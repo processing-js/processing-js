@@ -314,6 +314,8 @@ function buildProcessing( curElement ){
   var curFrameRate = 1000;
   var curShape = p.POLYGON;
   var curShapeCount = 0;
+  var curvePoints = [];
+  var curTightness = 0;
   var opacityRange = 255;
   var redRange = 255;
   var greenRange = 255;
@@ -856,6 +858,7 @@ function buildProcessing( curElement ){
   {
     curShape = type;
     curShapeCount = 0; 
+    curvePoints = [];
   }
   
   p.endShape = function endShape( close )
@@ -877,7 +880,15 @@ function buildProcessing( curElement ){
 
     if ( pathOpen )
     {
+      if ( doFill )
+        curContext.fill();
+
+      if ( doStroke )
+        curContext.stroke();
+
       curContext.closePath();
+      curShapeCount = 0;
+      pathOpen = false;
     }
   }
   
@@ -941,15 +952,43 @@ function buildProcessing( curElement ){
     }
   }
 
-  p.curveTightness = function()
-  {
-
-  }
-
-  // Unimplmented - not really possible with the Canvas API
   p.curveVertex = function( x, y, x2, y2 )
   {
-    p.vertex( x, y, x2, y2 );
+    if ( curvePoints.length < 3 ) {
+      curvePoints.push([x,y]);
+    } else {
+      var b = [], s = 1 - curTightness;
+
+      /*
+       * Matrix to convert from Catmull-Rom to cubic Bezier
+       * where t = curTightness
+       * |0         1          0         0       |
+       * |(t-1)/6   1          (1-t)/6   0       |
+       * |0         (1-t)/6    1         (t-1)/6 |
+       * |0         0          0         0       |
+       */
+
+      curvePoints.push([x,y]);
+
+      b[0] = [curvePoints[1][0],curvePoints[1][1]];
+      b[1] = [curvePoints[1][0]+(s*curvePoints[2][0]-s*curvePoints[0][0])/6,curvePoints[1][1]+(s*curvePoints[2][1]-s*curvePoints[0][1])/6];
+      b[2] = [curvePoints[2][0]+(s*curvePoints[1][0]-s*curvePoints[3][0])/6,curvePoints[2][1]+(s*curvePoints[1][1]-s*curvePoints[3][1])/6];
+      b[3] = [curvePoints[2][0],curvePoints[2][1]];
+
+      if ( !pathOpen ) {
+        p.vertex( b[0][0], b[0][1] );
+      } else {
+        curShapeCount = 1;
+      }
+
+      p.vertex( b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1] );
+      curvePoints.shift();
+    }
+  }
+
+  p.curveTightness = function( tightness )
+  {
+    curTightness = tightness;
   }
 
   p.bezierVertex = p.vertex
