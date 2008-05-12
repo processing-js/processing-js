@@ -275,10 +275,10 @@ function buildProcessing( curElement ){
   p.HALF_PI = p.PI / 2;
   p.P3D = 3;
   p.CORNER = 0;
-  p.CENTER = 1;
+  p.RADIUS = 1;
+  p.CENTER = 2;
   p.CENTER_RADIUS = 2;
-  p.RADIUS = 2;
-  p.POLYGON = 1;
+  p.POLYGON = 2;
   p.TRIANGLES = 6;
   p.POINTS = 7;
   p.LINES = 8;
@@ -287,6 +287,11 @@ function buildProcessing( curElement ){
   p.CLOSE = true;
   p.RGB = 1;
   p.HSB = 2;
+
+  // mouseButton constants: values adjusted to come directly from e.which
+  p.LEFT = 1;
+  p.CENTER = 2;
+  p.RIGHT = 3;
 
   // "Private" variables used to maintain state
   var curContext = curElement.getContext("2d");
@@ -323,6 +328,7 @@ function buildProcessing( curElement ){
   p.pmouseY = 0;
   p.mouseX = 0;
   p.mouseY = 0;
+  p.mouseButton = 0;
 
   // Will be replaced by the user, most likely
   p.mouseDragged = undefined;
@@ -1602,10 +1608,12 @@ function buildProcessing( curElement ){
     
     attach( curElement, "mousemove", function(e)
     {
+      var scrollX = window.scrollX != null ? window.scrollX : window.pageXOffset;
+      var scrollY = window.scrollY != null ? window.scrollY : window.pageYOffset;
       p.pmouseX = p.mouseX;
       p.pmouseY = p.mouseY;
-      p.mouseX = e.clientX - curElement.offsetLeft;
-      p.mouseY = e.clientY - curElement.offsetTop;
+      p.mouseX = e.clientX - curElement.offsetLeft + scrollX;
+      p.mouseY = e.clientY - curElement.offsetTop + scrollY;
 
       if ( p.mouseMoved )
       {
@@ -1621,6 +1629,7 @@ function buildProcessing( curElement ){
     attach( curElement, "mousedown", function(e)
     {
       mousePressed = true;
+      p.mouseButton = e.which;
 
       if ( typeof p.mousePressed == "function" )
       {
@@ -1631,7 +1640,13 @@ function buildProcessing( curElement ){
         p.mousePressed = true;
       }
     });
-      
+
+    attach( curElement, "contextmenu", function(e)
+    {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
     attach( curElement, "mouseup", function(e)
     {
       mousePressed = false;
