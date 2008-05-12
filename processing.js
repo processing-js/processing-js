@@ -349,6 +349,9 @@ function buildProcessing( curElement ){
   // The height/width of the canvas
   p.width = curElement.width - 0;
   p.height = curElement.height - 0;
+
+  // The current animation frame
+  p.frameCount = 0;
   
   // In case I ever need to do HSV conversion:
   // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
@@ -1043,6 +1046,8 @@ function buildProcessing( curElement ){
     {
       p.background();
     }
+
+    p.frameCount++;
     
     inDraw = true;
     p.pushMatrix();
