@@ -11,8 +11,14 @@
 
 this.Processing = function Processing( aElement, aCode )
 {
+  if ( typeof aElement == "string" )
+    aElement = document.getElementById( aElement );
+
   var p = buildProcessing( aElement );
-  p.init( aCode );
+
+  if ( aCode )
+    p.init( aCode );
+
   return p;
 };
 
@@ -1353,12 +1359,20 @@ function buildProcessing( curElement ){
     return getLoaded.get( x, y );
   }
 
-  p.set = function set( x, y, color )
+  p.set = function set( x, y, obj )
   {
-    var oldFill = curContext.fillStyle;
-    curContext.fillStyle = color;
-    curContext.fillRect( Math.round( x ), Math.round( y ), 1, 1 );
-    curContext.fillStyle = oldFill;
+    if ( obj && obj.img )
+    {
+      p.image( obj, x, y );
+    }
+    else
+    {
+      var oldFill = curContext.fillStyle;
+      var color = obj;
+      curContext.fillStyle = color;
+      curContext.fillRect( Math.round( x ), Math.round( y ), 1, 1 );
+      curContext.fillStyle = oldFill;
+    }
   }
   
   p.arc = function arc( x, y, width, height, start, stop )
