@@ -38,7 +38,7 @@ function log()
   }
 }
 
-function parse( aCode, p )
+var parse = Processing.parse = function parse( aCode, p )
 {
   // Angels weep at this parsing code :-(
 
