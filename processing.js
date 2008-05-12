@@ -282,8 +282,8 @@ function buildProcessing( curElement ){
   p.P3D = 3;
   p.CORNER = 0;
   p.RADIUS = 1;
+  p.CENTER_RADIUS = 1;
   p.CENTER = 2;
-  p.CENTER_RADIUS = 2;
   p.POLYGON = 2;
   p.TRIANGLES = 6;
   p.POINTS = 7;
