@@ -807,8 +807,7 @@ function buildProcessing( curElement ){
     };
     array.add = function( item )
     {
-      for ( var i = 0; this[ i ] != undefined; i++ ) {}
-      this[ i ] = item;
+      return this.push( item );
     };
     array.clone = function()
     {
