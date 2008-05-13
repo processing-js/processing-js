@@ -1577,10 +1577,16 @@ function buildProcessing( curElement ){
   {
     var colors = /(\d+),(\d+),(\d+),(\d+)/;
     var pixels = {};
-    var data = pixels.data = [];
     pixels.width = p.width;
     pixels.height = p.height;
+    pixels.data = [];
 
+    if ( curContext.createImageData )
+    {
+      pixels = curContext.createImageData( p.width, p.height );
+    }
+
+    var data = pixels.data;
     var pos = 0;
 
     for ( var i = 0, l = p.pixels.length; i < l; i++ ) {
