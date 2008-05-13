@@ -139,7 +139,7 @@ var parse = Processing.parse = function parse( aCode, p )
         .replace(/,\s?/g, ";\n  this.")
         .replace(/\b(var |final |public )+\s*/g, "this.")
         .replace(/this.(\w+);/g, "this.$1 = null;") + 
-	(extend ? "extendClass(this, " + extend + ");\n" : "") +
+  (extend ? "extendClass(this, " + extend + ");\n" : "") +
         "<CLASS " + name + " " + static + ">" + (typeof last == "string" ? last : name + "(");
   }
 
@@ -285,10 +285,13 @@ function buildProcessing( curElement ){
   p.CENTER_RADIUS = 1;
   p.CENTER = 2;
   p.POLYGON = 2;
+  p.QUADS = 5;
   p.TRIANGLES = 6;
   p.POINTS = 7;
   p.LINES = 8;
   p.TRIANGLE_STRIP = 9;
+  p.TRIANGLE_FAN = 4;
+  p.QUAD_STRIP = 3;
   p.CORNERS = 10;
   p.CLOSE = true;
   p.RGB = 1;
@@ -306,6 +309,7 @@ function buildProcessing( curElement ){
   var loopStarted = false;
   var hasBackground = false;
   var doLoop = true;
+  var looping = 0;
   var curRectMode = p.CORNER;
   var curEllipseMode = p.CENTER;
   var inSetup = false;
@@ -323,7 +327,7 @@ function buildProcessing( curElement ){
   var pathOpen = false;
   var mousePressed = false;
   var keyPressed = false;
-  var firstX, firstY, prevX, prevY;
+  var firstX, firstY, secondX, secondY, prevX, prevY;
   var curColorMode = p.RGB;
   var curTint = -1;
   var curTextSize = 12;
@@ -391,8 +395,8 @@ function buildProcessing( curElement ){
       if ( arguments.length == 2 )
       {
         var c = aColor.split(",");
-	c[3] = (aValue2 / opacityRange) + ")";
-	aColor = c.join(",");
+  c[3] = (aValue2 / opacityRange) + ")";
+  aColor = c.join(",");
       }
     }
     else if ( arguments.length == 2 )
@@ -490,16 +494,16 @@ function buildProcessing( curElement ){
       data.__defineGetter__("pixels", function()
       {
         if ( pixelsDone )
-	  return pixelsDone;
+    return pixelsDone;
 
-	pixelsDone = [];
+  pixelsDone = [];
 
         for ( var i = 0; i < pixels.length; i += 4 )
         {
           pixelsDone.push( p.color(pixels[i], pixels[i+1], pixels[i+2], pixels[i+3]) );
         }
 
-	return pixelsDone;
+  return pixelsDone;
       });
     }
     else
@@ -637,12 +641,11 @@ function buildProcessing( curElement ){
 
   p.exit = function exit()
   {
-
+    clearInterval(looping);
   }
 
   p.save = function save( file )
   {
-
   }
 
   p.loadImage = function loadImage( file )
@@ -674,8 +677,8 @@ function buildProcessing( curElement ){
           return curContext.mozMeasureText( typeof str == "number" ?
             String.fromCharCode( str ) :
             str) / curTextSize;
-	else
-	  return 0;
+  else
+    return 0;
       }
     };
   }
@@ -708,7 +711,7 @@ function buildProcessing( curElement ){
       curContext.translate(x, y);
       curContext.mozDrawText( typeof str == "number" ?
         String.fromCharCode( str ) :
-	str );
+  str );
       curContext.restore();
     }
   }
@@ -783,11 +786,11 @@ function buildProcessing( curElement ){
 
         for ( var j = 0; j < size2; j++ )
         {
-	  var a = array[i][j] = size3 ? new Array( size3 ) : 0;
-	  for ( var k = 0; k < size3; k++ )
-	  {
-	    a[k] = 0;
-	  }
+    var a = array[i][j] = size3 ? new Array( size3 ) : 0;
+    for ( var k = 0; k < size3; k++ )
+    {
+      a[k] = 0;
+    }
         }
       }
     }
@@ -869,6 +872,7 @@ function buildProcessing( curElement ){
   {
     if ( curShapeCount != 0 )
     {
+      if ( close || doFill ) 
       curContext.lineTo( firstX, firstY );
 
       if ( doFill )
@@ -903,6 +907,8 @@ function buildProcessing( curElement ){
       pathOpen = true;
       curContext.beginPath();
       curContext.moveTo( x, y );
+    firstX = x;
+    firstY = y;
     }
     else
     {
@@ -912,21 +918,69 @@ function buildProcessing( curElement ){
       }
       else if ( arguments.length == 2 )
       {
-        if ( curShape == p.TRIANGLE_STRIP && curShapeCount == 2 )
-	{
-          curContext.moveTo( prevX, prevY );
-          curContext.lineTo( firstX, firstY );
-	}
+      if ( curShape != p.QUAD_STRIP || curShapeCount != 2 )
+      curContext.lineTo( x, y );
 
+        if ( curShape == p.TRIANGLE_STRIP )
+    {
+      if ( curShapeCount == 2 )
+      {
+        // finish shape
+        p.endShape(p.CLOSE);
+        pathOpen = true;
+        curContext.beginPath();
+        
+        // redraw last line to start next shape
+        curContext.moveTo( prevX, prevY );
         curContext.lineTo( x, y );
+        curShapeCount = 1;
+      }
+      firstX = prevX;
+      firstY = prevY;
+    }
+
+    if ( curShape == p.TRIANGLE_FAN && curShapeCount == 2 )
+    {
+      // finish shape
+      p.endShape(p.CLOSE);
+      pathOpen = true;
+      curContext.beginPath();
+      
+      // redraw last line to start next shape
+      curContext.moveTo( firstX, firstY );
+      curContext.lineTo( x, y );
+      curShapeCount = 1;
+    }
+
+    if ( curShape == p.QUAD_STRIP && curShapeCount == 3 )
+    {
+      // finish shape
+      curContext.lineTo( prevX, prevY );
+      p.endShape(p.CLOSE);
+      pathOpen = true;
+      curContext.beginPath();
+
+      // redraw lines to start next shape
+      curContext.moveTo( prevX, prevY );
+      curContext.lineTo( x, y );
+      curShapeCount = 1;
+    }
+
+    if ( curShape == p.QUAD_STRIP)
+    {
+      firstX = secondX;
+      firstY = secondY;
+      secondX = prevX;
+      secondY = prevY;
+    }
       }
       else if ( arguments.length == 4 )
       {
         if ( curShapeCount > 1 )
         {
-	  curContext.moveTo( prevX, prevY );
+    curContext.moveTo( prevX, prevY );
           curContext.quadraticCurveTo( firstX, firstY, x, y );
-	  curShapeCount = 1;
+    curShapeCount = 1;
         }
       }
       else if ( arguments.length == 6 )
@@ -936,23 +990,15 @@ function buildProcessing( curElement ){
       }
     }
 
-    prevX = firstX;
-    prevY = firstY;
-    firstX = x;
-    firstY = y;
-
-    
+  prevX = x;
+  prevY = y;
     curShapeCount++;
     
     if ( curShape == p.LINES && curShapeCount == 2 ||
-         (curShape == p.TRIANGLES || curShape == p.TRIANGLE_STRIP) && curShapeCount == 3 )
+         (curShape == p.TRIANGLES) && curShapeCount == 3 ||
+     (curShape == p.QUADS) && curShapeCount == 4 )
     {
-      p.endShape();
-    }
-
-    if ( curShape == p.TRIANGLE_STRIP && curShapeCount == 3 )
-    {
-      curShapeCount = 2;
+      p.endShape(p.CLOSE);
     }
   }
 
@@ -1103,7 +1149,7 @@ function buildProcessing( curElement ){
     if ( loopStarted )
       return;
     
-    var looping = setInterval(function()
+    looping = setInterval(function()
     {
       try
       {
@@ -1190,7 +1236,7 @@ function buildProcessing( curElement ){
   p.float = function float( aNumber )
   {
     return typeof aNumber == "string" ?
-	p.float( aNumber.charCodeAt(0) ) :
+  p.float( aNumber.charCodeAt(0) ) :
         parseFloat( aNumber );
   }
 
@@ -1319,12 +1365,12 @@ function buildProcessing( curElement ){
   
   p.sqrt = function sqrt( aNumber )
   {
-  	return Math.sqrt( aNumber );
+    return Math.sqrt( aNumber );
   }
   
   p.atan2 = function atan2( aNumber, aNumber2 )
   {
-  	return Math.atan2( aNumber, aNumber2 );
+    return Math.atan2( aNumber, aNumber2 );
   }
   
   p.radians = function radians( aAngle )
