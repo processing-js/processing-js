@@ -517,26 +517,28 @@ function buildProcessing( curElement ){
 
   p.createImage = function createImage( w, h, mode )
   {
-    var data = {
-      width: w,
-      height: h,
-      pixels: new Array( w * h ),
-      get: function(x,y)
-      {
-        return this.pixels[w*y+x];
-      },
-      _mask: null,
-      mask: function(img)
-      {
-        this._mask = img;
-      },
-      loadPixels: function()
-      {
-      },
-      updatePixels: function()
-      {
-      }
+    var data = {};
+    data.width = w;
+    data.height = h;
+    data.data = [];
+
+    if ( curContext.createImageData )
+    {
+      data = curContext.createImageData( w, h );
+    }
+
+    data.pixels = new Array( w * h );
+    data.get = function(x,y)
+    {
+      return this.pixels[w*y+x];
     };
+    data._mask = null;
+    data.mask = function(img)
+    {
+      this._mask = img;
+    };
+    data.loadPixels = function(){};
+    data.updatePixels = function(){};
 
     return data;
   }
@@ -576,12 +578,14 @@ function buildProcessing( curElement ){
       return img.img || img.canvas;
     }
 
-    img.data = [];
-
     for ( var i = 0, l = img.pixels.length; i < l; i++ )
     {
+      var pos = i * 4;
       var c = (img.pixels[i] || "rgba(0,0,0,1)").slice(5,-1).split(",");
-      img.data.push( parseInt(c[0]), parseInt(c[1]), parseInt(c[2]), parseFloat(c[3]) * 100 );
+      img.data[pos] = parseInt(c[0]);
+      img.data[pos+1] = parseInt(c[1]);
+      img.data[pos+2] = parseInt(c[2]);
+      img.data[pos+3] = parseFloat(c[3]) * 100;
     }
 
     var canvas = document.createElement("canvas")
