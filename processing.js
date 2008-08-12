@@ -1032,6 +1032,10 @@ function buildProcessing( curElement ){
     return Math.ceil( aNumber );
   };
 
+  p.round = function round( aNumber ) {
+    return Math.round( aNumber );
+  };
+
   p.floor = function floor( aNumber ) {
     return Math.floor( aNumber );
   };
