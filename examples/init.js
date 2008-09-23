@@ -5,8 +5,8 @@
  * the Processing.js engine.
  */
 
-if ( document.addEventListener ) {
-	document.addEventListener("DOMContentLoaded", function() {
+if ( window.addEventListener ) {
+	window.addEventListener("load", function() {
 		var scripts = document.getElementsByTagName("script");
 		
 		for ( var i = 0; i < scripts.length; i++ ) {
