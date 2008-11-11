@@ -7,14 +7,28 @@
  * More information: http://processing.org/
  */
 
+// Declare Global Data Object
+ 
 (function(){
+this.Processing = function Processing( aElement, aCode) {
 
-this.Processing = function Processing( aElement, aCode ) {
   if ( typeof aElement == "string" )
     aElement = document.getElementById( aElement );
-
-  var p = buildProcessing( aElement );
-
+    
+  var p = buildProcessing( aElement );  
+  
+  // Quick bit of code to allow a C style include. Reason?:
+  // Burst Engine - My animation functions that make my tasks WAY easier!
+  /*
+  if (aCode.substring(0,3) == "# <"){
+    var include = aCode.substring( 3, aCode.indexOf( ">" ) );
+    aCode = aCode.substring( aCode.indexOf("\n"), aCode.length );
+    aCode = aCode + $.ajax({type: "GET", url: include, async: false, cache: false}).responseText;
+    console.log(aCode);  
+  } 
+  */
+  aCode = aCode + $.ajax({type: "GET", url: "../pro/burstEngine.pro", async: false, cache: false}).responseText;       
+  
   if ( aCode )
     p.init( aCode );
 
@@ -33,6 +47,7 @@ function log() {
 
 var parse = Processing.parse = function parse( aCode, p ) {
   // Angels weep at this parsing code :-(
+  // Why is this? - F1LT3R
 
   // Remove end-of-line comments
   aCode = aCode.replace(/\/\/ .*\n/g, "\n");
@@ -239,10 +254,10 @@ var parse = Processing.parse = function parse( aCode, p ) {
   return aCode;
 };
 
-function buildProcessing( curElement ){
-
+function buildProcessing( curElement ){        
+            
   var p = {};
-
+  
   // init
   p.PI = Math.PI;
   p.TWO_PI = 2 * p.PI;
@@ -266,9 +281,15 @@ function buildProcessing( curElement ){
   p.HSB = 2;
 
   // mouseButton constants: values adjusted to come directly from e.which
-  p.LEFT = 1;
-  p.CENTER = 2;
-  p.RIGHT = 3;
+  // CONFLICT: LEFT and RIGHT are keyboard values in Processing already. - F1lT3R         
+  // RESOLUTION: Extended Keyboard & Mouse variables  
+  p.CENTER = 88888880;
+  p.CODED  = 88888888;
+  p.UP      = 88888870;
+  p.RIGHT   = 88888871;
+  p.DOWN    = 88888872;
+  p.LEFT    = 88888869;
+  p.codedKeys = [69, 70, 71, 72];
 
   // "Private" variables used to maintain state
   var curContext = curElement.getContext("2d");
@@ -299,10 +320,10 @@ function buildProcessing( curElement ){
   var curColorMode = p.RGB;
   var curTint = -1;
   var curTextSize = 12;
-  var curTextFont = "Arial";
+  var curTextFont = "Arial";  
   var getLoaded = false;
-  var start = (new Date).getTime();
-
+  var start = (new Date).getTime();    
+  
   // Global vars for tracking mouse position
   p.pmouseX = 0;
   p.pmouseY = 0;
@@ -325,7 +346,111 @@ function buildProcessing( curElement ){
   p.height = curElement.height - 0;
 
   // The current animation frame
-  p.frameCount = 0;
+  p.frameCount = 0;          
+  
+  p.data = function data(){
+      //this.data
+      //alert( document.getElementById("canvas1").p );
+  } 
+  
+  
+  // Set console to 'off' 
+  p.curConsole = 0;
+  
+  // Unload this instance of Processing - (Personal Extension) - F1LT3R
+  //p.kill(){}        
+      
+  // Multi-Dimensional Array Splitter - (Personal Extension) - F1LT3R
+  p.split = function split(stringToSplit, divider1, divider2, divider3, divider4){
+      var i, j, k;
+      if (!divider2){
+          return stringToSplit.split(divider1);          
+      } else if (!divider3){                
+          var multiArray=stringToSplit.split(divider1);          
+          for (i=0; i<multiArray.length; i++){
+            var level2 = multiArray[i].split(divider2);                            
+            multiArray[i]=new Array(level2.length);                        
+            for (j=0; j<level2.length; j++){multiArray[i][j]=level2[j];}               
+          } return multiArray;
+      } else {
+        var multiArray=stringToSplit.split(divider1);          
+          for (i=0; i<multiArray.length; i++){            
+            var level2 = multiArray[i].split(divider2);                            
+            multiArray[i]=new Array(level2.length);                        
+            for (j=0; j<level2.length; j++){                      
+              multiArray[i][j]=level2[j];
+              var level3 = multiArray[i][j].split(divider3);                            
+              multiArray[i][j]=new Array(level3.length);                        
+              for (k=0; k<level3.length; k++){multiArray[i][j][k]=level3[k];}                        
+            }               
+          } return multiArray;          
+      }
+  }
+  
+  // Chain - load new document into current canvas - F1LT3R
+  p.chain = function chain(loadURL){
+      var chainScript = $.ajax({type: "GET", url: loadURL, async: false, cache: false}).responseText.split("\n");
+      //console.log( chainScript );
+      Processing(curElement, chainScript);          
+  }
+        
+  // Delay (A Valid Processing Function) - F1LT3R 
+  p.delay = function delay(ms){          
+    p.hasDelay=true;
+    setTimeout (function(){p.hasDelay=false},ms);                                   
+  }
+  
+  // Pause function - (Personal Extension) - F1LT3R
+  p.pauseToggle = function pause(){
+    if (!p.paused){
+      p.paused=true;
+    } else {
+      p.paused=false;
+    }
+  }        
+  
+  // Return the faces of a ".raw" 3D object from file - (Personal Extension) - F1LT3R      
+  p.loadRaw = function loadRaw(loadUrl) {                  
+      faces = $.ajax({type: "GET", url: loadUrl, async: false, cache: false}).responseText.split("\n");
+      var i, j;
+      for (i=0; i<faces.length; i++){                
+        var vertex = faces[i].split(" ");    
+        faces[i]=new Array(vertex.length);                        
+        for (j=0; j<vertex.length; j++){                      
+          faces[i][j]=vertex[j];          
+        }  
+      }
+      return faces;
+  };
+  
+  // Return the points of an ".off" 3D object from file - (Personal Extension) - F1LT3R      
+  p.loadOff = function loadOff(loadUrl) {                 
+      points = $.ajax({type: "GET", url: loadUrl, async: false, cache: false}).responseText.split("\n");
+      points.remove(0,1);
+      points.remove(points.length-1);
+      var i, j;
+      for (i=0; i<points.length; i++){
+        var vertex = points[i].split(" ");    
+        points[i]=new Array(vertex.length);        
+        for (j=0; j<vertex.length; j++){                      
+          points[i][j]=vertex[j];  
+        }  
+      }      
+      //console.log(points);
+      return points;
+  };
+  
+  // /////////
+  p.include = function include(loadUrl){
+      aCode = $.ajax({type: "GET", url: loadUrl, async: false, cache: false}).responseText.split("\n");      
+      p.init(aCode, p)
+      // this dosnt seem to work on classes for some reason.
+  }
+  
+  // Load a file or URL into strings using jQuery's Ajax functions - (Processing Function, (needs more work to bring up to spec)) - F1LT3R     
+  p.loadStrings = function loadStrings(loadUrl) {  
+      return $.ajax({type: "GET", url: loadUrl, async: false, cache: false}).responseText.split("\n");              
+  };
   
   // In case I ever need to do HSV conversion:
   // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
@@ -349,6 +474,7 @@ function buildProcessing( curElement ){
 
       aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
     } else if ( typeof aValue1 == "string" ) {
+      //alert("string col");
       aColor = aValue1;
 
       if ( arguments.length == 2 ) {
@@ -403,7 +529,7 @@ function buildProcessing( curElement ){
     return str;
   };
 
-  p.AniSprite = function( prefix, frames ) {
+  p.AniSprite = function( prefix, frames ) {    
     this.images = [];
     this.pos = 0;
 
@@ -578,6 +704,16 @@ function buildProcessing( curElement ){
     return data;
   };
 
+  p.println = function println(text){    
+    if (p.curConsole<1){ // Create console window for print() and println() functions.... only works in FireFox - F1LT3R  
+      curElement.parentNode.insertBefore(document.createElement('div'), curElement.nextSibling);
+      curElement.nextSibling.className="console";
+      curElement.nextSibling.innerHTML=curElement.nextSibling.innerHTML+"<strong class='console'>Console:<br/>";          
+      p.curConsole=1;
+    }            
+    curElement.nextSibling.innerHTML=curElement.nextSibling.innerHTML+text+"<br/>";
+  };
+
   p.loadFont = function loadFont( name ) {
     return {
       name: name,
@@ -620,8 +756,6 @@ function buildProcessing( curElement ){
   p.char = function char( key ) {
     return key;
   };
-
-  p.println = function println(){};
 
   p.map = function map( value, istart, istop, ostart, ostop ) {
     return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
@@ -766,7 +900,7 @@ function buildProcessing( curElement ){
     }
   };
   
-  p.vertex = function vertex( x, y, x2, y2, x3, y3 ) {
+  p.vertex = function vertex( x, y, x2, y2, x3, y3 ) {    
     if ( curShapeCount == 0 && curShape != p.POINTS ) {
       pathOpen = true;
       curContext.beginPath();
@@ -779,7 +913,6 @@ function buildProcessing( curElement ){
       } else if ( arguments.length == 2 ) {
         if ( curShape != p.QUAD_STRIP || curShapeCount != 2 )
           curContext.lineTo( x, y );
-
         if ( curShape == p.TRIANGLE_STRIP ) {
           if ( curShapeCount == 2 ) {
             // finish shape
@@ -822,6 +955,7 @@ function buildProcessing( curElement ){
         }
 
         if ( curShape == p.QUAD_STRIP) {
+          
           firstX = secondX;
           firstY = secondY;
           secondX = prevX;
@@ -835,7 +969,7 @@ function buildProcessing( curElement ){
         }
       } else if ( arguments.length == 6 ) {
         curContext.bezierCurveTo( x, y, x2, y2, x3, y3 );
-        curShapeCount = -1;
+        //curShapeCount = -1; // Removed due to Heart-Shape issue. - F1LT3R
       }
     }
 
@@ -968,12 +1102,14 @@ function buildProcessing( curElement ){
   };
   
   p.loop = function loop() {
-    if ( loopStarted )
+    if (loopStarted)
       return;
     
     looping = setInterval(function() {
       try {
-        p.redraw();
+        if (!p.paused && !p.hasDelay){
+          p.redraw();  
+        }      
       }
       catch(e) {
         clearInterval( looping );
@@ -995,19 +1131,35 @@ function buildProcessing( curElement ){
       } else {
         curBackground = p.color.apply( this, arguments );
       }
-    }
-    
+    }    
 
     if ( curBackground.img ) {
       p.image( curBackground, 0, 0 );
     } else {
+      // Clear background for web context - F1LT3R
+      if(arguments[3]==0){ curContext.clearRect(0,0,p.width,p.height); }
+             
       var oldFill = curContext.fillStyle;
       curContext.fillStyle = curBackground + "";
       curContext.fillRect( 0, 0, p.width, p.height );
       curContext.fillStyle = oldFill;
     }
   };
-
+  
+  // Clear function - F1LT3R
+  p.clear = function clear ( x, y, width, height ){
+    if(arguments.length==0){
+        curContext.clearRect( 0, 0, p.width, p.height );                
+    } else {
+        curContext.clearRect( x, y, width, height );
+    }
+  }
+  
+  // Str() function - In original Processing - F1LT3R
+  p.str = function str( aNumber ){
+      return aNumber+'';
+  }
+  
   p.sq = function sq( aNumber ) {
     return aNumber * aNumber;
   };
@@ -1015,9 +1167,18 @@ function buildProcessing( curElement ){
   p.sqrt = function sqrt( aNumber ) {
     return Math.sqrt( aNumber );
   };
+
+  // ngsqrt() - Personal Function - F1LT3R // Allows me to calculate the positive square root of a negative number
+  p.ngsqrt = function ngsqrt( aNumber ) {
+    if (aNumber <= 0){
+      return Math.sqrt( -aNumber );
+    } else {
+      return Math.sqrt( aNumber );
+    }
+  };
   
   p.int = function int( aNumber ) {
-    return Math.floor( aNumber );
+    return Math.floor( aNumber );    
   };
 
   p.min = function min( aNumber, aNumber2 ) {
@@ -1031,7 +1192,7 @@ function buildProcessing( curElement ){
   p.ceil = function ceil( aNumber ) {
     return Math.ceil( aNumber );
   };
-
+  
   p.round = function round( aNumber ) {
     return Math.round( aNumber );
   };
@@ -1041,9 +1202,12 @@ function buildProcessing( curElement ){
   };
 
   p.float = function float( aNumber ) {
-    return typeof aNumber == "string" ?
+      return parseFloat( aNumber );
+      /*
+      return typeof aNumber == "string" ?
       p.float( aNumber.charCodeAt(0) ) :
       parseFloat( aNumber );
+      */
   };
 
   p.byte = function byte( aNumber ) {
@@ -1163,6 +1327,13 @@ function buildProcessing( curElement ){
     return ( aAngle / 180 ) * p.PI;
   };
   
+  p.degrees = function degrees( aAngle ) {
+    aAngle = ( aAngle * 180 ) / p.PI;  
+    if (aAngle < 0) {aAngle = 360 + aAngle}    
+    return aAngle;
+    
+  };
+  
   p.size = function size( aWidth, aHeight ) {
     var fillStyle = curContext.fillStyle;
     var strokeStyle = curContext.strokeStyle;
@@ -1184,13 +1355,18 @@ function buildProcessing( curElement ){
   
   p.smooth = function smooth(){};
   
+  p.noSmooth = function noSmooth(){
+      
+  };
+  
+  
   p.noLoop = function noLoop() {
     doLoop = false;
   };
   
   p.fill = function fill() {
     doFill = true;
-    curContext.fillStyle = p.color.apply( this, arguments );
+    curContext.fillStyle = p.color.apply( this, arguments );    
   };
   
   p.stroke = function stroke() {
@@ -1209,7 +1385,15 @@ function buildProcessing( curElement ){
     curContext.fillStyle = oldFill;
   };
 
+  /*
   p.get = function get( x, y ) {
+    if ( arguments.length == 0 ) {
+      var c = p.createGraphics( p.width, p.height );
+      c.image( curContext, 0, 0 );
+      return c;
+    }
+    */
+    p.get = function get( x, y ) {
     if ( arguments.length == 0 ) {
       var c = p.createGraphics( p.width, p.height );
       c.image( curContext, 0, 0 );
@@ -1244,21 +1428,22 @@ function buildProcessing( curElement ){
       y += height / 2;
     }
 
-    curContext.beginPath();
-  
     curContext.moveTo( x, y );
+    curContext.beginPath();
+
     curContext.arc( x, y, curEllipseMode == p.CENTER_RADIUS ? width : width/2, start, stop, false );
-    
+                          
     if ( doFill )
-      curContext.fill();
-      
+      curContext.fill();    
+    
     if ( doStroke )
       curContext.stroke();
-    
+      
     curContext.closePath();
+      
   };
   
-  p.line = function line( x1, y1, x2, y2 ) {
+  p.line = function line( x1, y1, x2, y2 ) {   
     curContext.lineCap = "round";
     curContext.beginPath();
   
@@ -1291,6 +1476,7 @@ function buildProcessing( curElement ){
   };
 
   p.quad = function quad( x1, y1, x2, y2, x3, y3, x4, y4 ) {
+    curContext.lineCap = "square";
     p.beginShape();
     p.vertex( x1, y1 );
     p.vertex( x2, y2 );
@@ -1422,7 +1608,7 @@ function buildProcessing( curElement ){
           return oldfn.apply( this, arguments );
       };
     } else {
-      object[ name ] = fn;
+       object[ name ] = fn;
     }
   };
 
@@ -1432,7 +1618,7 @@ function buildProcessing( curElement ){
   
     // Canvas has trouble rendering single pixel stuff on whole-pixel
     // counts, so we slightly offset it (this is super lame).
-    curContext.translate( 0.5, 0.5 );
+    // curContext.translate( 0.5, 0.5 ); // Removed this to fix pixels push on rapid recalls of Processing - F1LT3R    
 
     if ( code ) {
       (function(Processing){with (p){
@@ -1457,11 +1643,11 @@ function buildProcessing( curElement ){
     
     attach( curElement, "mousemove", function(e) {
       var scrollX = window.scrollX != null ? window.scrollX : window.pageXOffset;
-      var scrollY = window.scrollY != null ? window.scrollY : window.pageYOffset;
+      var scrollY = window.scrollY != null ? window.scrollY : window.pageYOffset;            
       p.pmouseX = p.mouseX;
       p.pmouseY = p.mouseY;
       p.mouseX = e.clientX - curElement.offsetLeft + scrollX;
-      p.mouseY = e.clientY - curElement.offsetTop + scrollY;
+      p.mouseY = e.clientY - curElement.offsetTop + scrollY;    
 
       if ( p.mouseMoved ) {
         p.mouseMoved();
@@ -1474,8 +1660,14 @@ function buildProcessing( curElement ){
     
     attach( curElement, "mousedown", function(e) {
       mousePressed = true;
-      p.mouseButton = e.which;
-
+      
+      // 10.17.08 - mousedown - Made mouse compatible with updated keyCode function 
+      switch(e.which){
+        case 1: p.mouseButton = p.LEFT; break;
+        case 2: p.mouseButton = p.CENTER; break;
+        case 3: p.mouseButton = p.RIGHT; break; 
+      }
+      
       if ( typeof p.mousePressed == "function" ) {
         p.mousePressed();
       } else {
@@ -1503,7 +1695,21 @@ function buildProcessing( curElement ){
     attach( document, "keydown", function(e) {
       keyPressed = true;
 
-      p.key = e.keyCode + 32;
+      p.key = e.keyCode + 32;            
+      
+      // 10.17.08 - keydown - Added Processing keyCodes for arrow keys. (only checked on PC)
+      var i; 
+      for (i=0; i < p.codedKeys.length; i++){                                        
+          if (p.key == p.codedKeys[i]){            
+            switch(p.key){
+            case 70: p.keyCode = p.UP; break;
+            case 71: p.keyCode = p.RIGHT; break;
+            case 72: p.keyCode = p.DOWN; break;
+            case 69: p.keyCode = p.LEFT; break;          
+            }
+            p.key=p.CODED;            
+          }          
+      }
 
       if ( e.shiftKey ) {
         p.key = String.fromCharCode(p.key).toUpperCase().charCodeAt(0);
@@ -1514,6 +1720,9 @@ function buildProcessing( curElement ){
       } else {
         p.keyPressed = true;
       }
+      
+      
+      
     });
 
     attach( document, "keyup", function(e) {
@@ -1534,9 +1743,56 @@ function buildProcessing( curElement ){
       else
         elem.attachEvent( "on" + type, fn );
     }
+
+  
   };
 
   return p;
+   
 }
 
 })();
+
+/*// Changes from Alistair MacDonald (http://hyper-metrix.com/) ////////////////
+
+    
+  PROCESSING FUNCTIONS ADJUSTED
+  -----------------------------
+    20.09.06 - background() - Transparecy thing... more comments to come. 
+    20.09.08 - init() - Removed "curContext.translate( 0.5, 0.5 );" as it was causing the canvas to start drawing from a new position everytime Processing was initialised with a new Script.     
+    10.03.08 - float() - Kept returning the wrong value when I tried this, so I commeted the old code out and put something simple in. Can'wa wait to see what I#ve broken.
+    10.04.08 - vertex() - Removed a line from 6 arguments bezierVertex() call as the shape count was being set to 0 and tripping out the loop. More details here: http://github.com/jeresig/processing-js/wikis/filled-shapes-using-beziervertex
+    10.17.08 - keydown - Added Processing keyCodes for arrow keys. (only checked on PC)
+    10.17.08 - mousedown - Translated Mousedowns into a generic input stack that is too high in value to conflict with keyCodes or mouseButtons.
+        
+  PROCESSING FUNCTIONS ADDED
+  --------------------------        
+    10.03.08 - delay() - Halts opperation for expressed milliseconds. Currently this only works at the end of every draw loop, not in between every command as it should.
+    10.03.08 - loadStrings() - Uses jQuery get a file or URL into a string. Works with CURL for cross-domain purposes.     
+    10.03.08 - split() - I included this routine as it is present in the Processing App. and found it saved time to conform. Also added a second divider to split() for returning a multidimensional array.
+    10.05.08 - noSmooth() - Added this but havn't worked out how to do it yet.
+    10.14.08 - println() - Thought this function was pretty handy for debugging as I'm used to doing that with Processing, so added this function which inserts a div.console after each Processing.js Canvas and writes console data there.    
+    10.14.08 - print() - See println().
+    10.24.08 - degrees() - Converts radians to degrees.         
+    
+  PERSONAL FUNCTIONS ADDED
+  ------------------------
+    10.03.08 - pauseToggle() - Allows the user to toggle a paused state.
+    10.03.08 - loadRaw() - Returns a multidimensional array of vertices from 3d object file in ".raw" format.      
+    10.05.08 - include() - Loads a file and re-inits the new parsed aCode. Very buggy, dosn't seem to work with classes which is the whole reason I put it there in the first place. :(
+    10.18.08 - clear() - clears part r all of the background.
+    10.19.08 - loadOff() - Returns a multidimensional array of vertices from 3d object file in ".raw" format. Now accepts direct export from blender with no regex editing in text editor.
+    10.20.08 - chain() - Chains a new processing script into the current element and reparses the new code.
+    10.20.08 - jQuery() - Calls jQuery function.
+    11.02.08 - ngsqrt() - Personal Function - F1LT3R // Allows me to calculate the positive square root of a negative number
+    
+
+//////////////////////////////////////////////////////////////////////////////*/
+
+
+// This code became really useful in ingnore lines when loading files in an array
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from < 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
