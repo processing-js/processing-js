@@ -1197,6 +1197,11 @@ function buildProcessing( curElement ){
     return Math.round( aNumber );
   };
 
+  p.norm = function norm( aNumber, low, high ) {
+    var range = high-low;
+    return ((1/range)* aNumber) - ((1/range)*low);
+  };
+
   p.floor = function floor( aNumber ) {
     return Math.floor( aNumber );
   };
@@ -1773,7 +1778,8 @@ function buildProcessing( curElement ){
     10.05.08 - noSmooth() - Added this but havn't worked out how to do it yet.
     10.14.08 - println() - Thought this function was pretty handy for debugging as I'm used to doing that with Processing, so added this function which inserts a div.console after each Processing.js Canvas and writes console data there.    
     10.14.08 - print() - See println().
-    10.24.08 - degrees() - Converts radians to degrees.         
+    10.24.08 - degrees() - Converts radians to degrees.
+    11.13.08 - norm() - Added norm() function, never knew it existed until it was requested on Google Group. I then realised how freekin useful it is!!         
     
   PERSONAL FUNCTIONS ADDED
   ------------------------
