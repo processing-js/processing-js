@@ -521,7 +521,34 @@ function buildProcessing( curElement ){
     
     return aColor;
   }
-
+  
+  // Added lerpColor() - F1LT3R - 08.11.14
+  p.lerpColor = function lerpColor( c1, c2, amt ){
+      
+      // Get RGBA values for Color 1 to floats
+      var colors1 = p.color(c1).split(",");
+      var r1 = parseFloat( colors1[0].split("(")[1] ); 
+      var g1 = parseFloat( colors1[1] );
+      var b1 = parseFloat( colors1[2] );
+      var a1 = parseFloat( colors1[3].split(")")[0] );
+    
+      // Get RGBA values for Color 2 to floats
+      var colors2 = p.color(c2).split(",");
+      var r2 = parseFloat( colors2[0].split("(")[1] ); 
+      var g2 = parseFloat( colors2[1] );
+      var b2 = parseFloat( colors2[2] );
+      var a2 = parseFloat( colors2[3].split(")")[0] );
+                        
+      // Return lerp value for each channel, INT for color, Float for Alpha-range
+      var r = parseInt( p.lerp(r1, r2, amt) );
+      var g = parseInt( p.lerp(g1, g2, amt) );
+      var b = parseInt( p.lerp(b1, b2, amt) );
+      var a = parseFloat( p.lerp(a1, a2, amt) );
+      
+      aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
+      return aColor;
+  }
+  
   p.nf = function( num, pad ) {
     var str = "" + num;
     while ( pad - str.length )
@@ -1785,7 +1812,8 @@ function buildProcessing( curElement ){
     10.14.08 - print() - See println().
     10.24.08 - degrees() - Converts radians to degrees.
     11.13.08 - norm() - Added norm() function, never knew it existed until it was requested on Google Group. I then realised how freekin useful it is!!
-    11.13.08 - lerp() - Added lerp() function, also never knew it existed until it was requested on Google Group. Again... very useful.         
+    11.13.08 - lerp() - Added lerp() function, also never knew it existed until it was requested on Google Group. Again... very useful.
+    08.11.14 - lerpColor() as above ^^         
     
   PERSONAL FUNCTIONS ADDED
   ------------------------
