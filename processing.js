@@ -1304,22 +1304,30 @@ function buildProcessing( curElement ){
     var f = (1 - p.cos(ft)) * .5;
     return  a*(1-f) + b*f;
   }
-
-  p.red = function( aColor ) {
-    return parseInt(aColor.slice(5));
+  
+  p.red = function( aColor ) {        
+    return parseInt( verifyChannel(aColor).slice(5) );
   };
 
-  p.green = function( aColor ) {
-    return parseInt(aColor.split(",")[1]);
+  p.green = function( aColor ) {     
+    return parseInt( verifyChannel(aColor).split(",")[1] );
   };
 
   p.blue = function( aColor ) {
-    return parseInt(aColor.split(",")[2]);
+    return parseInt( verifyChannel(aColor).split(",")[2] );
   };
 
   p.alpha = function( aColor ) {
-    return parseInt(aColor.split(",")[3]);
+    return parseInt( verifyChannel(aColor).split(",")[3] );
   };
+
+  function verifyChannel(aColor){
+    if(aColor.constructor == Array){    
+      return aColor;
+    } else {      
+      return p.color(aColor);
+    }
+  }
 
   p.abs = function abs( aNumber ) {
     return Math.abs( aNumber );
@@ -1803,6 +1811,7 @@ function buildProcessing( curElement ){
     10.17.08 - keydown - Added Processing keyCodes for arrow keys. (only checked on PC)
     10.17.08 - mousedown - Translated Mousedowns into a generic input stack that is too high in value to conflict with keyCodes or mouseButtons.
     11.15.08 - updatePixels() - The alpha range was wrong. It's 255 not 100. Someone was up late :P
+    11.15.08 - red(), blue(), green(), alpha() - ie: to work with eg: 'red( color(r,g,b,a) );' or red(myColor);
         
   PROCESSING FUNCTIONS ADDED
   --------------------------        
@@ -1815,7 +1824,8 @@ function buildProcessing( curElement ){
     10.24.08 - degrees() - Converts radians to degrees.
     11.13.08 - norm() - Added norm() function, never knew it existed until it was requested on Google Group. I then realised how freekin useful it is!!
     11.13.08 - lerp() - Added lerp() function, also never knew it existed until it was requested on Google Group. Again... very useful.
-    08.11.14 - lerpColor() as above ^^         
+    11.14.08 - lerpColor() as above ^^
+    11.15.08 - verifyColor() - forces PJS to work with  'red( color(r,g,b,a) );' and red(myColor) as natively processing does.         
     
   PERSONAL FUNCTIONS ADDED
   ------------------------
@@ -1826,7 +1836,7 @@ function buildProcessing( curElement ){
     10.19.08 - loadOff() - Returns a multidimensional array of vertices from 3d object file in ".raw" format. Now accepts direct export from blender with no regex editing in text editor.
     10.20.08 - chain() - Chains a new processing script into the current element and reparses the new code.
     10.20.08 - jQuery() - Calls jQuery function.
-    11.02.08 - ngsqrt() - Personal Function - F1LT3R // Allows me to calculate the positive square root of a negative number
+    11.02.08 - ngsqrt() - Personal Function - F1LT3R // Allows me to calculate the positive square root of a negative number    
     
 
 //////////////////////////////////////////////////////////////////////////////*/
