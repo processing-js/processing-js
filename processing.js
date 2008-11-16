@@ -518,16 +518,16 @@ function buildProcessing( curElement ){
       
       // Get RGBA values for Color 1 to floats
       var colors1 = p.color(c1).split(",");
-      var r1 = parseFloat( colors1[0].split("(")[1] ); 
-      var g1 = parseFloat( colors1[1] );
-      var b1 = parseFloat( colors1[2] );
+      var r1 = parseInt( colors1[0].split("(")[1] ); 
+      var g1 = parseInt( colors1[1] );
+      var b1 = parseInt( colors1[2] );
       var a1 = parseFloat( colors1[3].split(")")[0] );
     
       // Get RGBA values for Color 2 to floats
       var colors2 = p.color(c2).split(",");
-      var r2 = parseFloat( colors2[0].split("(")[1] ); 
-      var g2 = parseFloat( colors2[1] );
-      var b2 = parseFloat( colors2[2] );
+      var r2 = parseInt( colors2[0].split("(")[1] ); 
+      var g2 = parseInt( colors2[1] );
+      var b2 = parseInt( colors2[2] );
       var a2 = parseFloat( colors2[3].split(")")[0] );
                         
       // Return lerp value for each channel, INT for color, Float for Alpha-range
@@ -1563,13 +1563,25 @@ function buildProcessing( curElement ){
     if ( curEllipseMode == p.RADIUS ) {
       width *= 2;
       height *= 2;
-    }
+    }     
     
     var offsetStart = 0;
     
     // Shortcut for drawing a circle
-    if ( width == height )
+    if ( width == height ) {
       curContext.arc( x - offsetStart, y - offsetStart, width / 2, 0, Math.PI * 2, false );
+    } else {
+      var w = width/2;
+      var h = height/2;
+      var C = 0.5522847498307933;
+      var c_x = C * w;
+      var c_y = C * h;
+      curContext.moveTo(x+w, y);
+      curContext.bezierCurveTo(x+w, y-c_y, x+c_x, y-h, x, y-h);
+      curContext.bezierCurveTo(x-c_x, y-h, x-w, y-c_y, x-w, y);
+      curContext.bezierCurveTo(x-w, y+c_y, x-c_x, y+h, x, y+h);
+      curContext.bezierCurveTo(x+c_x, y+h, x+w, y+c_y, x+w, y);
+    }
   
     if ( doFill )
       curContext.fill();
