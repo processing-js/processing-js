@@ -17,16 +17,7 @@ this.Processing = function Processing( aElement, aCode) {
     
   var p = buildProcessing( aElement );  
   
-  // Quick bit of code to allow a C style include. Reason?:
-  // Burst Engine - My animation functions that make my tasks WAY easier!
-  /*
-  if (aCode.substring(0,3) == "# <"){
-    var include = aCode.substring( 3, aCode.indexOf( ">" ) );
-    aCode = aCode.substring( aCode.indexOf("\n"), aCode.length );
-    aCode = aCode + $.ajax({type: "GET", url: include, async: false, cache: false}).responseText;
-    console.log(aCode);  
-  } 
-  */
+  // Burst Engine - My animation functions that make my tasks WAY easier!  
   aCode = aCode + $.ajax({type: "GET", url: "../pro/burstEngine.pro", async: false, cache: false}).responseText;       
   
   if ( aCode )
@@ -732,13 +723,11 @@ function buildProcessing( curElement ){
   };
 
   p.println = function println(text){    
-    if (p.curConsole<1){ // Create console window for print() and println() functions.... only works in FireFox - F1LT3R  
-      curElement.parentNode.insertBefore(document.createElement('div'), curElement.nextSibling);
-      curElement.nextSibling.className="console";
-      curElement.nextSibling.innerHTML=curElement.nextSibling.innerHTML+"<strong class='console'>Console:<br/>";          
-      p.curConsole=1;
-    }            
-    curElement.nextSibling.innerHTML=curElement.nextSibling.innerHTML+text+"<br/>";
+    console.log(text);
+  };
+
+  p.print = function print(text){    
+    console.log(text);
   };
 
   p.loadFont = function loadFont( name ) {
@@ -1431,18 +1420,18 @@ function buildProcessing( curElement ){
     }
     */
     p.get = function get( x, y ) {
-    if ( arguments.length == 0 ) {
-      var c = p.createGraphics( p.width, p.height );
-      c.image( curContext, 0, 0 );
-      return c;
-    }
-
-    if ( !getLoaded ) {
-      getLoaded = buildImageObject( curContext.getImageData(0, 0, p.width, p.height) );
-    }
-
-    return getLoaded.get( x, y );
-  };
+      if ( arguments.length == 0 ) {
+        var c = p.createGraphics( p.width, p.height );
+        c.image( curContext, 0, 0 );
+        return c;
+      }
+  
+      if ( !getLoaded ) {
+        getLoaded = buildImageObject( curContext.getImageData(0, 0, p.width, p.height) );
+      }
+  
+      return getLoaded.get( x, y );
+    };
 
   p.set = function set( x, y, obj ) {
     if ( obj && obj.img ) {
@@ -1618,7 +1607,7 @@ function buildProcessing( curElement ){
       data[pos] = parseInt(c[1]);
       data[pos+1] = parseInt(c[2]);
       data[pos+2] = parseInt(c[3]);
-      data[pos+3] = parseFloat(c[4]) * 100;
+      data[pos+3] = parseFloat(c[4]) * 255; // changed to 255 - F1LT3R 08.11.15
       pos += 4;
     }
 
@@ -1801,6 +1790,7 @@ function buildProcessing( curElement ){
     10.04.08 - vertex() - Removed a line from 6 arguments bezierVertex() call as the shape count was being set to 0 and tripping out the loop. More details here: http://github.com/jeresig/processing-js/wikis/filled-shapes-using-beziervertex
     10.17.08 - keydown - Added Processing keyCodes for arrow keys. (only checked on PC)
     10.17.08 - mousedown - Translated Mousedowns into a generic input stack that is too high in value to conflict with keyCodes or mouseButtons.
+    11.15.08 - updatePixels() - The alpha range was wrong. It's 255 not 100. Someone was up late :P
         
   PROCESSING FUNCTIONS ADDED
   --------------------------        
