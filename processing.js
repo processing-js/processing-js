@@ -17,8 +17,10 @@ this.Processing = function Processing( aElement, aCode) {
     
   var p = buildProcessing( aElement );  
   
-  // Burst Engine - My animation functions that make my tasks WAY easier!  
-  aCode = aCode + $.ajax({type: "GET", url: "../pro/burstEngine.pro", async: false, cache: false}).responseText;       
+  // Burst Engine - A Processing CSS-like animation engine I'm building. 
+  if (aCode.substr(2,11) == 'burstEngine'){
+      aCode = aCode.split("//burstEngine")[1] + $.ajax({type: "GET", url: "../pro/burstEngine.pro", async: false, cache: false}).responseText;
+  }       
   
   if ( aCode )
     p.init( aCode );
@@ -465,7 +467,6 @@ function buildProcessing( curElement ){
 
       aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
     } else if ( typeof aValue1 == "string" ) {
-      //alert("string col");
       aColor = aValue1;
 
       if ( arguments.length == 2 ) {
@@ -1324,7 +1325,7 @@ function buildProcessing( curElement ){
   function verifyChannel(aColor){
     if(aColor.constructor == Array){    
       return aColor;
-    } else {      
+    } else {
       return p.color(aColor);
     }
   }
