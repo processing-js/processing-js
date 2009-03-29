@@ -17,10 +17,11 @@ this.Processing = function Processing( aElement, aCode) {
     
   var p = buildProcessing( aElement );  
   
-  // Burst Engine - A Processing CSS-like animation engine I'm building. 
+  // Burst Engine - A Processing CSS-like animation engine.
   if (aCode.substr(2,11) == 'burstEngine'){
       aCode = aCode.split("//burstEngine")[1] + $.ajax({type: "GET", url: "../pro/burstEngine.pro", async: false, cache: false}).responseText;
-  }       
+  } 
+        
   
   if ( aCode )
     p.init( aCode );
@@ -382,7 +383,7 @@ function buildProcessing( curElement ){
   
   // Chain - load new document into current canvas - F1LT3R
   p.chain = function chain(loadURL){
-      var chainScript = $.ajax({type: "GET", url: loadURL, async: false, cache: false}).responseText.split("\n");
+      var chainScript = $.ajax({type: "GET", url: loadURL, async: false, cache: false}).responseText;
       //console.log( chainScript );
       Processing(curElement, chainScript);          
   }
@@ -484,15 +485,15 @@ function buildProcessing( curElement ){
 
     // HSB conversion function from Mootools, MIT Licensed
     function HSBtoRGB(h, s, b) {
-      h = (h / redRange) * 100;
+      h = (h / redRange) * 360;
       s = (s / greenRange) * 100;
       b = (b / blueRange) * 100;
+      var br = Math.round(b / 100 * 255);
       if (s == 0){
-        return [b, b, b];
+        return [br, br, br];
       } else {
         var hue = h % 360;
         var f = hue % 60;
-        var br = Math.round(b / 100 * 255);
         var p = Math.round((b * (100 - s)) / 10000 * 255);
         var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
         var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
@@ -769,6 +770,85 @@ function buildProcessing( curElement ){
       curContext.restore();
     }
   };
+  
+  p.loadGlyph = function loadGlyph(glyphs){
+    p.glyphTable=glyphs;
+  }
+
+  p.glyph = function glyph(output,scaleVal,xPos,yPos){   
+    var regex=function(needle, hay){
+      var regexp=new RegExp(needle,"g");
+      var i=0;
+      var results=[];
+      while(results[i]=regexp.exec(hay)){i++;}
+      return results;
+    }     
+    var glyphWidth;
+    // Gets width of glyph to use poly-space fonts.
+    var gWid=function(gWidth){
+      if(gWidth>=glyphWidth){glyphWidth=parseFloat(gWidth);}
+    }
+    
+    curContext.save();
+    curContext.translate(xPos,yPos);
+    curContext.scale(scaleVal,scaleVal);
+    
+    // Regular expressions for SVG Paths                        
+    var pathcom = "(([a-zA-Z][ ][0-9\-\.\, ]+)|([z][ ]|[z]))"; // Finds a path command in font data
+    var findXY = "([0-9\-\.]+)";        
+
+    var com; // Draw command
+    var pv; // Position value
+    var cx, cy; // Cursor X & Y
+        
+    var lines=output.split("\n");
+    for(var hh=0; hh < lines.length; hh++){
+      output=lines[hh];
+        var lineLength=0;
+        for(var ii=0;ii<output.length;ii++){
+          for(var jj=0;jj<p.glyphTable.length;jj++){
+            if(output[ii]==p.glyphTable[jj][0]){
+              glyphWidth=0;              
+                com=regex(pathcom,p.glyphTable[jj][1]);
+                curContext.beginPath();
+                for(var kk=0;kk<com.length-1;kk++){
+                  switch(com[kk][0][0]){
+                  case "M":
+                      pv=regex(findXY,com[kk][0]);
+                      cx=pv[0][0];
+                      cy=pv[1][0];
+                      gWid(cx);
+                      curContext.moveTo(cx,cy);                  
+                      break;
+                  case "C":
+                      pv=regex(findXY,com[kk][0]);                                        
+                      cx=pv[4][0];
+                      cy=pv[5][0];
+                      curContext.bezierCurveTo(pv[0][0],pv[1][0],pv[2][0],pv[3][0],cx,cy);
+                      gWid(pv[0][0]);gWid(pv[2][0]);gWid(cx);
+                      break;
+                  case "L":                      
+                      pv=regex(findXY,com[kk][0]);
+                      cx=pv[0][0];
+                      cy=pv[1][0];
+                      gWid(pv[0][0]);
+                      curContext.lineTo(cx,cy);                                                            
+                      break;
+                  case "z":break;
+                  }
+                }
+                curContext.closePath();            
+                doFill==true?curContext.fill():0;
+                doStroke==true?curContext.stroke():0;
+                curContext.translate(glyphWidth+p.glyphTable[0][1],0);
+                lineLength=lineLength+glyphWidth+p.glyphTable[0][1];              
+            }
+          }
+        }
+        curContext.translate(-lineLength,p.glyphTable[1][1]);      
+  }
+  curContext.restore();  
+  }  
 
   p.char = function char( key ) {
     return key;
