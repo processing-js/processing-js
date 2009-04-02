@@ -1310,27 +1310,19 @@ function buildProcessing( curElement ){
     curContext.fillStyle = oldFill;
   };
 
-  /*
   p.get = function get( x, y ) {
     if ( arguments.length == 0 ) {
       var c = p.createGraphics( p.width, p.height );
       c.image( curContext, 0, 0 );
       return c;
     }
-    */
-    p.get = function get( x, y ) {
-      if ( arguments.length == 0 ) {
-        var c = p.createGraphics( p.width, p.height );
-        c.image( curContext, 0, 0 );
-        return c;
-      }
-  
-      if ( !getLoaded ) {
-        getLoaded = buildImageObject( curContext.getImageData(0, 0, p.width, p.height) );
-      }
-  
-      return getLoaded.get( x, y );
-    };
+
+    if ( !getLoaded ) {
+      getLoaded = buildImageObject( curContext.getImageData(0, 0, p.width, p.height) );
+    }
+
+    return getLoaded.get( x, y );
+  };
 
   p.set = function set( x, y, obj ) {
     if ( obj && obj.img ) {
