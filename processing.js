@@ -417,6 +417,31 @@ function buildProcessing( curElement ){
     return aColor;
   }
   
+  p.red = function( aColor ) {        
+    return parseInt( verifyChannel(aColor).slice(5) );
+  };
+
+  p.green = function( aColor ) {     
+    return parseInt( verifyChannel(aColor).split(",")[1] );
+  };
+
+  p.blue = function( aColor ) {
+    return parseInt( verifyChannel(aColor).split(",")[2] );
+  };
+
+  p.alpha = function( aColor ) {    
+    return parseInt( parseFloat(verifyChannel(aColor).split(",")[3])*255 );
+  };
+
+  function verifyChannel(aColor){
+    if(aColor.constructor == Array){    
+      return aColor;
+    } else {
+      return p.color(aColor);
+    }
+  }
+
+  
   // Added lerpColor() - F1LT3R - 08.11.14
   p.lerpColor = function lerpColor( c1, c2, amt ){
       
@@ -1195,30 +1220,6 @@ function buildProcessing( curElement ){
     var ft = x * p.PI;
     var f = (1 - p.cos(ft)) * .5;
     return  a*(1-f) + b*f;
-  }
-  
-  p.red = function( aColor ) {        
-    return parseInt( verifyChannel(aColor).slice(5) );
-  };
-
-  p.green = function( aColor ) {     
-    return parseInt( verifyChannel(aColor).split(",")[1] );
-  };
-
-  p.blue = function( aColor ) {
-    return parseInt( verifyChannel(aColor).split(",")[2] );
-  };
-
-  p.alpha = function( aColor ) {
-    return parseInt( verifyChannel(aColor).split(",")[3] );
-  };
-
-  function verifyChannel(aColor){
-    if(aColor.constructor == Array){    
-      return aColor;
-    } else {
-      return p.color(aColor);
-    }
   }
 
   p.abs = function abs( aNumber ) {
