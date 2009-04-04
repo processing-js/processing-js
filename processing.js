@@ -689,7 +689,13 @@ function buildProcessing( curElement ){
       curContext.restore();
     }
   };
-
+  
+  p.print = function print( output ){
+    alert(output);
+  }
+  
+  p.println = p.print;
+  
   p.char = function char( key ) {
     return key;
   };
