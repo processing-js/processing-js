@@ -281,7 +281,7 @@ function buildProcessing( curElement ){
   var doFill = true;
   var doStroke = true;
   var loopStarted = false;
-  var hasBackground = true;
+  var hasBackground = false;
   var doLoop = true;
   var looping = 0;
   var curRectMode = p.CORNER;
