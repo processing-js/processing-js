@@ -281,7 +281,7 @@ function buildProcessing( curElement ){
   var doFill = true;
   var doStroke = true;
   var loopStarted = false;
-  var hasBackground = false;
+  var hasBackground = true;
   var doLoop = true;
   var looping = 0;
   var curRectMode = p.CORNER;
@@ -1343,28 +1343,26 @@ function buildProcessing( curElement ){
     }
   };
   
-  p.arc = function arc( x, y, width, height, start, stop ) {
-    if ( width <= 0 )
-      return;
+  p.arc = function arc( x, y, width, height, start, stop ) {       if ( width <= 0 )
+     return;
 
-    if ( curEllipseMode == p.CORNER ) {
-      x += width / 2;
-      y += height / 2;
-    }
+   if ( curEllipseMode == p.CORNER ) {
+     x += width / 2;
+     y += height / 2;
+   }
+      curContext.moveTo( x, y );
+   curContext.beginPath();   
+   curContext.arc( x, y, curEllipseMode == p.CENTER_RADIUS ? width : width/2, start, stop, false );
 
-    curContext.moveTo( x, y );
-    curContext.beginPath();
+   if ( doStroke )
+     curContext.stroke();
 
-    curContext.arc( x, y, curEllipseMode == p.CENTER_RADIUS ? width : width/2, start, stop, false );
-                          
-    if ( doFill )
-      curContext.fill();    
-    
-    if ( doStroke )
-      curContext.stroke();
-      
-    curContext.closePath();
-      
+   curContext.lineTo( x, y );
+
+   if ( doFill )
+     curContext.fill();
+   
+   curContext.closePath();
   };
   
   p.line = function line( x1, y1, x2, y2 ) {   
