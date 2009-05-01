@@ -3,7 +3,7 @@
  * MIT Licensed
  * http://ejohn.org/blog/processingjs/
  *
- * This is a port of the Processing Visualization Language
+ * This is a port of the Processing Visualization Language.
  * More information: http://processing.org/
  */
 
@@ -212,7 +212,7 @@ var parse = Processing.parse = function parse( aCode, p ) {
   aCode = aCode.replace(new RegExp("\\((" + classes.join("|") + ")(\\[\\])?\\)", "g"), "");
   
   // Convert 3.0f to just 3.0
-  aCode = aCode.replace(/(\d+)f/g, "$1");
+  aCode = aCode.replace(/(\d+)f[^a-zA-Z0-9]/g, "$1");
 
   // Force numbers to exist
   //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
@@ -223,7 +223,7 @@ var parse = Processing.parse = function parse( aCode, p ) {
   // Convert #aaaaaa into color
   aCode = aCode.replace(/#([a-f0-9]{6})/ig, function(m, hex){
     var num = toNumbers(hex);
-    return "color(" + num[0] + "," + num[1] + "," + num[2] + ")";
+    return "DefaultColor(" + num[0] + "," + num[1] + "," + num[2] + ")";
   });
 
   function toNumbers( str ){
@@ -331,7 +331,16 @@ function buildProcessing( curElement ){
   p.height = curElement.height - 0;
 
   // The current animation frame
-  p.frameCount = 0;      
+  p.frameCount = 0;
+  
+  // Forced default color mode for #aaaaaa style
+  p.DefaultColor = function ( aValue1, aValue2, aValue3) {
+    var tmpColorMode = curColorMode;
+    curColorMode = p.RGB;
+    var c = p.color( ((aValue1 / 255) * redRange), ((aValue2 / 255) * greenRange), ((aValue3 / 255) * blueRange));
+    curColorMode = tmpColorMode;
+    return c;
+  }      
     
   p.ajax=function(url){
     if(window.XMLHttpRequest){AJAX=new XMLHttpRequest();}
