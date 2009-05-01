@@ -709,7 +709,6 @@ function buildProcessing( curElement ){
       p.printed(arguments):
       p.lnPrinted();
   };
-  
   p.print = function print(){ p.println(arguments[0])};
       
   p.char = function char( key ) {
@@ -1067,9 +1066,7 @@ function buildProcessing( curElement ){
     
     looping = setInterval(function() {
       try {
-        if (!p.paused ){
-          p.redraw();  
-        }      
+        p.redraw();    
       }
       catch(e) {
         clearInterval( looping );
