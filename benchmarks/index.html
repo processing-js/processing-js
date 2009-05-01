@@ -4,7 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=windows-1250">
 <meta name="generator" content="PSPad editor, www.pspad.com">
 <title>Processing.js Benchmarks</title>
-<script type="text/javascript" src="../processing.min.js"></script>
+<script type="text/javascript" src="../processing.js"></script>
 <script type="text/javascript">
 /*
  * This code searches for all the <script type="application/processing" target="canvasid">
@@ -45,6 +45,20 @@ if ( document.addEventListener ) {
 <body>
 <h1>Processing.js Benchmarks</h1>
 <h2>All Canvas elements should render green</h2>
+  <div><p>println()<p>
+  <script type="application/processing">
+    size(50,50);    
+    noStroke();
+    void lnPrinted(){      
+      if(ln=="fillGreen"){         
+        fill(0,255,0);
+        rect(0,0,50,50);
+      }
+    }
+    println("fillGreen");    
+  </script><canvas style="background:red;"></canvas>    
+  </div>
+  
   <div><p>background<p>
   <script type="application/processing">
     size(50,50);

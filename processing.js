@@ -307,7 +307,10 @@ function buildProcessing( curElement ){
   var curTextSize = 12;
   var curTextFont = "Arial";  
   var getLoaded = false;
-  var start = (new Date).getTime();    
+  var start = (new Date).getTime();
+  
+  // println(), print()
+  p.ln = "";
   
   // Global vars for tracking mouse position
   p.pmouseX = 0;
@@ -690,12 +693,25 @@ function buildProcessing( curElement ){
     }
   };
   
-  p.print = function print( output ){
-    alert(output);
-  }
+  // Returns a line to lnPrinted() for user handling 
+  p.lnPrinted = function lnPrinted(){};
+  p.printed = function printed(){};  
+  p.println = function println(){
+    var Caller = arguments.callee.caller.name.toString();
+    if ( arguments.length > 1 ) {
+      Caller!="print"?
+        p.ln = arguments:
+        p.ln = arguments[0];
+    } else {
+      p.ln = arguments[0];
+    }
+    Caller=="print"?        
+      p.printed(arguments):
+      p.lnPrinted();
+  };
   
-  p.println = p.print;
-  
+  p.print = function print(){ p.println(arguments[0])};
+      
   p.char = function char( key ) {
     return key;
   };
