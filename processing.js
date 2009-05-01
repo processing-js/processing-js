@@ -3,7 +3,7 @@
  * MIT Licensed
  * http://ejohn.org/blog/processingjs/
  *
- * This is a port of the Processing Visualization Language.
+ * This is a port of the Processing Visualization Language
  * More information: http://processing.org/
  */
 
