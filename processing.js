@@ -396,15 +396,15 @@ function buildProcessing( curElement ){
 
     // HSB conversion function from Mootools, MIT Licensed
     function HSBtoRGB(h, s, b) {
-      h = (h / redRange) * 100;
+      h = (h / redRange) * 360;
       s = (s / greenRange) * 100;
       b = (b / blueRange) * 100;
+      var br = Math.round(b / 100 * 255);
       if (s == 0){
-        return [b, b, b];
+        return [br, br, br];
       } else {
         var hue = h % 360;
         var f = hue % 60;
-        var br = Math.round(b / 100 * 255);
         var p = Math.round((b * (100 - s)) / 10000 * 255);
         var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
         var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
