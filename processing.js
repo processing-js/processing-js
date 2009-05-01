@@ -1075,9 +1075,7 @@ function buildProcessing( curElement ){
     
     looping = setInterval(function() {
       try {
-        if (!p.paused ){
-          p.redraw();  
-        }      
+        p.redraw();  
       }
       catch(e) {
         clearInterval( looping );
