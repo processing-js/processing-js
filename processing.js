@@ -310,7 +310,10 @@ function buildProcessing( curElement ){
   var start = (new Date).getTime();
   
   // println(), print()
-  p.ln = "";    
+  p.ln = "";
+  
+  // Glyph path storage for quick rendering  
+  p.glyphTable = {};
   
   // Global vars for tracking mouse position
   p.pmouseX = 0;
@@ -664,17 +667,38 @@ function buildProcessing( curElement ){
   };
 
   p.loadFont = function loadFont( name ) {
-    return {
+    if(name.indexOf(".svg")==-1){
+      return {
+        name: name,
+        width: function( str ) {
+          if ( curContext.mozMeasureText )
+            return curContext.mozMeasureText( typeof str == "number" ?
+              String.fromCharCode( str ) :
+              str) / curTextSize;
+          else
+            return 0;
+        }
+      };
+    }else{// If the font is a glyph, calculate by SVG table 
+      var font=p.loadGlyphs(name);
+      return {
       name: name,
+      glyph: true,
+      units_per_em: font.units_per_em,
+      horiz_adv_x: font.horiz_adv_x,
+      ascent: font.ascent,
+      descent: font.descent,
       width: function( str ) {
-        if ( curContext.mozMeasureText )
-          return curContext.mozMeasureText( typeof str == "number" ?
-            String.fromCharCode( str ) :
-            str) / curTextSize;
-        else
-          return 0;
+        var width=0;
+        var len = str.length;
+        for(var i=0;i < len;i++){                          
+          try{width+=parseFloat(p.glyphLook(p.glyphTable[name],str[i]).horiz_adv_x);}
+          catch(e){;}
+        }
+        return width/p.glyphTable[name].units_per_em;
+        }
       }
-    };
+    }
   };
 
   p.textFont = function textFont( name, size ) {
@@ -690,17 +714,226 @@ function buildProcessing( curElement ){
 
   p.textAlign = function textAlign(){};
 
+  p.glyphLook = function glyphLook(font,chr){
+    try{
+      switch(chr){
+        case "1":return font["one"];break;
+        case "2":return font["two"];break;
+        case "3":return font["three"];break;
+        case "4":return font["four"];break;
+        case "5":return font["five"];break;
+        case "6":return font["six"];break;
+        case "7":return font["seven"];break;
+        case "8":return font["eight"];break;
+        case "9":return font["nine"];break;
+        case "0":return font["zero"];break;
+        case " ":return font["space"];break;
+        case "$":return font["dollar"];break;
+        case "!":return font["exclam"];break;
+        case '"':return font["quotedbl"];break;
+        case "#":return font["numbersign"];break;
+        case "%":return font["percent"];break;
+        case "&":return font["ampersand"];break;
+        case "'":return font["quotesingle"];break;
+        case "(":return font["parenleft"];break;
+        case ")":return font["parenright"];break;
+        case "*":return font["asterisk"];break;
+        case "+":return font["plus"];break;
+        case ",":return font["comma"];break;
+        case "-":return font["hyphen"];break;
+        case ".":return font["period"];break;
+        case "/":return font["slash"];break;
+        case "_":return font["underscore"];break;
+        case ":":return font["colon"];break;
+        case ";":return font["semicolon"];break;
+        case "<":return font["less"];break;
+        case "=":return font["equal"];break;
+        case ">":return font["greater"];break;
+        case "?":return font["question"];break;
+        case "@":return font["at"];break;
+        case "[":return font["bracketleft"];break;
+        case "\\":return font["backslash"];break;
+        case "]":return font["bracketright"];break;
+        case "^":return font["asciicircum"];break;
+        case "`":return font["grave"];break;
+        case "{":return font["braceleft"];break;
+        case "|":return font["bar"];break;
+        case "}":return font["braceright"];break;
+        case "~":return font["asciitilde"];break;
+        default:return font[chr]; break;
+      }
+    }catch(e){;}
+  }
+  
   p.text = function text( str, x, y ) {
-    if ( str && curContext.mozDrawText ) {
-      curContext.save();
-      curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-      curContext.translate(x, y);
-      curContext.mozDrawText( typeof str == "number" ?
-        String.fromCharCode( str ) :
-        str );
+    if(!curTextFont.glyph){
+      if ( str && curContext.mozDrawText ) {
+        curContext.save();
+        curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+        curContext.translate(x, y);
+        curContext.mozDrawText( typeof str == "number" ?
+          String.fromCharCode( str ) :
+          str );
+        curContext.restore();
+      }
+    }else{
+      var font=p.glyphTable[curTextFont.name];
+        curContext.save();
+        curContext.translate(x,y+curTextSize);
+        var upem = font["units_per_em"];
+        var newScale=1/upem*curTextSize;
+        curContext.scale(newScale,newScale);
+        var len = str.length;
+        for(var i=0;i < len;i++){
+          try{p.glyphLook(font,str[i]).draw();}
+          catch(e){;}
+        }
       curContext.restore();
     }
   };
+  
+  
+  // Load Batik SVG Fonts and parse to pre-def objects for quick rendering - F1LT3R 
+  p.loadGlyphs=function loadGlyph(url){
+      // SJAX SVG as XML D.O.
+      var loadXML=function loadXML(){
+        try{var xmlDoc=new ActiveXObject("Microsoft.XMLDOM");}
+        catch(e){try{xmlDoc=document.implementation.createDocument("","",null);}
+        catch(e){p.println(e.message);return;}}
+          try{// Firefox, Mozilla, Opera, etc.
+            xmlDoc.async=false;
+            xmlDoc.load(url);
+            parse(xmlDoc.getElementsByTagName("svg")[0]);
+            }
+          catch(e){try{// Google Chrome, Safari etc.
+             try{console.log(e)}catch(e){alert(e);}
+             var xmlhttp = new window.XMLHttpRequest();
+             xmlhttp.open("GET",url,false);
+             xmlhttp.send(null);
+             parse(xmlhttp.responseXML.documentElement);
+            }catch(e){}
+          }
+      }
+      
+      // Return arrays of SVG commands and coords
+      var regex=function regex(needle,hay){
+        var regexp=new RegExp(needle,"g");
+        var i=0;
+        var results=[];
+        while(results[i]=regexp.exec(hay)){i++;}
+        return results;
+      }        
+      
+      // Parse SVG font-file
+      var parse=function parse(svg){
+        
+        // Store font attributes
+        var font=svg.getElementsByTagName("font");
+        p.glyphTable[url]["horiz_adv_x"]=font[0].getAttribute("horiz-adv-x");      
+        var font_face=svg.getElementsByTagName("font-face")[0];                  
+        p.glyphTable[url]["units_per_em"]=parseFloat(font_face.getAttribute("units-per-em"));
+        p.glyphTable[url]["ascent"]=parseFloat(font_face.getAttribute("ascent"));
+        p.glyphTable[url]["descent"]=parseFloat(font_face.getAttribute("descent"));          
+        
+        var getXY = "[0-9\-]+";
+        var glyph = svg.getElementsByTagName("glyph");
+        
+        // Loop through each glyph in the SVG
+        var len = glyph.length;
+        for(var i=0;i < len;i++){
+          
+          // Store attributes for this glyph
+          var unicode = glyph[i].getAttribute("unicode");
+          var name = glyph[i].getAttribute("glyph-name");
+          var horiz_adv_x = glyph[i].getAttribute("horiz-adv-x");
+          if(horiz_adv_x==null){var horiz_adv_x=p.glyphTable[url]['horiz_adv_x'];}
+          
+          var buildPath = function buildPath(d){ 
+            var c = regex("[A-Za-z][0-9\- ]+|Z",d);                                                    
+            // Begin storing path object 
+            var path="var path={draw:function(){curContext.beginPath();";//curContext.beginPath();
+            // Loop through SVG commands translating to canvas eqivs functions in path object
+            var x=0,y=0,cx=0,cy=0,nx=0,ny=0,d=0,a=0,lastCom="";
+            var lenC = c.length-1;
+            for(var j=0;j < lenC;j++){
+              var com=c[j][0];
+              var xy=regex(getXY,com);
+              switch(com[0]){            
+                case "M"://curContext.moveTo(x,-y);
+                  x=parseFloat( xy[0][0] );
+                  y=parseFloat( xy[1][0] );              
+                  path+="curContext.moveTo("+(x)+","+(-y)+");";
+                  break;
+                case "L"://curContext.lineTo(x,-y);
+                  x=parseFloat( xy[0][0] );
+                  y=parseFloat( xy[1][0] );
+                  path+="curContext.lineTo("+(x)+","+(-y)+");";
+                  break;
+                case "H"://curContext.lineTo(x,-y)
+                  x=parseFloat( xy[0][0] );
+                  path+="curContext.lineTo("+(x)+","+(-y)+");";
+                  break;
+                case "V"://curContext.lineTo(x,-y);
+                  y=parseFloat( xy[0][0] );              
+                  path+="curContext.lineTo("+(x)+","+(-y)+");";
+                  break;
+                case "T"://curContext.quadraticCurveTo(cx,-cy,nx,-ny);
+                  nx=parseFloat( xy[0][0] );
+                  ny=parseFloat( xy[1][0] );
+                  if(lastCom=="Q"||lastCom=="T"){
+                    d=Math.sqrt(Math.pow(x-cx,2)+Math.pow(cy-y,2));
+                    a=Math.PI+Math.atan2(cx-x,cy-y);
+                    cx=x+(Math.sin(a)*(d));
+                    cy=y+(Math.cos(a)*(d));
+                  }else{cx=x;cy=y;}       
+                  path+="curContext.quadraticCurveTo("+(cx)+","+(-cy)+","+(nx)+","+(-ny)+");";
+                  x=nx;y=ny;
+                  break; 
+                case "Q"://curContext.quadraticCurveTo(cx,-cy,nx,-ny);
+                  cx=parseFloat( xy[0][0] );
+                  cy=parseFloat( xy[1][0] );
+                  nx=parseFloat( xy[2][0] );
+                  ny=parseFloat( xy[3][0] );  
+                  path+="curContext.quadraticCurveTo("+(cx)+","+(-cy)+","+(nx)+","+(-ny)+");";              
+                  x=nx;y=ny;
+                  break;
+                case "Z"://curContext.closePath();
+                  path+="curContext.closePath();";
+                  break;
+              }
+              lastCom=com[0];
+            }
+            path+="curContext.translate("+(horiz_adv_x)+",0);";
+            path+="curContext.stroke();curContext.fill();}}";//curContext.stroke();//curContext.fill();
+            return path;
+          }
+          
+          // Split path commands in glpyh          
+          var d=glyph[i].getAttribute("d");
+          if(d!==undefined){
+            var path=buildPath(d);
+            eval(path);
+            // Store glyph data to table object
+            p.glyphTable[url][name]={
+              name:name,
+              unicode:unicode,
+              horiz_adv_x:horiz_adv_x,
+              draw:path.draw
+            }
+          }                  
+        } // finished adding glyphs to table
+      }
+      
+      // Create a new object in glyphTable to store this font
+      p.glyphTable[url]={};
+      
+      // Begin loading the Batik SVG font... 
+      loadXML(url);
+      
+      // Return the loaded font for attribute grabbing
+      return p.glyphTable[url];
+  }
+  
   
   // Returns a line to lnPrinted() for user handling 
   p.lnPrinted = function lnPrinted(){};
