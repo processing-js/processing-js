@@ -1743,6 +1743,10 @@ function buildProcessing( curElement ){
     curContext.closePath();
   };
 
+  p.cursor = function(mode){
+    document.body.style.cursor=mode;
+  }
+
   p.link = function( href, target ) {
     window.location = href;
   };
