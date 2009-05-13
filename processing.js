@@ -321,8 +321,10 @@ function buildProcessing( curElement ){
   p.mouseX = 0;
   p.mouseY = 0;
   p.mouseButton = 0;
+  p.mouseDown = false;
 
   // Will be replaced by the user, most likely
+  p.mouseClicked = undefined;
   p.mouseDragged = undefined;
   p.mouseMoved = undefined;
   p.mousePressed = undefined;
@@ -1844,7 +1846,7 @@ function buildProcessing( curElement ){
 
       if ( p.mouseMoved ) {
         p.mouseMoved();
-      }      
+      }
 
       if ( mousePressed && p.mouseDragged ) {
         p.mouseDragged();
@@ -1853,13 +1855,13 @@ function buildProcessing( curElement ){
     
     attach( curElement, "mousedown", function(e) {
       mousePressed = true;
-      
-      // 10.17.08 - mousedown - Made mouse compatible with updated keyCode function 
       switch(e.which){
         case 1: p.mouseButton = p.LEFT; break;
         case 2: p.mouseButton = p.CENTER; break;
         case 3: p.mouseButton = p.RIGHT; break; 
       }
+      
+      p.mouseDown = true;
       
       if ( typeof p.mousePressed == "function" ) {
         p.mousePressed();
@@ -1875,7 +1877,11 @@ function buildProcessing( curElement ){
 
     attach( curElement, "mouseup", function(e) {
       mousePressed = false;
-
+      
+      if ( p.mouseClicked ) {
+        p.mouseClicked();
+      }
+      
       if ( typeof p.mousePressed != "function" ) {
         p.mousePressed = false;
       }
