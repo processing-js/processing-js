@@ -1850,7 +1850,11 @@ function buildProcessing( curElement ){
 
       if ( mousePressed && p.mouseDragged ) {
         p.mouseDragged();
-      }      
+      }    
+    });
+    
+    attach( curElement, "mouseout", function(e) {
+      p.cursor("auto");
     });
     
     attach( curElement, "mousedown", function(e) {
@@ -1896,18 +1900,17 @@ function buildProcessing( curElement ){
 
       p.key = e.keyCode + 32;
       
-      // 10.17.08 - keydown - Added Processing keyCodes for arrow keys. (only checked on PC)
       var i; 
       for (i=0; i < p.codedKeys.length; i++){                                        
-          if (p.key == p.codedKeys[i]){            
+          if (p.key == p.codedKeys[i]){
             switch(p.key){
             case 70: p.keyCode = p.UP; break;
             case 71: p.keyCode = p.RIGHT; break;
             case 72: p.keyCode = p.DOWN; break;
             case 69: p.keyCode = p.LEFT; break;          
             }
-            p.key=p.CODED;            
-          }          
+            p.key=p.CODED;
+          }
       }
 
       if ( e.shiftKey ) {
