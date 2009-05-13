@@ -906,7 +906,9 @@ function buildProcessing( curElement ){
               lastCom=com[0];
             }
             path+="curContext.translate("+(horiz_adv_x)+",0);";
-            path+="curContext.stroke();curContext.fill();}}";//curContext.stroke();//curContext.fill();
+            doStroke?path+="curContext.stroke();":0;
+            doFill?path+="curContext.fill();":0;
+            path+="}}";
             return path;
           }
           
