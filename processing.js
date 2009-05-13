@@ -687,7 +687,7 @@ function buildProcessing( curElement ){
       name: name,
       glyph: true,
       units_per_em: font.units_per_em,
-      horiz_adv_x: font.horiz_adv_x,
+      horiz_adv_x: 1/font.units_per_em*font.horiz_adv_x,
       ascent: font.ascent,
       descent: font.descent,
       width: function( str ) {
