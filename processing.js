@@ -48,7 +48,10 @@ var parse = Processing.parse = function parse( aCode, p ) {
       return "Processing." + name + " = function " + name + args;
     }
   });
-
+    
+  // Attach import() to p{} bypassing JS command, allowing for extrernal library loading
+  aCode = aCode.replace(/import \(|import\(/g, "p.import(");
+  
   // Force .length() to be .length
   aCode = aCode.replace(/\.length\(\)/g, ".length");
 
@@ -116,6 +119,7 @@ var parse = Processing.parse = function parse( aCode, p ) {
       // and force var foo; to become this.foo = null;
       vars
         .replace(/,\s?/g, ";\n  this.")
+        .replace(/\b(var |final |public )+\s*/g, "this.")
         .replace(/\b(var |final |public )+\s*/g, "this.")
         .replace(/this.(\w+);/g, "this.$1 = null;") + 
         (extend ? "extendClass(this, " + extend + ");\n" : "") +
@@ -243,6 +247,9 @@ function buildProcessing( curElement ){
             
   var p = {};
   
+  // Eval imported libraries  
+  //for( var i = 0; var len = libs
+  
   // init
   p.PI = Math.PI;
   p.TWO_PI = 2 * p.PI;
@@ -263,7 +270,7 @@ function buildProcessing( curElement ){
   p.CORNERS = 10;
   p.CLOSE = true;
   p.RGB = 1;
-  p.HSB = 2;
+  p.HSB = 2;  
 
   // mouseButton constants: values adjusted to come directly from e.which
   // CONFLICT: LEFT and RIGHT are keyboard values in Processing already. - F1lT3R         
@@ -305,7 +312,7 @@ function buildProcessing( curElement ){
   var curColorMode = p.RGB;
   var curTint = -1;
   var curTextSize = 12;
-  var curTextFont = "Arial";  
+  var curTextFont = "Arial";
   var getLoaded = false;
   var start = (new Date).getTime();
   
@@ -358,7 +365,11 @@ function buildProcessing( curElement ){
        AJAX.send(null);
        return AJAX.responseText;
     }else{return false;}
-  }              
+  }
+  
+  p.import = function import(lib){
+    eval(p.ajax(lib)); 
+  }
   
   // Load a file or URL into strings     
   p.loadStrings = function loadStrings(url) {
