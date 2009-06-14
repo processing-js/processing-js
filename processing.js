@@ -50,7 +50,7 @@ var parse = Processing.parse = function parse( aCode, p ) {
   });
     
   // Attach import() to p{} bypassing JS command, allowing for extrernal library loading
-  aCode = aCode.replace(/import \(|import\(/g, "p.import(");
+  aCode = aCode.replace(/import \(|import\(/g, "p.Import(");
   
   // Force .length() to be .length
   aCode = aCode.replace(/\.length\(\)/g, ".length");
@@ -367,8 +367,8 @@ function buildProcessing( curElement ){
     }else{return false;}
   }
   
-  p.import = function import(lib){
-    eval(p.ajax(lib)); 
+  p.Import=function Import(lib){
+    eval(p.ajax(lib));
   }
   
   // Load a file or URL into strings     
