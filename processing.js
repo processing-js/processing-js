@@ -864,7 +864,7 @@ function buildProcessing( curElement ){
           var buildPath = function buildPath(d){ 
             var c = regex("[A-Za-z][0-9\- ]+|Z",d);                                                    
             // Begin storing path object 
-            var path="var path={draw:function(){curContext.beginPath();";//curContext.beginPath();
+            var path="var path={draw:function(){curContext.beginPath();curContext.save();";//curContext.beginPath();
             // Loop through SVG commands translating to canvas eqivs functions in path object
             var x=0,y=0,cx=0,cy=0,nx=0,ny=0,d=0,a=0,lastCom="";
             var lenC = c.length-1;
@@ -916,9 +916,10 @@ function buildProcessing( curElement ){
               }
               lastCom=com[0];
             }
-            path+="curContext.translate("+(horiz_adv_x)+",0);";
             path+="doStroke?curContext.stroke():0;";
             path+="doFill?curContext.fill():0;";
+            path+="curContext.restore();";
+            path+="curContext.translate("+(horiz_adv_x)+",0);";            
             path+="}}";
             return path;
           }
