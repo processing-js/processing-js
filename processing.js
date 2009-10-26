@@ -1,10 +1,10 @@
 /*
  * Processing.js - John Resig (http://ejohn.org/)
  * MIT Licensed
- * http://ejohn.org/blog/processingjs/
+ * http://processingjs.org/
  *
  * This is a port of the Processing Visualization Language.
- * More information: http://processingjs.org/
+ * More information: http://processing.org/
  */
 
 
@@ -1788,7 +1788,7 @@
           
           // Store font attributes
           var font = svg.getElementsByTagName( "font" );
-          p.glyphTable[ url ][ "horiz_adv_x" ] = font[ 0 ].getAttribute( "horiz-adv-x" );      
+          p.glyphTable[ url ][ "horiz_adv_x"  ] = font[ 0 ].getAttribute( "horiz-adv-x" );      
           
           var font_face = svg.getElementsByTagName( "font-face" )[ 0 ];                  
           p.glyphTable[ url ][ "units_per_em" ] = parseFloat( font_face.getAttribute( "units-per-em") );
