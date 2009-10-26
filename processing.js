@@ -1,12 +1,18 @@
 /*
- * Processing.js - John Resig (http://ejohn.org/)
- * MIT Licensed
- * http://processingjs.org/
- *
- * This is a port of the Processing Visualization Language.
- * More information: http://processing.org/
- *
- */
+
+  P R O C E S S I N G . J S
+  a port of the Processing visualization language
+  
+  License       : MIT 
+  Developer     : John Resig - eJohn.org
+  Web Site      : http://processingjs.org  
+  Java Version  : http://processing.org
+  Github        : http://github.com/jeresig/processing-js
+  Mozilla POW!  : http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
+  Maintained by : F1LT3R & the students of Open Seneca...
+                  http://zenit.senecac.on.ca/wiki/index.php/Processing.js
+  
+*/
 
 
 (function(){
