@@ -1,7 +1,7 @@
 /*
 
-  P R O C E S S I N G . J S
-  a port of the Processing visualization language
+  Processing.js  
+    a port of the Processing visualization language
   
   License       : MIT 
   Developer     : John Resig - eJohn.org
@@ -11,7 +11,7 @@
   Mozilla POW!  : http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
   Maintained by : F1LT3R & the students of Open Seneca...
                   http://zenit.senecac.on.ca/wiki/index.php/Processing.js
-  
+
 */
 
 
