@@ -28,7 +28,21 @@
     return p;
     
   };
-
+  
+  // Auto-load Processing sketches
+  addEventListener( 'DOMContentLoaded', USInit, false );
+  
+  // IE Unfriendly AJAX Method
+  var ajax=function( url ){
+    var AJAX;
+    if( AJAX = new XMLHttpRequest() ){
+      AJAX.open( "GET", url, false );
+      AJAX.send( null );
+      return AJAX.responseText;
+    }else{
+      return false;
+    }
+  }
  
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   var parse = Processing.parse = function parse( aCode, p ){
@@ -189,7 +203,7 @@
             leftCount = 1,
             rightCount = 0;
         
-	      while( leftCount != rightCount ) {
+        while( leftCount != rightCount ) {
         
         var nextLeft  = rest.indexOf( "{" ),
             nextRight = rest.indexOf( "}" );
@@ -250,32 +264,32 @@
 
 
   // Attach Processing functions to 'p' 
-  function buildProcessing( curElement ){        
+  function buildProcessing( curElement ){
               
     // Create the 'p' object
     var p = {};
     
     // Set Processing defaults / environment variables
-    p.PI 							= Math.PI;
-    p.TWO_PI 					= 2 * p.PI;
-    p.HALF_PI 				= p.PI / 2;
-    p.P3D 						= 3;
-    p.CORNER 					= 0;
-    p.RADIUS 					= 1;
-    p.CENTER_RADIUS 	= 1;
-    p.CENTER 					= 2;
-    p.POLYGON 				= 2;
-    p.QUADS 					= 5;
-    p.TRIANGLES 			= 6;
-    p.POINTS 					= 7;
-    p.LINES 					= 8;
-    p.TRIANGLE_STRIP 	= 9;
-    p.TRIANGLE_FAN 		= 4;
-    p.QUAD_STRIP 		 	= 3;
-    p.CORNERS 			 	= 10;
-    p.CLOSE 					= true;
-    p.RGB 						= 1;
-    p.HSB 						= 2;  
+    p.PI              = Math.PI;
+    p.TWO_PI          = 2 * p.PI;
+    p.HALF_PI         = p.PI / 2;
+    p.P3D             = 3;
+    p.CORNER          = 0;
+    p.RADIUS          = 1;
+    p.CENTER_RADIUS   = 1;
+    p.CENTER          = 2;
+    p.POLYGON         = 2;
+    p.QUADS           = 5;
+    p.TRIANGLES       = 6;
+    p.POINTS          = 7;
+    p.LINES           = 8;
+    p.TRIANGLE_STRIP  = 9;
+    p.TRIANGLE_FAN    = 4;
+    p.QUAD_STRIP      = 3;
+    p.CORNERS         = 10;
+    p.CLOSE           = true;
+    p.RGB             = 1;
+    p.HSB             = 2;  
 
     // KeyCode table  
     p.CENTER  = 88888880;
@@ -289,43 +303,44 @@
     p.codedKeys = [ 69, 70, 71, 72  ];
 
     // "Private" variables used to maintain state
-    var curContext 			= curElement.getContext( "2d" ),
-    		doFill 					= true,
-    		doStroke 				= true,
-    		loopStarted 		= false,
-    		hasBackground 	= false,
-    		doLoop 					= true,
-    		looping 				= 0,
-    		curRectMode 		= p.CORNER,
-    		curEllipseMode 	= p.CENTER,
-    		inSetup 				= false,
-    		inDraw 					= false,
-    		curBackground 	= "rgba( 204, 204, 204, 1 )",
-    		curFrameRate 		= 1000,
-    		curMsPerFrame		= 1,
-    		curShape 				= p.POLYGON,
-    		curShapeCount 	= 0,
-    		curvePoints 		= [],
-    		curTightness 		= 0,
-    		opacityRange 		= 255,
-    		redRange 				= 255,
-    		greenRange 			= 255,
-    		blueRange 			= 255,
-    		pathOpen 				= false,
-    		mousePressed 		= false,
-    		keyPressed 			= false,
-    		curColorMode 		= p.RGB;
-    		curTint 				= - 1,
-    		curTextSize 		= 12,
-    		curTextFont 		= "Arial",
-    		getLoaded 			= false,
-    		start 					= ( new Date ).getTime(),
-    		firstX,
-    		firstY,
-    		secondX,
-    		secondY,
-    		prevX,
-    		prevY;
+    var curContext      = curElement.getContext( "2d" ),
+        doFill          = true,
+        doStroke        = true,
+        loopStarted     = false,
+        hasBackground   = false,
+        doLoop          = true,
+        looping         = 0,
+        curRectMode     = p.CORNER,
+        curEllipseMode  = p.CENTER,
+        inSetup         = false,
+        inDraw          = false,
+        curBackground   = "rgba( 204, 204, 204, 1 )",
+        curFrameRate    = 1000,
+        curMsPerFrame   = 1,
+        curShape        = p.POLYGON,
+        curShapeCount   = 0,
+        curvePoints     = [],
+        curTightness    = 0,
+        opacityRange    = 255,
+        redRange        = 255,
+        greenRange      = 255,
+        blueRange       = 255,
+        pathOpen        = false,
+        mousePressed    = false,
+        keyPressed      = false,
+        curColorMode    = p.RGB;
+        curTint         = - 1,
+        curTextSize     = 12,
+        curTextFont     = "Arial",
+        getLoaded       = false,
+        start           = ( new Date ).getTime();
+
+    var firstX,
+        firstY,
+        secondX,
+        secondY,
+        prevX,
+        prevY;
     
     // Store a line for println(), print() handline
     p.ln = "";
@@ -334,12 +349,12 @@
     p.glyphTable = {};
     
     // Global vars for tracking mouse position
-    p.pmouseX 		= 0;
-    p.pmouseY 		= 0;
-    p.mouseX 			= 0;
-    p.mouseY 			= 0;
+    p.pmouseX     = 0;
+    p.pmouseY     = 0;
+    p.mouseX      = 0;
+    p.mouseY      = 0;
     p.mouseButton = 0;
-    p.mouseDown 	= false;
+    p.mouseDown   = false;
 
     // Undefined event handlers to be replaced by user when needed
     p.mouseClicked = undefined;
@@ -362,7 +377,7 @@
     
 
     ////////////////////////////////////////////////////////////////////////////
-		// Array handling
+    // Array handling
     ////////////////////////////////////////////////////////////////////////////
 
     p.ArrayList = function ArrayList( size, size2, size3 ){
@@ -396,7 +411,7 @@
       array.clone   = function(      ){
                                         var a = new ArrayList( size );
                                         for( var i = 0; i < size; i++ ){
-	                                      	a[ i ] = this[ i ];
+                                          a[ i ] = this[ i ];
                                         }
                                         return a;
                                       };
@@ -407,7 +422,7 @@
 
 
     ////////////////////////////////////////////////////////////////////////////
-		// Color functions
+    // Color functions
     ////////////////////////////////////////////////////////////////////////////
 
     p.color = function color( aValue1, aValue2, aValue3, aValue4 ){
@@ -493,9 +508,9 @@
       return aColor;
     }
     
-    p.red 	= function( aColor ){ return parseInt( verifyChannel( aColor ).slice( 5 ) ); };
+    p.red   = function( aColor ){ return parseInt( verifyChannel( aColor ).slice( 5 ) ); };
     p.green = function( aColor ){ return parseInt( verifyChannel( aColor ).split( "," )[ 1 ] ); };
-    p.blue 	= function( aColor ){ return parseInt( verifyChannel( aColor ).split( "," )[ 2 ] ); };
+    p.blue  = function( aColor ){ return parseInt( verifyChannel( aColor ).split( "," )[ 2 ] ); };
     p.alpha = function( aColor ){ return parseInt( parseFloat( verifyChannel( aColor ).split( "," )[ 3 ] ) * 255 ); };
 
     function verifyChannel( aColor ){ 
@@ -543,47 +558,47 @@
     
     p.colorMode = function colorMode( mode, range1, range2, range3, range4 ){
       curColorMode = mode;
-      if( arguments.length >= 4 ){ redRange   	= range1; greenRange = range2; blueRange  = range3; }
+      if( arguments.length >= 4 ){ redRange     = range1; greenRange = range2; blueRange  = range3; }
       if( arguments.length == 5 ){ opacityRange = range4; }
       if( arguments.length == 2 ){ p.colorMode( mode, range1, range1, range1, range1 ); }    
     };
     
 
     ////////////////////////////////////////////////////////////////////////////
-		// Canvas-Matrix manipulation
+    // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
 
-    p.translate		= function translate( x, y ){ curContext.translate( x, y ); 	};    
-    p.scale 			= function scale( x, y )		{ curContext.scale( x, y || x ); 	};    
-    p.rotate 			= function rotate( aAngle ) { curContext.rotate( aAngle ); 		};    
-    p.pushMatrix 	= function pushMatrix() 		{ curContext.save(); 							};
-    p.popMatrix		= function popMatrix() 			{ curContext.restore(); 					};
-    p.ortho 			= function ortho(){};
+    p.translate   = function translate( x, y ){ curContext.translate( x, y );   };    
+    p.scale       = function scale( x, y )    { curContext.scale( x, y || x );  };    
+    p.rotate      = function rotate( aAngle ) { curContext.rotate( aAngle );    };    
+    p.pushMatrix  = function pushMatrix()     { curContext.save();              };
+    p.popMatrix   = function popMatrix()      { curContext.restore();           };
+    p.ortho       = function ortho(){};
 
 
-		
-    ////////////////////////////////////////////////////////////////////////////
-		//Time based functions
-    ////////////////////////////////////////////////////////////////////////////
-
-    p.year 		= function year()	 { return ( new Date ).getYear() + 1900; 	};
-    p.month 	= function month() { return ( new Date ).getMonth(); 				};
-    p.day 		= function day() 	 { return ( new Date ).getDay(); 					};
-    p.hour 		= function hour()	 { return ( new Date ).getHours(); 				};
-    p.minute 	= function minute(){ return ( new Date ).getMinutes(); 			};
-    p.second 	= function second(){ return ( new Date ).getSeconds(); 			};
-    p.millis 	= function millis(){ return ( new Date) .getTime() - start; };
     
-    p.noLoop 	= function noLoop(){ doLoop = false; };
+    ////////////////////////////////////////////////////////////////////////////
+    //Time based functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    p.year    = function year()  { return ( new Date ).getYear() + 1900;   };
+    p.month   = function month() { return ( new Date ).getMonth();         };
+    p.day     = function day()   { return ( new Date ).getDay();           };
+    p.hour    = function hour()  { return ( new Date ).getHours();         };
+    p.minute  = function minute(){ return ( new Date ).getMinutes();       };
+    p.second  = function second(){ return ( new Date ).getSeconds();       };
+    p.millis  = function millis(){ return ( new Date ) .getTime() - start; };
+    
+    p.noLoop  = function noLoop(){ doLoop = false; };
          
     p.redraw = function redraw(){
-		  if( hasBackground ){ p.background(); }
-		  p.frameCount++;		  
-		  inDraw = true;
-		  p.pushMatrix();
-		  p.draw();
-		  p.popMatrix();
-		  inDraw = false;      
+      if( hasBackground ){ p.background(); }
+      p.frameCount++;      
+      inDraw = true;
+      p.pushMatrix();
+      p.draw();
+      p.popMatrix();
+      inDraw = false;      
     };
     
     p.loop = function loop(){
@@ -591,14 +606,14 @@
       if( loopStarted ){ return; }
       
       looping = setInterval( function(){
-		     
-		      try {
-		        					p.redraw();
-		      		}
-		      catch( e ){
-		        					clearInterval( looping );
-		        					throw e;
-		      					}
+         
+          try {
+                      p.redraw();
+              }
+          catch( e ){
+                      clearInterval( looping );
+                      throw e;
+                    }
       }, curMsPerFrame );
       
       loopStarted = true;
@@ -617,23 +632,14 @@
     
     
     ////////////////////////////////////////////////////////////////////////////
-		// MISC functions
-		////////////////////////////////////////////////////////////////////////////
+    // MISC functions
+    ////////////////////////////////////////////////////////////////////////////
     p.cursor = function(mode){ document.body.style.cursor=mode; }
     p.link = function( href, target ) { window.location = href; };
- 		p.beginDraw = function beginDraw(){};
+    p.beginDraw = function beginDraw(){};
     p.endDraw = function endDraw(){};
-    // IE Unfriendly AJAX Method
-    p.ajax=function( url ){
-      var AJAX;
-      if( AJAX = new XMLHttpRequest() ){
-        AJAX.open( "GET", url, false );
-        AJAX.send( null );
-        return AJAX.responseText;
-      }else{
-        return false;
-      }
-    }
+    
+    p.ajax = ajax;
     
     // Imports an external Processing.js library
     p.Import = function Import( lib ){
@@ -665,7 +671,7 @@
         
     // Returns a line to lnPrinted() for user handling 
     p.lnPrinted = function lnPrinted(){};
-    p.printed 	= function printed()	{};  
+    p.printed   = function printed()  {};  
     
     // Event to send output to user control function print()/println()
     p.println = function println(){
@@ -703,25 +709,25 @@
     // Math functions
     ////////////////////////////////////////////////////////////////////////////
     
-    p.sq 			= function sq			( aNumber 						){ return aNumber * aNumber; 											};
-    p.sqrt 		= function sqrt		( aNumber 						){ return Math.sqrt( aNumber ); 									};
-    p.int 		= function int		( aNumber 						){ return Math.floor( aNumber );     							};
-    p.min 		= function min		( aNumber, aNumber2 	){ return Math.min( aNumber, aNumber2 ); 					};
-    p.max 		= function max		( aNumber, aNumber2 	){ return Math.max( aNumber, aNumber2 );	 				};
-    p.floor 	= function floor	( aNumber 						){ return Math.floor( aNumber ); 									};
-    p.float 	= function float	( aNumber 						){ return parseFloat( aNumber ); 									};
-    p.ceil 		= function ceil		( aNumber 						){ return Math.ceil( aNumber ); 									};    
-    p.round 	= function round	( aNumber 						){ return Math.round( aNumber ); 									};
-		p.lerp 		= function lerp		( value1, value2, amt ){ return ( ( value2 - value1 ) * amt ) + value1; };
-	 	p.abs 		= function abs		( aNumber 						){ return Math.abs( aNumber ); 										};
-    p.cos 		= function cos		( aNumber 						){ return Math.cos( aNumber ); 										};
-    p.sin 		= function sin		( aNumber 						){ return Math.sin( aNumber ); 										};
-    p.pow 		= function pow		( aNumber, aExponent 	){ return Math.pow( aNumber, aExponent ); 				};
-    p.sqrt 		= function sqrt		( aNumber 						){ return Math.sqrt( aNumber ); 									};
-    p.atan2 	= function atan2	( aNumber, aNumber2 	){ return Math.atan2( aNumber, aNumber2 ); 				};
-    p.radians = function radians( aAngle 							){ return ( aAngle / 180 ) * p.PI; 								};
+    p.sq      = function sq     ( aNumber             ){ return aNumber * aNumber;                       };
+    p.sqrt    = function sqrt   ( aNumber             ){ return Math.sqrt( aNumber );                    };
+    p.int     = function int    ( aNumber             ){ return Math.floor( aNumber );                   };
+    p.min     = function min    ( aNumber, aNumber2   ){ return Math.min( aNumber, aNumber2 );           };
+    p.max     = function max    ( aNumber, aNumber2   ){ return Math.max( aNumber, aNumber2 );           };
+    p.floor   = function floor  ( aNumber             ){ return Math.floor( aNumber );                   };
+    p.float   = function float  ( aNumber             ){ return parseFloat( aNumber );                   };
+    p.ceil    = function ceil   ( aNumber             ){ return Math.ceil( aNumber );                    };    
+    p.round   = function round  ( aNumber             ){ return Math.round( aNumber );                   };
+    p.lerp    = function lerp   ( value1, value2, amt ){ return ( ( value2 - value1 ) * amt ) + value1;  };
+     p.abs    = function abs    ( aNumber             ){ return Math.abs( aNumber );                     };
+    p.cos     = function cos    ( aNumber             ){ return Math.cos( aNumber );                     };
+    p.sin     = function sin    ( aNumber             ){ return Math.sin( aNumber );                     };
+    p.pow     = function pow    ( aNumber, aExponent  ){ return Math.pow( aNumber, aExponent );          };
+    p.sqrt    = function sqrt   ( aNumber             ){ return Math.sqrt( aNumber );                    };
+    p.atan2   = function atan2  ( aNumber, aNumber2   ){ return Math.atan2( aNumber, aNumber2 );         };
+    p.radians = function radians( aAngle              ){ return ( aAngle / 180 ) * p.PI;                 };
 
-    p.dist = function dist( x1, y1, x2, y2 ) {
+    p.dist = function dist( x1, y1, x2, y2 ){
       return Math.sqrt( Math.pow( x2 - x1, 2 ) + Math.pow( y2 - y1, 2 ) );
     };
 
@@ -732,7 +738,7 @@
     p.Random = function(){
 
       var haveNextNextGaussian = false,
-      		nextNextGaussian;
+          nextNextGaussian;
 
       this.nextGaussian = function(){
         
@@ -764,24 +770,24 @@
     };
 
 //! This can't be right... right?
-    p.byte 		= function byte( aNumber 							){ return aNumber || 0; 													};
+    p.byte     = function byte( aNumber               ){ return aNumber || 0;                           };
 
-    p.norm 		= function norm( aNumber, low, high 	){
+    p.norm     = function norm( aNumber, low, high   ){
       var range = high-low;
       return ( ( 1 / range ) * aNumber ) - ( ( 1 / range ) * low );
     };        
     
     p.random = function random( aMin, aMax ) {
-      return arguments.length == 2 									?
-        aMin + ( Math.random() * ( aMax - aMin ) )	:
-        Math.random() * aMin												;
+      return arguments.length == 2                   ?
+        aMin + ( Math.random() * ( aMax - aMin ) )  :
+        Math.random() * aMin                        ;
     };
 
     // From: http://freespace.virgin.net/hugo.elias/models/m_perlin.htm
     p.noise = function( x, y, z ){
-      return arguments.length >= 2	?
-        PerlinNoise_2D( x, y, z )		:
-        PerlinNoise_3D( x, x, z )		;
+      return arguments.length >= 2  ?
+        PerlinNoise_2D( x, y, z )    :
+        PerlinNoise_3D( x, x, z )    ;
     };
 
     function Noise( x, y ){
@@ -792,8 +798,8 @@
 
     function SmoothedNoise( x, y ){
       var corners = ( Noise( x - 1, y - 1 ) + Noise( x + 1, y - 1 ) + Noise( x - 1, y + 1 ) + Noise( x + 1, y + 1 ) ) / 16,
-      		sides   = ( Noise( x - 1, y ) + Noise( x + 1, y ) + Noise( x, y - 1 ) + Noise( x, y + 1 ) ) / 8,
-      		center  = Noise( x, y ) / 4;
+          sides   = ( Noise( x - 1, y ) + Noise( x + 1, y ) + Noise( x, y - 1 ) + Noise( x, y + 1 ) ) / 8,
+          center  = Noise( x, y ) / 4;
       return corners + sides + center;
     };
 
@@ -805,13 +811,13 @@
       var integer_Y    = Math.floor( y );
       var fractional_Y = y - integer_Y;
 
-      var v1 = SmoothedNoise( integer_X,     integer_Y 		 ),
-      		v2 = SmoothedNoise( integer_X + 1, integer_Y 		 ),
-      		v3 = SmoothedNoise( integer_X,     integer_Y + 1 ),
-      		v4 = SmoothedNoise( integer_X + 1, integer_Y + 1 );
+      var v1 = SmoothedNoise( integer_X,     integer_Y     ),
+          v2 = SmoothedNoise( integer_X + 1, integer_Y     ),
+          v3 = SmoothedNoise( integer_X,     integer_Y + 1 ),
+          v4 = SmoothedNoise( integer_X + 1, integer_Y + 1 );
 
       var i1 = Interpolate( v1, v2, fractional_X ),
-      		i2 = Interpolate( v3, v4, fractional_X );
+          i2 = Interpolate( v3, v4, fractional_X );
 
       return Interpolate( i1, i2, fractional_Y );
       
@@ -821,8 +827,8 @@
     function PerlinNoise_2D( x, y ){
 
         var total = 0,
-        		p 		= 0.25,
-        		n 		= 3;
+            p     = 0.25,
+            n     = 3;
 
         for( var i = 0; i <= n; i++ ){
           var frequency = Math.pow( 2, i );
@@ -834,8 +840,8 @@
     }
 
     function Interpolate( a, b, x ){
-      var ft 	= x * p.PI;
-      var f 	= (1 - Math.cos( ft ) ) * .5;
+      var ft   = x * p.PI;
+      var f   = (1 - Math.cos( ft ) ) * .5;
       return  a * ( 1 - f ) + b * f;
     }
    
@@ -851,7 +857,7 @@
     
     p.size = function size( aWidth, aHeight ){    
       var fillStyle = curContext.fillStyle,
-      		strokeStyle = curContext.strokeStyle;
+          strokeStyle = curContext.strokeStyle;
 
       curElement.width = p.width = aWidth;
       curElement.height = p.height = aHeight;
@@ -866,10 +872,10 @@
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
     
-    p.noStroke 	= function noStroke()	{ doStroke = false; };    
-    p.noFill 		= function noFill()	 	{ doFill = false; 	};
-    p.smooth 		= function smooth()		{};    
-		p.noSmooth 	= function noSmooth()	{};        
+    p.noStroke   = function noStroke()  { doStroke = false; };    
+    p.noFill     = function noFill()    { doFill = false;   };
+    p.smooth     = function smooth()    {};
+    p.noSmooth   = function noSmooth()  {};        
     
     p.fill = function fill(){
       doFill = true;
@@ -898,14 +904,14 @@
         return new Point( x, y );
       }
     };
-		
-		p.point = function point( x, y ){
+    
+    p.point = function point( x, y ){
       var oldFill = curContext.fillStyle;
       curContext.fillStyle = curContext.strokeStyle;
       curContext.fillRect( Math.round( x ), Math.round( y ), 1, 1 );
       curContext.fillStyle = oldFill;
     };
-		
+    
     p.beginShape = function beginShape( type ){
       curShape = type;
       curShapeCount = 0; 
@@ -1102,29 +1108,29 @@
 
     p.bezierVertex = p.vertex;    
     
-    p.rectMode 		= function rectMode( aRectMode ){ curRectMode = aRectMode; };
-    p.imageMode 	= function (){};    
-    p.ellipseMode = function ellipseMode( aEllipseMode ) { curEllipseMode = aEllipseMode; };    		
-		
+    p.rectMode     = function rectMode( aRectMode ){ curRectMode = aRectMode; };
+    p.imageMode   = function (){};    
+    p.ellipseMode = function ellipseMode( aEllipseMode ) { curEllipseMode = aEllipseMode; };        
+    
     p.arc = function arc( x, y, width, height, start, stop ){
 
-			if( width <= 0 ){ return; }
+      if( width <= 0 ){ return; }
 
-			if( curEllipseMode == p.CORNER ){
-			 x += width / 2;
-			 y += height / 2;
-			}
-			
-			curContext.moveTo( x, y );
-			curContext.beginPath();   
-			curContext.arc( x, y, curEllipseMode == p.CENTER_RADIUS ? width : width/2, start, stop, false );
+      if( curEllipseMode == p.CORNER ){
+       x += width / 2;
+       y += height / 2;
+      }
+      
+      curContext.moveTo( x, y );
+      curContext.beginPath();   
+      curContext.arc( x, y, curEllipseMode == p.CENTER_RADIUS ? width : width/2, start, stop, false );
 
-			if( doStroke ){ curContext.stroke(); }
-			curContext.lineTo( x, y );
+      if( doStroke ){ curContext.stroke(); }
+      curContext.lineTo( x, y );
 
-			if( doFill ){ curContext.fill(); }
-			curContext.closePath();
-			
+      if( doFill ){ curContext.fill(); }
+      curContext.closePath();
+      
     };
     
     p.line = function line( x1, y1, x2, y2 ){
@@ -1194,8 +1200,8 @@
         Math.round( height ) + offsetEnd
       );
         
-      if( doFill 		){ curContext.fill(); 	}        
-      if( doStroke 	){	curContext.stroke() };
+      if( doFill     ){ curContext.fill();   }        
+      if( doStroke   ){  curContext.stroke() };
       
       curContext.closePath();
       
@@ -1225,22 +1231,22 @@
       }else{
       
         var w = width/2,
-        		h = height/2,
-        		C = 0.5522847498307933;
+            h = height/2,
+            C = 0.5522847498307933;
         var c_x = C * w,
-        		c_y = C * h;
+            c_y = C * h;
 
-//!			Do we still need this? I hope the Canvas arc() more capable by now?
+//!      Do we still need this? I hope the Canvas arc() more capable by now?
         curContext.moveTo( x + w, y );
-        curContext.bezierCurveTo( x+w	 	, 	y-c_y	, 	x+c_x , 	y-h		, 	x		, 	y-h	);
-        curContext.bezierCurveTo( x-c_x	, 	y-h		, 	x-w		, 	y-c_y , 	x-w	, 	y		);
-        curContext.bezierCurveTo( x-w		, 	y+c_y	, 	x-c_x	, 	y+h, x, 	y+h					);
-        curContext.bezierCurveTo( x+c_x	, 	y+h		, 	x+w		, 	y+c_y , 	x+w, 		y		);
+        curContext.bezierCurveTo( x+w    ,   y-c_y  ,   x+c_x  ,   y-h   ,   x    ,   y-h  );
+        curContext.bezierCurveTo( x-c_x  ,   y-h    ,   x-w    ,   y-c_y ,   x-w  ,   y    );
+        curContext.bezierCurveTo( x-w    ,   y+c_y  ,   x-c_x  ,   y+h, x,   y+h           );
+        curContext.bezierCurveTo( x+c_x  ,   y+h    ,   x+w    ,   y+c_y ,   x+w  ,   y    );
       
       }
     
-      if( doFill 		){ curContext.fill(); 	}        
-      if( doStroke	){ curContext.stroke(); }
+      if( doFill    ){ curContext.fill();   }
+      if( doStroke  ){ curContext.stroke(); }
       
       curContext.closePath();
       
@@ -1249,8 +1255,8 @@
 
 
     ////////////////////////////////////////////////////////////////////////////
-		// Raster drawing functions
-		////////////////////////////////////////////////////////////////////////////
+    // Raster drawing functions
+    ////////////////////////////////////////////////////////////////////////////
 
     p.save = function save( file ){};
 
@@ -1300,8 +1306,8 @@
       }else{
       
         var oldFill = curContext.fillStyle,
-        		color 	= obj;
-        		
+            color   = obj;
+            
         curContext.fillStyle = color;
         curContext.fillRect( Math.round( x ), Math.round( y ), 1, 1 );
         curContext.fillStyle = oldFill;
@@ -1319,26 +1325,26 @@
     p.updatePixels = function() {
     
       var colors = /(\d+),(\d+),(\d+),(\d+)/,
-      		pixels = {};
-      		
-      pixels.width 	= p.width;
+          pixels = {};
+          
+      pixels.width   = p.width;
       pixels.height = p.height;
-      pixels.data 	= [];
+      pixels.data   = [];
 
       if( curContext.createImageData ){
         pixels = curContext.createImageData( p.width, p.height );
       }
 
-      var data 	= pixels.data,
-      		pos 	= 0;
+      var data   = pixels.data,
+          pos   = 0;
 
       for( var i = 0, l = p.pixels.length; i < l; i++ ){
 
         var c = ( p.pixels[i] || "rgba(0,0,0,1)" ).match( colors );
 
-        data[ pos + 0 ] = 	parseInt( c[ 1 ] );
-        data[ pos + 1 ] = 	parseInt( c[ 2 ] );
-        data[ pos + 2 ] = 	parseInt( c[ 3 ] );
+        data[ pos + 0 ] =   parseInt( c[ 1 ] );
+        data[ pos + 1 ] =   parseInt( c[ 2 ] );
+        data[ pos + 2 ] =   parseInt( c[ 3 ] );
         data[ pos + 3 ] = parseFloat( c[ 4 ] ) * 255;
 
         pos += 4;
@@ -1376,9 +1382,9 @@
     p.clear = function clear ( x, y, width, height ) {    
       if( arguments.length == 0 ){
         curContext.clearRect( x, y, width, height );
-			}else{
-		    curContext.clearRect( 0, 0, p.width, p.height ):
-			}
+      }else{
+        curContext.clearRect( 0, 0, p.width, p.height );
+      }
     }
     
     p.AniSprite = function( prefix, frames ){    
@@ -1397,13 +1403,8 @@
         }
       };
 
-      this.getWidth = function(){
-        return getImage( this.images[ 0 ] ).width;
-      };
-
-      this.getHeight = function(){
-        return getImage( this.images[ 0 ] ).height;
-      };
+      this.getWidth   = function(){ return getImage( this.images[ 0 ] ).width;  };
+      this.getHeight  = function(){ return getImage( this.images[ 0 ] ).height; };
     };
 
     function buildImageObject( obj ){
@@ -1567,7 +1568,7 @@
 
 
     ////////////////////////////////////////////////////////////////////////////
-		// Font handling
+    // Font handling
     ////////////////////////////////////////////////////////////////////////////
     
     // Loads a font from an SVG or Canvas API
@@ -1715,8 +1716,8 @@
         curContext.save();
         curContext.translate( x, y + curTextSize );
         
-        var upem 		 = font[ "units_per_em" ],
-        		newScale = 1 / upem * curTextSize;
+        var upem      = font[ "units_per_em" ],
+            newScale = 1 / upem * curTextSize;
         
         curContext.scale( newScale, newScale );
         
@@ -1773,15 +1774,15 @@
         // Return arrays of SVG commands and coords
         var regex = function regex( needle, hay ){
           
-          var regexp 	= new RegExp( needle, "g" ),
-          		results = [],
-          		i 			= 0,
-          		
+          var regexp  = new RegExp( needle, "g" ),
+              results = [],
+              i       = 0;
+              
           while( results[ i ] = regexp.exec( hay ) ){ i++; }
           return results;
         
         }
-        
+
         // Parse SVG font-file into block of Canvas commands
         var parse = function parse( svg ){
           
@@ -1795,8 +1796,8 @@
           p.glyphTable[ url ][ "descent"      ] = parseFloat( font_face.getAttribute( "descent"     ) );          
           
           var getXY = "[0-9\-]+",
-          		glyph = svg.getElementsByTagName( "glyph" ),
-          		len 	= glyph.length;
+              glyph = svg.getElementsByTagName( "glyph" ),
+              len   = glyph.length;
 
           // Loop through each glyph in the SVG
           for( var i = 0; i < len; i++ ){
@@ -1829,7 +1830,7 @@
               for( var j = 0; j < lenC; j++ ){
                 
                 var com = c[ j ][ 0 ],
-                		xy 	= regex( getXY, com );
+                    xy   = regex( getXY, com );
        
                 switch( com[ 0 ] ){
                 
@@ -1910,7 +1911,7 @@
             var d = glyph[ i ].getAttribute( "d" );
             
             // Split path commands in glpyh 
-            if( d! == undefined ){
+            if( d !== undefined ){
             
               var path = buildPath( d );
               eval( path );
@@ -1957,33 +1958,37 @@
 
       if( object[ name ] ){
       
-        var args 	= fn.length,
-        		oldfn = object[ name ];
+        var args   = fn.length,
+            oldfn = object[ name ];
         
         object[ name ] = function(){
           
           if( arguments.length == args ){
-          	return fn.apply( this, arguments );
+
+            return fn.apply( this, arguments );
+
           }else{
-          	return oldfn.apply( this, arguments );
-         	}
+
+            return oldfn.apply( this, arguments );
+
+          }
         
         };
       
       }else{
       
-      	object[ name ] = fn;
+        object[ name ] = fn;
       
       }
     
     };
-		
-		
+    
+    
 
     ////////////////////////////////////////////////////////////////////////////
-		// Set up environment
-		////////////////////////////////////////////////////////////////////////////
-		
+    // Set up environment
+    ////////////////////////////////////////////////////////////////////////////
+    
     p.init = function init(code){
 
       p.stroke( 0 );
@@ -1997,9 +2002,9 @@
       // The fun bit!
       if( code ){
         (function( Processing ){
-        	with ( p ){
-          	eval(parse(code, p));
-        	}
+          with ( p ){
+            eval(parse(code, p));
+          }
         })( p );
       }
     
@@ -2019,19 +2024,19 @@
       }
       
 
-	    //////////////////////////////////////////////////////////////////////////
+      //////////////////////////////////////////////////////////////////////////
       // Event handling
       //////////////////////////////////////////////////////////////////////////
       
-      attach( curElement, "mousemove"	, function(e){
+      attach( curElement, "mousemove"  , function(e){
       
         var scrollX = window.scrollX != null ? window.scrollX : window.pageXOffset;
         var scrollY = window.scrollY != null ? window.scrollY : window.pageYOffset;            
       
         p.pmouseX = p.mouseX;
         p.pmouseY = p.mouseY;
-        p.mouseX 	= e.clientX - curElement.offsetLeft + scrollX;
-        p.mouseY 	= e.clientY - curElement.offsetTop + scrollY;    
+        p.mouseX   = e.clientX - curElement.offsetLeft + scrollX;
+        p.mouseY   = e.clientY - curElement.offsetTop + scrollY;    
 
         if( p.mouseMoved ){ p.mouseMoved(); }
         if( mousePressed && p.mouseDragged ){ p.mouseDragged(); }
@@ -2071,10 +2076,10 @@
         for( i=0; i < len; i++ ){
             if( p.key == p.codedKeys[ i ] ){
               switch(p.key){
-              case 70: p.keyCode = p.UP				; break;
-              case 71: p.keyCode = p.RIGHT		; break;
-              case 72: p.keyCode = p.DOWN			; break;
-              case 69: p.keyCode = p.LEFT			; break;
+              case 70: p.keyCode = p.UP        ; break;
+              case 71: p.keyCode = p.RIGHT    ; break;
+              case 72: p.keyCode = p.DOWN      ; break;
+              case 69: p.keyCode = p.LEFT      ; break;
               }
               p.key=p.CODED;
             }
