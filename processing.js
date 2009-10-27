@@ -35,10 +35,7 @@
     return p;
     
   };
-  
-  // Auto-load Processing sketches
-  addEventListener( 'DOMContentLoaded', USInit, false );
-  
+   
   // IE Unfriendly AJAX Method
   var ajax=function( url ){
     var AJAX;
@@ -277,6 +274,7 @@
     var p = {};
     
     // Set Processing defaults / environment variables
+    p.name            = 'Processing.js Instance';
     p.PI              = Math.PI;
     p.TWO_PI          = 2 * p.PI;
     p.HALF_PI         = p.PI / 2;
@@ -726,7 +724,7 @@
     p.ceil    = function ceil   ( aNumber             ){ return Math.ceil( aNumber );                    };    
     p.round   = function round  ( aNumber             ){ return Math.round( aNumber );                   };
     p.lerp    = function lerp   ( value1, value2, amt ){ return ( ( value2 - value1 ) * amt ) + value1;  };
-     p.abs    = function abs    ( aNumber             ){ return Math.abs( aNumber );                     };
+    p.abs    = function abs     ( aNumber             ){ return Math.abs( aNumber );                     };
     p.cos     = function cos    ( aNumber             ){ return Math.cos( aNumber );                     };
     p.sin     = function sin    ( aNumber             ){ return Math.sin( aNumber );                     };
     p.pow     = function pow    ( aNumber, aExponent  ){ return Math.pow( aNumber, aExponent );          };
@@ -1178,7 +1176,7 @@
     
     p.rect = function rect( x, y, width, height ){
 
-      if( width + height ){ return; }       
+      if( !( width + height ) ){ return; }
 
       curContext.beginPath();
       
@@ -1267,26 +1265,35 @@
 
     p.save = function save( file ){};
 
-    p.loadImage = function loadImage( file ){
-      var img = document.getElementById( file );
+    // Loads an image for display. Type is unused. Callback is fired on load.
+    p.loadImage = function loadImage( file, type, callback ){
       
-      if ( !img ){ return; }
+      var img = document.createElement( 'img' );
+      img.src = file;
+     
+      img.onload = function(){
+        
+        var h = this.height,
+            w = this.width;
+        
+        var canvas = document.createElement( "canvas" );
+        canvas.width = w;
+        canvas.height = h;
+        var context = canvas.getContext( "2d" );
+     
+        context.drawImage( this, 0, 0 );
+        this.data = buildImageObject( context.getImageData( 0, 0, w, h ) );
+        this.data.img = img;
+
+        callback?callback():0;
+        
+      }
       
-      var h = img.height,
-          w = img.width;
-
-      var canvas = document.createElement( "canvas" );
-      canvas.width = w;
-      canvas.height = h;
-      var context = canvas.getContext( "2d" );
-
-      context.drawImage( img, 0, 0 );
-      var data = buildImageObject( context.getImageData( 0, 0, w, h ) );
-      data.img = img;
-      return data;
+      return img;
+          
     };
-
-    // Gets a single pixel from Canvas
+    
+    // Gets a single pixel or block of pixels from the current Canvas Context
     p.get = function get( x, y ){
       
       if( !arguments.length ){
@@ -1301,6 +1308,17 @@
 
       return getLoaded.get( x, y );
       
+    };
+
+    // Creates a new Processing instance and passes it back for... processing
+    p.createGraphics = function createGraphics( w, h ){
+ 
+      var canvas = document.createElement( "canvas" );
+      var ret = buildProcessing( canvas );
+      ret.size( w, h );
+      ret.canvas = canvas;
+      return ret;
+ 
     };
 
     // Paints a pixel array into the canvas
@@ -1362,39 +1380,35 @@
       
     };
 
+    // Draw an image or a color to the background
     p.background = function background( img ) {
       
-      if( arguments.length ){
+       if( arguments.length ){
         
-        if( img && img.img ){
-          curBackground = img;
+        if( img.data && img.data.img ){
+          curBackground = img.data;
         }else{
           curBackground = p.color.apply( this, arguments );
         }
-      
+        
       }
 
       if( curBackground.img ){
-        p.image( curBackground, 0, 0 );
+      
+        p.image( img, 0, 0 );
+        
       }else{
+
         var oldFill = curContext.fillStyle;
         curContext.fillStyle = curBackground + "";
         curContext.fillRect( 0, 0, p.width, p.height );
         curContext.fillStyle = oldFill;
+
       }
       
-    };
+    };    
     
-    // Clears hole in the Canvas or the whole Canvas
-    p.clear = function clear ( x, y, width, height ) {    
-      if( arguments.length == 0 ){
-        curContext.clearRect( x, y, width, height );
-      }else{
-        curContext.clearRect( 0, 0, p.width, p.height );
-      }
-    }
-    
-    p.AniSprite = function( prefix, frames ){    
+    p.AniSprite = function( prefix, frames ){
       this.images = [];
       this.pos = 0;
 
@@ -1403,15 +1417,15 @@
       }
 
       this.display = function( x, y ){
-        p.image( this.images[ this.pos ], x, y );
+        p.image_old( this.images[ this.pos ], x, y );
 
         if( ++this.pos >= frames ){
           this.pos = 0;
         }
       };
 
-      this.getWidth   = function(){ return getImage( this.images[ 0 ] ).width;  };
-      this.getHeight  = function(){ return getImage( this.images[ 0 ] ).height; };
+      this.getWidth   = function(){ return getImage_old( this.images[ 0 ] ).width;  };
+      this.getHeight  = function(){ return getImage_old( this.images[ 0 ] ).height; };
     };
 
     function buildImageObject( obj ){
@@ -1463,7 +1477,7 @@
     }
 
     p.createImage = function createImage( w, h, mode ){
-      
+            
       var data    = {};
       data.width  = w;
       data.height = h;
@@ -1492,29 +1506,19 @@
       
     };
 
-    p.createGraphics = function createGraphics( w, h ){
- 
-      var canvas = document.createElement( "canvas" );
-      var ret = buildProcessing( canvas );
-      ret.size( w, h );
-      ret.canvas = canvas;
-      return ret;
- 
-    };
-
-
-    p.tint = function tint( rgb, a ){
-      curTint = a;
-    };
-
     function getImage( img ){
- 
+      
       if( typeof img == "string" ){
         return document.getElementById( img );
       }
 
-      if( img.img || img.canvas ){
-        return img.img || img.canvas;
+      if( img.img ){
+      
+        return img.img;
+        
+      }else if( img.getContext || img.canvas ){
+
+        img.pixels = img.getContext( '2d' ).createImageData( img.width, img.height );
       }
 
       for( var i = 0, l = img.pixels.length; i < l; i++ ){
@@ -1534,43 +1538,114 @@
       canvas.height = img.height;
       
       var context = canvas.getContext( "2d" );
-      context.putImageData( img, 0, 0 );
+      context.putImageData( img.pixels, 0, 0 );
 
       img.canvas = canvas;
 
-      return canvas;
+      return img;
     }
 
-    p.image = function image( img, x, y, w, h ){
-      
+    // Depreciating "getImage_old" from PJS - currently here to support AniSprite
+    function getImage_old( img ){ 
+      if( typeof img == "string" ){
+        return document.getElementById( img );
+      } 
+      if( img.img || img.canvas ){
+        return img.img || img.canvas;
+      } 
+      for( var i = 0, l = img.pixels.length; i < l; i++ ){        
+        var pos = i * 4;
+        var c = ( img.pixels[ i ] || "rgba(0,0,0,1)" ).slice( 5, - 1 ).split( "," );        
+        img.data[ pos + 0 ] = parseInt( c[ 0 ] );
+        img.data[ pos + 1 ] = parseInt( c[ 1 ] );
+        img.data[ pos + 2 ] = parseInt( c[ 2 ] );
+        img.data[ pos + 3 ] = parseFloat( c[ 3 ] ) * 100;      
+      } 
+      var canvas = document.createElement( "canvas" );
+      canvas.width = img.width;
+      canvas.height = img.height;      
+      var context = canvas.getContext( "2d" );
+      context.putImageData( img, 0, 0 ); 
+      img.canvas = canvas; 
+      return canvas;
+    }
+    // Depreciating "getImage_old" from PJS - currently here to support AniSprite
+    p.image_old=function image_old(img,x,y,w,h){
       x = x || 0;
-      y = y || 0;
-
-      var obj = getImage( img );
-
+      y = y || 0; 
+      var obj = getImage( img ); 
       if( curTint >= 0 ){
         var oldAlpha = curContext.globalAlpha;
         curContext.globalAlpha = curTint / opacityRange;
-      }
-
+      } 
       if( arguments.length == 3 ){
         curContext.drawImage( obj, x, y );
       }else{
         curContext.drawImage( obj, x, y, w, h );
-      }
-
+      } 
       if( curTint >= 0 ){
         curContext.globalAlpha = oldAlpha;
-      }
-
+      } 
       if( img._mask ){
         var oldComposite = curContext.globalCompositeOperation;
         curContext.globalCompositeOperation = "darker";
         p.image( img._mask, x, y );
         curContext.globalCompositeOperation = oldComposite;
+      }      
+    };
+
+    // Draws an image to the Canvas
+    p.image = function image( img, x, y, w, h ){
+      
+      if( img.data || img.canvas ){
+
+        x = x || 0;
+        y = y || 0;
+
+        var obj = getImage( img.data || img.canvas );
+
+        if( curTint >= 0 ){
+          var oldAlpha = curContext.globalAlpha;
+          curContext.globalAlpha = curTint / opacityRange;
+        }
+
+        if( arguments.length == 3 ){
+          curContext.drawImage( obj, x, y );
+        }else{
+          curContext.drawImage( obj, x, y, w, h );
+        }
+
+        if( curTint >= 0 ){
+          curContext.globalAlpha = oldAlpha;
+        }
+
+        if( img._mask ){
+          var oldComposite = curContext.globalCompositeOperation;
+          curContext.globalCompositeOperation = "darker";
+          p.image( img._mask, x, y );
+          curContext.globalCompositeOperation = oldComposite;
+        }
+      
+      }
+      
+      if( typeof img == 'string' ){
+        
       }
       
     };    
+    
+    // Clears hole in the Canvas or the whole Canvas
+    p.clear = function clear ( x, y, width, height ) {    
+      if( arguments.length == 0 ){
+        curContext.clearRect( x, y, width, height );
+      }else{
+        curContext.clearRect( 0, 0, p.width, p.height );
+      }
+    }
+
+    p.tint = function tint( rgb, a ){
+      curTint = a;
+    };
 
 
 

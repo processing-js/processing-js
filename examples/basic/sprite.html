@@ -24,10 +24,10 @@ float drag = 30.0;
 void setup() 
 {
   size(200,200);
-  teddy = loadImage("teddy.gif");
+  teddy = loadImage("data/teddy.gif");
   xpos = width/2;
   ypos = height/2;
-  frameRate(60);
+  frameRate(60);  
 }
 
 void draw() 
@@ -47,7 +47,7 @@ void draw()
   }  
   
   // Display the sprite at the position xpos, ypos
-  image(teddy, xpos, ypos);
+  image( teddy, xpos, ypos );
 }
 </script><canvas width="200" height="200"></canvas></p>
 <div style="height:0px;width:0px;overflow:hidden;"><img src='data/sky.jpg' id='sky.jpg'/><img src='data/teddy.gif' id='teddy.gif'/></div>
@@ -63,7 +63,7 @@ float drag = 30.0;
 void setup() 
 {
   size(200,200);
-  teddy = loadImage("teddy.gif");
+  teddy = loadImage("data/teddy.gif");
   xpos = width/2;
   ypos = height/2;
   frameRate(60);

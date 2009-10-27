@@ -4,7 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=windows-1250">
 <meta name="generator" content="PSPad editor, www.pspad.com">
 <title>Processing.js Benchmarks</title>
-<script type="text/javascript" src="../processing.min.js"></script>
+<script type="text/javascript" src="../processing.js"></script>
 <script type="text/javascript">
 /*
  * This code searches for all the <script type="application/processing" target="canvasid">
@@ -39,33 +39,140 @@ if ( document.addEventListener ) {
   body{font-size:70%;font-family:lucida-console;padding:0;margin:0;}
   h1{font-family:verdana;background:steelblue;color:#fff;padding:5px 25px;margin:0;}
   h2{font-family:verdana;background:lightgrey;color:dimgrey;padding:5px 25px;margin:0;font-size:120%}
-  div{border:1px dotted dimgrey;padding:0 5px;float:left;margin:5px;}
+  div{border:1px dotted dimgrey;padding:0 5px;float:left;margin:5px;font-size:.7em;height:100px;}
 </style>
 </head>
 <body>
 <h1>Processing.js Benchmarks</h1>
 <h2>All Canvas elements should render green</h2>
 
+
+  <div><p>set() pixel<p>
+  <script type="application/processing">
+    size( 50, 50 );
+    color black = color(0);
+    set(10, 10, black);
+    set(40, 10, black);
+    set(40, 40, black);
+    set(10, 40, black);
+  </script><canvas style="background:#0f0;"></canvas>
+  </div>
+
+  <div><p>get() pixel<p>
+  <script type="application/processing">
+    void setup(){
+      size( 50, 50 );
+      frameRate(5);
+    }
+    PImage myImage = loadImage("obama_smoking.jpg");
+    void draw(){
+      image( myImage, 0, 0 );
+      color cp = get(30, 20);
+      fill(cp);
+      rect(5, 25, 20, 20);
+      if( frameCount > 10 ){ exit(); }
+    }
+  </script><canvas style="background:#f00;"></canvas>
+  </div>
+
+  <div><p>get() pixels<p>
+  <script type="application/processing">
+    void setup(){
+      size( 50, 50 );
+      frameRate(5);
+    }
+    PImage myImage = loadImage("obama_smoking.jpg");
+    void draw(){
+      image( myImage, 0, 0 );
+      PImage cp = get();
+      image( cp, 20, 20 );
+      if( frameCount > 10 ){ exit(); }
+    }
+  </script><canvas style="background:#f00;"></canvas>
+  </div>
+
+  <div><p>updatePixels()<p>
+  <script type="application/processing">
+    size( 50, 50 );
+    int halfImage = width*height / 2;
+    PImage myImage = loadImage("gradient.jpeg");    
+    void setup(){
+        frameRate(5);
+    }    
+    void draw(){
+      image( myImage, 0, 0 );
+      loadPixels();
+      for (int i = 0; i < halfImage; i++) {
+        pixels[i+halfImage] = pixels[i];
+      }
+      updatePixels()
+      if( frameCount > 10 ){ exit(); }
+    }
+  </script><canvas style="background:#f00;"></canvas>    
+  </div>
+
+  <div><p>background()<br /> as image<p>
+  <script type="application/processing">
+      pImage a;
+      void setup(){
+        size( 50, 50 );
+        frameRate(5);
+        a = loadImage( "green-square.gif" );
+      }
+      void draw(){
+        
+        // Image is not drawn if it's not ready
+        background( a );
+        
+        // Image load may be delayed, so wait a while...
+        if( frameCount > 10 ){
+          exit();
+        }        
+      }
+  </script><canvas style="background:#f00;"></canvas>    
+  </div>
+
+  <div><p>loadImage()<p>
+  <script type="application/processing">
+      pImage a;
+      void setup(){
+        size( 50, 50 );
+        frameRate(5);
+        a = loadImage( "green-square.gif" );
+      }
+      void draw(){
+        
+        // Image is not drawn if it's not ready
+        image( a, 0, 0 );
+        
+        // Image load may be delayed, so wait a while...
+        if( frameCount > 10 ){
+          exit();
+        }        
+      }
+  </script><canvas style="background:#f00;"></canvas>    
+  </div>
+  
   <div><p>text()<p>
   <script type="application/processing">
-    size(50,50);    
+    size(50,50);
     noStroke();
     PFont fontA = loadFont("Biotyp.svg");
     textFont(fontA, 12); 
     fill(0);
     text("Working!", 0, 0);        
   </script><canvas style="background:#0f0;"></canvas>    
-  </div>
-  
+  </div> 
+
   <div><p>println()<p>
   <script type="application/processing">
-    size(50,50);    
+    size(50,50);
     noStroke();
     void lnPrinted(){
       fill(ln[0],ln[1],ln[2]);
       rect(0,0,50,50);
     }
-    println(0,255,0);    
+    println(0,255,0);
   </script><canvas style="background:red;"></canvas>    
   </div>
   
@@ -194,8 +301,7 @@ if ( document.addEventListener ) {
     background(0,G,0,G);
   </script><canvas style="background:red"></canvas>      
   </div>
-    
-  
+      
   <div><p>lerp<p>
   <script type="application/processing">
     size(50,50);
@@ -236,6 +342,7 @@ if ( document.addEventListener ) {
   }
   </script><canvas style="background:url(arc_fill.gif);"></canvas>    
   </div>
+
 
 </body>
 </html>
