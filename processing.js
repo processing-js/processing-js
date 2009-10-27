@@ -681,24 +681,29 @@
     // Event to send output to user control function print()/println()
     p.println = function println(){
       
-      var Caller = arguments.callee.caller.name.toString();
+      // Not working on Safari :( find work around!
+      if( arguments.callee.caller ){
       
-      if( arguments.length > 1 ){
+        var Caller = arguments.callee.caller.name.toString();
+        
+        if( arguments.length > 1 ){
 
-        Caller != "print"        ?
-          p.ln  = arguments      :
-          p.ln  = arguments[ 0 ] ;
+          Caller != "print"        ?
+            p.ln  = arguments      :
+            p.ln  = arguments[ 0 ] ;
 
-      }else{
+        }else{
 
-          p.ln  = arguments[ 0 ] ;
+            p.ln  = arguments[ 0 ] ;
+        }
+        
+        //Returns a line to lnPrinted() for user error handling/debugging
+        Caller == "print"          ?        
+          p.printed( arguments )   :
+          p.lnPrinted()            ;
+        
       }
       
-      //Returns a line to lnPrinted() for user error handling/debugging
-      Caller == "print"          ?        
-        p.printed( arguments )   :
-        p.lnPrinted()            ;
-
     };    
 
     // Converts a number to a string
