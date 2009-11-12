@@ -46,7 +46,23 @@
     }else{
       return false;
     }
-  }
+  };
+  
+  // Automatic Initialization Method
+  var init = function(){
+    
+    var canvas  = document.getElementsByTagName( 'canvas' ),
+        datasrc = undefined;
+
+    for( var i = 0; l = i < canvas.length; i++ ){
+      if( datasrc = canvas[ i ].getAttribute( 'datasrc' ) ){
+        Processing( canvas[ i ], ajax( datasrc ) );
+      }
+    }
+    
+  };
+ 
+  addEventListener( 'DOMContentLoaded', function(){ init(); }, false );
  
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   var parse = Processing.parse = function parse( aCode, p ){
