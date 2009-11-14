@@ -1,1 +1,41 @@
-background( 0, 255, 0 );
+//*
+ 
+ 
+ 
+    size(500,250, P3D);
+        background(225);
+        stroke(24, 60, 100);
+        fill(255);
+        rect(1, 1, width-3, height-3);
+        PFont font;
+        font = loadFont("fonts/Biotyp.svg");
+        textFont(font, 14);
+        fill(0, 0, 0);
+        int a=200, b=-40, c=90;
+        String sa = nfs(a, 10);
+        String sb = nfs(b, 5);
+        String sc = nfs(c, 3);
+        float d = -200.94, e = 40.2, f = -9.012;
+        String sd = nfs(d, 10, 4);
+        String se = nfs(e, 5, 3);
+        String sf = nfs(f, 3, 5);        
+        int g=123456;
+        String sg = nfs(g, 8);
+        String sg2 = nfs(g, 4);
+        String sg3 = nfs(g, 4, 1);
+        int[] ary = {1.23, -23.4560, 999.9};
+        String[] sary = nfs(ary, 4, 4);
+        text("|" + sa, 10, 20);   // prints " 0000000200" 
+        text("|" + sb, 10, 40);   // prints "-00040" 
+        text("|" + sc, 10, 60);   // prints " 090" 
+        text("|" + sd, 10, 80);   // prints "-0000000200.9400" 
+        text("|" + se, 10, 100);  // prints " 00040.200" 
+        text("|" + sf, 10, 120);  // prints "-009.01200"
+        text("|" + sg, 10, 140);  // prints " 00123456"
+        text("|" + sg2, 10, 160); // prints " 123456"
+        text("|" + sg3, 10, 180); // prints " 123456.0"
+        for (int i = 0; i < sary.length; i++){
+            text("|" + sary[i] + " int array calling nfs(" + ary[i] + ", 4, 4)", 10, 200+(i*20));
+        }
+
+

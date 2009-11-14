@@ -1,6 +1,6 @@
 /*
 
-  P R O C E S S I N G . J S
+  P R O C E S S I N G - 0 . 0 . J S
   a port of the Processing visualization language
   
   License       : MIT 
@@ -8,9 +8,10 @@
   Web Site      : http://processingjs.org  
   Java Version  : http://processing.org
   Github Repo.  : http://github.com/jeresig/processing-js
+  Bug Tracking  : http://processing-js.lighthouseapp.com
   Mozilla POW!  : http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
-  Maintained by : F1LT3R & the students of Open Seneca...
-                  http://zenit.senecac.on.ca/wiki/index.php/Processing.js
+  Maintained by : Seneca: http://zenit.senecac.on.ca/wiki/index.php/Processing.js
+                  Hyper-Metrix: http://hyper-metrix.com/#Processing
 
 */
 
@@ -401,6 +402,48 @@
     // Array handling
     ////////////////////////////////////////////////////////////////////////////
 
+    p.shorten = function( ary ){
+    
+      var newary = new Array();
+
+      // copy array into new array
+      var len = ary.length;     
+      for( var i = 0; i < len; i++ ){
+        newary[ i ] = ary[ i ];
+      }
+
+      newary.pop();
+
+      return newary;
+    }
+
+  
+    p.expand = function( ary, newSize ){
+
+      var newary = new Array();
+      
+      var len = ary.length
+      for( var i = 0; i < len; i++ ){
+          newary[ i ] = ary[ i ];
+      }
+      
+      if( arguments.length == 1 ){
+        
+        // double size of array
+        newary.length *= 2;
+        
+      }else if( arguments.length == 2 ){
+        
+        // size is newSize
+        newary.length = newSize;
+        
+      }
+      
+      return newary;
+    }
+
+
+
     p.ArrayList = function ArrayList( size, size2, size3 ){
     
       var array = new Array( 0 | size );
@@ -446,84 +489,84 @@
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
 
-    p.color = function color( aValue1, aValue2, aValue3, aValue4 ){
+    // In case I ever need to do HSV conversion:
+    // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
+    p.color = function color( aValue1, aValue2, aValue3, aValue4 ) {
       var aColor = "";
       
-      if( arguments.length == 3 ){
+      if ( arguments.length == 3 ) {
       
         aColor = p.color( aValue1, aValue2, aValue3, opacityRange );
-      
-      } else if ( arguments.length == 4 ){
-       
+      } else if ( arguments.length == 4 ) {
         var a = aValue4 / opacityRange;
-        
-        a = isNaN( a ) ? 1 : a ;
+        a = isNaN(a) ? 1 : a;
 
-        if( curColorMode == p.HSB ){
-          var rgb = HSBtoRGB( aValue1, aValue2, aValue3 )
-              r   = rgb[ 0 ],
-              g   = rgb[ 1 ],
-              b   = rgb[ 2 ];
-        }else{
-          var r = getColor( aValue1, redRange );
-          var g = getColor( aValue2, greenRange );
-          var b = getColor( aValue3, blueRange );
+        if ( curColorMode == p.HSB ) {
+          var rgb = HSBtoRGB(aValue1, aValue2, aValue3);
+          var r = rgb[0], g = rgb[1], b = rgb[2];
+        } else {
+          var r = getColor(aValue1, redRange);
+          var g = getColor(aValue2, greenRange);
+          var b = getColor(aValue3, blueRange);
         }
 
-        aColor = "rgba("+ r +","+ g +","+ b +","+ a +")";
-      
-      }else if( typeof aValue1 == "string" ){
+        aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
+      } else if ( typeof aValue1 == "string" ) {
         aColor = aValue1;
 
-        if( arguments.length == 2 ){
-          var c = aColor.split( "," );
-          c[ 3 ] = ( aValue2 / opacityRange ) + ")";
-          aColor = c.join( "," );
+        if ( arguments.length == 2 ) {
+          var c = aColor.split(",");
+          c[3] = (aValue2 / opacityRange) + ")";
+          aColor = c.join(",");
         }
-      }else if( arguments.length == 2 ){
+      } else if ( arguments.length == 2 ) {
         aColor = p.color( aValue1, aValue1, aValue1, aValue2 );
-      }else if( typeof aValue1 == "number" ){
+      } else if ( typeof aValue1 == "number" && aValue1 < 256 && aValue1 >= 0) {
         aColor = p.color( aValue1, aValue1, aValue1, opacityRange );
-      }else{
+      } else if ( typeof aValue1 == "number" ) {
+        var intcolor = 0;
+        if( aValue1 < 0 ){
+          intcolor = 4294967296 - ( aValue1 * -1 );
+        }else{
+          intcolor = aValue1;
+        }
+        var ac = Math.floor((intcolor % 4294967296) / 16777216);
+        var rc = Math.floor((intcolor % 16777216) / 65536);
+        var gc = Math.floor((intcolor % 65536) / 256);
+        var bc = intcolor % 256;
+          
+        aColor = p.color( rc, gc, bc, ac );
+      } else {
         aColor = p.color( redRange, greenRange, blueRange, opacityRange );
       }
 
       // HSB conversion function from Mootools, MIT Licensed
-      function HSBtoRGB( h, s, b ){
-
-        h = ( h / redRange   ) * 360;
-        s = ( s / greenRange ) * 100;
-        b = ( b / blueRange  ) * 100;
-
-        var br = Math.round( b / 100 * 255 );
-
-        if( s == 0 ){
-
-          return [ br, br, br ];
-
-        }else{
-
+      function HSBtoRGB(h, s, b) {
+        h = (h / redRange) * 360;
+        s = (s / greenRange) * 100;
+        b = (b / blueRange) * 100;
+        var br = Math.round(b / 100 * 255);
+        if (s == 0){
+          return [br, br, br];
+        } else {
           var hue = h % 360;
-          var f   = hue % 60;
-          var p   = Math.round( ( b * ( 100  - s ) ) / 10000 * 255 );
-          var q   = Math.round( ( b * ( 6000 - s * f ) ) / 600000 * 255 );
-          var t   = Math.round( ( b * ( 6000 - s * ( 60 - f ) ) ) / 600000 * 255 );
-
-          switch ( Math.floor( hue / 60 ) ){
-            case 0: return [ br, t, p ];
-            case 1: return [ q, br, p ];
-            case 2: return [ p, br, t ];
-            case 3: return [ p, q, br ];
-            case 4: return [ t, p, br ];
-            case 5: return [ br, p, q ];
+          var f = hue % 60;
+          var p = Math.round((b * (100 - s)) / 10000 * 255);
+          var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
+          var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
+          switch (Math.floor(hue / 60)){
+            case 0: return [br, t, p];
+            case 1: return [q, br, p];
+            case 2: return [p, br, t];
+            case 3: return [p, q, br];
+            case 4: return [t, p, br];
+            case 5: return [br, p, q];
           }
-          
         }
-        
       }
-
-      function getColor( aValue, range ){
-        return Math.round( 255 * ( aValue / range ) );
+    
+      function getColor( aValue, range ) {
+        return Math.round(255 * (aValue / range));
       }
       
       return aColor;
@@ -672,6 +715,98 @@
     ////////////////////////////////////////////////////////////////////////////
     // String functions
     ////////////////////////////////////////////////////////////////////////////
+
+    p.nfs = function( num, left, right){
+      var str;
+      // array handling
+      if (typeof num == "object"){
+        str = new Array();
+        len = num.length;
+        for(var i=0; i < len; i++){
+          str[i] = p.nfs(num[i], left, right);
+        }
+      }
+      else if (arguments.length == 3){
+        var negative = false;
+        if (num < 0)
+          negative = true;
+          
+        str = "" + Math.abs(num);
+        var digits = ("" + Math.floor(Math.abs(num))).length;
+        var count = left - digits;
+        while (count > 0){
+          str = "0" + str;
+          count--;
+        }
+        // get the number of decimal places, if none will be -1
+        var decimals = ("" + Math.abs(num)).length - digits - 1;
+        if (decimals == -1 && right > 0)
+          str = str + ".";
+        if (decimals != -1)
+          count = right - decimals;
+        else if (decimals == -1 && right > 0){
+          count = right;
+        }
+        else
+          count = 0;
+        while (count > 0){
+          str = str + "0";
+          count--;
+        }
+        str = (negative ? "-" : " ") + str;
+      }
+      else if (arguments.length == 2){
+        str = p.nfs(num, left, 0);
+      }
+      return str;
+    }
+    
+    
+    p.unhex = function( str ){
+        var value = 0,
+            multiplier = 1,
+            num = 0;
+        
+        var len = str.length - 1;
+        for (var i = len ; i >= 0; i--){
+            try{
+                switch(str[i]){
+                    case "0": num = 0; break;
+                    case "1": num = 1; break;
+                    case "2": num = 2; break;
+                    case "3": num = 3; break;
+                    case "4": num = 4; break;
+                    case "5": num = 5; break;
+                    case "6": num = 6; break;
+                    case "7": num = 7; break;
+                    case "8": num = 8; break;
+                    case "9": num = 9; break;
+                    case "A":
+                    case "a": num = 10; break;
+                    case "B":
+                    case "b": num = 11; break;
+                    case "C": 
+                    case "c": num = 12; break;
+                    case "D":
+                    case "d": num = 13; break;
+                    case "E":
+                    case "e": num = 14; break;
+                    case "F":
+                    case "f": num = 15; break;
+                    default:return 0; break;
+                }
+                value += num * multiplier;
+                multiplier *= 16;
+            }catch(e){;}
+            // correct for int overflow java expectation
+            if (value > 2147483647)
+            {
+                value -= 4294967296;
+            }  
+        }
+        return value;
+      }
+
 
     // Load a file or URL into strings     
     p.loadStrings = function loadStrings( url ){
