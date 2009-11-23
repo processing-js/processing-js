@@ -311,7 +311,8 @@
     p.CORNERS         = 10;
     p.CLOSE           = true;
     p.RGB             = 1;
-    p.HSB             = 2;  
+    p.HSB             = 2;
+    p.focused         = true;
 
     // KeyCode table  
     p.CENTER  = 88888880;
@@ -401,6 +402,36 @@
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
     ////////////////////////////////////////////////////////////////////////////
+  
+    p.concat = function concat( array1, array2 ){
+      return array1.concat( array2 );
+    }
+
+    p.splice = function( array, value, index ){
+
+      if(array.length == 0 && value.length == 0){
+        return array;
+      };
+
+      if( value instanceof Array ){
+        for( var i = 0, j = index; i < value.length; j++, i++ ){
+         array.splice( j, 0, value[ i ] );
+        }
+      }else{
+        array.splice( index, 0, value );
+      };
+      
+      return array;
+      
+    }; 
+
+    p.subset = function( array, offset, length ){
+      if(arguments.length == 2){
+        return p.subset( array, offset, array.length - offset );
+      }else if( arguments.length == 3 ){
+        return array.slice( offset, offset + length );
+      }
+    };
 
     p.concat = function concat( array1, array2 ){ return array1.concat( array2 ) };
     
@@ -492,6 +523,18 @@
     ////////////////////////////////////////////////////////////////////////////
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
+
+    p.brightness = function brightness( color ){
+      return p.color( redRange, greenRange, blueRange );
+    }
+    
+    p.hue = function hue( color ){
+      return p.color( 0 * redRange, 0 * greenRange, 0 * blueRange );
+    }
+    
+    p.saturation = function saturation( color ){
+      return p.color( ( 126 / 255 ) * redRange, ( 126 / 255 ) * greenRange, ( 126 / 255 ) * blueRange);
+    }
 
     // In case I ever need to do HSV conversion:
     // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
@@ -676,6 +719,7 @@
       looping = setInterval( function(){
          
           try {
+                      p.focused = document.hasFocus();
                       p.redraw();
               }
           catch( e ){
