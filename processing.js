@@ -402,6 +402,10 @@
     // Array handling
     ////////////////////////////////////////////////////////////////////////////
 
+    p.concat = function concat( array1, array2 ){ return array1.concat( array2 ) };
+    
+    p.join = function join( array, seperator ){ return array.join( seperator ) };
+    
     p.shorten = function( ary ){
     
       var newary = new Array();
@@ -761,6 +765,78 @@
       return str;
     }
     
+    //function i use to convert RGB to hex values
+    p.RGB2HTML = function RGB2HTML(red, green, blue) {
+	    var char = "0123456789ABCDEF";
+	    return String(char.charAt(Math.floor(rgb / 16))) + String(char.charAt(rgb - (Math.floor(rgb / 16) * 16)));
+    }
+
+    //function i use to convert decimals to a padded hex value
+    p.decimalToHex = function decimalToHex(d, padding) {
+	    //if there is no padding value added, default padding to 8  else  go into while statement.
+	    padding = typeof (padding) === "undefined" || padding === null ? padding = 8 : padding;
+	    var hex = Number(d).toString(16);
+
+	    while (hex.length < padding) {
+		    hex = "0" + hex;
+	    }
+	    return hex;
+    }
+
+    //regExp i made to pattern match rgba and extract it's values
+    p.colorRGB = function colorRGB(col) {
+	    patt = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i;  //grouped \d{1,3} with ( ) so they can be referenced w\ $1-$4
+	    var str2 = col.replace(patt, "#$4,$1,$2,$3");
+
+	    al = col.replace(patt, "$4");
+	    reD = col.replace(patt, "$1");
+	    gree = col.replace(patt, "$2");
+	    blu = col.replace(patt, "$3");
+
+	    return ("" + Number(al).toString(16) + Number(reD).toString(16) + Number(gree).toString(16) + Number(blu).toString(16)).toUpperCase();
+    }
+
+    p.hex = function hex(decimal, len) {
+	    var hexadecimal = "";
+
+	    var patternRGBa = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i;  //match rgba(20,20,20,0) or rgba(20,20,20)
+	    var patternDigits = /^\d+$/;
+	    //**************************   dealing with 2 parameters   *************************************************
+	    if (arguments.length == 2) {
+		    if (patternDigits.test(decimal)) {
+			    hexadecimal = p.decimalToHex(decimal, len);
+		    }
+		    else if (patternRGBa.test(decimal)) //check to see if it's an rgba color
+		    {
+			    hexadecimal = p.colorRGB(decimal);
+			    hexadecimal = hexadecimal.substring(hexadecimal.length - len, hexadecimal.length);
+		    }
+	    }
+	    else if (arguments.length == 1) //****************   dealing with 1 parameter  ********************************
+	    {
+		    if (patternDigits.test(decimal)) {      //check to see if it's a decimal
+			    hexadecimal = p.decimalToHex(decimal);
+		    }
+		    else if (patternRGBa.test(decimal)) //check to see if it's an rgba color
+		    {
+			    hexadecimal = p.colorRGB(decimal);
+		    }
+		    else if (decimal.indexOf("#") == 0) //check to see if it's hex color in format #ffffff
+		    {
+			    if (decimal.length < 7) {
+				    throw "Not Hex format: the value passed into hex was not in the format #FFFFFF";
+			    }
+			    else {
+				    decimal = (decimal.slice(1)).toUpperCase();
+				    while (decimal.length < 8) {
+					    decimal = "FF" + decimal;
+				    }
+				    hexadecimal = decimal;
+			    }
+		    }
+	    }
+	    return hexadecimal;
+    }
     
     p.unhex = function( str ){
         var value = 0,
@@ -820,6 +896,59 @@
       }
       return str;
     };
+
+    p.nfp = function nfp(Value, pad, right){
+	    var str = String(Value);
+
+	    if (arguments.length < 3){	//check if it's 2 arguments
+		    if (Value > 0) {
+			    while (str.length < pad)					
+				    str = "0" + str;
+		
+			    str = "+" + str;
+			    return str;
+		    }
+		    else {
+			    str = str.slice(1);  //used to remove the '-' infront of the original number.
+			    while (str.length < pad)					
+				    str = "0" + str;
+		
+			    str = "-" + str;
+			    return str;
+		    }
+	    }
+	    else if (arguments.length == 3) {  //check if it's 3 arguments 
+		    var decimalPos = str.indexOf('.');
+		    if (Value > 0) {                    
+			    var strL = str.slice(0,decimalPos);   //store #'s to left of decimal into strL
+			    var strR = str.slice(decimalPos+1,str.length);  //store #'s to right of decimal into strR
+		
+			    while (strL.length < pad)   //pad to left of decimal on positive #'s
+				    strL = "0" + strL;
+			
+			    strL = "+" + strL;
+		
+			    while (strR.length < right)  //pad to right of decimal on positive #'s
+				    strR = strR + "0";
+		
+			    return strL+"."+strR;
+		    }
+		    else {
+			    var strL = str.slice(1,decimalPos);   //store #'s to left of decimal into strL
+			    var strR = str.slice(decimalPos+1,str.length);  //store #'s to right of decimal into strR
+		
+			    while (strL.length < pad)  //pad to left of decimal on negative #'s
+				    strL = "0" + strL;
+			
+			    strL = "-" + strL;
+		
+			    while (strR.length < right)  //pad to right of decimal on negative #'s
+				    strR = strR + "0";
+		
+			    return strL+"."+strR;
+		    }
+	    }
+    }
 
     String.prototype.replaceAll = function( re, replace ){
       return this.replace( new RegExp( re, "g" ), replace );
@@ -894,6 +1023,14 @@
 
     p.map = function map( value, istart, istop, ostart, ostop ){
       return ostart + ( ostop - ostart ) * ( ( value - istart ) / ( istop - istart ) );
+    };
+    
+    p.mag = function( a, b, c ){
+      if( arguments.length == 2 ){
+        return Math.sqrt( a*a + b*b );
+      }else if( arguments.length == 3 ){
+        return Math.sqrt( a*a + b*b + c*c );
+      };
     };
 
     p.Random = function(){
@@ -1790,12 +1927,12 @@
       
     };    
     
-    // Clears hole in the Canvas or the whole Canvas
+    // Clears a rectangle in the Canvas element or the whole Canvas
     p.clear = function clear ( x, y, width, height ) {    
       if( arguments.length == 0 ){
-        curContext.clearRect( x, y, width, height );
-      }else{
         curContext.clearRect( 0, 0, p.width, p.height );
+      }else{
+        curContext.clearRect( x, y, width, height );
       }
     }
 
