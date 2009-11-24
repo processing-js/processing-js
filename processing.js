@@ -523,19 +523,11 @@
     ////////////////////////////////////////////////////////////////////////////
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
-
-    p.brightness = function brightness( color ){
-      return p.color( redRange, greenRange, blueRange );
-    }
     
     p.hue = function hue( color ){
       return p.color( 0 * redRange, 0 * greenRange, 0 * blueRange );
     }
     
-    p.saturation = function saturation( color ){
-      return p.color( ( 126 / 255 ) * redRange, ( 126 / 255 ) * greenRange, ( 126 / 255 ) * blueRange);
-    }
-
     // In case I ever need to do HSV conversion:
     // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
     p.color = function color( aValue1, aValue2, aValue3, aValue4 ) {
