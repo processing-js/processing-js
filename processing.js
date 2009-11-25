@@ -13,7 +13,7 @@
   Maintained by : Seneca: http://zenit.senecac.on.ca/wiki/index.php/Processing.js
                   Hyper-Metrix: http://hyper-metrix.com/#Processing
 
-*/
+*/  
 
 
 (function(){
@@ -753,8 +753,33 @@
     
 
     ////////////////////////////////////////////////////////////////////////////
-    // String functions
+    // binaryunctions
     ////////////////////////////////////////////////////////////////////////////
+
+    p.unbinary = function unbinary( binaryString ){
+	    var binaryPattern = new RegExp("^[0|1]{8}$");
+	    var addUp = 0;
+
+	    if( isNaN( binaryString ) ){
+		    throw "NaN_Err";
+	    }else{
+		    if( arguments.length == 1 || binaryString.length == 8 ){
+			    if( binaryPattern.test( binaryString ) ){
+				    for( i = 0; i < 8; i++ ){
+					    addUp += ( Math.pow( 2, i ) * parseInt( binaryString.charAt( 7 - i ) ) );
+				    }
+				    return addUp + "";
+			    }else{
+				    throw "notBinary: the value passed into unbinary was not an 8 bit binary number";
+			    };
+		    }else{
+			    throw "longErr";
+		    };
+
+	    };
+	    
+	    return addUp;
+    }
 
     p.nfs = function( num, left, right){
       var str;
