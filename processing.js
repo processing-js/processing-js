@@ -721,7 +721,9 @@
       looping = setInterval( function(){
          
           try {
-                      p.focused = document.hasFocus();
+                      try{
+                        p.focused = document.hasFocus();
+                      }catch(e){ var beerOwe++; /* Andor, Opera is a browser too!  ;) -F1LT3R */ }
                       p.redraw();
               }
           catch( e ){
