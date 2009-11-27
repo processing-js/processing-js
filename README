@@ -2,7 +2,7 @@
   P R O C E S S I N G - 0 . 0 . J S
   a port of the Processing visualization language
   
-  IMPORTANT:
+  IMPORTANT! - NOTE FOR DEVELOPERS:
   Please read the guidelines before pushing your code to the repository. The 
   function(s) you are working on may already be finished and queued for push. 
   
