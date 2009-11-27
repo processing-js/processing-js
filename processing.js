@@ -524,10 +524,20 @@
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
     
-    p.hue = function hue( color ){
+    // !! WARNING: brightness() & saturation() not working with HSB colors
+    p.brightness = function brightness(){
+      return p.color( redRange, greenRange, blueRange );
+    }
+
+    p.saturation = function saturation( color ){
+      return  p.color( ( 126 / 255 ) * redRange, ( 126 / 255 ) * greenRange, ( 126 / 255 ) * blueRange );
+    }
+
+    p.hue = function hue(){
       return p.color( 0 * redRange, 0 * greenRange, 0 * blueRange );
     }
-    
+     
+
     // In case I ever need to do HSV conversion:
     // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
     p.color = function color( aValue1, aValue2, aValue3, aValue4 ) {
@@ -748,7 +758,7 @@
     // Imports an external Processing.js library
     p.Import = function Import( lib ){
       eval( p.ajax( lib ) );
-    }    
+    }
         
     p.disableContextMenu = function disableContextMenu(){
       curElement.addEventListener( 'contextmenu', function( e ){
