@@ -1214,15 +1214,18 @@
       return aAngle;
     };
     
-    p.size = function size( aWidth, aHeight ){    
-      var fillStyle = curContext.fillStyle,
-          strokeStyle = curContext.strokeStyle;
-
+    // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
+    p.size = function size( aWidth, aHeight ){
+    
+      var props = { fillStyle   : curContext.fillStyle,
+                    strokeStyle : curContext.strokeStyle,
+                    lineCap     : curContext.lineCap
+                  } // More to be added...
+      
       curElement.width = p.width = aWidth;
       curElement.height = p.height = aHeight;
 
-      curContext.fillStyle = fillStyle;
-      curContext.strokeStyle = strokeStyle;
+      for( var i in props ){ curContext[ i ] = props[ i ] };
     };
     
     // PVector instantiation
