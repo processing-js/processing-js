@@ -748,9 +748,14 @@
     // Imports an external Processing.js library
     p.Import = function Import( lib ){
       eval( p.ajax( lib ) );
+    }    
+        
+    p.disableContextMenu = function disableContextMenu(){
+      curElement.addEventListener( 'contextmenu', function( e ){
+        e.preventDefault();
+        e.stopPropagation();
+      }, false );
     }
-
-    
 
     ////////////////////////////////////////////////////////////////////////////
     // binaryunctions
@@ -2672,11 +2677,6 @@
         p.mouseDown = true;        
         if( typeof p.mousePressed == "function" ){ p.mousePressed(); }
         else{ p.mousePressed = true; }
-      });
-
-      attach( curElement, "contextmenu", function( e ){
-        e.preventDefault();
-        e.stopPropagation();
       });
 
       attach( curElement, "mouseup", function( e ){
