@@ -723,7 +723,7 @@
           try {
                       try{
                         p.focused = document.hasFocus();
-                      }catch(e){ var beerOwe++; /* Andor, Opera is a browser too!  ;) -F1LT3R */ }
+                      }catch(e){}
                       p.redraw();
               }
           catch( e ){
