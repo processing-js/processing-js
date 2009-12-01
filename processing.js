@@ -403,7 +403,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
     ////////////////////////////////////////////////////////////////////////////
-  
+    
     p.concat = function concat( array1, array2 ){
       return array1.concat( array2 );
     }
@@ -769,9 +769,11 @@
         e.stopPropagation();
       }, false );
     }
+    
+    
 
     ////////////////////////////////////////////////////////////////////////////
-    // binaryunctions
+    // Binary Functions
     ////////////////////////////////////////////////////////////////////////////
 
     p.unbinary = function unbinary( binaryString ){
@@ -1029,9 +1031,17 @@
 	    }
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    // String Functions
+    ////////////////////////////////////////////////////////////////////////////
+
     String.prototype.replaceAll = function( re, replace ){
       return this.replace( new RegExp( re, "g" ), replace );
     };
+
+    p.match = function( str, regexp ){
+      return str.match( regexp );
+    }  
         
     // Returns a line to lnPrinted() for user handling 
     p.lnPrinted = function lnPrinted(){};
