@@ -327,6 +327,7 @@
 
     // "Private" variables used to maintain state
     var curContext      = curElement.getContext( "2d" ),
+        online          = true,
         doFill          = true,
         doStroke        = true,
         loopStarted     = false,
