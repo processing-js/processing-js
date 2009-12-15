@@ -1,0 +1,763 @@
+65c65,126
+<  
+---
+>   
+>    var newWebGLArray = function(data)
+>   {
+>     var test = false;
+>   
+>     // compatibility issues between Minefield and Safari
+>     try{
+>       WebGLFloatArray;
+>       test = true;
+>     }
+>     catch(e)
+>     {}     
+>           
+>     if(test)
+>     {
+>       return new WebGLFloatArray(data);
+>     }
+>     else
+>     {
+>       return new CanvasFloatArray(data);
+>     }
+>     
+>   }
+>   
+>   var boxVerts = [1,1,-1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,-1,1,1,-1,1,1,1,-1,1,1,-1,-1,1,-1,-1,1,1,-1,1,1,1,1,1,1,-1,1,1,1,1,-1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,-1,1,-1,1,-1,-1,1,-1,-1,1,-1,-1,-1,1,-1,-1,-1,-1,-1,-1,-1,1,-1,1,1,-1,1,1,-1,1,-1,-1,-1,-1,1,1,1,1,1,-1,-1,1,-1,-1,1,-1,-1,1,1,1,1,1];
+>   var boxNorms =[0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0];	
+>   
+>   var programObject;
+>   var boxBuffer;
+>   var sphereBuffer;
+>   var sphereNBuffer;
+>   
+>   var vertexShaderSource = 
+> 
+>     "attribute vec3 Vertex;" +
+>     "attribute vec3 Normal;" +
+>     
+>     "uniform mat4 trans;" +
+>     "uniform mat4 cam;" +
+>     
+>     "uniform vec3 DirectionalLightColor;" +
+>     "uniform vec3 DirectionalLightDirection;" +
+> 
+>     "void main(void){" +
+> 
+>     // hardcoded, gahk!
+>     "  mat4 proj = mat4(" +
+>     "  2.414, 0.0, 0.0, 0.0," +
+>     "  0.0, 2.414, 0.0, 0.0," +
+>     "  0.0, 0.0, -1.0, -1.0," +
+>     "  0.0, 0.0, -0.2, 0.0);" +
+>   
+>     "gl_FrontColor = vec4(0.0,0.0,0.0,1.0) + vec4(DirectionalLightColor, 1.0) * max(0.0,dot(-vec3(DirectionalLightDirection), Normal));" +
+>     "  gl_Position = proj * trans * cam * vec4(Vertex, 1.0);" +
+>     "}";
+> 
+>   var fragmentShaderSource = 
+>     "void main(void){" +
+>     "  gl_FragColor = gl_Color;" +
+>     "}";
+>      
+> 	
+316c377,387
+< 
+---
+> 	p.OPENGL          = "OPENGL";
+>     p.FRAME_RATE      = 0;
+> 	p.SINCOS_LENGTH   = parseInt(360/0.5);
+> 	p.sphereDetailV   = 0;
+> 	p.sphereDetailU   = 0;
+> 	p.sinLUT = new Array(p.SINCOS_LENGTH);
+>     p.cosLUT = new Array(p.SINCOS_LENGTH);
+> 	p.sphereX     = new Array();
+> 	p.sphereY     = new Array();
+> 	p.sphereZ     = new Array();
+> 	
+329c400,401
+<     var curContext      = curElement.getContext( "2d" ),
+---
+>     var curContext,
+> 		cur3DContext,
+360c432,437
+<         start           = ( new Date ).getTime();
+---
+>         start           = ( new Date ).getTime(),
+> 		timeSinceLastFPS = start,
+>         framesSinceLastFPS = 0;
+>         ambientLightColor = [255,255,255], // default white
+>         directionalLight = {color:[0,0,0], dir:[0,0,0]}
+>         cur3DContextStokeStyleColor = [0,0,0];
+750,756c827,855
+<       if( hasBackground ){ p.background(); }
+<       p.frameCount++;      
+<       inDraw = true;
+<       p.pushMatrix();
+<       p.draw();
+<       p.popMatrix();
+<       inDraw = false;      
+---
+> 	 if(cur3DContext){
+>         p.background();
+>         cur3DContext.clear(cur3DContext.COLOR_BUFFER_BIT| cur3DContext.DEPTH_BUFFER_BIT);
+> 
+>         var sec = ((new Date).getTime() - timeSinceLastFPS)/1000;
+>         framesSinceLastFPS++;
+>         var fps = Math.floor(framesSinceLastFPS/sec);
+>       
+>         // recalculate FPS every half second for better accuracy.
+>         if(sec > 0.5)
+>         {
+>           timeSinceLastFPS = (new Date).getTime();
+>           framesSinceLastFPS = 0;
+>           p.FRAME_RATE = fps;
+>         }
+> 
+>         p.frameCount++;
+>         inDraw = true;
+>         p.draw();
+>         inDraw = false;       
+>       }else {
+> 		  if( hasBackground ){ p.background(); }
+> 		  p.frameCount++;      
+> 		  inDraw = true;
+> 		  p.pushMatrix();
+> 		  p.draw();
+> 		  p.popMatrix();
+> 		  inDraw = false;      
+> 	  }
+1200,1201c1299,1300
+< //! This can't be right... right?
+<     p.byte     = function byte( aNumber               ){ return aNumber || 0;                           };
+---
+> 
+>     p.byte     = function byte( aNumber ){ return aNumber || 0;                           };
+1287,1295c1386,1467
+<     p.size = function size( aWidth, aHeight ){
+<     
+<       var props = { fillStyle   : curContext.fillStyle,
+<                     strokeStyle : curContext.strokeStyle,
+<                     lineCap     : curContext.lineCap
+<                   } // More to be added...
+<       
+<       curElement.width = p.width = aWidth;
+<       curElement.height = p.height = aHeight;
+---
+>     p.size = function size( aWidth, aHeight, aMode ){
+> 	  if(aMode && aMode == "OPENGL")
+>       {
+>         // get the 3D rendering context
+>         try {
+>           cur3DContext = curElement.getContext("moz-webgl");
+>         } catch (e) {}
+> 
+>         if (!cur3DContext){
+>           try {
+>             cur3DContext = curElement.getContext("webkit-3d");
+>           } catch (e) {}
+>         }
+> 
+>         if(!cur3DContext)
+>         {
+>           throw "Your browser does not support WebGL!"
+>         }
+>         else
+>         {
+>           cur3DContext.viewport(0,0,curElement.width, curElement.height);
+>           cur3DContext.clearColor(204/255, 204/255, 204/255, 1.0);
+>           cur3DContext.enable(cur3DContext.DEPTH_TEST);
+> 		  
+> 		  for (var i = 0; i < p.SINCOS_LENGTH; i++) {
+>            p.sinLUT[i] = p.sin(i * (p.PI/180) * 0.5);
+>            p.cosLUT[i] = p.cos(i * (p.PI/180) * 0.5);
+>           }
+>         }
+>         
+>         var vertexShaderObject = cur3DContext.createShader(cur3DContext.VERTEX_SHADER);
+>         cur3DContext.shaderSource(vertexShaderObject, vertexShaderSource);
+>         cur3DContext.compileShader(vertexShaderObject);
+>         if(!cur3DContext.getShaderi(vertexShaderObject, cur3DContext.COMPILE_STATUS))
+>         {
+>           alert(cur3DContext.getShaderInfoLog(vertexShaderObject));
+>         }
+>         
+>         var fragmentShaderObject = cur3DContext.createShader(cur3DContext.FRAGMENT_SHADER);
+>         cur3DContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
+>         cur3DContext.compileShader(fragmentShaderObject);
+>         if(!cur3DContext.getShaderi(fragmentShaderObject, cur3DContext.COMPILE_STATUS))
+>         {
+>           alert(cur3DContext.getShaderInfoLog(fragmentShaderObject));
+>         }
+>         
+>         programObject = cur3DContext.createProgram();
+>         cur3DContext.attachShader(programObject,vertexShaderObject);
+>         cur3DContext.attachShader(programObject,fragmentShaderObject);
+>         cur3DContext.linkProgram(programObject);
+>         
+>         if(!cur3DContext.getProgrami(programObject, cur3DContext.LINK_STATUS))
+>         {
+>           alert("Error linking shaders.");
+>         }
+>         else
+>         {
+>           cur3DContext.useProgram(programObject);
+>         }
+>         
+> 		boxBuffer = cur3DContext.createBuffer();
+>         boxNBuffer = cur3DContext.createBuffer();
+>         sphereBuffer = cur3DContext.createBuffer();
+>         sphereNBuffer = cur3DContext.createBuffer();
+> 		
+>         cur3DContext.bindBuffer(cur3DContext.ARRAY_BUFFER,sphereBuffer);
+>                 
+>         cur3DContext.bindBuffer(cur3DContext.ARRAY_BUFFER,sphereNBuffer);
+>                 
+>         curElement.width = p.width = aWidth;
+>         curElement.height = p.height = aHeight;
+>       }
+>       else
+>       {
+> 		  curContext = curElement.getContext( "2d" );
+> 		  var props = { fillStyle   : curContext.fillStyle,
+> 						strokeStyle : curContext.strokeStyle,
+> 						lineCap     : curContext.lineCap
+> 					  } // More to be added...
+> 		  
+> 		  curElement.width = p.width = aWidth;
+> 		  curElement.height = p.height = aHeight;
+1297c1469,1470
+<       for( var i in props ){ curContext[ i ] = props[ i ] };
+---
+> 		  for( var i in props ){ curContext[ i ] = props[ i ] };
+> 	  }
+1669c1842,1859
+< 
+---
+> 	p.curve= function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4){
+> 	  if(arguments.length == 8)// curve(x1, y1, x2, y2, x3, y3, x4, y4)
+> 	  {
+> 		p.beginShape(p.LINES);
+> 		p.curveVertex(x1, y1);
+>         p.curveVertex(x1, y1);
+>         p.curveVertex(x2, y2);
+>         p.curveVertex(x3, y3);
+>         p.curveVertex(x4, y4);
+>         p.curveVertex(x4, y4);
+> 		p.endShape();
+> 		
+> 	  }else{//3D curve(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
+> 		if(cur3DContext){
+> 			
+> 		}
+> 	  }	
+> 	};
+1863c2053,2097
+< 
+---
+> 	p.rotateX = function rotateX(){
+> 	  
+> 	  aAngle = radians(arguments[0]);
+> 	  var sinA = sin(aAngle);
+>       var cosA = cos(aAngle);
+>       var sinA2 = sinA * sinA;
+> 	  var matrix = [
+> 		1, 0, 0, 0,
+> 		0, cosA, sinA , 0,
+> 		0, (-1*sinA),  cosA, 0,
+> 		0, 0, 0, 1
+> 		];
+> 		
+> 	  //push this matrix onto the stack
+> 	};
+> 	p.rotateY = function rotateY(){
+> 	  
+> 	  aAngle = radians(arguments[0]);
+> 	  var sinA = sin(aAngle);
+>       var cosA = cos(aAngle);
+>       var sinA2 = sinA * sinA;
+> 	  var matrix = [
+> 		cosA, 0, (-1*sinA), 0,
+> 		0, 1, 0, 0,
+> 		sinA, 0, cosA, 0,
+> 		0, 0, 0, 1
+> 		];
+> 
+> 	  //push this matrix onto the stack
+> 	};
+> 	p.rotateZ = function rotateZ(){
+> 	  
+> 	  aAngle = radians(arguments[0]);
+> 	  var sinA = sin(aAngle);
+>       var cosA = cos(aAngle);
+>       var sinA2 = sinA * sinA;
+> 	  var matrix = [
+> 		cosA, sinA, 0, 0,
+> 		(-1*sinA), cosA, 0, 0,
+> 		0, 0,  1, 0,
+> 		0, 0, 0, 1
+> 		];
+> 	
+> 	  //push this matrix onto the stack
+> 	};
+1869c2103,2104
+< 
+---
+> 	p.PImage = function PImage(){};
+> 	
+1894a2130,2131
+> 	  img.set = p.set;
+>       img.get = p.get;
+1902d2138
+<       
+1907,1908c2143,2157
+<       }
+< 
+---
+>       }else if ( arguments.length == 4 ){
+> 		var c = p.createGraphics( arguments[2], arguments[3] );
+> 		c.pixels = curContext.getImageData(arguments[0],arguments[1],arguments[2], arguments[3] ); 
+> 		//create a canvas to dump the ImageData onto
+> 		var canvas = document.createElement( "canvas" );
+> 		var context = canvas.getContext( "2d" );
+> 		//put the ImageData on this canvas
+> 		context.putImageData(c.pixels, 0 ,0, arguments[0],arguments[1], arguments[2], arguments[3] );
+> 		c.image( context, 0, 0 );
+>         return c;
+> 	  }else if ( arguments.length == 2 ){
+> 		if(p.pixels){
+> 		 return p.pixels[y * this.width + x];
+> 		}
+> 	  }
+1928c2177,2178
+<     // Paints a pixel array into the canvas
+---
+>     // Paints a pixel array into the canva
+> 	//PImage.set(x,y,color) not working
+1931c2181
+<       if( obj && obj.img ){
+---
+>       if( obj && obj.data){//PImage coming in
+1935,1943c2185,2193
+<       }else{
+<       
+<         var oldFill = curContext.fillStyle,
+<             color   = obj;
+<             
+<         curContext.fillStyle = color;
+<         curContext.fillRect( Math.round( x ), Math.round( y ), 1, 1 );
+<         curContext.fillStyle = oldFill;
+<         
+---
+>       }else{ //color coming in
+> 		index = arguments[1] * this.width + arguments[0];
+> 		if(this.pixels) //set called by itself
+> 		{
+> 			if(this.pixels.length)
+> 			{
+> 				this.pixels[index] = obj;
+> 			}
+> 		}
+1990,1998c2240,2306
+<        if( arguments.length ){
+<         
+<         if( img.data && img.data.img ){
+<           curBackground = img.data;
+<         }else{
+<           curBackground = p.color.apply( this, arguments );
+<         }
+<         
+<       }
+---
+>        if(cur3DContext){
+> 			// create alias
+> 			var col = arguments;
+> 
+> 			// if user passes in 1 argument, they either want
+> 			// a shade of gray or 
+> 			// it is a color object or
+> 			// it's a hex value
+> 			if(arguments.length == 1)
+> 			{
+> 				// type passed in was color()
+> 				if(typeof arguments[0] == "string")
+> 				{
+> 					var c = arguments[0].slice(5,-1).split(",");
+> 
+> 					// if 3 component color was passed in, alpha will be 1
+> 					// otherwise it will already be normalized.
+> 					cur3DContext.clearColor(c[0]/255,c[1]/255,c[2]/255,c[3]);
+> 				}
+> 
+> 				// user passes in value which ranges from 0-255, but opengl
+> 				// wants a normalized value.
+> 				else if(typeof arguments[0] == "number")
+> 				{
+> 					cur3DContext.clearColor(col[0]/255,col[0]/255,col[0]/255,1.0);
+> 				}
+> 			}
+> 			else if(arguments.length == 2)
+> 			{
+> 				if(typeof arguments[0] == "string")
+> 				{
+> 					var c = arguments[0].slice(5,-1).split(",");
+> 					// Processing is ignoring alpha
+> 					// var a = arguments[0]/255;
+> 					cur3DContext.clearColor(c[0]/255,c[1]/255,c[2]/255,1.0);
+> 				}
+> 				// first value is shade of gray, second is alpha
+> 				// background(0,255);
+> 				else if(typeof arguments[0] == "number")
+> 				{
+> 					var c = arguments[0]/255;
+> 
+> 					// Processing is ignoring alpha
+> 					// var a = arguments[0]/255;
+> 					var a = 1.0;
+> 					cur3DContext.clearColor(c,c,c,a);
+> 				}
+> 			}
+> 
+> 			// background(255,0,0) or background(0,255,0,255);
+> 			else if(arguments.length == 3 || arguments.length == 4)
+> 			{
+> 			// Processing seems to ignore this value, so just use 1.0 instead.
+> 			//var a = arguments.length == 3? 1.0: arguments[3]/255;
+> 			cur3DContext.clearColor(col[0]/255,col[1]/255,col[2]/255,1.0);
+> 			}
+> 	  }else{
+> 	   
+> 		  if( arguments.length ){
+>         
+> 			if( img.data && img.data.img ){
+> 			  curBackground = img.data;
+> 			}else{
+> 			  curBackground = p.color.apply( this, arguments );
+> 			}
+> 			
+> 		  }
+2000,2004c2308,2312
+<       if( curBackground.img ){
+<       
+<         p.image( img, 0, 0 );
+<         
+<       }else{
+---
+> 		  if( curBackground.img ){
+> 		  
+> 			p.image( img, 0, 0 );
+> 			
+> 		  }else{
+2006,2009c2314,2317
+<         var oldFill = curContext.fillStyle;
+<         curContext.fillStyle = curBackground + "";
+<         curContext.fillRect( 0, 0, p.width, p.height );
+<         curContext.fillStyle = oldFill;
+---
+> 			var oldFill = curContext.fillStyle;
+> 			curContext.fillStyle = curBackground + "";
+> 			curContext.fillRect( 0, 0, p.width, p.height );
+> 			curContext.fillStyle = oldFill;
+2011c2319,2320
+<       }
+---
+> 		  }
+> 		}
+2252a2562,2829
+>     ///////////////////////////////////////////////////////////////
+> 	// 3D Stuff
+> 	/////////////////////////////////////////////////////////////
+> 	p.box = function()
+>     {
+>       if(cur3DContext)
+>       {
+>         var x,
+> 			y,
+> 			z;
+> 		if(arguments.length == 1)
+> 		{
+> 		  x = y= z = arguments[0];
+> 		  
+> 		}else{
+> 		  x = arguments[0];
+> 		  y = arguments[1];
+> 		  z = arguments[2];
+> 		}
+> 		
+> 		//programObject declated in size, get index of shader variable
+> 		var loc = cur3DContext.getAttribLocation(programObject, "Vertex");
+> 		//make it the current buffer ur working with
+> 		cur3DContext.bindBuffer(cur3DContext.ARRAY_BUFFER,boxBuffer); 
+> 		//sets the buffer data
+> 		cur3DContext.bufferData(cur3DContext.ARRAY_BUFFER, newWebGLArray(boxVerts),cur3DContext.STATIC_DRAW);
+> 		//describe the buffer data
+> 		cur3DContext.vertexAttribPointer(loc, 3, cur3DContext.FLOAT, false, 0,0);
+>         cur3DContext.enableVertexAttribArray(loc);
+> 
+> 		//do the same for normals
+> 		var loc = cur3DContext.getAttribLocation(programObject, "Normal");
+> 		//make it the current buffer ur working with
+> 		cur3DContext.bindBuffer(cur3DContext.ARRAY_BUFFER,boxNBuffer); 
+> 		//sets the buffer data
+> 		cur3DContext.bufferData(cur3DContext.ARRAY_BUFFER, newWebGLArray(boxNorms),cur3DContext.STATIC_DRAW);
+> 		//describe the buffer data
+> 		cur3DContext.vertexAttribPointer(loc, 3, cur3DContext.FLOAT, false, 0,0);
+>         cur3DContext.enableVertexAttribArray(loc);
+> 		
+> 		var camLoc = cur3DContext.getUniformLocation(programObject, "cam");
+>         
+>         cur3DContext.uniformMatrix4fv(camLoc, false,
+>           [ 1, 0, 0, 0,
+>             0, 1, 0, 0, 
+>             0, 0, 1, 0, 
+>             0, 0, 0, 1]);
+>         
+>         var uloc = cur3DContext.getUniformLocation(programObject, "trans");
+> 		//-75 is used just so u can see the object, will not be used once camera functions are completed
+> 		var transMatrix =  [
+>      	  x, 0, 0, 0,
+>           0, y, 0, 0, 
+>           0, 0, z, 0, 
+>           0, 0, -75, 1
+> 		];
+>         cur3DContext.uniformMatrix4fv(uloc, false, transMatrix);
+> 		//TRIANGLE_STRIP to be used in the future
+> 		cur3DContext.drawArrays(cur3DContext.LINE_STRIP, 0, boxVerts.length/3);
+>       
+>       }
+>     }
+> 	//SPHERE and SphereDetail
+> 	//Taken and revised from:
+> 	//git://github.com/omouse/ohprocessing.git › core › src › processing › core › PGraphics.java
+> 	//UNDER :License: LGPL – Java
+> 	p.sphereDetail =  function sphereDetail(ures, vres) {
+> 	 if(arguments.length==1)
+> 	 {
+> 		ures = vres = arguments[0];
+> 	 }
+>      if (ures < 3) ures = 3; // force a minimum res
+>      if (vres < 2) vres = 2; // force a minimum res
+>      //if it hasn't changed do nothing
+> 	 if ((ures == p.sphereDetailU) && (vres == p.sphereDetailV)) return;
+> 
+>      var delta = p.SINCOS_LENGTH/ures;
+>      var cx = new Array(ures);
+>      var cz = new Array(ures);
+>      // calc unit circle in XZ plane
+>      for (var i = 0; i < ures; i++) {
+>       cx[i] = p.cosLUT[parseInt((i*delta) % p.SINCOS_LENGTH)];
+>       cz[i] = p.sinLUT[parseInt((i*delta) % p.SINCOS_LENGTH)];
+>      }
+>      // computing vertexlist
+>      // vertexlist starts at south pole
+>      var vertCount = ures * (vres-1) + 2;
+>      var currVert = 0;
+> 
+>      // re-init arrays to store vertices
+>      p.sphereX = new Array(vertCount);
+>      p.sphereY = new Array(vertCount);
+>      p.sphereZ = new Array(vertCount);
+> 
+>      var angle_step = p.SINCOS_LENGTH/vres;
+>      var angle = angle_step;
+> 
+>      // step along Y axis
+>      for (var i = 1; i < vres; i++) {
+>        var curradius = p.sinLUT[parseInt(angle % p.SINCOS_LENGTH)];
+>        var currY     = -p.cosLUT[parseInt(angle % p.SINCOS_LENGTH)];
+>        for (var j = 0; j < ures; j++) {
+>          p.sphereX[currVert] = cx[j] * curradius;
+>          p.sphereY[currVert] = currY;
+>          p.sphereZ[currVert++] = cz[j] * curradius;
+>        }
+>        angle += angle_step;
+>      }
+>      p.sphereDetailU = ures;
+>      p.sphereDetailV = vres;
+>   }
+> 
+>     p.sphere = function()
+>     {
+>       if(cur3DContext)
+>       {
+>         var sRad = arguments[0];
+> 		//ATTEMPT 2 USING Sphere Detail
+> 		var newSphereVerts = new Array();
+> 		var newSphereNorms = new Array();
+> 		if ((p.sphereDetailU < 3) || (p.sphereDetailV < 2)) {
+> 		   p.sphereDetail(30);
+> 		}
+> 		for (var i = 0; i < p.sphereDetailU; i++) {
+> 		  newSphereNorms.push(0);
+> 		  newSphereNorms.push(-1);
+> 		  newSphereNorms.push(0);
+> 		  newSphereVerts.push(0);
+> 		  newSphereVerts.push(-1);
+> 		  newSphereVerts.push(0);
+> 		  newSphereNorms.push(p.sphereX[i]);
+> 		  newSphereNorms.push(p.sphereY[i]);
+> 		  newSphereNorms.push(p.sphereZ[i]);
+> 		  newSphereVerts.push(p.sphereX[i]);
+> 		  newSphereVerts.push(p.sphereY[i]);
+> 		  newSphereVerts.push(p.sphereZ[i]);
+> 		}
+> 		newSphereNorms.push(0);
+> 		newSphereNorms.push(-1);
+> 		newSphereNorms.push(0);
+> 		newSphereVerts.push(0);
+> 		newSphereVerts.push(-1);
+> 		newSphereVerts.push(0);
+> 		newSphereNorms.push(p.sphereX[0]);
+> 		newSphereNorms.push(p.sphereY[0]);
+> 		newSphereNorms.push(p.sphereZ[0]);
+> 		newSphereVerts.push(p.sphereX[0]);
+> 		newSphereVerts.push(p.sphereY[0]);
+> 		newSphereVerts.push(p.sphereZ[0]);
+> 
+> 		var v1,v11,v2;
+> 
+> 		// middle rings
+> 		var voff = 0;
+> 		for (var i = 2; i < p.sphereDetailV; i++) {
+> 		  v1 = v11 = voff;
+> 		  voff += p.sphereDetailU;
+> 		  v2 = voff;
+> 		  for (var j = 0; j < p.sphereDetailU; j++) {
+> 			newSphereNorms.push(parseFloat(p.sphereX[v1]));
+> 			newSphereNorms.push(parseFloat(p.sphereY[v1]));
+> 			newSphereNorms.push(parseFloat(p.sphereZ[v1]));
+> 			//verts
+> 			newSphereVerts.push(parseFloat(p.sphereX[v1]));
+> 			newSphereVerts.push(parseFloat(p.sphereY[v1]));
+> 			newSphereVerts.push(parseFloat(p.sphereZ[v1++]));
+> 			//normals
+> 			newSphereNorms.push(parseFloat(p.sphereX[v2]));
+> 			newSphereNorms.push(parseFloat(p.sphereY[v2]));
+> 			newSphereNorms.push(parseFloat(p.sphereZ[v2]));
+> 			//verts
+> 			newSphereVerts.push(parseFloat(p.sphereX[v2]));
+> 			newSphereVerts.push(parseFloat(p.sphereY[v2]));
+> 			newSphereVerts.push(parseFloat(p.sphereZ[v2++]));
+> 		  }
+> 		  // close each ring
+> 		  v1 = v11;
+> 		  v2 = voff;
+> 		  newSphereNorms.push(parseFloat(p.sphereX[v1]));
+> 		  newSphereNorms.push(parseFloat(p.sphereY[v1]));
+> 		  newSphereNorms.push(parseFloat(p.sphereZ[v1]));
+> 		  //verts
+> 		  newSphereVerts.push(parseFloat(p.sphereX[v1]));
+> 		  newSphereVerts.push(parseFloat(p.sphereY[v1]));
+> 		  newSphereVerts.push(parseFloat(p.sphereZ[v1]));
+> 		  //norms
+> 		  newSphereNorms.push(parseFloat(p.sphereX[v2]));
+> 		  newSphereNorms.push(parseFloat(p.sphereY[v2]));
+> 		  newSphereNorms.push(parseFloat(p.sphereZ[v2]));
+> 		  //verts
+> 		  newSphereVerts.push(parseFloat(p.sphereX[v2]));
+> 		  newSphereVerts.push(parseFloat(p.sphereY[v2]));
+> 		  newSphereVerts.push(parseFloat(p.sphereZ[v2]));
+> 		}
+> 
+> 		// add the northern cap
+> 		for (var i = 0; i < p.sphereDetailU; i++) {
+> 		  v2 = voff + i;
+> 		  //norms
+> 		  newSphereNorms.push(parseFloat(p.sphereX[v2]));
+> 		  newSphereNorms.push(parseFloat(p.sphereY[v2]));
+> 		  newSphereNorms.push(parseFloat(p.sphereZ[v2]));
+> 		  //verts
+> 		  newSphereVerts.push(parseFloat(p.sphereX[v2]));
+> 		  newSphereVerts.push(parseFloat(p.sphereY[v2]));
+> 		  newSphereVerts.push(parseFloat(p.sphereZ[v2]));
+> 		  // newSphereNorms.push(0);
+> 		  // newSphereNorms.push(1);
+> 		  // newSphereNorms.push(0);
+> 		  // newSphereVerts.push(0);
+> 		  // newSphereVerts.push(1);
+> 		  // newSphereVerts.push(0);
+> 		}
+> 		newSphereNorms.push(parseFloat(p.sphereX[voff]));
+> 		newSphereNorms.push(parseFloat(p.sphereY[voff]));
+> 		newSphereNorms.push(parseFloat(p.sphereZ[voff]));
+> 		//verts
+> 		newSphereVerts.push(parseFloat(p.sphereX[voff]));
+> 		newSphereVerts.push(parseFloat(p.sphereY[voff]));
+> 		newSphereVerts.push(parseFloat(p.sphereZ[voff]));
+> 		//norms
+> 		newSphereNorms.push(0);
+> 		newSphereNorms.push(1);
+> 		newSphereNorms.push(0);
+> 		//verts
+> 		newSphereVerts.push(0);
+> 		newSphereVerts.push(1);
+> 		newSphereVerts.push(0);
+> 		
+> 		//programObject declated in size, get index of shader variable
+> 		var loc = cur3DContext.getAttribLocation(programObject, "Vertex");
+> 		//make it the current buffer ur working with
+> 		cur3DContext.bindBuffer(cur3DContext.ARRAY_BUFFER,sphereBuffer); 
+> 		//sets the buffer data
+> 		cur3DContext.bufferData(cur3DContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),cur3DContext.STATIC_DRAW);
+> 		//describe the buffer data
+> 		cur3DContext.vertexAttribPointer(loc, 3, cur3DContext.FLOAT, false, 0,0);
+>         cur3DContext.enableVertexAttribArray(loc);
+> 
+> 		//do the same for normals
+> 		var loc = cur3DContext.getAttribLocation(programObject, "Normal");
+> 		//make it the current buffer ur working with
+> 		cur3DContext.bindBuffer(cur3DContext.ARRAY_BUFFER,sphereNBuffer); 
+> 		//sets the buffer data
+> 		cur3DContext.bufferData(cur3DContext.ARRAY_BUFFER, newWebGLArray(newSphereNorms),cur3DContext.STATIC_DRAW);
+> 		//describe the buffer data
+> 		cur3DContext.vertexAttribPointer(loc, 3, cur3DContext.FLOAT, false, 0,0);
+>         cur3DContext.enableVertexAttribArray(loc);
+>         
+> 		var camLoc = cur3DContext.getUniformLocation(programObject, "cam");
+> 		
+>         cur3DContext.uniformMatrix4fv(camLoc, false,
+>           [ 1, 0, 0, 0,
+>             0, 1, 0, 0, 
+>             0, 0, 1, 0, 
+>             0, 0, 0, 1]);
+> 			
+>         var uloc = cur3DContext.getUniformLocation(programObject, "trans");
+> 		//-7 is for the camera and will not be needed once the camera functionality is completed
+> 		var transMatrix =  [
+>      	  sRad, 0, 0, 0,
+>           0, sRad, 0, 0, 
+>           0, 0, sRad, 0, 
+>           0, 0, -7, 1
+> 		];
+>         cur3DContext.uniformMatrix4fv(uloc, false, transMatrix);
+>         //TRIANGLE_STRIP to be used in the future
+>         cur3DContext.drawArrays(cur3DContext.LINE_STRIP, 0, newSphereVerts.length/3);
+2254,2255c2831,2833
+< 
+< 
+---
+>       }
+>     }
+> 	
+2680,2687c3258,3267
+<       p.stroke( 0 );
+<       p.fill( 255 );
+<     
+<       // Canvas has trouble rendering single pixel stuff on whole-pixel
+<       // counts, so we slightly offset it (this is super lame).
+<       
+<       curContext.translate( 0.5, 0.5 );    
+<           
+---
+>       if(curContext)
+> 	  {
+> 		  p.stroke( 0 );
+> 		  p.fill( 255 );
+> 		
+> 		  // Canvas has trouble rendering single pixel stuff on whole-pixel
+> 		  // counts, so we slightly offset it (this is super lame).
+> 		  
+> 		  curContext.translate( 0.5, 0.5 );    
+>       }
