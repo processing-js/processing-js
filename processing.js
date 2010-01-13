@@ -1,22 +1,22 @@
 /*
 
-  Processing.js  
-    a port of the Processing visualization language
+  P R O C E S S I N G - 0 . 0 . J S
+  a port of the Processing visualization language
   
   License       : MIT 
-  Developer     : John Resig - eJohn.org
+  Developer     : John Resig: http://ejohn.org
   Web Site      : http://processingjs.org  
   Java Version  : http://processing.org
   Github Repo.  : http://github.com/jeresig/processing-js
+  Bug Tracking  : http://processing-js.lighthouseapp.com
   Mozilla POW!  : http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
-  Maintained by : F1LT3R & the students of Open Seneca...
-                  http://zenit.senecac.on.ca/wiki/index.php/Processing.js
+  Maintained by : Seneca: http://zenit.senecac.on.ca/wiki/index.php/Processing.js
+                  Hyper-Metrix: http://hyper-metrix.com/#Processing
 
 */
 
 
-(function(){
-  
+(function(){ 
 
   // Attach Processing to the window 
   this.Processing = function Processing( aElement, aCode ){
@@ -27,7 +27,7 @@
     }
       
     // Build an Processing functions and env. vars into 'p'  
-    var p = buildProcessing( aElement );  
+    var p = buildProcessing( aElement );
 
     // Send aCode Processing syntax to be converted to JavaScript
     if( aCode ){ p.init( aCode ); }
@@ -35,10 +35,14 @@
     return p;
     
   };
-  
-  // Auto-load Processing sketches
-  addEventListener( 'DOMContentLoaded', USInit, false );
-  
+
+  this.Processing.library = {};
+  this.Processing.Import = function( code ){
+    for( i in code ){
+      Processing[ i ] = Processing.library[ i ] = code[ i ];
+    }
+  }
+   
   // IE Unfriendly AJAX Method
   var ajax=function( url ){
     var AJAX;
@@ -49,7 +53,23 @@
     }else{
       return false;
     }
-  }
+  };
+  
+  // Automatic Initialization Method
+  var init = function(){
+    
+    var canvas  = document.getElementsByTagName( 'canvas' ),
+        datasrc = undefined;
+
+    for( var i = 0; l = i < canvas.length; i++ ){
+      if( datasrc = canvas[ i ].getAttribute( 'datasrc' ) ){
+        Processing( canvas[ i ], ajax( datasrc ) );
+      }
+    }
+    
+  };
+ 
+  addEventListener( 'DOMContentLoaded', function(){ init(); }, false );
  
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   var parse = Processing.parse = function parse( aCode, p ){
@@ -272,11 +292,18 @@
 
   // Attach Processing functions to 'p' 
   function buildProcessing( curElement ){
-              
+  
     // Create the 'p' object
     var p = {};
+    p.curElement      = curElement;
+    p.curContext      = curElement.getContext( "2d" );
+    for( var i in Processing.library ){
+      p[ i ] = Processing.library[ i ];
+    }
+    
     
     // Set Processing defaults / environment variables
+    p.name            = 'Processing.js Instance';
     p.PI              = Math.PI;
     p.TWO_PI          = 2 * p.PI;
     p.HALF_PI         = p.PI / 2;
@@ -310,7 +337,8 @@
     p.codedKeys = [ 69, 70, 71, 72  ];
 
     // "Private" variables used to maintain state
-    var curContext      = curElement.getContext( "2d" ),
+    var curElement      = p.curElement,
+        curContext      = p.curContext,
         doFill          = true,
         doStroke        = true,
         loopStarted     = false,
@@ -349,6 +377,8 @@
         prevX,
         prevY;
     
+    
+    
     // Store a line for println(), print() handline
     p.ln = "";
     
@@ -386,6 +416,48 @@
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
     ////////////////////////////////////////////////////////////////////////////
+
+    p.shorten = function( ary ){
+    
+      var newary = new Array();
+
+      // copy array into new array
+      var len = ary.length;     
+      for( var i = 0; i < len; i++ ){
+        newary[ i ] = ary[ i ];
+      }
+
+      newary.pop();
+
+      return newary;
+    }
+
+  
+    p.expand = function( ary, newSize ){
+
+      var newary = new Array();
+      
+      var len = ary.length
+      for( var i = 0; i < len; i++ ){
+          newary[ i ] = ary[ i ];
+      }
+      
+      if( arguments.length == 1 ){
+        
+        // double size of array
+        newary.length *= 2;
+        
+      }else if( arguments.length == 2 ){
+        
+        // size is newSize
+        newary.length = newSize;
+        
+      }
+      
+      return newary;
+    }
+
+
 
     p.ArrayList = function ArrayList( size, size2, size3 ){
     
@@ -432,84 +504,99 @@
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
 
-    p.color = function color( aValue1, aValue2, aValue3, aValue4 ){
+    // In case I ever need to do HSV conversion:
+    // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
+    p.color = function color( aValue1, aValue2, aValue3, aValue4 ) {
       var aColor = "";
       
-      if( arguments.length == 3 ){
+      if ( arguments.length == 3 ) {
       
         aColor = p.color( aValue1, aValue2, aValue3, opacityRange );
-      
-      } else if ( arguments.length == 4 ){
-       
+      } else if ( arguments.length == 4 ) {
         var a = aValue4 / opacityRange;
-        
-        a = isNaN( a ) ? 1 : a ;
+        a = isNaN(a) ? 1 : a;
 
-        if( curColorMode == p.HSB ){
-          var rgb = HSBtoRGB( aValue1, aValue2, aValue3 )
-              r   = rgb[ 0 ],
-              g   = rgb[ 1 ],
-              b   = rgb[ 2 ];
-        }else{
-          var r = getColor( aValue1, redRange );
-          var g = getColor( aValue2, greenRange );
-          var b = getColor( aValue3, blueRange );
+        if ( curColorMode == p.HSB ) {
+          var rgb = HSBtoRGB(aValue1, aValue2, aValue3);
+          var r = rgb[0], g = rgb[1], b = rgb[2];
+        } else {
+          var r = getColor(aValue1, redRange);
+          var g = getColor(aValue2, greenRange);
+          var b = getColor(aValue3, blueRange);
         }
-
-        aColor = "rgba("+ r +","+ g +","+ b +","+ a +")";
-      
-      }else if( typeof aValue1 == "string" ){
+        aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
+      } else if ( typeof aValue1 == "string" ) {
         aColor = aValue1;
-
-        if( arguments.length == 2 ){
-          var c = aColor.split( "," );
-          c[ 3 ] = ( aValue2 / opacityRange ) + ")";
-          aColor = c.join( "," );
+               
+        if ( arguments.length == 2 ) {
+          var c = aColor.split(",");
+          c[3] = (aValue2 / opacityRange) + ")";
+          aColor = c.join(",");
         }
-      }else if( arguments.length == 2 ){
+        
+        if( aColor[ 0 ] == '#' ){
+          aColor = aValue1.replace(/#([a-f0-9]{6})/ig, function(m, hex){
+            return toNumbers( hex );
+          }).split(',');
+          aColor = p.color( aColor[ 0 ], aColor[ 1 ], aColor[ 2 ], 255 );
+        }
+        
+      } else if ( arguments.length == 2 ) {
         aColor = p.color( aValue1, aValue1, aValue1, aValue2 );
-      }else if( typeof aValue1 == "number" ){
+      } else if ( typeof aValue1 == "number" && aValue1 < 256 && aValue1 >= 0) {
         aColor = p.color( aValue1, aValue1, aValue1, opacityRange );
-      }else{
+      } else if ( typeof aValue1 == "number" ) {
+        var intcolor = 0;
+        if( aValue1 < 0 ){
+          intcolor = 4294967296 - ( aValue1 * -1 );
+        }else{
+          intcolor = aValue1;
+        }
+        var ac = Math.floor((intcolor % 4294967296) / 16777216);
+        var rc = Math.floor((intcolor % 16777216) / 65536);
+        var gc = Math.floor((intcolor % 65536) / 256);
+        var bc = intcolor % 256;
+          
+        aColor = p.color( rc, gc, bc, ac );
+      } else {
         aColor = p.color( redRange, greenRange, blueRange, opacityRange );
-      }
+      }      
 
       // HSB conversion function from Mootools, MIT Licensed
-      function HSBtoRGB( h, s, b ){
-
-        h = ( h / redRange   ) * 360;
-        s = ( s / greenRange ) * 100;
-        b = ( b / blueRange  ) * 100;
-
-        var br = Math.round( b / 100 * 255 );
-
-        if( s == 0 ){
-
-          return [ br, br, br ];
-
-        }else{
-
+      function HSBtoRGB(h, s, b) {
+        h = (h / redRange) * 360;
+        s = (s / greenRange) * 100;
+        b = (b / blueRange) * 100;
+        var br = Math.round(b / 100 * 255);
+        if (s == 0){
+          return [br, br, br];
+        } else {
           var hue = h % 360;
-          var f   = hue % 60;
-          var p   = Math.round( ( b * ( 100  - s ) ) / 10000 * 255 );
-          var q   = Math.round( ( b * ( 6000 - s * f ) ) / 600000 * 255 );
-          var t   = Math.round( ( b * ( 6000 - s * ( 60 - f ) ) ) / 600000 * 255 );
-
-          switch ( Math.floor( hue / 60 ) ){
-            case 0: return [ br, t, p ];
-            case 1: return [ q, br, p ];
-            case 2: return [ p, br, t ];
-            case 3: return [ p, q, br ];
-            case 4: return [ t, p, br ];
-            case 5: return [ br, p, q ];
+          var f = hue % 60;
+          var p = Math.round((b * (100 - s)) / 10000 * 255);
+          var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
+          var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
+          switch (Math.floor(hue / 60)){
+            case 0: return [br, t, p];
+            case 1: return [q, br, p];
+            case 2: return [p, br, t];
+            case 3: return [p, q, br];
+            case 4: return [t, p, br];
+            case 5: return [br, p, q];
           }
-          
         }
-        
       }
-
-      function getColor( aValue, range ){
-        return Math.round( 255 * ( aValue / range ) );
+      
+      function toNumbers( str ){
+        var ret = [];
+        str.replace( /(..)/g, function( str ){
+          ret.push( parseInt( str, 16 ) );
+        });
+        return ret;
+      }      
+      
+      function getColor( aValue, range ) {
+        return Math.round(255 * (aValue / range));
       }
       
       return aColor;
@@ -521,7 +608,7 @@
     p.alpha = function( aColor ){ return parseInt( parseFloat( verifyChannel( aColor ).split( "," )[ 3 ] ) * 255 ); };
 
     function verifyChannel( aColor ){ 
-      if( aColor.constructor == Array ){    
+      if( aColor.constructor == Array ){
         return aColor;
       } else {
         return p.color( aColor );
@@ -659,6 +746,98 @@
     // String functions
     ////////////////////////////////////////////////////////////////////////////
 
+    p.nfs = function( num, left, right){
+      var str;
+      // array handling
+      if (typeof num == "object"){
+        str = new Array();
+        len = num.length;
+        for(var i=0; i < len; i++){
+          str[i] = p.nfs(num[i], left, right);
+        }
+      }
+      else if (arguments.length == 3){
+        var negative = false;
+        if (num < 0)
+          negative = true;
+          
+        str = "" + Math.abs(num);
+        var digits = ("" + Math.floor(Math.abs(num))).length;
+        var count = left - digits;
+        while (count > 0){
+          str = "0" + str;
+          count--;
+        }
+        // get the number of decimal places, if none will be -1
+        var decimals = ("" + Math.abs(num)).length - digits - 1;
+        if (decimals == -1 && right > 0)
+          str = str + ".";
+        if (decimals != -1)
+          count = right - decimals;
+        else if (decimals == -1 && right > 0){
+          count = right;
+        }
+        else
+          count = 0;
+        while (count > 0){
+          str = str + "0";
+          count--;
+        }
+        str = (negative ? "-" : " ") + str;
+      }
+      else if (arguments.length == 2){
+        str = p.nfs(num, left, 0);
+      }
+      return str;
+    }
+    
+    
+    p.unhex = function( str ){
+        var value = 0,
+            multiplier = 1,
+            num = 0;
+        
+        var len = str.length - 1;
+        for (var i = len ; i >= 0; i--){
+            try{
+                switch(str[i]){
+                    case "0": num = 0; break;
+                    case "1": num = 1; break;
+                    case "2": num = 2; break;
+                    case "3": num = 3; break;
+                    case "4": num = 4; break;
+                    case "5": num = 5; break;
+                    case "6": num = 6; break;
+                    case "7": num = 7; break;
+                    case "8": num = 8; break;
+                    case "9": num = 9; break;
+                    case "A":
+                    case "a": num = 10; break;
+                    case "B":
+                    case "b": num = 11; break;
+                    case "C": 
+                    case "c": num = 12; break;
+                    case "D":
+                    case "d": num = 13; break;
+                    case "E":
+                    case "e": num = 14; break;
+                    case "F":
+                    case "f": num = 15; break;
+                    default:return 0; break;
+                }
+                value += num * multiplier;
+                multiplier *= 16;
+            }catch(e){;}
+            // correct for int overflow java expectation
+            if (value > 2147483647)
+            {
+                value -= 4294967296;
+            }  
+        }
+        return value;
+      }
+
+
     // Load a file or URL into strings     
     p.loadStrings = function loadStrings( url ){
       return p.ajax( url ).split( "\n" );              
@@ -683,24 +862,29 @@
     // Event to send output to user control function print()/println()
     p.println = function println(){
       
-      var Caller = arguments.callee.caller.name.toString();
+      // Not working on Safari :( find work around!
+      if( arguments.callee.caller ){
       
-      if( arguments.length > 1 ){
+        var Caller = arguments.callee.caller.name.toString();
+        
+        if( arguments.length > 1 ){
 
-        Caller != "print"        ?
-          p.ln  = arguments      :
-          p.ln  = arguments[ 0 ] ;
+          Caller != "print"        ?
+            p.ln  = arguments      :
+            p.ln  = arguments[ 0 ] ;
 
-      }else{
+        }else{
 
-          p.ln  = arguments[ 0 ] ;
+            p.ln  = arguments[ 0 ] ;
+        }
+        
+        //Returns a line to lnPrinted() for user error handling/debugging
+        Caller == "print"          ?        
+          p.printed( arguments )   :
+          p.lnPrinted()            ;
+        
       }
       
-      //Returns a line to lnPrinted() for user error handling/debugging
-      Caller == "print"          ?        
-        p.printed( arguments )   :
-        p.lnPrinted()            ;
-
     };    
 
     // Converts a number to a string
@@ -726,7 +910,7 @@
     p.ceil    = function ceil   ( aNumber             ){ return Math.ceil( aNumber );                    };    
     p.round   = function round  ( aNumber             ){ return Math.round( aNumber );                   };
     p.lerp    = function lerp   ( value1, value2, amt ){ return ( ( value2 - value1 ) * amt ) + value1;  };
-     p.abs    = function abs    ( aNumber             ){ return Math.abs( aNumber );                     };
+    p.abs    = function abs     ( aNumber             ){ return Math.abs( aNumber );                     };
     p.cos     = function cos    ( aNumber             ){ return Math.cos( aNumber );                     };
     p.sin     = function sin    ( aNumber             ){ return Math.sin( aNumber );                     };
     p.pow     = function pow    ( aNumber, aExponent  ){ return Math.pow( aNumber, aExponent );          };
@@ -779,10 +963,10 @@
 //! This can't be right... right?
     p.byte     = function byte( aNumber               ){ return aNumber || 0;                           };
 
-    p.norm     = function norm( aNumber, low, high   ){
-      var range = high-low;
+    p.norm     = function norm( aNumber, low, high    ){
+      var range = high - low;
       return ( ( 1 / range ) * aNumber ) - ( ( 1 / range ) * low );
-    };        
+    };
     
     p.random = function random( aMin, aMax ) {
       return arguments.length == 2                   ?
@@ -872,7 +1056,6 @@
       curContext.fillStyle = fillStyle;
       curContext.strokeStyle = strokeStyle;
     };
-    
 
     
     ////////////////////////////////////////////////////////////////////////////
@@ -1178,7 +1361,7 @@
     
     p.rect = function rect( x, y, width, height ){
 
-      if( width + height ){ return; }       
+      if( !( width + height ) ){ return; }
 
       curContext.beginPath();
       
@@ -1267,26 +1450,35 @@
 
     p.save = function save( file ){};
 
-    p.loadImage = function loadImage( file ){
-      var img = document.getElementById( file );
+    // Loads an image for display. Type is unused. Callback is fired on load.
+    p.loadImage = function loadImage( file, type, callback ){
       
-      if ( !img ){ return; }
+      var img = document.createElement( 'img' );
+      img.src = file;
+     
+      img.onload = function(){
+        
+        var h = this.height,
+            w = this.width;
+        
+        var canvas = document.createElement( "canvas" );
+        canvas.width = w;
+        canvas.height = h;
+        var context = canvas.getContext( "2d" );
+     
+        context.drawImage( this, 0, 0 );
+        this.data = buildImageObject( context.getImageData( 0, 0, w, h ) );
+        this.data.img = img;
+
+        callback?callback():0;
+        
+      }
       
-      var h = img.height,
-          w = img.width;
-
-      var canvas = document.createElement( "canvas" );
-      canvas.width = w;
-      canvas.height = h;
-      var context = canvas.getContext( "2d" );
-
-      context.drawImage( img, 0, 0 );
-      var data = buildImageObject( context.getImageData( 0, 0, w, h ) );
-      data.img = img;
-      return data;
+      return img;
+          
     };
-
-    // Gets a single pixel from Canvas
+    
+    // Gets a single pixel or block of pixels from the current Canvas Context
     p.get = function get( x, y ){
       
       if( !arguments.length ){
@@ -1301,6 +1493,17 @@
 
       return getLoaded.get( x, y );
       
+    };
+
+    // Creates a new Processing instance and passes it back for... processing
+    p.createGraphics = function createGraphics( w, h ){
+ 
+      var canvas = document.createElement( "canvas" );
+      var ret = buildProcessing( canvas );
+      ret.size( w, h );
+      ret.canvas = canvas;
+      return ret;
+ 
     };
 
     // Paints a pixel array into the canvas
@@ -1362,39 +1565,35 @@
       
     };
 
+    // Draw an image or a color to the background
     p.background = function background( img ) {
       
-      if( arguments.length ){
+       if( arguments.length ){
         
-        if( img && img.img ){
-          curBackground = img;
+        if( img.data && img.data.img ){
+          curBackground = img.data;
         }else{
           curBackground = p.color.apply( this, arguments );
         }
-      
+        
       }
 
       if( curBackground.img ){
-        p.image( curBackground, 0, 0 );
+      
+        p.image( img, 0, 0 );
+        
       }else{
+
         var oldFill = curContext.fillStyle;
         curContext.fillStyle = curBackground + "";
         curContext.fillRect( 0, 0, p.width, p.height );
         curContext.fillStyle = oldFill;
+
       }
       
-    };
+    };    
     
-    // Clears hole in the Canvas or the whole Canvas
-    p.clear = function clear ( x, y, width, height ) {    
-      if( arguments.length == 0 ){
-        curContext.clearRect( x, y, width, height );
-      }else{
-        curContext.clearRect( 0, 0, p.width, p.height );
-      }
-    }
-    
-    p.AniSprite = function( prefix, frames ){    
+    p.AniSprite = function( prefix, frames ){
       this.images = [];
       this.pos = 0;
 
@@ -1403,15 +1602,15 @@
       }
 
       this.display = function( x, y ){
-        p.image( this.images[ this.pos ], x, y );
+        p.image_old( this.images[ this.pos ], x, y );
 
         if( ++this.pos >= frames ){
           this.pos = 0;
         }
       };
 
-      this.getWidth   = function(){ return getImage( this.images[ 0 ] ).width;  };
-      this.getHeight  = function(){ return getImage( this.images[ 0 ] ).height; };
+      this.getWidth   = function(){ return getImage_old( this.images[ 0 ] ).width;  };
+      this.getHeight  = function(){ return getImage_old( this.images[ 0 ] ).height; };
     };
 
     function buildImageObject( obj ){
@@ -1463,7 +1662,7 @@
     }
 
     p.createImage = function createImage( w, h, mode ){
-      
+            
       var data    = {};
       data.width  = w;
       data.height = h;
@@ -1492,29 +1691,19 @@
       
     };
 
-    p.createGraphics = function createGraphics( w, h ){
- 
-      var canvas = document.createElement( "canvas" );
-      var ret = buildProcessing( canvas );
-      ret.size( w, h );
-      ret.canvas = canvas;
-      return ret;
- 
-    };
-
-
-    p.tint = function tint( rgb, a ){
-      curTint = a;
-    };
-
     function getImage( img ){
- 
+      
       if( typeof img == "string" ){
         return document.getElementById( img );
       }
 
-      if( img.img || img.canvas ){
-        return img.img || img.canvas;
+      if( img.img ){
+      
+        return img.img;
+        
+      }else if( img.getContext || img.canvas ){
+
+        img.pixels = img.getContext( '2d' ).createImageData( img.width, img.height );
       }
 
       for( var i = 0, l = img.pixels.length; i < l; i++ ){
@@ -1534,43 +1723,114 @@
       canvas.height = img.height;
       
       var context = canvas.getContext( "2d" );
-      context.putImageData( img, 0, 0 );
+      context.putImageData( img.pixels, 0, 0 );
 
       img.canvas = canvas;
 
-      return canvas;
+      return img;
     }
 
-    p.image = function image( img, x, y, w, h ){
-      
+    // Depreciating "getImage_old" from PJS - currently here to support AniSprite
+    function getImage_old( img ){ 
+      if( typeof img == "string" ){
+        return document.getElementById( img );
+      } 
+      if( img.img || img.canvas ){
+        return img.img || img.canvas;
+      } 
+      for( var i = 0, l = img.pixels.length; i < l; i++ ){        
+        var pos = i * 4;
+        var c = ( img.pixels[ i ] || "rgba(0,0,0,1)" ).slice( 5, - 1 ).split( "," );        
+        img.data[ pos + 0 ] = parseInt( c[ 0 ] );
+        img.data[ pos + 1 ] = parseInt( c[ 1 ] );
+        img.data[ pos + 2 ] = parseInt( c[ 2 ] );
+        img.data[ pos + 3 ] = parseFloat( c[ 3 ] ) * 100;      
+      } 
+      var canvas = document.createElement( "canvas" );
+      canvas.width = img.width;
+      canvas.height = img.height;      
+      var context = canvas.getContext( "2d" );
+      context.putImageData( img, 0, 0 ); 
+      img.canvas = canvas; 
+      return canvas;
+    }
+    // Depreciating "getImage_old" from PJS - currently here to support AniSprite
+    p.image_old=function image_old(img,x,y,w,h){
       x = x || 0;
-      y = y || 0;
-
-      var obj = getImage( img );
-
+      y = y || 0; 
+      var obj = getImage( img ); 
       if( curTint >= 0 ){
         var oldAlpha = curContext.globalAlpha;
         curContext.globalAlpha = curTint / opacityRange;
-      }
-
+      } 
       if( arguments.length == 3 ){
         curContext.drawImage( obj, x, y );
       }else{
         curContext.drawImage( obj, x, y, w, h );
-      }
-
+      } 
       if( curTint >= 0 ){
         curContext.globalAlpha = oldAlpha;
-      }
-
+      } 
       if( img._mask ){
         var oldComposite = curContext.globalCompositeOperation;
         curContext.globalCompositeOperation = "darker";
         p.image( img._mask, x, y );
         curContext.globalCompositeOperation = oldComposite;
+      }      
+    };
+
+    // Draws an image to the Canvas
+    p.image = function image( img, x, y, w, h ){
+      
+      if( img.data || img.canvas ){
+
+        x = x || 0;
+        y = y || 0;
+
+        var obj = getImage( img.data || img.canvas );
+
+        if( curTint >= 0 ){
+          var oldAlpha = curContext.globalAlpha;
+          curContext.globalAlpha = curTint / opacityRange;
+        }
+
+        if( arguments.length == 3 ){
+          curContext.drawImage( obj, x, y );
+        }else{
+          curContext.drawImage( obj, x, y, w, h );
+        }
+
+        if( curTint >= 0 ){
+          curContext.globalAlpha = oldAlpha;
+        }
+
+        if( img._mask ){
+          var oldComposite = curContext.globalCompositeOperation;
+          curContext.globalCompositeOperation = "darker";
+          p.image( img._mask, x, y );
+          curContext.globalCompositeOperation = oldComposite;
+        }
+      
+      }
+      
+      if( typeof img == 'string' ){
+        
       }
       
     };    
+    
+    // Clears hole in the Canvas or the whole Canvas
+    p.clear = function clear ( x, y, width, height ) {    
+      if( arguments.length == 0 ){
+        curContext.clearRect( x, y, width, height );
+      }else{
+        curContext.clearRect( 0, 0, p.width, p.height );
+      }
+    }
+
+    p.tint = function tint( rgb, a ){
+      curTint = a;
+    };
 
 
 
@@ -2114,3 +2374,5 @@
   }
 
 })();
+
+
