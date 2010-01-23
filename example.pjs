@@ -1,8 +1,9 @@
-//
-background( 0, 255, 0 );
+// 	
 
-float a = PI + PI/3.0;
-float t = tan(a);
-float at = atan(t);
-// Prints "1.0471976 : 1.7320509 : 1.0471976"
-console.log(a + " : " + t + " : " +  at);
+ 	
+
+float a = PI;
+float c = cos(a);
+float ac = acos(c);
+// Prints "3.1415927 : -1.0 : 3.1415927"
+console.log(a + " : " + c + " : " +  ac);

@@ -1148,6 +1148,10 @@
     p.atan    = function atan   ( aNumber             ){ return Math.atan( aNumber );                    };
     p.atan2   = function atan2  ( aNumber, aNumber2   ){ return Math.atan2( aNumber, aNumber2 );         };
     p.radians = function radians( aAngle              ){ return ( aAngle / 180 ) * p.PI;                 };
+    p.log     = function log    ( aNumber             ){ return Math.log(aNumber);                       }; 
+    p.exp     = function exp    ( aNumber             ){ return Math.exp(aNumber);                       };
+    p.asin    = function asin   ( aNumber             ){ return Math.asin(aNumber);                      };
+    p.acos    = function acos   ( aNumber             ){ return Math.acos(aNumber);                      };
 
     p.dist = function dist( x1, y1, x2, y2 ){
       return Math.sqrt( Math.pow( x2 - x1, 2 ) + Math.pow( y2 - y1, 2 ) );
