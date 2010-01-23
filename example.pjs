@@ -1,7 +1,2 @@
-// 	
-
- 	
-
-String sa[] = { "OH ", "NY ", "MA ", "CA "};
-sa = reverse(sa);
-console.log(sa);  // Prints "CA MA NY OH "
+// 	Processing.js Example
+background( 0, 255, 0 );

@@ -313,7 +313,14 @@
     p.RGB             = 1;
     p.HSB             = 2;
     p.focused         = true;
-
+    p.ARROW           = 'default';
+    p.CROSS           = 'crosshair';
+    p.HAND            = 'pointer';
+    p.MOVE            = 'move';
+    p.TEXT            = 'text';        
+    p.WAIT            = 'wait';
+    p.NOCURSOR        = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
+    
     // KeyCode table  
     p.CENTER  = 88888880;
     p.CODED   = 88888888;
@@ -340,6 +347,8 @@
         inDraw          = false,
         curBackground   = "rgba( 204, 204, 204, 1 )",
         curFrameRate    = 1000,
+        curCursor       = p.ARROW,
+        oldCursor       = document.body.style.cursor,
         curMsPerFrame   = 1,
         curShape        = p.POLYGON,
         curShapeCount   = 0,
@@ -796,7 +805,15 @@
     ////////////////////////////////////////////////////////////////////////////
     // MISC functions
     ////////////////////////////////////////////////////////////////////////////
-    p.cursor = function(mode){ document.body.style.cursor=mode; }
+    
+    p.cursor = function cursor( mode ){
+      curCursor = document.body.style.cursor = mode;
+    }
+    
+    p.noCursor = function noCursor(){
+      curCursor = document.body.style.cursor = p.NOCURSOR;
+    }
+    
     p.link = function( href, target ) { window.location = href; };
     p.beginDraw = function beginDraw(){};
     p.endDraw = function endDraw(){};
@@ -2732,25 +2749,26 @@
         p.pmouseX = p.mouseX;
         p.pmouseY = p.mouseY;
         p.mouseX   = e.clientX - curElement.offsetLeft + scrollX;
-        p.mouseY   = e.clientY - curElement.offsetTop + scrollY;    
+        p.mouseY   = e.clientY - curElement.offsetTop + scrollY;            
+        p.cursor( curCursor );
 
-        if( p.mouseMoved ){ p.mouseMoved(); }
-        if( mousePressed && p.mouseDragged ){ p.mouseDragged(); }
+        if( p.mouseMoved ){ p.mouseMoved() };
+        if( mousePressed && p.mouseDragged ){ p.mouseDragged() };
         
       });
       
-      attach( curElement, "mouseout" , function( e ){ p.cursor("auto"); });      
+      attach( curElement, "mouseout" , function( e ){ document.body.style.cursor = oldCursor } );      
       
-      attach( curElement, "mousedown", function( e ){      
+      attach( curElement, "mousedown", function( e ){
         mousePressed = true;      
-        switch(e.which){
-          case 1: p.mouseButton = p.LEFT; break;
+        switch( e.which ){
+          case 1: p.mouseButton = p.LEFT;   break;
           case 2: p.mouseButton = p.CENTER; break;
-          case 3: p.mouseButton = p.RIGHT; break; 
+          case 3: p.mouseButton = p.RIGHT;  break; 
         }        
         p.mouseDown = true;        
-        if( typeof p.mousePressed == "function" ){ p.mousePressed(); }
-        else{ p.mousePressed = true; }
+        if( typeof p.mousePressed == "function" ){ p.mousePressed() }
+        else{ p.mousePressed = true };
       });
 
       attach( curElement, "mouseup", function( e ){
