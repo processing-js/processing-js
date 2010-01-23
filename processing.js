@@ -475,8 +475,6 @@
 
       return ary;
     }
-
-  
     
     p.append = function( array, element ){
       array[ array.length ] = element;
