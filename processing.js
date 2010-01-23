@@ -291,37 +291,61 @@
     var p = {};
     
     // Set Processing defaults / environment variables
-    p.name            = 'Processing.js Instance';
-    p.PI              = Math.PI;
-    p.TWO_PI          = 2 * p.PI;
-    p.HALF_PI         = p.PI / 2;
-    p.P3D             = 3;
-    p.CORNER          = 0;
-    p.RADIUS          = 1;
-    p.CENTER_RADIUS   = 1;
-    p.CENTER          = 2;
-    p.POLYGON         = 2;
-    p.QUADS           = 5;
-    p.TRIANGLES       = 6;
-    p.POINTS          = 7;
-    p.LINES           = 8;
-    p.TRIANGLE_STRIP  = 9;
-    p.TRIANGLE_FAN    = 4;
-    p.QUAD_STRIP      = 3;
-    p.CORNERS         = 10;
-    p.CLOSE           = true;
-    p.RGB             = 1;
-    p.HSB             = 2;
-    p.focused         = true;
-    p.ARROW           = 'default';
-    p.CROSS           = 'crosshair';
-    p.HAND            = 'pointer';
-    p.MOVE            = 'move';
-    p.TEXT            = 'text';        
-    p.WAIT            = 'wait';
-    p.NOCURSOR        = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
+    p.name             = 'Processing.js Instance';
+    p.PI               = Math.PI;
+    p.TWO_PI           = 2 * p.PI;
+    p.HALF_PI          = p.PI / 2;
+    p.P3D              = 3;
+    p.CORNER           = 0;
+    p.RADIUS           = 1;
+    p.CENTER_RADIUS    = 1;
+    p.CENTER           = 2;
+    p.POLYGON          = 2;
+    p.QUADS            = 5;
+    p.TRIANGLES        = 6;
+    p.POINTS           = 7;
+    p.LINES            = 8;
+    p.TRIANGLE_STRIP   = 9;
+    p.TRIANGLE_FAN     = 4;
+    p.QUAD_STRIP       = 3;
+    p.CORNERS          = 10;
+    p.CLOSE            = true;
+    p.RGB              = 1;
+    p.HSB              = 2;
+    p.focused          = true;
+    p.ARROW            = 'default';
+    p.CROSS            = 'crosshair';
+    p.HAND             = 'pointer';
+    p.MOVE             = 'move';
+    p.TEXT             = 'text';        
+    p.WAIT             = 'wait';
+    p.NOCURSOR         = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
+    p.ALPHA_MASK       = 0xff000000;
+    p.RED_MASK         = 0x00ff0000;
+    p.GREEN_MASK       = 0x0000ff00;
+    p.BLUE_MASK        = 0x000000ff;
+    p.REPLACE          = 0;
+    p.BLEND            = 1 << 0;
+    p.ADD              = 1 << 1;
+    p.SUBTRACT         = 1 << 2;
+    p.LIGHTEST         = 1 << 3;
+    p.DARKEST          = 1 << 4;
+    p.DIFFERENCE       = 1 << 5;
+    p.EXCLUSION        = 1 << 6;
+    p.MULTIPLY         = 1 << 7;
+    p.SCREEN           = 1 << 8;
+    p.OVERLAY          = 1 << 9;
+    p.HARD_LIGHT       = 1 << 10;
+    p.SOFT_LIGHT       = 1 << 11;
+    p.DODGE            = 1 << 12;
+    p.BURN             = 1 << 13;   
+    p.PRECISIONB       = 15; // fixed point precision is limited to 15 bits!! 
+    p.PRECISIONF       = 1 << p.PRECISIONB;
+    p.PREC_MAXVAL      = p.PRECISIONF-1;
+    p.PREC_ALPHA_SHIFT = 24-p.PRECISIONB;
+    p.PREC_RED_SHIFT   = 16-p.PRECISIONB;
     
-    // KeyCode table  
+    // KeyCode Table
     p.CENTER  = 88888880;
     p.CODED   = 88888888;
     p.UP      = 88888870;
@@ -578,20 +602,261 @@
     ////////////////////////////////////////////////////////////////////////////
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
+
+    // convert rgba color strings to integer
+    p.rgbaToInt = function(color){
+        var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1,2)[0].split(',');
+        return (rgbaAry[3] << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
+    }
     
-    // !! WARNING: brightness() & saturation() not working with HSB colors
-    p.brightness = function brightness(){
-      return p.color( redRange, greenRange, blueRange );
+    // helper functions for internal blending modes
+    p.mix = function(a, b, f) {
+        return a + (((b - a) * f) >> 8);
     }
+    p.peg = function(n) {
+        return (n < 0) ? 0 : ((n > 255) ? 255 : n);
+    }
+    
+    // blending modes
+    p.modes = {
+        replace: function(a, b){
+            return p.rgbaToInt(b);
+        },
+        blend: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+            p.mix(c1 & p.RED_MASK, c2 & p.RED_MASK, f) & p.RED_MASK |
+            p.mix(c1 & p.GREEN_MASK, c2 & p.GREEN_MASK, f) & p.GREEN_MASK |
+            p.mix(c1 & p.BLUE_MASK, c2 & p.BLUE_MASK, f));
+        },
+        add: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+            Math.min(((c1 & p.RED_MASK) +
+                 ((c2 & p.RED_MASK) >> 8) * f), p.RED_MASK) & p.RED_MASK |
+            Math.min(((c1 & p.GREEN_MASK) +
+                 ((c2 & p.GREEN_MASK) >> 8) * f), p.GREEN_MASK) & p.GREEN_MASK |
+            Math.min((c1 & p.BLUE_MASK) +
+                (((c2 & p.BLUE_MASK) * f) >> 8), p.BLUE_MASK));
+        },
+        subtract: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+            Math.max(((c1 & p.RED_MASK) - ((c2 & p.RED_MASK) >> 8) * f),
+                 p.GREEN_MASK) & p.RED_MASK |
+            Math.max(((c1 & p.GREEN_MASK) - ((c2 & p.GREEN_MASK) >> 8) * f),
+                 p.BLUE_MASK) & p.GREEN_MASK |
+            Math.max((c1 & p.BLUE_MASK) - (((c2 & p.BLUE_MASK) * f) >> 8), 0));
+        },
+        lightest: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+            Math.max(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f) & p.RED_MASK |
+            Math.max(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f) & p.GREEN_MASK |
+            Math.max(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8));
+        },
+        darkest: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+            p.mix(c1 & p.RED_MASK,
+                Math.min(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f), f) & p.RED_MASK |
+            p.mix(c1 & p.GREEN_MASK,
+                Math.min(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f), f) & p.GREEN_MASK |
+            p.mix(c1 & p.BLUE_MASK,
+                Math.min(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8), f));
 
-    p.saturation = function saturation( color ){
-      return  p.color( ( 126 / 255 ) * redRange, ( 126 / 255 ) * greenRange, ( 126 / 255 ) * blueRange );
-    }
-
-    p.hue = function hue(){
-      return p.color( 0 * redRange, 0 * greenRange, 0 * blueRange );
-    }
-     
+        },
+        difference: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            var ar = (c1 & p.RED_MASK) >> 16;
+            var ag = (c1 & p.GREEN_MASK) >> 8;
+            var ab = (c1 & p.BLUE_MASK);
+            var br = (c2 & p.RED_MASK) >> 16;
+            var bg = (c2 & p.GREEN_MASK) >> 8;
+            var bb = (c2 & p.BLUE_MASK);
+            // formula:
+            var cr = (ar > br) ? (ar-br) : (br-ar);
+            var cg = (ag > bg) ? (ag-bg) : (bg-ag);
+            var cb = (ab > bb) ? (ab-bb) : (bb-ab);
+            // alpha blend (this portion will always be the same)
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                    (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
+                    (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
+                    (p.peg(ab + (((cb - ab) * f) >> 8)) ) );
+        },
+        exclusion: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            var ar = (c1 & p.RED_MASK) >> 16;
+            var ag = (c1 & p.GREEN_MASK) >> 8;
+            var ab = (c1 & p.BLUE_MASK);
+            var br = (c2 & p.RED_MASK) >> 16;
+            var bg = (c2 & p.GREEN_MASK) >> 8;
+            var bb = (c2 & p.BLUE_MASK);
+            // formula:
+            var cr = ar + br - ((ar * br) >> 7);
+            var cg = ag + bg - ((ag * bg) >> 7);
+            var cb = ab + bb - ((ab * bb) >> 7);
+            // alpha blend (this portion will always be the same)
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                    (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
+                    (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
+                    (p.peg(ab + (((cb - ab) * f) >> 8)) ) );
+        },
+        multiply: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            var ar = (c1 & p.RED_MASK) >> 16;
+            var ag = (c1 & p.GREEN_MASK) >> 8;
+            var ab = (c1 & p.BLUE_MASK);
+            var br = (c2 & p.RED_MASK) >> 16;
+            var bg = (c2 & p.GREEN_MASK) >> 8;
+            var bb = (c2 & p.BLUE_MASK);
+            // formula:
+            var cr = (ar * br) >> 8;
+            var cg = (ag * bg) >> 8;
+            var cb = (ab * bb) >> 8;
+            // alpha blend (this portion will always be the same)
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                    (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
+                    (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
+                    (p.peg(ab + (((cb - ab) * f) >> 8)) ) );
+        },
+        screen: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            var ar = (c1 & p.RED_MASK) >> 16;
+            var ag = (c1 & p.GREEN_MASK) >> 8;
+            var ab = (c1 & p.BLUE_MASK);
+            var br = (c2 & p.RED_MASK) >> 16;
+            var bg = (c2 & p.GREEN_MASK) >> 8;
+            var bb = (c2 & p.BLUE_MASK);
+            // formula:
+            var cr = 255 - (((255 - ar) * (255 - br)) >> 8);
+            var cg = 255 - (((255 - ag) * (255 - bg)) >> 8);
+            var cb = 255 - (((255 - ab) * (255 - bb)) >> 8);
+            // alpha blend (this portion will always be the same)
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                    (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
+                    (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
+                    (p.peg(ab + (((cb - ab) * f) >> 8)) ) );
+        },
+        hard_light: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            var ar = (c1 & p.RED_MASK) >> 16;
+            var ag = (c1 & p.GREEN_MASK) >> 8;
+            var ab = (c1 & p.BLUE_MASK);
+            var br = (c2 & p.RED_MASK) >> 16;
+            var bg = (c2 & p.GREEN_MASK) >> 8;
+            var bb = (c2 & p.BLUE_MASK);
+            // formula:
+            var cr = (br < 128) ? ((ar*br)>>7) : (255-(((255-ar)*(255-br))>>7));
+            var cg = (bg < 128) ? ((ag*bg)>>7) : (255-(((255-ag)*(255-bg))>>7));
+            var cb = (bb < 128) ? ((ab*bb)>>7) : (255-(((255-ab)*(255-bb))>>7));
+            // alpha blend (this portion will always be the same)
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                    (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
+                    (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
+                    (p.peg(ab + (((cb - ab) * f) >> 8)) ) );
+        },
+        soft_light: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            var ar = (c1 & p.RED_MASK) >> 16;
+            var ag = (c1 & p.GREEN_MASK) >> 8;
+            var ab = (c1 & p.BLUE_MASK);
+            var br = (c2 & p.RED_MASK) >> 16;
+            var bg = (c2 & p.GREEN_MASK) >> 8;
+            var bb = (c2 & p.BLUE_MASK);
+            // formula:
+            var cr = ((ar*br)>>7) + ((ar*ar)>>8) - ((ar*ar*br)>>15);
+            var cg = ((ag*bg)>>7) + ((ag*ag)>>8) - ((ag*ag*bg)>>15);
+            var cb = ((ab*bb)>>7) + ((ab*ab)>>8) - ((ab*ab*bb)>>15);
+            // alpha blend (this portion will always be the same)
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                    (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
+                    (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
+                    (p.peg(ab + (((cb - ab) * f) >> 8)) ) );
+        },
+        overlay: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            var ar = (c1 & p.RED_MASK) >> 16;
+            var ag = (c1 & p.GREEN_MASK) >> 8;
+            var ab = (c1 & p.BLUE_MASK);
+            var br = (c2 & p.RED_MASK) >> 16;
+            var bg = (c2 & p.GREEN_MASK) >> 8;
+            var bb = (c2 & p.BLUE_MASK);
+            // formula:
+            var cr = (ar < 128) ? ((ar*br)>>7) : (255-(((255-ar)*(255-br))>>7));
+            var cg = (ag < 128) ? ((ag*bg)>>7) : (255-(((255-ag)*(255-bg))>>7));
+            var cb = (ab < 128) ? ((ab*bb)>>7) : (255-(((255-ab)*(255-bb))>>7));
+            // alpha blend (this portion will always be the same)
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                    (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
+                    (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
+                    (p.peg(ab + (((cb - ab) * f) >> 8)) ) );
+        },
+        dodge: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            var ar = (c1 & p.RED_MASK) >> 16;
+            var ag = (c1 & p.GREEN_MASK) >> 8;
+            var ab = (c1 & p.BLUE_MASK);
+            var br = (c2 & p.RED_MASK) >> 16;
+            var bg = (c2 & p.GREEN_MASK) >> 8;
+            var bb = (c2 & p.BLUE_MASK);
+            // formula:
+            var cr = (br==255) ? 255 : p.peg((ar << 8) / (255 - br)); // division requires pre-peg()-ing
+            var cg = (bg==255) ? 255 : p.peg((ag << 8) / (255 - bg)); // "
+            var cb = (bb==255) ? 255 : p.peg((ab << 8) / (255 - bb)); // "
+            // alpha blend (this portion will always be the same)
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                    (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
+                    (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
+                    (p.peg(ab + (((cb - ab) * f) >> 8)) ) );
+        },
+        burn: function(a, b){
+            var c1 = p.rgbaToInt(a);
+            var c2 = p.rgbaToInt(b);
+            var f = (c2 & p.ALPHA_MASK) >>> 24;
+            var ar = (c1 & p.RED_MASK) >> 16;
+            var ag = (c1 & p.GREEN_MASK) >> 8;
+            var ab = (c1 & p.BLUE_MASK);
+            var br = (c2 & p.RED_MASK) >> 16;
+            var bg = (c2 & p.GREEN_MASK) >> 8;
+            var bb = (c2 & p.BLUE_MASK);
+            // formula:
+            var cr = (br==0) ? 0 : 255 - p.peg(((255 - ar) << 8) / br); // division requires pre-peg()-ing
+            var cg = (bg==0) ? 0 : 255 - p.peg(((255 - ag) << 8) / bg); // "
+            var cb = (bb==0) ? 0 : 255 - p.peg(((255 - ab) << 8) / bb); // "
+            // alpha blend (this portion will always be the same)
+            return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                    (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
+                    (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
+                    (p.peg(ab + (((cb - ab) * f) >> 8)) ) );
+        }      
+    };
 
     // In case I ever need to do HSV conversion:
     // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
@@ -614,7 +879,7 @@
           var b = getColor(aValue3, blueRange);
         }
 
-        aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
+        aColor = "rgba(" + r + "," + g + "," + b + "," + aValue4 + ")"; // a=aValue4
       } else if ( typeof aValue1 == "string" ) {
         aColor = aValue1;
 
@@ -730,7 +995,28 @@
       if( arguments.length == 5 ){ opacityRange = range4; }
       if( arguments.length == 2 ){ p.colorMode( mode, range1, range1, range1, range1 ); }    
     };
-    
+
+    p.blendColor = function(c1, c2, mode){
+        var color = 0;
+        switch(mode){
+            case p.REPLACE      : color = p.modes.replace(c1, c2); break;
+            case p.BLEND        : color = p.modes.blend(c1, c2); break;
+            case p.ADD          : color = p.modes.add(c1, c2); break;
+            case p.SUBTRACT     : color = p.modes.subtract(c1, c2); break;
+            case p.LIGHTEST     : color = p.modes.lightest(c1, c2); break;
+            case p.DARKEST      : color = p.modes.darkest(c1, c2); break;
+            case p.DIFFERENCE   : color = p.modes.difference(c1, c2); break;
+            case p.EXCLUSION    : color = p.modes.exclusion(c1, c2); break;
+            case p.MULTIPLY     : color = p.modes.multiply(c1, c2); break;
+            case p.SCREEN       : color = p.modes.screen(c1, c2); break;
+            case p.HARD_LIGHT   : color = p.modes.hard_light(c1, c2); break;
+            case p.SOFT_LIGHT   : color = p.modes.soft_light(c1, c2); break;
+            case p.OVERLAY      : color = p.modes.overlay(c1, c2); break;
+            case p.DODGE        : color = p.modes.dodge(c1, c2); break;
+            case p.BURN         : color = p.modes.burn(c1, c2); break;
+        }
+        return color;
+    }    
 
     ////////////////////////////////////////////////////////////////////////////
     // Canvas-Matrix manipulation
@@ -831,8 +1117,8 @@
         e.stopPropagation();
       }, false );
     }
-    
-    
+
+
 
     ////////////////////////////////////////////////////////////////////////////
     // Binary Functions
