@@ -1173,6 +1173,26 @@
     p.exp     = function exp    ( aNumber             ){ return Math.exp(aNumber);                       };
     p.asin    = function asin   ( aNumber             ){ return Math.asin(aNumber);                      };
     p.acos    = function acos   ( aNumber             ){ return Math.acos(aNumber);                      };
+    
+    p.boolean = function boolean( val ){
+      var ret = false;
+    
+      if( val && typeof val === 'number' && val !== 0 ){
+        ret = true;
+      }else if( val && typeof val === 'boolean' && val === true ){
+        ret = true;
+      }else if( val &&  typeof val === 'string' && val.toLowerCase() === 'true' ){
+        ret = true;
+      }else if( val && typeof val === 'object' && val.constructor === Array ){
+        ret = new Array( val.length );
+      
+        for( var i = 0; i < val.length; i++ ){
+          ret[i] = boolean( val[i] );
+        }
+      }
+    
+      return ret;
+    };
 
     p.dist = function dist( x1, y1, x2, y2 ){
       return Math.sqrt( Math.pow( x2 - x1, 2 ) + Math.pow( y2 - y1, 2 ) );
