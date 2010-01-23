@@ -1139,11 +1139,13 @@
     p.ceil    = function ceil   ( aNumber             ){ return Math.ceil( aNumber );                    };    
     p.round   = function round  ( aNumber             ){ return Math.round( aNumber );                   };
     p.lerp    = function lerp   ( value1, value2, amt ){ return ( ( value2 - value1 ) * amt ) + value1;  };
-    p.abs    = function abs     ( aNumber             ){ return Math.abs( aNumber );                     };
+    p.abs     = function abs    ( aNumber             ){ return Math.abs( aNumber );                     };
     p.cos     = function cos    ( aNumber             ){ return Math.cos( aNumber );                     };
     p.sin     = function sin    ( aNumber             ){ return Math.sin( aNumber );                     };
     p.pow     = function pow    ( aNumber, aExponent  ){ return Math.pow( aNumber, aExponent );          };
     p.sqrt    = function sqrt   ( aNumber             ){ return Math.sqrt( aNumber );                    };
+    p.tan     = function tan    ( aNumber             ){ return Math.tan( aNumber );                     };
+    p.atan    = function atan   ( aNumber             ){ return Math.atan( aNumber );                    };
     p.atan2   = function atan2  ( aNumber, aNumber2   ){ return Math.atan2( aNumber, aNumber2 );         };
     p.radians = function radians( aAngle              ){ return ( aAngle / 180 ) * p.PI;                 };
 
