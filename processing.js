@@ -398,6 +398,9 @@
         secondY,
         prevX,
         prevY;
+
+    // Stores states for pushStyle() and popStyle().
+    var styleArray = new Array();
     
     // Store a line for println(), print() handline
     p.ln = "";
@@ -1029,6 +1032,52 @@
     p.popMatrix   = function popMatrix()      { curContext.restore();           };
     p.ortho       = function ortho(){};
 
+    p.pushStyle = function pushStyle(){
+      // Save the canvas state.
+      curContext.save();
+
+      p.pushMatrix();
+    
+      var newState = {
+        'doFill':doFill, 
+        'doStroke':doStroke, 
+        'curTint':curTint,
+        'curRectMode':curRectMode, 
+        'curColorMode':curColorMode,
+        'redRange':redRange, 
+        'blueRange':blueRange,
+        'greenRange':greenRange,
+        'opacityRange':opacityRange, 
+        'curTextFont':curTextFont,
+        'curTextSize':curTextSize
+      };
+  
+      styleArray.push( newState );
+    };
+ 
+    p.popStyle = function popStyle(){
+      var oldState = styleArray.pop();
+
+      if( oldState ){
+        curContext.restore();
+      
+        p.popMatrix();
+      
+        doFill = oldState.doFill;
+        doStroke = oldState.doStroke;
+        curTint = oldState.curTint;
+        curRectMode = oldState.curRectmode;
+        curColorMode = oldState.curColorMode;
+        redRange = oldState.redRange;
+        blueRange = oldState.blueRange;
+        greenRange = oldState.greenRange;
+        opacityRange = oldState.opacityRange;
+        curTextFont = oldState.curTextFont;
+        curTextSize = oldState.curTextSize; 
+      }else{
+        throw "Too many popStyle() without enough pushStyle()";
+      }
+    };
 
     
     ////////////////////////////////////////////////////////////////////////////
