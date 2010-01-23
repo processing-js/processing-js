@@ -404,6 +404,8 @@
     // Array handling
     ////////////////////////////////////////////////////////////////////////////    
     
+    
+    
     p.splitTokens = function( str, tokens ){
 
       if( arguments.length == 1 ){
@@ -559,6 +561,8 @@
       
       return array;
     };
+    
+    p.reverse = function( array ){ return array.reverse() };
 
 
 
