@@ -1803,6 +1803,10 @@
           this.mult( high );
         }
       },
+      heading2D: function(){
+        var angle = Math.atan2( -this.y, this.x );
+        return -1 * angle;
+      },
       array: function(){
         return [this.x, this.y, this.z];
       }
