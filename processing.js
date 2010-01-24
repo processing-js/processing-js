@@ -1805,7 +1805,10 @@
       },
       heading2D: function(){
         var angle = Math.atan2( -this.y, this.x );
-        return -1 * angle;
+        return -angle;
+      },
+      toString: function(){
+        return "[" + this.x + ", " + this.y + ", " + this.z + "]";
       },
       array: function(){
         return [this.x, this.y, this.z];
