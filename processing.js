@@ -439,9 +439,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
     ////////////////////////////////////////////////////////////////////////////    
-    
-    
-    
+            
     p.splitTokens = function( str, tokens ){
 
       if( arguments.length == 1 ){
@@ -1429,6 +1427,12 @@
     ////////////////////////////////////////////////////////////////////////////
     // String Functions
     ////////////////////////////////////////////////////////////////////////////
+
+    p.matchAll = function matchAll( aString, aRegExp ){
+      var i=0,results=[],regexp=new RegExp(aRegExp,"g");
+      while(results[i]=regexp.exec(aString)){i++;}
+      return results.slice(0,i);
+    }
 
     String.prototype.replaceAll = function( re, replace ){
       return this.replace( new RegExp( re, "g" ), replace );
