@@ -75,7 +75,7 @@
     aCode = aCode.replace( /([^\s])%([^\s])/g, "$1 % $2" );
    
     // Simple convert a function-like thing to function
-    aCode = aCode.replace( /(?:static )?(\w+ )(\w+)\s*(\([^\)]*\)\s*{)/g, function( all, type, name, args ){
+    aCode = aCode.replace( /(?:static )?(\w+(?:\[\])* )(\w+)\s*(\([^\)]*\)\s*{)/g, function( all, type, name, args ){
       if ( name == "if" || name == "for" || name == "while" ) {
         return all;
       } else {
