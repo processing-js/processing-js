@@ -440,8 +440,11 @@
     // Array handling
     ////////////////////////////////////////////////////////////////////////////    
             
-    p.splitTokens = function( str, tokens ){
+    p.split = function( str, delim ){
+      return str.split( delim );
+    }
 
+    p.splitTokens = function( str, tokens ){
       if( arguments.length == 1 ){
         tokens = "\n\t\r\f ";
       }
@@ -484,7 +487,6 @@
     }
 
     p.splice = function( array, value, index ){
-
       if(array.length == 0 && value.length == 0){
         return array;
       };
@@ -498,7 +500,6 @@
       };
       
       return array;
-      
     }; 
 
     p.subset = function( array, offset, length ){
