@@ -1,3 +1,0 @@
-<script>
- alert( screen.width, screen.height );
-</script>
