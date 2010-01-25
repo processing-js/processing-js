@@ -1,7 +1,3 @@
 // 	Processing.js Example
 
-//background( 0, 255, 0 );
-
-x =0F; y =0F; z =0F;
- 
- console.log( x, y, z );
+background( 0, 255, 0 );
