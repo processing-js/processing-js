@@ -1366,8 +1366,8 @@
 
     p.nf = function( num, pad ){
       var str = "" + num;
-      while ( pad - str.length ){
-        str = "0" + str;
+      for( var i = pad - str.length; i > 0; i-- ){
+        str = "0" + str;  
       }
       return str;
     };
