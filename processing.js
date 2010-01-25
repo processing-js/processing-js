@@ -73,6 +73,12 @@
 
     // Weird parsing errors with %
     aCode = aCode.replace( /([^\s])%([^\s])/g, "$1 % $2" );
+
+    // Since frameRate() and frameRate are different things, 
+    // we need to differentiate them somehow. So when we parse
+    // the Processing.js source, replace frameRate so it isn't 
+    // confused with frameRate().
+    aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/,"$1p.FRAME_RATE$2");
    
     // Simple convert a function-like thing to function
     aCode = aCode.replace( /(?:static )?(\w+(?:\[\])* )(\w+)\s*(\([^\)]*\)\s*{)/g, function( all, type, name, args ){
@@ -312,6 +318,8 @@
     p.CLOSE            = true;
     p.RGB              = 1;
     p.HSB              = 2;
+    p.OPENGL           = "OPENGL";
+    p.FRAME_RATE       = 0;
     p.focused          = true;
     p.ARROW            = 'default';
     p.CROSS            = 'crosshair';
@@ -390,7 +398,10 @@
         curTextSize     = 12,
         curTextFont     = "Arial",
         getLoaded       = false,
-        start           = ( new Date ).getTime();
+        start           = ( new Date ).getTime(),
+        timeSinceLastFPS = start,
+        framesSinceLastFPS = 0;
+
 
     var firstX,
         firstY,
@@ -1093,6 +1104,18 @@
          
     p.redraw = function redraw(){
       if( hasBackground ){ p.background(); }
+
+      var sec = (( new Date ).getTime() - timeSinceLastFPS) / 1000;
+      framesSinceLastFPS++;
+      var fps = framesSinceLastFPS/sec;
+    
+      // recalculate FPS every half second for better accuracy.
+      if( sec > 0.5 ){
+        timeSinceLastFPS = ( new Date ).getTime();
+        framesSinceLastFPS = 0;
+        p.FRAME_RATE = fps;
+      }
+
       p.frameCount++;      
       inDraw = true;
       p.pushMatrix();
