@@ -253,9 +253,6 @@
 
     // Remove Casting
     aCode = aCode.replace( new RegExp("\\((" + classes.join("|") + ")(\\[\\])?\\)", "g"), "" );
-    
-    // Convert 3.0f to just 3.0
-    aCode = aCode.replace( /(\d+)f[^a-zA-Z0-9]/g, "$1" );
 
     // Force numbers to exist //
     //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
@@ -268,6 +265,9 @@
       var num = toNumbers(hex);
       return "DefaultColor(" + num[0] + "," + num[1] + "," + num[2] + ")";
     });
+
+    // Convert 3.0f to just 3.0
+    aCode = aCode.replace( /(\d+)f/g, "$1" );
 
     function toNumbers( str ){
       var ret = [];
