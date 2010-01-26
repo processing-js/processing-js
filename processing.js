@@ -2180,7 +2180,11 @@
     };
 
     p.curvePoint = function curvePoint( a, b, c, d, t ){
-      return 0.5* ((2 * b) +(-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t +(-a + 3 * b -3 * c + d) * t * t * t);
+      return 0.5* ((2 * b) +(-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b -3 * c + d) * t * t * t);
+    };
+
+    p.curveTangent = function curveTangent( a, b, c, d, t ){
+      return 0.5 * ((-a + c) + 2 * (2 * a -5 * b + 4 * c - d) * t + 3 * (-a + 3 * b - 3 * c + d) * t * t);
     };
 
     p.triangle = function triangle( x1, y1, x2, y2, x3, y3 ){
