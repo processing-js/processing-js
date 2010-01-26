@@ -2175,6 +2175,10 @@
       curContext.closePath();
     };
 
+    p.bezierPoint = function bezierPoint( a, b, c, d, t ){
+      return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
+    };
+
     p.triangle = function triangle( x1, y1, x2, y2, x3, y3 ){
       p.beginShape();
       p.vertex( x1, y1 );
@@ -3126,22 +3130,24 @@
       if( code ){
         (function( Processing ){
           with ( p ){
-            eval(parse(code, p));
+            var parsedCode = parse(code, p);
+
+            if( !p.use3DContext ){
+              // Setup default 2d canvas context. 
+              curContext = curElement.getContext( '2d' );
+
+              // Canvas has trouble rendering single pixel stuff on whole-pixel
+              // counts, so we slightly offset it (this is super lame).
+              curContext.translate( 0.5, 0.5 );    
+
+              // Set default stroke and fill color
+              p.stroke( 0 );
+              p.fill( 255 );
+            }
+
+            eval(parsedCode);
           }
         })( p );
-      }
-
-      if( !p.use3DContext ){
-        // Setup default 2d canvas context. 
-        curContext = curElement.getContext( '2d' );
-
-        // Canvas has trouble rendering single pixel stuff on whole-pixel
-        // counts, so we slightly offset it (this is super lame).
-        curContext.translate( 0.5, 0.5 );    
-
-        // Set default stroke and fill color
-        p.stroke( 0 );
-        p.fill( 255 );
       }
    
       // Run void setup()
