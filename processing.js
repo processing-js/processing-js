@@ -18,7 +18,6 @@
 
 (function(){
   
-
   // Attach Processing to the window 
   this.Processing = function Processing( aElement, aCode ){
 
@@ -254,6 +253,11 @@
       return right.slice( 0, position - 1 );
     }
 
+    // Check if 3D context is invoked -- this is not the best way to do this.
+    if ( aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\);/)){
+      p.use3DContext = true;
+    }
+
     // Handle (int) Casting
     aCode = aCode.replace( /\(int\)/g, "0|" );
 
@@ -318,7 +322,7 @@
     p.CLOSE            = true;
     p.RGB              = 1;
     p.HSB              = 2;
-    p.OPENGL           = "OPENGL";
+    p.OPENGL           = 'OPENGL';
     p.FRAME_RATE       = 0;
     p.focused          = true;
     p.ARROW            = 'default';
@@ -364,8 +368,10 @@
 //! // Description required...
     p.codedKeys = [ 69, 70, 71, 72  ];
 
+    p.use3DContext = false; // default '2d' canvas context
+
     // "Private" variables used to maintain state
-    var curContext      = curElement.getContext( "2d" ),
+    var curContext,
         online          = true,
         doFill          = true,
         doStroke        = true,
@@ -1117,10 +1123,18 @@
       }
 
       p.frameCount++;      
+
       inDraw = true;
-      p.pushMatrix();
-      p.draw();
-      p.popMatrix();
+
+      if( p.use3DContext ){
+        curContext.clear(curContext.COLOR_BUFFER_BIT);
+        p.draw();
+      } else {
+        p.pushMatrix();
+        p.draw();
+        p.popMatrix();
+      }
+
       inDraw = false;      
     };
     
@@ -1692,12 +1706,38 @@
     };
     
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
-    p.size = function size( aWidth, aHeight ){
-    
-      var props = { fillStyle   : curContext.fillStyle,
-                    strokeStyle : curContext.strokeStyle,
-                    lineCap     : curContext.lineCap
-                  } // More to be added...
+    p.size = function size( aWidth, aHeight, aMode ){
+      if( aMode && aMode === "OPENGL" ){
+        // get the 3D rendering context
+        try{
+          if( !curContext ){
+            curContext = curElement.getContext( "moz-webgl" );
+          }
+        }catch( e ){}
+
+        try{
+          if( !curContext ){
+            curContext = curElement.getContext("webkit-3d");
+          }
+        }catch( e ){}
+        
+        if( !curContext ) {
+          throw "OPENGL 3D context is not supported on this browser.";
+        }
+
+        p.stroke(0);
+        p.fill(255);
+      } 
+
+      // The default 2d context has already been created in the p.init() stage if 
+      // a 3d context was not specified. This is so that a 2d context will be 
+      // available if size() was not called.
+
+      var props = { 
+        fillStyle   : curContext.fillStyle,
+        strokeStyle : curContext.strokeStyle,
+        lineCap     : curContext.lineCap
+      }; // More to be added...
       
       curElement.width = p.width = aWidth;
       curElement.height = p.height = aHeight;
@@ -2361,30 +2401,73 @@
 
     // Draw an image or a color to the background
     p.background = function background( img ) {
-      
-       if( arguments.length ){
-        
-        if( img.data && img.data.img ){
-          curBackground = img.data;
-        }else{
-          curBackground = p.color.apply( this, arguments );
+      if( p.use3DContext ) {
+        // create alias
+        var col = arguments;
+   
+        // if user passes in 1 argument, they either want
+        // a shade of gray or 
+        // it is a color object or
+        // it's a hex value
+        if( arguments.length == 1 ){
+          // type passed in was color()
+          if( typeof arguments[0] == "string" ){
+            var c = arguments[0].slice( 5,-1 ).split( "," );
+
+            // if 3 component color was passed in, alpha will be 1
+            // otherwise it will already be normalized.
+            curContext.clearColor( c[0]/255, c[1]/255, c[2]/255, c[3] );
+          }
+     
+          // user passes in value which ranges from 0-255, but opengl
+          // wants a normalized value.
+          else if( typeof arguments[0] == "number" ){
+            curContext.clearColor( col[0]/255, col[0]/255, col[0]/255, 1.0 );
+          }
         }
-        
-      }
+        else if( arguments.length == 2 ){
+          if( typeof arguments[0] == "string" ){
+            var c = arguments[0].slice( 5,-1 ).split( "," );
+            // Processing is ignoring alpha
+            // var a = arguments[0]/255;
+            curContext.clearColor( c[0]/255, c[1]/255, c[2]/255, 1.0 );
+          }
+          // first value is shade of gray, second is alpha
+          // background(0,255);
+          else if( typeof arguments[0] == "number" ){
+            var c = arguments[0]/255;
 
-      if( curBackground.img ){
-      
-        p.image( img, 0, 0 );
-        
-      }else{
+            // Processing is ignoring alpha
+            // var a = arguments[0]/255;
+            var a = 1.0;
+            curContext.clearColor( c, c, c, a );
+          }
+        }
 
-        var oldFill = curContext.fillStyle;
-        curContext.fillStyle = curBackground + "";
-        curContext.fillRect( 0, 0, p.width, p.height );
-        curContext.fillStyle = oldFill;
+        // background(255,0,0) or background(0,255,0,255);
+        else if( arguments.length == 3 || arguments.length == 4 ){
+          // Processing seems to ignore this value, so just use 1.0 instead.
+          //var a = arguments.length == 3? 1.0: arguments[3]/255;
+          curContext.clearColor( col[0]/255, col[1]/255, col[2]/255, 1.0 );
+        } 
+      }else{ // 2d context
+        if( arguments.length ){
+          if( img.data && img.data.img ){
+            curBackground = img.data;
+          }else{
+            curBackground = p.color.apply( this, arguments );
+          }
+        }
 
-      }
-      
+        if( curBackground.img ){
+          p.image( img, 0, 0 );
+        }else{
+          var oldFill = curContext.fillStyle;
+          curContext.fillStyle = curBackground + "";
+          curContext.fillRect( 0, 0, p.width, p.height );
+          curContext.fillStyle = oldFill;
+        }
+      }  
     };    
     
     p.AniSprite = function( prefix, frames ){
@@ -3016,34 +3099,21 @@
     };
 
     p.addMethod = function addMethod( object, name, fn ){
-
       if( object[ name ] ){
-      
-        var args   = fn.length,
+        var args  = fn.length,
             oldfn = object[ name ];
         
         object[ name ] = function(){
-          
           if( arguments.length == args ){
-
             return fn.apply( this, arguments );
-
           }else{
-
             return oldfn.apply( this, arguments );
-
           }
-        
         };
-      
       }else{
-      
         object[ name ] = fn;
-      
       }
-    
     };
-    
     
 
     ////////////////////////////////////////////////////////////////////////////
@@ -3051,14 +3121,6 @@
     ////////////////////////////////////////////////////////////////////////////
     
     p.init = function init(code){
-
-      p.stroke( 0 );
-      p.fill( 255 );
-    
-      // Canvas has trouble rendering single pixel stuff on whole-pixel
-      // counts, so we slightly offset it (this is super lame).
-      
-      curContext.translate( 0.5, 0.5 );    
           
       // The fun bit!
       if( code ){
@@ -3068,7 +3130,21 @@
           }
         })( p );
       }
-    
+
+      if( !p.use3DContext ){
+        // Setup default 2d canvas context. 
+        curContext = curElement.getContext( '2d' );
+
+        // Canvas has trouble rendering single pixel stuff on whole-pixel
+        // counts, so we slightly offset it (this is super lame).
+        curContext.translate( 0.5, 0.5 );    
+
+        // Set default stroke and fill color
+        p.stroke( 0 );
+        p.fill( 255 );
+      }
+   
+      // Run void setup()
       if( p.setup ){
         inSetup = true;
         p.setup();
@@ -3090,7 +3166,6 @@
       //////////////////////////////////////////////////////////////////////////
       
       attach( curElement, "mousemove"  , function(e){
-      
         var scrollX = window.scrollX != null ? window.scrollX : window.pageXOffset;
         var scrollY = window.scrollY != null ? window.scrollY : window.pageYOffset;            
       
@@ -3102,7 +3177,6 @@
 
         if( p.mouseMoved ){ p.mouseMoved() };
         if( mousePressed && p.mouseDragged ){ p.mouseDragged() };
-        
       });
       
       attach( curElement, "mouseout" , function( e ){ document.body.style.cursor = oldCursor } );      
