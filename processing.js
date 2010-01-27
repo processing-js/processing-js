@@ -39,8 +39,8 @@
    
   // IE Unfriendly AJAX Method
   var ajax=function( url ){
-    var AJAX;
-    if( AJAX = new XMLHttpRequest() ){
+    var AJAX = new XMLHttpRequest();
+    if( AJAX ){
       AJAX.open( "GET", url, false );
       AJAX.send( null );
       return AJAX.responseText;
@@ -52,11 +52,11 @@
   // Automatic Initialization Method
   var init = function(){
     
-    var canvas  = document.getElementsByTagName( 'canvas' ),
-        datasrc = undefined;
+    var canvas  = document.getElementsByTagName( 'canvas' );
 
-    for( var i = 0; l = i < canvas.length; i++ ){
-      if( datasrc = canvas[ i ].getAttribute( 'datasrc' ) ){
+    for( var i = 0, l = canvas.length; i < l; i++ ){
+      var datasrc = canvas[ i ].getAttribute( 'datasrc' );
+      if( datasrc ){
         Processing( canvas[ i ], ajax( datasrc ) );
       }
     }
@@ -75,7 +75,7 @@
     aCode = aCode.replace( /([^\s])%([^\s])/g, "$1 % $2" );
    
     // Simple convert a function-like thing to function
-    aCode = aCode.replace( /(?:static )?(\w+(?:\[\])* )(\w+)\s*(\([^\)]*\)\s*{)/g, function( all, type, name, args ){
+    aCode = aCode.replace( /(?:static )?(\w+(?:\[\])* )(\w+)\s*(\([^\)]*\)\s*\{)/g, function( all, type, name, args ){
       if ( name == "if" || name == "for" || name == "while" ) {
         return all;
       } else {
@@ -99,29 +99,31 @@
     });
     
     // What does this do?
-    aCode = aCode.replace( /(?:static )?\w+\[\]\s*(\w+)\[?\]?\s*=\s*{.*?};/g, function( all ){
-      return all.replace( /{/g, "[").replace(/}/g, "]" );
+    aCode = aCode.replace( /(?:static )?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function( all ){
+      return all.replace( /\{/g, "[").replace(/\}/g, "]" );
     });
 
     // int|float foo;
     var intFloat = /(\n\s*(?:int|float)(?:\[\])?(?:\s*|[^\(]*?,\s*))([a-z]\w*)(;|,)/i;
-    while( intFloat.test(aCode) ){
-      aCode = aCode.replace( new RegExp( intFloat ), function( all, type, name, sep ){
+    var intFloatSep = function( all, type, name, sep ){
         return type + " " + name + " = 0" + sep;
-      });
+    };
+    while( intFloat.test(aCode) ){
+      aCode = aCode.replace( new RegExp( intFloat ), intFloatSep( all, type, name, sep ) );
     }
 
     // float foo = 5;
     aCode = aCode.replace( /(?:static )?(\w+)((?:\[\])+| ) *(\w+)\[?\]?(\s*[=,;])/g, function( all, type, arr, name, sep ){
-      if ( type == "return" )
+      if ( type == "return" ){
         return all;
-      else
+      } else {
         return "var " + name + sep;
+      }
     });
 
     // Fix Array[] foo = {...} to [...]
-    aCode = aCode.replace( /=\s*{((.|\s)*?)};/g, function(all,data){
-      return "= [" + data.replace(/{/g, "[").replace(/}/g, "]") + "]";
+    aCode = aCode.replace( /(=)\s*\{((.|\s)*?)\};/g, function(all,data){
+      return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]") + "]";
     });
     
     // super() is a reserved word
@@ -133,10 +135,10 @@
       
       classes.push( name );
 
-      var static = "";
+      var statics = "";
 
       vars = vars.replace( /final\s+var\s+(\w+\s*=\s*.*?;)/g, function( all, set ){
-        static += " " + name + "." + set;
+        statics += " " + name + "." + set;
         return "";
       });
 
@@ -152,17 +154,52 @@
           .replace( /\b(var |final |public )+\s*/g, "this." )
           .replace( /this.(\w+);/g, "this.$1 = null;" ) + 
           ( extend ? "extendClass(this, " + extend + ");\n" : "" ) +
-          "<CLASS " + name + " " + static + ">" + ( typeof last == "string" ? last : name + "(" );
+          "<CLASS " + name + " " + statics + ">" + ( typeof last == "string" ? last : name + "(" );
       }
 
-      var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?{\s*((?:.|\n)*?)\b\1\s*\(/g;
-      var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?{\s*((?:.|\n)*?)(Processing)/g;
+      var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)\b\1\s*\(/g;
+      var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(Processing)/g;
       
       aCode = aCode.replace( matchClasses, ClassReplace );
       aCode = aCode.replace( matchNoCon, ClassReplace );
 
       var matchClass = /<CLASS (\w+) (.*?)>/, m;
       
+      var repRestA = function( all, args ){
+        args = args.split( /,\s*?/ );          
+        if( args[ 0 ].match( /^\s*$/ ) ){
+          args.shift();
+        }          
+        var fn = "if ( arguments.length == " + args.length + " ) {\n";            
+        for ( var i = 0; i < args.length; i++ ) {
+          fn += "    var " + args[ i ] + " = arguments["+ i +"];\n";
+        }            
+        return fn;
+      };
+      var repRestB = function( all, name, args ){
+        return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
+      };
+      var nextBrace = function( right ) {
+        var rest      = right,
+            position  = 0,
+            leftCount = 1,
+            rightCount = 0;        
+        while( leftCount != rightCount ) {        
+          var nextLeft  = rest.indexOf( "{" ),
+              nextRight = rest.indexOf( "}" );       
+          if( nextLeft < nextRight && nextLeft != - 1 ) {
+            leftCount++;
+            rest = rest.slice( nextLeft + 1 );
+            position += nextLeft + 1;
+          } else {
+            rightCount++;
+            rest = rest.slice( nextRight + 1 );
+            position += nextRight + 1;
+          }        
+        }        
+        return right.slice( 0, position - 1 );
+      };
+
       while ( ( m = aCode.match( matchClass ) ) ){
         
         var left        = RegExp.leftContext,
@@ -172,31 +209,15 @@
             staticVars  = m[ 2 ] || "";
           
         allRest = allRest.slice( rest.length + 1 );
-
-        rest = rest.replace( new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), function( all, args ){
-          args = args.split( /,\s*?/ );
-          
-          if( args[ 0 ].match( /^\s*$/ ) ){
-            args.shift();
-          }
-          
-          var fn = "if ( arguments.length == " + args.length + " ) {\n";
-            
-          for ( var i = 0; i < args.length; i++ ) {
-            fn += "    var " + args[ i ] + " = arguments["+ i +"];\n";
-          }
-            
-          return fn;
-        });
+        
+        rest = rest.replace( new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), repRest( all, args ) );
         
         // Fix class method names
         // this.collide = function() { ... }
         // and add closing } for with(this) ...
-        rest = rest.replace( /(?:public )?Processing.\w+ = function (\w+)\((.*?)\)/g, function( all, name, args ){
-          return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
-        });
+        rest = rest.replace( /(?:public )?Processing.\w+ = function (\w+)\((.*?)\)/g, repRestB( all, name, args ) );
         
-        var matchMethod = /ADDMETHOD([\s\S]*?{)/, mc;
+        var matchMethod = /ADDMETHOD([\s\S]*?\{)/, mc;
         var methods = "";
         
         while ( ( mc = rest.match( matchMethod ) ) ){
@@ -217,37 +238,6 @@
       // Do some tidying up, where necessary
       aCode = aCode.replace( /Processing.\w+ = function addMethod/g, "addMethod" );
       
-      function nextBrace( right ) {
-
-        var rest      = right,
-            position  = 0,
-            leftCount = 1,
-            rightCount = 0;
-        
-        while( leftCount != rightCount ) {
-        
-        var nextLeft  = rest.indexOf( "{" ),
-            nextRight = rest.indexOf( "}" );
-        
-        if( nextLeft < nextRight && nextLeft != - 1 ) {
-
-          leftCount++;
-          rest = rest.slice( nextLeft + 1 );
-          position += nextLeft + 1;
-
-        }else{
-
-          rightCount++;
-          rest = rest.slice( nextRight + 1 );
-          position += nextRight + 1;
-
-        }
-        
-      }
-        
-      return right.slice( 0, position - 1 );
-    }
-
     // Handle (int) Casting
     aCode = aCode.replace( /\(int\)/g, "0|" );
 
