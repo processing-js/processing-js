@@ -44,7 +44,7 @@
   var ajax=function( url ){
     var AJAX = new XMLHttpRequest();
     if( AJAX ){
-      AJAX.open( "GET", url, false );
+      AJAX.open( "GET", url + "?t=" + (new Date).getTime(), false );
       AJAX.send( null );
       return AJAX.responseText;
     }else{

@@ -23,7 +23,7 @@
       };
       var failed = i - passed + 1;
       
-      this.passed += !!passed;
+      this.passed += !failed;
       this.failed += !!failed;
       this.passrate += passed;
       this.failrate += failed;
@@ -51,7 +51,7 @@
       }
       var failed = i - passed + 1;
 
-      this.passed += !!passed;
+      this.passed += !failed;
       this.failed += !!failed;
       this.passrate += passed;
       this.failrate += failed;
