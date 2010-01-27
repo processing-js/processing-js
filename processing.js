@@ -28,15 +28,18 @@
     }
       
     // Build an Processing functions and env. vars into 'p'  
-    var p = buildProcessing( aElement );  
+    p = buildProcessing( aElement );  
 
     // Send aCode Processing syntax to be converted to JavaScript
     if( aCode ){ p.init( aCode ); }
-    
+
     return p;
     
   };
-   
+ 
+  // Share lib space
+  Processing.lib = {};
+ 
   // IE Unfriendly AJAX Method
   var ajax=function( url ){
     var AJAX = new XMLHttpRequest();
@@ -278,7 +281,13 @@
   function buildProcessing( curElement ){
               
     // Create the 'p' object
-    var p = {};
+    var p = {};    
+    p.curElement      = curElement;
+    var curContext    = p.curContext = curElement.getContext( "2d" );
+    for( var i in Processing.lib ){
+      p[ i ] = window.Processing.lib[ i ];
+    }
+
     
     // Set Processing defaults / environment variables
     p.name             = 'Processing.js Instance';
@@ -347,8 +356,7 @@
     p.codedKeys = [ 69, 70, 71, 72  ];
 
     // "Private" variables used to maintain state
-    var curContext      = curElement.getContext( "2d" ),
-        online          = true,
+    var online          = true,
         doFill          = true,
         doStroke        = true,
         loopStarted     = false,
