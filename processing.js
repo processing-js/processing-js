@@ -18,7 +18,6 @@
 
 (function(){
   
-
   // Attach Processing to the window 
   this.Processing = function Processing( aElement, aCode ){
 
@@ -73,6 +72,12 @@
 
     // Weird parsing errors with %
     aCode = aCode.replace( /([^\s])%([^\s])/g, "$1 % $2" );
+
+    // Since frameRate() and frameRate are different things, 
+    // we need to differentiate them somehow. So when we parse
+    // the Processing.js source, replace frameRate so it isn't 
+    // confused with frameRate().
+    aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/,"$1p.FRAME_RATE$2");
    
     // Simple convert a function-like thing to function
     aCode = aCode.replace( /(?:static )?(\w+(?:\[\])* )(\w+)\s*(\([^\)]*\)\s*{)/g, function( all, type, name, args ){
@@ -248,6 +253,11 @@
       return right.slice( 0, position - 1 );
     }
 
+    // Check if 3D context is invoked -- this is not the best way to do this.
+    if ( aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\);/)){
+      p.use3DContext = true;
+    }
+
     // Handle (int) Casting
     aCode = aCode.replace( /\(int\)/g, "0|" );
 
@@ -312,6 +322,8 @@
     p.CLOSE            = true;
     p.RGB              = 1;
     p.HSB              = 2;
+    p.OPENGL           = 'OPENGL';
+    p.FRAME_RATE       = 0;
     p.focused          = true;
     p.ARROW            = 'default';
     p.CROSS            = 'crosshair';
@@ -356,8 +368,10 @@
 //! // Description required...
     p.codedKeys = [ 69, 70, 71, 72  ];
 
+    p.use3DContext = false; // default '2d' canvas context
+
     // "Private" variables used to maintain state
-    var curContext      = curElement.getContext( "2d" ),
+    var curContext,
         online          = true,
         doFill          = true,
         doStroke        = true,
@@ -390,7 +404,10 @@
         curTextSize     = 12,
         curTextFont     = "Arial",
         getLoaded       = false,
-        start           = ( new Date ).getTime();
+        start           = ( new Date ).getTime(),
+        timeSinceLastFPS = start,
+        framesSinceLastFPS = 0;
+
 
     var firstX,
         firstY,
@@ -1093,11 +1110,31 @@
          
     p.redraw = function redraw(){
       if( hasBackground ){ p.background(); }
+
+      var sec = (( new Date ).getTime() - timeSinceLastFPS) / 1000;
+      framesSinceLastFPS++;
+      var fps = framesSinceLastFPS/sec;
+    
+      // recalculate FPS every half second for better accuracy.
+      if( sec > 0.5 ){
+        timeSinceLastFPS = ( new Date ).getTime();
+        framesSinceLastFPS = 0;
+        p.FRAME_RATE = fps;
+      }
+
       p.frameCount++;      
+
       inDraw = true;
-      p.pushMatrix();
-      p.draw();
-      p.popMatrix();
+
+      if( p.use3DContext ){
+        curContext.clear(curContext.COLOR_BUFFER_BIT);
+        p.draw();
+      } else {
+        p.pushMatrix();
+        p.draw();
+        p.popMatrix();
+      }
+
       inDraw = false;      
     };
     
@@ -1396,8 +1433,8 @@
 
     p.nf = function( num, pad ){
       var str = "" + num;
-      while ( pad - str.length ){
-        str = "0" + str;
+      for( var i = pad - str.length; i > 0; i-- ){
+        str = "0" + str;  
       }
       return str;
     };
@@ -1699,12 +1736,38 @@
     };
     
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
-    p.size = function size( aWidth, aHeight ){
-    
-      var props = { fillStyle   : curContext.fillStyle,
-                    strokeStyle : curContext.strokeStyle,
-                    lineCap     : curContext.lineCap
-                  } // More to be added...
+    p.size = function size( aWidth, aHeight, aMode ){
+      if( aMode && aMode === "OPENGL" ){
+        // get the 3D rendering context
+        try{
+          if( !curContext ){
+            curContext = curElement.getContext( "moz-webgl" );
+          }
+        }catch( e ){}
+
+        try{
+          if( !curContext ){
+            curContext = curElement.getContext("webkit-3d");
+          }
+        }catch( e ){}
+        
+        if( !curContext ) {
+          throw "OPENGL 3D context is not supported on this browser.";
+        }
+
+        p.stroke(0);
+        p.fill(255);
+      } 
+
+      // The default 2d context has already been created in the p.init() stage if 
+      // a 3d context was not specified. This is so that a 2d context will be 
+      // available if size() was not called.
+
+      var props = { 
+        fillStyle   : curContext.fillStyle,
+        strokeStyle : curContext.strokeStyle,
+        lineCap     : curContext.lineCap
+      }; // More to be added...
       
       curElement.width = p.width = aWidth;
       curElement.height = p.height = aHeight;
@@ -2142,6 +2205,18 @@
       curContext.closePath();
     };
 
+    p.bezierPoint = function bezierPoint( a, b, c, d, t ){
+      return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
+    };
+
+    p.curvePoint = function curvePoint( a, b, c, d, t ){
+      return 0.5* ((2 * b) +(-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b -3 * c + d) * t * t * t);
+    };
+
+    p.curveTangent = function curveTangent( a, b, c, d, t ){
+      return 0.5 * ((-a + c) + 2 * (2 * a -5 * b + 4 * c - d) * t + 3 * (-a + 3 * b - 3 * c + d) * t * t);
+    };
+
     p.triangle = function triangle( x1, y1, x2, y2, x3, y3 ){
       p.beginShape();
       p.vertex( x1, y1 );
@@ -2368,30 +2443,73 @@
 
     // Draw an image or a color to the background
     p.background = function background( img ) {
-      
-       if( arguments.length ){
-        
-        if( img.data && img.data.img ){
-          curBackground = img.data;
-        }else{
-          curBackground = p.color.apply( this, arguments );
+      if( p.use3DContext ) {
+        // create alias
+        var col = arguments;
+   
+        // if user passes in 1 argument, they either want
+        // a shade of gray or 
+        // it is a color object or
+        // it's a hex value
+        if( arguments.length == 1 ){
+          // type passed in was color()
+          if( typeof arguments[0] == "string" ){
+            var c = arguments[0].slice( 5,-1 ).split( "," );
+
+            // if 3 component color was passed in, alpha will be 1
+            // otherwise it will already be normalized.
+            curContext.clearColor( c[0]/255, c[1]/255, c[2]/255, c[3] );
+          }
+     
+          // user passes in value which ranges from 0-255, but opengl
+          // wants a normalized value.
+          else if( typeof arguments[0] == "number" ){
+            curContext.clearColor( col[0]/255, col[0]/255, col[0]/255, 1.0 );
+          }
         }
-        
-      }
+        else if( arguments.length == 2 ){
+          if( typeof arguments[0] == "string" ){
+            var c = arguments[0].slice( 5,-1 ).split( "," );
+            // Processing is ignoring alpha
+            // var a = arguments[0]/255;
+            curContext.clearColor( c[0]/255, c[1]/255, c[2]/255, 1.0 );
+          }
+          // first value is shade of gray, second is alpha
+          // background(0,255);
+          else if( typeof arguments[0] == "number" ){
+            var c = arguments[0]/255;
 
-      if( curBackground.img ){
-      
-        p.image( img, 0, 0 );
-        
-      }else{
+            // Processing is ignoring alpha
+            // var a = arguments[0]/255;
+            var a = 1.0;
+            curContext.clearColor( c, c, c, a );
+          }
+        }
 
-        var oldFill = curContext.fillStyle;
-        curContext.fillStyle = curBackground + "";
-        curContext.fillRect( 0, 0, p.width, p.height );
-        curContext.fillStyle = oldFill;
+        // background(255,0,0) or background(0,255,0,255);
+        else if( arguments.length == 3 || arguments.length == 4 ){
+          // Processing seems to ignore this value, so just use 1.0 instead.
+          //var a = arguments.length == 3? 1.0: arguments[3]/255;
+          curContext.clearColor( col[0]/255, col[1]/255, col[2]/255, 1.0 );
+        } 
+      }else{ // 2d context
+        if( arguments.length ){
+          if( img.data && img.data.img ){
+            curBackground = img.data;
+          }else{
+            curBackground = p.color.apply( this, arguments );
+          }
+        }
 
-      }
-      
+        if( curBackground.img ){
+          p.image( img, 0, 0 );
+        }else{
+          var oldFill = curContext.fillStyle;
+          curContext.fillStyle = curBackground + "";
+          curContext.fillRect( 0, 0, p.width, p.height );
+          curContext.fillStyle = oldFill;
+        }
+      }  
     };    
     
     p.AniSprite = function( prefix, frames ){
@@ -3023,34 +3141,21 @@
     };
 
     p.addMethod = function addMethod( object, name, fn ){
-
       if( object[ name ] ){
-      
-        var args   = fn.length,
+        var args  = fn.length,
             oldfn = object[ name ];
         
         object[ name ] = function(){
-          
           if( arguments.length == args ){
-
             return fn.apply( this, arguments );
-
           }else{
-
             return oldfn.apply( this, arguments );
-
           }
-        
         };
-      
       }else{
-      
         object[ name ] = fn;
-      
       }
-    
     };
-    
     
 
     ////////////////////////////////////////////////////////////////////////////
@@ -3058,24 +3163,32 @@
     ////////////////////////////////////////////////////////////////////////////
     
     p.init = function init(code){
-
-      p.stroke( 0 );
-      p.fill( 255 );
-    
-      // Canvas has trouble rendering single pixel stuff on whole-pixel
-      // counts, so we slightly offset it (this is super lame).
-      
-      curContext.translate( 0.5, 0.5 );    
           
       // The fun bit!
       if( code ){
         (function( Processing ){
           with ( p ){
-            eval(parse(code, p));
+            var parsedCode = parse(code, p);
+
+            if( !p.use3DContext ){
+              // Setup default 2d canvas context. 
+              curContext = curElement.getContext( '2d' );
+
+              // Canvas has trouble rendering single pixel stuff on whole-pixel
+              // counts, so we slightly offset it (this is super lame).
+              curContext.translate( 0.5, 0.5 );    
+
+              // Set default stroke and fill color
+              p.stroke( 0 );
+              p.fill( 255 );
+            }
+
+            eval(parsedCode);
           }
         })( p );
       }
-    
+   
+      // Run void setup()
       if( p.setup ){
         inSetup = true;
         p.setup();
@@ -3097,7 +3210,6 @@
       //////////////////////////////////////////////////////////////////////////
       
       attach( curElement, "mousemove"  , function(e){
-      
         var scrollX = window.scrollX != null ? window.scrollX : window.pageXOffset;
         var scrollY = window.scrollY != null ? window.scrollY : window.pageYOffset;            
       
@@ -3109,7 +3221,6 @@
 
         if( p.mouseMoved ){ p.mouseMoved() };
         if( mousePressed && p.mouseDragged ){ p.mouseDragged() };
-        
       });
       
       attach( curElement, "mouseout" , function( e ){ document.body.style.cursor = oldCursor } );      
