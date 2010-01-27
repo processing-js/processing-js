@@ -1239,6 +1239,36 @@
       }
       return str;
     }
+
+    p.nfc = function( num, right ){
+      var str;
+      var decimals = right >= 0 ? right : 0;
+      if (typeof num == "object"){
+        str = new Array();
+        for(var i=0; i < num.length; i++){
+          str[i] = p.nfc(num[i], decimals);
+        }
+      }
+      else if (arguments.length == 2){
+        var rawStr = p.nfs(num, 0, decimals);
+        var digits = ("" + Math.floor(Math.abs(rawStr))).length;
+        var ary = new Array();
+        ary = rawStr.split('.');
+        // ary[0] contains left of decimal, ary[1] contains decimal places if they exist
+        // insert commas now, then append ary[1] if it exists
+        var leftStr = ary[0];
+        var rightStr = ary.length > 1 ? '.' + ary[1] : '';
+        var commas = /(\d+)(\d{3})/;
+        while (commas.test(leftStr)){
+          leftStr = leftStr.replace(commas, '$1' + ',' + '$2');
+        }
+        str = leftStr + rightStr;
+      }
+      else if (arguments.length == 1){
+        str = p.nfc(num, 0);
+      }
+      return str;
+    }    
     
     //function i use to convert RGB to hex values
     p.RGB2HTML = function RGB2HTML(red, green, blue) {
