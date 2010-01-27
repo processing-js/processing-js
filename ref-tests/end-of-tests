@@ -12,7 +12,9 @@ div.innerHTML = "<b>Passed:</b> " + reftest.passed + " (" + reftest.passrate + "
                 (function(){
                   var fails = "<ul>";
                   for(var i in reftest.testlist){
-                    fails += "<li>" + reftest.testlist[i].name + "</li>";
+                    if( reftest.testlist[i].failed ){
+                      fails += "<li>" + reftest.testlist[i].name + "</li>";
+                    }
                   }
                   fails += "</ul>";
                   return fails;
