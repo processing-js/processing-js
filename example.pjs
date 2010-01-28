@@ -1,2 +1,3 @@
-//
-background( 0, 255, 0 );
+// 	Processing.js Example
+
+background( #00ff00 );

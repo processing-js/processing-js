@@ -12,6 +12,7 @@
   Mozilla POW!  : http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
   Maintained by : Seneca: http://zenit.senecac.on.ca/wiki/index.php/Processing.js
                   Hyper-Metrix: http://hyper-metrix.com/#Processing
+<<<<<<< HEAD:processing.js
 
 */
 
@@ -5464,6 +5465,7 @@
         if( p.keyReleased ){ p.keyReleased(); }
       });
 
+>>>>>>> b19852049e3e0598fbc641771ad7fc2a2428c0ec:processing.js
       function attach(elem, type, fn) {
         if( elem.addEventListener ){ elem.addEventListener( type, fn, false ); }
         else{ elem.attachEvent( "on" + type, fn ); }
@@ -5476,3 +5478,5 @@
   }
 
 })();
+
+
