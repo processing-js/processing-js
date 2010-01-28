@@ -43,7 +43,7 @@
   var ajax=function( url ){
     var AJAX = new XMLHttpRequest();
     if( AJAX ){
-      AJAX.open( "GET", url + "?t=" + (new Date).getTime(), false );
+      AJAX.open( "GET", url + "?t=" + new Date().getTime(), false );
       AJAX.send( null );
       return AJAX.responseText;
     }else{
@@ -113,11 +113,9 @@
 
     // int|float foo;
     var intFloatSep = function( all, type, name, sep ){
-    var intFloat = /(\n\s*(?:int|float)(?!\[\])*(?:\s*|[^\(;]*?,\s*))(\w+)\s*(,|;)/i;
-    while( intFloat.test(aCode) ){
-      aCode = aCode.replace( new RegExp( intFloat ), function( all, type, name, sep ){
-        return type + " " + name + " = 0" + sep;
+      return type + " " + name + " = 0" + sep;
     };
+    var intFloat = /(\n\s*(?:int|float)(?!\[\])*(?:\s*|[^\(;]*?,\s*))(\w+)\s*(,|;)/i;
     while( intFloat.test(aCode) ){
       aCode = aCode.replace( new RegExp( intFloat ), intFloatSep( all, type, name, sep ) );
     }
@@ -248,8 +246,6 @@
       // Do some tidying up, where necessary
       aCode = aCode.replace( /Processing.\w+ = function addMethod/g, "addMethod" );
       
-<<<<<<< HEAD:processing.js
-=======
       function nextBrace( right ) {
 
         var rest      = right,
@@ -286,7 +282,6 @@
       p.use3DContext = true;
     }
 
->>>>>>> b802a7afbee8480fb2fb9743967d9dc32ad971f8:processing.js
     // Handle (int) Casting
     aCode = aCode.replace( /\(int\)/g, "0|" );
 
@@ -406,12 +401,7 @@
     p.use3DContext = false; // default '2d' canvas context
 
     // "Private" variables used to maintain state
-<<<<<<< HEAD:processing.js
     var online          = true,
-=======
-    var curContext,
-        online          = true,
->>>>>>> b802a7afbee8480fb2fb9743967d9dc32ad971f8:processing.js
         doFill          = true,
         doStroke        = true,
         loopStarted     = false,
