@@ -135,15 +135,15 @@
     var classes = [ "int", "float", "boolean", "string" ];
 
     function ClassReplace( all, name, extend, vars, last ){
-      
       classes.push( name );
 
       var static = "";
-
+     
       vars = vars.replace( /final\s+var\s+(\w+\s*=\s*.*?;)/g, function( all, set ){
         static += " " + name + "." + set;
         return "";
       });
+      
 
       // Move arguments up from constructor and wrap contents with
       // a with(this), and unwrap constructor
@@ -152,13 +152,15 @@
         // Replace var foo = 0; with this.foo = 0;
         // and force var foo; to become this.foo = null;
         vars
-          .replace( /,\s?/g, ";\n  this." )
+          .replace( /\s*,\s*/g, ";\n  this." )
           .replace( /\b(var |final |public )+\s*/g, "this." )
           .replace( /\b(var |final |public )+\s*/g, "this." )
           .replace( /this.(\w+);/g, "this.$1 = null;" ) + 
           ( extend ? "extendClass(this, " + extend + ");\n" : "" ) +
           "<CLASS " + name + " " + static + ">" + ( typeof last == "string" ? last : name + "(" );
+      
       }
+    
 
       var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?{\s*((?:.|\n)*?)\b\1\s*\(/g;
       var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?{\s*((?:.|\n)*?)(Processing)/g;
