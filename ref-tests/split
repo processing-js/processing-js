@@ -13,10 +13,12 @@ String numbers = "8 67 5 309";
 int[] nums = int(split(numbers, ' '));
 // nums[0] is now 8, nums[1] is now 67, ...
 
-String men = "Chernenko ] Andropov ] Brezhnev";
-String[] list2 = split(men, " ] ");
-// list[0] is now Chernenko, list[1] is Andropov, ..
+// nums is broken... but this works: int[] nums = split(numbers, ' ');
+// even though that works, nums should be returning an Int not a String
 
+String men2 = "Chernenko ] Andropov ] Brezhnev";
+String[] list2 = split(men2, " ] ");
+// list[0] is now Chernenko, list[1] is Andropov, ..
 
 //** REFTEST VALUES **//
 background(
@@ -30,4 +32,4 @@ background(
   ])
 );
 exit();
-//*******************//
+
