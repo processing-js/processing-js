@@ -7,7 +7,7 @@
 String t = "a b";
 String[] q = splitTokens(t);
 String s = "a, b c ,,d "; 
-String[] p = splitTokens(s, ", ");
+String[] p = splitTokens(s, ", "); // string passed should be treated as an array -F1LT3R
 
 //** REFTEST VALUES **//
 background(
