@@ -295,7 +295,7 @@ Processing.parse = function parse( aCode, p ){
       return ret;
     }
     
-    //console.log( aCode );
+    console.log( aCode );
     
     return aCode;
  };
