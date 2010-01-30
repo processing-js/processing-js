@@ -21,7 +21,7 @@
   this.Processing = function Processing( aElement, aCode ){
 
     // Get the DOM element if string was passed
-    if( typeof aElement == "string" ){
+    if( typeof aElement === "string" ){
       aElement = document.getElementById( aElement );
     }
       
@@ -52,8 +52,7 @@
   
   // Automatic Initialization Method
   var init = function(){
-    
-    var canvas  = document.getElementsByTagName( 'canvas' );
+    var canvas = document.getElementsByTagName( 'canvas' );
 
     for( var i = 0, l = canvas.length; i < l; i++ ){
       var datasrc = canvas[ i ].getAttribute( 'datasrc' );
@@ -64,13 +63,13 @@
     
   };
  
-document.addEventListener( 'DOMContentLoaded', function(){ init(); }, false );
+  document.addEventListener( 'DOMContentLoaded', function(){ init(); }, false );
 
-// Place-holder for debugging function
-Processing.debug = function(){};
+  // Place-holder for debugging function
+  Processing.debug = function(){};
  
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
-Processing.parse = function parse( aCode, p ){
+  Processing.parse = function parse( aCode, p ){
     // Remove end-of-line comments
     aCode = aCode.replace( /\/\/ .*\n/g, "\n" );
  
@@ -84,8 +83,8 @@ Processing.parse = function parse( aCode, p ){
     aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/,"$1p.FRAME_RATE$2");
    
     // Simple convert a function-like thing to function
-    aCode = aCode.replace( /(?:static )?(\w+(?:\[\])* )(\w+)\s*(\([^\)]*\)\s*{)/g, function( all, type, name, args ){
-      if ( name == "if" || name == "for" || name == "while" ) {
+    aCode = aCode.replace( /(?:static )?(\w+(?:\[\])* )(\w+)\s*(\([^\)]*\)\s*\{)/g, function( all, type, name, args ){
+      if ( name === "if" || name === "for" || name === "while" ) {
         return all;
       } else {
         return "Processing." + name + " = function " + name + args;
@@ -107,9 +106,9 @@ Processing.parse = function parse( aCode, p ){
       return "new ArrayList(" + args.slice(1,-1).split("][").join(", ") + ")";
     });
     
-    // What does this do?
-    aCode = aCode.replace( /(?:static )?\w+\[\]\s*(\w+)\[?\]?\s*=\s*{.*?};/g, function( all ){
-      return all.replace( /{/g, "[").replace(/}/g, "]" );
+    // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
+    aCode = aCode.replace( /(?:static )?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function( all ){
+      return all.replace( /\{/g, "[").replace(/\}/g, "]" );
     });
  
     // int|float foo;
@@ -122,15 +121,16 @@ Processing.parse = function parse( aCode, p ){
  
     // float foo = 5;
     aCode = aCode.replace( /(?:static )?(\w+)((?:\[\])+| ) *(\w+)\[?\]?(\s*[=,;])/g, function( all, type, arr, name, sep ){
-      if ( type == "return" )
+      if( type === "return" ){
         return all;
-      else
+      }else{
         return "var " + name + sep;
+      }
     });
  
     // Fix Array[] foo = {...} to [...]
-    aCode = aCode.replace( /=\s*{((.|\s)*?)};/g, function(all,data){
-      return "= [" + data.replace(/{/g, "[").replace(/}/g, "]") + "]";
+    aCode = aCode.replace( /\=\s*\{((.|\s)*?)\};/g, function(all,data){
+      return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]") + "]";
     });
     
     // super() is a reserved word
@@ -138,13 +138,13 @@ Processing.parse = function parse( aCode, p ){
  
     var classes = [ "int", "float", "boolean", "string" ];
  
-    function ClassReplace( all, name, extend, vars, last ){
+    var classReplace = function( all, name, extend, vars, last ){
       classes.push( name );
  
-      var static = "";
+      var staticVar = "";
      
       vars = vars.replace( /final\s+var\s+(\w+\s*=\s*.*?;)/g, function( all, set ){
-        static += " " + name + "." + set;
+        staticVar += " " + name + "." + set;
         return "";
       });
       
@@ -159,105 +159,93 @@ Processing.parse = function parse( aCode, p ){
           .replace( /\s*,\s*/g, ";\n  this." )
           .replace( /\b(var |final |public )+\s*/g, "this." )
           .replace( /\b(var |final |public )+\s*/g, "this." )
-          .replace( /this.(\w+);/g, "this.$1 = null;" ) +
+          .replace( /this\.(\w+);/g, "this.$1 = null;" ) +
           ( extend ? "extendClass(this, " + extend + ");\n" : "" ) +
-          "<CLASS " + name + " " + static + ">" + ( typeof last == "string" ? last : name + "(" );
+          "<CLASS " + name + " " + staticVar + ">" + ( typeof last === "string" ? last : name + "(" );
       
-      }
+    };
     
- 
-      var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?{\s*((?:.|\n)*?)\b\1\s*\(/g;
-      var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?{\s*((?:.|\n)*?)(Processing)/g;
-      
-      aCode = aCode.replace( matchClasses, ClassReplace );
-      aCode = aCode.replace( matchNoCon, ClassReplace );
- 
-      var matchClass = /<CLASS (\w+) (.*?)>/, m;
-      
-      while ( ( m = aCode.match( matchClass ) ) ){
+    var nextBrace = function( right ){
+      var rest = right, position = 0, leftCount = 1, rightCount = 0;
         
-        var left = RegExp.leftContext,
-            allRest = RegExp.rightContext,
-            rest = nextBrace( allRest ),
-            className = m[ 1 ],
-            staticVars = m[ 2 ] || "";
-          
-        allRest = allRest.slice( rest.length + 1 );
- 
-        rest = rest.replace( new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), function( all, args ){
-          args = args.split( /,\s*?/ );
-          
-          if( args[ 0 ].match( /^\s*$/ ) ){
-            args.shift();
-          }
-          
-          var fn = "if ( arguments.length == " + args.length + " ) {\n";
-            
-          for ( var i = 0; i < args.length; i++ ) {
-            fn += " var " + args[ i ] + " = arguments["+ i +"];\n";
-          }
-            
-          return fn;
-        });
+      while( leftCount !== rightCount ){
+        var nextLeft = rest.indexOf( "{" ), nextRight = rest.indexOf( "}" );
         
-        // Fix class method names
-        // this.collide = function() { ... }
-        // and add closing } for with(this) ...
-        rest = rest.replace( /(?:public )?Processing.\w+ = function (\w+)\((.*?)\)/g, function( all, name, args ){
-          return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
-        });
-        
-        var matchMethod = /ADDMETHOD([\s\S]*?{)/, mc;
-        var methods = "";
-        
-        while ( ( mc = rest.match( matchMethod ) ) ){
-          var prev = RegExp.leftContext,
-              allNext = RegExp.rightContext,
-              next = nextBrace(allNext);
- 
-          methods += "addMethod" + mc[ 1 ] + next + "});";
-          
-          rest = prev + allNext.slice( next.length + 1 );
-        }
- 
-        rest = methods + rest;
-        
-        aCode = left + rest + "\n}}" + staticVars + allRest;
-      }
- 
-      // Do some tidying up, where necessary
-      aCode = aCode.replace( /Processing.\w+ = function addMethod/g, "addMethod" );
-      
-      function nextBrace( right ) {
- 
-        var rest = right,
-            position = 0,
-            leftCount = 1,
-            rightCount = 0;
-        
-        while( leftCount != rightCount ) {
-        
-        var nextLeft = rest.indexOf( "{" ),
-            nextRight = rest.indexOf( "}" );
-        
-        if( nextLeft < nextRight && nextLeft != - 1 ) {
- 
+        if( nextLeft < nextRight && nextLeft !== - 1 ){
           leftCount++;
           rest = rest.slice( nextLeft + 1 );
           position += nextLeft + 1;
- 
         }else{
- 
           rightCount++;
           rest = rest.slice( nextRight + 1 );
           position += nextRight + 1;
- 
-        }
-        
+        } 
       }
-        
+          
       return right.slice( 0, position - 1 );
+    };
+ 
+    var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)\b\1\s*\(/g;
+    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(Processing)/g;
+      
+    aCode = aCode.replace( matchClasses, classReplace );
+    aCode = aCode.replace( matchNoCon, classReplace );
+ 
+    var matchClass = /<CLASS (\w+) (.*?)>/, m;
+      
+    while ( ( m = aCode.match( matchClass ) ) ){    
+      var left = RegExp.leftContext,
+          allRest = RegExp.rightContext,
+          rest = nextBrace( allRest ),
+          className = m[ 1 ],
+          staticVars = m[ 2 ] || "";
+          
+      allRest = allRest.slice( rest.length + 1 );
+ 
+      rest = rest.replace( new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), function( all, args ){
+        args = args.split( /,\s*?/ );
+          
+        if( args[ 0 ].match( /^\s*$/ ) ){
+          args.shift();
+        }
+          
+        var fn = "if ( arguments.length === " + args.length + " ) {\n";
+            
+        for ( var i = 0; i < args.length; i++ ) {
+          fn += " var " + args[ i ] + " = arguments["+ i +"];\n";
+        }
+            
+        return fn;
+      });
+        
+      // Fix class method names
+      // this.collide = function() { ... }
+      // and add closing } for with(this) ...
+      rest = rest.replace( /(?:public )?Processing.\w+ = function (\w+)\((.*?)\)/g, function( all, name, args ){
+        return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
+      });
+        
+      var matchMethod = /ADDMETHOD([\s\S]*?\{)/, mc;
+      var methods = "";
+        
+      while ( ( mc = rest.match( matchMethod ) ) ){
+        var prev = RegExp.leftContext,
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext);
+ 
+        methods += "addMethod" + mc[ 1 ] + next + "});";
+          
+        rest = prev + allNext.slice( next.length + 1 );
+      }
+ 
+      rest = methods + rest;
+        
+      aCode = left + rest + "\n}}" + staticVars + allRest;
     }
+ 
+    // Do some tidying up, where necessary
+    aCode = aCode.replace( /Processing.\w+ = function addMethod/g, "addMethod" );
+      
  
     // Check if 3D context is invoked -- this is not the best way to do this.
     if ( aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\);/)){
@@ -276,6 +264,16 @@ Processing.parse = function parse( aCode, p ){
 //! // Force characters-as-bytes to work --> Ping: Andor
     aCode = aCode.replace(/('[a-zA-Z0-9]')/g, "$1.charCodeAt(0)");
  
+    var toNumbers = function( str ){
+      var ret = [];
+      
+      str.replace( /(..)/g, function( str ){
+        ret.push( parseInt( str, 16 ) );
+      });
+      
+      return ret;
+    };
+ 
     // Convert #aaaaaa into color
     aCode = aCode.replace(/#([a-f0-9]{6})/ig, function(m, hex){
       var num = toNumbers(hex);
@@ -284,24 +282,12 @@ Processing.parse = function parse( aCode, p ){
  
     // Convert 3.0f to just 3.0
     aCode = aCode.replace( /(\d+)f/g, "$1" );
- 
-    function toNumbers( str ){
-      var ret = [];
-      
-      str.replace( /(..)/g, function( str ){
-        ret.push( parseInt( str, 16 ) );
-      });
-      
-      return ret;
-    }
-    
-    console.log( aCode );
     
     return aCode;
- };
+  };
 
-// Attach Processing functions to 'p' 
-Processing.build = function buildProcessing( curElement ){
+  // Attach Processing functions to 'p'
+  Processing.build = function buildProcessing( curElement ){
               
     // Create the 'p' object
     var p = {};    
@@ -474,7 +460,7 @@ Processing.build = function buildProcessing( curElement ){
     };
 
     p.splitTokens = function( str, tokens ){
-      if( arguments.length == 1 ){
+      if( arguments.length === 1 ){
         tokens = "\n\t\r\f ";
       }
 
@@ -532,9 +518,9 @@ Processing.build = function buildProcessing( curElement ){
     };
 
     p.subset = function( array, offset, length ){
-      if(arguments.length == 2){
+      if(arguments.length === 2){
         return p.subset( array, offset, array.length - offset );
-      }else if( arguments.length == 3 ){
+      }else if( arguments.length === 3 ){
         return array.slice( offset, offset + length );
       }
     };
@@ -568,12 +554,12 @@ Processing.build = function buildProcessing( curElement ){
           newary[ i ] = ary[ i ];
       }
       
-      if( arguments.length == 1 ){
+      if( arguments.length === 1 ){
         
         // double size of array
         newary.length *= 2;
         
-      }else if( arguments.length == 2 ){
+      }else if( arguments.length === 2 ){
         
         // size is newSize
         newary.length = newSize;
@@ -859,9 +845,9 @@ Processing.build = function buildProcessing( curElement ){
             var bg = (c2 & p.GREEN_MASK) >> 8;
             var bb = (c2 & p.BLUE_MASK);
             // formula:
-            var cr = (br==255) ? 255 : p.peg((ar << 8) / (255 - br)); // division requires pre-peg()-ing
-            var cg = (bg==255) ? 255 : p.peg((ag << 8) / (255 - bg)); // "
-            var cb = (bb==255) ? 255 : p.peg((ab << 8) / (255 - bb)); // "
+            var cr = (br === 255) ? 255 : p.peg((ar << 8) / (255 - br)); // division requires pre-peg()-ing
+            var cg = (bg === 255) ? 255 : p.peg((ag << 8) / (255 - bg)); // "
+            var cb = (bb === 255) ? 255 : p.peg((ab << 8) / (255 - bb)); // "
             // alpha blend (this portion will always be the same)
             return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                     (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
@@ -879,9 +865,9 @@ Processing.build = function buildProcessing( curElement ){
             var bg = (c2 & p.GREEN_MASK) >> 8;
             var bb = (c2 & p.BLUE_MASK);
             // formula:
-            var cr = (br===0) ? 0 : 255 - p.peg(((255 - ar) << 8) / br); // division requires pre-peg()-ing
-            var cg = (bg===0) ? 0 : 255 - p.peg(((255 - ag) << 8) / bg); // "
-            var cb = (bb===0) ? 0 : 255 - p.peg(((255 - ab) << 8) / bb); // "
+            var cr = (br === 0) ? 0 : 255 - p.peg(((255 - ar) << 8) / br); // division requires pre-peg()-ing
+            var cg = (bg === 0) ? 0 : 255 - p.peg(((255 - ag) << 8) / bg); // "
+            var cb = (bb === 0) ? 0 : 255 - p.peg(((255 - ab) << 8) / bb); // "
             // alpha blend (this portion will always be the same)
             return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                     (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
@@ -924,12 +910,12 @@ Processing.build = function buildProcessing( curElement ){
       
       var aColor = "", rgb, r, g, b;
       
-      if ( arguments.length == 3 ) {       
+      if ( arguments.length === 3 ) {       
         aColor = p.color( aValue1, aValue2, aValue3, opacityRange );
-      } else if ( arguments.length == 4 ) {
+      } else if ( arguments.length === 4 ) {
         var a = aValue4 / opacityRange;
         a = isNaN(a) ? 1 : a;
-        if ( curColorMode == p.HSB ) {
+        if ( curColorMode === p.HSB ) {
           rgb = HSBtoRGB(aValue1, aValue2, aValue3);
           r = rgb[0]; g = rgb[1]; b = rgb[2];
         } else {
@@ -938,19 +924,19 @@ Processing.build = function buildProcessing( curElement ){
           b = getColor(aValue3, blueRange);
         }
         aColor = "rgba(" + r + "," + g + "," + b + "," + aValue4 + ")"; // a=aValue4
-      } else if ( typeof aValue1 == "string" ) {
+      } else if ( typeof aValue1 === "string" ) {
         aColor = aValue1;
 
-        if ( arguments.length == 2 ) {
+        if ( arguments.length === 2 ) {
           var c = aColor.split(",");
           c[3] = (aValue2 / opacityRange) + ")";
           aColor = c.join(",");
         }
-      } else if ( arguments.length == 2 ) {
+      } else if ( arguments.length === 2 ) {
         aColor = p.color( aValue1, aValue1, aValue1, aValue2 );
-      } else if ( typeof aValue1 == "number" && aValue1 < 256 && aValue1 >= 0) {
+      } else if ( typeof aValue1 === "number" && aValue1 < 256 && aValue1 >= 0) {
         aColor = p.color( aValue1, aValue1, aValue1, opacityRange );
-      } else if ( typeof aValue1 == "number" ) {
+      } else if ( typeof aValue1 === "number" ) {
         var intcolor = 0;
         if( aValue1 < 0 ){
           intcolor = 4294967296 - ( aValue1 * -1 );
@@ -971,7 +957,7 @@ Processing.build = function buildProcessing( curElement ){
     };
 
     var verifyChannel = function verifyChannel( aColor ){ 
-      if( aColor.constructor == Array ){    
+      if( aColor.constructor === Array ){    
         return aColor;
       } else {
         return p.color( aColor );
@@ -1022,8 +1008,8 @@ Processing.build = function buildProcessing( curElement ){
     p.colorMode = function colorMode( mode, range1, range2, range3, range4 ){
       curColorMode = mode;
       if( arguments.length >= 4 ){ redRange     = range1; greenRange = range2; blueRange  = range3; }
-      if( arguments.length == 5 ){ opacityRange = range4; }
-      if( arguments.length == 2 ){ p.colorMode( mode, range1, range1, range1, range1 ); }    
+      if( arguments.length === 5 ){ opacityRange = range4; }
+      if( arguments.length === 2 ){ p.colorMode( mode, range1, range1, range1, range1 ); }    
     };
 
     p.blendColor = function(c1, c2, mode){
@@ -1227,7 +1213,7 @@ Processing.build = function buildProcessing( curElement ){
       if( isNaN( binaryString ) ){
 	      throw "NaN_Err";
       }else{
-	      if( arguments.length == 1 || binaryString.length == 8 ){
+	      if( arguments.length === 1 || binaryString.length === 8 ){
 		      if( binaryPattern.test( binaryString ) ){
 			      for( i = 0; i < 8; i++ ){
 				      addUp += ( Math.pow( 2, i ) * parseInt( binaryString.charAt( 7 - i ), 10 ) );
@@ -1246,14 +1232,14 @@ Processing.build = function buildProcessing( curElement ){
     p.nfs = function( num, left, right){
       var str, len;
       // array handling
-      if (typeof num == "object"){
+      if (typeof num === "object"){
         str = new Array(0);
         len = num.length;
         for(var i=0; i < len; i++){
           str[i] = p.nfs(num[i], left, right);
         }
       }
-      else if (arguments.length == 3){
+      else if (arguments.length === 3){
         var negative = false;
         if(num < 0){ negative = true; }
           
@@ -1266,11 +1252,11 @@ Processing.build = function buildProcessing( curElement ){
         }
         // get the number of decimal places, if none will be -1
         var decimals = ("" + Math.abs(num)).length - digits - 1;
-        if (decimals == -1 && right > 0){ str = str + "."; }
+        if (decimals === -1 && right > 0){ str = str + "."; }
         
-        if (decimals != -1){
+        if (decimals !== -1){
           count = right - decimals;
-        }else if (decimals == -1 && right > 0){
+        }else if (decimals === -1 && right > 0){
           count = right;
         }else{
           count = 0;
@@ -1281,7 +1267,7 @@ Processing.build = function buildProcessing( curElement ){
         }
         str = (negative ? "-" : " ") + str;
       }
-      else if (arguments.length == 2){
+      else if (arguments.length === 2){
         str = p.nfs(num, left, 0);
       }
       return str;
@@ -1290,13 +1276,13 @@ Processing.build = function buildProcessing( curElement ){
     p.nfc = function( num, right ){
       var str;
       var decimals = right >= 0 ? right : 0;
-      if (typeof num == "object"){
+      if (typeof num === "object"){
         str = new Array(0);
         for(var i=0; i < num.length; i++){
           str[i] = p.nfc(num[i], decimals);
         }
       }
-      else if (arguments.length == 2){
+      else if (arguments.length === 2){
         var rawStr = p.nfs(num, 0, decimals);
         var digits = ("" + Math.floor(Math.abs(rawStr))).length;
         var ary = new Array(0);
@@ -1311,7 +1297,7 @@ Processing.build = function buildProcessing( curElement ){
         }
         str = leftStr + rightStr;
       }
-      else if (arguments.length == 1){
+      else if (arguments.length === 1){
         str = p.nfc(num, 0);
       }
       return str;
@@ -1349,7 +1335,7 @@ Processing.build = function buildProcessing( curElement ){
       var patternRGBa = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i;  //match rgba(20,20,20,0) or rgba(20,20,20)
       var patternDigits = /^\d+$/;
       //**************************   dealing with 2 parameters   *************************************************
-      if (arguments.length == 2) {
+      if (arguments.length === 2) {
 	      if (patternDigits.test(decimal)) {
 		      hexadecimal = p.decimalToHex(decimal, len);
 	      }
@@ -1359,7 +1345,7 @@ Processing.build = function buildProcessing( curElement ){
 		      hexadecimal = hexadecimal.substring(hexadecimal.length - len, hexadecimal.length);
 	      }
       }
-      else if (arguments.length == 1) //****************   dealing with 1 parameter  ********************************
+      else if (arguments.length === 1) //****************   dealing with 1 parameter  ********************************
       {
 	      if (patternDigits.test(decimal)) {      //check to see if it's a decimal
 		      hexadecimal = p.decimalToHex(decimal);
@@ -1465,7 +1451,7 @@ Processing.build = function buildProcessing( curElement ){
 		      return str;
 	      }
       }
-      else if (arguments.length == 3) {  //check if it's 3 arguments 
+      else if (arguments.length === 3) {  //check if it's 3 arguments 
 	      var decimalPos = str.indexOf('.'),
 	          strL, strR;
 	      if (Value > 0) {                    
@@ -1531,12 +1517,12 @@ Processing.build = function buildProcessing( curElement ){
       if( arguments.callee.caller ){        
         var Caller = arguments.callee.caller.name.toString();          
         if( arguments.length > 1 ){
-          p.ln = Caller != "print" ? arguments: arguments[ 0 ];
+          p.ln = Caller !== "print" ? arguments: arguments[ 0 ];
         }else{
             p.ln  = arguments[ 0 ];
         }          
         //Returns a line to lnPrinted() for user error handling/debugging
-        if( Caller == "print" ){
+        if( Caller === "print" ){
            p.printed( arguments );
         } else {
            p.lnPrinted();
@@ -1611,9 +1597,9 @@ Processing.build = function buildProcessing( curElement ){
     };
     
     p.mag = function( a, b, c ){
-      if( arguments.length == 2 ){
+      if( arguments.length === 2 ){
         return Math.sqrt( a*a + b*b );
-      }else if( arguments.length == 3 ){
+      }else if( arguments.length === 3 ){
         return Math.sqrt( a*a + b*b + c*c );
       }
     };
@@ -1661,7 +1647,7 @@ Processing.build = function buildProcessing( curElement ){
     };        
     
     p.random = function random( aMin, aMax ) {
-      return arguments.length == 2                   ?
+      return arguments.length === 2                   ?
         aMin + ( Math.random() * ( aMax - aMin ) )  :
         Math.random() * aMin                        ;
     };
@@ -2003,7 +1989,7 @@ Processing.build = function buildProcessing( curElement ){
     
     p.vertex = function vertex( x, y, x2, y2, x3, y3 ){    
       
-      if( curShapeCount === 0 && curShape != p.POINTS ){
+      if( curShapeCount === 0 && curShape !== p.POINTS ){
 
         pathOpen = true;
         curContext.beginPath();
@@ -2013,21 +1999,21 @@ Processing.build = function buildProcessing( curElement ){
 
       }else{
 
-        if( curShape == p.POINTS ){
+        if( curShape === p.POINTS ){
 
           p.point( x, y );
 
-        }else if( arguments.length == 2 ){
+        }else if( arguments.length === 2 ){
           
-          if( curShape != p.QUAD_STRIP || curShapeCount != 2 ){
+          if( curShape !== p.QUAD_STRIP || curShapeCount !== 2 ){
 
             curContext.lineTo( x, y );
 
           }
           
-          if( curShape == p.TRIANGLE_STRIP ){
+          if( curShape === p.TRIANGLE_STRIP ){
             
-            if( curShapeCount == 2 ){
+            if( curShapeCount === 2 ){
               
               // finish shape
               p.endShape( p.CLOSE );
@@ -2046,7 +2032,7 @@ Processing.build = function buildProcessing( curElement ){
           
           }
 
-          if( curShape == p.TRIANGLE_FAN && curShapeCount == 2 ){
+          if( curShape === p.TRIANGLE_FAN && curShapeCount === 2 ){
             
             // finish shape
             p.endShape( p.CLOSE) ;
@@ -2060,7 +2046,7 @@ Processing.build = function buildProcessing( curElement ){
           
           }
       
-          if( curShape == p.QUAD_STRIP && curShapeCount == 3 ){
+          if( curShape === p.QUAD_STRIP && curShapeCount === 3 ){
             
             // finish shape
             curContext.lineTo( prevX, prevY );
@@ -2075,7 +2061,7 @@ Processing.build = function buildProcessing( curElement ){
           
           }
 
-          if( curShape == p.QUAD_STRIP ){
+          if( curShape === p.QUAD_STRIP ){
             
             firstX  = secondX;
             firstY  = secondY;
@@ -2084,7 +2070,7 @@ Processing.build = function buildProcessing( curElement ){
             
           }
         
-        }else if( arguments.length == 4 ){
+        }else if( arguments.length === 4 ){
         
           if( curShapeCount > 1 ){
             
@@ -2094,7 +2080,7 @@ Processing.build = function buildProcessing( curElement ){
           
           }
         
-        }else if( arguments.length == 6 ){
+        }else if( arguments.length === 6 ){
           
           curContext.bezierCurveTo( x, y, x2, y2, x3, y3 );
 
@@ -2105,9 +2091,9 @@ Processing.build = function buildProcessing( curElement ){
       prevY = y;
       curShapeCount ++;
       
-      if(   curShape == p.LINES && curShapeCount == 2       ||
-          ( curShape == p.TRIANGLES ) && curShapeCount == 3 ||
-          ( curShape == p.QUADS     ) && curShapeCount == 4 
+      if(   curShape === p.LINES && curShapeCount === 2       ||
+          ( curShape === p.TRIANGLES ) && curShapeCount === 3 ||
+          ( curShape === p.QUADS     ) && curShapeCount === 4 
         ){
           p.endShape( p.CLOSE );
         }
@@ -2172,14 +2158,14 @@ Processing.build = function buildProcessing( curElement ){
 
       if( width <= 0 ){ return; }
 
-      if( curEllipseMode == p.CORNER ){
+      if( curEllipseMode === p.CORNER ){
        x += width / 2;
        y += height / 2;
       }
       
       curContext.moveTo( x, y );
       curContext.beginPath();   
-      curContext.arc( x, y, curEllipseMode == p.CENTER_RADIUS ? width : width/2, start, stop, false );
+      curContext.arc( x, y, curEllipseMode === p.CENTER_RADIUS ? width : width/2, start, stop, false );
 
       if( doStroke ){ curContext.stroke(); }
       curContext.lineTo( x, y );
@@ -2246,17 +2232,17 @@ Processing.build = function buildProcessing( curElement ){
       var offsetStart = 0;
       var offsetEnd = 0;
 
-      if( curRectMode == p.CORNERS ){
+      if( curRectMode === p.CORNERS ){
         width -= x;
         height -= y;
       }
       
-      if( curRectMode == p.RADIUS ){
+      if( curRectMode === p.RADIUS ){
         width *= 2;
         height *= 2;
       }
       
-      if( curRectMode == p.CENTER || curRectMode == p.RADIUS ){
+      if( curRectMode === p.CENTER || curRectMode === p.RADIUS ){
         x -= width / 2;
         y -= height / 2;
       }
@@ -2284,7 +2270,7 @@ Processing.build = function buildProcessing( curElement ){
 
       curContext.beginPath();
       
-      if( curEllipseMode == p.RADIUS ){
+      if( curEllipseMode === p.RADIUS ){
         width *= 2;
         height *= 2;
       }     
@@ -2292,7 +2278,7 @@ Processing.build = function buildProcessing( curElement ){
       var offsetStart = 0;
       
       // Shortcut for drawing a circle
-      if( width == height ){
+      if( width === height ){
       
         curContext.arc( x - offsetStart, y - offsetStart, width / 2, 0, p.TWO_PI, false );
       
@@ -2502,9 +2488,9 @@ Processing.build = function buildProcessing( curElement ){
         // a shade of gray or 
         // it is a color object or
         // it's a hex value
-        if( arguments.length == 1 ){
+        if( arguments.length === 1 ){
           // type passed in was color()
-          if( typeof arguments[0] == "string" ){
+          if( typeof arguments[0] === "string" ){
             c = arguments[0].slice( 5,-1 ).split( "," );
 
             // if 3 component color was passed in, alpha will be 1
@@ -2514,12 +2500,12 @@ Processing.build = function buildProcessing( curElement ){
      
           // user passes in value which ranges from 0-255, but opengl
           // wants a normalized value.
-          else if( typeof arguments[0] == "number" ){
+          else if( typeof arguments[0] === "number" ){
             curContext.clearColor( col[0]/255, col[0]/255, col[0]/255, 1.0 );
           }
         }
-        else if( arguments.length == 2 ){
-          if( typeof arguments[0] == "string" ){
+        else if( arguments.length === 2 ){
+          if( typeof arguments[0] === "string" ){
             c = arguments[0].slice( 5,-1 ).split( "," );
             // Processing is ignoring alpha
             // var a = arguments[0]/255;
@@ -2527,7 +2513,7 @@ Processing.build = function buildProcessing( curElement ){
           }
           // first value is shade of gray, second is alpha
           // background(0,255);
-          else if( typeof arguments[0] == "number" ){
+          else if( typeof arguments[0] === "number" ){
             c = arguments[0]/255;
 
             // Processing is ignoring alpha
@@ -2538,9 +2524,9 @@ Processing.build = function buildProcessing( curElement ){
         }
 
         // background(255,0,0) or background(0,255,0,255);
-        else if( arguments.length == 3 || arguments.length == 4 ){
+        else if( arguments.length === 3 || arguments.length === 4 ){
           // Processing seems to ignore this value, so just use 1.0 instead.
-          //var a = arguments.length == 3? 1.0: arguments[3]/255;
+          //var a = arguments.length === 3? 1.0: arguments[3]/255;
           curContext.clearColor( col[0]/255, col[1]/255, col[2]/255, 1.0 );
         } 
       }else{ // 2d context
@@ -2565,7 +2551,7 @@ Processing.build = function buildProcessing( curElement ){
 
     // Depreciating "getImage_old" from PJS - currently here to support AniSprite
     var getImage_old = function getImage_old( img ){ 
-      if( typeof img == "string" ){
+      if( typeof img === "string" ){
         return document.getElementById( img );
       } 
       if( img.img || img.canvas ){
@@ -2640,7 +2626,7 @@ Processing.build = function buildProcessing( curElement ){
 
     function getImage( img ){
       
-      if( typeof img == "string" ){
+      if( typeof img === "string" ){
         return document.getElementById( img );
       }
 
@@ -2686,7 +2672,7 @@ Processing.build = function buildProcessing( curElement ){
         oldAlpha = curContext.globalAlpha;
         curContext.globalAlpha = curTint / opacityRange;
       } 
-      if( arguments.length == 3 ){
+      if( arguments.length === 3 ){
         curContext.drawImage( obj, x, y );
       }else{
         curContext.drawImage( obj, x, y, w, h );
@@ -2717,7 +2703,7 @@ Processing.build = function buildProcessing( curElement ){
           curContext.globalAlpha = curTint / opacityRange;
         }
 
-        if( arguments.length == 3 ){
+        if( arguments.length === 3 ){
           curContext.drawImage( obj, x, y );
         }else{
           curContext.drawImage( obj, x, y, w, h );
@@ -2736,7 +2722,7 @@ Processing.build = function buildProcessing( curElement ){
       
       }
       
-      if( typeof img == 'string' ){
+      if( typeof img === 'string' ){
         
       }
       
@@ -2764,14 +2750,14 @@ Processing.build = function buildProcessing( curElement ){
     // Loads a font from an SVG or Canvas API
     p.loadFont = function loadFont( name ){
       
-      if( name.indexOf( ".svg" ) == - 1 ){
+      if( name.indexOf( ".svg" ) === - 1 ){
 
         return {
           name: name,
           width: function( str ){
             if( curContext.mozMeasureText ){
               return curContext.mozMeasureText(
-                typeof str == "number" ?
+                typeof str === "number" ?
                   String.fromCharCode( str ) :
                   str
               ) / curTextSize;
@@ -2892,7 +2878,7 @@ Processing.build = function buildProcessing( curElement ){
           curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
           curContext.translate( x, y );
           curContext.mozDrawText( 
-            typeof str == "number" ?
+            typeof str === "number" ?
             String.fromCharCode( str ) :
             str ) ;
           curContext.restore();
@@ -3029,7 +3015,7 @@ Processing.build = function buildProcessing( curElement ){
                     nx = parseFloat( xy[ 0 ][ 0 ] );
                     ny = parseFloat( xy[ 1 ][ 0 ] );
 
-                    if( lastCom == "Q" || lastCom == "T" ){
+                    if( lastCom === "Q" || lastCom === "T" ){
 
                       d = Math.sqrt( Math.pow( x - cx, 2 ) + Math.pow( cy - y, 2 ) );
                       a = Math.PI+Math.atan2( cx - x, cy - y );
@@ -3115,7 +3101,7 @@ Processing.build = function buildProcessing( curElement ){
     ////////////////////////////////////////////////////////////////////////////
     
     p.extendClass = function extendClass( obj, args, fn ){
-      if( arguments.length == 3 ){
+      if( arguments.length === 3 ){
         fn.apply( obj, args );
       }else{
         args.call( obj );
@@ -3128,7 +3114,7 @@ Processing.build = function buildProcessing( curElement ){
             oldfn = object[ name ];
         
         object[ name ] = function(){
-          if( arguments.length == args ){
+          if( arguments.length === args ){
             return fn.apply( this, arguments );
           }else{
             return oldfn.apply( this, arguments );
@@ -3222,7 +3208,7 @@ Processing.build = function buildProcessing( curElement ){
           case 3: p.mouseButton = p.RIGHT;  break; 
         }        
         p.mouseDown = true;        
-        if( typeof p.mousePressed == "function" ){
+        if( typeof p.mousePressed === "function" ){
           p.mousePressed();
         } else { p.mousePressed = true; }         
       });
@@ -3230,7 +3216,7 @@ Processing.build = function buildProcessing( curElement ){
       attach( curElement, "mouseup", function( e ){
         mousePressed = false;
         if( p.mouseClicked ){ p.mouseClicked(); }        
-        if( typeof p.mousePressed != "function" ){ p.mousePressed = false; }
+        if( typeof p.mousePressed !== "function" ){ p.mousePressed = false; }
         if( p.mouseReleased ){ p.mouseReleased(); }
       });
 
@@ -3239,24 +3225,24 @@ Processing.build = function buildProcessing( curElement ){
         p.key = e.keyCode + 32;               
         var i, len = p.codedKeys.length;        
         for( i=0; i < len; i++ ){
-            if( p.key == p.codedKeys[ i ] ){
+            if( p.key === p.codedKeys[ i ] ){
               switch(p.key){
-              case 70: p.keyCode = p.UP        ; break;
-              case 71: p.keyCode = p.RIGHT    ; break;
-              case 72: p.keyCode = p.DOWN      ; break;
-              case 69: p.keyCode = p.LEFT      ; break;
+              case 70: p.keyCode = p.UP     ; break;
+              case 71: p.keyCode = p.RIGHT  ; break;
+              case 72: p.keyCode = p.DOWN   ; break;
+              case 69: p.keyCode = p.LEFT   ; break;
               }
               p.key=p.CODED;
             }
         }
         if( e.shiftKey ){ p.key = String.fromCharCode(p.key).toUpperCase().charCodeAt( 0 ); }
-        if( typeof p.keyPressed == "function" ){ p.keyPressed(); }
+        if( typeof p.keyPressed === "function" ){ p.keyPressed(); }
         else{ p.keyPressed = true; }
       });
 
       attach( document, "keyup", function( e ){
         keyPressed = false;
-        if( typeof p.keyPressed != "function" ){ p.keyPressed = false; }
+        if( typeof p.keyPressed !== "function" ){ p.keyPressed = false; }
         if( p.keyReleased ){ p.keyReleased(); }
       });
 
