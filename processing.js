@@ -282,7 +282,7 @@
  
     // Convert 3.0f to just 3.0
     aCode = aCode.replace( /(\d+)f/g, "$1" );
-    
+        
     return aCode;
   };
 
@@ -910,7 +910,7 @@
       
       var aColor = "", rgb, r, g, b;
       
-      if ( arguments.length === 3 ) {       
+      if ( arguments.length === 3 ) {
         aColor = p.color( aValue1, aValue2, aValue3, opacityRange );
       } else if ( arguments.length === 4 ) {
         var a = aValue4 / opacityRange;
@@ -923,7 +923,7 @@
           g = getColor(aValue2, greenRange);
           b = getColor(aValue3, blueRange);
         }
-        aColor = "rgba(" + r + "," + g + "," + b + "," + aValue4 + ")"; // a=aValue4
+        aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")"; // a changed from aValue4 as colors broke, but i feel this will break other things.
       } else if ( typeof aValue1 === "string" ) {
         aColor = aValue1;
 
@@ -1652,62 +1652,64 @@
         Math.random() * aMin                        ;
     };
 
-    var Noise = function Noise( x, y ){
+    var noiseGen = function noiseGen( x, y ){
       var n = x + y * 57;
       n = ( n << 13 ) ^ n;
       return Math.abs( 1.0 - ( ( ( n * ( ( n * n * 15731 ) + 789221 ) + 1376312589 ) & 0x7fffffff ) / 1073741824.0 ) );
     };
 
-    var SmoothedNoise = function SmoothNoise( x, y ){
-      var corners = ( Noise( x - 1, y - 1 ) + Noise( x + 1, y - 1 ) + Noise( x - 1, y + 1 ) + Noise( x + 1, y + 1 ) ) / 16,
-          sides   = ( Noise( x - 1, y ) + Noise( x + 1, y ) + Noise( x, y - 1 ) + Noise( x, y + 1 ) ) / 8,
-          center  = Noise( x, y ) / 4;
+    var smoothedNoise = function smoothedNoise( x, y ){
+      var corners = ( noiseGen( x - 1, y - 1 ) + noiseGen( x + 1, y - 1 ) + noiseGen( x - 1, y + 1 ) + noiseGen( x + 1, y + 1 ) ) / 16,
+          sides   = ( noiseGen( x - 1, y ) + noiseGen( x + 1, y ) + noiseGen( x, y - 1 ) + noiseGen( x, y + 1 ) ) / 8,
+          center  = noiseGen( x, y ) / 4;
       return corners + sides + center;
     };
 
-    var Interpolate = function Interpolate( a, b, x ){
+    var interpolate = function interpolate( a, b, x ){
       var ft   = x * p.PI;
       var f   = (1 - Math.cos( ft ) ) * 0.5;
       return  a * ( 1 - f ) + b * f;
     };
 
-    var InterpolatedNoise = function InterpolatedNoise( x, y ){
+    var interpolatedNoise = function interpolatedNoise( x, y ){
       var integer_X    = Math.floor( x );
       var fractional_X = x - integer_X;
       var integer_Y    = Math.floor( y );
       var fractional_Y = y - integer_Y;
-      var v1 = SmoothedNoise( integer_X,     integer_Y     ),
-          v2 = SmoothedNoise( integer_X + 1, integer_Y     ),
-          v3 = SmoothedNoise( integer_X,     integer_Y + 1 ),
-          v4 = SmoothedNoise( integer_X + 1, integer_Y + 1 );
-      var i1 = Interpolate( v1, v2, fractional_X ),
-          i2 = Interpolate( v3, v4, fractional_X );
-      return Interpolate( i1, i2, fractional_Y );        
+      var v1 = smoothedNoise( integer_X,     integer_Y     ),
+          v2 = smoothedNoise( integer_X + 1, integer_Y     ),
+          v3 = smoothedNoise( integer_X,     integer_Y + 1 ),
+          v4 = smoothedNoise( integer_X + 1, integer_Y + 1 );
+      var i1 = interpolate( v1, v2, fractional_X ),
+          i2 = interpolate( v3, v4, fractional_X );
+      return interpolate( i1, i2, fractional_Y );        
     };
    
-    var PerlinNoise_2D = function PerlinNoise_2D( x, y ){
+    var perlinNoise_2D = function perlinNoise_2D( x, y ){
         var total = 0,
             p     = 0.25,
             n     = 3;
         for( var i = 0; i <= n; i++ ){
           var frequency = Math.pow( 2, i );
           var amplitude = Math.pow( p, i );
-          total += InterpolatedNoise( x * frequency, y * frequency ) * amplitude;
+          total += interpolatedNoise( x * frequency, y * frequency ) * amplitude;
         }
 
         return total;
     };
     
-    // Add Thomas Saunders 3D Noise code here....
-    var PerlinNoise_3D = function PerlinNoise_3D(){};
+    // Add Thomas Saunders 3D noiseGen code here....
+    var perlinNoise_3D = function perlinNoise_3D(){return 0;};
 
     // From: http://freespace.virgin.net/hugo.elias/models/m_perlin.htm
     p.noise = function( x, y, z ){
-      return arguments.length >= 2  ?
-        PerlinNoise_2D( x, y, z )   :
-        PerlinNoise_3D( x, x, z )   ;
+      switch( arguments.length ){
+        case 2: return perlinNoise_2D( x, y );
+        case 3: return perlinNoise_3D( x, y, z );
+        case 1: return perlinNoise_2D( x, x );
+      }
     };
-   
+       
     p.constrain = function constrain( aNumber, aMin, aMax ){
       return Math.min( Math.max( aNumber, aMin ), aMax );
     };
