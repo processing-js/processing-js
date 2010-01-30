@@ -113,7 +113,7 @@ Processing.parse = function parse( aCode, p ){
     });
  
     // int|float foo;
-    var intFloat = /(\n\s*(?:int|float)(?!\[\])*(?:\s*|[^\(;]*?,\s*))(\w+)\s*(,|;)/i;
+    var intFloat = /(\n\s*(?:int|float)(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
     while( intFloat.test(aCode) ){
       aCode = aCode.replace( new RegExp( intFloat ), function( all, type, name, sep ){
         return type + " " + name + " = 0" + sep;
@@ -156,7 +156,7 @@ Processing.parse = function parse( aCode, p ){
         // Replace var foo = 0; with this.foo = 0;
         // and force var foo; to become this.foo = null;
         vars
-          .replace( /\s*,\s*/g, ";\n this." )
+          .replace( /\s*,\s*/g, ";\n  this." )
           .replace( /\b(var |final |public )+\s*/g, "this." )
           .replace( /\b(var |final |public )+\s*/g, "this." )
           .replace( /this.(\w+);/g, "this.$1 = null;" ) +
@@ -294,7 +294,9 @@ Processing.parse = function parse( aCode, p ){
       
       return ret;
     }
- 
+    
+    //console.log( aCode );
+    
     return aCode;
  };
 
@@ -1162,7 +1164,7 @@ Processing.build = function buildProcessing( curElement ){
                       p.redraw();
               }
           catch( e_loop ){
-                      document.clearInterval( looping );
+                      window.clearInterval( looping );
                       throw e_loop;
                     }
       }, curMsPerFrame );
@@ -1177,7 +1179,7 @@ Processing.build = function buildProcessing( curElement ){
     };
 
     p.exit = function exit(){
-      document.clearInterval( looping );
+      window.clearInterval( looping );
     };
     
     
@@ -2235,8 +2237,8 @@ Processing.build = function buildProcessing( curElement ){
       p.endShape();
     };
     
-    p.rect = function rect( x, y, width, height ){
-
+    p.rect = function rect( x, y, width, height ){    
+    
       if( !width && !height ){ return; }
 
       curContext.beginPath();
@@ -2258,15 +2260,15 @@ Processing.build = function buildProcessing( curElement ){
         x -= width / 2;
         y -= height / 2;
       }
-    
+      
       curContext.rect(
         Math.round( x ) - offsetStart,
         Math.round( y ) - offsetStart,
         Math.round( width ) + offsetEnd,
         Math.round( height ) + offsetEnd
       );
-        
-      if( doFill     ){ curContext.fill();   }        
+      
+      if( doFill     ){ curContext.fill();    }        
       if( doStroke   ){  curContext.stroke(); }
       
       curContext.closePath();
