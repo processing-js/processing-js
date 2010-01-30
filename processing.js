@@ -367,6 +367,13 @@
     p.DOWN    = 88888872;
     p.LEFT    = 88888869;
     
+    // Stroke cap and join constants.
+    p.ROUND   = 0; // Used by both cap and join.
+    p.SQUARE  = 1; // Used by cap.
+    p.PROJECT = 2; // Used by cap.
+    p.MITER   = 3; // Used by join.
+    p.BEVEL   = 4; // Used by join.
+    
 //! // Description required...
     p.codedKeys = [ 69, 70, 71, 72  ];
 
@@ -1768,13 +1775,14 @@
       var props = { 
         fillStyle   : curContext.fillStyle,
         strokeStyle : curContext.strokeStyle,
-        lineCap     : curContext.lineCap
+        lineCap     : curContext.lineCap,
+        lineJoin    : curContext.lineJoin
       }; // More to be added...
       
       curElement.width = p.width = aWidth;
       curElement.height = p.height = aHeight;
 
-      for( var i in props ){ curContext[ i ] = props[ i ] };
+      for( var i in props ){ curContext[ i ] = props[ i ]; };
     };
     
 
@@ -1947,7 +1955,25 @@
       curContext.lineWidth = w;
     };
 
-       
+    p.strokeCap = function strokeCap( set ){
+      if ( set == p.ROUND ) {
+        curContext.lineCap = 'round';
+      } else if ( set == p.SQUARE ) {
+        curContext.lineCap = 'butt';
+      } else if ( set == p.PROJECT ) {
+        curContext.lineCap = 'square';
+      }
+    };
+
+    p.strokeJoin = function strokeJoin( set ){
+      if ( set == p.MITER ) {
+        curContext.lineJoin = 'miter';
+      } else if ( set == p.BEVEL ) {
+        curContext.lineJoin = 'bevel';
+      } else if ( set == p.ROUND ) {
+        curContext.lineJoin = 'round';
+      }
+    };
         
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
@@ -2190,7 +2216,6 @@
     };
     
     p.line = function line( x1, y1, x2, y2 ){
-      curContext.lineCap = "round";
       curContext.beginPath();    
       curContext.moveTo( x1 || 0, y1 || 0 );
       curContext.lineTo( x2 || 0, y2 || 0 );      
@@ -2199,7 +2224,6 @@
     };
 
     p.bezier = function bezier( x1, y1, x2, y2, x3, y3, x4, y4 ){
-      curContext.lineCap = "butt";
       curContext.beginPath();    
       curContext.moveTo( x1, y1 );
       curContext.bezierCurveTo( x2, y2, x3, y3, x4, y4 );      
@@ -2879,20 +2903,27 @@
     }
     
     // Print some text to the Canvas
-    p.text = function text( str, x, y ){
+    p.text = function text( val, x, y ){
+      
+      if ( typeof val === 'number' && (val+"").indexOf('.') >= 0 ) {
+        
+        // Make sure .15 rounds to .1, but .151 rounds to .2.
+        if ( (val*1000) - Math.floor( val * 1000 ) == 0.5 ) {
+          val = val - 0.0001;
+        }
+        
+        val = val.toFixed(3);
+      }
       
       // If the font is a standard Canvas font...
       if( !curTextFont.glyph ){
       
-        if( str && curContext.mozDrawText ){
+        if( val && curContext.mozDrawText ){
 
           curContext.save();
           curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
           curContext.translate( x, y );
-          curContext.mozDrawText( 
-            typeof str == "number" ?
-            String.fromCharCode( str ) :
-            str ) ;
+          curContext.mozDrawText( val ) ;
           curContext.restore();
 
         }
@@ -2909,11 +2940,11 @@
         
         curContext.scale( newScale, newScale );
         
-        var len = str.length;
+        var len = val.length;
         
         for(var i = 0; i < len; i++ ){
           // Test character against glyph table
-          try{ p.glyphLook( font, str[ i ] ).draw(); }
+          try{ p.glyphLook( font, val[ i ] ).draw(); }
           catch( e ){ ; }
         }
         
@@ -3180,6 +3211,14 @@
               // counts, so we slightly offset it (this is super lame).
               curContext.translate( 0.5, 0.5 );    
 
+              // curContext.lineCap defaults to 'butt'. Processing must default
+              // to 'round'.
+              curContext.lineCap = 'round';
+              
+              // curContext.lineJoin defaults to 'miter'already, but setting
+              // again here just in case.
+              curContext.lineJoin = 'miter';
+              
               // Set default stroke and fill color
               p.stroke( 0 );
               p.fill( 255 );
