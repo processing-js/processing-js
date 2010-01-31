@@ -3200,18 +3200,20 @@
         else{ elem.attachEvent( "on" + type, fn ); }
       }
 
-      attach( curElement, "mousemove"  , function(e){
-        var scrollX = window.scrollX !== null ? window.scrollX : window.pageXOffset;
-        var scrollY = window.scrollY !== null ? window.scrollY : window.pageYOffset;            
-      
+      attach( curElement, "mousemove"  , function(e){    
+
         p.pmouseX = p.mouseX;
         p.pmouseY = p.mouseY;
+
+        var scrollX = window.scrollX !== null ? window.scrollX : window.pageXOffset;
+        var scrollY = window.scrollY !== null ? window.scrollY : window.pageYOffset;                
+      
         p.mouseX   = e.clientX - curElement.offsetLeft + scrollX;
         p.mouseY   = e.clientY - curElement.offsetTop + scrollY;            
         p.cursor( curCursor );
 
         if( p.mouseMoved ){ p.mouseMoved(); }
-        if( mousePressed && p.mouseDragged ){ p.mouseDragged(); }
+        if( mousePressed && p.mouseDragged ){ p.mouseDragged(); }      
       });
       
       attach( curElement, "mouseout" , function( e ){ document.body.style.cursor = oldCursor; } );      
