@@ -629,7 +629,7 @@
     // convert rgba color strings to integer
     p.rgbaToInt = function(color){
         var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1,2)[0].split(',');
-        return (rgbaAry[3] << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
+        return ( (rgbaAry[3]*255) << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
     };
     
     // helper functions for internal blending modes
@@ -885,6 +885,7 @@
     // In case I ever need to do HSV conversion:
     // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
     p.color = function color( aValue1, aValue2, aValue3, aValue4 ) {
+           
       // HSB conversion function from Mootools, MIT Licensed
       function HSBtoRGB(h, s, b) {
         h = (h / redRange) * 360;
@@ -910,17 +911,15 @@
         }
       }
 
-      function getColor( aValue, range ) {
+      function getColor( aValue, range ){
         return Math.round(255 * (aValue / range));
       }
-      
-      var aColor = "", rgb, r, g, b;
       
       if ( arguments.length === 3 ) {
         aColor = p.color( aValue1, aValue2, aValue3, opacityRange );
       } else if ( arguments.length === 4 ) {
         var a = aValue4 / opacityRange;
-        a = isNaN(a) ? 1 : a;
+        a = isNaN(a) ? 1: a;
         if ( curColorMode === p.HSB ) {
           rgb = HSBtoRGB(aValue1, aValue2, aValue3);
           r = rgb[0]; g = rgb[1]; b = rgb[2];
@@ -928,11 +927,10 @@
           r = getColor(aValue1, redRange);
           g = getColor(aValue2, greenRange);
           b = getColor(aValue3, blueRange);
-        }
-        aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")"; // a changed from aValue4 as colors broke, but i feel this will break other things.
+        }        
+        aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
       } else if ( typeof aValue1 === "string" ) {
         aColor = aValue1;
-
         if ( arguments.length === 2 ) {
           var c = aColor.split(",");
           c[3] = (aValue2 / opacityRange) + ")";
@@ -953,12 +951,10 @@
         var rc = Math.floor((intcolor % 16777216) / 65536);
         var gc = Math.floor((intcolor % 65536) / 256);
         var bc = intcolor % 256;
-          
         aColor = p.color( rc, gc, bc, ac );
       } else {
         aColor = p.color( redRange, greenRange, blueRange, opacityRange );
       }     
-      
       return aColor;
     };
 
