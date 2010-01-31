@@ -356,6 +356,12 @@
     p.PREC_MAXVAL      = p.PRECISIONF-1;
     p.PREC_ALPHA_SHIFT = 24-p.PRECISIONB;
     p.PREC_RED_SHIFT   = 16-p.PRECISIONB;
+    p.ROUND   = 'round' ; // Used by both cap and join.
+    p.SQUARE  = 'butt'  ; // Used by cap.
+    p.PROJECT = 'square'; // Used by cap.
+    p.MITER   = 'miter' ; // Used by join.
+    p.BEVEL   = 'bevel' ; // Used by join.
+
     
     // KeyCode Table
     p.CENTER  = 88888880;
@@ -1751,8 +1757,9 @@
       var props = { 
         fillStyle   : curContext.fillStyle,
         strokeStyle : curContext.strokeStyle,
-        lineCap     : curContext.lineCap
-      }; // More to be added...
+        lineCap     : curContext.lineCap,
+        lineJoin    : curContext.lineJoin       
+      };
       
       curElement.width = p.width = aWidth;
       curElement.height = p.height = aHeight;
@@ -1935,7 +1942,13 @@
       curContext.lineWidth = w;
     };
 
-       
+    p.strokeCap = function strokeCap( set ){
+      curContext.lineCap = set;
+    };
+
+    p.strokeJoin = function strokeJoin( set ){
+      curContext.lineJoin = set;
+    };   
         
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
@@ -2178,7 +2191,6 @@
     };
     
     p.line = function line( x1, y1, x2, y2 ){
-      curContext.lineCap = "round";
       curContext.beginPath();    
       curContext.moveTo( x1 || 0, y1 || 0 );
       curContext.lineTo( x2 || 0, y2 || 0 );      
@@ -2187,7 +2199,6 @@
     };
 
     p.bezier = function bezier( x1, y1, x2, y2, x3, y3, x4, y4 ){
-      curContext.lineCap = "butt";
       curContext.beginPath();    
       curContext.moveTo( x1, y1 );
       curContext.bezierCurveTo( x2, y2, x3, y3, x4, y4 );      
@@ -3148,6 +3159,8 @@
               // counts, so we slightly offset it (this is super lame).
               curContext.translate( 0.5, 0.5 );    
 
+              curContext.lineCap = 'round';
+              
               // Set default stroke and fill color
               p.stroke( 0 );
               p.fill( 255 );
