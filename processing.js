@@ -2377,6 +2377,7 @@
       var img = document.createElement( 'img' );
       img.src = file;
       img.loaded = false;
+      img.mask = function(){}; // I don't think image mask was ever implemented? -F1LT3R
       img.onload = function(){       
         
         var h = this.height,
