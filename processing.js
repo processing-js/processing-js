@@ -1,4 +1,4 @@
-/*
+  /*
 
   P R O C E S S I N G - 0 . 0 . J S
   a port of the Processing visualization language
@@ -1538,7 +1538,8 @@
     
     p.print = function print(){ p.println(arguments[ 0 ] ); };
     
-    p.char = function char( key ){ return key; };
+    // YUI Compressor does not like the use of reserved name "char"
+    p['char']=function(key){ return key; };
     
     
     
@@ -1547,12 +1548,18 @@
     ////////////////////////////////////////////////////////////////////////////
     
     p.sq      = function sq     ( aNumber             ){ return aNumber * aNumber;                       };
-    p.sqrt    = function sqrt   ( aNumber             ){ return Math.sqrt( aNumber );                    };
-    p.int     = function int    ( aNumber             ){ return Math.floor( aNumber );                   };
+    p.sqrt    = function sqrt(aNumber){ return Math.sqrt(aNumber); };
+
+    // YUI compressor does not like us using reserved "int"
+    p['int']  = function(aNumber){ return Math.floor(aNumber); };
+    
     p.min     = function min    ( aNumber, aNumber2   ){ return Math.min( aNumber, aNumber2 );           };
     p.max     = function max    ( aNumber, aNumber2   ){ return Math.max( aNumber, aNumber2 );           };
-    p.floor   = function floor  ( aNumber             ){ return Math.floor( aNumber );                   };
-    p.float   = function float  ( aNumber             ){ return parseFloat( aNumber );                   };
+    p.floor   = function floor  ( aNumber             ){ return Math.floor( aNumber );                   };    
+
+    // YUI compressor does not like us using reserved "float"
+    p['float']=function(aNumber){ return parseFloat(aNumber);};
+
     p.ceil    = function ceil   ( aNumber             ){ return Math.ceil( aNumber );                    };    
     p.round   = function round  ( aNumber             ){ return Math.round( aNumber );                   };
     p.lerp    = function lerp   ( value1, value2, amt ){ return ( ( value2 - value1 ) * amt ) + value1;  };
@@ -1570,7 +1577,8 @@
     p.asin    = function asin   ( aNumber             ){ return Math.asin(aNumber);                      };
     p.acos    = function acos   ( aNumber             ){ return Math.acos(aNumber);                      };
     
-    p.boolean = function boolean( val ){
+    // YUI compressor does not like us using reserved "boolean"
+    p['boolean'] = function( val ){
       var ret = false;
     
       if( val && typeof val === 'number' && val !== 0 ){
@@ -1583,7 +1591,8 @@
         ret = new Array( val.length );
       
         for( var i = 0; i < val.length; i++ ){
-          ret[i] = boolean( val[i] );
+          // YUI compressor does not like us using reserved "boolean"
+          ret[ i ] = p['boolean']( val[ i ] );
         }
       }
     
@@ -1641,7 +1650,8 @@
     };
 
 //! This can't be right... right?
-    p.byte     = function byte( aNumber               ){ return aNumber || 0;                           };
+    // YUI compressor does not like us using reserved "byte"
+    p['byte']  = function( aNumber ){ return aNumber || 0;};
 
     p.norm     = function norm( aNumber, low, high   ){
       var range = high-low;
