@@ -19,21 +19,27 @@ PImage a;
 
 void setup()
 {
-  a = loadImage("eames.jpg");
+  a = loadImage("data/eames.jpg");
   size(200,200);
   noStroke();
   background(255);
   smooth();
 }
 
+
 void draw()
 { 
   float pointillize = map(mouseX, 0, width, 2, 18);
   int x = int(random(a.width));
   int y = int(random(a.height));
-  color pix = a.get(x, y);
-  fill(pix, 126);
-  ellipse(x, y, pointillize, pointillize);
+
+console.log(a.loaded);
+  
+  if( a.loaded ){
+    color pix = a.get(x, y);
+    fill(pix, 126);
+    ellipse(x, y, pointillize, pointillize);
+  }
 }
 </script><canvas width="200" height="200"></canvas></p>
 <div style="height:0px;width:0px;overflow:hidden;"><img src='data/eames.jpg' id='eames.jpg'/><img src='data/sunflower.jpg' id='sunflower.jpg'/></div>

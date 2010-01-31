@@ -1,0 +1,36 @@
+/* 
+    Processing.js Ref Test
+    Function : join()
+    Source   : http://processing.org/reference/join_
+*/
+
+String[] animals = new String[3]; 
+animals[0] = "cat"; 
+animals[1] = "seal"; 
+animals[2] = "bear"; 
+String joinedAnimals = join(animals, " : "); 
+//console.log(joinedAnimals); // Prints "cat : seal : bear" 
+
+// Joining an array of ints requires first
+// converting to an array of Strings
+int[] numbers = new int[3];
+numbers[0] = 8; 
+numbers[1] = 67; 
+numbers[2] = 5;
+
+// An array should be returned from nf(numbers,0). This is breaks the join test.
+try{
+  String joinedNumbers = join( nf(numbers, 0), ", ");
+}catch( e ){}
+//console.log( joinedNumbers ); // Prints "8, 67, 5"
+
+
+//** REFTEST VALUES **//
+background(
+  reftest.checkValues([     
+    joinedAnimals === "cat : seal : bear",
+    joinedNumbers === "8, 67, 5"
+  ])
+);
+exit();
+

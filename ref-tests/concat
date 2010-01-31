@@ -1,0 +1,26 @@
+/* 
+    Processing.js Ref Test
+    Function : concat()
+    Source   : http://processing.org/reference/concat_
+*/
+
+ 	
+String[] sa1 = { "OH ", "NY ", "CA "};
+String[] sa2 = { "KY ", "IN ", "MA "};
+String[] sa3 = concat(sa1, sa2);
+
+
+//** REFTEST VALUES **//
+background(
+  reftest.checkValues([
+     sa3[0] === "OH ",
+     sa3[1] === "NY ",
+     sa3[2] === "CA ",
+     sa3[3] === "KY ",
+     sa3[4] === "IN ",
+     sa3[5] === "MA "
+     // need checks for other 'types'
+  ])
+);
+exit();
+

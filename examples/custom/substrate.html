@@ -7,6 +7,8 @@
 <body><h1><a href="http://ejohn.org/blog/processingjs/">Processing.js</a></h1>
 <h2>Substrate</h2>
 
+<p>This code was updated from the Java source to work with Processing.js asynchronous image loading. <sup>-F1LT3R</sup></p>
+
 <p>An artistic watercolor visualization by <a href="http://complexification.net/">J. Tarbell</a>.</p>
 
 <p><a href="http://complexification.net/"><b>Original Example:</b> Substrate</a><br>
@@ -42,12 +44,11 @@ void setup() {
   size(250,250,P3D);
 
   background(255);
-  takecolor("pollockShimmering.gif");
+  takecolor("data/pollockShimmering.gif");
   
   cgrid = new int[dimx*dimy];
   cracks = new Crack[maxnum];
   
-  begin();  
 }
 
 void draw() {
@@ -105,28 +106,33 @@ color somecolor() {
 
 void takecolor(String fn) {
   PImage b;
-  b = loadImage(fn);
-  image(b,0,0);
+  b = loadImage(fn, null, function(){
+    image(b,0,0);
 
-  for (int x=0;x<b.width;x++){
-    for (int y=0;y<1;y++) {
-      color c = get(x,y);
-      boolean exists = false;
-      for (int n=0;n<numpal;n++) {
-        if (c==goodcolor[n]) {
-          exists = true;
-          break;
+    for (int x=0;x<b.width;x++){
+      for (int y=0;y<1;y++) {
+        color c = get(x,y);
+        boolean exists = false;
+        for (int n=0;n<numpal;n++) {
+          if (c==goodcolor[n]) {
+            exists = true;
+            break;
+          }
+        }
+        if (!exists) {
+          // add color to pal
+          if (numpal<maxpal) {
+            goodcolor[numpal] = c;
+            numpal++;
+          }
         }
       }
-      if (!exists) {
-        // add color to pal
-        if (numpal<maxpal) {
-          goodcolor[numpal] = c;
-          numpal++;
-        }
-      }
-    }
-  }
+    }  
+  
+    begin();
+  
+  });
+  
 }
 
 

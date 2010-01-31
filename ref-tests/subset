@@ -1,0 +1,36 @@
+/* 
+    Processing.js Ref Test
+    Function : subset()
+    Source   : http://processing.org/reference/subset_
+*/
+
+ 	
+String[] sa1 = { "OH ", "NY ", "CA ", "VA ", "CO ", "IL "};
+String[] sa2 = subset(sa1, 1);
+String[] sa3 = subset(sa1, 2, 3);
+
+
+//** REFTEST VALUES **//
+background(
+  reftest.checkValues([     
+    sa1[0] === "OH ",
+    sa1[1] === "NY ",
+    sa1[2] === "CA ",
+    sa1[3] === "VA ",
+    sa1[4] === "CO ",
+    sa1[5] === "IL ",
+
+    sa2[0] === "NY ",
+    sa2[1] === "CA ",
+    sa2[2] === "VA ",
+    sa2[3] === "CO ",
+    sa2[4] === "IL ",
+
+    sa3[0] === "CA ",
+    sa3[1] === "VA ",
+    sa3[2] === "CO "
+     // need checks for other 'types'
+  ])
+);
+exit();
+

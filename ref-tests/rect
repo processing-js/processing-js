@@ -1,0 +1,18 @@
+/* 
+    Processing.js Ref Test
+    Function : rect()
+    Source   : F1LT3R
+*/
+
+//** SET PIXELS SIZE *//
+size( 20, 20 ); // This must be set for tests using checkPixels();
+//********************//
+
+fill( #00FF00 );
+rect( -3, -3, 26, 26 );
+
+
+//** REFTEST PIXELS **//
+background( reftest.checkPixels() );
+exit();
+//********************//
