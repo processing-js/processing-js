@@ -1549,8 +1549,6 @@
     p.sq      = function sq     ( aNumber             ){ return aNumber * aNumber;                       };
     p.sqrt    = function sqrt   ( aNumber             ){ return Math.sqrt( aNumber );                    };
     p.int     = function int    ( aNumber             ){ return Math.floor( aNumber );                   };
-    p.min     = function min    ( aNumber, aNumber2   ){ return Math.min( aNumber, aNumber2 );           };
-    p.max     = function max    ( aNumber, aNumber2   ){ return Math.max( aNumber, aNumber2 );           };
     p.floor   = function floor  ( aNumber             ){ return Math.floor( aNumber );                   };
     p.float   = function float  ( aNumber             ){ return parseFloat( aNumber );                   };
     p.ceil    = function ceil   ( aNumber             ){ return Math.ceil( aNumber );                    };    
@@ -1569,6 +1567,72 @@
     p.exp     = function exp    ( aNumber             ){ return Math.exp(aNumber);                       };
     p.asin    = function asin   ( aNumber             ){ return Math.asin(aNumber);                      };
     p.acos    = function acos   ( aNumber             ){ return Math.acos(aNumber);                      };
+    
+    p.min = function min() {
+        var ret = undefined;
+
+        if ( arguments.length == 1 ) {
+
+          if ( typeof arguments[0] === 'number' ) {
+            
+            ret = arguments[0];
+          } else if ( typeof arguments[0] === 'object' &&
+              arguments[0].constructor === Array ) {
+
+            ret = 0;
+            for( i = 1; i < arguments[0].length && ret != undefined; i++ ) {
+              ret = min( arguments[0][i-1], arguments[0][i] );
+            }
+          }
+        } else if ( arguments.length > 2 ) {
+          
+          ret = 0;
+          for( i = 1; i < arguments.length && ret != undefined; i++ ) {
+            ret = min( arguments[i-1], arguments[i] );
+          }
+        } else if ( arguments.length == 2 ) {
+          
+          if ( typeof arguments[0] === 'number' &&
+              typeof arguments[1] === 'number' ) {
+            ret = Math.min( arguments[0], arguments[1] );
+          }
+        }
+
+        return ret;
+      };
+      
+      p.max = function max() {
+        var ret = undefined;
+
+        if ( arguments.length == 1 ) {
+
+          if ( typeof arguments[0] === 'number' ) {
+            
+            ret = arguments[0];
+          } else if ( typeof arguments[0] === 'object' &&
+              arguments[0].constructor === Array ) {
+
+            ret = 0;
+            for( i = 1; i < arguments[0].length && ret != undefined; i++ ) {
+              ret = max( arguments[0][i-1], arguments[0][i] );
+            }
+          }
+        } else if ( arguments.length > 2 ) {
+          
+          ret = 0;
+          for( i = 1; i < arguments.length && ret != undefined; i++ ) {
+            ret = max( arguments[i-1], arguments[i] );
+          }
+        } else if ( arguments.length == 2 ) {
+          
+          if ( typeof arguments[0] === 'number' &&
+              typeof arguments[1] === 'number' ) {
+            ret = Math.max( arguments[0], arguments[1] );
+          }
+        }
+
+        return ret;
+      };
     
     p.boolean = function boolean( val ){
       var ret = false;
