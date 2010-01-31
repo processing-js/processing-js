@@ -1580,14 +1580,14 @@
               arguments[0].constructor === Array ) {
 
             ret = 0;
-            for( i = 1; i < arguments[0].length && ret != undefined; i++ ) {
+            for( var i = 1; i < arguments[0].length && ret != undefined; i++ ) {
               ret = min( arguments[0][i-1], arguments[0][i] );
             }
           }
         } else if ( arguments.length > 2 ) {
           
           ret = 0;
-          for( i = 1; i < arguments.length && ret != undefined; i++ ) {
+          for( var i = 1; i < arguments.length && ret != undefined; i++ ) {
             ret = min( arguments[i-1], arguments[i] );
           }
         } else if ( arguments.length == 2 ) {
@@ -1613,14 +1613,14 @@
               arguments[0].constructor === Array ) {
 
             ret = 0;
-            for( i = 1; i < arguments[0].length && ret != undefined; i++ ) {
+            for( var i = 1; i < arguments[0].length && ret != undefined; i++ ) {
               ret = max( arguments[0][i-1], arguments[0][i] );
             }
           }
         } else if ( arguments.length > 2 ) {
           
           ret = 0;
-          for( i = 1; i < arguments.length && ret != undefined; i++ ) {
+          for( var i = 1; i < arguments.length && ret != undefined; i++ ) {
             ret = max( arguments[i-1], arguments[i] );
           }
         } else if ( arguments.length == 2 ) {
