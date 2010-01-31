@@ -885,7 +885,9 @@
     // In case I ever need to do HSV conversion:
     // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
     p.color = function color( aValue1, aValue2, aValue3, aValue4 ) {
-           
+      
+      var r, g, b, rgb, aColor;      
+                 
       // HSB conversion function from Mootools, MIT Licensed
       function HSBtoRGB(h, s, b) {
         h = (h / redRange) * 360;
@@ -1286,7 +1288,6 @@
       }
       else if (arguments.length === 2){
         var rawStr = p.nfs(num, 0, decimals);
-        var digits = ("" + Math.floor(Math.abs(rawStr))).length;
         var ary = new Array(0);
         ary = rawStr.split('.');
         // ary[0] contains left of decimal, ary[1] contains decimal places if they exist
@@ -1320,8 +1321,7 @@
     //regExp i made to pattern match rgba and extract it's values
     p.colorRGB = function colorRGB(col) {
       var patt = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i;  //grouped \d{1,3} with ( ) so they can be referenced w\ $1-$4
-      var str2 = col.replace(patt, "#$4,$1,$2,$3");
-      
+     
       // What's up with the crazy variable names? -F1LT3R
       var al = col.replace(patt, "$4");
       var reD = col.replace(patt, "$1");
@@ -2926,35 +2926,6 @@
     
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
     p.loadGlyphs = function loadGlyph( url ){
-        
-        // Load and parse Batik SVG font as XML into a Processing Glyph object
-        var loadXML = function loadXML(){
-          var xmlDoc;
-          
-          try{
-            xmlDoc=document.implementation.createDocument( "", "", null );
-          } catch( e ){
-            Processing.debug(e);
-            return;
-          }
-          
-          try{
-            xmlDoc.async = false;
-            xmlDoc.load( url );
-            Processing.parse( xmlDoc.getElementsByTagName( "svg" )[ 0 ] );
-          }
-          catch( e_fx_op ){
-            Processing.debug(e_fx_op);
-            // Google Chrome, Safari etc.
-            try{
-                  var xmlhttp = new window.XMLHttpRequest();
-                  xmlhttp.open( "GET", url, false );
-                  xmlhttp.send( null );
-                  Processing.parse( xmlhttp.responseXML.documentElement );
-            }
-            catch( e_ch_sf ){ Processing.debug(e_ch_sf); }
-          }
-        };          
 
         // Parse SVG font-file into block of Canvas commands
         var parse = function parse( svg ){
@@ -3096,6 +3067,35 @@
          
           } // finished adding glyphs to table
           
+        };
+        
+        // Load and parse Batik SVG font as XML into a Processing Glyph object
+        var loadXML = function loadXML(){
+          var xmlDoc;
+          
+          try{
+            xmlDoc=document.implementation.createDocument( "", "", null );
+          } catch( e ){
+            Processing.debug(e);
+            return;
+          }
+          
+          try{
+            xmlDoc.async = false;
+            xmlDoc.load( url );
+            parse( xmlDoc.getElementsByTagName( "svg" )[ 0 ] );
+          }
+          catch( e_fx_op ){
+            Processing.debug(e_fx_op);
+            // Google Chrome, Safari etc.
+            try{
+                  var xmlhttp = new window.XMLHttpRequest();
+                  xmlhttp.open( "GET", url, false );
+                  xmlhttp.send( null );
+                  parse( xmlhttp.responseXML.documentElement );
+            }
+            catch( e_ch_sf ){ Processing.debug(e_ch_sf); }
+          }
         };
         
         // Create a new object in glyphTable to store this font
