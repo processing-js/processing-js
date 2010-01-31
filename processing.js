@@ -2373,11 +2373,11 @@
 
     // Loads an image for display. Type is unused. Callback is fired on load.
     p.loadImage = function loadImage( file, type, callback ){
-      
+
       var img = document.createElement( 'img' );
       img.src = file;
-     
-      img.onload = function(){
+      img.loaded = false;
+      img.onload = function(){       
         
         var h = this.height,
             w = this.width;
@@ -2390,9 +2390,13 @@
         context.drawImage( this, 0, 0 );
         this.data = buildImageObject( context.getImageData( 0, 0, w, h ) );
         this.data.img = img;
-
-        if(callback){ callback(); }
         
+        this.get = this.data.get;
+        this.pixels = this.data.pixels;
+        
+        this.loaded = true;
+        
+        if(callback){ callback(); }    
       };
       
       return img;
