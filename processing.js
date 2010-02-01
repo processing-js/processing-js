@@ -295,7 +295,11 @@
     // Create the 'p' object
     var p = {};
     p.curElement = curElement;
-    var curContext = p.curContext = curElement.getContext("2d");
+    p.curContext = null;
+    var curContext = p.curContext;
+
+    //var curContext = p.curContext = curElement.getContext("2d"); // Corban: not sure why this was added. We cannot set a default 2d context or 3d will not work.
+
     for (var i in Processing.lib) {
       if (1) {
         p[i] = window.Processing.lib[i];
@@ -1859,17 +1863,11 @@
         // get the 3D rendering context
         try {
           if (!curContext) {
-            curContext = curElement.getContext("moz-webgl");
+            curContext = curElement.getContext("experimental-webgl");
           }
         } catch(e_size) {
           Processing.debug(e_size);
         }
-
-        try {
-          if (!curContext) {
-            curContext = curElement.getContext("webkit-3d");
-          }
-        } catch(e) {}
 
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
@@ -1877,7 +1875,7 @@
 
         p.stroke(0);
         p.fill(255);
-      }
+      } 
 
       // The default 2d context has already been created in the p.init() stage if 
       // a 3d context was not specified. This is so that a 2d context will be 
