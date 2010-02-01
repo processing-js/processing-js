@@ -1620,7 +1620,26 @@
             return key;
         };
 
+        String.prototype.equals = function equals( str ) {
+            var ret = true;
 
+            if ( this.length == str.length ) {
+              
+                for ( var i = 0; i < this.length; i++) {
+
+                    if ( this.charAt( i ) != str.charAt( i ) ) {
+
+                        i = this.length;
+                        ret = false;
+                    }
+                }
+            } else {
+                ret = false;
+            }
+
+            return ret;
+        };
+        
 
         ////////////////////////////////////////////////////////////////////////////
         // Math functions
