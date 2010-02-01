@@ -1,13 +1,29 @@
 Processing.js automated tests rely on a working JavaScript Shell.
-You can build one for your platform by following the instructions
-in tools/js/src/README-Processing-js.txt:
+The easiest way to do this is to build one from source.  First you
+will need a working Mozilla build environment:
 
-$ cd tools/js/src
+https://developer.mozilla.org/en/Build_Documentation
+
+Next, obtain the Firefox source code:
+
+$ hg clone http://hg.mozilla.org/mozilla-central
+
+Now configure and build the source (NOTE: use the appropriate
+autoconf v 2.13 for your system, autoconf213, autoconf-2.13, etc.):
+
+$ cd mozilla-central/js/src
 $ autoconf213
 $ mkdir opt-build
 $ ../configure --disable-debug --enable-optimize
 $ make
 
+This should produce a working JavaScript Shell at:
+
+mozilla-central/js/src/opt-build/js
+
+You should update the Makefile with the path to your js executable:
+
+JS=/path/to/your/js/src/opt-build/js
 
 Once you have a working JS Shell, you can run tests and do other
 tasks like so:
@@ -40,10 +56,15 @@ tasks like so:
 
    $ make /tmp/foo.js
 
-6) Create a release (not finished yet):
+6) Create a release:
 
    $ make release
 
 7) Clean out old release:
 
    $ make clean
+
+8) Check Processing.js for errors (jslint):
+
+   $ make check-lint
+
