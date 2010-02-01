@@ -7,6 +7,8 @@
 <body><h1><a href="http://ejohn.org/blog/processingjs/">Processing.js</a></h1>
 <h2>Pointillism</h2>
 
+<p>This code was updated from the Java source to work with Processing.js asynchronous image loading. <sup>-F1LT3R</sup></p> 
+
 <p>by Daniel Shiffman. 
 
 Mouse horizontal location controls size of dots. 
@@ -33,8 +35,6 @@ void draw()
   int x = int(random(a.width));
   int y = int(random(a.height));
 
-console.log(a.loaded);
-  
   if( a.loaded ){
     color pix = a.get(x, y);
     fill(pix, 126);

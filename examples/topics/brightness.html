@@ -7,6 +7,8 @@
 <body><h1><a href="http://ejohn.org/blog/processingjs/">Processing.js</a></h1>
 <h2>Brightness</h2>
 
+<p>This code was updated from the Java source to work with Processing.js asynchronous image loading.</p>
+
 <p>by Daniel Shiffman. 
 
 Adjusts the brightness of part of the image
@@ -19,7 +21,7 @@ PImage img;
 void setup() {
   size(33, 33);
   frameRate(30);
-  img = loadImage("cait.jpg");
+  img = loadImage("data/cait.jpg");
 }
 
 void draw() {
@@ -62,7 +64,7 @@ PImage img;
 void setup() {
   size(200, 200);
   frameRate(30);
-  img = loadImage("wires.jpg");
+  img = loadImage("data/cait.jpg");
 }
 
 void draw() {
