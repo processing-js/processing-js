@@ -3203,7 +3203,7 @@
             nx = parseFloat(xy[0][0]);
             ny = parseFloat(xy[1][0]);
 
-            if (lastCom == "Q" || lastCom == "T") {
+            if (lastCom === "Q" || lastCom === "T") {
 
               d = Math.sqrt(Math.pow(x - cx, 2) + Math.pow(cy - y, 2));
               a = Math.PI + Math.atan2(cx - x, cy - y);
