@@ -1923,6 +1923,30 @@
 
     p.PVector = PVector;
 
+    ////////////////////////////////////////////////////////////////////////////
+    // 3D Functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    /*
+      Sets the uniform variable 'varName' to the value specified by 'value'.
+      Before calling this function, make sure the correct program object 
+      has been installed as part of the current rendering state.
+
+      On some systems, if the variable exists in the shader but isn't used,
+      the compiler will optimize it out and this function will fail.
+    */
+    function uniformf(programObj, varName, varValue)
+    {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if( varLocation !== -1)
+      {
+        if      (varValue.length == 4){curContext.uniform4fv(varLocation, varValue);}
+        else if (varValue.length == 3){curContext.uniform3fv(varLocation, varValue);}
+        else if (varValue.length == 2){curContext.uniform2fv(varLocation, varValue);}
+        else                          {curContext.uniform1f (varLocation, varValue);}
+      }
+    }
     
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
