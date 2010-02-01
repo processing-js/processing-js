@@ -2802,8 +2802,11 @@
         return img.img;
 
       } else if (img.getContext || img.canvas) {
-
-        img.pixels = img.getContext('2d').createImageData(img.width, img.height);
+        if(img.getContext('2d').createImageData) {
+          img.pixels = img.getContext('2d').createImageData(img.width, img.height) ;
+        } else {
+          img.pixels = img.getContext('2d').getImageData(0, 0, img.width, img.height) ;
+        }
       }
 
       for (var i = 0, l = img.pixels.length; i < l; i++) {
@@ -3430,8 +3433,8 @@
         p.pmouseX = p.mouseX;
         p.pmouseY = p.mouseY;
 
-        var scrollX = window.scrollX !== null ? window.scrollX : window.pageXOffset;
-        var scrollY = window.scrollY !== null ? window.scrollY : window.pageYOffset;
+        var scrollX = (window.scrollX !== null && typeof window.scrollX !== 'undefined') ? window.scrollX : window.pageXOffset;
+        var scrollY = (window.scrollY !== null && typeof window.scrollY !== 'undefined') ? window.scrollY : window.pageYOffset;
 
         p.mouseX = e.clientX - curElement.offsetLeft + scrollX;
         p.mouseY = e.clientY - curElement.offsetTop + scrollY;
