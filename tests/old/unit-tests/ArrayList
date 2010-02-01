@@ -1,0 +1,25 @@
+/* 
+    Processing.js Ref Test
+    Function : ArrayList()
+    Source   : http://processing.org/reference/ArrayList_
+*/
+
+
+balls = new ArrayList();  // Create an empty ArrayList
+balls.add( new Ball( 0 ) );
+
+class Ball { 
+  Ball (float y) {  
+     
+  } 
+  void update() { 
+  } 
+}
+
+//** REFTEST VALUES **//
+background(
+  reftest.checkValues([
+  ])
+);
+exit();
+
