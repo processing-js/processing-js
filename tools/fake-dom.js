@@ -3,6 +3,7 @@ var __empty_func__ = function () {};
 
 var canvas = {
   attachEvent: __empty_func__,
+  addEventListener: __empty_func__,
   getContext:  function() {
                  return {
                    translate: __empty_func__,

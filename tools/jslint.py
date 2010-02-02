@@ -10,11 +10,12 @@ class Linter(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
 
   def run(self, jsshell, filename):
-    code = jsshellhelper.stringify(filename)
+    tmpFile = jsshellhelper.createEscapedFile(filename)
 
     cmd = [jsshell,
            '-f', os.path.join(self.toolsdir, 'cleaner.js'),
-           '-e', 'var input = clean("%s");\n' % code,
+           '-f', tmpFile,
+           '-e', 'var input = __unescape_string();\n',
            '-f', os.path.join(self.toolsdir, 'jslint-cmdline.js')]
 
     proc = Popen(cmd)
@@ -24,6 +25,8 @@ class Linter(object):
       print stdout
     else:
       print stderr
+
+    jsshellhelper.cleanUp(tmpFile)
 
 
 def main():

@@ -8,22 +8,25 @@ from subprocess import Popen, PIPE, STDOUT
 
 class Minifier(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
+
   def run(self, jsshell, filename):
-    pcode = jsshellhelper.stringify(filename)
+    tmpFile = jsshellhelper.createEscapedFile(filename)
 
     cmd = [jsshell,
            '-f', os.path.join(self.toolsdir, 'jsmin.js'),
            '-f', os.path.join(self.toolsdir, 'cleaner.js'),
-           '-e', "var input = clean('%s'); print(jsmin('', input, 2));" % pcode ]
+           '-f', tmpFile,
+           '-e', "var input = __unescape_string(); print(jsmin('', input, 2));"]
 
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
-
     stdout, stderr = proc.communicate()
 
     if stdout:
       print stdout
     else:
       print stderr
+
+    jsshellhelper.cleanUp(tmpFile)
 
 def main():
     parser = OptionParser()

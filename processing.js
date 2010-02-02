@@ -294,7 +294,7 @@
 
     // Create the 'p' object
     var p = {};
-    var curContext, curElement;
+    var curContext, curElement = curElement;
 
     //var curElement = p.curElement = curElement;
     //var curContext = p.curContext = curElement.getContext("2d"); // Corban: not sure why this was added. We cannot set a default 2d context or 3d will not work.

@@ -28,13 +28,14 @@ class ProcessingTests(object):
               if testPath and not fullpath.startswith(testPath):
                   continue
               if filename.endswith('.pde'):
-                  code = jsshellhelper.stringify(fullpath)
-                  one_test = 'var parserTest = {name:"' + fullpath + '", body: clean("' + code + '")};'
+                  tmpFile = jsshellhelper.createEscapedFile(fullpath)
+                  one_test = 'var parserTest = {name:"' + fullpath + '", body: __unescape_string()};\n'
 
                   testCmd = [jsshell,
                              '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
                              '-f', os.path.join(self.toolsdir, '..', 'processing.js'),
                              '-f', os.path.join(self.toolsdir, 'cleaner.js'),
+                             '-f', tmpFile,
                              '-e', one_test,
                              '-f', os.path.join(self.toolsdir, 'test-harness.js')]
                   proc = Popen(testCmd, stdout=PIPE, stderr=PIPE)
@@ -62,6 +63,8 @@ class ProcessingTests(object):
                       self.testsFailed += 1
                       print "TEST-FAILED: " + fullpath + ". Test died:"
                       print stdout
+
+                  jsshellhelper.cleanUp(tmpFile)
 
   def runUnitTests(self, jsshell, testPath=None):
       """Run all .js unit tests in test/unit through the test harness."""
