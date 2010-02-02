@@ -294,12 +294,12 @@
 
     // Create the 'p' object
     var p = {};
-    p.curElement = curElement;
-    p.curContext = null;
-    var curContext = p.curContext;
+    var curContext, curElement;
 
+    //var curElement = p.curElement = curElement;
     //var curContext = p.curContext = curElement.getContext("2d"); // Corban: not sure why this was added. We cannot set a default 2d context or 3d will not work.
 
+    
     for (var i in Processing.lib) {
       if (1) {
         p[i] = window.Processing.lib[i];
@@ -379,6 +379,7 @@
     p.codedKeys = [69, 70, 71, 72];
 
     p.use3DContext = false; // default '2d' canvas context
+
     // "Private" variables used to maintain state
     var online = true,
       doFill = true,
