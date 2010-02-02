@@ -392,7 +392,7 @@
       curEllipseMode = p.CENTER,
       inSetup = false,
       inDraw = false,
-      curBackground = "rgba( 204, 204, 204, 255 )",
+      curBackground = "rgba( 204, 204, 204, 1 )",
       curFrameRate = 1000,
       curCursor = p.ARROW,
       oldCursor = document.body.style.cursor,
@@ -3391,8 +3391,7 @@
 
               curContext.lineCap = 'round';
 
-              // Set default stroke and fill color              
-              //p.background(p.curBackground);
+              // Set default stroke and fill color
               p.stroke(0);
               p.fill(255);
 
