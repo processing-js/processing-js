@@ -126,7 +126,7 @@
     }
 
     // float foo = 5;
-    aCode = aCode.replace(/(?:static )?(\w+)((?:\[\])+| ) *(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
+    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\])+| ) *(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
       if (type === "return") {
         return all;
       } else {
