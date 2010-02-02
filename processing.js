@@ -108,7 +108,8 @@
 
     // float[] foo = new float[5];
     aCode = aCode.replace(/new (\w+)((?:\[([^\]]*)\])+)/g, function (all, name, args) {
-      return "new ArrayList(" + args.slice(1, -1).split("][").join(", ") + ")";
+      return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ")";
+      //return "new ArrayList(" + args.slice(1, -1).split("][").join(", ") + ")";
     });
 
     // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
@@ -260,7 +261,7 @@
     aCode = aCode.replace(/\(int\)/g, "0|");
 
     // Remove Casting
-    aCode = aCode.replace(new RegExp("\\((" + classes.join("|") + ")(\\[\\])?\\)", "g"), "");
+    aCode = aCode.replace(new RegExp("\\((" + classes.join("|") + ")(\\[\\])*\\)", "g"), "");
 
     // Force numbers to exist //
     //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
