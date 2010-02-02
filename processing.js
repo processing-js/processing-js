@@ -142,7 +142,7 @@
     // super() is a reserved word
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
-    var classes = ["int", "float", "boolean", "String", "byte"];
+    var classes = ["int", "float", "boolean", "String", "byte", "double", "long"];
 
     var classReplace = function (all, name, extend, vars, last) {
       classes.push(name);
@@ -312,6 +312,10 @@
     p.PI = Math.PI;
     p.TWO_PI = 2 * p.PI;
     p.HALF_PI = p.PI / 2;
+    p.MAX_FLOAT = 3.4028235e+38;
+    p.MIN_FLOAT = -3.4028235e+38;
+    p.MAX_INT = 2147483647;
+    p.MIN_INT = -2147483648;
     p.P3D = 3;
     p.CORNER = 0;
     p.RADIUS = 1;
