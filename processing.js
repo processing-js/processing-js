@@ -1248,7 +1248,7 @@
     var contextMenu = function (e) {
       e.preventDefault();
       e.stopPropagation();
-    }
+    };
     
     p.disableContextMenu = function disableContextMenu() {
       curElement.addEventListener('contextmenu', contextMenu, false);
