@@ -47,5 +47,6 @@ var setInterval = __empty_func__;
 var XMLHttpRequest = __empty_func__;
 
 var window = {
-  setInterval: __empty_func__
+  setInterval: __empty_func__,
+  XMLHttpRequest: __empty_func__
 };
