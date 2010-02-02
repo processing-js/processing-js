@@ -3486,15 +3486,16 @@
       attach(document, "keydown", function (e) {
         keyPressed = true;
         p.key = e.keyCode + 32;
-        var i, len = p.codedKeys.length;
-        for (i = 0; i < len; i++) {
+        var wasCoded = false;
+        for (var i = 0, l = p.codedKeys.length; i < l; i++) {
           if (p.key === p.codedKeys[i]) {
+            wasCoded = true;
             switch (p.key) {
             case 70:
               p.keyCode = p.UP;
               break;
             case 71:
-              p.keyCode = p.RIGHT;
+              keyCode = p.RIGHT;
               break;
             case 72:
               p.keyCode = p.DOWN;
@@ -3506,6 +3507,7 @@
             p.key = p.CODED;
           }
         }
+        if (!wasCoded){ p.keyCode = null; }
         if (e.shiftKey) {
           p.key = String.fromCharCode(p.key).toUpperCase().charCodeAt(0);
         }
@@ -3515,7 +3517,7 @@
           p.keyPressed = true;
         }
       });
-
+      
       attach(document, "keyup", function (e) {
         keyPressed = false;
         if (typeof p.keyPressed !== "function") {
