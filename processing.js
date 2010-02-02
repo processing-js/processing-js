@@ -294,8 +294,12 @@
 
     // Create the 'p' object
     var p = {};
-    p.curElement = curElement;
-    var curContext = p.curContext = curElement.getContext("2d");
+    var curContext, curElement;
+
+    //var curElement = p.curElement = curElement;
+    //var curContext = p.curContext = curElement.getContext("2d"); // Corban: not sure why this was added. We cannot set a default 2d context or 3d will not work.
+
+    
     for (var i in Processing.lib) {
       if (1) {
         p[i] = window.Processing.lib[i];
@@ -375,6 +379,7 @@
     p.codedKeys = [69, 70, 71, 72];
 
     p.use3DContext = false; // default '2d' canvas context
+
     // "Private" variables used to maintain state
     var online = true,
       doFill = true,
@@ -1859,17 +1864,11 @@
         // get the 3D rendering context
         try {
           if (!curContext) {
-            curContext = curElement.getContext("moz-webgl");
+            curContext = curElement.getContext("experimental-webgl");
           }
         } catch(e_size) {
           Processing.debug(e_size);
         }
-
-        try {
-          if (!curContext) {
-            curContext = curElement.getContext("webkit-3d");
-          }
-        } catch(e) {}
 
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
@@ -1877,7 +1876,7 @@
 
         p.stroke(0);
         p.fill(255);
-      }
+      } 
 
       // The default 2d context has already been created in the p.init() stage if 
       // a 3d context was not specified. This is so that a 2d context will be 
@@ -2802,8 +2801,11 @@
         return img.img;
 
       } else if (img.getContext || img.canvas) {
-
-        img.pixels = img.getContext('2d').createImageData(img.width, img.height);
+        if(img.getContext('2d').createImageData) {
+          img.pixels = img.getContext('2d').createImageData(img.width, img.height) ;
+        } else {
+          img.pixels = img.getContext('2d').getImageData(0, 0, img.width, img.height) ;
+        }
       }
 
       for (var i = 0, l = img.pixels.length; i < l; i++) {
@@ -3430,8 +3432,8 @@
         p.pmouseX = p.mouseX;
         p.pmouseY = p.mouseY;
 
-        var scrollX = window.scrollX !== null ? window.scrollX : window.pageXOffset;
-        var scrollY = window.scrollY !== null ? window.scrollY : window.pageYOffset;
+        var scrollX = (window.scrollX !== null && typeof window.scrollX !== 'undefined') ? window.scrollX : window.pageXOffset;
+        var scrollY = (window.scrollY !== null && typeof window.scrollY !== 'undefined') ? window.scrollY : window.pageYOffset;
 
         p.mouseX = e.clientX - curElement.offsetLeft + scrollX;
         p.mouseY = e.clientY - curElement.offsetTop + scrollY;
