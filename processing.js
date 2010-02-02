@@ -392,7 +392,7 @@
       curEllipseMode = p.CENTER,
       inSetup = false,
       inDraw = false,
-      curBackground = "rgba( 204, 204, 204, 1 )",
+      curBackground = "rgba( 204, 204, 204, 255 )",
       curFrameRate = 1000,
       curCursor = p.ARROW,
       oldCursor = document.body.style.cursor,
@@ -1245,12 +1245,17 @@
       // p context. -F1LT3R 
     };
 
+    var contextMenu = function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     p.disableContextMenu = function disableContextMenu() {
-      curElement.addEventListener('contextmenu', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      },
-      false);
+      curElement.addEventListener('contextmenu', contextMenu, false);
+    };
+
+    p.enableContextMenu = function enableContextMenu() {
+      curElement.removeEventListener('contextmenu', contextMenu, false);
     };
 
 
@@ -3386,9 +3391,13 @@
 
               curContext.lineCap = 'round';
 
-              // Set default stroke and fill color
+              // Set default stroke and fill color              
+              //p.background(p.curBackground);
               p.stroke(0);
               p.fill(255);
+
+              p.disableContextMenu();
+              
             }
 
             eval(parsedCode);
