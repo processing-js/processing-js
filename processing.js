@@ -295,11 +295,10 @@
 
     // Create the 'p' object
     var p = {};
-    var curContext, curElement = curElement;
+    var curElement = curElement;
+    var curContext;
 
-    //var curElement = p.curElement = curElement;
-    //var curContext = p.curContext = curElement.getContext("2d"); // Corban: not sure why this was added. We cannot set a default 2d context or 3d will not work.
-
+    p.use3DContext = false; // default '2d' canvas context
     
     for (var i in Processing.lib) {
       if (1) {
@@ -383,7 +382,6 @@
     //! // Description required...
     p.codedKeys = [69, 70, 71, 72];
 
-    p.use3DContext = false; // default '2d' canvas context
 
     // "Private" variables used to maintain state
     var online = true,
@@ -1886,18 +1884,23 @@
 
         p.stroke(0);
         p.fill(255);
-      } 
+      } else {
+        if (typeof curContext === "undefined") {
+          // size() was called without p.init() default context, ie. p.createGraphics()
+          curContext = curElement.getContext("2d");
+        }
+      }
 
       // The default 2d context has already been created in the p.init() stage if 
       // a 3d context was not specified. This is so that a 2d context will be 
       // available if size() was not called.
+
       var props = {
         fillStyle: curContext.fillStyle,
         strokeStyle: curContext.strokeStyle,
         lineCap: curContext.lineCap,
         lineJoin: curContext.lineJoin
       };
-
       curElement.width = p.width = aWidth;
       curElement.height = p.height = aHeight;
 
