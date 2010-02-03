@@ -1,0 +1,361 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1250">
+<meta name="generator" content="PSPad editor, www.pspad.com">
+<title>Processing.js Benchmarks</title>
+<script type="text/javascript" src="../../processing.js"></script>
+<script type="text/javascript">
+/*
+ * This code searches for all the <script type="application/processing" target="canvasid">
+ * in your page and loads each script in the target canvas with the proper id.
+ * It is useful to smooth the process of adding Processing code in your page and starting
+ * the Processing.js engine.
+ */
+if ( document.addEventListener ) {
+	document.addEventListener("DOMContentLoaded", function() {
+		var scripts = document.getElementsByTagName("script");		  
+		
+		for ( var i = 0; i < scripts.length; i++ ) {
+			if ( scripts[i].type == "application/processing" ) {
+				var src = scripts[i].src, canvas = scripts[i].nextSibling;
+	
+				if ( src && src.indexOf("#") ) {
+					canvas = document.getElementById( src.substr( src.indexOf("#") + 1 ) );
+				} else {
+					while ( canvas && canvas.nodeName.toUpperCase() != "CANVAS" )
+						canvas = canvas.nextSibling;
+				}
+
+				if ( canvas ) {
+					Processing(canvas, scripts[i].textContent);
+				}
+			}
+		}
+	}, false);
+}
+</script>
+<style type="text/css">
+  body{font-size:70%;font-family:lucida-console;padding:0;margin:0;}
+  h1{font-family:verdana;background:steelblue;color:#fff;padding:5px 25px;margin:0;}
+  h2{font-family:verdana;background:lightgrey;color:dimgrey;padding:5px 25px;margin:0;font-size:120%}
+  div{border:1px dotted dimgrey;padding:0 5px;float:left;margin:5px;font-size:.7em;height:100px;}
+</style>
+</head>
+<body>
+<h1>Processing.js Benchmarks</h1>
+<h2>All Canvas elements should render green</h2>
+
+  <div><p>set() pixel<p>
+  <script type="application/processing">
+    size(50,50);
+    background(0,255,0);
+    color black = color(0,0,0);
+    set(10,10,black);
+  </script><canvas width="50" height="50" style="background:#f00;"></canvas>
+  </div>
+
+  <div><p>get() pixel<p>
+  <script type="application/processing">
+    void setup(){
+      size( 50, 50 );
+      frameRate(5);
+    }
+    PImage myImage = loadImage("obama_smoking.jpg");
+    void draw(){
+      image( myImage, 0, 0 );
+      color cp = get(30, 20);
+      fill(cp);
+      rect(5, 25, 20, 20);
+      if( frameCount > 10 ){ exit(); }
+    }
+  </script><canvas style="background:#f00;"></canvas>
+  </div>
+
+
+  <div><p>get() pixels<p>
+  <script type="application/processing">
+    void setup(){
+      size( 50, 50 );
+      frameRate(5);
+    }
+    PImage myImage = loadImage("obama_smoking.jpg");
+    void draw(){
+      image( myImage, 0, 0 );
+      PImage cp = get();
+      image( cp, 20, 20 );
+      if( frameCount > 10 ){ exit(); }
+    }
+  </script><canvas style="background:#f00;"></canvas>
+  </div>
+
+
+  <div><p>updatePixels()<p>
+  <script type="application/processing">
+    size( 50, 50 );
+    int halfImage = width*height / 2;
+    PImage myImage = loadImage("gradient.jpeg");    
+    void setup(){
+        frameRate(5);
+    }    
+    void draw(){
+      image( myImage, 0, 0 );
+      loadPixels();
+      for (int i = 0; i < halfImage; i++) {
+        pixels[i+halfImage] = pixels[i];
+      }
+      updatePixels()
+      if( frameCount > 10 ){ exit(); }
+    }
+  </script><canvas style="background:#f00;"></canvas>    
+  </div>
+
+  <div><p>background()<br /> as image<p>
+  <script type="application/processing">
+      pImage a;
+      void setup(){
+        size( 50, 50 );
+        frameRate(5);
+        a = loadImage( "green-square.gif" );
+      }
+      void draw(){
+        
+        // Image is not drawn if it's not ready
+        background( a );
+        
+        // Image load may be delayed, so wait a while...
+        if( frameCount > 10 ){
+          exit();
+        }        
+      }
+  </script><canvas style="background:#f00;"></canvas>    
+  </div>
+
+  <div><p>loadImage()<p>
+  <script type="application/processing">
+      pImage a;
+      void setup(){
+        size( 50, 50 );
+        frameRate(5);
+        a = loadImage( "green-square.gif" );
+      }
+      void draw(){
+        
+        // Image is not drawn if it's not ready
+        image( a, 0, 0 );
+        
+        // Image load may be delayed, so wait a while...
+        if( frameCount > 10 ){
+          exit();
+        }        
+      }
+  </script><canvas style="background:#f00;"></canvas>    
+  </div>
+  
+  <div><p>text()<p>
+  <script type="application/processing">
+    size(50,50);
+    noStroke();
+    PFont fontA = loadFont("Biotyp.svg");    
+    textFont(fontA, 12);    
+    fill(0);
+    text("Working!", 0, 0);        
+  </script><canvas style="background:#0f0;"></canvas>    
+  </div> 
+
+
+<!-- not working in Opera -->
+<!--
+  <div><p>println()<p>
+  <script type="application/processing">
+    size(50,50);
+    noStroke();
+    void lnPrinted(){
+      fill(ln[0],ln[1],ln[2]);
+      rect(0,0,50,50);
+    }
+    println(0,255,0);
+  </script><canvas style="background:red;"></canvas>    
+  </div>
+-->
+
+
+
+  <div><p>background<p>
+  <script type="application/processing">
+    size(50,50);
+    background(0,255,0);
+  </script><canvas style="background:red;"></canvas>    
+  </div>
+
+  
+  <div><p>stroke<p>
+  <script type="application/processing">
+    size(50,50);
+    stroke(0,255,0);
+    fill(255,0,0);    
+    strokeWeight(50);
+    rect(0,0,50,50);
+  </script><canvas style="background:red;"></canvas>    
+  </div>
+
+  
+  <div><p>noStroke<p>
+  <script type="application/processing">
+    size(50,50);
+    stroke(255,0,0);    
+    strokeWeight(50);
+    fill(0,255,0);
+    noStroke();
+    rect(0,0,50,50);    
+  </script><canvas style="background:red;"></canvas>    
+  </div>
+
+  <div><p>fill<p>
+  <script type="application/processing">
+    size(50,50);
+    fill(0,255,0);
+    noStroke();    
+    rect(0,0,50,50);
+  </script><canvas style="background:red;"></canvas>    
+  </div>
+  
+  <div><p>noFill<p>
+  <script type="application/processing">
+    size(50,50);
+    fill(255,0,0);
+    noStroke();
+    noFill();    
+    rect(0,0,50,50);
+  </script><canvas style="background:#0f0;"></canvas>    
+  </div>
+  
+  <div><p>ellipse<p>
+  <script type="application/processing">
+    size(50,50);
+    noStroke();    
+    fill(0,255,0);
+    ellipse(15,10,21,11);
+    ellipse(25,25,21,21);
+    ellipse(40,35,11,21);
+  </script><canvas style="background:red url(ellipse.gif);"></canvas>    
+  </div>
+  
+  <div><p>loadStrings<p>
+  <script type="application/processing">
+    size(50,50);
+    String c=loadStrings("ajax.me");
+    background(c[0],c[1],c[2]);
+  </script><canvas style="background:red"></canvas>    
+  </div>
+
+
+  <div><p>color #HEX<p>
+  <script type="application/processing">
+    size(50,50);
+    color C = #00ff00;
+    background(C);  
+  </script><canvas style="background:red"></canvas>      
+  </div>
+
+  
+  <div><p>color rgb()<p>
+  <script type="application/processing">
+    size(50,50);
+    color C = color(0,255,0);
+    background(C);  
+  </script><canvas style="background:red"></canvas>      
+  </div>
+
+  
+  <div><p>color rgba()<p>
+  <script type="application/processing">
+    size(50,50);
+    color C = color(255,0,0,0);
+    background(C);  
+  </script><canvas style="background:#0f0"></canvas>      
+  </div>
+  
+  <div><p>red()<p>
+  <script type="application/processing">
+    size(50,50);    
+    color C = color(255,0,0);
+    int G = red(C);
+    background(0,G,0,G);
+  </script><canvas style="background:red"></canvas>      
+  </div>  
+
+  
+  <div><p>green()<p>
+  <script type="application/processing">
+    size(50,50);    
+    color C = color(0,255,0);
+    int G = green(C);
+    background(0,G,0,G);
+  </script><canvas style="background:red"></canvas>      
+  </div>
+
+  
+  <div><p>blue()<p>
+  <script type="application/processing">
+    size(50,50);    
+    color C = color(0,0,255);
+    int G = blue(C);
+    background(0,G,0,G);
+  </script><canvas style="background:red"></canvas>      
+  </div>
+  
+  <div><p>alpha()<p>
+  <script type="application/processing">
+    size(50,50);    
+    color C = color(0,0,0,255);
+    int G = alpha(C);
+    background(0,G,0,G);
+  </script><canvas style="background:red"></canvas>      
+  </div>
+      
+  <div><p>lerp<p>
+  <script type="application/processing">
+    size(50,50);
+    noStroke();
+    int myLerp = lerp(0,255,1);
+    color C = color(0,255,0,myLerp);            
+    fill(C);
+    rect(0,0,50,50);    
+  </script><canvas style="background:red"></canvas>    
+  </div>
+  
+  <div><p>lerpColor<p>
+  <script type="application/processing">
+    size(50,50);
+    noStroke();
+    color A = #00FF00;
+    color B = #00FF00;    
+    for(int i=0;i<50;i++){
+      color C = lerpColor(A,B,.02*i);
+      fill(C);
+      rect(0,i,50,1);
+    }
+  </script><canvas style="background:red"></canvas>    
+  </div>
+
+    
+  <div><p>arc with fill<p>
+  <script type="application/processing">
+  void setup(){
+    size(50,50);
+    strokeWeight(8);
+    fill(0,255,0);
+    stroke(0,255,0);
+  }  
+  void draw(){
+    arc(25,25,40,40,0,HALF_PI);
+    arc(25,25,40,40,PI,PI+HALF_PI);
+    exit();
+  }
+  </script><canvas style="background:url(arc_fill.gif);"></canvas>    
+  </div>
+
+
+</body>
+</html>
