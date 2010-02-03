@@ -3,6 +3,7 @@ var __empty_func__ = function () {};
 
 var canvas = {
   attachEvent: __empty_func__,
+  addEventListener: __empty_func__,
   getContext:  function() {
                  return {
                    translate: __empty_func__,
@@ -46,5 +47,6 @@ var setInterval = __empty_func__;
 var XMLHttpRequest = __empty_func__;
 
 var window = {
-  setInterval: __empty_func__
+  setInterval: __empty_func__,
+  XMLHttpRequest: __empty_func__
 };

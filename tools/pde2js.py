@@ -10,14 +10,15 @@ class Converter(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
 
   def run(self, jsshell, filename, strip=None):
-    pcode = jsshellhelper.stringify(filename)
+    tmpFile = jsshellhelper.createEscapedFile(filename)
 
     cmd = [jsshell,
            '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
            '-f', os.path.join(self.toolsdir, '..', 'processing.js'),
            '-f', os.path.join(self.toolsdir, 'cleaner.js'),
            '-f', os.path.join(self.toolsdir, 'jsbeautify.js'),
-           '-e', 'var pcode = clean("%s"); print(js_beautify(Processing.parse(pcode, Processing(canvas, pcode))));\n' % pcode]
+           '-f', tmpFile,
+           '-e', 'var pcode = __unescape_string(); print(js_beautify(Processing.parse(pcode, Processing(canvas, pcode))));\n']
 
     proc = Popen(cmd)
 
@@ -28,6 +29,8 @@ class Converter(object):
     # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
     stdout, stderr = proc.communicate()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    jsshellhelper.cleanUp(tmpFile)
 
 def main():
     parser = OptionParser()

@@ -8,22 +8,25 @@ from subprocess import Popen, PIPE, STDOUT
 
 class Packer(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
+
   def run(self, jsshell, filename):
-    pcode = jsshellhelper.stringify(filename)
+    tmpFile = jsshellhelper.createEscapedFile(filename)
 
     cmd = [jsshell,
            '-f', os.path.join(self.toolsdir, 'packer.js'),
            '-f', os.path.join(self.toolsdir, 'cleaner.js'),
-           '-e', "var input = clean('%s'); print(pack(input, 62, 1, 0));" % pcode ]
+           '-f', tmpFile,
+           '-e', "var input = __unescape_string(); print(pack(input, 62, 1, 0));"]
 
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
-
     stdout, stderr = proc.communicate()
 
     if stdout:
       print stdout
     else:
       print stderr
+
+    tmpFile = jsshellhelper.cleanUp(tmpFile)
 
 def main():
     parser = OptionParser()
