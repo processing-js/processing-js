@@ -1499,13 +1499,110 @@
             return p.ajax(url).split("\n");
         };
 
-        // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
-        // This breaks the join() ref-test. The Processing.org documentation says String or String[].
-        p.nf = function (num, pad) {
-            var str = "" + num;
-            for (var i = pad - str.length; i > 0; i--) {
-                str = "0" + str;
+        p.nf = function() {
+            var str = undefined;
+          
+            if ( arguments.length == 2 && typeof arguments[0] === 'number'
+                && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') == -1 ) {
+            
+                var num = arguments[0];
+                var pad = arguments[1];
+
+                var isNegative = num < 0;
+                if ( isNegative ) {
+                    num = Math.abs(num);
+                }
+            
+                str = "" + num;
+                for ( var i = pad - str.length; i > 0; i-- ) {
+                    str = "0" + str;
+                }
+            
+                if ( isNegative ) {
+                    str = "-" + str;
+                }
+            } else if ( arguments.length == 2 && typeof arguments[0] === 'object'
+                && arguments[0].constructor === Array && typeof arguments[1] === 'number' ) {
+            
+                var arr = arguments[0];
+                var pad = arguments[1];
+            
+                str = new Array( arr.length );
+
+                for ( var i = 0; i < arr.length && str != undefined; i++ ) {
+              
+                    var test = this.nf( arr[i], pad );
+                    if ( test == undefined ) {
+                        str = undefined;
+                    } else {
+                        str[i] = test;
+                    }
+                }
+            } else if ( arguments.length == 3 && typeof arguments[0] === 'number'
+                && typeof arguments[1] === 'number' && typeof arguments[2] === 'number'
+                && (arguments[0]+"").indexOf( '.' ) >= 0 ) {
+            
+                var num = arguments[0];
+                var left = arguments[1];
+                var right = arguments[2];
+            
+                var isNegative = num < 0;
+                if ( isNegative ) {
+                    num = Math.abs(num);
+                }
+
+                // Change the way the number is 'floored' based on whether it is odd or even.
+                if ( right < 0 && Math.floor( num ) % 2 == 1 ) {
+
+                    // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
+                    if ( (num) - Math.floor( num ) >= 0.5 ) {
+                        num = num + 1;
+                    }
+                }
+
+                str = "" + num;
+
+                for ( var i = left - str.indexOf( '.' ); i > 0; i-- ) {
+                    str = "0" + str;  
+                }
+
+                var numDec = str.length - str.indexOf( '.' ) - 1;
+                if ( numDec <= right ) {
+                    for ( var i = right - ( str.length - str.indexOf( '.' ) - 1 ); i > 0; i-- ) {
+                        str = str + "0";  
+                    }
+                } else if ( right > 0 ) {
+                    str = str.substring( 0, str.length - ( numDec - right ) );
+                } else if ( right < 0 ) {
+
+                    str = str.substring( 0, str.indexOf( '.' ) );
+                }
+                
+                if ( isNegative ) {
+                    str = "-" + str;
+                }
+                
+            } else if ( arguments.length == 3 && typeof arguments[0] === 'object'
+                && arguments[0].constructor === Array && typeof arguments[1] === 'number'
+                && typeof arguments[2] === 'number' ) {
+            
+                var arr = arguments[0];
+                var left = arguments[1];
+                var right = arguments[2];
+            
+                str = new Array( arr.length );
+            
+                for ( var i = 0; i < arr.length && str != undefined; i++ ) {
+              
+                    var test = this.nf( arr[i], left, right );
+                    if ( test == undefined ) {
+                        str = undefined;
+                    } else {
+                        str[i] = test;
+                    }
+                }
             }
+          
             return str;
         };
 
