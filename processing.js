@@ -2248,8 +2248,16 @@
     p.noFill = function noFill() {
       doFill = false;
     };
-    p.smooth = function smooth() {};
-    p.noSmooth = function noSmooth() {};
+    
+    p.smooth = function() {
+      curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+      curContext.mozImageSmoothingEnabled = true;
+    };
+
+    p.noSmooth = function() {
+      curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+      curContext.mozImageSmoothingEnabled = false;
+    };
 
     p.fill = function fill() {
       doFill = true;
@@ -3591,6 +3599,8 @@
               p.stroke(0);
               p.fill(255);
 
+              p.noSmooth();
+              
               p.disableContextMenu();
               
             }
