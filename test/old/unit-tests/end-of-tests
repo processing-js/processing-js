@@ -1,0 +1,21 @@
+/* 
+    Processing.js Ref Test
+    Function : tests finished, display results.
+    Source   : F1LT3R
+*/
+
+var div = document.getElementById( "results" );
+
+div.innerHTML = "<b>Passed:</b> " + reftest.passed + " (" + reftest.passrate + ")<br/>" +
+                "<b>Failed:</b> " + reftest.failed + " (" + reftest.failrate + ")<br/>" +
+                "<b>Fails:</b><br/>" +
+                (function(){
+                  var fails = "<ul>";
+                  for(var i in reftest.testlist){
+                    if( reftest.testlist[i].failed ){
+                      fails += "<li>" + reftest.testlist[i].name + "</li>";
+                    }
+                  }
+                  fails += "</ul>";
+                  return fails;
+                })();

@@ -6,6 +6,8 @@
 <link rel="stylesheet" href="../style.css"/></head>
 <body><h1><a href="http://ejohn.org/blog/processingjs/">Processing.js</a></h1>
 <h2>Reading</h2>
+  
+<p>This code was updated from the Java source to work with Processing.js asynchronous image loading.</p>
 
 <p>An image is recreated from its individual component colors.
 The many colors of the image are created through modulating the 
@@ -19,33 +21,35 @@ background(0);
 
 // Load an image from the data directory
 PImage c;
-c = loadImage("cait.jpg");
+c = loadImage("data/cait.jpg", null, function(){
 
-int xoff = 0;
-int yoff = 0;
-int p = 2;
-int pix = p*3;
+  int xoff = 0;
+  int yoff = 0;
+  int p = 2;
+  int pix = p*3;
 
 
-for(int i = 0; i < c.width*c.height; i += 1) 
-{  
-  int here = c.pixels[i];
-  
-  fill(red(here), 0, 0);
-  rect(xoff, yoff, p, pix);
-  
-  fill(0, green(here), 0);
-  rect(xoff+p, yoff, p, pix);
-  
-  fill(0, 0, blue(here));
-  rect(xoff+p*2, yoff, p, pix);
-  
-  xoff+=pix;
-  if(xoff >= width-pix) {
-    xoff = 0;
-    yoff += pix;
+  for(int i = 0; i < c.width*c.height; i += 1) 
+  {  
+    int here = c.pixels[i];
+    
+    fill(red(here), 0, 0);
+    rect(xoff, yoff, p, pix);
+    
+    fill(0, green(here), 0);
+    rect(xoff+p, yoff, p, pix);
+    
+    fill(0, 0, blue(here));
+    rect(xoff+p*2, yoff, p, pix);
+    
+    xoff+=pix;
+    if(xoff >= width-pix) {
+      xoff = 0;
+      yoff += pix;
+    }
   }
-}
+
+});
 </script><canvas width="200" height="200"></canvas></p>
 <div style="height:0px;width:0px;overflow:hidden;"><img src='data/cait.jpg' id='cait.jpg'/></div>
 

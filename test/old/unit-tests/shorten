@@ -1,0 +1,25 @@
+/* 
+    Processing.js Ref Test
+    Function : shorten()
+    Source   : http://processing.org/reference/shorten_
+*/
+ 	
+
+String[] sa1 = { "OH ", "NY ", "CA "};
+String[] sa2 = shorten(sa1); 
+//println(sa1);  // sa1 still contains OH, NY, CA
+//println(sa2);  // sa2 now contains OH, NY
+
+//** REFTEST VALUES **//
+background(
+  reftest.checkValues([
+    sa1[0] === "OH ",
+    sa1[1] === "NY ",
+    sa1[2] === "CA ",
+    // Need to add tests to handle arrays of objects
+    sa2[0] === "OH ",
+    sa2[1] === "NY "
+  ])
+);
+exit();
+

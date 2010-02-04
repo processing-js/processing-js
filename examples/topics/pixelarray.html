@@ -7,6 +7,8 @@
 <body><h1><a href="http://ejohn.org/blog/processingjs/">Processing.js</a></h1>
 <h2>PixelArray</h2>
 
+<p>This code was updated from the Java source to work with Processing.js asynchronous image loading.</p>
+
 <p>Click and drag the mouse up and down to control the signal and 
 press and hold any key to see the current pixel being read. 
 This program sequentially reads the color of every pixel of an image
@@ -27,10 +29,11 @@ void setup()
   noFill();
   stroke(255);
   frameRate(30);
-  a = loadImage("ystone08.jpg");
-  for(int i=0; i<width*height; i++) {
-    aPixels[i] = a.pixels[i];
-  }
+  a = loadImage("data/ystone08.jpg", null, function(){
+    for(int i=0; i<width*height; i++) {
+      aPixels[i] = a.pixels[i];
+    }
+  });  
 }
 
 void draw() 
@@ -87,10 +90,11 @@ void setup()
   noFill();
   stroke(255);
   frameRate(30);
-  a = loadImage("ystone08.jpg");
-  for(int i=0; i&lt;width*height; i++) {
-    aPixels[i] = a.pixels[i];
-  }
+  a = loadImage("data/ystone08.jpg", null, function(){
+    for(int i=0; i<width*height; i++) {
+      aPixels[i] = a.pixels[i];
+    }
+  });
 }
 
 void draw() 
