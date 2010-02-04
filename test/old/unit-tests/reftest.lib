@@ -1,0 +1,71 @@
+// Lib for reftesting
+(function(){
+
+  Processing.lib.reftest = {
+
+    testlist  : [],
+    passed    : 0,
+    failed    : 0,
+    passrate  : 0,
+    failrate  : 0,
+    
+    postResultsURL  : "http://...",
+    
+    // Check functions that change values
+    checkValues: function( p, checks ){    
+    
+      var passed = 0;
+      var name = p.curContext.canvas.getAttribute( 'datasrc' );
+      p.curContext.canvas.title = name;
+      
+      for(var i in checks){
+        passed += checks[ i ];        
+      };
+      var failed = i - passed + 1;
+      
+      this.passed += !failed;
+      this.failed += !!failed;
+      this.passrate += passed;
+      this.failrate += failed;
+        
+      this.testlist[ this.testlist.length ] = {
+        name: name,
+        passed: passed,
+        failed: failed
+      }
+      
+      return failed ? "#FF0000" : "#00FF00";    
+    
+    },
+
+    // Check functions that change pixels
+    checkPixels: function( p ){
+      
+      p.loadPixels();     
+      var passed = 0;
+      var name = p.curContext.canvas.getAttribute( 'datasrc' );
+      p.curContext.canvas.title = name;      
+      
+      for(var i in p.pixels){
+        passed += p.pixels[ i ] == "rgba(0,255,0,255)";
+      }
+      var failed = i - passed + 1;
+
+      this.passed += !failed;
+      this.failed += !!failed;
+      this.passrate += passed;
+      this.failrate += failed;
+
+      this.testlist[ this.testlist.length ] = {
+        name: name,
+        passed: passed,
+        failed: failed
+      }
+
+      return failed ? "#FF0000" : "#00FF00";    
+          
+    }
+  
+  };
+  
+})();
