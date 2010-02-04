@@ -7,6 +7,8 @@
 <body><h1><a href="http://ejohn.org/blog/processingjs/">Processing.js</a></h1>
 <h2>ImageButton</h2>
 
+<p>This code was updated from the Java source to work with Processing.js asynchronous image loading.</p>
+
 <p>Loading images and using them to create a button.</p>
 
 <p><a href="http://processing.org/learning/topics/imagebutton.html"><b>Original Processing.org Example:</b> ImageButton</a><br>
@@ -19,9 +21,9 @@ void setup()
   background(102, 102, 102);
   
   // Define and create image button
-  PImage b = loadImage("base.gif");
-  PImage r = loadImage("roll.gif");
-  PImage d = loadImage("down.gif");
+  PImage b = loadImage("data/base.gif");
+  PImage r = loadImage("data/roll.gif");
+  PImage d = loadImage("data/down.gif");
   int x = width/2 - b.width/2;
   int y = height/2 - b.height/2; 
   int w = b.width;

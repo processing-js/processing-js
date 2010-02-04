@@ -7,6 +7,8 @@
 <body><h1><a href="http://ejohn.org/blog/processingjs/">Processing.js</a></h1>
 <h2>Snake</h2>
 
+<p>This code was updated from the Java source to work with Processing.js asynchronous image loading.</p>
+
 <p>A snake that follows your cursor.</p>
 
 <p><a href="http://ejohn.org/">Snake</a><br>
@@ -19,7 +21,7 @@ PImage a;
 void setup() {
   size(320, 240);
   smooth();
-  a = loadImage("dirt.jpg");
+  a = loadImage("data/dirt.jpg");
 }
 
 void draw() {

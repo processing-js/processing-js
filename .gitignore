@@ -1,5 +1,8 @@
-.DS_Store
-logs
-*~
-dist
+release/
+dist/
+logs/
+
 Unsaved\ Document*
+.DS_Store
+*.swp
+*~

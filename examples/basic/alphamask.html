@@ -7,6 +7,9 @@
 <body><h1><a href="http://ejohn.org/blog/processingjs/">Processing.js</a></h1>
 <h2>Alphamask</h2>
 
+<p>This code was updated from the Java source to work with Processing.js asynchronous image loading. Not sure image masks were ever implemented in Processing.js.<sup>-F1LT3R</sup></p> 
+
+
 <p>Loads a "mask" for an image to specify the transparency 
 in different parts of the image. The two images are blended
 together using the mask() method of PImage. 
@@ -21,8 +24,8 @@ PImage maskImg;
 void setup() 
 {
   size(200,200);
-  img = loadImage("test.jpg");
-  maskImg = loadImage("mask.jpg");
+  img = loadImage("data/test.jpg");
+  maskImg = loadImage("data/mask.jpg");
   img.mask(maskImg);
 }
 
