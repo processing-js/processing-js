@@ -1920,8 +1920,60 @@
       return Math.sqrt(aNumber);
     };
 
-    p.int = function (aNumber) {
-      return Math.floor(aNumber);
+    p.int = function int( val ) {
+      var ret = undefined;
+
+      if ( ( val || val === 0 ) && arguments.length == 1 ) {
+
+        if ( typeof val === 'number' ) {
+
+          var isNegative = val < 0;
+          if ( isNegative ) {
+            val = Math.abs( val );
+          }
+
+          ret = Math.floor( val );
+
+          if ( isNegative ) {
+            ret = -ret;
+          }
+        } else if ( typeof val === 'boolean' ) {
+
+          if ( val == true ) {
+            ret = 1;
+          } else {
+            ret = 0;
+          }
+        } else if ( typeof val === 'string' ) {
+
+          if ( val.indexOf(' ') > -1 ) {
+            ret = 0;
+          } else if ( val.length == 1 ) {
+
+            ret = val.charCodeAt( 0 );
+          } else {
+            ret = parseInt( val );
+
+            if ( isNaN( ret ) ) {
+              ret = 0;
+            }
+          }
+        } else if ( typeof val === 'object' && val.constructor === Array ) {
+
+          ret = new Array( val.length );
+
+          for ( var i = 0; i < val.length; i++) {
+
+            if ( typeof val[i] === 'string' && val[i].indexOf('.') > -1 ) {
+              ret[i] = 0;
+            } else {
+              ret[i] = p.int( val[i] );
+            }
+          }
+        }
+      }
+
+      return ret;
     };
 		
 		//Determines the smallest value in a sequence of numbers.
