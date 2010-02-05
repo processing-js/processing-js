@@ -302,7 +302,7 @@
     
     for (var i in Processing.lib) {
       if (1) {
-        p[i] = window.Processing.lib[i];
+        p[i] = Processing.lib[i];
       }
     }
 

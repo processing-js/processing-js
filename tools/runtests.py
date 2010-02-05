@@ -80,6 +80,10 @@ class ProcessingTests(object):
               fullpath = os.path.join(root, filename)
               if testPath and not fullpath.startswith(testPath):
                   continue
+
+              tmpFile = None
+              testCmd = None
+
               if filename.endswith('.js'):
                   # Read the test file so we can wrap it properly:
                   f = open(fullpath, 'r')
@@ -92,32 +96,46 @@ class ProcessingTests(object):
                              '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
                              '-f', os.path.join(self.toolsdir, '..', 'processing.js'),
                              '-f', os.path.join(self.toolsdir, 'test-harness.js')]
+              elif filename.endswith('.pde'):
+                  tmpFile = jsshellhelper.createEscapedFile(fullpath)
+                  testCmd = [jsshell,
+                             '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
+                             '-f', os.path.join(self.toolsdir, '..', 'processing.js'),
+                             '-f', os.path.join(self.toolsdir, 'test-harness-lib.js'),
+                             '-f', os.path.join(self.toolsdir, 'cleaner.js'),
+                             '-f', tmpFile,
+                             '-e', 'eval(Processing(canvas, \'UnitTests();\' + __unescape_string() + \'_printTestSummary();\'));']
+              else:
+                continue
 
-                  proc = Popen(testCmd, stdout=PIPE, stderr=PIPE)
-                  stdout, stderr = proc.communicate()
+              proc = Popen(testCmd, stdout=PIPE, stderr=PIPE)
+              stdout, stderr = proc.communicate()
 
-                  if stdout:
-                    # TEST-SUMMARY: passed/failed
-                    m = re.search('^TEST-SUMMARY: (\d+)\/(\d+)', stdout, re.MULTILINE)
-                    if m and m.group:
-                      self.testsPassed += int(m.group(1))
-                      self.testsFailed += int(m.group(2))
-                      if int(m.group(2)) > 0:
-                        print "TEST-FAILED: " + fullpath
-                        print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
-                        print stderr
-                      else:
-                        print "TEST-PASSED: " + fullpath
-                    else:
-                      # This shouldn't happen, so we died early...not good!
-                      self.testsFailed += 1
-                      print "TEST-FAILED: " + fullpath + ". Test exited early:"
-                      print stdout
-                  elif stderr:
-                    # Shouldn't happen!
-                    self.testsFailed += 1
-                    print "TEST-FAILED: " + fullpath + ". Test exited early:"
+              if stdout:
+                # TEST-SUMMARY: passed/failed
+                m = re.search('^TEST-SUMMARY: (\d+)\/(\d+)', stdout, re.MULTILINE)
+                if m and m.group:
+                  self.testsPassed += int(m.group(1))
+                  self.testsFailed += int(m.group(2))
+                  if int(m.group(2)) > 0:
+                    print "TEST-FAILED: " + fullpath
+                    print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
                     print stderr
+                  else:
+                    print "TEST-PASSED: " + fullpath
+                else:
+                  # This shouldn't happen, so we died early...not good!
+                  self.testsFailed += 1
+                  print "TEST-FAILED: " + fullpath + ". Test exited early:"
+                  print stdout
+              elif stderr:
+                # Shouldn't happen!
+                self.testsFailed += 1
+                print "TEST-FAILED: " + fullpath + ". Test exited early:"
+                print stderr
+
+              if tmpFile:
+                jsshellhelper.cleanUp(tmpFile)
 
 def main():
     parser = OptionParser()
