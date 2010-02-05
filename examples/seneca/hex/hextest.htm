@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Processing.js test of hex()</title>
+    <script type="text/javascript" src="../../../processing.js"></script>
+    <script type="text/javascript" src="../../../scripts/shCore.js"></script>
+    <script type="text/javascript" src="../../../scripts/shBrushProcessing.js"></script>
+    <link type="text/css" rel="stylesheet" href="../../../styles/shCore.css" />
+    <link type="text/css" rel="stylesheet" href="../../../styles/shThemeDefault.css" />
+    <script type="text/javascript">
+        SyntaxHighlighter.config.clipboardSwf = '../../../scripts/clipboard.swf';
+        SyntaxHighlighter.all();
+    </script>
+
+    <style type="text/css">
+        html, body
+        {
+            background: #EEE;
+            font-family: Arial;
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+        h1
+        {
+            background: #385C85;
+            color: #FFF;
+            padding: 10px;
+            padding-left: 20px;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+        h1 a
+        {
+            color: #FFF;
+        }
+        h2
+        {
+            padding-left: 20px;
+        }
+        p
+        {
+            padding-left: 20px;
+            line-height: 1.3em;
+        }
+        p a
+        {
+            color: #385C85;
+        }
+        canvas
+        {
+            margin: 10px 0;
+        }
+        pre
+        {
+            margin-left: 20px;
+            margin-right: 20px;
+            padding: 5px;
+            background: #FFF;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+        }
+        div.ref-col
+        {
+            float: left;
+            width: 32%;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        <!-- name of your function and test description -->
+        hex() test</h1>
+    <h2>
+        This is a test of hex(value, digits)</h2>
+    <p>
+        hex() converts a byte, char, int, or color to a String containing the equivalent hexadecimal notation. For example color(0, 102, 153, 255) will convert to the String "FF006699".</p>
+    <!-- include your processing file below -->
+    <canvas datasrc="hex.pjs" width="200" height="200" style="margin-left: 10px;"></canvas>
+    <img src="hex.png" alt=""/>
+    <br />
+    <b>Test written by <a href="http://dhodgin.wordpress.com/">Daniel Hodgin</a></b><br />
+    <h1>
+        Source Code:</h1>
+    <pre class="brush: processing;">
+// 	Hex example
+size(500,220, P3D);
+background(20);
+stroke(128, 128, 128);
+fill(64);
+rect(1, 1, width-3, height-3);
+
+byte b1 = 23;
+byte b2 = 127;
+byte b3 = -127;
+byte b4 = -127;
+
+char c1 = 'A';
+char c2 = '#';
+char c3 = '9';
+char c4 = 'Z';
+
+int i1 = 255;
+int i2 = -65535;
+int i3 = 65536;
+int i4 = 429844428;
+
+color cl1 = color(255,0,0,0);
+color cl2 = #ffcc00;
+color cl3 = color(34,255,204,153);
+color cl4 = color(0,102,153,255);
+
+PFont font;
+font = loadFont("Arial"); 
+textFont(font, 14);
+fill(32, 255, 0);
+text("Bytes", 5, 20);
+text("Chars", 5, 120);
+text("Ints", 195, 20);
+text("Colors", 195, 120);
+fill(255, 255, 255);
+text("b1: " + b1, 15, 40);
+text("hex: " + hex(b1), 80, 40);
+text("b2: " + b2, 15, 60);
+text("hex: " + hex(b2), 80, 60);
+text("b3: " + b3, 15, 80);
+text("hex: " + hex(b3), 80, 80);
+text("b4: " + b4, 15, 100);
+text("hex: " + hex(b4,2), 80, 100);
+text("c1: " + c1, 15, 140);
+text("hex: " + hex(c1), 80, 140);
+text("c2: " + c2, 15, 160);
+text("hex: " + hex(c2), 80, 160);
+text("c3: " + c3, 15, 180);
+text("hex: " + hex(c3), 80, 180);
+text("c4: " + c4, 15, 200);
+text("hex: " + hex(c4,4), 80, 200);
+text("i1: " + i1, 200, 40);
+text("hex: " + hex(i1), 370, 40);
+text("i2: " + i2, 200, 60);
+text("hex: " + hex(i2), 370, 60);
+text("i3: " + i3, 200, 80);
+text("hex: " + hex(i3), 370, 80);
+text("i4: " + i4, 200, 100);
+text("hex: " + hex(i4), 370, 100);
+text("cl1: " + cl1, 200, 140);
+text("hex: " + hex(cl1), 370, 140);
+text("cl2: " + cl2, 200, 160);
+text("hex: " + hex(cl2), 370, 160);
+text("cl3: " + cl3, 200, 180);
+text("hex: " + hex(cl3), 370, 180);
+text("cl4: " + cl4, 200, 200);
+text("hex: " + hex(cl4), 370, 200);
+        </pre>
+    <br />
+</body>
+</html>
