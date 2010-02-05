@@ -1371,7 +1371,7 @@
       }
       return hex;
     };
-    // work in progress for 0.5
+
     p.hex = function hex(value, len) {
       var hexstring = "";
       var patternRGBa = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i; //match rgba(20,20,20,0) or rgba(20,20,20)
