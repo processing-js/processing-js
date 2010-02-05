@@ -1362,67 +1362,115 @@
       return str;
     };
 
-    //function i use to convert decimals to a padded hex value
-    p.decimalToHex = function decimalToHex(d, padding) {
-      //if there is no padding value added, default padding to 8  else  go into while statement.
+    var decimalToHex = function decimalToHex(d, padding) {
+      //if there is no padding value added, default padding to 8 else go into while statement.
       padding = typeof(padding) === "undefined" || padding === null ? padding = 8 : padding;
       var hex = Number(d).toString(16);
-
       while (hex.length < padding) {
         hex = "0" + hex;
       }
       return hex;
     };
 
-    //regExp i made to pattern match rgba and extract it's values
-    p.colorRGB = function colorRGB(col) {
-      var patt = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i; //grouped \d{1,3} with ( ) so they can be referenced w\ $1-$4
-      // What's up with the crazy variable names? -F1LT3R
-      var al = col.replace(patt, "$4");
-      var reD = col.replace(patt, "$1");
-      var gree = col.replace(patt, "$2");
-      var blu = col.replace(patt, "$3");
-
-      return ("" + Number(al).toString(16) + Number(reD).toString(16) + Number(gree).toString(16) + Number(blu).toString(16)).toUpperCase();
-    };
-
-    p.hex = function hex(decimal, len) {
-      var hexadecimal = "";
-
+    p.hex = function hex(value, len) {
+      var hexstring = "";
       var patternRGBa = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i; //match rgba(20,20,20,0) or rgba(20,20,20)
       var patternDigits = /^\d+$/;
-      //**************************   dealing with 2 parameters   *************************************************
-      if (arguments.length === 2) {
-        if (patternDigits.test(decimal)) {
-          hexadecimal = p.decimalToHex(decimal, len);
-        } else if (patternRGBa.test(decimal)) //check to see if it's an rgba color
-        {
-          hexadecimal = p.colorRGB(decimal);
-          hexadecimal = hexadecimal.substring(hexadecimal.length - len, hexadecimal.length);
+      if (arguments.length === 1){
+        // check if its an int or a color object
+        if (patternDigits.test(value) | patternRGBa.test(value)) {
+          p.hex(value, 8);
         }
-      } else if (arguments.length === 1) //****************   dealing with 1 parameter  ********************************
-      {
-        if (patternDigits.test(decimal)) { //check to see if it's a decimal
-          hexadecimal = p.decimalToHex(decimal);
-        } else if (patternRGBa.test(decimal)) //check to see if it's an rgba color
-        {
-          hexadecimal = p.colorRGB(decimal);
+        // check if its a char
+        else if (value && typeof value === "string" && value.length == 1) {
+          p.hex(value, 4);
         }
-        else if (decimal.indexOf("#") === 0) //check to see if it's hex color in format #ffffff
-        {
-          if (decimal.length < 7) {
-            throw "Not Hex format: the value passed into hex was not in the format #FFFFFF";
-          } else {
-            decimal = (decimal.slice(1)).toUpperCase();
-            while (decimal.length < 8) {
-              decimal = "FF" + decimal;
-            }
-            hexadecimal = decimal;
-          }
-        }
+        // check if its a byte
+        else if (value) {
+          p.hex(value, 2);
+        }  
       }
-      return hexadecimal;
+      
+      if (patternRGBa.test(value)) {
+        // its a color
+        hexstring = decimalToHex(p.rgbaToInt(value),len);
+      } else if (value && typeof value === "string" && value.toString().length == 1) {
+      // its a char
+        hexstring = decimalToHex(value, len);
+      } else {
+        hexstring = decimalToHex(value, len);
+      }
+      return hexstring;
     };
+//      
+//      if (patternDigits.test(value)) {
+//        hexadecimal = p.decimalToHex(value, len);
+//      } else if (patternRGBa.test(value)) //check to see if it's an rgba color
+//        {
+//          hexadecimal = p.colorRGB(value);
+//          hexadecimal = hexadecimal.substring(hexadecimal.length - len, hexadecimal.length);
+//        }
+//      } else if (arguments.length === 1)
+//      {
+//        if (patternDigits.test(value)) { //check to see if it's a decimal
+//          hexadecimal = p.decimalToHex(value);
+//        } else if (patternRGBa.test(value)) //check to see if it's an rgba color
+//        {
+//          hexadecimal = p.colorRGB(value);
+//        }
+//        else if (value.indexOf("#") === 0) //check to see if it's hex color in format #ffffff
+//        {
+//          if (value.length < 7) {
+//            throw "Not Hex format: the value passed into hex was not in the format #FFFFFF";
+//          } else {
+//            value = (value.slice(1)).toUpperCase();
+//            while (value.length < 8) {
+//            value = "FF" + value;
+//            }
+//            hexadecimal = value;
+//          }
+//        }
+//      }
+//      return hexadecimal;
+   
+    
+//    p.hex = function hex(decimal, len) {
+//      var hexadecimal = "";
+
+//      var patternRGBa = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i; //match rgba(20,20,20,0) or rgba(20,20,20)
+//      var patternDigits = /^\d+$/;
+//      //**************************   dealing with 2 parameters   *************************************************
+//      if (arguments.length === 2) {
+//        if (patternDigits.test(decimal)) {
+//          hexadecimal = p.decimalToHex(decimal, len);
+//        } else if (patternRGBa.test(decimal)) //check to see if it's an rgba color
+//        {
+//          hexadecimal = p.colorRGB(decimal);
+//          hexadecimal = hexadecimal.substring(hexadecimal.length - len, hexadecimal.length);
+//        }
+//      } else if (arguments.length === 1) //****************   dealing with 1 parameter  ********************************
+//      {
+//        if (patternDigits.test(decimal)) { //check to see if it's a decimal
+//          hexadecimal = p.decimalToHex(decimal);
+//        } else if (patternRGBa.test(decimal)) //check to see if it's an rgba color
+//        {
+//          hexadecimal = p.colorRGB(decimal);
+//        }
+//        else if (decimal.indexOf("#") === 0) //check to see if it's hex color in format #ffffff
+//        {
+//          if (decimal.length < 7) {
+//            throw "Not Hex format: the value passed into hex was not in the format #FFFFFF";
+//          } else {
+//            decimal = (decimal.slice(1)).toUpperCase();
+//            while (decimal.length < 8) {
+//              decimal = "FF" + decimal;
+//            }
+//            hexadecimal = decimal;
+//          }
+//        }
+//      }
+//      return hexadecimal;
+//    };
 
     p.unhex = function (str) {
       var value = 0,
