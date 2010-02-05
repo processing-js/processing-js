@@ -1390,7 +1390,7 @@
           p.hex(value, 2);
         }  
       }
-      
+      // need to fix this it doesnt handle negative numbers 
       if (patternRGBa.test(value)) {
         // its a color
         hexstring = decimalToHex(p.rgbaToInt(value),len);
