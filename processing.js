@@ -3293,6 +3293,8 @@
         }
 
         val = val.toFixed(3);
+      } else if ( val === 0 ) {
+        val = val.toString();
       }
 
       // If the font is a standard Canvas font...
