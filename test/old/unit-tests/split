@@ -1,0 +1,37 @@
+/* 
+    Processing.js Ref Test
+    Function : split()
+    Source   : http://processing.org/reference/split_
+*/
+
+
+String men = "Chernenko,Andropov,Brezhnev";
+String[] list = split(men, ',');
+// list[0] is now Chernenko, list[1] is Andropov, ...
+
+String numbers = "8 67 5 309";
+int[] nums = int(split(numbers, ' '));
+// nums[0] is now 8, nums[1] is now 67, ...
+
+// nums is broken... but this works: int[] nums = split(numbers, ' ');
+// even though that works, nums should be returning an Int not a String
+
+String men2 = "Chernenko ] Andropov ] Brezhnev";
+String[] list2 = split(men2, " ] ");
+// list[0] is now Chernenko, list[1] is Andropov, ..
+
+//** REFTEST VALUES **//
+
+
+background(
+  reftest.checkValues(p, [
+     list[0] === "Chernenko",
+     list[1] === "Andropov",
+     nums[0] === 8,
+     nums[1] === 67,
+    list2[0] === "Chernenko",
+    list2[1] === "Andropov"
+  ])
+);
+exit();
+

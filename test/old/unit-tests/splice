@@ -1,0 +1,34 @@
+/* 
+    Processing.js Ref Test
+    Function : splice()
+    Source   : http://processing.org/reference/splice_
+*/
+	
+
+String[] sa1 = { "OH", "NY", "CA" };
+sa1 = splice(sa1, "KY", 1);
+
+String[] sa2 = { "VA", "CO", "IL" };
+sa2 = splice(sa1, sa2, 2);
+
+
+//** REFTEST VALUES **//
+background(
+  reftest.checkValues([
+     sa1[0] === "OH",
+     sa1[1] === "KY",
+     sa1[2] === "NY",
+     sa1[3] === "CA",
+        
+     sa2[0] === "OH", 
+     sa2[1] === "KY",
+     sa2[2] === "VA",
+     sa2[3] === "CO",
+     sa2[4] === "IL",
+     sa2[5] === "NY",
+     sa2[6] === "CA"
+     // need checks for other 'types'
+  ])
+);
+exit();
+

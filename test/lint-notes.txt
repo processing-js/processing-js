@@ -1,0 +1,25 @@
+NOTES FOR LINTING
+
+Use: http://jslint.com
+
+Errors Allowed:
+
+[ IGNORE THESE THREE LOOPS IN REGEX PARSER ]
+Problem at line 126 character 10: Be careful when making functions within a loop. Consider putting the function in a closure.
+Problem at line 224 character 10: Be careful when making functions within a loop. Consider putting the function in a closure.
+Problem at line 231 character 10: Be careful when making functions within a loop. Consider putting the function in a closure.
+
+[ IGNORE THESE EVAL ERRORS ]
+Problem at line 3272 character 17: eval is evil: eval( path );
+Problem at line 3384 character 15: eval is evil: eval(parsedCode);
+
+[ PROBLEMS WITH 'with(p)' ]
+Lint at line 3374 character 11: Expected an identifier and instead saw 'with'.
+
+'with(p)' will not lint correctly and will halt the linting process. Please comment out the with block starting on line 3374 if 
+you wish to completely lint the processing.js source.
+
+Globals Allowed:
+ document
+ window
+

@@ -1,0 +1,50 @@
+html, body {
+  background: #EEE;
+  font-family: Arial;
+  font-size: 13px;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  background: #385C85;
+  color: #FFF;
+  padding: 10px;
+  padding-left: 20px;
+  margin-top: 0px;
+}
+
+h1 a {
+  color: #FFF;
+}
+
+h2 {
+  padding-left: 20px;
+}
+
+p {
+  padding-left: 20px;
+  line-height: 1.3em;
+}
+
+p a {
+  color: #385C85;
+}
+
+canvas {
+  margin: 10px 0;
+}
+
+pre {
+  margin-left: 20px;
+  margin-right: 20px;
+  padding: 5px;
+  background: #FFF;
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+}
+
+div.ref-col {
+  float: left;
+  width: 32%;
+}
