@@ -149,8 +149,8 @@
 
       var staticVar = "";
 
-      vars = vars.replace(/final\s+var\s+(\w+\s*=\s*.*?;)/g, function (all, set) {
-        staticVar += " " + name + "." + set;
+      vars = vars.replace(/final\s+var\s+(\w+\s*=\s*.*?;)/g, function (all, setting) {
+        staticVar += " " + name + "." + setting;
         return "";
       });
 
@@ -1916,9 +1916,6 @@
     p.pow = function pow(aNumber, aExponent) {
       return Math.pow(aNumber, aExponent);
     };
-    p.sqrt = function sqrt(aNumber) {
-      return Math.sqrt(aNumber);
-    };
     p.tan = function tan(aNumber) {
       return Math.tan(aNumber);
     };
@@ -2777,12 +2774,12 @@
       curContext.lineWidth = w;
     };
 
-    p.strokeCap = function strokeCap(set) {
-      curContext.lineCap = set;
+    p.strokeCap = function strokeCap(value) {
+      curContext.lineCap = value;
     };
 
-    p.strokeJoin = function strokeJoin(set) {
-      curContext.lineJoin = set;
+    p.strokeJoin = function strokeJoin(value) {
+      curContext.lineJoin = value;
     };
 
     ////////////////////////////////////////////////////////////////////////////
