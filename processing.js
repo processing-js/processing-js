@@ -3335,29 +3335,40 @@
     };
 
     // Print some text to the Canvas
-    p.text = function text(val, x, y) {
+    p.text = function text(str, x, y) {
 
-      if ( typeof val === 'number' && (val+"").indexOf('.') >= 0 ) {
+      if ( typeof str === 'number' && (str+"").indexOf('.') >= 0 ) {
 
         // Make sure .15 rounds to .1, but .151 rounds to .2.
-        if ( (val*1000) - Math.floor( val * 1000 ) == 0.5 ) {
-          val = val - 0.0001;
+        if ( (str*1000) - Math.floor( str * 1000 ) == 0.5 ) {
+          str = str - 0.0001;
         }
 
-        val = val.toFixed(3);
-      } else if ( val === 0 ) {
-        val = val.toString();
+        str = str.toFixed(3);
+      } else if ( str === 0 ) {
+        str = str.toString();
       }
-
+      
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
 
-        if (val && curContext.mozDrawText) {
+        if (str && (curContext.fillText || curContext.mozDrawText)) {
+
 
           curContext.save();
-          curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-          curContext.translate(x, y);
-          curContext.mozDrawText( val ) ;
+          curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+
+          if (curContext.fillText) {
+
+            curContext.fillText(str, x, y);
+
+          } else if (curContext.mozDrawText) {
+
+            curContext.translate(x, y);
+            curContext.mozDrawText(str);
+
+          }
+
           curContext.restore();
 
         }
@@ -3374,12 +3385,12 @@
 
         curContext.scale(newScale, newScale);
 
-        var len = val.length;
+        var len = str.length;
 
         for (var i = 0; i < len; i++) {
           // Test character against glyph table
           try {
-            p.glyphLook(font, val[i]).draw();
+            p.glyphLook(font, str[i]).draw();
           }
           catch(e) {
             Processing.debug(e);
