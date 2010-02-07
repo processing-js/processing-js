@@ -2060,7 +2060,7 @@
     p.PVector = PVector;
 
     /*
-      When a matrix is created, it is set to an identity matrix.
+      When a matrix is created, it is set to an identity matrix
     */
     var PMatrix3D = function(){
       this.reset();
