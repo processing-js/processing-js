@@ -1266,6 +1266,68 @@
     ////////////////////////////////////////////////////////////////////////////
     // Binary Functions
     ////////////////////////////////////////////////////////////////////////////
+    function decToBin(value, numBitsInValue) {
+			var mask = 1;
+			mask = mask << (numBitsInValue-1);
+
+			var str = "";
+			for(var i=0; i < numBitsInValue ;i++) {
+				str += (mask & value) ? "1" : "0";
+				mask = mask >>> 1; 
+			}
+			return str;
+		}
+
+		p.binary = function(num, numBits) {
+			var numBitsInValue = 32;
+				
+			// color
+			if(typeof num == "string" && num.length > 1) {
+				var c = num.slice(5,-1).split(",");
+						
+				// if all components are zero, a single "0" is returned
+				// for some reason
+				var sbin = [
+				decToBin(c[3]*255,8), // alpha is normalized
+				decToBin(c[0],8), // r
+				decToBin(c[1],8), // g
+				decToBin(c[2],8), // b
+				];
+						
+				var s = sbin[0]+sbin[1]+sbin[2]+sbin[3];
+						
+				if(numBits) { 
+					s = s.substr(-numBits);
+				}
+				// if the user didn't specify number of bits,
+				// trim leading zeros.
+				else {
+					s = s.replace(/^0+$/g,"0");
+					s = s.replace(/^0{1,}1/g,"1");
+				}
+				return s;
+			}
+				
+			// char
+			if(typeof num == "string") {
+				num = num.charCodeAt(0);
+						
+				if(numBits) {
+					numBitsInValue = 32;
+				}
+				else {
+					numBitsInValue = 16;
+				}
+			}
+				
+			var str = decToBin(num, numBitsInValue);
+				
+			// trim string if user wanted less chars
+			if(numBits) {
+				str = str.substr(-numBits);
+			}    
+			return str;
+		};  
     p.unbinary = function unbinary(binaryString) {
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
