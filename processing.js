@@ -2165,6 +2165,307 @@
 
     p.PVector = PVector;
 
+    /*
+      When a matrix is created, it is set to an identity matrix
+    */
+    var PMatrix3D = function(){
+      this.reset();
+    };
+
+    PMatrix3D.prototype = {
+      set: function(){
+        if( arguments.length === 16 ){
+          var a = arguments;
+          this.set([a[0], a[1], a[2], a[3],
+                    a[4], a[5], a[6], a[7],
+                    a[8], a[9], a[10],a[11],
+                    a[12],a[13],a[14],a[15]]);
+        }else if( arguments.length === 1 && arguments[0] instanceof PMatrix3D ){
+          this.elements = arguments[0].array();
+        }else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          this.elements = arguments[0].slice();
+        }
+      },
+      get: function(){
+        var outgoing = new PMatrix3D();
+        outgoing.set( this.elements );
+        return outgoing;
+      },
+      reset: function(){
+        this.set([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+      },
+      /*
+        Returns a copy of the element values.
+      */
+      array: function array(){
+        return this.elements.slice();
+      },
+      translate: function( tx, ty, tz ){
+        if( tx && ty && !tz )
+        {
+          this.translate( tx, ty, 0 );
+        }
+        else
+        {                      
+          this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
+          this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
+          this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
+          this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
+        }
+      },
+      transpose: function(){
+        var temp = this.elements.slice();
+        this.elements[0] = temp[0];
+        this.elements[1] = temp[4];
+        this.elements[2] = temp[8];
+        this.elements[3] = temp[12];
+        this.elements[4] = temp[1];
+        this.elements[5] = temp[5];
+        this.elements[6] = temp[9];
+        this.elements[7] = temp[13];
+        this.elements[8] = temp[2];
+        this.elements[9] = temp[6];
+        this.elements[10] = temp[10];
+        this.elements[11] = temp[14];
+        this.elements[12] = temp[3];
+        this.elements[13] = temp[7];
+        this.elements[14] = temp[11];
+        this.elements[15] = temp[15];
+      },
+      /*
+        You must either pass in two PVectors or two arrays,
+        don't mix between types. You may also omit a second
+        argument and simply read the result from the return.
+      */
+      mult: function( source, target ){
+        var x, y, z, w;
+        if( source instanceof PVector )
+        {
+          x = source.x;
+          y = source.y;
+          z = source.z;
+          w = 1;
+          if(!target)
+          {
+            target = new PVector();
+          }
+        }
+        else if( source instanceof Array )
+        {
+          x = source[0];
+          y = source[1];
+          z = source[2];
+          w = source[3] || 1;
+
+         if (!target || target.length !== 3 && target.length !== 4){
+            target = [0,0,0];
+          }
+        }
+        
+        if(target instanceof Array)
+        {
+          if(target.length === 3)
+          {
+            target[0] = this.elements[0] * x + this.elements[1] * y + this.elements[ 2] * z + this.elements[ 3];
+            target[1] = this.elements[4] * x + this.elements[5] * y + this.elements[ 6] * z + this.elements[ 7];
+            target[2] = this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
+          }
+          else if(target.length === 4)
+          {
+            target[0] = this.elements[ 0] * x + this.elements[ 1] * y + this.elements[ 2] * z + this.elements[ 3] * w;
+            target[1] = this.elements[ 4] * x + this.elements[ 5] * y + this.elements[ 6] * z + this.elements[ 7] * w;
+            target[2] = this.elements[ 8] * x + this.elements[ 9] * y + this.elements[10] * z + this.elements[11] * w;
+            target[3] = this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
+          }
+        }
+        if(target instanceof PVector)
+        {
+          target.x = this.elements[0] * x + this.elements[1] * y + this.elements[ 2] * z + this.elements[ 3];
+          target.y = this.elements[4] * x + this.elements[5] * y + this.elements[ 6] * z + this.elements[ 7];
+          target.z = this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
+        }
+        return target;
+      },
+      preApply: function(){
+        if( arguments.length === 1 && arguments[0] instanceof PMatrix3D ){
+          this.preApply(arguments[0].array());
+        }
+        else if( arguments.length === 16 ){
+          var a = arguments;
+          this.preApply([a[0], a[1], a[2], a[3],
+                         a[4], a[5], a[6], a[7],
+                         a[8], a[9], a[10],a[11],
+                         a[12],a[13],a[14],a[15]]);
+        }
+        else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          var source = arguments[0];
+
+          var result = [0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0];
+          var e = 0;
+          for( var row = 0; row < 4; row++ ){
+            for( var col = 0; col < 4; col++, e++ ){
+              result[e] += this.elements[col +  0] * source[row *4 + 0] +
+                           this.elements[col +  4] * source[row *4 + 1] +
+                           this.elements[col +  8] * source[row *4 + 2] +
+                           this.elements[col + 12] * source[row *4 + 3];
+
+            }
+          }
+          this.elements = result.slice();
+        }
+      },
+      apply: function(){
+        if( arguments.length === 1 && arguments[0] instanceof PMatrix3D ){
+          this.apply( arguments[0].array() );
+        }
+        else if( arguments.length === 16){
+          var a = arguments;
+          this.apply([a[0], a[1], a[2], a[3],
+                      a[4], a[5], a[6], a[7],
+                      a[8], a[9], a[10],a[11],
+                      a[12],a[13],a[14],a[15]]);
+        }
+        else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          var source = arguments[0];
+
+          var result = [0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0];
+          var e = 0;
+          for(var row = 0; row < 4; row++){
+            for(var col = 0; col < 4; col++, e++){
+              result[e] += this.elements[row *4 + 0] * source[col + 0] +
+                           this.elements[row *4 + 1] * source[col + 4] +
+                           this.elements[row *4 + 2] * source[col + 8] +
+                           this.elements[row *4 + 3] * source[col + 12];
+
+            }
+          }
+          this.elements = result.slice();
+        }
+      },
+      rotateX: function( angle ){
+        var c = p.cos( angle );
+        var s = p.sin( angle );
+        this.apply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
+      },
+      rotateY: function( angle ){
+        var c = p.cos( angle );
+        var s = p.sin( angle );
+        this.apply([c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1]);
+      },
+      rotateZ: function( angle ){
+        var c = Math.cos( angle );
+        var s = Math.sin( angle );
+        this.apply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
+      },
+      /*
+        Uniform scaling if only one value passed in
+      */
+      scale: function( sx, sy, sz ){
+        if( sx && !sy && !sz )
+        {
+          sy = sz = sx;
+        }
+        else if( sx && sy && !sz )
+        {
+          sz = 1;
+        }
+
+        if ( sx && sy && sz ){
+          this.elements[0] *= sx;
+          this.elements[1] *= sy;
+          this.elements[2] *= sz;
+          this.elements[4] *= sx;
+          this.elements[5] *= sy;
+          this.elements[6] *= sz;
+          this.elements[8] *= sx;
+          this.elements[9] *= sy;
+          this.elements[10] *= sz;
+          this.elements[12] *= sx;
+          this.elements[13] *= sy;
+          this.elements[14] *= sz;
+        }
+      },
+      invert: function(){
+        var kInv = [];
+        var fA0 = this.elements[ 0] * this.elements[ 5] - this.elements[ 1] * this.elements[ 4];
+        var fA1 = this.elements[ 0] * this.elements[ 6] - this.elements[ 2] * this.elements[ 4];
+        var fA2 = this.elements[ 0] * this.elements[ 7] - this.elements[ 3] * this.elements[ 4];
+        var fA3 = this.elements[ 1] * this.elements[ 6] - this.elements[ 2] * this.elements[ 5];
+        var fA4 = this.elements[ 1] * this.elements[ 7] - this.elements[ 3] * this.elements[ 5];
+        var fA5 = this.elements[ 2] * this.elements[ 7] - this.elements[ 3] * this.elements[ 6];
+        var fB0 = this.elements[ 8] * this.elements[13] - this.elements[ 9] * this.elements[12];
+        var fB1 = this.elements[ 8] * this.elements[14] - this.elements[10] * this.elements[12];
+        var fB2 = this.elements[ 8] * this.elements[15] - this.elements[11] * this.elements[12];
+        var fB3 = this.elements[ 9] * this.elements[14] - this.elements[10] * this.elements[13];
+        var fB4 = this.elements[ 9] * this.elements[15] - this.elements[11] * this.elements[13];
+        var fB5 = this.elements[10] * this.elements[15] - this.elements[11] * this.elements[14];
+
+        // Determinant
+        var fDet = fA0 * fB5 - fA1 * fB4 + fA2 * fB3 + fA3 * fB2 - fA4 * fB1 + fA5 * fB0;
+        
+        // Account for a very small value
+        // return false if not successful.
+        if ( Math.abs( fDet ) <= 1e-9 )
+        {
+          return false;
+        }
+
+        kInv[ 0] = + this.elements[ 5] * fB5 - this.elements[ 6] * fB4 + this.elements[ 7] * fB3;
+        kInv[ 4] = - this.elements[ 4] * fB5 + this.elements[ 6] * fB2 - this.elements[ 7] * fB1;
+        kInv[ 8] = + this.elements[ 4] * fB4 - this.elements[ 5] * fB2 + this.elements[ 7] * fB0;
+        kInv[12] = - this.elements[ 4] * fB3 + this.elements[ 5] * fB1 - this.elements[ 6] * fB0;
+        kInv[ 1] = - this.elements[ 1] * fB5 + this.elements[ 2] * fB4 - this.elements[ 3] * fB3;
+        kInv[ 5] = + this.elements[ 0] * fB5 - this.elements[ 2] * fB2 + this.elements[ 3] * fB1;
+        kInv[ 9] = - this.elements[ 0] * fB4 + this.elements[ 1] * fB2 - this.elements[ 3] * fB0;
+        kInv[13] = + this.elements[ 0] * fB3 - this.elements[ 1] * fB1 + this.elements[ 2] * fB0;
+        kInv[ 2] = + this.elements[13] * fA5 - this.elements[14] * fA4 + this.elements[15] * fA3;
+        kInv[ 6] = - this.elements[12] * fA5 + this.elements[14] * fA2 - this.elements[15] * fA1;
+        kInv[10] = + this.elements[12] * fA4 - this.elements[13] * fA2 + this.elements[15] * fA0;
+        kInv[14] = - this.elements[12] * fA3 + this.elements[13] * fA1 - this.elements[14] * fA0;
+        kInv[ 3] = - this.elements[ 9] * fA5 + this.elements[10] * fA4 - this.elements[11] * fA3;
+        kInv[ 7] = + this.elements[ 8] * fA5 - this.elements[10] * fA2 + this.elements[11] * fA1;
+        kInv[11] = - this.elements[ 8] * fA4 + this.elements[ 9] * fA2 - this.elements[11] * fA0;
+        kInv[15] = + this.elements[ 8] * fA3 - this.elements[ 9] * fA1 + this.elements[10] * fA0;
+
+        // Inverse using Determinant
+        var fInvDet = 1.0 / fDet;
+        kInv[ 0] *= fInvDet;
+        kInv[ 1] *= fInvDet;
+        kInv[ 2] *= fInvDet;
+        kInv[ 3] *= fInvDet;
+        kInv[ 4] *= fInvDet;
+        kInv[ 5] *= fInvDet;
+        kInv[ 6] *= fInvDet;
+        kInv[ 7] *= fInvDet;
+        kInv[ 8] *= fInvDet;
+        kInv[ 9] *= fInvDet;
+        kInv[10] *= fInvDet;
+        kInv[11] *= fInvDet;
+        kInv[12] *= fInvDet;
+        kInv[13] *= fInvDet;
+        kInv[14] *= fInvDet;
+        kInv[15] *= fInvDet;
+
+        this.elements = kInv.slice();
+        return true;
+      },
+      toString: function()
+      {
+        var str = "";
+        for( var i = 0; i < 15; i++ )
+        {
+          str += this.elements[i] + ", ";
+        }
+        str += this.elements[15];
+        return str;
+      }
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
