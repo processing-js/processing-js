@@ -3510,7 +3510,7 @@
               p.keyCode = p.UP;
               break;
             case 71:
-              keyCode = p.RIGHT;
+              p.keyCode = p.RIGHT;
               break;
             case 72:
               p.keyCode = p.DOWN;
