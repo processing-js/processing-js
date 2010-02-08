@@ -507,7 +507,37 @@
     p.concat = function concat(array1, array2) {
       return array1.concat(array2);
     };
+		
+		p.sort = function(array, numElem){
+			var ret = [];
 
+			// depending on the type used (int, float) or string
+			// we'll need to use a different compare function
+			if(array.length > 0){
+				// copy since we need to return another array
+				var elemsToCopy = numElem > 0 ? numElem : array.length;
+				for(var i=0; i < elemsToCopy; i++){
+					ret.push(array[i]);
+				}
+				if(typeof array[0] == "string"){  
+					ret.sort();
+				}
+				// int or float
+				else{
+					ret.sort(function(a,b){return a-b;});
+				}
+						
+				// copy on the rest of the elements that were not sorted in case the user
+				// only wanted a subset of an array to be sorted.
+				if(numElem > 0){
+					for(var i = ret.length; i < array.length; i++){
+						ret.push(array[i]);
+					}
+				}
+			}
+			return ret;
+		};
+		
     p.splice = function (array, value, index) {
       if (array.length === 0 && value.length === 0) {
         return array;
