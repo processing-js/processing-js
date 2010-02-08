@@ -1510,59 +1510,61 @@
     };
 
     p.nf = function() {
-      var str = undefined;
+      var str;
+      var num;
+      var left;
+      var right;
+      var i;
+      var isNegative;
+      var test;
 
-      if ( arguments.length == 2 && typeof arguments[0] === 'number'
-        && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') == -1 ) {
+      if ( arguments.length === 2 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') === -1 ) {
 
-        var num = arguments[0];
-        var pad = arguments[1];
+        num = arguments[0];
+        left = arguments[1];
 
-        var isNegative = num < 0;
+        isNegative = num < 0;
         if ( isNegative ) {
           num = Math.abs(num);
         }
 
         str = "" + num;
-        for ( var i = pad - str.length; i > 0; i-- ) {
+        for ( i = left - str.length; i > 0; i-- ) {
           str = "0" + str;
         }
 
         if ( isNegative ) {
           str = "-" + str;
         }
-      } else if ( arguments.length == 2 && typeof arguments[0] === 'object'
-        && arguments[0].constructor === Array && typeof arguments[1] === 'number' ) {
+      } else if ( arguments.length === 2 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' ) {
 
-        var arr = arguments[0];
-        var pad = arguments[1];
+        num = arguments[0];
+        left = arguments[1];
 
-        str = new Array( arr.length );
+        str = new Array( num.length );
 
-        for ( var i = 0; i < arr.length && str != undefined; i++ ) {
+        for ( i = 0; i < num.length && str !== undefined; i++ ) {
 
-          var test = this.nf( arr[i], pad );
-          if ( test == undefined ) {
+          test = this.nf( num[i], left );
+          if ( test === undefined ) {
             str = undefined;
           } else {
             str[i] = test;
           }
         }
-      } else if ( arguments.length == 3 && typeof arguments[0] === 'number'
-        && typeof arguments[1] === 'number' && typeof arguments[2] === 'number'
-          && (arguments[0]+"").indexOf( '.' ) >= 0 ) {
+      } else if ( arguments.length === 3 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' && (arguments[0]+"").indexOf( '.' ) >= 0 ) {
 
-        var num = arguments[0];
-        var left = arguments[1];
-        var right = arguments[2];
+        num = arguments[0];
+        left = arguments[1];
+        right = arguments[2];
 
-        var isNegative = num < 0;
+        isNegative = num < 0;
         if ( isNegative ) {
           num = Math.abs(num);
         }
 
         // Change the way the number is 'floored' based on whether it is odd or even.
-        if ( right < 0 && Math.floor( num ) % 2 == 1 ) {
+        if ( right < 0 && Math.floor( num ) % 2 === 1 ) {
 
           // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
           if ( (num) - Math.floor( num ) >= 0.5 ) {
@@ -1572,13 +1574,13 @@
 
         str = "" + num;
 
-        for ( var i = left - str.indexOf( '.' ); i > 0; i-- ) {
+        for ( i = left - str.indexOf( '.' ); i > 0; i-- ) {
           str = "0" + str;  
         }
 
         var numDec = str.length - str.indexOf( '.' ) - 1;
         if ( numDec <= right ) {
-          for ( var i = right - ( str.length - str.indexOf( '.' ) - 1 ); i > 0; i-- ) {
+          for ( i = right - ( str.length - str.indexOf( '.' ) - 1 ); i > 0; i-- ) {
             str = str + "0";  
           }
         } else if ( right > 0 ) {
@@ -1592,20 +1594,18 @@
           str = "-" + str;
         }
 
-      } else if ( arguments.length == 3 && typeof arguments[0] === 'object'
-        && arguments[0].constructor === Array && typeof arguments[1] === 'number'
-          && typeof arguments[2] === 'number' ) {
+      } else if ( arguments.length === 3 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' ) {
 
-        var arr = arguments[0];
-        var left = arguments[1];
-        var right = arguments[2];
+        num = arguments[0];
+        left = arguments[1];
+        right = arguments[2];
 
-        str = new Array( arr.length );
+        str = new Array( num.length );
 
-        for ( var i = 0; i < arr.length && str != undefined; i++ ) {
+        for ( i = 0; i < num.length && str !== undefined; i++ ) {
 
-          var test = this.nf( arr[i], left, right );
-          if ( test == undefined ) {
+          test = p.nf( num[i], left, right );
+          if ( test === undefined ) {
             str = undefined;
           } else {
             str[i] = test;
@@ -1688,11 +1688,11 @@
     String.prototype.equals = function equals( str ) {
       var ret = true;
 
-      if ( this.length == str.length ) {
+      if ( this.length === str.length ) {
 
         for ( var i = 0; i < this.length; i++) {
 
-          if ( this.charAt( i ) != str.charAt( i ) ) {
+          if ( this.charAt( i ) !== str.charAt( i ) ) {
 
             i = this.length;
             ret = false;
@@ -1758,9 +1758,9 @@
     };
 
     p.int = function int( val ) {
-      var ret = undefined;
+      var ret;
 
-      if ( ( val || val === 0 ) && arguments.length == 1 ) {
+      if ( ( val || val === 0 ) && arguments.length === 1 ) {
 
         if ( typeof val === 'number' ) {
 
@@ -1776,7 +1776,7 @@
           }
         } else if ( typeof val === 'boolean' ) {
 
-          if ( val == true ) {
+          if ( val === true ) {
             ret = 1;
           } else {
             ret = 0;
@@ -1785,11 +1785,11 @@
 
           if ( val.indexOf(' ') > -1 ) {
             ret = 0;
-          } else if ( val.length == 1 ) {
+          } else if ( val.length === 1 ) {
 
             ret = val.charCodeAt( 0 );
           } else {
-            ret = parseInt( val );
+            ret = parseInt( val, 10 );
 
             if ( isNaN( ret ) ) {
               ret = 0;
@@ -1814,32 +1814,30 @@
     };
 
     p.min = function min() {
-      var ret = undefined;
+      var ret;
+      var i;
 
-      if ( arguments.length == 1 ) {
+      if ( arguments.length === 1 ) {
 
         if ( typeof arguments[0] === 'number' ) {
 
           ret = arguments[0];
-        } else if ( typeof arguments[0] === 'object'
-          && arguments[0].constructor === Array ) {
+        } else if ( typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
 
           ret = 0;
-          for( var  i = 1; i < arguments[0].length
-          && ret != undefined; i++ ) {
+          for( i = 1; i < arguments[0].length && ret !== undefined; i++ ) {
             ret = min( arguments[0][i-1], arguments[0][i] );
           }
         }
       } else if ( arguments.length > 2 ) {
 
         ret = 0;
-        for( var  i = 1; i < arguments.length && ret != undefined; i++ ) {
+        for( i = 1; i < arguments.length && ret !== undefined; i++ ) {
           ret = min( arguments[i-1], arguments[i] );
         }
-      } else if ( arguments.length == 2 ) {
+      } else if ( arguments.length === 2 ) {
 
-        if ( typeof arguments[0] === 'number'
-            && typeof arguments[1] === 'number' ) {
+        if ( typeof arguments[0] === 'number' && typeof arguments[1] === 'number' ) {
           ret = Math.min( arguments[0], arguments[1] );
         }
       }
@@ -1848,32 +1846,30 @@
     };
 
     p.max = function max() {
-      var ret = undefined;
+      var ret;
+      var i;
 
-      if ( arguments.length == 1 ) {
+      if ( arguments.length === 1 ) {
 
         if ( typeof arguments[0] === 'number' ) {
 
           ret = arguments[0];
-        } else if ( typeof arguments[0] === 'object'
-          && arguments[0].constructor === Array ) {
+        } else if ( typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
 
           ret = 0;
-          for( var  i = 1; i < arguments[0].length
-          && ret != undefined; i++ ) {
+          for( i = 1; i < arguments[0].length && ret !== undefined; i++ ) {
             ret = max( arguments[0][i-1], arguments[0][i] );
           }
         }
       } else if ( arguments.length > 2 ) {
 
         ret = 0;
-        for( var i = 1; i < arguments.length && ret != undefined; i++ ) {
+        for( i = 1; i < arguments.length && ret !== undefined; i++ ) {
           ret = max( arguments[i-1], arguments[i] );
         }
-      } else if ( arguments.length == 2 ) {
+      } else if ( arguments.length === 2 ) {
 
-        if ( typeof arguments[0] === 'number'
-            && typeof arguments[1] === 'number' ) {
+        if ( typeof arguments[0] === 'number' && typeof arguments[1] === 'number' ) {
           ret = Math.max( arguments[0], arguments[1] );
         }
       }
@@ -3340,7 +3336,7 @@
       if ( typeof str === 'number' && (str+"").indexOf('.') >= 0 ) {
 
         // Make sure .15 rounds to .1, but .151 rounds to .2.
-        if ( (str*1000) - Math.floor( str * 1000 ) == 0.5 ) {
+        if ( (str*1000) - Math.floor( str * 1000 ) === 0.5 ) {
           str = str - 0.0001;
         }
 
