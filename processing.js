@@ -2466,6 +2466,17 @@
       }
     }
 
+		function vertexAttribPointer(programObj, varName, size, VBO)
+		{
+			var varLocation = curContext.getAttribLocation(programObj, varName);
+			if(varLocation !== -1)
+			{
+			curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
+			curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
+			curContext.enableVertexAttribArray(varLocation);
+			}
+		}
+		
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
