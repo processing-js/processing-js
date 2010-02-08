@@ -1,0 +1,289 @@
+<!DOCTYPE html> 
+<html> 
+  <head> 
+    <script src="../../../processing.js"></script> 
+    <link rel="stylesheet" href="../../style.css"/> 
+  </head> 
+ 
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1> 
+    <h2>Some test</h2> 
+ 
+    <p>This script first tests the internal PMatrix3D class. If all tests<br /> 
+    pass, it renders a box. The rendering of the box tests the other functions for my<br /> 
+    0.5 release including uniformMatrix, uniformf and vertexAttribPointer<br /> 
+    which are called in the box() function.<br /> 
+    </p> 
+ 
+    <p> 
+      <canvas datasrc="0.5tests.js" width="500" height="500"></canvas> 
+      <span id="debug"></span> 
+    </p> 
+    
+    <pre> 
+<b>//Test written by <a href="http://asalga.wordpress.com/">Andor Salga</a></b> 
+void setup()
+{
+  size(500,500,OPENGL);
+  
+  if(testPMatrix3D())
+  {
+    translate(250,250,430);
+    box(1,1,1);
+  }
+}
+ 
+ 
+// -----------
+    
+ 
+p.testPMatrix3D = function()
+{
+  //Test written by Andor Salga
+  // starts off as identity matrix
+  var mat = new PMatrix3D();
+  if(!ArraysEqual(mat.array(), [1,0,0,0, 0,1,0,0, 0,0,1,0,  0,0,0,1])) return false;
+ 
+  // set to identity 
+  mat.reset();
+  if(!ArraysEqual(mat.array(), [1,0,0,0, 0,1,0,0, 0,0,1,0,  0,0,0,1])) return false;
+ 
+  // set to some matrix using array
+  mat.set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
+  if(!ArraysEqual(mat.array(), [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])) return false;
+ 
+  // set using 16 values
+  mat.set(2,4,6,8,1,3,5,7,9,11,12,34,65,12,87,101);
+  if(!ArraysEqual(mat.array(), [2,4,6,8,1,3,5,7,9,11,12,34,65,12,87,101])) return false;
+ 
+  // set using pmatrix
+  var matrix2 = new PMatrix3D();
+  matrix2.set(4,5,6,7,8,9,2,3,4,5,1,1,1,2,3,4);
+  mat.set(matrix2);
+  if(!ArraysEqual(mat.array(), [4,5,6,7,8,9,2,3,4,5,1,1,1,2,3,4])) return false;
+ 
+  // multiply with identity using matrix
+  mat.set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);       
+  mat.apply(new PMatrix3D());
+  if(!ArraysEqual(mat.array(), [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])) return false;
+ 
+  // multiply with identity using array
+  mat.reset();
+  mat.apply(matrix2.array());
+  if(!ArraysEqual(mat.array(), matrix2.array())) return false;
+  
+  // INVERT
+  var invTest = new PMatrix3D();
+  invTest.set(1,4,3,2,0,2,0,3,2,1,0,4,5,0,3,4);
+ var res =  invTest.invert();
+  var invExpected =	[0.4167, -1.5000,  1.3333, -0.4167,
+   0.5000, -1.0000,  1.0000, -0.5000,
+  -0.2500,  1.1667, -1.3333,  0.5833,
+  -0.3333,  1.0000, -0.6667,  0.3333];
+  if(!ArraysEqual(invTest.array(), invExpected)) return false;
+  if(res == false) return false;
+ 
+  // Failed Invert
+  var invTest = new PMatrix3D();
+  invTest.set(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+  var res = invTest.invert();
+  if(!ArraysEqual(invTest,[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])) return false;
+  if(res == true) return false;
+ 
+  // multiply 2 matrices using 2nd matrix array()
+  var mat1 = new PMatrix3D();
+  var mat2 = new PMatrix3D();
+  var res =  new PMatrix3D();
+  res.set(39,61,37,52,63,92,49,59,53,51,71,45,41,72,47,60);
+  mat1.set([1,2,4,4,1,7,3,4,8,2,3,0,2,1,6,4]);
+  mat2.set([5,1,7,4,5,8,3,2,1,9,3,3,5,2,3,8]);
+  mat1.apply(mat2.array());
+  if(!ArraysEqual(mat1.array(), res.array())) return false;
+ 
+  ///////////
+  /// SCALE
+  ///////////
+ 
+  // scale by uniform 5
+  res.set([5,10,20,4,5,35,15,4,40,10,15,0,10,5,30,4]);
+  mat1.set([1,2,4,4,1,7,3,4,8,2,3,0,2,1,6,4]);
+  mat1.scale(5);
+  if(!ArraysEqual(mat1.array(), res.array())) return false;  
+ 
+  // same thing, but specify x,y,z
+  res.set([5,10,20,4,5,35,15,4,40,10,15,0,10,5,30,4]);
+  mat1.set([1,2,4,4,1,7,3,4,8,2,3,0,2,1,6,4]);
+  mat1.scale(5,5,5);
+  if(!ArraysEqual(mat1.array(), res.array())) return false;
+ 
+  // non uniform scale
+  res.set(1,6,15,4,5,18,35,8,9,30,55,12,13,42,75,16);
+  mat1.set(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+  mat1.scale(1,3,5);
+  if(!ArraysEqual(mat1.array(), res.array())) return false;
+ 
+  // scale by 1
+  mat1.scale(1);
+  if(!ArraysEqual(mat1.array(), res.array())) return false;
+ 
+  //////////////
+  ///  TRANSPOSE
+  //////////////
+ 
+  var tmat1 = new PMatrix3D();
+  tmat1.transpose();
+  if(!ArraysEqual(tmat1.array(),  [1,0,0,0, 0,1,0,0, 0,0,1,0,  0,0,0,1] )) return false;
+ 
+  tmat1.set([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
+  tmat1.transpose();
+  if(!ArraysEqual(tmat1.array(),  [0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15] )) return false;
+ 
+  tmat1.set(6,2,5,9,13,22,0,0,3,4,1,7,8,9,3,4);
+  tmat1.transpose();
+  if(!ArraysEqual(tmat1.array(),  [6,13,3,8,2,22,4,9,5,0,1,3,9,0,7,4] )) return false;
+ 
+  ///////////////
+  /// TRANSLATE
+  //////////////
+ 
+  var res = [1,0,0,5,   0,1,0,0,  0,0,1,0,  0,0,0,1];
+  var trMat = new PMatrix3D();
+  trMat.translate(5,0,0);
+  if(!ArraysEqual(trMat.array(), res)) return false;
+ 
+  /*
+   01.0000  02.0000  03.0000  22.0000
+   05.0000  06.0000  07.0000  38.0000
+   09.0000  10.0000  11.0000  54.0000
+   13.0000  14.0000  15.0000  70.0000*/
+ 
+  trMat.set([
+    1,2,3,4,
+    5,6,7,8,
+    9,10,11,12,
+    13,14,15,16]);
+  res = [
+    1,2,3,22,
+    5,6,7,38,
+    9,10,11,54,
+    13,14,15,70];
+  trMat.translate(-5,1,7);
+ 
+  if(!ArraysEqual(trMat.array(), res)) return false;
+ 
+ 
+ 
+  ///////////      
+  // PREAPPLY
+  ///////////
+ 
+  // preapply with array
+  var preMat1 = new PMatrix3D();
+ 
+  res = [
+  6,3,5,9,
+  7,2,6,0,
+  4,3,7,1,
+  5,4,8,9];
+ 
+  preMat1.preApply(res);
+ 
+  if(!ArraysEqual(preMat1.array(), res)) return false;
+ 
+  // preapply with numbers
+  var preMat2 = new PMatrix3D();
+  preMat2.set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+  preMat2.preApply(6,7,4,5,3,2,3,4,5,6,7,8,9,0,1,9);
+  var res =  [142,164,186,208,
+              92,104,116,128,
+              202,228,254,280,
+              135,154,173,192];
+  if(!ArraysEqual(preMat2.array(), res)) return false;
+ 
+  // preAppy with matrix
+  preMat2.set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+  var tempMat = new PMatrix3D();
+  tempMat.set(6,7,4,5,3,2,3,4,5,6,7,8,9,0,1,9);
+  preMat2.preApply(tempMat);
+  var res =  [142,164,186,208,
+              92,104,116,128,
+              202,228,254,280,
+              135,154,173,192];
+  if(!ArraysEqual(preMat2.array(), res)) return false;
+ 
+  ///////////
+  // MULT
+  ///////////
+  var mMat = new PMatrix3D();
+  var exp = [36,29,32];
+  var res = mMat.mult(exp);
+  if( exp[0] !== res[0] || exp[1] !== res[1] || 
+      exp[2] !== res[2])
+  {
+    return false;
+  }
+ 
+  mMat = new PMatrix3D();
+  mMat.set(6,7,4,5,
+           3,2,3,4,
+           5,6,7,8,
+           9,0,1,9);
+ 
+  exp = [82,41,95,42];
+  var res = [0,0,0,0];
+  mMat.mult([3,5,6,1],res);
+ 
+  if( exp[0] !== res[0] || exp[1] !== res[1] || 
+      exp[2] !== res[2] || exp[3] !== res[3])
+  {
+    return false;
+  }
+ 
+  
+  exp = [82,41,95];
+  var res = [0,0,0];
+  mMat.mult([3,5,6,1],res);
+  if( exp[0] !== res[0] || exp[1] !== res[1] || 
+      exp[2] !== res[2])
+  {
+    return false;
+  }
+  
+  var mMat = new PMatrix3D();
+  mMat.set(6,7,4,5,
+           3,2,3,4,
+           5,6,7,8,
+           9,0,1,9);
+ 
+  var s = new PVector(3,5,6,1);
+  var res = [82,41,95]
+  var d = new PVector(0,0,0);
+  
+  mMat.mult(s,d);
+ 
+  if( d.x !== res[0] || d.y !== res[1] || 
+      d.z !== res[2])
+  {
+    return false;
+  }
+ 
+  ////////
+  // GET
+  ///////
+ 
+  var gMat1 = new PMatrix3D();
+  var gMat2 = gMat1.get();
+  if(!ArraysEqual(gMat1.array(), gMat2.array())) return false;
+ 
+  gMat1.set([1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4]);
+ 
+  // they shouldn't be still equal
+  if(ArraysEqual(gMat1.array(), gMat2.array())) return false;
+ 
+  // if we got to this point, all tests passed
+  return true;
+}
+</pre> 
+ 
+</body> 
+</html>
