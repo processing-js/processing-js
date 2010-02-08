@@ -1,0 +1,200 @@
+ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head runat="server"> 
+	<title>Processing.js test of text() (1)</title> 
+	<script type="text/javascript" src="../../../processing.js"></script> 
+	<script type="text/javascript" src="../../init.js"></script> 
+	<style type="text/css"> 
+	html, body
+	{
+		background: #EEE;
+		font-family: Arial;
+		font-size: 13px;
+		margin: 0;
+		padding: 0;
+	}
+	h1
+	{
+		background: #385C85;
+		color: #FFF;
+		padding: 10px;
+		padding-left: 20px;
+		margin-top: 0px;
+	}
+	h1 a
+	{
+		color: #FFF;
+	}
+	h2
+	{
+		padding-left: 20px;
+	}
+	p
+	{
+		padding-left: 20px;
+		line-height: 1.3em;
+	}
+	p a
+	{
+		color: #385C85;
+	}
+	canvas
+	{
+		margin: 10px 0;
+	}
+	pre
+	{
+		margin-left: 20px;
+		margin-right: 20px;
+		padding: 5px;
+		background: #FFF;
+		border-top: 1px solid #333;
+		border-bottom: 1px solid #333;
+	}
+	div.ref-col
+	{
+		float: left;
+		width: 32%;
+	}
+	</style> 
+</head> 
+<body> 
+<h1> 
+	<!-- name of your function and test description --> 
+	Processing.js test of text() (1)</h1> 
+	<h2> 
+	Testing text() with int, double, and byte input.</h2> 
+	<br/> 
+	<p> 
+	<!-- copy paste your processing code below this script tag --> 
+	<script id="script" type="application/processing"> 
+size(400,300);
+background(50);
+ 
+int input=0;
+int expect=120;
+int res=250;
+int out=300;
+ 
+text("String 10", input, 20);
+text("Expected: 10", expect, 20);
+text("Result:", res, 20);
+text("10", out, 20);
+ 
+text("String Joey", input, 40);
+text("Expected: Joey", expect, 40);
+text("Result:", res, 40);
+text("Joey", out, 40);
+ 
+text("str(2.71828)", input, 60);
+text("Expected: 2.71828", expect, 60);
+text("Result:", res, 60);
+text(str(2.71828), out, 60);
+ 
+text("Float 2.71849", input, 100);
+text("Expected: 2.718", expect, 100);
+text("Result:", res, 100);
+text(2.71849, out, 100);
+text("Float 2.7185", input, 120);
+text("Expected: 2.718", expect, 120);
+text("Result:", res, 120);
+text(2.7185, out, 120);
+text("Float 2.71851", input, 140);
+text("Expected: 2.719", expect, 140);
+text("Result:", res, 140);
+text(2.71851, out, 140);
+text("Float 2.7186", input, 160);
+text("Expected: 2.719", expect, 160);
+text("Result:", res, 160);
+text(2.7186, out, 160);
+ 
+text("Float 2.7", input, 200);
+text("Expected: 2.700", expect, 200);
+text("Result:", res, 200);
+text(2.7, out, 200);
+text("Int 10", input, 220);
+text("Expected: 10", expect, 220);
+text("Result:", res, 220);
+text(10, out, 220);
+ 
+byte b = -128;
+text("Byte -128", input, 260);
+text("Expected: -128", expect, 260);
+text("Result:", res, 260);
+text(b, out, 260);
+ 
+text("0", input, 280);
+text("Expected: 0", expect, 280);
+text("Result:", res, 280);
+text(0, out, 280);
+	</script> 
+	<canvas id="display" style="width:200;height:100;"></canvas> 
+	<script type="text/javascript"> 
+	$(document).ready(function(){
+	var canvas = document.getElementById('display');
+	var script = document.getElementById('script').text;
+	var source = script.replace(/[^\.]size\(\)\;/,'size('+ $("body").width() +','+ $("body").height() +');');
+	Processing(canvas,source);
+	});
+	</script><br /> 
+	<b>Test written by <a href="http://zenit.senecac.on.ca/wiki/index.php/User:Mlam19">Matthew Lam</a> 
+	<pre style="border-style: dotted; border-width: 1px; background-color: #FFFFFF; padding: 2px; margin: 5px"> 
+size(200,300);
+background(50);
+ 
+int input=0;
+int expect=120;
+int res=250;
+int out=300;
+ 
+text("String 10", input, 20);
+text("Expected: 10", expect, 20);
+text("Result:", res, 20);
+text("10", out, 20);
+ 
+text("String Joey", input, 40);
+text("Expected: Joey", expect, 40);
+text("Result:", res, 40);
+text("Joey", out, 40);
+ 
+text("str(2.71828)", input, 60);
+text("Expected: 2.71828", expect, 60);
+text("Result:", res, 60);
+text(str(2.71828), out, 60);
+ 
+text("Float 2.71849", input, 100);
+text("Expected: 2.718", expect, 100);
+text("Result:", res, 100);
+text(2.71849, out, 100);
+text("Float 2.7185", input, 120);
+text("Expected: 2.718", expect, 120);
+text("Result:", res, 120);
+text(2.7185, out, 120);
+text("Float 2.71851", input, 140);
+text("Expected: 2.719", expect, 140);
+text("Result:", res, 140);
+text(2.71851, out, 140);
+text("Float 2.7186", input, 160);
+text("Expected: 2.719", expect, 160);
+text("Result:", res, 160);
+text(2.7186, out, 160);
+ 
+text("Float 2.7", input, 200);
+text("Expected: 2.700", expect, 200);
+text("Result:", res, 200);
+text(2.7, out, 200);
+text("Int 10", input, 220);
+text("Expected: 10", expect, 220);
+text("Result:", res, 220);
+text(10, out, 220);
+ 
+byte b = -128;
+text("Byte -128", input, 260);
+text("Expected: -128", expect, 260);
+text("Result:", res, 260);
+text(b, out, 260);
+	</pre> 
+	<br /> 
+</body> 
+</html> 
+ 

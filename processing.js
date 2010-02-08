@@ -3518,48 +3518,60 @@
 
     // Print some text to the Canvas
     p.text = function text(str, x, y) {
-
-      // If the font is a standard Canvas font...
-      if (!curTextFont.glyph) {
-
-        if (str && curContext.mozDrawText) {
-
-          curContext.save();
-          curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-          curContext.translate(x, y);
-          curContext.mozDrawText(
-          typeof str === "number" ? String.fromCharCode(str) : str);
-          curContext.restore();
-
+ 
+      if ( typeof str === 'number' && (str+"").indexOf('.') >= 0 ) {
+ 
+        // Make sure .15 rounds to .1, but .151 rounds to .2.
+        if ( ( str * 1000 ) - Math.floor( str * 1000 ) === 0.5 ) {
+          str = str - 0.0001;
         }
-
+        str = str.toFixed(3);
+      } else if ( str === 0 ) {
+        str = str.toString();
+      }
+      // If the font is a standard Canvas font...
+      if ( !curTextFont.glyph ) {
+ 
+        if (str && ( curContext.fillText || curContext.mozDrawText )) {
+          curContext.save();
+          curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+ 
+          if ( curContext.fillText ) {
+ 
+            curContext.fillText(str, x, y);
+ 
+          } else if ( curContext.mozDrawText ) {
+ 
+            curContext.translate( x, y );
+            curContext.mozDrawText( str );
+          }
+          curContext.restore();
+        }
       } else {
-
+ 
         // If the font is a Batik SVG font...
         var font = p.glyphTable[curTextFont.name];
         curContext.save();
-        curContext.translate(x, y + curTextSize);
-
+        curContext.translate( x, y + curTextSize );
+ 
         var upem = font.units_per_em,
-          newScale = 1 / upem * curTextSize;
-
-        curContext.scale(newScale, newScale);
-
+        newScale = 1 / upem * curTextSize;
+ 
+        curContext.scale( newScale, newScale );
+ 
         var len = str.length;
-
-        for (var i = 0; i < len; i++) {
+ 
+        for ( var i = 0; i < len; i++ ) {
           // Test character against glyph table
           try {
-            p.glyphLook(font, str[i]).draw();
+            p.glyphLook( font, str[i] ).draw();
           }
           catch(e) {
             Processing.debug(e);
           }
         }
-
         curContext.restore();
       }
-
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
