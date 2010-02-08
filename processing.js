@@ -1628,7 +1628,21 @@
       return key;
     };
 
-
+    p.trim = function( str ) {
+      var newstr;
+      if (typeof str === "object") {
+        // if str is an array recursivly loop through each element
+        // and drill down into multiple arrays trimming whitespace
+        newstr = new Array(0);
+        for (var i = 0; i < str.length; i++) {
+          newstr[i] = p.trim(str[i]);
+        }
+      } else {
+        // if str is not an array then remove all whitespace, tabs, and returns
+        newstr = str.replace(/^\s*/,'').replace(/\s*$/,'').replace(/\r*$/,''); 
+      }
+      return newstr; 
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Math functions
