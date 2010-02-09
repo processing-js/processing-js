@@ -1815,9 +1815,7 @@
 
     p.trim = function( str ) {
       var newstr;
-      if (typeof str === "object") {
-        // if str is an array recursivly loop through each element
-        // and drill down into multiple arrays trimming whitespace
+      if (typeof str === "object" && str.constructor === Array) {
         newstr = new Array(0);
         for (var i = 0; i < str.length; i++) {
           newstr[i] = p.trim(str[i]);
