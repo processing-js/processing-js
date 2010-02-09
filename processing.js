@@ -1876,8 +1876,38 @@
       return Math.floor(aNumber);
     };
 
-    p.float = function (aNumber) {
-      return parseFloat(aNumber);
+    p.float = function int( val ) {
+      var ret;
+
+      if ( ( val || val === 0 ) && arguments.length === 1 ) {
+
+        if ( typeof val === 'number' ) {
+          ret = val.toFixed( 3 );
+        } else if ( typeof val === 'boolean' ) {
+
+          if ( val === true ) {
+            ret = 1.000;
+          } else {
+            ret = 0.000;
+          }
+        } else if ( typeof val === 'string' ) {
+
+          if ( val.indexOf(' ') > -1 ) {
+            ret = 0;
+          } else {
+            ret = parseDouble( val );
+          }
+        } else if ( typeof val === 'object' && val.constructor === Array ) {
+
+          ret = new Array( val.length );
+
+          for ( var i = 0; i < val.length; i++) {
+              ret[i] = p.double( val[i] );
+          }
+        }
+      }
+
+      return ret;
     };
 
     p.ceil = function ceil(aNumber) {
