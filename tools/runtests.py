@@ -14,7 +14,7 @@ class ProcessingTests(object):
   testsPassed = 0
   testsFailed = 0
 
-  def runParserTests(self, jsshell, testPath=None):
+  def runParserTests(self, jsshell, testPath=None, summaryOnly=False):
       """Get all .pjs in test/parser/ files as JSON, and run through the test harness, faking a DOM"""
       jsshell = os.path.abspath(jsshell)
       parsertestdir = os.path.join(self.toolsdir, '..', 'test', 'parser')
@@ -23,6 +23,9 @@ class ProcessingTests(object):
 
       for root, dirs, filenames in os.walk(parsertestdir):
           for filename in filenames:
+              sys.stdout.flush()
+              sys.stderr.flush()
+
               # If a single test file name is given, only test that file
               fullpath = os.path.join(root, filename)
               if testPath and not fullpath.startswith(testPath):
@@ -44,8 +47,12 @@ class ProcessingTests(object):
                   if stderr:
                     # we failed to parse, and died in the js shell
                     self.testsFailed += 1
-                    print "TEST-FAILED: " + fullpath
-                    print stderr
+                    if summaryOnly:
+                      sys.stdout.write('F')
+                      sys.stdout.flush()
+                    else:
+                      print "TEST-FAILED: " + fullpath
+                      print stderr
                   elif stdout:
                     # TEST-SUMMARY: passed/failed
                     m = re.search('^TEST-SUMMARY: (\d+)/(\d+)', stdout, re.MULTILINE)
@@ -53,20 +60,32 @@ class ProcessingTests(object):
                       self.testsPassed += int(m.group(1))
                       self.testsFailed += int(m.group(2))
                       if int(m.group(2)) > 0:
-                        print "TEST-FAILED: " + fullpath
-                        print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
-                        print stderr
+                        if summaryOnly:
+                          sys.stdout.write('F')
+                          sys.stdout.flush()
+                        else:
+                          print "TEST-FAILED: " + fullpath
+                          print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
+                          print stderr
                       else:
-                        print "TEST-PASSED: " + fullpath
+                        if summaryOnly:
+                          sys.stdout.write('.')
+                          sys.stdout.flush()
+                        else:
+                          print "TEST-PASSED: " + fullpath
                     else:
                       # Shouldn't happen!
                       self.testsFailed += 1
-                      print "TEST-FAILED: " + fullpath + ". Test died:"
-                      print stdout
+                      if summaryOnly:
+                        sys.stdout.write('F')
+                        sys.stdout.flush()
+                      else:
+                        print "TEST-FAILED: " + fullpath + ". Test died:"
+                        print stdout
 
                   jsshellhelper.cleanUp(tmpFile)
 
-  def runUnitTests(self, jsshell, testPath=None):
+  def runUnitTests(self, jsshell, testPath=None, summaryOnly=False):
       """Run all .js unit tests in test/unit through the test harness."""
       # TODO: add support for doing .pjs unit tests.
       unittestdir = os.path.join(self.toolsdir, '..', 'test', 'unit')
@@ -76,6 +95,9 @@ class ProcessingTests(object):
 
       for root, dirs, filenames in os.walk(unittestdir):
           for filename in filenames:
+              sys.stdout.flush()
+              sys.stderr.flush()
+
               # If a single test file name is given, only test that file
               fullpath = os.path.join(root, filename)
               if testPath and not fullpath.startswith(testPath):
@@ -118,21 +140,37 @@ class ProcessingTests(object):
                   self.testsPassed += int(m.group(1))
                   self.testsFailed += int(m.group(2))
                   if int(m.group(2)) > 0:
-                    print "TEST-FAILED: " + fullpath
-                    print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
-                    print stderr
+                    if summaryOnly:
+                      sys.stdout.write('F')
+                      sys.stdout.flush()
+                    else:
+                      print "TEST-FAILED: " + fullpath
+                      print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
+                      print stderr
                   else:
-                    print "TEST-PASSED: " + fullpath
+                    if summaryOnly:
+                      sys.stdout.write('.')
+                      sys.stdout.flush()
+                    else:
+                      print "TEST-PASSED: " + fullpath
                 else:
                   # This shouldn't happen, so we died early...not good!
                   self.testsFailed += 1
-                  print "TEST-FAILED: " + fullpath + ". Test exited early:"
-                  print stdout
+                  if summaryOnly:
+                    sys.stdout.write('F')
+                    sys.stdout.flush()
+                  else:
+                    print "TEST-FAILED: " + fullpath + ". Test exited early:"
+                    print stdout
               elif stderr:
                 # Shouldn't happen!
                 self.testsFailed += 1
-                print "TEST-FAILED: " + fullpath + ". Test exited early:"
-                print stderr
+                if summaryOnly:
+                  sys.stdout.write('F')
+                  sys.stdout.flush()
+                else:
+                  print "TEST-FAILED: " + fullpath + ". Test exited early:"
+                  print stderr
 
               if tmpFile:
                 jsshellhelper.cleanUp(tmpFile)
@@ -140,6 +178,9 @@ class ProcessingTests(object):
 def main():
     parser = OptionParser()
 
+    parser.add_option("-s", "--summary-only",
+                      action="store_true", dest="summaryOnly", default=False,
+                      help="only print test summary info.")
     parser.add_option("-p", "--parser-only",
                       action="store_true", dest="parserOnly", default=False,
                       help="only run parser tests.")
@@ -159,12 +200,12 @@ def main():
     ptests = ProcessingTests()
 
     if options.parserOnly:
-        ptests.runParserTests(args[0], testPath=options.testPath)
+        ptests.runParserTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
     elif options.unitOnly:
-        ptests.runUnitTests(args[0], testPath=options.testPath)
+        ptests.runUnitTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
     else:
-        ptests.runParserTests(args[0], testPath=options.testPath)
-        ptests.runUnitTests(args[0], testPath=options.testPath)
+        ptests.runParserTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
+        ptests.runUnitTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
 
     print "\nTEST SUMMARY: %s passed, %s failed, %s total" % (ptests.testsPassed, ptests.testsFailed, (ptests.testsPassed + ptests.testsFailed))
 
