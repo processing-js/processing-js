@@ -1842,13 +1842,29 @@
     p.int = function (aNumber) {
       return Math.floor(aNumber);
     };
+		
+		//Determines the smallest value in a sequence of numbers.
+		//Can accept more than 2 parameters or an array
+		//Undefined if passed in an array and a scalar; or if a non number was passed in
+    p.min = function() {
+      if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
+        return Math.min.apply(this, arguments[0]);
+      }
 
-    p.min = function min(aNumber, aNumber2) {
-      return Math.min(aNumber, aNumber2);
+      return Math.min.apply(this, arguments);
     };
-    p.max = function max(aNumber, aNumber2) {
-      return Math.max(aNumber, aNumber2);
+
+		//Determines the biggest value in a sequence of numbers.
+		//Can accept more than 2 parameters or an array
+		//Undefined if passed in an array and a scalar; or if a non number was passed in 
+    p.max = function() {
+      if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
+        return Math.max.apply(this, arguments[0]);
+      }
+
+      return Math.max.apply(this, arguments);
     };
+
     p.floor = function floor(aNumber) {
       return Math.floor(aNumber);
     };
@@ -2584,7 +2600,20 @@
         else                          {curContext.uniform1f (varLocation, varValue);}
       }
     }
-
+		
+		function uniformi(programObj, varName, varValue)
+    {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if( varLocation !== -1)
+      {
+        if      (varValue.length == 4){curContext.uniform4iv(varLocation, varValue);}
+        else if (varValue.length == 3){curContext.uniform3iv(varLocation, varValue);}
+        else if (varValue.length == 2){curContext.uniform2iv(varLocation, varValue);}
+        else                          {curContext.uniform1i (varLocation, varValue);}
+      }
+    }
+		
 		function vertexAttribPointer(programObj, varName, size, VBO)
 		{
 			var varLocation = curContext.getAttribLocation(programObj, varName);
@@ -2595,6 +2624,18 @@
 			curContext.enableVertexAttribArray(varLocation);
 			}
 		}
+		
+		function uniformMatrix( programObj, varName, transpose, matrix )
+    {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if( varLocation !== -1)
+      {
+        if      (matrix.length === 16){curContext.uniformMatrix4fv(varLocation, transpose, matrix);}
+        else if (matrix.length ===  9){curContext.uniformMatrix3fv(varLocation, transpose, matrix);}
+        else                          {curContext.uniformMatrix2fv(varLocation, transpose, matrix);}
+      }
+    }
 		
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
