@@ -1842,13 +1842,80 @@
     p.int = function (aNumber) {
       return Math.floor(aNumber);
     };
+		
+		//Determines the smallest value in a sequence of numbers.
+		//Can accept more than 2 parameters or an array
+		//Undefined if passed in an array and a scalar; or if a non number was passed in
+    p.min = function min() {
+      var ret = undefined;
 
-    p.min = function min(aNumber, aNumber2) {
-      return Math.min(aNumber, aNumber2);
+      if ( arguments.length == 1 ) {
+
+        if ( typeof arguments[0] === 'number' ) {
+
+          ret = arguments[0];
+        } else if ( typeof arguments[0] === 'object'
+          && arguments[0].constructor === Array ) {
+
+          ret = 0;
+          for( var  i = 1; i < arguments[0].length
+          && ret != undefined; i++ ) {
+            ret = min( arguments[0][i-1], arguments[0][i] );
+          }
+        }
+      } else if ( arguments.length > 2 ) {
+
+        ret = 0;
+        for( var  i = 1; i < arguments.length && ret != undefined; i++ ) {
+          ret = min( arguments[i-1], arguments[i] );
+        }
+      } else if ( arguments.length == 2 ) {
+
+        if ( typeof arguments[0] === 'number'
+            && typeof arguments[1] === 'number' ) {
+          ret = Math.min( arguments[0], arguments[1] );
+        }
+      }
+
+      return ret;
     };
-    p.max = function max(aNumber, aNumber2) {
-      return Math.max(aNumber, aNumber2);
+		//Determines the biggest value in a sequence of numbers.
+		//Can accept more than 2 parameters or an array
+		//Undefined if passed in an array and a scalar; or if a non number was passed in 
+    p.max = function max() {
+      var ret = undefined;
+
+      if ( arguments.length == 1 ) {
+
+        if ( typeof arguments[0] === 'number' ) {
+
+          ret = arguments[0];
+        } else if ( typeof arguments[0] === 'object'
+          && arguments[0].constructor === Array ) {
+
+          ret = 0;
+          for( var  i = 1; i < arguments[0].length
+          && ret != undefined; i++ ) {
+            ret = max( arguments[0][i-1], arguments[0][i] );
+          }
+        }
+      } else if ( arguments.length > 2 ) {
+
+        ret = 0;
+        for( var i = 1; i < arguments.length && ret != undefined; i++ ) {
+          ret = max( arguments[i-1], arguments[i] );
+        }
+      } else if ( arguments.length == 2 ) {
+
+        if ( typeof arguments[0] === 'number'
+            && typeof arguments[1] === 'number' ) {
+          ret = Math.max( arguments[0], arguments[1] );
+        }
+      }
+
+      return ret;
     };
+
     p.floor = function floor(aNumber) {
       return Math.floor(aNumber);
     };
