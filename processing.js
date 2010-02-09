@@ -1756,14 +1756,11 @@
 		String.prototype.equals = function equals( str ) {
       var ret = true;
 
-      if ( this.length == str.length ) {
-
+      if ( this.length === str.length ) {
         for ( var i = 0; i < this.length; i++) {
-
-          if ( this.charAt( i ) != str.charAt( i ) ) {
-
-            i = this.length;
+          if ( this.charAt( i ) !== str.charAt( i ) ) {
             ret = false;
+            break;
           }
         }
       } else {
