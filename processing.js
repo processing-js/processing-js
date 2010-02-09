@@ -519,7 +519,7 @@
 				for(var i=0; i < elemsToCopy; i++){
 					ret.push(array[i]);
 				}
-				if(typeof array[0] == "string"){  
+				if(typeof array[0] === "string"){  
 					ret.sort();
 				}
 				// int or float
@@ -1313,7 +1313,7 @@
 			var numBitsInValue = 32;
 				
 			// color
-			if(typeof num == "string" && num.length > 1) {
+			if(typeof num === "string" && num.length > 1) {
 				var c = num.slice(5,-1).split(",");
 						
 				// if all components are zero, a single "0" is returned
@@ -1340,7 +1340,7 @@
 			}
 				
 			// char
-			if(typeof num == "string") {
+			if(typeof num === "string") {
 				num = num.charCodeAt(0);
 						
 				if(numBits) {
@@ -1578,15 +1578,14 @@
     // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
     // This breaks the join() ref-test. The Processing.org documentation says String or String[]. SHOULD BE FIXED NOW
 		p.nf = function() {
-      var str = undefined;
+      var str, num, pad, arr, left, right, isNegative;
 
-      if ( arguments.length == 2 && typeof arguments[0] === 'number'
-        && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') == -1 ) {
+      if ( arguments.length === 2 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') === -1 ) {
+        num = arguments[0];
+        pad = arguments[1];
 
-        var num = arguments[0];
-        var pad = arguments[1];
+        isNegative = num < 0;
 
-        var isNegative = num < 0;
         if ( isNegative ) {
           num = Math.abs(num);
         }
@@ -1599,39 +1598,33 @@
         if ( isNegative ) {
           str = "-" + str;
         }
-      } else if ( arguments.length == 2 && typeof arguments[0] === 'object'
-        && arguments[0].constructor === Array && typeof arguments[1] === 'number' ) {
-
-        var arr = arguments[0];
-        var pad = arguments[1];
+      } else if ( arguments.length === 2 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' ) {
+        arr = arguments[0];
+        pad = arguments[1];
 
         str = new Array( arr.length );
 
-        for ( var i = 0; i < arr.length && str != undefined; i++ ) {
-
+        for ( var i = 0; i < arr.length && str !== undefined; i++ ) {
           var test = this.nf( arr[i], pad );
-          if ( test == undefined ) {
+          if ( test === undefined ) {
             str = undefined;
           } else {
             str[i] = test;
           }
         }
-      } else if ( arguments.length == 3 && typeof arguments[0] === 'number'
-        && typeof arguments[1] === 'number' && typeof arguments[2] === 'number'
-          && (arguments[0]+"").indexOf( '.' ) >= 0 ) {
+      } else if ( arguments.length === 3 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' && (arguments[0]+"").indexOf( '.' ) >= 0 ) {
+        num = arguments[0];
+        left = arguments[1];
+        right = arguments[2];
 
-        var num = arguments[0];
-        var left = arguments[1];
-        var right = arguments[2];
+        isNegative = num < 0;
 
-        var isNegative = num < 0;
         if ( isNegative ) {
           num = Math.abs(num);
         }
 
         // Change the way the number is 'floored' based on whether it is odd or even.
-        if ( right < 0 && Math.floor( num ) % 2 == 1 ) {
-
+        if ( right < 0 && Math.floor( num ) % 2 === 1 ) {
           // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
           if ( (num) - Math.floor( num ) >= 0.5 ) {
             num = num + 1;
@@ -1659,21 +1652,16 @@
         if ( isNegative ) {
           str = "-" + str;
         }
-
-      } else if ( arguments.length == 3 && typeof arguments[0] === 'object'
-        && arguments[0].constructor === Array && typeof arguments[1] === 'number'
-          && typeof arguments[2] === 'number' ) {
-
-        var arr = arguments[0];
-        var left = arguments[1];
-        var right = arguments[2];
+      } else if ( arguments.length === 3 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' ) {
+        arr = arguments[0];
+        left = arguments[1];
+        right = arguments[2];
 
         str = new Array( arr.length );
 
-        for ( var i = 0; i < arr.length && str != undefined; i++ ) {
-
+        for ( var i = 0; i < arr.length && str !== undefined; i++ ) {
           var test = this.nf( arr[i], left, right );
-          if ( test == undefined ) {
+          if ( test === undefined ) {
             str = undefined;
           } else {
             str[i] = test;
@@ -2610,9 +2598,9 @@
       // the variable won't be found if it was optimized out.
       if( varLocation !== -1)
       {
-        if      (varValue.length == 4){curContext.uniform4fv(varLocation, varValue);}
-        else if (varValue.length == 3){curContext.uniform3fv(varLocation, varValue);}
-        else if (varValue.length == 2){curContext.uniform2fv(varLocation, varValue);}
+        if      (varValue.length === 4){curContext.uniform4fv(varLocation, varValue);}
+        else if (varValue.length === 3){curContext.uniform3fv(varLocation, varValue);}
+        else if (varValue.length === 2){curContext.uniform2fv(varLocation, varValue);}
         else                          {curContext.uniform1f (varLocation, varValue);}
       }
     }
@@ -2623,9 +2611,9 @@
       // the variable won't be found if it was optimized out.
       if( varLocation !== -1)
       {
-        if      (varValue.length == 4){curContext.uniform4iv(varLocation, varValue);}
-        else if (varValue.length == 3){curContext.uniform3iv(varLocation, varValue);}
-        else if (varValue.length == 2){curContext.uniform2iv(varLocation, varValue);}
+        if      (varValue.length === 4){curContext.uniform4iv(varLocation, varValue);}
+        else if (varValue.length === 3){curContext.uniform3iv(varLocation, varValue);}
+        else if (varValue.length === 2){curContext.uniform2iv(varLocation, varValue);}
         else                          {curContext.uniform1i (varLocation, varValue);}
       }
     }
