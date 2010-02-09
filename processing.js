@@ -1847,22 +1847,46 @@
 		//Can accept more than 2 parameters or an array
 		//Undefined if passed in an array and a scalar; or if a non number was passed in
     p.min = function() {
+      var numbers;
+
       if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
-        return Math.min.apply(this, arguments[0]);
+        numbers = arguments[0];
+      } else {
+        numbers = arguments;
       }
 
-      return Math.min.apply(this, arguments);
+      // Scan for illegal non-numbers
+      for ( var i = 0; i < numbers.length; i++ ) {
+        if ( typeof numbers[i] !== 'number' ) {
+          //throw "Value sent to min is not a number.";
+          return undefined;
+        }
+      }
+      
+      return Math.min.apply(this, numbers);
     };
 
 		//Determines the biggest value in a sequence of numbers.
 		//Can accept more than 2 parameters or an array
 		//Undefined if passed in an array and a scalar; or if a non number was passed in 
     p.max = function() {
+      var numbers;
+
       if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
-        return Math.max.apply(this, arguments[0]);
+        numbers = arguments[0];
+      } else {
+        numbers = arguments;
       }
 
-      return Math.max.apply(this, arguments);
+      // Scan for illegal non-numbers
+      for ( var i = 0; i < numbers.length; i++ ) {
+        if ( typeof numbers[i] !== 'number' ) {
+          //throw "Value sent to max is not a number.";
+          return undefined;
+        }
+      }
+      
+      return Math.max.apply(this, numbers);
     };
 
     p.floor = function floor(aNumber) {
