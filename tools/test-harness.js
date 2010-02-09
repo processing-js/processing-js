@@ -6,7 +6,7 @@ function _pass() {
   _passCount++;
 }
 
-function _fail(mmsg) {
+function _fail(msg) {
   print(msg);
   _failCount++;
 }

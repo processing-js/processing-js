@@ -32,7 +32,7 @@ check:
 	$(TOOLSDIR)/runtests.py $(JS)
 
 check-summary:
-	$(TOOLSDIR)/runtests.py $(JS) | grep "^TEST SUMMARY"
+	$(TOOLSDIR)/runtests.py -s $(JS)
 
 check-lint:
 	$(TOOLSDIR)/jslint.py $(JS) processing.js
