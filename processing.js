@@ -142,7 +142,7 @@
     // super() is a reserved word
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
-    var classes = ["int", "float", "boolean", "String", "byte", "double", "long"];
+    var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
 
     var classReplace = function (all, name, extend, vars, last) {
       classes.push(name);
