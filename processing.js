@@ -2676,6 +2676,18 @@
 			}
 		}
 		
+		function uniformMatrix( programObj, varName, transpose, matrix )
+    {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if( varLocation !== -1)
+      {
+        if      (matrix.length === 16){curContext.uniformMatrix4fv(varLocation, transpose, matrix);}
+        else if (matrix.length ===  9){curContext.uniformMatrix3fv(varLocation, transpose, matrix);}
+        else                          {curContext.uniformMatrix2fv(varLocation, transpose, matrix);}
+      }
+    }
+		
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
