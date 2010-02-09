@@ -142,15 +142,15 @@
     // super() is a reserved word
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
-    var classes = ["int", "float", "boolean", "String", "byte", "double", "long"];
+    var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
 
     var classReplace = function (all, name, extend, vars, last) {
       classes.push(name);
 
       var staticVar = "";
 
-      vars = vars.replace(/final\s+var\s+(\w+\s*=\s*.*?;)/g, function (all, set) {
-        staticVar += " " + name + "." + set;
+      vars = vars.replace(/final\s+var\s+(\w+\s*=\s*.*?;)/g, function (all, setting) {
+        staticVar += " " + name + "." + setting;
         return "";
       });
 
@@ -519,7 +519,7 @@
 				for(var i=0; i < elemsToCopy; i++){
 					ret.push(array[i]);
 				}
-				if(typeof array[0] == "string"){  
+				if(typeof array[0] === "string"){  
 					ret.sort();
 				}
 				// int or float
@@ -1313,7 +1313,7 @@
 			var numBitsInValue = 32;
 				
 			// color
-			if(typeof num == "string" && num.length > 1) {
+			if(typeof num === "string" && num.length > 1) {
 				var c = num.slice(5,-1).split(",");
 						
 				// if all components are zero, a single "0" is returned
@@ -1340,7 +1340,7 @@
 			}
 				
 			// char
-			if(typeof num == "string") {
+			if(typeof num === "string") {
 				num = num.charCodeAt(0);
 						
 				if(numBits) {
@@ -1578,15 +1578,14 @@
     // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
     // This breaks the join() ref-test. The Processing.org documentation says String or String[]. SHOULD BE FIXED NOW
 		p.nf = function() {
-      var str = undefined;
+      var str, num, pad, arr, left, right, isNegative;
 
-      if ( arguments.length == 2 && typeof arguments[0] === 'number'
-        && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') == -1 ) {
+      if ( arguments.length === 2 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') === -1 ) {
+        num = arguments[0];
+        pad = arguments[1];
 
-        var num = arguments[0];
-        var pad = arguments[1];
+        isNegative = num < 0;
 
-        var isNegative = num < 0;
         if ( isNegative ) {
           num = Math.abs(num);
         }
@@ -1599,39 +1598,33 @@
         if ( isNegative ) {
           str = "-" + str;
         }
-      } else if ( arguments.length == 2 && typeof arguments[0] === 'object'
-        && arguments[0].constructor === Array && typeof arguments[1] === 'number' ) {
-
-        var arr = arguments[0];
-        var pad = arguments[1];
+      } else if ( arguments.length === 2 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' ) {
+        arr = arguments[0];
+        pad = arguments[1];
 
         str = new Array( arr.length );
 
-        for ( var i = 0; i < arr.length && str != undefined; i++ ) {
-
+        for ( var i = 0; i < arr.length && str !== undefined; i++ ) {
           var test = this.nf( arr[i], pad );
-          if ( test == undefined ) {
+          if ( test === undefined ) {
             str = undefined;
           } else {
             str[i] = test;
           }
         }
-      } else if ( arguments.length == 3 && typeof arguments[0] === 'number'
-        && typeof arguments[1] === 'number' && typeof arguments[2] === 'number'
-          && (arguments[0]+"").indexOf( '.' ) >= 0 ) {
+      } else if ( arguments.length === 3 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' && (arguments[0]+"").indexOf( '.' ) >= 0 ) {
+        num = arguments[0];
+        left = arguments[1];
+        right = arguments[2];
 
-        var num = arguments[0];
-        var left = arguments[1];
-        var right = arguments[2];
+        isNegative = num < 0;
 
-        var isNegative = num < 0;
         if ( isNegative ) {
           num = Math.abs(num);
         }
 
         // Change the way the number is 'floored' based on whether it is odd or even.
-        if ( right < 0 && Math.floor( num ) % 2 == 1 ) {
-
+        if ( right < 0 && Math.floor( num ) % 2 === 1 ) {
           // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
           if ( (num) - Math.floor( num ) >= 0.5 ) {
             num = num + 1;
@@ -1659,21 +1652,16 @@
         if ( isNegative ) {
           str = "-" + str;
         }
-
-      } else if ( arguments.length == 3 && typeof arguments[0] === 'object'
-        && arguments[0].constructor === Array && typeof arguments[1] === 'number'
-          && typeof arguments[2] === 'number' ) {
-
-        var arr = arguments[0];
-        var left = arguments[1];
-        var right = arguments[2];
+      } else if ( arguments.length === 3 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' ) {
+        arr = arguments[0];
+        left = arguments[1];
+        right = arguments[2];
 
         str = new Array( arr.length );
 
-        for ( var i = 0; i < arr.length && str != undefined; i++ ) {
-
+        for ( var i = 0; i < arr.length && str !== undefined; i++ ) {
           var test = this.nf( arr[i], left, right );
-          if ( test == undefined ) {
+          if ( test === undefined ) {
             str = undefined;
           } else {
             str[i] = test;
@@ -1756,14 +1744,11 @@
 		String.prototype.equals = function equals( str ) {
       var ret = true;
 
-      if ( this.length == str.length ) {
-
+      if ( this.length === str.length ) {
         for ( var i = 0; i < this.length; i++) {
-
-          if ( this.charAt( i ) != str.charAt( i ) ) {
-
-            i = this.length;
+          if ( this.charAt( i ) !== str.charAt( i ) ) {
             ret = false;
+            break;
           }
         }
       } else {
@@ -1815,9 +1800,7 @@
 
     p.trim = function( str ) {
       var newstr;
-      if (typeof str === "object") {
-        // if str is an array recursivly loop through each element
-        // and drill down into multiple arrays trimming whitespace
+      if (typeof str === "object" && str.constructor === Array) {
         newstr = new Array(0);
         for (var i = 0; i < str.length; i++) {
           newstr[i] = p.trim(str[i]);
@@ -1847,22 +1830,46 @@
 		//Can accept more than 2 parameters or an array
 		//Undefined if passed in an array and a scalar; or if a non number was passed in
     p.min = function() {
+      var numbers;
+
       if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
-        return Math.min.apply(this, arguments[0]);
+        numbers = arguments[0];
+      } else {
+        numbers = arguments;
       }
 
-      return Math.min.apply(this, arguments);
+      // Scan for illegal non-numbers
+      for ( var i = 0; i < numbers.length; i++ ) {
+        if ( typeof numbers[i] !== 'number' ) {
+          //throw "Value sent to min is not a number.";
+          return undefined;
+        }
+      }
+      
+      return Math.min.apply(this, numbers);
     };
 
 		//Determines the biggest value in a sequence of numbers.
 		//Can accept more than 2 parameters or an array
 		//Undefined if passed in an array and a scalar; or if a non number was passed in 
     p.max = function() {
+      var numbers;
+
       if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
-        return Math.max.apply(this, arguments[0]);
+        numbers = arguments[0];
+      } else {
+        numbers = arguments;
       }
 
-      return Math.max.apply(this, arguments);
+      // Scan for illegal non-numbers
+      for ( var i = 0; i < numbers.length; i++ ) {
+        if ( typeof numbers[i] !== 'number' ) {
+          //throw "Value sent to max is not a number.";
+          return undefined;
+        }
+      }
+      
+      return Math.max.apply(this, numbers);
     };
 
     p.floor = function floor(aNumber) {
@@ -1893,9 +1900,6 @@
     };
     p.pow = function pow(aNumber, aExponent) {
       return Math.pow(aNumber, aExponent);
-    };
-    p.sqrt = function sqrt(aNumber) {
-      return Math.sqrt(aNumber);
     };
     p.tan = function tan(aNumber) {
       return Math.tan(aNumber);
@@ -2594,9 +2598,9 @@
       // the variable won't be found if it was optimized out.
       if( varLocation !== -1)
       {
-        if      (varValue.length == 4){curContext.uniform4fv(varLocation, varValue);}
-        else if (varValue.length == 3){curContext.uniform3fv(varLocation, varValue);}
-        else if (varValue.length == 2){curContext.uniform2fv(varLocation, varValue);}
+        if      (varValue.length === 4){curContext.uniform4fv(varLocation, varValue);}
+        else if (varValue.length === 3){curContext.uniform3fv(varLocation, varValue);}
+        else if (varValue.length === 2){curContext.uniform2fv(varLocation, varValue);}
         else                          {curContext.uniform1f (varLocation, varValue);}
       }
     }
@@ -2607,9 +2611,9 @@
       // the variable won't be found if it was optimized out.
       if( varLocation !== -1)
       {
-        if      (varValue.length == 4){curContext.uniform4iv(varLocation, varValue);}
-        else if (varValue.length == 3){curContext.uniform3iv(varLocation, varValue);}
-        else if (varValue.length == 2){curContext.uniform2iv(varLocation, varValue);}
+        if      (varValue.length === 4){curContext.uniform4iv(varLocation, varValue);}
+        else if (varValue.length === 3){curContext.uniform3iv(varLocation, varValue);}
+        else if (varValue.length === 2){curContext.uniform2iv(varLocation, varValue);}
         else                          {curContext.uniform1i (varLocation, varValue);}
       }
     }
@@ -2637,6 +2641,98 @@
       }
     }
 		
+		////////////////////////////////////////////////////////////////////////////
+    // Camera functions
+    ////////////////////////////////////////////////////////////////////////////
+    
+		p.camera = function camera(){
+			if( arguments.length === 0 ){
+				//in case canvas is resized
+				cameraX = curElement.width / 2;
+				cameraY = curElement.height / 2;
+				cameraZ = cameraY / Math.tan( cameraFOV / 2 );
+				p.camera( cameraX, cameraY, cameraZ,
+							    cameraX, cameraY, 0,
+							    0 , 1 , 0 );
+			}
+			else{
+				var a = arguments;
+				var z = new p.PVector( a[ 0 ] - a[ 3 ], a[ 1 ] - a[ 4 ], a[ 2 ] - a[ 5 ] );
+				var y = new p.PVector( a[ 6 ], a[ 7 ], a[ 8 ]);
+				var transX, transY, transZ;            
+				z.normalize();            
+				var x = p.PVector.cross( y, z );        
+				y = p.PVector.cross( z, x );            
+				x.normalize();
+				y.normalize();
+				cam = new PMatrix3D();
+				cam.set( x.x, x.y, x.z, 0,
+						 y.x, y.y, y.z, 0,
+						 z.x, z.y, z.z, 0,
+						 0,   0,   0,   1 );
+				cam.translate( -a[ 0 ], -a[ 1 ], -a[ 2 ] );
+				cameraInv = new PMatrix3D();
+				cameraInv.set( x.x, x.y, x.z, 0,
+								 y.x, y.y, y.z, 0,
+								 z.x, z.y, z.z, 0,
+								 0,   0,   0,   1 );
+				cameraInv.translate( a[ 0 ], a[ 1 ], a[ 2 ] );
+				modelView = new PMatrix3D();
+				modelView.set( cam );
+				modelViewInv = new PMatrix3D();
+				modelViewInv.set( cameraInv );
+			}
+		};
+
+		p.perspective = function perspective(){
+			if( arguments.length === 0 ){
+				//in case canvas is resized\
+				cameraY         = curElement.height / 2;
+				cameraZ         = cameraY / Math.tan( cameraFOV / 2 );
+				cameraNear      = cameraZ / 10;
+				cameraFar       = cameraZ * 10;
+				cameraAspect    = curElement.width / curElement.height;
+				p.perspective( cameraFOV, cameraAspect, cameraNear, cameraFar );
+			}
+			else{        
+				var a = arguments;
+				var yMax, yMin, xMax, xMin;            
+				yMax = a[ 2 ] * Math.tan( a[ 0 ] / 2 );
+				yMin = -1 * yMax;            
+				xMax = yMax * a[ 1 ];
+				xMin = yMin * a[ 1 ];            
+				p.frustum( xMin, xMax, yMin, yMax, a[ 2 ], a[ 3 ] );        
+			}
+		};
+
+		p.frustum = function frustum( left, right, bottom, top, near, far ){
+			frustumMode = true;
+			projection = new PMatrix3D();
+			projection.set( (2*near)/(right-left), 0 , (right+left)/(right-left),	0 ,
+							0, (2*near)/(top-bottom), (top+bottom)/(top-bottom), 0 ,
+							0, 0 , -(far+near)/(far-near), -(2*far*near)/(far-near) ,
+							0, 0 , -1, 0 );
+		};
+
+		p.ortho = function ortho(){
+			if( arguments.length === 0 )
+				p.ortho( 0, p.width, 0, p.height, -10, 10 );
+			else{
+				var a = arguments;
+				var x = 2 / ( a[ 1 ] - a[ 0 ] );
+				var y = 2 / ( a[ 3 ] - a[ 2 ] );
+				var z = -2 / ( a[ 5 ] - a[ 4 ] );
+				var tx = -( a[ 1 ] + a[ 0 ] ) / ( a[ 1 ] - a[ 0 ] );
+				var ty = -( a[ 3 ] + a[ 2 ] ) / ( a[ 3 ] - a[ 2 ] );
+				var tz = -( a[ 5 ] + a[ 4 ] ) / ( a[ 5 ] - a[ 4 ] );
+				projection = new PMatrix3D();
+				projection.set( x , 0 , 0 , tx,
+												0 , y , 0 , ty,
+												0 , 0 , z , tz,
+												0 , 0 , 0 , 1 );
+				frustumMode = false;
+			}
+		};		
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
@@ -2663,12 +2759,12 @@
       curContext.lineWidth = w;
     };
 
-    p.strokeCap = function strokeCap(set) {
-      curContext.lineCap = set;
+    p.strokeCap = function strokeCap(value) {
+      curContext.lineCap = value;
     };
 
-    p.strokeJoin = function strokeJoin(set) {
-      curContext.lineJoin = set;
+    p.strokeJoin = function strokeJoin(value) {
+      curContext.lineJoin = value;
     };
 
     ////////////////////////////////////////////////////////////////////////////
