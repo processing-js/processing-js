@@ -1576,12 +1576,111 @@
     };
 
     // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
-    // This breaks the join() ref-test. The Processing.org documentation says String or String[].
-    p.nf = function (num, pad) {
-      var str = "" + num;
-      for (var i = pad - str.length; i > 0; i--) {
-        str = "0" + str;
+    // This breaks the join() ref-test. The Processing.org documentation says String or String[]. SHOULD BE FIXED NOW
+		p.nf = function() {
+      var str = undefined;
+
+      if ( arguments.length == 2 && typeof arguments[0] === 'number'
+        && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') == -1 ) {
+
+        var num = arguments[0];
+        var pad = arguments[1];
+
+        var isNegative = num < 0;
+        if ( isNegative ) {
+          num = Math.abs(num);
+        }
+
+        str = "" + num;
+        for ( var i = pad - str.length; i > 0; i-- ) {
+          str = "0" + str;
+        }
+
+        if ( isNegative ) {
+          str = "-" + str;
+        }
+      } else if ( arguments.length == 2 && typeof arguments[0] === 'object'
+        && arguments[0].constructor === Array && typeof arguments[1] === 'number' ) {
+
+        var arr = arguments[0];
+        var pad = arguments[1];
+
+        str = new Array( arr.length );
+
+        for ( var i = 0; i < arr.length && str != undefined; i++ ) {
+
+          var test = this.nf( arr[i], pad );
+          if ( test == undefined ) {
+            str = undefined;
+          } else {
+            str[i] = test;
+          }
+        }
+      } else if ( arguments.length == 3 && typeof arguments[0] === 'number'
+        && typeof arguments[1] === 'number' && typeof arguments[2] === 'number'
+          && (arguments[0]+"").indexOf( '.' ) >= 0 ) {
+
+        var num = arguments[0];
+        var left = arguments[1];
+        var right = arguments[2];
+
+        var isNegative = num < 0;
+        if ( isNegative ) {
+          num = Math.abs(num);
+        }
+
+        // Change the way the number is 'floored' based on whether it is odd or even.
+        if ( right < 0 && Math.floor( num ) % 2 == 1 ) {
+
+          // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
+          if ( (num) - Math.floor( num ) >= 0.5 ) {
+            num = num + 1;
+          }
+        }
+
+        str = "" + num;
+
+        for ( var i = left - str.indexOf( '.' ); i > 0; i-- ) {
+          str = "0" + str;  
+        }
+
+        var numDec = str.length - str.indexOf( '.' ) - 1;
+        if ( numDec <= right ) {
+          for ( var i = right - ( str.length - str.indexOf( '.' ) - 1 ); i > 0; i-- ) {
+            str = str + "0";  
+          }
+        } else if ( right > 0 ) {
+          str = str.substring( 0, str.length - ( numDec - right ) );
+        } else if ( right < 0 ) {
+
+          str = str.substring( 0, str.indexOf( '.' ) );
+        }
+
+        if ( isNegative ) {
+          str = "-" + str;
+        }
+
+      } else if ( arguments.length == 3 && typeof arguments[0] === 'object'
+        && arguments[0].constructor === Array && typeof arguments[1] === 'number'
+          && typeof arguments[2] === 'number' ) {
+
+        var arr = arguments[0];
+        var left = arguments[1];
+        var right = arguments[2];
+
+        str = new Array( arr.length );
+
+        for ( var i = 0; i < arr.length && str != undefined; i++ ) {
+
+          var test = this.nf( arr[i], left, right );
+          if ( test == undefined ) {
+            str = undefined;
+          } else {
+            str[i] = test;
+          }
+        }
       }
+
       return str;
     };
 
@@ -1653,7 +1752,27 @@
     String.prototype.replaceAll = function (re, replace) {
       return this.replace(new RegExp(re, "g"), replace);
     };
+		
+		String.prototype.equals = function equals( str ) {
+      var ret = true;
 
+      if ( this.length == str.length ) {
+
+        for ( var i = 0; i < this.length; i++) {
+
+          if ( this.charAt( i ) != str.charAt( i ) ) {
+
+            i = this.length;
+            ret = false;
+          }
+        }
+      } else {
+        ret = false;
+      }
+
+      return ret;
+    };
+		
     p.match = function (str, regexp) {
       return str.match(regexp);
     };
@@ -2466,6 +2585,17 @@
       }
     }
 
+		function vertexAttribPointer(programObj, varName, size, VBO)
+		{
+			var varLocation = curContext.getAttribLocation(programObj, varName);
+			if(varLocation !== -1)
+			{
+			curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
+			curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
+			curContext.enableVertexAttribArray(varLocation);
+			}
+		}
+		
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
@@ -3507,48 +3637,60 @@
 
     // Print some text to the Canvas
     p.text = function text(str, x, y) {
-
-      // If the font is a standard Canvas font...
-      if (!curTextFont.glyph) {
-
-        if (str && curContext.mozDrawText) {
-
-          curContext.save();
-          curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-          curContext.translate(x, y);
-          curContext.mozDrawText(
-          typeof str === "number" ? String.fromCharCode(str) : str);
-          curContext.restore();
-
+ 
+      if ( typeof str === 'number' && (str+"").indexOf('.') >= 0 ) {
+ 
+        // Make sure .15 rounds to .1, but .151 rounds to .2.
+        if ( ( str * 1000 ) - Math.floor( str * 1000 ) === 0.5 ) {
+          str = str - 0.0001;
         }
-
+        str = str.toFixed(3);
+      } else if ( str === 0 ) {
+        str = str.toString();
+      }
+      // If the font is a standard Canvas font...
+      if ( !curTextFont.glyph ) {
+ 
+        if (str && ( curContext.fillText || curContext.mozDrawText )) {
+          curContext.save();
+          curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+ 
+          if ( curContext.fillText ) {
+ 
+            curContext.fillText(str, x, y);
+ 
+          } else if ( curContext.mozDrawText ) {
+ 
+            curContext.translate( x, y );
+            curContext.mozDrawText( str );
+          }
+          curContext.restore();
+        }
       } else {
-
+ 
         // If the font is a Batik SVG font...
         var font = p.glyphTable[curTextFont.name];
         curContext.save();
-        curContext.translate(x, y + curTextSize);
-
+        curContext.translate( x, y + curTextSize );
+ 
         var upem = font.units_per_em,
-          newScale = 1 / upem * curTextSize;
-
-        curContext.scale(newScale, newScale);
-
+        newScale = 1 / upem * curTextSize;
+ 
+        curContext.scale( newScale, newScale );
+ 
         var len = str.length;
-
-        for (var i = 0; i < len; i++) {
+ 
+        for ( var i = 0; i < len; i++ ) {
           // Test character against glyph table
           try {
-            p.glyphLook(font, str[i]).draw();
+            p.glyphLook( font, str[i] ).draw();
           }
           catch(e) {
             Processing.debug(e);
           }
         }
-
         curContext.restore();
       }
-
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
