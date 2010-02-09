@@ -410,6 +410,7 @@
       blueRange = 255,
       pathOpen = false,
       mousePressed = false,
+      mouseDragging = false,
       keyPressed = false,
       curColorMode = p.RGB,
       curTint = -1,
@@ -4144,11 +4145,12 @@
         p.mouseY = e.clientY - curElement.offsetTop + scrollY;
         p.cursor(curCursor);
 
-        if (p.mouseMoved) {
+        if (p.mouseMoved && !mousePressed) {
           p.mouseMoved();
         }
         if (mousePressed && p.mouseDragged) {
           p.mouseDragged();
+          p.mouseDragging = true;
         }
       });
 
@@ -4158,6 +4160,7 @@
 
       attach(curElement, "mousedown", function (e) {
         mousePressed = true;
+        p.mouseDragging = false;
         switch (e.which) {
         case 1:
           p.mouseButton = p.LEFT;
@@ -4179,7 +4182,7 @@
 
       attach(curElement, "mouseup", function (e) {
         mousePressed = false;
-        if (p.mouseClicked) {
+        if (p.mouseClicked && !p.mouseDragging) {
           p.mouseClicked();
         }
         if (typeof p.mousePressed !== "function") {
