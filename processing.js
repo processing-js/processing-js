@@ -2682,40 +2682,37 @@
     ////////////////////////////////////////////////////////////////////////////
     // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
-    
-    function P3DMatrixStack() { 
-      this.matrixStack = new Array(); 
-    };
-    
-    P3DMatrixStack.prototype.peek = function peek() { 
-      return this.matrixStack[this.matrixStack.length-1]; 
+
+    function PMatrix3DStack() {
+      this.matrixStack = new Array();
     };
 
-    P3DMatrixStack.prototype.push = function push() { 
-      this.matrixStack.push(arguments[0]); 
-    };
-
-    P3DMatrixStack.prototype.pop = function pop() { 
-      return this.matrixStack.pop(); 
-    };
-
-    P3DMatrixStack.prototype.mult = function mult( matrix ) {
-      var tmp = [0, 0, 0, 0,
-                 0, 0, 0, 0,
-                 0, 0, 0, 0,
-                 0, 0, 0, 0];
-      
-      var e = 0;
-      
-      for(var row = 0; row < 4; row++) {
-        for(var col = 0; col < 4; col++, e++) {
-          tmp[e] += this.matrixStack[this.matrixStack.length-1][row *4 + 0] * matrix[col + 0] +
-          this.matrixStack[this.matrixStack.length-1][row *4 + 1] * matrix[col + 4] +
-          this.matrixStack[this.matrixStack.length-1][row *4 + 2] * matrix[col + 8] +
-          this.matrixStack[this.matrixStack.length-1][row *4 + 3] * matrix[col + 12];
-        }
+    PMatrix3DStack.prototype.load = function load() {
+      var tmpMatrix = new PMatrix3D();
+      if ( arguments.length === 1 ) {
+        tmpMatrix.set( arguments[0] );
+      } else {
+        tmpMatrix.set( arguments );
       }
-      this.matrixStack.push( tmp );
+      this.matrixStack.push( tmpMatrix );
+    };
+
+    PMatrix3DStack.prototype.push = function push() {
+      this.matrixStack.push( this.peek() );
+    };
+
+    PMatrix3DStack.prototype.pop = function pop() {
+      return this.matrixStack.pop();
+    };
+
+    PMatrix3DStack.prototype.peek = function peek() {
+      var tmpMatrix = new PMatrix3D();
+      tmpMatrix.set( this.matrixStack[this.matrixStack.length - 1] );
+      return tmpMatrix;
+    };
+
+    PMatrix3DStack.prototype.mult = function mult( matrix ){
+      this.matrixStack[this.matrixStack.length - 1].apply( matrix );
     };
 
     ////////////////////////////////////////////////////////////////////////////
