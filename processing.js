@@ -1900,7 +1900,7 @@
           if ( val.indexOf(' ') > -1 ) {
             ret = 0;
           } else {
-            ret = parseDouble( val );
+            ret = parseFloat( val );
             // Make sure .15 rounds to .1, but .151 rounds to .2.
             if ( ( ret * 1000 ) - Math.floor( ret * 1000 ) === 0.5 ) {
               ret = ret - 0.0001;
