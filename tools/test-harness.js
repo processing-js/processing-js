@@ -64,6 +64,20 @@ function _checkFalse(a) {
   _checkEqual(a, false);
 }
 
+function _checkIsNaN(a) {
+  if (isNaN(a))
+    _pass();
+  else
+    _fail(a + " expected to be NaN.");
+}
+
+function _checkIsNull(a) {
+  if (a)
+    _fail(a + " expected to be null.");
+  else
+    _pass();
+}
+
 function _checkThrows(f) {
   try {
     f();

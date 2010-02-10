@@ -16,6 +16,9 @@ function _runTest() {
   _checkNotEqual([1,2,3], [4,5,6]);
   _checkNotEqual([[1,2],[3,4]], [[1,2],[3,5]]);
 
+  _checkIsNaN(NaN);
+  _checkIsNull(null);
+
   // Checking that a function throws, give the function name
   _checkThrows(thisThrows);
 }
