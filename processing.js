@@ -1904,7 +1904,7 @@
           } else if ( val.length === 1 ) {
             // Need this to convert chars properly.
             ret = val.charCodeAt( 0 );
-            ret = val.toFixed(1);
+            ret = ret.toFixed(1);
           } else {
             ret = parseFloat( val );
           }
