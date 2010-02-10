@@ -1876,13 +1876,16 @@
       return Math.floor(aNumber);
     };
 
-    p.float = function int( val ) {
+    p.float = function float( val ) {
       var ret;
 
       if ( ( val || val === 0 ) && arguments.length === 1 ) {
 
         if ( typeof val === 'number' ) {
-          ret = val.toFixed( 3 );
+          // float() not allowed to handle floats.
+          if ( ( val + "" ).indexOf( '.' ) === -1 ) {
+            ret = val.toFixed( 3 );
+          }
         } else if ( typeof val === 'boolean' ) {
 
           if ( val === true ) {
@@ -1896,6 +1899,7 @@
             ret = 0;
           } else {
             ret = parseDouble( val );
+            ret = val.toFixed( 3 );
           }
         } else if ( typeof val === 'object' && val.constructor === Array ) {
 
