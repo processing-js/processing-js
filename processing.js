@@ -1900,7 +1900,7 @@
         } else if ( typeof val === 'string' ) {
 
           if ( val.indexOf(' ') > -1 ) {
-            ret = 0;
+            ret = NaN;
           } else {
             ret = parseFloat( val );
           }
