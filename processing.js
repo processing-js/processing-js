@@ -1876,6 +1876,8 @@
       return Math.floor(aNumber);
     };
 
+    // Processing doc claims good argument types are: int, char, byte, boolean,
+    // String, int[], char[], byte[], boolean[], String[].
     p.float = function float( val ) {
       var ret;
 
@@ -1899,14 +1901,18 @@
             ret = 0;
           } else {
             ret = parseDouble( val );
-            ret = val.toFixed( 3 );
+            // Make sure .15 rounds to .1, but .151 rounds to .2.
+            if ( ( ret * 1000 ) - Math.floor( ret * 1000 ) === 0.5 ) {
+              ret = ret - 0.0001;
+            }
+            ret = ret.toFixed( 3 );
           }
         } else if ( typeof val === 'object' && val.constructor === Array ) {
 
           ret = new Array( val.length );
 
           for ( var i = 0; i < val.length; i++) {
-              ret[i] = p.double( val[i] );
+              ret[i] = p.float( val[i] );
           }
         }
       }
