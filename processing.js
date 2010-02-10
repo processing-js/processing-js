@@ -1893,10 +1893,11 @@
         } else if ( typeof val === 'boolean' ) {
 
           if ( val === true ) {
-            ret = 1.000;
+            ret = 1.0;
           } else {
-            ret = 0.000;
+            ret = 0.0;
           }
+          ret = ret.toFixed(1);
         } else if ( typeof val === 'string' ) {
 
           if ( val.indexOf(' ') > -1 ) {
