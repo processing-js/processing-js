@@ -1883,7 +1883,7 @@
     p.float = function float( val ) {
       var ret;
 
-      if ( ( val || val === 0 ) && arguments.length === 1 ) {
+      if ( arguments.length === 1 ) {
 
         if ( typeof val === 'number' ) {
           // float() not allowed to handle floats.
@@ -1902,7 +1902,7 @@
           if ( val.indexOf(' ') > -1 ) {
             ret = NaN;
           } else if ( val.length === 1 ) {
-            // Need this to convert chars properly.
+            // Need this to convert chars like @ properly.
             ret = val.charCodeAt( 0 );
             ret = ret.toFixed(1);
           } else {
