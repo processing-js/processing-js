@@ -1888,7 +1888,7 @@
         if ( typeof val === 'number' ) {
           // float() not allowed to handle floats.
           if ( ( val + "" ).indexOf( '.' ) === -1 ) {
-            ret = val + 0.1;
+            ret = val + 0.0;
           }
         } else if ( typeof val === 'boolean' ) {
 
