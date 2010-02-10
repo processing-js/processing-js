@@ -59,6 +59,20 @@
       }
     };
 
+    this._checkIsNaN = function(a) {
+      if (isNaN(a))
+        this._pass();
+      else
+        this._fail(a + " expected to be NaN.");
+    };
+
+    this._checkIsNull = function(a) {
+      if (a)
+        this._fail(a + " expected to be null.");
+      else
+        this._pass();
+    }
+
     this._checkTrue = function(a) {
       this._checkEqual(a, true);
     };

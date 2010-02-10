@@ -18,3 +18,6 @@ _checkNotEqual("3", "2");
 _checkNotEqual(true, false);
 _checkNotEqual(int1, int3);
 _checkNotEqual(int4, int6);
+
+_checkIsNaN(NaN);
+_checkIsNull(null);
