@@ -1903,7 +1903,6 @@
             ret = 0;
           } else {
             ret = parseFloat( val );
-            ret = ret.toFixed( 3 );
           }
         } else if ( typeof val === 'object' && val.constructor === Array ) {
 
