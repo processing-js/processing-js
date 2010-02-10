@@ -2796,7 +2796,7 @@
 
       if (curShapeCount !== 0) {
 
-        if (close || doFill) {
+        if (close && doFill) {
           curContext.lineTo(firstX, firstY);
         }
         if (doFill) {
