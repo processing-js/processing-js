@@ -1845,8 +1845,26 @@
 
     };
 
-    p.str = function str(aNumber) {
-      return aNumber + '';
+    p.str = function str( val ) {
+      
+      var ret;
+      
+      if ( argument.length === 1 ) {
+        if ( typeof val === "string" && val.length !== 1) {
+          // No strings allowed.
+        } else if ( typeof val === "object" && val.constructor === Array ) {
+          
+          ret = new Array(0);
+          
+          for ( var i = 0; i< val.length; i++ ) {
+            ret[i] = val[0];
+          }
+        } else {
+          ret = val + "";
+        }
+      }
+      
+      return ret;
     };
 
     p.print = function print() {
