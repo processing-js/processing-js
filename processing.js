@@ -1901,6 +1901,10 @@
 
           if ( val.indexOf(' ') > -1 ) {
             ret = NaN;
+          } else if ( val.length === 1 ) {
+            // Need this to convert chars properly.
+            ret = val.charCodeAt( 0 );
+            ret = val.toFixed(1);
           } else {
             ret = parseFloat( val );
           }
