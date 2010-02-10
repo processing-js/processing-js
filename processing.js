@@ -946,8 +946,7 @@
       var r, g, b, rgb, aColor;
 
       // HSB conversion function from Mootools, MIT Licensed
-
-      function HSBtoRGB(h, s, b) {
+      function toRGB(h, s, b) {
         h = (h / redRange) * 360;
         s = (s / greenRange) * 100;
         b = (b / blueRange) * 100;
@@ -987,7 +986,7 @@
         var a = aValue4 / opacityRange;
         a = isNaN(a) ? 1 : a;
         if (curColorMode === p.HSB) {
-          rgb = HSBtoRGB(aValue1, aValue2, aValue3);
+          rgb = toRGB(aValue1, aValue2, aValue3);
           r = rgb[0];
           g = rgb[1];
           b = rgb[2];
