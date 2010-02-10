@@ -11,18 +11,49 @@ function _fail(msg) {
   _failCount++;
 }
 
+// compareArrays() used under MIT License -- http://code.google.com/p/jqcommons/
+Array.prototype.compareArrays = function(arr) {
+  if (this.length != arr.length)
+    return false;
+
+  for (var i = 0; i < arr.length; i++) {
+    if (this[i].compareArrays) { // nested array?
+      if (!this[i].compareArrays(arr[i]))
+        return false;
+      else
+        continue;
+    }
+    if (this[i] != arr[i]) return false;
+  }
+  return true;
+};
+
 function _checkEqual(a, b) {
-  if (a != b)
-    _fail(a + " != " + b);
-  else
-    _pass();
+  if (a.compareArrays && b.compareArrays) {
+    if (a.compareArrays(b))
+      _pass();
+    else
+      _fail(a + " != " + b);
+  } else {
+    if (a != b)
+      _fail(a + " != " + b);
+    else
+      _pass();
+  }
 }
 
 function _checkNotEqual(a, b) {
-  if (a == b)
-    _fail(a + " == " + b);
-  else
-    _pass();
+  if (a.compareArrays && b.compareArrays) {
+    if (a.compareArrays(b))
+      _fail(a + " == " + b);
+    else
+      _pass();
+  } else {
+    if (a == b)
+      _fail(a + " == " + b);
+    else
+      _pass();
+  }
 }
 
 function _checkTrue(a) {

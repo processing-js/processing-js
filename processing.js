@@ -464,6 +464,22 @@
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0;
 
+    // Camera defaults and settings
+    var cam,
+      cameraInv,
+      forwardTransform,
+      modelView,
+      modelViewInv,
+      projection,
+      frustumMode = false,
+      cameraFOV = 60 * (Math.PI / 180),
+      cameraX = curElement.width / 2,
+      cameraY = curElement.height / 2,
+      cameraZ = cameraY / Math.tan(cameraFOV / 2),
+      cameraNear = cameraZ / 10,
+      cameraFar = cameraZ * 10,
+      cameraAspect = curElement.width / curElement.height;
+
     var firstX, firstY, secondX, secondY, prevX, prevY;
 
     // Stores states for pushStyle() and popStyle().
@@ -930,8 +946,7 @@
       var r, g, b, rgb, aColor;
 
       // HSB conversion function from Mootools, MIT Licensed
-
-      function HSBtoRGB(h, s, b) {
+      function toRGB(h, s, b) {
         h = (h / redRange) * 360;
         s = (s / greenRange) * 100;
         b = (b / blueRange) * 100;
@@ -971,7 +986,7 @@
         var a = aValue4 / opacityRange;
         a = isNaN(a) ? 1 : a;
         if (curColorMode === p.HSB) {
-          rgb = HSBtoRGB(aValue1, aValue2, aValue3);
+          rgb = toRGB(aValue1, aValue2, aValue3);
           r = rgb[0];
           g = rgb[1];
           b = rgb[2];
@@ -2143,9 +2158,7 @@
 
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
-        }
-				else
-        {
+        } else {
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
@@ -2153,7 +2166,6 @@
           var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
           curContext.shaderSource(vertexShaderObject, vertexShaderSource);
           curContext.compileShader(vertexShaderObject);
-
 
           if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)){
               alert(curContext.getShaderInfoLog(vertexShaderObject));
@@ -2173,8 +2185,7 @@
 
           if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)){
             alert("Error linking shaders.");
-          }
-          else{
+          } else{
             curContext.useProgram(programObject);
           }
 
@@ -2185,6 +2196,9 @@
           boxOutlineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
+
+          p.camera();
+          p.perspective();
         }
         p.stroke(0);
         p.fill(255);
@@ -2666,6 +2680,45 @@
     };
 
     ////////////////////////////////////////////////////////////////////////////
+    // Matrix Stack
+    ////////////////////////////////////////////////////////////////////////////
+    
+    function P3DMatrixStack() { 
+      this.matrixStack = new Array(); 
+    };
+    
+    P3DMatrixStack.prototype.peek = function peek() { 
+      return this.matrixStack[this.matrixStack.length-1]; 
+    };
+
+    P3DMatrixStack.prototype.push = function push() { 
+      this.matrixStack.push(arguments[0]); 
+    };
+
+    P3DMatrixStack.prototype.pop = function pop() { 
+      return this.matrixStack.pop(); 
+    };
+
+    P3DMatrixStack.prototype.mult = function mult( matrix ) {
+      var tmp = [0, 0, 0, 0,
+                 0, 0, 0, 0,
+                 0, 0, 0, 0,
+                 0, 0, 0, 0];
+      
+      var e = 0;
+      
+      for(var row = 0; row < 4; row++) {
+        for(var col = 0; col < 4; col++, e++) {
+          tmp[e] += this.matrixStack[this.matrixStack.length-1][row *4 + 0] * matrix[col + 0] +
+          this.matrixStack[this.matrixStack.length-1][row *4 + 1] * matrix[col + 4] +
+          this.matrixStack[this.matrixStack.length-1][row *4 + 2] * matrix[col + 8] +
+          this.matrixStack[this.matrixStack.length-1][row *4 + 3] * matrix[col + 12];
+        }
+      }
+      this.matrixStack.push( tmp );
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
     // 3D Functions
     ////////////////////////////////////////////////////////////////////////////
 
@@ -2677,52 +2730,44 @@
       On some systems, if the variable exists in the shader but isn't used,
       the compiler will optimize it out and this function will fail.
     */
-    function uniformf(programObj, varName, varValue)
-    {
+    function uniformf(programObj, varName, varValue) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
       // the variable won't be found if it was optimized out.
-      if( varLocation !== -1)
-      {
-        if      (varValue.length === 4){curContext.uniform4fv(varLocation, varValue);}
-        else if (varValue.length === 3){curContext.uniform3fv(varLocation, varValue);}
-        else if (varValue.length === 2){curContext.uniform2fv(varLocation, varValue);}
-        else                          {curContext.uniform1f (varLocation, varValue);}
+      if (varLocation !== -1) {
+        if      (varValue.length === 4) {curContext.uniform4fv(varLocation, varValue);}
+        else if (varValue.length === 3) {curContext.uniform3fv(varLocation, varValue);}
+        else if (varValue.length === 2) {curContext.uniform2fv(varLocation, varValue);}
+        else                            {curContext.uniform1f (varLocation, varValue);}
+      }
+    }
+
+    function uniformi(programObj, varName, varValue) {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if (varLocation !== -1) {
+        if      (varValue.length === 4) {curContext.uniform4iv(varLocation, varValue);}
+        else if (varValue.length === 3) {curContext.uniform3iv(varLocation, varValue);}
+        else if (varValue.length === 2) {curContext.uniform2iv(varLocation, varValue);}
+        else                            {curContext.uniform1i (varLocation, varValue);}
       }
     }
 		
-		function uniformi(programObj, varName, varValue)
-    {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
-      // the variable won't be found if it was optimized out.
-      if( varLocation !== -1)
-      {
-        if      (varValue.length === 4){curContext.uniform4iv(varLocation, varValue);}
-        else if (varValue.length === 3){curContext.uniform3iv(varLocation, varValue);}
-        else if (varValue.length === 2){curContext.uniform2iv(varLocation, varValue);}
-        else                          {curContext.uniform1i (varLocation, varValue);}
+    function vertexAttribPointer(programObj, varName, size, VBO) {
+      var varLocation = curContext.getAttribLocation(programObj, varName);
+      if(varLocation !== -1) {
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
+        curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
+        curContext.enableVertexAttribArray(varLocation);
       }
     }
 		
-		function vertexAttribPointer(programObj, varName, size, VBO)
-		{
-			var varLocation = curContext.getAttribLocation(programObj, varName);
-			if(varLocation !== -1)
-			{
-			curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
-			curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
-			curContext.enableVertexAttribArray(varLocation);
-			}
-		}
-		
-		function uniformMatrix( programObj, varName, transpose, matrix )
-    {
+    function uniformMatrix( programObj, varName, transpose, matrix ) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
       // the variable won't be found if it was optimized out.
-      if( varLocation !== -1)
-      {
-        if      (matrix.length === 16){curContext.uniformMatrix4fv(varLocation, transpose, matrix);}
-        else if (matrix.length ===  9){curContext.uniformMatrix3fv(varLocation, transpose, matrix);}
-        else                          {curContext.uniformMatrix2fv(varLocation, transpose, matrix);}
+      if ( varLocation !== -1) {
+        if      (matrix.length === 16) {curContext.uniformMatrix4fv(varLocation, transpose, matrix);}
+        else if (matrix.length ===  9) {curContext.uniformMatrix3fv(varLocation, transpose, matrix);}
+        else                           {curContext.uniformMatrix2fv(varLocation, transpose, matrix);}
       }
     }
 		
@@ -2835,10 +2880,10 @@
         {
           h = d = w;
         }
-        
+
         // Modeling transformation
         var model = new PMatrix3D();
-        model.scale(w,h,d);
+        model.scale( w, h, d );
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
@@ -2850,11 +2895,11 @@
         uniformMatrix( programObject , "view" , true , view.array() );
         uniformMatrix( programObject , "projection" , true , projection.array() );
 
-        uniformf(programObject, "color", [0,0,0,1]);
+        uniformf( programObject, "color", [0,0,0,1] );
         vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
-        
+
         // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth( lineWidth3D );
+        curContext.lineWidth( 1 );
         curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
 
         // fix stitching problems. (lines get occluded by triangles
@@ -2862,14 +2907,15 @@
         // working, but it's a start for drawing the outline. So
         // developers can start playing around with styles. 
         curContext.enable( curContext.POLYGON_OFFSET_FILL );
-        curContext.polygonOffset(1,1);
+        curContext.polygonOffset( 1, 1 );
 
-        uniformf( programObject, "color", [0.5,1,1,1] );
-        vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );         
+        uniformf( programObject, "color", [1,1,1,1] );
+        vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );
         curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
       }
-    };		
+    };
+
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
@@ -2932,7 +2978,7 @@
 
       if (curShapeCount !== 0) {
 
-        if (close || doFill) {
+        if (close && doFill) {
           curContext.lineTo(firstX, firstY);
         }
         if (doFill) {
@@ -3116,6 +3162,15 @@
 
     };
 
+    p.curve = function curve(x1, y1, x2, y2, x3, y3, x4, y4) {
+      p.beginShape();
+        p.curveVertex(x1, y1);
+        p.curveVertex(x2, y2);
+        p.curveVertex(x3, y3);
+        p.curveVertex(x4, y4);
+      p.endShape();
+    };
+
     p.curveTightness = function (tightness) {
       curTightness = tightness;
     };
@@ -3177,7 +3232,7 @@
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
 
-	p.bezierTangent = function bezierTangent(a, b, c, d, t) {
+    p.bezierTangent = function bezierTangent(a, b, c, d, t) {
       return ( 3 * t * t * ( -a + 3 * b -3 * c + d ) +6 *t * ( a - 2 * b + c ) + 3 * ( -a + b ) );
     };
 	
