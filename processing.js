@@ -1849,7 +1849,7 @@
       
       var ret;
       
-      if ( argument.length === 1 ) {
+      if ( arguments.length === 1 ) {
         if ( typeof val === "string" && val.length !== 1) {
           // No strings allowed.
         } else if ( typeof val === "object" && val.constructor === Array ) {
