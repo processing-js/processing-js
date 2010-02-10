@@ -1,0 +1,18 @@
+size(150,150);
+background(128);
+fill(255);
+
+beginShape();
+  curveVertex(5,26);
+  curveVertex(5,26);
+  curveVertex(73,24);
+  curveVertex(73,61);
+endShape();
+
+beginShape();
+  curveVertex(5,26);
+  curveVertex(73,24);
+  curveVertex(73,61);
+  curveVertex(73,61);
+  curveVertex(15,65);
+endShape();
