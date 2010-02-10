@@ -2101,7 +2101,48 @@
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
         }
+				else
+        {
+          curContext.viewport(0,0,curElement.width, curElement.height);
+          curContext.clearColor(204/255, 204/255, 204/255, 1.0);
+          curContext.enable(curContext.DEPTH_TEST);
 
+          var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
+          curContext.shaderSource(vertexShaderObject, vertexShaderSource);
+          curContext.compileShader(vertexShaderObject);
+
+
+          if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)){
+              alert(curContext.getShaderInfoLog(vertexShaderObject));
+          }
+
+          var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
+          curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
+          curContext.compileShader(fragmentShaderObject);
+          if(!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS)){
+            alert(curContext.getShaderInfoLog(fragmentShaderObject));
+          }
+
+          programObject = curContext.createProgram();
+          curContext.attachShader(programObject, vertexShaderObject);
+          curContext.attachShader(programObject, fragmentShaderObject);
+          curContext.linkProgram(programObject);
+
+          if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)){
+            alert("Error linking shaders.");
+          }
+          else{
+            curContext.useProgram(programObject);
+          }
+
+          boxBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts),curContext.DYNAMIC_DRAW);
+
+          boxOutlineBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
+        }
         p.stroke(0);
         p.fill(255);
       } else {
