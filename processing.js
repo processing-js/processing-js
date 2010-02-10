@@ -1878,6 +1878,8 @@
 
     // Processing doc claims good argument types are: int, char, byte, boolean,
     // String, int[], char[], byte[], boolean[], String[].
+    // floats should not work. However, floats with only zeroes right of the
+    // decimal will work because JS converts those to int.
     p.float = function float( val ) {
       var ret;
 
@@ -1901,10 +1903,6 @@
             ret = 0;
           } else {
             ret = parseFloat( val );
-            // Make sure .15 rounds to .1, but .151 rounds to .2.
-            if ( ( ret * 1000 ) - Math.floor( ret * 1000 ) === 0.5 ) {
-              ret = ret - 0.0001;
-            }
             ret = ret.toFixed( 3 );
           }
         } else if ( typeof val === 'object' && val.constructor === Array ) {
