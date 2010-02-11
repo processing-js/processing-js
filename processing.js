@@ -2997,23 +2997,23 @@
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
-    p.noStroke = function noStroke() {
-      doStroke = false;
-    };
-    p.noFill = function noFill() {
-      doFill = false;
-    };
-    p.smooth = function smooth() {};
-    p.noSmooth = function noSmooth() {};
 
     p.fill = function fill() {
       doFill = true;
       curContext.fillStyle = p.color.apply(this, arguments);
     };
 
+    p.noFill = function noFill() {
+      doFill = false;
+    };
+
     p.stroke = function stroke() {
       doStroke = true;
       curContext.strokeStyle = p.color.apply(this, arguments);
+    };
+
+    p.noStroke = function noStroke() {
+      doStroke = false;
     };
 
     p.strokeWeight = function strokeWeight(w) {
@@ -3027,6 +3027,18 @@
     p.strokeJoin = function strokeJoin(value) {
       curContext.lineJoin = value;
     };
+
+    p.smooth = function() {
+      curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+      curContext.mozImageSmoothingEnabled = true;
+    };
+
+    p.noSmooth = function() {
+      curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+      curContext.mozImageSmoothingEnabled = false;
+    };
+
+    p.noSmooth(); // default to noSmooth
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
