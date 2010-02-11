@@ -79,7 +79,7 @@
     catch(e){}     
 
     return WebGLFloatArrayExists === true ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
-  }
+  };
 
   var boxVerts = [0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5, 0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
   var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5,0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,0.5, 0.5,-0.5,0.5];
@@ -591,8 +591,8 @@
 				// copy on the rest of the elements that were not sorted in case the user
 				// only wanted a subset of an array to be sorted.
 				if(numElem > 0){
-					for(var i = ret.length; i < array.length; i++){
-						ret.push(array[i]);
+					for(var j = ret.length; j < array.length; j++){
+						ret.push(array[j]);
 					}
 				}
 			}
@@ -1676,7 +1676,7 @@
     // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
     // This breaks the join() ref-test. The Processing.org documentation says String or String[]. SHOULD BE FIXED NOW
 		p.nf = function() {
-      var str, num, pad, arr, left, right, isNegative;
+      var str, num, pad, arr, left, right, isNegative, test, i;
 
       if ( arguments.length === 2 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') === -1 ) {
         num = arguments[0];
@@ -1689,7 +1689,7 @@
         }
 
         str = "" + num;
-        for ( var i = pad - str.length; i > 0; i-- ) {
+        for ( i = pad - str.length; i > 0; i-- ) {
           str = "0" + str;
         }
 
@@ -1702,8 +1702,8 @@
 
         str = new Array( arr.length );
 
-        for ( var i = 0; i < arr.length && str !== undefined; i++ ) {
-          var test = this.nf( arr[i], pad );
+        for ( i = 0; i < arr.length && str !== undefined; i++ ) {
+          test = this.nf( arr[i], pad );
           if ( test === undefined ) {
             str = undefined;
           } else {
@@ -1731,13 +1731,13 @@
 
         str = "" + num;
 
-        for ( var i = left - str.indexOf( '.' ); i > 0; i-- ) {
+        for ( i = left - str.indexOf( '.' ); i > 0; i-- ) {
           str = "0" + str;  
         }
 
         var numDec = str.length - str.indexOf( '.' ) - 1;
         if ( numDec <= right ) {
-          for ( var i = right - ( str.length - str.indexOf( '.' ) - 1 ); i > 0; i-- ) {
+          for ( i = right - ( str.length - str.indexOf( '.' ) - 1 ); i > 0; i-- ) {
             str = str + "0";  
           }
         } else if ( right > 0 ) {
@@ -1757,8 +1757,8 @@
 
         str = new Array( arr.length );
 
-        for ( var i = 0; i < arr.length && str !== undefined; i++ ) {
-          var test = this.nf( arr[i], left, right );
+        for ( i = 0; i < arr.length && str !== undefined; i++ ) {
+          test = this.nf( arr[i], left, right );
           if ( test === undefined ) {
             str = undefined;
           } else {
@@ -1921,12 +1921,10 @@
     };
 
     p.int = function int( val ) {
-      var ret = undefined;
+      var ret;
 
-      if ( ( val || val === 0 ) && arguments.length == 1 ) {
-
+      if ( ( val || val === 0 ) && arguments.length === 1 ) {
         if ( typeof val === 'number' ) {
-
           var isNegative = val < 0;
           if ( isNegative ) {
             val = Math.abs( val );
@@ -1938,17 +1936,15 @@
             ret = -ret;
           }
         } else if ( typeof val === 'boolean' ) {
-
-          if ( val == true ) {
+          if ( val === true ) {
             ret = 1;
           } else {
             ret = 0;
           }
         } else if ( typeof val === 'string' ) {
-
           if ( val.indexOf(' ') > -1 ) {
             ret = 0;
-          } else if ( val.length == 1 ) {
+          } else if ( val.length === 1 ) {
 
             ret = val.charCodeAt( 0 );
           } else {
@@ -1959,11 +1955,9 @@
             }
           }
         } else if ( typeof val === 'object' && val.constructor === Array ) {
-
           ret = new Array( val.length );
 
           for ( var i = 0; i < val.length; i++) {
-
             if ( typeof val[i] === 'string' && val[i].indexOf('.') > -1 ) {
               ret[i] = 0;
             } else {
@@ -2792,7 +2786,9 @@
           p.nfs(this.elements[14], digits, 4) + " " +
           p.nfs(this.elements[15], digits, 4) + "\n";
 
-        console.log(output);
+        if (typeof console === 'object' && typeof console.log === 'function') {
+          console.log(output);
+        }
       }
     };
 
@@ -2801,7 +2797,7 @@
     ////////////////////////////////////////////////////////////////////////////
 
     function PMatrix3DStack() {
-      this.matrixStack = new Array();
+      this.matrixStack = [];
     };
 
     PMatrix3DStack.prototype.load = function load() {
@@ -3081,13 +3077,13 @@
     };
 
     p.smooth = function() {
-      curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-      curContext.mozImageSmoothingEnabled = true;
+      //curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+      //curContext.mozImageSmoothingEnabled = true;
     };
 
     p.noSmooth = function() {
-      curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-      curContext.mozImageSmoothingEnabled = false;
+      //curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+      //curContext.mozImageSmoothingEnabled = false;
     };
 
     //p.noSmooth(); // default to noSmooth // Corban: turning this on breaks 3D context
