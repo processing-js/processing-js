@@ -1845,7 +1845,7 @@
 
     };
 
-    // Alphabetic chars arguments automatically converted to numbers when
+    // Alphanumeric chars arguments automatically converted to numbers when
     // passed in, and will come out as numbers. 
     p.str = function str( val ) {
       
