@@ -2875,25 +2875,25 @@
 							0, 0 , -1, 0 );
 		};
 
-		p.ortho = function ortho(){
-			if( arguments.length === 0 )
-				p.ortho( 0, p.width, 0, p.height, -10, 10 );
-			else{
-				var a = arguments;
-				var x = 2 / ( a[ 1 ] - a[ 0 ] );
-				var y = 2 / ( a[ 3 ] - a[ 2 ] );
-				var z = -2 / ( a[ 5 ] - a[ 4 ] );
-				var tx = -( a[ 1 ] + a[ 0 ] ) / ( a[ 1 ] - a[ 0 ] );
-				var ty = -( a[ 3 ] + a[ 2 ] ) / ( a[ 3 ] - a[ 2 ] );
-				var tz = -( a[ 5 ] + a[ 4 ] ) / ( a[ 5 ] - a[ 4 ] );
-				projection = new PMatrix3D();
-				projection.set( x , 0 , 0 , tx,
-												0 , y , 0 , ty,
-												0 , 0 , z , tz,
-												0 , 0 , 0 , 1 );
-				frustumMode = false;
-			}
-		};	
+    p.ortho = function ortho() {
+      if ( arguments.length === 0 ) {
+        p.ortho( 0, p.width, 0, p.height, -10, 10 );
+      } else {
+        var a = arguments;
+        var x = 2 / ( a[ 1 ] - a[ 0 ] );
+        var y = 2 / ( a[ 3 ] - a[ 2 ] );
+        var z = -2 / ( a[ 5 ] - a[ 4 ] );
+        var tx = -( a[ 1 ] + a[ 0 ] ) / ( a[ 1 ] - a[ 0 ] );
+        var ty = -( a[ 3 ] + a[ 2 ] ) / ( a[ 3 ] - a[ 2 ] );
+        var tz = -( a[ 5 ] + a[ 4 ] ) / ( a[ 5 ] - a[ 4 ] );
+        projection = new PMatrix3D();
+        projection.set( x , 0 , 0 , tx,
+                        0 , y , 0 , ty,
+                        0 , 0 , z , tz,
+                        0 , 0 , 0 , 1 );
+        frustumMode = false;
+      }
+    };	
 		
 		////////////////////////////////////////////////////////////////////////////
     // Shapes
