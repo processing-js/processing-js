@@ -1273,6 +1273,8 @@
 
     p.noLoop = function noLoop() {
       doLoop = false;
+      loopStarted = false;
+      clearInterval(looping);
     };
 
     p.redraw = function redraw() {
@@ -1328,6 +1330,7 @@
       },
       curMsPerFrame);
 
+      doLoop = true;
       loopStarted = true;
 
     };
