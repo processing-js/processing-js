@@ -3498,57 +3498,13 @@
       return data;
     };
 
-    /*
-    var buildImageObject = function buildImageObject(obj) {
-
-      var pixels = obj.data;
-      var data = p.createImage(obj.width, obj.height);
-
-      if (data.__defineGetter__ && data.__lookupGetter__ && !data.__lookupGetter__("pixels")) {
-
-        var pixelsDone;
-
-        data.__defineGetter__("pixels", function () {
-
-          if (pixelsDone) {
-            return pixelsDone;
-          }
-          pixelsDone = [];
-
-          for (var i = 0; i < pixels.length; i += 4) {
-            pixelsDone.push(
-            p.color(
-            pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]));
-          }
-
-          return pixelsDone;
-
-        });
-
-      } else {
-
-        data.pixels = [];
-
-        for (var i = 0; i < pixels.length; i += 4) {
-          data.pixels.push(p.color(
-          pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]));
-        }
-
-      }
-
-      return data;
-    };
-    */
-
     // Loads an image for display. Type is unused. Callback is fired on load.
     p.loadImage = function loadImage(file, type, callback) {
-
       var img = document.createElement('img');
       img.src = file;
       img.loaded = false;
       img.mask = function () {}; // I don't think image mask was ever implemented? -F1LT3R
       img.onload = function () {
-
         var h = this.height,
           w = this.width;
 
@@ -3572,7 +3528,6 @@
       };
 
       return img;
-
     };
 
     // Gets a single pixel or block of pixels from the current Canvas Context
