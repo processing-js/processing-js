@@ -4086,9 +4086,6 @@
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
         if (str && (curContext.fillText || curContext.mozDrawText)) {
-          str = typeof str === "number" ?
-            String.fromCharCode(str) :
-            str;
           curContext.save();
           curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
