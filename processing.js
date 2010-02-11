@@ -3038,7 +3038,7 @@
       curContext.mozImageSmoothingEnabled = false;
     };
 
-    p.noSmooth(); // default to noSmooth
+    //p.noSmooth(); // default to noSmooth // Corban: turning this on breaks 3D context
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
