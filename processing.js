@@ -2707,6 +2707,30 @@
         }
         str += this.elements[15];
         return str;
+      },
+      print: function() {
+        var output = "", digits = 3;
+        output += p.nfs(this.elements[0], digits, 4) + " " +
+          p.nfs(this.elements[1], digits, 4) + " " +
+          p.nfs(this.elements[2], digits, 4) + " " +
+          p.nfs(this.elements[3], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[4], digits, 4) + " " +
+          p.nfs(this.elements[5], digits, 4) + " " +
+          p.nfs(this.elements[6], digits, 4) + " " +
+          p.nfs(this.elements[7], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[8], digits, 4) + " " +
+          p.nfs(this.elements[9], digits, 4) + " " +
+          p.nfs(this.elements[10], digits, 4) + " " +
+          p.nfs(this.elements[11], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[12], digits, 4) + " " +
+          p.nfs(this.elements[13], digits, 4) + " " +
+          p.nfs(this.elements[14], digits, 4) + " " +
+          p.nfs(this.elements[15], digits, 4) + "\n";
+
+        console.log(output);
       }
     };
 
@@ -2894,6 +2918,10 @@
         frustumMode = false;
       }
     };	
+
+    p.printProjection = function() {
+      console.log(projection.print());
+    };
 		
 		////////////////////////////////////////////////////////////////////////////
     // Shapes
