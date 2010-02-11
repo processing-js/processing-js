@@ -1471,47 +1471,54 @@
     };
 
     p.nfs = function (num, left, right) {
-      var str, len;
+      var str, len, formatLength, rounded;
+
       // array handling
-      if (typeof num === "object") {
+      if (typeof num === "object" && num.constructor === Array) {
         str = new Array(0);
         len = num.length;
         for (var i = 0; i < len; i++) {
           str[i] = p.nfs(num[i], left, right);
         }
       } else if (arguments.length === 3) {
-        var negative = false;
-        if (num < 0) {
-          negative = true;
-        }
+        var negative = num < 0 ? true : false;
 
-        str = "" + Math.abs(num);
-        var digits = ("" + Math.floor(Math.abs(num))).length;
-        var count = left - digits;
-        while (count > 0) {
-          str = "0" + str;
-          count--;
+        // Make it work exactly like p5 for right = 0
+        if ( right === 0 ) {
+          right = 1;
         }
-        // get the number of decimal places, if none will be -1
-        var decimals = ("" + Math.abs(num)).length - digits - 1;
-        if (decimals === -1 && right > 0) {
-          str = str + ".";
-        }
-
-        if (decimals !== -1) {
-          count = right - decimals;
-        } else if (decimals === -1 && right > 0) {
-          count = right;
+        
+        if ( right < 0 ) {
+          rounded = Math.round(num);
         } else {
-          count = 0;
+          // round to 'right' decimal places
+          rounded = Math.round(num * Math.pow(10,right)) / Math.pow(10,right);
         }
-        while (count > 0) {
-          str = str + "0";
-          count--;
+
+        // split number into whole and fractional components
+        var splitNum = Math.abs(rounded).toString().split("."); // [0] whole number, [1] fractional number
+
+        // format whole part
+        formatLength = left - splitNum[0].length;
+        for(; formatLength > 0; formatLength--) {
+          splitNum[0] = "0" + splitNum[0];
         }
+
+        // format fractional part
+        if ( splitNum.length === 2 || right > 0 ) {
+          splitNum[1] = splitNum.length === 2 ? splitNum[1] : "";
+          formatLength = right - splitNum[1].length;
+          for(; formatLength > 0; formatLength--) {
+            splitNum[1] += "0";
+          }
+          str = splitNum.join(".");
+        } else {
+          str = splitNum[0]; 
+        }
+
         str = (negative ? "-" : " ") + str;
       } else if (arguments.length === 2) {
-        str = p.nfs(num, left, 0);
+        str = p.nfs(num, left, -1);
       }
       return str;
     };
@@ -2920,7 +2927,7 @@
     };	
 
     p.printProjection = function() {
-      console.log(projection.print());
+      projection.print();
     };
 		
 		////////////////////////////////////////////////////////////////////////////
