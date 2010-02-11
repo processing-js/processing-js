@@ -3438,6 +3438,67 @@
     ////////////////////////////////////////////////////////////////////////////
     p.save = function save(file) {};
 
+    var buildImageObject = function (obj) {
+      var pixels = obj.data,
+        data = p.createImage(obj.width, obj.height),
+        len = pixels.length;
+
+      if ( ( // ECMAScript 5
+        Object.defineProperty &&
+        Object.getOwnPropertyDescriptor &&
+        !Object.getOwnPropertyDescriptor( data, "pixels" ).get
+      ) || ( // Legacy JavaScript
+          data.__defineGetter__ &&
+          data.__lookupGetter__ &&
+          !data.__lookupGetter__( "pixels" )
+      ) ) {
+        var pixelsDone, pixelsGetter = function () {
+          if (pixelsDone) {
+            return pixelsDone;
+          }
+
+          pixelsDone = [];
+
+          for (var i = 0; i < len; i += 4) {
+            pixelsDone.push(
+              p.color(
+                pixels[i],
+                pixels[i + 1],
+                pixels[i + 2],
+                pixels[i + 3]
+              )
+            );
+          }
+
+          return pixelsDone;
+        };
+
+        if (Object.defineProperty) {
+          Object.defineProperty(data, "pixels", {
+            get: pixelsGetter
+          });
+        } else if (data.__defineGetter__) {
+          data.__defineGetter__("pixels", pixelsGetter);
+        }
+      } else {
+        data.pixels = [];
+
+        for (var i = 0; i < len; i += 4) {
+          data.pixels.push(
+            p.color(
+              pixels[i],
+              pixels[i + 1],
+              pixels[i + 2],
+              pixels[i + 3]
+            )
+          );
+        }
+      }
+
+      return data;
+    };
+
+    /*
     var buildImageObject = function buildImageObject(obj) {
 
       var pixels = obj.data;
@@ -3477,6 +3538,7 @@
 
       return data;
     };
+    */
 
     // Loads an image for display. Type is unused. Callback is fired on load.
     p.loadImage = function loadImage(file, type, callback) {
