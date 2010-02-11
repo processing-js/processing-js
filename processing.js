@@ -470,6 +470,7 @@
       forwardTransform,
       modelView,
       modelViewInv,
+      userMatrixStack,
       projection,
       frustumMode = false,
       cameraFOV = 60 * (Math.PI / 180),
@@ -734,7 +735,6 @@
     ////////////////////////////////////////////////////////////////////////////
     // convert rgba color strings to integer
     p.rgbaToInt = function (color) {
-      //alert(color);
       var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1, 2)[0].split(',');
       return ((rgbaAry[3] * 255) << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
     };
@@ -1152,8 +1152,12 @@
     ////////////////////////////////////////////////////////////////////////////
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
-    p.translate = function translate(x, y) {
-      curContext.translate(x, y);
+    p.translate = function translate(x, y, z) {
+      if (p.use3DContext) {
+        forwardTransform.translate(x, y, z);
+      } else {
+        curContext.translate(x, y);
+      }
     };
     p.scale = function scale(x, y) {
       curContext.scale(x, y || x);
@@ -1161,13 +1165,38 @@
     p.rotate = function rotate(aAngle) {
       curContext.rotate(aAngle);
     };
+
     p.pushMatrix = function pushMatrix() {
-      curContext.save();
+      if (p.use3DContext) {
+        userMatrixStack.load(modelView);
+      } else {
+        curContext.save();
+      }
     };
+
     p.popMatrix = function popMatrix() {
-      curContext.restore();
+      if (p.use3DContext) {
+        modelView.set(userMatrixStack.pop());
+      } else {
+        curContext.restore();
+      }
     };
-    p.ortho = function ortho() {};
+
+    p.resetMatrix = function resetMatrix() {
+      forwardTransform.reset();
+    };
+    
+    p.rotateX = function(angleInRadians) {
+      forwardTransform.rotateX(angleInRadians);
+    };
+    
+    p.rotateZ = function(angleInRadians) {
+      forwardTransform.rotateZ(angleInRadians);
+    };
+
+    p.rotateY = function(angleInRadians) {
+      forwardTransform.rotateY(angleInRadians);
+    };
 
     p.pushStyle = function pushStyle() {
       // Save the canvas state.
@@ -1381,7 +1410,7 @@
 				decToBin(c[3]*255,8), // alpha is normalized
 				decToBin(c[0],8), // r
 				decToBin(c[1],8), // g
-				decToBin(c[2],8), // b
+				decToBin(c[2],8)  // b
 				];
 						
 				var s = sbin[0]+sbin[1]+sbin[2]+sbin[3];
@@ -2168,14 +2197,14 @@
           curContext.compileShader(vertexShaderObject);
 
           if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)){
-              alert(curContext.getShaderInfoLog(vertexShaderObject));
+            throw curContext.getShaderInfoLog(vertexShaderObject);
           }
 
           var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
           curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
           curContext.compileShader(fragmentShaderObject);
           if(!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS)){
-            alert(curContext.getShaderInfoLog(fragmentShaderObject));
+            throw curContext.getShaderInfoLog(fragmentShaderObject);
           }
 
           programObject = curContext.createProgram();
@@ -2184,7 +2213,7 @@
           curContext.linkProgram(programObject);
 
           if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)){
-            alert("Error linking shaders.");
+            throw "Error linking shaders.";
           } else{
             curContext.useProgram(programObject);
           }
@@ -2199,6 +2228,8 @@
 
           p.camera();
           p.perspective();
+
+          userMatrixStack = new PMatrix3DStack();
         }
         p.stroke(0);
         p.fill(255);
@@ -2682,40 +2713,37 @@
     ////////////////////////////////////////////////////////////////////////////
     // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
-    
-    function P3DMatrixStack() { 
-      this.matrixStack = new Array(); 
-    };
-    
-    P3DMatrixStack.prototype.peek = function peek() { 
-      return this.matrixStack[this.matrixStack.length-1]; 
+
+    function PMatrix3DStack() {
+      this.matrixStack = new Array();
     };
 
-    P3DMatrixStack.prototype.push = function push() { 
-      this.matrixStack.push(arguments[0]); 
-    };
-
-    P3DMatrixStack.prototype.pop = function pop() { 
-      return this.matrixStack.pop(); 
-    };
-
-    P3DMatrixStack.prototype.mult = function mult( matrix ) {
-      var tmp = [0, 0, 0, 0,
-                 0, 0, 0, 0,
-                 0, 0, 0, 0,
-                 0, 0, 0, 0];
-      
-      var e = 0;
-      
-      for(var row = 0; row < 4; row++) {
-        for(var col = 0; col < 4; col++, e++) {
-          tmp[e] += this.matrixStack[this.matrixStack.length-1][row *4 + 0] * matrix[col + 0] +
-          this.matrixStack[this.matrixStack.length-1][row *4 + 1] * matrix[col + 4] +
-          this.matrixStack[this.matrixStack.length-1][row *4 + 2] * matrix[col + 8] +
-          this.matrixStack[this.matrixStack.length-1][row *4 + 3] * matrix[col + 12];
-        }
+    PMatrix3DStack.prototype.load = function load() {
+      var tmpMatrix = new PMatrix3D();
+      if ( arguments.length === 1 ) {
+        tmpMatrix.set( arguments[0] );
+      } else {
+        tmpMatrix.set( arguments );
       }
-      this.matrixStack.push( tmp );
+      this.matrixStack.push( tmpMatrix );
+    };
+
+    PMatrix3DStack.prototype.push = function push() {
+      this.matrixStack.push( this.peek() );
+    };
+
+    PMatrix3DStack.prototype.pop = function pop() {
+      return this.matrixStack.pop();
+    };
+
+    PMatrix3DStack.prototype.peek = function peek() {
+      var tmpMatrix = new PMatrix3D();
+      tmpMatrix.set( this.matrixStack[this.matrixStack.length - 1] );
+      return tmpMatrix;
+    };
+
+    PMatrix3DStack.prototype.mult = function mult( matrix ){
+      this.matrixStack[this.matrixStack.length - 1].apply( matrix );
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -2809,6 +2837,9 @@
 				cameraInv.translate( a[ 0 ], a[ 1 ], a[ 2 ] );
 				modelView = new PMatrix3D();
 				modelView.set( cam );
+
+        forwardTransform = modelView;        
+
 				modelViewInv = new PMatrix3D();
 				modelViewInv.set( cameraInv );
 			}
@@ -2835,34 +2866,34 @@
 			}
 		};
 
-		p.frustum = function frustum( left, right, bottom, top, near, far ){
-			frustumMode = true;
-			projection = new PMatrix3D();
-			projection.set( (2*near)/(right-left), 0 , (right+left)/(right-left),	0 ,
-							0, (2*near)/(top-bottom), (top+bottom)/(top-bottom), 0 ,
-							0, 0 , -(far+near)/(far-near), -(2*far*near)/(far-near) ,
-							0, 0 , -1, 0 );
-		};
+    p.frustum = function frustum( left, right, bottom, top, near, far ) {
+      frustumMode = true;
+      projection = new PMatrix3D();
+      projection.set( (2*near)/(right-left), 0 , (right+left)/(right-left),	0 ,
+        0, (2*near)/(top-bottom), (top+bottom)/(top-bottom), 0 ,
+        0, 0 , -(far+near)/(far-near), -(2*far*near)/(far-near) ,
+        0, 0 , -1, 0 );
+    };
 
-		p.ortho = function ortho(){
-			if( arguments.length === 0 )
-				p.ortho( 0, p.width, 0, p.height, -10, 10 );
-			else{
-				var a = arguments;
-				var x = 2 / ( a[ 1 ] - a[ 0 ] );
-				var y = 2 / ( a[ 3 ] - a[ 2 ] );
-				var z = -2 / ( a[ 5 ] - a[ 4 ] );
-				var tx = -( a[ 1 ] + a[ 0 ] ) / ( a[ 1 ] - a[ 0 ] );
-				var ty = -( a[ 3 ] + a[ 2 ] ) / ( a[ 3 ] - a[ 2 ] );
-				var tz = -( a[ 5 ] + a[ 4 ] ) / ( a[ 5 ] - a[ 4 ] );
-				projection = new PMatrix3D();
-				projection.set( x , 0 , 0 , tx,
-												0 , y , 0 , ty,
-												0 , 0 , z , tz,
-												0 , 0 , 0 , 1 );
-				frustumMode = false;
-			}
-		};	
+    p.ortho = function ortho() {
+      if ( arguments.length === 0 ) {
+        p.ortho( 0, p.width, 0, p.height, -10, 10 );
+      } else {
+        var a = arguments;
+        var x = 2 / ( a[ 1 ] - a[ 0 ] );
+        var y = 2 / ( a[ 3 ] - a[ 2 ] );
+        var z = -2 / ( a[ 5 ] - a[ 4 ] );
+        var tx = -( a[ 1 ] + a[ 0 ] ) / ( a[ 1 ] - a[ 0 ] );
+        var ty = -( a[ 3 ] + a[ 2 ] ) / ( a[ 3 ] - a[ 2 ] );
+        var tz = -( a[ 5 ] + a[ 4 ] ) / ( a[ 5 ] - a[ 4 ] );
+        projection = new PMatrix3D();
+        projection.set( x , 0 , 0 , tx,
+                        0 , y , 0 , ty,
+                        0 , 0 , z , tz,
+                        0 , 0 , 0 , 1 );
+        frustumMode = false;
+      }
+    };	
 		
 		////////////////////////////////////////////////////////////////////////////
     // Shapes
@@ -4396,7 +4427,7 @@
               p.keyCode = p.UP;
               break;
             case 71:
-              keyCode = p.RIGHT;
+              p.keyCode = p.RIGHT;
               break;
             case 72:
               p.keyCode = p.DOWN;
