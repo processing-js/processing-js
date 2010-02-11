@@ -470,6 +470,7 @@
       forwardTransform,
       modelView,
       modelViewInv,
+      userMatrixStack,
       projection,
       frustumMode = false,
       cameraFOV = 60 * (Math.PI / 180),
@@ -734,7 +735,6 @@
     ////////////////////////////////////////////////////////////////////////////
     // convert rgba color strings to integer
     p.rgbaToInt = function (color) {
-      //alert(color);
       var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1, 2)[0].split(',');
       return ((rgbaAry[3] * 255) << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
     };
@@ -1152,8 +1152,12 @@
     ////////////////////////////////////////////////////////////////////////////
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
-    p.translate = function translate(x, y) {
-      curContext.translate(x, y);
+    p.translate = function translate(x, y, z) {
+      if (p.use3DContext) {
+        forwardTransform.translate(x, y, z);
+      } else {
+        curContext.translate(x, y);
+      }
     };
     p.scale = function scale(x, y) {
       curContext.scale(x, y || x);
@@ -1161,12 +1165,39 @@
     p.rotate = function rotate(aAngle) {
       curContext.rotate(aAngle);
     };
+
     p.pushMatrix = function pushMatrix() {
-      curContext.save();
+      if (p.use3DContext) {
+        userMatrixStack.load(modelView);
+      } else {
+        curContext.save();
+      }
     };
+
     p.popMatrix = function popMatrix() {
-      curContext.restore();
+      if (p.use3DContext) {
+        modelView.set(userMatrixStack.pop());
+      } else {
+        curContext.restore();
+      }
     };
+
+    p.resetMatrix = function resetMatrix() {
+      forwardTransform.reset();
+    };
+    
+    p.rotateX = function(angleInRadians) {
+      forwardTransform.rotateX(angleInRadians);
+    };
+    
+    p.rotateZ = function(angleInRadians) {
+      forwardTransform.rotateZ(angleInRadians);
+    };
+
+    p.rotateY = function(angleInRadians) {
+      forwardTransform.rotateY(angleInRadians);
+    };
+
     p.ortho = function ortho() {};
 
     p.pushStyle = function pushStyle() {
@@ -1381,7 +1412,7 @@
 				decToBin(c[3]*255,8), // alpha is normalized
 				decToBin(c[0],8), // r
 				decToBin(c[1],8), // g
-				decToBin(c[2],8), // b
+				decToBin(c[2],8)  // b
 				];
 						
 				var s = sbin[0]+sbin[1]+sbin[2]+sbin[3];
@@ -2168,14 +2199,14 @@
           curContext.compileShader(vertexShaderObject);
 
           if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)){
-              alert(curContext.getShaderInfoLog(vertexShaderObject));
+            throw curContext.getShaderInfoLog(vertexShaderObject);
           }
 
           var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
           curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
           curContext.compileShader(fragmentShaderObject);
           if(!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS)){
-            alert(curContext.getShaderInfoLog(fragmentShaderObject));
+            throw curContext.getShaderInfoLog(fragmentShaderObject);
           }
 
           programObject = curContext.createProgram();
@@ -2184,7 +2215,7 @@
           curContext.linkProgram(programObject);
 
           if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)){
-            alert("Error linking shaders.");
+            throw "Error linking shaders.";
           } else{
             curContext.useProgram(programObject);
           }
@@ -2199,6 +2230,8 @@
 
           p.camera();
           p.perspective();
+
+          userMatrixStack = new PMatrix3DStack();
         }
         p.stroke(0);
         p.fill(255);
@@ -2806,6 +2839,9 @@
 				cameraInv.translate( a[ 0 ], a[ 1 ], a[ 2 ] );
 				modelView = new PMatrix3D();
 				modelView.set( cam );
+
+        forwardTransform = modelView;        
+
 				modelViewInv = new PMatrix3D();
 				modelViewInv.set( cameraInv );
 			}
