@@ -48,6 +48,17 @@ var clearInterval = __empty_func__;
 
 var XMLHttpRequest = __empty_func__;
 
+// Constructors not included in many parser tests to allow them to run
+var Table = function() {};
+Table.prototype.getRowCount = __empty_func__;
+Table.prototype.getTableMax = __empty_func__;
+
+var FloatTable = function() {};
+FloatTable.prototype.getRowCount = __empty_func__;
+FloatTable.prototype.getColumnCount = __empty_func__;
+FloatTable.prototype.getRowNames = __empty_func__;
+FloatTable.prototype.getTableMax = __empty_func__;
+
 var window = {
   setInterval: __empty_func__,
   XMLHttpRequest: __empty_func__
