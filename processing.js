@@ -2500,17 +2500,15 @@
         return this.elements.slice();
       },
       translate: function( tx, ty, tz ){
-        if( tx && ty && !tz )
+        if( typeof tz === 'undefined' )
         {
-          this.translate( tx, ty, 0 );
+          tx = 0;
         }
-        else
-        {                      
-          this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
-          this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
-          this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
-          this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
-        }
+                              
+				this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
+				this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
+				this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
+				this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
       },
       transpose: function(){
         var temp = this.elements.slice();
