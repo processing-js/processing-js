@@ -44,6 +44,8 @@ var addEventListener = __empty_func__;
 
 var setInterval = __empty_func__;
 
+var clearInterval = __empty_func__;
+
 var XMLHttpRequest = __empty_func__;
 
 var window = {
