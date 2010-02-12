@@ -128,7 +128,7 @@
     // masks all strings into <STRING n>
     // to be replaced with the array strings after parsing is finishes
     var strings = aCode.match(/(["'])(\\\1|.)*?(\1)/g);
-    for ( var i = 0; /(["'])(\\\1|.)*?(\1)/.test(aCode); i++){
+    for ( var i = 0; /(["'])(\\\1|.)*?(\1)/.test(aCode); i++) {
       aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/, "<STRING " + i + ">");
     }
   
@@ -349,39 +349,32 @@
     aCode = aCode.replace(/(\d+)f/g, "$1");
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-    if (strings != null){
-
-      for( var i = 0; l = i < strings.length; i++ ){
-        aCode = aCode.replace(new RegExp("(.*)(\<STRING " + i + "\>)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
-
+    if (strings !== null) {
+      for( var i = 0; l = i < strings.length; i++ ) {
+        aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
           var returnString = all, notString = true, quoteType = "", escape = false;
 
-          for (var x = 0; x < quoteStart.length; x++){
-
-            if (notString){
-
-              if (quoteStart.charAt(x) == "\"" || quoteStart.charAt(x) == "'"){
+          for (var x = 0; x < quoteStart.length; x++) {
+            if (notString) {
+              if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
                 quoteType = quoteStart.charAt(x);
                 notString = false;
               }
-            }
-            else{
-
-              if (!escape){
-
-                if (quoteStart.charAt(x) == "\\"){
+            } else {
+              if (!escape) {
+                if (quoteStart.charAt(x) === "\\") {
                   escape = true;
-                }
-                else if (quoteStart.charAt(x) == quoteType){
+                } else if (quoteStart.charAt(x) === quoteType) {
                   notString = true;
                   quoteType = "";
                 }
+              } else { 
+                escape = false; 
               }
-              else{ escape = false; }
             }
           }
 
-          if(notString){ // Match is not inside a string
+          if (notString) { // Match is not inside a string
             returnString = quoteStart + strings[i] + quoteEnd;
           }
 
@@ -1504,6 +1497,7 @@
 			}    
 			return str;
 		};  
+
     p.unbinary = function unbinary(binaryString) {
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
@@ -1513,7 +1507,7 @@
       } else {
         if (arguments.length === 1 || binaryString.length === 8) {
           if (binaryPattern.test(binaryString)) {
-            for (i = 0; i < 8; i++) {
+            for (var i = 0; i < 8; i++) {
               addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
             }
             return addUp + "";
