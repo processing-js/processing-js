@@ -124,6 +124,9 @@
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   Processing.parse = function parse(aCode, p) {
 
+    // Force characters-as-bytes to work.
+    aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+
     // Saves all strings into an array
     // masks all strings into <STRING n>
     // to be replaced with the array strings after parsing is finishes
@@ -326,8 +329,6 @@
 
     // Force numbers to exist //
     //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
-    //! // Force characters-as-bytes to work --> Ping: Andor
-    aCode = aCode.replace(/('[a-zA-Z0-9]')/g, "$1.charCodeAt(0)");
 
     var toNumbers = function (str) {
       var ret = [];
