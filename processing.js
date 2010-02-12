@@ -145,7 +145,11 @@
     });
 
     // Attach import() to p{} bypassing JS command, allowing for extrernal library loading
-    aCode = aCode.replace(/import \(|import\(/g, "p.Import(");
+    //aCode = aCode.replace(/import \(|import\(/g, "p.Import(");
+
+    // Delete import statements, ie. import processing.video.*;
+    // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
+    aCode = aCode.replace(/import\s+(.+);/g, "");
 
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
