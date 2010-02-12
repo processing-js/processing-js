@@ -1347,6 +1347,7 @@
 
       if (p.use3DContext) {
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+        p.camera();
         p.draw();
       } else {
         p.pushMatrix();
