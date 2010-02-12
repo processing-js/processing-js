@@ -1162,10 +1162,6 @@
     p.scale = function scale(x, y) {
       curContext.scale(x, y || x);
     };
-    p.rotate = function rotate(aAngle) {
-      curContext.rotate(aAngle);
-    };
-
     p.pushMatrix = function pushMatrix() {
       if (p.use3DContext) {
         userMatrixStack.load(modelView);
@@ -1186,18 +1182,22 @@
       forwardTransform.reset();
     };
     
-    p.rotateX = function(angleInRadians) {
-      forwardTransform.rotateX(angleInRadians);
+    p.rotateX = function( angleInRadians ) {
+      forwardTransform.rotateX( angleInRadians );
     };
     
-    p.rotateZ = function(angleInRadians) {
-      forwardTransform.rotateZ(angleInRadians);
+    p.rotateZ = function( angleInRadians ) {
+      forwardTransform.rotateZ( angleInRadians );
     };
 
-    p.rotateY = function(angleInRadians) {
-      forwardTransform.rotateY(angleInRadians);
+    p.rotateY = function( angleInRadians ) {
+      forwardTransform.rotateY( angleInRadians );
     };
-
+		
+		p.rotate = function rotate( angleInRadians ) {
+      forwardTransform.rotateZ( angleInRadians );
+    };
+		
     p.pushStyle = function pushStyle() {
       // Save the canvas state.
       curContext.save();
