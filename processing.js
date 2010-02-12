@@ -1,6 +1,6 @@
 /*
 
-    P R O C E S S I N G - 0 . 4 . J S
+    P R O C E S S I N G - 0 . 5 . J S
     a port of the Processing visualization language
     
     License       : MIT 
@@ -56,13 +56,18 @@
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
-      var datasrc = canvas[i].getAttribute('datasrc');
+      // Get data-src instead of datasrc
+      var datasrc = canvas[i].getAttribute('data-src');
+      if(datasrc===null){
+        // Temporary fallback for datasrc
+        datasrc = canvas[i].getAttribute('datasrc');
+      }
       if (datasrc) {
         Processing(canvas[i], ajax(datasrc));
       }
     }
-
   };
+  
 	/*
     Andor Salga
     asalga.wordpress.com
