@@ -1,0 +1,15 @@
+void setup() {
+  size(500, 500, OPENGL);
+  fill(204);
+}
+
+void draw() {
+  background(255, 0, 0);
+  
+  // Change height of the camera with mouseY
+  camera(0, 0, 400, // eyeX, eyeY, eyeZ
+         mouseX - width/2, mouseY - height/2, 0.0, // centerX, centerY, centerZ
+         0.0, 1.0, 0.0); // upX, upY, upZ
+  
+  box(50);
+}
