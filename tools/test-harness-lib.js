@@ -1,7 +1,8 @@
 // A Processing.js lib version of the unit test code
 (function() {
 
-  Processing.lib.UnitTests = function() {
+Processing.lib.UnitTests = function() {
+  this.UnitTests = function() {
     var _passCount   = 0,
         _failCount   = 0;
 
@@ -94,5 +95,6 @@
       print('TEST-SUMMARY: ' + _passCount + '/' + _failCount);
     };
   }
+}
 
 })();
