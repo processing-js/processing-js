@@ -140,7 +140,7 @@
       if (name === "if" || name === "for" || name === "while") {
         return all;
       } else {
-        return "Processing." + name + " = function " + name + args;
+        return "processing." + name + " = function " + name + args;
       }
     });
 
@@ -237,7 +237,7 @@
     };
 
     var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)\b\1\s*\(/g;
-    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(Processing)/g;
+    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(processing)/g;
 
     aCode = aCode.replace(matchClasses, classReplace);
     aCode = aCode.replace(matchNoCon, classReplace);
@@ -273,7 +273,7 @@
       // Fix class method names
       // this.collide = function() { ... }
       // and add closing } for with(this) ...
-      rest = rest.replace(/(?:public )?Processing.\w+ = function (\w+)\((.*?)\)/g, function (all, name, args) {
+      rest = rest.replace(/(?:public )?processing.\w+ = function (\w+)\((.*?)\)/g, function (all, name, args) {
         return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
       });
 
@@ -297,7 +297,7 @@
     }
 
     // Do some tidying up, where necessary
-    aCode = aCode.replace(/Processing.\w+ = function addMethod/g, "addMethod");
+    aCode = aCode.replace(/processing.\w+ = function addMethod/g, "addMethod");
 
 
     // Check if 3D context is invoked -- this is not the best way to do this.
@@ -343,16 +343,8 @@
 
     // Create the 'p' object
     var p = {};
-    var curElement = curElement;
-    var curContext;
-
+    var curContext, curElement = curElement;
     p.use3DContext = false; // default '2d' canvas context
-    
-    for (var i in Processing.lib) {
-      if (1) {
-        p[i] = Processing.lib[i];
-      }
-    }
 
     // Set Processing defaults / environment variables
     p.name = 'Processing.js Instance';
@@ -4419,10 +4411,10 @@
     p.init = function init(code) {
 
       if (code) {
-        (function (Processing) {
+        (function (processing) {
 
           with(p) {
-            var parsedCode = this.Processing.parse(code, p);
+            var parsedCode = Processing.parse(code, p);
 
             if (!p.use3DContext) {
               // Setup default 2d canvas context. 
@@ -4440,6 +4432,14 @@
 
               p.disableContextMenu();
               
+            }
+
+            // Step through the libraries that were attached at doc load...
+            for (var i in Processing.lib) {
+              if (Processing.lib) {                
+                // Init the libraries in the context of this p_instance
+                Processing.lib[i].call(processing);
+              }
             }
 
             eval(parsedCode);
