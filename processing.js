@@ -1195,7 +1195,9 @@
     };
 		
 		p.rotate = function rotate( angleInRadians ) {
-      forwardTransform.rotateZ( angleInRadians );
+      if (p.use3DContext) {  
+				forwardTransform.rotateZ( angleInRadians );
+			}else { curContext.rotate( angleInRadians ); }
     };
 		
     p.pushStyle = function pushStyle() {
