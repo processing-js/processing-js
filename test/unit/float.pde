@@ -1,3 +1,11 @@
+// Tests for Processing float() function - http://processing.org/reference/float_.html
+
+int i = 65;
+byte b = 65;
+
+_checkEqual('A', char(i));
+_checkEqual('A', char(b));
+
 byte inByte=12;
 
 float[] inFloatArr={10.5,-11.5,12.5};
