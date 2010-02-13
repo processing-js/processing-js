@@ -1858,7 +1858,7 @@
       var ret;
       
       if ( arguments.length === 1 && typeof key === "number" && (key + "").indexOf( '.' ) === -1 ) {
-        ret = String.fromCharCode( key );
+        ret = String.fromCharCode( key ).toString();
       } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
         ret = new Array(0);
         
