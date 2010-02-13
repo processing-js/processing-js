@@ -8,7 +8,7 @@ _checkEqual('A', char(b));
 
 int[] intArr=new int[3];
 intArr[0]=70;
-intArr[1]=118;
+intArr[1]=117;
 intArr[2]=98;
 char[] intExp=new char[3];
 intExp[0]='F';
