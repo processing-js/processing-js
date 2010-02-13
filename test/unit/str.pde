@@ -9,7 +9,7 @@ int i = 1024;
 _checkEqual("false", str(b));
 _checkEqual("-28", str(y));
 
-// Test fails because JS converts char arguments into numbers. The function
+// Test fails because char arguments are converted into numbers. The function
 // cannot tell if an argument is a char. Problem also occurs with char arrays.
 // To get the correct result one must pass in single characters as Strings.
 // str('R') returns "82", str("R") returns "R".
