@@ -318,7 +318,7 @@
 
 
     // Check if 3D context is invoked -- this is not the best way to do this.
-    if (aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\);/)) {
+    if (aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\s*\);/)) {
       p.use3DContext = true;
     }
 
@@ -387,11 +387,11 @@
   };
 
   // Attach Processing functions to 'p'
-  Processing.build = function buildProcessing(element) {
+  Processing.build = function buildProcessing(curElement) {
 
     // Create the 'p' object
     var p = {};
-    var curContext, curElement = element;
+    var curContext;
     p.use3DContext = false; // default '2d' canvas context
 
     // Set Processing defaults / environment variables
