@@ -27,9 +27,10 @@ class ProcessingTests(object):
               sys.stderr.flush()
 
               # If a single test file name is given, only test that file
-              fullpath = os.path.join(root, filename)
-              if testPath and not fullpath.startswith(testPath):
-                  continue
+              fullpath = os.path.abspath(os.path.join(root, filename))
+              if testPath and not fullpath.endswith(testPath):
+                continue
+
               if filename.endswith('.pde'):
                   tmpFile = jsshellhelper.createEscapedFile(fullpath)
                   one_test = 'var parserTest = {name:"' + fullpath + '", body: __unescape_string()};\n'
@@ -90,8 +91,6 @@ class ProcessingTests(object):
       # TODO: add support for doing .pjs unit tests.
       unittestdir = os.path.join(self.toolsdir, '..', 'test', 'unit')
       jsshell = os.path.abspath(jsshell)
-      if testPath:
-        testPath = os.path.abspath(testPath)
 
       for root, dirs, filenames in os.walk(unittestdir):
           for filename in filenames:
@@ -99,8 +98,8 @@ class ProcessingTests(object):
               sys.stderr.flush()
 
               # If a single test file name is given, only test that file
-              fullpath = os.path.join(root, filename)
-              if testPath and not fullpath.startswith(testPath):
+              fullpath = os.path.abspath(os.path.join(root, filename))
+              if testPath and not fullpath.endswith(testPath):
                   continue
 
               tmpFile = None

@@ -76,6 +76,7 @@ var JSLINT = (function () {
         document: true,
         window: true,
         Processing: true,
+        console: true,
         event: false,
         focus: false,
         frames: false,
