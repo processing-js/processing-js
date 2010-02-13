@@ -131,10 +131,10 @@
     // masks all strings into <STRING n>
     // to be replaced with the array strings after parsing is finishes
     var strings = aCode.match(/(["'])(\\\1|.)*?(\1)/g);
-    for ( var i = 0; /(["'])(\\\1|.)*?(\1)/.test(aCode); i++) {
-      aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/, "<STRING " + i + ">");
+    for ( var n = 0; /(["'])(\\\1|.)*?(\1)/.test(aCode); n++) {
+      aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/, "<STRING " + n + ">");
     }
-  
+
     // Remove end-of-line comments
     aCode = aCode.replace(/\/\/.*\n/g, "\n");
 
@@ -351,7 +351,7 @@
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
     if (strings !== null) {
-      for( var i = 0; l = i < strings.length; i++ ) {
+      for( var i = 0; i < strings.length; i++ ) {
         aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
           var returnString = all, notString = true, quoteType = "", escape = false;
 
@@ -388,11 +388,11 @@
   };
 
   // Attach Processing functions to 'p'
-  Processing.build = function buildProcessing(curElement) {
+  Processing.build = function buildProcessing(element) {
 
     // Create the 'p' object
     var p = {};
-    var curContext, curElement = curElement;
+    var curContext, curElement = element;
     p.use3DContext = false; // default '2d' canvas context
 
     // Set Processing defaults / environment variables
@@ -1998,7 +1998,7 @@
 
             ret = val.charCodeAt( 0 );
           } else {
-            ret = parseInt( val );
+            ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
 
             if ( isNaN( ret ) ) {
               ret = 0;
