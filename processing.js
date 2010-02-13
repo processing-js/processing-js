@@ -2080,7 +2080,9 @@
 
         if ( typeof val === 'number' ) {
           // float() not allowed to handle floats.
-          if ( ( val + "" ).indexOf( '.' ) === -1 ) {
+          if ( ( val + "" ).indexOf( '.' ) === 1 ) {
+            throw "float() may not accept float arguments.";
+          } else {
             ret = val.toFixed(1);
           }
         } else if ( typeof val === 'boolean' ) {
