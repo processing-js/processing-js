@@ -2368,6 +2368,10 @@
         }
       }
 
+      // redraw the background if background was called before size
+      if (hasBackground) {
+        p.background();
+      }
     };
 
 
@@ -3797,6 +3801,7 @@
           curContext.fillStyle = oldFill;
         }
       }
+      hasBackground = true;
     };
 
     // Depreciating "getImage_old" from PJS - currently here to support AniSprite
