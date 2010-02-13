@@ -9,10 +9,8 @@ int i = 1024;
 _checkEqual("false", str(b));
 _checkEqual("-28", str(y));
 
-// Test fails because char arguments are converted into numbers. The function
-// cannot tell if an argument is a char. Problem also occurs with char arrays.
-// To get the correct result one must pass in single characters as Strings.
-// str('R') returns "82", str("R") returns "R".
+// See #312 Char arguments indistinguishable from numbers
+// https://processing-js.lighthouseapp.com/projects/41284/tickets/312-char-arguments-indistinguishable-from-numbers#ticket-312-1
 _checkEqual("R", str(c));
 
 _checkEqual("-32.6", str(f));
@@ -42,7 +40,8 @@ byteExp[2]="-2";
 byteExp[3]="-1";
 _checkEqual(byteExp, str(byteArr));
 
-// See note on chars for why char arrays don't work.
+// See #312 Char arguments indistinguishable from numbers
+// https://processing-js.lighthouseapp.com/projects/41284/tickets/312-char-arguments-indistinguishable-from-numbers#ticket-312-1
 char[] charArr=new char[4];
 charArr[0]='@';
 charArr[1]='M';
