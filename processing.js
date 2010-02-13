@@ -1575,6 +1575,59 @@
       return str;
     };
 
+    p.nfp = function (num, left, right) {
+      var str, len, formatLength, rounded;
+
+      // array handling
+      if (typeof num === "object" && num.constructor === Array) {
+        str = new Array(0);
+        len = num.length;
+        for (var i = 0; i < len; i++) {
+          str[i] = p.nfp(num[i], left, right);
+        }
+      } else if (arguments.length === 3) {
+        var negative = num < 0 ? true : false;
+
+        // Make it work exactly like p5 for right = 0
+        if ( right === 0 ) {
+          right = 1;
+        }
+        
+        if ( right < 0 ) {
+          rounded = Math.round(num);
+        } else {
+          // round to 'right' decimal places
+          rounded = Math.round(num * Math.pow(10,right)) / Math.pow(10,right);
+        }
+
+        // split number into whole and fractional components
+        var splitNum = Math.abs(rounded).toString().split("."); // [0] whole number, [1] fractional number
+
+        // format whole part
+        formatLength = left - splitNum[0].length;
+        for(; formatLength > 0; formatLength--) {
+          splitNum[0] = "0" + splitNum[0];
+        }
+
+        // format fractional part
+        if ( splitNum.length === 2 || right > 0 ) {
+          splitNum[1] = splitNum.length === 2 ? splitNum[1] : "";
+          formatLength = right - splitNum[1].length;
+          for(; formatLength > 0; formatLength--) {
+            splitNum[1] += "0";
+          }
+          str = splitNum.join(".");
+        } else {
+          str = splitNum[0]; 
+        }
+
+        str = (negative ? "-" : "+") + str;
+      } else if (arguments.length === 2) {
+        str = p.nfp(num, left, -1);
+      }
+      return str;
+    };
+
     p.nfc = function (num, right) {
       var str;
       var decimals = right >= 0 ? right : 0;
@@ -1817,55 +1870,6 @@
       }
 
       return str;
-    };
-
-    p.nfp = function nfp(Value, pad, right) {
-      var str = String(Value);
-
-      if (arguments.length < 3) { //check if it's 2 arguments
-        if (Value > 0) {
-          while (str.length < pad) {
-            str = "0" + str;
-          }
-          str = "+" + str;
-          return str;
-        } else {
-          str = str.slice(1); //used to remove the '-' infront of the original number.
-          while (str.length < pad) {
-            str = "0" + str;
-          }
-          str = "-" + str;
-          return str;
-        }
-      } else if (arguments.length === 3) { //check if it's 3 arguments 
-        var decimalPos = str.indexOf('.'),
-          strL, strR;
-        if (Value > 0) {
-          strL = str.slice(0, decimalPos); //store #'s to left of decimal into strL
-          strR = str.slice(decimalPos + 1, str.length); //store #'s to right of decimal into strR
-          while (strL.length < pad) { //pad to left of decimal on positive #'s
-            strL = "0" + strL;
-          }
-          strL = "+" + strL;
-
-          while (strR.length < right) { //pad to right of decimal on positive #'s
-            strR = strR + "0";
-          }
-          return strL + "." + strR;
-        } else {
-          strL = str.slice(1, decimalPos); //store #'s to left of decimal into strL
-          strR = str.slice(decimalPos + 1, str.length); //store #'s to right of decimal into strR
-          while (strL.length < pad) { //pad to left of decimal on negative #'s
-            strL = "0" + strL;
-          }
-          strL = "-" + strL;
-
-          while (strR.length < right) { //pad to right of decimal on negative #'s
-            strR = strR + "0";
-          }
-          return strL + "." + strR;
-        }
-      }
     };
 
     ////////////////////////////////////////////////////////////////////////////
