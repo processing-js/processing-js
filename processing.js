@@ -1,6 +1,6 @@
 /*
 
-    P R O C E S S I N G - 0 . 4 . J S
+    P R O C E S S I N G - 0 . 5 . J S
     a port of the Processing visualization language
     
     License       : MIT 
@@ -56,13 +56,18 @@
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
-      var datasrc = canvas[i].getAttribute('datasrc');
+      // Get data-src instead of datasrc
+      var datasrc = canvas[i].getAttribute('data-src');
+      if(datasrc===null){
+        // Temporary fallback for datasrc
+        datasrc = canvas[i].getAttribute('datasrc');
+      }
       if (datasrc) {
         Processing(canvas[i], ajax(datasrc));
       }
     }
-
   };
+  
 	/*
     Andor Salga
     asalga.wordpress.com
@@ -118,8 +123,21 @@
 
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   Processing.parse = function parse(aCode, p) {
+
+    // Force characters-as-bytes to work.
+    aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+
+    // Saves all strings into an array
+    // masks all strings into <STRING n>
+    // to be replaced with the array strings after parsing is finishes
+    var strings = [];
+    aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
+      strings.push(all);
+      return "<STRING " + (strings.length -1) + ">";
+    });
+
     // Remove end-of-line comments
-    aCode = aCode.replace(/\/\/ .*\n/g, "\n");
+    aCode = aCode.replace(/\/\/.*\n/g, "\n");
 
     // Weird parsing errors with %
     aCode = aCode.replace(/([^\s])%([^\s])/g, "$1 % $2");
@@ -135,12 +153,16 @@
       if (name === "if" || name === "for" || name === "while") {
         return all;
       } else {
-        return "Processing." + name + " = function " + name + args;
+        return "processing." + name + " = function " + name + args;
       }
     });
 
     // Attach import() to p{} bypassing JS command, allowing for extrernal library loading
-    aCode = aCode.replace(/import \(|import\(/g, "p.Import(");
+    //aCode = aCode.replace(/import \(|import\(/g, "p.Import(");
+
+    // Delete import statements, ie. import processing.video.*;
+    // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
+    aCode = aCode.replace(/import\s+(.+);/g, "");
 
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
@@ -232,7 +254,7 @@
     };
 
     var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)\b\1\s*\(/g;
-    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(Processing)/g;
+    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(processing)/g;
 
     aCode = aCode.replace(matchClasses, classReplace);
     aCode = aCode.replace(matchNoCon, classReplace);
@@ -268,7 +290,7 @@
       // Fix class method names
       // this.collide = function() { ... }
       // and add closing } for with(this) ...
-      rest = rest.replace(/(?:public )?Processing.\w+ = function (\w+)\((.*?)\)/g, function (all, name, args) {
+      rest = rest.replace(/(?:public )?processing.\w+ = function (\w+)\((.*?)\)/g, function (all, name, args) {
         return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
       });
 
@@ -292,11 +314,11 @@
     }
 
     // Do some tidying up, where necessary
-    aCode = aCode.replace(/Processing.\w+ = function addMethod/g, "addMethod");
+    aCode = aCode.replace(/processing.\w+ = function addMethod/g, "addMethod");
 
 
     // Check if 3D context is invoked -- this is not the best way to do this.
-    if (aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\);/)) {
+    if (aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\s*\);/)) {
       p.use3DContext = true;
     }
 
@@ -308,8 +330,6 @@
 
     // Force numbers to exist //
     //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
-    //! // Force characters-as-bytes to work --> Ping: Andor
-    aCode = aCode.replace(/('[a-zA-Z0-9]')/g, "$1.charCodeAt(0)");
 
     var toNumbers = function (str) {
       var ret = [];
@@ -330,6 +350,39 @@
     // Convert 3.0f to just 3.0
     aCode = aCode.replace(/(\d+)f/g, "$1");
 
+    // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
+    for( var i = 0; i < strings.length; i++ ) {
+      aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
+        var returnString = all, notString = true, quoteType = "", escape = false;
+
+        for (var x = 0; x < quoteStart.length; x++) {
+          if (notString) {
+            if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
+              quoteType = quoteStart.charAt(x);
+              notString = false;
+            }
+          } else {
+            if (!escape) {
+              if (quoteStart.charAt(x) === "\\") {
+                escape = true;
+              } else if (quoteStart.charAt(x) === quoteType) {
+                notString = true;
+                quoteType = "";
+              }
+            } else { 
+              escape = false; 
+            }
+          }
+        }
+
+        if (notString) { // Match is not inside a string
+          returnString = quoteStart + strings[i] + quoteEnd;
+        }
+
+        return returnString;
+      });
+    }
+
     return aCode;
   };
 
@@ -338,16 +391,8 @@
 
     // Create the 'p' object
     var p = {};
-    var curElement = curElement;
     var curContext;
-
     p.use3DContext = false; // default '2d' canvas context
-    
-    for (var i in Processing.lib) {
-      if (1) {
-        p[i] = Processing.lib[i];
-      }
-    }
 
     // Set Processing defaults / environment variables
     p.name = 'Processing.js Instance';
@@ -1195,7 +1240,9 @@
     };
 		
 		p.rotate = function rotate( angleInRadians ) {
-      forwardTransform.rotateZ( angleInRadians );
+      if (p.use3DContext) {  
+				forwardTransform.rotateZ( angleInRadians );
+			}else { curContext.rotate( angleInRadians ); }
     };
 		
     p.pushStyle = function pushStyle() {
@@ -1299,6 +1346,7 @@
 
       if (p.use3DContext) {
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+        p.camera();
         p.draw();
       } else {
         p.pushMatrix();
@@ -1450,6 +1498,7 @@
 			}    
 			return str;
 		};  
+
     p.unbinary = function unbinary(binaryString) {
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
@@ -1459,7 +1508,7 @@
       } else {
         if (arguments.length === 1 || binaryString.length === 8) {
           if (binaryPattern.test(binaryString)) {
-            for (i = 0; i < 8; i++) {
+            for (var i = 0; i < 8; i++) {
               addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
             }
             return addUp + "";
@@ -1948,7 +1997,7 @@
 
             ret = val.charCodeAt( 0 );
           } else {
-            ret = parseInt( val );
+            ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
 
             if ( isNaN( ret ) ) {
               ret = 0;
@@ -2542,17 +2591,15 @@
         return this.elements.slice();
       },
       translate: function( tx, ty, tz ){
-        if( tx && ty && !tz )
+        if( typeof tz === 'undefined' )
         {
-          this.translate( tx, ty, 0 );
+          tx = 0;
         }
-        else
-        {                      
-          this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
-          this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
-          this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
-          this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
-        }
+                              
+				this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
+				this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
+				this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
+				this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
       },
       transpose: function(){
         var temp = this.elements.slice();
@@ -4456,10 +4503,10 @@
     p.init = function init(code) {
 
       if (code) {
-        (function (Processing) {
+        (function (processing) {
 
           with(p) {
-            var parsedCode = this.Processing.parse(code, p);
+            var parsedCode = Processing.parse(code, p);
 
             if (!p.use3DContext) {
               // Setup default 2d canvas context. 
@@ -4477,6 +4524,14 @@
 
               p.disableContextMenu();
               
+            }
+
+            // Step through the libraries that were attached at doc load...
+            for (var i in Processing.lib) {
+              if (Processing.lib) {                
+                // Init the libraries in the context of this p_instance
+                Processing.lib[i].call(processing);
+              }
             }
 
             eval(parsedCode);
