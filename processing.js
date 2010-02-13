@@ -124,14 +124,18 @@
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   Processing.parse = function parse(aCode, p) {
 
+    // Force characters-as-bytes to work.
+    aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+
     // Saves all strings into an array
     // masks all strings into <STRING n>
     // to be replaced with the array strings after parsing is finishes
-    var strings = aCode.match(/(["'])(\\\1|.)*?(\1)/g);
-    for ( var i = 0; /(["'])(\\\1|.)*?(\1)/.test(aCode); i++) {
-      aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/, "<STRING " + i + ">");
-    }
-  
+    var strings = [];
+    aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
+      strings.push(all);
+      return "<STRING " + (strings.length -1) + ">";
+    });
+
     // Remove end-of-line comments
     aCode = aCode.replace(/\/\/.*\n/g, "\n");
 
@@ -326,8 +330,6 @@
 
     // Force numbers to exist //
     //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
-    //! // Force characters-as-bytes to work --> Ping: Andor
-    aCode = aCode.replace(/('[a-zA-Z0-9]')/g, "$1.charCodeAt(0)");
 
     var toNumbers = function (str) {
       var ret = [];
@@ -349,49 +351,47 @@
     aCode = aCode.replace(/(\d+)f/g, "$1");
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-    if (strings !== null) {
-      for( var i = 0; l = i < strings.length; i++ ) {
-        aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
-          var returnString = all, notString = true, quoteType = "", escape = false;
+    for( var i = 0; i < strings.length; i++ ) {
+      aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
+        var returnString = all, notString = true, quoteType = "", escape = false;
 
-          for (var x = 0; x < quoteStart.length; x++) {
-            if (notString) {
-              if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
-                quoteType = quoteStart.charAt(x);
-                notString = false;
+        for (var x = 0; x < quoteStart.length; x++) {
+          if (notString) {
+            if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
+              quoteType = quoteStart.charAt(x);
+              notString = false;
+            }
+          } else {
+            if (!escape) {
+              if (quoteStart.charAt(x) === "\\") {
+                escape = true;
+              } else if (quoteStart.charAt(x) === quoteType) {
+                notString = true;
+                quoteType = "";
               }
-            } else {
-              if (!escape) {
-                if (quoteStart.charAt(x) === "\\") {
-                  escape = true;
-                } else if (quoteStart.charAt(x) === quoteType) {
-                  notString = true;
-                  quoteType = "";
-                }
-              } else { 
-                escape = false; 
-              }
+            } else { 
+              escape = false; 
             }
           }
+        }
 
-          if (notString) { // Match is not inside a string
-            returnString = quoteStart + strings[i] + quoteEnd;
-          }
+        if (notString) { // Match is not inside a string
+          returnString = quoteStart + strings[i] + quoteEnd;
+        }
 
-          return returnString;
-        });
-      }
+        return returnString;
+      });
     }
 
     return aCode;
   };
 
   // Attach Processing functions to 'p'
-  Processing.build = function buildProcessing(curElement) {
+  Processing.build = function buildProcessing(element) {
 
     // Create the 'p' object
     var p = {};
-    var curContext, curElement = curElement;
+    var curContext, curElement = element;
     p.use3DContext = false; // default '2d' canvas context
 
     // Set Processing defaults / environment variables
@@ -1346,6 +1346,7 @@
 
       if (p.use3DContext) {
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+        p.camera();
         p.draw();
       } else {
         p.pushMatrix();
@@ -1996,7 +1997,7 @@
 
             ret = val.charCodeAt( 0 );
           } else {
-            ret = parseInt( val );
+            ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
 
             if ( isNaN( ret ) ) {
               ret = 0;
