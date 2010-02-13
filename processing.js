@@ -130,10 +130,11 @@
     // Saves all strings into an array
     // masks all strings into <STRING n>
     // to be replaced with the array strings after parsing is finishes
-    var strings = aCode.match(/(["'])(\\\1|.)*?(\1)/g);
-    for ( var n = 0; /(["'])(\\\1|.)*?(\1)/.test(aCode); n++) {
-      aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/, "<STRING " + n + ">");
-    }
+    var strings = [];
+    aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
+      strings.push(all);
+      return "<STRING " + (strings.length -1) + ">";
+    });
 
     // Remove end-of-line comments
     aCode = aCode.replace(/\/\/.*\n/g, "\n");
@@ -350,38 +351,36 @@
     aCode = aCode.replace(/(\d+)f/g, "$1");
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-    if (strings !== null) {
-      for( var i = 0; i < strings.length; i++ ) {
-        aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
-          var returnString = all, notString = true, quoteType = "", escape = false;
+    for( var i = 0; i < strings.length; i++ ) {
+      aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
+        var returnString = all, notString = true, quoteType = "", escape = false;
 
-          for (var x = 0; x < quoteStart.length; x++) {
-            if (notString) {
-              if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
-                quoteType = quoteStart.charAt(x);
-                notString = false;
+        for (var x = 0; x < quoteStart.length; x++) {
+          if (notString) {
+            if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
+              quoteType = quoteStart.charAt(x);
+              notString = false;
+            }
+          } else {
+            if (!escape) {
+              if (quoteStart.charAt(x) === "\\") {
+                escape = true;
+              } else if (quoteStart.charAt(x) === quoteType) {
+                notString = true;
+                quoteType = "";
               }
-            } else {
-              if (!escape) {
-                if (quoteStart.charAt(x) === "\\") {
-                  escape = true;
-                } else if (quoteStart.charAt(x) === quoteType) {
-                  notString = true;
-                  quoteType = "";
-                }
-              } else { 
-                escape = false; 
-              }
+            } else { 
+              escape = false; 
             }
           }
+        }
 
-          if (notString) { // Match is not inside a string
-            returnString = quoteStart + strings[i] + quoteEnd;
-          }
+        if (notString) { // Match is not inside a string
+          returnString = quoteStart + strings[i] + quoteEnd;
+        }
 
-          return returnString;
-        });
-      }
+        return returnString;
+      });
     }
 
     return aCode;
