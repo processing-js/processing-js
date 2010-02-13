@@ -1455,13 +1455,13 @@
 			if(typeof num === "string" && num.length > 1) {
 				var c = num.slice(5,-1).split(",");
 						
-				// if all components are zero, a single "0" is returned
-				// for some reason
+				// if all components are zero, a single "0" is returned for some reason
+        // [0] alpha is normalized, [1] r, [2] g, [3] b
 				var sbin = [
-				decToBin(c[3]*255,8), // alpha is normalized
-				decToBin(c[0],8), // r
-				decToBin(c[1],8), // g
-				decToBin(c[2],8)  // b
+				decToBin(c[3]*255,8),
+				decToBin(c[0],8),
+				decToBin(c[1],8),
+				decToBin(c[2],8)
 				];
 						
 				var s = sbin[0]+sbin[1]+sbin[2]+sbin[3];
