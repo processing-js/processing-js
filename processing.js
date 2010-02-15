@@ -3564,11 +3564,11 @@
       normalY = ny;
       normalZ = nz;
 
-      if ( curShape != 0 ) {
-        if ( normalMode == NORMAL_MODE_AUTO ) {
-          normalMode = NORMAL_MODE_SHAPE;
-        } else if ( normalMode == NORMAL_MODE_SHAPE ) {
-          normalMode = NORMAL_MODE_VERTEX;
+      if ( curShape !== 0 ) {
+        if ( normalMode === p.NORMAL_MODE_AUTO ) {
+          normalMode = p.NORMAL_MODE_SHAPE;
+        } else if ( normalMode === p.NORMAL_MODE_SHAPE ) {
+          normalMode = p.NORMAL_MODE_VERTEX;
         }
       }
     };
