@@ -3547,6 +3547,11 @@
 
 
     p.normal = function normal( nx, ny, nz ) {
+      
+      if ( arguments.length !== 3 && typeof nx !== "number" && typeof ny !== "number" && typeof nz !== "number" ) {
+        throw "normal() requires three numeric arguments.";
+      }
+      
       normalX = nx;
       normalY = ny;
       normalZ = nz;
