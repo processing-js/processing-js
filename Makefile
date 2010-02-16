@@ -2,7 +2,6 @@
 TOOLSDIR=./tools
 JS=$(TOOLSDIR)/js/src/js
 
-
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
 	$(TOOLSDIR)/pde2js.py $(JS) $?
@@ -24,6 +23,8 @@ zipped: release-files
 
 release-docs: create-release
 	cp README ./release
+	cp LICENSE ./release
+	cp CHANGELOG ./release
 
 example: create-release pretty
 	echo "<script src=\"processing-$(VERSION).js\"></script>" > ./release/example.html
