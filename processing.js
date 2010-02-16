@@ -92,6 +92,9 @@
   var programObject;
   var boxBuffer;
   var boxOutlineBuffer;
+	
+	var sphereBuffer;
+  var sphereOutlineBuffer;
   
   var vertexShaderSource = 
   "attribute vec3 Vertex;" +
@@ -400,6 +403,7 @@
     p.PI = Math.PI;
     p.TWO_PI = 2 * p.PI;
     p.HALF_PI = p.PI / 2;
+		p.SINCOS_LENGTH   = parseInt(360/0.5);
     p.MAX_FLOAT = 3.4028235e+38;
     p.MIN_FLOAT = -3.4028235e+38;
     p.MAX_INT = 2147483647;
@@ -460,6 +464,14 @@
     p.PROJECT = 'square'; // Used by cap.
     p.MITER = 'miter'; // Used by join.
     p.BEVEL = 'bevel'; // Used by join.
+		//sphere stuff
+		p.sphereDetailV = 0;
+	  p.sphereDetailU = 0;
+		p.sphereX     = new Array();
+		p.sphereY     = new Array();
+		p.sphereZ     = new Array();
+		p.sinLUT      = new Array( p.SINCOS_LENGTH );
+    p.cosLUT      = new Array( p.SINCOS_LENGTH );
     // KeyCode Table
     p.CENTER = 88888880;
     p.CODED = 88888888;
@@ -2330,7 +2342,13 @@
           boxOutlineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
-
+					
+					sphereBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
+          
+          sphereOutlineBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereOutlineBuffer);
+					
           p.camera();
           p.perspective();
 
@@ -3088,7 +3106,193 @@
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
       }
     };
+		//SPHERE and SphereDetail
+		//Taken and revised from:
+		//git://github.com/omouse/ohprocessing.git › core › src › processing › core › PGraphics.java
+		//UNDER :License: LGPL – Java
+		p.sphereDetail =  function sphereDetail(ures, vres) {
+			if(arguments.length==1)
+			{
+				ures = vres = arguments[0];
+			}
+			if ( ures < 3 ) ures = 3; // force a minimum res
+			if ( vres < 2 ) vres = 2; // force a minimum res
+			//if it hasn't changed do nothing
+			if (( ures == p.sphereDetailU ) && ( vres == p.sphereDetailV )) return;
 
+			var delta = p.SINCOS_LENGTH/ures;
+			var cx = new Array(ures);
+			var cz = new Array(ures);
+			// calc unit circle in XZ plane
+			for (var i = 0; i < ures; i++) {
+			cx[i] = p.cosLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH )];
+			cz[i] = p.sinLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH )];
+			}
+			// computing vertexlist
+			// vertexlist starts at south pole
+			var vertCount = ures * ( vres - 1 ) + 2;
+			var currVert = 0;
+
+			// re-init arrays to store vertices
+			p.sphereX = new Array( vertCount );
+			p.sphereY = new Array( vertCount );
+			p.sphereZ = new Array( vertCount );
+
+			var angle_step = p.SINCOS_LENGTH/vres;
+			var angle = angle_step;
+
+			// step along Y axis
+			for (var i = 1; i < vres; i++) {
+				var curradius = p.sinLUT[ parseInt( angle % p.SINCOS_LENGTH )];
+				var currY     = -p.cosLUT[ parseInt( angle % p.SINCOS_LENGTH )];
+				for ( var j = 0; j < ures; j++ ) {
+					p.sphereX[currVert]   = cx[j] * curradius;
+					p.sphereY[currVert]   = currY;
+					p.sphereZ[currVert++] = cz[j] * curradius;
+				}
+			  angle += angle_step;
+			}
+			p.sphereDetailU = ures;
+			p.sphereDetailV = vres;
+		}
+		
+		p.sphere = function()
+		{
+			if(curContext)
+			{
+				var sRad = arguments[0];
+				//ATTEMPT 2 USING Sphere Detail
+				var newSphereVerts = new Array();
+				var newSphereNorms = new Array();
+				if (( p.sphereDetailU < 3 ) || ( p.sphereDetailV < 2 )) {
+					p.sphereDetail(30);
+				}
+				for (var i = 0; i < p.sphereDetailU; i++) {
+					newSphereNorms.push(0);
+					newSphereNorms.push(-1);
+					newSphereNorms.push(0);
+					newSphereVerts.push(0);
+					newSphereVerts.push(-1);
+					newSphereVerts.push(0);
+					newSphereNorms.push( p.sphereX[i] );
+					newSphereNorms.push( p.sphereY[i] );
+					newSphereNorms.push( p.sphereZ[i] );
+					newSphereVerts.push( p.sphereX[i] );
+					newSphereVerts.push( p.sphereY[i] );
+					newSphereVerts.push( p.sphereZ[i] );
+				}
+				newSphereNorms.push(0);
+				newSphereNorms.push(-1);
+				newSphereNorms.push(0);
+				newSphereVerts.push(0);
+				newSphereVerts.push(-1);
+				newSphereVerts.push(0);
+				newSphereNorms.push( p.sphereX[0] );
+				newSphereNorms.push( p.sphereY[0] );
+				newSphereNorms.push( p.sphereZ[0] );
+				newSphereVerts.push( p.sphereX[0] );
+				newSphereVerts.push( p.sphereY[0] );
+				newSphereVerts.push( p.sphereZ[0] );
+
+				var v1,v11,v2;
+
+				// middle rings
+				var voff = 0;
+				for (var i = 2; i < p.sphereDetailV; i++) {
+					v1 = v11 = voff;
+					voff += p.sphereDetailU;
+					v2 = voff;
+					for (var j = 0; j < p.sphereDetailU; j++) {
+						newSphereNorms.push( parseFloat( p.sphereX[v1] ) );
+						newSphereNorms.push( parseFloat( p.sphereY[v1] ) );
+						newSphereNorms.push( parseFloat( p.sphereZ[v1] ) );
+						//verts
+						newSphereVerts.push( parseFloat( p.sphereX[v1] ) );
+						newSphereVerts.push( parseFloat( p.sphereY[v1] ) );
+						newSphereVerts.push( parseFloat( p.sphereZ[v1++] ) );
+						//normals
+						newSphereNorms.push( parseFloat( p.sphereX[v2] ) );
+						newSphereNorms.push( parseFloat( p.sphereY[v2] ) );
+						newSphereNorms.push( parseFloat( p.sphereZ[v2] ) );
+						//verts
+						newSphereVerts.push( parseFloat( p.sphereX[v2] ) );
+						newSphereVerts.push( parseFloat( p.sphereY[v2] ) );
+						newSphereVerts.push( parseFloat( p.sphereZ[v2++] ) );
+					}
+					// close each ring
+					v1 = v11;
+					v2 = voff;
+					newSphereNorms.push( parseFloat( p.sphereX[v1] ) );
+					newSphereNorms.push( parseFloat( p.sphereY[v1] ) );
+					newSphereNorms.push( parseFloat( p.sphereZ[v1] ) );
+					//verts
+					newSphereVerts.push( parseFloat( p.sphereX[v1] ) );
+					newSphereVerts.push( parseFloat( p.sphereY[v1] ) );
+					newSphereVerts.push( parseFloat( p.sphereZ[v1] ) );
+					//norms
+					newSphereNorms.push( parseFloat( p.sphereX[v2] ) );
+					newSphereNorms.push( parseFloat( p.sphereY[v2] ) );
+					newSphereNorms.push( parseFloat( p.sphereZ[v2] ) );
+					//verts
+					newSphereVerts.push( parseFloat( p.sphereX[v2] ) );
+					newSphereVerts.push( parseFloat( p.sphereY[v2] ) );
+					newSphereVerts.push( parseFloat( p.sphereZ[v2] ) );
+				}
+
+				// add the northern cap
+				for (var i = 0; i < p.sphereDetailU; i++) {
+					v2 = voff + i;
+					//norms
+					newSphereNorms.push( parseFloat( p.sphereX[v2] ) );
+					newSphereNorms.push( parseFloat( p.sphereY[v2] ) );
+					newSphereNorms.push( parseFloat( p.sphereZ[v2] ) );
+					//verts
+					newSphereVerts.push( parseFloat( p.sphereX[v2] ) );
+					newSphereVerts.push( parseFloat( p.sphereY[v2] ) );
+					newSphereVerts.push( parseFloat( p.sphereZ[v2] ) );
+				}
+				newSphereNorms.push( parseFloat( p.sphereX[voff] ) );
+				newSphereNorms.push( parseFloat( p.sphereY[voff] ) );
+				newSphereNorms.push( parseFloat( p.sphereZ[voff] ) );
+				//verts
+				newSphereVerts.push( parseFloat( p.sphereX[voff] ) );
+				newSphereVerts.push( parseFloat( p.sphereY[voff] ) );
+				newSphereVerts.push( parseFloat( p.sphereZ[voff] ) );
+				//norms
+				newSphereNorms.push(0);
+				newSphereNorms.push(1);
+				newSphereNorms.push(0);
+				//verts
+				newSphereVerts.push(0);
+				newSphereVerts.push(1);
+				newSphereVerts.push(0);
+
+				// Modeling transformation
+        var model = new PMatrix3D();
+        model.scale( sRad , sRad, sRad );
+
+        // viewing transformation needs to have Y flipped
+        // becuase that's what Processing does.
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+
+				uniformMatrix( programObject , "model" , true,  model.array() );
+        uniformMatrix( programObject , "view" , true , view.array() );
+        uniformMatrix( programObject , "projection" , true , projection.array() );
+
+        uniformf( programObject, "color", [0,0,0,1] );
+				
+				curContext.bindBuffer(curContext.ARRAY_BUFFER,sphereBuffer); 
+				//sets the buffer data
+				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
+        uniformf( programObject, "color", [1,1,1,1] );
+        vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
+        curContext.drawArrays( curContext.LINE_STRIP, 0 , newSphereVerts.length/3 );
+        curContext.disable( curContext.POLYGON_OFFSET_FILL );
+
+			}
+		}
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
