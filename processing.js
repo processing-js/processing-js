@@ -1325,10 +1325,6 @@
     };
 
     p.redraw = function redraw() {
-      if (hasBackground) {
-        p.background();
-      }
-
       var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
