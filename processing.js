@@ -3612,19 +3612,19 @@
     // Loads an image for display. Type is unused. Callback is fired on load.
     p.loadImage = function loadImage(file, type, callback) {
       var img = document.createElement('img');
-      img.src = file;
       img.loaded = false;
       img.mask = function () {}; // I don't think image mask was ever implemented? -F1LT3R
       img.onload = function () {
-        var h = this.height,
-          w = this.width;
-
+        var h = this.height, w = this.width;
         var canvas = document.createElement("canvas");
+
         canvas.width = w;
         canvas.height = h;
+
         var context = canvas.getContext("2d");
 
         context.drawImage(this, 0, 0);
+
         this.data = buildImageObject(context.getImageData(0, 0, w, h));
         this.data.img = img;
 
@@ -3637,6 +3637,8 @@
           callback();
         }
       };
+
+      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
 
       return img;
     };
