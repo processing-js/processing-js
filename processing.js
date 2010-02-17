@@ -3093,6 +3093,57 @@
       }
     };
 
+		////////////////////////////////////////////////////////////////////////////
+    // Coordinates
+    ////////////////////////////////////////////////////////////////////////////
+    p.screenX = function screenX( x, y, z ) {
+      var mv = modelView.array();
+      var pj = projection.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+      if ( ow != 0 ) ox /= ow;
+      return p.width * ( 1 + ox ) / 2.0;
+    }
+
+	  p.screenY = function screenY( x, y, z ) {
+      var mv = modelView.array();
+      var pj = projection.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+
+	    var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
+	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+	    if ( ow != 0 ) oy /= ow;
+	    return p.height * ( 1 + oy ) / 2.0;
+	  }
+
+	  p.screenZ = function screenZ( x, y,z ) {
+      var mv = modelView.array();
+      var pj = projection.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+
+	    var oz = pj[ 8]*ax + pj[ 9]*ay + pj[10]*az + pj[11]*aw;
+	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+	    if ( ow != 0 ) oz /= ow;
+	    return ( oz + 1 ) / 2.0;
+	  }
+
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
