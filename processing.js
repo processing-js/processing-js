@@ -516,6 +516,7 @@
       modelView,
       modelViewInv,
       userMatrixStack,
+      inverseCopy,
       projection,
       frustumMode = false,
       cameraFOV = 60 * (Math.PI / 180),
@@ -2698,6 +2699,22 @@
           this.elements = result.slice();
         }
       },
+      invApply: function() {
+       if ( inverseCopy == null ) {
+          inverseCopy = new PMatrix3D();
+        }
+        var a = arguments;
+        inverseCopy.set( a[0],  a[1],  a[2],  a[3],
+                         a[4],  a[5],  a[6],  a[7], 
+                         a[8],  a[9],  a[10], a[11], 
+                         a[12], a[13], a[14], a[15] );
+          
+        if ( !inverseCopy.invert() ) {
+          return false;
+        }
+        this.preApply( inverseCopy );
+        return true;
+      },
       rotateX: function( angle ){
         var c = p.cos( angle );
         var s = p.sin( angle );
@@ -2965,13 +2982,13 @@
         cam.translate( -eyeX, -eyeY, -eyeZ );
 
 				cameraInv = new PMatrix3D();
-				cameraInv.set(x.x, x.y, x.z, 0,
-				              y.x, y.y, y.z, 0,
-				              z.x, z.y, z.z, 0,
-				              0,   0,   0,   1);
+				cameraInv.invApply(x.x, x.y, x.z, 0,
+				                   y.x, y.y, y.z, 0,
+				                   z.x, z.y, z.z, 0,
+				                   0,   0,   0,   1);
 
 				cameraInv.translate( eyeX, eyeY, eyeZ );
-				
+
         modelView = new PMatrix3D();
 				modelView.set( cam );
 
@@ -3092,6 +3109,56 @@
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
       }
     };
+
+		////////////////////////////////////////////////////////////////////////////
+    // Coordinates
+    ////////////////////////////////////////////////////////////////////////////
+    p.modelX = function modelX( x, y, z ) {
+      var mv = modelView.array();
+      //alert(mv);
+      var ci = cameraInv.array();
+      //alert(ci);
+
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var ox = ci[ 0]*ax + ci[ 1]*ay + ci[ 2]*az + ci[ 3]*aw;
+      var ow = ci[12]*ax + ci[13]*ay + ci[14]*az + ci[15]*aw;      
+
+      return ( ow != 0 ) ? ox / ow : ox;
+    }
+
+    p.modelY = function modelY( x, y, z ) {
+      var mv = modelView.array();
+      var ci = cameraInv.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var oy = ci[ 4]*ax + ci[ 5]*ay + ci[ 6]*az + ci[ 7]*aw;
+      var ow = ci[12]*ax + ci[13]*ay + ci[14]*az + ci[15]*aw;
+
+      return ( ow != 0 ) ? oy / ow : oy;
+    }
+
+    p.modelZ = function modelZ(x, y, z) {
+      var mv = modelView.array();
+      var ci = cameraInv.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var oz = ci[ 8]*ax + ci[ 9]*ay + ci[10]*az + ci[11]*aw;
+      var ow = ci[12]*ax + ci[13]*ay + ci[14]*az + ci[15]*aw;
+
+      return ( ow != 0 ) ? oz / ow : oz;
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
