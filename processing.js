@@ -4465,45 +4465,44 @@
     ////////////////////////////////////////////////////////////////////////////
     // Set up environment
     ////////////////////////////////////////////////////////////////////////////
+
     p.init = function init(code) {
 
       if (code) {
+        var parsedCode = Processing.parse(code, p);
+
+        if (!p.use3DContext) {
+          // Setup default 2d canvas context. 
+          curContext = curElement.getContext('2d');
+
+          // Canvas has trouble rendering single pixel stuff on whole-pixel
+          // counts, so we slightly offset it (this is super lame).
+          curContext.translate(0.5, 0.5);
+
+          curContext.lineCap = 'round';
+
+          // Set default stroke and fill color
+          p.stroke(0);
+          p.fill(255);
+
+          p.disableContextMenu();
+        }
+
+        // Step through the libraries that were attached at doc load...
+        for (var i in Processing.lib) {
+          if (Processing.lib) {                
+            // Init the libraries in the context of this p_instance
+            Processing.lib[i].call(p);
+          }
+        }
+
+        // The parser adds custom methods to the processing context
+        // this renames p to processing so these methods will run
         (function (processing) {
-
-          with(p) {
-            var parsedCode = Processing.parse(code, p);
-
-            if (!p.use3DContext) {
-              // Setup default 2d canvas context. 
-              curContext = curElement.getContext('2d');
-
-              // Canvas has trouble rendering single pixel stuff on whole-pixel
-              // counts, so we slightly offset it (this is super lame).
-              curContext.translate(0.5, 0.5);
-
-              curContext.lineCap = 'round';
-
-              // Set default stroke and fill color
-              p.stroke(0);
-              p.fill(255);
-
-              p.disableContextMenu();
-              
-            }
-
-            // Step through the libraries that were attached at doc load...
-            for (var i in Processing.lib) {
-              if (Processing.lib) {                
-                // Init the libraries in the context of this p_instance
-                Processing.lib[i].call(processing);
-              }
-            }
-
+          with(processing) {
             eval(parsedCode);
           }
-
         })(p);
-
       }
 
       // Run void setup()
