@@ -2296,6 +2296,8 @@
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+          curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
           var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
           curContext.shaderSource(vertexShaderObject, vertexShaderSource);
@@ -3071,25 +3073,27 @@
         uniformMatrix( programObject , "model" , true,  model.array() );
         uniformMatrix( programObject , "view" , true , view.array() );
         uniformMatrix( programObject , "projection" , true , projection.array() );
-
-        uniformf( programObject, "color", [0,0,0,1] );
+        
         vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
 
+        if( doFill === true ) {
+          // fix stitching problems. (lines get occluded by triangles
+          // since they share the same depth values). This is not entirely
+          // working, but it's a start for drawing the outline. So
+          // developers can start playing around with styles. 
+          curContext.enable( curContext.POLYGON_OFFSET_FILL );
+          curContext.polygonOffset( 0.2, 3 );
+          var c = curContext.fillStyle.slice( 5, -1 ).split( "," );
+          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, 0.7 ] );
+          vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );
+          curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
+          curContext.disable( curContext.POLYGON_OFFSET_FILL );
+        }
+
         // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth( 1 );
-        curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
-
-        // fix stitching problems. (lines get occluded by triangles
-        // since they share the same depth values). This is not entirely
-        // working, but it's a start for drawing the outline. So
-        // developers can start playing around with styles. 
-        curContext.enable( curContext.POLYGON_OFFSET_FILL );
-        curContext.polygonOffset( 1, 1 );
-
-        uniformf( programObject, "color", [1,1,1,1] );
-        vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );
-        curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
-        curContext.disable( curContext.POLYGON_OFFSET_FILL );
+        //curContext.lineWidth( 1 );
+       // uniformf( programObject, "color", [0,0,0,1] );
+       // curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
       }
     };
 
@@ -3779,7 +3783,7 @@
         else if (arguments.length === 3 || arguments.length === 4) {
           // Processing seems to ignore this value, so just use 1.0 instead.
           //var a = arguments.length === 3? 1.0: arguments[3]/255;
-          curContext.clearColor(col[0] / 255, col[1] / 255, col[2] / 255, 1.0);
+          curContext.clearColor(col[0] / 255, col[1] / 255, col[2] / 255, 1);
         }
       } else { // 2d context
         if (arguments.length) {
