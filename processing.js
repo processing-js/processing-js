@@ -3758,7 +3758,7 @@
           // user passes in value which ranges from 0-255, but opengl
           // wants a normalized value.
           else if (typeof arguments[0] === "number") {
-            curContext.clearColor(col[0] / 255, col[0] / 255, col[0] / 255, 1.0);
+            curContext.clearColor(col[0] / 255, col[0] / 255, col[0] / 255, );
           }
         } else if (arguments.length === 2) {
           if (typeof arguments[0] === "string") {
