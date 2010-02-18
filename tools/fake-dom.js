@@ -22,10 +22,28 @@ var canvas = {
                    arc: __empty_func__,
                    scale: __empty_func__,
                    restore: __empty_func__,
-                   bezierCurveTo: __empty_func__
+                   bezierCurveTo: __empty_func__,
+                   viewport: __empty_func__,
+                   clearColor: __empty_func__,
+                   enable: __empty_func__,
+                   createShader: __empty_func__,
+                   shaderSource: __empty_func__,
+                   compileShader: __empty_func__,
+                   getShaderParameter: function() { return true; },
+                   getShaderInfoLog: __empty_func__,
+                   createProgram: __empty_func__,
+                   attachShader: __empty_func__,
+                   linkProgram: __empty_func__,
+                   getProgramParameter: function() { return true; }, 
+                   useProgram: __empty_func__,
+                   createBuffer: __empty_func__,
+                   bindBuffer: __empty_func__,
+                   bufferData: __empty_func__
                  };
   }
 };
+
+var WebGLFloatArray = __empty_func__;
 
 // This is enough of the DOM to allow the parser work.
 var document = {
