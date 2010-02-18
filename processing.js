@@ -2305,6 +2305,10 @@
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
         } else {
+					for (var i = 0; i < p.SINCOS_LENGTH; i++) {
+						p.sinLUT[i] = p.sin(i * (p.PI/180) * 0.5);
+						p.cosLUT[i] = p.cos(i * (p.PI/180) * 0.5);
+          }
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
