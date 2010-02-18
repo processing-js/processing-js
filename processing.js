@@ -3189,9 +3189,6 @@
 					newSphereVerts.push( p.sphereY[i] );
 					newSphereVerts.push( p.sphereZ[i] );
 				}
-				newSphereNorms.push(0);
-				newSphereNorms.push(-1);
-				newSphereNorms.push(0);
 				newSphereVerts.push(0);
 				newSphereVerts.push(-1);
 				newSphereVerts.push(0);
@@ -3258,6 +3255,14 @@
 					newSphereVerts.push( parseFloat( p.sphereX[v2] ) );
 					newSphereVerts.push( parseFloat( p.sphereY[v2] ) );
 					newSphereVerts.push( parseFloat( p.sphereZ[v2] ) );
+					//norms
+					newSphereNorms.push( parseFloat( p.sphereX[0] ) );
+					newSphereNorms.push( parseFloat( p.sphereY[1] ) );
+					newSphereNorms.push( parseFloat( p.sphereZ[0] ) );
+					//verts
+					newSphereVerts.push( parseFloat( p.sphereX[0] ) );
+					newSphereVerts.push( parseFloat( p.sphereY[1] ) );
+					newSphereVerts.push( parseFloat( p.sphereZ[0] ) );
 				}
 				newSphereNorms.push( parseFloat( p.sphereX[voff] ) );
 				newSphereNorms.push( parseFloat( p.sphereY[voff] ) );
@@ -3289,15 +3294,28 @@
         uniformMatrix( programObject , "view" , true , view.array() );
         uniformMatrix( programObject , "projection" , true , projection.array() );
 
-        uniformf( programObject, "color", [0,0,0,1] );
+        //make a solid white sphere
+				uniformf( programObject, "color", [1,1,1,1] );
+				
+				curContext.bindBuffer(curContext.ARRAY_BUFFER,sphereBuffer);
+				//set the buffer data
+				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
+				
+        vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
+        curContext.drawArrays( curContext.TRIANGLE_STRIP, 0 , newSphereVerts.length/3 );
+        curContext.disable( curContext.POLYGON_OFFSET_FILL );
+				
+				//make the black lines
+				uniformf( programObject, "color", [0,0,0,1] );
 				
 				curContext.bindBuffer(curContext.ARRAY_BUFFER,sphereBuffer); 
 				//sets the buffer data
 				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
-        uniformf( programObject, "color", [1,1,1,1] );
-        vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
+        curContext.lineWidth( 1 );
         curContext.drawArrays( curContext.LINE_STRIP, 0 , newSphereVerts.length/3 );
-        curContext.disable( curContext.POLYGON_OFFSET_FILL );
+				//make an offset so that you can actually see the lines
+				curContext.enable( curContext.POLYGON_OFFSET_FILL );
+        curContext.polygonOffset( 11, 11 );
 
 			}
 		}
