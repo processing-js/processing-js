@@ -1332,10 +1332,6 @@
     };
 
     p.redraw = function redraw() {
-      if (hasBackground) {
-        p.background();
-      }
-
       var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
@@ -3641,19 +3637,19 @@
     // Loads an image for display. Type is unused. Callback is fired on load.
     p.loadImage = function loadImage(file, type, callback) {
       var img = document.createElement('img');
-      img.src = file;
       img.loaded = false;
       img.mask = function () {}; // I don't think image mask was ever implemented? -F1LT3R
       img.onload = function () {
-        var h = this.height,
-          w = this.width;
-
+        var h = this.height, w = this.width;
         var canvas = document.createElement("canvas");
+
         canvas.width = w;
         canvas.height = h;
+
         var context = canvas.getContext("2d");
 
         context.drawImage(this, 0, 0);
+
         this.data = buildImageObject(context.getImageData(0, 0, w, h));
         this.data.img = img;
 
@@ -3666,6 +3662,8 @@
           callback();
         }
       };
+
+      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
 
       return img;
     };
@@ -4492,45 +4490,44 @@
     ////////////////////////////////////////////////////////////////////////////
     // Set up environment
     ////////////////////////////////////////////////////////////////////////////
+
     p.init = function init(code) {
 
       if (code) {
+        var parsedCode = Processing.parse(code, p);
+
+        if (!p.use3DContext) {
+          // Setup default 2d canvas context. 
+          curContext = curElement.getContext('2d');
+
+          // Canvas has trouble rendering single pixel stuff on whole-pixel
+          // counts, so we slightly offset it (this is super lame).
+          curContext.translate(0.5, 0.5);
+
+          curContext.lineCap = 'round';
+
+          // Set default stroke and fill color
+          p.stroke(0);
+          p.fill(255);
+
+          p.disableContextMenu();
+        }
+
+        // Step through the libraries that were attached at doc load...
+        for (var i in Processing.lib) {
+          if (Processing.lib) {                
+            // Init the libraries in the context of this p_instance
+            Processing.lib[i].call(p);
+          }
+        }
+
+        // The parser adds custom methods to the processing context
+        // this renames p to processing so these methods will run
         (function (processing) {
-
-          with(p) {
-            var parsedCode = Processing.parse(code, p);
-
-            if (!p.use3DContext) {
-              // Setup default 2d canvas context. 
-              curContext = curElement.getContext('2d');
-
-              // Canvas has trouble rendering single pixel stuff on whole-pixel
-              // counts, so we slightly offset it (this is super lame).
-              curContext.translate(0.5, 0.5);
-
-              curContext.lineCap = 'round';
-
-              // Set default stroke and fill color
-              p.stroke(0);
-              p.fill(255);
-
-              p.disableContextMenu();
-              
-            }
-
-            // Step through the libraries that were attached at doc load...
-            for (var i in Processing.lib) {
-              if (Processing.lib) {                
-                // Init the libraries in the context of this p_instance
-                Processing.lib[i].call(processing);
-              }
-            }
-
+          with(processing) {
             eval(parsedCode);
           }
-
         })(p);
-
       }
 
       // Run void setup()
