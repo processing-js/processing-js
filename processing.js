@@ -133,11 +133,12 @@
     // Saves all strings into an array
     // masks all strings into <STRING n>
     // to be replaced with the array strings after parsing is finishes
-    var strings = aCode.match(/(["'])(\\\1|.)*?(\1)/g);
-    for ( var i = 0; /(["'])(\\\1|.)*?(\1)/.test(aCode); i++) {
-      aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/, "<STRING " + i + ">");
-    }
-  
+    var strings = [];
+    aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
+      strings.push(all);
+      return "<STRING " + (strings.length -1) + ">";
+    });
+
     // Remove end-of-line comments
     aCode = aCode.replace(/\/\/.*\n/g, "\n");
 
@@ -320,7 +321,7 @@
 
 
     // Check if 3D context is invoked -- this is not the best way to do this.
-    if (aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\);/)) {
+    if (aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\s*\);/)) {
       p.use3DContext = true;
     }
 
@@ -353,38 +354,36 @@
     aCode = aCode.replace(/(\d+)f/g, "$1");
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-    if (strings !== null) {
-      for( var i = 0; l = i < strings.length; i++ ) {
-        aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
-          var returnString = all, notString = true, quoteType = "", escape = false;
+    for( var i = 0; i < strings.length; i++ ) {
+      aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
+        var returnString = all, notString = true, quoteType = "", escape = false;
 
-          for (var x = 0; x < quoteStart.length; x++) {
-            if (notString) {
-              if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
-                quoteType = quoteStart.charAt(x);
-                notString = false;
+        for (var x = 0; x < quoteStart.length; x++) {
+          if (notString) {
+            if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
+              quoteType = quoteStart.charAt(x);
+              notString = false;
+            }
+          } else {
+            if (!escape) {
+              if (quoteStart.charAt(x) === "\\") {
+                escape = true;
+              } else if (quoteStart.charAt(x) === quoteType) {
+                notString = true;
+                quoteType = "";
               }
-            } else {
-              if (!escape) {
-                if (quoteStart.charAt(x) === "\\") {
-                  escape = true;
-                } else if (quoteStart.charAt(x) === quoteType) {
-                  notString = true;
-                  quoteType = "";
-                }
-              } else { 
-                escape = false; 
-              }
+            } else { 
+              escape = false; 
             }
           }
+        }
 
-          if (notString) { // Match is not inside a string
-            returnString = quoteStart + strings[i] + quoteEnd;
-          }
+        if (notString) { // Match is not inside a string
+          returnString = quoteStart + strings[i] + quoteEnd;
+        }
 
-          return returnString;
-        });
-      }
+        return returnString;
+      });
     }
 
     return aCode;
@@ -395,7 +394,7 @@
 
     // Create the 'p' object
     var p = {};
-    var curContext, curElement = curElement;
+    var curContext;
     p.use3DContext = false; // default '2d' canvas context
 
     // Set Processing defaults / environment variables
@@ -1338,10 +1337,6 @@
     };
 
     p.redraw = function redraw() {
-      if (hasBackground) {
-        p.background();
-      }
-
       var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
@@ -1359,6 +1354,7 @@
 
       if (p.use3DContext) {
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+        p.camera();
         p.draw();
       } else {
         p.pushMatrix();
@@ -1467,13 +1463,13 @@
 			if(typeof num === "string" && num.length > 1) {
 				var c = num.slice(5,-1).split(",");
 						
-				// if all components are zero, a single "0" is returned
-				// for some reason
+				// if all components are zero, a single "0" is returned for some reason
+        // [0] alpha is normalized, [1] r, [2] g, [3] b
 				var sbin = [
-				decToBin(c[3]*255,8), // alpha is normalized
-				decToBin(c[0],8), // r
-				decToBin(c[1],8), // g
-				decToBin(c[2],8)  // b
+				decToBin(c[3]*255,8),
+				decToBin(c[0],8),
+				decToBin(c[1],8),
+				decToBin(c[2],8)
 				];
 						
 				var s = sbin[0]+sbin[1]+sbin[2]+sbin[3];
@@ -1583,6 +1579,59 @@
         str = (negative ? "-" : " ") + str;
       } else if (arguments.length === 2) {
         str = p.nfs(num, left, -1);
+      }
+      return str;
+    };
+
+    p.nfp = function (num, left, right) {
+      var str, len, formatLength, rounded;
+
+      // array handling
+      if (typeof num === "object" && num.constructor === Array) {
+        str = new Array(0);
+        len = num.length;
+        for (var i = 0; i < len; i++) {
+          str[i] = p.nfp(num[i], left, right);
+        }
+      } else if (arguments.length === 3) {
+        var negative = num < 0 ? true : false;
+
+        // Make it work exactly like p5 for right = 0
+        if ( right === 0 ) {
+          right = 1;
+        }
+        
+        if ( right < 0 ) {
+          rounded = Math.round(num);
+        } else {
+          // round to 'right' decimal places
+          rounded = Math.round(num * Math.pow(10,right)) / Math.pow(10,right);
+        }
+
+        // split number into whole and fractional components
+        var splitNum = Math.abs(rounded).toString().split("."); // [0] whole number, [1] fractional number
+
+        // format whole part
+        formatLength = left - splitNum[0].length;
+        for(; formatLength > 0; formatLength--) {
+          splitNum[0] = "0" + splitNum[0];
+        }
+
+        // format fractional part
+        if ( splitNum.length === 2 || right > 0 ) {
+          splitNum[1] = splitNum.length === 2 ? splitNum[1] : "";
+          formatLength = right - splitNum[1].length;
+          for(; formatLength > 0; formatLength--) {
+            splitNum[1] += "0";
+          }
+          str = splitNum.join(".");
+        } else {
+          str = splitNum[0]; 
+        }
+
+        str = (negative ? "-" : "+") + str;
+      } else if (arguments.length === 2) {
+        str = p.nfp(num, left, -1);
       }
       return str;
     };
@@ -1831,55 +1880,6 @@
       return str;
     };
 
-    p.nfp = function nfp(Value, pad, right) {
-      var str = String(Value);
-
-      if (arguments.length < 3) { //check if it's 2 arguments
-        if (Value > 0) {
-          while (str.length < pad) {
-            str = "0" + str;
-          }
-          str = "+" + str;
-          return str;
-        } else {
-          str = str.slice(1); //used to remove the '-' infront of the original number.
-          while (str.length < pad) {
-            str = "0" + str;
-          }
-          str = "-" + str;
-          return str;
-        }
-      } else if (arguments.length === 3) { //check if it's 3 arguments 
-        var decimalPos = str.indexOf('.'),
-          strL, strR;
-        if (Value > 0) {
-          strL = str.slice(0, decimalPos); //store #'s to left of decimal into strL
-          strR = str.slice(decimalPos + 1, str.length); //store #'s to right of decimal into strR
-          while (strL.length < pad) { //pad to left of decimal on positive #'s
-            strL = "0" + strL;
-          }
-          strL = "+" + strL;
-
-          while (strR.length < right) { //pad to right of decimal on positive #'s
-            strR = strR + "0";
-          }
-          return strL + "." + strR;
-        } else {
-          strL = str.slice(1, decimalPos); //store #'s to left of decimal into strL
-          strR = str.slice(decimalPos + 1, str.length); //store #'s to right of decimal into strR
-          while (strL.length < pad) { //pad to left of decimal on negative #'s
-            strL = "0" + strL;
-          }
-          strL = "-" + strL;
-
-          while (strR.length < right) { //pad to right of decimal on negative #'s
-            strR = strR + "0";
-          }
-          return strL + "." + strR;
-        }
-      }
-    };
-
     ////////////////////////////////////////////////////////////////////////////
     // String Functions
     ////////////////////////////////////////////////////////////////////////////
@@ -2009,7 +2009,7 @@
 
             ret = val.charCodeAt( 0 );
           } else {
-            ret = parseInt( val );
+            ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
 
             if ( isNaN( ret ) ) {
               ret = 0;
@@ -2386,6 +2386,10 @@
         }
       }
 
+      // redraw the background if background was called before size
+      if (hasBackground) {
+        p.background();
+      }
     };
 
 
@@ -3816,19 +3820,19 @@
     // Loads an image for display. Type is unused. Callback is fired on load.
     p.loadImage = function loadImage(file, type, callback) {
       var img = document.createElement('img');
-      img.src = file;
       img.loaded = false;
       img.mask = function () {}; // I don't think image mask was ever implemented? -F1LT3R
       img.onload = function () {
-        var h = this.height,
-          w = this.width;
-
+        var h = this.height, w = this.width;
         var canvas = document.createElement("canvas");
+
         canvas.width = w;
         canvas.height = h;
+
         var context = canvas.getContext("2d");
 
         context.drawImage(this, 0, 0);
+
         this.data = buildImageObject(context.getImageData(0, 0, w, h));
         this.data.img = img;
 
@@ -3841,6 +3845,8 @@
           callback();
         }
       };
+
+      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
 
       return img;
     };
@@ -4001,6 +4007,7 @@
           curContext.fillStyle = oldFill;
         }
       }
+      hasBackground = true;
     };
 
     // Depreciating "getImage_old" from PJS - currently here to support AniSprite
@@ -4666,45 +4673,44 @@
     ////////////////////////////////////////////////////////////////////////////
     // Set up environment
     ////////////////////////////////////////////////////////////////////////////
+
     p.init = function init(code) {
 
       if (code) {
+        var parsedCode = Processing.parse(code, p);
+
+        if (!p.use3DContext) {
+          // Setup default 2d canvas context. 
+          curContext = curElement.getContext('2d');
+
+          // Canvas has trouble rendering single pixel stuff on whole-pixel
+          // counts, so we slightly offset it (this is super lame).
+          curContext.translate(0.5, 0.5);
+
+          curContext.lineCap = 'round';
+
+          // Set default stroke and fill color
+          p.stroke(0);
+          p.fill(255);
+
+          p.disableContextMenu();
+        }
+
+        // Step through the libraries that were attached at doc load...
+        for (var i in Processing.lib) {
+          if (Processing.lib) {                
+            // Init the libraries in the context of this p_instance
+            Processing.lib[i].call(p);
+          }
+        }
+
+        // The parser adds custom methods to the processing context
+        // this renames p to processing so these methods will run
         (function (processing) {
-
-          with(p) {
-            var parsedCode = Processing.parse(code, p);
-
-            if (!p.use3DContext) {
-              // Setup default 2d canvas context. 
-              curContext = curElement.getContext('2d');
-
-              // Canvas has trouble rendering single pixel stuff on whole-pixel
-              // counts, so we slightly offset it (this is super lame).
-              curContext.translate(0.5, 0.5);
-
-              curContext.lineCap = 'round';
-
-              // Set default stroke and fill color
-              p.stroke(0);
-              p.fill(255);
-
-              p.disableContextMenu();
-              
-            }
-
-            // Step through the libraries that were attached at doc load...
-            for (var i in Processing.lib) {
-              if (Processing.lib) {                
-                // Init the libraries in the context of this p_instance
-                Processing.lib[i].call(processing);
-              }
-            }
-
+          with(processing) {
             eval(parsedCode);
           }
-
         })(p);
-
       }
 
       // Run void setup()
