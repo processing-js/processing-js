@@ -164,6 +164,9 @@
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
 
+    //replace  catch (IOException e) to catch (eIOException)
+	aCode = aCode.replace(/catch\s\((\w+)\s(\w+)\)\s{/g, "catch ($2$1){");
+
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 
