@@ -3110,7 +3110,7 @@
 
       if ( ow != 0 ) ox /= ow;
       return p.width * ( 1 + ox ) / 2.0;
-    }
+    };
 
 	  p.screenY = function screenY( x, y, z ) {
       var mv = modelView.array();
@@ -3126,7 +3126,7 @@
 
 	    if ( ow != 0 ) oy /= ow;
 	    return p.height * ( 1 + oy ) / 2.0;
-	  }
+	  };
 
 	  p.screenZ = function screenZ( x, y,z ) {
       var mv = modelView.array();
@@ -3142,7 +3142,7 @@
 
 	    if ( ow != 0 ) oz /= ow;
 	    return ( oz + 1 ) / 2.0;
-	  }
+	  };
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
