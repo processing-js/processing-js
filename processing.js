@@ -165,7 +165,7 @@
     aCode = aCode.replace(/import\s+(.+);/g, "");
 
     //replace  catch (IOException e) to catch (eIOException)
-	aCode = aCode.replace(/catch\s\((\w+)\s(\w+)\)\s{/g, "catch ($2$1){");
+	aCode = aCode.replace(/catch\s\((\w+)\1\s(\w+)\2\)\s\{.\($2\)/g, "catch ($2$1)\n{$2$1");
 
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
