@@ -492,6 +492,8 @@
       curShapeCount = 0,
       curvePoints = [],
       curTightness = 0,
+			curveDetail = 20,
+			curveInited = false,
       opacityRange = 255,
       redRange = 255,
       greenRange = 255,
@@ -507,7 +509,12 @@
       getLoaded = false,
       start = new Date().getTime(),
       timeSinceLastFPS = start,
-      framesSinceLastFPS = 0;
+      framesSinceLastFPS = 0,
+			curveBasisMatrix,
+			curveToBezierMatrix,
+			curveDrawMatrix,
+			bezierBasisInverse,
+			bezierBasisMatrix;
 
     // Camera defaults and settings
     var cam,
@@ -2335,6 +2342,16 @@
           p.perspective();
 
           userMatrixStack = new PMatrix3DStack();
+					// used by both curve and bezier, so just init here
+					curveBasisMatrix    = new PMatrix3D();
+					curveToBezierMatrix = new PMatrix3D();
+					curveDrawMatrix     = new PMatrix3D();
+					bezierBasisInverse  = new PMatrix3D();
+					bezierBasisMatrix   = new PMatrix3D();
+					bezierBasisMatrix.set( -1,  3, -3,  1,
+																	3, -6,  3,  0,
+																 -3,  3,  0,  0,
+																	1,  0,  0,  0);
         }
         p.stroke(0);
         p.fill(255);
@@ -3092,7 +3109,60 @@
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
       }
     };
+		
+		//curveDetail, curveInit, splineForward
+		//Taken and revised from:
+		//git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
+		//UNDER :License: LGPL Java
+		p.curveDetail = function curveDetail(){
+			curveDetail = arguments[0];
+			curveInit();
+		}
+		//internal curveInit
+		//used by curveDetail, curveTightness
+		var curveInit = function(){
+			// allocate only if/when used to save startup time
+			if ( !curveDrawMatrix ) {
+				curveBasisMatrix = new PMatrix3D();
+				curveDrawMatrix  = new PMatrix3D();
+				curveInited      = true;
+			}
 
+			var s = curTightness;
+			curveBasisMatrix.set( ((s-1)/2).toFixed(2), ((s+3)/2).toFixed(2),  ((-3-s)/2).toFixed(2), ((1-s)/2).toFixed(2),
+													  (1-s),    ((-5-s)/2).toFixed(2), (s+2),     ((s-1)/2).toFixed(2),
+													  ((s-1)/2).toFixed(2), 0,         ((1-s)/2).toFixed(2),  0,
+													  0,        1,          0,         0 );
+			
+			splineForward( curveDetail, curveDrawMatrix );
+			
+			if ( !bezierBasisInverse ) {
+				bezierBasisInverse = bezierBasisMatrix.get();
+				bezierBasisInverse.invert();
+				curveToBezierMatrix = new PMatrix3D();
+			}
+
+			// TODO only needed for PGraphicsJava2D? if so, move it there
+			// actually, it's generally useful for other renderers, so keep it
+			// or hide the implementation elsewhere.
+			curveToBezierMatrix.set( curveBasisMatrix );
+			curveToBezierMatrix.preApply( bezierBasisInverse );
+
+			// multiply the basis and forward diff matrices together
+			// saves much time since this needn't be done for each curve
+			curveDrawMatrix.apply( curveBasisMatrix );
+		}
+		//used by both curveDetail and bezierDetail
+		var splineForward = function(segments, matrix) {
+			var f  = 1.0 / segments;
+			var ff = f * f;
+			var fff = ff * f;
+
+			matrix.set(0,     0,    0, 1,
+								 fff,   ff,   f, 0,
+								 6*fff, 2*ff, 0, 0,
+								 6*fff, 0,    0, 0);
+		}
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
