@@ -15,8 +15,6 @@
 
   */
 
-/* global self */
-
 (function () {
 
   this.Processing = function Processing(aElement, aCode) {
@@ -1917,14 +1915,14 @@
 
     // tinylog lite JavaScript library
     // http://github.com/eligrey/tinylog
-    var tinylogLite = (function (self) {
+    var tinylogLite = (function (doc) {
       "use strict";
 
       var tinylogLite = {},
-      doc             = self.document,
-      tinylog         = self.tinylog,
-      console         = self.console,
-      print           = self.print,
+      view            = doc.defaultView,
+      tinylog         = view.tinylog,
+      console         = view.console,
+      print           = view.print,
       False           = !1,
       True            = !0,
       log             = "log";
@@ -2164,11 +2162,28 @@
       }
   
       return tinylogLite;
-    }(self));
+    }(document)),
+    
+    logBuffer = [];
 
-    p.println = p.print = function(message) {
-      tinylogLite.log(message);
+    p.println = function println(message) {
+      var bufferLen = logBuffer.length;
+      if (bufferLen) {
+        tinylogLite.log(logBuffer.join(""));
+        logBuffer.length = 0; // clear log buffer
+      }
+      
+      if (arguments.length === 0 && bufferLen === 0) {
+        tinylogLite.log("");
+      } else if (arguments.length !== 0) {
+        tinylogLite.log(message);
+      }
     };
+    
+    p.print = function print(message) {
+      logBuffer.push(message);
+    };
+
 
     p.str = function str(aNumber) {
       return aNumber + '';
