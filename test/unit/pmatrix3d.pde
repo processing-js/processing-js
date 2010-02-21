@@ -130,3 +130,40 @@ _checkEqual(
  0.9968146901271856,  2.0000,  3.0000,  4.0000,
  0.9968146901271856,  2.0000,  3.0000,  4.0000],
 p.array() );
+
+///////////////////
+//  MULTX
+//////////////////
+
+var ptest = new PMatrix3D();
+ptest.set(1,3,4,2,4,5,6,7,5,6,8,7,6,5,4,3);
+
+_checkEqual( 2.0, ptest.multX(0,0) );
+_checkEqual( 5.0, ptest.multX(0,1) );
+_checkEqual( 8.0, ptest.multX(0,2) );
+_checkEqual( 3.0, ptest.multX(1,0) );
+_checkEqual (4.0, ptest.multX(2,0) );
+_checkEqual( -1.0, ptest.multX(0,-1) );
+_checkEqual( 1.0, ptest.multX(-1,0) );
+_checkEqual( -1.0, ptest.multX(0,-1) );
+_checkEqual( 1.0, ptest.multX(-1,0) );
+_checkEqual( -14.0, ptest.multX(-4,-4) );
+
+///////////////////
+//  MULTY
+//////////////////
+
+_checkEqual( 7.0, ptest.multY(0,0) );
+_checkEqual( 12.0, ptest.multY(0,1) );
+_checkEqual( 17.0, ptest.multY(0,2) );
+_checkEqual( 11.0, ptest.multY(1,0) );
+_checkEqual( 15.0, ptest.multY(2,0) );
+_checkEqual( 2.0, ptest.multY(0,-1) );
+_checkEqual( 3.0, ptest.multY(-1,0) );
+_checkEqual( 2.0, ptest.multY(0,-1) );
+_checkEqual( 3.0, ptest.multY(-1,0) );
+_checkEqual( -29.0, ptest.multY(-4,-4) );
+
+
+
+
