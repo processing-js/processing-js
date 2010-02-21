@@ -3094,9 +3094,7 @@
           p.nfs(this.elements[14], digits, 4) + " " +
           p.nfs(this.elements[15], digits, 4) + "\n";
 
-        if (typeof console === 'object' && typeof console.log === 'function') {
-          console.log(output);
-        }
+        p.println(output);
       }
     };
 
