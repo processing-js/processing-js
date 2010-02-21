@@ -3419,10 +3419,33 @@
     };
 
     p.point = function point(x, y) {
-      var oldFill = curContext.fillStyle;
-      curContext.fillStyle = curContext.strokeStyle;
-      curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-      curContext.fillStyle = oldFill;
+      if (p.use3DContext) {
+        var x = arguments[0], y = arguments[1], z = arguments[2] || 0;
+
+        var pointVert = [x, y, z];
+
+        var model = new PMatrix3D();
+
+        // move point to position
+        model.translate(x, y, z);
+
+        var view = new PMatrix3D();
+        view.scale(1, -1 , 1);
+        view.apply(modelView.array());
+
+        uniformMatrix(programObject , "model" , true,  model.array());
+        uniformMatrix(programObject , "view" , true , view.array());
+        uniformMatrix(programObject , "projection" , true , projection.array());
+        uniformf(programObject, "color", [0,0,0,1]);
+        vertexAttribPointer(programObject , "Vertex", 3 , pointBuffer);
+
+        curContext.drawArrays(curContext.POINTS, 0, 1);
+      } else {
+        var oldFill = curContext.fillStyle;
+        curContext.fillStyle = curContext.strokeStyle;
+        curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+        curContext.fillStyle = oldFill;
+      }
     };
 
     p.beginShape = function beginShape(type) {
