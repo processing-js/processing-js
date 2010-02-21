@@ -475,6 +475,7 @@
     var online = true,
       doFill = true,
       doStroke = true,
+      lineWidth = 1,
       loopStarted = false,
       hasBackground = false,
       doLoop = true,
@@ -3332,9 +3333,11 @@
         uniformf( programObject, "color", [0,0,0,1] );
         vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
 
-        // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth( 1 );
-        curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
+        if( lineWidth > 0 ) {
+          // If you're working with styles, you'll need to change this literal.
+          curContext.lineWidth( lineWidth );
+          curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
+        }
 
         // fix stitching problems. (lines get occluded by triangles
         // since they share the same depth values). This is not entirely
@@ -3373,7 +3376,7 @@
     };
 
     p.strokeWeight = function strokeWeight(w) {
-      curContext.lineWidth = w;
+      lineWidth = w;
     };
 
     p.strokeCap = function strokeCap(value) {
