@@ -475,6 +475,7 @@
     var online = true,
       doFill = true,
       doStroke = true,
+      strokeStyle = "rgba( 204, 204, 204, 1 )",
       lineWidth = 1,
       loopStarted = false,
       hasBackground = false,
@@ -3330,12 +3331,12 @@
         uniformMatrix( programObject , "view" , true , view.array() );
         uniformMatrix( programObject , "projection" , true , projection.array() );
 
-        uniformf( programObject, "color", [0,0,0,1] );
-        vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
-
-        if( lineWidth > 0 ) {
-          // If you're working with styles, you'll need to change this literal.
+        if( lineWidth > 0 && doStroke ) {
+          // eventually need to make this more efficient.
+          var c = strokeStyle.slice( 5, -1 ).split( "," );
+          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
           curContext.lineWidth( lineWidth );
+          vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
           curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
         }
 
@@ -3368,7 +3369,7 @@
 
     p.stroke = function stroke() {
       doStroke = true;
-      curContext.strokeStyle = p.color.apply(this, arguments);
+      strokeStyle = p.color.apply(this, arguments);
     };
 
     p.noStroke = function noStroke() {
