@@ -1910,7 +1910,7 @@
     };
 
     // tinylog lite JavaScript library
-    // http://github.com/eligrey/tinylog
+    /* http://github.com/eligrey/tinylog
     var tinylogLite = (function (doc) {
       "use strict";
 
@@ -2173,7 +2173,7 @@
       return tinylogLite;
     }(document)),
     
-    logBuffer = [];
+    logBuffer = [];*/
 
     p.println = function println(message) {
       var bufferLen = logBuffer.length;
@@ -2999,6 +2999,20 @@
           this.elements[13] *= sy;
           this.elements[14] *= sz;
         }
+      },
+      skewX: function( angle ) {
+        var t = p.tan( angle );
+        this.apply( 1, t, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1);
+      },
+      skewY: function( angle ) {
+        var t = Math.tan( angle );
+        this.apply( 1, 0, 0, 0,
+                    t, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1);
       },
       invert: function(){
         var kInv = [];
