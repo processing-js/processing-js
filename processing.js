@@ -2542,6 +2542,9 @@
         try {
           if (!curContext) {
             curContext = curElement.getContext("experimental-webgl");
+            
+             //document.getElementById('d').innerHTML = "<canvas id='display' width='" + newWidth + "' height='" + newHeight + "'></canvas>";
+
           }
         } catch(e_size) {
           Processing.debug(e_size);
