@@ -1911,11 +1911,11 @@
 
     // tinylog lite JavaScript library
     // http://purl.eligrey.com/tinylog/lite
-    var tinylogLite = (function (doc) {
+    var tinylogLite = (function (view) {
       "use strict";
 
       var tinylogLite = {},
-      view            = doc.defaultView,
+      doc             = view.document,
       tinylog         = view.tinylog,
       print           = view.print,
       False           = !1,
@@ -2167,9 +2167,11 @@
       }
   
       return tinylogLite;
-    }(document)),
+    }(window)),
     
     logBuffer = [];
+    
+    p.console = window.console || tinylogLite;
 
     p.println = function println(message) {
       var bufferLen = logBuffer.length;
