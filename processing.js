@@ -3369,7 +3369,12 @@
 
     p.stroke = function stroke() {
       doStroke = true;
-      strokeStyle = p.color.apply(this, arguments);
+      if( p.use3DContext ) {
+        strokeStyle = p.color.apply(this, arguments);
+      }
+      else {
+        curContext.strokeStyle = p.color.apply(this, arguments);
+      }
     };
 
     p.noStroke = function noStroke() {
@@ -3377,7 +3382,12 @@
     };
 
     p.strokeWeight = function strokeWeight(w) {
-      lineWidth = w;
+      if( p.use3DContext ) {
+        lineWidth = w;
+      }
+      else {
+        curContext.lineWidth = w;
+      }
     };
 
     p.strokeCap = function strokeCap(value) {
