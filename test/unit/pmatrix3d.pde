@@ -164,6 +164,32 @@ _checkEqual( 2.0, ptest.multY(0,-1) );
 _checkEqual( 3.0, ptest.multY(-1,0) );
 _checkEqual( -29.0, ptest.multY(-4,-4) );
 
+///////////////////
+//  MULTZ
+//////////////////
 
+_checkEqual( 7.0, ptest.multZ(0,0,0));
+_checkEqual( 21.0, ptest.multZ(0,1,1));
+_checkEqual( 43.0, ptest.multZ(0,2,3));
+_checkEqual( -20.0, ptest.multZ(1,0,-4));
+_checkEqual( 89.0, ptest.multZ(2,0,9));
+_checkEqual( 17.0, ptest.multZ(0,-1,2));
+_checkEqual(-30.0, ptest.multZ(-1,0,-4));
+_checkEqual( 1.0, ptest.multZ(0,-1,0));
+_checkEqual( 50.0, ptest.multZ(-1,0,6));
+_checkEqual( -109.0, ptest.multZ(-4,-4,-9));
 
+///////////////////
+//  MULTW
+//////////////////
 
+_checkEqual( 3.0, ptest.multW(0,0,0) );
+_checkEqual( 12.0, ptest.multW(0,1,1) );
+_checkEqual( 25.0, ptest.multW(0,2,3) );
+_checkEqual( -7.0, ptest.multW(1,0,-4) );
+_checkEqual( 51.0, ptest.multW(2,0,9) );
+_checkEqual( 6.0, ptest.multW(0,-1,2) );
+_checkEqual( -19.0,  ptest.multW(-1,0,-4) );
+_checkEqual( -2.0, ptest.multW(0,-1,0) );
+_checkEqual( 21.0, ptest.multW(-1,0,6) );
+_checkEqual( -77.0, ptest.multW(-4,-4,-9) );
