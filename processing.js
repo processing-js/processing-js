@@ -474,6 +474,7 @@
     // "Private" variables used to maintain state
     var online = true,
       doFill = true,
+      fillStyle = "rgba( 255, 255, 255, 1 )",
       doStroke = true,
       loopStarted = false,
       hasBackground = false,
@@ -3340,7 +3341,7 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          var c = curContext.fillStyle.slice( 5, -1 ).split( "," );
+          var c = fillStyle.slice( 5, -1 ).split( "," );
           uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
           vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );
           curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
@@ -3360,7 +3361,12 @@
 
     p.fill = function fill() {
       doFill = true;
-      curContext.fillStyle = p.color.apply(this, arguments);
+      if( p.use3DContext ) {
+        fillStyle = p.color.apply(this, arguments);
+      }
+      else {
+        curContext.fillStyle = p.color.apply(this, arguments);
+      }
     };
 
     p.noFill = function noFill() {
