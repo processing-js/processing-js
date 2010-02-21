@@ -8,22 +8,18 @@ int boxCounter = 0;
 
 void setup()
 {
- size(500,500,OPENGL);
- 
- // select a color unlike others so transparency
- // is visible.
+  size(500,500,OPENGL);
 
- startX = width/2 - 70;
- startY = height/2 - 60;
+  startX = width/2 - 70;
+  startY = height/2 - 60;
  
- x = startX;
- y = startY;
+  x = startX;
+  y = startY;
 }
 
 void draw()
 {
- // background(0);
- background(100,135,100);
+  background(100,135,100);
   drawBoxes();
 }
 
@@ -35,7 +31,7 @@ void drawBoxes()
   drawNextBox();
 
   // single value
-  fill(0);
+  noFill();
   drawNextBox();
 
   // single value
@@ -84,7 +80,7 @@ void drawBoxes()
   fill(#FFFFFF);
   drawNextBox();
     
-  fill(#FF0000);
+  noFill();
   drawNextBox();
     
   fill(#00FF00);
@@ -280,7 +276,7 @@ void drawBoxes()
   fill(255,0,0);
   drawNextBox();
   
-  fill(0,255,0);
+  noFill();
   drawNextBox();
   
   fill(0,0,255);
