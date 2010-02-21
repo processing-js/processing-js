@@ -1917,17 +1917,12 @@
       var tinylogLite = {},
       view            = doc.defaultView,
       tinylog         = view.tinylog,
-      console         = view.console,
       print           = view.print,
       False           = !1,
       True            = !0,
       log             = "log";
   
-      if (console && console[log]) { // native console
-        tinylogLite[log] = function (message) {
-          console[log](message);
-        };
-      } else if (tinylog && tinylog[log]) { // pre-existing tinylog
+      if (tinylog && tinylog[log]) { // pre-existing tinylog
         tinylogLite[log] = tinylog[log];
       } else if (doc) { (function () { // DOM document
         var
