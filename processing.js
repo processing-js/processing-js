@@ -1912,24 +1912,19 @@
     };
 
     // tinylog lite JavaScript library
-    // http://github.com/eligrey/tinylog
-    var tinylogLite = (function (doc) {
+    // http://purl.eligrey.com/tinylog/lite
+    var tinylogLite = (function (view) {
       "use strict";
 
       var tinylogLite = {},
-      view            = doc.defaultView,
+      doc             = view.document,
       tinylog         = view.tinylog,
-      console         = view.console,
       print           = view.print,
       False           = !1,
       True            = !0,
       log             = "log";
   
-      if (console && console[log]) { // native console
-        tinylogLite[log] = function (message) {
-          console[log](message);
-        };
-      } else if (tinylog && tinylog[log]) { // pre-existing tinylog
+      if (tinylog && tinylog[log]) { // pre-existing tinylog
         tinylogLite[log] = tinylog[log];
       } else if (doc) { (function () { // DOM document
         var
@@ -1980,6 +1975,7 @@
           fontSize: "12px",
           margin: "0 5px 0 5px",
           maxWidth: "100%",
+          whiteSpace: "pre-wrap",
           overflow: "auto"
         },
     
@@ -2173,9 +2169,11 @@
       }
   
       return tinylogLite;
-    }(document)),
+    }(window)),
     
     logBuffer = [];
+    
+    p.console = window.console || tinylogLite;
 
     p.println = function println(message) {
       var bufferLen = logBuffer.length;
@@ -3096,9 +3094,7 @@
           p.nfs(this.elements[14], digits, 4) + " " +
           p.nfs(this.elements[15], digits, 4) + "\n";
 
-        if (typeof console === 'object' && typeof console.log === 'function') {
-          console.log(output);
-        }
+        p.println(output);
       }
     };
 
