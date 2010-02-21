@@ -1910,7 +1910,7 @@
     };
 
     // tinylog lite JavaScript library
-    // http://github.com/eligrey/tinylog
+    // http://purl.eligrey.com/tinylog/lite
     var tinylogLite = (function (doc) {
       "use strict";
 
