@@ -3368,9 +3368,7 @@
     ////////////////////////////////////////////////////////////////////////////
     p.modelX = function modelX( x, y, z ) {
       var mv = modelView.array();
-      //alert(mv);
       var ci = cameraInv.array();
-      //alert(ci);
 
       var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
       var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];

@@ -3,10 +3,15 @@
 // Tests for modelX(), modelY(), modelZ()
 //
 
+// I'll need to look at why camera needs to be called here.
+
+/////////////
 // modelX
+/////////////
 
 // 1.0
 size(100,100,OPENGL);
+camera();
 _checkEqual( 1.0, modelX(1,1,1));
 
 // 0.0
@@ -50,9 +55,9 @@ size(500,500,OPENGL);
 camera(250,250,0,0,-1,0,0,1,0);
 _checkEqual( -427.1291901466046, modelX(0,0,0) );
 
-
-//////////////////////////////
+/////////////
 // modelY
+/////////////
 
 // 1.0
 size(100,100,OPENGL);
@@ -104,8 +109,9 @@ size(500,500,OPENGL);
 camera(250,250,0,0,-1,0,0,1,0);
 _checkEqual( -73.57650383804321, modelY(0,0,0) );
 
-//////////////////////////////
+/////////////
 // modelZ
+/////////////
 
 // 1.0
 size(100,100,OPENGL);
