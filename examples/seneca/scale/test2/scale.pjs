@@ -1,0 +1,11 @@
+void setup() {
+  size(100, 100, P3D);
+}
+
+void draw() {
+  fill(255, 102);
+  translate(width/2+12, height/2);
+  box(20, 20, 20);
+  scale(2.5, 2.5, 2.5);
+  box(20, 20, 20);
+}
