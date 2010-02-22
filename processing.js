@@ -15,8 +15,6 @@
 
   */
 
-/* global self */
-
 (function () {
 
   this.Processing = function Processing(aElement, aCode) {
@@ -1911,29 +1909,20 @@
       return str.match(regexp);
     };
 
-    // Returns a line to lnPrinted() for user handling 
-    p.lnPrinted = function lnPrinted() {};
-    p.printed = function printed() {};
-
     // tinylog lite JavaScript library
-    // http://github.com/eligrey/tinylog
-    var tinylogLite = (function (self) {
+    // http://purl.eligrey.com/tinylog/lite
+    var tinylogLite = (function (view) {
       "use strict";
 
       var tinylogLite = {},
-      doc             = self.document,
-      tinylog         = self.tinylog,
-      console         = self.console,
-      print           = self.print,
+      doc             = view.document,
+      tinylog         = view.tinylog,
+      print           = view.print,
       False           = !1,
       True            = !0,
       log             = "log";
   
-      if (console && console[log]) { // native console
-        tinylogLite[log] = function (message) {
-          console[log](message);
-        };
-      } else if (tinylog && tinylog[log]) { // pre-existing tinylog
+      if (tinylog && tinylog[log]) { // pre-existing tinylog
         tinylogLite[log] = tinylog[log];
       } else if (doc) { (function () { // DOM document
         var
@@ -1978,12 +1967,16 @@
         },
         entryStyles = {
           borderBottom: "1px solid #d3d3d3",
+          minHeight: "16px"
+        },
+        entryTextStyles = {
+          fontSize: "12px",
+          margin: "0 5px 0 5px",
+          maxWidth: "100%",
           whiteSpace: "pre-wrap",
-          minHeight: "16px",
-          fontSize: "12px"
+          overflow: "auto"
         },
     
-        view         = doc.defaultView,
         docElem      = doc.documentElement,
         docElemStyle = docElem[$style],
     
@@ -2041,20 +2034,21 @@
     
         var 
         uninit,
-        originalPadding = docElemStyle.paddingBottom,
-        container       = createElement($div),
-        containerStyle  = container[$style],
-        resizer         = append(container, createElement($div)),
-        output          = append(container, createElement($div)),
-        closeButton     = append(container, createElement($div)),
-        draggingHandle  = False,
-        previousSize    = False,
+        originalPadding   = docElemStyle.paddingBottom,
+        container         = createElement($div),
+        containerStyle    = container[$style],
+        resizer           = append(container, createElement($div)),
+        output            = append(container, createElement($div)),
+        closeButton       = append(container, createElement($div)),
+        resizingLog       = False,
+        previousHeight    = False,
+        previousScrollTop = False,
     
         updateSafetyMargin = function () {
           // have a blank space large enough to fit the output box at the page bottom
           docElemStyle.paddingBottom = container.clientHeight + "px";
         },
-        setContainerSize = function (height) {
+        setContainerHeight = function (height) {
           var viewHeight = view.innerHeight,
           resizerHeight  = resizer.clientHeight;
     
@@ -2072,36 +2066,40 @@
         observers = [
       
           observer(doc, "mousemove", function (evt) {
-            if (draggingHandle) {
-              setContainerSize(view.innerHeight - evt.clientY);
+            if (resizingLog) {
+              setContainerHeight(view.innerHeight - evt.clientY);
+              output.scrollTop = previousScrollTop;
             }
           }),
     
           observer(doc, "mouseup", function () {
-            draggingHandle = False;
+            if (resizingLog) {
+              resizingLog = previousScrollTop = False;
+            }
           }),
       
           // minimize tinylog
           observer(resizer, "dblclick", function (evt) {
             evt.preventDefault();
         
-            if (previousSize) {
-              setContainerSize(previousSize);
-              previousSize = False;
+            if (previousHeight) {
+              setContainerHeight(previousHeight);
+              previousHeight = False;
             } else {
-              previousSize = container.clientHeight;
+              previousHeight = container.clientHeight;
               containerStyle.height = "0px";
             }
           }),
       
           observer(resizer, "mousedown", function (evt) {
             evt.preventDefault();
-            draggingHandle = True;
+            resizingLog = True;
+            previousScrollTop = output.scrollTop;
           }),
       
           // fix resizing being stuck when context menu opens
           observer(resizer, "contextmenu", function () {
-            draggingHandle = False;
+            resizingLog = False;
           }),
     
           observer(closeButton, "click", function () {
@@ -2139,17 +2137,22 @@
         closeButton[$title] = "Close Log";
         append(closeButton, createTextNode("X"));
     
-        resizer[$title] = "Double-click here to toggle log minimization";
+        resizer[$title] = "Double-click to toggle log minimization";
     
         docElem.insertBefore(container, docElem.firstChild);
     
         tinylogLite[log] = function (message) {
-          var entry  = append(output, createElement($div));
+          var entry = append(output, createElement($div)),
+          entryText = append(entry, createElement($div));
       
-          setStyles(entry, entryStyles);
-          entry[$title] = (new Date()).toLocaleString();
+          entry[$title] = (new Date()).toLocaleTimeString();
       
-          append(entry, createTextNode(message));
+          setStyles(
+            entry,     entryStyles,
+            entryText, entryTextStyles
+          );
+      
+          append(entryText, createTextNode(message));
           output.scrollTop = output.scrollHeight;
         };
     
@@ -2164,11 +2167,30 @@
       }
   
       return tinylogLite;
-    }(self));
+    }(window)),
+    
+    logBuffer = [];
+    
+    p.console = window.console || tinylogLite;
 
-    p.println = p.print = function(message) {
-      tinylogLite.log(message);
+    p.println = function println(message) {
+      var bufferLen = logBuffer.length;
+      if (bufferLen) {
+        tinylogLite.log(logBuffer.join(""));
+        logBuffer.length = 0; // clear log buffer
+      }
+      
+      if (arguments.length === 0 && bufferLen === 0) {
+        tinylogLite.log("");
+      } else if (arguments.length !== 0) {
+        tinylogLite.log(message);
+      }
     };
+    
+    p.print = function print(message) {
+      logBuffer.push(message);
+    };
+
 
     p.str = function str(aNumber) {
       return aNumber + '';
@@ -3070,9 +3092,7 @@
           p.nfs(this.elements[14], digits, 4) + " " +
           p.nfs(this.elements[15], digits, 4) + "\n";
 
-        if (typeof console === 'object' && typeof console.log === 'function') {
-          console.log(output);
-        }
+        p.println(output);
       }
     };
 
