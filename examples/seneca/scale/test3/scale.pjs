@@ -1,5 +1,3 @@
-//import processing.opengl.*;
-
 void setup()
 {
   size(500,500,OPENGL);
@@ -12,8 +10,7 @@ void draw()
 
   translate(width/2,height/2,380);
 
-  rotateX(3.14/1.5);
   rotateY(3.14/1.5);
-  scale(10,10,10);
+  scale(10,10);
   box(1,1,1);
 }
