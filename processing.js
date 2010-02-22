@@ -3148,7 +3148,7 @@
 			sphereY = new Array( vertCount );
 			sphereZ = new Array( vertCount );
 
-			var angle_step = p.SINCOS_LENGTH/vres;
+			var angle_step = (p.SINCOS_LENGTH *0.5)/vres;
 			var angle = angle_step;
 
 			// step along Y axis
@@ -3258,13 +3258,13 @@
 					newSphereVerts.push( parseFloat( sphereY[v2] ) );
 					newSphereVerts.push( parseFloat( sphereZ[v2] ) );
 					//norms
-					newSphereNorms.push( parseFloat( sphereX[0] ) );
-					newSphereNorms.push( parseFloat( sphereY[1] ) );
-					newSphereNorms.push( parseFloat( sphereZ[0] ) );
+					newSphereNorms.push( 0 );
+					newSphereNorms.push( 1 );
+					newSphereNorms.push( 0 );
 					//verts
-					newSphereVerts.push( parseFloat( sphereX[0] ) );
-					newSphereVerts.push( parseFloat( sphereY[1] ) );
-					newSphereVerts.push( parseFloat( sphereZ[0] ) );
+					newSphereVerts.push( 0 );
+					newSphereVerts.push( 1 );
+					newSphereVerts.push( 0 );
 				}
 				newSphereNorms.push( parseFloat( sphereX[voff] ) );
 				newSphereNorms.push( parseFloat( sphereY[voff] ) );
