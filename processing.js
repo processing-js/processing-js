@@ -4309,6 +4309,8 @@
 
     };
 
+    p.createFont = function(name, size) {};
+
     // Sets a 'current font' for use
     p.textFont = function textFont(name, size) {
       curTextFont = name;

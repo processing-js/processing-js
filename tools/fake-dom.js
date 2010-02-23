@@ -104,8 +104,8 @@ Table.prototype.getTableMax = __empty_func__;
 var FloatTable = __empty_func__;
 FloatTable.prototype.getRowCount = __empty_func__;
 FloatTable.prototype.getColumnCount = __empty_func__;
-FloatTable.prototype.getRowNames = __empty_func__;
-FloatTable.prototype.getTableMax = __empty_func__;
+FloatTable.prototype.getRowNames = function() { return ["2004","2005", "2006", "2007", "2008", "2009", "2010"]; };
+FloatTable.prototype.getTableMax = function() { return 4; };
 
 var FixedSpring     = __empty_func__;
 var Spring2D        = __empty_func__;
