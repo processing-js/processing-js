@@ -2080,7 +2080,6 @@
             }
           }),
       
-          // minimize tinylog
           observer(resizer, "dblclick", function (evt) {
             evt.preventDefault();
         
@@ -2099,7 +2098,6 @@
             previousScrollTop = output.scrollTop;
           }),
       
-          // fix resizing being stuck when context menu opens
           observer(resizer, "contextmenu", function () {
             resizingLog = False;
           }),
