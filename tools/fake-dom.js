@@ -107,6 +107,12 @@ FloatTable.prototype.getColumnCount = __empty_func__;
 FloatTable.prototype.getRowNames = function() { return ["2004","2005", "2006", "2007", "2008", "2009", "2010"]; };
 FloatTable.prototype.getTableMax = function() { return 4; };
 
+var OBJModel        = __empty_func__;
+OBJModel.prototype.load = __empty_func__;
+
+var Serial          = __empty_func__;
+Serial.begin = __empty_func__;
+
 var FixedSpring     = __empty_func__;
 var Spring2D        = __empty_func__;
 var Particle        = __empty_func__;
@@ -123,3 +129,4 @@ var EggRing         = __empty_func__;
 var OverRect        = __empty_func__;
 var OverCircle      = __empty_func__;
 var SpinSpots       = __empty_func__;
+var WordMap         = __empty_func__;
