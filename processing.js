@@ -1911,21 +1911,22 @@
 
     // tinylog lite JavaScript library
     // http://purl.eligrey.com/tinylog/lite
-    var tinylogLite = (function (view) {
+        var tinylogLite = (function () {
       "use strict";
 
       var tinylogLite = {},
-      doc             = view.document,
-      tinylog         = view.tinylog,
-      print           = view.print,
+      undef           = "undefined",
+      func            = "function",
       False           = !1,
       True            = !0,
       log             = "log";
   
-      if (tinylog && tinylog[log]) { // pre-existing tinylog
+      if (typeof tinylog !== undef && typeof tinylog[log] === func) {
+        // pre-existing tinylog present
         tinylogLite[log] = tinylog[log];
-      } else if (doc) { (function () { // DOM document
-        var
+      } else if (typeof document !== undef && !document.fake) { (function () {
+        // DOM document
+        var doc = document,
     
         $div   = "div",
         $style = "style",
@@ -1977,6 +1978,7 @@
           overflow: "auto"
         },
     
+        view         = doc.defaultView,
         docElem      = doc.documentElement,
         docElemStyle = docElem[$style],
     
@@ -2113,7 +2115,7 @@
           var i = observers.length;
       
           while (i--) {
-            unobserve.apply(self, observers[i]);
+            unobserve.apply(tinylogLite, observers[i]);
           }
       
           // remove tinylog lite from the DOM
@@ -2162,12 +2164,12 @@
   
       }());
   
-      } else if (print) { // JS shell
+      } else if (typeof print === func) { // JS shell
         tinylogLite[log] = print;
       }
   
       return tinylogLite;
-    }(window)),
+    }()),
     
     logBuffer = [];
     
