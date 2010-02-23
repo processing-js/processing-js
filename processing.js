@@ -3421,13 +3421,30 @@
 
     };
 
-    p.curve = function curve(x1, y1, x2, y2, x3, y3, x4, y4) {
-      p.beginShape();
-        p.curveVertex(x1, y1);
-        p.curveVertex(x2, y2);
-        p.curveVertex(x3, y3);
-        p.curveVertex(x4, y4);
-      p.endShape();
+    p.curve = function curve() {
+      if(arguments.length == 8)// curve(x1, y1, x2, y2, x3, y3, x4, y4)
+			{
+				p.beginShape();
+				
+				p.curveVertex( arguments[0], arguments[1] );
+				p.curveVertex( arguments[2], arguments[3] );
+				p.curveVertex( arguments[4], arguments[5] );
+				p.curveVertex( arguments[6], arguments[7] );
+				
+				p.endShape();
+			}else{ // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+				if( p.use3DContext )
+				{
+					beginShape();
+					
+					curveVertex( arguments[0], arguments[1], arguments[2] );
+					curveVertex( arguments[3], arguments[4], arguments[5] );
+					curveVertex( arguments[6], arguments[7], arguments[8] );
+					curveVertex( arguments[9], arguments[10], arguments[11] );
+					
+					endShape();
+				}
+			}
     };
 
     p.curveTightness = function (tightness) {
