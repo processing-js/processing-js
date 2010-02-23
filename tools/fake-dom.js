@@ -43,7 +43,8 @@ var canvas = {
                    useProgram: __empty_func__,
                    createBuffer: __empty_func__,
                    bindBuffer: __empty_func__,
-                   bufferData: __empty_func__
+                   bufferData: __empty_func__,
+                   blendFunc: __empty_func__
                  };
   },
   style: {}
