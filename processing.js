@@ -1218,8 +1218,12 @@
         curContext.translate(x, y);
       }
     };
-    p.scale = function scale(x, y) {
-      curContext.scale(x, y || x);
+    p.scale = function scale( x, y, z ) {
+      if ( p.use3DContext ) {
+        forwardTransform.scale( x, y, z );
+      } else {
+        curContext.scale( x, y || x );
+      }
     };
     p.pushMatrix = function pushMatrix() {
       if (p.use3DContext) {

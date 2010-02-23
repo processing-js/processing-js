@@ -1,0 +1,31 @@
+//import processing.opengl.*;
+
+float r = 0;
+
+void setup()
+{
+  size(500,500,OPENGL);
+}
+
+void draw()
+{
+  camera();
+  background(33,66,99);
+
+  translate(250,270,380);
+  rotateY(r += 0.01);
+
+  for(int i = 0; i < 15; i++)
+  {
+    pushMatrix();
+    translate(i-7,-3,0);
+    translate(0,sin(frameCount/5 + i),0);
+    rotateX(i/10 + frameCount/20);
+    scale(1,1,3);
+    box(1,1,1);
+    popMatrix();
+  }
+  
+  scale(13,1,13);
+  box(1,1,1);
+}
