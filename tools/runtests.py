@@ -13,6 +13,24 @@ class ProcessingTests(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
   testsPassed = 0
   testsFailed = 0
+  testsFailedKnown = 0
+
+  def __init__(self):
+      self.knownFailures = set()
+      f = open(os.path.join(self.toolsdir, '..', 'test', 'KNOWN-FAILURES'), 'r')
+      for line in f.readlines():
+          if line.startswith('#') or line.lstrip().rstrip() == '':
+              continue
+          self.knownFailures.add(line.rstrip('\r\n'))
+
+      f.close()
+
+  def isKnownFailure(self, testpath):
+      # Assumes abs path for testpath
+      if testpath[testpath.index('/test/')+1:] in self.knownFailures:
+        return True
+      else:
+        return False
 
   def runParserTests(self, jsshell, testPath=None, summaryOnly=False):
       """Get all .pjs in test/parser/ files as JSON, and run through the test harness, faking a DOM"""
@@ -47,33 +65,62 @@ class ProcessingTests(object):
 
                   if stderr:
                     # we failed to parse, and died in the js shell
-                    self.testsFailed += 1
                     if summaryOnly:
-                      sys.stdout.write('F')
+                      if self.isKnownFailure(fullpath):
+                        sys.stdout.write('K')
+                        self.testsFailedKnown += 1
+                      else:
+                        sys.stdout.write('F')
+                        self.testsFailed += 1
                       sys.stdout.flush()
                     else:
-                      print "TEST-FAILED: " + fullpath
-                      print stderr
+                      if self.isKnownFailure(fullpath):
+                        print "KNOWN-FAILURE: " + fullpath
+                        self.testsFailedKnown += 1
+                      else:
+                        print "TEST-FAILED: " + fullpath
+                        print stderr
+                        self.testsFailed += 1
                   elif stdout:
                     # TEST-SUMMARY: passed/failed
                     m = re.search('^TEST-SUMMARY: (\d+)/(\d+)', stdout, re.MULTILINE)
                     if m and m.group:
                       self.testsPassed += int(m.group(1))
-                      self.testsFailed += int(m.group(2))
+                      if self.isKnownFailure(fullpath):
+                        self.testsFailedKnown += int(m.group(2))
+                      else:
+                        self.testsFailed += int(m.group(2))
+
                       if int(m.group(2)) > 0:
                         if summaryOnly:
-                          sys.stdout.write('F')
+                          if isKnownFailure(fullpath):
+                            sys.stdout.write('K')
+                          else:
+                            sys.stdout.write('F')
                           sys.stdout.flush()
                         else:
-                          print "TEST-FAILED: " + fullpath
-                          print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
-                          print stderr
+                          if isKnownFailure(fullpath):
+                            print "KNOWN-FAILURE: " + fullpath
+                          else:
+                            print "TEST-FAILED: " + fullpath
+                            print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
+                            print stderr
                       else:
                         if summaryOnly:
-                          sys.stdout.write('.')
+                          if self.isKnownFailure(fullpath):
+                            # we should pass if we are expecting to fail!
+                            sys.stdout.write('!')
+                          else:
+                            sys.stdout.write('.')
                           sys.stdout.flush()
                         else:
-                          print "TEST-PASSED: " + fullpath
+                          if self.isKnownFailure(fullpath):
+                            # we shouldn't pass if we are expecting to fail!
+                            print "TEST-FAILED (known failure passed!): " + fullpath
+                            self.testsPassed -= 1
+                            self.testsFailed += 1
+                          else:
+                            print "TEST-PASSED: " + fullpath
                     else:
                       # Shouldn't happen!
                       self.testsFailed += 1
@@ -134,32 +181,52 @@ class ProcessingTests(object):
 
               if stdout:
                 # TEST-SUMMARY: passed/failed
-                m = re.search('^TEST-SUMMARY: (\d+)\/(\d+)', stdout, re.MULTILINE)
+                m = re.search('^TEST-SUMMARY: (\d+)/(\d+)', stdout, re.MULTILINE)
                 if m and m.group:
                   self.testsPassed += int(m.group(1))
-                  self.testsFailed += int(m.group(2))
+                  if self.isKnownFailure(fullpath):
+                    self.testsFailedKnown += int(m.group(2))
+                  else:
+                    self.testsFailed += int(m.group(2))
+
                   if int(m.group(2)) > 0:
                     if summaryOnly:
-                      sys.stdout.write('F')
+                      if isKnownFailure(fullpath):
+                        sys.stdout.write('K')
+                      else:
+                        sys.stdout.write('F')
                       sys.stdout.flush()
                     else:
-                      print "TEST-FAILED: " + fullpath
-                      print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
-                      print stderr
+                      if isKnownFailure(fullpath):
+                        print "KNOWN-FAILURE: " + fullpath
+                      else:
+                        print "TEST-FAILED: " + fullpath
+                        print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
+                        print stderr
                   else:
                     if summaryOnly:
-                      sys.stdout.write('.')
+                      if self.isKnownFailure(fullpath):
+                        # we should pass if we are expecting to fail!
+                        sys.stdout.write('!')
+                      else:
+                        sys.stdout.write('.')
                       sys.stdout.flush()
                     else:
-                      print "TEST-PASSED: " + fullpath
+                      if self.isKnownFailure(fullpath):
+                        # we shouldn't pass if we are expecting to fail!
+                        print "TEST-FAILED (known failure passed!): " + fullpath
+                        self.testsPassed -= 1
+                        self.testsFailed += 1
+                      else:
+                        print "TEST-PASSED: " + fullpath
                 else:
-                  # This shouldn't happen, so we died early...not good!
+                  # Shouldn't happen!
                   self.testsFailed += 1
                   if summaryOnly:
                     sys.stdout.write('F')
                     sys.stdout.flush()
                   else:
-                    print "TEST-FAILED: " + fullpath + ". Test exited early:"
+                    print "TEST-FAILED: " + fullpath + ". Test died:"
                     print stdout
               elif stderr:
                 # Shouldn't happen!
@@ -206,7 +273,10 @@ def main():
         ptests.runParserTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
         ptests.runUnitTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
 
-    print "\nTEST SUMMARY: %s passed, %s failed, %s total" % (ptests.testsPassed, ptests.testsFailed, (ptests.testsPassed + ptests.testsFailed))
+    print "\nTEST SUMMARY: %s passed, %s failed (%s known), %s total" % (ptests.testsPassed,
+                                                                         ptests.testsFailed,
+                                                                         ptests.testsFailedKnown,
+                                                                         (ptests.testsPassed + ptests.testsFailed + ptests.testsFailedKnown))
 
 if __name__ == '__main__':
     main()
