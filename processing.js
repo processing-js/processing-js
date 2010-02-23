@@ -480,6 +480,8 @@
     var online = true,
       doFill = true,
       doStroke = true,
+      strokeStyle = "rgba( 204, 204, 204, 1 )",
+      lineWidth = 1,
       loopStarted = false,
       hasBackground = false,
       doLoop = true,
@@ -3424,8 +3426,6 @@
         uniformMatrix( programObject , "model" , true,  model.array() );
         uniformMatrix( programObject , "view" , true , view.array() );
         uniformMatrix( programObject , "projection" , true , projection.array() );
-        
-        vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
 
         if( doFill === true ) {
           // fix stitching problems. (lines get occluded by triangles
@@ -3441,10 +3441,14 @@
           curContext.disable( curContext.POLYGON_OFFSET_FILL );
         }
 
-        // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth( 1 );
-        uniformf( programObject, "color", [0,0,0,1] );
-        curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
+        if( lineWidth > 0 && doStroke ) {
+          // eventually need to make this more efficient.
+          var c = strokeStyle.slice( 5, -1 ).split( "," );
+          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          curContext.lineWidth( lineWidth );
+          vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
+          curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
+        }
       }
     };
 
@@ -3672,7 +3676,12 @@
 
     p.stroke = function stroke() {
       doStroke = true;
-      curContext.strokeStyle = p.color.apply(this, arguments);
+      if( p.use3DContext ) {
+        strokeStyle = p.color.apply(this, arguments);
+      }
+      else {
+        curContext.strokeStyle = p.color.apply(this, arguments);
+      }
     };
 
     p.noStroke = function noStroke() {
@@ -3680,7 +3689,12 @@
     };
 
     p.strokeWeight = function strokeWeight(w) {
-      curContext.lineWidth = w;
+      if( p.use3DContext ) {
+        lineWidth = w;
+      }
+      else {
+        curContext.lineWidth = w;
+      }
     };
 
     p.strokeCap = function strokeCap(value) {
