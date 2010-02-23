@@ -32,7 +32,6 @@ test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_06c_variable_size_nodes/s
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_07c_save_pdf/step_07c_save_pdf.pde
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_08c_graphviz/step_08c_graphviz.pde
 test/parser/Processing-Book-001/Appendixes/Appendix B/_02/_02.pde
-test/parser/Processing-Book-001/Appendixes/Appendix E/_01/_01.pde
 test/parser/Processing-Book-001/Appendixes/Appendix E/_05/_05.pde
 test/parser/Processing-Book-001/Appendixes/Appendix E/_06/_06.pde
 test/parser/Processing-Book-001/Appendixes/Appendix E/_07/_07.pde
@@ -93,60 +92,21 @@ test/parser/Processing-Book-001/Synthesis/_14_pond/_14_pond.pde
 test/parser/Processing-Book-001/Synthesis/_15_tree/_15_tree.pde
 test/parser/Processing-Book-001/Synthesis/_16_sodaprocessing/_16_sodaprocessing.pde
 test/parser/Processing-Book-001/Units 00-17/01 Structure 1/_04/_04.pde
-test/parser/Processing-Book-001/Units 00-17/01 Structure 1/_07/_07.pde
-test/parser/Processing-Book-001/Units 00-17/03 Data 1/_08/_08.pde
-test/parser/Processing-Book-001/Units 00-17/03 Data 1/_09/_09.pde
-test/parser/Processing-Book-001/Units 00-17/03 Data 1/_10/_10.pde
-test/parser/Processing-Book-001/Units 00-17/04 Math 1/_08/_08.pde
-test/parser/Processing-Book-001/Units 00-17/04 Math 1/_16/_16.pde
-test/parser/Processing-Book-001/Units 00-17/04 Math 1/_17/_17.pde
-test/parser/Processing-Book-001/Units 00-17/04 Math 1/_18/_18.pde
-test/parser/Processing-Book-001/Units 00-17/04 Math 1/_19/_19.pde
-test/parser/Processing-Book-001/Units 00-17/04 Math 1/_20/_20.pde
-test/parser/Processing-Book-001/Units 00-17/04 Math 1/_21/_21.pde
-test/parser/Processing-Book-001/Units 00-17/05 Control 1/_01/_01.pde
-test/parser/Processing-Book-001/Units 00-17/05 Control 1/_02/_02.pde
-test/parser/Processing-Book-001/Units 00-17/05 Control 1/_12/_12.pde
 test/parser/Processing-Book-001/Units 00-17/10 Image 1/_03/_03.pde
 test/parser/Processing-Book-001/Units 00-17/10 Image 1/_04/_04.pde
 test/parser/Processing-Book-001/Units 00-17/11 Data 2/_01/_01.pde
-test/parser/Processing-Book-001/Units 00-17/11 Data 2/_02/_02.pde
-test/parser/Processing-Book-001/Units 00-17/11 Data 2/_03/_03.pde
-test/parser/Processing-Book-001/Units 00-17/11 Data 2/_04/_04.pde
-test/parser/Processing-Book-001/Units 00-17/11 Data 2/_06/_06.pde
-test/parser/Processing-Book-001/Units 00-17/12 Data 3/_08/_08.pde
-test/parser/Processing-Book-001/Units 00-17/12 Data 3/_09/_09.pde
 test/parser/Processing-Book-001/Units 00-17/12 Data 3/_10/_10.pde
-test/parser/Processing-Book-001/Units 00-17/12 Data 3/_11/_11.pde
 test/parser/Processing-Book-001/Units 00-17/12 Data 3/_12/_12.pde
-test/parser/Processing-Book-001/Units 00-17/12 Data 3/_13/_13.pde
-test/parser/Processing-Book-001/Units 00-17/12 Data 3/_14/_14.pde
-test/parser/Processing-Book-001/Units 00-17/12 Data 3/_15/_15.pde
 test/parser/Processing-Book-001/Units 00-17/13 Typography 1/_09/_09.pde
 test/parser/Processing-Book-001/Units 00-17/13 Typography 1/_11/_11.pde
-test/parser/Processing-Book-001/Units 00-17/14 Math 3/_01/_01.pde
-test/parser/Processing-Book-001/Units 00-17/14 Math 3/_02/_02.pde
-test/parser/Processing-Book-001/Units 00-17/14 Math 3/_03/_03.pde
-test/parser/Processing-Book-001/Units 00-17/14 Math 3/_04/_04.pde
-test/parser/Processing-Book-001/Units 00-17/14 Math 3/_05/_05.pde
 test/parser/Processing-Book-001/Units 00-17/14 Math 3/_15/_15.pde
 test/parser/Processing-Book-001/Units 00-17/15 Math 4/_07/_07.pde
 test/parser/Processing-Book-001/Units 00-17/15 Math 4/_08/_08.pde
-test/parser/Processing-Book-001/Units 20-29/21 Structure 3/_19/_19.pde
-test/parser/Processing-Book-001/Units 20-29/21 Structure 3/_20/_20.pde
 test/parser/Processing-Book-001/Units 20-29/22 Shape 3/_11/_11.pde
-test/parser/Processing-Book-001/Units 20-29/28 Input 5/_01/_01.pde
-test/parser/Processing-Book-001/Units 20-29/28 Input 5/_08/_08.pde
 test/parser/Processing-Book-001/Units 31-42/32 Motion 2/_05/_05.pde
 test/parser/Processing-Book-001/Units 31-42/32 Motion 2/_06/_06.pde
-test/parser/Processing-Book-001/Units 31-42/33 Data 4/_09/_09.pde
-test/parser/Processing-Book-001/Units 31-42/33 Data 4/_10/_10.pde
-test/parser/Processing-Book-001/Units 31-42/33 Data 4/_17/_17.pde
-test/parser/Processing-Book-001/Units 31-42/33 Data 4/_18/_18.pde
 test/parser/Processing-Book-001/Units 31-42/33 Data 4/_20/_20.pde
-test/parser/Processing-Book-001/Units 31-42/33 Data 4/_21/_21.pde
 test/parser/Processing-Book-001/Units 31-42/33 Data 4/_22/_22.pde
-test/parser/Processing-Book-001/Units 31-42/33 Data 4/_23/_23.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_01/_01.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_02/_02.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_03/_03.pde
@@ -157,8 +117,6 @@ test/parser/Processing-Book-001/Units 31-42/35 Image 3/_12/_12.pde
 test/parser/Processing-Book-001/Units 31-42/36 Typography 2/_08/_08.pde
 test/parser/Processing-Book-001/Units 31-42/37 Typography 3/_03/_03.pde
 test/parser/Processing-Book-001/Units 31-42/37 Typography 3/_04/_04.pde
-test/parser/Processing-Book-001/Units 31-42/38 Color 2/_01/_01.pde
-test/parser/Processing-Book-001/Units 31-42/38 Color 2/_02/_02.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_03/_03.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_05/_05.pde
@@ -182,13 +140,9 @@ test/parser/Processing-Book-001/Units 31-42/40 Image 5/_14/_14.pde
 test/parser/Processing-Book-001/Units 31-42/40 Image 5/_15/_15.pde
 test/parser/Processing-Book-001/Units 31-42/40 Image 5/_16/_16.pde
 test/parser/Processing-Book-001/Units 43-51/43 Structure 4/_02/_02.pde
-test/parser/Processing-Book-001/Units 43-51/45 Output 2/_01/_01.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_01/_01.pde
-test/parser/Processing-Book-001/Units 43-51/46 Input 6/_02/_02.pde
-test/parser/Processing-Book-001/Units 43-51/46 Input 6/_03/_03.pde
-test/parser/Processing-Book-001/Units 43-51/46 Input 6/_04/_04.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_05/_05.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_06/_06.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_07/_07.pde
