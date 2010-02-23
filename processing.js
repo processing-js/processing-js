@@ -92,6 +92,9 @@
   var programObject;
   var boxBuffer;
   var boxOutlineBuffer;
+	
+	var sphereBuffer;
+  var sphereOutlineBuffer;
   
   var vertexShaderSource = 
   "attribute vec3 Vertex;" +
@@ -318,7 +321,7 @@
 
 
     // Check if 3D context is invoked -- this is not the best way to do this.
-    if (aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\s*\);/)) {
+    if (aCode.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
       p.use3DContext = true;
     }
 
@@ -399,11 +402,11 @@
     p.PI = Math.PI;
     p.TWO_PI = 2 * p.PI;
     p.HALF_PI = p.PI / 2;
+		p.SINCOS_LENGTH   = parseInt(360/0.5);
     p.MAX_FLOAT = 3.4028235e+38;
     p.MIN_FLOAT = -3.4028235e+38;
     p.MAX_INT = 2147483647;
     p.MIN_INT = -2147483648;
-    p.P3D = 3;
     p.CORNER = 0;
     p.RADIUS = 1;
     p.CENTER_RADIUS = 1;
@@ -421,6 +424,7 @@
     p.RGB = 1;
     p.HSB = 2;
     p.OPENGL = 'OPENGL';
+    p.P3D = 'P3D';
     p.FRAME_RATE = 0;
     p.focused = true;
     p.ARROW = 'default';
@@ -459,6 +463,7 @@
     p.PROJECT = 'square'; // Used by cap.
     p.MITER = 'miter'; // Used by join.
     p.BEVEL = 'bevel'; // Used by join.
+		
     // KeyCode Table
     p.CENTER = 88888880;
     p.CODED = 88888888;
@@ -508,8 +513,17 @@
       start = new Date().getTime(),
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0;
-
-    // Camera defaults and settings
+		
+		//sphere stuff
+		var sphereDetailV = 0,
+			  sphereDetailU = 0,
+			  sphereX       = new Array(),
+			  sphereY       = new Array(),
+			  sphereZ       = new Array(),
+			  sinLUT        = new Array( p.SINCOS_LENGTH ),
+			  cosLUT        = new Array( p.SINCOS_LENGTH );
+    
+		// Camera defaults and settings
     var cam,
       cameraInv,
       forwardTransform,
@@ -1911,21 +1925,22 @@
 
     // tinylog lite JavaScript library
     // http://purl.eligrey.com/tinylog/lite
-    var tinylogLite = (function (view) {
+        var tinylogLite = (function () {
       "use strict";
 
       var tinylogLite = {},
-      doc             = view.document,
-      tinylog         = view.tinylog,
-      print           = view.print,
+      undef           = "undefined",
+      func            = "function",
       False           = !1,
       True            = !0,
       log             = "log";
   
-      if (tinylog && tinylog[log]) { // pre-existing tinylog
+      if (typeof tinylog !== undef && typeof tinylog[log] === func) {
+        // pre-existing tinylog present
         tinylogLite[log] = tinylog[log];
-      } else if (doc) { (function () { // DOM document
-        var
+      } else if (typeof document !== undef && !document.fake) { (function () {
+        // DOM document
+        var doc = document,
     
         $div   = "div",
         $style = "style",
@@ -1977,6 +1992,7 @@
           overflow: "auto"
         },
     
+        view         = doc.defaultView,
         docElem      = doc.documentElement,
         docElemStyle = docElem[$style],
     
@@ -2078,7 +2094,6 @@
             }
           }),
       
-          // minimize tinylog
           observer(resizer, "dblclick", function (evt) {
             evt.preventDefault();
         
@@ -2097,7 +2112,6 @@
             previousScrollTop = output.scrollTop;
           }),
       
-          // fix resizing being stuck when context menu opens
           observer(resizer, "contextmenu", function () {
             resizingLog = False;
           }),
@@ -2113,7 +2127,7 @@
           var i = observers.length;
       
           while (i--) {
-            unobserve.apply(self, observers[i]);
+            unobserve.apply(tinylogLite, observers[i]);
           }
       
           // remove tinylog lite from the DOM
@@ -2162,12 +2176,12 @@
   
       }());
   
-      } else if (print) { // JS shell
+      } else if (typeof print === func) { // JS shell
         tinylogLite[log] = print;
       }
   
       return tinylogLite;
-    }(window)),
+    }()),
     
     logBuffer = [];
     
@@ -2535,7 +2549,7 @@
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
-      if (aMode && aMode === "OPENGL") {
+      if (aMode && (aMode === "OPENGL" || aMode === "P3D" ) ) {
         // get the 3D rendering context
         try {
           if (!curContext) {
@@ -2548,6 +2562,10 @@
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
         } else {
+					for (var i = 0; i < p.SINCOS_LENGTH; i++) {
+						sinLUT[i] = p.sin(i * (p.PI/180) * 0.5);
+						cosLUT[i] = p.cos(i * (p.PI/180) * 0.5);
+          }
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
@@ -2578,6 +2596,7 @@
             curContext.useProgram(programObject);
           }
 
+          // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts),curContext.DYNAMIC_DRAW);
@@ -2585,6 +2604,12 @@
           boxOutlineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
+					
+					sphereBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
+          
+          sphereOutlineBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereOutlineBuffer);
 
           p.camera();
           p.perspective();
@@ -3345,6 +3370,215 @@
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
       }
     };
+
+		// sphere and sphereDetail
+		// Taken and revised from:
+		// git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
+		// UNDER :License: LGPL Java
+		p.sphereDetail =  function sphereDetail(ures, vres) {
+			if(arguments.length === 1) {
+				ures = vres = arguments[0];
+			}
+
+			if ( ures < 3 ) { ures = 3; } // force a minimum res
+			if ( vres < 2 ) { vres = 2; } // force a minimum res
+
+			// if it hasn't changed do nothing
+			if (( ures === sphereDetailU ) && ( vres === sphereDetailV )) { return; }
+
+			var delta = p.SINCOS_LENGTH/ures;
+			var cx = new Array(ures);
+			var cz = new Array(ures);
+			// calc unit circle in XZ plane
+			for (var i = 0; i < ures; i++) {
+			  cx[i] = cosLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH )];
+			  cz[i] = sinLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH )];
+			}
+
+			// computing vertexlist
+			// vertexlist starts at south pole
+			var vertCount = ures * ( vres - 1 ) + 2;
+			var currVert = 0;
+
+			// re-init arrays to store vertices
+			sphereX = new Array( vertCount );
+			sphereY = new Array( vertCount );
+			sphereZ = new Array( vertCount );
+
+			var angle_step = (p.SINCOS_LENGTH *0.5)/vres;
+			var angle = angle_step;
+
+			// step along Y axis
+			for (var i = 1; i < vres; i++) {
+				var curradius = sinLUT[ parseInt( angle % p.SINCOS_LENGTH )];
+				var currY     = -cosLUT[ parseInt( angle % p.SINCOS_LENGTH )];
+				for ( var j = 0; j < ures; j++ ) {
+					sphereX[currVert]   = cx[j] * curradius;
+					sphereY[currVert]   = currY;
+					sphereZ[currVert++] = cz[j] * curradius;
+				}
+			  angle += angle_step;
+			}
+			sphereDetailU = ures;
+			sphereDetailV = vres;
+		};
+		
+		p.sphere = function() {
+			if(curContext) {
+				var sRad = arguments[0];
+				var newSphereVerts = new Array();
+				var newSphereNorms = new Array();
+
+				if (( sphereDetailU < 3 ) || ( sphereDetailV < 2 )) {
+					sphereDetail(30);
+				}
+				
+        for (var i = 0; i < sphereDetailU; i++) {
+					newSphereNorms.push(0);
+					newSphereNorms.push(-1);
+					newSphereNorms.push(0);
+					newSphereVerts.push(0);
+					newSphereVerts.push(-1);
+					newSphereVerts.push(0);
+					newSphereNorms.push( sphereX[i] );
+					newSphereNorms.push( sphereY[i] );
+					newSphereNorms.push( sphereZ[i] );
+					newSphereVerts.push( sphereX[i] );
+					newSphereVerts.push( sphereY[i] );
+					newSphereVerts.push( sphereZ[i] );
+				}
+
+				newSphereVerts.push(0);
+				newSphereVerts.push(-1);
+				newSphereVerts.push(0);
+				newSphereNorms.push( sphereX[0] );
+				newSphereNorms.push( sphereY[0] );
+				newSphereNorms.push( sphereZ[0] );
+				newSphereVerts.push( sphereX[0] );
+				newSphereVerts.push( sphereY[0] );
+				newSphereVerts.push( sphereZ[0] );
+
+				var v1, v11, v2;
+
+				// middle rings
+				var voff = 0;
+				for (var i = 2; i < sphereDetailV; i++) {
+					v1 = v11 = voff;
+					voff += sphereDetailU;
+					v2 = voff;
+
+					for (var j = 0; j < sphereDetailU; j++) {
+						newSphereNorms.push( parseFloat( sphereX[v1] ) );
+						newSphereNorms.push( parseFloat( sphereY[v1] ) );
+						newSphereNorms.push( parseFloat( sphereZ[v1] ) );
+						// verts
+						newSphereVerts.push( parseFloat( sphereX[v1] ) );
+						newSphereVerts.push( parseFloat( sphereY[v1] ) );
+						newSphereVerts.push( parseFloat( sphereZ[v1++] ) );
+						// normals
+						newSphereNorms.push( parseFloat( sphereX[v2] ) );
+						newSphereNorms.push( parseFloat( sphereY[v2] ) );
+						newSphereNorms.push( parseFloat( sphereZ[v2] ) );
+						// verts
+						newSphereVerts.push( parseFloat( sphereX[v2] ) );
+						newSphereVerts.push( parseFloat( sphereY[v2] ) );
+						newSphereVerts.push( parseFloat( sphereZ[v2++] ) );
+					}
+
+					// close each ring
+					v1 = v11;
+					v2 = voff;
+					newSphereNorms.push( parseFloat( sphereX[v1] ) );
+					newSphereNorms.push( parseFloat( sphereY[v1] ) );
+					newSphereNorms.push( parseFloat( sphereZ[v1] ) );
+					// verts
+					newSphereVerts.push( parseFloat( sphereX[v1] ) );
+					newSphereVerts.push( parseFloat( sphereY[v1] ) );
+					newSphereVerts.push( parseFloat( sphereZ[v1] ) );
+					// norms
+					newSphereNorms.push( parseFloat( sphereX[v2] ) );
+					newSphereNorms.push( parseFloat( sphereY[v2] ) );
+					newSphereNorms.push( parseFloat( sphereZ[v2] ) );
+					// verts
+					newSphereVerts.push( parseFloat( sphereX[v2] ) );
+					newSphereVerts.push( parseFloat( sphereY[v2] ) );
+					newSphereVerts.push( parseFloat( sphereZ[v2] ) );
+				}
+
+				// add the northern cap
+				for (var i = 0; i < sphereDetailU; i++) {
+					v2 = voff + i;
+					// norms
+					newSphereNorms.push( parseFloat( sphereX[v2] ) );
+					newSphereNorms.push( parseFloat( sphereY[v2] ) );
+					newSphereNorms.push( parseFloat( sphereZ[v2] ) );
+					// verts
+					newSphereVerts.push( parseFloat( sphereX[v2] ) );
+					newSphereVerts.push( parseFloat( sphereY[v2] ) );
+					newSphereVerts.push( parseFloat( sphereZ[v2] ) );
+					// norms
+					newSphereNorms.push( 0 );
+					newSphereNorms.push( 1 );
+					newSphereNorms.push( 0 );
+					// verts
+					newSphereVerts.push( 0 );
+					newSphereVerts.push( 1 );
+					newSphereVerts.push( 0 );
+				}
+
+				newSphereNorms.push( parseFloat( sphereX[voff] ) );
+				newSphereNorms.push( parseFloat( sphereY[voff] ) );
+				newSphereNorms.push( parseFloat( sphereZ[voff] ) );
+				// verts
+				newSphereVerts.push( parseFloat( sphereX[voff] ) );
+				newSphereVerts.push( parseFloat( sphereY[voff] ) );
+				newSphereVerts.push( parseFloat( sphereZ[voff] ) );
+				// norms
+				newSphereNorms.push(0);
+				newSphereNorms.push(1);
+				newSphereNorms.push(0);
+				// verts
+				newSphereVerts.push(0);
+				newSphereVerts.push(1);
+				newSphereVerts.push(0);
+
+				// Modeling transformation
+        var model = new PMatrix3D();
+        model.scale( sRad , sRad, sRad );
+
+        // viewing transformation needs to have Y flipped
+        // becuase that's what Processing does.
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+
+				uniformMatrix( programObject , "model" , true,  model.array() );
+        uniformMatrix( programObject , "view" , true , view.array() );
+        uniformMatrix( programObject , "projection" , true , projection.array() );
+
+        //make a solid white sphere
+				uniformf( programObject, "color", [1,1,1,1] );
+
+        vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
+				
+				//set the buffer data
+				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
+        curContext.drawArrays( curContext.TRIANGLE_STRIP, 0 , newSphereVerts.length/3 );
+        curContext.disable( curContext.POLYGON_OFFSET_FILL );
+				
+				//make the black lines
+				uniformf( programObject, "color", [0,0,0,1] );
+				
+				//sets the buffer data
+				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
+        curContext.lineWidth( 1 );
+        curContext.drawArrays( curContext.LINE_STRIP, 0 , newSphereVerts.length/3 );
+
+				//make an offset so that you can actually see the lines
+				curContext.enable( curContext.POLYGON_OFFSET_FILL );
+        curContext.polygonOffset( 11, 11 );
+			}
+		};
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
@@ -4308,6 +4542,8 @@
       }
 
     };
+
+    p.createFont = function(name, size) {};
 
     // Sets a 'current font' for use
     p.textFont = function textFont(name, size) {
