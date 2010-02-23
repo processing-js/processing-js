@@ -96,6 +96,10 @@ var window = {
   createElement: function() { return elem; }
 };
 
+window.XMLHttpRequest.prototype.open = __empty_func__;
+window.XMLHttpRequest.prototype.send = __empty_func__;
+window.XMLHttpRequest.prototype.responseText = "some text";
+
 // Constructors not included in many parser tests to allow them to run
 var Table = __empty_func__;
 Table.prototype.getRowCount = __empty_func__;
@@ -113,6 +117,13 @@ OBJModel.prototype.load = __empty_func__;
 var Serial          = __empty_func__;
 Serial.begin = __empty_func__;
 
+var WordMap         = __empty_func__;
+WordMap.prototype.addWord = __empty_func__;
+WordMap.prototype.finishAdd = __empty_func__;
+
+var Treemap         = __empty_func__;
+Treemap.prototype.draw = __empty_func__;
+
 var FixedSpring     = __empty_func__;
 var Spring2D        = __empty_func__;
 var Particle        = __empty_func__;
@@ -129,4 +140,3 @@ var EggRing         = __empty_func__;
 var OverRect        = __empty_func__;
 var OverCircle      = __empty_func__;
 var SpinSpots       = __empty_func__;
-var WordMap         = __empty_func__;
