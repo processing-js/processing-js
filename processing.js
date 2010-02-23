@@ -321,7 +321,7 @@
 
 
     // Check if 3D context is invoked -- this is not the best way to do this.
-    if (aCode.match(/size\((?:.+),(?:.+),\s*OPENGL\s*\);/)) {
+    if (aCode.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
       p.use3DContext = true;
     }
 
@@ -407,7 +407,6 @@
     p.MIN_FLOAT = -3.4028235e+38;
     p.MAX_INT = 2147483647;
     p.MIN_INT = -2147483648;
-    p.P3D = 3;
     p.CORNER = 0;
     p.RADIUS = 1;
     p.CENTER_RADIUS = 1;
@@ -425,6 +424,7 @@
     p.RGB = 1;
     p.HSB = 2;
     p.OPENGL = 'OPENGL';
+    p.P3D = 'P3D';
     p.FRAME_RATE = 0;
     p.focused = true;
     p.ARROW = 'default';
@@ -2549,7 +2549,7 @@
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
-      if (aMode && aMode === "OPENGL") {
+      if (aMode && (aMode === "OPENGL" || aMode === "P3D" ) ) {
         // get the 3D rendering context
         try {
           if (!curContext) {
