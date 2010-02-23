@@ -1924,7 +1924,8 @@
       if (typeof tinylog !== undef && typeof tinylog[log] === func) {
         // pre-existing tinylog present
         tinylogLite[log] = tinylog[log];
-      } else if (typeof document !== undef) { (function () { // DOM document
+      } else if (typeof document !== undef && !document.fake) { (function () {
+        // DOM document
         var doc = document,
     
         $div   = "div",
