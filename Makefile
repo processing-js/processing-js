@@ -22,6 +22,7 @@ zipped: release-files
 	find ./release -print | zip -j ./release/processing.js-$(VERSION).zip -@
 
 release-docs: create-release
+	cp AUTHORS ./release
 	cp README ./release
 	cp LICENSE ./release
 	cp CHANGELOG ./release
