@@ -1941,7 +1941,7 @@
       p.println(arguments[0]);
     };
 
-    p.char = function char( key ) {
+     function char( key ) {
       
       var ret;
 
@@ -1957,7 +1957,7 @@
         throw "char() may receive only one argument of type int, byte, int[], or byte[].";
       }
       
-      return key;
+      return ret;
     };
 
     p.trim = function( str ) {
