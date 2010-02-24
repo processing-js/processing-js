@@ -479,7 +479,10 @@
     // "Private" variables used to maintain state
     var online = true,
       doFill = true,
+      fillStyle = "rgba( 255, 255, 255, 1 )",
       doStroke = true,
+      strokeStyle = "rgba( 204, 204, 204, 1 )",
+      lineWidth = 1,
       loopStarted = false,
       hasBackground = false,
       doLoop = true,
@@ -1218,8 +1221,12 @@
         curContext.translate(x, y);
       }
     };
-    p.scale = function scale(x, y) {
-      curContext.scale(x, y || x);
+    p.scale = function scale( x, y, z ) {
+      if ( p.use3DContext ) {
+        forwardTransform.scale( x, y, z );
+      } else {
+        curContext.scale( x, y || x );
+      }
     };
     p.pushMatrix = function pushMatrix() {
       if (p.use3DContext) {
@@ -2569,6 +2576,8 @@
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+          curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
           var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
           curContext.shaderSource(vertexShaderObject, vertexShaderSource);
@@ -2978,6 +2987,23 @@
           this.elements = result.slice();
         }
       },
+      rotate: function( angle, v0, v1, v2 ) {
+        if( !v1 ) {
+          this.rotateZ( angle );
+        }
+        else {
+          // TODO should make sure this vector is normalized
+
+          var c = p.cos( angle );
+          var s = p.sin( angle );
+          var t = 1.0 - c;
+
+          this.apply( (t*v0*v0) + c, (t*v0*v1) - (s*v2), (t*v0*v2) + (s*v1), 0,
+                      (t*v0*v1) + (s*v2), (t*v1*v1) + c, (t*v1*v2) - (s*v0), 0,
+                      (t*v0*v2) - (s*v1), (t*v1*v2) + (s*v0), (t*v2*v2) + c, 0,
+                      0, 0, 0, 1);
+        }
+      },
       rotateX: function( angle ){
         var c = p.cos( angle );
         var s = p.sin( angle );
@@ -3019,6 +3045,58 @@
           this.elements[12] *= sx;
           this.elements[13] *= sy;
           this.elements[14] *= sz;
+        }
+      },
+      skewX: function( angle ) {
+        var t = p.tan( angle );
+        this.apply( 1, t, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1);
+      },
+      skewY: function( angle ) {
+        var t = Math.tan( angle );
+        this.apply( 1, 0, 0, 0,
+                    t, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1);
+      },
+      multX: function( x, y, z, w ) {
+        if( !z ) {
+          return this.elements[0] * x + this.elements[1] * y + this.elements[3];
+        }
+        else if ( !w ) {
+          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
+        }
+        else {
+          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
+        }
+      },
+      multY: function( x, y, z, w ) {
+        if( !z ) {
+          return this.elements[4] * x + this.elements[5] * y + this.elements[7];
+        }
+        else if ( !w ) {
+          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
+        }
+        else {
+          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
+        }
+      },
+      multZ: function( x, y, z, w ) {
+        if( !w ) {
+          return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
+        }
+        else {
+          return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
+        }
+      },
+      multW: function( x, y, z, w ) {
+        if( !w ) {
+          return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15];
+        }
+        else {
+          return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
         }
       },
       invert: function(){
@@ -3350,24 +3428,28 @@
         uniformMatrix( programObject , "view" , true , view.array() );
         uniformMatrix( programObject , "projection" , true , projection.array() );
 
-        uniformf( programObject, "color", [0,0,0,1] );
-        vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
+        if( doFill === true ) {
+          // fix stitching problems. (lines get occluded by triangles
+          // since they share the same depth values). This is not entirely
+          // working, but it's a start for drawing the outline. So
+          // developers can start playing around with styles. 
+          curContext.enable( curContext.POLYGON_OFFSET_FILL );
+          curContext.polygonOffset( 1, 1 );
+          var c = fillStyle.slice( 5, -1 ).split( "," );
+          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );
+          curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
+          curContext.disable( curContext.POLYGON_OFFSET_FILL );
+        }
 
-        // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth( 1 );
-        curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
-
-        // fix stitching problems. (lines get occluded by triangles
-        // since they share the same depth values). This is not entirely
-        // working, but it's a start for drawing the outline. So
-        // developers can start playing around with styles. 
-        curContext.enable( curContext.POLYGON_OFFSET_FILL );
-        curContext.polygonOffset( 1, 1 );
-
-        uniformf( programObject, "color", [1,1,1,1] );
-        vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );
-        curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
-        curContext.disable( curContext.POLYGON_OFFSET_FILL );
+        if( lineWidth > 0 && doStroke ) {
+          // eventually need to make this more efficient.
+          var c = strokeStyle.slice( 5, -1 ).split( "," );
+          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          curContext.lineWidth( lineWidth );
+          vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
+          curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
+        }
       }
     };
 
@@ -3586,7 +3668,12 @@
 
     p.fill = function fill() {
       doFill = true;
-      curContext.fillStyle = p.color.apply(this, arguments);
+      if( p.use3DContext ) {
+        fillStyle = p.color.apply(this, arguments);
+      }
+      else {
+        curContext.fillStyle = p.color.apply(this, arguments);
+      }
     };
 
     p.noFill = function noFill() {
@@ -3595,7 +3682,12 @@
 
     p.stroke = function stroke() {
       doStroke = true;
-      curContext.strokeStyle = p.color.apply(this, arguments);
+      if( p.use3DContext ) {
+        strokeStyle = p.color.apply(this, arguments);
+      }
+      else {
+        curContext.strokeStyle = p.color.apply(this, arguments);
+      }
     };
 
     p.noStroke = function noStroke() {
@@ -3603,7 +3695,12 @@
     };
 
     p.strokeWeight = function strokeWeight(w) {
-      curContext.lineWidth = w;
+      if( p.use3DContext ) {
+        lineWidth = w;
+      }
+      else {
+        curContext.lineWidth = w;
+      }
     };
 
     p.strokeCap = function strokeCap(value) {
@@ -4241,7 +4338,7 @@
           // user passes in value which ranges from 0-255, but opengl
           // wants a normalized value.
           else if (typeof arguments[0] === "number") {
-            curContext.clearColor(col[0] / 255, col[0] / 255, col[0] / 255, 1.0);
+            curContext.clearColor(col[0] / 255, col[0] / 255, col[0] / 255, 1.0 );
           }
         } else if (arguments.length === 2) {
           if (typeof arguments[0] === "string") {
@@ -4266,7 +4363,7 @@
         else if (arguments.length === 3 || arguments.length === 4) {
           // Processing seems to ignore this value, so just use 1.0 instead.
           //var a = arguments.length === 3? 1.0: arguments[3]/255;
-          curContext.clearColor(col[0] / 255, col[1] / 255, col[2] / 255, 1.0);
+          curContext.clearColor(col[0] / 255, col[1] / 255, col[2] / 255, 1);
         }
       } else { // 2d context
         if (arguments.length) {
