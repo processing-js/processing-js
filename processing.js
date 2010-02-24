@@ -522,8 +522,8 @@
 			sphereZ     = new Array(),
 			sinLUT      = new Array( p.SINCOS_LENGTH ),
 			cosLUT      = new Array( p.SINCOS_LENGTH ),
-			newSphereVerts = new Array(),
-			newSphereNorms = new Array();
+			newSphereVerts,
+			newSphereNorms;
     
 		// Camera defaults and settings
     var cam,
@@ -3171,6 +3171,8 @@
 		}
 		initSphere = function()
 		{
+			newSphereVerts = new Array();
+			newSphereNorms = new Array();
 			for (var i = 0; i < sphereDetailU; i++) {
 				newSphereNorms.push(0);
 				newSphereNorms.push(-1);
@@ -3275,6 +3277,10 @@
 			newSphereVerts.push(0);
 			newSphereVerts.push(1);
 			newSphereVerts.push(0);
+			
+			vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
+			//set the buffer data
+			curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
 		}
 		p.sphere = function()
 		{
@@ -3303,10 +3309,6 @@
         //make a solid white sphere
 				uniformf( programObject, "color", [1,1,1,1] );
 				
-				vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
-				
-				//set the buffer data
-				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
         curContext.drawArrays( curContext.TRIANGLE_STRIP, 0 , newSphereVerts.length/3 );
 				
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
@@ -3314,9 +3316,7 @@
 				//make the black lines
 				uniformf( programObject, "color", [0,0,0,1] );
 				
-				//sets the buffer data
-				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
-        curContext.lineWidth( 1 );
+				curContext.lineWidth( 1 );
         curContext.drawArrays( curContext.LINE_STRIP, 0 , newSphereVerts.length/3 );
 				//make an offset so that you can actually see the lines
 				curContext.enable( curContext.POLYGON_OFFSET_FILL );
