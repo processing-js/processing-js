@@ -4091,6 +4091,16 @@
         height *= 2;
       }
 
+      if ( curEllipseMode === p.CORNERS ) {
+        width = width-x;
+        height = height-y;
+      }
+
+      if ( curEllipseMode === p.CORNER || curEllipseMode === p.CORNERS ) {
+        x += width/2;
+        y += height/2;
+      }
+
       var offsetStart = 0;
 
       // Shortcut for drawing a circle
