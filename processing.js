@@ -3304,6 +3304,7 @@
 				uniformf( programObject, "color", [1,1,1,1] );
 				
 				vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
+				
 				//set the buffer data
 				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
         curContext.drawArrays( curContext.TRIANGLE_STRIP, 0 , newSphereVerts.length/3 );
