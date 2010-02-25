@@ -1256,19 +1256,15 @@
     };
     
     p.applyMatrix = function applyMatrix(){
-	  if( p.use3DContext ){
-		forwardTransform.apply( arguments ); 
-	  }
-	  else{
-		var a = arguments;
+	  var a = arguments;
+	  if( !p.use3DContext ){			  	  
 		for( var cnt = a.length; cnt < 16; cnt++ ){ a[cnt] = 0 };
 		a[ 10 ] = a [ 15 ] = 1;
-		forwardTransform.apply( a[ 0 ],	  a[ 1 ],	a[ 2 ],	  a[ 3 ],
-								a[ 4 ],	  a[ 5 ],	a[ 6 ],	  a[ 7 ],
-								a[ 8 ],	  a[ 8 ],	a[ 10 ],  a[ 11 ],
-								a[ 12 ],  a[ 13 ],	a[ 14 ],  a[ 15 ] );
-    	
 	  }
+	  forwardTransform.apply( a[ 0 ],	a[ 1 ],	  a[ 2 ],	a[ 3 ],
+							  a[ 4 ],	a[ 5 ],	  a[ 6 ],   a[ 7 ],
+							  a[ 8 ],	a[ 9 ],	  a[ 10 ],  a[ 11 ],
+							  a[ 12 ],	a[ 13 ],  a[ 14 ],  a[ 15 ] );
 	};
     
     p.rotateX = function( angleInRadians ) {
