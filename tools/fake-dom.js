@@ -52,7 +52,7 @@ var canvas = {
   },
   style: {}
 };
-
+ 
 var WebGLFloatArray = __empty_func__;
 
 var document = {
@@ -84,12 +84,12 @@ var elem = {
   removeChild: __empty_func__,
   style: {}
 };
-
+ 
 var addEventListener = __empty_func__;
 var XMLHttpRequest = __empty_func__;
 var setInterval = __empty_func__;
 var clearInterval = __empty_func__;
-
+ 
 var window = {
   appendChild: __elem_func__,
   removeChild: __empty_func__,
@@ -108,7 +108,7 @@ window.XMLHttpRequest.prototype.responseText = "some text";
 var Table = __empty_func__;
 Table.prototype.getRowCount = __empty_func__;
 Table.prototype.getTableMax = __empty_func__;
-
+ 
 var FloatTable = __empty_func__;
 FloatTable.prototype.getRowCount = __empty_func__;
 FloatTable.prototype.getColumnCount = __empty_func__;
@@ -133,14 +133,14 @@ var Spring2D        = __empty_func__;
 var Particle        = __empty_func__;
 var ArrowParticle   = __empty_func__;
 var LimitedParticle = __empty_func__;
-var GenParticle     = __empty_func__;
-var DragButton      = __empty_func__;
-var Button          = __empty_func__;
-var Check           = __empty_func__;
-var Radio           = __empty_func__;
-var Scrollbar       = __empty_func__;
-var SpinArm         = __empty_func__;
-var EggRing         = __empty_func__;
-var OverRect        = __empty_func__;
-var OverCircle      = __empty_func__;
-var SpinSpots       = __empty_func__;
+var GenParticle = __empty_func__;
+var DragButton = __empty_func__;
+var Button = __empty_func__;
+var Check = __empty_func__;
+var Radio = __empty_func__;
+var Scrollbar = __empty_func__;
+var SpinArm = __empty_func__;
+var EggRing = __empty_func__;
+var OverRect = __empty_func__;
+var OverCircle = __empty_func__;
+var SpinSpots = __empty_func__;
