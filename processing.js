@@ -468,21 +468,31 @@
     p.PROJECT = 'square'; // Used by cap.
     p.MITER = 'miter'; // Used by join.
     p.BEVEL = 'bevel'; // Used by join.
-		
-    // KeyCode Table
     p.CENTER = 88888880;
-    p.CODED = 88888888;
-    p.UP = 88888870;
-    p.RIGHT = 88888871;
-    p.DOWN = 88888872;
-    p.LEFT = 88888869;
     p.NORMAL_MODE_AUTO = 0;
     p.NORMAL_MODE_SHAPE = 1;
     p.NORMAL_MODE_VERTEX = 2;
+		
+    // Key Constants
+    // both key and keyCode will be equal to these values
+    p.BACKSPACE = 8;
+    p.TAB       = 9;
+    p.ENTER     = 10;
+    p.RETURN    = 13;
+    p.ESC       = 27;
+    p.DELETE    = 127;
 
-    //! // Description required...
-    p.codedKeys = [69, 70, 71, 72];
+    p.CODED = 0xffff; 
+    // key will be CODED and keyCode will be this value
+    p.SHIFT     = 16;
+    p.CONTROL   = 17;
+    p.ALT       = 18;
+    p.UP        = 38;
+    p.RIGHT     = 39;
+    p.DOWN      = 40;
+    p.LEFT      = 37;
 
+    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
 
     // "Private" variables used to maintain state
     var online = true,
@@ -5364,32 +5374,66 @@
 
       attach(document, "keydown", function (e) {
         keyPressed = true;
-        p.key = e.keyCode + 32;
-        var wasCoded = false;
-        for (var i = 0, l = p.codedKeys.length; i < l; i++) {
-          if (p.key === p.codedKeys[i]) {
-            wasCoded = true;
-            switch (p.key) {
-            case 70:
-              p.keyCode = p.UP;
-              break;
-            case 71:
-              p.keyCode = p.RIGHT;
-              break;
-            case 72:
-              p.keyCode = p.DOWN;
-              break;
-            case 69:
-              p.keyCode = p.LEFT;
-              break;
+        p.keyCode = null;
+        p.key = e.keyCode;
+
+        // Letters
+        if ( e.keyCode >= 65 && e.keyCode <= 90 ) { // A-Z
+          // Keys return ASCII for upcased letters.
+          // Convert to downcase if shiftKey is not pressed.
+          if ( !e.shiftKey ) { 
+            p.key += 32; 
+          }
+        } 
+
+        // Numbers and their shift-symbols 
+        else if ( e.keyCode >= 48 && e.keyCode <= 57 ) { // 0-9
+          if ( e.shiftKey ) {
+            switch ( e.keyCode ) {
+              case 49: p.key = 33; break; // !
+              case 50: p.key = 64; break; // @
+              case 51: p.key = 35; break; // #
+              case 52: p.key = 36; break; // $
+              case 53: p.key = 37; break; // %
+              case 54: p.key = 94; break; // ^
+              case 55: p.key = 38; break; // &
+              case 56: p.key = 42; break; // *
+              case 57: p.key = 40; break; // (
+              case 48: p.key = 41; break; // )
             }
-            p.key = p.CODED;
           }
         }
-        if (!wasCoded){ p.keyCode = null; }
-        if (e.shiftKey) {
-          p.key = String.fromCharCode(p.key).toUpperCase().charCodeAt(0);
+
+        // Coded keys
+        else if ( codedKeys.indexOf(e.keyCode) >= 0 ) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
+          p.key = p.CODED;
+          p.keyCode = e.keyCode;
         }
+        
+        // Symbols and their shift-symbols
+        else {
+          if ( e.shiftKey ) {
+            switch( e.keyCode ) {
+              case 107: p.key = 43;  break; // +
+              case 219: p.key = 123; break; // { 
+              case 221: p.key = 125; break; // } 
+              case 222: p.key = 34;  break; // "
+            }
+          } else {
+            switch( e.keyCode ) {
+              case 188: p.key = 44; break; // , 
+              case 109: p.key = 45; break; // - 
+              case 190: p.key = 46; break; // . 
+              case 191: p.key = 47; break; // / 
+              case 192: p.key = 96; break; // ~ 
+              case 219: p.key = 91; break; // [ 
+              case 220: p.key = 92; break; // \
+              case 221: p.key = 93; break; // ] 
+              case 222: p.key = 39; break; // '
+            }
+          }
+        }
+
         if (typeof p.keyPressed === "function") {
           p.keyPressed();
         } else {
