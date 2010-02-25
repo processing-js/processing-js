@@ -12,6 +12,7 @@
     Mozilla POW!  : http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
     Maintained by : Seneca: http://zenit.senecac.on.ca/wiki/index.php/Processing.js
                     Hyper-Metrix: http://hyper-metrix.com/#Processing
+                    BuildingSky: http://weare.buildingsky.net/pages/processing-js
 
   */
 
@@ -86,15 +87,20 @@
     return WebGLFloatArrayExists === true ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
   };
 
+  var programObject;
+
   var boxVerts = [0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5, 0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
   var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5,0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,0.5, 0.5,-0.5,0.5];
   
-  var programObject;
   var boxBuffer;
   var boxOutlineBuffer;
 	
 	var sphereBuffer;
   var sphereOutlineBuffer;
+
+  var lineBuffer;
+
+  var pointBuffer;
   
   var vertexShaderSource = 
   "attribute vec3 Vertex;" +
@@ -2620,6 +2626,13 @@
           sphereOutlineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereOutlineBuffer);
 
+          lineBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
+
+          pointBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
+
           p.camera();
           p.perspective();
 
@@ -3734,11 +3747,35 @@
       };
     };
 
-    p.point = function point(x, y) {
-      var oldFill = curContext.fillStyle;
-      curContext.fillStyle = curContext.strokeStyle;
-      curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-      curContext.fillStyle = oldFill;
+    p.point = function point(x, y, z) {
+      if (p.use3DContext) {
+        var model = new PMatrix3D();
+
+        // move point to position
+        model.translate(x, y, z || 0);
+
+        var view = new PMatrix3D();
+        view.scale(1, -1 , 1);
+        view.apply(modelView.array());
+
+        uniformMatrix(programObject , "model" , true,  model.array());
+        uniformMatrix(programObject , "view" , true , view.array());
+        uniformMatrix(programObject , "projection" , true , projection.array());
+
+        if( lineWidth > 0 && doStroke ) {
+          // this will be replaced with the new bit shifting color code
+          var c = strokeStyle.slice(5, -1).split(",");
+          uniformf(programObject, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+
+          vertexAttribPointer(programObject, "Vertex", 3, pointBuffer);
+          curContext.drawArrays(curContext.POINTS, 0, 1);
+        }
+      } else {
+        var oldFill = curContext.fillStyle;
+        curContext.fillStyle = curContext.strokeStyle;
+        curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+        curContext.fillStyle = oldFill;
+      }
     };
 
     p.beginShape = function beginShape(type) {
@@ -3985,12 +4022,50 @@
 
     };
 
-    p.line = function line(x1, y1, x2, y2) {
-      curContext.beginPath();
-      curContext.moveTo(x1 || 0, y1 || 0);
-      curContext.lineTo(x2 || 0, y2 || 0);
-      curContext.stroke();
-      curContext.closePath();
+    p.line = function line() {
+      if (p.use3DContext) {
+        if ( arguments.length === 6 ) {
+          var x1 = arguments[0], y1 = arguments[1], z1 = arguments[2],
+              x2 = arguments[3], y2 = arguments[4], z2 = arguments[5];
+        } else if ( arguments.length === 4 ) {
+          var x1 = arguments[0], y1 = arguments[1], z1 = 0,
+              x2 = arguments[2], y2 = arguments[3], z2 = 0;
+        }
+
+        var lineVerts = [x1,y1,z1,x2,y2,z2];
+
+        var model = new PMatrix3D();
+        //model.scale(w, h, d);
+
+        var view = new PMatrix3D();
+        view.scale(1, -1 , 1);
+        view.apply(modelView.array());
+
+        uniformMatrix(programObject , "model" , true,  model.array());
+        uniformMatrix(programObject , "view" , true , view.array());
+        uniformMatrix(programObject , "projection" , true , projection.array());
+
+        if( lineWidth > 0 && doStroke ) {
+          // this will be replaced with the new bit shifting color code
+          var c = strokeStyle.slice(5, -1).split(",");
+          uniformf(programObject, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+
+          curContext.lineWidth(lineWidth);
+
+          vertexAttribPointer(programObject, "Vertex", 3, lineBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(lineVerts),curContext.STREAM_DRAW);
+          curContext.drawArrays(curContext.LINES, 0, 2);
+        }
+      } else {
+        var x1 = arguments[0], y1 = arguments[1],
+            x2 = arguments[2], y2 = arguments[3];
+
+        curContext.beginPath();
+        curContext.moveTo(x1 || 0, y1 || 0);
+        curContext.lineTo(x2 || 0, y2 || 0);
+        curContext.stroke();
+        curContext.closePath();
+      }
     };
 
     p.bezier = function bezier(x1, y1, x2, y2, x3, y3, x4, y4) {
@@ -4089,6 +4164,16 @@
       if (curEllipseMode === p.RADIUS) {
         width *= 2;
         height *= 2;
+      }
+
+      if ( curEllipseMode === p.CORNERS ) {
+        width = width-x;
+        height = height-y;
+      }
+
+      if ( curEllipseMode === p.CORNER || curEllipseMode === p.CORNERS ) {
+        x += width/2;
+        y += height/2;
       }
 
       var offsetStart = 0;

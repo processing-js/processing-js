@@ -5,7 +5,6 @@ import jsshellhelper
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 
-# Assumes all tests are in same dir as runtests.py
 # Uses jsshell https://developer.mozilla.org/en/Introduction_to_the_JavaScript_shell
 
 class ProcessingTests(object):
@@ -32,12 +31,23 @@ class ProcessingTests(object):
       else:
         return False
 
-  def runParserTests(self, jsshell, testPath=None, summaryOnly=False):
+  def shouldSkipTest(self, testPattern, testPath):
+      if testPattern:
+        # we support *.js and * .pde tests, as well as passing dirs.
+        # assume a dir name doesn't end with .js or .pde
+        if testPattern.endswith('.js') or testPattern.endswith('.pde'):
+          if testPath.endswith(testPattern):
+            return False
+        else:
+          # assume this is a dir, so just look for the pattern in the path
+          if testPath.find(testPattern) > -1:
+            return False
+      return True
+
+  def runParserTests(self, jsshell, testPattern=None, summaryOnly=False):
       """Get all .pjs in test/parser/ files as JSON, and run through the test harness, faking a DOM"""
       jsshell = os.path.abspath(jsshell)
       parsertestdir = os.path.join(self.toolsdir, '..', 'test', 'parser')
-      if testPath:
-        testPath = os.path.abspath(testPath)
 
       for root, dirs, filenames in os.walk(parsertestdir):
           for filename in filenames:
@@ -46,7 +56,7 @@ class ProcessingTests(object):
 
               # If a single test file name is given, only test that file
               fullpath = os.path.abspath(os.path.join(root, filename))
-              if testPath and not fullpath.endswith(testPath):
+              if testPattern and self.shouldSkipTest(testPattern, fullpath):
                 continue
 
               if filename.endswith('.pde'):
@@ -133,7 +143,7 @@ class ProcessingTests(object):
 
                   jsshellhelper.cleanUp(tmpFile)
 
-  def runUnitTests(self, jsshell, testPath=None, summaryOnly=False):
+  def runUnitTests(self, jsshell, testPattern=None, summaryOnly=False):
       """Run all .js unit tests in test/unit through the test harness."""
       # TODO: add support for doing .pjs unit tests.
       unittestdir = os.path.join(self.toolsdir, '..', 'test', 'unit')
@@ -146,8 +156,8 @@ class ProcessingTests(object):
 
               # If a single test file name is given, only test that file
               fullpath = os.path.abspath(os.path.join(root, filename))
-              if testPath and not fullpath.endswith(testPath):
-                  continue
+              if testPattern and self.shouldSkipTest(testPattern, fullpath):
+                continue
 
               tmpFile = None
               testCmd = None
@@ -254,7 +264,7 @@ def main():
                       action="store_true", dest="unitOnly", default=False,
                       help="only run unit tests.")
     parser.add_option("-t", "--single-test",
-                      type="string", dest="testPath", default=None,
+                      type="string", dest="testPattern", default=None,
                       help="single test filename or dir to be tested")
     options, args = parser.parse_args()
 
@@ -266,12 +276,12 @@ def main():
     ptests = ProcessingTests()
 
     if options.parserOnly:
-        ptests.runParserTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
+        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
     elif options.unitOnly:
-        ptests.runUnitTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
+        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
     else:
-        ptests.runParserTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
-        ptests.runUnitTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
+        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
+        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
 
     print "\nTEST SUMMARY: %s passed, %s failed (%s known), %s total" % (ptests.testsPassed,
                                                                          ptests.testsFailed,
