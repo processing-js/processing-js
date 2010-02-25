@@ -96,7 +96,6 @@
   var boxOutlineBuffer;
 	
 	var sphereBuffer;
-  var sphereOutlineBuffer;
 
   var lineBuffer;
 
@@ -525,12 +524,14 @@
 		
 		//sphere stuff
 		var sphereDetailV = 0,
-			  sphereDetailU = 0,
-			  sphereX       = new Array(),
-			  sphereY       = new Array(),
-			  sphereZ       = new Array(),
-			  sinLUT        = new Array( p.SINCOS_LENGTH ),
-			  cosLUT        = new Array( p.SINCOS_LENGTH );
+        sphereDetailU = 0,
+        sphereX     = new Array(),
+        sphereY     = new Array(),
+        sphereZ     = new Array(),
+        sinLUT      = new Array( p.SINCOS_LENGTH ),
+        cosLUT      = new Array( p.SINCOS_LENGTH ),
+        sphereVerts,
+        sphereNorms;
     
 		// Camera defaults and settings
     var cam,
@@ -2623,9 +2624,6 @@
 					sphereBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
           
-          sphereOutlineBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereOutlineBuffer);
-
           lineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
 
@@ -3413,9 +3411,7 @@
 		////////////////////////////////////////////////////////////////////////////
     // Shapes
     ////////////////////////////////////////////////////////////////////////////
-		/*
-      asalga.wordpress.com
-    */
+
     p.box = function( w, h, d )
     {
       if(curContext)
@@ -3516,127 +3512,135 @@
 			}
 			sphereDetailU = ures;
 			sphereDetailV = vres;
-		};
-		
-		p.sphere = function() {
-			if(curContext) {
-				var sRad = arguments[0];
-				var newSphereVerts = new Array();
-				var newSphereNorms = new Array();
 
+			// make the sphere verts and norms
+			initSphere();
+		};
+
+		initSphere = function() {
+			sphereVerts = new Array();
+			sphereNorms = new Array();
+
+			for (var i = 0; i < sphereDetailU; i++) {
+				sphereNorms.push(0);
+				sphereNorms.push(-1);
+				sphereNorms.push(0);
+				sphereVerts.push(0);
+				sphereVerts.push(-1);
+				sphereVerts.push(0);
+				sphereNorms.push( sphereX[i] );
+				sphereNorms.push( sphereY[i] );
+				sphereNorms.push( sphereZ[i] );
+				sphereVerts.push( sphereX[i] );
+				sphereVerts.push( sphereY[i] );
+				sphereVerts.push( sphereZ[i] );
+			}
+			sphereVerts.push(0);
+			sphereVerts.push(-1);
+			sphereVerts.push(0);
+			sphereNorms.push( sphereX[0] );
+			sphereNorms.push( sphereY[0] );
+			sphereNorms.push( sphereZ[0] );
+			sphereVerts.push( sphereX[0] );
+			sphereVerts.push( sphereY[0] );
+			sphereVerts.push( sphereZ[0] );
+
+			var v1,v11,v2;
+
+			// middle rings
+			var voff = 0;
+			for (var i = 2; i < sphereDetailV; i++) {
+				v1 = v11 = voff;
+				voff += sphereDetailU;
+				v2 = voff;
+				for (var j = 0; j < sphereDetailU; j++) {
+					sphereNorms.push( parseFloat( sphereX[v1] ) );
+					sphereNorms.push( parseFloat( sphereY[v1] ) );
+					sphereNorms.push( parseFloat( sphereZ[v1] ) );
+					// verts
+					sphereVerts.push( parseFloat( sphereX[v1] ) );
+					sphereVerts.push( parseFloat( sphereY[v1] ) );
+					sphereVerts.push( parseFloat( sphereZ[v1++] ) );
+					// normals
+					sphereNorms.push( parseFloat( sphereX[v2] ) );
+					sphereNorms.push( parseFloat( sphereY[v2] ) );
+					sphereNorms.push( parseFloat( sphereZ[v2] ) );
+					// verts
+					sphereVerts.push( parseFloat( sphereX[v2] ) );
+					sphereVerts.push( parseFloat( sphereY[v2] ) );
+					sphereVerts.push( parseFloat( sphereZ[v2++] ) );
+				}
+
+				// close each ring
+				v1 = v11;
+				v2 = voff;
+				sphereNorms.push( parseFloat( sphereX[v1] ) );
+				sphereNorms.push( parseFloat( sphereY[v1] ) );
+				sphereNorms.push( parseFloat( sphereZ[v1] ) );
+				// verts
+				sphereVerts.push( parseFloat( sphereX[v1] ) );
+				sphereVerts.push( parseFloat( sphereY[v1] ) );
+				sphereVerts.push( parseFloat( sphereZ[v1] ) );
+				// norms
+				sphereNorms.push( parseFloat( sphereX[v2] ) );
+				sphereNorms.push( parseFloat( sphereY[v2] ) );
+				sphereNorms.push( parseFloat( sphereZ[v2] ) );
+				// verts
+				sphereVerts.push( parseFloat( sphereX[v2] ) );
+				sphereVerts.push( parseFloat( sphereY[v2] ) );
+				sphereVerts.push( parseFloat( sphereZ[v2] ) );
+			}
+
+			// add the northern cap
+			for (var i = 0; i < sphereDetailU; i++) {
+				v2 = voff + i;
+				// norms
+				sphereNorms.push( parseFloat( sphereX[v2] ) );
+				sphereNorms.push( parseFloat( sphereY[v2] ) );
+				sphereNorms.push( parseFloat( sphereZ[v2] ) );
+				// verts
+				sphereVerts.push( parseFloat( sphereX[v2] ) );
+				sphereVerts.push( parseFloat( sphereY[v2] ) );
+				sphereVerts.push( parseFloat( sphereZ[v2] ) );
+				// norms
+				sphereNorms.push( 0 );
+				sphereNorms.push( 1 );
+				sphereNorms.push( 0 );
+				// verts
+				sphereVerts.push( 0 );
+				sphereVerts.push( 1 );
+				sphereVerts.push( 0 );
+			}
+
+			sphereNorms.push( parseFloat( sphereX[voff] ) );
+			sphereNorms.push( parseFloat( sphereY[voff] ) );
+			sphereNorms.push( parseFloat( sphereZ[voff] ) );
+			// verts
+			sphereVerts.push( parseFloat( sphereX[voff] ) );
+			sphereVerts.push( parseFloat( sphereY[voff] ) );
+			sphereVerts.push( parseFloat( sphereZ[voff] ) );
+			// norms
+			sphereNorms.push(0);
+			sphereNorms.push(1);
+			sphereNorms.push(0);
+			// verts
+			sphereVerts.push(0);
+			sphereVerts.push(1);
+			sphereVerts.push(0);
+			
+			vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
+			//set the buffer data
+			curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(sphereVerts),curContext.STATIC_DRAW);
+		};
+
+		p.sphere = function() {
+			if(p.use3DContext) {
+				var sRad = arguments[0];
+				
 				if (( sphereDetailU < 3 ) || ( sphereDetailV < 2 )) {
 					sphereDetail(30);
 				}
 				
-        for (var i = 0; i < sphereDetailU; i++) {
-					newSphereNorms.push(0);
-					newSphereNorms.push(-1);
-					newSphereNorms.push(0);
-					newSphereVerts.push(0);
-					newSphereVerts.push(-1);
-					newSphereVerts.push(0);
-					newSphereNorms.push( sphereX[i] );
-					newSphereNorms.push( sphereY[i] );
-					newSphereNorms.push( sphereZ[i] );
-					newSphereVerts.push( sphereX[i] );
-					newSphereVerts.push( sphereY[i] );
-					newSphereVerts.push( sphereZ[i] );
-				}
-
-				newSphereVerts.push(0);
-				newSphereVerts.push(-1);
-				newSphereVerts.push(0);
-				newSphereNorms.push( sphereX[0] );
-				newSphereNorms.push( sphereY[0] );
-				newSphereNorms.push( sphereZ[0] );
-				newSphereVerts.push( sphereX[0] );
-				newSphereVerts.push( sphereY[0] );
-				newSphereVerts.push( sphereZ[0] );
-
-				var v1, v11, v2;
-
-				// middle rings
-				var voff = 0;
-				for (var i = 2; i < sphereDetailV; i++) {
-					v1 = v11 = voff;
-					voff += sphereDetailU;
-					v2 = voff;
-
-					for (var j = 0; j < sphereDetailU; j++) {
-						newSphereNorms.push( parseFloat( sphereX[v1] ) );
-						newSphereNorms.push( parseFloat( sphereY[v1] ) );
-						newSphereNorms.push( parseFloat( sphereZ[v1] ) );
-						// verts
-						newSphereVerts.push( parseFloat( sphereX[v1] ) );
-						newSphereVerts.push( parseFloat( sphereY[v1] ) );
-						newSphereVerts.push( parseFloat( sphereZ[v1++] ) );
-						// normals
-						newSphereNorms.push( parseFloat( sphereX[v2] ) );
-						newSphereNorms.push( parseFloat( sphereY[v2] ) );
-						newSphereNorms.push( parseFloat( sphereZ[v2] ) );
-						// verts
-						newSphereVerts.push( parseFloat( sphereX[v2] ) );
-						newSphereVerts.push( parseFloat( sphereY[v2] ) );
-						newSphereVerts.push( parseFloat( sphereZ[v2++] ) );
-					}
-
-					// close each ring
-					v1 = v11;
-					v2 = voff;
-					newSphereNorms.push( parseFloat( sphereX[v1] ) );
-					newSphereNorms.push( parseFloat( sphereY[v1] ) );
-					newSphereNorms.push( parseFloat( sphereZ[v1] ) );
-					// verts
-					newSphereVerts.push( parseFloat( sphereX[v1] ) );
-					newSphereVerts.push( parseFloat( sphereY[v1] ) );
-					newSphereVerts.push( parseFloat( sphereZ[v1] ) );
-					// norms
-					newSphereNorms.push( parseFloat( sphereX[v2] ) );
-					newSphereNorms.push( parseFloat( sphereY[v2] ) );
-					newSphereNorms.push( parseFloat( sphereZ[v2] ) );
-					// verts
-					newSphereVerts.push( parseFloat( sphereX[v2] ) );
-					newSphereVerts.push( parseFloat( sphereY[v2] ) );
-					newSphereVerts.push( parseFloat( sphereZ[v2] ) );
-				}
-
-				// add the northern cap
-				for (var i = 0; i < sphereDetailU; i++) {
-					v2 = voff + i;
-					// norms
-					newSphereNorms.push( parseFloat( sphereX[v2] ) );
-					newSphereNorms.push( parseFloat( sphereY[v2] ) );
-					newSphereNorms.push( parseFloat( sphereZ[v2] ) );
-					// verts
-					newSphereVerts.push( parseFloat( sphereX[v2] ) );
-					newSphereVerts.push( parseFloat( sphereY[v2] ) );
-					newSphereVerts.push( parseFloat( sphereZ[v2] ) );
-					// norms
-					newSphereNorms.push( 0 );
-					newSphereNorms.push( 1 );
-					newSphereNorms.push( 0 );
-					// verts
-					newSphereVerts.push( 0 );
-					newSphereVerts.push( 1 );
-					newSphereVerts.push( 0 );
-				}
-
-				newSphereNorms.push( parseFloat( sphereX[voff] ) );
-				newSphereNorms.push( parseFloat( sphereY[voff] ) );
-				newSphereNorms.push( parseFloat( sphereZ[voff] ) );
-				// verts
-				newSphereVerts.push( parseFloat( sphereX[voff] ) );
-				newSphereVerts.push( parseFloat( sphereY[voff] ) );
-				newSphereVerts.push( parseFloat( sphereZ[voff] ) );
-				// norms
-				newSphereNorms.push(0);
-				newSphereNorms.push(1);
-				newSphereNorms.push(0);
-				// verts
-				newSphereVerts.push(0);
-				newSphereVerts.push(1);
-				newSphereVerts.push(0);
-
 				// Modeling transformation
         var model = new PMatrix3D();
         model.scale( sRad , sRad, sRad );
@@ -3651,27 +3655,30 @@
         uniformMatrix( programObject , "view" , true , view.array() );
         uniformMatrix( programObject , "projection" , true , projection.array() );
 
-        //make a solid white sphere
-				uniformf( programObject, "color", [1,1,1,1] );
-
         vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
-				
-				//set the buffer data
-				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
-        curContext.drawArrays( curContext.TRIANGLE_STRIP, 0 , newSphereVerts.length/3 );
-        curContext.disable( curContext.POLYGON_OFFSET_FILL );
-				
-				//make the black lines
-				uniformf( programObject, "color", [0,0,0,1] );
-				
-				//sets the buffer data
-				curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(newSphereVerts),curContext.STATIC_DRAW);
-        curContext.lineWidth( 1 );
-        curContext.drawArrays( curContext.LINE_STRIP, 0 , newSphereVerts.length/3 );
 
-				//make an offset so that you can actually see the lines
-				curContext.enable( curContext.POLYGON_OFFSET_FILL );
-        curContext.polygonOffset( 11, 11 );
+        if( doFill === true ) {
+          // fix stitching problems. (lines get occluded by triangles
+          // since they share the same depth values). This is not entirely
+          // working, but it's a start for drawing the outline. So
+          // developers can start playing around with styles. 
+          curContext.enable( curContext.POLYGON_OFFSET_FILL );
+          curContext.polygonOffset( 1, 1 );
+          var c = fillStyle.slice( 5, -1 ).split( "," );
+          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+
+          curContext.drawArrays( curContext.TRIANGLE_STRIP, 0 , sphereVerts.length/3 );
+          curContext.disable( curContext.POLYGON_OFFSET_FILL );
+        }
+
+        if( lineWidth > 0 && doStroke ) {
+          // eventually need to make this more efficient.
+          var c = strokeStyle.slice( 5, -1 ).split( "," );
+          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+
+          curContext.lineWidth( lineWidth );
+          curContext.drawArrays( curContext.LINE_STRIP, 0 , sphereVerts.length/3 );
+        }
 			}
 		};
 
