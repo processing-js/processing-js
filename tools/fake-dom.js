@@ -44,7 +44,10 @@ var canvas = {
                    createBuffer: __empty_func__,
                    bindBuffer: __empty_func__,
                    bufferData: __empty_func__,
-                   blendFunc: __empty_func__
+                   blendFunc: __empty_func__,
+                   getAttribLocation: __empty_func__,
+                   vertexAttribPointer: __empty_func__,
+                   enableVertexAttribArray: __empty_func__
                  };
   },
   style: {}
