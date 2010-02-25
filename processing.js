@@ -476,6 +476,9 @@
     p.RIGHT = 88888871;
     p.DOWN = 88888872;
     p.LEFT = 88888869;
+    p.NORMAL_MODE_AUTO = 0;
+    p.NORMAL_MODE_SHAPE = 1;
+    p.NORMAL_MODE_VERTEX = 2;
 
     //! // Description required...
     p.codedKeys = [69, 70, 71, 72];
@@ -494,6 +497,10 @@
       looping = 0,
       curRectMode = p.CORNER,
       curEllipseMode = p.CENTER,
+      normalX = 0,
+      normalY = 0,
+      normalZ = 0,
+      normalMode = p.NORMAL_MODE_AUTO,
       inSetup = false,
       inDraw = false,
       curBackground = "rgba( 204, 204, 204, 1 )",
@@ -4219,7 +4226,25 @@
     };
 
 
+    p.normal = function normal( nx, ny, nz ) {
+      
+      if ( arguments.length !== 3 && typeof nx !== "number" && typeof ny !== "number" && typeof nz !== "number" ) {
+        throw "normal() requires three numeric arguments.";
+      }
+      
+      normalX = nx;
+      normalY = ny;
+      normalZ = nz;
 
+      if ( curShape !== 0 ) {
+        if ( normalMode === p.NORMAL_MODE_AUTO ) {
+          normalMode = p.NORMAL_MODE_SHAPE;
+        } else if ( normalMode === p.NORMAL_MODE_SHAPE ) {
+          normalMode = p.NORMAL_MODE_VERTEX;
+        }
+      }
+    };
+    
     ////////////////////////////////////////////////////////////////////////////
     // Raster drawing functions
     ////////////////////////////////////////////////////////////////////////////
