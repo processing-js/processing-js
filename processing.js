@@ -468,18 +468,31 @@
     p.PROJECT = 'square'; // Used by cap.
     p.MITER = 'miter'; // Used by join.
     p.BEVEL = 'bevel'; // Used by join.
-		
-    // KeyCode Table
     p.CENTER = 88888880;
-    p.CODED = 88888888;
-    p.UP = 88888870;
-    p.RIGHT = 88888871;
-    p.DOWN = 88888872;
-    p.LEFT = 88888869;
+    p.NORMAL_MODE_AUTO = 0;
+    p.NORMAL_MODE_SHAPE = 1;
+    p.NORMAL_MODE_VERTEX = 2;
+		
+    // Key Constants
+    // both key and keyCode will be equal to these values
+    p.BACKSPACE = 8;
+    p.TAB       = 9;
+    p.ENTER     = 10;
+    p.RETURN    = 13;
+    p.ESC       = 27;
+    p.DELETE    = 127;
 
-    //! // Description required...
-    p.codedKeys = [69, 70, 71, 72];
+    p.CODED = 0xffff; 
+    // key will be CODED and keyCode will be this value
+    p.SHIFT     = 16;
+    p.CONTROL   = 17;
+    p.ALT       = 18;
+    p.UP        = 38;
+    p.RIGHT     = 39;
+    p.DOWN      = 40;
+    p.LEFT      = 37;
 
+    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
 
     // "Private" variables used to maintain state
     var online = true,
@@ -494,6 +507,10 @@
       looping = 0,
       curRectMode = p.CORNER,
       curEllipseMode = p.CENTER,
+      normalX = 0,
+      normalY = 0,
+      normalZ = 0,
+      normalMode = p.NORMAL_MODE_AUTO,
       inSetup = false,
       inDraw = false,
       curBackground = "rgba( 204, 204, 204, 1 )",
@@ -540,6 +557,7 @@
       modelView,
       modelViewInv,
       userMatrixStack,
+      inverseCopy,
       projection,
       frustumMode = false,
       cameraFOV = 60 * (Math.PI / 180),
@@ -3015,6 +3033,22 @@
                       0, 0, 0, 1);
         }
       },
+      invApply: function() {
+       if ( inverseCopy == null ) {
+          inverseCopy = new PMatrix3D();
+        }
+        var a = arguments;
+        inverseCopy.set( a[0],  a[1],  a[2],  a[3],
+                         a[4],  a[5],  a[6],  a[7], 
+                         a[8],  a[9],  a[10], a[11], 
+                         a[12], a[13], a[14], a[15] );
+          
+        if ( !inverseCopy.invert() ) {
+          return false;
+        }
+        this.preApply( inverseCopy );
+        return true;
+      },
       rotateX: function( angle ){
         var c = p.cos( angle );
         var s = p.sin( angle );
@@ -3332,13 +3366,13 @@
         cam.translate( -eyeX, -eyeY, -eyeZ );
 
 				cameraInv = new PMatrix3D();
-				cameraInv.set(x.x, x.y, x.z, 0,
-				              y.x, y.y, y.z, 0,
-				              z.x, z.y, z.z, 0,
-				              0,   0,   0,   1);
+				cameraInv.invApply(x.x, x.y, x.z, 0,
+				                   y.x, y.y, y.z, 0,
+				                   z.x, z.y, z.z, 0,
+				                   0,   0,   0,   1);
 
 				cameraInv.translate( eyeX, eyeY, eyeZ );
-				
+
         modelView = new PMatrix3D();
 				modelView.set( cam );
 
@@ -3681,6 +3715,54 @@
         }
 			}
 		};
+
+		////////////////////////////////////////////////////////////////////////////
+    // Coordinates
+    ////////////////////////////////////////////////////////////////////////////
+    p.modelX = function modelX( x, y, z ) {
+      var mv = modelView.array();
+      var ci = cameraInv.array();
+
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var ox = ci[ 0]*ax + ci[ 1]*ay + ci[ 2]*az + ci[ 3]*aw;
+      var ow = ci[12]*ax + ci[13]*ay + ci[14]*az + ci[15]*aw;      
+
+      return ( ow !== 0 ) ? ox / ow : ox;
+    };
+
+    p.modelY = function modelY( x, y, z ) {
+      var mv = modelView.array();
+      var ci = cameraInv.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var oy = ci[ 4]*ax + ci[ 5]*ay + ci[ 6]*az + ci[ 7]*aw;
+      var ow = ci[12]*ax + ci[13]*ay + ci[14]*az + ci[15]*aw;
+
+      return ( ow !== 0 ) ? oy / ow : oy;
+    };
+
+    p.modelZ = function modelZ(x, y, z) {
+      var mv = modelView.array();
+      var ci = cameraInv.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var oz = ci[ 8]*ax + ci[ 9]*ay + ci[10]*az + ci[11]*aw;
+      var ow = ci[12]*ax + ci[13]*ay + ci[14]*az + ci[15]*aw;
+
+      return ( ow !== 0 ) ? oz / ow : oz;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
@@ -4219,7 +4301,25 @@
     };
 
 
+    p.normal = function normal( nx, ny, nz ) {
+      
+      if ( arguments.length !== 3 || !( typeof nx === "number" && typeof ny === "number" && typeof nz === "number" ) ) {
+        throw "normal() requires three numeric arguments.";
+      }
+      
+      normalX = nx;
+      normalY = ny;
+      normalZ = nz;
 
+      if ( curShape !== 0 ) {
+        if ( normalMode === p.NORMAL_MODE_AUTO ) {
+          normalMode = p.NORMAL_MODE_SHAPE;
+        } else if ( normalMode === p.NORMAL_MODE_SHAPE ) {
+          normalMode = p.NORMAL_MODE_VERTEX;
+        }
+      }
+    };
+    
     ////////////////////////////////////////////////////////////////////////////
     // Raster drawing functions
     ////////////////////////////////////////////////////////////////////////////
@@ -5274,32 +5374,66 @@
 
       attach(document, "keydown", function (e) {
         keyPressed = true;
-        p.key = e.keyCode + 32;
-        var wasCoded = false;
-        for (var i = 0, l = p.codedKeys.length; i < l; i++) {
-          if (p.key === p.codedKeys[i]) {
-            wasCoded = true;
-            switch (p.key) {
-            case 70:
-              p.keyCode = p.UP;
-              break;
-            case 71:
-              p.keyCode = p.RIGHT;
-              break;
-            case 72:
-              p.keyCode = p.DOWN;
-              break;
-            case 69:
-              p.keyCode = p.LEFT;
-              break;
+        p.keyCode = null;
+        p.key = e.keyCode;
+
+        // Letters
+        if ( e.keyCode >= 65 && e.keyCode <= 90 ) { // A-Z
+          // Keys return ASCII for upcased letters.
+          // Convert to downcase if shiftKey is not pressed.
+          if ( !e.shiftKey ) { 
+            p.key += 32; 
+          }
+        } 
+
+        // Numbers and their shift-symbols 
+        else if ( e.keyCode >= 48 && e.keyCode <= 57 ) { // 0-9
+          if ( e.shiftKey ) {
+            switch ( e.keyCode ) {
+              case 49: p.key = 33; break; // !
+              case 50: p.key = 64; break; // @
+              case 51: p.key = 35; break; // #
+              case 52: p.key = 36; break; // $
+              case 53: p.key = 37; break; // %
+              case 54: p.key = 94; break; // ^
+              case 55: p.key = 38; break; // &
+              case 56: p.key = 42; break; // *
+              case 57: p.key = 40; break; // (
+              case 48: p.key = 41; break; // )
             }
-            p.key = p.CODED;
           }
         }
-        if (!wasCoded){ p.keyCode = null; }
-        if (e.shiftKey) {
-          p.key = String.fromCharCode(p.key).toUpperCase().charCodeAt(0);
+
+        // Coded keys
+        else if ( codedKeys.indexOf(e.keyCode) >= 0 ) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
+          p.key = p.CODED;
+          p.keyCode = e.keyCode;
         }
+        
+        // Symbols and their shift-symbols
+        else {
+          if ( e.shiftKey ) {
+            switch( e.keyCode ) {
+              case 107: p.key = 43;  break; // +
+              case 219: p.key = 123; break; // { 
+              case 221: p.key = 125; break; // } 
+              case 222: p.key = 34;  break; // "
+            }
+          } else {
+            switch( e.keyCode ) {
+              case 188: p.key = 44; break; // , 
+              case 109: p.key = 45; break; // - 
+              case 190: p.key = 46; break; // . 
+              case 191: p.key = 47; break; // / 
+              case 192: p.key = 96; break; // ~ 
+              case 219: p.key = 91; break; // [ 
+              case 220: p.key = 92; break; // \
+              case 221: p.key = 93; break; // ] 
+              case 222: p.key = 39; break; // '
+            }
+          }
+        }
+
         if (typeof p.keyPressed === "function") {
           p.keyPressed();
         } else {
