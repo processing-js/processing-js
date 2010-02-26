@@ -103,13 +103,13 @@ class ProcessingTests(object):
 
                       if int(m.group(2)) > 0:
                         if summaryOnly:
-                          if isKnownFailure(fullpath):
+                          if self.isKnownFailure(fullpath):
                             sys.stdout.write('K')
                           else:
                             sys.stdout.write('F')
                           sys.stdout.flush()
                         else:
-                          if isKnownFailure(fullpath):
+                          if self.isKnownFailure(fullpath):
                             print "KNOWN-FAILURE: " + fullpath
                           else:
                             print "TEST-FAILED: " + fullpath
@@ -201,13 +201,13 @@ class ProcessingTests(object):
 
                   if int(m.group(2)) > 0:
                     if summaryOnly:
-                      if isKnownFailure(fullpath):
+                      if self.isKnownFailure(fullpath):
                         sys.stdout.write('K')
                       else:
                         sys.stdout.write('F')
                       sys.stdout.flush()
                     else:
-                      if isKnownFailure(fullpath):
+                      if self.isKnownFailure(fullpath):
                         print "KNOWN-FAILURE: " + fullpath
                       else:
                         print "TEST-FAILED: " + fullpath
