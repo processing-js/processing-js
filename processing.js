@@ -1,6 +1,6 @@
 /*
 
-    P R O C E S S I N G - 0 . 5 . J S
+    P R O C E S S I N G - 0 . 6 . J S
     a port of the Processing visualization language
     
     License       : MIT 
@@ -407,7 +407,7 @@
     p.PI = Math.PI;
     p.TWO_PI = 2 * p.PI;
     p.HALF_PI = p.PI / 2;
-		p.SINCOS_LENGTH   = parseInt(360/0.5);
+		p.SINCOS_LENGTH = parseInt(360/0.5, 10);
     p.MAX_FLOAT = 3.4028235e+38;
     p.MIN_FLOAT = -3.4028235e+38;
     p.MAX_INT = 2147483647;
@@ -542,9 +542,9 @@
 		//sphere stuff
 		var sphereDetailV = 0,
         sphereDetailU = 0,
-        sphereX     = new Array(),
-        sphereY     = new Array(),
-        sphereZ     = new Array(),
+        sphereX     = [],
+        sphereY     = [],
+        sphereZ     = [],
         sinLUT      = new Array( p.SINCOS_LENGTH ),
         cosLUT      = new Array( p.SINCOS_LENGTH ),
         sphereVerts,
@@ -1275,7 +1275,7 @@
     
     p.applyMatrix = function applyMatrix(){
       var a = arguments;
-      if( !p.use3DContext ) {			  	  
+      if( !p.use3DContext ) {
         for( var cnt = a.length; cnt < 16; cnt++ ) {
           a[cnt] = 0;
         }
@@ -2769,9 +2769,9 @@
       curElement.width = p.width = aWidth;
       curElement.height = p.height = aHeight;
 
-      for (var i in props) {
+      for (var j in props) {
         if (props) {
-          curContext[i] = props[i];
+          curContext[j] = props[j];
         }
       }
 
@@ -3127,7 +3127,7 @@
         }
       },
       invApply: function() {
-       if ( inverseCopy == null ) {
+       if ( typeof inverseCopy === "undefined" ) {
           inverseCopy = new PMatrix3D();
         }
         var a = arguments;
@@ -3341,7 +3341,7 @@
     // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
 
-    function PMatrix3DStack() {
+    var PMatrix3DStack = function PMatrix3DStack() {
       this.matrixStack = [];
     };
 
@@ -3539,8 +3539,9 @@
     // Shapes
     ////////////////////////////////////////////////////////////////////////////
 
-    p.box = function( w, h, d )
-    {
+    p.box = function( w, h, d ) {
+      var c;
+
       if(curContext)
       {
         // user can uniformly scale the box by  
@@ -3571,7 +3572,7 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          var c = fillStyle.slice( 5, -1 ).split( "," );
+          c = fillStyle.slice( 5, -1 ).split( "," );
           uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
           vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );
           curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
@@ -3580,7 +3581,7 @@
 
         if( lineWidth > 0 && doStroke ) {
           // eventually need to make this more efficient.
-          var c = strokeStyle.slice( 5, -1 ).split( "," );
+          c = strokeStyle.slice( 5, -1 ).split( "," );
           uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
           curContext.lineWidth( lineWidth );
           vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
@@ -3589,66 +3590,12 @@
       }
     };
 
-		// sphere and sphereDetail
-		// Taken and revised from:
-		// git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
-		// UNDER :License: LGPL Java
-		p.sphereDetail =  function sphereDetail(ures, vres) {
-			if(arguments.length === 1) {
-				ures = vres = arguments[0];
-			}
+		var initSphere = function() {
+      var i;
+			sphereVerts = [];
+			sphereNorms = [];
 
-			if ( ures < 3 ) { ures = 3; } // force a minimum res
-			if ( vres < 2 ) { vres = 2; } // force a minimum res
-
-			// if it hasn't changed do nothing
-			if (( ures === sphereDetailU ) && ( vres === sphereDetailV )) { return; }
-
-			var delta = p.SINCOS_LENGTH/ures;
-			var cx = new Array(ures);
-			var cz = new Array(ures);
-			// calc unit circle in XZ plane
-			for (var i = 0; i < ures; i++) {
-			  cx[i] = cosLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH )];
-			  cz[i] = sinLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH )];
-			}
-
-			// computing vertexlist
-			// vertexlist starts at south pole
-			var vertCount = ures * ( vres - 1 ) + 2;
-			var currVert = 0;
-
-			// re-init arrays to store vertices
-			sphereX = new Array( vertCount );
-			sphereY = new Array( vertCount );
-			sphereZ = new Array( vertCount );
-
-			var angle_step = (p.SINCOS_LENGTH *0.5)/vres;
-			var angle = angle_step;
-
-			// step along Y axis
-			for (var i = 1; i < vres; i++) {
-				var curradius = sinLUT[ parseInt( angle % p.SINCOS_LENGTH )];
-				var currY     = -cosLUT[ parseInt( angle % p.SINCOS_LENGTH )];
-				for ( var j = 0; j < ures; j++ ) {
-					sphereX[currVert]   = cx[j] * curradius;
-					sphereY[currVert]   = currY;
-					sphereZ[currVert++] = cz[j] * curradius;
-				}
-			  angle += angle_step;
-			}
-			sphereDetailU = ures;
-			sphereDetailV = vres;
-
-			// make the sphere verts and norms
-			initSphere();
-		};
-
-		initSphere = function() {
-			sphereVerts = new Array();
-			sphereNorms = new Array();
-
-			for (var i = 0; i < sphereDetailU; i++) {
+			for (i = 0; i < sphereDetailU; i++) {
 				sphereNorms.push(0);
 				sphereNorms.push(-1);
 				sphereNorms.push(0);
@@ -3676,7 +3623,7 @@
 
 			// middle rings
 			var voff = 0;
-			for (var i = 2; i < sphereDetailV; i++) {
+			for (i = 2; i < sphereDetailV; i++) {
 				v1 = v11 = voff;
 				voff += sphereDetailU;
 				v2 = voff;
@@ -3719,7 +3666,7 @@
 			}
 
 			// add the northern cap
-			for (var i = 0; i < sphereDetailU; i++) {
+			for (i = 0; i < sphereDetailU; i++) {
 				v2 = voff + i;
 				// norms
 				sphereNorms.push( parseFloat( sphereX[v2] ) );
@@ -3760,12 +3707,70 @@
 			curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(sphereVerts),curContext.STATIC_DRAW);
 		};
 
+		// sphere and sphereDetail
+		// Taken and revised from:
+		// git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
+		// UNDER :License: LGPL Java
+		p.sphereDetail =  function sphereDetail(ures, vres) {
+      var i;
+
+			if(arguments.length === 1) {
+				ures = vres = arguments[0];
+			}
+
+			if ( ures < 3 ) { ures = 3; } // force a minimum res
+			if ( vres < 2 ) { vres = 2; } // force a minimum res
+
+			// if it hasn't changed do nothing
+			if (( ures === sphereDetailU ) && ( vres === sphereDetailV )) { return; }
+
+			var delta = p.SINCOS_LENGTH/ures;
+			var cx = new Array(ures);
+			var cz = new Array(ures);
+			// calc unit circle in XZ plane
+			for (i = 0; i < ures; i++) {
+			  cx[i] = cosLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH, 10 )];
+			  cz[i] = sinLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH, 10 )];
+			}
+
+			// computing vertexlist
+			// vertexlist starts at south pole
+			var vertCount = ures * ( vres - 1 ) + 2;
+			var currVert = 0;
+
+			// re-init arrays to store vertices
+			sphereX = new Array( vertCount );
+			sphereY = new Array( vertCount );
+			sphereZ = new Array( vertCount );
+
+			var angle_step = (p.SINCOS_LENGTH *0.5)/vres;
+			var angle = angle_step;
+
+			// step along Y axis
+			for (i = 1; i < vres; i++) {
+				var curradius = sinLUT[ parseInt( angle % p.SINCOS_LENGTH, 10 )];
+				var currY     = -cosLUT[ parseInt( angle % p.SINCOS_LENGTH, 10 )];
+				for ( var j = 0; j < ures; j++ ) {
+					sphereX[currVert]   = cx[j] * curradius;
+					sphereY[currVert]   = currY;
+					sphereZ[currVert++] = cz[j] * curradius;
+				}
+			  angle += angle_step;
+			}
+			sphereDetailU = ures;
+			sphereDetailV = vres;
+
+			// make the sphere verts and norms
+			initSphere();
+		};
+
+
 		p.sphere = function() {
 			if(p.use3DContext) {
-				var sRad = arguments[0];
+				var sRad = arguments[0], c;
 				
 				if (( sphereDetailU < 3 ) || ( sphereDetailV < 2 )) {
-					sphereDetail(30);
+					p.sphereDetail(30);
 				}
 				
 				// Modeling transformation
@@ -3791,7 +3796,7 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          var c = fillStyle.slice( 5, -1 ).split( "," );
+          c = fillStyle.slice( 5, -1 ).split( "," );
           uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
 
           curContext.drawArrays( curContext.TRIANGLE_STRIP, 0 , sphereVerts.length/3 );
@@ -3800,7 +3805,7 @@
 
         if( lineWidth > 0 && doStroke ) {
           // eventually need to make this more efficient.
-          var c = strokeStyle.slice( 5, -1 ).split( "," );
+          c = strokeStyle.slice( 5, -1 ).split( "," );
           uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
 
           curContext.lineWidth( lineWidth );
@@ -4205,13 +4210,23 @@
     };
 
     p.line = function line() {
+      var x1, y1, z1, x2, y2, z2;
+
       if (p.use3DContext) {
         if ( arguments.length === 6 ) {
-          var x1 = arguments[0], y1 = arguments[1], z1 = arguments[2],
-              x2 = arguments[3], y2 = arguments[4], z2 = arguments[5];
+          x1 = arguments[0];
+          y1 = arguments[1];
+          z1 = arguments[2];
+          x2 = arguments[3];
+          y2 = arguments[4];
+          z2 = arguments[5];
         } else if ( arguments.length === 4 ) {
-          var x1 = arguments[0], y1 = arguments[1], z1 = 0,
-              x2 = arguments[2], y2 = arguments[3], z2 = 0;
+          x1 = arguments[0]; 
+          y1 = arguments[1]; 
+          z1 = 0;
+          x2 = arguments[2]; 
+          y2 = arguments[3];
+          z2 = 0;
         }
 
         var lineVerts = [x1,y1,z1,x2,y2,z2];
@@ -4239,8 +4254,10 @@
           curContext.drawArrays(curContext.LINES, 0, 2);
         }
       } else {
-        var x1 = arguments[0], y1 = arguments[1],
-            x2 = arguments[2], y2 = arguments[3];
+        x1 = arguments[0]; 
+        y1 = arguments[1];
+        x2 = arguments[2]; 
+        y2 = arguments[3];
 
         curContext.beginPath();
         curContext.moveTo(x1 || 0, y1 || 0);
