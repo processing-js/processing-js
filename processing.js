@@ -2242,8 +2242,22 @@
       return aNumber + '';
     };
 
-    p.char = function (key) {
-      return key;
+    p.char = function char( key ) {
+      var ret;
+
+      if ( arguments.length === 1 && typeof key === "number" && (key + "").indexOf( '.' ) === -1 ) {
+        ret = String.fromCharCode( key );
+      } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
+        ret = new Array(0);
+        
+        for ( var i = 0; i < key.length; i++ ) {
+          ret[i] = char( key[i] );
+        }
+      } else {
+        throw "char() may receive only one argument of type int, byte, int[], or byte[].";
+      }
+      
+      return ret;
     };
 
     p.trim = function( str ) {
