@@ -1,6 +1,6 @@
 /*
 
-    P R O C E S S I N G - 0 . 6 . J S
+    P R O C E S S I N G . J S - 0 . 6
     a port of the Processing visualization language
     
     License       : MIT 
