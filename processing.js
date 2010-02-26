@@ -1941,7 +1941,7 @@
       p.println(arguments[0]);
     };
 
-     function char( key ) {
+    p.char = function char( key ) {
       
       var ret;
 
