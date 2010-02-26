@@ -2403,8 +2403,52 @@
       return Math.floor(aNumber);
     };
 
-    p.float = function (aNumber) {
-      return parseFloat(aNumber);
+    // Processing doc claims good argument types are: int, char, byte, boolean,
+    // String, int[], char[], byte[], boolean[], String[].
+    // floats should not work. However, floats with only zeroes right of the
+    // decimal will work because JS converts those to int.
+    p.float = function float( val ) {
+      var ret;
+
+      if ( arguments.length === 1 ) {
+
+        if ( typeof val === 'number' ) {
+          // float() not allowed to handle floats.
+          if ( ( val + "" ).indexOf( '.' ) > -1 ) {
+            throw "float() may not accept float arguments.";
+          } else {
+            ret = val.toFixed(1);
+          }
+        } else if ( typeof val === 'boolean' ) {
+
+          if ( val === true ) {
+            ret = 1.0;
+          } else {
+            ret = 0.0;
+          }
+          ret = ret.toFixed(1);
+        } else if ( typeof val === 'string' ) {
+
+          if ( val.indexOf(' ') > -1 ) {
+            ret = NaN;
+          } else if ( val.length === 1 ) {
+            // Need this to convert chars like @ properly.
+            ret = val.charCodeAt( 0 );
+            ret = ret.toFixed(1);
+          } else {
+            ret = parseFloat( val );
+          }
+        } else if ( typeof val === 'object' && val.constructor === Array ) {
+
+          ret = new Array( val.length );
+
+          for ( var i = 0; i < val.length; i++) {
+              ret[i] = p.float( val[i] );
+          }
+        }
+      }
+
+      return ret;
     };
 
     p.ceil = function ceil(aNumber) {
