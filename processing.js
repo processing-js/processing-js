@@ -2237,9 +2237,28 @@
       logBuffer.push(message);
     };
 
+    // Alphanumeric chars arguments automatically converted to numbers when
+    // passed in, and will come out as numbers. 
+    p.str = function str( val ) {
+      var ret;
 
-    p.str = function str(aNumber) {
-      return aNumber + '';
+      if ( arguments.length === 1 ) {
+
+        if ( typeof val === "string" && val.length === 1 ) {
+          // No strings allowed.
+          ret = val;
+        } else if ( typeof val === "object" && val.constructor === Array ) {
+          ret = new Array(0);
+          
+          for ( var i = 0; i < val.length; i++ ) {
+              ret[i] = str( val[i] );
+          }
+        } else {
+          ret = val + "";
+        }
+      }
+      
+      return ret;
     };
 
     p.char = function char( key ) {
