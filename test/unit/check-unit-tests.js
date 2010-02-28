@@ -18,6 +18,7 @@ function _runTest() {
 
   _checkIsNaN(NaN);
   _checkIsNull(null);
+  _checkIsNull(undefined); // null and undefined both return true
 
   // Checking that a function throws, give the function name
   _checkThrows(thisThrows);

@@ -61,17 +61,17 @@ Processing.lib.UnitTests = function() {
     };
 
     this._checkIsNaN = function(a) {
-      if (isNaN(a))
+      if (a != a) // better check than isNaN()
         this._pass();
       else
         this._fail(a + " expected to be NaN.");
     };
 
     this._checkIsNull = function(a) {
-      if (a)
-        this._fail(a + " expected to be null.");
-      else
+      if (a == undefined) // == will cause check of undefined and null
         this._pass();
+      else
+        this._fail(a + " expected to be null (or undefined).");
     }
 
     this._checkTrue = function(a) {
