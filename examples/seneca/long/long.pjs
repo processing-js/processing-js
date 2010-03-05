@@ -1,0 +1,11 @@
+﻿// long data type example
+long a;          // Declare variable "a" of type int
+a = 9876543210;          // Assign "a" the value 9876543210
+long b = a * 2;   // Declare variable "b" and assign it the value 19753086420
+long c = a + b;  // Declare variable "c" and assign it the sum of "a" and "b"
+println(a);
+println(b);
+println(c);
+c = (c - 30) / 100;
+int i = (int)c;  // Converts the value of "c" from a long to a int
+println(i);
