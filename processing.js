@@ -4547,10 +4547,75 @@
           );
         }
       }
-
       return data;
     };
 
+    var PImage = function PImage(aWidth, aHeight, aFormat) {
+      var img = {};
+      if(arguments.length == 1) {
+        img = null; // not yet implemented
+      } else if (arguments.length == 2 || arguments.length == 3) {
+        img.width = aWidth;
+        img.height = aHeight;
+        img.pixels = new Array(aWidth * aHeight);
+        img.data = img.pixels;
+        img.format = aFormat ? aFormat : p.RGB;
+        img.oogabooga = 2;
+      }
+      this.loadPixels = function() {
+      }
+      return img;
+    };
+
+    PImage.prototype = {
+      get: function (x, y, w, h) {
+        return p.get(x, y, w, h);
+      },
+      set: function (x, y, c) {
+        //todo
+      },
+      loadPixels: function() {
+      },
+      updatePixels: function() {
+      }
+    };
+    
+    p.PImage = PImage;
+    
+    p.createImage = function createImage(w, h, mode) {
+
+      var img = new PImage(w,h,mode);
+      var data = {};
+
+      if (curContext.createImageData) {
+        data = curContext.createImageData(w, h);
+      }
+
+      //data.width = w;
+      //data.height = h;
+      //data.data = [];
+      //data.format = mode;
+      //data.pixels = new Array(w * h);
+//      for (var i = 0; i < w*h; i++){
+//        data.pixels[i++] = 255;
+//        data.pixels[i++] = 55;
+//        data.pixels[i] = 55;
+//      }
+//      data.get = function (x, y) {
+//        return this.pixels[w * y + x];
+//      };
+
+//      data._mask = null;
+//      data.mask = function (img) {
+//        this._mask = img;
+//      };
+
+//      data.loadPixels = function () {};
+//      data.updatePixels = function () {};
+      //img.pixels = data.data;
+      return img;
+    };
+    
     // Loads an image for display. Type is unused. Callback is fired on load.
     p.loadImage = function loadImage(file, type, callback) {
       var img = document.createElement('img');
@@ -4586,14 +4651,27 @@
     };
 
     // Gets a single pixel or block of pixels from the current Canvas Context
-    p.get = function get(x, y) {
+    p.get = function get(x, y, w, h) {
 
       if (!arguments.length) {
         var c = p.createGraphics(p.width, p.height);
         c.image(curContext, 0, 0);
         return c;
-      }
-
+      } else if ( arguments.length == 4 ){
+		    var c = p.createGraphics( w, h );
+		    c.pixels = curContext.getImageData(x, y, w, h); 
+		    //create a canvas to dump the ImageData onto
+		    var canvas = document.createElement( "canvas" );
+		    var context = canvas.getContext( "2d" );
+		    //put the ImageData on this canvas
+		    context.putImageData(c.pixels, 0 ,0, x, y, w, h);
+		    c.image( context, 0, 0 );
+        return c;
+	    } else if ( arguments.length == 2 ){
+		    if(p.pixels){
+		      return p.pixels[y * this.width + x];
+		    }
+	    }
       if (!getLoaded) {
         getLoaded = buildImageObject(curContext.getImageData(0, 0, p.width, p.height));
       }
@@ -4791,36 +4869,6 @@
       this.getHeight = function () {
         return getImage_old(this.images[0]).height;
       };
-    };
-
-    p.createImage = function createImage(w, h, mode) {
-
-      var data = {};
-      data.width = w;
-      data.height = h;
-      data.data = [];
-
-      if (curContext.createImageData) {
-        data = curContext.createImageData(w, h);
-      }
-
-      data.pixels = new Array(w * h);
-
-      data.get = function (x, y) {
-        return this.pixels[w * y + x];
-      };
-
-      data._mask = null;
-
-      data.mask = function (img) {
-        this._mask = img;
-      };
-
-      data.loadPixels = function () {};
-      data.updatePixels = function () {};
-
-      return data;
-
     };
 
     function getImage(img) {
