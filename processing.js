@@ -1250,7 +1250,7 @@
       var big = 0;
       for ( var i = 0; i < elements.length; i++) {
         
-        if ( i != 0 ) {
+        if ( i !== 0 ) {
           big = Math.max( big, Math.abs( elements[i] ));
         } else {
           big = Math.abs( elements[i] );
@@ -1258,9 +1258,9 @@
       }
       
       var digits = (big+"").indexOf(".");
-      if ( digits == 0 ) {
+      if ( digits === 0 ) {
         digits = 1;
-      } else if ( digits == -1 ) {
+      } else if ( digits === -1 ) {
         digits = (big+"").length;
       }
       
