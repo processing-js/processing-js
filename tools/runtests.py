@@ -26,7 +26,8 @@ class ProcessingTests(object):
 
   def isKnownFailure(self, testpath):
       # Assumes abs path for testpath
-      if testpath[testpath.index('/test/')+1:] in self.knownFailures:
+      pos = testpath.find(os.sep + 'test' + os.sep)
+      if pos > -1 and testpath[pos+1:] in self.knownFailures:
         return True
       else:
         return False
