@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Processing Helper</title>
+
+    <script src="../processing.js"></script>
+    <script src="packer.js"></script>
+    <script src="jsbeautify.js"></script>
+  </head>
+  <body onload="document.getElementById('code').focus()">
+    <h1>Processing Helper</h1>
+    <p>Paste your Processing code below and execute whichever options you require:</p>
+
+    <h2>Processing Code</h2>
+    <textarea rows="20" cols="80" id="code"></textarea>
+    <br>  <input onclick="helper.runSketch();" type="button" value="Run"></input>
+    &nbsp;<input onclick="helper.convertToJS();" type="button" value="Convert to JS"></input>
+    &nbsp;<input onclick="helper.generateDataURI();" type="button" value="Generate Data URI"></input>
+    &nbsp;<input onclick="helper.generateRefTest();" type="button" value="Generate Ref Test"></input>
+
+    <h2>Canvas</h2>
+    <canvas id="sketch" style="border: 1px solid"></canvas>
+
+    <h2>Output</h2>
+    <textarea rows="20" cols="80" id="output" readonly="readonly">None.</textarea>
+
+    <script>
+    var helper = (function() {
+      return {
+        canvas: document.getElementById('sketch'),
+        code:   document.getElementById('code'),
+        output: document.getElementById('output'),
+
+        runSketch: function() {
+          try {
+            Processing(this.canvas, this.code.value);
+          } catch (e) {
+            this.output.value = "Error! Error was:\n" + e.toString();
+          }
+        },
+
+        convertToJS: function() {
+          try {
+            this.output.value = js_beautify(
+                                  Processing.parse(
+                                    this.code.value, Processing(
+                                      this.canvas, this.code.value))).replace(/\n\n\n+/g, '\n\n');
+            this.output.select();
+          } catch (e) {
+            this.output.value = "Parser Error! Error was:\n" + e.toString();
+          }
+        },
+
+        generateDataURI: function() {
+          // Run the sketch first, in case the user hasn't
+          this.runSketch();
+          this.output.value = this.canvas.toDataURL();
+          this.output.select();
+        },
+
+        generateRefTest: function() {
+          // Run the sketch first, in case the user hasn't
+          this.runSketch();
+          var dataURI = '//' + this.canvas.toDataURL();
+          this.output.value = dataURI + '\n' + this.code.value;
+          this.output.select();
+        }
+      };
+    })();
+    </script>
+  </body>
+</html>

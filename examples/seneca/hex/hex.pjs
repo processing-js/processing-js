@@ -1,5 +1,5 @@
 // 	Hex example
-size(500,220, P3D);
+size(500,220);
 background(20);
 stroke(128, 128, 128);
 fill(64);
