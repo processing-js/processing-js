@@ -1,6 +1,6 @@
 # If your jsshell isn't at ./tools/js/src/js, update JS below
 TOOLSDIR=./tools
-JS=D:/mozilla/objdir-ff-release/dist/bin/js
+JS=$(TOOLSDIR)/js/src/js
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
