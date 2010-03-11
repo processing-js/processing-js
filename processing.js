@@ -3529,7 +3529,7 @@
     p.box = function( w, h, d ) {
       var c;
 
-      if(curContext)
+      if(p.use3DContext)
       {
         // user can uniformly scale the box by  
         // passing in only one argument.
