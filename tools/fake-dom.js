@@ -97,12 +97,15 @@ var window = {
   XMLHttpRequest: __empty_func__,
   print: print,
   document: document,
-  createElement: function() { return elem; }
+  createElement: function() { return elem; },
+  setTimeout: __empty_func__
 };
 
 window.XMLHttpRequest.prototype.open = __empty_func__;
 window.XMLHttpRequest.prototype.send = __empty_func__;
 window.XMLHttpRequest.prototype.responseText = "some text";
+
+var Image = __empty_func__;
 
 // Constructors not included in many parser tests to allow them to run
 var Table = __empty_func__;

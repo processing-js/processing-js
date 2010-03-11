@@ -135,6 +135,41 @@
     // Force characters-as-bytes to work.
     aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
 
+    // Parse out @pjs directive, if any.
+    p.pjs = {imageCache: {pending: 0}}; // by default we have an empty imageCache, no more.
+    var dm = /\/\*\s*@pjs\s*([^\/\*]+)\*\//.exec(aCode);
+    if (dm && dm.length == 2) {
+      var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
+
+      // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
+      var clean = function(s) { return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, ''); };
+
+      for (var i=0, dl=directives.length; i<dl; i++) {
+        var pair = directives[i].split('=');
+        if (pair && pair.length == 2) {
+          var key = clean(pair[0]);
+          var value = clean(pair[1]);
+
+          // A few directives require work beyond storying key/value pairings
+          if (key == "preload") {
+            var list = value.split(',');
+            // All pre-loaded images will get put in imageCache, keyed on filename
+            for (var j=0, ll=list.length; j<ll; j++) {
+              var imageName = clean(list[j]);
+              var img = new Image();
+              img.onload = function() { p.pjs.imageCache.pending--; };
+              p.pjs.imageCache.pending++;
+              p.pjs.imageCache[imageName] = img;
+              img.src = imageName;
+            }
+          } else {
+            p.pjs[key] = value;
+          }
+        }
+      }
+      aCode = aCode.replace(dm[0], '');
+    }
+
     // Saves all strings into an array
     // masks all strings into <STRING n>
     // to be replaced with the array strings after parsing is finishes
@@ -785,6 +820,9 @@
       array.get = function (i) {
         return this[i];
       };
+			array.contains = function(item) {
+				return this.indexOf(item) !== -1;
+			};
       array.add = function (item) {
         return this.push(item);
       };
@@ -5371,31 +5409,37 @@
           }
         }
 
-        // The parser adds custom methods to the processing context
-        // this renames p to processing so these methods will run
-        (function (processing) {
+        var executeSketch = function(processing) {
           with(processing) {
+            // Don't start until all specified images in the cache are preloaded
+            if (!pjs.imageCache.pending) {
             eval(parsedCode);
-          }
-        })(p);
-      }
 
       // Run void setup()
-      if (p.setup) {
+              if (setup) {
         inSetup = true;
-        p.setup();
+                setup();
       }
 
       inSetup = false;
 
-      if (p.draw) {
+              if (draw) {
         if (!doLoop) {
-          p.redraw();
+                  redraw();
+                } else {
+                  loop();
+                }
+              }
         } else {
-          p.loop();
+              window.setTimeout(executeSketch, 10, processing);
         }
       }
+        };
 
+        // The parser adds custom methods to the processing context
+        // this renames p to processing so these methods will run
+        executeSketch(p);
+      }
 
       //////////////////////////////////////////////////////////////////////////
       // Event handling
