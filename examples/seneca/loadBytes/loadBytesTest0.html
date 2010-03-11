@@ -48,7 +48,7 @@ void setup() {
 
 void draw() {
         
-        int[] expVal=new String[3];
+        byte[] expVal=new byte[3];
         expVal[0]=33;
         expVal[1]=65;
         expVal[2]=97;
@@ -68,7 +68,7 @@ void draw() {
 	text(errMsg,5,20);
 }
 
-void outputIntArr(int ind,String txt,int[] results,int[] expected) {
+void outputIntArr(int ind,String txt,byte[] results,byte[] expected) {
 	fill(255,255,255);
 	text("["+ind+"] "+txt,xcoord,ycoord+=yinc);
 
@@ -76,7 +76,7 @@ void outputIntArr(int ind,String txt,int[] results,int[] expected) {
         fill(0,255,0);
         for (int i=0;i<results.length;i++) {
            
-           if (i>=expected.length || !results[i]==expected[i]) {
+           if (i>=expected.length || !(results[i]==expected[i])) {
                fill(255,0,0);
                errors=true;
            }
