@@ -1,0 +1,16 @@
+void setup()
+{
+  size( 500, 500, P3D );
+}
+	
+void draw() {
+  background(255, 0, 0);
+
+  pushMatrix();
+
+  translate(width/2,height/2,1);
+  rotateX(sin(frameCount/100.0));
+
+  box(100);
+  popMatrix();
+}

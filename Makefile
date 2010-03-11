@@ -19,9 +19,10 @@ release: release-files zipped
 release-files: pretty packed minified example release-docs
 
 zipped: release-files
-	find ./release -print | zip -j ./release/processing-$(VERSION).zip -@
+	find ./release -print | zip -j ./release/processing.js-$(VERSION).zip -@
 
 release-docs: create-release
+	cp AUTHORS ./release
 	cp README ./release
 	cp LICENSE ./release
 	cp CHANGELOG ./release

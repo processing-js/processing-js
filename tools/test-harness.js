@@ -65,17 +65,17 @@ function _checkFalse(a) {
 }
 
 function _checkIsNaN(a) {
-  if (isNaN(a))
+  if (a != a) // better check than isNaN()
     _pass();
   else
     _fail(a + " expected to be NaN.");
 }
 
 function _checkIsNull(a) {
-  if (a)
-    _fail(a + " expected to be null.");
-  else
+  if (a == undefined) // == will cause check of undefined and null
     _pass();
+  else
+    _fail(a + " expected to be null (or undefined).");
 }
 
 function _checkThrows(f) {
