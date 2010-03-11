@@ -820,6 +820,9 @@
       array.get = function (i) {
         return this[i];
       };
+			array.contains = function(item) {
+				return this.indexOf(item) !== -1;
+			};
       array.add = function (item) {
         return this.push(item);
       };
