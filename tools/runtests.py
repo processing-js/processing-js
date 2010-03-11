@@ -25,8 +25,9 @@ class ProcessingTests(object):
       f.close()
 
   def isKnownFailure(self, testpath):
-      # Assumes abs path for testpath
+      # Assumes abs path for testpath, and normalize for Unix path
       pos = testpath.find(os.sep + 'test' + os.sep)
+      testpath = testpath.replace('\\', '/')
       if pos > -1 and testpath[pos+1:] in self.knownFailures:
         return True
       else:
@@ -34,6 +35,9 @@ class ProcessingTests(object):
 
   def shouldSkipTest(self, testPattern, testPath):
       if testPattern:
+			  # Normalize paths to Unix style
+        testPattern = testPattern.replace('\\', '/')
+        testPath = testPath.replace('\\', '/')
         # we support *.js and * .pde tests, as well as passing dirs.
         # assume a dir name doesn't end with .js or .pde
         if testPattern.endswith('.js') or testPattern.endswith('.pde'):
