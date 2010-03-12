@@ -789,7 +789,26 @@
       return newary;
     };
 
-
+    p.arrayCopy = function arrayCopy(src, srcPos, dest, destPos, length) {
+      if(arguments.length === 2) {
+        // recall itself and copy src to dest from start index 0 to 0 of src.length
+        p.arrayCopy(src, 0, srcPos, 0, src.length);
+      } else if (arguments.length === 3) {
+        // recall itself and copy src to dest from start index 0 to 0 of length
+        p.arrayCopy(src, 0, srcPos, 0, dest);
+      } else if (arguments.length === 5) {
+        // copy src to dest from index srcPos to index destPos of length recursivly on objects
+        for (var i=srcPos, j=destPos; i < length+srcPos; i++, j++) {
+          if(src[i] && typeof src[i] == "object"){
+            // src[i] is not null and is another object or array. go recursive
+            p.arrayCopy(src[i],0,dest[j],0,src[i].length);
+          } else {
+            // standard type, just copy
+            dest[j] = src[i];
+          }
+        }
+      }      
+    };
 
     p.ArrayList = function ArrayList(size, size2, size3) {
 
