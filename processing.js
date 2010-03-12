@@ -2026,14 +2026,15 @@
           width: "100%",
           height: "15%",
           fontFamily: "sans-serif",
-          color: "black",
-          backgroundColor: "white"
+          color: "#ccc",
+          backgroundColor: "black"
         },
         outputStyles = {
           position: "relative",
           fontFamily: "monospace",
           overflow: "auto",
-          height: "100%"
+          height: "100%",
+          paddingTop: "5px"
         },
         resizerStyles = {
           height: "5px",
@@ -2043,23 +2044,26 @@
         },
         closeButtonStyles = {
           position: "absolute",
-          top: "0px",
-          right: "15px",
-          border: "1px solid black",
-          borderTop: "none",
+          top: "5px",
+          right: "20px",
+          color: "#111",
+          MozBorderRadius: "4px",
+          webkitBorderRadius: "4px",
+          borderRadius: "4px",
           cursor: "pointer",
-          fontWeight: "bold",
+          fontWeight: "normal",
           textAlign: "center",
-          padding: "1px 5px",
-          backgroundColor: "#eb0000"
+          padding: "3px 5px",
+          backgroundColor: "#333",
+          fontSize: "12px"
         },
         entryStyles = {
-          borderBottom: "1px solid #d3d3d3",
+          //borderBottom: "1px solid #d3d3d3",
           minHeight: "16px"
         },
         entryTextStyles = {
           fontSize: "12px",
-          margin: "0 5px 0 5px",
+          margin: "0 8px 0 8px",
           maxWidth: "100%",
           whiteSpace: "pre-wrap",
           overflow: "auto"
@@ -2222,7 +2226,7 @@
         );
     
         closeButton[$title] = "Close Log";
-        append(closeButton, createTextNode("X"));
+        append(closeButton, createTextNode("\u2716"));
     
         resizer[$title] = "Double-click to toggle log minimization";
     
