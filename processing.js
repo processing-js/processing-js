@@ -200,7 +200,8 @@
         return type + " " + name + " = 0" + sep;
       });
     }
-
+		aCode = aCode.replace(/catch\s\((\w+)\1\s(\w+)\2\)\s\{.\($2\)/g, "catch ($2$1)\n{$2$1");
+		
     // float foo = 5;
     aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\])+| ) *(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
       if (type === "return") {
@@ -1952,31 +1953,18 @@
     String.prototype.replaceAll = function (re, replace) {
       return this.replace(new RegExp(re, "g"), replace);
     };
-		
-		String.prototype.equals = function equals( str ) {
-      var ret = true;
 
-      if ( this.length === str.length ) {
-        for ( var i = 0; i < this.length; i++) {
-          if ( this.charAt( i ) !== str.charAt( i ) ) {
-            ret = false;
-            break;
-          }
-        }
-      } else {
-        ret = false;
-      }
-
-      return ret;
+    String.prototype.equals = function equals( str ) {
+      return this.valueOf() === str.valueOf();
     };
-		
+
     p.match = function (str, regexp) {
       return str.match(regexp);
     };
 
     // tinylog lite JavaScript library
     // http://purl.eligrey.com/tinylog/lite
-        var tinylogLite = (function () {
+    var tinylogLite = (function () {
       "use strict";
 
       var tinylogLite = {},
