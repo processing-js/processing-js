@@ -462,7 +462,10 @@
     p.CORNERS = 10;
     p.CLOSE = true;
     p.RGB = 1;
-    p.HSB = 2;
+    p.ARGB = 2;
+    p.HSB = 3;
+    p.ALPHA = 4;
+    p.CMYK = 5;
     p.OPENGL = 'OPENGL';
     p.P3D = 'P3D';
     p.FRAME_RATE = 0;
@@ -4551,20 +4554,15 @@
     };
 
     var PImage = function PImage(aWidth, aHeight, aFormat) {
-      var img = {};
       if(arguments.length == 1) {
-        img = null; // not yet implemented
+        // not yet implemented, <img> object constructor ?
       } else if (arguments.length == 2 || arguments.length == 3) {
-        img.width = aWidth;
-        img.height = aHeight;
-        img.pixels = new Array(aWidth * aHeight);
-        img.data = img.pixels;
-        img.format = aFormat ? aFormat : p.RGB;
-        img.oogabooga = 2;
+        this.width = aWidth;
+        this.height = aHeight;
+        this.pixels = new Array(aWidth * aHeight);
+        this.data = this.pixels;
+        this.format = aFormat ? aFormat : p.RGB;
       }
-      this.loadPixels = function() {
-      }
-      return img;
     };
 
     PImage.prototype = {
@@ -4577,6 +4575,35 @@
       loadPixels: function() {
       },
       updatePixels: function() {
+      },
+      toImageData: function() {
+        var canvas = document.createElement('canvas');
+        var imgData = canvas.getContext('2d').createImageData(this.width, this.height); 
+        for (var i = 0; i< this.pixels.length; i++) {
+          // convert each this.pixels[i] int to array of 4 ints of each color
+          var c = this.pixels[i];
+          var pos = i*4;
+          // pjs uses argb, canvas stores rgba        
+          imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
+          imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
+          imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
+          imgData.data[pos + 2] = c % 256;
+        }
+        // return a canvas ImageData object with pixel array in canvas format
+        return imgData;
+      },
+      fromImageData: function(canvasImg) {
+        this.width = canvasImg.width;
+        this.height = canvasImg.height;
+        this.pixels = new Array(canvasImg.width * canvasImg.height);
+        this.format = p.ARGB;
+        for (var i = 0; i< this.pixels.length; i++) {
+          // convert each canvasImg's colors to PImage array format
+          var pos = i*4;
+          // pjs uses argb, canvas stores rgba
+          this.pixels[i] = (canvasImg.data[pos + 3] * 16777216 * 256) + (canvasImg.data[pos + 0] * 65536) +
+                  (canvasImg.data[pos + 1])    +   (canvasImg.data[pos + 2]);                  
+        }
       }
     };
     
@@ -4585,22 +4612,14 @@
     p.createImage = function createImage(w, h, mode) {
 
       var img = new PImage(w,h,mode);
-      var data = {};
 
-      if (curContext.createImageData) {
-        data = curContext.createImageData(w, h);
-      }
-
-      //data.width = w;
-      //data.height = h;
-      //data.data = [];
-      //data.format = mode;
-      //data.pixels = new Array(w * h);
-//      for (var i = 0; i < w*h; i++){
-//        data.pixels[i++] = 255;
-//        data.pixels[i++] = 55;
-//        data.pixels[i] = 55;
+//      if (curContext.createImageData) {
+//        data = curContext.createImageData(w, h);
 //      }
+      // make the new image transparent black by default
+      for (var i = 0; i < w*h; i++){
+        img.pixels[i] = 4291559526;//1976303718;
+      }
 //      data.get = function (x, y) {
 //        return this.pixels[w * y + x];
 //      };
@@ -4609,10 +4628,6 @@
 //      data.mask = function (img) {
 //        this._mask = img;
 //      };
-
-//      data.loadPixels = function () {};
-//      data.updatePixels = function () {};
-      //img.pixels = data.data;
       return img;
     };
     
@@ -4942,13 +4957,14 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
 
-      if (img.data || img.canvas) {
+      if (img.pixels) {
 
         x = x || 0;
         y = y || 0;
 
-        var obj = getImage(img.data || img.canvas),
-          oldAlpha;
+        //var obj = getImage(img),
+        var obj = img.toImageData();
+        var  oldAlpha;
 
         if (curTint >= 0) {
           oldAlpha = curContext.globalAlpha;
@@ -4956,7 +4972,8 @@
         }
 
         if (arguments.length === 3) {
-          curContext.drawImage(obj, x, y);
+          //curContext.drawImage(obj, x, y);
+          curContext.putImageData(obj, x, y);
         } else {
           curContext.drawImage(obj, x, y, w, h);
         }
@@ -4971,13 +4988,7 @@
           p.image(img._mask, x, y);
           curContext.globalCompositeOperation = oldComposite;
         }
-
       }
-
-      if (typeof img === 'string') {
-
-      }
-
     };
 
     // Clears a rectangle in the Canvas element or the whole Canvas

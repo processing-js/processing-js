@@ -1,42 +1,41 @@
-﻿<script src="../../../processing.js"></script>
-<canvas datasrc="pimage.pjs" width="200" height="200"></canvas>
-<br />
+﻿<body style="background-color: #000000; color: #ffffff;">
+
+    <script src="../../../processing.js"></script>
+
+    <canvas datasrc="pimage.pjs" width="200" height="200"></canvas>
+    <br />
 <pre>
-PImage img = createImage(66, 66, RGB);
-//img.loadPixels();
+background(0);
+PImage img = createImage(128, 128, ARGB);
 for (int i = 0; i < img.pixels.length; i++) {
-  img.pixels[i] = color(0, 90, 102); 
+  img.pixels[i] = 13369446 + (i % img.width * 2 * 16777216);
 }
-//img.updatePixels();
-image(img, 17, 17);
-
-
-
-PImage img = createImage(66, 66, RGB);
-img.loadPixels();
-for (int i = 0; i < img.pixels.length; i++) {
-  img.pixels[i] = color(0, 90, 102); 
-}
-img.updatePixels();
-image(img, 17, 17);
-
-
-//annas demo
-size(472,266);
-PImage pi = loadImage("metamorphosis.jpg");
-color c = pi.get(464, 200); 
-int x=0;
-int y=0;
-int z=0;
-for (z=0; z<10000; z++)
-{
-  pi.set(x+200,y+100,c);
-  x++;
-  if(x%99 == 0)
-  {
-    y++;
-    x=0;
-  }
-  image(pi,0,0);
-}
+image(img, 10, 10);
+image(img, 62, 62);
 </pre>
+    <div style="display: none">
+        PImage img = createImage(66, 66, RGB); 
+        //img.loadPixels(); 
+        for (int i = 0; i < img.pixels.length; i++) { 
+          img.pixels[i] = color(0, 90, 102); 
+        } 
+        //img.updatePixels(); 
+        image(img, 17, 17); 
+        //annas demo 
+        size(472,266); 
+        PImage pi = loadImage("metamorphosis.jpg"); 
+        color c = pi.get(464, 200); 
+        int x=0; 
+        int y=0; 
+        int z=0; 
+        for (z=0; z<10000; z++) { 
+          pi.set(x+200,y+100,c);
+          x++; 
+          if(x%99 == 0) { 
+            y++; 
+            x=0; 
+          } 
+          image(pi,0,0); 
+        }
+    </div>
+</body>
