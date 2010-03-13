@@ -1468,7 +1468,12 @@
     };
 
     p.link = function (href, target) {
-      window.location = href;
+      if (target)
+      {
+	window.open(href,target);
+      }
+      else
+	window.location = href;
     };
     p.beginDraw = function beginDraw() {};
     p.endDraw = function endDraw() {};
