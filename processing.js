@@ -2589,9 +2589,15 @@
       return ret;
     };
 
-    p.dist = function dist(x1, y1, x2, y2) {
-      return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-    };
+    p.dist = function dist(x1, y1, z1, x2, y2, z2) {
+	  if( arguments.length === 4 )
+		return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+	  else if( arguments.length === 6 ){
+		var x = new PVector( x1, y1, z1 ),
+			y = new PVector( x2, y2, z2 );
+		return PVector.dist( x, y );
+	  }
+	};
 
     p.map = function map(value, istart, istop, ostart, ostop) {
       return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
