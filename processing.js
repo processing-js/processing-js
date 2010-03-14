@@ -179,7 +179,7 @@
     while(catchBlock.test(aCode)){
       aCode = aCode.replace(new RegExp(catchBlock),"$1");
     }
-
+    Error.prototype.printStackTrace = function() { this.toString(); };
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 

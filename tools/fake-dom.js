@@ -145,6 +145,6 @@ var OverRect = __empty_func__;
 var OverCircle = __empty_func__;
 var SpinSpots = __empty_func__;
 
-Error.prototype.printStackTrace = function() { this.toString(); };
+
 var SearchClient = __empty_func__;
 var WebSearchRequest = __empty_func__;
