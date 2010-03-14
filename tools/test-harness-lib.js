@@ -15,31 +15,34 @@ Processing.lib.UnitTests = function() {
       _failCount++;
     };
 
-    // compareArrays() used under MIT License -- http://code.google.com/p/jqcommons/
-    Array.prototype.compareArrays = function(arr) {
+    // compareArrays() used under MIT License -- based on http://code.google.com/p/jqcommons/
+    Array.prototype.compareArrays = function(arr, eps) {
       if (this.length != arr.length)
         return false;
 
       for (var i = 0; i < arr.length; i++) {
         if (this[i].compareArrays) { // nested array?
-          if (!this[i].compareArrays(arr[i]))
+          if (!this[i].compareArrays(arr[i], eps))
             return false;
           else
             continue;
         }
-        if (this[i] != arr[i]) return false;
+        if ((!eps && this[i] != arr[i]) || (eps && (Math.abs(this[i] - arr[i]) > eps)))
+          return false;
       }
       return true;
     };
 
     this._checkEqual = function(a, b) {
+      // If user passed a third arg (Epsilon) use it for ~=
+      var eps = arguments[2] || 0;
       if (a.compareArrays && b.compareArrays) {
-        if (a.compareArrays(b))
+        if (a.compareArrays(b, eps))
           this._pass();
         else
           this._fail(a + " != " + b);
       } else {
-        if (a != b)
+        if ((!eps && a != b) || (eps && (Math.abs(a - b) > eps)))
           this._fail(a + " != " + b);
         else
           this._pass();
@@ -72,14 +75,14 @@ Processing.lib.UnitTests = function() {
         this._pass();
       else
         this._fail(a + " expected to be null (or undefined).");
-    }
+    };
 
     this._checkTrue = function(a) {
-      this._checkEqual(a, true);
+      this._checkEqual(!!a, true);
     };
 
     this._checkFalse = function(a) {
-      this._checkEqual(a, false);
+      this._checkEqual(!!a, false);
     };
 
     this._checkThrows = function(f) {
@@ -94,7 +97,7 @@ Processing.lib.UnitTests = function() {
     this._printTestSummary = function() {
       print('TEST-SUMMARY: ' + _passCount + '/' + _failCount);
     };
-  }
-}
+  };
+};
 
 })();
