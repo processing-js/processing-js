@@ -172,7 +172,7 @@
 
     // Saves all strings into an array
     // masks all strings into <STRING n>
-    // to be replaced with the array strings after parsing is finishes
+    // to be replaced with the array strings after parsing is finished
     var strings = [];
     aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
       strings.push(all);
