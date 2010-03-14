@@ -2011,6 +2011,14 @@
       return this.valueOf() === str.valueOf();
     };
 
+    String.prototype.toCharArray = function() {
+      var chars = this.split("");
+      for (var i = chars.length -1; i >= 0; i--) {
+        chars[i] = chars[i].charCodeAt(0);
+      }
+      return chars;
+    };
+
     p.match = function (str, regexp) {
       return str.match(regexp);
     };

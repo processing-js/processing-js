@@ -69,7 +69,6 @@ test/parser/Processing-Book-001/Units 00-17/10 Image 1/_03/_03.pde
 test/parser/Processing-Book-001/Units 00-17/10 Image 1/_04/_04.pde
 test/parser/Processing-Book-001/Units 00-17/11 Data 2/_01/_01.pde
 test/parser/Processing-Book-001/Units 00-17/12 Data 3/_10/_10.pde
-test/parser/Processing-Book-001/Units 00-17/12 Data 3/_12/_12.pde
 test/parser/Processing-Book-001/Units 00-17/13 Typography 1/_09/_09.pde
 test/parser/Processing-Book-001/Units 00-17/13 Typography 1/_11/_11.pde
 test/parser/Processing-Book-001/Units 00-17/14 Math 3/_15/_15.pde
@@ -87,9 +86,6 @@ test/parser/Processing-Book-001/Units 31-42/35 Image 3/_04/_04.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_05/_05.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_08/_08.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_12/_12.pde
-test/parser/Processing-Book-001/Units 31-42/36 Typography 2/_08/_08.pde
-test/parser/Processing-Book-001/Units 31-42/37 Typography 3/_03/_03.pde
-test/parser/Processing-Book-001/Units 31-42/37 Typography 3/_04/_04.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_03/_03.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_05/_05.pde
