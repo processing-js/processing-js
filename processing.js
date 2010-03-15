@@ -594,6 +594,7 @@
       userMatrixStack,
       inverseCopy,
       projection,
+      manipulatingCamera = false,
       frustumMode = false,
       cameraFOV = 60 * (Math.PI / 180),
       cameraX = curElement.width / 2,
@@ -3485,6 +3486,28 @@
 		////////////////////////////////////////////////////////////////////////////
     // Camera functions
     ////////////////////////////////////////////////////////////////////////////
+    
+    p.beginCamera() = function beginCamera(){
+	  if( manipulatingCamera ){
+		throw("You cannot call beginCamera() again before calling endCamera()");
+	  }
+	  else{
+		manipulatingCamera = true;
+		forwardTransform = cameraInv;
+	  }
+	}
+
+	p.endCamera() = function endCamera(){
+	  if( !manipulatingCamera ){
+		throw("You cannot call endCamera() before calling beginCamera()");
+	  }
+	  else{
+		modelView.set( cam );
+		modelViewInv.set( cameraInv );
+		forwardTransform = modelView;
+		manipulatingCamera = false;
+	  }
+	}
     
 		p.camera = function camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
 			if( arguments.length === 0 ){
