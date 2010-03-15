@@ -172,7 +172,7 @@
 
     // Saves all strings into an array
     // masks all strings into <STRING n>
-    // to be replaced with the array strings after parsing is finishes
+    // to be replaced with the array strings after parsing is finished
     var strings = [];
     aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
       strings.push(all);
@@ -234,7 +234,7 @@
     }
 
     // float foo = 5;
-    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\])+| ) *(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
+    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
       if (type === "return") {
         return all;
       } else {
@@ -789,7 +789,26 @@
       return newary;
     };
 
-
+    p.arrayCopy = function arrayCopy(src, srcPos, dest, destPos, length) {
+      if(arguments.length === 2) {
+        // recall itself and copy src to dest from start index 0 to 0 of src.length
+        p.arrayCopy(src, 0, srcPos, 0, src.length);
+      } else if (arguments.length === 3) {
+        // recall itself and copy src to dest from start index 0 to 0 of length
+        p.arrayCopy(src, 0, srcPos, 0, dest);
+      } else if (arguments.length === 5) {
+        // copy src to dest from index srcPos to index destPos of length recursivly on objects
+        for (var i=srcPos, j=destPos; i < length+srcPos; i++, j++) {
+          if(src[i] && typeof src[i] == "object"){
+            // src[i] is not null and is another object or array. go recursive
+            p.arrayCopy(src[i],0,dest[j],0,src[i].length);
+          } else {
+            // standard type, just copy
+            dest[j] = src[i];
+          }
+        }
+      }      
+    };
 
     p.ArrayList = function ArrayList(size, size2, size3) {
 
@@ -1992,6 +2011,14 @@
       return this.valueOf() === str.valueOf();
     };
 
+    String.prototype.toCharArray = function() {
+      var chars = this.split("");
+      for (var i = chars.length -1; i >= 0; i--) {
+        chars[i] = chars[i].charCodeAt(0);
+      }
+      return chars;
+    };
+
     p.match = function (str, regexp) {
       return str.match(regexp);
     };
@@ -2026,14 +2053,15 @@
           width: "100%",
           height: "15%",
           fontFamily: "sans-serif",
-          color: "black",
-          backgroundColor: "white"
+          color: "#ccc",
+          backgroundColor: "black"
         },
         outputStyles = {
           position: "relative",
           fontFamily: "monospace",
           overflow: "auto",
-          height: "100%"
+          height: "100%",
+          paddingTop: "5px"
         },
         resizerStyles = {
           height: "5px",
@@ -2043,23 +2071,26 @@
         },
         closeButtonStyles = {
           position: "absolute",
-          top: "0px",
-          right: "15px",
-          border: "1px solid black",
-          borderTop: "none",
+          top: "5px",
+          right: "20px",
+          color: "#111",
+          MozBorderRadius: "4px",
+          webkitBorderRadius: "4px",
+          borderRadius: "4px",
           cursor: "pointer",
-          fontWeight: "bold",
+          fontWeight: "normal",
           textAlign: "center",
-          padding: "1px 5px",
-          backgroundColor: "#eb0000"
+          padding: "3px 5px",
+          backgroundColor: "#333",
+          fontSize: "12px"
         },
         entryStyles = {
-          borderBottom: "1px solid #d3d3d3",
+          //borderBottom: "1px solid #d3d3d3",
           minHeight: "16px"
         },
         entryTextStyles = {
           fontSize: "12px",
-          margin: "0 5px 0 5px",
+          margin: "0 8px 0 8px",
           maxWidth: "100%",
           whiteSpace: "pre-wrap",
           overflow: "auto"
@@ -2222,7 +2253,7 @@
         );
     
         closeButton[$title] = "Close Log";
-        append(closeButton, createTextNode("X"));
+        append(closeButton, createTextNode("\u2716"));
     
         resizer[$title] = "Double-click to toggle log minimization";
     
