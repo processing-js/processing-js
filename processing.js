@@ -589,6 +589,7 @@
     var cam,
       cameraInv,
       forwardTransform,
+      reverseTransform,
       modelView,
       modelViewInv,
       userMatrixStack,
@@ -1300,6 +1301,7 @@
     p.translate = function translate(x, y, z) {
       if (p.use3DContext) {
         forwardTransform.translate(x, y, z);
+        reverseTransform.invTranslate(x, y, z);
       } else {
         curContext.translate(x, y);
       }
@@ -1307,6 +1309,7 @@
     p.scale = function scale( x, y, z ) {
       if ( p.use3DContext ) {
         forwardTransform.scale( x, y, z );
+        reverseTransform.invScale( x, y, z );
       } else {
         curContext.scale( x, y || x );
       }
@@ -1329,6 +1332,7 @@
 
     p.resetMatrix = function resetMatrix() {
       forwardTransform.reset();
+      reverseTransform.reset();
     };
     
     p.applyMatrix = function applyMatrix(){
@@ -1345,23 +1349,32 @@
                               a[4],	 a[5],  a[6],  a[7],
                               a[8],	 a[9],  a[10], a[11],
                               a[12], a[13], a[14], a[15] );
+      reverseTransform.invApply(  a[0],	 a[1],  a[2],	a[3],
+								  a[4],	 a[5],  a[6],	a[7],
+								  a[8],	 a[9],  a[10],	a[11],
+								  a[12], a[13], a[14],	a[15] );
+      
     };
     
     p.rotateX = function( angleInRadians ) {
       forwardTransform.rotateX( angleInRadians );
+      reverseTransform.invRotateX( angleInRadians );
     };
     
     p.rotateZ = function( angleInRadians ) {
       forwardTransform.rotateZ( angleInRadians );
+      reverseTransform.invRotateZ( angleInRadians );
     };
 
     p.rotateY = function( angleInRadians ) {
       forwardTransform.rotateY( angleInRadians );
+      reverseTransform.invRotateY( angleInRadians );
     };
 		
 		p.rotate = function rotate( angleInRadians ) {
       if (p.use3DContext) {  
 				forwardTransform.rotateZ( angleInRadians );
+				reverseTransform.invRotateZ( angleInRadians );
 			}else { curContext.rotate( angleInRadians ); }
     };
 		
@@ -2801,6 +2814,8 @@
 
           p.camera();
           p.perspective();
+          forwardTransform = modelView;
+          reverseTransform = modelViewInv;
 
           userMatrixStack = new PMatrix3DStack();
         }
@@ -3204,6 +3219,7 @@
         var s = p.sin( angle );
         this.apply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
       },
+      
       rotateY: function( angle ){
         var c = p.cos( angle );
         var s = p.sin( angle );
@@ -3391,6 +3407,30 @@
           p.nfs(this.elements[15], digits, 4) + "\n";
 
         p.println(output);
+      },
+      invTranslate: function( tx, ty, tz) {
+		this.preApply(	1, 0, 0, -tx,
+						0, 1, 0, -ty,
+						0, 0, 1, -tz,
+						0, 0, 0, 1);
+	  },
+      invRotateX: function( angle ){
+        var c = p.cos( -angle );
+        var s = p.sin( -angle );
+        this.preApply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
+      },
+      invRotateY: function( angle ){
+        var c = p.cos( -angle );
+        var s = p.sin( -angle );
+        this.preApply([c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1]);
+      },
+      invRotateZ: function( angle ){
+        var c = p.cos( -angle );
+        var s = p.sin( -angle );
+        this.preApply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
+      },
+      invScale: function( x, y, z ){
+        this.preApply([1/x, 0, 0, 0, 0, 1/y, 0, 0, 0, 0, 1/z, 0, 0, 0, 0, 1]);
       }
     };
 
@@ -3487,17 +3527,18 @@
     // Camera functions
     ////////////////////////////////////////////////////////////////////////////
     
-    p.beginCamera() = function beginCamera(){
+    p.beginCamera = function beginCamera(){
 	  if( manipulatingCamera ){
 		throw("You cannot call beginCamera() again before calling endCamera()");
 	  }
 	  else{
 		manipulatingCamera = true;
 		forwardTransform = cameraInv;
+		reverseTransform = cam;
 	  }
 	}
 
-	p.endCamera() = function endCamera(){
+	p.endCamera = function endCamera(){
 	  if( !manipulatingCamera ){
 		throw("You cannot call endCamera() before calling beginCamera()");
 	  }
@@ -3505,6 +3546,7 @@
 		modelView.set( cam );
 		modelViewInv.set( cameraInv );
 		forwardTransform = modelView;
+		reverseTransform = modelViewInv;
 		manipulatingCamera = false;
 	  }
 	}
@@ -3538,6 +3580,7 @@
         cam.translate( -eyeX, -eyeY, -eyeZ );
 
 				cameraInv = new PMatrix3D();
+				cameraInv.reset();
 				cameraInv.invApply(x.x, x.y, x.z, 0,
 				                   y.x, y.y, y.z, 0,
 				                   z.x, z.y, z.z, 0,
@@ -3546,13 +3589,12 @@
 				cameraInv.translate( eyeX, eyeY, eyeZ );
 
         modelView = new PMatrix3D();
-				modelView.set( cam );
-
-        forwardTransform = modelView;        
+				modelView.set( cam );     
 
 				modelViewInv = new PMatrix3D();
-				modelViewInv.set( cameraInv );
+				modelViewInv.set( cameraInv );				
 			}
+		
 		};
 
 		p.perspective = function perspective(fov, aspect, near, far) {

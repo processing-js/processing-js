@@ -1,0 +1,12 @@
+size(100, 100, P3D);
+noFill();
+
+beginCamera();
+printCamera();
+rotateX(-PI/6);
+printCamera();
+endCamera();
+
+translate(50, 50, 0);
+rotateY(PI/3);
+box(45);
