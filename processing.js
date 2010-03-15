@@ -4561,16 +4561,22 @@
         this.height = aHeight;
         this.pixels = new Array(aWidth * aHeight);
         this.data = this.pixels;
-        this.format = aFormat ? aFormat : p.RGB;
+        this.format = (aFormat === p.ARGB || aFormat === p.RGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
       }
     };
 
     PImage.prototype = {
       get: function (x, y, w, h) {
-        return p.get(x, y, w, h);
+        if (!arguments.length) {
+          return p.get(this);
+        } else if (arguments.length === 2) {
+          return p.get(x,y,this);
+        } else if (arguments.length === 4) {
+          return p.get(x, y, w, h, this);
+        }
       },
       set: function (x, y, c) {
-        //todo
+        return p.set(x, y, this);
       },
       loadPixels: function() {
       },
@@ -4601,7 +4607,7 @@
           // convert each canvasImg's colors to PImage array format
           var pos = i*4;
           // pjs uses argb, canvas stores rgba
-          this.pixels[i] = (canvasImg.data[pos + 3] * 16777216 * 256) + (canvasImg.data[pos + 0] * 65536) +
+          this.pixels[i] = (canvasImg.data[pos + 3] * 16777216) + (canvasImg.data[pos + 0] * 65536) +
                   (canvasImg.data[pos + 1])    +   (canvasImg.data[pos + 2]);                  
         }
       }
@@ -4612,22 +4618,18 @@
     p.createImage = function createImage(w, h, mode) {
 
       var img = new PImage(w,h,mode);
-
-//      if (curContext.createImageData) {
-//        data = curContext.createImageData(w, h);
-//      }
       // make the new image transparent black by default
       for (var i = 0; i < w*h; i++){
-        img.pixels[i] = 4291559526;//1976303718;
+        if (mode === p.RGB) {
+          // if mode is RGB set alpha to 255, no transparency
+          img.pixels[i++] = 255;
+        } else {
+          img.pixels[i++] = 0;
+        }
+        img.pixels[i++] = 0;
+        img.pixels[i++] = 0;
+        img.pixels[i++] = 0;        
       }
-//      data.get = function (x, y) {
-//        return this.pixels[w * y + x];
-//      };
-
-//      data._mask = null;
-//      data.mask = function (img) {
-//        this._mask = img;
-//      };
       return img;
     };
     
@@ -4665,34 +4667,51 @@
       return img;
     };
 
-    // Gets a single pixel or block of pixels from the current Canvas Context
-    p.get = function get(x, y, w, h) {
-
+    // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
+    p.get = function get(x, y, w, h, img) {
+      // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
       if (!arguments.length) {
-        var c = p.createGraphics(p.width, p.height);
-        c.image(curContext, 0, 0);
+        //return a PImage of curContext
+        var c = new PImage(p.width, p.height, p.RGB);
+        c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
+        return c;
+      } else if ( arguments.length == 5 ){
+        // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+        var start = y * img.width + x;
+        var end = (y + h) * img.width + x + w;
+        var c = new PImage(w, h, p.RGB);
+        for (var i=start, j=0; i < end; i++, j++) {
+          c.pixels[j] = img[i];
+          if (j+1 % w == 0) {
+            //completed one line, increment i by offset
+            i += img.width-w;
+          }
+        }
         return c;
       } else if ( arguments.length == 4 ){
-		    var c = p.createGraphics( w, h );
-		    c.pixels = curContext.getImageData(x, y, w, h); 
-		    //create a canvas to dump the ImageData onto
-		    var canvas = document.createElement( "canvas" );
-		    var context = canvas.getContext( "2d" );
-		    //put the ImageData on this canvas
-		    context.putImageData(c.pixels, 0 ,0, x, y, w, h);
-		    c.image( context, 0, 0 );
+        // return a PImage of w and h from cood x,y of curContext
+		    var c = new PImage(w, h, p.RGB);
+		    c.fromImageData(curContext.getImageData(x, y, w, h)); 
         return c;
+      } else if ( arguments.length == 3 ){
+        // PImage.get(x,y) was called, return the color (int) at x,y of img
+        return img.pixels[y * img.width + x];
 	    } else if ( arguments.length == 2 ){
-		    if(p.pixels){
-		      return p.pixels[y * this.width + x];
+	      // return the color at x,y (int) of curContext
+	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
+		    if(x <= p.width && x > 0 && y > 0 && y <= p.height){
+		      // x,y is inside canvas space
+		      var c = new PImage(1,1,p.RGB);
+		      c.fromImageData(curContext.getImageData(x,y,1,1));
+		      return c.pixels[0];
+		    } else {
+		      // x,y is outside image return transparent black
+		      return 0;
 		    }
+	    } else if ( arguments.length == 1 ){
+	      // PImage.get() was called, return the PImage
+	      return x;
 	    }
-      if (!getLoaded) {
-        getLoaded = buildImageObject(curContext.getImageData(0, 0, p.width, p.height));
-      }
-
-      return getLoaded.get(x, y);
-
     };
 
     // Creates a new Processing instance and passes it back for... processing

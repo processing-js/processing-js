@@ -1,0 +1,29 @@
+﻿<script src="../../../processing.js"></script>
+<canvas datasrc="pimageget.pjs" width="200" height="200"></canvas>
+<pre>
+background(0);
+PImage greenSquare = createImage(100, 100, ARGB);
+for (int i = 0; i < greenSquare.pixels.length; i++) {
+ // make greenSquare green
+  greenSquare.pixels[i] = 4278255360;
+}
+image(greenSquare, 0, 0);
+PImage blueSquare = createImage(100, 100, ARGB);
+for (int i = 0; i < blueSquare.pixels.length; i++) {
+ // make blueSquare blue
+  blueSquare.pixels[i] = 4278190335;
+}
+image(blueSquare, 100, 0);
+
+// draw red square inside green then get and put in blue
+PImage redSquare = createImage(40,40,ARGB);
+for (int i = 0; i < redSquare.pixels.length; i++) {
+ // make redSquare red
+  redSquare.pixels[i] = 4294901760;
+}
+image(redSquare,30,30);
+
+PImage getRedSquare = createImage(40,40,ARGB);
+getRedSquare.get(30,30,40,40);
+image(redSquare, 130,30);
+</pre>
