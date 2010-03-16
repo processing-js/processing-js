@@ -1419,10 +1419,10 @@
       return new Date().getYear() + 1900;
     };
     p.month = function month() {
-      return new Date().getMonth();
+      return new Date().getMonth() + 1;
     };
     p.day = function day() {
-      return new Date().getDay();
+      return new Date().getDate();
     };
     p.hour = function hour() {
       return new Date().getHours();
