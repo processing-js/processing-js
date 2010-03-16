@@ -207,6 +207,9 @@
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
 
+    //replace  catch (IOException e) to catch (eIOException)
+	aCode = aCode.replace(/catch\s\((\w+)\1\s(\w+)\2\)\s\{.\($2\)/g, "catch ($2$1)\n{$2$1");
+
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 
@@ -232,7 +235,8 @@
         return type + " " + name + " = 0" + sep;
       });
     }
-
+		aCode = aCode.replace(/catch\s\((\w+)\1\s(\w+)\2\)\s\{.\($2\)/g, "catch ($2$1)\n{$2$1");
+		
     // float foo = 5;
     aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
       if (type === "return") {
@@ -1521,7 +1525,12 @@
     };
 
     p.link = function (href, target) {
-      window.location = href;
+      if (target)
+      {
+	window.open(href,target);
+      }
+      else
+	window.location = href;
     };
     p.beginDraw = function beginDraw() {};
     p.endDraw = function endDraw() {};
