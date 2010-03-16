@@ -3137,8 +3137,8 @@
 			splineForward( curveDetail, curveDrawMatrix );
 			
 			if ( !bezierBasisInverse ) {
-				bezierBasisInverse = bezierBasisMatrix.get();
-				bezierBasisInverse.invert();
+				//bezierBasisInverse = bezierBasisMatrix.get();
+				//bezierBasisInverse.invert();
 				curveToBezierMatrix = new PMatrix3D();
 			}
 
@@ -3353,7 +3353,74 @@
 
           }
 
-        } else if (arguments.length === 4) {
+        } else if (arguments.length === 3) {
+
+          if (curShape !== p.QUAD_STRIP || curShapeCount !== 2) {
+
+            curContext.lineTo(arguments[0], arguments[1],arguments[2]);
+
+          }
+
+          if (curShape === p.TRIANGLE_STRIP) {
+
+            if (curShapeCount === 2) {
+
+              // finish shape
+              p.endShape(p.CLOSE);
+              pathOpen = true;
+              curContext.beginPath();
+
+              // redraw last line to start next shape
+              curContext.moveTo(prevX, prevY);
+              curContext.lineTo(x, y);
+              curShapeCount = 1;
+
+            }
+
+            firstX = prevX;
+            firstY = prevY;
+
+          }
+
+          if (curShape === p.TRIANGLE_FAN && curShapeCount === 2) {
+
+            // finish shape
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw last line to start next shape
+            curContext.moveTo(firstX, firstY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+
+          }
+
+          if (curShape === p.QUAD_STRIP && curShapeCount === 3) {
+
+            // finish shape
+            curContext.lineTo(prevX, prevY);
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw lines to start next shape
+            curContext.moveTo(prevX, prevY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+
+          }
+
+          if (curShape === p.QUAD_STRIP) {
+
+            firstX = secondX;
+            firstY = secondY;
+            secondX = prevX;
+            secondY = prevY;
+
+          }
+
+        }else if (arguments.length === 4) {
 
           if (curShapeCount > 1) {
 
@@ -3380,49 +3447,87 @@
 
     };
 
-    p.curveVertex = function (x, y, x2, y2) {
+    p.curveVertex = function (x, y, z) {
 
-      if (curvePoints.length < 3) {
+      if( p.use3DContext && z)
+			{
+				curvePoints.push([x, y, z]);
+			}
+			else{
+				curvePoints.push([x, y]);
+			}
+			
+			if (curvePoints.length > 3){
+				if( p.use3DContext)
+				{
+					alert(curvePoints.length);
+					p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
+															  curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
+																curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
+																curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
+				}
+				else{
+					var b = [],
+						s = 1 - curTightness;
 
-        curvePoints.push([x, y]);
+					/*
+						 * Matrix to convert from Catmull-Rom to cubic Bezier
+						 * where t = curTightness
+						 * |0         1          0         0       |
+						 * |(t-1)/6   1          (1-t)/6   0       |
+						 * |0         (1-t)/6    1         (t-1)/6 |
+						 * |0         0          0         0       |
+						 */
 
-      } else {
+					curvePoints.push([x, y]);
 
-        var b = [],
-          s = 1 - curTightness;
+					b[0] = [curvePoints[1][0], curvePoints[1][1]];
+					b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
+					b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
+					b[3] = [curvePoints[2][0], curvePoints[2][1]];
 
-        /*
-           * Matrix to convert from Catmull-Rom to cubic Bezier
-           * where t = curTightness
-           * |0         1          0         0       |
-           * |(t-1)/6   1          (1-t)/6   0       |
-           * |0         (1-t)/6    1         (t-1)/6 |
-           * |0         0          0         0       |
-           */
+					if (!pathOpen) {
+						p.vertex(b[0][0], b[0][1]);
+					} else {
+						curShapeCount = 1;
+					}
 
-        curvePoints.push([x, y]);
+					p.vertex(
+					b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
 
-        b[0] = [curvePoints[1][0], curvePoints[1][1]];
-        b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
-        b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
-        b[3] = [curvePoints[2][0], curvePoints[2][1]];
-
-        if (!pathOpen) {
-          p.vertex(b[0][0], b[0][1]);
-        } else {
-          curShapeCount = 1;
-        }
-
-        p.vertex(
-        b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
-
-        curvePoints.shift();
-      }
-
+					curvePoints.shift();
+				}
+			}
     };
+		p.curveVertexSegment = function ( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4 ) {
+			var x0 = x2;
+			var y0 = y2;
+			var z0 = z2;
 
+			var draw = curveDrawMatrix.array();
+
+			var xplot1 = draw[4] *x1 + draw[5] *x2 + draw[6] *x3 + draw[7] *x4;
+			var xplot2 = draw[8] *x1 + draw[9] *x2 + draw[10]*x3 + draw[11]*x4;
+			var xplot3 = draw[12]*x1 + draw[13]*x2 + draw[14]*x3 + draw[15]*x4;
+			
+			var yplot1 = draw[4] *y1 + draw[5] *y2 + draw[6] *y3 + draw[7] *y4;
+			var yplot2 = draw[8] *y1 + draw[9] *y2 + draw[10]*y3 + draw[11]*y4;
+			var yplot3 = draw[12]*y1 + draw[13]*y2 + draw[14]*y3 + draw[15]*y4;
+
+			var zplot1 = draw[4] *z1 + draw[5] *z2 + draw[6]*z3 + draw[7] *z4;
+			var zplot2 = draw[8] *z1 + draw[9] *z2 + draw[10]*z3 + draw[11]*z4;
+			var zplot3 = draw[12]*z1 + draw[13]*z2 + draw[14]*z3 + draw[15]*z4;
+
+			p.vertex(x0, y0, z0);
+			for (var j = 0; j < curveDetail; j++) {
+				x0 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+				y0 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+				z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
+				p.vertex(x0, y0, z0);
+			}
+		}
     p.curve = function curve() {
-      if(arguments.length == 8)// curve(x1, y1, x2, y2, x3, y3, x4, y4)
+      if( arguments.length == 8 )// curve(x1, y1, x2, y2, x3, y3, x4, y4)
 			{
 				p.beginShape();
 				
@@ -3435,14 +3540,13 @@
 			}else{ // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
 				if( p.use3DContext )
 				{
-					beginShape();
-					
+					p.beginShape();
 					curveVertex( arguments[0], arguments[1] , arguments[2] );
 					curveVertex( arguments[3], arguments[4] , arguments[5] );
 					curveVertex( arguments[6], arguments[7] , arguments[8] );
 					curveVertex( arguments[9], arguments[10], arguments[11] );
 					
-					endShape();
+					p.endShape();
 				}
 			}
     };
