@@ -1,0 +1,22 @@
+void setup()
+{
+  size(200,200,OPENGL);
+}
+
+void draw()
+{
+  background(0);
+  float x = (mouseX-100.0f)/100.0f;
+  float y = (mouseY-100.0f)/100.0f;
+  float m = mag(x,y);
+  
+  x /= m;
+  y /= m;
+
+  noStroke();
+  ambientLight(4 * y, 4 * x, 0);
+  directionalLight(33*x,66,99*y, -x, -y, 0);
+
+  translate(width/2.0f, height/2.0f, 2);
+  sphere(50);
+}
