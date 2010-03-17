@@ -4576,7 +4576,7 @@
         }
       },
       set: function (x, y, c) {
-        return p.set(x, y, this);
+        p.set(x, y, c, this);
       },
       loadPixels: function() {
       },
@@ -4608,7 +4608,7 @@
           var pos = i*4;
           // pjs uses argb, canvas stores rgba
           this.pixels[i] = (canvasImg.data[pos + 3] * 16777216) + (canvasImg.data[pos + 0] * 65536) +
-                  (canvasImg.data[pos + 1])    +   (canvasImg.data[pos + 2]);                  
+                  (canvasImg.data[pos + 1] * 256)    +   (canvasImg.data[pos + 2]);                  
         }
       }
     };
@@ -4628,7 +4628,7 @@
         }
         img.pixels[i++] = 0;
         img.pixels[i++] = 0;
-        img.pixels[i++] = 0;        
+        img.pixels[i] = 0;        
       }
       return img;
     };
@@ -4695,7 +4695,7 @@
         return c;
       } else if ( arguments.length == 3 ){
         // PImage.get(x,y) was called, return the color (int) at x,y of img
-        return img.pixels[y * img.width + x];
+        return w.pixels[y * w.width + x];
 	    } else if ( arguments.length == 2 ){
 	      // return the color at x,y (int) of curContext
 	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
@@ -4726,23 +4726,25 @@
     };
 
     // Paints a pixel array into the canvas
-    p.set = function set(x, y, obj) {
-
-      if (obj && obj.img) {
-
-        p.image(obj, x, y);
-
-      } else {
-
-        var oldFill = curContext.fillStyle,
-          color = obj;
-
-        curContext.fillStyle = color;
-        curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-        curContext.fillStyle = oldFill;
-
+    p.set = function set(x, y, obj, img) {
+      // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
+      if ( arguments.length == 4 ) {
+        img.pixels[y*img.width+x] = obj;
+      } else if (arguments.length = 3) {
+        // called p.set(), was it with a color or a img ?
+        if(typeof obj === "number"){
+          // it was a color
+          // use canvas method to fill pixel with color
+//          var oldFill = curContext.fillStyle,
+//          color = obj;
+//          curContext.fillStyle = color;
+//          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+//          curContext.fillStyle = oldFill;
+        } else {
+          // it was a PImage
+          p.imageMode(x,y,obj);
+        }
       }
-
     };
 
     // Gets a 1-Dimensional pixel array from Canvas
