@@ -5,7 +5,6 @@
     <title>Processing Helper</title>
 
     <script src="../processing.js"></script>
-    <script src="packer.js"></script>
     <script src="jsbeautify.js"></script>
   </head>
   <body onload="document.getElementById('code').focus()">
@@ -26,8 +25,7 @@
     <textarea rows="20" cols="80" id="output" readonly="readonly">None.</textarea>
 
     <script>
-    var helper = (function() {
-      return {
+    var helper = {
         canvas: document.getElementById('sketch'),
         code:   document.getElementById('code'),
         output: document.getElementById('output'),
@@ -62,12 +60,13 @@
         generateRefTest: function() {
           // Run the sketch first, in case the user hasn't
           this.runSketch();
-          var dataURI = '//' + this.canvas.toDataURL();
-          this.output.value = dataURI + '\n' + this.code.value;
-          this.output.select();
+          var context = this.canvas.getContext('2d');
+          var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
+          var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
+          document.location.href= "data:text/plain;charset=utf-8;base64," + 
+                                  btoa('//' + dimensions + imgData.toString() + '\n' + this.code.value);
         }
-      };
-    })();
+    };
     </script>
   </body>
 </html>
