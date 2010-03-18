@@ -798,21 +798,21 @@
     ////////////////////////////////////////////////////////////////////////////    
     var charMap = {};
 
-    function Char(value) {
-      } if ( typeof value === 'string' && value.length === 1 ) {
-        this.value = value.charCodeAt(0);
+    function Char(chr) {
+      if ( typeof chr === 'string' && chr.length === 1 ) {
+        this.code = chr.charCodeAt(0);
       } else {
-        this.value = NaN;
+        this.code = NaN;
       }
 
-      return ( typeof charMap[this.value] === 'undefined' ) ? charMap[this.value] = this : charMap[this.value];   
+      return ( typeof charMap[this.code] === 'undefined' ) ? charMap[this.code] = this : charMap[this.code];   
     };
 
     Char.prototype.toString = function() {
-      return String.fromCharCode(this.value);
+      return String.fromCharCode(this.code);
     };
     Char.prototype.valueOf = function() {
-      return this.value;
+      return this.code;
     };
 
     ////////////////////////////////////////////////////////////////////////////
