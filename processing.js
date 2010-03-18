@@ -2178,12 +2178,10 @@
     };
     
     p.loadBytes = function loadBytes(url) {
-      
       var string = ajax(url);
       var ret = new Array( string.length );
       
       for ( var i = 0; i < string.length; i++) {
-        
         ret[i] = string.charCodeAt(i);
       }
       
