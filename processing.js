@@ -270,7 +270,10 @@
   Processing.parse = function parse(aCode, p) {
 
     // Force characters-as-bytes to work.
-    aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+    //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+    aCode = aCode.replace(/'.{1}'/g, function(all) {
+      return "(new Char(" + all + "))";
+    });
 
     // Parse out @pjs directive, if any.
     p.pjs = {imageCache: {pending: 0}}; // by default we have an empty imageCache, no more.
