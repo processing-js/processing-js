@@ -790,7 +790,27 @@
     // The current animation frame
     p.frameCount = 0;
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Char handling
+    ////////////////////////////////////////////////////////////////////////////    
+    var charMap = {};
 
+    function Char(value) {
+      } if ( typeof value === 'string' && value.length === 1 ) {
+        this.value = value.charCodeAt(0);
+      } else {
+        this.value = NaN;
+      }
+
+      return ( typeof charMap[this.value] === 'undefined' ) ? charMap[this.value] = this : charMap[this.value];   
+    };
+
+    Char.prototype.toString = function() {
+      return String.fromCharCode(this.value);
+    };
+    Char.prototype.valueOf = function() {
+      return this.value;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
