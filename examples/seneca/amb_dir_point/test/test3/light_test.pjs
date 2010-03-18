@@ -1,0 +1,13 @@
+// import processing.opengl.*;
+
+void setup() {
+  size(100, 100, P3D);
+}
+
+void draw() {
+  background(0);
+  noStroke();
+  directionalLight(51, 102, 126, 0, -1, 0);
+  translate(80, 50, 0);
+  sphere(30);
+}
