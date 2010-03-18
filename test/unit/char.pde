@@ -3,8 +3,8 @@
 int i = 65;
 byte b = 65;
 
-//_checkEqual('A', char(i));
-//_checkEqual('A', char(b));
+_checkEqual('A', char(i));
+_checkEqual('A', char(b));
 
 int[] intArr=new int[3];
 intArr[0]=70;
@@ -14,7 +14,7 @@ char[] intExp=new char[3];
 intExp[0]='F';
 intExp[1]='u';
 intExp[2]='b';
-//_checkEqual(intExp, char(intArr));
+_checkEqual(intExp, char(intArr));
 
 byte[] byteArr=new byte[3];
 byteArr[0]=98;
@@ -24,7 +24,7 @@ char[] byteExp=new char[3];
 byteExp[0]='b';
 byteExp[1]='a';
 byteExp[2]='r';
-//_checkEqual(byteExp, char(byteArr));
+_checkEqual(byteExp, char(byteArr));
 
 _checkThrows(function(){char("NoStringsAllowed");});
 _checkThrows(function(){char(true);});

@@ -147,3 +147,7 @@ var EggRing = __empty_func__;
 var OverRect = __empty_func__;
 var OverCircle = __empty_func__;
 var SpinSpots = __empty_func__;
+
+
+var SearchClient = __empty_func__;
+var WebSearchRequest = __empty_func__;
