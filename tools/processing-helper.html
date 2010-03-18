@@ -29,10 +29,11 @@
         canvas: document.getElementById('sketch'),
         code:   document.getElementById('code'),
         output: document.getElementById('output'),
+        p:      null,
 
         runSketch: function() {
           try {
-            Processing(this.canvas, this.code.value);
+            p = Processing(this.canvas, this.code.value);
           } catch (e) {
             this.output.value = "Error! Error was:\n" + e.toString();
           }
@@ -60,11 +61,32 @@
         generateRefTest: function() {
           // Run the sketch first, in case the user hasn't
           this.runSketch();
-          var context = this.canvas.getContext('2d');
-          var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
-          var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
-          document.location.href= "data:text/plain;charset=utf-8;base64," + 
+          
+          // if the test was 2d, we can just call getImageData
+          if(p.use3DContext === false) {
+            var context = this.canvas.getContext('2d');
+            var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
+            var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
+            document.location.href= "data:text/plain;charset=utf-8;base64," + 
                                   btoa('//' + dimensions + imgData.toString() + '\n' + this.code.value);
+          }
+          else {
+            // else, we'll need to call WebGL's readPixels
+            var context = this.canvas.getContext("experimental-webgl");
+            var unsignedBuffer = context.readPixels(0,0,this.canvas.width,this.canvas.height,context.RGBA, context.UNSIGNED_BYTE);
+            var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
+            var JSarray = [];
+
+            // extract the data from the WebGLBuffer and place
+            // it in a JS array for easy manipulation.
+            for(var i = 0; i < unsignedBuffer.length; i++){
+              JSarray[i] = unsignedBuffer[i];
+            }
+            
+            // this doesn't seem to work on Safari
+            document.location.href= "data:text/plain;charset=utf-8;base64," + 
+                                  btoa('//' + dimensions + JSarray.toString() + '\n' + this.code.value);
+          }
         }
     };
     </script>
