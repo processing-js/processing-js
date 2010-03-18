@@ -2589,14 +2589,17 @@
       return ret;
     };
 
-    p.dist = function dist(x1, y1, z1, x2, y2, z2) {
-	  if( arguments.length === 4 )
-		return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-	  else if( arguments.length === 6 ){
-		var x = new PVector( x1, y1, z1 ),
-			y = new PVector( x2, y2, z2 );
-		return PVector.dist( x, y );
-	  }
+    p.dist = function() {
+	  var dx, dy, dz = 0;      
+	  if (arguments.length === 4) {
+		dx = arguments[0] - arguments[2];
+		dy = arguments[1] - arguments[3];
+	  } else if (arguments.length === 6) {
+		dx = arguments[0] - arguments[3];
+		dy = arguments[1] - arguments[4];
+		dz = arguments[2] - arguments[5];
+	  }      
+	  return Math.sqrt(dx * dx + dy * dy + dz * dz);
 	};
 
     p.map = function map(value, istart, istop, ostart, ostop) {
