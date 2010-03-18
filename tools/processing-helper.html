@@ -66,9 +66,15 @@
           if(p.use3DContext === false) {
             var context = this.canvas.getContext('2d');
             var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
+            var pixels = [];
+            
+            for(var i = 0; i < imgData.length; i++){
+              pixels[i] = imgData[i];
+            }
+            
             var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
             document.location.href= "data:text/plain;charset=utf-8;base64," + 
-                                  btoa('//' + dimensions + imgData.toString() + '\n' + this.code.value);
+                                  btoa('//' + dimensions + pixels + '\n' + this.code.value);
           }
           
           // else, we'll need to call WebGL's readPixels
