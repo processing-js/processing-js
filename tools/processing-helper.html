@@ -77,11 +77,12 @@
                                   btoa('//' + dimensions + pixels + '\n' + this.code.value);
           }
           
-          // else, we'll need to call WebGL's readPixels
+          // else, we'll need to call WebGL's readPixels.
+          // The order of the pixels go from bottom to top, left to right.
           else {            
-            // Safari is retuning a regular JS object for readPixels,
-            // Minefield is returning a WebGLUnsignedByteArray.
-            // Chromium raises an exception
+            // Safari returns a regular JS object for readPixels.
+            // Minefield returns a WebGLUnsignedByteArray.
+            // Chromium raises an exception because of an XHR bug.
             // So we need to handle each case differently.
             
             var browserString = navigator.userAgent;
