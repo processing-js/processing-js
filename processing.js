@@ -2819,7 +2819,11 @@
 
     //! This can't be right... right?
     p.byte = function (aNumber) {
-      return aNumber || 0;
+      if (aNumber < 128) {
+        return aNumber || 0;
+      } else {
+        return (-256 + aNumber);
+      }
     };
 
     p.norm = function norm(aNumber, low, high) {
