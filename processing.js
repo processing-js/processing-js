@@ -2176,6 +2176,19 @@
     p.loadStrings = function loadStrings(url) {
       return ajax(url).split("\n");
     };
+    
+    p.loadBytes = function loadBytes(url) {
+      
+      var string = ajax(url);
+      var ret = new Array( string.length );
+      
+      for ( var i = 0; i < string.length; i++) {
+        
+        ret[i] = string.charCodeAt(i);
+      }
+      
+      return ret;
+    };
 
     // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
     // This breaks the join() ref-test. The Processing.org documentation says String or String[]. SHOULD BE FIXED NOW
