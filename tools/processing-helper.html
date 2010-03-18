@@ -70,22 +70,40 @@
             document.location.href= "data:text/plain;charset=utf-8;base64," + 
                                   btoa('//' + dimensions + imgData.toString() + '\n' + this.code.value);
           }
-          else {
-            // else, we'll need to call WebGL's readPixels
+          
+          // else, we'll need to call WebGL's readPixels
+          else {            
+            // Safari is retuning a regular JS object for readPixels,
+            // Minefield is returning a WebGLUnsignedByteArray.
+            // Chromium raises an exception
+            // So we need to handle each case differently.
+            
+            var browserString = navigator.userAgent;
+            var regex = /Safari/i;
+            var isSafari = browserString.match(regex);
+
             var context = this.canvas.getContext("experimental-webgl");
+            
+            // Safari returns null if format RGB is requested
             var unsignedBuffer = context.readPixels(0,0,this.canvas.width,this.canvas.height,context.RGBA, context.UNSIGNED_BYTE);
             var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
-            var JSarray = [];
-
-            // extract the data from the WebGLBuffer and place
-            // it in a JS array for easy manipulation.
-            for(var i = 0; i < unsignedBuffer.length; i++){
-              JSarray[i] = unsignedBuffer[i];
-            }
+            var pixels = [];
             
-            // this doesn't seem to work on Safari
+            if(isSafari) {
+              // extract the data from the WebGLUnsignedByteArray and place
+              // it in a JS array for easy manipulation.
+              for(var i = 0; i < unsignedBuffer.length; i++){
+                pixels[i] = unsignedBuffer[i];
+              }
+            }
+
+            // Minefield
+            else if(!isSafari) {
+              pixels = unsignedBuffer['data'];
+            }
+
             document.location.href= "data:text/plain;charset=utf-8;base64," + 
-                                  btoa('//' + dimensions + JSarray.toString() + '\n' + this.code.value);
+                                  btoa('//' + dimensions + pixels.toString() + '\n' + this.code.value);
           }
         }
     };
