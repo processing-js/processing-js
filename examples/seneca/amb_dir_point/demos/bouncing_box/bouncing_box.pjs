@@ -1,0 +1,39 @@
+//import processing.opengl.*;
+
+void setup()
+{
+  size(400, 400, OPENGL);
+}
+
+float yRot = 0;
+float xRot = 0;
+float zRot = 0;
+
+float frames = 0;
+
+void draw()
+{
+  frames++;
+  
+  background(0);
+
+  camera();
+  noStroke();
+
+  directionalLight(128, 0, 0, 0, 1, 0);
+  directionalLight(0, 0, 128, 0, -1, 0);
+  directionalLight(0, 64, 0, 0, 0, -1);
+  directionalLight(64, 64, 64, -1, 0, 0);
+  directionalLight(64, 0, 128, 1, 0, 0);
+
+  fill(255);
+
+  pushMatrix();
+    translate(width/2, height/2, 220);
+    translate(0, sin(frames/30)* 40, 0);  
+    rotateY(yRot+=0.01);
+    rotateX(xRot+=0.005);
+    rotateZ(zRot+=0.025);
+    box(35);
+  popMatrix();
+}
