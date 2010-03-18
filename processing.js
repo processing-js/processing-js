@@ -2590,18 +2590,18 @@
     };
 
     p.dist = function() {
-	  var dx, dy, dz = 0;      
-	  if (arguments.length === 4) {
-	    dx = arguments[0] - arguments[2];
-	    dy = arguments[1] - arguments[3];
-	  } 
-	  else if (arguments.length === 6) {
-	    dx = arguments[0] - arguments[3];
-	    dy = arguments[1] - arguments[4];
-	    dz = arguments[2] - arguments[5];
-	  }      
-	  return Math.sqrt(dx * dx + dy * dy + dz * dz);
-	};
+      var dx, dy, dz = 0;      
+      if (arguments.length === 4) {
+        dx = arguments[0] - arguments[2];
+        dy = arguments[1] - arguments[3];
+      } 
+      else if (arguments.length === 6) {
+        dx = arguments[0] - arguments[3];
+        dy = arguments[1] - arguments[4];
+        dz = arguments[2] - arguments[5];
+      }      
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    };
 
     p.map = function map(value, istart, istop, ostart, ostop) {
       return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
