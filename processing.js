@@ -4947,12 +4947,14 @@
             // if 3 component color was passed in, alpha will be 1
             // otherwise it will already be normalized.
             curContext.clearColor(c[0] / 255, c[1] / 255, c[2] / 255, c[3]);
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
 
           // user passes in value which ranges from 0-255, but opengl
           // wants a normalized value.
           else if (typeof arguments[0] === "number") {
             curContext.clearColor(col[0] / 255, col[0] / 255, col[0] / 255, 1.0 );
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
         } else if (arguments.length === 2) {
           if (typeof arguments[0] === "string") {
@@ -4960,6 +4962,7 @@
             // Processing is ignoring alpha
             // var a = arguments[0]/255;
             curContext.clearColor(c[0] / 255, c[1] / 255, c[2] / 255, 1.0);
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
           // first value is shade of gray, second is alpha
           // background(0,255);
@@ -4970,6 +4973,7 @@
             // var a = arguments[0]/255;
             a = 1.0;
             curContext.clearColor(c, c, c, a);
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
         }
 
@@ -4978,6 +4982,7 @@
           // Processing seems to ignore this value, so just use 1.0 instead.
           //var a = arguments.length === 3? 1.0: arguments[3]/255;
           curContext.clearColor(col[0] / 255, col[1] / 255, col[2] / 255, 1);
+          curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
         }
       } else { // 2d context
         if (arguments.length) {

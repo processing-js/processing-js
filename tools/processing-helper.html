@@ -29,10 +29,11 @@
         canvas: document.getElementById('sketch'),
         code:   document.getElementById('code'),
         output: document.getElementById('output'),
+        p:      null,
 
         runSketch: function() {
           try {
-            Processing(this.canvas, this.code.value);
+            p = Processing(this.canvas, this.code.value);
           } catch (e) {
             this.output.value = "Error! Error was:\n" + e.toString();
           }
@@ -60,11 +61,57 @@
         generateRefTest: function() {
           // Run the sketch first, in case the user hasn't
           this.runSketch();
-          var context = this.canvas.getContext('2d');
-          var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
-          var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
-          document.location.href= "data:text/plain;charset=utf-8;base64," + 
-                                  btoa('//' + dimensions + imgData.toString() + '\n' + this.code.value);
+          
+          // if the test was 2d, we can just call getImageData
+          if(p.use3DContext === false) {
+            var context = this.canvas.getContext('2d');
+            var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
+            var pixels = [];
+            
+            for(var i = 0; i < imgData.length; i++){
+              pixels[i] = imgData[i];
+            }
+            
+            var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
+            document.location.href= "data:text/plain;charset=utf-8;base64," + 
+                                  btoa('//' + dimensions + pixels + '\n' + this.code.value);
+          }
+          
+          // else, we'll need to call WebGL's readPixels.
+          // The order of the pixels go from bottom to top, left to right.
+          else {            
+            // Safari returns a regular JS object for readPixels.
+            // Minefield returns a WebGLUnsignedByteArray.
+            // Chromium raises an exception because of an XHR bug.
+            // So we need to handle each case differently.
+            
+            var browserString = navigator.userAgent;
+            var regex = /Safari/i;
+            var isSafari = browserString.match(regex);
+
+            var context = this.canvas.getContext("experimental-webgl");
+            
+            // Safari returns null if format RGB is requested
+            var unsignedBuffer = context.readPixels(0,0,this.canvas.width,this.canvas.height,context.RGBA, context.UNSIGNED_BYTE);
+            var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
+            var pixels = [];
+            
+            if(isSafari) {
+              // extract the data from the WebGLUnsignedByteArray and place
+              // it in a JS array for easy manipulation.
+              for(var i = 0; i < unsignedBuffer.length; i++){
+                pixels[i] = unsignedBuffer[i];
+              }
+            }
+
+            // Minefield
+            else if(!isSafari) {
+              pixels = unsignedBuffer['data'];
+            }
+
+            document.location.href= "data:text/plain;charset=utf-8;base64," + 
+                                  btoa('//' + dimensions + pixels.toString() + '\n' + this.code.value);
+          }
         }
     };
     </script>
