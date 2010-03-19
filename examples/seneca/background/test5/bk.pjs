@@ -1,0 +1,10 @@
+//import processing.opengl.*;
+
+void setup() {
+  size(100, 100, P3D);
+  background(33,66,99);
+}
+
+void draw() {
+  box(25);
+}

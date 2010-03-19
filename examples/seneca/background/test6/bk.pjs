@@ -1,0 +1,237 @@
+var testCodeArray = 
+["background(0);",
+"background(1);",
+"background(50);",
+"background(128);",
+"background(200);",
+"background(255);",
+"background(color(0));",
+"background(color(1));",
+"background(color(50));",
+"background(color(200));",
+"background(color(255));",
+"background(color(0,0,0));",
+"background(color(128,128,128));",
+"background(color(255,255,255));",
+"background(color(255,0,0));",
+"background(color(0,255,0));",
+"background(color(0,0,255));",
+"background(color(255,255,0));",
+"background(color(255,0,255));",
+"background(color(0,255,255));",
+"background(color(33,66,99));",
+"background(#000000);",
+"background(#808080);",
+"background(#FFFFFF);",
+"background(#FF0000);",
+"background(#00FF00);",
+"background(#0000FF);",
+"background(#FFFF00);",
+"background(#FF00FF);",
+"background(#00FFFF);",
+"background(#214263);",
+"background(color(0,0,0),0);",
+"background(color(128,128,128),0);",
+"background(color(255,255,255),0);",
+"background(color(255,0,0),255);",
+"background(color(0,255,0),255);",
+"background(color(0,0,255),128);",
+"background(color(255),0);",
+"background(color(0,0,255),0);",
+"background(color(0,255,0),128);",
+"background(color(255,0,0),0);",
+"background(color(255),128);",
+"background(color(255),0);",
+"background(color(255),255);",
+"background(color(128),255);",
+"background(color(128),128);",
+"background(#000000,128);",
+"background(#808080,255);",
+"background(#FFFFFF,0);",
+"background(#FF0000,255);",
+"background(#00FF00,255);",
+"background(#0000FF,128);",
+"background(#FFFF00,255);",
+"background(#FF00FF,128);",
+"background(#00FFFF,0);",
+"background(#214263,128);",
+"background(0,0);",
+"background(0,128);",
+"background(0,255);",
+"background(1,0);",
+"background(1,128);",
+"background(1,255);",
+"background(50,0);",
+"background(50,128);",
+"background(50,255);",
+"background(128,0);",
+"background(128,128);",
+"background(128,255);",
+"background(255,255);",
+"background(255,128);",
+"background(255,0);",
+"background(0,0,0);",
+"background(128,128,128);",
+"background(255,255,255);",
+"background(255,0,0);",
+"background(0,255,0);",
+"background(0,0,255);",
+"background(255,255,0);",
+"background(255,0,255);",
+"background(0,255,255);",
+"background(33,66,99);",
+"background(0,0,0,0);",
+"background(0,0,0,128);",
+"background(0,0,0,255);",
+"background(128,128,128,0);",
+"background(128,128,128,128);",
+"background(128,128,128,255);",
+"background(255,255,255,0);",
+"background(255,255,255,128);",
+"background(255,255,255,255);",
+"background(255,0,0,0);",
+"background(255,0,0,128);",
+"background(255,0,0,255);",
+"background(0,255,0,0);",
+"background(0,255,0,128);",
+"background(0,255,0,255);",
+"background(33,66,99,0);",
+"background(33,66,99,100);",
+"background(33,66,99,128);",
+"background(33,66,99,200);",
+"background(33,66,99,255);"];
+
+void setup()
+{
+  size(100,100,OPENGL);
+}
+
+void draw()
+{
+  int testToRun = $("#sliderChoke").slider("value");
+  
+  switch(testToRun)
+  {
+    // single values - int
+    case 0: background(0);break;
+    case 1: background(1);break;
+    case 2: background(50);break;
+    case 3: background(128);break;
+    case 4: background(200);break;
+    case 5: background(255);break;
+
+    // single value - color, single value
+    case 6: background(color(0));break;
+    case 7: background(color(1));break;
+    case 8: background(color(50));break;
+    case 9: background(color(200));break;
+    case 10: background(color(255));break;
+
+    // single value - color, multiple values
+    case 11: background(color(0,0,0));break;
+    case 12: background(color(128,128,128));break;
+    case 13: background(color(255,255,255));break;
+    case 14: background(color(255,0,0));break;
+    case 15: background(color(0,255,0));break;
+    case 16: background(color(0,0,255));break;
+    case 17: background(color(255,255,0));break;
+    case 18: background(color(255,0,255));break;
+    case 19: background(color(0,255,255));break;
+    case 20: background(color(33,66,99));break;
+
+    // single value - hex no alpha
+    case 21: background(#000000);break;
+    case 22: background(#808080);break;
+    case 23: background(#FFFFFF);break;
+    case 24: background(#FF0000);break;
+    case 25: background(#00FF00);break;
+    case 26: background(#0000FF);break;
+    case 27: background(#FFFF00);break;
+    case 28: background(#FF00FF);break;
+    case 29: background(#00FFFF);break;
+    case 30: background(#214263);break;
+
+    // double values - color + alpha
+    case 31:background(color(0,0,0),0);break;
+    case 32:background(color(128,128,128),0);break;
+    case 33:background(color(255,255,255),0);break;
+    case 34:background(color(255,0,0),255);break;
+    case 35:background(color(0,255,0),255);break;
+    case 36:background(color(0,0,255),128);break;
+    case 37:background(color(255),0);break;
+    case 38:background(color(0,0,255),0);break;
+    case 39:background(color(0,255,0),128);break;
+    case 40:background(color(255,0,0),0);break;
+    case 41:background(color(255),128);break;
+    case 42:background(color(255),0);break;
+    case 43:background(color(255),255);break;
+    case 44:background(color(128),255);break;
+    case 45:background(color(128),128);break;
+    
+    // hex + alpha
+    case 46: background(#000000,128);break;
+    case 47: background(#808080,255);break;
+    case 48: background(#FFFFFF,0);break;
+    case 49: background(#FF0000,255);break;
+    case 50: background(#00FF00,255);break;
+    case 51: background(#0000FF,128);break;
+    case 52: background(#FFFF00,255);break;
+    case 52: background(#FF00FF,128);break;
+    case 54: background(#00FFFF,0);break;
+    case 55: background(#214263,128);break;
+
+    // gray + alpha
+    case 56: background(0,0);break;
+    case 57: background(0,128);break;
+    case 58: background(0,255);break;
+    case 59: background(1,0);break;
+    case 60: background(1,128);break;
+    case 61: background(1,255);break;
+    case 62: background(50,0);break;
+    case 63: background(50,128);break;
+    case 64: background(50,255);break;
+    case 65: background(128,0);break;
+    case 66: background(128,128);break;
+    case 67: background(128,255);break;
+    case 68: background(255,255);break;
+    case 69: background(255,128);break;
+    case 70: background(255,0);break;
+
+    // triple values r,g,b
+    case 71: background(0,0,0);break;
+    case 72: background(128,128,128);break;
+    case 73: background(255,255,255);break;
+    case 74: background(255,0,0);break;
+    case 75: background(0,255,0);break;
+    case 76: background(0,0,255);break;
+    case 77: background(255,255,0);break;
+    case 78: background(255,0,255);break;
+    case 79: background(0,255,255);break;
+    case 80: background(33,66,99);break;
+    
+    // quad values
+    case 81: background(0,0,0,0);break;
+    case 82: background(0,0,0,128);break;
+    case 83: background(0,0,0,255);break;
+    case 84: background(128,128,128,0);break;
+    case 85: background(128,128,128,128);break;
+    case 86: background(128,128,128,255);break;
+    case 87: background(255,255,255,0);break;
+    case 88: background(255,255,255,128);break;
+    case 89: background(255,255,255,255);break;
+    case 90: background(255,0,0,0);break;
+    case 91: background(255,0,0,128);break;
+    case 92: background(255,0,0,255);break;
+    case 93: background(0,255,0,0);break;
+    case 94: background(0,255,0,128);break;
+    case 95: background(0,255,0,255);break;
+    case 96: background(33,66,99,0);break;
+    case 97: background(33,66,99,100);break;
+    case 98: background(33,66,99,128);break;
+    case 99: background(33,66,99,200);break;
+    case 100: background(33,66,99,255);break;
+    defult:break;
+  }
+
+  document.getElementById('testCode').innerHTML = testCodeArray[testToRun];
+}
