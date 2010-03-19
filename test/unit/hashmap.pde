@@ -23,3 +23,4 @@ _checkTrue(map.isEmpty());
 
 map.put(map, map);
 _checkEqual(map, map.get(map));
+

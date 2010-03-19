@@ -1026,14 +1026,19 @@
     ////////////////////////////////////////////////////////////////////////////
     // HashMap
     ////////////////////////////////////////////////////////////////////////////
-    p.HashMap =     function HashMap() {
+    p.HashMap = function HashMap() {
+      if(arguments.length == 1 && arguments[0].constructor == HashMap)
+        return arguments[0].clone();
+
       var initialCapacity = arguments.length > 0 ? arguments[0] : 16;
       var loadFactor = arguments.length > 1 ? arguments[1] : 0.75;
   
       var buckets = new Array(initialCapacity);
       var count = 0;
+      var hashMap = this;
      
-      this.clear = function() { count = 0; buckets = new Array(initialCapacity); }
+      this.clear = function() { count = 0; buckets = new Array(initialCapacity); };
+      this.clone = function() { var map = new HashMap(); map.putAll(this); return map; };
       this.containsKey = function(key) { 
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
@@ -1053,6 +1058,12 @@
         }
         return false;
       };
+      this.entrySet = function() { return new Set(
+           function(pair) { return new Entry(pair); },
+           function(pair) { return pair.constructor == Entry && pair._isIn(hashMap); },
+           function(pair) { return hashMap.remove(pair.getKey()); }
+         ); 
+      };
       this.get = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
@@ -1062,6 +1073,12 @@
         return null;
       };
       this.isEmpty = function() { return count == 0; };
+      this.keySet = function() { return new Set(
+           function(pair) { return pair.key; },
+           function(key) { return hashMap.containsKey(key); },
+           function(key) { return hashMap.remove(key); }
+         ); 
+      };
       this.put = function(key, value) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
@@ -1083,6 +1100,13 @@
         ensureLoad();
         return null;
       };
+      this.putAll = function(m) {
+        var it = m.entrySet().iterator();
+        while(it.hasNext()) {
+          var entry = it.next();
+          this.put(entry.getKey(), entry.getValue());
+        }
+      }
       this.remove = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
@@ -1091,6 +1115,7 @@
           if(virtEquals(bucket[i].key, key)) {
             --count;
             var previous = bucket[i].value;
+            bucket[i].removed = true;
             if(bucket.length > 1)
               bucket.splice(i, 1); 
             else        
@@ -1101,7 +1126,16 @@
         return null;
       };
       this.size = function() { return count; }
-      
+      this.values = function() {
+        var result = new ArrayList(0);
+        var it = m.entrySet().iterator();
+        while(it.hasNext()) {
+          var entry = it.next();
+          result.push(entry.getValue());
+        }
+        return result;
+      };
+
       function ensureLoad() {
         if(count <= loadFactor * buckets.length) return;
         var allEntries = [];
@@ -1115,6 +1149,92 @@
           var bucket = buckets[index];
           if(bucket == undefined) buckets[index] = bucket = [];
           bucket.push(allEntries[i]);        
+        }
+      }
+
+      function Set(conversion, isIn, removeItem) {
+        this.clear = function() { hashMap.clear(); }
+        this.contains = function(o) { return isIn(o); }
+        this.containsAll = function(o) { 
+          var it = o.iterator();
+          while(it.hasNext()) {
+            if(!this.contains(it.next())) return false;
+          }
+          return true;
+        };
+        this.isEmpty = function() { return hashMap.isEmpty(); }
+        this.iterator = function() { return new Iterator(conversion, removeItem); }
+        this.remove = function(o) { 
+          if(this.contains(o)) {
+            removeItem(o); return true;
+          }
+	  return false;
+        }        
+        this.removeAll = function(c) { 
+          var it = c.iterator();
+          var changed = false;
+          while(it.hasNext()) {
+            var item = it.next();
+            if(this.contains(item)) {
+              removeItem(item); changed = true;
+            }
+          }
+          return true;
+        };
+        this.retainAll = function(c) { 
+          var it = this.iterator();
+          var toRemove = [];          
+          while(it.hasNext()) {
+            var entry = it.next();
+            if(!c.contains(entry)) {
+              toRemove.push(entry);
+            }
+          }
+          for(var i=0;i<toRemove.length;++i) 
+            removeItem(toRemove[i]);
+          return toRemove.length > 0;
+        };
+        this.size = function() { return hashMap.size(); }
+        this.toArray = function() { 
+          var result = new ArrayList(0);
+          var it = this.iterator();
+          while(it.hasNext()) {
+            result.push(it.next());
+          }
+          return result;
+        }
+      }
+     
+      function Entry(pair) {        
+        this._isIn = function(map) { return map == hashMap && (typeof(pair.removed) === 'undefined'); }
+        this.equals = function(o) { return virtEquals(pair.key, o.getKey()); }
+        this.getKey = function() { return pair.key; }
+        this.getValue = function() { return pair.value; }
+        this.hashCode = function(o) { return virtHashCode(pair.key); }
+        this.setValue = function(value) { var old = pair.value; pair.value = value; return old; }
+      }
+
+      function Iterator(conversion, removeItem) {
+        var bucketIndex = 0;
+        var itemIndex = -1;
+        var endOfBuckets = false;
+        this.hasNext = function() { return !endOfBuckets; }
+        this.next = function() { var result = conversion(buckets[bucketIndex][itemIndex]); findNext(); return result; }
+        this.remove = function() { removeItem(this.next()); --itemIndex; } 
+
+        findNext();
+        
+        function findNext() {
+          while(!endOfBuckets) {
+            ++itemIndex;
+            if(bucketIndex >= buckets.length) 
+              endOfBuckets = true;
+            else if(typeof(buckets[bucketIndex]) === 'undefined'
+              || itemIndex >= buckets[bucketIndex].length) {
+              itemIndex = -1; ++bucketIndex;
+            } else
+              return; 
+          }
         }
       }
     }
