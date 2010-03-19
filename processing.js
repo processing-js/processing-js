@@ -4555,13 +4555,23 @@
 
     var PImage = function PImage(aWidth, aHeight, aFormat) {
       if(arguments.length == 1) {
-        // not yet implemented, <img> object constructor ?
+        // convert an <img> to a PImage
+        var img = arguments[0];
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var context = canvas.getContext("2d");
+        context.drawImage(img, 0, 0);
+        var imageData = context.getImageData(0,0,img.width,img.height);
+        var pimage = new PImage(0,0);
+        pimage.fromImageData(imageData);
+        return pimage;
       } else if (arguments.length == 2 || arguments.length == 3) {
         this.width = aWidth;
         this.height = aHeight;
         this.pixels = new Array(aWidth * aHeight);
         this.data = this.pixels;
-        this.format = (aFormat === p.ARGB || aFormat === p.RGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
+        this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
       }
     };
 
@@ -4635,6 +4645,11 @@
     
     // Loads an image for display. Type is unused. Callback is fired on load.
     p.loadImage = function loadImage(file, type, callback) {
+    // if (p.pjs.imageCache["flower.jpg"]) {
+    //   return new PImage(p.pjs.imageCache["flower.jpg"]);
+    // }
+    // else {
+    //   
       var img = document.createElement('img');
       img.loaded = false;
       img.mask = function () {}; // I don't think image mask was ever implemented? -F1LT3R
@@ -4735,14 +4750,15 @@
         if(typeof obj === "number"){
           // it was a color
           // use canvas method to fill pixel with color
-//          var oldFill = curContext.fillStyle,
-//          color = obj;
-//          curContext.fillStyle = color;
-//          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-//          curContext.fillStyle = oldFill;
+          // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
+          var oldFill = curContext.fillStyle,
+          color = obj;
+          curContext.fillStyle = color.toString();
+          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+          curContext.fillStyle = oldFill;
         } else {
           // it was a PImage
-          p.imageMode(x,y,obj);
+          p.image(x,y,obj);
         }
       }
     };
@@ -4992,12 +5008,14 @@
           curContext.globalAlpha = curTint / opacityRange;
         }
 
-        if (arguments.length === 3) {
-          //curContext.drawImage(obj, x, y);
-          curContext.putImageData(obj, x, y);
-        } else {
-          curContext.drawImage(obj, x, y, w, h);
+        if (arguments.length === 5) {
+          // resize the image to w,h
+          // this should use resize later on and also pay attention to imageMode
+          // does not crop image, resizes it to w,h
+          // coming in 0.8
         }
+        // draw the image
+        curContext.putImageData(obj, x, y);
 
         if (curTint >= 0) {
           curContext.globalAlpha = oldAlpha;
