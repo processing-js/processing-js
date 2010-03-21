@@ -2956,9 +2956,26 @@
 
     };
 
-    //! This can't be right... right?
+    //! This can't be right... right? <corban> should be good now
+    // a byte is a number between -128 and 127
     p.byte = function (aNumber) {
-      return aNumber || 0;
+      if (typeof aNumber === 'object' && aNumber.constructor === Array) {
+        var bytes = [];
+        for(var i = 0; i < aNumber.length; i++) {
+          bytes[i] = p.byte(aNumber[i]);  
+        }
+        return bytes;
+      } else {
+        if (aNumber >= -128 && aNumber < 128) {
+          return aNumber;
+        } else {
+          if ( aNumber >= 128) {
+            return p.byte(-256 + aNumber);
+          } else if ( aNumber < -128) {
+            return p.byte(256 + aNumber);
+          }
+        }
+      }
     };
 
     p.norm = function norm(aNumber, low, high) {
