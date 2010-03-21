@@ -4681,37 +4681,14 @@
             }
           };
         })(img, pimg, callback);
-        img.src = file;
+        img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
         return pimg;
       }
     };    
-   
-//        function () {
-//          var h = this.height, w = this.width;
-//          var canvas = document.createElement("canvas");
-
-//          canvas.width = w;
-//          canvas.height = h;
-
-//          var context = canvas.getContext("2d");
-
-//          context.drawImage(this, 0, 0);
-
-//          this.data = buildImageObject(context.getImageData(0, 0, w, h));
-//          this.data.img = img;
-
-//          this.get = this.data.get;
-//          this.pixels = this.data.pixels;
-
-//          if (callback) {
-//            callback();
-//          }
-//        };        
-//      }
-//      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
-//      return img;
-//    };
-
+    
+    // async loading of large images, same functionality as loadImage above
+    p.requestImage = p.loadImage;
+    
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
     p.get = function get(x, y, w, h, img) {
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
@@ -5024,7 +5001,7 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
 
-      if (img.pixels) {
+      if (img.width > 0) {
 
         x = x || 0;
         y = y || 0;
