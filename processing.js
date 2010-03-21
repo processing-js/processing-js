@@ -1589,7 +1589,7 @@
     //Time based functions
     ////////////////////////////////////////////////////////////////////////////
     p.year = function year() {
-      return new Date().getYear() + 1900;
+      return new Date().getFullYear();
     };
     p.month = function month() {
       return new Date().getMonth() + 1;
