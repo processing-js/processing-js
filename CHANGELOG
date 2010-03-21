@@ -1,3 +1,39 @@
+February 26, 2010 - Release 0.6
+
+		* Added ellipseMode support ellipse 
+		* Added a way to specify tests that are known to fail 
+		* Added applyMatrix()
+		* Added float() suppose to work on all primitive datatypes including arrays
+		* Added char() suppose to work on all primitive datatypes including arrays
+		* Added str() suppose to work on all primitive datatypes including arrays
+		* Added normal() 
+		* Added modelZ()
+		* Added modelX() 
+		* Added modelY() 
+		* Added sphere()
+		* Added sphereDetail() 
+		* Added scale() 
+		* Added line() - 3D  
+		* Added fill() - 3D 
+		* Added noFill() - 3D
+		* Added noStroke() - 3D 
+		* Added stroke() - 3D 
+		* Added PMatrix3D - remaining functions 
+		* Added P3D support 
+		* Added tinylog for println() println 
+		* Added automated tests: string parsing
+		* Fixed loadImage()to work in Opera
+		* Fixed fake-dom to work with println and tinylog 
+		* Fixed KNOWN-FAILURES for tinylog parsing
+		* Fixed and updated the AUTHORS log
+		* Fixed Parse Error: Does not like strings in the format "test test, test test, ..." 
+		* Fixed Rename zip file for make release 
+		* Fixed keyCodes for numbered keys return same values as some letter keys 
+		* Fixed Test harness _checkEqual does not compare "undefined" 
+		* Fixed automated tests: make check-one path not resolving 
+		* Fixed Example: examples/basic.displaying.html incorrect source code "loadimage example bug"
+		* Setup an OpenGrok instance infrastructure 
+
 February 12, 2010 - Release 0.5
 
     * Added acos()

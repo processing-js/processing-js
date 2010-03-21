@@ -5,7 +5,6 @@ import jsshellhelper
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 
-# Assumes all tests are in same dir as runtests.py
 # Uses jsshell https://developer.mozilla.org/en/Introduction_to_the_JavaScript_shell
 
 class ProcessingTests(object):
@@ -13,13 +12,47 @@ class ProcessingTests(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
   testsPassed = 0
   testsFailed = 0
+  testsFailedKnown = 0
 
-  def runParserTests(self, jsshell, testPath=None, summaryOnly=False):
+  def __init__(self):
+      self.knownFailures = set()
+      f = open(os.path.join(self.toolsdir, '..', 'test', 'KNOWN-FAILURES'), 'r')
+      for line in f.readlines():
+          if line.startswith('#') or line.lstrip().rstrip() == '':
+              continue
+          self.knownFailures.add(line.rstrip('\r\n'))
+
+      f.close()
+
+  def isKnownFailure(self, testpath):
+      # Assumes abs path for testpath, and normalize for Unix path
+      pos = testpath.find(os.sep + 'test' + os.sep)
+      testpath = testpath.replace('\\', '/')
+      if pos > -1 and testpath[pos+1:] in self.knownFailures:
+        return True
+      else:
+        return False
+
+  def shouldSkipTest(self, testPattern, testPath):
+      if testPattern:
+			  # Normalize paths to Unix style
+        testPattern = testPattern.replace('\\', '/')
+        testPath = testPath.replace('\\', '/')
+        # we support *.js and * .pde tests, as well as passing dirs.
+        # assume a dir name doesn't end with .js or .pde
+        if testPattern.endswith('.js') or testPattern.endswith('.pde'):
+          if testPath.endswith(testPattern):
+            return False
+        else:
+          # assume this is a dir, so just look for the pattern in the path
+          if testPath.find(testPattern) > -1:
+            return False
+      return True
+
+  def runParserTests(self, jsshell, testPattern=None, summaryOnly=False):
       """Get all .pjs in test/parser/ files as JSON, and run through the test harness, faking a DOM"""
       jsshell = os.path.abspath(jsshell)
       parsertestdir = os.path.join(self.toolsdir, '..', 'test', 'parser')
-      if testPath:
-        testPath = os.path.abspath(testPath)
 
       for root, dirs, filenames in os.walk(parsertestdir):
           for filename in filenames:
@@ -28,7 +61,7 @@ class ProcessingTests(object):
 
               # If a single test file name is given, only test that file
               fullpath = os.path.abspath(os.path.join(root, filename))
-              if testPath and not fullpath.endswith(testPath):
+              if testPattern and self.shouldSkipTest(testPattern, fullpath):
                 continue
 
               if filename.endswith('.pde'):
@@ -47,33 +80,62 @@ class ProcessingTests(object):
 
                   if stderr:
                     # we failed to parse, and died in the js shell
-                    self.testsFailed += 1
                     if summaryOnly:
-                      sys.stdout.write('F')
+                      if self.isKnownFailure(fullpath):
+                        sys.stdout.write('K')
+                        self.testsFailedKnown += 1
+                      else:
+                        sys.stdout.write('F')
+                        self.testsFailed += 1
                       sys.stdout.flush()
                     else:
-                      print "TEST-FAILED: " + fullpath
-                      print stderr
+                      if self.isKnownFailure(fullpath):
+                        print "KNOWN-FAILURE: " + fullpath
+                        self.testsFailedKnown += 1
+                      else:
+                        print "TEST-FAILED: " + fullpath
+                        print stderr
+                        self.testsFailed += 1
                   elif stdout:
                     # TEST-SUMMARY: passed/failed
                     m = re.search('^TEST-SUMMARY: (\d+)/(\d+)', stdout, re.MULTILINE)
                     if m and m.group:
                       self.testsPassed += int(m.group(1))
-                      self.testsFailed += int(m.group(2))
+                      if self.isKnownFailure(fullpath):
+                        self.testsFailedKnown += int(m.group(2))
+                      else:
+                        self.testsFailed += int(m.group(2))
+
                       if int(m.group(2)) > 0:
                         if summaryOnly:
-                          sys.stdout.write('F')
+                          if self.isKnownFailure(fullpath):
+                            sys.stdout.write('K')
+                          else:
+                            sys.stdout.write('F')
                           sys.stdout.flush()
                         else:
-                          print "TEST-FAILED: " + fullpath
-                          print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
-                          print stderr
+                          if self.isKnownFailure(fullpath):
+                            print "KNOWN-FAILURE: " + fullpath
+                          else:
+                            print "TEST-FAILED: " + fullpath
+                            print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
+                            print stderr
                       else:
                         if summaryOnly:
-                          sys.stdout.write('.')
+                          if self.isKnownFailure(fullpath):
+                            # we should pass if we are expecting to fail!
+                            sys.stdout.write('!')
+                          else:
+                            sys.stdout.write('.')
                           sys.stdout.flush()
                         else:
-                          print "TEST-PASSED: " + fullpath
+                          if self.isKnownFailure(fullpath):
+                            # we shouldn't pass if we are expecting to fail!
+                            print "TEST-FAILED (known failure passed!): " + fullpath
+                            self.testsPassed -= 1
+                            self.testsFailed += 1
+                          else:
+                            print "TEST-PASSED: " + fullpath
                     else:
                       # Shouldn't happen!
                       self.testsFailed += 1
@@ -86,7 +148,7 @@ class ProcessingTests(object):
 
                   jsshellhelper.cleanUp(tmpFile)
 
-  def runUnitTests(self, jsshell, testPath=None, summaryOnly=False):
+  def runUnitTests(self, jsshell, testPattern=None, summaryOnly=False):
       """Run all .js unit tests in test/unit through the test harness."""
       # TODO: add support for doing .pjs unit tests.
       unittestdir = os.path.join(self.toolsdir, '..', 'test', 'unit')
@@ -99,8 +161,8 @@ class ProcessingTests(object):
 
               # If a single test file name is given, only test that file
               fullpath = os.path.abspath(os.path.join(root, filename))
-              if testPath and not fullpath.endswith(testPath):
-                  continue
+              if testPattern and self.shouldSkipTest(testPattern, fullpath):
+                continue
 
               tmpFile = None
               testCmd = None
@@ -134,32 +196,52 @@ class ProcessingTests(object):
 
               if stdout:
                 # TEST-SUMMARY: passed/failed
-                m = re.search('^TEST-SUMMARY: (\d+)\/(\d+)', stdout, re.MULTILINE)
+                m = re.search('^TEST-SUMMARY: (\d+)/(\d+)', stdout, re.MULTILINE)
                 if m and m.group:
                   self.testsPassed += int(m.group(1))
-                  self.testsFailed += int(m.group(2))
+                  if self.isKnownFailure(fullpath):
+                    self.testsFailedKnown += int(m.group(2))
+                  else:
+                    self.testsFailed += int(m.group(2))
+
                   if int(m.group(2)) > 0:
                     if summaryOnly:
-                      sys.stdout.write('F')
+                      if self.isKnownFailure(fullpath):
+                        sys.stdout.write('K')
+                      else:
+                        sys.stdout.write('F')
                       sys.stdout.flush()
                     else:
-                      print "TEST-FAILED: " + fullpath
-                      print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
-                      print stderr
+                      if self.isKnownFailure(fullpath):
+                        print "KNOWN-FAILURE: " + fullpath
+                      else:
+                        print "TEST-FAILED: " + fullpath
+                        print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
+                        print stderr
                   else:
                     if summaryOnly:
-                      sys.stdout.write('.')
+                      if self.isKnownFailure(fullpath):
+                        # we should pass if we are expecting to fail!
+                        sys.stdout.write('!')
+                      else:
+                        sys.stdout.write('.')
                       sys.stdout.flush()
                     else:
-                      print "TEST-PASSED: " + fullpath
+                      if self.isKnownFailure(fullpath):
+                        # we shouldn't pass if we are expecting to fail!
+                        print "TEST-FAILED (known failure passed!): " + fullpath
+                        self.testsPassed -= 1
+                        self.testsFailed += 1
+                      else:
+                        print "TEST-PASSED: " + fullpath
                 else:
-                  # This shouldn't happen, so we died early...not good!
+                  # Shouldn't happen!
                   self.testsFailed += 1
                   if summaryOnly:
                     sys.stdout.write('F')
                     sys.stdout.flush()
                   else:
-                    print "TEST-FAILED: " + fullpath + ". Test exited early:"
+                    print "TEST-FAILED: " + fullpath + ". Test died:"
                     print stdout
               elif stderr:
                 # Shouldn't happen!
@@ -187,7 +269,7 @@ def main():
                       action="store_true", dest="unitOnly", default=False,
                       help="only run unit tests.")
     parser.add_option("-t", "--single-test",
-                      type="string", dest="testPath", default=None,
+                      type="string", dest="testPattern", default=None,
                       help="single test filename or dir to be tested")
     options, args = parser.parse_args()
 
@@ -199,14 +281,17 @@ def main():
     ptests = ProcessingTests()
 
     if options.parserOnly:
-        ptests.runParserTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
+        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
     elif options.unitOnly:
-        ptests.runUnitTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
+        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
     else:
-        ptests.runParserTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
-        ptests.runUnitTests(args[0], testPath=options.testPath, summaryOnly=options.summaryOnly)
+        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
+        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
 
-    print "\nTEST SUMMARY: %s passed, %s failed, %s total" % (ptests.testsPassed, ptests.testsFailed, (ptests.testsPassed + ptests.testsFailed))
+    print "\nTEST SUMMARY: %s passed, %s failed (%s known), %s total" % (ptests.testsPassed,
+                                                                         ptests.testsFailed,
+                                                                         ptests.testsFailedKnown,
+                                                                         (ptests.testsPassed + ptests.testsFailed + ptests.testsFailedKnown))
 
 if __name__ == '__main__':
     main()

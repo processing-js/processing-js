@@ -16,12 +16,13 @@ VERSION ?= $(error Specify a version for your release (e.g., VERSION=0.5))
 
 release: release-files zipped
 
-release-files: pretty packed minified example release-docs
+release-files: pretty closure example release-docs
 
 zipped: release-files
-	find ./release -print | zip -j ./release/processing-$(VERSION).zip -@
+	find ./release -print | zip -j ./release/processing.js-$(VERSION).zip -@
 
 release-docs: create-release
+	cp AUTHORS ./release
 	cp README ./release
 	cp LICENSE ./release
 	cp CHANGELOG ./release
@@ -44,6 +45,11 @@ packed: create-release
 minified: create-release
 	$(TOOLSDIR)/minifier.py $(JS) processing.js > ./release/processing-$(VERSION).min.js
 # check for any parsing errors in minified version of processing.js
+	$(JS) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).min.js
+
+closure: create-release
+	java -jar $(TOOLSDIR)/closure/compiler.jar --js=processing.js --js_output_file=./release/processing-$(VERSION).closure.js
+# check for any parsing errors in compiled version of processing.js
 	$(JS) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).min.js
 
 check:
