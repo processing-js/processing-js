@@ -35,7 +35,3 @@ void draw(){
 void mouseClicked() {
     i++;
 }
-
-PImage b;
-b = loadImage("country.jpg");
-image(b, 0, 0);

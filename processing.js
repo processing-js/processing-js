@@ -4557,16 +4557,6 @@
       if(arguments.length == 1) {
         // convert an <img> to a PImage
         this.fromHTMLImageData(arguments[0]);
-//        var img = arguments[0];
-//        var canvas = document.createElement("canvas");
-//        canvas.width = img.width;
-//        canvas.height = img.height;
-//        var context = canvas.getContext("2d");
-//        context.drawImage(img, 0, 0);
-//        var imageData = context.getImageData(0,0,img.width,img.height);
-//        var pimage = new PImage(0,0);
-//        pimage.fromImageData(imageData);
-//        return pimage;
       } else if (arguments.length == 2 || arguments.length == 3) {
         this.width = aWidth;
         this.height = aHeight;
@@ -4630,6 +4620,7 @@
         var context = canvas.getContext("2d");
         context.drawImage(htmlImg, 0, 0);
         var imageData = context.getImageData(0,0,htmlImg.width,htmlImg.height);
+        this.ImageData = imageData;
         this.fromImageData(imageData);
       }
     };
@@ -5006,8 +4997,12 @@
         x = x || 0;
         y = y || 0;
 
-        //var obj = getImage(img),
-        var obj = img.toImageData();
+        var obj;
+        if (img.ImageData && img.ImageData.width > 0) {
+          obj = img.ImageData;
+        } else {
+          obj = img.toImageData();
+        }
         var  oldAlpha;
 
         if (curTint >= 0) {
