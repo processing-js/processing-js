@@ -3180,60 +3180,89 @@
     ////////////////////////////////////////////////////////////////////////////
     
     var PMatrix2D = function(){
-      this.reset();
+      
+      if ( arguments.length === 0 ) {
+        this.reset();
+      } else {
+        this.set( arguments );
+      }
     };
 
     PMatrix2D.prototype = {
-        set: function(){
-      if( arguments.length === 6 ){
-        var a = arguments;
-        this.set([a[0], a[1], a[2],
-                  a[3], a[4], a[5]]);
-      }else if( arguments.length === 1 && arguments[0] instanceof PMatrix2D ){
-        this.elements = arguments[0].array();
-      }else if( arguments.length === 1 && arguments[0] instanceof Array ){
-        this.elements = arguments[0].slice();
-      }
-    },
-    get: function(){
-      var outgoing = new PMatrix2D();
-      outgoing.set( this.elements );
-      return outgoing;
-    },
-    reset: function(){
-      this.set([1,0,0,0,1,0]);
-    },
-    /*
-      Returns a copy of the element values.
-     */
-    array: function array(){
-      return this.elements.slice();
-    },
-    apply: function(){
-      if( arguments.length === 1 && arguments[0] instanceof PMatrix2D ){
-        this.apply( arguments[0].array() );
-      }
-      else if( arguments.length === 6){
-        var a = arguments;
-        this.apply([a[0], a[1], a[2],
+      set: function(){
+        if( arguments.length === 6 ){
+          var a = arguments;
+          this.set([a[0], a[1], a[2],
                     a[3], a[4], a[5]]);
-      }
-      else if( arguments.length === 1 && arguments[0] instanceof Array ){
-        var source = arguments[0];
-
-        var result = [0, 0, 0,
-                      0, 0, 0];
-        var e = 0;
-        for(var row = 0; row < 2; row++){
-          for(var col = 0; col < 3; col++, e++){
-            result[e] += this.elements[row *3 + 0] * source[col + 0] +
-            this.elements[row *3 + 1] * source[col + 3];
-
-          }
+        }else if( arguments.length === 1 && arguments[0] instanceof PMatrix2D ){
+          this.elements = arguments[0].array();
+        }else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          this.elements = arguments[0].slice();
         }
-        this.elements = result.slice();
+      },
+      get: function(){
+        var outgoing = new PMatrix2D();
+        outgoing.set( this.elements );
+        return outgoing;
+      },
+      reset: function(){
+        this.set([1,0,0,0,1,0]);
+      },
+      /*
+        Returns a copy of the element values.
+       */
+      array: function array(){
+        return this.elements.slice();
+      },
+      apply: function(){
+        if( arguments.length === 1 && arguments[0] instanceof PMatrix2D ){
+          this.apply( arguments[0].array() );
+        }
+        else if( arguments.length === 6){
+          var a = arguments;
+          this.apply([a[0], a[1], a[2],
+                      a[3], a[4], a[5]]);
+        }
+        else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          var source = arguments[0];
+
+          var result = [0, 0, 0,
+                        0, 0, 0];
+          var e = 0;
+          for(var row = 0; row < 2; row++){
+            for(var col = 0; col < 3; col++, e++){
+              result[e] += this.elements[row *3 + 0] * source[col + 0] +
+              this.elements[row *3 + 1] * source[col + 3];
+
+            }
+          }
+          this.elements = result.slice();
+        }
+      },
+      print: function() {
+        var output = "", digits = 3;
+        output += p.nfs(this.elements[0], digits, 4) + " " +
+          p.nfs(this.elements[1], digits, 4) + " " +
+          p.nfs(this.elements[2], digits, 4) + " " +
+          p.nfs(this.elements[3], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[4], digits, 4) + " " +
+          p.nfs(this.elements[5], digits, 4) + " " +
+          p.nfs(this.elements[6], digits, 4) + " " +
+          p.nfs(this.elements[7], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[8], digits, 4) + " " +
+          p.nfs(this.elements[9], digits, 4) + " " +
+          p.nfs(this.elements[10], digits, 4) + " " +
+          p.nfs(this.elements[11], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[12], digits, 4) + " " +
+          p.nfs(this.elements[13], digits, 4) + " " +
+          p.nfs(this.elements[14], digits, 4) + " " +
+          p.nfs(this.elements[15], digits, 4) + "\n";
+
+        p.println(output);
       }
-    }
     };
     
     ////////////////////////////////////////////////////////////////////////////
