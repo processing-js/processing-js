@@ -25,6 +25,28 @@
       aElement = document.getElementById(aElement);
     }
 
+    // The problem: if the HTML canvas dimensions differ from the
+    // dimensions specified in the size() call in the sketch, for
+    // 3D sketches, browsers will either not render or render the
+    // scene incorrectly. To fix this, we need to adjust the attributes
+    // of the canvas width and height.
+    // this regex needs to be cleaned up a bit
+    var r = "" + aCode.match( /size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/ );
+    var dimensions = r.match( /[0-9]+/g );
+    
+    if(dimensions)
+    {
+      var sketchWidth = parseInt( dimensions[0] );
+      var sketchHeight = parseInt( dimensions[1] );
+
+      // only adjust the attributes if they differ
+      if( aElement.width != sketchWidth || aElement.height != sketchHeight )
+      {
+        aElement.setAttribute( "width", sketchWidth );
+        aElement.setAttribute( "height", sketchHeight );
+      }
+    }
+
     // Build an Processing functions and env. vars into 'p'  
     var p = Processing.build(aElement);
 
