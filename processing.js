@@ -3850,7 +3850,7 @@
     PMatrixStack.prototype.load = function load() {
 
       var tmpMatrix;
-      if ( use3DContext ) {
+      if ( p.use3DContext ) {
         tmpMatrix = new PMatrix3D();
       } else {
         tmpMatrix = new PMatrix2D();
@@ -3875,7 +3875,7 @@
     PMatrixStack.prototype.peek = function peek() {
 
       var tmpMatrix;
-      if ( use3DContext ) {
+      if ( p.use3DContext ) {
         tmpMatrix = new PMatrix3D();
       } else {
         tmpMatrix = new PMatrix2D();
