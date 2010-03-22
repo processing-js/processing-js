@@ -1721,7 +1721,7 @@
     //Time based functions
     ////////////////////////////////////////////////////////////////////////////
     p.year = function year() {
-      return new Date().getYear() + 1900;
+      return new Date().getFullYear();
     };
     p.month = function month() {
       return new Date().getMonth() + 1;
@@ -1947,7 +1947,6 @@
           throw "longErr";
         }
       }
-      return addUp;
     };
 
     p.nfs = function (num, left, right) {
@@ -2657,22 +2656,20 @@
       return ret;
     };
 
-    p.char = function char( key ) {
-      var ret;
-
+    p['char'] = function ( key ) {
       if ( arguments.length === 1 && typeof key === "number" && (key + "").indexOf( '.' ) === -1 ) { // not a float
-        ret = new Char(String.fromCharCode(key));
+        return new Char(String.fromCharCode(key));
       } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
-        ret = [];
-        
+        var ret = [];
+
         for ( var i = 0; i < key.length; i++ ) {
-          ret[i] = char( key[i] );
+          ret[i] = p['char']( key[i] );
         }
+
+        return ret;
       } else {
         throw "char() may receive only one argument of type int, byte, int[], or byte[].";
       }
-      
-      return ret;
     };
 
     p.trim = function( str ) {
@@ -2699,7 +2696,7 @@
       return Math.sqrt(aNumber);
     };
 
-    p.int = function int( val ) {
+    p['int'] = function( val ) {
       var ret;
 
       if ( ( val || val === 0 ) && arguments.length === 1 ) {
@@ -2735,7 +2732,7 @@
             if ( typeof val[i] === 'string' && val[i].indexOf('.') > -1 ) {
               ret[i] = 0;
             } else {
-              ret[i] = p.int( val[i] );
+              ret[i] = p['int']( val[i] );
             }
           }
         }
@@ -2798,7 +2795,7 @@
     // String, int[], char[], byte[], boolean[], String[].
     // floats should not work. However, floats with only zeroes right of the
     // decimal will work because JS converts those to int.
-    p.float = function float( val ) {
+    p['float'] = function( val ) {
       var ret;
 
       if ( arguments.length === 1 ) {
@@ -2825,7 +2822,7 @@
           ret = new Array( val.length );
 
           for ( var i = 0; i < val.length; i++) {
-              ret[i] = p.float( val[i] );
+              ret[i] = p['float']( val[i] );
           }
         }
       }
@@ -2879,7 +2876,7 @@
       return Math.acos(aNumber);
     };
 
-    p.boolean = function (val) {
+    p['boolean'] = function( val ) {
       var ret = false;
 
       if (val && typeof val === 'number' && val !== 0) {
@@ -2892,7 +2889,7 @@
         ret = new Array(val.length);
 
         for (var i = 0; i < val.length; i++) {
-          ret[i] = p.boolean(val[i]);
+          ret[i] = p['boolean'](val[i]);
         }
       }
 
@@ -2961,11 +2958,11 @@
 
     //! This can't be right... right? <corban> should be good now
     // a byte is a number between -128 and 127
-    p.byte = function (aNumber) {
+    p['byte'] = function (aNumber) {
       if (typeof aNumber === 'object' && aNumber.constructor === Array) {
         var bytes = [];
         for(var i = 0; i < aNumber.length; i++) {
-          bytes[i] = p.byte(aNumber[i]);  
+          bytes[i] = p['byte'](aNumber[i]);  
         }
         return bytes;
       } else {
@@ -2973,9 +2970,9 @@
           return aNumber;
         } else {
           if ( aNumber >= 128) {
-            return p.byte(-256 + aNumber);
+            return p['byte'](-256 + aNumber);
           } else if ( aNumber < -128) {
-            return p.byte(256 + aNumber);
+            return p['byte'](256 + aNumber);
           }
         }
       }
