@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>bug 277</h2>
+
+    <p>This tests bug277 in lighthouse<br />
+    </p>
+
+    <p>
+      <canvas id="cvs" width="1234" height="5678"> </canvas>
+      <script>
+        var cvs = document.getElementById('cvs');
+        var AJAX = new window.XMLHttpRequest();
+        if (AJAX) {
+          AJAX.open("GET", "test.pjs", false);
+          AJAX.send(null);
+          var p = Processing(cvs, AJAX.responseText);
+        }
+        
+      </script>
+    </p>
+    
+    <pre>
+<b>// Test from Processing.org</b>
+</pre>
+
+  </body>
+</html>
