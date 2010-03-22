@@ -1,0 +1,19 @@
+﻿size(300,400); 
+background(0);
+PImage pi = createImage(256,256,ARGB); 
+int white = 4294967295; // white
+int red = 65536;
+int green = 256;
+int blue = 1;
+int redgreenblue = 65793;
+int c = 4294967295;
+for (int i = 0; i < pi.width; i++) {
+  for(int j = 0; j < pi.height; j++) {
+    pi.set(j, i, c);
+    c -= red;
+    c -= green;
+  }
+  white -= redgreenblue;
+  c = white;
+}
+image(pi,22,22); 

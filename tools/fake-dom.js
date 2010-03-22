@@ -4,6 +4,8 @@
 var __empty_func__ = function () {};
 var __elem_func__ = function() { return elem };
 
+var navigator = { useragent: true };
+
 var canvas = {
   attachEvent: __empty_func__,
   addEventListener: __empty_func__,
@@ -13,7 +15,6 @@ var canvas = {
                  return {
                    translate: __empty_func__,
                    attachEvent: __empty_func__,
-                   getImageData: __empty_func__,
                    fillRect: __empty_func__,
                    beginPath: __empty_func__,
                    moveTo: __empty_func__,
@@ -47,7 +48,8 @@ var canvas = {
                    blendFunc: __empty_func__,
                    getAttribLocation: __empty_func__,
                    vertexAttribPointer: __empty_func__,
-                   enableVertexAttribArray: __empty_func__
+                   enableVertexAttribArray: __empty_func__,
+                   getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; }
                  };
   },
   style: {}
