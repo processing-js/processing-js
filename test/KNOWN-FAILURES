@@ -33,7 +33,6 @@ test/parser/Processing-Book-001/Extensions/Mobile/_08/_08.pde
 test/parser/Processing-Book-001/Extensions/Network/_01/_01.pde
 test/parser/Processing-Book-001/Extensions/Network/_02A/_02A.pde
 test/parser/Processing-Book-001/Extensions/Network/_02B/_02B.pde
-test/parser/Processing-Book-001/Extensions/Network/_03/_03.pde
 test/parser/Processing-Book-001/Extensions/Network/_04/_04.pde
 test/parser/Processing-Book-001/Extensions/Print/_01/_01.pde
 test/parser/Processing-Book-001/Extensions/Print/_02/_02.pde
@@ -59,17 +58,16 @@ test/parser/Processing-Book-001/Illustrations/page_326/page_326.pde
 test/parser/Processing-Book-001/Illustrations/page_346/page_346.pde
 test/parser/Processing-Book-001/Illustrations/page_xx/page_xx.pde
 test/parser/Processing-Book-001/Synthesis/_03_grids/_05_grids/_05_grids.pde
-test/parser/Processing-Book-001/Synthesis/_10_chronodraw/_10_chronodraw.pde
 test/parser/Processing-Book-001/Synthesis/_13_withoutTitle/_13_withoutTitle.pde
 test/parser/Processing-Book-001/Synthesis/_14_pond/_14_pond.pde
 test/parser/Processing-Book-001/Synthesis/_15_tree/_15_tree.pde
 test/parser/Processing-Book-001/Synthesis/_16_sodaprocessing/_16_sodaprocessing.pde
+test/parser/Processing-Book-001/Synthesis/_12_robot/_12_robot.pde
 test/parser/Processing-Book-001/Units 00-17/01 Structure 1/_04/_04.pde
 test/parser/Processing-Book-001/Units 00-17/10 Image 1/_03/_03.pde
 test/parser/Processing-Book-001/Units 00-17/10 Image 1/_04/_04.pde
 test/parser/Processing-Book-001/Units 00-17/11 Data 2/_01/_01.pde
 test/parser/Processing-Book-001/Units 00-17/12 Data 3/_10/_10.pde
-test/parser/Processing-Book-001/Units 00-17/12 Data 3/_12/_12.pde
 test/parser/Processing-Book-001/Units 00-17/13 Typography 1/_09/_09.pde
 test/parser/Processing-Book-001/Units 00-17/13 Typography 1/_11/_11.pde
 test/parser/Processing-Book-001/Units 00-17/14 Math 3/_15/_15.pde
@@ -82,18 +80,12 @@ test/parser/Processing-Book-001/Units 31-42/33 Data 4/_20/_20.pde
 test/parser/Processing-Book-001/Units 31-42/33 Data 4/_22/_22.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_01/_01.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_02/_02.pde
-test/parser/Processing-Book-001/Units 31-42/35 Image 3/_03/_03.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_04/_04.pde
-test/parser/Processing-Book-001/Units 31-42/35 Image 3/_05/_05.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_08/_08.pde
-test/parser/Processing-Book-001/Units 31-42/35 Image 3/_12/_12.pde
-test/parser/Processing-Book-001/Units 31-42/36 Typography 2/_08/_08.pde
-test/parser/Processing-Book-001/Units 31-42/37 Typography 3/_03/_03.pde
-test/parser/Processing-Book-001/Units 31-42/37 Typography 3/_04/_04.pde
+test/parser/Processing-Book-001/Units 31-42/39 Image 4/_12/_12.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_03/_03.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_05/_05.pde
-test/parser/Processing-Book-001/Units 31-42/38 Color 2/_13/_13.pde
 test/parser/Processing-Book-001/Units 31-42/39 Image 4/_01/_01.pde
 test/parser/Processing-Book-001/Units 31-42/39 Image 4/_02/_02.pde
 test/parser/Processing-Book-001/Units 31-42/39 Image 4/_04/_04.pde
@@ -108,12 +100,10 @@ test/parser/Processing-Book-001/Units 31-42/40 Image 5/_08/_08.pde
 test/parser/Processing-Book-001/Units 31-42/40 Image 5/_09/_09.pde
 test/parser/Processing-Book-001/Units 31-42/40 Image 5/_10/_10.pde
 test/parser/Processing-Book-001/Units 31-42/40 Image 5/_11/_11.pde
-test/parser/Processing-Book-001/Units 31-42/40 Image 5/_13/_13.pde
-test/parser/Processing-Book-001/Units 31-42/40 Image 5/_14/_14.pde
-test/parser/Processing-Book-001/Units 31-42/40 Image 5/_15/_15.pde
-test/parser/Processing-Book-001/Units 31-42/40 Image 5/_16/_16.pde
 test/parser/Processing-Book-001/Units 43-51/43 Structure 4/_02/_02.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_06/_06.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_07/_07.pde
+# this test fails because the char parser converts singled quoted 1 character strings to Char objects
+test/parser/stringParsing/singleQuotedStrings/3.pde

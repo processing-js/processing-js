@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>sphere() & pointLight() Test</h2>
+
+    <p>This test was taken from <a href="http://www.processing.org/">Processing.org</a> which tests to make<br />
+    sure the pointLight() works correctly on a sphere.
+    </p>
+
+    <p>
+      <canvas datasrc="light_test.pjs" width="100" height="100"> </canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0;"/>
+    </p>
+    
+    <pre>
+<b>// Test from Processing.org</b>
+void setup() {
+  size(100, 100, P3D);
+}
+
+void draw() {
+  background(0);
+  noStroke();
+  pointLight(51, 102, 126, 35, 40, 36);
+  noStroke();
+  translate(80, 50, 0);
+  sphere(30);
+}
+</pre>
+
+  </body>
+</html>

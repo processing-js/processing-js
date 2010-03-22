@@ -1,0 +1,561 @@
+//import processing.opengl.*;
+
+int startX, startY;
+int x, y;
+int boxCounter = 1;
+int NUM_OBJECTS_PER_ROW = 13;
+boolean isDone = false;
+
+void setup()
+{
+  size(500,500,OPENGL);
+
+  startX = width/2 - 60;
+  startY = height/2 - 70;
+ 
+  x = startX;
+  y = startY;
+}
+
+void draw()
+{
+  background(100,135,100);
+  drawBoxes();
+}
+
+void drawBoxes()
+{
+  camera();
+  noStroke();
+
+  fill(255);
+  drawNextBox();
+
+  // single value
+  noFill();
+  drawNextBox();
+
+  // single value
+  fill(1);
+  drawNextBox();
+  
+  fill(50);
+  drawNextBox();
+
+  fill(128);
+  drawNextBox();
+
+  fill(200);
+  drawNextBox();
+
+  fill(255);
+  drawNextBox();
+ 
+  ////////////////////////////////////////////////
+  // single values for color, color - single value
+  ////////////////////////////////////////////////
+
+  //ambientLight(128, 0, 0);
+  fill(color(0));
+  drawNextBox();
+    
+  fill(color(1));
+  drawNextBox();
+  
+  fill(color(50));
+  drawNextBox();
+
+  fill(color(200));
+  drawNextBox();
+  
+  fill(color(255));
+  drawNextBox();
+  
+  ///////////////////////////////  
+  // single value - hex no alpha
+  ///////////////////////////////
+  fill(#000000);
+  drawNextBox();
+  
+  fill(#808080);
+  drawNextBox();
+    
+  fill(#FFFFFF);
+  drawNextBox();
+    
+  noFill();
+  drawNextBox();
+
+  directionalLight( 0, 0, 128,  0, 1, 0 );
+  directionalLight( 0, 128, 0,  1, 0, -1 );
+  
+  fill(#00FF00);
+  drawNextBox();
+  
+  fill(#0000FF);
+  drawNextBox();
+  
+  fill(#FFFF00);
+  drawNextBox();
+  
+  fill(#FF00FF);
+  drawNextBox();
+  
+  fill(#00FFFF);
+  drawNextBox();
+  
+  fill(#214263);
+  drawNextBox();
+  
+  ///////////////////////////////////////////////
+  // single value - color, color multiple values
+  //////////////////////////////////////////////
+  fill(color(0,0,0));
+  drawNextBox();
+  
+  fill(color(128,128,128));
+  drawNextBox();
+  
+  fill(color(255,255,255));
+  drawNextBox();
+  
+  fill(color(255,0,0));
+  drawNextBox();
+  
+  fill(color(0,255,0));
+  drawNextBox();
+  
+  fill(color(0,0,255));
+  drawNextBox();
+  
+  fill(color(255,255,0));
+  drawNextBox();
+  
+  fill(color(255,0,255));
+  drawNextBox();
+  
+  fill(color(0,255,255));
+  drawNextBox();
+  
+  fill(color(33,66,99)); 
+  drawNextBox();
+  
+  /////////////////////////////////
+  // double values - color + alpha
+  /////////////////////////////////
+  directionalLight( 128, 0, 0,  -1, 0, 0 );
+
+  fill(color(0,0,0),255);
+  drawNextBox();
+  
+  fill(color(128,128,128),255);
+  drawNextBox();
+  
+  fill(color(255,255,255),255);
+  drawNextBox();
+  
+  fill(color(255,0,0),255);
+  drawNextBox();
+  
+  fill(color(0,255,0),255);
+  drawNextBox();
+  
+  fill(color(0,0,255),255);
+  drawNextBox();
+  
+  fill(color(255),255);
+  drawNextBox();
+  
+  fill(color(0,0,255),255);
+  drawNextBox();
+  
+  fill(color(0,255,0),255);
+  drawNextBox();
+  
+  fill(color(255,0,0),255);
+  drawNextBox();
+  
+  fill(color(255),255);
+  drawNextBox();
+  
+  fill(color(255),255);
+  drawNextBox();
+  
+  fill(color(255),255);
+  drawNextBox();
+  
+  fill(color(128),255);
+  drawNextBox();
+  
+  fill(color(128),255);
+  drawNextBox();
+  
+  // hex + alpha
+  fill(#000000,255);
+  drawNextBox();
+  
+  fill(#808080,255);
+  drawNextBox();
+  
+  fill(#FFFFFF,255);
+  drawNextBox();
+  
+  fill(#FF0000,255);
+  drawNextBox();
+  
+  fill(#00FF00,255);
+  drawNextBox();
+  
+  fill(#0000FF,255);
+  drawNextBox();
+  
+  fill(#FFFF00,255);
+  drawNextBox();
+  
+  fill(#FF00FF,255);
+  drawNextBox();
+  
+  fill(#00FFFF,255);
+  drawNextBox();
+  
+  fill(#214263,255);
+  drawNextBox();
+
+  ////////////////
+  // gray + alpha
+  ////////////////
+  fill(0, 255);
+  drawNextBox();
+  
+  fill(0, 255);
+  drawNextBox();
+  
+  fill(0, 255);
+  drawNextBox();
+  
+  fill(1, 255);
+  drawNextBox();
+  
+  fill(1, 255);
+  drawNextBox();
+  
+  fill(1, 255);
+  drawNextBox();
+  
+  fill(50, 255);
+  drawNextBox();
+  
+  fill(50, 255);
+  drawNextBox();
+  
+  fill(50, 255);
+  drawNextBox();
+  
+  fill(128, 255);
+  drawNextBox();
+  
+  fill(128, 255);
+  drawNextBox();
+  
+  fill(128, 255);
+  drawNextBox();
+  
+  fill(255, 255);
+  drawNextBox();
+  
+  fill(255, 255);
+  drawNextBox();
+  
+  fill(255, 255);
+  drawNextBox();
+  
+  ///////////////////////
+  // triple values r,g,b
+  //////////////////////
+  noLights();
+  directionalLight(128, 64, 0, 1, 0, -1);
+  
+  fill(0,0,0);
+  drawNextBox();
+  
+  fill(128,128,128);
+  drawNextBox();
+  
+  fill(255,255,255);
+  drawNextBox();
+  
+  fill(255,0,0);
+  drawNextBox();
+  
+  noFill();
+  drawNextBox();
+  
+  fill(0,0,255);
+  drawNextBox();
+  
+  fill(255,255,0);
+  drawNextBox();
+  
+  fill(255,0,255);
+  drawNextBox();
+  
+  fill(0,255,255);
+  drawNextBox();
+  
+  fill(33,66,99);
+  drawNextBox();
+  
+  ///////////////
+  // quad values
+  ///////////////
+  
+  directionalLight( 0, 128, 128,  1, 1, 0 );
+  
+  fill(0, 255);
+  drawNextBox();
+  
+  fill(0, 255);
+  drawNextBox();
+  
+  fill(0, 255);
+  drawNextBox();
+  
+  fill(1, 255);
+  drawNextBox();
+  
+  fill(1, 255);
+  drawNextBox();
+  
+  fill(1, 255);
+  drawNextBox();
+  
+  fill(50, 255);
+  drawNextBox();
+  
+  fill(50, 255);
+  drawNextBox();
+  
+  fill(50, 255);
+  drawNextBox();
+  
+  fill(128, 255);
+  drawNextBox();
+  
+  fill(128, 255);
+  drawNextBox();
+  
+  fill(128, 255);
+  drawNextBox();
+  
+  fill(255, 255);
+  drawNextBox();
+  
+  fill(255, 255);
+  drawNextBox();
+  
+  fill(255, 255);
+  drawNextBox();
+
+  fill(0,0,0,255);
+  drawNextBox();
+  
+  fill(0,0,0, 255);
+  drawNextBox();
+  
+  fill(0,0,0, 255);
+  drawNextBox();
+  
+  fill(128,128,128, 255);
+  drawNextBox();
+  
+  fill(128,128,128, 255);
+  drawNextBox();
+  
+  fill(128,128,128, 255);
+  drawNextBox();
+  
+  fill(255,255,255, 255);
+  drawNextBox();
+  
+  // !!
+  fill(255,255,255, 255);
+  drawNextBox();
+  
+  fill(255,255,255, 255);
+  drawNextBox();
+  
+  fill(255,0,0, 255);
+  drawNextBox();
+  
+  fill(255,0,0, 255);
+  drawNextBox();
+  
+  fill(255,0,0, 255);
+  drawNextBox();
+  
+  fill(0,255,0, 255);
+  drawNextBox();
+  
+  fill(0,255,0, 255);
+  drawNextBox();
+  
+  fill(0,255,0, 255);
+  drawNextBox();
+  
+  fill(33,66,99, 255);
+  drawNextBox();
+  
+  fill(33,66,99, 255);
+  drawNextBox();
+
+  fill(33,66,99, 255);
+  drawNextBox();
+
+  /// extras 
+  directionalLight( 128, 128, 128,  0, -1, 0 );
+  
+  fill(#00FF00);
+  drawNextBox();
+  
+  fill(#0000FF);
+  drawNextBox();
+  
+  fill(#FFFF00);
+  drawNextBox();
+  
+  fill(#FF00FF);
+  drawNextBox();
+  
+  fill(#00FFFF);
+  drawNextBox();
+  
+  fill(#214263);
+  drawNextBox();
+  
+  fill(#00FF00);
+  drawNextBox();
+  
+  fill(#0000FF);
+  drawNextBox();
+  
+  fill(#FFFF00);
+  drawNextBox();
+  
+  fill(#FF00FF);
+  drawNextBox();
+  
+  fill(#00FFFF);
+  drawNextBox();
+  
+  fill(#214263);
+  drawNextBox();
+ 
+  fill(255,255,255, 255);
+  drawNextBox();
+  
+  fill(255,255,255, 255);
+  drawNextBox();
+  
+  fill(255,0,0, 255);
+  drawNextBox();
+  
+  fill(255,0,0, 255);
+  drawNextBox();
+  
+  fill(255,0,0, 255);
+  drawNextBox();
+  
+  fill(0,255,0, 255);
+  drawNextBox();
+  
+  fill(0,255,0, 255);
+  drawNextBox();
+  
+  fill(0,255,0, 255);
+  drawNextBox();
+  
+  fill(33,66,99, 255);
+  drawNextBox();
+  
+  fill(33,66,99, 255);
+  drawNextBox();
+
+  strokeWeight(1);
+  stroke(128,0,0,255);
+  directionalLight( 64, 255, 0,  0, 0, -1 );
+    
+  fill(33,66,99, 255);
+  drawNextBox();
+  
+  fill(0, 255);
+  drawNextBox();
+  
+  fill(0, 255);
+  drawNextBox();
+  
+  fill(0, 255);
+  drawNextBox();
+  
+  fill(1, 255);
+  drawNextBox();
+  
+  fill(1, 255);
+  drawNextBox();
+  
+  fill(1, 255);
+  drawNextBox();
+  
+  fill(50, 255);
+  drawNextBox();
+  
+  fill(50, 255);
+  drawNextBox();
+  
+  fill(50, 255);
+  drawNextBox();
+  
+  fill(128, 255);
+  drawNextBox();
+  
+  fill(128, 255);
+  drawNextBox();
+  
+  fill(128, 255);
+  drawNextBox();
+  
+  fill(255, 255);
+  drawNextBox();
+  
+  fill(255, 255);
+  drawNextBox();
+  
+  fill(255, 255);
+  drawNextBox();
+
+  isDone = true;
+}
+
+void drawNextBox()
+{
+  if(isDone){
+    isDone = false;
+    boxCounter = 1;
+    x = startX;
+    y = startY;
+  }
+
+  x += 10;
+  
+  if( boxCounter % NUM_OBJECTS_PER_ROW-1 == 0 )
+  {
+    y += 10;
+    x = startX;
+  }
+
+  pushMatrix();
+  translate(x, y, 320);
+  box(5);
+  popMatrix();
+
+  boxCounter++;
+}

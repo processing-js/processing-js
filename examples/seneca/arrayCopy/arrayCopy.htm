@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Processing.js test of arrayCopy()</title>
+    <script type="text/javascript" src="../../../processing.js"></script>
+
+    <style type="text/css">
+        html, body
+        {
+            background: #EEE;
+            font-family: Arial;
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+        h1
+        {
+            background: #385C85;
+            color: #FFF;
+            padding: 10px;
+            padding-left: 20px;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+        h1 a
+        {
+            color: #FFF;
+        }
+        h2
+        {
+            padding-left: 20px;
+        }
+        p
+        {
+            padding-left: 20px;
+            line-height: 1.3em;
+        }
+        p a
+        {
+            color: #385C85;
+        }
+        canvas
+        {
+            margin: 10px 0;
+        }
+        pre
+        {
+            margin-left: 20px;
+            margin-right: 20px;
+            padding: 5px;
+            background: #FFF;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+        }
+        div.ref-col
+        {
+            float: left;
+            width: 32%;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        <!-- name of your function and test description -->
+        arrayCopy() test</h1>
+    <h2>
+        This is a test of arrayCopy(src, srcPos, dest, destPos, length)</h2>
+    <p>
+        Copies an array (or part of an array) to another array. The src array is copied to the dst array, beginning at the position specified by srcPos and into the position specified by dstPos. The number of elements to copy is determined by length. The simplified version with two arguments copies an entire array to another of the same size. It is equivalent to "arrayCopy(src, 0, dst, 0, src.length)". This function is far more efficient for copying array data than iterating through a for and copying each element.</p>
+    <!-- include your processing file below -->
+    <canvas datasrc="arrayCopy.pjs" width="2" height="2" style="margin-left: 10px;"></canvas>
+    <b>Test written by <a href="http://dhodgin.wordpress.com/">Daniel Hodgin</a></b><br />
+    <h1>
+        Source Code:</h1>
+    <pre>
+// 	arrayCopy example
+String[] north = { "OH", "IN", "MI"};
+String[] south = { "GA", "FL", "NC"}; 
+arrayCopy(north, 1, south, 0, 2);
+println(south);  // Prints IN, MI, NC
+
+int[] numbers = new int[3];
+numbers[0] = 90;
+numbers[1] = 150;
+numbers[2] = 30;
+int[] added = new int[3];
+arrayCopy(numbers,added);
+added[1] = added[0] + added[1]; // Sets added[1] to 240
+added[2] = added[1] + added[2]; // Sets added[2] to 270
+println(added);
+
+String[][] codes = {{"ON", "QC", "PE", "NB"}, {"FL", "NY", "TX", "CA"}};
+println(codes[0]);
+println(codes[1]);
+String[][] codes2 = {{"NS", "MN", "BC", "NF"}, {"IL", "NJ", "WY", "OH"}};
+println(codes2[0]);
+println(codes2[1]);
+String[][] combined = new String[4][4];
+arrayCopy(codes, combined);
+println(combined);
+arrayCopy(codes2, 0, combined, 2, 2);
+println(combined);
+        </pre>
+    <br />
+</body>
+</html>
