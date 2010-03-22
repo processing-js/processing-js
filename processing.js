@@ -778,6 +778,7 @@
     p.mouseY = 0;
     p.mouseButton = 0;
     p.mouseDown = false;
+    p.mouseScroll = 0;
 
     // Undefined event handlers to be replaced by user when needed
     p.mouseClicked = undefined;
@@ -785,6 +786,7 @@
     p.mouseMoved = undefined;
     p.mousePressed = undefined;
     p.mouseReleased = undefined;
+    p.mouseScrolled = undefined;
     p.keyPressed = undefined;
     p.keyReleased = undefined;
     p.draw = undefined;
@@ -6055,6 +6057,25 @@
         }
       });
 
+      attach(document, /Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)?"DOMMouseScroll":"mousewheel", function(e) {
+        var delta = 0;
+
+        if (event.wheelDelta) {
+          delta = event.wheelDelta / 120; 
+          if (window.opera) {
+            delta = -delta; 
+          }
+        } else if (event.detail) {
+          delta = -event.detail/3;
+        }
+
+        p.mouseScroll = delta;
+
+        if (delta) {
+          p.mouseScrolled();
+        }
+      });
+
       attach(document, "keydown", function (e) {
         keyPressed = true;
         p.keyCode = null;
@@ -6133,7 +6154,6 @@
           p.keyReleased();
         }
       });
-
     };
 
     return p;
