@@ -5064,16 +5064,7 @@
     var PImage = function PImage(aWidth, aHeight, aFormat) {
       if(arguments.length === 1) {
         // convert an <img> to a PImage
-        var img = arguments[0];
-        var canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        var context = canvas.getContext("2d");
-        context.drawImage(img, 0, 0);
-        var imageData = context.getImageData(0,0,img.width,img.height);
-        var pimage = new PImage(0,0);
-        pimage.fromImageData(imageData);
-        return pimage;
+        this.fromHTMLImageData(arguments[0]);
       } else if (arguments.length === 2 || arguments.length === 3) {
         this.width = aWidth;
         this.height = aHeight;
@@ -5128,11 +5119,27 @@
           this.pixels[i] = (canvasImg.data[pos + 3] * 16777216) + (canvasImg.data[pos + 0] * 65536) +
                   (canvasImg.data[pos + 1] * 256)    +   (canvasImg.data[pos + 2]);                  
         }
+      },
+      fromHTMLImageData: function(htmlImg) {
+        // convert an <img> to a PImage
+        var canvas = document.createElement("canvas");
+        canvas.width = htmlImg.width;
+        canvas.height = htmlImg.height;
+        var context = canvas.getContext("2d");
+        context.drawImage(htmlImg, 0, 0);
+        var imageData = context.getImageData(0,0,htmlImg.width,htmlImg.height);
+        this.ImageData = imageData;
+        this.fromImageData(imageData);
       }
     };
     
     p.PImage = PImage;
-    
+    try {
+			// Opera createImageData fix
+			if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
+				CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); }
+			}
+		} catch(e) {}
     p.createImage = function createImage(w, h, mode) {
 
       var img = new PImage(w,h,mode);
@@ -5153,38 +5160,39 @@
     
     // Loads an image for display. Type is unused. Callback is fired on load.
     p.loadImage = function loadImage(file, type, callback) {
-      var img = document.createElement('img');
-      img.loaded = false;
-      img.mask = function () {}; // I don't think image mask was ever implemented? -F1LT3R
-      img.onload = function () {
-        var h = this.height, w = this.width;
-        var canvas = document.createElement("canvas");
-
-        canvas.width = w;
-        canvas.height = h;
-
-        var context = canvas.getContext("2d");
-
-        context.drawImage(this, 0, 0);
-
-        this.data = buildImageObject(context.getImageData(0, 0, w, h));
-        this.data.img = img;
-
-        this.get = this.data.get;
-        this.pixels = this.data.pixels;
-
-        this.loaded = true;
-
-        if (callback) {
-          callback();
-        }
-      };
-
-      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
-
-      return img;
-    };
-
+      // if type is specified add it with a . to file to make the filename
+      if(type){
+        file = file + "." + type;
+      }
+      // if image is in the preloader cache return a new PImage
+      if (p.pjs.imageCache[file]) {
+        return new PImage(p.pjs.imageCache[file]);
+      }
+      // else aysnc load it
+      else {
+        var pimg = new PImage(0,0,p.ARGB);
+        var img = document.createElement('img');
+        pimg.sourceImg = img;
+        img.onload = ( function(aImage, aPImage, aCallback) {
+          var image = aImage;
+          var pimg = aPImage;
+          var callback = aCallback;
+          return function() {
+            // change the <img> object into a PImage now that its loaded
+            pimg.fromHTMLImageData(image);
+            if (callback) {
+              callback();
+            }
+          };
+        })(img, pimg, callback);
+        img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
+        return pimg;
+      }
+    };    
+    
+    // async loading of large images, same functionality as loadImage above
+    p.requestImage = p.loadImage;
+    
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
     p.get = function get(x, y, w, h, img) {
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
@@ -5363,20 +5371,16 @@
         }
       } else { // 2d context
         if (arguments.length) {
-          if (img.data && img.data.img) {
-            curBackground = img.data;
+          if (img.pixels && img.width == p.width && img.height == p.height) {
+            curBackground = img;
+            p.image(img, 0, 0);
           } else {
             curBackground = p.color.apply(this, arguments);
+            var oldFill = curContext.fillStyle;
+            curContext.fillStyle = curBackground + "";
+            curContext.fillRect(0, 0, p.width, p.height);
+            curContext.fillStyle = oldFill;
           }
-        }
-
-        if (curBackground.img) {
-          p.image(img, 0, 0);
-        } else {
-          var oldFill = curContext.fillStyle;
-          curContext.fillStyle = curBackground + "";
-          curContext.fillRect(0, 0, p.width, p.height);
-          curContext.fillStyle = oldFill;
         }
       }
       hasBackground = true;
@@ -5502,13 +5506,17 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
 
-      if (img.pixels) {
+      if (img.width > 0) {
 
         x = x || 0;
         y = y || 0;
 
-        //var obj = getImage(img),
-        var obj = img.toImageData();
+        var obj;
+        if (img.ImageData && img.ImageData.width > 0) {
+          obj = img.ImageData;
+        } else {
+          obj = img.toImageData();
+        }
         var  oldAlpha;
 
         if (curTint >= 0) {
