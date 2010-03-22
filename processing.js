@@ -3183,8 +3183,11 @@
       
       if ( arguments.length === 0 ) {
         this.reset();
-      } else {
-        this.set( arguments );
+      } else if ( arguments.length === 1 && arguments[0] instanceof PMatrix2D ) {
+        this.set( arguments[0].array() );
+      } else if ( arguments.length === 6 ) {
+        this.set( arguments[0], arguments[1], arguments[2],
+            arguments[3], arguments[4], arguments[5] );
       }
     };
 
