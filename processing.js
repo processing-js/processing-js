@@ -3247,7 +3247,7 @@
           p.camera();
           p.perspective();
 
-          userMatrixStack = new PMatrix3DStack();
+          userMatrixStack = new PMatrixStack();
         }
         p.stroke(0);
         p.fill(255);
