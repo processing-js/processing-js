@@ -3178,66 +3178,6 @@
     /*
       When a matrix is created, it is set to an identity matrix
     */
-    var PMatrix2D = function(){
-      this.reset();
-    };
-
-    PMatrix2D.prototype = {
-      set: function(){
-        if( arguments.length === 6 ){
-          var a = arguments;
-          this.set([a[0], a[1], a[2],
-                    a[3], a[4], a[5]]);
-        }else if( arguments.length === 1 && arguments[0] instanceof PMatrix2D ){
-          this.elements = arguments[0].array();
-        }else if( arguments.length === 1 && arguments[0] instanceof Array ){
-          this.elements = arguments[0].slice();
-        }
-      },
-      get: function(){
-        var outgoing = new PMatrix2D();
-        outgoing.set( this.elements );
-        return outgoing;
-      },
-      reset: function(){
-        this.set([1,0,0,0,1,0]);
-      },
-      /*
-        Returns a copy of the element values.
-      */
-      array: function array(){
-        return this.elements.slice();
-      },
-      apply: function(){
-        if( arguments.length === 1 && arguments[0] instanceof PMatrix2D ){
-          this.apply( arguments[0].array() );
-        }
-        else if( arguments.length === 6){
-          var a = arguments;
-          this.apply([a[0], a[1], a[2],
-                      a[3], a[4], a[5]]);
-        }
-        else if( arguments.length === 1 && arguments[0] instanceof Array ){
-          var source = arguments[0];
-
-          var result = [0, 0, 0,
-                        0, 0, 0];
-          var e = 0;
-          for(var row = 0; row < 2; row++){
-            for(var col = 0; col < 3; col++, e++){
-              result[e] += this.elements[row *3 + 0] * source[col + 0] +
-                           this.elements[row *3 + 1] * source[col + 3];
-
-            }
-          }
-          this.elements = result.slice();
-        }
-      }
-    };
-
-    /*
-      When a matrix is created, it is set to an identity matrix
-    */
     var PMatrix3D = function(){
       this.reset();
     };
@@ -3642,46 +3582,6 @@
 
         p.println(output);
       }
-    };
-
-    ////////////////////////////////////////////////////////////////////////////
-    // 2D Matrix Stack
-    ////////////////////////////////////////////////////////////////////////////
-
-    var PMatrix2DStack = function PMatrix2DStack() {
-      this.matrixStack = [];
-    };
-
-    PMatrix2DStack.prototype.load = function load() {
-
-      var tmpMatrix = new PMatrix2D();
-      
-      if ( arguments.length === 1 ) {
-        tmpMatrix.set( arguments[0] );
-      } else {
-        tmpMatrix.set( arguments );
-      }
-      this.matrixStack.push( tmpMatrix );
-    };
-
-    PMatrix2DStack.prototype.push = function push() {
-      this.matrixStack.push( this.peek() );
-    };
-
-    PMatrix2DStack.prototype.pop = function pop() {
-      return this.matrixStack.pop();
-    };
-
-    PMatrix2DStack.prototype.peek = function peek() {
-
-      var tmpMatrix = new PMatrix2D();
-
-      tmpMatrix.set( this.matrixStack[this.matrixStack.length - 1] );
-      return tmpMatrix;
-    };
-
-    PMatrix2DStack.prototype.mult = function mult( matrix ){
-      this.matrixStack[this.matrixStack.length - 1].apply( matrix );
     };
 
     ////////////////////////////////////////////////////////////////////////////
