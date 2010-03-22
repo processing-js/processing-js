@@ -4853,20 +4853,16 @@
         }
       } else { // 2d context
         if (arguments.length) {
-          if (img.data && img.data.img) {
-            curBackground = img.data;
-          } else {
+          if (img.pixels && img.width == p.width && img.height == p.height) {
+            curBackground = img;
+            p.image(img, 0, 0);
+          } else if (typeof img == "number") {
             curBackground = p.color.apply(this, arguments);
+            var oldFill = curContext.fillStyle;
+            curContext.fillStyle = curBackground + "";
+            curContext.fillRect(0, 0, p.width, p.height);
+            curContext.fillStyle = oldFill;
           }
-        }
-
-        if (curBackground.img) {
-          p.image(img, 0, 0);
-        } else {
-          var oldFill = curContext.fillStyle;
-          curContext.fillStyle = curBackground + "";
-          curContext.fillRect(0, 0, p.width, p.height);
-          curContext.fillStyle = oldFill;
         }
       }
       hasBackground = true;
