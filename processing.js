@@ -3840,16 +3840,21 @@
     };
 
     ////////////////////////////////////////////////////////////////////////////
-    // 2D Matrix Stack
+    // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
 
-    var PMatrix2DStack = function PMatrix2DStack() {
+    var PMatrixStack = function PMatrixStack() {
       this.matrixStack = [];
     };
 
-    PMatrix2DStack.prototype.load = function load() {
+    PMatrixStack.prototype.load = function load() {
 
-      var tmpMatrix = new PMatrix2D();
+      var tmpMatrix;
+      if ( use3DContext ) {
+        tmpMatrix = new PMatrix3D();
+      } else {
+        tmpMatrix = new PMatrix2D();
+      }
       
       if ( arguments.length === 1 ) {
         tmpMatrix.set( arguments[0] );
@@ -3859,63 +3864,28 @@
       this.matrixStack.push( tmpMatrix );
     };
 
-    PMatrix2DStack.prototype.push = function push() {
+    PMatrixStack.prototype.push = function push() {
       this.matrixStack.push( this.peek() );
     };
 
-    PMatrix2DStack.prototype.pop = function pop() {
+    PMatrixStack.prototype.pop = function pop() {
       return this.matrixStack.pop();
     };
 
-    PMatrix2DStack.prototype.peek = function peek() {
+    PMatrixStack.prototype.peek = function peek() {
 
-      var tmpMatrix = new PMatrix2D();
-
-      tmpMatrix.set( this.matrixStack[this.matrixStack.length - 1] );
-      return tmpMatrix;
-    };
-
-    PMatrix2DStack.prototype.mult = function mult( matrix ){
-      this.matrixStack[this.matrixStack.length - 1].apply( matrix );
-    };
-
-    ////////////////////////////////////////////////////////////////////////////
-    // 3D Matrix Stack
-    ////////////////////////////////////////////////////////////////////////////
-
-    var PMatrix3DStack = function PMatrix3DStack() {
-      this.matrixStack = [];
-    };
-
-    PMatrix3DStack.prototype.load = function load() {
-
-      var tmpMatrix = new PMatrix3D();
-      
-      if ( arguments.length === 1 ) {
-        tmpMatrix.set( arguments[0] );
+      var tmpMatrix;
+      if ( use3DContext ) {
+        tmpMatrix = new PMatrix3D();
       } else {
-        tmpMatrix.set( arguments );
+        tmpMatrix = new PMatrix2D();
       }
-      this.matrixStack.push( tmpMatrix );
-    };
-
-    PMatrix3DStack.prototype.push = function push() {
-      this.matrixStack.push( this.peek() );
-    };
-
-    PMatrix3DStack.prototype.pop = function pop() {
-      return this.matrixStack.pop();
-    };
-
-    PMatrix3DStack.prototype.peek = function peek() {
-
-      var tmpMatrix = new PMatrix3D();
 
       tmpMatrix.set( this.matrixStack[this.matrixStack.length - 1] );
       return tmpMatrix;
     };
 
-    PMatrix3DStack.prototype.mult = function mult( matrix ){
+    PMatrixStack.prototype.mult = function mult( matrix ){
       this.matrixStack[this.matrixStack.length - 1].apply( matrix );
     };
 
