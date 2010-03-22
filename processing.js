@@ -74,8 +74,7 @@
     asalga.wordpress.com
     Compatibility wrapper for older browsers
   */
-  var newWebGLArray = function(data)
-  {
+  var newWebGLArray = function(data) {
     var WebGLFloatArrayExists = false;
 
     try{
@@ -86,36 +85,174 @@
 
     return WebGLFloatArrayExists === true ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
   };
+  
+  /*
+  */
+  var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
+    var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER );
+    curContext.shaderSource( vertexShaderObject, vetexShaderSource );
+    curContext.compileShader( vertexShaderObject );
+    if(!curContext.getShaderParameter( vertexShaderObject, curContext.COMPILE_STATUS )){
+      throw curContext.getShaderInfoLog( vertexShaderObject );
+    }
 
-  var programObject;
+    var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER );
+    curContext.shaderSource( fragmentShaderObject, fragmentShaderSource );
+    curContext.compileShader( fragmentShaderObject );
+    if(!curContext.getShaderParameter( fragmentShaderObject, curContext.COMPILE_STATUS )){
+      throw curContext.getShaderInfoLog( fragmentShaderObject );
+    }
 
-  var boxVerts = [0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5, 0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
-  var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5,0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,0.5, 0.5,-0.5,0.5];
+    var programObject = curContext.createProgram();
+    curContext.attachShader( programObject, vertexShaderObject );
+    curContext.attachShader( programObject, fragmentShaderObject );
+    curContext.linkProgram( programObject );
+    if(!curContext.getProgramParameter( programObject, curContext.LINK_STATUS )){
+      throw "Error linking shaders.";
+    }
+
+    return programObject;
+  };
+
+  var programObject3D;
+  var programObject2D;
+
+  // Vertices are specified in a counter-clockwise order
+  // triangles are in this order: back, front, right, bottom, left, top
+  var boxVerts = [0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,
+                 -0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,-0.5,0.5,0.5,
+                 -0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,
+                  0.5,0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,
+                  0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,
+                 -0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,
+                 -0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,
+                 -0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,0.5,-0.5,
+                 -0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,0.5,0.5];
+   
+  var boxNorms = [0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,
+                  0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+                  1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,
+                  0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,
+                  -1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,
+                  0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0];
+
+  var boxOutlineVerts = [0.5,0.5,0.5,0.5,-0.5,0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,
+                        -0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,
+                         0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,-0.5,
+                        -0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,0.5,0.5,0.5,
+                         0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,
+                        -0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5];
   
   var boxBuffer;
+  var boxNormBuffer;
   var boxOutlineBuffer;
 	
-	var sphereBuffer;
+  var sphereBuffer;
 
   var lineBuffer;
 
   var pointBuffer;
   
-  var vertexShaderSource = 
+  // Vertex shader for points and lines
+  var vertexShaderSource2D = 
   "attribute vec3 Vertex;" +
-  
   "uniform vec4 color;" +
 
   "uniform mat4 model;" +
   "uniform mat4 view;" +
   "uniform mat4 projection;" +
 
-  "void main(void){" +
+  "void main(void) {" +
   "  gl_FrontColor = color;" +
   "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
   "}";
 
-  var fragmentShaderSource = 
+  var fragmentShaderSource2D =
+  "void main(void){" +
+  "  gl_FragColor = gl_Color;" +
+  "}";
+  
+  // Vertex shader for boxes and spheres
+  var vertexShaderSource3D = 
+  "attribute vec3 Vertex;" +
+  "attribute vec3 Normal;" +
+
+  "uniform vec4 color;" +
+
+  "uniform mat4 model;" +
+  "uniform mat4 view;" +
+  "uniform mat4 projection;" +
+  "uniform mat4 normalTransform;" +
+  
+  "uniform int lightCount;" +
+
+  "struct Light {" +
+  "  bool dummy;" +
+  "	 int type;" +
+  "	 vec3 color;" +
+  "	 vec3 position;" +
+  "};" +
+  "uniform Light lights[8];" +
+
+  "void AmbientLight( inout vec3 col, in vec3 vertColor, in Light light ) {" +
+  "  col += vertColor * light.color;" +
+  "}" +
+
+  "void DirectionalLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, in Light light ) {" +
+  "  col += vertColor * light.color * max(0.0, dot(-normalize(light.position), vertNormal));" +
+  "}" +
+
+  "void PointLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
+     // Get the vector from the light to the vertex
+  "	 vec3 VP = vec3(light.position) - ecPos;" +
+
+  	 // Get the distance from the current vector to the light position
+  "  float d = length(VP); " + 
+
+     // Normalize the light so it can be used in the dot product operation.
+  "  VP = normalize(VP);" + 
+  "	 float nDotVP = max(0.0, dot(vertNormal, VP));"+ 
+  "  col += vertColor * light.color * nDotVP;" + 
+  "}" +
+
+  "void main(void) {" +
+  
+  "  vec3 finalColor = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
+
+     // If there were no lights this frame, just use the 
+     // assigned color of the shape.
+  "  if( lightCount == 0 ) {" + 
+  "    gl_FrontColor = color;" +
+  "  }" +
+    
+  "  else {" +
+  "    for( int i = 0; i < lightCount; i++ ) {" +
+  "      if( lights[i].type == 0 ) {"+
+  "        AmbientLight( finalColor, vec3( color[0], color[1], color[2] ), lights[i] );"+   
+  "      }" +
+  "      else if( lights[i].type == 1 ) {" +
+  "        DirectionalLight( finalColor, vec3( color[0], color[1], color[2] ), norm, lights[i] );" +
+  "      }" +
+  "      else if( lights[i].type == 2 ) {" +
+  
+          // Place the current vertex into view space
+          // ecPos = eye coordinate position.
+  "       vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
+
+           // the current vertex in eye coordinate space
+           // perspective divide
+  "        vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
+  "        PointLight( finalColor, vec3( color[0], color[1], color[2] ), norm, ecPos, lights[i] );" +
+  "      }" +
+  "    }" +
+  "    gl_FrontColor = vec4( finalColor, color[3] );" +
+  "  }" +
+
+  "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
+  "}";
+
+  var fragmentShaderSource3D = 
   "void main(void){" +
   "  gl_FragColor = gl_Color;" +
   "}";
@@ -133,7 +270,10 @@
   Processing.parse = function parse(aCode, p) {
 
     // Force characters-as-bytes to work.
-    aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+    //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+    aCode = aCode.replace(/'.{1}'/g, function(all) {
+      return "(new Char(" + all + "))";
+    });
 
     // Parse out @pjs directive, if any.
     p.pjs = {imageCache: {pending: 0}}; // by default we have an empty imageCache, no more.
@@ -172,7 +312,7 @@
 
     // Saves all strings into an array
     // masks all strings into <STRING n>
-    // to be replaced with the array strings after parsing is finishes
+    // to be replaced with the array strings after parsing is finished
     var strings = [];
     aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
       strings.push(all);
@@ -207,6 +347,14 @@
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
 
+    //replace  catch (IOException e) to catch (e)
+    aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g,"catch \($1\)");
+    //delete  the multiple catch block
+    var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
+    while(catchBlock.test(aCode)){
+      aCode = aCode.replace(new RegExp(catchBlock),"$1");
+    }
+    Error.prototype.printStackTrace = function() { this.toString(); };
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 
@@ -215,9 +363,13 @@
     aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+| )\s*(\w+\s*[\),])/g, "$1$4");
 
     // float[] foo = new float[5];
-    aCode = aCode.replace(/new (\w+)((?:\[([^\]]*)\])+)/g, function (all, name, args) {
-      return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ")";
-      //return "new ArrayList(" + args.slice(1, -1).split("][").join(", ") + ")";
+    aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{.*\})*\s*;/g, function (all, name, args, initVars) {
+      if (initVars) {
+        return initVars + ";";
+      }
+      else {
+        return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
+      }
     });
 
     // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
@@ -232,9 +384,10 @@
         return type + " " + name + " = 0" + sep;
       });
     }
-
+		aCode = aCode.replace(/catch\s\((\w+)\1\s(\w+)\2\)\s\{.\($2\)/g, "catch ($2$1)\n{$2$1");
+		
     // float foo = 5;
-    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\])+| ) *(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
+    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
       if (type === "return") {
         return all;
       } else {
@@ -425,7 +578,7 @@
         return returnString;
       });
     }
-
+    
     return aCode;
   };
 
@@ -462,7 +615,10 @@
     p.CORNERS = 10;
     p.CLOSE = true;
     p.RGB = 1;
-    p.HSB = 2;
+    p.ARGB = 2;
+    p.HSB = 3;
+    p.ALPHA = 4;
+    p.CMYK = 5;
     p.OPENGL = 'OPENGL';
     p.P3D = 'P3D';
     p.FRAME_RATE = 0;
@@ -507,6 +663,7 @@
     p.NORMAL_MODE_AUTO = 0;
     p.NORMAL_MODE_SHAPE = 1;
     p.NORMAL_MODE_VERTEX = 2;
+    p.MAX_LIGHTS = 8;
 		
     // Key Constants
     // both key and keyCode will be equal to these values
@@ -573,6 +730,9 @@
       start = new Date().getTime(),
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0;
+      
+    // User can only have MAX_LIGHTS lights
+    var lightCount = 0;
 		
 		//sphere stuff
 		var sphereDetailV = 0,
@@ -621,6 +781,7 @@
     p.mouseY = 0;
     p.mouseButton = 0;
     p.mouseDown = false;
+    p.mouseScroll = 0;
 
     // Undefined event handlers to be replaced by user when needed
     p.mouseClicked = undefined;
@@ -628,6 +789,7 @@
     p.mouseMoved = undefined;
     p.mousePressed = undefined;
     p.mouseReleased = undefined;
+    p.mouseScrolled = undefined;
     p.keyPressed = undefined;
     p.keyReleased = undefined;
     p.draw = undefined;
@@ -640,7 +802,27 @@
     // The current animation frame
     p.frameCount = 0;
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Char handling
+    ////////////////////////////////////////////////////////////////////////////    
+    var charMap = {};
 
+    function Char(chr) {
+      if ( typeof chr === 'string' && chr.length === 1 ) {
+        this.code = chr.charCodeAt(0);
+      } else {
+        this.code = NaN;
+      }
+
+      return ( typeof charMap[this.code] === 'undefined' ) ? charMap[this.code] = this : charMap[this.code];   
+    };
+
+    Char.prototype.toString = function() {
+      return String.fromCharCode(this.code);
+    };
+    Char.prototype.valueOf = function() {
+      return this.code;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
@@ -789,7 +971,26 @@
       return newary;
     };
 
-
+    p.arrayCopy = function arrayCopy(src, srcPos, dest, destPos, length) {
+      if(arguments.length === 2) {
+        // recall itself and copy src to dest from start index 0 to 0 of src.length
+        p.arrayCopy(src, 0, srcPos, 0, src.length);
+      } else if (arguments.length === 3) {
+        // recall itself and copy src to dest from start index 0 to 0 of length
+        p.arrayCopy(src, 0, srcPos, 0, dest);
+      } else if (arguments.length === 5) {
+        // copy src to dest from index srcPos to index destPos of length recursivly on objects
+        for (var i=srcPos, j=destPos; i < length+srcPos; i++, j++) {
+          if(src[i] && typeof src[i] == "object"){
+            // src[i] is not null and is another object or array. go recursive
+            p.arrayCopy(src[i],0,dest[j],0,src[i].length);
+          } else {
+            // standard type, just copy
+            dest[j] = src[i];
+          }
+        }
+      }      
+    };
 
     p.ArrayList = function ArrayList(size, size2, size3) {
 
@@ -854,6 +1055,255 @@
     };
 
 
+    ////////////////////////////////////////////////////////////////////////////
+    // HashMap
+    ////////////////////////////////////////////////////////////////////////////
+    p.HashMap = function HashMap() {
+      if(arguments.length === 1 && arguments[0].constructor === HashMap)
+        return arguments[0].clone();
+
+      var initialCapacity = arguments.length > 0 ? arguments[0] : 16;
+      var loadFactor = arguments.length > 1 ? arguments[1] : 0.75;
+  
+      var buckets = new Array(initialCapacity);
+      var count = 0;
+      var hashMap = this;
+     
+      this.clear = function() { count = 0; buckets = new Array(initialCapacity); };
+      this.clone = function() { var map = new HashMap(); map.putAll(this); return map; };
+      this.containsKey = function(key) { 
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if(bucket == undefined) return false;
+        for(var i=0; i < bucket.length; ++i)
+          if(virtEquals(bucket[i].key, key)) return true;
+        return false;
+      };
+      this.containsValue = function(value) {
+        for(var i=0; i < buckets.length; ++i) {
+          var bucket = buckets[i];
+          if(bucket == undefined) continue;
+          for(var j=0; j < bucket.length; ++j) {
+            if(virtEquals(bucket[j].value, value))
+              return true;
+          }
+        }
+        return false;
+      };
+      this.entrySet = function() { return new Set(
+           function(pair) { return new Entry(pair); },
+           function(pair) { return pair.constructor == Entry && pair._isIn(hashMap); },
+           function(pair) { return hashMap.remove(pair.getKey()); }
+         ); 
+      };
+      this.get = function(key) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if(bucket == undefined) return null;
+        for(var i=0; i < bucket.length; ++i)
+          if(virtEquals(bucket[i].key, key)) return bucket[i].value;
+        return null;
+      };
+      this.isEmpty = function() { return count == 0; };
+      this.keySet = function() { return new Set(
+           function(pair) { return pair.key; },
+           function(key) { return hashMap.containsKey(key); },
+           function(key) { return hashMap.remove(key); }
+         ); 
+      };
+      this.put = function(key, value) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if(bucket == undefined) { 
+          ++count;
+          buckets[index] = [ {key: key, value: value } ];
+          ensureLoad();
+          return null;
+        }	
+        for(var i=0; i < bucket.length; ++i) {
+          if(virtEquals(bucket[i].key, key)) {
+            var previous = bucket[i].value;
+            bucket[i].value = value;
+            return previous;
+          }
+        }
+        ++count;
+        bucket.push({key: key, value: value });
+        ensureLoad();
+        return null;
+      };
+      this.putAll = function(m) {
+        var it = m.entrySet().iterator();
+        while(it.hasNext()) {
+          var entry = it.next();
+          this.put(entry.getKey(), entry.getValue());
+        }
+      }
+      this.remove = function(key) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if(bucket == undefined) return null;
+        for(var i=0; i < bucket.length; ++i) {
+          if(virtEquals(bucket[i].key, key)) {
+            --count;
+            var previous = bucket[i].value;
+            bucket[i].removed = true;
+            if(bucket.length > 1)
+              bucket.splice(i, 1); 
+            else        
+              buckets[index] = undefined;
+            return previous;
+          }
+        }
+        return null;
+      };
+      this.size = function() { return count; }
+      this.values = function() {
+        var result = new ArrayList(0);
+        var it = m.entrySet().iterator();
+        while(it.hasNext()) {
+          var entry = it.next();
+          result.push(entry.getValue());
+        }
+        return result;
+      };
+
+      function ensureLoad() {
+        if(count <= loadFactor * buckets.length) return;
+        var allEntries = [];
+        for(var i=0; i < buckets.length; ++i) {
+           if(buckets[i] != undefined) 
+             allEntries = allEntries.concat(buckets[i]);
+        }
+        buckets = new Array(buckets.length * 2);
+        for(var i=0; i < allEntries.length; ++i) {
+          var index = virtHashCode(allEntries[i].key) % buckets.length;
+          var bucket = buckets[index];
+          if(bucket == undefined) buckets[index] = bucket = [];
+          bucket.push(allEntries[i]);        
+        }
+      }
+
+      function Set(conversion, isIn, removeItem) {
+        this.clear = function() { hashMap.clear(); }
+        this.contains = function(o) { return isIn(o); }
+        this.containsAll = function(o) { 
+          var it = o.iterator();
+          while(it.hasNext()) {
+            if(!this.contains(it.next())) return false;
+          }
+          return true;
+        };
+        this.isEmpty = function() { return hashMap.isEmpty(); }
+        this.iterator = function() { return new Iterator(conversion, removeItem); }
+        this.remove = function(o) { 
+          if(this.contains(o)) {
+            removeItem(o); return true;
+          }
+	  return false;
+        }        
+        this.removeAll = function(c) { 
+          var it = c.iterator();
+          var changed = false;
+          while(it.hasNext()) {
+            var item = it.next();
+            if(this.contains(item)) {
+              removeItem(item); changed = true;
+            }
+          }
+          return true;
+        };
+        this.retainAll = function(c) { 
+          var it = this.iterator();
+          var toRemove = [];          
+          while(it.hasNext()) {
+            var entry = it.next();
+            if(!c.contains(entry)) {
+              toRemove.push(entry);
+            }
+          }
+          for(var i=0;i<toRemove.length;++i) 
+            removeItem(toRemove[i]);
+          return toRemove.length > 0;
+        };
+        this.size = function() { return hashMap.size(); }
+        this.toArray = function() { 
+          var result = new ArrayList(0);
+          var it = this.iterator();
+          while(it.hasNext()) {
+            result.push(it.next());
+          }
+          return result;
+        }
+      }
+     
+      function Entry(pair) {        
+        this._isIn = function(map) { return map == hashMap && (typeof(pair.removed) === 'undefined'); }
+        this.equals = function(o) { return virtEquals(pair.key, o.getKey()); }
+        this.getKey = function() { return pair.key; }
+        this.getValue = function() { return pair.value; }
+        this.hashCode = function(o) { return virtHashCode(pair.key); }
+        this.setValue = function(value) { var old = pair.value; pair.value = value; return old; }
+      }
+
+      function Iterator(conversion, removeItem) {
+        var bucketIndex = 0;
+        var itemIndex = -1;
+        var endOfBuckets = false;
+        this.hasNext = function() { return !endOfBuckets; }
+        this.next = function() { var result = conversion(buckets[bucketIndex][itemIndex]); findNext(); return result; }
+        this.remove = function() { removeItem(this.next()); --itemIndex; } 
+
+        findNext();
+        
+        function findNext() {
+          while(!endOfBuckets) {
+            ++itemIndex;
+            if(bucketIndex >= buckets.length) 
+              endOfBuckets = true;
+            else if(typeof(buckets[bucketIndex]) === 'undefined'
+              || itemIndex >= buckets[bucketIndex].length) {
+              itemIndex = -1; ++bucketIndex;
+            } else
+              return; 
+          }
+        }
+      }
+    }
+    
+    function virtHashCode(obj) {
+      if(obj.constructor == String) {
+        var hash = 0;
+        for(var i=0;i<obj.length;++i) {
+          hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
+        }
+        return hash;
+      } else if(typeof(obj) != "object") {
+        return obj & 0xFFFFFFFF;
+      } else if("hashCode" in obj) {
+        return obj.hashCode.call(obj);
+      } else {
+        if(obj.$id == undefined) {
+          obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+        }
+        return obj.$id;     
+      }
+
+    }
+
+    function virtEquals(obj, other) {
+      if(obj == null || other == null) {
+        return (obj == null) && (other == null);
+      } else if(obj.constructor == String) {
+        return obj == other;
+      } else if(typeof(obj) != "object") {
+        return obj === other;
+      } else if("equals" in obj) {
+        return obj.equals.call(obj, other);
+      } else {
+        return obj == other;
+      }
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     // Color functions
@@ -1397,13 +1847,13 @@
     //Time based functions
     ////////////////////////////////////////////////////////////////////////////
     p.year = function year() {
-      return new Date().getYear() + 1900;
+      return new Date().getFullYear();
     };
     p.month = function month() {
-      return new Date().getMonth();
+      return new Date().getMonth() + 1;
     };
     p.day = function day() {
-      return new Date().getDay();
+      return new Date().getDate();
     };
     p.hour = function hour() {
       return new Date().getHours();
@@ -1441,6 +1891,9 @@
       inDraw = true;
 
       if (p.use3DContext) {
+        // Delete all the lighting states the user set in the last
+        // draw() call. They will have to reset them each time.
+        p.noLights();
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.camera();
         p.draw();
@@ -1502,8 +1955,13 @@
     };
 
     p.link = function (href, target) {
-      window.location = href;
+      if (typeof target !== 'undefined') {
+        window.open(href, target);
+      } else {
+        window.location = href;
+      }
     };
+
     p.beginDraw = function beginDraw() {};
     p.endDraw = function endDraw() {};
 
@@ -1615,7 +2073,6 @@
           throw "longErr";
         }
       }
-      return addUp;
     };
 
     p.nfs = function (num, left, right) {
@@ -1870,6 +2327,17 @@
     p.loadStrings = function loadStrings(url) {
       return ajax(url).split("\n");
     };
+    
+    p.loadBytes = function loadBytes(url) {
+      var string = ajax(url);
+      var ret = new Array( string.length );
+      
+      for ( var i = 0; i < string.length; i++) {
+        ret[i] = string.charCodeAt(i);
+      }
+      
+      return ret;
+    };
 
     // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
     // This breaks the join() ref-test. The Processing.org documentation says String or String[]. SHOULD BE FIXED NOW
@@ -1992,6 +2460,14 @@
       return this.valueOf() === str.valueOf();
     };
 
+    String.prototype.toCharArray = function() {
+      var chars = this.split("");
+      for (var i = chars.length -1; i >= 0; i--) {
+        chars[i] = chars[i].charCodeAt(0);
+      }
+      return chars;
+    };
+
     p.match = function (str, regexp) {
       return str.match(regexp);
     };
@@ -2026,14 +2502,15 @@
           width: "100%",
           height: "15%",
           fontFamily: "sans-serif",
-          color: "black",
-          backgroundColor: "white"
+          color: "#ccc",
+          backgroundColor: "black"
         },
         outputStyles = {
           position: "relative",
           fontFamily: "monospace",
           overflow: "auto",
-          height: "100%"
+          height: "100%",
+          paddingTop: "5px"
         },
         resizerStyles = {
           height: "5px",
@@ -2043,23 +2520,26 @@
         },
         closeButtonStyles = {
           position: "absolute",
-          top: "0px",
-          right: "15px",
-          border: "1px solid black",
-          borderTop: "none",
+          top: "5px",
+          right: "20px",
+          color: "#111",
+          MozBorderRadius: "4px",
+          webkitBorderRadius: "4px",
+          borderRadius: "4px",
           cursor: "pointer",
-          fontWeight: "bold",
+          fontWeight: "normal",
           textAlign: "center",
-          padding: "1px 5px",
-          backgroundColor: "#eb0000"
+          padding: "3px 5px",
+          backgroundColor: "#333",
+          fontSize: "12px"
         },
         entryStyles = {
-          borderBottom: "1px solid #d3d3d3",
+          //borderBottom: "1px solid #d3d3d3",
           minHeight: "16px"
         },
         entryTextStyles = {
           fontSize: "12px",
-          margin: "0 5px 0 5px",
+          margin: "0 8px 0 8px",
           maxWidth: "100%",
           whiteSpace: "pre-wrap",
           overflow: "auto"
@@ -2222,7 +2702,7 @@
         );
     
         closeButton[$title] = "Close Log";
-        append(closeButton, createTextNode("X"));
+        append(closeButton, createTextNode("\u2716"));
     
         resizer[$title] = "Double-click to toggle log minimization";
     
@@ -2302,22 +2782,20 @@
       return ret;
     };
 
-    p.char = function char( key ) {
-      var ret;
-
-      if ( arguments.length === 1 && typeof key === "number" && (key + "").indexOf( '.' ) === -1 ) {
-        ret = String.fromCharCode( key );
+    p['char'] = function ( key ) {
+      if ( arguments.length === 1 && typeof key === "number" && (key + "").indexOf( '.' ) === -1 ) { // not a float
+        return new Char(String.fromCharCode(key));
       } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
-        ret = new Array(0);
-        
+        var ret = [];
+
         for ( var i = 0; i < key.length; i++ ) {
-          ret[i] = char( key[i] );
+          ret[i] = p['char']( key[i] );
         }
+
+        return ret;
       } else {
         throw "char() may receive only one argument of type int, byte, int[], or byte[].";
       }
-      
-      return ret;
     };
 
     p.trim = function( str ) {
@@ -2344,7 +2822,7 @@
       return Math.sqrt(aNumber);
     };
 
-    p.int = function int( val ) {
+    p['int'] = function( val ) {
       var ret;
 
       if ( ( val || val === 0 ) && arguments.length === 1 ) {
@@ -2366,18 +2844,13 @@
             ret = 0;
           }
         } else if ( typeof val === 'string' ) {
-          if ( val.indexOf(' ') > -1 ) {
+          ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
+
+          if ( isNaN( ret ) ) {
             ret = 0;
-          } else if ( val.length === 1 ) {
-
-            ret = val.charCodeAt( 0 );
-          } else {
-            ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
-
-            if ( isNaN( ret ) ) {
-              ret = 0;
-            }
           }
+        } else if ( typeof val === 'object' && val.constructor === Char ) {
+          ret = val.code;
         } else if ( typeof val === 'object' && val.constructor === Array ) {
           ret = new Array( val.length );
 
@@ -2385,7 +2858,7 @@
             if ( typeof val[i] === 'string' && val[i].indexOf('.') > -1 ) {
               ret[i] = 0;
             } else {
-              ret[i] = p.int( val[i] );
+              ret[i] = p['int']( val[i] );
             }
           }
         }
@@ -2448,11 +2921,10 @@
     // String, int[], char[], byte[], boolean[], String[].
     // floats should not work. However, floats with only zeroes right of the
     // decimal will work because JS converts those to int.
-    p.float = function float( val ) {
+    p['float'] = function( val ) {
       var ret;
 
       if ( arguments.length === 1 ) {
-
         if ( typeof val === 'number' ) {
           // float() not allowed to handle floats.
           if ( ( val + "" ).indexOf( '.' ) > -1 ) {
@@ -2461,7 +2933,6 @@
             ret = val.toFixed(1);
           }
         } else if ( typeof val === 'boolean' ) {
-
           if ( val === true ) {
             ret = 1.0;
           } else {
@@ -2469,22 +2940,15 @@
           }
           ret = ret.toFixed(1);
         } else if ( typeof val === 'string' ) {
-
-          if ( val.indexOf(' ') > -1 ) {
-            ret = NaN;
-          } else if ( val.length === 1 ) {
-            // Need this to convert chars like @ properly.
-            ret = val.charCodeAt( 0 );
-            ret = ret.toFixed(1);
-          } else {
-            ret = parseFloat( val );
-          }
+          ret = parseFloat( val );
+        } else if ( typeof val === 'object' && val.constructor === Char ) {
+          ret = val.code.toFixed(1);  
         } else if ( typeof val === 'object' && val.constructor === Array ) {
 
           ret = new Array( val.length );
 
           for ( var i = 0; i < val.length; i++) {
-              ret[i] = p.float( val[i] );
+              ret[i] = p['float']( val[i] );
           }
         }
       }
@@ -2538,7 +3002,7 @@
       return Math.acos(aNumber);
     };
 
-    p.boolean = function (val) {
+    p['boolean'] = function( val ) {
       var ret = false;
 
       if (val && typeof val === 'number' && val !== 0) {
@@ -2551,15 +3015,25 @@
         ret = new Array(val.length);
 
         for (var i = 0; i < val.length; i++) {
-          ret[i] = p.boolean(val[i]);
+          ret[i] = p['boolean'](val[i]);
         }
       }
 
       return ret;
     };
 
-    p.dist = function dist(x1, y1, x2, y2) {
-      return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    p.dist = function() {
+      var dx, dy, dz = 0;      
+      if (arguments.length === 4) {
+        dx = arguments[0] - arguments[2];
+        dy = arguments[1] - arguments[3];
+      } 
+      else if (arguments.length === 6) {
+        dx = arguments[0] - arguments[3];
+        dy = arguments[1] - arguments[4];
+        dz = arguments[2] - arguments[5];
+      }      
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
     };
 
     p.map = function map(value, istart, istop, ostart, ostop) {
@@ -2608,9 +3082,26 @@
 
     };
 
-    //! This can't be right... right?
-    p.byte = function (aNumber) {
-      return aNumber || 0;
+    //! This can't be right... right? <corban> should be good now
+    // a byte is a number between -128 and 127
+    p['byte'] = function (aNumber) {
+      if (typeof aNumber === 'object' && aNumber.constructor === Array) {
+        var bytes = [];
+        for(var i = 0; i < aNumber.length; i++) {
+          bytes[i] = p['byte'](aNumber[i]);  
+        }
+        return bytes;
+      } else {
+        if (aNumber >= -128 && aNumber < 128) {
+          return aNumber;
+        } else {
+          if ( aNumber >= 128) {
+            return p['byte'](-256 + aNumber);
+          } else if ( aNumber < -128) {
+            return p['byte'](256 + aNumber);
+          }
+        }
+      }
     };
 
     p.norm = function norm(aNumber, low, high) {
@@ -2721,44 +3212,30 @@
           curContext.enable(curContext.DEPTH_TEST);
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
-
-          var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
-          curContext.shaderSource(vertexShaderObject, vertexShaderSource);
-          curContext.compileShader(vertexShaderObject);
-
-          if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)){
-            throw curContext.getShaderInfoLog(vertexShaderObject);
-          }
-
-          var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
-          curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
-          curContext.compileShader(fragmentShaderObject);
-          if(!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS)){
-            throw curContext.getShaderInfoLog(fragmentShaderObject);
-          }
-
-          programObject = curContext.createProgram();
-          curContext.attachShader(programObject, vertexShaderObject);
-          curContext.attachShader(programObject, fragmentShaderObject);
-          curContext.linkProgram(programObject);
-
-          if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)){
-            throw "Error linking shaders.";
-          } else{
-            curContext.useProgram(programObject);
-          }
+          
+          // Create the program objects to render 2D (points, lines) and 
+          // 3D (spheres, boxes) shapes. Because 2D shapes are not lit, 
+          // lighting calculations could be ommitted from that program object.
+          programObject2D = createProgramObject( curContext, vertexShaderSource2D, fragmentShaderSource3D );
+          programObject3D = createProgramObject( curContext, vertexShaderSource3D, fragmentShaderSource3D );
 
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts),curContext.DYNAMIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts),curContext.STATIC_DRAW);
+
+          boxNormBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxNorms),curContext.STATIC_DRAW);
 
           boxOutlineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
-					
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.STATIC_DRAW);
+
+          // The sphere vertices are specified dynamically since the user
+          // can change the level of detail. Everytime the user does that
+          // using sphereDetail(), the new vertices are calculated.
 					sphereBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
           
           lineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
@@ -3450,7 +3927,67 @@
         else                           {curContext.uniformMatrix2fv(varLocation, transpose, matrix);}
       }
     }
-		
+
+ 		////////////////////////////////////////////////////////////////////////////
+    // Lights
+    ////////////////////////////////////////////////////////////////////////////
+    
+    /*      
+    */
+    p.ambientLight = function( r, g, b ) {
+      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
+        uniformi( programObject3D, "lights[" + lightCount + "].type", 0 );
+        uniformi( programObject3D, "lightCount", ++lightCount );
+      }
+    }
+
+    /*
+    */
+    p.directionalLight = function( r, g, b, nx, ny, nz ) {
+      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position", [nx, -ny, nz] );
+        uniformi( programObject3D, "lights[" + lightCount + "].type", 1 );
+        uniformi( programObject3D, "lightCount", ++lightCount );
+      }
+    }
+    
+    /*
+    */
+    p.pointLight = function( r, g, b, x, y, z ) {
+      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
+
+        // place the point in view space once instead of once per vertex
+        // in the shader.
+        var pos = new PVector( x, y, z );
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( pos, pos );
+
+        uniformf( programObject3D, "lights[" + lightCount + "].position", pos.array() );
+        uniformi( programObject3D, "lights[" + lightCount + "].type", 2 );
+        uniformi( programObject3D, "lightCount", ++lightCount );
+      }
+    }
+
+    /*
+      Disables lighting so the all shapes drawn after this
+      will not be lit.
+    */
+    p.noLights = function() {
+      if( p.use3DContext ) {
+        lightCount = 0;
+        curContext.useProgram( programObject3D );
+        uniformi( programObject3D, "lightCount", lightCount );
+      }
+    }
+
 		////////////////////////////////////////////////////////////////////////////
     // Camera functions
     ////////////////////////////////////////////////////////////////////////////
@@ -3586,9 +4123,10 @@
         view.scale( 1, -1 , 1 );
         view.apply( modelView.array() );
 
-        uniformMatrix( programObject , "model" , true,  model.array() );
-        uniformMatrix( programObject , "view" , true , view.array() );
-        uniformMatrix( programObject , "projection" , true , projection.array() );
+        curContext.useProgram( programObject3D );
+        uniformMatrix( programObject3D, "model" , true,  model.array() );
+        uniformMatrix( programObject3D, "view" , true, view.array() );
+        uniformMatrix( programObject3D, "projection", true, projection.array() );
 
         if( doFill === true ) {
           // fix stitching problems. (lines get occluded by triangles
@@ -3598,18 +4136,40 @@
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
           c = fillStyle.slice( 5, -1 ).split( "," );
-          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
-          vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );
-          curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
+          uniformf( programObject3D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+
+          var v = new PMatrix3D();
+          v.set(view);
+
+          var m = new PMatrix3D();
+          m.set(model);
+
+          v.mult(m);
+
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+
+          uniformMatrix( programObject3D , "normalTransform", false, normalMatrix.array() );
+
+          vertexAttribPointer( programObject3D, "Vertex", 3, boxBuffer );
+          vertexAttribPointer( programObject3D, "Normal", 3, boxNormBuffer );
+
+          curContext.drawArrays( curContext.TRIANGLES, 0, boxVerts.length/3 );
           curContext.disable( curContext.POLYGON_OFFSET_FILL );
         }
 
         if( lineWidth > 0 && doStroke ) {
+          curContext.useProgram(programObject2D);
+          uniformMatrix( programObject2D, "model", true,  model.array() );
+          uniformMatrix( programObject2D, "view", true, view.array() );
+          uniformMatrix( programObject2D, "projection", true, projection.array() );
+
           // eventually need to make this more efficient.
           c = strokeStyle.slice( 5, -1 ).split( "," );
-          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf(programObject2D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
           curContext.lineWidth( lineWidth );
-          vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
+          vertexAttribPointer( programObject2D, "Vertex", 3, boxOutlineBuffer );
           curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
         }
       }
@@ -3618,18 +4178,11 @@
 		var initSphere = function() {
       var i;
 			sphereVerts = [];
-			sphereNorms = [];
 
 			for (i = 0; i < sphereDetailU; i++) {
-				sphereNorms.push(0);
-				sphereNorms.push(-1);
-				sphereNorms.push(0);
 				sphereVerts.push(0);
 				sphereVerts.push(-1);
 				sphereVerts.push(0);
-				sphereNorms.push( sphereX[i] );
-				sphereNorms.push( sphereY[i] );
-				sphereNorms.push( sphereZ[i] );
 				sphereVerts.push( sphereX[i] );
 				sphereVerts.push( sphereY[i] );
 				sphereVerts.push( sphereZ[i] );
@@ -3637,9 +4190,6 @@
 			sphereVerts.push(0);
 			sphereVerts.push(-1);
 			sphereVerts.push(0);
-			sphereNorms.push( sphereX[0] );
-			sphereNorms.push( sphereY[0] );
-			sphereNorms.push( sphereZ[0] );
 			sphereVerts.push( sphereX[0] );
 			sphereVerts.push( sphereY[0] );
 			sphereVerts.push( sphereZ[0] );
@@ -3653,18 +4203,9 @@
 				voff += sphereDetailU;
 				v2 = voff;
 				for (var j = 0; j < sphereDetailU; j++) {
-					sphereNorms.push( parseFloat( sphereX[v1] ) );
-					sphereNorms.push( parseFloat( sphereY[v1] ) );
-					sphereNorms.push( parseFloat( sphereZ[v1] ) );
-					// verts
 					sphereVerts.push( parseFloat( sphereX[v1] ) );
 					sphereVerts.push( parseFloat( sphereY[v1] ) );
 					sphereVerts.push( parseFloat( sphereZ[v1++] ) );
-					// normals
-					sphereNorms.push( parseFloat( sphereX[v2] ) );
-					sphereNorms.push( parseFloat( sphereY[v2] ) );
-					sphereNorms.push( parseFloat( sphereZ[v2] ) );
-					// verts
 					sphereVerts.push( parseFloat( sphereX[v2] ) );
 					sphereVerts.push( parseFloat( sphereY[v2] ) );
 					sphereVerts.push( parseFloat( sphereZ[v2++] ) );
@@ -3673,18 +4214,10 @@
 				// close each ring
 				v1 = v11;
 				v2 = voff;
-				sphereNorms.push( parseFloat( sphereX[v1] ) );
-				sphereNorms.push( parseFloat( sphereY[v1] ) );
-				sphereNorms.push( parseFloat( sphereZ[v1] ) );
-				// verts
+
 				sphereVerts.push( parseFloat( sphereX[v1] ) );
 				sphereVerts.push( parseFloat( sphereY[v1] ) );
 				sphereVerts.push( parseFloat( sphereZ[v1] ) );
-				// norms
-				sphereNorms.push( parseFloat( sphereX[v2] ) );
-				sphereNorms.push( parseFloat( sphereY[v2] ) );
-				sphereNorms.push( parseFloat( sphereZ[v2] ) );
-				// verts
 				sphereVerts.push( parseFloat( sphereX[v2] ) );
 				sphereVerts.push( parseFloat( sphereY[v2] ) );
 				sphereVerts.push( parseFloat( sphereZ[v2] ) );
@@ -3693,43 +4226,25 @@
 			// add the northern cap
 			for (i = 0; i < sphereDetailU; i++) {
 				v2 = voff + i;
-				// norms
-				sphereNorms.push( parseFloat( sphereX[v2] ) );
-				sphereNorms.push( parseFloat( sphereY[v2] ) );
-				sphereNorms.push( parseFloat( sphereZ[v2] ) );
-				// verts
+
 				sphereVerts.push( parseFloat( sphereX[v2] ) );
 				sphereVerts.push( parseFloat( sphereY[v2] ) );
 				sphereVerts.push( parseFloat( sphereZ[v2] ) );
-				// norms
-				sphereNorms.push( 0 );
-				sphereNorms.push( 1 );
-				sphereNorms.push( 0 );
-				// verts
 				sphereVerts.push( 0 );
 				sphereVerts.push( 1 );
 				sphereVerts.push( 0 );
 			}
 
-			sphereNorms.push( parseFloat( sphereX[voff] ) );
-			sphereNorms.push( parseFloat( sphereY[voff] ) );
-			sphereNorms.push( parseFloat( sphereZ[voff] ) );
-			// verts
 			sphereVerts.push( parseFloat( sphereX[voff] ) );
 			sphereVerts.push( parseFloat( sphereY[voff] ) );
 			sphereVerts.push( parseFloat( sphereZ[voff] ) );
-			// norms
-			sphereNorms.push(0);
-			sphereNorms.push(1);
-			sphereNorms.push(0);
-			// verts
 			sphereVerts.push(0);
 			sphereVerts.push(1);
 			sphereVerts.push(0);
-			
-			vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
-			//set the buffer data
-			curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(sphereVerts),curContext.STATIC_DRAW);
+      
+      //set the buffer data
+      curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
+      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(sphereVerts),curContext.STATIC_DRAW);
 		};
 
 		// sphere and sphereDetail
@@ -3791,28 +4306,45 @@
 
 
 		p.sphere = function() {
-			if(p.use3DContext) {
-				var sRad = arguments[0], c;
-				
-				if (( sphereDetailU < 3 ) || ( sphereDetailV < 2 )) {
-					p.sphereDetail(30);
-				}
-				
-				// Modeling transformation
+      if(p.use3DContext) {
+        var sRad = arguments[0], c;
+
+        if (( sphereDetailU < 3 ) || ( sphereDetailV < 2 )) {
+          p.sphereDetail(30);
+        }
+
+        // Modeling transformation
         var model = new PMatrix3D();
-        model.scale( sRad , sRad, sRad );
+        model.scale( sRad, sRad, sRad );
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
         var view = new PMatrix3D();
-        view.scale( 1, -1 , 1 );
+        view.scale( 1, -1, 1 );
         view.apply( modelView.array() );
 
-				uniformMatrix( programObject , "model" , true,  model.array() );
-        uniformMatrix( programObject , "view" , true , view.array() );
-        uniformMatrix( programObject , "projection" , true , projection.array() );
+        curContext.useProgram( programObject3D );
+        
+        uniformMatrix( programObject3D, "model", true,  model.array() );
+        uniformMatrix( programObject3D, "view", true, view.array() );
+        uniformMatrix( programObject3D, "projection", true, projection.array() );
 
-        vertexAttribPointer( programObject, "Vertex", 3 , sphereBuffer );
+        var v = new PMatrix3D();
+        v.set(view);
+
+        var m = new PMatrix3D();
+        m.set(model);
+
+        v.mult(m);
+
+        var normalMatrix = new PMatrix3D();
+        normalMatrix.set(v);
+        normalMatrix.invert();
+
+        uniformMatrix( programObject3D , "normalTransform", false, normalMatrix.array() );
+
+        vertexAttribPointer( programObject3D, "Vertex", 3, sphereBuffer );
+        vertexAttribPointer( programObject3D, "Normal", 3, sphereBuffer );
 
         if( doFill === true ) {
           // fix stitching problems. (lines get occluded by triangles
@@ -3822,19 +4354,26 @@
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
           c = fillStyle.slice( 5, -1 ).split( "," );
-          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf( programObject3D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
 
-          curContext.drawArrays( curContext.TRIANGLE_STRIP, 0 , sphereVerts.length/3 );
+          curContext.drawArrays( curContext.TRIANGLE_STRIP, 0, sphereVerts.length/3 );
           curContext.disable( curContext.POLYGON_OFFSET_FILL );
         }
 
         if( lineWidth > 0 && doStroke ) {
+          curContext.useProgram( programObject2D );
+          vertexAttribPointer( programObject2D, "Vertex", 3 , sphereBuffer );
+
+   				uniformMatrix( programObject2D, "model", true,  model.array() );
+          uniformMatrix( programObject2D, "view", true, view.array() );
+          uniformMatrix( programObject2D, "projection", true, projection.array() );
+
           // eventually need to make this more efficient.
           c = strokeStyle.slice( 5, -1 ).split( "," );
-          uniformf(programObject, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf(programObject2D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
 
           curContext.lineWidth( lineWidth );
-          curContext.drawArrays( curContext.LINE_STRIP, 0 , sphereVerts.length/3 );
+          curContext.drawArrays( curContext.LINE_STRIP, 0, sphereVerts.length/3 );
         }
 			}
 		};
@@ -4021,16 +4560,17 @@
         view.scale(1, -1 , 1);
         view.apply(modelView.array());
 
-        uniformMatrix(programObject , "model" , true,  model.array());
-        uniformMatrix(programObject , "view" , true , view.array());
-        uniformMatrix(programObject , "projection" , true , projection.array());
+        curContext.useProgram(programObject2D);
+        uniformMatrix(programObject2D , "model" , true,  model.array());
+        uniformMatrix(programObject2D , "view" , true , view.array());
+        uniformMatrix(programObject2D , "projection" , true , projection.array());
 
         if( lineWidth > 0 && doStroke ) {
           // this will be replaced with the new bit shifting color code
           var c = strokeStyle.slice(5, -1).split(",");
-          uniformf(programObject, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+          uniformf(programObject2D, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
 
-          vertexAttribPointer(programObject, "Vertex", 3, pointBuffer);
+          vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
           curContext.drawArrays(curContext.POINTS, 0, 1);
         }
       } else {
@@ -4311,21 +4851,23 @@
         //model.scale(w, h, d);
 
         var view = new PMatrix3D();
-        view.scale(1, -1 , 1);
+        view.scale(1, -1, 1);
         view.apply(modelView.array());
 
-        uniformMatrix(programObject , "model" , true,  model.array());
-        uniformMatrix(programObject , "view" , true , view.array());
-        uniformMatrix(programObject , "projection" , true , projection.array());
+        curContext.useProgram( programObject2D );
+        uniformMatrix( programObject2D, "model", true,  model.array() );
+        uniformMatrix( programObject2D, "view", true, view.array() );
+        uniformMatrix( programObject2D, "projection", true, projection.array() );
 
         if( lineWidth > 0 && doStroke ) {
+          curContext.useProgram(programObject2D);
           // this will be replaced with the new bit shifting color code
           var c = strokeStyle.slice(5, -1).split(",");
-          uniformf(programObject, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+          uniformf(programObject2D, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
 
           curContext.lineWidth(lineWidth);
 
-          vertexAttribPointer(programObject, "Vertex", 3, lineBuffer);
+          vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(lineVerts),curContext.STREAM_DRAW);
           curContext.drawArrays(curContext.LINES, 0, 2);
         }
@@ -4567,59 +5109,186 @@
           );
         }
       }
-
       return data;
     };
 
-    // Loads an image for display. Type is unused. Callback is fired on load.
-    p.loadImage = function loadImage(file, type, callback) {
-      var img = document.createElement('img');
-      img.loaded = false;
-      img.mask = function () {}; // I don't think image mask was ever implemented? -F1LT3R
-      img.onload = function () {
-        var h = this.height, w = this.width;
-        var canvas = document.createElement("canvas");
-
-        canvas.width = w;
-        canvas.height = h;
-
-        var context = canvas.getContext("2d");
-
-        context.drawImage(this, 0, 0);
-
-        this.data = buildImageObject(context.getImageData(0, 0, w, h));
-        this.data.img = img;
-
-        this.get = this.data.get;
-        this.pixels = this.data.pixels;
-
-        this.loaded = true;
-
-        if (callback) {
-          callback();
-        }
-      };
-
-      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
-
-      return img;
+    var PImage = function PImage(aWidth, aHeight, aFormat) {
+      if(arguments.length === 1) {
+        // convert an <img> to a PImage
+        this.fromHTMLImageData(arguments[0]);
+      } else if (arguments.length === 2 || arguments.length === 3) {
+        this.width = aWidth;
+        this.height = aHeight;
+        this.pixels = new Array(aWidth * aHeight);
+        this.data = this.pixels;
+        this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
+      }
     };
 
-    // Gets a single pixel or block of pixels from the current Canvas Context
-    p.get = function get(x, y) {
+    PImage.prototype = {
+      get: function (x, y, w, h) {
+        if (!arguments.length) {
+          return p.get(this);
+        } else if (arguments.length === 2) {
+          return p.get(x,y,this);
+        } else if (arguments.length === 4) {
+          return p.get(x, y, w, h, this);
+        }
+      },
+      set: function (x, y, c) {
+        p.set(x, y, c, this);
+      },
+      loadPixels: function() {
+      },
+      updatePixels: function() {
+      },
+      toImageData: function() {
+        var canvas = document.createElement('canvas');
+        var imgData = canvas.getContext('2d').createImageData(this.width, this.height); 
+        for (var i = 0; i< this.pixels.length; i++) {
+          // convert each this.pixels[i] int to array of 4 ints of each color
+          var c = this.pixels[i];
+          var pos = i*4;
+          // pjs uses argb, canvas stores rgba        
+          imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
+          imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
+          imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
+          imgData.data[pos + 2] = c % 256;
+        }
+        // return a canvas ImageData object with pixel array in canvas format
+        return imgData;
+      },
+      fromImageData: function(canvasImg) {
+        this.width = canvasImg.width;
+        this.height = canvasImg.height;
+        this.pixels = new Array(canvasImg.width * canvasImg.height);
+        this.format = p.ARGB;
+        for (var i = 0; i< this.pixels.length; i++) {
+          // convert each canvasImg's colors to PImage array format
+          var pos = i*4;
+          // pjs uses argb, canvas stores rgba
+          this.pixels[i] = (canvasImg.data[pos + 3] * 16777216) + (canvasImg.data[pos + 0] * 65536) +
+                  (canvasImg.data[pos + 1] * 256)    +   (canvasImg.data[pos + 2]);                  
+        }
+      },
+      fromHTMLImageData: function(htmlImg) {
+        // convert an <img> to a PImage
+        var canvas = document.createElement("canvas");
+        canvas.width = htmlImg.width;
+        canvas.height = htmlImg.height;
+        var context = canvas.getContext("2d");
+        context.drawImage(htmlImg, 0, 0);
+        var imageData = context.getImageData(0,0,htmlImg.width,htmlImg.height);
+        this.ImageData = imageData;
+        this.fromImageData(imageData);
+      }
+    };
+    
+    p.PImage = PImage;
+    try {
+			// Opera createImageData fix
+			if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
+				CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); }
+			}
+		} catch(e) {}
+    p.createImage = function createImage(w, h, mode) {
 
+      var img = new PImage(w,h,mode);
+      // make the new image transparent black by default
+      for (var i = 0; i < w*h; i++){
+        if (mode === p.RGB) {
+          // if mode is RGB set alpha to 255, no transparency
+          img.pixels[i++] = 255;
+        } else {
+          img.pixels[i++] = 0;
+        }
+        img.pixels[i++] = 0;
+        img.pixels[i++] = 0;
+        img.pixels[i] = 0;        
+      }
+      return img;
+    };
+    
+    // Loads an image for display. Type is unused. Callback is fired on load.
+    p.loadImage = function loadImage(file, type, callback) {
+      // if type is specified add it with a . to file to make the filename
+      if(type){
+        file = file + "." + type;
+      }
+      // if image is in the preloader cache return a new PImage
+      if (p.pjs.imageCache[file]) {
+        return new PImage(p.pjs.imageCache[file]);
+      }
+      // else aysnc load it
+      else {
+        var pimg = new PImage(0,0,p.ARGB);
+        var img = document.createElement('img');
+        pimg.sourceImg = img;
+        img.onload = ( function(aImage, aPImage, aCallback) {
+          var image = aImage;
+          var pimg = aPImage;
+          var callback = aCallback;
+          return function() {
+            // change the <img> object into a PImage now that its loaded
+            pimg.fromHTMLImageData(image);
+            if (callback) {
+              callback();
+            }
+          };
+        })(img, pimg, callback);
+        img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
+        return pimg;
+      }
+    };    
+    
+    // async loading of large images, same functionality as loadImage above
+    p.requestImage = p.loadImage;
+    
+    // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
+    p.get = function get(x, y, w, h, img) {
+      // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
       if (!arguments.length) {
-        var c = p.createGraphics(p.width, p.height);
-        c.image(curContext, 0, 0);
+        //return a PImage of curContext
+        var c = new PImage(p.width, p.height, p.RGB);
+        c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
         return c;
-      }
-
-      if (!getLoaded) {
-        getLoaded = buildImageObject(curContext.getImageData(0, 0, p.width, p.height));
-      }
-
-      return getLoaded.get(x, y);
-
+      } else if ( arguments.length === 5 ){
+        // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+        var start = y * img.width + x;
+        var end = (y + h) * img.width + x + w;
+        var c = new PImage(w, h, p.RGB);
+        for (var i=start, j=0; i < end; i++, j++) {
+          c.pixels[j] = img[i];
+          if (j+1 % w == 0) {
+            //completed one line, increment i by offset
+            i += img.width-w;
+          }
+        }
+        return c;
+      } else if ( arguments.length === 4 ){
+        // return a PImage of w and h from cood x,y of curContext
+		    var c = new PImage(w, h, p.RGB);
+		    c.fromImageData(curContext.getImageData(x, y, w, h)); 
+        return c;
+      } else if ( arguments.length === 3 ){
+        // PImage.get(x,y) was called, return the color (int) at x,y of img
+        return w.pixels[y * w.width + x];
+	    } else if ( arguments.length === 2 ){
+	      // return the color at x,y (int) of curContext
+	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
+		    if(x <= p.width && x > 0 && y > 0 && y <= p.height){
+		      // x,y is inside canvas space
+		      var c = new PImage(1,1,p.RGB);
+		      c.fromImageData(curContext.getImageData(x,y,1,1));
+		      return c.pixels[0];
+		    } else {
+		      // x,y is outside image return transparent black
+		      return 0;
+		    }
+	    } else if ( arguments.length === 1 ){
+	      // PImage.get() was called, return the PImage
+	      return x;
+	    }
     };
 
     // Creates a new Processing instance and passes it back for... processing
@@ -4634,23 +5303,26 @@
     };
 
     // Paints a pixel array into the canvas
-    p.set = function set(x, y, obj) {
-
-      if (obj && obj.img) {
-
-        p.image(obj, x, y);
-
-      } else {
-
-        var oldFill = curContext.fillStyle,
+    p.set = function set(x, y, obj, img) {
+      // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
+      if ( arguments.length === 4 ) {
+        img.pixels[y*img.width+x] = obj;
+      } else if (arguments.length = 3) {
+        // called p.set(), was it with a color or a img ?
+        if(typeof obj === "number"){
+          // it was a color
+          // use canvas method to fill pixel with color
+          // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
+          var oldFill = curContext.fillStyle,
           color = obj;
-
-        curContext.fillStyle = color;
-        curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-        curContext.fillStyle = oldFill;
-
+          curContext.fillStyle = color.toString();
+          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+          curContext.fillStyle = oldFill;
+        } else {
+          // it was a PImage
+          p.image(x,y,obj);
+        }
       }
-
     };
 
     // Gets a 1-Dimensional pixel array from Canvas
@@ -4711,12 +5383,14 @@
             // if 3 component color was passed in, alpha will be 1
             // otherwise it will already be normalized.
             curContext.clearColor(c[0] / 255, c[1] / 255, c[2] / 255, c[3]);
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
 
           // user passes in value which ranges from 0-255, but opengl
           // wants a normalized value.
           else if (typeof arguments[0] === "number") {
             curContext.clearColor(col[0] / 255, col[0] / 255, col[0] / 255, 1.0 );
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
         } else if (arguments.length === 2) {
           if (typeof arguments[0] === "string") {
@@ -4724,6 +5398,7 @@
             // Processing is ignoring alpha
             // var a = arguments[0]/255;
             curContext.clearColor(c[0] / 255, c[1] / 255, c[2] / 255, 1.0);
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
           // first value is shade of gray, second is alpha
           // background(0,255);
@@ -4734,6 +5409,7 @@
             // var a = arguments[0]/255;
             a = 1.0;
             curContext.clearColor(c, c, c, a);
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
         }
 
@@ -4742,23 +5418,20 @@
           // Processing seems to ignore this value, so just use 1.0 instead.
           //var a = arguments.length === 3? 1.0: arguments[3]/255;
           curContext.clearColor(col[0] / 255, col[1] / 255, col[2] / 255, 1);
+          curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
         }
       } else { // 2d context
         if (arguments.length) {
-          if (img.data && img.data.img) {
-            curBackground = img.data;
+          if (img.pixels && img.width == p.width && img.height == p.height) {
+            curBackground = img;
+            p.image(img, 0, 0);
           } else {
             curBackground = p.color.apply(this, arguments);
+            var oldFill = curContext.fillStyle;
+            curContext.fillStyle = curBackground + "";
+            curContext.fillRect(0, 0, p.width, p.height);
+            curContext.fillStyle = oldFill;
           }
-        }
-
-        if (curBackground.img) {
-          p.image(img, 0, 0);
-        } else {
-          var oldFill = curContext.fillStyle;
-          curContext.fillStyle = curBackground + "";
-          curContext.fillRect(0, 0, p.width, p.height);
-          curContext.fillStyle = oldFill;
         }
       }
       hasBackground = true;
@@ -4811,36 +5484,6 @@
       this.getHeight = function () {
         return getImage_old(this.images[0]).height;
       };
-    };
-
-    p.createImage = function createImage(w, h, mode) {
-
-      var data = {};
-      data.width = w;
-      data.height = h;
-      data.data = [];
-
-      if (curContext.createImageData) {
-        data = curContext.createImageData(w, h);
-      }
-
-      data.pixels = new Array(w * h);
-
-      data.get = function (x, y) {
-        return this.pixels[w * y + x];
-      };
-
-      data._mask = null;
-
-      data.mask = function (img) {
-        this._mask = img;
-      };
-
-      data.loadPixels = function () {};
-      data.updatePixels = function () {};
-
-      return data;
-
     };
 
     function getImage(img) {
@@ -4914,24 +5557,32 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
 
-      if (img.data || img.canvas) {
+      if (img.width > 0) {
 
         x = x || 0;
         y = y || 0;
 
-        var obj = getImage(img.data || img.canvas),
-          oldAlpha;
+        var obj;
+        if (img.ImageData && img.ImageData.width > 0) {
+          obj = img.ImageData;
+        } else {
+          obj = img.toImageData();
+        }
+        var  oldAlpha;
 
         if (curTint >= 0) {
           oldAlpha = curContext.globalAlpha;
           curContext.globalAlpha = curTint / opacityRange;
         }
 
-        if (arguments.length === 3) {
-          curContext.drawImage(obj, x, y);
-        } else {
-          curContext.drawImage(obj, x, y, w, h);
+        if (arguments.length === 5) {
+          // resize the image to w,h
+          // this should use resize later on and also pay attention to imageMode
+          // does not crop image, resizes it to w,h
+          // coming in 0.8
         }
+        // draw the image
+        curContext.putImageData(obj, x, y);
 
         if (curTint >= 0) {
           curContext.globalAlpha = oldAlpha;
@@ -4943,13 +5594,7 @@
           p.image(img._mask, x, y);
           curContext.globalCompositeOperation = oldComposite;
         }
-
       }
-
-      if (typeof img === 'string') {
-
-      }
-
     };
 
     // Clears a rectangle in the Canvas element or the whole Canvas
@@ -5564,6 +6209,25 @@
         }
       });
 
+      attach(document, /Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)?"DOMMouseScroll":"mousewheel", function(e) {
+        var delta = 0;
+
+        if (event.wheelDelta) {
+          delta = event.wheelDelta / 120; 
+          if (window.opera) {
+            delta = -delta; 
+          }
+        } else if (event.detail) {
+          delta = -event.detail/3;
+        }
+
+        p.mouseScroll = delta;
+
+        if (delta) {
+          p.mouseScrolled();
+        }
+      });
+
       attach(document, "keydown", function (e) {
         keyPressed = true;
         p.keyCode = null;
@@ -5642,7 +6306,6 @@
           p.keyReleased();
         }
       });
-
     };
 
     return p;
