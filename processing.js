@@ -4856,7 +4856,7 @@
           if (img.pixels && img.width == p.width && img.height == p.height) {
             curBackground = img;
             p.image(img, 0, 0);
-          } else if (typeof img == "number") {
+          } else {
             curBackground = p.color.apply(this, arguments);
             var oldFill = curContext.fillStyle;
             curContext.fillStyle = curBackground + "";
