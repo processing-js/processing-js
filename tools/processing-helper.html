@@ -19,22 +19,26 @@
     &nbsp;<input onclick="helper.generateRefTest();" type="button" value="Generate Ref Test"></input>
 
     <h2>Canvas</h2>
-    <canvas id="sketch" style="border: 1px solid"></canvas>
+    <canvas id="sketch" width="100" height="100" style="border: 1px solid"></canvas>
 
     <h2>Output</h2>
     <textarea rows="20" cols="80" id="output" readonly="readonly">None.</textarea>
 
     <script>
-    var helper = {
+      var helper = {
         canvas: document.getElementById('sketch'),
         code:   document.getElementById('code'),
         output: document.getElementById('output'),
+        p:      null,
 
         runSketch: function() {
           try {
-            Processing(this.canvas, this.code.value);
+            this.output.value = '';
+            p = Processing(this.canvas, this.code.value);
+            return true;
           } catch (e) {
             this.output.value = "Error! Error was:\n" + e.toString();
+            return false;
           }
         },
 
@@ -59,14 +63,66 @@
 
         generateRefTest: function() {
           // Run the sketch first, in case the user hasn't
-          this.runSketch();
-          var context = this.canvas.getContext('2d');
-          var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
-          var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
-          document.location.href= "data:text/plain;charset=utf-8;base64," + 
-                                  btoa('//' + dimensions + imgData.toString() + '\n' + this.code.value);
+          if (!this.runSketch()) {
+            return;
+          }
+
+          try {          
+            // if the test was 2d, we can just call getImageData
+            if (!p.use3DContext) {
+              var context = this.canvas.getContext('2d');
+              var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
+              var pixels = [];
+            
+              for(var i = 0, idl = imgData.length; i < idl; i++){
+                pixels[i] = imgData[i];
+              }
+            
+              var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
+              document.location.href= "data:text/plain;charset=utf-8;base64," + 
+                                    btoa('//' + dimensions + pixels + '\n' + this.code.value);
+            } else {
+              // else, we'll need to call WebGL's readPixels.
+              // The order of the pixels go from bottom to top, left to right.
+
+              // Safari returns a regular JS object for readPixels.
+              // Minefield returns a WebGLUnsignedByteArray.
+              // Chromium raises an exception because of an XHR bug.
+              // So we need to handle each case differently.
+            
+              var browserString = navigator.userAgent;
+              var regex = /Safari/i;
+              var isSafari = browserString.match(regex);
+
+              var context = this.canvas.getContext("experimental-webgl");
+            
+              // Safari returns null if format RGB is requested
+              var unsignedBuffer = context.readPixels(0,0,this.canvas.width,this.canvas.height,context.RGBA, context.UNSIGNED_BYTE);
+              var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
+              var pixels = [];
+            
+              if (isSafari) {
+                // extract the data from the WebGLUnsignedByteArray and place
+                // it in a JS array for easy manipulation.
+                for (var i = 0, ubl = unsignedBuffer.length; i < ubl; i++){
+                  pixels[i] = unsignedBuffer[i];
+                }
+              } else if(!isSafari) {
+                // Minefield no longer has .toString() on ImageData.data
+                for (var i = 0, ubl = unsignedBuffer.data.length; i < ubl; i++){
+                  pixels[i] = unsignedBuffer.data[i];
+                }
+              }
+
+              // Opera doesn't have btoa() so this won't work there.
+              document.location.href = "data:text/plain;charset=utf-8;base64," + 
+                                       btoa('//' + dimensions + pixels.toString() + '\n' + this.code.value);
+            }
+          } catch (e) {
+            this.output.value = "Error creating ref test! Error was: " + e.toString();
+          }
         }
-    };
+      };
     </script>
   </body>
 </html>
