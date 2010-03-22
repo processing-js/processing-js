@@ -3217,6 +3217,14 @@
       array: function array(){
         return this.elements.slice();
       },
+      skewX: function(angle) {
+        this.apply(1, 0, 1,
+                   angle, 0, 0);
+      },
+      skewY: function(angle) {
+        this.apply(1, 0, 1,
+                   0, angle, 0);
+      },
       apply: function(){
         if( arguments.length === 1 && arguments[0] instanceof PMatrix2D ){
           this.apply( arguments[0].array() );
@@ -3229,8 +3237,8 @@
         else if( arguments.length === 1 && arguments[0] instanceof Array ){
           var source = arguments[0];
 
-          var result = [0, 0, 0,
-                        0, 0, 0];
+          var result = [0, 0, this.elements[2],
+                        0, 0, this.elements[5]];
           var e = 0;
           for(var row = 0; row < 2; row++){
             for(var col = 0; col < 3; col++, e++){
