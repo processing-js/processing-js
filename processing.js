@@ -5008,7 +5008,12 @@
     };
     
     p.PImage = PImage;
-    
+    try {
+			// Opera createImageData fix
+			if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
+				CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); }
+			}
+		} catch(e) {}
     p.createImage = function createImage(w, h, mode) {
 
       var img = new PImage(w,h,mode);
