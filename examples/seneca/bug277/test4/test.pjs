@@ -1,11 +1,14 @@
 // import processing.opengl.*;
 
 void setup() {
-  size( 100, 100);
+  size( 100, 100, OPENGL );
 }
 
 void draw() {
-  background(33,66,99);
+  background(0);
   noStroke();
-  rect(0,0,20,20);
+  pointLight(51, 102, 126, 35, 40, 36);
+  noStroke();
+  translate(80, 50, 0);
+  sphere(30);
 }

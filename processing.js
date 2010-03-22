@@ -98,14 +98,17 @@
         // this regex needs to be cleaned up a bit
         var r = "" + sketchSource.match( /size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/ );
         var dimensions = r.match( /[0-9]+/g );
-        var sketchWidth = parseInt( dimensions[0] );
-        var sketchHeight = parseInt( dimensions[1] );
+        
+        if(dimensions) {
+          var sketchWidth = parseInt( dimensions[0] );
+          var sketchHeight = parseInt( dimensions[1] );
 
-        // only adjust the attributes if they differ
-        if( canvas[i].width != sketchWidth || canvas[i].height != sketchHeight )
-        {
-          canvas[i].setAttribute( "width", sketchWidth );
-          canvas[i].setAttribute( "height", sketchHeight );
+          // only adjust the attributes if they differ
+          if( canvas[i].width != sketchWidth || canvas[i].height != sketchHeight )
+          {
+            canvas[i].setAttribute( "width", sketchWidth );
+            canvas[i].setAttribute( "height", sketchHeight );
+          }
         }
         Processing( canvas[i], sketchSource );
       }
