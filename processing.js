@@ -363,9 +363,13 @@
     aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+| )\s*(\w+\s*[\),])/g, "$1$4");
 
     // float[] foo = new float[5];
-    aCode = aCode.replace(/new (\w+)((?:\[([^\]]*)\])+)/g, function (all, name, args) {
-      return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ")";
-      //return "new ArrayList(" + args.slice(1, -1).split("][").join(", ") + ")";
+    aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{.*\})*\s*;/g, function (all, name, args, initVars) {
+      if (initVars) {
+        return initVars + ";";
+      }
+      else {
+        return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
+      }
     });
 
     // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
