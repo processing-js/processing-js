@@ -49,10 +49,15 @@ class ProcessingTests(object):
             return False
       return True
 
-  def runParserTests(self, jsshell, testPattern=None, summaryOnly=False):
+  def runParserTests(self, jsshell, testPattern=None, summaryOnly=False, processingPath=None):
       """Get all .pjs in test/parser/ files as JSON, and run through the test harness, faking a DOM"""
       jsshell = os.path.abspath(jsshell)
       parsertestdir = os.path.join(self.toolsdir, '..', 'test', 'parser')
+      processing_js = None
+      if processingPath:
+        processing_js =os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep))
+      else:
+        processing_js = os.path.join(self.toolsdir, '..', 'processing.js')
 
       for root, dirs, filenames in os.walk(parsertestdir):
           for filename in filenames:
@@ -70,7 +75,7 @@ class ProcessingTests(object):
 
                   testCmd = [jsshell,
                              '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
-                             '-f', os.path.join(self.toolsdir, '..', 'processing.js'),
+                             '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
                              '-f', os.path.join(self.toolsdir, 'cleaner.js'),
                              '-f', tmpFile,
                              '-e', one_test,
@@ -148,11 +153,16 @@ class ProcessingTests(object):
 
                   jsshellhelper.cleanUp(tmpFile)
 
-  def runUnitTests(self, jsshell, testPattern=None, summaryOnly=False):
+  def runUnitTests(self, jsshell, testPattern=None, summaryOnly=False, processingPath=None):
       """Run all .js unit tests in test/unit through the test harness."""
       # TODO: add support for doing .pjs unit tests.
       unittestdir = os.path.join(self.toolsdir, '..', 'test', 'unit')
       jsshell = os.path.abspath(jsshell)
+      processing_js = None
+      if processingPath:
+        processing_js =os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep))
+      else:
+        processing_js = os.path.join(self.toolsdir, '..', 'processing.js')
 
       for root, dirs, filenames in os.walk(unittestdir):
           for filename in filenames:
@@ -177,13 +187,13 @@ class ProcessingTests(object):
 
                   testCmd = [jsshell, '-e', 'var _testName = "%s"; %s;' % (fullpath, wrapper),
                              '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
-                             '-f', os.path.join(self.toolsdir, '..', 'processing.js'),
+                             '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
                              '-f', os.path.join(self.toolsdir, 'test-harness.js')]
               elif filename.endswith('.pde'):
                   tmpFile = jsshellhelper.createEscapedFile(fullpath)
                   testCmd = [jsshell,
                              '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
-                             '-f', os.path.join(self.toolsdir, '..', 'processing.js'),
+                             '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
                              '-f', os.path.join(self.toolsdir, 'test-harness-lib.js'),
                              '-f', os.path.join(self.toolsdir, 'cleaner.js'),
                              '-f', tmpFile,
@@ -271,6 +281,9 @@ def main():
     parser.add_option("-t", "--single-test",
                       type="string", dest="testPattern", default=None,
                       help="single test filename or dir to be tested")
+    parser.add_option("-l", "--library",
+                      type="string", dest="processingPath", default=None,
+                      help="use a different processing.js library")
     options, args = parser.parse_args()
 
     if len(args) < 1:
@@ -281,12 +294,12 @@ def main():
     ptests = ProcessingTests()
 
     if options.parserOnly:
-        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
+        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly, processingPath=options.processingPath)
     elif options.unitOnly:
-        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
+        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly, processingPath=options.processingPath)
     else:
-        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
-        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly)
+        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly, processingPath=options.processingPath)
+        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly, processingPath=options.processingPath)
 
     print "\nTEST SUMMARY: %s passed, %s failed (%s known), %s total" % (ptests.testsPassed,
                                                                          ptests.testsFailed,
