@@ -1,10 +1,9 @@
 size(100, 100, P3D);
 noFill();
+background(0, 255, 0);
 
 beginCamera();
-printCamera();
 rotateX(-PI/6);
-printCamera();
 endCamera();
 
 translate(50, 50, 0);
