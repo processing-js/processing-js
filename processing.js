@@ -63,8 +63,29 @@
         // Temporary fallback for datasrc
         datasrc = canvas[i].getAttribute('datasrc');
       }
-      if (datasrc) {
-        Processing(canvas[i], ajax(datasrc));
+      if ( datasrc ) {
+        // The problem: if the HTML canvas dimensions differ from the
+        // dimensions specified in the size() call in the sketch, for
+        // 3D sketches, browsers will either not render or render the
+        // scene incorrectly. To fix this, we need to adjust the attributes
+        // of the canvas width and height.
+
+        // Get the source, we'll need to find what the user has used in size()
+        var sketchSource = ajax( datasrc );
+        // get the dimensions
+        // this regex needs to be cleaned up a bit
+        var r = "" + sketchSource.match( /size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/ );
+        var dimensions = r.match( /[0-9]+/g );
+        var sketchWidth = parseInt( dimensions[0] );
+        var sketchHeight = parseInt( dimensions[1] );
+
+        // only adjust the attributes if they differ
+        if( canvas[i].width != sketchWidth || canvas[i].height != sketchHeight )
+        {
+          canvas[i].setAttribute( "width", sketchWidth );
+          canvas[i].setAttribute( "height", sketchHeight );
+        }
+        Processing( canvas[i], sketchSource );
       }
     }
   };
