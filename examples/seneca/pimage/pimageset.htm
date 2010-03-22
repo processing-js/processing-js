@@ -1,0 +1,23 @@
+﻿<script src="../../../processing.js"></script>
+<canvas datasrc="pimageset.pjs" width="200" height="200"></canvas>
+<pre>
+size(300,300); 
+background(0);
+PImage pi = createImage(256,256,ARGB); 
+int white = 4294967295; // white
+int red = 65536;
+int green = 256;
+int c = 4294967295;
+for (int i = 0; i < pi.width; i++) {
+  for(int j = 0; j < pi.height; j++) {
+    pi.set(i, j, c);
+    c -= red;
+    if (j%2 == 0){
+      c -= green;
+    }
+  }
+  white -= 65793;
+  c = white;
+}
+image(pi,22,22); 
+</pre>

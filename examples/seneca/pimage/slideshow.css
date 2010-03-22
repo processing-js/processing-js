@@ -1,0 +1,21 @@
+﻿html, body
+{
+    margin: 0px;
+    font-family: Calibri, Cambria, Verdana;
+    font-size: 1.0em;
+    height: 100%;
+}
+
+p
+{
+    margin-left: 10px;
+    margin-bottom:10px;
+    margin-top:10px;
+}
+
+h1
+{
+    font-family: Vivaldi;
+    font-size: 1.8em;
+    margin-left: 5px;
+}
