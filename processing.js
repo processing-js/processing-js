@@ -4939,16 +4939,6 @@
       if(arguments.length == 1) {
         // convert an <img> to a PImage
         this.fromHTMLImageData(arguments[0]);
-//        var img = arguments[0];
-//        var canvas = document.createElement("canvas");
-//        canvas.width = img.width;
-//        canvas.height = img.height;
-//        var context = canvas.getContext("2d");
-//        context.drawImage(img, 0, 0);
-//        var imageData = context.getImageData(0,0,img.width,img.height);
-//        var pimage = new PImage(0,0);
-//        pimage.fromImageData(imageData);
-//        return pimage;
       } else if (arguments.length == 2 || arguments.length == 3) {
         this.width = aWidth;
         this.height = aHeight;
@@ -5012,6 +5002,7 @@
         var context = canvas.getContext("2d");
         context.drawImage(htmlImg, 0, 0);
         var imageData = context.getImageData(0,0,htmlImg.width,htmlImg.height);
+        this.ImageData = imageData;
         this.fromImageData(imageData);
       }
     };
@@ -5063,37 +5054,14 @@
             }
           };
         })(img, pimg, callback);
-        img.src = file;
+        img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
         return pimg;
       }
     };    
-   
-//        function () {
-//          var h = this.height, w = this.width;
-//          var canvas = document.createElement("canvas");
-
-//          canvas.width = w;
-//          canvas.height = h;
-
-//          var context = canvas.getContext("2d");
-
-//          context.drawImage(this, 0, 0);
-
-//          this.data = buildImageObject(context.getImageData(0, 0, w, h));
-//          this.data.img = img;
-
-//          this.get = this.data.get;
-//          this.pixels = this.data.pixels;
-
-//          if (callback) {
-//            callback();
-//          }
-//        };        
-//      }
-//      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
-//      return img;
-//    };
-
+    
+    // async loading of large images, same functionality as loadImage above
+    p.requestImage = p.loadImage;
+    
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
     p.get = function get(x, y, w, h, img) {
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
@@ -5411,13 +5379,17 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
 
-      if (img.pixels) {
+      if (img.width > 0) {
 
         x = x || 0;
         y = y || 0;
 
-        //var obj = getImage(img),
-        var obj = img.toImageData();
+        var obj;
+        if (img.ImageData && img.ImageData.width > 0) {
+          obj = img.ImageData;
+        } else {
+          obj = img.toImageData();
+        }
         var  oldAlpha;
 
         if (curTint >= 0) {
