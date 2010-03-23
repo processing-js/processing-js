@@ -2218,6 +2218,20 @@
       return aColor;
     };
 
+    // Ease of use function to extract the colour bits into a string
+    p.color.toString = function(colorInt) {
+      return "rgba("+
+        ((colorInt & p.RED_MASK)>>>16) +","+
+        ((colorInt & p.GREEN_MASK)>>>8) + "," +
+        ((colorInt & p.BLUE_MASK)) +","+
+        ((colorInt & p.ALPHA_MASK)>>>24)/opacityRange +");";
+    };
+
+    // Easy of use function to pack rgba values into a single bit-shifted color int.
+    p.color.toColorInt = function (r, g, b, a) {
+      return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+    };
+
     var verifyChannel = function verifyChannel(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
