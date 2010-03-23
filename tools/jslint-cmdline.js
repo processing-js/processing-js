@@ -72,6 +72,7 @@ var JSLINT = (function () {
         clearTimeout: false,
         WebGLFloatArray: true,
         CanvasFloatArray: true,
+        CanvasRenderingContext2D: true,
         close: false,
         closed: false,
         defaultStatus: false,

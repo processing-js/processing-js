@@ -16,7 +16,7 @@
   
  */
 
-(function () {
+(function() {
 
   this.Processing = function Processing(aElement, aCode) {
     // Get the DOM element if string was passed
@@ -539,8 +539,8 @@
     aCode = aCode.replace(/(\d+)f/g, "$1");
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-    for( var i = 0; i < strings.length; i++ ) {
-      aCode = aCode.replace(new RegExp("(.*)(<STRING " + i + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
+    for( var n = 0; n < strings.length; n++ ) {
+      aCode = aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
         var returnString = all, notString = true, quoteType = "", escape = false;
 
         for (var x = 0; x < quoteStart.length; x++) {
@@ -564,7 +564,7 @@
         }
 
         if (notString) { // Match is not inside a string
-          returnString = quoteStart + strings[i] + quoteEnd;
+          returnString = quoteStart + strings[n] + quoteEnd;
         }
 
         return returnString;
@@ -1669,6 +1669,40 @@
     ////////////////////////////////////////////////////////////////////////////
     // HashMap
     ////////////////////////////////////////////////////////////////////////////
+
+    var virtHashCode = function virtHashCode(obj) {
+      if(obj.constructor === String) {
+        var hash = 0;
+        for(var i=0;i<obj.length;++i) {
+          hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
+        }
+        return hash;
+      } else if(typeof(obj) !== "object") {
+        return obj & 0xFFFFFFFF;
+      } else if("hashCode" in obj) {
+        return obj.hashCode.call(obj);
+      } else {
+        if(obj.$id === undefined) {
+          obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+        }
+        return obj.$id;     
+      }
+    };
+
+    var virtEquals = function virtEquals(obj, other) {
+      if(obj === null || other === null) {
+        return (obj === null) && (other === null);
+      } else if(obj.constructor === String) {
+        return obj === other;
+      } else if(typeof(obj) !== "object") {
+        return obj === other;
+      } else if("equals" in obj) {
+        return obj.equals.call(obj, other);
+      } else {
+        return obj === other;
+      }
+    };
+
     p.HashMap = function HashMap() {
       if(arguments.length === 1 && arguments[0].constructor === HashMap) {
         return arguments[0].clone();
@@ -1690,12 +1724,37 @@
            }
         }
         buckets = new Array(buckets.length * 2);
-        for(var i=0; i < allEntries.length; ++i) {
-          var index = virtHashCode(allEntries[i].key) % buckets.length;
+        for(var j=0; j < allEntries.length; ++j) {
+          var index = virtHashCode(allEntries[j].key) % buckets.length;
           var bucket = buckets[index];
           if(bucket === undefined) { buckets[index] = bucket = []; }
-          bucket.push(allEntries[i]);        
+          bucket.push(allEntries[j]);        
         }
+      }
+
+      function Iterator(conversion, removeItem) {
+        var bucketIndex = 0;
+        var itemIndex = -1;
+        var endOfBuckets = false;
+
+        function findNext() {
+          while(!endOfBuckets) {
+            ++itemIndex;
+            if(bucketIndex >= buckets.length) {
+              endOfBuckets = true;
+            } else if(typeof(buckets[bucketIndex]) === 'undefined' || itemIndex >= buckets[bucketIndex].length) {
+              itemIndex = -1; ++bucketIndex;
+            } else {
+              return;
+            }
+          }
+        }
+
+        this.hasNext = function() { return !endOfBuckets; };
+        this.next = function() { var result = conversion(buckets[bucketIndex][itemIndex]); findNext(); return result; };
+        this.remove = function() { removeItem(this.next()); --itemIndex; };
+
+        findNext();
       }
 
       function Set(conversion, isIn, removeItem) {
@@ -1759,30 +1818,6 @@
         this.getValue = function() { return pair.value; };
         this.hashCode = function(o) { return virtHashCode(pair.key); };
         this.setValue = function(value) { var old = pair.value; pair.value = value; return old; };
-      }
-
-      function Iterator(conversion, removeItem) {
-        var bucketIndex = 0;
-        var itemIndex = -1;
-        var endOfBuckets = false;
-        this.hasNext = function() { return !endOfBuckets; };
-        this.next = function() { var result = conversion(buckets[bucketIndex][itemIndex]); findNext(); return result; };
-        this.remove = function() { removeItem(this.next()); --itemIndex; };
-
-        findNext();
-        
-        function findNext() {
-          while(!endOfBuckets) {
-            ++itemIndex;
-            if(bucketIndex >= buckets.length) {
-              endOfBuckets = true;
-            } else if(typeof(buckets[bucketIndex]) === 'undefined' || itemIndex >= buckets[bucketIndex].length) {
-              itemIndex = -1; ++bucketIndex;
-            } else {
-              return;
-            }
-          }
-        }
       }
 
       this.clear = function() { count = 0; buckets = new Array(initialCapacity); };
@@ -1880,7 +1915,7 @@
       this.size = function() { return count; };
       this.values = function() {
         var result = new p.ArrayList(0);
-        var it = m.entrySet().iterator();
+        var it = this.entrySet().iterator();
         while(it.hasNext()) {
           var entry = it.next();
           result.push(entry.getValue());
@@ -1889,42 +1924,11 @@
       };
     };
     
-    function virtHashCode(obj) {
-      if(obj.constructor === String) {
-        var hash = 0;
-        for(var i=0;i<obj.length;++i) {
-          hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
-        }
-        return hash;
-      } else if(typeof(obj) !== "object") {
-        return obj & 0xFFFFFFFF;
-      } else if("hashCode" in obj) {
-        return obj.hashCode.call(obj);
-      } else {
-        if(obj.$id === undefined) {
-          obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
-        }
-        return obj.$id;     
-      }
-    }
-
-    function virtEquals(obj, other) {
-      if(obj === null || other === null) {
-        return (obj === null) && (other === null);
-      } else if(obj.constructor === String) {
-        return obj === other;
-      } else if(typeof(obj) !== "object") {
-        return obj === other;
-      } else if("equals" in obj) {
-        return obj.equals.call(obj, other);
-      } else {
-        return obj === other;
-      }
-    }
 
     ////////////////////////////////////////////////////////////////////////////
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
+
     // convert rgba color strings to integer
     p.rgbaToInt = function(color) {
       var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1, 2)[0].split(',');
@@ -3108,10 +3112,7 @@
       True            = !0,
       log             = "log";
   
-      if (typeof tinylog !== undef && typeof tinylog[log] === func) {
-        // pre-existing tinylog present
-        tinylogLite[log] = tinylog[log];
-      } else if (typeof document !== undef && !document.fake) { (function () {
+      if (typeof document !== undef && !document.fake) { (function () {
         // DOM document
         var doc = document,
     
@@ -5408,7 +5409,7 @@
         var pimg = new PImage(0,0,p.ARGB);
         var img = document.createElement('img');
         pimg.sourceImg = img;
-        img.onload = ( function(aImage, aPImage, aCallback) {
+        img.onload = (function(aImage, aPImage, aCallback) {
           var image = aImage;
           var pimg = aPImage;
           var callback = aCallback;
@@ -5419,7 +5420,7 @@
               callback();
             }
           };
-        })(img, pimg, callback);
+        }(img, pimg, callback));
         img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
         return pimg;
       }
@@ -5430,17 +5431,18 @@
     
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
     p.get = function get(x, y, w, h, img) {
+      var c;
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
       if (!arguments.length) {
         //return a PImage of curContext
-        var c = new PImage(p.width, p.height, p.RGB);
+        c = new PImage(p.width, p.height, p.RGB);
         c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
         return c;
       } else if ( arguments.length === 5 ){
         // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
         var start = y * img.width + x;
         var end = (y + h) * img.width + x + w;
-        var c = new PImage(w, h, p.RGB);
+        c = new PImage(w, h, p.RGB);
         for (var i=start, j=0; i < end; i++, j++) {
           c.pixels[j] = img[i];
           if (j+1 % w === 0) {
@@ -5451,7 +5453,7 @@
         return c;
       } else if ( arguments.length === 4 ){
         // return a PImage of w and h from cood x,y of curContext
-		    var c = new PImage(w, h, p.RGB);
+		    c = new PImage(w, h, p.RGB);
 		    c.fromImageData(curContext.getImageData(x, y, w, h)); 
         return c;
       } else if ( arguments.length === 3 ){
@@ -5462,7 +5464,7 @@
 	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
 		    if(x <= p.width && x > 0 && y > 0 && y <= p.height){
 		      // x,y is inside canvas space
-		      var c = new PImage(1,1,p.RGB);
+		      c = new PImage(1,1,p.RGB);
 		      c.fromImageData(curContext.getImageData(x,y,1,1));
 		      return c.pixels[0];
 		    } else {
@@ -5477,13 +5479,11 @@
 
     // Creates a new Processing instance and passes it back for... processing
     p.createGraphics = function createGraphics(w, h) {
-
       var canvas = document.createElement("canvas");
       var ret = Processing.build(canvas);
       ret.size(w, h);
       ret.canvas = canvas;
       return ret;
-
     };
 
     // Paints a pixel array into the canvas
@@ -6077,27 +6077,27 @@
 
           curContext.font = curTextSize + "px " + curTextFont.name;
 
-          for ( var i = 0; i < str.length; i++ ) {
+          for ( var j = 0; j < str.length; j++ ) {
             if (curContext.fillText) {
-              letterWidth = curContext.measureText( str[i] ).width;
+              letterWidth = curContext.measureText( str[j] ).width;
             } else if (curContext.mozDrawText) {
-              letterWidth = curContext.mozMeasureText( str[i] );
+              letterWidth = curContext.mozMeasureText( str[j] );
             }
-            if ( str[i] !== "\n" && (str[i] === " " || (str[i-1] !== " " && str[i+1] === " ") || lineWidth + 2*letterWidth < textboxWidth ) ){ // check a line of text
-              if ( str[i] === " " ) {
-                spaceMark = i;
+            if ( str[j] !== "\n" && (str[j] === " " || (str[j-1] !== " " && str[j+1] === " ") || lineWidth + 2*letterWidth < textboxWidth ) ){ // check a line of text
+              if ( str[j] === " " ) {
+                spaceMark = j;
               }
               lineWidth += letterWidth;
             } else { // draw a line of text
               if ( start === spaceMark + 1 ){ // in case a whole line without a space
-                spaceMark = i;
+                spaceMark = j;
               }
 
               lastTextPos[0] = x;
               lastTextPos[1] = lastTextPos[1] + curTextSize;
-              if (str[i] === "\n" ) {
-                text(str.substring(start,i));
-                start=i+1;
+              if (str[j] === "\n" ) {
+                text(str.substring(start,j));
+                start=j+1;
               } else {
                 text(str.substring(start,spaceMark+1));
                 start=spaceMark+1;
@@ -6107,7 +6107,7 @@
               if ( lastTextPos[1] + 2*curTextSize > y + height + 0.6*curTextSize ) { // stop if no enough space for one more line draw
                 return;
               }
-              i = start - 1;
+              j = start - 1;
             }
           }
 
@@ -6598,4 +6598,4 @@
     return p;
   };
 
-})();
+}());
