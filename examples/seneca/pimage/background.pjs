@@ -1,0 +1,17 @@
+﻿/* @pjs preload="string.jpg"; */
+size(472,266);
+PImage b;
+b = loadImage("string.jpg");
+background(0);
+background(b);
+PFont font;
+font = loadFont("Arial"); 
+textFont(font, 16);
+fill(255, 255, 255);
+text("Here is an example of using", 100,80);
+text("a PImage as a background.", 100,100);
+text("LoadImage requires precaching", 100,120);
+text("the image first. See example code.", 100,140);
+text("The image must be the exact same size as", 100,160);
+text("canvas size or nothing happens.", 100,180);
+text("Use img.resize(w,h) to make it the proper size.", 100,200);
