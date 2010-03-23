@@ -389,6 +389,7 @@
     // super() is a reserved word
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
+
     var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
 
     var classReplace = function (all, name, extend, vars, last) {
@@ -801,9 +802,10 @@
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
     ////////////////////////////////////////////////////////////////////////////    
+
     var charMap = {};
 
-    var Char = function(chr) {
+    var Char = function Char(chr) {
       if ( typeof chr === 'string' && chr.length === 1 ) {
         this.code = chr.charCodeAt(0);
       } else {
@@ -819,6 +821,625 @@
 
     Char.prototype.valueOf = function() {
       return this.code;
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // PVector
+    ////////////////////////////////////////////////////////////////////////////
+
+    var PVector = function (x, y, z) {
+      this.x = x || 0;
+      this.y = y || 0;
+      this.z = z || 0;
+    },
+      createPVectorMethod = function (method) {
+      return function (v1, v2) {
+        var v = v1.get();
+        v[method](v2);
+        return v;
+      };
+    },
+      createSimplePVectorMethod = function (method) {
+      return function (v1, v2) {
+        return v1[method](v2);
+      };
+    },
+      simplePVMethods = "dist dot cross".split(" "),
+      method = simplePVMethods.length;
+
+    PVector.angleBetween = function (v1, v2) {
+      return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
+    };
+
+    // Common vector operations for PVector
+    PVector.prototype = {
+      set: function (v, y, z) {
+        if (arguments.length === 1) {
+          this.set(v.x || v[0], v.y || v[1], v.z || v[2]);
+        } else {
+          this.x = v;
+          this.y = y;
+          this.z = z;
+        }
+      },
+      get: function () {
+        return new PVector(this.x, this.y, this.z);
+      },
+      mag: function () {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+      },
+      add: function (v, y, z) {
+        if (arguments.length === 3) {
+          this.x += v;
+          this.y += y;
+          this.z += z;
+        } else if (arguments.length === 1) {
+          this.x += v.x;
+          this.y += v.y;
+          this.z += v.z;
+        }
+      },
+      sub: function (v, y, z) {
+        if (arguments.length === 3) {
+          this.x -= v;
+          this.y -= y;
+          this.z -= z;
+        } else if (arguments.length === 1) {
+          this.x -= v.x;
+          this.y -= v.y;
+          this.z -= v.z;
+        }
+      },
+      mult: function (v) {
+        if (typeof v === 'number') {
+          this.x *= v;
+          this.y *= v;
+          this.z *= v;
+        } else if (typeof v === 'object') {
+          this.x *= v.x;
+          this.y *= v.y;
+          this.z *= v.z;
+        }
+      },
+      div: function (v) {
+        if (typeof v === 'number') {
+          this.x /= v;
+          this.y /= v;
+          this.z /= v;
+        } else if (typeof v === 'object') {
+          this.x /= v.x;
+          this.y /= v.y;
+          this.z /= v.z;
+        }
+      },
+      dist: function (v) {
+        var dx = this.x - v.x,
+          dy = this.y - v.y,
+          dz = this.z - v.z;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+      },
+      dot: function (v, y, z) {
+        var num;
+        if (arguments.length === 3) {
+          num = this.x * v + this.y * y + this.z * z;
+        } else if (arguments.length === 1) {
+          num = this.x * v.x + this.y * v.y + this.z * v.z;
+        }
+        return num;
+      },
+      cross: function (v) {
+        var
+        crossX = this.y * v.z - v.y * this.z,
+          crossY = this.z * v.x - v.z * this.x,
+          crossZ = this.x * v.y - v.x * this.y;
+        return new PVector(crossX, crossY, crossZ);
+      },
+      normalize: function () {
+        var m = this.mag();
+        if (m > 0) {
+          this.div(m);
+        }
+      },
+      limit: function (high) {
+        if (this.mag() > high) {
+          this.normalize();
+          this.mult(high);
+        }
+      },
+      heading2D: function () {
+        var angle = Math.atan2(-this.y, this.x);
+        return -angle;
+      },
+      toString: function () {
+        return "[" + this.x + ", " + this.y + ", " + this.z + "]";
+      },
+      array: function () {
+        return [this.x, this.y, this.z];
+      }
+    };
+
+    while (method--) {
+      PVector[simplePVMethods[method]] = createSimplePVectorMethod(simplePVMethods[method]);
+    }
+
+    for (method in PVector.prototype) {
+      if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
+        PVector[method] = createPVectorMethod(method);
+      }
+    }
+
+    p.PVector = PVector;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // PMatrix3D
+    ////////////////////////////////////////////////////////////////////////////    
+
+    var PMatrix3D = function PMatrix3D(){
+      //When a matrix is created, it is set to an identity matrix
+      this.reset();
+    };
+
+    PMatrix3D.prototype = {
+      set: function(){
+        if( arguments.length === 16 ){
+          var a = arguments;
+          this.set([a[0], a[1], a[2], a[3],
+                    a[4], a[5], a[6], a[7],
+                    a[8], a[9], a[10],a[11],
+                    a[12],a[13],a[14],a[15]]);
+        }else if( arguments.length === 1 && arguments[0] instanceof PMatrix3D ){
+          this.elements = arguments[0].array();
+        }else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          this.elements = arguments[0].slice();
+        }
+      },
+      get: function(){
+        var outgoing = new PMatrix3D();
+        outgoing.set( this.elements );
+        return outgoing;
+      },
+      reset: function(){
+        this.set([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+      },
+      /*
+        Returns a copy of the element values.
+      */
+      array: function array(){
+        return this.elements.slice();
+      },
+      translate: function( tx, ty, tz ){
+        if( typeof tz === 'undefined' )
+        {
+          tx = 0;
+        }
+                              
+				this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
+				this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
+				this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
+				this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
+      },
+      transpose: function(){
+        var temp = this.elements.slice();
+        this.elements[0] = temp[0];
+        this.elements[1] = temp[4];
+        this.elements[2] = temp[8];
+        this.elements[3] = temp[12];
+        this.elements[4] = temp[1];
+        this.elements[5] = temp[5];
+        this.elements[6] = temp[9];
+        this.elements[7] = temp[13];
+        this.elements[8] = temp[2];
+        this.elements[9] = temp[6];
+        this.elements[10] = temp[10];
+        this.elements[11] = temp[14];
+        this.elements[12] = temp[3];
+        this.elements[13] = temp[7];
+        this.elements[14] = temp[11];
+        this.elements[15] = temp[15];
+      },
+      /*
+        You must either pass in two PVectors or two arrays,
+        don't mix between types. You may also omit a second
+        argument and simply read the result from the return.
+      */
+      mult: function( source, target ){
+        var x, y, z, w;
+        if( source instanceof PVector )
+        {
+          x = source.x;
+          y = source.y;
+          z = source.z;
+          w = 1;
+          if(!target)
+          {
+            target = new PVector();
+          }
+        }
+        else if( source instanceof Array )
+        {
+          x = source[0];
+          y = source[1];
+          z = source[2];
+          w = source[3] || 1;
+
+         if (!target || target.length !== 3 && target.length !== 4){
+            target = [0,0,0];
+          }
+        }
+        
+        if(target instanceof Array)
+        {
+          if(target.length === 3)
+          {
+            target[0] = this.elements[0] * x + this.elements[1] * y + this.elements[ 2] * z + this.elements[ 3];
+            target[1] = this.elements[4] * x + this.elements[5] * y + this.elements[ 6] * z + this.elements[ 7];
+            target[2] = this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
+          }
+          else if(target.length === 4)
+          {
+            target[0] = this.elements[ 0] * x + this.elements[ 1] * y + this.elements[ 2] * z + this.elements[ 3] * w;
+            target[1] = this.elements[ 4] * x + this.elements[ 5] * y + this.elements[ 6] * z + this.elements[ 7] * w;
+            target[2] = this.elements[ 8] * x + this.elements[ 9] * y + this.elements[10] * z + this.elements[11] * w;
+            target[3] = this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
+          }
+        }
+        if(target instanceof PVector)
+        {
+          target.x = this.elements[0] * x + this.elements[1] * y + this.elements[ 2] * z + this.elements[ 3];
+          target.y = this.elements[4] * x + this.elements[5] * y + this.elements[ 6] * z + this.elements[ 7];
+          target.z = this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
+        }
+        return target;
+      },
+      preApply: function(){
+        if( arguments.length === 1 && arguments[0] instanceof PMatrix3D ){
+          this.preApply(arguments[0].array());
+        }
+        else if( arguments.length === 16 ){
+          var a = arguments;
+          this.preApply([a[0], a[1], a[2], a[3],
+                         a[4], a[5], a[6], a[7],
+                         a[8], a[9], a[10],a[11],
+                         a[12],a[13],a[14],a[15]]);
+        }
+        else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          var source = arguments[0];
+
+          var result = [0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0];
+          var e = 0;
+          for( var row = 0; row < 4; row++ ){
+            for( var col = 0; col < 4; col++, e++ ){
+              result[e] += this.elements[col +  0] * source[row *4 + 0] +
+                           this.elements[col +  4] * source[row *4 + 1] +
+                           this.elements[col +  8] * source[row *4 + 2] +
+                           this.elements[col + 12] * source[row *4 + 3];
+
+            }
+          }
+          this.elements = result.slice();
+        }
+      },
+      apply: function(){
+        if( arguments.length === 1 && arguments[0] instanceof PMatrix3D ){
+          this.apply( arguments[0].array() );
+        }
+        else if( arguments.length === 16){
+          var a = arguments;
+          this.apply([a[0], a[1], a[2], a[3],
+                      a[4], a[5], a[6], a[7],
+                      a[8], a[9], a[10],a[11],
+                      a[12],a[13],a[14],a[15]]);
+        }
+        else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          var source = arguments[0];
+
+          var result = [0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0];
+          var e = 0;
+          for(var row = 0; row < 4; row++){
+            for(var col = 0; col < 4; col++, e++){
+              result[e] += this.elements[row *4 + 0] * source[col + 0] +
+                           this.elements[row *4 + 1] * source[col + 4] +
+                           this.elements[row *4 + 2] * source[col + 8] +
+                           this.elements[row *4 + 3] * source[col + 12];
+
+            }
+          }
+          this.elements = result.slice();
+        }
+      },
+      rotate: function( angle, v0, v1, v2 ) {
+        if( !v1 ) {
+          this.rotateZ( angle );
+        }
+        else {
+          // TODO should make sure this vector is normalized
+
+          var c = p.cos( angle );
+          var s = p.sin( angle );
+          var t = 1.0 - c;
+
+          this.apply( (t*v0*v0) + c, (t*v0*v1) - (s*v2), (t*v0*v2) + (s*v1), 0,
+                      (t*v0*v1) + (s*v2), (t*v1*v1) + c, (t*v1*v2) - (s*v0), 0,
+                      (t*v0*v2) - (s*v1), (t*v1*v2) + (s*v0), (t*v2*v2) + c, 0,
+                      0, 0, 0, 1);
+        }
+      },
+      invApply: function() {
+       if ( typeof inverseCopy === "undefined" ) {
+          inverseCopy = new PMatrix3D();
+        }
+        var a = arguments;
+        inverseCopy.set( a[0],  a[1],  a[2],  a[3],
+                         a[4],  a[5],  a[6],  a[7], 
+                         a[8],  a[9],  a[10], a[11], 
+                         a[12], a[13], a[14], a[15] );
+          
+        if ( !inverseCopy.invert() ) {
+          return false;
+        }
+        this.preApply( inverseCopy );
+        return true;
+      },
+      rotateX: function( angle ){
+        var c = p.cos( angle );
+        var s = p.sin( angle );
+        this.apply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
+      },
+      
+      rotateY: function( angle ){
+        var c = p.cos( angle );
+        var s = p.sin( angle );
+        this.apply([c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1]);
+      },
+      rotateZ: function( angle ){
+        var c = Math.cos( angle );
+        var s = Math.sin( angle );
+        this.apply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
+      },
+      /*
+        Uniform scaling if only one value passed in
+      */
+      scale: function( sx, sy, sz ){
+        if( sx && !sy && !sz )
+        {
+          sy = sz = sx;
+        }
+        else if( sx && sy && !sz )
+        {
+          sz = 1;
+        }
+
+        if ( sx && sy && sz ){
+          this.elements[0] *= sx;
+          this.elements[1] *= sy;
+          this.elements[2] *= sz;
+          this.elements[4] *= sx;
+          this.elements[5] *= sy;
+          this.elements[6] *= sz;
+          this.elements[8] *= sx;
+          this.elements[9] *= sy;
+          this.elements[10] *= sz;
+          this.elements[12] *= sx;
+          this.elements[13] *= sy;
+          this.elements[14] *= sz;
+        }
+      },
+      skewX: function( angle ) {
+        var t = p.tan( angle );
+        this.apply( 1, t, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1);
+      },
+      skewY: function( angle ) {
+        var t = Math.tan( angle );
+        this.apply( 1, 0, 0, 0,
+                    t, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1);
+      },
+      multX: function( x, y, z, w ) {
+        if( !z ) {
+          return this.elements[0] * x + this.elements[1] * y + this.elements[3];
+        }
+        else if ( !w ) {
+          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
+        }
+        else {
+          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
+        }
+      },
+      multY: function( x, y, z, w ) {
+        if( !z ) {
+          return this.elements[4] * x + this.elements[5] * y + this.elements[7];
+        }
+        else if ( !w ) {
+          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
+        }
+        else {
+          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
+        }
+      },
+      multZ: function( x, y, z, w ) {
+        if( !w ) {
+          return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
+        }
+        else {
+          return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
+        }
+      },
+      multW: function( x, y, z, w ) {
+        if( !w ) {
+          return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15];
+        }
+        else {
+          return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
+        }
+      },
+      invert: function(){
+        var kInv = [];
+        var fA0 = this.elements[ 0] * this.elements[ 5] - this.elements[ 1] * this.elements[ 4];
+        var fA1 = this.elements[ 0] * this.elements[ 6] - this.elements[ 2] * this.elements[ 4];
+        var fA2 = this.elements[ 0] * this.elements[ 7] - this.elements[ 3] * this.elements[ 4];
+        var fA3 = this.elements[ 1] * this.elements[ 6] - this.elements[ 2] * this.elements[ 5];
+        var fA4 = this.elements[ 1] * this.elements[ 7] - this.elements[ 3] * this.elements[ 5];
+        var fA5 = this.elements[ 2] * this.elements[ 7] - this.elements[ 3] * this.elements[ 6];
+        var fB0 = this.elements[ 8] * this.elements[13] - this.elements[ 9] * this.elements[12];
+        var fB1 = this.elements[ 8] * this.elements[14] - this.elements[10] * this.elements[12];
+        var fB2 = this.elements[ 8] * this.elements[15] - this.elements[11] * this.elements[12];
+        var fB3 = this.elements[ 9] * this.elements[14] - this.elements[10] * this.elements[13];
+        var fB4 = this.elements[ 9] * this.elements[15] - this.elements[11] * this.elements[13];
+        var fB5 = this.elements[10] * this.elements[15] - this.elements[11] * this.elements[14];
+
+        // Determinant
+        var fDet = fA0 * fB5 - fA1 * fB4 + fA2 * fB3 + fA3 * fB2 - fA4 * fB1 + fA5 * fB0;
+        
+        // Account for a very small value
+        // return false if not successful.
+        if ( Math.abs( fDet ) <= 1e-9 )
+        {
+          return false;
+        }
+
+        kInv[ 0] = + this.elements[ 5] * fB5 - this.elements[ 6] * fB4 + this.elements[ 7] * fB3;
+        kInv[ 4] = - this.elements[ 4] * fB5 + this.elements[ 6] * fB2 - this.elements[ 7] * fB1;
+        kInv[ 8] = + this.elements[ 4] * fB4 - this.elements[ 5] * fB2 + this.elements[ 7] * fB0;
+        kInv[12] = - this.elements[ 4] * fB3 + this.elements[ 5] * fB1 - this.elements[ 6] * fB0;
+        kInv[ 1] = - this.elements[ 1] * fB5 + this.elements[ 2] * fB4 - this.elements[ 3] * fB3;
+        kInv[ 5] = + this.elements[ 0] * fB5 - this.elements[ 2] * fB2 + this.elements[ 3] * fB1;
+        kInv[ 9] = - this.elements[ 0] * fB4 + this.elements[ 1] * fB2 - this.elements[ 3] * fB0;
+        kInv[13] = + this.elements[ 0] * fB3 - this.elements[ 1] * fB1 + this.elements[ 2] * fB0;
+        kInv[ 2] = + this.elements[13] * fA5 - this.elements[14] * fA4 + this.elements[15] * fA3;
+        kInv[ 6] = - this.elements[12] * fA5 + this.elements[14] * fA2 - this.elements[15] * fA1;
+        kInv[10] = + this.elements[12] * fA4 - this.elements[13] * fA2 + this.elements[15] * fA0;
+        kInv[14] = - this.elements[12] * fA3 + this.elements[13] * fA1 - this.elements[14] * fA0;
+        kInv[ 3] = - this.elements[ 9] * fA5 + this.elements[10] * fA4 - this.elements[11] * fA3;
+        kInv[ 7] = + this.elements[ 8] * fA5 - this.elements[10] * fA2 + this.elements[11] * fA1;
+        kInv[11] = - this.elements[ 8] * fA4 + this.elements[ 9] * fA2 - this.elements[11] * fA0;
+        kInv[15] = + this.elements[ 8] * fA3 - this.elements[ 9] * fA1 + this.elements[10] * fA0;
+
+        // Inverse using Determinant
+        var fInvDet = 1.0 / fDet;
+        kInv[ 0] *= fInvDet;
+        kInv[ 1] *= fInvDet;
+        kInv[ 2] *= fInvDet;
+        kInv[ 3] *= fInvDet;
+        kInv[ 4] *= fInvDet;
+        kInv[ 5] *= fInvDet;
+        kInv[ 6] *= fInvDet;
+        kInv[ 7] *= fInvDet;
+        kInv[ 8] *= fInvDet;
+        kInv[ 9] *= fInvDet;
+        kInv[10] *= fInvDet;
+        kInv[11] *= fInvDet;
+        kInv[12] *= fInvDet;
+        kInv[13] *= fInvDet;
+        kInv[14] *= fInvDet;
+        kInv[15] *= fInvDet;
+
+        this.elements = kInv.slice();
+        return true;
+      },
+      toString: function()
+      {
+        var str = "";
+        for( var i = 0; i < 15; i++ )
+        {
+          str += this.elements[i] + ", ";
+        }
+        str += this.elements[15];
+        return str;
+      },
+      print: function() {
+        var output = "", digits = 3;
+        output += p.nfs(this.elements[0], digits, 4) + " " +
+          p.nfs(this.elements[1], digits, 4) + " " +
+          p.nfs(this.elements[2], digits, 4) + " " +
+          p.nfs(this.elements[3], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[4], digits, 4) + " " +
+          p.nfs(this.elements[5], digits, 4) + " " +
+          p.nfs(this.elements[6], digits, 4) + " " +
+          p.nfs(this.elements[7], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[8], digits, 4) + " " +
+          p.nfs(this.elements[9], digits, 4) + " " +
+          p.nfs(this.elements[10], digits, 4) + " " +
+          p.nfs(this.elements[11], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[12], digits, 4) + " " +
+          p.nfs(this.elements[13], digits, 4) + " " +
+          p.nfs(this.elements[14], digits, 4) + " " +
+          p.nfs(this.elements[15], digits, 4) + "\n";
+
+        p.println(output);
+      },
+      invTranslate: function( tx, ty, tz) {
+		this.preApply(	1, 0, 0, -tx,
+						0, 1, 0, -ty,
+						0, 0, 1, -tz,
+						0, 0, 0, 1);
+	  },
+      invRotateX: function( angle ){
+        var c = p.cos( -angle );
+        var s = p.sin( -angle );
+        this.preApply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
+      },
+      invRotateY: function( angle ){
+        var c = p.cos( -angle );
+        var s = p.sin( -angle );
+        this.preApply([c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1]);
+      },
+      invRotateZ: function( angle ){
+        var c = p.cos( -angle );
+        var s = p.sin( -angle );
+        this.preApply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
+      },
+      invScale: function( x, y, z ){
+        this.preApply([1/x, 0, 0, 0, 0, 1/y, 0, 0, 0, 0, 1/z, 0, 0, 0, 0, 1]);
+      }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Matrix Stack
+    ////////////////////////////////////////////////////////////////////////////
+
+    var PMatrix3DStack = function PMatrix3DStack() {
+      this.matrixStack = [];
+    };
+
+    PMatrix3DStack.prototype.load = function load() {
+      var tmpMatrix = new PMatrix3D();
+      if ( arguments.length === 1 ) {
+        tmpMatrix.set( arguments[0] );
+      } else {
+        tmpMatrix.set( arguments );
+      }
+      this.matrixStack.push( tmpMatrix );
+    };
+
+    PMatrix3DStack.prototype.push = function push() {
+      this.matrixStack.push( this.peek() );
+    };
+
+    PMatrix3DStack.prototype.pop = function pop() {
+      return this.matrixStack.pop();
+    };
+
+    PMatrix3DStack.prototype.peek = function peek() {
+      var tmpMatrix = new PMatrix3D();
+      tmpMatrix.set( this.matrixStack[this.matrixStack.length - 1] );
+      return tmpMatrix;
+    };
+
+    PMatrix3DStack.prototype.mult = function mult( matrix ){
+      this.matrixStack[this.matrixStack.length - 1].apply( matrix );
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1055,6 +1676,110 @@
       var count = 0;
       var hashMap = this;
      
+      function ensureLoad() {
+        if(count <= loadFactor * buckets.length) { return; }
+        var allEntries = [];
+        for(var i=0; i < buckets.length; ++i) {
+           if(buckets[i] !== undefined) {
+             allEntries = allEntries.concat(buckets[i]);
+           }
+        }
+        buckets = new Array(buckets.length * 2);
+        for(var i=0; i < allEntries.length; ++i) {
+          var index = virtHashCode(allEntries[i].key) % buckets.length;
+          var bucket = buckets[index];
+          if(bucket === undefined) { buckets[index] = bucket = []; }
+          bucket.push(allEntries[i]);        
+        }
+      }
+
+      function Set(conversion, isIn, removeItem) {
+        this.clear = function() { hashMap.clear(); };
+        this.contains = function(o) { return isIn(o); };
+        this.containsAll = function(o) { 
+          var it = o.iterator();
+          while(it.hasNext()) {
+            if(!this.contains(it.next())) { return false; }
+          }
+          return true;
+        };
+        this.isEmpty = function() { return hashMap.isEmpty(); };
+        this.iterator = function() { return new Iterator(conversion, removeItem); };
+        this.remove = function(o) { 
+          if(this.contains(o)) {
+            removeItem(o); return true;
+          }
+	        return false;
+        };        
+        this.removeAll = function(c) { 
+          var it = c.iterator();
+          var changed = false;
+          while(it.hasNext()) {
+            var item = it.next();
+            if(this.contains(item)) {
+              removeItem(item); changed = true;
+            }
+          }
+          return true;
+        };
+        this.retainAll = function(c) { 
+          var it = this.iterator();
+          var toRemove = [];          
+          while(it.hasNext()) {
+            var entry = it.next();
+            if(!c.contains(entry)) {
+              toRemove.push(entry);
+            }
+          }
+          for(var i=0;i<toRemove.length;++i) {
+            removeItem(toRemove[i]);
+          }
+          return toRemove.length > 0;
+        };
+        this.size = function() { return hashMap.size(); };
+        this.toArray = function() { 
+          var result = new p.ArrayList(0);
+          var it = this.iterator();
+          while(it.hasNext()) {
+            result.push(it.next());
+          }
+          return result;
+        };
+      }
+     
+      function Entry(pair) {        
+        this._isIn = function(map) { return map === hashMap && (typeof(pair.removed) === 'undefined'); };
+        this.equals = function(o) { return virtEquals(pair.key, o.getKey()); };
+        this.getKey = function() { return pair.key; };
+        this.getValue = function() { return pair.value; };
+        this.hashCode = function(o) { return virtHashCode(pair.key); };
+        this.setValue = function(value) { var old = pair.value; pair.value = value; return old; };
+      }
+
+      function Iterator(conversion, removeItem) {
+        var bucketIndex = 0;
+        var itemIndex = -1;
+        var endOfBuckets = false;
+        this.hasNext = function() { return !endOfBuckets; };
+        this.next = function() { var result = conversion(buckets[bucketIndex][itemIndex]); findNext(); return result; };
+        this.remove = function() { removeItem(this.next()); --itemIndex; };
+
+        findNext();
+        
+        function findNext() {
+          while(!endOfBuckets) {
+            ++itemIndex;
+            if(bucketIndex >= buckets.length) {
+              endOfBuckets = true;
+            } else if(typeof(buckets[bucketIndex]) === 'undefined' || itemIndex >= buckets[bucketIndex].length) {
+              itemIndex = -1; ++bucketIndex;
+            } else {
+              return;
+            }
+          }
+        }
+      }
+
       this.clear = function() { count = 0; buckets = new Array(initialCapacity); };
       this.clone = function() { var map = new p.HashMap(); map.putAll(this); return map; };
       this.containsKey = function(key) { 
@@ -1157,111 +1882,6 @@
         }
         return result;
       };
-
-      function ensureLoad() {
-        if(count <= loadFactor * buckets.length) { return; }
-        var allEntries = [];
-        for(var i=0; i < buckets.length; ++i) {
-           if(buckets[i] !== undefined) {
-             allEntries = allEntries.concat(buckets[i]);
-           }
-        }
-        buckets = new Array(buckets.length * 2);
-        for(var i=0; i < allEntries.length; ++i) {
-          var index = virtHashCode(allEntries[i].key) % buckets.length;
-          var bucket = buckets[index];
-          if(bucket === undefined) { buckets[index] = bucket = []; }
-          bucket.push(allEntries[i]);        
-        }
-      }
-
-      function Set(conversion, isIn, removeItem) {
-        this.clear = function() { hashMap.clear(); };
-        this.contains = function(o) { return isIn(o); };
-        this.containsAll = function(o) { 
-          var it = o.iterator();
-          while(it.hasNext()) {
-            if(!this.contains(it.next())) { return false; }
-          }
-          return true;
-        };
-        this.isEmpty = function() { return hashMap.isEmpty(); };
-        this.iterator = function() { return new Iterator(conversion, removeItem); };
-        this.remove = function(o) { 
-          if(this.contains(o)) {
-            removeItem(o); return true;
-          }
-	        return false;
-        };        
-        this.removeAll = function(c) { 
-          var it = c.iterator();
-          var changed = false;
-          while(it.hasNext()) {
-            var item = it.next();
-            if(this.contains(item)) {
-              removeItem(item); changed = true;
-            }
-          }
-          return true;
-        };
-        this.retainAll = function(c) { 
-          var it = this.iterator();
-          var toRemove = [];          
-          while(it.hasNext()) {
-            var entry = it.next();
-            if(!c.contains(entry)) {
-              toRemove.push(entry);
-            }
-          }
-          for(var i=0;i<toRemove.length;++i) {
-            removeItem(toRemove[i]);
-          }
-          return toRemove.length > 0;
-        };
-        this.size = function() { return hashMap.size(); };
-        this.toArray = function() { 
-          var result = new p.ArrayList(0);
-          var it = this.iterator();
-          while(it.hasNext()) {
-            result.push(it.next());
-          }
-          return result;
-        };
-      }
-     
-      function Entry(pair) {        
-        this._isIn = function(map) { return map === hashMap && (typeof(pair.removed) === 'undefined'); };
-        this.equals = function(o) { return virtEquals(pair.key, o.getKey()); };
-        this.getKey = function() { return pair.key; };
-        this.getValue = function() { return pair.value; };
-        this.hashCode = function(o) { return virtHashCode(pair.key); };
-        this.setValue = function(value) { var old = pair.value; pair.value = value; return old; };
-      }
-
-      function Iterator(conversion, removeItem) {
-        var bucketIndex = 0;
-        var itemIndex = -1;
-        var endOfBuckets = false;
-        this.hasNext = function() { return !endOfBuckets; };
-        this.next = function() { var result = conversion(buckets[bucketIndex][itemIndex]); findNext(); return result; };
-        this.remove = function() { removeItem(this.next()); --itemIndex; };
-
-        findNext();
-        
-        function findNext() {
-          while(!endOfBuckets) {
-            ++itemIndex;
-            if(bucketIndex >= buckets.length) {
-              endOfBuckets = true;
-            } else if(typeof(buckets[bucketIndex]) === 'undefined'
-              || itemIndex >= buckets[bucketIndex].length) {
-              itemIndex = -1; ++bucketIndex;
-            } else {
-              return;
-            }
-          }
-        }
-      }
     };
     
     function virtHashCode(obj) {
@@ -3300,621 +3920,7 @@
     };
 
 
-    ////////////////////////////////////////////////////////////////////////////
-    // PVector
-    ////////////////////////////////////////////////////////////////////////////
-    var PVector = function (x, y, z) {
-      this.x = x || 0;
-      this.y = y || 0;
-      this.z = z || 0;
-    },
-      createPVectorMethod = function (method) {
-      return function (v1, v2) {
-        var v = v1.get();
-        v[method](v2);
-        return v;
-      };
-    },
-      createSimplePVectorMethod = function (method) {
-      return function (v1, v2) {
-        return v1[method](v2);
-      };
-    },
-      simplePVMethods = "dist dot cross".split(" "),
-      method = simplePVMethods.length;
 
-    PVector.angleBetween = function (v1, v2) {
-      return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
-    };
-
-    // Common vector operations for PVector
-    PVector.prototype = {
-      set: function (v, y, z) {
-        if (arguments.length === 1) {
-          this.set(v.x || v[0], v.y || v[1], v.z || v[2]);
-        } else {
-          this.x = v;
-          this.y = y;
-          this.z = z;
-        }
-      },
-      get: function () {
-        return new PVector(this.x, this.y, this.z);
-      },
-      mag: function () {
-        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-      },
-      add: function (v, y, z) {
-        if (arguments.length === 3) {
-          this.x += v;
-          this.y += y;
-          this.z += z;
-        } else if (arguments.length === 1) {
-          this.x += v.x;
-          this.y += v.y;
-          this.z += v.z;
-        }
-      },
-      sub: function (v, y, z) {
-        if (arguments.length === 3) {
-          this.x -= v;
-          this.y -= y;
-          this.z -= z;
-        } else if (arguments.length === 1) {
-          this.x -= v.x;
-          this.y -= v.y;
-          this.z -= v.z;
-        }
-      },
-      mult: function (v) {
-        if (typeof v === 'number') {
-          this.x *= v;
-          this.y *= v;
-          this.z *= v;
-        } else if (typeof v === 'object') {
-          this.x *= v.x;
-          this.y *= v.y;
-          this.z *= v.z;
-        }
-      },
-      div: function (v) {
-        if (typeof v === 'number') {
-          this.x /= v;
-          this.y /= v;
-          this.z /= v;
-        } else if (typeof v === 'object') {
-          this.x /= v.x;
-          this.y /= v.y;
-          this.z /= v.z;
-        }
-      },
-      dist: function (v) {
-        var dx = this.x - v.x,
-          dy = this.y - v.y,
-          dz = this.z - v.z;
-        return Math.sqrt(dx * dx + dy * dy + dz * dz);
-      },
-      dot: function (v, y, z) {
-        var num;
-        if (arguments.length === 3) {
-          num = this.x * v + this.y * y + this.z * z;
-        } else if (arguments.length === 1) {
-          num = this.x * v.x + this.y * v.y + this.z * v.z;
-        }
-        return num;
-      },
-      cross: function (v) {
-        var
-        crossX = this.y * v.z - v.y * this.z,
-          crossY = this.z * v.x - v.z * this.x,
-          crossZ = this.x * v.y - v.x * this.y;
-        return new PVector(crossX, crossY, crossZ);
-      },
-      normalize: function () {
-        var m = this.mag();
-        if (m > 0) {
-          this.div(m);
-        }
-      },
-      limit: function (high) {
-        if (this.mag() > high) {
-          this.normalize();
-          this.mult(high);
-        }
-      },
-      heading2D: function () {
-        var angle = Math.atan2(-this.y, this.x);
-        return -angle;
-      },
-      toString: function () {
-        return "[" + this.x + ", " + this.y + ", " + this.z + "]";
-      },
-      array: function () {
-        return [this.x, this.y, this.z];
-      }
-    };
-
-    while (method--) {
-      PVector[simplePVMethods[method]] = createSimplePVectorMethod(simplePVMethods[method]);
-    }
-
-    for (method in PVector.prototype) {
-      if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
-        PVector[method] = createPVectorMethod(method);
-      }
-    }
-
-    p.PVector = PVector;
-
-    /*
-      When a matrix is created, it is set to an identity matrix
-    */
-    var PMatrix3D = function(){
-      this.reset();
-    };
-
-    PMatrix3D.prototype = {
-      set: function(){
-        if( arguments.length === 16 ){
-          var a = arguments;
-          this.set([a[0], a[1], a[2], a[3],
-                    a[4], a[5], a[6], a[7],
-                    a[8], a[9], a[10],a[11],
-                    a[12],a[13],a[14],a[15]]);
-        }else if( arguments.length === 1 && arguments[0] instanceof PMatrix3D ){
-          this.elements = arguments[0].array();
-        }else if( arguments.length === 1 && arguments[0] instanceof Array ){
-          this.elements = arguments[0].slice();
-        }
-      },
-      get: function(){
-        var outgoing = new PMatrix3D();
-        outgoing.set( this.elements );
-        return outgoing;
-      },
-      reset: function(){
-        this.set([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
-      },
-      /*
-        Returns a copy of the element values.
-      */
-      array: function array(){
-        return this.elements.slice();
-      },
-      translate: function( tx, ty, tz ){
-        if( typeof tz === 'undefined' )
-        {
-          tx = 0;
-        }
-                              
-				this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
-				this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
-				this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
-				this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
-      },
-      transpose: function(){
-        var temp = this.elements.slice();
-        this.elements[0] = temp[0];
-        this.elements[1] = temp[4];
-        this.elements[2] = temp[8];
-        this.elements[3] = temp[12];
-        this.elements[4] = temp[1];
-        this.elements[5] = temp[5];
-        this.elements[6] = temp[9];
-        this.elements[7] = temp[13];
-        this.elements[8] = temp[2];
-        this.elements[9] = temp[6];
-        this.elements[10] = temp[10];
-        this.elements[11] = temp[14];
-        this.elements[12] = temp[3];
-        this.elements[13] = temp[7];
-        this.elements[14] = temp[11];
-        this.elements[15] = temp[15];
-      },
-      /*
-        You must either pass in two PVectors or two arrays,
-        don't mix between types. You may also omit a second
-        argument and simply read the result from the return.
-      */
-      mult: function( source, target ){
-        var x, y, z, w;
-        if( source instanceof PVector )
-        {
-          x = source.x;
-          y = source.y;
-          z = source.z;
-          w = 1;
-          if(!target)
-          {
-            target = new PVector();
-          }
-        }
-        else if( source instanceof Array )
-        {
-          x = source[0];
-          y = source[1];
-          z = source[2];
-          w = source[3] || 1;
-
-         if (!target || target.length !== 3 && target.length !== 4){
-            target = [0,0,0];
-          }
-        }
-        
-        if(target instanceof Array)
-        {
-          if(target.length === 3)
-          {
-            target[0] = this.elements[0] * x + this.elements[1] * y + this.elements[ 2] * z + this.elements[ 3];
-            target[1] = this.elements[4] * x + this.elements[5] * y + this.elements[ 6] * z + this.elements[ 7];
-            target[2] = this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
-          }
-          else if(target.length === 4)
-          {
-            target[0] = this.elements[ 0] * x + this.elements[ 1] * y + this.elements[ 2] * z + this.elements[ 3] * w;
-            target[1] = this.elements[ 4] * x + this.elements[ 5] * y + this.elements[ 6] * z + this.elements[ 7] * w;
-            target[2] = this.elements[ 8] * x + this.elements[ 9] * y + this.elements[10] * z + this.elements[11] * w;
-            target[3] = this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
-          }
-        }
-        if(target instanceof PVector)
-        {
-          target.x = this.elements[0] * x + this.elements[1] * y + this.elements[ 2] * z + this.elements[ 3];
-          target.y = this.elements[4] * x + this.elements[5] * y + this.elements[ 6] * z + this.elements[ 7];
-          target.z = this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
-        }
-        return target;
-      },
-      preApply: function(){
-        if( arguments.length === 1 && arguments[0] instanceof PMatrix3D ){
-          this.preApply(arguments[0].array());
-        }
-        else if( arguments.length === 16 ){
-          var a = arguments;
-          this.preApply([a[0], a[1], a[2], a[3],
-                         a[4], a[5], a[6], a[7],
-                         a[8], a[9], a[10],a[11],
-                         a[12],a[13],a[14],a[15]]);
-        }
-        else if( arguments.length === 1 && arguments[0] instanceof Array ){
-          var source = arguments[0];
-
-          var result = [0, 0, 0, 0,
-                        0, 0, 0, 0,
-                        0, 0, 0, 0,
-                        0, 0, 0, 0];
-          var e = 0;
-          for( var row = 0; row < 4; row++ ){
-            for( var col = 0; col < 4; col++, e++ ){
-              result[e] += this.elements[col +  0] * source[row *4 + 0] +
-                           this.elements[col +  4] * source[row *4 + 1] +
-                           this.elements[col +  8] * source[row *4 + 2] +
-                           this.elements[col + 12] * source[row *4 + 3];
-
-            }
-          }
-          this.elements = result.slice();
-        }
-      },
-      apply: function(){
-        if( arguments.length === 1 && arguments[0] instanceof PMatrix3D ){
-          this.apply( arguments[0].array() );
-        }
-        else if( arguments.length === 16){
-          var a = arguments;
-          this.apply([a[0], a[1], a[2], a[3],
-                      a[4], a[5], a[6], a[7],
-                      a[8], a[9], a[10],a[11],
-                      a[12],a[13],a[14],a[15]]);
-        }
-        else if( arguments.length === 1 && arguments[0] instanceof Array ){
-          var source = arguments[0];
-
-          var result = [0, 0, 0, 0,
-                        0, 0, 0, 0,
-                        0, 0, 0, 0,
-                        0, 0, 0, 0];
-          var e = 0;
-          for(var row = 0; row < 4; row++){
-            for(var col = 0; col < 4; col++, e++){
-              result[e] += this.elements[row *4 + 0] * source[col + 0] +
-                           this.elements[row *4 + 1] * source[col + 4] +
-                           this.elements[row *4 + 2] * source[col + 8] +
-                           this.elements[row *4 + 3] * source[col + 12];
-
-            }
-          }
-          this.elements = result.slice();
-        }
-      },
-      rotate: function( angle, v0, v1, v2 ) {
-        if( !v1 ) {
-          this.rotateZ( angle );
-        }
-        else {
-          // TODO should make sure this vector is normalized
-
-          var c = p.cos( angle );
-          var s = p.sin( angle );
-          var t = 1.0 - c;
-
-          this.apply( (t*v0*v0) + c, (t*v0*v1) - (s*v2), (t*v0*v2) + (s*v1), 0,
-                      (t*v0*v1) + (s*v2), (t*v1*v1) + c, (t*v1*v2) - (s*v0), 0,
-                      (t*v0*v2) - (s*v1), (t*v1*v2) + (s*v0), (t*v2*v2) + c, 0,
-                      0, 0, 0, 1);
-        }
-      },
-      invApply: function() {
-       if ( typeof inverseCopy === "undefined" ) {
-          inverseCopy = new PMatrix3D();
-        }
-        var a = arguments;
-        inverseCopy.set( a[0],  a[1],  a[2],  a[3],
-                         a[4],  a[5],  a[6],  a[7], 
-                         a[8],  a[9],  a[10], a[11], 
-                         a[12], a[13], a[14], a[15] );
-          
-        if ( !inverseCopy.invert() ) {
-          return false;
-        }
-        this.preApply( inverseCopy );
-        return true;
-      },
-      rotateX: function( angle ){
-        var c = p.cos( angle );
-        var s = p.sin( angle );
-        this.apply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
-      },
-      
-      rotateY: function( angle ){
-        var c = p.cos( angle );
-        var s = p.sin( angle );
-        this.apply([c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1]);
-      },
-      rotateZ: function( angle ){
-        var c = Math.cos( angle );
-        var s = Math.sin( angle );
-        this.apply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
-      },
-      /*
-        Uniform scaling if only one value passed in
-      */
-      scale: function( sx, sy, sz ){
-        if( sx && !sy && !sz )
-        {
-          sy = sz = sx;
-        }
-        else if( sx && sy && !sz )
-        {
-          sz = 1;
-        }
-
-        if ( sx && sy && sz ){
-          this.elements[0] *= sx;
-          this.elements[1] *= sy;
-          this.elements[2] *= sz;
-          this.elements[4] *= sx;
-          this.elements[5] *= sy;
-          this.elements[6] *= sz;
-          this.elements[8] *= sx;
-          this.elements[9] *= sy;
-          this.elements[10] *= sz;
-          this.elements[12] *= sx;
-          this.elements[13] *= sy;
-          this.elements[14] *= sz;
-        }
-      },
-      skewX: function( angle ) {
-        var t = p.tan( angle );
-        this.apply( 1, t, 0, 0,
-                    0, 1, 0, 0,
-                    0, 0, 1, 0,
-                    0, 0, 0, 1);
-      },
-      skewY: function( angle ) {
-        var t = Math.tan( angle );
-        this.apply( 1, 0, 0, 0,
-                    t, 1, 0, 0,
-                    0, 0, 1, 0,
-                    0, 0, 0, 1);
-      },
-      multX: function( x, y, z, w ) {
-        if( !z ) {
-          return this.elements[0] * x + this.elements[1] * y + this.elements[3];
-        }
-        else if ( !w ) {
-          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
-        }
-        else {
-          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
-        }
-      },
-      multY: function( x, y, z, w ) {
-        if( !z ) {
-          return this.elements[4] * x + this.elements[5] * y + this.elements[7];
-        }
-        else if ( !w ) {
-          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
-        }
-        else {
-          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
-        }
-      },
-      multZ: function( x, y, z, w ) {
-        if( !w ) {
-          return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
-        }
-        else {
-          return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
-        }
-      },
-      multW: function( x, y, z, w ) {
-        if( !w ) {
-          return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15];
-        }
-        else {
-          return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
-        }
-      },
-      invert: function(){
-        var kInv = [];
-        var fA0 = this.elements[ 0] * this.elements[ 5] - this.elements[ 1] * this.elements[ 4];
-        var fA1 = this.elements[ 0] * this.elements[ 6] - this.elements[ 2] * this.elements[ 4];
-        var fA2 = this.elements[ 0] * this.elements[ 7] - this.elements[ 3] * this.elements[ 4];
-        var fA3 = this.elements[ 1] * this.elements[ 6] - this.elements[ 2] * this.elements[ 5];
-        var fA4 = this.elements[ 1] * this.elements[ 7] - this.elements[ 3] * this.elements[ 5];
-        var fA5 = this.elements[ 2] * this.elements[ 7] - this.elements[ 3] * this.elements[ 6];
-        var fB0 = this.elements[ 8] * this.elements[13] - this.elements[ 9] * this.elements[12];
-        var fB1 = this.elements[ 8] * this.elements[14] - this.elements[10] * this.elements[12];
-        var fB2 = this.elements[ 8] * this.elements[15] - this.elements[11] * this.elements[12];
-        var fB3 = this.elements[ 9] * this.elements[14] - this.elements[10] * this.elements[13];
-        var fB4 = this.elements[ 9] * this.elements[15] - this.elements[11] * this.elements[13];
-        var fB5 = this.elements[10] * this.elements[15] - this.elements[11] * this.elements[14];
-
-        // Determinant
-        var fDet = fA0 * fB5 - fA1 * fB4 + fA2 * fB3 + fA3 * fB2 - fA4 * fB1 + fA5 * fB0;
-        
-        // Account for a very small value
-        // return false if not successful.
-        if ( Math.abs( fDet ) <= 1e-9 )
-        {
-          return false;
-        }
-
-        kInv[ 0] = + this.elements[ 5] * fB5 - this.elements[ 6] * fB4 + this.elements[ 7] * fB3;
-        kInv[ 4] = - this.elements[ 4] * fB5 + this.elements[ 6] * fB2 - this.elements[ 7] * fB1;
-        kInv[ 8] = + this.elements[ 4] * fB4 - this.elements[ 5] * fB2 + this.elements[ 7] * fB0;
-        kInv[12] = - this.elements[ 4] * fB3 + this.elements[ 5] * fB1 - this.elements[ 6] * fB0;
-        kInv[ 1] = - this.elements[ 1] * fB5 + this.elements[ 2] * fB4 - this.elements[ 3] * fB3;
-        kInv[ 5] = + this.elements[ 0] * fB5 - this.elements[ 2] * fB2 + this.elements[ 3] * fB1;
-        kInv[ 9] = - this.elements[ 0] * fB4 + this.elements[ 1] * fB2 - this.elements[ 3] * fB0;
-        kInv[13] = + this.elements[ 0] * fB3 - this.elements[ 1] * fB1 + this.elements[ 2] * fB0;
-        kInv[ 2] = + this.elements[13] * fA5 - this.elements[14] * fA4 + this.elements[15] * fA3;
-        kInv[ 6] = - this.elements[12] * fA5 + this.elements[14] * fA2 - this.elements[15] * fA1;
-        kInv[10] = + this.elements[12] * fA4 - this.elements[13] * fA2 + this.elements[15] * fA0;
-        kInv[14] = - this.elements[12] * fA3 + this.elements[13] * fA1 - this.elements[14] * fA0;
-        kInv[ 3] = - this.elements[ 9] * fA5 + this.elements[10] * fA4 - this.elements[11] * fA3;
-        kInv[ 7] = + this.elements[ 8] * fA5 - this.elements[10] * fA2 + this.elements[11] * fA1;
-        kInv[11] = - this.elements[ 8] * fA4 + this.elements[ 9] * fA2 - this.elements[11] * fA0;
-        kInv[15] = + this.elements[ 8] * fA3 - this.elements[ 9] * fA1 + this.elements[10] * fA0;
-
-        // Inverse using Determinant
-        var fInvDet = 1.0 / fDet;
-        kInv[ 0] *= fInvDet;
-        kInv[ 1] *= fInvDet;
-        kInv[ 2] *= fInvDet;
-        kInv[ 3] *= fInvDet;
-        kInv[ 4] *= fInvDet;
-        kInv[ 5] *= fInvDet;
-        kInv[ 6] *= fInvDet;
-        kInv[ 7] *= fInvDet;
-        kInv[ 8] *= fInvDet;
-        kInv[ 9] *= fInvDet;
-        kInv[10] *= fInvDet;
-        kInv[11] *= fInvDet;
-        kInv[12] *= fInvDet;
-        kInv[13] *= fInvDet;
-        kInv[14] *= fInvDet;
-        kInv[15] *= fInvDet;
-
-        this.elements = kInv.slice();
-        return true;
-      },
-      toString: function()
-      {
-        var str = "";
-        for( var i = 0; i < 15; i++ )
-        {
-          str += this.elements[i] + ", ";
-        }
-        str += this.elements[15];
-        return str;
-      },
-      print: function() {
-        var output = "", digits = 3;
-        output += p.nfs(this.elements[0], digits, 4) + " " +
-          p.nfs(this.elements[1], digits, 4) + " " +
-          p.nfs(this.elements[2], digits, 4) + " " +
-          p.nfs(this.elements[3], digits, 4) + "\n";
-
-        output += p.nfs(this.elements[4], digits, 4) + " " +
-          p.nfs(this.elements[5], digits, 4) + " " +
-          p.nfs(this.elements[6], digits, 4) + " " +
-          p.nfs(this.elements[7], digits, 4) + "\n";
-
-        output += p.nfs(this.elements[8], digits, 4) + " " +
-          p.nfs(this.elements[9], digits, 4) + " " +
-          p.nfs(this.elements[10], digits, 4) + " " +
-          p.nfs(this.elements[11], digits, 4) + "\n";
-
-        output += p.nfs(this.elements[12], digits, 4) + " " +
-          p.nfs(this.elements[13], digits, 4) + " " +
-          p.nfs(this.elements[14], digits, 4) + " " +
-          p.nfs(this.elements[15], digits, 4) + "\n";
-
-        p.println(output);
-      },
-      invTranslate: function( tx, ty, tz) {
-		this.preApply(	1, 0, 0, -tx,
-						0, 1, 0, -ty,
-						0, 0, 1, -tz,
-						0, 0, 0, 1);
-	  },
-      invRotateX: function( angle ){
-        var c = p.cos( -angle );
-        var s = p.sin( -angle );
-        this.preApply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
-      },
-      invRotateY: function( angle ){
-        var c = p.cos( -angle );
-        var s = p.sin( -angle );
-        this.preApply([c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1]);
-      },
-      invRotateZ: function( angle ){
-        var c = p.cos( -angle );
-        var s = p.sin( -angle );
-        this.preApply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
-      },
-      invScale: function( x, y, z ){
-        this.preApply([1/x, 0, 0, 0, 0, 1/y, 0, 0, 0, 0, 1/z, 0, 0, 0, 0, 1]);
-      }
-    };
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Matrix Stack
-    ////////////////////////////////////////////////////////////////////////////
-
-    var PMatrix3DStack = function PMatrix3DStack() {
-      this.matrixStack = [];
-    };
-
-    PMatrix3DStack.prototype.load = function load() {
-      var tmpMatrix = new PMatrix3D();
-      if ( arguments.length === 1 ) {
-        tmpMatrix.set( arguments[0] );
-      } else {
-        tmpMatrix.set( arguments );
-      }
-      this.matrixStack.push( tmpMatrix );
-    };
-
-    PMatrix3DStack.prototype.push = function push() {
-      this.matrixStack.push( this.peek() );
-    };
-
-    PMatrix3DStack.prototype.pop = function pop() {
-      return this.matrixStack.pop();
-    };
-
-    PMatrix3DStack.prototype.peek = function peek() {
-      var tmpMatrix = new PMatrix3D();
-      tmpMatrix.set( this.matrixStack[this.matrixStack.length - 1] );
-      return tmpMatrix;
-    };
-
-    PMatrix3DStack.prototype.mult = function mult( matrix ){
-      this.matrixStack[this.matrixStack.length - 1].apply( matrix );
-    };
 
     ////////////////////////////////////////////////////////////////////////////
     // 3D Functions
@@ -3969,12 +3975,10 @@
       }
     }
 
- 		////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     // Lights
     ////////////////////////////////////////////////////////////////////////////
     
-    /*      
-    */
     p.ambientLight = function( r, g, b ) {
       if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
         curContext.useProgram( programObject3D );
@@ -3982,10 +3986,8 @@
         uniformi( programObject3D, "lights[" + lightCount + "].type", 0 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
-    }
+    };
 
-    /*
-    */
     p.directionalLight = function( r, g, b, nx, ny, nz ) {
       if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
         curContext.useProgram( programObject3D );
@@ -3994,10 +3996,8 @@
         uniformi( programObject3D, "lights[" + lightCount + "].type", 1 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
-    }
+    };
     
-    /*
-    */
     p.pointLight = function( r, g, b, x, y, z ) {
       if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
         curContext.useProgram( programObject3D );
@@ -4015,7 +4015,7 @@
         uniformi( programObject3D, "lights[" + lightCount + "].type", 2 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
-    }
+    };
 
     /*
       Disables lighting so the all shapes drawn after this
@@ -4027,7 +4027,7 @@
         curContext.useProgram( programObject3D );
         uniformi( programObject3D, "lightCount", lightCount );
       }
-    }
+    };
 
 		////////////////////////////////////////////////////////////////////////////
     // Camera functions
@@ -4042,7 +4042,7 @@
         forwardTransform = cameraInv;
         reverseTransform = cam;
       }
-    }
+    };
 
     p.endCamera = function endCamera(){
       if( !manipulatingCamera ){
@@ -4055,7 +4055,7 @@
         reverseTransform = modelViewInv;
         manipulatingCamera = false;
       }
-    }
+    };
     
     p.camera = function camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
       if( arguments.length === 0 ){
@@ -4081,7 +4081,7 @@
                 y.x, y.y, y.z, 0,
                 z.x, z.y, z.z, 0,
                 0,   0,   0,   1);
-    		
+
                 cam.translate( -eyeX, -eyeY, -eyeZ );
 
         cameraInv.reset();
@@ -4424,7 +4424,7 @@
           curContext.useProgram( programObject2D );
           vertexAttribPointer( programObject2D, "Vertex", 3 , sphereBuffer );
 
-   				uniformMatrix( programObject2D, "model", true,  model.array() );
+          uniformMatrix( programObject2D, "model", true,  model.array() );
           uniformMatrix( programObject2D, "view", true, view.array() );
           uniformMatrix( programObject2D, "projection", true, projection.array() );
 
@@ -4820,7 +4820,6 @@
 			
 			if (curvePoints.length > 3){
 				if( p.use3DContext) {
-					alert(curvePoints.length);
 					p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
 															  curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
 																curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
@@ -4885,7 +4884,7 @@
 				z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
 				p.vertex(x0, y0, z0);
 			}
-		}
+		};
 
     p.curve = function curve() {
       if( arguments.length === 8 )// curve(x1, y1, x2, y2, x3, y3, x4, y4)
@@ -4897,13 +4896,12 @@
           p.curveVertex( arguments[6], arguments[7] );
 				p.endShape();
 			} else { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
-				if( p.use3DContext )
-				{
+				if( p.use3DContext ) {
 					p.beginShape();
-            curveVertex( arguments[0], arguments[1] , arguments[2] );
-            curveVertex( arguments[3], arguments[4] , arguments[5] );
-            curveVertex( arguments[6], arguments[7] , arguments[8] );
-            curveVertex( arguments[9], arguments[10], arguments[11] );
+            p.curveVertex( arguments[0], arguments[1] , arguments[2] );
+            p.curveVertex( arguments[3], arguments[4] , arguments[5] );
+            p.curveVertex( arguments[6], arguments[7] , arguments[8] );
+            p.curveVertex( arguments[9], arguments[10], arguments[11] );
 					p.endShape();
 				}
 			}
@@ -4913,13 +4911,16 @@
       curTightness = tightness;
     };
 
-		//curveDetail, curveInit, splineForward
-		//Taken and revised from:
-		//git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
-		//UNDER :License: LGPL Java
-		p.curveDetail = function curveDetail(){
-			curveDetail = arguments[0];
-			curveInit();
+		//used by both curveDetail and bezierDetail
+		var splineForward = function(segments, matrix) {
+			var f  = 1.0 / segments;
+			var ff = f * f;
+			var fff = ff * f;
+
+			matrix.set(0,     0,    0, 1,
+								 fff,   ff,   f, 0,
+								 6*fff, 2*ff, 0, 0,
+								 6*fff, 0,    0, 0);
 		};
 
 		//internal curveInit
@@ -4957,16 +4958,13 @@
 			curveDrawMatrix.apply( curveBasisMatrix );
 		};
 
-		//used by both curveDetail and bezierDetail
-		var splineForward = function(segments, matrix) {
-			var f  = 1.0 / segments;
-			var ff = f * f;
-			var fff = ff * f;
-
-			matrix.set(0,     0,    0, 1,
-								 fff,   ff,   f, 0,
-								 6*fff, 2*ff, 0, 0,
-								 6*fff, 0,    0, 0);
+		//curveDetail, curveInit, splineForward
+		//Taken and revised from:
+		//git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
+		//UNDER :License: LGPL Java
+		p.curveDetail = function curveDetail(){
+			curveDetail = arguments[0];
+			curveInit();
 		};
 
     p.bezierVertex = p.vertex;
@@ -4974,13 +4972,14 @@
     p.rectMode = function rectMode(aRectMode) {
       curRectMode = aRectMode;
     };
+
     p.imageMode = function () {};
+    
     p.ellipseMode = function ellipseMode(aEllipseMode) {
       curEllipseMode = aEllipseMode;
     };
 
     p.arc = function arc(x, y, width, height, start, stop) {
-
       if (width <= 0) {
         return;
       }
@@ -5003,7 +5002,6 @@
         curContext.fill();
       }
       curContext.closePath();
-
     };
 
     p.line = function line() {
@@ -5369,7 +5367,7 @@
     try {
 			// Opera createImageData fix
 			if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
-				CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); }
+				CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); };
 			}
 		} catch(e) {}
     p.createImage = function createImage(w, h, mode) {
@@ -5488,7 +5486,7 @@
       // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
       if ( arguments.length === 4 ) {
         img.pixels[y*img.width+x] = obj;
-      } else if (arguments.length = 3) {
+      } else if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
         if(typeof obj === "number"){
           // it was a color
