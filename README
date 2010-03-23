@@ -1,12 +1,12 @@
 
-  P R O C E S S I N G . J S - 0 . 6
+  P R O C E S S I N G . J S - 0 . 7
   a port of the Processing visualization language
 
   //////////////////////////////////////////////////////////////////////////////
 
   License           MIT (see included LICENSE)
   Original Author   John Resig: http://ejohn.org
-                    see AUTHORS for contributer list
+                    see included AUTHORS file for contributer list
 
   Web Site          http://processingjs.org  
   Java Version      http://processing.org
@@ -40,17 +40,6 @@
   makes an ideal tool for visualizing data, creating user-interfaces and
   developing web-based games.
 
-  Processing.js is explicitly developed for browsers that support the HTML5
-  <Canvas> element. Processing.js runs in FireFox, Safari, Opera and Chrome but
-  will not be supported in Internet Explorer until Mircosoft catch up with
-  ISSUE 15.
-
-  Implementing Processing.js in Flash or Silverlight is not recommended as Java
-  already occupies the browser-plug-in space for this library. For users
-  wishing to run Processing.js in Silverlight, see Paul Irish's Silverlight
-  implementation. Using Explorer Canvas with Processing.js typically results in
-  unusable frame-rates for moderately complex visualizations.
-
   The Processing language was created by Ben Fry and Casey Reas. It evolved
   from ideas explored in the Aesthetics and Computation Group at the MIT Media
   Lab and was originally intended to be used in a Java run-time environment. In
@@ -58,31 +47,25 @@
   of Processing to Javascript for use in web pages. Much like the native
   language, Processing.js is a community driven project, and continues to grow
   as browser technology advances.
-
+  
 
   //////////////////////////////////////////////////////////////////////////////
 
   PLATFORM AND BROWSER COMPATIBILITY
-  Processing.js is explicitly developed for browsers that support the HTML5 Canvas
-  element. Processing.js runs in FireFox, Safari, Opera and Chrome but is not 
-  currently supported in Internet Explorer. Processing.js aims for 100% 
-  compatibility across all supported browsers however differences between 
-  individual canvas implementations may give slightly different results in your 
-  sketches.
-
-  Processing.js is actively tested on the following platforms and browsers:  
-
-           Fx  Sf  Ch  Op  IE
-          +---+---+---+---+---+
-  Leopard | 1 | 1 | 1 | 1 | . |  4 / 4
-          +---+---+---+---+---+
-   Ubuntu | 1 | . | 1 | 1 | . |  3 / 3
-          +---+---+---+---+---+
-    Vista | 1 | 1 | 1 | 1 | . |  4 / 4
-          +---+---+---+---+---+   
-    Win 7 | 1 | 1 | 1 | 1 | . |  4 / 4
-          +---+---+---+---+---+   
-                                13 / 13 = Pass
-                               
+  
+  Processing.js is explicitly developed for and actively tested on browsers that
+  support the HTML5 <Canvas> element. Processing.js runs in FireFox, Safari, 
+  Chrome and Opera but is not currently supported in Internet Explorer.
+   
+  Processing.js aims for 100 percent compatibility across all supported browsers; 
+  however, differences between individual canvas implementations may give 
+  slightly different results in your sketches.  
+  
+  Implementing Processing.js in Flash or Silverlight is not recommended, as Java
+  already occupies the browser plug-in space for this library. For users
+  wishing to run Processing.js in Silverlight, see Paul Irish's Silverlight
+  implementation. Using Internet Explorer Canvas with Processing.js typically
+  results in unusable frame-rates for moderately complex visualizations.
+                            
   //////////////////////////////////////////////////////////////////////////////
   
