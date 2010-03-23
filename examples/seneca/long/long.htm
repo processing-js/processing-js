@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Processing.js test of long data type</title>
+    <script type="text/javascript" src="../../../processing.js"></script>
+
+    <style type="text/css">
+        html, body
+        {
+            background: #EEE;
+            font-family: Arial;
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+        h1
+        {
+            background: #385C85;
+            color: #FFF;
+            padding: 10px;
+            padding-left: 20px;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+        h1 a
+        {
+            color: #FFF;
+        }
+        h2
+        {
+            padding-left: 20px;
+        }
+        p
+        {
+            padding-left: 20px;
+            line-height: 1.3em;
+        }
+        p a
+        {
+            color: #385C85;
+        }
+        canvas
+        {
+            margin: 10px 0;
+        }
+        pre
+        {
+            margin-left: 20px;
+            margin-right: 20px;
+            padding: 5px;
+            background: #FFF;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+        }
+        div.ref-col
+        {
+            float: left;
+            width: 32%;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        <!-- name of your function and test description -->
+        long type test</h1>
+    <h2>
+        This is a test of long data type</h2>
+    <p>
+        Datatype for large integers. While integers can be as large as 2,147,483,647 and as low as -2,147,483,648 (stored as 32 bits), a long  integer has a minimum value of -9,223,372,036,854,775,808 and a maximum value of 9,223,372,036,854,775,807 (stored as 64 bits). Use this datatype when you need a number to have a greater magnitude than can be stored within an int. Processing functions don't use this datatype, so while they work in the language, you'll usually have to convert to a int using the (int) syntax before passing into a function.</p>
+    <!-- include your processing file below -->
+    <canvas datasrc="long.pjs" width="200" height="200" style="margin-left: 10px;"></canvas>
+    <b>Test written by <a href="http://dhodgin.wordpress.com/">Daniel Hodgin</a></b><br />
+    <h1>
+        Source Code:</h1>
+    <pre>
+// long data type example
+long a;          // Declare variable "a" of type int
+a = 9876543210;          // Assign "a" the value 9876543210
+long b = a * 2;   // Declare variable "b" and assign it the value 19753086420
+long c = a + b;  // Declare variable "c" and assign it the sum of "a" and "b"
+println(a);
+println(b);
+println(c);
+c = (c - 30) / 100;
+int i = (int)c;  // Converts the value of "c" from a long to a int
+println(i);
+        </pre>
+    <br />
+</body>
+</html>

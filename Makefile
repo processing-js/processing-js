@@ -16,12 +16,14 @@ VERSION ?= $(error Specify a version for your release (e.g., VERSION=0.5))
 
 release: release-files zipped
 
-release-files: pretty packed minified example release-docs
+release-files: pretty yui example release-docs
 
 zipped: release-files
-	find ./release -print | zip -j ./release/processing-$(VERSION).zip -@
+	gzip -c ./release/processing-$(VERSION).min.js > ./release/processing-$(VERSION).min.js.gz
+	find ./release -print | zip -j ./release/processing.js-$(VERSION).zip -@
 
 release-docs: create-release
+	cp AUTHORS ./release
 	cp README ./release
 	cp LICENSE ./release
 	cp CHANGELOG ./release
@@ -42,12 +44,20 @@ packed: create-release
 	$(JS) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).packed.js
 
 minified: create-release
-	$(TOOLSDIR)/minifier.py $(JS) processing.js > ./release/processing-$(VERSION).min.js
+	$(TOOLSDIR)/minifier.py $(JS) processing.js > ./release/processing-$(VERSION).jsmin.js
 # check for any parsing errors in minified version of processing.js
+	$(JS) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).jsmin.js
+
+yui: create-release
+	java -jar $(TOOLSDIR)/yui/yuicompressor-2.4.2.jar --nomunge processing.js -o ./release/processing-$(VERSION).min.js
+# check for any parsing errors in compiled version of processing.js
 	$(JS) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).min.js
 
 check:
 	$(TOOLSDIR)/runtests.py $(JS)
+
+check-release: yui
+	$(TOOLSDIR)/runtests.py $(JS) -l ./release/processing-$(VERSION).min.js
 
 check-summary:
 	$(TOOLSDIR)/runtests.py -s $(JS)

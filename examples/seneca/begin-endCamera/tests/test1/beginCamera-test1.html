@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head>
+  <body>
+    <h1>beginCamera() and endCamera() test</h1>
+
+    <p>
+    <canvas datasrc="beginCamera-test1.pjs" width="100" height="100"></canvas>
+    <img src="p5_result.jpg" style="margin: 10px 0;"/>
+    </p>
+
+    <pre>
+size(100, 100, P3D);
+noFill();
+background(0, 255, 0);
+
+beginCamera();
+rotateX(-PI/6);
+endCamera();
+
+translate(50, 50, 0);
+rotateY(PI/3);
+box(45);
+    </pre>
+  </body>
+</html>
