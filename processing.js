@@ -70,8 +70,6 @@
   };
   
 	/*
-    Andor Salga
-    asalga.wordpress.com
     Compatibility wrapper for older browsers
   */
   var newWebGLArray = function(data) {
@@ -86,8 +84,6 @@
     return WebGLFloatArrayExists === true ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
   };
   
-  /*
-  */
   var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
     var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER );
     curContext.shaderSource( vertexShaderObject, vetexShaderSource );
@@ -1514,8 +1510,6 @@
       }
     };
 
-    // In case I ever need to do HSV conversion:
-    // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
 
       var r, g, b, rgb, aColor;
@@ -2473,7 +2467,6 @@
     };
 
     // tinylog lite JavaScript library
-    // http://purl.eligrey.com/tinylog/lite
     var tinylogLite = (function () {
       "use strict";
 
