@@ -2895,8 +2895,7 @@
       // Scan for illegal non-numbers
       for ( var i = 0; i < numbers.length; i++ ) {
         if ( typeof numbers[i] !== 'number' ) {
-          //throw "Value sent to min is not a number.";
-          return undefined;
+          throw "Value sent to min is not a number.";
         }
       }
       
@@ -2918,8 +2917,7 @@
       // Scan for illegal non-numbers
       for ( var i = 0; i < numbers.length; i++ ) {
         if ( typeof numbers[i] !== 'number' ) {
-          //throw "Value sent to max is not a number.";
-          return undefined;
+          throw "Value sent to max is not a number.";
         }
       }
       
