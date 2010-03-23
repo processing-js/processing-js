@@ -389,6 +389,11 @@
     // super() is a reserved word
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
+    // implements Int1, Int2 
+    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*) \{/g, function (all, interfaces) {
+      var names = interfaces.replace(/\s+/g, "").split(",");
+      return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
+    });
 
     var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
 
