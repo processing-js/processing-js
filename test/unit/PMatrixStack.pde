@@ -13,8 +13,8 @@ test4 = matrix2DStack.pop();
 
 _checkEqual(test1.elements, [1,2,3,4,5,6]);
 _checkEqual(test2.elements, [16,15,14,13,12,11]);
-_checkEqual(test3.elements, [42,39,36,129,120,111]);
-_checkEqual(test4.elements, [42,39,36,129,120,111]);
+_checkEqual(test3.elements, [42,39,39,129,120,117]);
+_checkEqual(test4.elements, [42,39,39,129,120,117]);
 
 use3DContext = true;
 
