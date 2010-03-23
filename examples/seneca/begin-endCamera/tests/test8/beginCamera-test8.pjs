@@ -1,0 +1,14 @@
+size(100, 100, P3D);
+noFill();
+background(0, 255, 0);
+
+beginCamera();
+translate(25, 0, 25);
+endCamera();
+
+translate(50, 50, 0);
+rotateY(PI/3);
+box(45);
+
+translate(85, 25, 0);
+sphere(45);
