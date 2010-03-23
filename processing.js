@@ -71,15 +71,7 @@
     Compatibility wrapper for older browsers
   */
   var newWebGLArray = function(data) {
-    var WebGLFloatArrayExists = false;
-
-    try{
-      WebGLFloatArray;
-      WebGLFloatArrayExists = true;
-    }
-    catch(e){}     
-
-    return WebGLFloatArrayExists === true ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
+    return (typeof WebGLFloatArray === 'function') ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
   };
   
   var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
@@ -200,7 +192,7 @@
      // Get the vector from the light to the vertex
   "	 vec3 VP = vec3(light.position) - ecPos;" +
 
-  	 // Get the distance from the current vector to the light position
+     // Get the distance from the current vector to the light position
   "  float d = length(VP); " + 
 
      // Normalize the light so it can be used in the dot product operation.
@@ -272,7 +264,7 @@
     // Parse out @pjs directive, if any.
     p.pjs = {imageCache: {pending: 0}}; // by default we have an empty imageCache, no more.
     var dm = /\/\*\s*@pjs\s*([^\/\*]+)\*\//.exec(aCode);
-    if (dm && dm.length == 2) {
+    if (dm && dm.length === 2) {
       var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
 
       // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
@@ -280,12 +272,12 @@
 
       for (var i=0, dl=directives.length; i<dl; i++) {
         var pair = directives[i].split('=');
-        if (pair && pair.length == 2) {
+        if (pair && pair.length === 2) {
           var key = clean(pair[0]);
           var value = clean(pair[1]);
 
           // A few directives require work beyond storying key/value pairings
-          if (key == "preload") {
+          if (key === "preload") {
             var list = value.split(',');
             // All pre-loaded images will get put in imageCache, keyed on filename
             for (var j=0, ll=list.length; j<ll; j++) {
@@ -342,7 +334,7 @@
     aCode = aCode.replace(/import\s+(.+);/g, "");
 
     //replace  catch (IOException e) to catch (e)
-    aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g,"catch \($1\)");
+    aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g,"catch ($1)");
     //delete  the multiple catch block
     var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
     while(catchBlock.test(aCode)){
@@ -534,7 +526,7 @@
     // Convert #aaaaaa into color
     aCode = aCode.replace(/#([a-f0-9]{6})/ig, function (m, hex) {
       var num = toNumbers(hex);
-      return "DefaultColor(" + num[0] + "," + num[1] + "," + num[2] + ")";
+      return "defaultColor(" + num[0] + "," + num[1] + "," + num[2] + ")";
     });
 
     // Convert 3.0f to just 3.0
@@ -811,7 +803,7 @@
     ////////////////////////////////////////////////////////////////////////////    
     var charMap = {};
 
-    function Char(chr) {
+    var Char = function(chr) {
       if ( typeof chr === 'string' && chr.length === 1 ) {
         this.code = chr.charCodeAt(0);
       } else {
@@ -824,6 +816,7 @@
     Char.prototype.toString = function() {
       return String.fromCharCode(this.code);
     };
+
     Char.prototype.valueOf = function() {
       return this.code;
     };
@@ -831,11 +824,11 @@
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
     ////////////////////////////////////////////////////////////////////////////    
-    p.split = function (str, delim) {
+    p.split = function(str, delim) {
       return str.split(delim);
     };
 
-    p.splitTokens = function (str, tokens) {
+    p.splitTokens = function(str, tokens) {
       if (arguments.length === 1) {
         tokens = "\n\t\r\f ";
       }
@@ -868,12 +861,12 @@
       return ary;
     };
 
-    p.append = function (array, element) {
+    p.append = function(array, element) {
       array[array.length] = element;
       return array;
     };
 
-    p.concat = function concat(array1, array2) {
+    p.concat = function(array1, array2) {
       return array1.concat(array2);
     };
 		
@@ -907,7 +900,7 @@
 			return ret;
 		};
 		
-    p.splice = function (array, value, index) {
+    p.splice = function(array, value, index) {
       if (array.length === 0 && value.length === 0) {
         return array;
       }
@@ -923,7 +916,7 @@
       return array;
     };
 
-    p.subset = function (array, offset, length) {
+    p.subset = function(array, offset, length) {
       if (arguments.length === 2) {
         return p.subset(array, offset, array.length - offset);
       } else if (arguments.length === 3) {
@@ -931,12 +924,11 @@
       }
     };
 
-    p.join = function join(array, seperator) {
+    p.join = function(array, seperator) {
       return array.join(seperator);
     };
 
-    p.shorten = function (ary) {
-
+    p.shorten = function(ary) {
       var newary = new Array(0);
 
       // copy array into new array
@@ -951,8 +943,7 @@
     };
 
 
-    p.expand = function (ary, newSize) {
-
+    p.expand = function(ary, newSize) {
       var newary = new Array(0);
 
       var len = ary.length;
@@ -961,21 +952,17 @@
       }
 
       if (arguments.length === 1) {
-
         // double size of array
         newary.length *= 2;
-
       } else if (arguments.length === 2) {
-
         // size is newSize
         newary.length = newSize;
-
       }
 
       return newary;
     };
 
-    p.arrayCopy = function arrayCopy(src, srcPos, dest, destPos, length) {
+    p.arrayCopy = function(src, srcPos, dest, destPos, length) {
       if(arguments.length === 2) {
         // recall itself and copy src to dest from start index 0 to 0 of src.length
         p.arrayCopy(src, 0, srcPos, 0, src.length);
@@ -985,7 +972,7 @@
       } else if (arguments.length === 5) {
         // copy src to dest from index srcPos to index destPos of length recursivly on objects
         for (var i=srcPos, j=destPos; i < length+srcPos; i++, j++) {
-          if(src[i] && typeof src[i] == "object"){
+          if(src[i] && typeof src[i] === "object"){
             // src[i] is not null and is another object or array. go recursive
             p.arrayCopy(src[i],0,dest[j],0,src[i].length);
           } else {
@@ -996,14 +983,11 @@
       }      
     };
 
-    p.ArrayList = function ArrayList(size, size2, size3) {
-
+    p.ArrayList = function(size, size2, size3) {
       var array = new Array(0 | size);
 
       if (size2) {
-
         for (var i = 0; i < size; i++) {
-
           array[i] = [];
 
           for (var j = 0; j < size2; j++) {
@@ -1012,11 +996,8 @@
               a[k] = 0;
             }
           }
-
         }
-
       } else {
-
         for (var l = 0; l < size; l++) {
           array[l] = 0;
         }
@@ -1044,7 +1025,7 @@
         return !this.length;
       };
       array.clone = function () {
-        var a = new ArrayList(size);
+        var a = new p.ArrayList(size);
         for (var i = 0; i < size; i++) {
           a[i] = this[i];
         }
@@ -1054,7 +1035,7 @@
       return array;
     };
 
-    p.reverse = function (array) {
+    p.reverse = function(array) {
       return array.reverse();
     };
 
@@ -1063,8 +1044,9 @@
     // HashMap
     ////////////////////////////////////////////////////////////////////////////
     p.HashMap = function HashMap() {
-      if(arguments.length === 1 && arguments[0].constructor === HashMap)
+      if(arguments.length === 1 && arguments[0].constructor === HashMap) {
         return arguments[0].clone();
+      }
 
       var initialCapacity = arguments.length > 0 ? arguments[0] : 16;
       var loadFactor = arguments.length > 1 ? arguments[1] : 0.75;
@@ -1074,41 +1056,44 @@
       var hashMap = this;
      
       this.clear = function() { count = 0; buckets = new Array(initialCapacity); };
-      this.clone = function() { var map = new HashMap(); map.putAll(this); return map; };
+      this.clone = function() { var map = new p.HashMap(); map.putAll(this); return map; };
       this.containsKey = function(key) { 
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if(bucket == undefined) return false;
-        for(var i=0; i < bucket.length; ++i)
-          if(virtEquals(bucket[i].key, key)) return true;
+        if(bucket === undefined) { return false; }
+        for(var i=0; i < bucket.length; ++i) {
+          if(virtEquals(bucket[i].key, key)) { return true; }
+        }
         return false;
       };
       this.containsValue = function(value) {
         for(var i=0; i < buckets.length; ++i) {
           var bucket = buckets[i];
-          if(bucket == undefined) continue;
+          if(bucket === undefined) { continue; }
           for(var j=0; j < bucket.length; ++j) {
-            if(virtEquals(bucket[j].value, value))
+            if(virtEquals(bucket[j].value, value)) {
               return true;
+            }
           }
         }
         return false;
       };
       this.entrySet = function() { return new Set(
            function(pair) { return new Entry(pair); },
-           function(pair) { return pair.constructor == Entry && pair._isIn(hashMap); },
+           function(pair) { return pair.constructor === Entry && pair._isIn(hashMap); },
            function(pair) { return hashMap.remove(pair.getKey()); }
          ); 
       };
       this.get = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if(bucket == undefined) return null;
-        for(var i=0; i < bucket.length; ++i)
-          if(virtEquals(bucket[i].key, key)) return bucket[i].value;
+        if(bucket === undefined) { return null; }
+        for(var i=0; i < bucket.length; ++i) {
+          if(virtEquals(bucket[i].key, key)) { return bucket[i].value; }
+        }
         return null;
       };
-      this.isEmpty = function() { return count == 0; };
+      this.isEmpty = function() { return count === 0; };
       this.keySet = function() { return new Set(
            function(pair) { return pair.key; },
            function(key) { return hashMap.containsKey(key); },
@@ -1118,7 +1103,7 @@
       this.put = function(key, value) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if(bucket == undefined) { 
+        if(bucket === undefined) { 
           ++count;
           buckets[index] = [ {key: key, value: value } ];
           ensureLoad();
@@ -1142,28 +1127,29 @@
           var entry = it.next();
           this.put(entry.getKey(), entry.getValue());
         }
-      }
+      };
       this.remove = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if(bucket == undefined) return null;
+        if(bucket === undefined) { return null; }
         for(var i=0; i < bucket.length; ++i) {
           if(virtEquals(bucket[i].key, key)) {
             --count;
             var previous = bucket[i].value;
             bucket[i].removed = true;
-            if(bucket.length > 1)
+            if(bucket.length > 1) {
               bucket.splice(i, 1); 
-            else        
+            } else {      
               buckets[index] = undefined;
+            }
             return previous;
           }
         }
         return null;
       };
-      this.size = function() { return count; }
+      this.size = function() { return count; };
       this.values = function() {
-        var result = new ArrayList(0);
+        var result = new p.ArrayList(0);
         var it = m.entrySet().iterator();
         while(it.hasNext()) {
           var entry = it.next();
@@ -1173,39 +1159,40 @@
       };
 
       function ensureLoad() {
-        if(count <= loadFactor * buckets.length) return;
+        if(count <= loadFactor * buckets.length) { return; }
         var allEntries = [];
         for(var i=0; i < buckets.length; ++i) {
-           if(buckets[i] != undefined) 
+           if(buckets[i] !== undefined) {
              allEntries = allEntries.concat(buckets[i]);
+           }
         }
         buckets = new Array(buckets.length * 2);
         for(var i=0; i < allEntries.length; ++i) {
           var index = virtHashCode(allEntries[i].key) % buckets.length;
           var bucket = buckets[index];
-          if(bucket == undefined) buckets[index] = bucket = [];
+          if(bucket === undefined) { buckets[index] = bucket = []; }
           bucket.push(allEntries[i]);        
         }
       }
 
       function Set(conversion, isIn, removeItem) {
-        this.clear = function() { hashMap.clear(); }
-        this.contains = function(o) { return isIn(o); }
+        this.clear = function() { hashMap.clear(); };
+        this.contains = function(o) { return isIn(o); };
         this.containsAll = function(o) { 
           var it = o.iterator();
           while(it.hasNext()) {
-            if(!this.contains(it.next())) return false;
+            if(!this.contains(it.next())) { return false; }
           }
           return true;
         };
-        this.isEmpty = function() { return hashMap.isEmpty(); }
-        this.iterator = function() { return new Iterator(conversion, removeItem); }
+        this.isEmpty = function() { return hashMap.isEmpty(); };
+        this.iterator = function() { return new Iterator(conversion, removeItem); };
         this.remove = function(o) { 
           if(this.contains(o)) {
             removeItem(o); return true;
           }
-	  return false;
-        }        
+	        return false;
+        };        
         this.removeAll = function(c) { 
           var it = c.iterator();
           var changed = false;
@@ -1226,86 +1213,87 @@
               toRemove.push(entry);
             }
           }
-          for(var i=0;i<toRemove.length;++i) 
+          for(var i=0;i<toRemove.length;++i) {
             removeItem(toRemove[i]);
+          }
           return toRemove.length > 0;
         };
-        this.size = function() { return hashMap.size(); }
+        this.size = function() { return hashMap.size(); };
         this.toArray = function() { 
-          var result = new ArrayList(0);
+          var result = new p.ArrayList(0);
           var it = this.iterator();
           while(it.hasNext()) {
             result.push(it.next());
           }
           return result;
-        }
+        };
       }
      
       function Entry(pair) {        
-        this._isIn = function(map) { return map == hashMap && (typeof(pair.removed) === 'undefined'); }
-        this.equals = function(o) { return virtEquals(pair.key, o.getKey()); }
-        this.getKey = function() { return pair.key; }
-        this.getValue = function() { return pair.value; }
-        this.hashCode = function(o) { return virtHashCode(pair.key); }
-        this.setValue = function(value) { var old = pair.value; pair.value = value; return old; }
+        this._isIn = function(map) { return map === hashMap && (typeof(pair.removed) === 'undefined'); };
+        this.equals = function(o) { return virtEquals(pair.key, o.getKey()); };
+        this.getKey = function() { return pair.key; };
+        this.getValue = function() { return pair.value; };
+        this.hashCode = function(o) { return virtHashCode(pair.key); };
+        this.setValue = function(value) { var old = pair.value; pair.value = value; return old; };
       }
 
       function Iterator(conversion, removeItem) {
         var bucketIndex = 0;
         var itemIndex = -1;
         var endOfBuckets = false;
-        this.hasNext = function() { return !endOfBuckets; }
-        this.next = function() { var result = conversion(buckets[bucketIndex][itemIndex]); findNext(); return result; }
-        this.remove = function() { removeItem(this.next()); --itemIndex; } 
+        this.hasNext = function() { return !endOfBuckets; };
+        this.next = function() { var result = conversion(buckets[bucketIndex][itemIndex]); findNext(); return result; };
+        this.remove = function() { removeItem(this.next()); --itemIndex; };
 
         findNext();
         
         function findNext() {
           while(!endOfBuckets) {
             ++itemIndex;
-            if(bucketIndex >= buckets.length) 
+            if(bucketIndex >= buckets.length) {
               endOfBuckets = true;
-            else if(typeof(buckets[bucketIndex]) === 'undefined'
+            } else if(typeof(buckets[bucketIndex]) === 'undefined'
               || itemIndex >= buckets[bucketIndex].length) {
               itemIndex = -1; ++bucketIndex;
-            } else
-              return; 
+            } else {
+              return;
+            }
           }
         }
       }
-    }
+    };
     
     function virtHashCode(obj) {
-      if(obj.constructor == String) {
+      if(obj.constructor === String) {
         var hash = 0;
         for(var i=0;i<obj.length;++i) {
           hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
         }
         return hash;
-      } else if(typeof(obj) != "object") {
+      } else if(typeof(obj) !== "object") {
         return obj & 0xFFFFFFFF;
       } else if("hashCode" in obj) {
         return obj.hashCode.call(obj);
       } else {
-        if(obj.$id == undefined) {
+        if(obj.$id === undefined) {
           obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
         }
         return obj.$id;     
       }
-
     }
 
     function virtEquals(obj, other) {
-      if(obj == null || other == null) {
-        return (obj == null) && (other == null);
-      } else if(obj.constructor == String) {
-        return obj == other;
-      } else if(typeof(obj) != "object") {
+      if(obj === null || other === null) {
+        return (obj === null) && (other === null);
+      } else if(obj.constructor === String) {
+        return obj === other;
+      } else if(typeof(obj) !== "object") {
         return obj === other;
       } else if("equals" in obj) {
         return obj.equals.call(obj, other);
       } else {
-        return obj == other;
+        return obj === other;
       }
     }
 
@@ -1313,57 +1301,57 @@
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
     // convert rgba color strings to integer
-    p.rgbaToInt = function (color) {
+    p.rgbaToInt = function(color) {
       var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1, 2)[0].split(',');
       return ((rgbaAry[3] * 255) << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
     };
 
     // helper functions for internal blending modes
-    p.mix = function (a, b, f) {
+    p.mix = function(a, b, f) {
       return a + (((b - a) * f) >> 8);
     };
 
-    p.peg = function (n) {
+    p.peg = function(n) {
       return (n < 0) ? 0 : ((n > 255) ? 255 : n);
     };
 
     // blending modes
     p.modes = {
-      replace: function (a, b) {
+      replace: function(a, b) {
         return p.rgbaToInt(b);
       },
-      blend: function (a, b) {
+      blend: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | p.mix(c1 & p.RED_MASK, c2 & p.RED_MASK, f) & p.RED_MASK | p.mix(c1 & p.GREEN_MASK, c2 & p.GREEN_MASK, f) & p.GREEN_MASK | p.mix(c1 & p.BLUE_MASK, c2 & p.BLUE_MASK, f));
       },
-      add: function (a, b) {
+      add: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | Math.min(((c1 & p.RED_MASK) + ((c2 & p.RED_MASK) >> 8) * f), p.RED_MASK) & p.RED_MASK | Math.min(((c1 & p.GREEN_MASK) + ((c2 & p.GREEN_MASK) >> 8) * f), p.GREEN_MASK) & p.GREEN_MASK | Math.min((c1 & p.BLUE_MASK) + (((c2 & p.BLUE_MASK) * f) >> 8), p.BLUE_MASK));
       },
-      subtract: function (a, b) {
+      subtract: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | Math.max(((c1 & p.RED_MASK) - ((c2 & p.RED_MASK) >> 8) * f), p.GREEN_MASK) & p.RED_MASK | Math.max(((c1 & p.GREEN_MASK) - ((c2 & p.GREEN_MASK) >> 8) * f), p.BLUE_MASK) & p.GREEN_MASK | Math.max((c1 & p.BLUE_MASK) - (((c2 & p.BLUE_MASK) * f) >> 8), 0));
       },
-      lightest: function (a, b) {
+      lightest: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | Math.max(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f) & p.RED_MASK | Math.max(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f) & p.GREEN_MASK | Math.max(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8));
       },
-      darkest: function (a, b) {
+      darkest: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | p.mix(c1 & p.RED_MASK, Math.min(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f), f) & p.RED_MASK | p.mix(c1 & p.GREEN_MASK, Math.min(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f), f) & p.GREEN_MASK | p.mix(c1 & p.BLUE_MASK, Math.min(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8), f));
 
       },
-      difference: function (a, b) {
+      difference: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
@@ -1380,7 +1368,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      exclusion: function (a, b) {
+      exclusion: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
@@ -1397,7 +1385,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      multiply: function (a, b) {
+      multiply: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
@@ -1414,7 +1402,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      screen: function (a, b) {
+      screen: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
@@ -1431,7 +1419,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      hard_light: function (a, b) {
+      hard_light: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
@@ -1448,7 +1436,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      soft_light: function (a, b) {
+      soft_light: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
@@ -1465,7 +1453,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      overlay: function (a, b) {
+      overlay: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
@@ -1482,7 +1470,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      dodge: function (a, b) {
+      dodge: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
@@ -1499,7 +1487,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      burn: function (a, b) {
+      burn: function(a, b) {
         var c1 = p.rgbaToInt(a);
         var c2 = p.rgbaToInt(b);
         var f = (c2 & p.ALPHA_MASK) >>> 24;
@@ -1518,8 +1506,7 @@
       }
     };
 
-    p.color = function color(aValue1, aValue2, aValue3, aValue4) {
-
+    p.color = function(aValue1, aValue2, aValue3, aValue4) {
       var r, g, b, rgb, aColor;
 
       // HSB conversion function from Mootools, MIT Licensed
@@ -1610,21 +1597,20 @@
       }
     };
 
-    p.red = function (aColor) {
+    p.red = function(aColor) {
       return parseInt(verifyChannel(aColor).slice(5), 10);
     };
-    p.green = function (aColor) {
+    p.green = function(aColor) {
       return parseInt(verifyChannel(aColor).split(",")[1], 10);
     };
-    p.blue = function (aColor) {
+    p.blue = function(aColor) {
       return parseInt(verifyChannel(aColor).split(",")[2], 10);
     };
-    p.alpha = function (aColor) {
+    p.alpha = function(aColor) {
       return parseInt(parseFloat(verifyChannel(aColor).split(",")[3]) * 255, 10);
     };
 
-    p.lerpColor = function lerpColor(c1, c2, amt) {
-
+    p.lerpColor = function(c1, c2, amt) {
       // Get RGBA values for Color 1 to floats
       var colors1 = p.color(c1).split(",");
       var r1 = parseInt(colors1[0].split("(")[1], 10);
@@ -1651,7 +1637,7 @@
     };
 
     // Forced default color mode for #aaaaaa style
-    p.DefaultColor = function (aValue1, aValue2, aValue3) {
+    p.defaultColor = function(aValue1, aValue2, aValue3) {
       var tmpColorMode = curColorMode;
       curColorMode = p.RGB;
       var c = p.color(aValue1 / 255 * redRange, aValue2 / 255 * greenRange, aValue3 / 255 * blueRange);
@@ -4902,7 +4888,7 @@
 		}
 
     p.curve = function curve() {
-      if( arguments.length == 8 )// curve(x1, y1, x2, y2, x3, y3, x4, y4)
+      if( arguments.length === 8 )// curve(x1, y1, x2, y2, x3, y3, x4, y4)
 			{
 				p.beginShape();
           p.curveVertex( arguments[0], arguments[1] );
@@ -5454,7 +5440,7 @@
         var c = new PImage(w, h, p.RGB);
         for (var i=start, j=0; i < end; i++, j++) {
           c.pixels[j] = img[i];
-          if (j+1 % w == 0) {
+          if (j+1 % w === 0) {
             //completed one line, increment i by offset
             i += img.width-w;
           }
@@ -5617,7 +5603,7 @@
         }
       } else { // 2d context
         if (arguments.length) {
-          if (img.pixels && img.width == p.width && img.height == p.height) {
+          if (img.pixels && img.width === p.width && img.height === p.height) {
             curBackground = img;
             p.image(img, 0, 0);
           } else {
@@ -5995,7 +5981,7 @@
         p.text( str, lastTextPos[0], lastTextPos[1] );
       } else if ( arguments.length === 3 ) { // for text( str, x, y)
         text( str, arguments[1], arguments[2], 0 );
-      } else if ( arguments.length == 4 ){ // for text( str, x, y, z)
+      } else if ( arguments.length === 4 ){ // for text( str, x, y, z)
         x = arguments[1]; 
         y = arguments[2]; 
         z = arguments[3];
@@ -6066,7 +6052,7 @@
         lastTextPos[2] = z;
       } else if ( arguments.length === 5 ) { // for text( str, x, y , width, height)
         text( str, arguments[1], arguments[2], arguments[3], arguments[4], 0 );
-      } else if ( arguments.length == 6 ) { // for text( stringdata, x, y , width, height, z)
+      } else if ( arguments.length === 6 ) { // for text( stringdata, x, y , width, height, z)
         x = arguments[1]; 
         y = arguments[2]; 
         width = arguments[3]; 
@@ -6100,7 +6086,7 @@
               }
               lineWidth += letterWidth;
             } else { // draw a line of text
-              if ( start == spaceMark + 1 ){ // in case a whole line without a space
+              if ( start === spaceMark + 1 ){ // in case a whole line without a space
                 spaceMark = i;
               }
 
