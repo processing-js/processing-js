@@ -5462,7 +5462,7 @@
 	    } else if ( arguments.length === 2 ){
 	      // return the color at x,y (int) of curContext
 	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
-		    if(x <= p.width && x > 0 && y > 0 && y <= p.height){
+		    if(x < p.width && x >= 0 && y >= 0 && y < p.height){
 		      // x,y is inside canvas space
 		      c = new PImage(1,1,p.RGB);
 		      c.fromImageData(curContext.getImageData(x,y,1,1));
