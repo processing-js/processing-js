@@ -1,0 +1,73 @@
+// 	Processing.js Example
+
+int x = height * 25 / 100;
+int y = width * 50 / 100;
+
+forground = false;
+
+void setup() {
+  frameRate(20);
+}
+
+void mouseScrolled() {
+  int delta = mouseScroll;
+
+  if (delta > 0) {
+    if (forground) 
+    {
+      if (x > (height * 25 / 100))
+      {
+        x -= 15;
+      }
+      else {
+        forground = !forground;
+      }
+    }
+    else {
+      if (x < (height * 75 / 100))
+      {
+        x += 15;
+      }
+      else {
+        forground = !forground;
+      }
+    }
+    
+  }
+  else if (delta < 0) {
+    if (forground) {
+      if (x < (height * 75 / 100))
+      {
+        x += 15;
+      }
+      else {
+        forground = !forground;
+      }
+    }
+    else {
+      if (x > (height * 25 / 100))
+      {
+        x -= 15;
+      }
+      else {
+        forground = !forground;
+      }
+    }
+  } 
+}
+
+void draw() { 
+
+  background(100);
+  if (forground) {
+    ellipse(y, x, 55, 55);
+    ellipse(y, y, 70, 70);
+  }
+  else {
+    ellipse(y, y, 70, 70);
+    ellipse(y, x, 55, 55);
+  }
+  text("move the mousewheel to change axis: " + x, 15, 15);
+  
+}
+
