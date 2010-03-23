@@ -70,8 +70,6 @@
   };
   
 	/*
-    Andor Salga
-    asalga.wordpress.com
     Compatibility wrapper for older browsers
   */
   var newWebGLArray = function(data) {
@@ -86,8 +84,6 @@
     return WebGLFloatArrayExists === true ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
   };
   
-  /*
-  */
   var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
     var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER );
     curContext.shaderSource( vertexShaderObject, vetexShaderSource );
@@ -714,6 +710,8 @@
       curShapeCount = 0,
       curvePoints = [],
       curTightness = 0,
+			curveDetail = 20,
+			curveInited = false,
       opacityRange = 255,
       redRange = 255,
       greenRange = 255,
@@ -729,7 +727,13 @@
       getLoaded = false,
       start = new Date().getTime(),
       timeSinceLastFPS = start,
-      framesSinceLastFPS = 0;
+      framesSinceLastFPS = 0,
+      lastTextPos = [ 0, 0, 0 ],
+			curveBasisMatrix,
+			curveToBezierMatrix,
+			curveDrawMatrix,
+			bezierBasisInverse,
+			bezierBasisMatrix;
       
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
@@ -749,11 +753,13 @@
     var cam,
       cameraInv,
       forwardTransform,
+      reverseTransform,
       modelView,
       modelViewInv,
       userMatrixStack,
       inverseCopy,
       projection,
+      manipulatingCamera = false,
       frustumMode = false,
       cameraFOV = 60 * (Math.PI / 180),
       cameraX = curElement.width / 2,
@@ -761,7 +767,7 @@
       cameraZ = cameraY / Math.tan(cameraFOV / 2),
       cameraNear = cameraZ / 10,
       cameraFar = cameraZ * 10,
-      cameraAspect = curElement.width / curElement.height;
+      cameraAspect = curElement.width / curElement.height;      
 
     var firstX, firstY, secondX, secondY, prevX, prevY;
 
@@ -1514,8 +1520,6 @@
       }
     };
 
-    // In case I ever need to do HSV conversion:
-    // http://srufaculty.sru.edu/david.dailey/javascript/js/5rml.js
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
 
       var r, g, b, rgb, aColor;
@@ -1730,6 +1734,7 @@
     p.translate = function translate(x, y, z) {
       if (p.use3DContext) {
         forwardTransform.translate(x, y, z);
+        reverseTransform.invTranslate(x, y, z);
       } else {
         curContext.translate(x, y);
       }
@@ -1737,6 +1742,7 @@
     p.scale = function scale( x, y, z ) {
       if ( p.use3DContext ) {
         forwardTransform.scale( x, y, z );
+        reverseTransform.invScale( x, y, z );
       } else {
         curContext.scale( x, y || x );
       }
@@ -1759,6 +1765,7 @@
 
     p.resetMatrix = function resetMatrix() {
       forwardTransform.reset();
+      reverseTransform.reset();
     };
     
     p.applyMatrix = function applyMatrix(){
@@ -1775,23 +1782,32 @@
                               a[4],	 a[5],  a[6],  a[7],
                               a[8],	 a[9],  a[10], a[11],
                               a[12], a[13], a[14], a[15] );
+      reverseTransform.invApply(  a[0],	 a[1],  a[2],	a[3],
+								  a[4],	 a[5],  a[6],	a[7],
+								  a[8],	 a[9],  a[10],	a[11],
+								  a[12], a[13], a[14],	a[15] );
+      
     };
     
     p.rotateX = function( angleInRadians ) {
       forwardTransform.rotateX( angleInRadians );
+      reverseTransform.invRotateX( angleInRadians );
     };
     
     p.rotateZ = function( angleInRadians ) {
       forwardTransform.rotateZ( angleInRadians );
+      reverseTransform.invRotateZ( angleInRadians );
     };
 
     p.rotateY = function( angleInRadians ) {
       forwardTransform.rotateY( angleInRadians );
+      reverseTransform.invRotateY( angleInRadians );
     };
 		
 		p.rotate = function rotate( angleInRadians ) {
       if (p.use3DContext) {  
 				forwardTransform.rotateZ( angleInRadians );
+				reverseTransform.invRotateZ( angleInRadians );
 			}else { curContext.rotate( angleInRadians ); }
     };
 		
@@ -2473,7 +2489,6 @@
     };
 
     // tinylog lite JavaScript library
-    // http://purl.eligrey.com/tinylog/lite
     var tinylogLite = (function () {
       "use strict";
 
@@ -3243,11 +3258,30 @@
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
-
+          
+          cam = new PMatrix3D();
+          cameraInv = new PMatrix3D();
+          forwardTransform = new PMatrix3D();
+          reverseTransform = new PMatrix3D();
+          modelView = new PMatrix3D();
+          modelViewInv = new PMatrix3D();
+          projection = new PMatrix3D();
           p.camera();
           p.perspective();
+          forwardTransform = modelView;
+          reverseTransform = modelViewInv;
 
           userMatrixStack = new PMatrix3DStack();
+					// used by both curve and bezier, so just init here
+					curveBasisMatrix    = new PMatrix3D();
+					curveToBezierMatrix = new PMatrix3D();
+					curveDrawMatrix     = new PMatrix3D();
+					bezierBasisInverse  = new PMatrix3D();
+					bezierBasisMatrix   = new PMatrix3D();
+					bezierBasisMatrix.set( -1,  3, -3,  1,
+																	3, -6,  3,  0,
+																 -3,  3,  0,  0,
+																	1,  0,  0,  0);
         }
         p.stroke(0);
         p.fill(255);
@@ -3649,6 +3683,7 @@
         var s = p.sin( angle );
         this.apply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
       },
+      
       rotateY: function( angle ){
         var c = p.cos( angle );
         var s = p.sin( angle );
@@ -3836,6 +3871,30 @@
           p.nfs(this.elements[15], digits, 4) + "\n";
 
         p.println(output);
+      },
+      invTranslate: function( tx, ty, tz) {
+		this.preApply(	1, 0, 0, -tx,
+						0, 1, 0, -ty,
+						0, 0, 1, -tz,
+						0, 0, 0, 1);
+	  },
+      invRotateX: function( angle ){
+        var c = p.cos( -angle );
+        var s = p.sin( -angle );
+        this.preApply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
+      },
+      invRotateY: function( angle ){
+        var c = p.cos( -angle );
+        var s = p.sin( -angle );
+        this.preApply([c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1]);
+      },
+      invRotateZ: function( angle ){
+        var c = p.cos( -angle );
+        var s = p.sin( -angle );
+        this.preApply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
+      },
+      invScale: function( x, y, z ){
+        this.preApply([1/x, 0, 0, 0, 0, 1/y, 0, 0, 0, 0, 1/z, 0, 0, 0, 0, 1]);
       }
     };
 
@@ -3992,71 +4051,90 @@
     // Camera functions
     ////////////////////////////////////////////////////////////////////////////
     
-		p.camera = function camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
-			if( arguments.length === 0 ){
-				//in case canvas is resized
-				cameraX = curElement.width / 2;
-				cameraY = curElement.height / 2;
-				cameraZ = cameraY / Math.tan( cameraFOV / 2 );
-				p.camera( cameraX, cameraY, cameraZ,
-							    cameraX, cameraY, 0,
-							    0 , 1 , 0 );
-			}
-			else{
-				var z = new p.PVector( eyeX - centerX, eyeY - centerY, eyeZ - centerZ );
-				var y = new p.PVector( upX, upY, upZ);
-				var transX, transY, transZ;            
-				z.normalize();            
-				var x = p.PVector.cross( y, z );        
-				y = p.PVector.cross( z, x );            
-				x.normalize();
-				y.normalize();
+    p.beginCamera = function beginCamera(){
+      if( manipulatingCamera ){
+        throw("You cannot call beginCamera() again before calling endCamera()");
+      }
+      else{
+        manipulatingCamera = true;
+        forwardTransform = cameraInv;
+        reverseTransform = cam;
+      }
+    }
 
-				cam = new PMatrix3D();
-				cam.set(x.x, x.y, x.z, 0,
-				        y.x, y.y, y.z, 0,
-				        z.x, z.y, z.z, 0,
-				        0,   0,   0,   1);
-				
-        cam.translate( -eyeX, -eyeY, -eyeZ );
+    p.endCamera = function endCamera(){
+      if( !manipulatingCamera ){
+        throw("You cannot call endCamera() before calling beginCamera()");
+      }
+      else{
+        modelView.set( cam );
+        modelViewInv.set( cameraInv );
+        forwardTransform = modelView;
+        reverseTransform = modelViewInv;
+        manipulatingCamera = false;
+      }
+    }
+    
+    p.camera = function camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
+      if( arguments.length === 0 ){
+        //in case canvas is resized
+        cameraX = curElement.width / 2;
+        cameraY = curElement.height / 2;
+        cameraZ = cameraY / Math.tan( cameraFOV / 2 );
+        p.camera( cameraX, cameraY, cameraZ,
+			            cameraX, cameraY, 0,
+			            0 , 1 , 0 );
+      }
+      else{
+        var z = new p.PVector( eyeX - centerX, eyeY - centerY, eyeZ - centerZ );
+        var y = new p.PVector( upX, upY, upZ);
+        var transX, transY, transZ;            
+        z.normalize();            
+        var x = p.PVector.cross( y, z );        
+        y = p.PVector.cross( z, x );            
+        x.normalize();
+        y.normalize();
 
-				cameraInv = new PMatrix3D();
-				cameraInv.invApply(x.x, x.y, x.z, 0,
-				                   y.x, y.y, y.z, 0,
-				                   z.x, z.y, z.z, 0,
-				                   0,   0,   0,   1);
+        cam.set(x.x, x.y, x.z, 0,
+                y.x, y.y, y.z, 0,
+                z.x, z.y, z.z, 0,
+                0,   0,   0,   1);
+    		
+                cam.translate( -eyeX, -eyeY, -eyeZ );
 
-				cameraInv.translate( eyeX, eyeY, eyeZ );
+        cameraInv.reset();
+        cameraInv.invApply(x.x, x.y, x.z, 0,
+                           y.x, y.y, y.z, 0,
+                           z.x, z.y, z.z, 0,
+                           0,   0,   0,   1);
 
-        modelView = new PMatrix3D();
-				modelView.set( cam );
+        cameraInv.translate( eyeX, eyeY, eyeZ );
 
-        forwardTransform = modelView;        
+        modelView.set( cam );     
+        modelViewInv.set( cameraInv );				
+      }
 
-				modelViewInv = new PMatrix3D();
-				modelViewInv.set( cameraInv );
-			}
-		};
+    };
 
-		p.perspective = function perspective(fov, aspect, near, far) {
-			if ( arguments.length === 0 ) {
-				//in case canvas is resized
-				cameraY         = curElement.height / 2;
-				cameraZ         = cameraY / Math.tan( cameraFOV / 2 );
-				cameraNear      = cameraZ / 10;
-				cameraFar       = cameraZ * 10;
-				cameraAspect    = curElement.width / curElement.height;
-				p.perspective( cameraFOV, cameraAspect, cameraNear, cameraFar );
-			} else {        
-				var a = arguments;
-				var yMax, yMin, xMax, xMin;            
-				yMax = near * Math.tan( fov / 2 );
-				yMin = -yMax;            
-				xMax = yMax * aspect;
-				xMin = yMin * aspect;            
-				p.frustum( xMin, xMax, yMin, yMax, near, far );        
-			}
-		};
+    p.perspective = function perspective(fov, aspect, near, far) {
+      if ( arguments.length === 0 ) {
+        //in case canvas is resized
+        cameraY         = curElement.height / 2;
+        cameraZ         = cameraY / Math.tan( cameraFOV / 2 );
+        cameraNear      = cameraZ / 10;
+        cameraFar       = cameraZ * 10;
+        cameraAspect    = curElement.width / curElement.height;
+        p.perspective( cameraFOV, cameraAspect, cameraNear, cameraFar );
+      } else {        
+        var a = arguments;
+        var yMax, yMin, xMax, xMin;            
+        yMax = near * Math.tan( fov / 2 );
+        yMin = -yMax;            
+        xMax = yMax * aspect;
+        xMin = yMin * aspect;            
+        p.frustum( xMin, xMax, yMin, yMax, near, far );        
+      }
+    };
 
     p.frustum = function frustum( left, right, bottom, top, near, far ) {
       frustumMode = true;
@@ -4174,6 +4252,7 @@
         }
       }
     };
+		
 
 		var initSphere = function() {
       var i;
@@ -4304,7 +4383,6 @@
 			initSphere();
 		};
 
-
 		p.sphere = function() {
       if(p.use3DContext) {
         var sRad = arguments[0], c;
@@ -4425,6 +4503,7 @@
 
       return ( ow !== 0 ) ? oz / ow : oz;
     };
+
 
 		////////////////////////////////////////////////////////////////////////////
     // Coordinates
@@ -4707,7 +4786,74 @@
 
           }
 
-        } else if (arguments.length === 4) {
+        } else if (arguments.length === 3) {
+
+          if (curShape !== p.QUAD_STRIP || curShapeCount !== 2) {
+
+            curContext.lineTo(arguments[0], arguments[1],arguments[2]);
+
+          }
+
+          if (curShape === p.TRIANGLE_STRIP) {
+
+            if (curShapeCount === 2) {
+
+              // finish shape
+              p.endShape(p.CLOSE);
+              pathOpen = true;
+              curContext.beginPath();
+
+              // redraw last line to start next shape
+              curContext.moveTo(prevX, prevY);
+              curContext.lineTo(x, y);
+              curShapeCount = 1;
+
+            }
+
+            firstX = prevX;
+            firstY = prevY;
+
+          }
+
+          if (curShape === p.TRIANGLE_FAN && curShapeCount === 2) {
+
+            // finish shape
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw last line to start next shape
+            curContext.moveTo(firstX, firstY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+
+          }
+
+          if (curShape === p.QUAD_STRIP && curShapeCount === 3) {
+
+            // finish shape
+            curContext.lineTo(prevX, prevY);
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw lines to start next shape
+            curContext.moveTo(prevX, prevY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+
+          }
+
+          if (curShape === p.QUAD_STRIP) {
+
+            firstX = secondX;
+            firstY = secondY;
+            secondX = prevX;
+            secondY = prevY;
+
+          }
+
+        }else if (arguments.length === 4) {
 
           if (curShapeCount > 1) {
 
@@ -4734,59 +4880,163 @@
 
     };
 
-    p.curveVertex = function (x, y, x2, y2) {
+    p.curveVertex = function (x, y, z) {
+      if( p.use3DContext && z) {
+				curvePoints.push([x, y, z]);
+			} else{
+				curvePoints.push([x, y]);
+			}
+			
+			if (curvePoints.length > 3){
+				if( p.use3DContext) {
+					alert(curvePoints.length);
+					p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
+															  curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
+																curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
+																curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
+				} else {
+					var b = [],
+						s = 1 - curTightness;
 
-      if (curvePoints.length < 3) {
+					/*
+						 * Matrix to convert from Catmull-Rom to cubic Bezier
+						 * where t = curTightness
+						 * |0         1          0         0       |
+						 * |(t-1)/6   1          (1-t)/6   0       |
+						 * |0         (1-t)/6    1         (t-1)/6 |
+						 * |0         0          0         0       |
+						 */
 
-        curvePoints.push([x, y]);
+					curvePoints.push([x, y]);
 
-      } else {
+					b[0] = [curvePoints[1][0], curvePoints[1][1]];
+					b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
+					b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
+					b[3] = [curvePoints[2][0], curvePoints[2][1]];
 
-        var b = [],
-          s = 1 - curTightness;
+					if (!pathOpen) {
+						p.vertex(b[0][0], b[0][1]);
+					} else {
+						curShapeCount = 1;
+					}
 
-        /*
-           * Matrix to convert from Catmull-Rom to cubic Bezier
-           * where t = curTightness
-           * |0         1          0         0       |
-           * |(t-1)/6   1          (1-t)/6   0       |
-           * |0         (1-t)/6    1         (t-1)/6 |
-           * |0         0          0         0       |
-           */
+					p.vertex(
+					b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
 
-        curvePoints.push([x, y]);
-
-        b[0] = [curvePoints[1][0], curvePoints[1][1]];
-        b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
-        b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
-        b[3] = [curvePoints[2][0], curvePoints[2][1]];
-
-        if (!pathOpen) {
-          p.vertex(b[0][0], b[0][1]);
-        } else {
-          curShapeCount = 1;
-        }
-
-        p.vertex(
-        b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
-
-        curvePoints.shift();
-      }
-
+					curvePoints.shift();
+				}
+			}
     };
 
-    p.curve = function curve(x1, y1, x2, y2, x3, y3, x4, y4) {
-      p.beginShape();
-        p.curveVertex(x1, y1);
-        p.curveVertex(x2, y2);
-        p.curveVertex(x3, y3);
-        p.curveVertex(x4, y4);
-      p.endShape();
+		p.curveVertexSegment = function ( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4 ) {
+			var x0 = x2;
+			var y0 = y2;
+			var z0 = z2;
+
+			var draw = curveDrawMatrix.array();
+
+			var xplot1 = draw[4] *x1 + draw[5] *x2 + draw[6] *x3 + draw[7] *x4;
+			var xplot2 = draw[8] *x1 + draw[9] *x2 + draw[10]*x3 + draw[11]*x4;
+			var xplot3 = draw[12]*x1 + draw[13]*x2 + draw[14]*x3 + draw[15]*x4;
+			
+			var yplot1 = draw[4] *y1 + draw[5] *y2 + draw[6] *y3 + draw[7] *y4;
+			var yplot2 = draw[8] *y1 + draw[9] *y2 + draw[10]*y3 + draw[11]*y4;
+			var yplot3 = draw[12]*y1 + draw[13]*y2 + draw[14]*y3 + draw[15]*y4;
+
+			var zplot1 = draw[4] *z1 + draw[5] *z2 + draw[6]*z3 + draw[7] *z4;
+			var zplot2 = draw[8] *z1 + draw[9] *z2 + draw[10]*z3 + draw[11]*z4;
+			var zplot3 = draw[12]*z1 + draw[13]*z2 + draw[14]*z3 + draw[15]*z4;
+
+			p.vertex(x0, y0, z0);
+			for (var j = 0; j < curveDetail; j++) {
+				x0 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+				y0 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+				z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
+				p.vertex(x0, y0, z0);
+			}
+		}
+
+    p.curve = function curve() {
+      if( arguments.length == 8 )// curve(x1, y1, x2, y2, x3, y3, x4, y4)
+			{
+				p.beginShape();
+          p.curveVertex( arguments[0], arguments[1] );
+          p.curveVertex( arguments[2], arguments[3] );
+          p.curveVertex( arguments[4], arguments[5] );
+          p.curveVertex( arguments[6], arguments[7] );
+				p.endShape();
+			} else { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+				if( p.use3DContext )
+				{
+					p.beginShape();
+            curveVertex( arguments[0], arguments[1] , arguments[2] );
+            curveVertex( arguments[3], arguments[4] , arguments[5] );
+            curveVertex( arguments[6], arguments[7] , arguments[8] );
+            curveVertex( arguments[9], arguments[10], arguments[11] );
+					p.endShape();
+				}
+			}
     };
 
     p.curveTightness = function (tightness) {
       curTightness = tightness;
     };
+
+		//curveDetail, curveInit, splineForward
+		//Taken and revised from:
+		//git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
+		//UNDER :License: LGPL Java
+		p.curveDetail = function curveDetail(){
+			curveDetail = arguments[0];
+			curveInit();
+		};
+
+		//internal curveInit
+		//used by curveDetail, curveTightness
+		var curveInit = function(){
+			// allocate only if/when used to save startup time
+			if ( !curveDrawMatrix ) {
+				curveBasisMatrix = new PMatrix3D();
+				curveDrawMatrix  = new PMatrix3D();
+				curveInited      = true;
+			}
+
+      var s = curTightness;
+      curveBasisMatrix.set( ((s-1)/2).toFixed(2), ((s+3)/2).toFixed(2),  ((-3-s)/2).toFixed(2), ((1-s)/2).toFixed(2),
+													  (1-s),    ((-5-s)/2).toFixed(2), (s+2),     ((s-1)/2).toFixed(2),
+													  ((s-1)/2).toFixed(2), 0,         ((1-s)/2).toFixed(2),  0,
+													  0,        1,          0,         0 );
+			
+			splineForward( curveDetail, curveDrawMatrix );
+			
+			if ( !bezierBasisInverse ) {
+				//bezierBasisInverse = bezierBasisMatrix.get();
+				//bezierBasisInverse.invert();
+				curveToBezierMatrix = new PMatrix3D();
+			}
+
+			// TODO only needed for PGraphicsJava2D? if so, move it there
+			// actually, it's generally useful for other renderers, so keep it
+			// or hide the implementation elsewhere.
+			curveToBezierMatrix.set( curveBasisMatrix );
+			curveToBezierMatrix.preApply( bezierBasisInverse );
+
+			// multiply the basis and forward diff matrices together
+			// saves much time since this needn't be done for each curve
+			curveDrawMatrix.apply( curveBasisMatrix );
+		};
+
+		//used by both curveDetail and bezierDetail
+		var splineForward = function(segments, matrix) {
+			var f  = 1.0 / segments;
+			var ff = f * f;
+			var fff = ff * f;
+
+			matrix.set(0,     0,    0, 1,
+								 fff,   ff,   f, 0,
+								 6*fff, 2*ff, 0, 0,
+								 6*fff, 0,    0, 0);
+		};
 
     p.bezierVertex = p.vertex;
 
@@ -5783,60 +6033,165 @@
     };
 
     // Print some text to the Canvas
-    p.text = function text(str, x, y) {
+    p.text = function text() {
+      var str = arguments[0], x, y, z, pos, width, height;
+
       if ( typeof str === 'number' && (str+"").indexOf('.') >= 0 ) {
         // Make sure .15 rounds to .1, but .151 rounds to .2.
         if ( ( str * 1000 ) - Math.floor( str * 1000 ) === 0.5 ) {
           str = str - 0.0001;
         }
         str = str.toFixed(3);
-      } else if ( str === 0 ) {
-        str = str.toString();
       }
 
-      // If the font is a standard Canvas font...
-      if (!curTextFont.glyph) {
-        if (str && (curContext.fillText || curContext.mozDrawText)) {
-          curContext.save();
-          curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      str = str.toString();
 
-          if (curContext.fillText) {
-            curContext.fillText(str, x, y);
-          } else if (curContext.mozDrawText) {
-            curContext.translate(x, y);
-            curContext.mozDrawText(str);
+      if ( arguments.length === 1 ){ // for text( str )
+        p.text( str, lastTextPos[0], lastTextPos[1] );
+      } else if ( arguments.length === 3 ) { // for text( str, x, y)
+        text( str, arguments[1], arguments[2], 0 );
+      } else if ( arguments.length == 4 ){ // for text( str, x, y, z)
+        x = arguments[1]; 
+        y = arguments[2]; 
+        z = arguments[3];
+
+        do {
+          pos = str.indexOf("\n");
+          if (pos !== -1) {
+            if (pos !== 0) {
+              text(str.substring(0, pos));
+            }
+            y += curTextSize;
+            str = str.substring(pos+1, str.length);
+          }
+        } while(pos !== -1);
+
+        if(p.use3DContext){
+          //...
+        }
+
+        width = 0;
+
+        // If the font is a standard Canvas font...
+        if (!curTextFont.glyph) {
+          if (str && (curContext.fillText || curContext.mozDrawText)) {
+            curContext.save();
+            curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+
+            if (curContext.fillText) {
+              curContext.fillText(str, x, y);
+              width = curContext.measureText( str ).width;
+            } else if (curContext.mozDrawText) {
+              curContext.translate(x, y);
+              curContext.mozDrawText(str);
+              width = curContext.mozMeasureText( str );
+            }
+            curContext.restore();
+          }
+        } else {
+          // If the font is a Batik SVG font...
+          var font = p.glyphTable[curTextFont.name];
+          curContext.save();
+          curContext.translate(x, y + curTextSize);
+
+          var upem = font.units_per_em,
+              newScale = 1 / upem * curTextSize;
+
+          curContext.scale(newScale, newScale);
+
+          var len = str.length;
+
+          for (var i = 0; i < len; i++) {
+            // Test character against glyph table
+            try {
+              p.glyphLook(font, str[i]).draw();
+            } catch(e) {
+              Processing.debug(e);
+            }
           }
           curContext.restore();
         }
-      } else {
-        // If the font is a Batik SVG font...
-        var font = p.glyphTable[curTextFont.name];
-        curContext.save();
-        curContext.translate(x, y + curTextSize);
 
-        var upem = font.units_per_em,
-            newScale = 1 / upem * curTextSize;
-
-        curContext.scale(newScale, newScale);
-
-        var len = str.length;
-
-        for (var i = 0; i < len; i++) {
-          // Test character against glyph table
-          try {
-            p.glyphLook(font, str[i]).draw();
-          }
-          catch(e) {
-            Processing.debug(e);
-          }
+        if(p.use3DContext){
+          // ...
         }
-        curContext.restore();
-      }
+
+        lastTextPos[0] = x + width;
+        lastTextPos[1] = y;
+        lastTextPos[2] = z;
+      } else if ( arguments.length === 5 ) { // for text( str, x, y , width, height)
+        text( str, arguments[1], arguments[2], arguments[3], arguments[4], 0 );
+      } else if ( arguments.length == 6 ) { // for text( stringdata, x, y , width, height, z)
+        x = arguments[1]; 
+        y = arguments[2]; 
+        width = arguments[3]; 
+        height = arguments[4]; 
+        z = arguments[5];
+
+        if ( str.length > 0 ) {
+          if( curTextSize > height ) {
+            return;
+          }
+          var spaceMark = -1;
+          var start = 0;
+          var lineWidth = 0;
+          var letterWidth = 0;
+          var textboxWidth = width ;
+
+          lastTextPos[0] = x;
+          lastTextPos[1] = y - 0.4*curTextSize;
+
+          curContext.font = curTextSize + "px " + curTextFont.name;
+
+          for ( var i = 0; i < str.length; i++ ) {
+            if (curContext.fillText) {
+              letterWidth = curContext.measureText( str[i] ).width;
+            } else if (curContext.mozDrawText) {
+              letterWidth = curContext.mozMeasureText( str[i] );
+            }
+            if ( str[i] !== "\n" && (str[i] === " " || (str[i-1] !== " " && str[i+1] === " ") || lineWidth + 2*letterWidth < textboxWidth ) ){ // check a line of text
+              if ( str[i] === " " ) {
+                spaceMark = i;
+              }
+              lineWidth += letterWidth;
+            } else { // draw a line of text
+              if ( start == spaceMark + 1 ){ // in case a whole line without a space
+                spaceMark = i;
+              }
+
+              lastTextPos[0] = x;
+              lastTextPos[1] = lastTextPos[1] + curTextSize;
+              if (str[i] === "\n" ) {
+                text(str.substring(start,i));
+                start=i+1;
+              } else {
+                text(str.substring(start,spaceMark+1));
+                start=spaceMark+1;
+              }
+
+              lineWidth = 0;
+              if ( lastTextPos[1] + 2*curTextSize > y + height + 0.6*curTextSize ) { // stop if no enough space for one more line draw
+                return;
+              }
+              i = start - 1;
+            }
+          }
+
+          if ( start !== str.length ) { // draw the last line
+            lastTextPos[0] = x;
+            lastTextPos[1] = lastTextPos[1] + curTextSize;
+            for (; start < str.length; start++ ) {
+              text( str[start] );
+            }
+          }
+
+        } // end str != ""
+
+      } // end arguments.length == 6
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
     p.loadGlyphs = function loadGlyph(url) {
-
       var x, y, cx, cy, nx, ny, d, a, lastCom, lenC, horiz_adv_x, getXY = '[0-9\\-]+',
         path;
 
