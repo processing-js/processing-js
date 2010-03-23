@@ -1,6 +1,6 @@
 /*
-
-    P R O C E S S I N G . J S - 0 . 6
+  
+    P R O C E S S I N G . J S - 0 . 7
     a port of the Processing visualization language
     
     License       : MIT 
@@ -13,13 +13,12 @@
     Maintained by : Seneca: http://zenit.senecac.on.ca/wiki/index.php/Processing.js
                     Hyper-Metrix: http://hyper-metrix.com/#Processing
                     BuildingSky: http://weare.buildingsky.net/pages/processing-js
-
-  */
+  
+ */
 
 (function () {
 
   this.Processing = function Processing(aElement, aCode) {
-
     // Get the DOM element if string was passed
     if (typeof aElement === "string") {
       aElement = document.getElementById(aElement);
@@ -34,7 +33,6 @@
     }
 
     return p;
-
   };
 
   // Share lib space
@@ -6322,7 +6320,6 @@
           // Google Chrome, Safari etc.
           Processing.debug(e_sf_ch);
           try {
-
             var xmlhttp = new window.XMLHttpRequest();
             xmlhttp.open("GET", url, false);
             xmlhttp.send(null);
@@ -6380,7 +6377,6 @@
     ////////////////////////////////////////////////////////////////////////////
 
     p.init = function init(code) {
-
       if (code) {
         var parsedCode = Processing.parse(code, p);
 
@@ -6413,27 +6409,27 @@
           with(processing) {
             // Don't start until all specified images in the cache are preloaded
             if (!pjs.imageCache.pending) {
-            eval(parsedCode);
+              eval(parsedCode);
 
-      // Run void setup()
+              // Run void setup()
               if (setup) {
-        inSetup = true;
+                inSetup = true;
                 setup();
-      }
+              }
 
-      inSetup = false;
+              inSetup = false;
 
               if (draw) {
-        if (!doLoop) {
+                if (!doLoop) {
                   redraw();
                 } else {
                   loop();
                 }
               }
-        } else {
+            } else {
               window.setTimeout(executeSketch, 10, processing);
-        }
-      }
+            }
+          }
         };
 
         // The parser adds custom methods to the processing context
@@ -6613,7 +6609,6 @@
     };
 
     return p;
-
   };
 
 })();
