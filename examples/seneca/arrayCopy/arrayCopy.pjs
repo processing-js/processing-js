@@ -1,0 +1,26 @@
+﻿String[] north = { "OH", "IN", "MI"};
+String[] south = { "GA", "FL", "NC"}; 
+arrayCopy(north, 1, south, 0, 2);
+println(south);  // Prints IN, MI, NC
+
+int[] numbers = new int[3];
+numbers[0] = 90;
+numbers[1] = 150;
+numbers[2] = 30;
+int[] added = new int[3];
+arrayCopy(numbers,added);
+added[1] = added[0] + added[1]; // Sets added[1] to 240
+added[2] = added[1] + added[2]; // Sets added[2] to 270
+println(added);
+
+String[][] codes = {{"ON", "QC", "PE", "NB"}, {"FL", "NY", "TX", "CA"}};
+println(codes[0]);
+println(codes[1]);
+String[][] codes2 = {{"NS", "MN", "BC", "NF"}, {"IL", "NJ", "WY", "OH"}};
+println(codes2[0]);
+println(codes2[1]);
+String[][] combined = new String[4][4];
+arrayCopy(codes, combined);
+println(combined);
+arrayCopy(codes2, 0, combined, 2, 2);
+println(combined);

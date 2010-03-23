@@ -1,0 +1,25 @@
+﻿/* @pjs preload="metamorphosis.jpg,lake.jpg,moon.jpg,country.jpg,string.jpg,ocean.jpg,winter.jpg,castle.jpg"; */
+size(492,286);
+background(0);
+PImage[] slideshow = new PImage[8];
+slideshow[0] = new PImage(pjs.imageCache["metamorphosis.jpg"]);
+slideshow[1] = new PImage(pjs.imageCache["lake.jpg"]);
+slideshow[2] = new PImage(pjs.imageCache["moon.jpg"]);
+slideshow[3] = new PImage(pjs.imageCache["country.jpg"]);
+slideshow[4] = new PImage(pjs.imageCache["string.jpg"]);
+slideshow[5] = new PImage(pjs.imageCache["ocean.jpg"]);
+slideshow[6] = new PImage(pjs.imageCache["winter.jpg"]);
+slideshow[7] = new PImage(pjs.imageCache["castle.jpg"]);
+image(slideshow[0],10,10);
+int i = 1;
+
+void mouseClicked() {
+  if(i < slideshow.length) {
+    image(slideshow[i],10,10);
+    i++;
+  } else {
+    i = 0;
+    image(slideshow[i],10,10);
+    i++;
+  }
+}
