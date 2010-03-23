@@ -710,6 +710,8 @@
       curShapeCount = 0,
       curvePoints = [],
       curTightness = 0,
+			curveDetail = 20,
+			curveInited = false,
       opacityRange = 255,
       redRange = 255,
       greenRange = 255,
@@ -725,8 +727,13 @@
       getLoaded = false,
       start = new Date().getTime(),
       timeSinceLastFPS = start,
-      framesSinceLastFPS = 0;
-      lastTextPos = [ 0, 0 ,0 ];
+      framesSinceLastFPS = 0,
+      lastTextPos = [ 0, 0, 0 ],
+			curveBasisMatrix,
+			curveToBezierMatrix,
+			curveDrawMatrix,
+			bezierBasisInverse,
+			bezierBasisMatrix;
       
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
@@ -3242,6 +3249,16 @@
           p.perspective();
 
           userMatrixStack = new PMatrix3DStack();
+					// used by both curve and bezier, so just init here
+					curveBasisMatrix    = new PMatrix3D();
+					curveToBezierMatrix = new PMatrix3D();
+					curveDrawMatrix     = new PMatrix3D();
+					bezierBasisInverse  = new PMatrix3D();
+					bezierBasisMatrix   = new PMatrix3D();
+					bezierBasisMatrix.set( -1,  3, -3,  1,
+																	3, -6,  3,  0,
+																 -3,  3,  0,  0,
+																	1,  0,  0,  0);
         }
         p.stroke(0);
         p.fill(255);
@@ -4168,6 +4185,7 @@
         }
       }
     };
+		
 
 		var initSphere = function() {
       var i;
@@ -4298,7 +4316,6 @@
 			initSphere();
 		};
 
-
 		p.sphere = function() {
       if(p.use3DContext) {
         var sRad = arguments[0], c;
@@ -4419,6 +4436,7 @@
 
       return ( ow !== 0 ) ? oz / ow : oz;
     };
+
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
@@ -4650,7 +4668,74 @@
 
           }
 
-        } else if (arguments.length === 4) {
+        } else if (arguments.length === 3) {
+
+          if (curShape !== p.QUAD_STRIP || curShapeCount !== 2) {
+
+            curContext.lineTo(arguments[0], arguments[1],arguments[2]);
+
+          }
+
+          if (curShape === p.TRIANGLE_STRIP) {
+
+            if (curShapeCount === 2) {
+
+              // finish shape
+              p.endShape(p.CLOSE);
+              pathOpen = true;
+              curContext.beginPath();
+
+              // redraw last line to start next shape
+              curContext.moveTo(prevX, prevY);
+              curContext.lineTo(x, y);
+              curShapeCount = 1;
+
+            }
+
+            firstX = prevX;
+            firstY = prevY;
+
+          }
+
+          if (curShape === p.TRIANGLE_FAN && curShapeCount === 2) {
+
+            // finish shape
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw last line to start next shape
+            curContext.moveTo(firstX, firstY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+
+          }
+
+          if (curShape === p.QUAD_STRIP && curShapeCount === 3) {
+
+            // finish shape
+            curContext.lineTo(prevX, prevY);
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw lines to start next shape
+            curContext.moveTo(prevX, prevY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+
+          }
+
+          if (curShape === p.QUAD_STRIP) {
+
+            firstX = secondX;
+            firstY = secondY;
+            secondX = prevX;
+            secondY = prevY;
+
+          }
+
+        }else if (arguments.length === 4) {
 
           if (curShapeCount > 1) {
 
@@ -4677,59 +4762,163 @@
 
     };
 
-    p.curveVertex = function (x, y, x2, y2) {
+    p.curveVertex = function (x, y, z) {
+      if( p.use3DContext && z) {
+				curvePoints.push([x, y, z]);
+			} else{
+				curvePoints.push([x, y]);
+			}
+			
+			if (curvePoints.length > 3){
+				if( p.use3DContext) {
+					alert(curvePoints.length);
+					p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
+															  curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
+																curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
+																curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
+				} else {
+					var b = [],
+						s = 1 - curTightness;
 
-      if (curvePoints.length < 3) {
+					/*
+						 * Matrix to convert from Catmull-Rom to cubic Bezier
+						 * where t = curTightness
+						 * |0         1          0         0       |
+						 * |(t-1)/6   1          (1-t)/6   0       |
+						 * |0         (1-t)/6    1         (t-1)/6 |
+						 * |0         0          0         0       |
+						 */
 
-        curvePoints.push([x, y]);
+					curvePoints.push([x, y]);
 
-      } else {
+					b[0] = [curvePoints[1][0], curvePoints[1][1]];
+					b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
+					b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
+					b[3] = [curvePoints[2][0], curvePoints[2][1]];
 
-        var b = [],
-          s = 1 - curTightness;
+					if (!pathOpen) {
+						p.vertex(b[0][0], b[0][1]);
+					} else {
+						curShapeCount = 1;
+					}
 
-        /*
-           * Matrix to convert from Catmull-Rom to cubic Bezier
-           * where t = curTightness
-           * |0         1          0         0       |
-           * |(t-1)/6   1          (1-t)/6   0       |
-           * |0         (1-t)/6    1         (t-1)/6 |
-           * |0         0          0         0       |
-           */
+					p.vertex(
+					b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
 
-        curvePoints.push([x, y]);
-
-        b[0] = [curvePoints[1][0], curvePoints[1][1]];
-        b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
-        b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
-        b[3] = [curvePoints[2][0], curvePoints[2][1]];
-
-        if (!pathOpen) {
-          p.vertex(b[0][0], b[0][1]);
-        } else {
-          curShapeCount = 1;
-        }
-
-        p.vertex(
-        b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
-
-        curvePoints.shift();
-      }
-
+					curvePoints.shift();
+				}
+			}
     };
 
-    p.curve = function curve(x1, y1, x2, y2, x3, y3, x4, y4) {
-      p.beginShape();
-        p.curveVertex(x1, y1);
-        p.curveVertex(x2, y2);
-        p.curveVertex(x3, y3);
-        p.curveVertex(x4, y4);
-      p.endShape();
+		p.curveVertexSegment = function ( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4 ) {
+			var x0 = x2;
+			var y0 = y2;
+			var z0 = z2;
+
+			var draw = curveDrawMatrix.array();
+
+			var xplot1 = draw[4] *x1 + draw[5] *x2 + draw[6] *x3 + draw[7] *x4;
+			var xplot2 = draw[8] *x1 + draw[9] *x2 + draw[10]*x3 + draw[11]*x4;
+			var xplot3 = draw[12]*x1 + draw[13]*x2 + draw[14]*x3 + draw[15]*x4;
+			
+			var yplot1 = draw[4] *y1 + draw[5] *y2 + draw[6] *y3 + draw[7] *y4;
+			var yplot2 = draw[8] *y1 + draw[9] *y2 + draw[10]*y3 + draw[11]*y4;
+			var yplot3 = draw[12]*y1 + draw[13]*y2 + draw[14]*y3 + draw[15]*y4;
+
+			var zplot1 = draw[4] *z1 + draw[5] *z2 + draw[6]*z3 + draw[7] *z4;
+			var zplot2 = draw[8] *z1 + draw[9] *z2 + draw[10]*z3 + draw[11]*z4;
+			var zplot3 = draw[12]*z1 + draw[13]*z2 + draw[14]*z3 + draw[15]*z4;
+
+			p.vertex(x0, y0, z0);
+			for (var j = 0; j < curveDetail; j++) {
+				x0 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+				y0 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+				z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
+				p.vertex(x0, y0, z0);
+			}
+		}
+
+    p.curve = function curve() {
+      if( arguments.length == 8 )// curve(x1, y1, x2, y2, x3, y3, x4, y4)
+			{
+				p.beginShape();
+          p.curveVertex( arguments[0], arguments[1] );
+          p.curveVertex( arguments[2], arguments[3] );
+          p.curveVertex( arguments[4], arguments[5] );
+          p.curveVertex( arguments[6], arguments[7] );
+				p.endShape();
+			} else { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+				if( p.use3DContext )
+				{
+					p.beginShape();
+            curveVertex( arguments[0], arguments[1] , arguments[2] );
+            curveVertex( arguments[3], arguments[4] , arguments[5] );
+            curveVertex( arguments[6], arguments[7] , arguments[8] );
+            curveVertex( arguments[9], arguments[10], arguments[11] );
+					p.endShape();
+				}
+			}
     };
 
     p.curveTightness = function (tightness) {
       curTightness = tightness;
     };
+
+		//curveDetail, curveInit, splineForward
+		//Taken and revised from:
+		//git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
+		//UNDER :License: LGPL Java
+		p.curveDetail = function curveDetail(){
+			curveDetail = arguments[0];
+			curveInit();
+		};
+
+		//internal curveInit
+		//used by curveDetail, curveTightness
+		var curveInit = function(){
+			// allocate only if/when used to save startup time
+			if ( !curveDrawMatrix ) {
+				curveBasisMatrix = new PMatrix3D();
+				curveDrawMatrix  = new PMatrix3D();
+				curveInited      = true;
+			}
+
+      var s = curTightness;
+      curveBasisMatrix.set( ((s-1)/2).toFixed(2), ((s+3)/2).toFixed(2),  ((-3-s)/2).toFixed(2), ((1-s)/2).toFixed(2),
+													  (1-s),    ((-5-s)/2).toFixed(2), (s+2),     ((s-1)/2).toFixed(2),
+													  ((s-1)/2).toFixed(2), 0,         ((1-s)/2).toFixed(2),  0,
+													  0,        1,          0,         0 );
+			
+			splineForward( curveDetail, curveDrawMatrix );
+			
+			if ( !bezierBasisInverse ) {
+				//bezierBasisInverse = bezierBasisMatrix.get();
+				//bezierBasisInverse.invert();
+				curveToBezierMatrix = new PMatrix3D();
+			}
+
+			// TODO only needed for PGraphicsJava2D? if so, move it there
+			// actually, it's generally useful for other renderers, so keep it
+			// or hide the implementation elsewhere.
+			curveToBezierMatrix.set( curveBasisMatrix );
+			curveToBezierMatrix.preApply( bezierBasisInverse );
+
+			// multiply the basis and forward diff matrices together
+			// saves much time since this needn't be done for each curve
+			curveDrawMatrix.apply( curveBasisMatrix );
+		};
+
+		//used by both curveDetail and bezierDetail
+		var splineForward = function(segments, matrix) {
+			var f  = 1.0 / segments;
+			var ff = f * f;
+			var fff = ff * f;
+
+			matrix.set(0,     0,    0, 1,
+								 fff,   ff,   f, 0,
+								 6*fff, 2*ff, 0, 0,
+								 6*fff, 0,    0, 0);
+		};
 
     p.bezierVertex = p.vertex;
 
