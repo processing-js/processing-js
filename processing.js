@@ -1546,8 +1546,16 @@
       curElement.removeEventListener('contextmenu', contextMenu, false);
     };
 
-
-
+    p.createInput = function createInput(filename){
+      if ((input != null) && filename.toLowerCase().endsWith(".gz")) 
+         return new GZIPInputStream(input);
+      else if ( input == null ) 
+          return null;
+      else
+      return input;
+    };
+	
+		
     ////////////////////////////////////////////////////////////////////////////
     // Binary Functions
     ////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,7 @@
 # If your jsshell isn't at ./tools/js/src/js, update JS below
+#C:\mozilla-central\objdir-ff-debug\dist
 TOOLSDIR=./tools
-JS=$(TOOLSDIR)/js/src/js
+JS=C:/mozilla-central/objdir-ff-debug/dist/bin/js
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
