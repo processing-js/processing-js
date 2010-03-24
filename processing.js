@@ -5482,7 +5482,7 @@
         return c;
       } else if ( arguments.length === 3 ){
         // PImage.get(x,y) was called, return the color (int) at x,y of img
-        return w.pixels[y * w.width + x];
+        return p.color.toString(w.pixels[y * w.width + x]);
 	    } else if ( arguments.length === 2 ){
 	      // return the color at x,y (int) of curContext
 	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
