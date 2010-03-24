@@ -1,11 +1,11 @@
-# If your jsshell isn't at ./tools/js/src/js, update JS below
+# Make sure $JSSHELL points to your js shell binary in .profile or .bashrc
 TOOLSDIR=./tools
 #JS=$(TOOLSDIR)/js/src/js
 JS=/Users/andor/mozilla-central/obj-ff-dbg/dist/MinefieldDebug.app/Contents/MacOS/./js
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
-	$(TOOLSDIR)/pde2js.py $(JS) $?
+	$(TOOLSDIR)/pde2js.py $(JSSHELL) $?
 
 all: release
 
@@ -35,48 +35,48 @@ example: create-release pretty
 	cp example.pjs ./release
 
 pretty: create-release
-	$(TOOLSDIR)/jsbeautify.py $(JS) processing.js > ./release/processing-$(VERSION).js
+	$(TOOLSDIR)/jsbeautify.py $(JSSHELL) processing.js > ./release/processing-$(VERSION).js
 # check for any parsing errors in pretty version of processing.js
-	$(JS) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).js
+	$(JSSHELL) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).js
 
 packed: create-release
-	$(TOOLSDIR)/packer.py $(JS) processing.js > ./release/processing-$(VERSION).packed.js
+	$(TOOLSDIR)/packer.py $(JSSHELL) processing.js > ./release/processing-$(VERSION).packed.js
 # check for any parsing errors in packed version of processing.js
-	$(JS) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).packed.js
+	$(JSSHELL) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).packed.js
 
 minified: create-release
-	$(TOOLSDIR)/minifier.py $(JS) processing.js > ./release/processing-$(VERSION).jsmin.js
+	$(TOOLSDIR)/minifier.py $(JSSHELL) processing.js > ./release/processing-$(VERSION).jsmin.js
 # check for any parsing errors in minified version of processing.js
-	$(JS) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).jsmin.js
+	$(JSSHELL) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).jsmin.js
 
 yui: create-release
 	java -jar $(TOOLSDIR)/yui/yuicompressor-2.4.2.jar --nomunge processing.js -o ./release/processing-$(VERSION).min.js
 # check for any parsing errors in compiled version of processing.js
-	$(JS) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).min.js
+	$(JSSHELL) -f $(TOOLSDIR)/fake-dom.js -f ./release/processing-$(VERSION).min.js
 
 check:
-	$(TOOLSDIR)/runtests.py $(JS)
+	$(TOOLSDIR)/runtests.py $(JSSHELL)
 
 check-release: yui
-	$(TOOLSDIR)/runtests.py $(JS) -l ./release/processing-$(VERSION).min.js
+	$(TOOLSDIR)/runtests.py $(JSSHELL) -l ./release/processing-$(VERSION).min.js
 
 check-summary:
-	$(TOOLSDIR)/runtests.py -s $(JS)
+	$(TOOLSDIR)/runtests.py -s $(JSSHELL)
 
 check-lint:
-	$(TOOLSDIR)/jslint.py $(JS) processing.js
+	$(TOOLSDIR)/jslint.py $(JSSHELL) processing.js
 
 check-parser:
-	$(TOOLSDIR)/runtests.py -p $(JS)
+	$(TOOLSDIR)/runtests.py -p $(JSSHELL)
 
 check-unit:
-	$(TOOLSDIR)/runtests.py -u $(JS)
+	$(TOOLSDIR)/runtests.py -u $(JSSHELL)
 
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 
 check-one:
-	$(TOOLSDIR)/runtests.py $(JS) -t $(TEST)
+	$(TOOLSDIR)/runtests.py $(JSSHELL) -t $(TEST)
 
 clean:
 	rm -fr ./release
