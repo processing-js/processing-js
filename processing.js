@@ -374,7 +374,7 @@
 		
     // float foo = 5;
     aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
-      if (type === "return") {
+      if (type === "return" || type === "else") {
         return all;
       } else {
         return "var " + name + sep;
