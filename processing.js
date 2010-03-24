@@ -5457,6 +5457,7 @@
           return function() {
             // change the <img> object into a PImage now that its loaded
             pimg.fromHTMLImageData(image);
+            pimg.loaded = true;
             if (callback) {
               callback();
             }
