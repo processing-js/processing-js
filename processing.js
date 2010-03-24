@@ -4834,30 +4834,29 @@
     };
 
     p.curveVertex = function (x, y, z) {
-      if( p.use3DContext && z) {
-				curvePoints.push([x, y, z]);
-			} else{
-				curvePoints.push([x, y]);
-			}
-			
-			if (curvePoints.length > 3){
+      if (curvePoints.length < 3) {
+				if( p.use3DContext && z) {
+					curvePoints.push([x, y, z]);
+				} else{
+					curvePoints.push([x, y]);
+				}
+			}	else{
 				if( p.use3DContext) {
-					p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
-															  curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
-																curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
-																curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
-				} else {
+						p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
+																	curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
+																	curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
+																	curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
+				 } else {
 					var b = [],
-						s = 1 - curTightness;
-
-					/*
-						 * Matrix to convert from Catmull-Rom to cubic Bezier
-						 * where t = curTightness
-						 * |0         1          0         0       |
-						 * |(t-1)/6   1          (1-t)/6   0       |
-						 * |0         (1-t)/6    1         (t-1)/6 |
-						 * |0         0          0         0       |
-						 */
+          s = 1 - curTightness;
+          /*
+          * Matrix to convert from Catmull-Rom to cubic Bezier
+          * where t = curTightness
+          * |0         1          0         0       |
+          * |(t-1)/6   1          (1-t)/6   0       |
+          * |0         (1-t)/6    1         (t-1)/6 |
+          * |0         0          0         0       |
+          */
 
 					curvePoints.push([x, y]);
 
@@ -4877,7 +4876,7 @@
 
 					curvePoints.shift();
 				}
-			}
+      }
     };
 
 		p.curveVertexSegment = function ( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4 ) {
