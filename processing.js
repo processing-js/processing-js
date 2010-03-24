@@ -3246,6 +3246,8 @@
         p.fill(255);
       } else {
         if (typeof curContext === "undefined") {
+          userMatrixStack = new PMatrixStack();
+        	
           // size() was called without p.init() default context, ie. p.createGraphics()
           curContext = curElement.getContext("2d");
         }
