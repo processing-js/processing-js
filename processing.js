@@ -3937,6 +3937,8 @@
       if (hasBackground) {
         p.background();
       }
+
+      p.context = curContext; // added for createGraphics
     };
 
 
@@ -5322,10 +5324,8 @@
         this.data = this.pixels;
         this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
       }
-    };
 
-    PImage.prototype = {
-      get: function (x, y, w, h) {
+      this.get = function (x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
         } else if (arguments.length === 2) {
@@ -5333,15 +5333,19 @@
         } else if (arguments.length === 4) {
           return p.get(x, y, w, h, this);
         }
-      },
-      set: function (x, y, c) {
+      };
+
+      this.set = function (x, y, c) {
         p.set(x, y, c, this);
-      },
-      loadPixels: function() {
-      },
-      updatePixels: function() {
-      },
-      toImageData: function() {
+      };
+
+      this.loadPixels = function() {
+      };
+
+      this.updatePixels = function() {
+      };
+
+      this.toImageData = function() {
         var canvas = document.createElement('canvas');
         var imgData = canvas.getContext('2d').createImageData(this.width, this.height); 
         for (var i = 0; i< this.pixels.length; i++) {
@@ -5356,8 +5360,9 @@
         }
         // return a canvas ImageData object with pixel array in canvas format
         return imgData;
-      },
-      fromImageData: function(canvasImg) {
+      };
+
+      this.fromImageData = function(canvasImg) {
         this.width = canvasImg.width;
         this.height = canvasImg.height;
         this.pixels = new Array(canvasImg.width * canvasImg.height);
@@ -5369,8 +5374,9 @@
           this.pixels[i] = (canvasImg.data[pos + 3] * 16777216) + (canvasImg.data[pos + 0] * 65536) +
                   (canvasImg.data[pos + 1] * 256)    +   (canvasImg.data[pos + 2]);                  
         }
-      },
-      fromHTMLImageData: function(htmlImg) {
+      };
+
+      this.fromHTMLImageData = function(htmlImg) {
         // convert an <img> to a PImage
         var canvas = document.createElement("canvas");
         canvas.width = htmlImg.width;
@@ -5380,7 +5386,7 @@
         var imageData = context.getImageData(0,0,htmlImg.width,htmlImg.height);
         this.ImageData = imageData;
         this.fromImageData(imageData);
-      }
+      };
     };
     
     p.PImage = PImage;
@@ -5422,7 +5428,9 @@
       else {
         var pimg = new PImage(0,0,p.ARGB);
         var img = document.createElement('img');
+
         pimg.sourceImg = img;
+
         img.onload = (function(aImage, aPImage, aCallback) {
           var image = aImage;
           var pimg = aPImage;
@@ -5435,7 +5443,9 @@
             }
           };
         }(img, pimg, callback));
+
         img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
+
         return pimg;
       }
     };    
@@ -5763,18 +5773,30 @@
 
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
-
       if (img.width > 0) {
+        var obj;
 
         x = x || 0;
         y = y || 0;
 
-        var obj;
-        if (img.ImageData && img.ImageData.width > 0) {
-          obj = img.ImageData;
-        } else {
-          obj = img.toImageData();
+        if (typeof img === 'object' && img.constructor === PImage) {
+          if (img.ImageData && img.ImageData.width > 0) {
+            obj = img.ImageData;
+          } else {
+            obj = img.toImageData();
+          }
+        } else if (img.canvas) {
+          var pg = img;
+          var pimg = new PImage(pg.width, pg.height, p.RGB);
+          pimg.fromImageData(pg.context.getImageData(0, 0, pg.width, pg.height));
+
+          if (pimg.ImageData && pimg.ImageData.width > 0) {
+            obj = pimg.ImageData;
+          } else {
+            obj = pimg.toImageData();
+          }
         }
+        
         var  oldAlpha;
 
         if (curTint >= 0) {
