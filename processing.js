@@ -3488,7 +3488,7 @@
           if ( isNaN( ret ) ) {
             ret = 0;
           }
-        } else if ( typeof val === 'object' && val.constructor === Char ) {
+        } else if ( val instanceof Char ) {
           ret = val.code;
         } else if ( typeof val === 'object' && val.constructor === Array ) {
           ret = new Array( val.length );
@@ -3578,7 +3578,7 @@
           ret = ret.toFixed(1);
         } else if ( typeof val === 'string' ) {
           ret = parseFloat( val );
-        } else if ( typeof val === 'object' && val.constructor === Char ) {
+        } else if ( val instanceof Char ) {
           ret = val.code.toFixed(1);  
         } else if ( typeof val === 'object' && val.constructor === Array ) {
 
@@ -5331,7 +5331,7 @@
       this.mask = function(mask) {
         this._mask = undefined;
 
-        if (typeof mask === "object" && mask.constructor === PImage) {
+        if (mask instanceof PImage) {
           if (mask.width === this.width && mask.height === this.height) {
             this._mask = mask;
           } else {
@@ -5556,7 +5556,7 @@
           curContext.fillStyle = color;
           curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
           curContext.fillStyle = oldFill;
-        } else if (typeof obj === "object" && obj.constructor === PImage) {
+        } else if (obj instanceof PImage) {
           p.image(x,y,obj);
         }
       }
@@ -5801,7 +5801,7 @@
         x = x || 0;
         y = y || 0;
 
-        if (typeof img === 'object' && img.constructor === PImage) {
+        if (img instanceof PImage) {
           if (img.ImageData && img.ImageData.width > 0) {
             obj = img.ImageData;
           } else {
