@@ -3511,7 +3511,7 @@
 
         output += p.nfs(this.elements[3], digits, 4) + " " +
           p.nfs(this.elements[4], digits, 4) + " " +
-          p.nfs(this.elements[5], digits, 4) + "\n";
+          p.nfs(this.elements[5], digits, 4) + "\n\n";
         
         p.println(output);
       }
@@ -3921,7 +3921,7 @@
         output += p.nfs(this.elements[12], digits, 4) + " " +
           p.nfs(this.elements[13], digits, 4) + " " +
           p.nfs(this.elements[14], digits, 4) + " " +
-          p.nfs(this.elements[15], digits, 4) + "\n";
+          p.nfs(this.elements[15], digits, 4) + "\n\n";
 
         p.println(output);
       }
