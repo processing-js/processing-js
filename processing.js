@@ -5586,8 +5586,7 @@
 
       for (var i = 0, l = p.pixels.length; i < l; i++) {
 
-        var c = (p.pixels[i] || "rgba(0,0,0,1)").match(colors);
-
+        var c = (p.color.toString(p.pixels[i]) || "rgba(0,0,0,1)").match(colors);
         data[pos + 0] = parseInt(c[1], 10);
         data[pos + 1] = parseInt(c[2], 10);
         data[pos + 2] = parseInt(c[3], 10);
