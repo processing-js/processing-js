@@ -5345,7 +5345,7 @@
             throw "mask array must be the same length as PImage pixels array.";
           }
         }
-      }
+      };
 
       this.loadPixels = function() {
       };
