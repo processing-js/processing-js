@@ -1750,11 +1750,7 @@
     };
   
     p.printMatrix = function printMatrix() {
-      if (p.use3DContext) {
-        modelView.print();
-      } else {
-        // Print 2D matrix here.
-      }
+      modelView.print();
     };
     
     p.translate = function translate(x, y, z) {
