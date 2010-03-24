@@ -5314,17 +5314,6 @@
     };
 
     var PImage = function PImage(aWidth, aHeight, aFormat) {
-      if(arguments.length === 1) {
-        // convert an <img> to a PImage
-        this.fromHTMLImageData(arguments[0]);
-      } else if (arguments.length === 2 || arguments.length === 3) {
-        this.width = aWidth;
-        this.height = aHeight;
-        this.pixels = new Array(aWidth * aHeight);
-        this.data = this.pixels;
-        this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
-      }
-
       this.get = function (x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
@@ -5387,6 +5376,17 @@
         this.ImageData = imageData;
         this.fromImageData(imageData);
       };
+
+      if(arguments.length === 1) {
+        // convert an <img> to a PImage
+        this.fromHTMLImageData(arguments[0]);
+      } else if (arguments.length === 2 || arguments.length === 3) {
+        this.width = aWidth;
+        this.height = aHeight;
+        this.pixels = new Array(aWidth * aHeight);
+        this.data = this.pixels;
+        this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
+      }
     };
     
     p.PImage = PImage;
@@ -5810,6 +5810,7 @@
           // does not crop image, resizes it to w,h
           // coming in 0.8
         }
+
         // draw the image
         curContext.putImageData(obj, x, y);
 
