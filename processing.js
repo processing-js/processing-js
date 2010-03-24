@@ -2224,11 +2224,11 @@
         ((colorInt & p.RED_MASK)>>>16) +","+
         ((colorInt & p.GREEN_MASK)>>>8) + "," +
         ((colorInt & p.BLUE_MASK)) +","+
-        ((colorInt & p.ALPHA_MASK)>>>24)/opacityRange +");";
+        ((colorInt & p.ALPHA_MASK)>>>24)/opacityRange +")";
     };
 
     // Easy of use function to pack rgba values into a single bit-shifted color int.
-    p.color.toColorInt = function (r, g, b, a) {
+    p.color.toInt = function (r, g, b, a) {
       return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
     };
 
@@ -5480,7 +5480,7 @@
 		      // x,y is inside canvas space
 		      c = new PImage(1,1,p.RGB);
 		      c.fromImageData(curContext.getImageData(x,y,1,1));
-		      return c.pixels[0];
+		      return p.color.toString(c.pixels[0]);
 		    } else {
 		      // x,y is outside image return transparent black
 		      return 0;
@@ -5502,22 +5502,31 @@
 
     // Paints a pixel array into the canvas
     p.set = function set(x, y, obj, img) {
+      var color, oldFill;
       // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
       if ( arguments.length === 4 ) {
         img.pixels[y*img.width+x] = obj;
       } else if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
-        if(typeof obj === "number"){
+        if (typeof obj === "number"){
           // it was a color
           // use canvas method to fill pixel with color
           // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
-          var oldFill = curContext.fillStyle,
+          oldFill = curContext.fillStyle;
           color = obj;
-          curContext.fillStyle = color.toString();
+          curContext.fillStyle = p.color.toString(color);
           curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
           curContext.fillStyle = oldFill;
-        } else {
-          // it was a PImage
+        } else if (typeof obj === "string"){
+          // it was a color
+          // use canvas method to fill pixel with color
+          // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
+          oldFill = curContext.fillStyle;
+          color = obj;
+          curContext.fillStyle = color;
+          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+          curContext.fillStyle = oldFill;
+        } else if (typeof obj === "object" && obj.constructor === PImage) {
           p.image(x,y,obj);
         }
       }
