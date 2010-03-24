@@ -5314,7 +5314,7 @@
     };
 
     var PImage = function PImage(aWidth, aHeight, aFormat) {
-      this.get = function (x, y, w, h) {
+      this.get = function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
         } else if (arguments.length === 2) {
@@ -5324,9 +5324,28 @@
         }
       };
 
-      this.set = function (x, y, c) {
+      this.set = function(x, y, c) {
         p.set(x, y, c, this);
       };
+
+      this.mask = function(mask) {
+        this._mask = undefined;
+
+        if (typeof mask === "object" && mask.constructor === PImage) {
+          if (mask.width === this.width && mask.height === this.height) {
+            this._mask = mask;
+          } else {
+            throw "mask must have the same dimensions as PImage.";
+          }
+        } else if (typeof mask === "object" && mask.constructor === Array) { // this is a pixel array
+          // mask pixel array needs to be the same length as this.pixels
+          if (this.pixels.length === mask.length) {
+            this._mask = mask;
+          } else {
+            throw "mask array must be the same length as PImage pixels array.";
+          }
+        }
+      }
 
       this.loadPixels = function() {
       };
@@ -5765,7 +5784,7 @@
       }
       if (img._mask) {
         var oldComposite = curContext.globalCompositeOperation;
-        curContext.globalCompositeOperation = "darker";
+        curContext.globalCompositeOperation = "source-in";
         p.image(img._mask, x, y);
         curContext.globalCompositeOperation = oldComposite;
       }
@@ -5805,7 +5824,7 @@
         }
 
         // draw the image
-        //curContext.putImageData(obj, x, y);
+        //curContext.putImageData(obj, x, y); // this causes error if data overflows the canvas dimensions
 
         // <corban> doing this the slow way for now
         // we will want to replace this with putImageData and clipping logic
