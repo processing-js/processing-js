@@ -4687,6 +4687,7 @@ var JSLINT = (function () {
         immed: true,
         indent: 2,
         browser: true,
+        sub: true
         /*
         bitwise: true,
         eqeqeq: true,
