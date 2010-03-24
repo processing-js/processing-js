@@ -3246,10 +3246,10 @@
         p.fill(255);
       } else {
         if (typeof curContext === "undefined") {
-          modelView = new PMatrix2D();
         
           // size() was called without p.init() default context, ie. p.createGraphics()
           curContext = curElement.getContext("2d");
+          modelView = new PMatrix2D();
         }
       }
 
@@ -6124,6 +6124,8 @@
         if (!p.use3DContext) {
           // Setup default 2d canvas context. 
           curContext = curElement.getContext('2d');
+          
+          modelView = new PMatrix2D();
 
           // Canvas has trouble rendering single pixel stuff on whole-pixel
           // counts, so we slightly offset it (this is super lame).
