@@ -175,6 +175,12 @@
 
   "uniform vec4 color;" +
 
+  "uniform vec3 falloff;" +
+
+  "uniform vec3 mat_emissive;" +
+  "uniform vec3 mat_ambient;" +
+//  "uniform vec3 mat_specular;" +
+
   "uniform mat4 model;" +
   "uniform mat4 view;" +
   "uniform mat4 projection;" +
@@ -187,6 +193,9 @@
   "	 int type;" +
   "	 vec3 color;" +
   "	 vec3 position;" +
+  "  float angle;" +
+  "  float concentration;" +
+  "  vec3 direction;" +
   "};" +
   "uniform Light lights[8];" +
 
@@ -198,7 +207,8 @@
   "  col += vertColor * light.color * max(0.0, dot(-normalize(light.position), vertNormal));" +
   "}" +
 
-  "void PointLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
+  "void PointLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, " +
+  "                 in vec3 ecPos, in Light light ) {" +
      // Get the vector from the light to the vertex
   "	 vec3 VP = vec3(light.position) - ecPos;" +
 
@@ -210,12 +220,56 @@
   "	 float nDotVP = max(0.0, dot(vertNormal, VP));"+ 
   "  col += vertColor * light.color * nDotVP;" + 
   "}" +
+  
+  /*
+  */
+  "void SpotLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, " +
+  "                 in vec3 ecPos, in Light light ) {" +
+  "  float nDotVP = 1.0;" + 
+  "  float spotDot;" + 
+  "	 float spotAttenuation;" +
+  "	 float attenuation;" + 
+  "	 float d;" +
+  "  vec3 VP;" +
+  "	 vec3 halfVector;" +
+
+	// calculate the vector from the current vertex to the light.
+  "  VP = vec3( light.position ) - ecPos; " + 
+  "  vec3 ldir = normalize( light.direction );" +
+
+  // get the distance from the spotlight and the vertex
+  "  d = length( VP );" +
+  "  VP = normalize( VP );" + 
+
+  "  attenuation = 1.0 / (falloff[0] + (falloff[1] * d) + (falloff[2] * d * d));" +
+//"attenuation = 1.0;" +
+
+	// dot product of the vector from vertex to light and light direction.
+  "  spotDot = dot(VP, ldir);" +
+
+    // if the vertex falls inside the cone
+  "  if( spotDot < cos( light.angle ) )" +
+  "  {" +
+  "    spotAttenuation = pow(spotDot, light.concentration);" +
+  "  }" +
+  "  else{" +
+  "    spotAttenuation = 1.0;" +
+  "  }" +
+
+  "  attenuation *= spotAttenuation;" +
+  "  nDotVP = max(0.0, dot(vertNormal, VP));" + 
+  "  col += vertColor * light.color * nDotVP * attenuation;" + 
+  "}" +
 
   "void main(void) {" +
-  
-  "  vec3 finalColor = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" +
+
   "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
 
+  "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
+  "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
+  
      // If there were no lights this frame, just use the 
      // assigned color of the shape.
   "  if( lightCount == 0 ) {" + 
@@ -225,24 +279,20 @@
   "  else {" +
   "    for( int i = 0; i < lightCount; i++ ) {" +
   "      if( lights[i].type == 0 ) {"+
-  "        AmbientLight( finalColor, vec3( color[0], color[1], color[2] ), lights[i] );"+   
+  "        AmbientLight( finalAmbient, vec3( color[0], color[1], color[2] ), lights[i] );"+   
   "      }" +
   "      else if( lights[i].type == 1 ) {" +
-  "        DirectionalLight( finalColor, vec3( color[0], color[1], color[2] ), norm, lights[i] );" +
+  "        DirectionalLight( finalDiffuse, vec3( color[0], color[1], color[2] ), norm, lights[i] );" +
   "      }" +
   "      else if( lights[i].type == 2 ) {" +
-  
-          // Place the current vertex into view space
-          // ecPos = eye coordinate position.
-  "       vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
-
-           // the current vertex in eye coordinate space
-           // perspective divide
-  "        vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
-  "        PointLight( finalColor, vec3( color[0], color[1], color[2] ), norm, ecPos, lights[i] );" +
+  "        PointLight( finalDiffuse, vec3( color[0], color[1], color[2] ), norm, ecPos, lights[i] );" +
+  "      }" +
+  "      else if( lights[i].type == 3 ) {" +
+  "        SpotLight( finalDiffuse, vec3( color[0], color[1], color[2] ), norm, ecPos, lights[i] );" +
   "      }" +
   "    }" +
-  "    gl_FrontColor = vec4( finalColor, color[3] );" +
+  "    gl_FrontColor = vec4(  mat_emissive + " +
+  "                           mat_ambient * finalAmbient + finalDiffuse, color[3] );" +
   "  }" +
 
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
@@ -1910,6 +1960,7 @@
         // Delete all the lighting states the user set in the last
         // draw() call. They will have to reset them each time.
         p.noLights();
+        p.lightFalloff( 1.0, 0.0, 0.0 );
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.camera();
         p.draw();
@@ -3222,6 +3273,7 @@
 						sinLUT[i] = p.sin(i * (p.PI/180) * 0.5);
 						cosLUT[i] = p.cos(i * (p.PI/180) * 0.5);
           }
+          // Set defaults
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
@@ -3233,6 +3285,10 @@
           // lighting calculations could be ommitted from that program object.
           programObject2D = createProgramObject( curContext, vertexShaderSource2D, fragmentShaderSource3D );
           programObject3D = createProgramObject( curContext, vertexShaderSource3D, fragmentShaderSource3D );
+
+          // Now that the programs have been compiled, we can set the default
+          // attenuation for lights.
+          p.lightFalloff( 1.0, 0.0, 0.0 );
 
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
@@ -4016,6 +4072,32 @@
     
     /*
     */
+    p.lightFalloff = function lightFalloff( constant, linear, quadratic ) {
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        
+        uniformf( programObject3D, "falloff", [constant, linear, quadratic] );
+      }
+    }
+    
+    /*
+    */
+    p.lightSpecular = function lightSpecular() {
+    }
+    
+    /*
+     	Sets the the default ambient light, directional light,
+      falloff, and specular values. 
+    */
+    p.lights = function lights() {
+      p.ambientLight( 128, 128, 128 );
+      p.directionalLight( 128, 128, 128, 0, 0, -1 );
+      p.lightFalloff( 1, 0, 0 );
+      p.specular( 0, 0, 0 );
+    }
+    
+    /*
+    */
     p.pointLight = function( r, g, b, x, y, z ) {
       if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
         curContext.useProgram( programObject3D );
@@ -4039,11 +4121,44 @@
       Disables lighting so the all shapes drawn after this
       will not be lit.
     */
-    p.noLights = function() {
+    p.noLights = function noLights() {
       if( p.use3DContext ) {
         lightCount = 0;
         curContext.useProgram( programObject3D );
         uniformi( programObject3D, "lightCount", lightCount );
+      }
+    }
+    
+    /*
+    */
+    p.spotLight = function spotLight( r, g, b, x, y, z, 
+                                      nx, ny, nz, angle, concentration) {
+      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+        curContext.useProgram( programObject3D );
+        
+        // place the point in view space once instead of once per vertex
+        // in the shader.
+        var pos = new PVector( x, y, z );
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( pos, pos );
+        
+        // transform the spotlight's direction
+        // need to find a solution for this one. Maybe manual mult?
+        var dir = [ nx, ny, nz, 0.0000001 ];     
+        view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        dir = view.mult( dir, dir );
+        
+        uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position",  pos.array() );
+        uniformf( programObject3D, "lights[" + lightCount + "].direction", [dir[0],dir[1],dir[2]] );
+        uniformf( programObject3D, "lights[" + lightCount + "].concentration", concentration );
+        uniformf( programObject3D, "lights[" + lightCount + "].angle", angle );
+        uniformi( programObject3D, "lights[" + lightCount + "].type", 3 );
+        uniformi( programObject3D, "lightCount", ++lightCount );
       }
     }
 
@@ -4504,6 +4619,105 @@
       return ( ow !== 0 ) ? oz / ow : oz;
     };
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Material Properties
+    ////////////////////////////////////////////////////////////////////////////
+
+    p.ambient = function ambient() {
+      // create an alias to shorten code
+      var a = arguments;
+      
+      // either a shade of gray or a 'color' object.
+      if( p.use3DContext && a.length === 1 ) {
+        curContext.useProgram( programObject3D );
+      
+        // color object was passed in
+        if( typeof a[0] === "string" ) {  
+          c = a[0].slice(5, -1).split(",");
+          uniformf( programObject3D, "mat_ambient", [c[0]/255, c[1]/255, c[2]/255] );
+        }
+        // else a regular number was passed in for gray shade
+        else {
+          uniformf( programObject3D, "mat_ambient", [a[0]/255, a[0]/255, a[0]/255] );
+        }
+      }
+      // Otherwise three values were provided (r,g,b)
+      else
+      {
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "mat_ambient", [a[0]/255, a[1]/255, a[2]/255] );      
+      }   
+    }
+
+    /*
+    */
+    p.emissive = function emissive() {
+      // create an alias to shorten code
+      var a = arguments;
+      
+      if( p.use3DContext ) {
+      
+        // If only one argument was provided, the user either gave us a 
+        // shade of gray or a 'color' object.
+        if( a.length === 1 ) {
+          curContext.useProgram( programObject3D );
+      
+          // color object was passed in
+          if( typeof a[0] === "string" ) {  
+            c = a[0].slice(5, -1).split(",");
+            uniformf( programObject3D, "mat_emissive", [c[0]/255, c[1]/255, c[2]/255] );
+          }
+          // else a regular number was passed in for gray shade
+          else {
+            uniformf( programObject3D, "mat_emissive", [a[0]/255, a[0]/255, a[0]/255] );
+          }
+        }
+        // Otherwise three values were provided (r,g,b)
+        else
+        {
+          curContext.useProgram( programObject3D );
+          uniformf( programObject3D, "mat_emissive", [a[0]/255, a[1]/255, a[2]/255] );      
+        }
+      }
+    }
+
+    /*
+    */
+    p.shininess = function shininess() {
+    }
+    
+    /*
+    */
+    p.specular = function specular() {
+      var a = arguments;
+
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+      
+        // color object was passed in
+        if( a.length === 1 && typeof a[0] === "string") {
+        }
+        
+        // a single value for a gray shade was passed in
+        else if( a.length === 1 && typeof a[0] === "number") {
+        }
+
+        // gray and alpha
+        else if( a.length === 2 ) {
+        }
+
+        // r, g, b
+        else if( a.length === 3 ) {
+        }
+
+        // r, g, b, a
+        else {
+        }
+      }
+    }
+    
+    p.lightSpecular = function lightSpecular() {
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
@@ -6413,27 +6627,27 @@
           with(processing) {
             // Don't start until all specified images in the cache are preloaded
             if (!pjs.imageCache.pending) {
-            eval(parsedCode);
+              eval(parsedCode);
 
-      // Run void setup()
+              // Run void setup()
               if (setup) {
-        inSetup = true;
+                inSetup = true;
                 setup();
-      }
+              }
 
-      inSetup = false;
+              inSetup = false;
 
               if (draw) {
-        if (!doLoop) {
+                if (!doLoop) {
                   redraw();
                 } else {
                   loop();
                 }
               }
-        } else {
+            } else {
               window.setTimeout(executeSketch, 10, processing);
-        }
-      }
+            }
+          }
         };
 
         // The parser adds custom methods to the processing context
