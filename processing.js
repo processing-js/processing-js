@@ -5804,15 +5804,26 @@
           curContext.globalAlpha = curTint / opacityRange;
         }
 
+        // draw the image
+        //curContext.putImageData(obj, x, y);
+
+        // <corban> doing this the slow way for now
+        // we will want to replace this with putImageData and clipping logic
+        var c = document.createElement('canvas');
+        c.width = obj.width;
+        c.height = obj.height;
+        var ctx = c.getContext('2d');
+        ctx.putImageData(obj, 0, 0);
+
         if (arguments.length === 5) {
           // resize the image to w,h
           // this should use resize later on and also pay attention to imageMode
           // does not crop image, resizes it to w,h
           // coming in 0.8
+          curContext.drawImage(c, x, y, w, h);
+        } else {
+          curContext.drawImage(c, x, y);
         }
-
-        // draw the image
-        curContext.putImageData(obj, x, y);
 
         if (curTint >= 0) {
           curContext.globalAlpha = oldAlpha;
