@@ -5569,9 +5569,8 @@
 
     // Draws a 1-Dimensional pixel array to Canvas
     p.updatePixels = function () {
-
       var colors = /(\d+),(\d+),(\d+),(\d+)/,
-        pixels = {};
+        pixels = {}, c;
 
       pixels.width = p.width;
       pixels.height = p.height;
@@ -5585,8 +5584,12 @@
         pos = 0;
 
       for (var i = 0, l = p.pixels.length; i < l; i++) {
+        if (typeof p.pixels[i] === "number") {
+          c = (p.color.toString(p.pixels[i]) || "rgba(0,0,0,1)").match(colors);
+        } else if(typeof p.pixels[i] === "string") {
+          c = (p.pixels[i] || "rgba(0,0,0,1)").match(colors);
+        }
 
-        var c = (p.color.toString(p.pixels[i]) || "rgba(0,0,0,1)").match(colors);
         data[pos + 0] = parseInt(c[1], 10);
         data[pos + 1] = parseInt(c[2], 10);
         data[pos + 2] = parseInt(c[3], 10);
