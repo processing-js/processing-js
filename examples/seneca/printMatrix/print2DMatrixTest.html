@@ -1,7 +1,7 @@
 <!DOCTYPE html> 
 <html>
 	<head>
-		<title>Processing.js test of printMatrix() for PMatrix2D</title>
+		<title>Processing.js test of printMatrix() and print() for PMatrix2D</title>
 		<script type="text/javascript" src="../../../processing.js"></script>
 		<style type="text/css">
 			html{
@@ -29,18 +29,32 @@
 		</style>
 	</head>
 	<body>
-		<div id="title">Processing.js test of printMatrix() for PMatrix2D</div>
+		<div id="title">Processing.js test of printMatrix() and print() for PMatrix2D</div>
 		<h2></h2>
 		<script id="script" type="application/processing">
 void setup() {
-	size(500,400);
+	size(1,1);
 	background(50);
 	noLoop();
 } 
 
 void draw() {
         
+	// Should print:
+	//  1.0000 0.0000 0.0000
+        //  0.0000 1.0000 0.0000
+	// Followed by an empty line.
 	printMatrix();
+
+	// Should print:
+	//  10000.0000  00100.0000  00010.0000
+	//  00001.0000 -00010.0000 -00100.0000
+	// Followed by an empty line.
+	PMatrix2D b=new PMatrix2D();
+	b.set(10000,100,10,1,-10,-100);
+	b.print();
+
+	println("Another line");
 }
 		</script>
 		<canvas id="display"></canvas>
