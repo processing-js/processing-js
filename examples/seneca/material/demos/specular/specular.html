@@ -7,40 +7,20 @@
  
   <body> 
     <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1> 
-    <h2>Mouse Light Direction Demo</h2> 
+    <h2>Sol Demo</h2> 
  
-    <p>This page demonstates that ambientLight() and directionalLight()<br />
-    for <a href="http://www.processingjs.org/">Processing JS</a> work correctly on a sphere.
+    <p>
     </p>
  
     <p> 
-      <canvas datasrc="mouse_dir.pjs" width="100" height="100"></canvas>
+      <canvas datasrc="specular.pjs" width="400" height="400"></canvas>
     </p> 
     
     <pre> 
 <b>// Demo written by <a href="http://asalga.wordpress.com/">Andor Salga</a></b> 
-void setup()
-{
-  size(200,200,OPENGL);
-}
-
-void draw()
-{
-  background(0);
-  float x = (mouseX-100.0f)/100.0f;
-  float y = (mouseY-100.0f)/100.0f;
-  float m = mag(x,y);
-  
-  x /= m;
-  y /= m;
-
-  noStroke();
-  ambientLight(4 * y, 4 * x, 0);
-  directionalLight(33*x,66,99*y, -x, -y, 0);
-
-  translate(width/2.0f, height/2.0f, 2);
-  sphere(50);
-}</pre> 
- 
+</pre> 
+ <br />
+ <br />
+ <br />
 </body> 
 </html>

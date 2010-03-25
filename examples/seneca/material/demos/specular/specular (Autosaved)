@@ -11,22 +11,12 @@ PFont starFont;
 void setup(){
   size(400,400,OPENGL);
   noStroke();
-  infoFont = createFont("Arial", 24);
-  starFont = createFont("Arial", 8);
 }
 
 /*
 */
 void displayText()
 {
-  /*fill(25,70,20);
-  textFont(infoFont); 
-  text( "FPS: " + int(frameRate), 15, 30); 
-  text( "LOD: " + int(zoom + 16.0) , 15, 50);
- 
-  text( "Keys:", 15, 100);
-  text( "a - move forward" , 15, 120);
-  text( "z - move backward",  15, 140);*/
 }
 
 
@@ -34,15 +24,6 @@ void displayText()
 */
 void drawStars()
 {
-  //textFont(starFont);
-  //randomSeed(0);
-  //fill(255);
-  for(int i=0; i < 300; i++)
-  {
-    int x = int(random(0,width));
-    int y = int(random(0,height));
-  //  text(".", x,y);
-  }
 }
 
 /*

@@ -219,7 +219,7 @@
   "  spec += specular * powerfactor;" +
   "}" +
 
-  "void PointLight( inout vec3 col, in vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+  "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
   "  float powerfactor;" + 
   
      // Get the vector from the light to the vertex
@@ -250,7 +250,7 @@
 
   /*
   */
-  "void SpotLight( inout vec3 col, in vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+  "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
   "	 float spotAttenuation;" +
   "  float powerfactor;" + 
 
@@ -285,7 +285,7 @@
   "    powerfactor = 0.0;" +
   "  }" +
   "  else{"+
-  "    powerfactor = pow(nDotHV, shininess);" +
+  "    powerfactor = pow( nDotHV, shininess );" +
   "  }" +
 
   "  spec += specular * powerfactor * attenuation;" +  
@@ -4142,8 +4142,17 @@
     p.directionalLight = function( r, g, b, nx, ny, nz ) {
       if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
         curContext.useProgram( programObject3D );
+
+        // transform the spotlight's direction
+        // need to find a solution for this one. Maybe manual mult?
+        var dir = [ nx, ny, nz, 0.0000001 ];     
+        view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        dir = view.mult( dir, dir );
+        
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
-        uniformf( programObject3D, "lights[" + lightCount + "].position", [nx, -ny, nz] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position", [dir[0], dir[1], dir[2]] );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 1 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
@@ -4192,7 +4201,7 @@
         view.scale( 1, -1 , 1 );
         view.apply( modelView.array() );
         view.mult( pos, pos );
-
+        
         uniformf( programObject3D, "lights[" + lightCount + "].position", pos.array() );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 2 );
         uniformi( programObject3D, "lightCount", ++lightCount );
@@ -4772,6 +4781,8 @@
     /*
     */
     p.shininess = function shininess( shine ) {
+    //tinylogLite.log(shine);
+          //  uniformi( programObject3D, "usingMat", true );
       curContext.useProgram( programObject3D );
       uniformf( programObject3D, "shininess", shine );
     }
