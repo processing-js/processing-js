@@ -283,7 +283,7 @@
             for (var j=0, ll=list.length; j<ll; j++) {
               var imageName = clean(list[j]);
               var img = new Image();
-              img.onload = function() { p.pjs.imageCache.pending--; };
+              img.onload = (function() { return function() { p.pjs.imageCache.pending--; }; }());
               p.pjs.imageCache.pending++;
               p.pjs.imageCache[imageName] = img;
               img.src = imageName;
@@ -366,9 +366,9 @@
     // int|float foo;
     var intFloat = /(\n\s*(?:int|float)(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
     while (intFloat.test(aCode)) {
-      aCode = aCode.replace(new RegExp(intFloat), function (all, type, name, sep) {
+      aCode = (function() { return aCode.replace(new RegExp(intFloat), function (all, type, name, sep) {
         return type + " " + name + " = 0" + sep;
-      });
+      }); }());
     }
 		aCode = aCode.replace(/catch\s\((\w+)\1\s(\w+)\2\)\s\{.\($2\)/g, "catch ($2$1)\n{$2$1");
 		
@@ -459,7 +459,7 @@
 
       allRest = allRest.slice(rest.length + 1);
 
-      rest = rest.replace(new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), function (all, args) {
+      rest = (function() { return rest.replace(new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), function (all, args) {
         args = args.split(/,\s*?/);
 
         if (args[0].match(/^\s*$/)) {
@@ -473,14 +473,14 @@
         }
 
         return fn;
-      });
+      }); }());
 
       // Fix class method names
       // this.collide = function() { ... }
       // and add closing } for with(this) ...
-      rest = rest.replace(/(?:public )?processing.\w+ = function (\w+)\((.*?)\)/g, function (all, name, args) {
+      rest = (function() { return rest.replace(/(?:public )?processing.\w+ = function (\w+)\((.*?)\)/g, function (all, name, args) {
         return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
-      });
+      }); }());
 
       var matchMethod = /ADDMETHOD([\s\S]*?\{)/,
         mc;
@@ -540,7 +540,7 @@
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
     for( var n = 0; n < strings.length; n++ ) {
-      aCode = aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
+      aCode = (function() { return aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
         var returnString = all, notString = true, quoteType = "", escape = false;
 
         for (var x = 0; x < quoteStart.length; x++) {
@@ -568,7 +568,7 @@
         }
 
         return returnString;
-      });
+      }); }());
     }
     
     return aCode;
