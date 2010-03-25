@@ -1362,7 +1362,7 @@
         return str;
       },
       print: function() {
-    	
+
         var digits = printMatrixHelper( this.elements );
 
         var output = "";
