@@ -165,13 +165,16 @@
 
 // rename to fill color
   "uniform vec4 color;" +
+  "uniform vec3 specular;" +
 
   "uniform vec3 falloff;" +
 
+  // !!!
   "uniform bool usingMat;" +
   "uniform vec3 mat_emissive;" +
   "uniform vec3 mat_ambient;" +
-//  "uniform vec3 mat_specular;" +
+  "uniform vec3 mat_specular;" +
+  "uniform float shininess;" +
 
   "uniform mat4 model;" +
   "uniform mat4 view;" +
@@ -200,11 +203,25 @@
   "  totalAmbient += light.color * attenuation;" +
   "}" +
 
-  "void DirectionalLight( inout vec3 col, in vec3 vertNormal, in Light light ) {" +
+  "void DirectionalLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in Light light ) {" +
   "  col += light.color * max(0.0, dot(-normalize(light.position), vertNormal));" +
+  "  vec3 VP = -normalize(light.position);" +
+  "  float powerfactor;" +
+  "  float nDotVP = max(0.0, dot(vertNormal, VP));" + 
+
+  "  if( nDotVP == 0.0 ){" +
+  "    powerfactor = 0.0;" +
+  "  }" +
+  "  else{"+
+  "    powerfactor = pow( nDotVP, shininess );" + 
+  "  }" +
+
+  "  spec += specular * powerfactor;" +
   "}" +
 
-  "void PointLight( inout vec3 col, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
+  "void PointLight( inout vec3 col, in vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+  "  float powerfactor;" + 
+  
      // Get the vector from the light to the vertex
   "	 vec3 VP = vec3( light.position ) - ecPos;" +
 
@@ -214,38 +231,41 @@
      // Normalize the light ray so it can be used in the dot product operation.
   "  VP = normalize( VP );" + 
   
-      // calculate the attenuation
   "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d) + (falloff[2] * d * d));" + 
 
-     // Find out if the light ray glaces off the vertex or hits
-     // it directly on. 
-  "	 float nDotVP = max( 0.0, dot( vertNormal, VP ) );"+ 
+  "  float nDotVP = max(0.0, dot(vertNormal, VP));" + 
+  "  vec3 halfVector = normalize(VP + eye);" +
+  "  float nDotHV = max(0.0, dot(vertNormal, halfVector));" +
+
+  "  if(nDotVP == 0.0){" +
+  "    powerfactor = 0.0;" +
+  "  }" +
+  "  else{"+
+  "    powerfactor = pow(nDotHV, shininess);" +
+  "  }" +
+
+  "  spec += specular * powerfactor * attenuation;" +  
   "  col += light.color * nDotVP * attenuation;" + 
   "}" +
 
   /*
   */
-  "void SpotLight( inout vec3 col, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
-  "  float nDotVP = 1.0;" + 
-  "  float spotDot;" + 
+  "void SpotLight( inout vec3 col, in vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
   "	 float spotAttenuation;" +
-  "	 float attenuation;" + 
-  "	 float d;" +
-  "  vec3 VP;" +
-  "	 vec3 halfVector;" +
+  "  float powerfactor;" + 
 
 	// calculate the vector from the current vertex to the light.
-  "  VP = vec3( light.position ) - ecPos; " + 
+  "  vec3 VP = vec3( light.position ) - ecPos; " + 
   "  vec3 ldir = normalize( light.direction );" +
 
   // get the distance from the spotlight and the vertex
-  "  d = length( VP );" +
+  "  float d = length( VP );" +
   "  VP = normalize( VP );" + 
 
-  "  attenuation = 1.0 / (falloff[0] + (falloff[1] * d) + (falloff[2] * d * d));" +
+  "  float attenuation = 1.0 / (falloff[0] + (falloff[1] * d) + (falloff[2] * d * d));" +
 
 	// dot product of the vector from vertex to light and light direction.
-  "  spotDot = dot(VP, ldir);" +
+  "  float spotDot = dot(VP, ldir);" +
 
     // if the vertex falls inside the cone
   "  if( spotDot < cos( light.angle ) )" +
@@ -256,18 +276,32 @@
   "    spotAttenuation = 1.0;" +
   "  }" +
   "  attenuation *= spotAttenuation;" +
-  "  nDotVP = max(0.0, dot(vertNormal, VP));" + 
+  
+  "  float nDotVP = max(0.0, dot(vertNormal, VP));" + 
+  "  vec3 halfVector = normalize(VP + eye);" +
+  "  float nDotHV = max(0.0, dot(vertNormal, halfVector));" +
+
+  "  if(nDotVP == 0.0){" +
+  "    powerfactor = 0.0;" +
+  "  }" +
+  "  else{"+
+  "    powerfactor = pow(nDotHV, shininess);" +
+  "  }" +
+
+  "  spec += specular * powerfactor * attenuation;" +  
   "  col += light.color * nDotVP * attenuation;" + 
   "}" +
 
   "void main(void) {" +
   "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" +
   "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
 
   "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
 
   "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
   "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
+  "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
   
      // If there were no lights this draw call, just use the 
      // assigned fill color of the shape.
@@ -277,27 +311,34 @@
     
   "  else {" +
   "    for( int i = 0; i < lightCount; i++ ) {" +
-  
   "      if( lights[i].type == 0 ) {"+
   "        AmbientLight( finalAmbient, ecPos, lights[i] );"+   
   "      }" +
   "      else if( lights[i].type == 1 ) {" +
-  "        DirectionalLight( finalDiffuse, norm, lights[i] );" +
+  "        DirectionalLight( finalDiffuse, finalSpecular, norm, lights[i] );" +
   "      }" +
   "      else if( lights[i].type == 2 ) {" +
-  "        PointLight( finalDiffuse, norm, ecPos, lights[i] );" +
+  "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
   "      }" +
   "      else if( lights[i].type == 3 ) {" +
-  "        SpotLight( finalDiffuse, norm, ecPos, lights[i] );" +
+  "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
   "      }" +
   "    }" +
   
   // 
   "   if( usingMat == false ) {" + 
-  "    gl_FrontColor = vec4( vec3(color) * finalAmbient + vec3(color) * finalDiffuse, color[3] );" +
- "   }" +
- "   else{" +
-  "     gl_FrontColor = vec4( mat_emissive + (vec3(color) * mat_ambient * finalAmbient) + vec3(color) * finalDiffuse , color[3] );" +
+  "    gl_FrontColor = vec4(  " +
+  "                           vec3(color) * finalAmbient + " +
+  "                           vec3(color) * finalDiffuse + " +
+  "                           vec3(color) * finalSpecular," +
+  "                           color[3] );" +
+  "   }" +
+  "   else{" +
+  "     gl_FrontColor = vec4( mat_emissive + " +
+  "                           (vec3(color) * mat_ambient * finalAmbient) + " +
+  "                           (vec3(color) * finalDiffuse) + " +
+  "                           mat_specular * finalSpecular, " +
+  "                           color[3] );" +
   "   }" +
 
   "  }" +
@@ -3926,7 +3967,10 @@
 
           // Now that the programs have been compiled, we can set the default
           // attenuation for lights.
+          curContext.useProgram( programObject3D );
           p.lightFalloff( 1, 0, 0 );
+          p.shininess( 1.0 );
+          p.specular( 0,0,0 );
           uniformi( programObject3D, "usingMat", false );
 
           // Create buffers for 3D primitives
@@ -4116,7 +4160,11 @@
     
     /*
     */
-    p.lightSpecular = function lightSpecular() {
+    p.lightSpecular = function lightSpecular( r, g, b ) {
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "specular", [r/255, g/255, b/255] );
+      }
     };
     
     /*
@@ -4716,14 +4764,16 @@
         // Otherwise three values were provided (r,g,b)
         else
         {
-          uniformf( programObject3D, "mat_emissive", [a[0]/255, a[1]/255, a[2]/255] );      
+          uniformf( programObject3D, "mat_emissive", [a[0]/255, a[1]/255, a[2]/255] );
         }
       }
     }
 
     /*
     */
-    p.shininess = function shininess() {
+    p.shininess = function shininess( shine ) {
+      curContext.useProgram( programObject3D );
+      uniformf( programObject3D, "shininess", shine );
     }
     
     /*
@@ -4733,7 +4783,7 @@
 
       if( p.use3DContext ) {
         curContext.useProgram( programObject3D );
-     //   uniformi( programObject3D, "usingMat", true );
+        uniformi( programObject3D, "usingMat", true );
       
         // color object was passed in
         if( a.length === 1 && typeof a[0] === "string") {
@@ -4749,6 +4799,7 @@
 
         // r, g, b
         else if( a.length === 3 ) {
+          uniformf( programObject3D, "mat_specular", [a[0]/255, a[1]/255, a[2]/255] );      
         }
 
         // r, g, b, a
@@ -4757,9 +4808,6 @@
       }
     }
     
-    p.lightSpecular = function lightSpecular() {
-    }
-
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
