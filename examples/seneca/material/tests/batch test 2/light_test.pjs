@@ -145,7 +145,7 @@ void drawObjects()
   /////////////////////////////////
   // double values - color + alpha
   /////////////////////////////////
-  ambient(64, 64, 0);
+  //ambient(64, 64, 0);
   directionalLight( 128, 0, 0,  -1, 0, 0 );
 
   fill(color(0,0,0),255);
@@ -227,7 +227,7 @@ void drawObjects()
   ////////////////
   // gray + alpha
   ////////////////
-  ambient(128, 0, 128);
+  //ambient(128, 0, 128);
   fill(0, 255);
   drawNextObject();
   
@@ -483,7 +483,8 @@ void drawObjects()
   
   fill(33,66,99, 255);
   drawNextObject();
-
+  
+noLights();
   strokeWeight(1);
   stroke(128,0,0);
   sphereDetail(10);

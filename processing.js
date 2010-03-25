@@ -72,10 +72,6 @@
   */
   var newWebGLArray = function(data) {return new WebGLFloatArray(data);};
   
-//    var newWebGLArray = function(data) {
-  //    return (typeof WebGLFloatArray === 'function') ? new WebGLFloatArray(data) : new CanvasFloatArray(data);
-   // };
-
   var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
     var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER );
     curContext.shaderSource( vertexShaderObject, vetexShaderSource );
@@ -165,10 +161,12 @@
   "attribute vec3 Vertex;" +
   "attribute vec3 Normal;" +
 
+// rename to fill color
   "uniform vec4 color;" +
 
   "uniform vec3 falloff;" +
 
+  "uniform bool usingMat;" +
   "uniform vec3 mat_emissive;" +
   "uniform vec3 mat_ambient;" +
 //  "uniform vec3 mat_specular;" +
@@ -185,50 +183,47 @@
   "	 int type;" +
   "	 vec3 color;" +
   "	 vec3 position;" +
+  "  vec3 direction;" +
   "  float angle;" +
   "  float concentration;" +
-  "  vec3 direction;" +
   "};" +
   "uniform Light lights[8];" +
 
-  "void AmbientLight( inout vec3 col, in vec3 vertColor, in Light light ) {" +//in vec3 ecPos,
+  "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
      // Get the vector from the light to the vertex
      // Get the distance from the current vector to the light position
- // "	 float d = length( vec3( light.position ) - ecPos );" +
+  "	 float d = length( vec3( light.position ) - ecPos );" +
 
-     // calculate the attenuation
- // "  float attenuation = 1.0 / (falloff[0] + (falloff[1] * d) + (falloff[2] * d * d));" + 
-  "  col += vertColor * light.color;" + //+  * attenuation;" +
+  "  float attenuation = 1.0 / (falloff[0] + (falloff[1] * d) + (falloff[2] * d * d));" + 
+  "  totalAmbient += light.color * attenuation;" +
   "}" +
 
-  "void DirectionalLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, in Light light ) {" +
-  "  col += vertColor * light.color * max(0.0, dot(-normalize(light.position), vertNormal));" +
+  "void DirectionalLight( inout vec3 col, in vec3 vertNormal, in Light light ) {" +
+  "  col += light.color * max(0.0, dot(-normalize(light.position), vertNormal));" +
   "}" +
 
-  "void PointLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, " +
-  "                 in vec3 ecPos, in Light light ) {" +
+  "void PointLight( inout vec3 col, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
      // Get the vector from the light to the vertex
-  "	 vec3 VP = vec3(light.position) - ecPos;" +
+  "	 vec3 VP = vec3( light.position ) - ecPos;" +
 
      // Get the distance from the current vector to the light position
-  "  float d = length(VP); " + 
+  "  float d = length( VP ); " + 
 
      // Normalize the light ray so it can be used in the dot product operation.
-  "  VP = normalize(VP);" + 
+  "  VP = normalize( VP );" + 
   
       // calculate the attenuation
-  "  float attenuation = 1.0 / (falloff[0] + (falloff[1] * d) + (falloff[2] * d * d));" + 
+  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d) + (falloff[2] * d * d));" + 
 
      // Find out if the light ray glaces off the vertex or hits
      // it directly on. 
-  "	 float nDotVP = max(0.0, dot(vertNormal, VP));"+ 
-  "  col += vertColor * light.color * nDotVP * attenuation;" + 
+  "	 float nDotVP = max( 0.0, dot( vertNormal, VP ) );"+ 
+  "  col += light.color * nDotVP * attenuation;" + 
   "}" +
 
   /*
   */
-  "void SpotLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, " +
-  "                 in vec3 ecPos, in Light light ) {" +
+  "void SpotLight( inout vec3 col, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
   "  float nDotVP = 1.0;" + 
   "  float spotDot;" + 
   "	 float spotAttenuation;" +
@@ -260,7 +255,7 @@
   "  }" +
   "  attenuation *= spotAttenuation;" +
   "  nDotVP = max(0.0, dot(vertNormal, VP));" + 
-  "  col += vertColor * light.color * nDotVP * attenuation;" + 
+  "  col += light.color * nDotVP * attenuation;" + 
   "}" +
 
   "void main(void) {" +
@@ -280,23 +275,30 @@
     
   "  else {" +
   "    for( int i = 0; i < lightCount; i++ ) {" +
+  
   "      if( lights[i].type == 0 ) {"+
-  "        AmbientLight( finalAmbient, vec3( color[0], color[1], color[2] ), lights[i] );"+   
+  "        AmbientLight( finalAmbient, ecPos, lights[i] );"+   
   "      }" +
   "      else if( lights[i].type == 1 ) {" +
-  "        DirectionalLight( finalDiffuse, vec3( color[0], color[1], color[2] ), norm, lights[i] );" +
+  "        DirectionalLight( finalDiffuse, norm, lights[i] );" +
   "      }" +
   "      else if( lights[i].type == 2 ) {" +
-  "        PointLight( finalDiffuse, vec3( color[0], color[1], color[2] ), norm, ecPos, lights[i] );" +
+  "        PointLight( finalDiffuse, norm, ecPos, lights[i] );" +
   "      }" +
   "      else if( lights[i].type == 3 ) {" +
-  "        SpotLight( finalDiffuse, vec3( color[0], color[1], color[2] ), norm, ecPos, lights[i] );" +
+  "        SpotLight( finalDiffuse, norm, ecPos, lights[i] );" +
   "      }" +
   "    }" +
-  "    gl_FrontColor = vec4(  mat_emissive + " +
-  "                           mat_ambient * finalAmbient + finalDiffuse, color[3] );" +
-  "  }" +
+  
+  // 
+  "   if( usingMat == false ) {" + 
+  "    gl_FrontColor = vec4( vec3(color) * finalAmbient + vec3(color) * finalDiffuse, color[3] );" +
+ "   }" +
+ "   else{" +
+  "     gl_FrontColor = vec4( mat_emissive + (vec3(color) * mat_ambient * finalAmbient) + vec3(color) * finalDiffuse , color[3] );" +
+  "   }" +
 
+  "  }" +
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
   "}";
 
@@ -3923,7 +3925,7 @@
           // Now that the programs have been compiled, we can set the default
           // attenuation for lights.
           p.lightFalloff( 1, 0, 0 );
-          p.ambient( 1, 1, 1 );
+          uniformi( programObject3D, "usingMat", false );
 
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
@@ -4083,7 +4085,7 @@
         
         curContext.useProgram( programObject3D );
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
-       // uniformf( programObject3D, "lights[" + lightCount + "].position", [x, y, z] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position", pos.array() );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 0 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
@@ -4156,6 +4158,7 @@
         lightCount = 0;
         curContext.useProgram( programObject3D );
         uniformi( programObject3D, "lightCount", lightCount );
+       //uniformi( programObject3D, "usingMat", false );
       }
     }
     
@@ -4663,25 +4666,26 @@
       var a = arguments;
       
       // either a shade of gray or a 'color' object.
-      if( p.use3DContext && a.length === 1 ) {
+      if( p.use3DContext ) {
         curContext.useProgram( programObject3D );
-      
-        // color object was passed in
-        if( typeof a[0] === "string" ) {  
-          c = a[0].slice(5, -1).split(",");
-          uniformf( programObject3D, "mat_ambient", [c[0]/255, c[1]/255, c[2]/255] );
+        uniformi( programObject3D, "usingMat", true );
+        
+        if( a.length === 1 ) {
+          // color object was passed in
+          if( typeof a[0] === "string" ) {  
+            c = a[0].slice(5, -1).split(",");
+            uniformf( programObject3D, "mat_ambient", [c[0]/255, c[1]/255, c[2]/255] );
+          }
+          // else a regular number was passed in for gray shade
+          else {
+            uniformf( programObject3D, "mat_ambient", [a[0]/255, a[0]/255, a[0]/255] );
+          }
         }
-        // else a regular number was passed in for gray shade
+        // Otherwise three values were provided (r,g,b)        
         else {
-          uniformf( programObject3D, "mat_ambient", [a[0]/255, a[0]/255, a[0]/255] );
+          uniformf( programObject3D, "mat_ambient", [a[0]/255, a[1]/255, a[2]/255] );
         }
       }
-      // Otherwise three values were provided (r,g,b)
-      else
-      {
-        curContext.useProgram( programObject3D );
-        uniformf( programObject3D, "mat_ambient", [a[0]/255, a[1]/255, a[2]/255] );      
-      }   
     }
 
     /*
@@ -4691,12 +4695,12 @@
       var a = arguments;
       
       if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformi( programObject3D, "usingMat", true );
       
         // If only one argument was provided, the user either gave us a 
         // shade of gray or a 'color' object.
         if( a.length === 1 ) {
-          curContext.useProgram( programObject3D );
-      
           // color object was passed in
           if( typeof a[0] === "string" ) {  
             c = a[0].slice(5, -1).split(",");
@@ -4710,7 +4714,6 @@
         // Otherwise three values were provided (r,g,b)
         else
         {
-          curContext.useProgram( programObject3D );
           uniformf( programObject3D, "mat_emissive", [a[0]/255, a[1]/255, a[2]/255] );      
         }
       }
@@ -4728,6 +4731,7 @@
 
       if( p.use3DContext ) {
         curContext.useProgram( programObject3D );
+     //   uniformi( programObject3D, "usingMat", true );
       
         // color object was passed in
         if( a.length === 1 && typeof a[0] === "string") {
