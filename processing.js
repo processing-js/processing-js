@@ -1363,7 +1363,7 @@
       },
       print: function() {
     	
-    	var digits = printMatrixHelper( this.elements );
+        var digits = printMatrixHelper( this.elements );
 
         var output = "";
         output += p.nfs(this.elements[0], digits, 4) + " " +
