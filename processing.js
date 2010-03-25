@@ -263,7 +263,7 @@
 
     // Parse out @pjs directive, if any.
     p.pjs = {imageCache: {pending: 0}}; // by default we have an empty imageCache, no more.
-    var dm = /\/\*\s*@pjs\s+((?:[^*]|\*+[^*/])*)\*\//g.exec(aCode);
+    var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
     if (dm && dm.length === 2) {
       var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
 
@@ -349,9 +349,9 @@
     aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+| )\s*(\w+\s*[\),])/g, "$1$4");
 
     // float[] foo = new float[5];
-    aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{.*\})*\s*;/g, function (all, name, args, initVars) {
+    aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function (all, name, args, initVars) {
       if (initVars) {
-        return initVars + ";";
+        return initVars;
       }
       else {
         return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
@@ -374,7 +374,7 @@
 		
     // float foo = 5;
     aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
-      if (type === "return") {
+      if (type === "return" || type === "else") {
         return all;
       } else {
         return "var " + name + sep;
@@ -382,8 +382,8 @@
     });
 
     // Fix Array[] foo = {...} to [...]
-    aCode = aCode.replace(/\=\s*\{((.|\s)*?)\};/g, function (all, data) {
-      return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]") + "]";
+    aCode = aCode.replace(/\=\s*\{((.|\s)*?\};)/g, function (all, data) {
+      return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]");
     });
 
     // super() is a reserved word
@@ -3106,7 +3106,7 @@
     String.prototype.toCharArray = function() {
       var chars = this.split("");
       for (var i = chars.length -1; i >= 0; i--) {
-        chars[i] = chars[i].charCodeAt(0);
+        chars[i] = new Char(chars[i]);
       }
       return chars;
     };
@@ -3488,7 +3488,7 @@
           if ( isNaN( ret ) ) {
             ret = 0;
           }
-        } else if ( typeof val === 'object' && val.constructor === Char ) {
+        } else if ( val instanceof Char ) {
           ret = val.code;
         } else if ( typeof val === 'object' && val.constructor === Array ) {
           ret = new Array( val.length );
@@ -3578,7 +3578,7 @@
           ret = ret.toFixed(1);
         } else if ( typeof val === 'string' ) {
           ret = parseFloat( val );
-        } else if ( typeof val === 'object' && val.constructor === Char ) {
+        } else if ( val instanceof Char ) {
           ret = val.code.toFixed(1);  
         } else if ( typeof val === 'object' && val.constructor === Array ) {
 
@@ -4885,30 +4885,29 @@
     };
 
     p.curveVertex = function (x, y, z) {
-      if( p.use3DContext && z) {
-				curvePoints.push([x, y, z]);
-			} else{
-				curvePoints.push([x, y]);
-			}
-			
-			if (curvePoints.length > 3){
+      if (curvePoints.length < 3) {
+				if( p.use3DContext && z) {
+					curvePoints.push([x, y, z]);
+				} else{
+					curvePoints.push([x, y]);
+				}
+			}	else{
 				if( p.use3DContext) {
-					p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
-															  curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
-																curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
-																curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
-				} else {
+						p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
+																	curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
+																	curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
+																	curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
+				 } else {
 					var b = [],
-						s = 1 - curTightness;
-
-					/*
-						 * Matrix to convert from Catmull-Rom to cubic Bezier
-						 * where t = curTightness
-						 * |0         1          0         0       |
-						 * |(t-1)/6   1          (1-t)/6   0       |
-						 * |0         (1-t)/6    1         (t-1)/6 |
-						 * |0         0          0         0       |
-						 */
+          s = 1 - curTightness;
+          /*
+          * Matrix to convert from Catmull-Rom to cubic Bezier
+          * where t = curTightness
+          * |0         1          0         0       |
+          * |(t-1)/6   1          (1-t)/6   0       |
+          * |0         (1-t)/6    1         (t-1)/6 |
+          * |0         0          0         0       |
+          */
 
 					curvePoints.push([x, y]);
 
@@ -4928,7 +4927,7 @@
 
 					curvePoints.shift();
 				}
-			}
+      }
     };
 
 		p.curveVertexSegment = function ( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4 ) {
@@ -5365,7 +5364,7 @@
     };
 
     var PImage = function PImage(aWidth, aHeight, aFormat) {
-      this.get = function (x, y, w, h) {
+      this.get = function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
         } else if (arguments.length === 2) {
@@ -5375,8 +5374,27 @@
         }
       };
 
-      this.set = function (x, y, c) {
+      this.set = function(x, y, c) {
         p.set(x, y, c, this);
+      };
+
+      this.mask = function(mask) {
+        this._mask = undefined;
+
+        if (mask instanceof PImage) {
+          if (mask.width === this.width && mask.height === this.height) {
+            this._mask = mask;
+          } else {
+            throw "mask must have the same dimensions as PImage.";
+          }
+        } else if (typeof mask === "object" && mask.constructor === Array) { // this is a pixel array
+          // mask pixel array needs to be the same length as this.pixels
+          if (this.pixels.length === mask.length) {
+            this._mask = mask;
+          } else {
+            throw "mask array must be the same length as PImage pixels array.";
+          }
+        }
       };
 
       this.loadPixels = function() {
@@ -5489,6 +5507,7 @@
           return function() {
             // change the <img> object into a PImage now that its loaded
             pimg.fromHTMLImageData(image);
+            pimg.loaded = true;
             if (callback) {
               callback();
             }
@@ -5587,7 +5606,7 @@
           curContext.fillStyle = color;
           curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
           curContext.fillStyle = oldFill;
-        } else if (typeof obj === "object" && obj.constructor === PImage) {
+        } else if (obj instanceof PImage) {
           p.image(x,y,obj);
         }
       }
@@ -5600,9 +5619,8 @@
 
     // Draws a 1-Dimensional pixel array to Canvas
     p.updatePixels = function () {
-
       var colors = /(\d+),(\d+),(\d+),(\d+)/,
-        pixels = {};
+        pixels = {}, c;
 
       pixels.width = p.width;
       pixels.height = p.height;
@@ -5616,8 +5634,11 @@
         pos = 0;
 
       for (var i = 0, l = p.pixels.length; i < l; i++) {
-
-        var c = (p.pixels[i] || "rgba(0,0,0,1)").match(colors);
+        if (typeof p.pixels[i] === "number") {
+          c = (p.color.toString(p.pixels[i]) || "rgba(0,0,0,1)").match(colors);
+        } else if(typeof p.pixels[i] === "string") {
+          c = (p.pixels[i] || "rgba(0,0,0,1)").match(colors);
+        }
 
         data[pos + 0] = parseInt(c[1], 10);
         data[pos + 1] = parseInt(c[2], 10);
@@ -5816,7 +5837,7 @@
       }
       if (img._mask) {
         var oldComposite = curContext.globalCompositeOperation;
-        curContext.globalCompositeOperation = "darker";
+        curContext.globalCompositeOperation = "source-in";
         p.image(img._mask, x, y);
         curContext.globalCompositeOperation = oldComposite;
       }
@@ -5830,7 +5851,7 @@
         x = x || 0;
         y = y || 0;
 
-        if (typeof img === 'object' && img.constructor === PImage) {
+        if (img instanceof PImage) {
           if (img.ImageData && img.ImageData.width > 0) {
             obj = img.ImageData;
           } else {
@@ -5855,15 +5876,26 @@
           curContext.globalAlpha = curTint / opacityRange;
         }
 
+        // draw the image
+        //curContext.putImageData(obj, x, y); // this causes error if data overflows the canvas dimensions
+
+        // <corban> doing this the slow way for now
+        // we will want to replace this with putImageData and clipping logic
+        var c = document.createElement('canvas');
+        c.width = obj.width;
+        c.height = obj.height;
+        var ctx = c.getContext('2d');
+        ctx.putImageData(obj, 0, 0);
+
         if (arguments.length === 5) {
           // resize the image to w,h
           // this should use resize later on and also pay attention to imageMode
           // does not crop image, resizes it to w,h
           // coming in 0.8
+          curContext.drawImage(c, x, y, w, h);
+        } else {
+          curContext.drawImage(c, x, y);
         }
-
-        // draw the image
-        curContext.putImageData(obj, x, y);
 
         if (curTint >= 0) {
           curContext.globalAlpha = oldAlpha;
