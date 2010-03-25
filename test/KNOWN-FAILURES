@@ -61,7 +61,6 @@ test/parser/Processing-Book-001/Synthesis/_13_withoutTitle/_13_withoutTitle.pde
 test/parser/Processing-Book-001/Synthesis/_14_pond/_14_pond.pde
 test/parser/Processing-Book-001/Synthesis/_15_tree/_15_tree.pde
 test/parser/Processing-Book-001/Synthesis/_16_sodaprocessing/_16_sodaprocessing.pde
-test/parser/Processing-Book-001/Synthesis/_12_robot/_12_robot.pde
 test/parser/Processing-Book-001/Units 00-17/01 Structure 1/_04/_04.pde
 test/parser/Processing-Book-001/Units 00-17/10 Image 1/_03/_03.pde
 test/parser/Processing-Book-001/Units 00-17/10 Image 1/_04/_04.pde
@@ -81,7 +80,6 @@ test/parser/Processing-Book-001/Units 31-42/35 Image 3/_01/_01.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_02/_02.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_04/_04.pde
 test/parser/Processing-Book-001/Units 31-42/35 Image 3/_08/_08.pde
-test/parser/Processing-Book-001/Units 31-42/39 Image 4/_12/_12.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_03/_03.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_05/_05.pde
