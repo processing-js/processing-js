@@ -3116,6 +3116,7 @@
     };
 
     // tinylog lite JavaScript library
+    /*global tinylog*/
     var tinylogLite = (function () {
       "use strict";
 
@@ -3126,7 +3127,10 @@
       True            = !0,
       log             = "log";
   
-      if (typeof document !== undef && !document.fake) { (function () {
+      if (typeof tinylog !== undef && typeof tinylog[log] === func) {
+        // pre-existing tinylog present
+        tinylogLite[log] = tinylog[log];
+      } else if (typeof document !== undef && !document.fake) { (function () {
         // DOM document
         var doc = document,
     
