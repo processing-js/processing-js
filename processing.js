@@ -70,7 +70,9 @@
 	/*
     Wrapper to easily deal with array names changes.
   */
-  var newWebGLArray = function(data) {return new WebGLFloatArray(data);};
+  var newWebGLArray = function(data) {
+    return new WebGLFloatArray(data);    
+  };
   
   var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
     var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER );
