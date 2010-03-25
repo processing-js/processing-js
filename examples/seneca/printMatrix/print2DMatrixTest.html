@@ -1,0 +1,71 @@
+<!DOCTYPE html> 
+<html>
+	<head>
+		<title>Processing.js test of printMatrix() and print() for PMatrix2D</title>
+		<script type="text/javascript" src="../../../processing.js"></script>
+		<style type="text/css">
+			html{
+				background: #EEEEEE;
+			}
+			#title{
+				font-size:xx-large;
+				font-weight:bold;
+				padding:0.5em;
+				background: #385C85;
+				color: #FFFFFF;
+			}
+			p{
+				line-height: 1.3em;
+			}
+			p a{
+				color: #385C85;
+			}
+			#code{
+				border-style: dotted;
+				border: 1px solid #333333;
+				background-color: #FFFFFF;
+				padding: 0.5em;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="title">Processing.js test of printMatrix() and print() for PMatrix2D</div>
+		<h2></h2>
+		<script id="script" type="application/processing">
+void setup() {
+	size(1,1);
+	background(50);
+	noLoop();
+} 
+
+void draw() {
+        
+	// Should print:
+	//  1.0000 0.0000 0.0000
+    //  0.0000 1.0000 0.0000
+	// Followed by an empty line.
+	printMatrix();
+
+	// Should print:
+	//  10000.0000  00100.0000  00010.0000
+	//  00001.0000 -00010.0000 -00100.0000
+	// Followed by an empty line.
+	PMatrix2D b=new PMatrix2D();
+	b.set(10000,100,10,1,-10,-100);
+	b.print();
+
+	println("Another line");
+}
+		</script>
+		<canvas id="display"></canvas>
+		<p><strong>Test written by <a href="http://zenit.senecac.on.ca/wiki/index.php/User:Mlam19">Matthew Lam</a></strong></p>
+		<pre id="code"></pre>
+		<script type="text/javascript">
+			var canvas = document.getElementById("display");
+			var script = document.getElementById("script").innerHTML;
+			document.getElementById("code").innerHTML=script;
+			var source = script.replace(/[^\.]size\(\)\;/,'size('+ canvas.width +','+ canvas.height +');');
+			Processing(canvas,source);
+		</script>
+	</body>
+</html>
