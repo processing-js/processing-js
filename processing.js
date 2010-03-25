@@ -5603,7 +5603,7 @@
     };
 
     // Draw an image or a color to the background
-    p.background = function background(img) {
+    p.background = function background() {
       var c, a;
       if (p.use3DContext) {
         // create alias
@@ -5659,17 +5659,21 @@
           curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
         }
       } else { // 2d context
-        if (arguments.length) {
+        if (arguments.length === 1 && arguments[0] instanceof PImage) {
+          var img = arguments[0];
+
           if (img.pixels && img.width === p.width && img.height === p.height) {
             curBackground = img;
             p.image(img, 0, 0);
           } else {
-            curBackground = p.color.apply(this, arguments);
-            var oldFill = curContext.fillStyle;
-            curContext.fillStyle = curBackground + "";
-            curContext.fillRect(0, 0, p.width, p.height);
-            curContext.fillStyle = oldFill;
+            throw "Background image must be the same dimensions as the canvas.";
           }
+        } else if (arguments.length > 0) {
+          curBackground = p.color.apply(this, arguments);
+          var oldFill = curContext.fillStyle;
+          curContext.fillStyle = curBackground + "";
+          curContext.fillRect(0, 0, p.width, p.height);
+          curContext.fillStyle = oldFill;
         }
       }
       hasBackground = true;
