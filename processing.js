@@ -68,12 +68,14 @@
   };
   
 	/*
-    Compatibility wrapper for older browsers
+    Wrapper to easily deal with array names changes.
   */
-  var newWebGLArray = function(data) {
-    return (typeof WebGLFloatArray === 'function') ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
-  };
+  var newWebGLArray = function(data) {return new WebGLFloatArray(data);};
   
+//    var newWebGLArray = function(data) {
+  //    return (typeof WebGLFloatArray === 'function') ? new WebGLFloatArray(data) : new CanvasFloatArray(data);
+   // };
+
   var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
     var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER );
     curContext.shaderSource( vertexShaderObject, vetexShaderSource );
@@ -189,8 +191,14 @@
   "};" +
   "uniform Light lights[8];" +
 
-  "void AmbientLight( inout vec3 col, in vec3 vertColor, in Light light ) {" +
-  "  col += vertColor * light.color;" +
+  "void AmbientLight( inout vec3 col, in vec3 vertColor, in Light light ) {" +//in vec3 ecPos,
+     // Get the vector from the light to the vertex
+     // Get the distance from the current vector to the light position
+ // "	 float d = length( vec3( light.position ) - ecPos );" +
+
+     // calculate the attenuation
+ // "  float attenuation = 1.0 / (falloff[0] + (falloff[1] * d) + (falloff[2] * d * d));" + 
+  "  col += vertColor * light.color;" + //+  * attenuation;" +
   "}" +
 
   "void DirectionalLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, in Light light ) {" +
@@ -205,12 +213,18 @@
      // Get the distance from the current vector to the light position
   "  float d = length(VP); " + 
 
-     // Normalize the light so it can be used in the dot product operation.
+     // Normalize the light ray so it can be used in the dot product operation.
   "  VP = normalize(VP);" + 
-  "	 float nDotVP = max(0.0, dot(vertNormal, VP));"+ 
-  "  col += vertColor * light.color * nDotVP;" + 
-  "}" +
   
+      // calculate the attenuation
+  "  float attenuation = 1.0 / (falloff[0] + (falloff[1] * d) + (falloff[2] * d * d));" + 
+
+     // Find out if the light ray glaces off the vertex or hits
+     // it directly on. 
+  "	 float nDotVP = max(0.0, dot(vertNormal, VP));"+ 
+  "  col += vertColor * light.color * nDotVP * attenuation;" + 
+  "}" +
+
   /*
   */
   "void SpotLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, " +
@@ -232,7 +246,6 @@
   "  VP = normalize( VP );" + 
 
   "  attenuation = 1.0 / (falloff[0] + (falloff[1] * d) + (falloff[2] * d * d));" +
-//"attenuation = 1.0;" +
 
 	// dot product of the vector from vertex to light and light direction.
   "  spotDot = dot(VP, ldir);" +
@@ -245,7 +258,6 @@
   "  else{" +
   "    spotAttenuation = 1.0;" +
   "  }" +
-
   "  attenuation *= spotAttenuation;" +
   "  nDotVP = max(0.0, dot(vertNormal, VP));" + 
   "  col += vertColor * light.color * nDotVP * attenuation;" + 
@@ -260,8 +272,8 @@
   "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
   "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
   
-     // If there were no lights this frame, just use the 
-     // assigned color of the shape.
+     // If there were no lights this draw call, just use the 
+     // assigned fill color of the shape.
   "  if( lightCount == 0 ) {" + 
   "    gl_FrontColor = color;" +
   "  }" +
@@ -3910,7 +3922,8 @@
 
           // Now that the programs have been compiled, we can set the default
           // attenuation for lights.
-          p.lightFalloff( 1.0, 0.0, 0.0 );
+          p.lightFalloff( 1, 0, 0 );
+          p.ambient( 1, 1, 1 );
 
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
@@ -4057,15 +4070,27 @@
     // Lights
     ////////////////////////////////////////////////////////////////////////////
     
-    p.ambientLight = function( r, g, b ) {
+    /*
+    */
+    p.ambientLight = function( r, g, b, x, y, z ) {
       if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+
+        var pos = new PVector( x, y, z );
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( pos, pos );
+        
         curContext.useProgram( programObject3D );
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
+       // uniformf( programObject3D, "lights[" + lightCount + "].position", [x, y, z] );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 0 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
     };
 
+    /*
+    */
     p.directionalLight = function( r, g, b, nx, ny, nz ) {
       if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
         curContext.useProgram( programObject3D );
@@ -4081,7 +4106,6 @@
     p.lightFalloff = function lightFalloff( constant, linear, quadratic ) {
       if( p.use3DContext ) {
         curContext.useProgram( programObject3D );
-        
         uniformf( programObject3D, "falloff", [constant, linear, quadratic] );
       }
     };
@@ -4136,6 +4160,11 @@
     }
     
     /*
+      r,g,b - Color of the light
+      x,y,z - position of the light in modeling space
+      nx,ny,nz - direction of the spotlight
+      angle - in radians
+      concentration - 
     */
     p.spotLight = function spotLight( r, g, b, x, y, z, 
                                       nx, ny, nz, angle, concentration) {
