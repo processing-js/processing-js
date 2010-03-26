@@ -3116,7 +3116,7 @@
     };
 
     // tinylog lite JavaScript library
-    /*global tinylog*/
+    /*global tinylog,print*/
     var tinylogLite = (function () {
       "use strict";
 
@@ -6598,7 +6598,7 @@
 
         p.mouseScroll = delta;
 
-        if (delta) {
+        if (delta && typeof p.mouseScrolled === 'function') {
           p.mouseScrolled();
         }
       });
