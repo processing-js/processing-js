@@ -71,7 +71,7 @@
     Compatibility wrapper for older browsers
   */
   var newWebGLArray = function(data) {
-    return (typeof WebGLFloatArray === 'function') ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
+    return new WebGLFloatArray(data);
   };
   
   var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
