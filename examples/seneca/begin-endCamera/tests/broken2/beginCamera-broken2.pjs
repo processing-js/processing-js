@@ -1,0 +1,24 @@
+void setup()
+{
+  size(500,500,OPENGL);
+}
+
+void draw() {
+  background(0, 255, 0);
+
+  beginCamera();
+  camera();
+  translate(1000 * cos(frameCount/100.0), 0, 1000 * sin(frameCount/100.0));
+  rotateY(cos(frameCount/100.0));
+  //rotateZ(2 * sin(frameCount/360.0));
+}
+  endCamera();
+  
+  translate(250, 250, 0);
+  rotateY(PI/3);
+  rotateX(PI/6);
+  box(100);
+  
+  translate(250, 150, 0);
+  sphere(50);
+
