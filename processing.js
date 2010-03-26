@@ -1,6 +1,6 @@
 /*
   
-    P R O C E S S I N G . J S - 0 . 7
+    P R O C E S S I N G . J S - 0 . 7 . 1
     a port of the Processing visualization language
     
     License       : MIT 
@@ -3116,6 +3116,7 @@
     };
 
     // tinylog lite JavaScript library
+    /*global tinylog,print*/
     var tinylogLite = (function () {
       "use strict";
 
@@ -6594,7 +6595,7 @@
 
         p.mouseScroll = delta;
 
-        if (delta) {
+        if (delta && typeof p.mouseScrolled === 'function') {
           p.mouseScrolled();
         }
       });
