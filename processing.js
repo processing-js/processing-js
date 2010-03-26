@@ -5432,7 +5432,7 @@
       return img;
     };
     
-    // Loads an image for display. Type is unused. Callback is fired on load.
+    // Loads an image for display. Type is an extension. Callback is fired on load.
     p.loadImage = function loadImage(file, type, callback) {
       // if type is specified add it with a . to file to make the filename
       if(type){
@@ -5441,6 +5441,10 @@
       // if image is in the preloader cache return a new PImage
       if (p.pjs.imageCache[file]) {
         return new PImage(p.pjs.imageCache[file]);
+      }
+      // else if in the DOM already
+      else if (document.getElementById(file) instanceof HTMLImageElement) {
+        return new PImage(document.getElementById(file));
       }
       // else aysnc load it
       else {

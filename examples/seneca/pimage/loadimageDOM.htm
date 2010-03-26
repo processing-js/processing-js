@@ -1,0 +1,26 @@
+﻿<script src="../../../processing.js"></script>
+<p>load the img with a html tag</p>
+<img src="string.jpg" id="string.jpg"/><br />
+<p>load the image into the canvas from the dom now</p>
+<canvas datasrc="loadimageDOM.pjs" width="200" height="200"></canvas>
+<pre>
+PImage b;
+ 
+void setup() {
+  size(472,266);
+  background(0);
+  frameRate(1);
+  b = loadImage("string.jpg");
+  PFont font;
+  font = loadFont("Arial"); 
+  textFont(font, 24);
+  fill(203, 21, 10);
+  text("Loading picture from DOM ...", 60,140);
+}
+ 
+void draw() {
+  if (b.width != 0) {
+    image(b, 0, 0);
+  }
+}
+</pre>
