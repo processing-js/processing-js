@@ -56,6 +56,7 @@ var canvas = {
 };
  
 var WebGLFloatArray = __empty_func__;
+var HTMLImageElement = __empty_func__;
 
 var document = {
   fake: true,
@@ -67,6 +68,7 @@ var document = {
   },
   appendChild: __elem_func__,
   removeChild: __empty_func__,
+  getElementById: __empty_func__,
   getElementByTagName: function() { return canvas; },
   createElement: function () { return canvas },
   addEventListener: __empty_func__,
