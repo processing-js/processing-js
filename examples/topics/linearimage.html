@@ -14,6 +14,8 @@ Press and hold any key to watch the scanning.</p>
 
 <p><a href="http://processing.org/learning/topics/linearimage.html"><b>Original Processing.org Example:</b> LinearImage</a><br>
 <script type="application/processing">
+/* @pjs preload="data/cait.jpg"; */
+
 PImage a;
 boolean onetime = true;
 int[] aPixels = new int[200*200];
@@ -25,11 +27,11 @@ void setup()
 {
   size(33, 33);
   stroke(255);
-  a = loadImage("data/cait.jpg", null, function(){
-    for(int i=0; i<width*height; i++) {
-      aPixels[i] = a.pixels[i];
-    }
-  });  
+  a = loadImage("data/cait.jpg");
+
+  for(int i=0; i<width*height; i++) {
+    aPixels[i] = a.pixels[i];
+  }
   frameRate(30);
 }
 

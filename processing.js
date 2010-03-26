@@ -71,7 +71,7 @@
     Compatibility wrapper for older browsers
   */
   var newWebGLArray = function(data) {
-    return (typeof WebGLFloatArray === 'function') ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
+    return new WebGLFloatArray(data);
   };
   
   var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
@@ -263,7 +263,7 @@
 
     // Parse out @pjs directive, if any.
     p.pjs = {imageCache: {pending: 0}}; // by default we have an empty imageCache, no more.
-    var dm = /\/\*\s*@pjs\s*([^\/\*]+)\*\//.exec(aCode);
+    var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
     if (dm && dm.length === 2) {
       var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
 
@@ -283,7 +283,7 @@
             for (var j=0, ll=list.length; j<ll; j++) {
               var imageName = clean(list[j]);
               var img = new Image();
-              img.onload = function() { p.pjs.imageCache.pending--; };
+              img.onload = (function() { return function() { p.pjs.imageCache.pending--; }; }());
               p.pjs.imageCache.pending++;
               p.pjs.imageCache[imageName] = img;
               img.src = imageName;
@@ -349,9 +349,9 @@
     aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+| )\s*(\w+\s*[\),])/g, "$1$4");
 
     // float[] foo = new float[5];
-    aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{.*\})*\s*;/g, function (all, name, args, initVars) {
+    aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function (all, name, args, initVars) {
       if (initVars) {
-        return initVars + ";";
+        return initVars;
       }
       else {
         return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
@@ -366,15 +366,15 @@
     // int|float foo;
     var intFloat = /(\n\s*(?:int|float)(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
     while (intFloat.test(aCode)) {
-      aCode = aCode.replace(new RegExp(intFloat), function (all, type, name, sep) {
+      aCode = (function() { return aCode.replace(new RegExp(intFloat), function (all, type, name, sep) {
         return type + " " + name + " = 0" + sep;
-      });
+      }); }());
     }
 		aCode = aCode.replace(/catch\s\((\w+)\1\s(\w+)\2\)\s\{.\($2\)/g, "catch ($2$1)\n{$2$1");
 		
     // float foo = 5;
     aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
-      if (type === "return") {
+      if (type === "return" || type === "else") {
         return all;
       } else {
         return "var " + name + sep;
@@ -382,8 +382,8 @@
     });
 
     // Fix Array[] foo = {...} to [...]
-    aCode = aCode.replace(/\=\s*\{((.|\s)*?)\};/g, function (all, data) {
-      return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]") + "]";
+    aCode = aCode.replace(/\=\s*\{((.|\s)*?\};)/g, function (all, data) {
+      return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]");
     });
 
     // super() is a reserved word
@@ -442,7 +442,7 @@
     };
 
     var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)\b\1\s*\(/g;
-    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(processing)/g;
+    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(processing)?/g;
 
     aCode = aCode.replace(matchClasses, classReplace);
     aCode = aCode.replace(matchNoCon, classReplace);
@@ -459,7 +459,7 @@
 
       allRest = allRest.slice(rest.length + 1);
 
-      rest = rest.replace(new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), function (all, args) {
+      rest = (function() { return rest.replace(new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), function (all, args) {
         args = args.split(/,\s*?/);
 
         if (args[0].match(/^\s*$/)) {
@@ -473,14 +473,14 @@
         }
 
         return fn;
-      });
+      }); }());
 
       // Fix class method names
       // this.collide = function() { ... }
       // and add closing } for with(this) ...
-      rest = rest.replace(/(?:public )?processing.\w+ = function (\w+)\((.*?)\)/g, function (all, name, args) {
+      rest = (function() { return rest.replace(/(?:public )?processing.\w+ = function (\w+)\((.*?)\)/g, function (all, name, args) {
         return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
-      });
+      }); }());
 
       var matchMethod = /ADDMETHOD([\s\S]*?\{)/,
         mc;
@@ -540,7 +540,7 @@
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
     for( var n = 0; n < strings.length; n++ ) {
-      aCode = aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
+      aCode = (function() { return aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd){
         var returnString = all, notString = true, quoteType = "", escape = false;
 
         for (var x = 0; x < quoteStart.length; x++) {
@@ -568,7 +568,7 @@
         }
 
         return returnString;
-      });
+      }); }());
     }
     
     return aCode;
@@ -2218,6 +2218,20 @@
       return aColor;
     };
 
+    // Ease of use function to extract the colour bits into a string
+    p.color.toString = function(colorInt) {
+      return "rgba("+
+        ((colorInt & p.RED_MASK)>>>16) +","+
+        ((colorInt & p.GREEN_MASK)>>>8) + "," +
+        ((colorInt & p.BLUE_MASK)) +","+
+        ((colorInt & p.ALPHA_MASK)>>>24)/opacityRange +")";
+    };
+
+    // Easy of use function to pack rgba values into a single bit-shifted color int.
+    p.color.toInt = function (r, g, b, a) {
+      return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+    };
+
     var verifyChannel = function verifyChannel(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
@@ -3092,7 +3106,7 @@
     String.prototype.toCharArray = function() {
       var chars = this.split("");
       for (var i = chars.length -1; i >= 0; i--) {
-        chars[i] = chars[i].charCodeAt(0);
+        chars[i] = new Char(chars[i]);
       }
       return chars;
     };
@@ -3102,6 +3116,7 @@
     };
 
     // tinylog lite JavaScript library
+    /*global tinylog,print*/
     var tinylogLite = (function () {
       "use strict";
 
@@ -3112,7 +3127,10 @@
       True            = !0,
       log             = "log";
   
-      if (typeof document !== undef && !document.fake) { (function () {
+      if (typeof tinylog !== undef && typeof tinylog[log] === func) {
+        // pre-existing tinylog present
+        tinylogLite[log] = tinylog[log];
+      } else if (typeof document !== undef && !document.fake) { (function () {
         // DOM document
         var doc = document,
     
@@ -3474,7 +3492,7 @@
           if ( isNaN( ret ) ) {
             ret = 0;
           }
-        } else if ( typeof val === 'object' && val.constructor === Char ) {
+        } else if ( val instanceof Char ) {
           ret = val.code;
         } else if ( typeof val === 'object' && val.constructor === Array ) {
           ret = new Array( val.length );
@@ -3564,7 +3582,7 @@
           ret = ret.toFixed(1);
         } else if ( typeof val === 'string' ) {
           ret = parseFloat( val );
-        } else if ( typeof val === 'object' && val.constructor === Char ) {
+        } else if ( val instanceof Char ) {
           ret = val.code.toFixed(1);  
         } else if ( typeof val === 'object' && val.constructor === Array ) {
 
@@ -3923,6 +3941,8 @@
       if (hasBackground) {
         p.background();
       }
+
+      p.context = curContext; // added for createGraphics
     };
 
 
@@ -4818,30 +4838,29 @@
     };
 
     p.curveVertex = function (x, y, z) {
-      if( p.use3DContext && z) {
-				curvePoints.push([x, y, z]);
-			} else{
-				curvePoints.push([x, y]);
-			}
-			
-			if (curvePoints.length > 3){
+      if (curvePoints.length < 3) {
+				if( p.use3DContext && z) {
+					curvePoints.push([x, y, z]);
+				} else{
+					curvePoints.push([x, y]);
+				}
+			}	else{
 				if( p.use3DContext) {
-					p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
-															  curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
-																curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
-																curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
-				} else {
+						p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
+																	curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
+																	curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
+																	curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
+				 } else {
 					var b = [],
-						s = 1 - curTightness;
-
-					/*
-						 * Matrix to convert from Catmull-Rom to cubic Bezier
-						 * where t = curTightness
-						 * |0         1          0         0       |
-						 * |(t-1)/6   1          (1-t)/6   0       |
-						 * |0         (1-t)/6    1         (t-1)/6 |
-						 * |0         0          0         0       |
-						 */
+          s = 1 - curTightness;
+          /*
+          * Matrix to convert from Catmull-Rom to cubic Bezier
+          * where t = curTightness
+          * |0         1          0         0       |
+          * |(t-1)/6   1          (1-t)/6   0       |
+          * |0         (1-t)/6    1         (t-1)/6 |
+          * |0         0          0         0       |
+          */
 
 					curvePoints.push([x, y]);
 
@@ -4861,7 +4880,7 @@
 
 					curvePoints.shift();
 				}
-			}
+      }
     };
 
 		p.curveVertexSegment = function ( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4 ) {
@@ -5298,20 +5317,7 @@
     };
 
     var PImage = function PImage(aWidth, aHeight, aFormat) {
-      if(arguments.length === 1) {
-        // convert an <img> to a PImage
-        this.fromHTMLImageData(arguments[0]);
-      } else if (arguments.length === 2 || arguments.length === 3) {
-        this.width = aWidth;
-        this.height = aHeight;
-        this.pixels = new Array(aWidth * aHeight);
-        this.data = this.pixels;
-        this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
-      }
-    };
-
-    PImage.prototype = {
-      get: function (x, y, w, h) {
+      this.get = function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
         } else if (arguments.length === 2) {
@@ -5319,15 +5325,38 @@
         } else if (arguments.length === 4) {
           return p.get(x, y, w, h, this);
         }
-      },
-      set: function (x, y, c) {
+      };
+
+      this.set = function(x, y, c) {
         p.set(x, y, c, this);
-      },
-      loadPixels: function() {
-      },
-      updatePixels: function() {
-      },
-      toImageData: function() {
+      };
+
+      this.mask = function(mask) {
+        this._mask = undefined;
+
+        if (mask instanceof PImage) {
+          if (mask.width === this.width && mask.height === this.height) {
+            this._mask = mask;
+          } else {
+            throw "mask must have the same dimensions as PImage.";
+          }
+        } else if (typeof mask === "object" && mask.constructor === Array) { // this is a pixel array
+          // mask pixel array needs to be the same length as this.pixels
+          if (this.pixels.length === mask.length) {
+            this._mask = mask;
+          } else {
+            throw "mask array must be the same length as PImage pixels array.";
+          }
+        }
+      };
+
+      this.loadPixels = function() {
+      };
+
+      this.updatePixels = function() {
+      };
+
+      this.toImageData = function() {
         var canvas = document.createElement('canvas');
         var imgData = canvas.getContext('2d').createImageData(this.width, this.height); 
         for (var i = 0; i< this.pixels.length; i++) {
@@ -5342,8 +5371,9 @@
         }
         // return a canvas ImageData object with pixel array in canvas format
         return imgData;
-      },
-      fromImageData: function(canvasImg) {
+      };
+
+      this.fromImageData = function(canvasImg) {
         this.width = canvasImg.width;
         this.height = canvasImg.height;
         this.pixels = new Array(canvasImg.width * canvasImg.height);
@@ -5355,8 +5385,9 @@
           this.pixels[i] = (canvasImg.data[pos + 3] * 16777216) + (canvasImg.data[pos + 0] * 65536) +
                   (canvasImg.data[pos + 1] * 256)    +   (canvasImg.data[pos + 2]);                  
         }
-      },
-      fromHTMLImageData: function(htmlImg) {
+      };
+
+      this.fromHTMLImageData = function(htmlImg) {
         // convert an <img> to a PImage
         var canvas = document.createElement("canvas");
         canvas.width = htmlImg.width;
@@ -5366,6 +5397,17 @@
         var imageData = context.getImageData(0,0,htmlImg.width,htmlImg.height);
         this.ImageData = imageData;
         this.fromImageData(imageData);
+      };
+
+      if(arguments.length === 1) {
+        // convert an <img> to a PImage
+        this.fromHTMLImageData(arguments[0]);
+      } else if (arguments.length === 2 || arguments.length === 3) {
+        this.width = aWidth;
+        this.height = aHeight;
+        this.pixels = new Array(aWidth * aHeight);
+        this.data = this.pixels;
+        this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
       }
     };
     
@@ -5408,7 +5450,9 @@
       else {
         var pimg = new PImage(0,0,p.ARGB);
         var img = document.createElement('img');
+
         pimg.sourceImg = img;
+
         img.onload = (function(aImage, aPImage, aCallback) {
           var image = aImage;
           var pimg = aPImage;
@@ -5416,12 +5460,15 @@
           return function() {
             // change the <img> object into a PImage now that its loaded
             pimg.fromHTMLImageData(image);
+            pimg.loaded = true;
             if (callback) {
               callback();
             }
           };
         }(img, pimg, callback));
+
         img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
+
         return pimg;
       }
     };    
@@ -5458,15 +5505,15 @@
         return c;
       } else if ( arguments.length === 3 ){
         // PImage.get(x,y) was called, return the color (int) at x,y of img
-        return w.pixels[y * w.width + x];
+        return p.color.toString(w.pixels[y * w.width + x]);
 	    } else if ( arguments.length === 2 ){
 	      // return the color at x,y (int) of curContext
 	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
-		    if(x <= p.width && x > 0 && y > 0 && y <= p.height){
+		    if(x < p.width && x >= 0 && y >= 0 && y < p.height){
 		      // x,y is inside canvas space
 		      c = new PImage(1,1,p.RGB);
 		      c.fromImageData(curContext.getImageData(x,y,1,1));
-		      return c.pixels[0];
+		      return p.color.toString(c.pixels[0]);
 		    } else {
 		      // x,y is outside image return transparent black
 		      return 0;
@@ -5488,22 +5535,31 @@
 
     // Paints a pixel array into the canvas
     p.set = function set(x, y, obj, img) {
+      var color, oldFill;
       // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
       if ( arguments.length === 4 ) {
         img.pixels[y*img.width+x] = obj;
       } else if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
-        if(typeof obj === "number"){
+        if (typeof obj === "number"){
           // it was a color
           // use canvas method to fill pixel with color
           // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
-          var oldFill = curContext.fillStyle,
+          oldFill = curContext.fillStyle;
           color = obj;
-          curContext.fillStyle = color.toString();
+          curContext.fillStyle = p.color.toString(color);
           curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
           curContext.fillStyle = oldFill;
-        } else {
-          // it was a PImage
+        } else if (typeof obj === "string"){
+          // it was a color
+          // use canvas method to fill pixel with color
+          // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
+          oldFill = curContext.fillStyle;
+          color = obj;
+          curContext.fillStyle = color;
+          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+          curContext.fillStyle = oldFill;
+        } else if (obj instanceof PImage) {
           p.image(x,y,obj);
         }
       }
@@ -5516,9 +5572,8 @@
 
     // Draws a 1-Dimensional pixel array to Canvas
     p.updatePixels = function () {
-
       var colors = /(\d+),(\d+),(\d+),(\d+)/,
-        pixels = {};
+        pixels = {}, c;
 
       pixels.width = p.width;
       pixels.height = p.height;
@@ -5532,8 +5587,11 @@
         pos = 0;
 
       for (var i = 0, l = p.pixels.length; i < l; i++) {
-
-        var c = (p.pixels[i] || "rgba(0,0,0,1)").match(colors);
+        if (typeof p.pixels[i] === "number") {
+          c = (p.color.toString(p.pixels[i]) || "rgba(0,0,0,1)").match(colors);
+        } else if(typeof p.pixels[i] === "string") {
+          c = (p.pixels[i] || "rgba(0,0,0,1)").match(colors);
+        }
 
         data[pos + 0] = parseInt(c[1], 10);
         data[pos + 1] = parseInt(c[2], 10);
@@ -5549,7 +5607,7 @@
     };
 
     // Draw an image or a color to the background
-    p.background = function background(img) {
+    p.background = function background() {
       var c, a;
       if (p.use3DContext) {
         // create alias
@@ -5605,17 +5663,21 @@
           curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
         }
       } else { // 2d context
-        if (arguments.length) {
+        if (arguments.length === 1 && arguments[0] instanceof PImage) {
+          var img = arguments[0];
+
           if (img.pixels && img.width === p.width && img.height === p.height) {
             curBackground = img;
             p.image(img, 0, 0);
           } else {
-            curBackground = p.color.apply(this, arguments);
-            var oldFill = curContext.fillStyle;
-            curContext.fillStyle = curBackground + "";
-            curContext.fillRect(0, 0, p.width, p.height);
-            curContext.fillStyle = oldFill;
+            throw "Background image must be the same dimensions as the canvas.";
           }
+        } else if (arguments.length > 0) {
+          curBackground = p.color.apply(this, arguments);
+          var oldFill = curContext.fillStyle;
+          curContext.fillStyle = curBackground + "";
+          curContext.fillRect(0, 0, p.width, p.height);
+          curContext.fillStyle = oldFill;
         }
       }
       hasBackground = true;
@@ -5732,7 +5794,7 @@
       }
       if (img._mask) {
         var oldComposite = curContext.globalCompositeOperation;
-        curContext.globalCompositeOperation = "darker";
+        curContext.globalCompositeOperation = "source-in";
         p.image(img._mask, x, y);
         curContext.globalCompositeOperation = oldComposite;
       }
@@ -5740,18 +5802,30 @@
 
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
-
       if (img.width > 0) {
+        var obj;
 
         x = x || 0;
         y = y || 0;
 
-        var obj;
-        if (img.ImageData && img.ImageData.width > 0) {
-          obj = img.ImageData;
-        } else {
-          obj = img.toImageData();
+        if (img instanceof PImage) {
+          if (img.ImageData && img.ImageData.width > 0) {
+            obj = img.ImageData;
+          } else {
+            obj = img.toImageData();
+          }
+        } else if (img.canvas) {
+          var pg = img;
+          var pimg = new PImage(pg.width, pg.height, p.RGB);
+          pimg.fromImageData(pg.context.getImageData(0, 0, pg.width, pg.height));
+
+          if (pimg.ImageData && pimg.ImageData.width > 0) {
+            obj = pimg.ImageData;
+          } else {
+            obj = pimg.toImageData();
+          }
         }
+        
         var  oldAlpha;
 
         if (curTint >= 0) {
@@ -5759,14 +5833,26 @@
           curContext.globalAlpha = curTint / opacityRange;
         }
 
+        // draw the image
+        //curContext.putImageData(obj, x, y); // this causes error if data overflows the canvas dimensions
+
+        // <corban> doing this the slow way for now
+        // we will want to replace this with putImageData and clipping logic
+        var c = document.createElement('canvas');
+        c.width = obj.width;
+        c.height = obj.height;
+        var ctx = c.getContext('2d');
+        ctx.putImageData(obj, 0, 0);
+
         if (arguments.length === 5) {
           // resize the image to w,h
           // this should use resize later on and also pay attention to imageMode
           // does not crop image, resizes it to w,h
           // coming in 0.8
+          curContext.drawImage(c, x, y, w, h);
+        } else {
+          curContext.drawImage(c, x, y);
         }
-        // draw the image
-        curContext.putImageData(obj, x, y);
 
         if (curTint >= 0) {
           curContext.globalAlpha = oldAlpha;
@@ -5968,160 +6054,162 @@
 
     // Print some text to the Canvas
     p.text = function text() {
-      var str = arguments[0], x, y, z, pos, width, height;
+      if ( typeof arguments[0] !== 'undefined' ) {
+        var str = arguments[0], x, y, z, pos, width, height;
 
-      if ( typeof str === 'number' && (str+"").indexOf('.') >= 0 ) {
-        // Make sure .15 rounds to .1, but .151 rounds to .2.
-        if ( ( str * 1000 ) - Math.floor( str * 1000 ) === 0.5 ) {
-          str = str - 0.0001;
-        }
-        str = str.toFixed(3);
-      }
-
-      str = str.toString();
-
-      if ( arguments.length === 1 ){ // for text( str )
-        p.text( str, lastTextPos[0], lastTextPos[1] );
-      } else if ( arguments.length === 3 ) { // for text( str, x, y)
-        text( str, arguments[1], arguments[2], 0 );
-      } else if ( arguments.length === 4 ){ // for text( str, x, y, z)
-        x = arguments[1]; 
-        y = arguments[2]; 
-        z = arguments[3];
-
-        do {
-          pos = str.indexOf("\n");
-          if (pos !== -1) {
-            if (pos !== 0) {
-              text(str.substring(0, pos));
-            }
-            y += curTextSize;
-            str = str.substring(pos+1, str.length);
+        if ( typeof str === 'number' && (str+"").indexOf('.') >= 0 ) {
+          // Make sure .15 rounds to .1, but .151 rounds to .2.
+          if ( ( str * 1000 ) - Math.floor( str * 1000 ) === 0.5 ) {
+            str = str - 0.0001;
           }
-        } while(pos !== -1);
-
-        if(p.use3DContext){
-          //...
+          str = str.toFixed(3);
         }
 
-        width = 0;
+        str = str.toString();
 
-        // If the font is a standard Canvas font...
-        if (!curTextFont.glyph) {
-          if (str && (curContext.fillText || curContext.mozDrawText)) {
+        if ( arguments.length === 1 ){ // for text( str )
+          p.text( str, lastTextPos[0], lastTextPos[1] );
+        } else if ( arguments.length === 3 ) { // for text( str, x, y)
+          text( str, arguments[1], arguments[2], 0 );
+        } else if ( arguments.length === 4 ){ // for text( str, x, y, z)
+          x = arguments[1]; 
+          y = arguments[2]; 
+          z = arguments[3];
+
+          do {
+            pos = str.indexOf("\n");
+            if (pos !== -1) {
+              if (pos !== 0) {
+                text(str.substring(0, pos));
+              }
+              y += curTextSize;
+              str = str.substring(pos+1, str.length);
+            }
+          } while(pos !== -1);
+
+          if(p.use3DContext){
+            //...
+          }
+
+          width = 0;
+
+          // If the font is a standard Canvas font...
+          if (!curTextFont.glyph) {
+            if (str && (curContext.fillText || curContext.mozDrawText)) {
+              curContext.save();
+              curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+
+              if (curContext.fillText) {
+                curContext.fillText(str, x, y);
+                width = curContext.measureText( str ).width;
+              } else if (curContext.mozDrawText) {
+                curContext.translate(x, y);
+                curContext.mozDrawText(str);
+                width = curContext.mozMeasureText( str );
+              }
+              curContext.restore();
+            }
+          } else {
+            // If the font is a Batik SVG font...
+            var font = p.glyphTable[curTextFont.name];
             curContext.save();
-            curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+            curContext.translate(x, y + curTextSize);
 
-            if (curContext.fillText) {
-              curContext.fillText(str, x, y);
-              width = curContext.measureText( str ).width;
-            } else if (curContext.mozDrawText) {
-              curContext.translate(x, y);
-              curContext.mozDrawText(str);
-              width = curContext.mozMeasureText( str );
+            var upem = font.units_per_em,
+                newScale = 1 / upem * curTextSize;
+
+            curContext.scale(newScale, newScale);
+
+            var len = str.length;
+
+            for (var i = 0; i < len; i++) {
+              // Test character against glyph table
+              try {
+                p.glyphLook(font, str[i]).draw();
+              } catch(e) {
+                Processing.debug(e);
+              }
             }
             curContext.restore();
           }
-        } else {
-          // If the font is a Batik SVG font...
-          var font = p.glyphTable[curTextFont.name];
-          curContext.save();
-          curContext.translate(x, y + curTextSize);
 
-          var upem = font.units_per_em,
-              newScale = 1 / upem * curTextSize;
-
-          curContext.scale(newScale, newScale);
-
-          var len = str.length;
-
-          for (var i = 0; i < len; i++) {
-            // Test character against glyph table
-            try {
-              p.glyphLook(font, str[i]).draw();
-            } catch(e) {
-              Processing.debug(e);
-            }
+          if(p.use3DContext){
+            // ...
           }
-          curContext.restore();
-        }
 
-        if(p.use3DContext){
-          // ...
-        }
+          lastTextPos[0] = x + width;
+          lastTextPos[1] = y;
+          lastTextPos[2] = z;
+        } else if ( arguments.length === 5 ) { // for text( str, x, y , width, height)
+          text( str, arguments[1], arguments[2], arguments[3], arguments[4], 0 );
+        } else if ( arguments.length === 6 ) { // for text( stringdata, x, y , width, height, z)
+          x = arguments[1]; 
+          y = arguments[2]; 
+          width = arguments[3]; 
+          height = arguments[4]; 
+          z = arguments[5];
 
-        lastTextPos[0] = x + width;
-        lastTextPos[1] = y;
-        lastTextPos[2] = z;
-      } else if ( arguments.length === 5 ) { // for text( str, x, y , width, height)
-        text( str, arguments[1], arguments[2], arguments[3], arguments[4], 0 );
-      } else if ( arguments.length === 6 ) { // for text( stringdata, x, y , width, height, z)
-        x = arguments[1]; 
-        y = arguments[2]; 
-        width = arguments[3]; 
-        height = arguments[4]; 
-        z = arguments[5];
-
-        if ( str.length > 0 ) {
-          if( curTextSize > height ) {
-            return;
-          }
-          var spaceMark = -1;
-          var start = 0;
-          var lineWidth = 0;
-          var letterWidth = 0;
-          var textboxWidth = width ;
-
-          lastTextPos[0] = x;
-          lastTextPos[1] = y - 0.4*curTextSize;
-
-          curContext.font = curTextSize + "px " + curTextFont.name;
-
-          for ( var j = 0; j < str.length; j++ ) {
-            if (curContext.fillText) {
-              letterWidth = curContext.measureText( str[j] ).width;
-            } else if (curContext.mozDrawText) {
-              letterWidth = curContext.mozMeasureText( str[j] );
+          if ( str.length > 0 ) {
+            if( curTextSize > height ) {
+              return;
             }
-            if ( str[j] !== "\n" && (str[j] === " " || (str[j-1] !== " " && str[j+1] === " ") || lineWidth + 2*letterWidth < textboxWidth ) ){ // check a line of text
-              if ( str[j] === " " ) {
-                spaceMark = j;
-              }
-              lineWidth += letterWidth;
-            } else { // draw a line of text
-              if ( start === spaceMark + 1 ){ // in case a whole line without a space
-                spaceMark = j;
-              }
+            var spaceMark = -1;
+            var start = 0;
+            var lineWidth = 0;
+            var letterWidth = 0;
+            var textboxWidth = width ;
 
+            lastTextPos[0] = x;
+            lastTextPos[1] = y - 0.4*curTextSize;
+
+            curContext.font = curTextSize + "px " + curTextFont.name;
+
+            for ( var j = 0; j < str.length; j++ ) {
+              if (curContext.fillText) {
+                letterWidth = curContext.measureText( str[j] ).width;
+              } else if (curContext.mozDrawText) {
+                letterWidth = curContext.mozMeasureText( str[j] );
+              }
+              if ( str[j] !== "\n" && (str[j] === " " || (str[j-1] !== " " && str[j+1] === " ") || lineWidth + 2*letterWidth < textboxWidth ) ){ // check a line of text
+                if ( str[j] === " " ) {
+                  spaceMark = j;
+                }
+                lineWidth += letterWidth;
+              } else { // draw a line of text
+                if ( start === spaceMark + 1 ){ // in case a whole line without a space
+                  spaceMark = j;
+                }
+
+                lastTextPos[0] = x;
+                lastTextPos[1] = lastTextPos[1] + curTextSize;
+                if (str[j] === "\n" ) {
+                  text(str.substring(start,j));
+                  start=j+1;
+                } else {
+                  text(str.substring(start,spaceMark+1));
+                  start=spaceMark+1;
+                }
+
+                lineWidth = 0;
+                if ( lastTextPos[1] + 2*curTextSize > y + height + 0.6*curTextSize ) { // stop if no enough space for one more line draw
+                  return;
+                }
+                j = start - 1;
+              }
+            }
+
+            if ( start !== str.length ) { // draw the last line
               lastTextPos[0] = x;
               lastTextPos[1] = lastTextPos[1] + curTextSize;
-              if (str[j] === "\n" ) {
-                text(str.substring(start,j));
-                start=j+1;
-              } else {
-                text(str.substring(start,spaceMark+1));
-                start=spaceMark+1;
+              for (; start < str.length; start++ ) {
+                text( str[start] );
               }
-
-              lineWidth = 0;
-              if ( lastTextPos[1] + 2*curTextSize > y + height + 0.6*curTextSize ) { // stop if no enough space for one more line draw
-                return;
-              }
-              j = start - 1;
             }
-          }
 
-          if ( start !== str.length ) { // draw the last line
-            lastTextPos[0] = x;
-            lastTextPos[1] = lastTextPos[1] + curTextSize;
-            for (; start < str.length; start++ ) {
-              text( str[start] );
-            }
-          }
+          } // end str != ""
 
-        } // end str != ""
-
-      } // end arguments.length == 6
+        } // end arguments.length == 6
+      }
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
@@ -6510,7 +6598,7 @@
 
         p.mouseScroll = delta;
 
-        if (delta) {
+        if (delta && typeof p.mouseScrolled === 'function') {
           p.mouseScrolled();
         }
       });

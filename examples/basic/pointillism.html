@@ -17,6 +17,8 @@ according to pixels in an image.</p>
 
 <p><a href="http://processing.org/learning/basics/pointillism.html"><b>Original Processing.org Example:</b> Pointillism</a><br>
 <script type="application/processing">
+/* @pjs preload="data/eames.jpg"; */
+
 PImage a;
 
 void setup()
@@ -34,18 +36,18 @@ void draw()
   float pointillize = map(mouseX, 0, width, 2, 18);
   int x = int(random(a.width));
   int y = int(random(a.height));
-
-  if( a.loaded ){
-    color pix = a.get(x, y);
-    fill(pix, 126);
-    ellipse(x, y, pointillize, pointillize);
-  }
+  color pix = a.get(x, y);
+  fill(pix, 126);
+  ellipse(x, y, pointillize, pointillize);
 }
 </script><canvas width="200" height="200"></canvas></p>
 <div style="height:0px;width:0px;overflow:hidden;"><img src='data/eames.jpg' id='eames.jpg'/><img src='data/sunflower.jpg' id='sunflower.jpg'/></div>
 
 <pre><b>// All Examples Written by <a href="http://reas.com/">Casey Reas</a> and <a href="http://benfry.com/">Ben Fry</a>
 // unless otherwise stated.</b>
+
+/* @pjs preload="data/eames.jpg"; */
+
 PImage a;
 
 void setup()
