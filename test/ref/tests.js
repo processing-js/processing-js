@@ -14,5 +14,6 @@ var tests = [
   "rect-quad.pde",
   "size-fill-rect.pde",
   "triangle.pde",
+  "createimage.pde",
   "box.pde"
 ];
