@@ -390,6 +390,8 @@
               p.pjs.imageCache[imageName] = img;
               img.src = imageName;
             }
+          } else if (key === "opaque") {
+            p.canvas.mozOpaque = value === "true";
           } else {
             p.pjs[key] = value;
           }
@@ -682,6 +684,7 @@
     var p = {};
     var curContext;
     p.use3DContext = false; // default '2d' canvas context
+    p.canvas = curElement;
 
     // Set Processing defaults / environment variables
     p.name = 'Processing.js Instance';
