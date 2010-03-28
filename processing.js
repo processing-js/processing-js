@@ -2135,6 +2135,7 @@
       }
     };
 
+    /*
     p.color = function(aValue1, aValue2, aValue3, aValue4) {
       var r, g, b, rgb, aColor;
 
@@ -2218,6 +2219,54 @@
       return aColor;
     };
 
+    */
+
+    p.color = function color(aValue1, aValue2, aValue3, aValue4) {
+      var r, g, b, rgb, aColor;
+      
+      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 == undefined) {
+        aColor = p.color(aValue1, aValue2, aValue3, opacityRange);
+      } else if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
+        if (curColorMode === p.HSB) {
+          rgb = p.color.toRGB(aValue1, aValue2, aValue3);
+          r = rgb[0];
+          g = rgb[1];
+          b = rgb[2];
+        } else {
+          r = Math.round(255 * (aValue1 / redRange));
+          g = Math.round(255 * (aValue2 / greenRange));
+          b = Math.round(255 * (aValue3 / blueRange));
+        }
+        aColor = ((isNaN(aValue4) ? 255 : aValue4) << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+      } else if (typeof aValue1 === "string") {
+        aColor = aValue1;
+        if (aValue2 && aValue4 == null && aValue4 == null) {
+          var c = aColor.split(",");
+          c[3] = (aValue2 / opacityRange) + ")";
+          aColor = c.join(",");
+        }
+      } else if (aValue1 != null && aValue2 != null && aValue3 == undefined && aValue4 == undefined) {
+        aColor = p.color(aValue1, aValue1, aValue1, aValue2);
+      } else if (typeof aValue1 === "number" && aValue1 < 256 && aValue1 >= 0) {
+        aColor = p.color(aValue1, aValue1, aValue1, opacityRange);
+      } else if (typeof aValue1 === "number") {
+        var intcolor = 0;
+        if (aValue1 < 0) {
+          intcolor = 4294967296 - (aValue1 * -1);
+        } else {
+          intcolor = aValue1;
+        }
+        var ac = Math.floor((intcolor % 4294967296) / 16777216);
+        var rc = Math.floor((intcolor % 16777216) / 65536);
+        var gc = Math.floor((intcolor % 65536) / 256);
+        var bc = intcolor % 256;
+        aColor = p.color(rc, gc, bc, ac);
+      } else {
+        aColor = p.color(redRange, greenRange, blueRange, opacityRange);
+      }
+      return aColor;
+    };
+
     // Ease of use function to extract the colour bits into a string
     p.color.toString = function(colorInt) {
       return "rgba("+
@@ -2232,6 +2281,37 @@
       return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
     };
 
+    // HSB conversion function from Mootools, MIT Licensed
+    p.color.toRGB = function (h, s, b) {
+      h = (h / redRange) * 360;
+      s = (s / greenRange) * 100;
+      b = (b / blueRange) * 100;
+      var br = Math.round(b / 100 * 255);
+      if (s === 0) {
+        return [br, br, br];
+      } else {
+        var hue = h % 360;
+        var f = hue % 60;
+        var p = Math.round((b * (100 - s)) / 10000 * 255);
+        var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
+        var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
+        switch (Math.floor(hue / 60)) {
+        case 0:
+          return [br, t, p];
+        case 1:
+          return [q, br, p];
+        case 2:
+          return [p, br, t];
+        case 3:
+          return [p, q, br];
+        case 4:
+          return [t, p, br];
+        case 5:
+          return [br, p, q];
+        }
+      }
+    };
+    
     var verifyChannel = function verifyChannel(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
@@ -2240,33 +2320,33 @@
       }
     };
 
-    p.red = function(aColor) {
-      return parseInt(verifyChannel(aColor).slice(5), 10);
+    p.red = function (aColor) {
+      return (aColor & p.RED_MASK)>>>16;
     };
-    p.green = function(aColor) {
-      return parseInt(verifyChannel(aColor).split(",")[1], 10);
+    p.green = function (aColor) {
+      return (aColor & p.GREEN_MASK)>>>8;
     };
-    p.blue = function(aColor) {
-      return parseInt(verifyChannel(aColor).split(",")[2], 10);
+    p.blue = function (aColor) {
+      return (aColor & p.BLUE_MASK);
     };
-    p.alpha = function(aColor) {
-      return parseInt(parseFloat(verifyChannel(aColor).split(",")[3]) * 255, 10);
+    p.alpha = function (aColor) {
+      return ((aColor & p.ALPHA_MASK)>>>24)/opacityRange;
     };
 
-    p.lerpColor = function(c1, c2, amt) {
+    p.lerpColor = function lerpColor(c1, c2, amt) {
       // Get RGBA values for Color 1 to floats
-      var colors1 = p.color(c1).split(",");
-      var r1 = parseInt(colors1[0].split("(")[1], 10);
-      var g1 = parseInt(colors1[1], 10);
-      var b1 = parseInt(colors1[2], 10);
-      var a1 = parseFloat(colors1[3].split(")")[0], 10);
+      var colorBits1 = p.color(c1);
+      var r1 = (colorBits1 & p.RED_MASK)>>>16;
+      var g1 = (colorBits1 & p.GREEN_MASK)>>>8;
+      var b1 = (colorBits1 & p.BLUE_MASK);
+      var a1 = ((colorBits1 & p.ALPHA_MASK)>>>24)/opacityRange;
 
       // Get RGBA values for Color 2 to floats
-      var colors2 = p.color(c2).split(",");
-      var r2 = parseInt(colors2[0].split("(")[1], 10);
-      var g2 = parseInt(colors2[1], 10);
-      var b2 = parseInt(colors2[2], 10);
-      var a2 = parseFloat(colors2[3].split(")")[0], 10);
+      var colorBits2 = p.color(c2);
+      var r2 = (colorBits2 & p.RED_MASK)>>>16;
+      var g2 = (colorBits2 & p.GREEN_MASK)>>>8;
+      var b2 = (colorBits2 & p.BLUE_MASK);
+      var a2 = ((colorBits2 & p.ALPHA_MASK)>>>24)/opacityRange;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
       var r = parseInt(p.lerp(r1, r2, amt), 10);
@@ -2274,18 +2354,16 @@
       var b = parseInt(p.lerp(b1, b2, amt), 10);
       var a = parseFloat(p.lerp(a1, a2, amt), 10);
 
-      var aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
-
-      return aColor;
+      return p.color.toInt(r, g, b, a);
     };
 
     // Forced default color mode for #aaaaaa style
-    p.defaultColor = function(aValue1, aValue2, aValue3) {
+    p.defaultColor = function (aValue1, aValue2, aValue3) {
       var tmpColorMode = curColorMode;
       curColorMode = p.RGB;
       var c = p.color(aValue1 / 255 * redRange, aValue2 / 255 * greenRange, aValue3 / 255 * blueRange);
       curColorMode = tmpColorMode;
-      return c;
+      return p.color.toString(c);
     };
 
     p.colorMode = function colorMode(mode, range1, range2, range3, range4) {
@@ -4519,11 +4597,13 @@
 
     p.fill = function fill() {
       doFill = true;
+      var color = p.color.apply(this, arguments);
+      
       if( p.use3DContext ) {
-        fillStyle = p.color.apply(this, arguments);
+        fillStyle = p.color.toGLArray(color);
       }
       else {
-        curContext.fillStyle = p.color.apply(this, arguments);
+        curContext.fillStyle = p.color.toString(color);
       }
     };
 
@@ -4533,11 +4613,13 @@
 
     p.stroke = function stroke() {
       doStroke = true;
+      var color = p.color.apply(this, arguments);
+      
       if( p.use3DContext ) {
-        strokeStyle = p.color.apply(this, arguments);
+        strokeStyle = p.color.toGLArray(color);
       }
       else {
-        curContext.strokeStyle = p.color.apply(this, arguments);
+        curContext.strokeStyle = p.color.toString(color);
       }
     };
 
