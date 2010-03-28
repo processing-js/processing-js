@@ -5588,7 +5588,7 @@
           curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
           curContext.fillStyle = oldFill;
         } else if (obj instanceof PImage) {
-          p.image(x,y,obj);
+          p.image(obj,x,y);
         }
       }
     };
