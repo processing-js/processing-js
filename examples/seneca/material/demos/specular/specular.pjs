@@ -2,57 +2,15 @@ import processing.opengl.*;
 
 float rotEarth = 0.0;
 float rotMoon = 0.0;
-float zoom = 0;
-PFont infoFont;
-PFont starFont;
 
-/*
-*/
 void setup(){
   size(400,400,OPENGL);
   noStroke();
-  infoFont = createFont("Arial", 24);
-  starFont = createFont("Arial", 8);
 }
 
-/*
-*/
-void displayText()
-{
-  /*fill(25,70,20);
-  textFont(infoFont); 
-  text( "FPS: " + int(frameRate), 15, 30); 
-  text( "LOD: " + int(zoom + 16.0) , 15, 50);
- 
-  text( "Keys:", 15, 100);
-  text( "a - move forward" , 15, 120);
-  text( "z - move backward",  15, 140);*/
-}
-
-
-/*
-*/
-void drawStars()
-{
-  //textFont(starFont);
-  //randomSeed(0);
-  //fill(255);
-  for(int i=0; i < 300; i++)
-  {
-    int x = int(random(0,width));
-    int y = int(random(0,height));
-  //  text(".", x,y);
-  }
-}
-
-/*
-*/
 void draw()
 {
-  // clear the color buffer
   background(0);
-  
-  displayText();
   
   lightSpecular(255,255,255);
   pointLight(200,200,200,0,100,400);
@@ -62,7 +20,7 @@ void draw()
 
   // push matrix to center of the viewport
   pushMatrix();
-  translate(width/2, height/2, 150 + zoom);
+  translate(width/2, height/2, 150);
   
   // draw the sun
   fill(255,0,0);
@@ -75,7 +33,7 @@ void draw()
   
   fill(25,70,20);
   
-  sphereDetail(int(zoom + 16));
+  sphereDetail(16);
   sphere(10);
   
   pushMatrix();
@@ -87,6 +45,4 @@ void draw()
   popMatrix();
   popMatrix();
   popMatrix();
-  
-  drawStars();
 }

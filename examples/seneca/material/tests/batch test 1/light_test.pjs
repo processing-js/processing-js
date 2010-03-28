@@ -1,7 +1,5 @@
 import processing.opengl.*;
 
-//import processing.opengl.*;
-
 int startX, startY;
 int x, y;
 int objCounter = 0;
