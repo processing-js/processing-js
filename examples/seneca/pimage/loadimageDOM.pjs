@@ -13,7 +13,7 @@ void setup() {
 }
  
 void draw() {
-  if (b.width != 0) {
+  if (b.width > 0) {
     image(b, 0, 0);
   }
 }

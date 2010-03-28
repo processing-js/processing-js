@@ -5327,6 +5327,33 @@
       this.set = function(x, y, c) {
         p.set(x, y, c, this);
       };
+      
+      this.resize = function(w, h) {
+        if (this.width != 0 || this.height != 0) {
+          // make aspect ratio if w or h is 0
+          if (w == 0 && h != 0) {
+            w = this.width/this.height*h;
+          } else if (h == 0 && w != 0) {
+            h = w/(this.width/this.height);
+          }
+          // put 'this' into a new canvas
+          var pimg = this.toImageData();        
+          var canvas = document.createElement('canvas');
+          canvas.width = this.width;
+          canvas.height = this.height;
+          canvas.getContext('2d').putImageData(pimg, 0, 0);
+          // pass new canvas to drawimage with w,h
+          var canvasResized = document.createElement('canvas');
+          canvasResized.width = w;
+          canvasResized.height = h;
+          canvasResized.getContext('2d').drawImage(canvas, 0, 0, w, h);
+          // pull imageData object out of canvas into ImageData object
+          var imageData = canvasResized.getContext('2d').getImageData(0,0,w,h);
+          // set this as new pimage
+          this.ImageData = imageData;
+          this.fromImageData(imageData);
+        }
+      };
 
       this.mask = function(mask) {
         this._mask = undefined;
