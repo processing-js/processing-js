@@ -6580,13 +6580,13 @@
       attach(document, /Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)?"DOMMouseScroll":"mousewheel", function(e) {
         var delta = 0;
 
-        if (event.wheelDelta) {
-          delta = event.wheelDelta / 120; 
+        if (e.wheelDelta) {
+          delta = e.wheelDelta / 120; 
           if (window.opera) {
             delta = -delta; 
           }
-        } else if (event.detail) {
-          delta = -event.detail/3;
+        } else if (e.detail) {
+          delta = -e.detail/3;
         }
 
         p.mouseScroll = delta;
