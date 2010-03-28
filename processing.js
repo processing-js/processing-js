@@ -2281,6 +2281,10 @@
       return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
     };
 
+    p.color.toGLArray = function(colorInt) {
+      return [((colorInt & p.RED_MASK)>>>16)/redRange, ((colorInt & p.GREEN_MASK)>>>8)/greenRange, (colorInt & p.BLUE_MASK)/blueRange, ((colorInt & p.ALPHA_MASK)>>>24)/opacityRange];
+    };
+
     // HSB conversion function from Mootools, MIT Licensed
     p.color.toRGB = function (h, s, b) {
       h = (h / redRange) * 360;
@@ -4266,8 +4270,6 @@
     ////////////////////////////////////////////////////////////////////////////
 
     p.box = function( w, h, d ) {
-      var c;
-
       if(p.use3DContext)
       {
         // user can uniformly scale the box by  
@@ -4299,8 +4301,7 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          c = fillStyle.slice( 5, -1 ).split( "," );
-          uniformf( programObject3D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf( programObject3D, "color", p.color.toGLArray(fillStyle));
 
           var v = new PMatrix3D();
           v.set(view);
@@ -4329,9 +4330,7 @@
           uniformMatrix( programObject2D, "view", true, view.array() );
           uniformMatrix( programObject2D, "projection", true, projection.array() );
 
-          // eventually need to make this more efficient.
-          c = strokeStyle.slice( 5, -1 ).split( "," );
-          uniformf(programObject2D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf(programObject2D, "color", p.color.toGLArray(strokeStyle));
           curContext.lineWidth( lineWidth );
           vertexAttribPointer( programObject2D, "Vertex", 3, boxOutlineBuffer );
           curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
@@ -4517,8 +4516,7 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          c = fillStyle.slice( 5, -1 ).split( "," );
-          uniformf( programObject3D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf( programObject3D, "color", p.color.toGLArray(fillStyle));
 
           curContext.drawArrays( curContext.TRIANGLE_STRIP, 0, sphereVerts.length/3 );
           curContext.disable( curContext.POLYGON_OFFSET_FILL );
@@ -4532,9 +4530,7 @@
           uniformMatrix( programObject2D, "view", true, view.array() );
           uniformMatrix( programObject2D, "projection", true, projection.array() );
 
-          // eventually need to make this more efficient.
-          c = strokeStyle.slice( 5, -1 ).split( "," );
-          uniformf(programObject2D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf(programObject2D, "color", p.color.toGLArray(strokeStyle));
 
           curContext.lineWidth( lineWidth );
           curContext.drawArrays( curContext.LINE_STRIP, 0, sphereVerts.length/3 );
@@ -5140,16 +5136,15 @@
         view.scale(1, -1, 1);
         view.apply(modelView.array());
 
-        curContext.useProgram( programObject2D );
-        uniformMatrix( programObject2D, "model", true,  model.array() );
-        uniformMatrix( programObject2D, "view", true, view.array() );
-        uniformMatrix( programObject2D, "projection", true, projection.array() );
+        curContext.useProgram(programObject2D);
+        uniformMatrix(programObject2D, "model", true,  model.array());
+        uniformMatrix(programObject2D, "view", true, view.array());
+        uniformMatrix(programObject2D, "projection", true, projection.array());
 
         if( lineWidth > 0 && doStroke ) {
           curContext.useProgram(programObject2D);
-          // this will be replaced with the new bit shifting color code
-          var c = strokeStyle.slice(5, -1).split(",");
-          uniformf(programObject2D, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+
+          uniformf(programObject2D, "color", p.color.toGLArray(strokeStyle));
 
           curContext.lineWidth(lineWidth);
 
