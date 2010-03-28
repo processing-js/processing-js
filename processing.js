@@ -4621,6 +4621,26 @@
       curShape = type;
       curShapeCount = 0;
       curvePoints = [];
+      textureImage = null;
+      if(p.use3Dcontext)
+      {
+        if (p.ENABLE_DEPTH_SORT) {
+        // continue with previous vertex, line and triangle count
+        // all shapes are rendered at endDraw();
+        shapeFirst = curShapeCount;
+        shapeLast = 0;
+
+        } else {
+          // reset vertex, line and triangle information
+          // every shape is rendered at endShape();
+          curShapeCount = 0;
+          /*if (line != null) line.reset();  // necessary?
+          lineCount = 0;
+          if (triangle != null) triangle.reset();  // necessary?
+          triangleCount = 0; */
+        }
+        normalMode = NORMAL_MODE_AUTO;
+      }
     };
 
     p.endShape = function endShape(close) {
