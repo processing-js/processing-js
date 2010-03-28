@@ -621,7 +621,6 @@
     p.MOVE = 'move';
     p.TEXT = 'text';
     p.WAIT = 'wait';
-    p.NOCURSOR = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
     p.ALPHA_MASK = 0xff000000;
     p.RED_MASK = 0x00ff0000;
     p.GREEN_MASK = 0x0000ff00;
@@ -699,8 +698,7 @@
       inDraw = false,
       curBackground = "rgba( 204, 204, 204, 1 )",
       curFrameRate = 1000,
-      curCursor = p.ARROW,
-      oldCursor = document.body.style.cursor,
+      oldCursor = curElement.style.cursor,
       curMsPerFrame = 1,
       curShape = p.POLYGON,
       curShapeCount = 0,
@@ -2589,12 +2587,27 @@
     ////////////////////////////////////////////////////////////////////////////
     // MISC functions
     ////////////////////////////////////////////////////////////////////////////
-    p.cursor = function cursor(mode) {
-      curCursor = document.body.style.cursor = mode;
+    p.cursor = function cursor() {
+      if(arguments.length > 1) {
+        var image = arguments[0], x = arguments[1], y = arguments[2];
+        if(x < 0 || y < 0 || y >= image.height || x >= image.width) {
+          throw "x and y must be non-negative and less than the dimensions of the image";
+        }
+
+        // see https://developer.mozilla.org/en/Using_URL_values_for_the_cursor_property
+        var imageDataURL = image.toDataURL();
+        var style = "url(\"" + imageDataURL + "\") " + x + " " + y + ", default";
+        curElement.style.cursor = style;
+      } else if(arguments.length === 1) {
+        var mode = arguments[0];
+        curElement.style.cursor = mode;
+      } else {
+        curElement.style.cursor = oldCursor;
+      } 
     };
 
     p.noCursor = function noCursor() {
-      curCursor = document.body.style.cursor = p.NOCURSOR;
+      curElement.style.cursor = "none";
     };
 
     p.link = function (href, target) {
@@ -5370,6 +5383,27 @@
         return imgData;
       };
 
+      this.toDataURL = function() {
+        var canvas = document.createElement('canvas');
+        canvas.height = this.height;
+        canvas.width = this.width;
+        var ctx = canvas.getContext('2d');
+        var imgData = ctx.createImageData(this.width, this.height); 
+        for (var i = 0; i < this.pixels.length; i++) {
+          // convert each this.pixels[i] int to array of 4 ints of each color
+          var c = this.pixels[i];
+          var pos = i*4;
+          // pjs uses argb, canvas stores rgba        
+          imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
+          imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
+          imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
+          imgData.data[pos + 2] = c % 256;
+        }
+        // return data URI for a canvas
+        ctx.putImageData(imgData, 0, 0);
+        return canvas.toDataURL();
+      };
+
       this.fromImageData = function(canvasImg) {
         this.width = canvasImg.width;
         this.height = canvasImg.height;
@@ -6527,7 +6561,6 @@
 
         p.mouseX = e.clientX - curElement.offsetLeft + scrollX;
         p.mouseY = e.clientY - curElement.offsetTop + scrollY;
-        p.cursor(curCursor);
 
         if (p.mouseMoved && !mousePressed) {
           p.mouseMoved();
@@ -6539,7 +6572,6 @@
       });
 
       attach(curElement, "mouseout", function (e) {
-        document.body.style.cursor = oldCursor;
       });
 
       attach(curElement, "mousedown", function (e) {
