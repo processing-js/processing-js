@@ -2589,8 +2589,26 @@
     ////////////////////////////////////////////////////////////////////////////
     // MISC functions
     ////////////////////////////////////////////////////////////////////////////
-    p.cursor = function cursor(mode) {
-      curCursor = document.body.style.cursor = mode;
+    p.cursor = function cursor( mode ) {
+      if( arguements.length == 1 && typeof target ==="PImage" ){
+        cursor(mode, mode.width/2, mode.height/2);
+      }
+      else if ( arguements.length == 1){
+          curCursor = document.body.style.cursor = mode;
+      }
+      else if( arguements.length == 3)
+      {
+        Image jimage =
+      createImage(new MemoryImageSource(image.width, image.height,
+                                        image.pixels, 0, image.width));
+    Point hotspot = new Point(hotspotX, hotspotY);
+    Toolkit tk = Toolkit.getDefaultToolkit();
+    Cursor cursor = tk.createCustomCursor(jimage, hotspot, "Custom Cursor");
+    setCursor(cursor);
+      }
+      else{
+        curCursor = document.body.style.cursor =  p.ARROW;
+      }
     };
 
     p.noCursor = function noCursor() {
