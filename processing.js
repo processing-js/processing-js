@@ -2108,7 +2108,6 @@
 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
       var r, g, b, a, rgb, aColor;
-      
       if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
         if (curColorMode === p.HSB) {
           rgb = p.color.toRGB(aValue1, aValue2, aValue3);
@@ -2124,7 +2123,7 @@
         r = ( r > redRange ) ? redRange : r;
         g = ( g > greenRange ) ? greenRange : g;
         b = ( b > blueRange ) ? blueRange : b;
-        a = ( isNaN(aValue4) || aValue4 > opacityRange ) ? 255 : aValue4;
+        a = ( aValue4 > opacityRange) ? opacityRange : aValue4;
         
         aColor = (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
       } else if (aValue1 != null && aValue2 != null && aValue3 != null) {
