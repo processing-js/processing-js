@@ -1929,7 +1929,7 @@
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
 
-    // convert rgba color strings to integer
+    // convert rgba color strings to integer <corban> I dont think we need this anymore, remember to take it out when you get bitcolor working
     p.rgbaToInt = function(color) {
       var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1, 2)[0].split(',');
       return ((rgbaAry[3] * 255) << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
@@ -1947,42 +1947,42 @@
     // blending modes
     p.modes = {
       replace: function(a, b) {
-        return p.rgbaToInt(b);
+        return b;
       },
       blend: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | p.mix(c1 & p.RED_MASK, c2 & p.RED_MASK, f) & p.RED_MASK | p.mix(c1 & p.GREEN_MASK, c2 & p.GREEN_MASK, f) & p.GREEN_MASK | p.mix(c1 & p.BLUE_MASK, c2 & p.BLUE_MASK, f));
       },
       add: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | Math.min(((c1 & p.RED_MASK) + ((c2 & p.RED_MASK) >> 8) * f), p.RED_MASK) & p.RED_MASK | Math.min(((c1 & p.GREEN_MASK) + ((c2 & p.GREEN_MASK) >> 8) * f), p.GREEN_MASK) & p.GREEN_MASK | Math.min((c1 & p.BLUE_MASK) + (((c2 & p.BLUE_MASK) * f) >> 8), p.BLUE_MASK));
       },
       subtract: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | Math.max(((c1 & p.RED_MASK) - ((c2 & p.RED_MASK) >> 8) * f), p.GREEN_MASK) & p.RED_MASK | Math.max(((c1 & p.GREEN_MASK) - ((c2 & p.GREEN_MASK) >> 8) * f), p.BLUE_MASK) & p.GREEN_MASK | Math.max((c1 & p.BLUE_MASK) - (((c2 & p.BLUE_MASK) * f) >> 8), 0));
       },
       lightest: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | Math.max(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f) & p.RED_MASK | Math.max(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f) & p.GREEN_MASK | Math.max(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8));
       },
       darkest: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | p.mix(c1 & p.RED_MASK, Math.min(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f), f) & p.RED_MASK | p.mix(c1 & p.GREEN_MASK, Math.min(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f), f) & p.GREEN_MASK | p.mix(c1 & p.BLUE_MASK, Math.min(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8), f));
 
       },
       difference: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -1998,8 +1998,8 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       exclusion: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2015,8 +2015,8 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       multiply: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2032,8 +2032,8 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       screen: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2049,8 +2049,8 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       hard_light: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2066,8 +2066,8 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       soft_light: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2083,8 +2083,8 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       overlay: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2100,8 +2100,8 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       dodge: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2117,8 +2117,8 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       burn: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+        var c1 = a;
+        var c2 = b;
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2222,7 +2222,7 @@
     */
 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
-      var r, g, b, rgb, aColor;
+      var r, g, b, a, rgb, aColor;
       
       if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 == undefined) {
         aColor = p.color(aValue1, aValue2, aValue3, opacityRange);
@@ -2237,7 +2237,15 @@
           g = Math.round(255 * (aValue2 / greenRange));
           b = Math.round(255 * (aValue3 / blueRange));
         }
-        aColor = ((isNaN(aValue4) ? 255 : aValue4) << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+        
+          
+        // Normalize values: values greater than range == range 
+        r = ( r > redRange ) ? redRange : r;
+        g = ( g > greenRange ) ? greenRange : g;
+        b = ( b > blueRange ) ? blueRange : b;
+        a = ( isNaN(aValue4) || aValue4 > opacityRange ) ? 255 : aValue4;
+        
+        aColor = (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
       } else if (typeof aValue1 === "string") {
         aColor = aValue1;
         if (aValue2 && aValue4 == null && aValue4 == null) {
@@ -2246,7 +2254,11 @@
           aColor = c.join(",");
         }
       } else if (aValue1 != null && aValue2 != null && aValue3 == undefined && aValue4 == undefined) {
-        aColor = p.color(aValue1, aValue1, aValue1, aValue2);
+        if ( (aValue1 & p.ALPHA_MASK) ) { // colorInt and opacity
+          aColor = p.color(p.red(aValue1), p.green(aValue1), p.blue(aValue1), aValue2);
+        } else { // grayscale and alpha
+          aColor = p.color(aValue1, aValue1, aValue1, aValue2);
+        }   
       } else if (typeof aValue1 === "number" && aValue1 < 256 && aValue1 >= 0) {
         aColor = p.color(aValue1, aValue1, aValue1, opacityRange);
       } else if (typeof aValue1 === "number") {
@@ -2281,6 +2293,12 @@
       return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
     };
 
+    // Creates a simple array in [R, G, B, A] format, [255, 255, 255, 255]
+    p.color.toArray = function(colorInt) {
+      return [(colorInt & p.RED_MASK)>>>16, (colorInt & p.GREEN_MASK)>>>8, colorInt & p.BLUE_MASK, (colorInt & p.ALPHA_MASK)>>>24];
+    };
+
+    // Creates a WebGL color array in [R, G, B, A] format. WebGL wants the color ranges between 0 and 1, [1, 1, 1, 1]
     p.color.toGLArray = function(colorInt) {
       return [((colorInt & p.RED_MASK)>>>16)/redRange, ((colorInt & p.GREEN_MASK)>>>8)/greenRange, (colorInt & p.BLUE_MASK)/blueRange, ((colorInt & p.ALPHA_MASK)>>>24)/opacityRange];
     };
@@ -2367,7 +2385,7 @@
       curColorMode = p.RGB;
       var c = p.color(aValue1 / 255 * redRange, aValue2 / 255 * greenRange, aValue3 / 255 * blueRange);
       curColorMode = tmpColorMode;
-      return p.color.toString(c);
+      return c;
     };
 
     p.colorMode = function colorMode(mode, range1, range2, range3, range4) {
