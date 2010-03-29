@@ -5665,19 +5665,17 @@
         pixels = curContext.createImageData(p.width, p.height);
       }
 
-      var data = pixels.data,
-        pos = 0;
+      var data = pixels.data, pos = 0, defaultColor;
+      
+      defaultColor = p.color.toArray(p.color(0, 0, 0, 255));
 
       for (var i = 0, l = p.pixels.length; i < l; i++) {
-        // c = (p.color.toString(p.pixels[i]) || "rgba(0,0,0,1)").match(colors);
-        
-        c = p.color.toArray(p.pixels[i]);
+        c = p.pixels[i] ? p.color.toArray(p.pixels[i]) : defaultColor;
           
-        data[pos + 0] = parseInt(c[0], 10);
-        data[pos + 1] = parseInt(c[1], 10);
-        data[pos + 2] = parseInt(c[2], 10);
-        //data[pos + 3] = parseFloat(c[4]) * 255;
-        data[pos + 3] = parseFloat(c[3]);  
+        data[pos + 0] = c[0];
+        data[pos + 1] = c[1];
+        data[pos + 2] = c[2];
+        data[pos + 3] = c[3];  
 
         pos += 4;
       }
