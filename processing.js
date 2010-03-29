@@ -5600,15 +5600,15 @@
         return c;
       } else if ( arguments.length === 3 ){
         // PImage.get(x,y) was called, return the color (int) at x,y of img
-        return p.color.toString(w.pixels[y * w.width + x]);
+        return w.pixels[y * w.width + x];
 	    } else if ( arguments.length === 2 ){
 	      // return the color at x,y (int) of curContext
 	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
-		    if(x < p.width && x >= 0 && y >= 0 && y < p.height){
+		    if ( x < p.width && x >= 0 && y >= 0 && y < p.height ){
 		      // x,y is inside canvas space
 		      c = new PImage(1,1,p.RGB);
 		      c.fromImageData(curContext.getImageData(x,y,1,1));
-		      return p.color.toString(c.pixels[0]);
+		      return c.pixels[0];
 		    } else {
 		      // x,y is outside image return transparent black
 		      return 0;
@@ -5637,21 +5637,9 @@
       } else if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number"){
-          // it was a color
-          // use canvas method to fill pixel with color
-          // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
           oldFill = curContext.fillStyle;
           color = obj;
           curContext.fillStyle = p.color.toString(color);
-          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-          curContext.fillStyle = oldFill;
-        } else if (typeof obj === "string"){
-          // it was a color
-          // use canvas method to fill pixel with color
-          // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
-          oldFill = curContext.fillStyle;
-          color = obj;
-          curContext.fillStyle = color;
           curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
           curContext.fillStyle = oldFill;
         } else if (obj instanceof PImage) {
@@ -5667,8 +5655,7 @@
 
     // Draws a 1-Dimensional pixel array to Canvas
     p.updatePixels = function () {
-      var colors = /(\d+),(\d+),(\d+),(\d+)/,
-        pixels = {}, c;
+      var pixels = {}, c;
 
       pixels.width = p.width;
       pixels.height = p.height;
@@ -5682,19 +5669,17 @@
         pos = 0;
 
       for (var i = 0, l = p.pixels.length; i < l; i++) {
-        if (typeof p.pixels[i] === "number") {
-          c = (p.color.toString(p.pixels[i]) || "rgba(0,0,0,1)").match(colors);
-        } else if(typeof p.pixels[i] === "string") {
-          c = (p.pixels[i] || "rgba(0,0,0,1)").match(colors);
-        }
-
-        data[pos + 0] = parseInt(c[1], 10);
-        data[pos + 1] = parseInt(c[2], 10);
-        data[pos + 2] = parseInt(c[3], 10);
-        data[pos + 3] = parseFloat(c[4]) * 255;
+        // c = (p.color.toString(p.pixels[i]) || "rgba(0,0,0,1)").match(colors);
+        
+        c = p.color.toArray(p.pixels[i]);
+          
+        data[pos + 0] = parseInt(c[0], 10);
+        data[pos + 1] = parseInt(c[1], 10);
+        data[pos + 2] = parseInt(c[2], 10);
+        //data[pos + 3] = parseFloat(c[4]) * 255;
+        data[pos + 3] = parseFloat(c[3]);  
 
         pos += 4;
-
       }
 
       curContext.putImageData(pixels, 0, 0);
