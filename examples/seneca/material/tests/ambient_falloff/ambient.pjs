@@ -1,7 +1,0 @@
-size(100, 100, P3D);
-//lightFalloff(10,0,0);
-ambientLight(255,0,0,   0, 90,0);
-noStroke();
-fill(0);
-translate(width/2, height/2, 30);
-sphere(30);
