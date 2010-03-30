@@ -5335,6 +5335,8 @@
       return data;
     };
 
+    var Temporary2DContext = document.createElement('canvas').getContext('2d');
+
     var PImage = function PImage(aWidth, aHeight, aFormat) {
       this.get = function(x, y, w, h) {
         if (!arguments.length) {
@@ -5376,21 +5378,26 @@
       };
 
       this.toImageData = function() {
+        var imgData = Temporary2DContext.createImageData(this.width, this.height);
+        var i, len;
+        var dest = imgData.data;
         if (this.ImageData && this.ImageData.width > 0) {
-          return this.ImageData; // image is based on ImageData
-        }
-
-        var canvas = document.createElement('canvas');
-        var imgData = canvas.getContext('2d').createImageData(this.width, this.height); 
-        for (var i = 0; i< this.pixels.length; i++) {
-          // convert each this.pixels[i] int to array of 4 ints of each color
-          var c = this.pixels[i];
-          var pos = i*4;
-          // pjs uses argb, canvas stores rgba        
-          imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
-          imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
-          imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
-          imgData.data[pos + 2] = c % 256;
+          // image is based on ImageData. Copying...
+          var src = this.ImageData.data;
+          for (i = 0, len = this.width * this.height * 4; i < len; ++i) {
+            dest[i] = src[i];
+          }
+        } else {
+          for (i = 0, len = this.pixels.length; i < len; ++i) {
+            // convert each this.pixels[i] int to array of 4 ints of each color
+            var c = this.pixels[i];
+            var pos = i*4;
+            // pjs uses argb, canvas stores rgba        
+            dest[pos + 3] = (c >>> 24) & 0xFF;
+            dest[pos + 0] = (c >>> 16) & 0xFF;
+            dest[pos + 1] = (c >>> 8) & 0xFF;
+            dest[pos + 2] = c & 0xFF;
+          }
         }
         // return a canvas ImageData object with pixel array in canvas format
         return imgData;
