@@ -1,0 +1,39 @@
+﻿<script src="../../../processing.js"></script>
+<canvas datasrc="cursorimg.pjs" width="100" height="100"></canvas>
+<pre>
+// Move the mouse across the image to see the cursor 
+// change in .. to ..
+//   up-left... the download icon
+//   up-right... a wait icon
+//   down-left... no icon
+//   down-right... the default/page icon
+
+/* @pjs preload="download.png"; */
+
+PImage img;
+
+void setup()
+{
+  size(100,100);
+  background(0,0,255);
+
+  img = loadImage("download.png");
+}
+
+void draw() 
+{
+  if(mouseX < width / 2) {
+    if(mouseY < height / 2) {
+      cursor(img, 16, 16);
+    } else {
+      noCursor();
+    }
+  } else {
+    if(mouseY < height / 2) {
+      cursor(WAIT);
+    } else {
+      cursor();
+    }
+  }
+}
+</pre>
