@@ -132,30 +132,49 @@
   var boxBuffer;
   var boxNormBuffer;
   var boxOutlineBuffer;
-	
+  
   var sphereBuffer;
 
   var lineBuffer;
 
   var pointBuffer;
   
+  var textBuffer;
+  
+  var textureBuffer;
+  var indexBuffer;
+  
   // Vertex shader for points and lines
   var vertexShaderSource2D = 
   "attribute vec3 Vertex;" +
+  "attribute vec2 aTextureCoord;" +
   "uniform vec4 color;" +
 
   "uniform mat4 model;" +
   "uniform mat4 view;" +
   "uniform mat4 projection;" +
 
+  "varying vec2 vTextureCoord;"+
+  
   "void main(void) {" +
   "  gl_FrontColor = color;" +
   "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
+  "  vTextureCoord = aTextureCoord;"+
   "}";
 
   var fragmentShaderSource2D =
+  "varying vec2 vTextureCoord;"+
+  "uniform vec4 fcolor;"+
+  "uniform sampler2D uSampler;"+
+  "uniform int picktype;"
+  
   "void main(void){" +
-  "  gl_FragColor = gl_Color;" +
+  "  if(picktype==0){"+
+  "    gl_FragColor = gl_color;" +
+  "  }else if(picktype==1){"+
+  "    float alpha = texture2D(uSampler,vTextureCoord).a;"+
+  "    gl_FragColor = vec4(fcolor.rgb*alpha,alpha);\n"+
+  "  }"+
   "}";
   
   // Vertex shader for boxes and spheres
@@ -3885,6 +3904,18 @@
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
           
+          textBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
+	
+          textureBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
+
+          indexBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
+          curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new WebGLUnsignedShortArray([0,1,2,2,3,0]), curContext.STATIC_DRAW);
+
           cam = new PMatrix3D();
           cameraInv = new PMatrix3D();
           forwardTransform = new PMatrix3D();
@@ -5068,6 +5099,7 @@
           // this will be replaced with the new bit shifting color code
           var c = strokeStyle.slice(5, -1).split(",");
           uniformf(programObject2D, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+          uniformf(programObject2D, "picktype", [0]);
 
           curContext.lineWidth(lineWidth);
 
@@ -6086,9 +6118,17 @@
               str = str.substring(pos+1, str.length);
             }
           } while(pos !== -1);
-
+		  
+		  /*
+			var canvas =null;
           if(p.use3DContext){
-            //...
+		  canvas = document.createElement("canvas");
+            var oldContext = curContext;
+            curContext = canvas.getContext("2d");
+			
+			canvas.width=100;
+			canvas.height=100;
+            curContext = canvas.getContext("2d");
           }
 
           width = 0;
@@ -6132,9 +6172,84 @@
             }
             curContext.restore();
           }
-
+*/
           if(p.use3DContext){
-            // ...
+		  /*
+	var canvas = document.createElement("canvas");
+          var oldContext = curContext;
+	curContext = canvas.getContext("2d");
+        curContext.font = curTextSize+"pt Arial";
+	canvas.width=curContext.measureText(str).width;
+	canvas.height=curTextSize*1.2;
+	curContext = canvas.getContext("2d");
+        curContext.font = curTextSize+"pt Arial";
+	//curContext.fillStyle="rgb("+color.r*255+","+color.g*255+","+color.b*255+")";
+	curContext.textBaseline="top";
+	//aspect=canvas.width/canvas.height;
+	curContext.fillText(str, 0, 0);
+	
+          curContext = oldContext;
+		  
+       var texture = curContext.createTexture();
+	   
+	   	curContext.bindTexture(curContext.TEXTURE_2D, texture);
+	//TODO: fix this when minefield is upto spec
+	try{curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,false,true);}
+	catch(e){
+          //curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,null);
+        }
+	curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, oldContext.LINEAR);
+	curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, oldContext.LINEAR_MIPMAP_LINEAR);
+	curContext.generateMipmap(curContext.TEXTURE_2D);
+	curContext.bindTexture(curContext.TEXTURE_2D, null);
+	   */
+        var model = new PMatrix3D();
+        //model.scale(w, h, d);
+        model.translate(x, y, z || 0);                                                             
+		model.scale(50);
+		
+        var view = new PMatrix3D();
+        view.scale(1, -1, 1);
+        view.apply(modelView.array());
+	/*
+    curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE);
+    curContext.enable(curContext.BLEND);
+    curContext.disable(curContext.DEPTH_TEST);
+	*/
+	
+      curContext.disable(curContext.BLEND);
+    curContext.enable(curContext.DEPTH_TEST);
+    curContext.depthFunc(curContext.LEQUAL);
+	
+    curContext.useProgram(programObject2D);
+
+    vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
+     //vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
+
+    //curContext.activeTexture(curContext.TEXTURE0);
+    //curContext.bindTexture(curContext.TEXTURE_2D, texture);
+	
+          //uniformi(programObject2D, "uSampler", [0]);
+          uniformf(programObject2D, "picktype", [0]);
+		  
+        uniformMatrix( programObject2D, "model", false,  model.array() );
+        uniformMatrix( programObject2D, "view", false, view.array() );
+        uniformMatrix( programObject2D, "projection", false, projection.array() );
+
+          var c = strokeStyle.slice(5, -1).split(",");
+		  //alert(strokeStyle);
+          uniformf(programObject2D, "fcolor", [c[0]/255, c[1]/255, c[2]/255, 0.5]);
+          //uniformf(programObject2D, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+
+    //curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    //curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
+    curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
+          //curContext.drawArrays( curContext.TRIANGLES, 0, 6 );
+
+    //curContext.enable(curContext.DEPTH_TEST);
+    //curContext.depthFunc(curContext.LEQUAL);
+    //curContext.disable(curContext.BLEND);
+
           }
 
           lastTextPos[0] = x + width;
