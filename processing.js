@@ -574,6 +574,10 @@
     return aCode;
   };
 
+  function imageModeCorner(x, y, w, h, whAreSizes) { return { x: x, y: y, w: w, h: h }; }
+  function imageModeCorners(x, y, w, h, whAreSizes) { return { x: x, y: y, w: whAreSizes ? w : w - x, h: whAreSizes ? h : h - y }; }
+  function imageModeCenter(x, y, w, h, whAreSizes) { return { x: x - w/2, y: y - h/2, w: w, h: h }; }
+
   // Attach Processing functions to 'p'
   Processing.build = function buildProcessing(curElement) {
 
@@ -691,6 +695,7 @@
       looping = 0,
       curRectMode = p.CORNER,
       curEllipseMode = p.CENTER,
+      imageModeConvert = imageModeCorner,
       normalX = 0,
       normalY = 0,
       normalZ = 0,
@@ -3940,6 +3945,9 @@
       }
 
       p.context = curContext; // added for createGraphics
+      p.toImageData = function() {
+        return curContext.getImageData(0,0,this.width,this.height);
+      };
     };
 
 
@@ -4995,7 +5003,21 @@
       curRectMode = aRectMode;
     };
 
-    p.imageMode = function () {};
+    p.imageMode = function (mode) {
+      switch(mode) {
+        case p.CORNER:
+          imageModeConvert = imageModeCorner;
+          break;
+        case p.CORNERS:
+          imageModeConvert = imageModeCorners;
+          break;
+        case p.CENTER:
+          imageModeConvert = imageModeCenter;
+          break;
+        default:
+          throw "Invalid imageMode";
+      }
+    };
     
     p.ellipseMode = function ellipseMode(aEllipseMode) {
       curEllipseMode = aEllipseMode;
@@ -5354,6 +5376,10 @@
       };
 
       this.toImageData = function() {
+        if (this.ImageData && this.ImageData.width > 0) {
+          return this.ImageData; // image is based on ImageData
+        }
+
         var canvas = document.createElement('canvas');
         var imgData = canvas.getContext('2d').createImageData(this.width, this.height); 
         for (var i = 0; i< this.pixels.length; i++) {
@@ -5796,66 +5822,44 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
-        var obj;
+        var bounds = imageModeConvert(x || 0, y || 0, 
+          w || img.width, h || img.height, arguments.length < 4);
 
-        x = x || 0;
-        y = y || 0;
+        var obj = img.toImageData();
 
-        if (img instanceof PImage) {
-          if (img.ImageData && img.ImageData.width > 0) {
-            obj = img.ImageData;
+        if (img._mask) {
+          var j, size;
+          if(img._mask instanceof PImage) {            
+            var objMask = img._mask.toImageData();
+            for(j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+              // using it as an alpha channel
+              obj.data[j + 1] = objMask.data[j]; 
+              // but only the blue color channel
+            }
           } else {
-            obj = img.toImageData();
-          }
-        } else if (img.canvas) {
-          var pg = img;
-          var pimg = new PImage(pg.width, pg.height, p.RGB);
-          pimg.fromImageData(pg.context.getImageData(0, 0, pg.width, pg.height));
-
-          if (pimg.ImageData && pimg.ImageData.width > 0) {
-            obj = pimg.ImageData;
-          } else {
-            obj = pimg.toImageData();
+            for(j = 0, size = img._mask.length; j < size; ++j) {
+              obj.data[(j << 2) + 3] = img._mask[j]; 
+            }
           }
         }
-        
-        var  oldAlpha;
 
-        if (curTint >= 0) {
+        var oldAlpha;
+        if (curTint >= 0) { // wrong: can be color-tinted
           oldAlpha = curContext.globalAlpha;
           curContext.globalAlpha = curTint / opacityRange;
         }
 
-        // draw the image
-        //curContext.putImageData(obj, x, y); // this causes error if data overflows the canvas dimensions
-
-        // <corban> doing this the slow way for now
-        // we will want to replace this with putImageData and clipping logic
         var c = document.createElement('canvas');
         c.width = obj.width;
         c.height = obj.height;
         var ctx = c.getContext('2d');
         ctx.putImageData(obj, 0, 0);
 
-        if (arguments.length === 5) {
-          // resize the image to w,h
-          // this should use resize later on and also pay attention to imageMode
-          // does not crop image, resizes it to w,h
-          // coming in 0.8
-          curContext.drawImage(c, x, y, w, h);
-        } else {
-          curContext.drawImage(c, x, y);
-        }
+        curContext.drawImage(c, 0, 0, img.width, img.height,
+          bounds.x, bounds.y, bounds.w, bounds.h);
 
         if (curTint >= 0) {
           curContext.globalAlpha = oldAlpha;
-        }
-
-        if (img._mask) {
-          var oldComposite = curContext.globalCompositeOperation;
-          curContext.globalCompositeOperation = "darker";
-          p.image(img._mask, x, y);
-          curContext.globalCompositeOperation = oldComposite;
         }
       }
     };
