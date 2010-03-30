@@ -1,3 +1,7 @@
+March 25, 2010 - Release 0.7.1
+
+  * Fixed mouseScrolled event failure
+
 March 24, 2010 - Release 0.7.0
 
   * Added custom @pjs directive parser
