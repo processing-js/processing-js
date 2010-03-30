@@ -1,0 +1,26 @@
+
+
+void setup() 
+{
+  size(800, 600, P3D);
+  background(200);
+PFont font = loadFont("CourierNew36");
+textFont(font,50); 
+} 
+
+void draw(){
+  
+  //background(0);
+   camera(0, 0, 400, // eyeX, eyeY, eyeZ
+  mouseX - width/2, mouseY - height/2, 0.0, // centerX, centerY, centerZ
+  0.0, 1.0, 0.0); //
+  //translate(10, 10);
+  line(30, 20, 0, 85, 20, 15);
+  stroke(126);
+  line(85, 20, 15, 85, 75, 0);
+  stroke(255);
+  line(85, 75, 0, 30, 75, -50);
+  
+  fill(0);
+  text("hello",5,5,0);
+}
