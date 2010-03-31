@@ -3422,22 +3422,6 @@
       return ret;
     };
 
-    p['char'] = function ( key ) {
-      if ( arguments.length === 1 && typeof key === "number" && (key + "").indexOf( '.' ) === -1 ) { // not a float
-        return new Char(String.fromCharCode(key));
-      } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
-        var ret = [];
-
-        for ( var i = 0; i < key.length; i++ ) {
-          ret[i] = p['char']( key[i] );
-        }
-
-        return ret;
-      } else {
-        throw "char() may receive only one argument of type int, byte, int[], or byte[].";
-      }
-    };
-
     p.trim = function( str ) {
       var newstr;
       if (typeof str === "object" && str.constructor === Array) {
@@ -3451,6 +3435,103 @@
       }
       return newstr; 
     };
+
+    // Conversion
+
+    p['boolean'] = function( val ) {
+      if (typeof val === 'number') {
+        return val !== 0;
+      } else if (typeof val === 'boolean') {
+        return val;
+      } else if (typeof val === 'string') {
+        return val.toLowerCase() === 'true';
+      } else if (val instanceof Char) {
+        // 1, T or t
+        return val.code === 49 || val.code === 84 || val.code == 116; 
+      } else if (typeof val === 'object' && val.constructor === Array) {
+        ret = new Array(val.length);
+
+        for (var i = 0; i < val.length; i++) {
+          ret[i] = p['boolean'](val[i]);
+        }
+      }
+
+      return ret;
+    };
+
+    // a byte is a number between -128 and 127
+    p['byte'] = function (aNumber) {
+      if (typeof aNumber === 'object' && aNumber.constructor === Array) {
+        var bytes = [];
+        for(var i = 0; i < aNumber.length; i++) {
+          bytes[i] = p['byte'](aNumber[i]);  
+        }
+        return bytes;
+      } else {
+        return (0 - (aNumber & 0x80)) | (aNumber & 0x7F);
+      }
+    };
+
+    p['char'] = function ( key ) {
+      if ( arguments.length === 1 && typeof key === "number") {
+        return new Char(String.fromCharCode(key & 0xFFFF));
+      } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
+        var ret = new Array(key.length);
+
+        for ( var i = 0; i < key.length; i++ ) {
+          ret[i] = p['char']( key[i] );
+        }
+
+        return ret;
+      } else {
+        throw "char() may receive only one argument of type int, byte, int[], or byte[].";
+      }
+    };
+
+    // Processing doc claims good argument types are: int, char, byte, boolean,
+    // String, int[], char[], byte[], boolean[], String[].
+    // floats should not work. However, floats with only zeroes right of the
+    // decimal will work because JS converts those to int.
+    p['float'] = function( val ) {
+      if ( arguments.length === 1 ) {
+        if ( typeof val === 'number' ) {
+          return val;          
+        } else if ( typeof val === 'boolean' ) {
+          return val ? 1 : 0;
+        } else if ( typeof val === 'string' ) {
+          return parseFloat( val );
+        } else if ( val instanceof Char ) {
+          return val.code;
+        } else if ( typeof val === 'object' && val.constructor === Array ) {
+          var ret = new Array( val.length );
+
+          for ( var i = 0; i < val.length; i++) {
+              ret[i] = p['float']( val[i] );
+          }
+          return ret;
+        }
+      }
+    };
+
+    p['int'] = function( val ) {
+      if(typeof val === 'number') {
+        return val & 0xFFFFFFFF;
+      } else if (typeof val === 'boolean' ) {
+        return val ? 1 : 0;
+      } else if ( typeof val === 'string' ) {
+        var ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
+        return ret & 0xFFFFFFFF;
+      } else if ( val instanceof Char ) {
+        return val.code;
+      } else if ( typeof val === 'object' && val.constructor === Array ) {
+        var ret = new Array( val.length );
+
+        for ( var i = 0; i < val.length; i++) {
+          ret[i] = p['int']( val[i] );
+        }
+        return ret;
+      }
+    };		
 
     ////////////////////////////////////////////////////////////////////////////
     // Math functions
@@ -3546,111 +3627,7 @@
     p.sin = Math.sin;
     p.tan = Math.tan;
 
-    
-    p['int'] = function( val ) {
-      var ret;
-
-      if ( ( val || val === 0 ) && arguments.length === 1 ) {
-        if ( typeof val === 'number' ) {
-          var isNegative = val < 0;
-          if ( isNegative ) {
-            val = Math.abs( val );
-          }
-
-          ret = Math.floor( val );
-
-          if ( isNegative ) {
-            ret = -ret;
-          }
-        } else if ( typeof val === 'boolean' ) {
-          if ( val === true ) {
-            ret = 1;
-          } else {
-            ret = 0;
-          }
-        } else if ( typeof val === 'string' ) {
-          ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
-
-          if ( isNaN( ret ) ) {
-            ret = 0;
-          }
-        } else if ( val instanceof Char ) {
-          ret = val.code;
-        } else if ( typeof val === 'object' && val.constructor === Array ) {
-          ret = new Array( val.length );
-
-          for ( var i = 0; i < val.length; i++) {
-            if ( typeof val[i] === 'string' && val[i].indexOf('.') > -1 ) {
-              ret[i] = 0;
-            } else {
-              ret[i] = p['int']( val[i] );
-            }
-          }
-        }
-      }
-
-      return ret;
-    };		
-
-    // Processing doc claims good argument types are: int, char, byte, boolean,
-    // String, int[], char[], byte[], boolean[], String[].
-    // floats should not work. However, floats with only zeroes right of the
-    // decimal will work because JS converts those to int.
-    p['float'] = function( val ) {
-      var ret;
-
-      if ( arguments.length === 1 ) {
-        if ( typeof val === 'number' ) {
-          // float() not allowed to handle floats.
-          if ( ( val + "" ).indexOf( '.' ) > -1 ) {
-            throw "float() may not accept float arguments.";
-          } else {
-            ret = val.toFixed(1);
-          }
-        } else if ( typeof val === 'boolean' ) {
-          if ( val === true ) {
-            ret = 1.0;
-          } else {
-            ret = 0.0;
-          }
-          ret = ret.toFixed(1);
-        } else if ( typeof val === 'string' ) {
-          ret = parseFloat( val );
-        } else if ( val instanceof Char ) {
-          ret = val.code.toFixed(1);  
-        } else if ( typeof val === 'object' && val.constructor === Array ) {
-
-          ret = new Array( val.length );
-
-          for ( var i = 0; i < val.length; i++) {
-              ret[i] = p['float']( val[i] );
-          }
-        }
-      }
-
-      return ret;
-    };
-
-
-    p['boolean'] = function( val ) {
-      var ret = false;
-
-      if (val && typeof val === 'number' && val !== 0) {
-        ret = true;
-      } else if (val && typeof val === 'boolean' && val === true) {
-        ret = true;
-      } else if (val && typeof val === 'string' && val.toLowerCase() === 'true') {
-        ret = true;
-      } else if (val && typeof val === 'object' && val.constructor === Array) {
-        ret = new Array(val.length);
-
-        for (var i = 0; i < val.length; i++) {
-          ret[i] = p['boolean'](val[i]);
-        }
-      }
-
-      return ret;
-    };
+    // Random
 
     p.Random = function () {
 
@@ -3684,28 +3661,6 @@
 
       };
 
-    };
-
-    //! This can't be right... right? <corban> should be good now
-    // a byte is a number between -128 and 127
-    p['byte'] = function (aNumber) {
-      if (typeof aNumber === 'object' && aNumber.constructor === Array) {
-        var bytes = [];
-        for(var i = 0; i < aNumber.length; i++) {
-          bytes[i] = p['byte'](aNumber[i]);  
-        }
-        return bytes;
-      } else {
-        if (aNumber >= -128 && aNumber < 128) {
-          return aNumber;
-        } else {
-          if ( aNumber >= 128) {
-            return p['byte'](-256 + aNumber);
-          } else if ( aNumber < -128) {
-            return p['byte'](256 + aNumber);
-          }
-        }
-      }
     };
 
     p.random = function random(aMin, aMax) {
