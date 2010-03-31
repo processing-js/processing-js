@@ -3447,16 +3447,14 @@
         return val.toLowerCase() === 'true';
       } else if (val instanceof Char) {
         // 1, T or t
-        return val.code === 49 || val.code === 84 || val.code == 116; 
+        return val.code === 49 || val.code === 84 || val.code === 116; 
       } else if (typeof val === 'object' && val.constructor === Array) {
-        ret = new Array(val.length);
-
+        var ret = new Array(val.length);
         for (var i = 0; i < val.length; i++) {
           ret[i] = p['boolean'](val[i]);
         }
+        return ret;
       }
-
-      return ret;
     };
 
     // a byte is a number between -128 and 127
@@ -3477,11 +3475,9 @@
         return new Char(String.fromCharCode(key & 0xFFFF));
       } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
         var ret = new Array(key.length);
-
         for ( var i = 0; i < key.length; i++ ) {
           ret[i] = p['char']( key[i] );
         }
-
         return ret;
       } else {
         throw "char() may receive only one argument of type int, byte, int[], or byte[].";
@@ -3504,7 +3500,6 @@
           return val.code;
         } else if ( typeof val === 'object' && val.constructor === Array ) {
           var ret = new Array( val.length );
-
           for ( var i = 0; i < val.length; i++) {
               ret[i] = p['float']( val[i] );
           }
@@ -3519,13 +3514,12 @@
       } else if (typeof val === 'boolean' ) {
         return val ? 1 : 0;
       } else if ( typeof val === 'string' ) {
-        var ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
-        return ret & 0xFFFFFFFF;
+        var number = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
+        return number & 0xFFFFFFFF;
       } else if ( val instanceof Char ) {
         return val.code;
       } else if ( typeof val === 'object' && val.constructor === Array ) {
         var ret = new Array( val.length );
-
         for ( var i = 0; i < val.length; i++) {
           ret[i] = p['int']( val[i] );
         }
@@ -3578,11 +3572,14 @@
       } else {
         var numbers = arguments.length === 1 ?
           arguments[0] : arguments; // if single argument, array is used
-        if(!("length" in numbers && numbers.length > 0))
+        if(!("length" in numbers && numbers.length > 0)) {
           throw "Non-empty array is expected";
+        }
         var max = numbers[0], count = numbers.length;
         for(var i = 1; i < count; ++i) {
-          if(max < numbers[i]) max = numbers[i];
+          if(max < numbers[i]) { 
+            max = numbers[i]; 
+          }
         }
         return max;
       }
@@ -3593,11 +3590,14 @@
       } else {
         var numbers = arguments.length === 1 ?
           arguments[0] : arguments; // if single argument, array is used
-        if(!("length" in numbers && numbers.length > 0))
+        if(!("length" in numbers && numbers.length > 0)) {
           throw "Non-empty array is expected";
+        }
         var min = numbers[0], count = numbers.length;
         for(var i = 1; i < count; ++i) {
-          if(min > numbers[i]) min = numbers[i];
+          if(min > numbers[i]) {
+            min = numbers[i];
+          }
         }
         return min;
       }
