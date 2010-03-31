@@ -3455,13 +3455,98 @@
     ////////////////////////////////////////////////////////////////////////////
     // Math functions
     ////////////////////////////////////////////////////////////////////////////
-    p.sq = function sq(aNumber) {
+
+    // Calculation
+    p.abs = Math.abs;
+    p.ceil = Math.ceil;
+    p.constrain = function(aNumber, aMin, aMax) {
+      return aNumber > aMax ? aMax : aNumber < aMin ? aMin : aNumber;
+    };
+    p.dist = function() {
+      var dx, dy, dz;      
+      if (arguments.length === 4) {
+        dx = arguments[0] - arguments[2];
+        dy = arguments[1] - arguments[3];
+        return Math.sqrt(dx * dx + dy * dy);
+      } else if (arguments.length === 6) {
+        dx = arguments[0] - arguments[3];
+        dy = arguments[1] - arguments[4];
+        dz = arguments[2] - arguments[5];
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+      }      
+    };
+    p.exp = Math.exp;
+    p.floor = Math.floor;
+    p.lerp = function(value1, value2, amt) {
+      return ((value2 - value1) * amt) + value1;
+    };
+    p.log = Math.log;
+    p.mag = function(a, b, c) {
+      if (arguments.length === 2) {
+        return Math.sqrt(a * a + b * b);
+      } else if (arguments.length === 3) {
+        return Math.sqrt(a * a + b * b + c * c);
+      }
+    };
+    p.map = function(value, istart, istop, ostart, ostop) {
+      return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+    };
+    p.max = function() {
+      if(arguments.length === 2) {
+        return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
+      } else {
+        var numbers = arguments.length === 1 ?
+          arguments[0] : arguments; // if single argument, array is used
+        if(!("length" in numbers && numbers.length > 0))
+          throw "Non-empty array is expected";
+        var max = numbers[0], count = numbers.length;
+        for(var i = 1; i < count; ++i) {
+          if(max < numbers[i]) max = numbers[i];
+        }
+        return max;
+      }
+    };
+    p.min = function() {
+      if(arguments.length === 2) {
+        return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
+      } else {
+        var numbers = arguments.length === 1 ?
+          arguments[0] : arguments; // if single argument, array is used
+        if(!("length" in numbers && numbers.length > 0))
+          throw "Non-empty array is expected";
+        var min = numbers[0], count = numbers.length;
+        for(var i = 1; i < count; ++i) {
+          if(min > numbers[i]) min = numbers[i];
+        }
+        return min;
+      }
+    };
+    p.norm = function(aNumber, low, high) {
+      return (aNumber - low) / (high - low);
+    };
+    p.pow = Math.pow;
+    p.round = Math.round;    
+    p.sq = function(aNumber) {
       return aNumber * aNumber;
     };
-    p.sqrt = function sqrt(aNumber) {
-      return Math.sqrt(aNumber);
-    };
+    p.sqrt = Math.sqrt;
 
+    // Trigonometry 
+    p.acos = Math.acos;
+    p.asin = Math.asin;
+    p.atan = Math.atan;
+    p.atan2 = Math.atan2;
+    p.cos = Math.cos;
+    p.degrees = function(aAngle) {
+      return (aAngle * 180) / Math.PI;
+    };
+    p.radians = function(aAngle) {
+      return (aAngle / 180) * Math.PI;
+    };
+    p.sin = Math.sin;
+    p.tan = Math.tan;
+
+    
     p['int'] = function( val ) {
       var ret;
 
@@ -3505,55 +3590,7 @@
       }
 
       return ret;
-    };
-		
-		//Determines the smallest value in a sequence of numbers.
-		//Can accept more than 2 parameters or an array
-		//Undefined if passed in an array and a scalar; or if a non number was passed in
-    p.min = function() {
-      var numbers;
-
-      if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
-        numbers = arguments[0];
-      } else {
-        numbers = arguments;
-      }
-
-      // Scan for illegal non-numbers
-      for ( var i = 0; i < numbers.length; i++ ) {
-        if ( typeof numbers[i] !== 'number' ) {
-          throw "Value sent to min is not a number.";
-        }
-      }
-      
-      return Math.min.apply(this, numbers);
-    };
-
-		//Determines the biggest value in a sequence of numbers.
-		//Can accept more than 2 parameters or an array
-		//Undefined if passed in an array and a scalar; or if a non number was passed in 
-    p.max = function() {
-      var numbers;
-
-      if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
-        numbers = arguments[0];
-      } else {
-        numbers = arguments;
-      }
-
-      // Scan for illegal non-numbers
-      for ( var i = 0; i < numbers.length; i++ ) {
-        if ( typeof numbers[i] !== 'number' ) {
-          throw "Value sent to max is not a number.";
-        }
-      }
-      
-      return Math.max.apply(this, numbers);
-    };
-
-    p.floor = function floor(aNumber) {
-      return Math.floor(aNumber);
-    };
+    };		
 
     // Processing doc claims good argument types are: int, char, byte, boolean,
     // String, int[], char[], byte[], boolean[], String[].
@@ -3594,51 +3631,6 @@
       return ret;
     };
 
-    p.ceil = function ceil(aNumber) {
-      return Math.ceil(aNumber);
-    };
-    p.round = function round(aNumber) {
-      return Math.round(aNumber);
-    };
-    p.lerp = function lerp(value1, value2, amt) {
-      return ((value2 - value1) * amt) + value1;
-    };
-    p.abs = function abs(aNumber) {
-      return Math.abs(aNumber);
-    };
-    p.cos = function cos(aNumber) {
-      return Math.cos(aNumber);
-    };
-    p.sin = function sin(aNumber) {
-      return Math.sin(aNumber);
-    };
-    p.pow = function pow(aNumber, aExponent) {
-      return Math.pow(aNumber, aExponent);
-    };
-    p.tan = function tan(aNumber) {
-      return Math.tan(aNumber);
-    };
-    p.atan = function atan(aNumber) {
-      return Math.atan(aNumber);
-    };
-    p.atan2 = function atan2(aNumber, aNumber2) {
-      return Math.atan2(aNumber, aNumber2);
-    };
-    p.radians = function radians(aAngle) {
-      return (aAngle / 180) * p.PI;
-    };
-    p.log = function log(aNumber) {
-      return Math.log(aNumber);
-    };
-    p.exp = function exp(aNumber) {
-      return Math.exp(aNumber);
-    };
-    p.asin = function asin(aNumber) {
-      return Math.asin(aNumber);
-    };
-    p.acos = function acos(aNumber) {
-      return Math.acos(aNumber);
-    };
 
     p['boolean'] = function( val ) {
       var ret = false;
@@ -3658,32 +3650,6 @@
       }
 
       return ret;
-    };
-
-    p.dist = function() {
-      var dx, dy, dz = 0;      
-      if (arguments.length === 4) {
-        dx = arguments[0] - arguments[2];
-        dy = arguments[1] - arguments[3];
-      } 
-      else if (arguments.length === 6) {
-        dx = arguments[0] - arguments[3];
-        dy = arguments[1] - arguments[4];
-        dz = arguments[2] - arguments[5];
-      }      
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    };
-
-    p.map = function map(value, istart, istop, ostart, ostop) {
-      return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
-    };
-
-    p.mag = function (a, b, c) {
-      if (arguments.length === 2) {
-        return Math.sqrt(a * a + b * b);
-      } else if (arguments.length === 3) {
-        return Math.sqrt(a * a + b * b + c * c);
-      }
     };
 
     p.Random = function () {
@@ -3740,11 +3706,6 @@
           }
         }
       }
-    };
-
-    p.norm = function norm(aNumber, low, high) {
-      var range = high - low;
-      return ((1 / range) * aNumber) - ((1 / range) * low);
     };
 
     p.random = function random(aMin, aMax) {
@@ -3812,18 +3773,6 @@
       case 1:
         return perlinNoise_2D(x, x);
       }
-    };
-
-    p.constrain = function constrain(aNumber, aMin, aMax) {
-      return Math.min(Math.max(aNumber, aMin), aMax);
-    };
-
-    p.degrees = function degrees(aAngle) {
-      aAngle = (aAngle * 180) / p.PI;
-      if (aAngle < 0) {
-        aAngle = 360 + aAngle;
-      }
-      return aAngle;
     };
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
