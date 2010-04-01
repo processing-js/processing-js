@@ -49,7 +49,9 @@ var canvas = {
                    getAttribLocation: __empty_func__,
                    vertexAttribPointer: __empty_func__,
                    enableVertexAttribArray: __empty_func__,
-                   getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; }
+                   getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
+                   createImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
+                   drawImage: __empty_func__
                  };
   },
   style: {}
