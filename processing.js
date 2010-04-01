@@ -574,6 +574,10 @@
     return aCode;
   };
 
+  function imageModeCorner(x, y, w, h, whAreSizes) { return { x: x, y: y, w: w, h: h }; }
+  function imageModeCorners(x, y, w, h, whAreSizes) { return { x: x, y: y, w: whAreSizes ? w : w - x, h: whAreSizes ? h : h - y }; }
+  function imageModeCenter(x, y, w, h, whAreSizes) { return { x: x - w/2, y: y - h/2, w: w, h: h }; }
+
   // Attach Processing functions to 'p'
   Processing.build = function buildProcessing(curElement) {
 
@@ -691,6 +695,7 @@
       looping = 0,
       curRectMode = p.CORNER,
       curEllipseMode = p.CENTER,
+      imageModeConvert = imageModeCorner,
       normalX = 0,
       normalY = 0,
       normalZ = 0,
@@ -4043,6 +4048,9 @@
       }
 
       p.context = curContext; // added for createGraphics
+      p.toImageData = function() {
+        return curContext.getImageData(0,0,this.width,this.height);
+      };
     };
 
 
@@ -5094,7 +5102,21 @@
       curRectMode = aRectMode;
     };
 
-    p.imageMode = function () {};
+    p.imageMode = function (mode) {
+      switch(mode) {
+        case p.CORNER:
+          imageModeConvert = imageModeCorner;
+          break;
+        case p.CORNERS:
+          imageModeConvert = imageModeCorners;
+          break;
+        case p.CENTER:
+          imageModeConvert = imageModeCenter;
+          break;
+        default:
+          throw "Invalid imageMode";
+      }
+    };
     
     p.ellipseMode = function ellipseMode(aEllipseMode) {
       curEllipseMode = aEllipseMode;
@@ -5411,6 +5433,8 @@
       return data;
     };
 
+    var Temporary2DContext = document.createElement('canvas').getContext('2d');
+
     var PImage = function PImage(aWidth, aHeight, aFormat) {
       this.get = function(x, y, w, h) {
         if (!arguments.length) {
@@ -5479,17 +5503,26 @@
       };
 
       this.toImageData = function() {
-        var canvas = document.createElement('canvas');
-        var imgData = canvas.getContext('2d').createImageData(this.width, this.height); 
-        for (var i = 0; i< this.pixels.length; i++) {
-          // convert each this.pixels[i] int to array of 4 ints of each color
-          var c = this.pixels[i];
-          var pos = i*4;
-          // pjs uses argb, canvas stores rgba        
-          imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
-          imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
-          imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
-          imgData.data[pos + 2] = c % 256;
+        var imgData = Temporary2DContext.createImageData(this.width, this.height);
+        var i, len;
+        var dest = imgData.data;
+        if (this.ImageData && this.ImageData.width > 0) {
+          // image is based on ImageData. Copying...
+          var src = this.ImageData.data;
+          for (i = 0, len = this.width * this.height * 4; i < len; ++i) {
+            dest[i] = src[i];
+          }
+        } else {
+          for (i = 0, len = this.pixels.length; i < len; ++i) {
+            // convert each this.pixels[i] int to array of 4 ints of each color
+            var c = this.pixels[i];
+            var pos = i*4;
+            // pjs uses argb, canvas stores rgba        
+            dest[pos + 3] = (c >>> 24) & 0xFF;
+            dest[pos + 0] = (c >>> 16) & 0xFF;
+            dest[pos + 1] = (c >>> 8) & 0xFF;
+            dest[pos + 2] = c & 0xFF;
+          }
         }
         // return a canvas ImageData object with pixel array in canvas format
         return imgData;
@@ -5874,64 +5907,44 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
-        var obj;
+        var bounds = imageModeConvert(x || 0, y || 0, 
+          w || img.width, h || img.height, arguments.length < 4);
 
-        x = x || 0;
-        y = y || 0;
+        var obj = img.toImageData();
 
-        if (img instanceof PImage) {
-          if (img.ImageData && img.ImageData.width > 0) {
-            obj = img.ImageData;
+        if (img._mask) {
+          var j, size;
+          if(img._mask instanceof PImage) {            
+            var objMask = img._mask.toImageData();
+            for(j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+              // using it as an alpha channel
+              obj.data[j + 1] = objMask.data[j]; 
+              // but only the blue color channel
+            }
           } else {
-            obj = img.toImageData();
-          }
-        } else if (img.canvas) {
-          var pg = img;
-          var pimg = new PImage(pg.width, pg.height, p.RGB);
-          pimg.fromImageData(pg.context.getImageData(0, 0, pg.width, pg.height));
-
-          if (pimg.ImageData && pimg.ImageData.width > 0) {
-            obj = pimg.ImageData;
-          } else {
-            obj = pimg.toImageData();
+            for(j = 0, size = img._mask.length; j < size; ++j) {
+              obj.data[(j << 2) + 3] = img._mask[j]; 
+            }
           }
         }
-        
-        var  oldAlpha;
 
-        if (curTint >= 0) {
+        var oldAlpha;
+        if (curTint >= 0) { // wrong: can be color-tinted
           oldAlpha = curContext.globalAlpha;
           curContext.globalAlpha = curTint / opacityRange;
         }
 
-        // draw the image
-        //curContext.putImageData(obj, x, y); // this causes error if data overflows the canvas dimensions
-
-        // <corban> doing this the slow way for now
-        // we will want to replace this with putImageData and clipping logic
         var c = document.createElement('canvas');
         c.width = obj.width;
         c.height = obj.height;
         var ctx = c.getContext('2d');
         ctx.putImageData(obj, 0, 0);
 
-        if (arguments.length === 5) {
-          // resize the image to w,h
-          //  pay attention to imageMode in the future (0.9)
-          curContext.drawImage(c, x, y, w, h);
-        } else {
-          curContext.drawImage(c, x, y);
-        }
+        curContext.drawImage(c, 0, 0, img.width, img.height,
+          bounds.x, bounds.y, bounds.w, bounds.h);
 
         if (curTint >= 0) {
           curContext.globalAlpha = oldAlpha;
-        }
-
-        if (img._mask) {
-          var oldComposite = curContext.globalCompositeOperation;
-          curContext.globalCompositeOperation = "darker";
-          p.image(img._mask, x, y);
-          curContext.globalCompositeOperation = oldComposite;
         }
       }
     };
