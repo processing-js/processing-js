@@ -4,6 +4,11 @@ _checkEqual(int(f), 65);
 char c = 'E';
 _checkEqual(int(c), 69);
 
+_checkEqual(int(4294967295), -1);
+_checkEqual(int(4294967296), 0);
+_checkEqual(int(4294967297), 1);
+_checkEqual(int(-1.1), -1);
+
 // Test that we do NOT convert hex and octal numbers
 // NOTE: p5 does not convert these and returns the values stated below
 // We want int to work exactly like p5

@@ -28,7 +28,6 @@ _checkEqual(byteExp, char(byteArr));
 
 _checkThrows(function(){char("NoStringsAllowed");});
 _checkThrows(function(){char(true);});
-_checkThrows(function(){char(123.45);});
 
 String[] strArr=new String[3];
 strArr[0]="No";
@@ -44,9 +43,3 @@ boolArr[2]=false;
 for (var i = 0; i < boolArr.length; i++)
   _checkThrows(function(){char(boolArr[i]);});
   
-float[] floatArr=new float[3];
-floatArr[0]=123.456;
-floatArr[1]=789.012;
-floatArr[2]=345.678;
-for (var i = 0; i < floatArr.length; i++)
-  _checkThrows(function(){char(floatArr[i]);});
