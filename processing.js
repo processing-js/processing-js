@@ -4563,16 +4563,18 @@
     };
 
     p.smooth = function() {
-      //curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-      //curContext.mozImageSmoothingEnabled = true;
+      if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+        curContext.mozImageSmoothingEnabled = true;
+      }
     };
 
     p.noSmooth = function() {
-      //curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-      //curContext.mozImageSmoothingEnabled = false;
+      if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+        curContext.mozImageSmoothingEnabled = false;
+      }
     };
-
-    //p.noSmooth(); // default to noSmooth // Corban: turning this on breaks 3D context
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
@@ -6468,7 +6470,7 @@
           // Set default stroke and fill color
           p.stroke(0);
           p.fill(255);
-
+          p.noSmooth();
           p.disableContextMenu();
         }
 
