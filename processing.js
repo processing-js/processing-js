@@ -2001,6 +2001,7 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       multiply: function(c1, c2) {
+        var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
         var ab = (c1 & p.BLUE_MASK);
@@ -5552,10 +5553,8 @@
 
       var data = pixels.data, pos = 0, defaultColor;
       
-      defaultColor = p.color.toArray(p.color(0, 0, 0, 255));
-
       for (var i = 0, l = p.pixels.length; i < l; i++) {
-        c = p.pixels[i] ? p.color.toArray(p.pixels[i]) : defaultColor;
+        c = p.pixels[i] ? p.color.toArray(p.pixels[i]) : [0,0,0,255];
           
         data[pos + 0] = c[0];
         data[pos + 1] = c[1];
@@ -5677,7 +5676,7 @@
       for (var i = 0, l = img.pixels.length; i < l; i++) {
 
         var pos = i * 4;
-        var c = (img.pixels[i] || "rgba(0,0,0,1)").slice(5, -1).split(",");
+        var c = img.pixels[i] || [0,0,0,255];
 
         img.data[pos + 0] = parseInt(c[0], 10);
         img.data[pos + 1] = parseInt(c[1], 10);
