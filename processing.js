@@ -305,6 +305,9 @@
       return "<STRING " + (strings.length -1) + ">";
     });
 
+    // Windows newlines cause problems: 
+    aCode = aCode.replace(/\r\n?/g, "\n");
+
     // Remove end-of-line comments
     aCode = aCode.replace(/\/\/.*\n/g, "\n");
 
