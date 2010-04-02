@@ -6429,15 +6429,20 @@
       }
 
       attach(curElement, "mousemove", function (e) {
+        var element = curElement, offsetX = 0, offsetY = 0;
 
-        p.pmouseX = p.mouseX;
-        p.pmouseY = p.mouseY;
+        if (element.offsetParent) {
+          do {
+            offsetX += element.offsetLeft;
+            offsetY += element.offsetTop;
+          } while(element = element.offsetParent);
+        }
 
-        var scrollX = (window.scrollX !== null && typeof window.scrollX !== 'undefined') ? window.scrollX : window.pageXOffset;
-        var scrollY = (window.scrollY !== null && typeof window.scrollY !== 'undefined') ? window.scrollY : window.pageYOffset;
+        // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
+        // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
+        p.mouseX = e.pageX - offsetX;
+        p.mouseY = e.pageY - offsetY;
 
-        p.mouseX = e.clientX - curElement.offsetLeft + scrollX;
-        p.mouseY = e.clientY - curElement.offsetTop + scrollY;
         p.cursor(curCursor);
 
         if (p.mouseMoved && !mousePressed) {
