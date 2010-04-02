@@ -3084,15 +3084,15 @@
     ////////////////////////////////////////////////////////////////////////////
     // I have updated this to lint, we should check it still performs faster than the other option -F1LT3R
     p.matchAll = function matchAll(aString, aRegExp) {
-      var i = 0,
-        results = [],
-        latest, regexp = new RegExp(aRegExp, "g");
-      latest = results[i] = regexp.exec(aString);
-      while (latest) {
-        i++;
-        latest = results[i] = regexp.exec(aString);
+      var results = [], latest;
+      var regexp = new RegExp(aRegExp, "g");      
+      while ( (latest = regexp.exec(aString)) !== null ) {
+        results.push(latest);
+        if(latest[0].length === 0) {
+          ++regexp.lastIndex;
+        }
       }
-      return results.slice(0, i);
+      return results.length > 0 ? results : null;
     };
 
     String.prototype.replaceAll = function (re, replace) {
