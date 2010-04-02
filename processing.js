@@ -5537,8 +5537,10 @@
           // convert each canvasImg's colors to PImage array format
           var pos = i*4;
           // pjs uses argb, canvas stores rgba
-          this.pixels[i] = (canvasImg.data[pos + 3] * 16777216) + (canvasImg.data[pos + 0] * 65536) +
-                  (canvasImg.data[pos + 1] * 256)    +   (canvasImg.data[pos + 2]);                  
+          this.pixels[i] = p.color.toInt(canvasImg.data[pos + 0], canvasImg.data[pos + 1],
+          canvasImg.data[pos + 2], canvasImg.data[pos + 3]);
+          //(canvasImg.data[pos + 3] * 16777216) + (canvasImg.data[pos + 0] * 65536) +
+          //        (canvasImg.data[pos + 1] * 256)    +   (canvasImg.data[pos + 2]);                  
         }
       };
 
@@ -5600,10 +5602,6 @@
       // if image is in the preloader cache return a new PImage
       if (p.pjs.imageCache[file]) {
         return new PImage(p.pjs.imageCache[file]);
-      }
-      // else if in the DOM already
-      else if (document.getElementById(file) instanceof HTMLImageElement) {
-        return new PImage(document.getElementById(file));
       }
       // else aysnc load it
       else {
