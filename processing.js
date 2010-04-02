@@ -5560,9 +5560,9 @@
         // convert an <img> to a PImage
         this.fromHTMLImageData(arguments[0]);
       } else if (arguments.length === 2 || arguments.length === 3) {
-        this.width = aWidth;
-        this.height = aHeight;
-        this.pixels = new Array(aWidth * aHeight);
+        this.width = aWidth || 0;
+        this.height = aHeight || 0;
+        this.pixels = new Array(this.width * this.height);
         this.data = this.pixels;
         this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
       }

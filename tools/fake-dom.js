@@ -51,7 +51,8 @@ var canvas = {
                    enableVertexAttribArray: __empty_func__,
                    getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
                    createImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
-                   drawImage: __empty_func__
+                   drawImage: __empty_func__,
+                   putImageData: __empty_func__
                  };
   },
   style: {}
