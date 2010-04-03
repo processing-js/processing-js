@@ -770,9 +770,6 @@
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
 
-    // Store a line for println(), print() handline
-    p.ln = "";
-
     // Glyph path storage for textFonts
     p.glyphTable = {};
 
