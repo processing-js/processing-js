@@ -86,11 +86,12 @@ Processing.lib.UnitTests = function() {
     };
 
     this._checkThrows = function(f) {
+      var shouldThrow = (arguments.length === 2) ? !!arguments[1] : true;
       try {
         f();
-        this._fail(f + " didn't throw as expected.");
+        shouldThrow ? this._fail(f + " didn't throw as expected.") : this._pass();
       } catch (e) {
-        this._pass();
+        shouldThrow ? this._pass() : this._fail(f + " should not have thrown exception, but did.");
       }
     };
 
