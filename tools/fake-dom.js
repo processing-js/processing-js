@@ -52,7 +52,9 @@ var canvas = {
                    getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; }
                  };
   },
-  style: {}
+  style: {
+    setProperty: __empty_func__
+  }
 };
  
 var WebGLFloatArray = __empty_func__;
