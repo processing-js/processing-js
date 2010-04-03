@@ -49,13 +49,28 @@ var canvas = {
                    getAttribLocation: __empty_func__,
                    vertexAttribPointer: __empty_func__,
                    enableVertexAttribArray: __empty_func__,
+                   getUniformLocation: __empty_func__,
+                   uniform1f: __empty_func__,
+                   uniform2f: __empty_func__,
+                   uniform3f: __empty_func__,
+                   uniform4f: __empty_func__,
+                   uniformfv: __empty_func__,
+                   uniform2fv: __empty_func__,
+                   uniform3fv: __empty_func__,
+                   uniform1i: __empty_func__,
+                   uniform2i: __empty_func__,
+                   uniform3i: __empty_func__,
+                   uniform4i: __empty_func__,
                    getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; }
                  };
   },
-  style: {}
+  style: {
+    setProperty: __empty_func__
+  }
 };
  
 var WebGLFloatArray = __empty_func__;
+var HTMLImageElement = __empty_func__;
 
 var document = {
   fake: true,
@@ -67,6 +82,7 @@ var document = {
   },
   appendChild: __elem_func__,
   removeChild: __empty_func__,
+  getElementById: __empty_func__,
   getElementByTagName: function() { return canvas; },
   createElement: function () { return canvas },
   addEventListener: __empty_func__,

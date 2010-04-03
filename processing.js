@@ -68,10 +68,10 @@
   };
   
 	/*
-    Compatibility wrapper for older browsers
+    Wrapper to easily deal with array names changes.
   */
   var newWebGLArray = function(data) {
-    return new WebGLFloatArray(data);
+    return new WebGLFloatArray(data);    
   };
   
   var createProgramObject = function( curContext, vetexShaderSource, fragmentShaderSource ) {
@@ -165,76 +165,178 @@
 
   "uniform vec4 color;" +
 
+  "uniform bool usingMat;" +
+  "uniform vec3 specular;" +
+  "uniform vec3 mat_emissive;" +
+  "uniform vec3 mat_ambient;" +
+  "uniform vec3 mat_specular;" +
+  "uniform float shininess;" +
+
   "uniform mat4 model;" +
   "uniform mat4 view;" +
   "uniform mat4 projection;" +
   "uniform mat4 normalTransform;" +
   
   "uniform int lightCount;" +
+  "uniform vec3 falloff;" +
 
   "struct Light {" +
   "  bool dummy;" +
   "	 int type;" +
   "	 vec3 color;" +
   "	 vec3 position;" +
+  "  vec3 direction;" +
+  "  float angle;" +
+  "  vec3 halfVector;" +
+  "  float concentration;" +
   "};" +
   "uniform Light lights[8];" +
 
-  "void AmbientLight( inout vec3 col, in vec3 vertColor, in Light light ) {" +
-  "  col += vertColor * light.color;" +
-  "}" +
-
-  "void DirectionalLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, in Light light ) {" +
-  "  col += vertColor * light.color * max(0.0, dot(-normalize(light.position), vertNormal));" +
-  "}" +
-
-  "void PointLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
+  "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
      // Get the vector from the light to the vertex
-  "	 vec3 VP = vec3(light.position) - ecPos;" +
+     // Get the distance from the current vector to the light position
+  "	 float d = length( light.position - ecPos );" +
+
+  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + 
+  "  totalAmbient += light.color * attenuation;" +
+  "}" +
+
+  "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" +
+  "  float powerfactor = 0.0;" +
+  "  float nDotVP = max(0.0, dot( vertNormal, light.position ));" + 
+  "  float nDotVH = max(0.0, dot( vertNormal, normalize( light.position-ecPos )));" +
+
+  "  if( nDotVP != 0.0 ){" +
+  "    powerfactor = pow( nDotVH, shininess );" + 
+  "  }" +
+
+  "  col += light.color * nDotVP;" +
+  "  spec += specular * powerfactor;" +
+  "}" +
+
+  "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+  "  float powerfactor;" + 
+  
+     // Get the vector from the light to the vertex
+  "	 vec3 VP = light.position - ecPos;" +
 
      // Get the distance from the current vector to the light position
-  "  float d = length(VP); " + 
+  "  float d = length( VP ); " + 
 
-     // Normalize the light so it can be used in the dot product operation.
-  "  VP = normalize(VP);" + 
-  "	 float nDotVP = max(0.0, dot(vertNormal, VP));"+ 
-  "  col += vertColor * light.color * nDotVP;" + 
+     // Normalize the light ray so it can be used in the dot product operation.
+  "  VP = normalize( VP );" + 
+  
+  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + 
+
+  "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
+  "  vec3 halfVector = normalize( VP + eye );" +
+  "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
+
+  "  if( nDotVP == 0.0) {" +
+  "    powerfactor = 0.0;" +
+  "  }" +
+  "  else{"+
+  "    powerfactor = pow( nDotHV, shininess );" +
+  "  }" +
+
+  "  spec += specular * powerfactor * attenuation;" +  
+  "  col += light.color * nDotVP * attenuation;" + 
+  "}" +
+
+  /*
+  */
+  "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+  "	 float spotAttenuation;" +
+  "  float powerfactor;" + 
+
+	// calculate the vector from the current vertex to the light.
+  "  vec3 VP = light.position - ecPos; " + 
+  "  vec3 ldir = normalize( light.direction );" +
+
+  // get the distance from the spotlight and the vertex
+  "  float d = length( VP );" +
+  "  VP = normalize( VP );" + 
+
+  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ) );" +
+
+	// dot product of the vector from vertex to light and light direction.
+  "  float spotDot = dot( VP, ldir );" +
+
+  // if the vertex falls inside the cone
+  "  if( spotDot < cos( light.angle ) )" +
+  "  {" +
+  "    spotAttenuation = pow( spotDot, light.concentration );" +
+  "  }" +
+  "  else{" +
+  "    spotAttenuation = 1.0;" +
+  "  }" +
+  "  attenuation *= spotAttenuation;" +
+  
+  "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
+  "  vec3 halfVector = normalize( VP + eye );" +
+  "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
+
+  "  if( nDotVP == 0.0 ){" +
+  "    powerfactor = 0.0;" +
+  "  }" +
+  "  else{"+
+  "    powerfactor = pow( nDotHV, shininess );" +
+  "  }" +
+
+  "  spec += specular * powerfactor * attenuation;" +  
+  "  col += light.color * nDotVP * attenuation;" + 
   "}" +
 
   "void main(void) {" +
-  
-  "  vec3 finalColor = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
+
   "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
 
-     // If there were no lights this frame, just use the 
-     // assigned color of the shape.
+  "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
+  "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
+  "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
+  
+     // If there were no lights this draw call, just use the 
+     // assigned fill color of the shape and the specular value
   "  if( lightCount == 0 ) {" + 
-  "    gl_FrontColor = color;" +
+  "    gl_FrontColor = color + vec4(mat_specular,1.0);" +
   "  }" +
     
   "  else {" +
   "    for( int i = 0; i < lightCount; i++ ) {" +
   "      if( lights[i].type == 0 ) {"+
-  "        AmbientLight( finalColor, vec3( color[0], color[1], color[2] ), lights[i] );"+   
+  "        AmbientLight( finalAmbient, ecPos, lights[i] );"+   
   "      }" +
   "      else if( lights[i].type == 1 ) {" +
-  "        DirectionalLight( finalColor, vec3( color[0], color[1], color[2] ), norm, lights[i] );" +
+  "        DirectionalLight( finalDiffuse,ecPos, finalSpecular, norm, lights[i] );" +
   "      }" +
   "      else if( lights[i].type == 2 ) {" +
-  
-          // Place the current vertex into view space
-          // ecPos = eye coordinate position.
-  "       vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
-
-           // the current vertex in eye coordinate space
-           // perspective divide
-  "        vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
-  "        PointLight( finalColor, vec3( color[0], color[1], color[2] ), norm, ecPos, lights[i] );" +
+  "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
+  "      }" +
+  "      else if( lights[i].type == 3 ) {" +
+  "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
   "      }" +
   "    }" +
-  "    gl_FrontColor = vec4( finalColor, color[3] );" +
-  "  }" +
+  
+  "   if( usingMat == false ) {" + 
+  "    gl_FrontColor = vec4(  " +
+  "                           vec3(color) * finalAmbient +" +
+  "                           vec3(color) * finalDiffuse +" +
+  "                           vec3(color) * finalSpecular," +
+  "                           color[3] );" +
+  "   }" +
+  "   else{" +
+  "     gl_FrontColor = vec4( " +
+  "                           mat_emissive + " +
+  "                           (vec3(color) * mat_ambient * finalAmbient) + " +
+  "                           (vec3(color) * finalDiffuse) + " +
+  "                           ( mat_specular * finalSpecular), " +
+  "                           color[3] );" +
+  "   }" +
 
+  "  }" +
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
   "}";
 
@@ -769,9 +871,6 @@
 
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
-
-    // Store a line for println(), print() handline
-    p.ln = "";
 
     // Glyph path storage for textFonts
     p.glyphTable = {};
@@ -2534,9 +2633,14 @@
       inDraw = true;
 
       if (p.use3DContext) {
-        // Delete all the lighting states the user set in the last
-        // draw() call. They will have to reset them each time.
+        // Delete all the lighting states and the materials the
+        // user set in the last draw() call.
         p.noLights();
+        p.lightFalloff( 1, 0, 0 );
+        p.shininess( 1 );
+        p.ambient( 255, 255, 255 );
+        p.specular( 0, 0, 0 );
+
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.camera();
         p.draw();
@@ -3084,15 +3188,15 @@
     ////////////////////////////////////////////////////////////////////////////
     // I have updated this to lint, we should check it still performs faster than the other option -F1LT3R
     p.matchAll = function matchAll(aString, aRegExp) {
-      var i = 0,
-        results = [],
-        latest, regexp = new RegExp(aRegExp, "g");
-      latest = results[i] = regexp.exec(aString);
-      while (latest) {
-        i++;
-        latest = results[i] = regexp.exec(aString);
+      var results = [], latest;
+      var regexp = new RegExp(aRegExp, "g");      
+      while ( (latest = regexp.exec(aString)) !== null ) {
+        results.push(latest);
+        if(latest[0].length === 0) {
+          ++regexp.lastIndex;
+        }
       }
-      return results.slice(0, i);
+      return results.length > 0 ? results : null;
     };
 
     String.prototype.replaceAll = function (re, replace) {
@@ -3422,22 +3526,6 @@
       return ret;
     };
 
-    p['char'] = function ( key ) {
-      if ( arguments.length === 1 && typeof key === "number" && (key + "").indexOf( '.' ) === -1 ) { // not a float
-        return new Char(String.fromCharCode(key));
-      } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
-        var ret = [];
-
-        for ( var i = 0; i < key.length; i++ ) {
-          ret[i] = p['char']( key[i] );
-        }
-
-        return ret;
-      } else {
-        throw "char() may receive only one argument of type int, byte, int[], or byte[].";
-      }
-    };
-
     p.trim = function( str ) {
       var newstr;
       if (typeof str === "object" && str.constructor === Array) {
@@ -3452,107 +3540,52 @@
       return newstr; 
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Math functions
-    ////////////////////////////////////////////////////////////////////////////
-    p.sq = function sq(aNumber) {
-      return aNumber * aNumber;
-    };
-    p.sqrt = function sqrt(aNumber) {
-      return Math.sqrt(aNumber);
-    };
+    // Conversion
 
-    p['int'] = function( val ) {
-      var ret;
-
-      if ( ( val || val === 0 ) && arguments.length === 1 ) {
-        if ( typeof val === 'number' ) {
-          var isNegative = val < 0;
-          if ( isNegative ) {
-            val = Math.abs( val );
-          }
-
-          ret = Math.floor( val );
-
-          if ( isNegative ) {
-            ret = -ret;
-          }
-        } else if ( typeof val === 'boolean' ) {
-          if ( val === true ) {
-            ret = 1;
-          } else {
-            ret = 0;
-          }
-        } else if ( typeof val === 'string' ) {
-          ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
-
-          if ( isNaN( ret ) ) {
-            ret = 0;
-          }
-        } else if ( val instanceof Char ) {
-          ret = val.code;
-        } else if ( typeof val === 'object' && val.constructor === Array ) {
-          ret = new Array( val.length );
-
-          for ( var i = 0; i < val.length; i++) {
-            if ( typeof val[i] === 'string' && val[i].indexOf('.') > -1 ) {
-              ret[i] = 0;
-            } else {
-              ret[i] = p['int']( val[i] );
-            }
-          }
+    p['boolean'] = function( val ) {
+      if (typeof val === 'number') {
+        return val !== 0;
+      } else if (typeof val === 'boolean') {
+        return val;
+      } else if (typeof val === 'string') {
+        return val.toLowerCase() === 'true';
+      } else if (val instanceof Char) {
+        // 1, T or t
+        return val.code === 49 || val.code === 84 || val.code === 116; 
+      } else if (typeof val === 'object' && val.constructor === Array) {
+        var ret = new Array(val.length);
+        for (var i = 0; i < val.length; i++) {
+          ret[i] = p['boolean'](val[i]);
         }
+        return ret;
       }
-
-      return ret;
     };
-		
-		//Determines the smallest value in a sequence of numbers.
-		//Can accept more than 2 parameters or an array
-		//Undefined if passed in an array and a scalar; or if a non number was passed in
-    p.min = function() {
-      var numbers;
 
-      if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
-        numbers = arguments[0];
+    // a byte is a number between -128 and 127
+    p['byte'] = function (aNumber) {
+      if (typeof aNumber === 'object' && aNumber.constructor === Array) {
+        var bytes = [];
+        for(var i = 0; i < aNumber.length; i++) {
+          bytes[i] = p['byte'](aNumber[i]);  
+        }
+        return bytes;
       } else {
-        numbers = arguments;
+        return (0 - (aNumber & 0x80)) | (aNumber & 0x7F);
       }
-
-      // Scan for illegal non-numbers
-      for ( var i = 0; i < numbers.length; i++ ) {
-        if ( typeof numbers[i] !== 'number' ) {
-          throw "Value sent to min is not a number.";
-        }
-      }
-      
-      return Math.min.apply(this, numbers);
     };
 
-		//Determines the biggest value in a sequence of numbers.
-		//Can accept more than 2 parameters or an array
-		//Undefined if passed in an array and a scalar; or if a non number was passed in 
-    p.max = function() {
-      var numbers;
-
-      if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
-        numbers = arguments[0];
+    p['char'] = function ( key ) {
+      if ( arguments.length === 1 && typeof key === "number") {
+        return new Char(String.fromCharCode(key & 0xFFFF));
+      } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
+        var ret = new Array(key.length);
+        for ( var i = 0; i < key.length; i++ ) {
+          ret[i] = p['char']( key[i] );
+        }
+        return ret;
       } else {
-        numbers = arguments;
+        throw "char() may receive only one argument of type int, byte, int[], or byte[].";
       }
-
-      // Scan for illegal non-numbers
-      for ( var i = 0; i < numbers.length; i++ ) {
-        if ( typeof numbers[i] !== 'number' ) {
-          throw "Value sent to max is not a number.";
-        }
-      }
-      
-      return Math.max.apply(this, numbers);
-    };
-
-    p.floor = function floor(aNumber) {
-      return Math.floor(aNumber);
     };
 
     // Processing doc claims good argument types are: int, char, byte, boolean,
@@ -3560,131 +3593,145 @@
     // floats should not work. However, floats with only zeroes right of the
     // decimal will work because JS converts those to int.
     p['float'] = function( val ) {
-      var ret;
-
       if ( arguments.length === 1 ) {
         if ( typeof val === 'number' ) {
-          // float() not allowed to handle floats.
-          if ( ( val + "" ).indexOf( '.' ) > -1 ) {
-            throw "float() may not accept float arguments.";
-          } else {
-            ret = val.toFixed(1);
-          }
+          return val;          
         } else if ( typeof val === 'boolean' ) {
-          if ( val === true ) {
-            ret = 1.0;
-          } else {
-            ret = 0.0;
-          }
-          ret = ret.toFixed(1);
+          return val ? 1 : 0;
         } else if ( typeof val === 'string' ) {
-          ret = parseFloat( val );
+          return parseFloat( val );
         } else if ( val instanceof Char ) {
-          ret = val.code.toFixed(1);  
+          return val.code;
         } else if ( typeof val === 'object' && val.constructor === Array ) {
-
-          ret = new Array( val.length );
-
+          var ret = new Array( val.length );
           for ( var i = 0; i < val.length; i++) {
               ret[i] = p['float']( val[i] );
           }
+          return ret;
         }
       }
-
-      return ret;
     };
 
-    p.ceil = function ceil(aNumber) {
-      return Math.ceil(aNumber);
-    };
-    p.round = function round(aNumber) {
-      return Math.round(aNumber);
-    };
-    p.lerp = function lerp(value1, value2, amt) {
-      return ((value2 - value1) * amt) + value1;
-    };
-    p.abs = function abs(aNumber) {
-      return Math.abs(aNumber);
-    };
-    p.cos = function cos(aNumber) {
-      return Math.cos(aNumber);
-    };
-    p.sin = function sin(aNumber) {
-      return Math.sin(aNumber);
-    };
-    p.pow = function pow(aNumber, aExponent) {
-      return Math.pow(aNumber, aExponent);
-    };
-    p.tan = function tan(aNumber) {
-      return Math.tan(aNumber);
-    };
-    p.atan = function atan(aNumber) {
-      return Math.atan(aNumber);
-    };
-    p.atan2 = function atan2(aNumber, aNumber2) {
-      return Math.atan2(aNumber, aNumber2);
-    };
-    p.radians = function radians(aAngle) {
-      return (aAngle / 180) * p.PI;
-    };
-    p.log = function log(aNumber) {
-      return Math.log(aNumber);
-    };
-    p.exp = function exp(aNumber) {
-      return Math.exp(aNumber);
-    };
-    p.asin = function asin(aNumber) {
-      return Math.asin(aNumber);
-    };
-    p.acos = function acos(aNumber) {
-      return Math.acos(aNumber);
-    };
-
-    p['boolean'] = function( val ) {
-      var ret = false;
-
-      if (val && typeof val === 'number' && val !== 0) {
-        ret = true;
-      } else if (val && typeof val === 'boolean' && val === true) {
-        ret = true;
-      } else if (val && typeof val === 'string' && val.toLowerCase() === 'true') {
-        ret = true;
-      } else if (val && typeof val === 'object' && val.constructor === Array) {
-        ret = new Array(val.length);
-
-        for (var i = 0; i < val.length; i++) {
-          ret[i] = p['boolean'](val[i]);
+    p['int'] = function( val ) {
+      if(typeof val === 'number') {
+        return val & 0xFFFFFFFF;
+      } else if (typeof val === 'boolean' ) {
+        return val ? 1 : 0;
+      } else if ( typeof val === 'string' ) {
+        var number = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
+        return number & 0xFFFFFFFF;
+      } else if ( val instanceof Char ) {
+        return val.code;
+      } else if ( typeof val === 'object' && val.constructor === Array ) {
+        var ret = new Array( val.length );
+        for ( var i = 0; i < val.length; i++) {
+          ret[i] = p['int']( val[i] );
         }
+        return ret;
       }
+    };		
 
-      return ret;
+    ////////////////////////////////////////////////////////////////////////////
+    // Math functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Calculation
+    p.abs = Math.abs;
+    p.ceil = Math.ceil;
+    p.constrain = function(aNumber, aMin, aMax) {
+      return aNumber > aMax ? aMax : aNumber < aMin ? aMin : aNumber;
     };
-
     p.dist = function() {
-      var dx, dy, dz = 0;      
+      var dx, dy, dz;      
       if (arguments.length === 4) {
         dx = arguments[0] - arguments[2];
         dy = arguments[1] - arguments[3];
-      } 
-      else if (arguments.length === 6) {
+        return Math.sqrt(dx * dx + dy * dy);
+      } else if (arguments.length === 6) {
         dx = arguments[0] - arguments[3];
         dy = arguments[1] - arguments[4];
         dz = arguments[2] - arguments[5];
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
       }      
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
     };
-
-    p.map = function map(value, istart, istop, ostart, ostop) {
-      return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+    p.exp = Math.exp;
+    p.floor = Math.floor;
+    p.lerp = function(value1, value2, amt) {
+      return ((value2 - value1) * amt) + value1;
     };
-
-    p.mag = function (a, b, c) {
+    p.log = Math.log;
+    p.mag = function(a, b, c) {
       if (arguments.length === 2) {
         return Math.sqrt(a * a + b * b);
       } else if (arguments.length === 3) {
         return Math.sqrt(a * a + b * b + c * c);
       }
     };
+    p.map = function(value, istart, istop, ostart, ostop) {
+      return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+    };
+    p.max = function() {
+      if(arguments.length === 2) {
+        return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
+      } else {
+        var numbers = arguments.length === 1 ?
+          arguments[0] : arguments; // if single argument, array is used
+        if(!("length" in numbers && numbers.length > 0)) {
+          throw "Non-empty array is expected";
+        }
+        var max = numbers[0], count = numbers.length;
+        for(var i = 1; i < count; ++i) {
+          if(max < numbers[i]) { 
+            max = numbers[i]; 
+          }
+        }
+        return max;
+      }
+    };
+    p.min = function() {
+      if(arguments.length === 2) {
+        return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
+      } else {
+        var numbers = arguments.length === 1 ?
+          arguments[0] : arguments; // if single argument, array is used
+        if(!("length" in numbers && numbers.length > 0)) {
+          throw "Non-empty array is expected";
+        }
+        var min = numbers[0], count = numbers.length;
+        for(var i = 1; i < count; ++i) {
+          if(min > numbers[i]) {
+            min = numbers[i];
+          }
+        }
+        return min;
+      }
+    };
+    p.norm = function(aNumber, low, high) {
+      return (aNumber - low) / (high - low);
+    };
+    p.pow = Math.pow;
+    p.round = Math.round;    
+    p.sq = function(aNumber) {
+      return aNumber * aNumber;
+    };
+    p.sqrt = Math.sqrt;
+
+    // Trigonometry 
+    p.acos = Math.acos;
+    p.asin = Math.asin;
+    p.atan = Math.atan;
+    p.atan2 = Math.atan2;
+    p.cos = Math.cos;
+    p.degrees = function(aAngle) {
+      return (aAngle * 180) / Math.PI;
+    };
+    p.radians = function(aAngle) {
+      return (aAngle / 180) * Math.PI;
+    };
+    p.sin = Math.sin;
+    p.tan = Math.tan;
+
+    // Random
 
     p.Random = function () {
 
@@ -3718,33 +3765,6 @@
 
       };
 
-    };
-
-    //! This can't be right... right? <corban> should be good now
-    // a byte is a number between -128 and 127
-    p['byte'] = function (aNumber) {
-      if (typeof aNumber === 'object' && aNumber.constructor === Array) {
-        var bytes = [];
-        for(var i = 0; i < aNumber.length; i++) {
-          bytes[i] = p['byte'](aNumber[i]);  
-        }
-        return bytes;
-      } else {
-        if (aNumber >= -128 && aNumber < 128) {
-          return aNumber;
-        } else {
-          if ( aNumber >= 128) {
-            return p['byte'](-256 + aNumber);
-          } else if ( aNumber < -128) {
-            return p['byte'](256 + aNumber);
-          }
-        }
-      }
-    };
-
-    p.norm = function norm(aNumber, low, high) {
-      var range = high - low;
-      return ((1 / range) * aNumber) - ((1 / range) * low);
     };
 
     p.random = function random(aMin, aMax) {
@@ -3814,18 +3834,6 @@
       }
     };
 
-    p.constrain = function constrain(aNumber, aMin, aMax) {
-      return Math.min(Math.max(aNumber, aMin), aMax);
-    };
-
-    p.degrees = function degrees(aAngle) {
-      aAngle = (aAngle * 180) / p.PI;
-      if (aAngle < 0) {
-        aAngle = 360 + aAngle;
-      }
-      return aAngle;
-    };
-
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
       if (aMode && (aMode === "OPENGL" || aMode === "P3D" ) ) {
@@ -3845,6 +3853,7 @@
 						sinLUT[i] = p.sin(i * (p.PI/180) * 0.5);
 						cosLUT[i] = p.cos(i * (p.PI/180) * 0.5);
           }
+          // Set defaults
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
@@ -3854,8 +3863,16 @@
           // Create the program objects to render 2D (points, lines) and 
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit, 
           // lighting calculations could be ommitted from that program object.
-          programObject2D = createProgramObject( curContext, vertexShaderSource2D, fragmentShaderSource3D );
+          programObject2D = createProgramObject( curContext, vertexShaderSource2D, fragmentShaderSource2D );
           programObject3D = createProgramObject( curContext, vertexShaderSource3D, fragmentShaderSource3D );
+
+          // Now that the programs have been compiled, we can set the default
+          // states for the lights.
+          curContext.useProgram( programObject3D );
+          p.lightFalloff( 1, 0, 0 );
+          p.shininess( 1 );
+          p.ambient( 255, 255, 255 );
+          p.specular( 0, 0, 0 );
 
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
@@ -4002,27 +4019,98 @@
     // Lights
     ////////////////////////////////////////////////////////////////////////////
     
-    p.ambientLight = function( r, g, b ) {
-      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+    /*
+    */
+    p.ambientLight = function( r, g, b, x, y, z ) {
+
+      if( p.use3DContext ) {
+            
+        if( lightCount === p.MAX_LIGHTS ) {
+          throw "can only create " + p.MAX_LIGHTS + " lights";
+        }
+        
+        var pos = new PVector( x, y, z );
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( pos, pos );
+        
         curContext.useProgram( programObject3D );
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position", pos.array() );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 0 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
     };
 
+    /*
+    */
     p.directionalLight = function( r, g, b, nx, ny, nz ) {
-      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+
+      if( p.use3DContext ) {
+            
+        if( lightCount === p.MAX_LIGHTS ) {
+          throw "can only create " + p.MAX_LIGHTS + " lights";
+        }
+
         curContext.useProgram( programObject3D );
+
+        // transform the spotlight's direction
+        // Less code than manually multiplying, but I'll fix
+        // this when I have more time.
+        var dir = [ nx, ny, nz, 0.0000001 ];     
+        view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( dir, dir );
+
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
-        uniformf( programObject3D, "lights[" + lightCount + "].position", [nx, -ny, nz] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position", [-dir[0], -dir[1], -dir[2]] );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 1 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
     };
     
+    /*
+    */
+    p.lightFalloff = function lightFalloff( constant, linear, quadratic ) {
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "falloff", [constant, linear, quadratic] );
+      }
+    };
+    
+    /*
+    */
+    p.lightSpecular = function lightSpecular( r, g, b ) {
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "specular", [r/255, g/255, b/255] );
+      }
+    };
+    
+    /*
+     	Sets the the default ambient light, directional light,
+      falloff, and specular values. P5 Documentation says specular()
+      is set, but the code calls lightSpecular().
+    */
+    p.lights = function lights() {
+      p.ambientLight( 128, 128, 128 );
+      p.directionalLight( 128, 128, 128, 0, 0, -1 );
+      p.lightFalloff( 1, 0, 0 );
+      p.lightSpecular( 0, 0, 0 );
+    };
+    
+    /*
+    */
     p.pointLight = function( r, g, b, x, y, z ) {
-      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+
+      if( p.use3DContext ) {
+      
+        if( lightCount === p.MAX_LIGHTS ) {
+          throw "can only create " + p.MAX_LIGHTS + " lights";
+        }
+        
         curContext.useProgram( programObject3D );
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
 
@@ -4033,7 +4121,7 @@
         view.scale( 1, -1 , 1 );
         view.apply( modelView.array() );
         view.mult( pos, pos );
-
+        
         uniformf( programObject3D, "lights[" + lightCount + "].position", pos.array() );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 2 );
         uniformi( programObject3D, "lightCount", ++lightCount );
@@ -4044,11 +4132,54 @@
       Disables lighting so the all shapes drawn after this
       will not be lit.
     */
-    p.noLights = function() {
+    p.noLights = function noLights() {
       if( p.use3DContext ) {
         lightCount = 0;
         curContext.useProgram( programObject3D );
         uniformi( programObject3D, "lightCount", lightCount );
+      }
+    }
+    
+    /*
+      r,g,b - Color of the light
+      x,y,z - position of the light in modeling space
+      nx,ny,nz - direction of the spotlight
+      angle - in radians
+      concentration - 
+    */
+    p.spotLight = function spotLight( r, g, b, x, y, z, 
+                                      nx, ny, nz, angle, concentration) {
+      if( p.use3DContext ) {
+      
+        if( lightCount === p.MAX_LIGHTS ) {
+          throw "can only create " + p.MAX_LIGHTS + " lights";
+        }
+
+        curContext.useProgram( programObject3D );
+        
+        // place the point in view space once instead of once per vertex
+        // in the shader.
+        var pos = new PVector( x, y, z );
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( pos, pos );
+        
+        // transform the spotlight's direction
+        // need to find a solution for this one. Maybe manual mult?
+        var dir = [ nx, ny, nz, 0.0000001 ];     
+        view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( dir, dir );
+        
+        uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position",  pos.array() );
+        uniformf( programObject3D, "lights[" + lightCount + "].direction", [dir[0],dir[1],dir[2]] );
+        uniformf( programObject3D, "lights[" + lightCount + "].concentration", concentration );
+        uniformf( programObject3D, "lights[" + lightCount + "].angle", angle );
+        uniformi( programObject3D, "lights[" + lightCount + "].type", 3 );
+        uniformi( programObject3D, "lightCount", ++lightCount );
       }
     };
 
@@ -4509,7 +4640,109 @@
       return ( ow !== 0 ) ? oz / ow : oz;
     };
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Material Properties
+    ////////////////////////////////////////////////////////////////////////////
 
+    /*
+    */
+    p.ambient = function ambient() {
+      // create an alias to shorten code
+      var a = arguments;
+      
+      // either a shade of gray or a 'color' object.
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformi( programObject3D, "usingMat", true );
+        
+        if( a.length === 1 ) {
+          // color object was passed in
+          if( typeof a[0] === "string" ) {  
+            c = a[0].slice(5, -1).split(",");
+            uniformf( programObject3D, "mat_ambient", [c[0]/255, c[1]/255, c[2]/255] );
+          }
+          // else a single number was passed in for gray shade
+          else {
+            uniformf( programObject3D, "mat_ambient", [a[0]/255, a[0]/255, a[0]/255] );
+          }
+        }
+        // Otherwise three values were provided (r,g,b)        
+        else {
+          uniformf( programObject3D, "mat_ambient", [a[0]/255, a[1]/255, a[2]/255] );
+        }
+      }
+    }
+
+    /*
+    */
+    p.emissive = function emissive() {
+      // create an alias to shorten code
+      var a = arguments;
+      
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformi( programObject3D, "usingMat", true );
+      
+        // If only one argument was provided, the user either gave us a 
+        // shade of gray or a 'color' object.
+        if( a.length === 1 ) {
+          // color object was passed in
+          if( typeof a[0] === "string" ) {  
+            c = a[0].slice(5, -1).split(",");
+            uniformf( programObject3D, "mat_emissive", [c[0]/255, c[1]/255, c[2]/255] );
+          }
+          // else a regular number was passed in for gray shade
+          else {
+            uniformf( programObject3D, "mat_emissive", [a[0]/255, a[0]/255, a[0]/255] );
+          }
+        }
+        // Otherwise three values were provided (r,g,b)
+        else
+        {
+          uniformf( programObject3D, "mat_emissive", [a[0]/255, a[1]/255, a[2]/255] );
+        }
+      }
+    }
+
+    /*
+    */
+    p.shininess = function shininess( shine ) {
+      curContext.useProgram( programObject3D );
+      uniformi( programObject3D, "usingMat", true );
+      uniformf( programObject3D, "shininess", shine );
+    }
+    
+    /*
+      Documentation says the following calls are valid, but the
+      Processing throws exceptions:
+      specular(gray, alpha)
+      specular(v1, v2, v3, alpha)
+    */
+    p.specular = function specular() {
+      var a = arguments;
+
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformi( programObject3D, "usingMat", true );
+      
+        // color object was passed in
+        if( a.length === 1 && typeof a[0] === "string" ) {
+          var c = arguments[0].slice(5, -1).split(",");
+          uniformf( programObject3D, "mat_specular", [c[0]/255, c[1]/255, c[2]/255] );
+        }
+        
+        // a single value for a gray shade was passed in
+        else if( a.length === 1 && typeof a[0] === "number" ) {
+          uniformf( programObject3D, "mat_specular", [a[0]/255, a[0]/255, a[0]/255] );
+        }
+        
+        // r, g, b
+        else if( a.length === 3 ) {
+          uniformf( programObject3D, "mat_specular", [a[0]/255, a[1]/255, a[2]/255] );
+        }
+      }
+    }
+    
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
@@ -4560,16 +4793,18 @@
     };
 
     p.smooth = function() {
-      //curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-      //curContext.mozImageSmoothingEnabled = true;
+      if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+        curContext.mozImageSmoothingEnabled = true;
+      }
     };
 
     p.noSmooth = function() {
-      //curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-      //curContext.mozImageSmoothingEnabled = false;
+      if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+        curContext.mozImageSmoothingEnabled = false;
+      }
     };
-
-    //p.noSmooth(); // default to noSmooth // Corban: turning this on breaks 3D context
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
@@ -6461,7 +6696,7 @@
           // Set default stroke and fill color
           p.stroke(0);
           p.fill(255);
-
+          p.noSmooth();
           p.disableContextMenu();
         }
 
@@ -6518,15 +6753,20 @@
       }
 
       attach(curElement, "mousemove", function (e) {
+        var element = curElement, offsetX = 0, offsetY = 0;
 
-        p.pmouseX = p.mouseX;
-        p.pmouseY = p.mouseY;
+        if (element.offsetParent) {
+          do {
+            offsetX += element.offsetLeft;
+            offsetY += element.offsetTop;
+          } while(element = element.offsetParent);
+        }
 
-        var scrollX = (window.scrollX !== null && typeof window.scrollX !== 'undefined') ? window.scrollX : window.pageXOffset;
-        var scrollY = (window.scrollY !== null && typeof window.scrollY !== 'undefined') ? window.scrollY : window.pageYOffset;
+        // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
+        // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
+        p.mouseX = e.pageX - offsetX;
+        p.mouseY = e.pageY - offsetY;
 
-        p.mouseX = e.clientX - curElement.offsetLeft + scrollX;
-        p.mouseY = e.clientY - curElement.offsetTop + scrollY;
         p.cursor(curCursor);
 
         if (p.mouseMoved && !mousePressed) {
