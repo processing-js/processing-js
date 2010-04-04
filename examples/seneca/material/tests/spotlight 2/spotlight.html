@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>spotLight() Test</h2>
+
+    <p>This test was taken from <a href="http://www.processing.org/">Processing.org</a> which tests to make<br />
+    sure the spotLights() works correctly on a sphere.
+    </p>
+
+    <p>
+      <canvas datasrc="spotlight.pjs" width="100" height="100"> </canvas>
+      <img src="spotlight.jpg" style="margin: 10px 0;"/>
+    </p>
+    
+    <pre>
+<b>// Test from Processing.org</b>
+size(100, 100, P3D);
+background(0); 
+noStroke(); 
+background(0); 
+spotLight(51, 102, 126, 50, 50, 200, 
+          0, 0, -1, PI/3, 400.0 ); 
+translate(80, 50, 0); 
+sphere(30);</pre>
+
+  </body>
+</html>
