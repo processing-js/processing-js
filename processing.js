@@ -1014,6 +1014,51 @@
       array: function array(){
         return this.elements.slice();
       },
+      translate: function(tx,ty) {                     
+        this.elements[2] = tx*this.elements[0] + ty*this.elements[1] + this.elements[2];
+        this.elements[5] = tx*this.elements[3] + ty*this.elements[4] + this.elements[5];
+      },
+      transpose: function() {
+        // Does nothing in Processing.
+      },
+      mult: function( source, target ) {
+        
+        var x, y;
+        
+        if ( source instanceof PVector ) {
+          
+          x = source.x;
+          y = source.y;
+          if (!target) {
+            target = new PVector();
+          }
+        } else if ( source instanceof Array ) {
+          
+          x = source[0];
+          y = source[1];
+          if (!target) {
+            target = new Array();
+          }
+        }
+        
+        if ( target instanceof Array ) {
+          
+          target[0] = this.elements[0]*x + this.elements[1]*y + this.elements[2];
+          target[1] = this.elements[3]*x + this.elements[4]*y + this.elements[5];
+        } else if ( target instanceof PVector ) {
+          target.x = this.elements[0]*x + this.elements[1]*y + this.elements[2];
+          target.y = this.elements[3]*x + this.elements[4]*y + this.elements[5];
+          target.z = 0;
+        }
+        
+        return target;
+      },
+      multX: function(x,y) {
+        return x*this.elements[0] + y*this.elements[1] + this.elements[2];
+      },
+      multY: function(x,y) {
+        return x*this.elements[3] + y*this.elements[4] + this.elements[5];
+      },
       skewX: function(angle) {
         this.apply(1, 0, 1,
                    angle, 0, 0);
