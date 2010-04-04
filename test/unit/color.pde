@@ -80,3 +80,24 @@ _checkEqual(color.toString(a), "rgba(100,200,0,0.7843137254901961)");
 _checkEqual(color.toString(b), "rgba(100,255,100,1)");
 _checkEqual(color.toString(c), "rgba(57,128,255,0)");
 _checkEqual(color.toString(d), "rgba(0,0,0,0)");
+
+// Test colorMode
+colorMode(RGB, 100);
+a = color(55);
+b = color(70);
+c = color(85);
+d = color(100);
+
+_checkEqual(color.toArray(a), [140, 140, 140, 255]);
+_checkEqual(color.toArray(b), [179, 179, 179, 255]);
+_checkEqual(color.toArray(c), [217, 217, 217, 255]);
+_checkEqual(color.toArray(d), [255, 255, 255, 255]);
+
+colorMode(RGB, 1, 10, 100);
+a = color(1, 10, 100);
+b = color(0.5, 5, 50);
+c = color(0, 0, 0);
+
+_checkEqual(color.toArray(a), [255, 255, 255, 255]);
+_checkEqual(color.toArray(b), [128, 128, 128, 255]);
+_checkEqual(color.toArray(c), [0, 0, 0, 255]);

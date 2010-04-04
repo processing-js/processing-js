@@ -2218,12 +2218,14 @@
           r = Math.round(255 * (aValue1 / redRange));
           g = Math.round(255 * (aValue2 / greenRange));
           b = Math.round(255 * (aValue3 / blueRange));
+          a = Math.round(255 * (aValue4 / opacityRange));
         }
+
         // Normalize values: values greater than range == range 
-        r = ( r > redRange ) ? redRange : r;
-        g = ( g > greenRange ) ? greenRange : g;
-        b = ( b > blueRange ) ? blueRange : b;
-        a = ( aValue4 > opacityRange) ? opacityRange : aValue4;
+        r = ( r > 255 ) ? 255 : r;
+        g = ( g > 255 ) ? 255 : g;
+        b = ( b > 255 ) ? 255 : b;
+        a = ( a > 255 ) ? 255 : a;
         
         aColor = (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
       } else if (aValue1 != null && aValue2 != null && aValue3 != null) {
@@ -2270,7 +2272,7 @@
         ((colorInt & p.RED_MASK)>>>16) +","+
         ((colorInt & p.GREEN_MASK)>>>8) + "," +
         ((colorInt & p.BLUE_MASK)) +","+
-        ((colorInt & p.ALPHA_MASK)>>>24)/opacityRange +")";
+        ((colorInt & p.ALPHA_MASK)>>>24)/255 +")";
     };
 
     // Easy of use function to pack rgba values into a single bit-shifted color int.
@@ -2285,7 +2287,7 @@
 
     // Creates a WebGL color array in [R, G, B, A] format. WebGL wants the color ranges between 0 and 1, [1, 1, 1, 1]
     p.color.toGLArray = function(colorInt) {
-      return [((colorInt & p.RED_MASK)>>>16)/redRange, ((colorInt & p.GREEN_MASK)>>>8)/greenRange, (colorInt & p.BLUE_MASK)/blueRange, ((colorInt & p.ALPHA_MASK)>>>24)/opacityRange];
+      return [((colorInt & p.RED_MASK)>>>16)/255, ((colorInt & p.GREEN_MASK)>>>8)/255, (colorInt & p.BLUE_MASK)/255, ((colorInt & p.ALPHA_MASK)>>>24)/255];
     };
 
     // HSB conversion function from Mootools, MIT Licensed
@@ -2328,16 +2330,19 @@
     };
 
     p.red = function (aColor) {
-      return (aColor & p.RED_MASK)>>>16;
+      return ((aColor & p.RED_MASK)>>>16)/255 * redRange;
     };
+
     p.green = function (aColor) {
-      return (aColor & p.GREEN_MASK)>>>8;
+      return ((aColor & p.GREEN_MASK)>>>8)/255 * greenRange;
     };
+
     p.blue = function (aColor) {
-      return (aColor & p.BLUE_MASK);
+      return (aColor & p.BLUE_MASK)/255 * blueRange;
     };
+
     p.alpha = function (aColor) {
-      return ((aColor & p.ALPHA_MASK)>>>24)/opacityRange;
+      return ((aColor & p.ALPHA_MASK)>>>24)/255 * opacityRange;
     };
 
     p.lerpColor = function lerpColor(c1, c2, amt) {
