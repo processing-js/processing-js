@@ -2264,7 +2264,7 @@
         } else { // grayscale and alpha
           aColor = p.color(aValue1, aValue1, aValue1, aValue2);
         }   
-      } else if (typeof aValue1 === "number" && aValue1 < 256 && aValue1 >= 0) {
+      } else if (typeof aValue1 === "number" && Math.abs(aValue1) < 0x1000000) {
         aColor = p.color(aValue1, aValue1, aValue1, opacityRange);
       } else if (typeof aValue1 === "number") {
         var intcolor = 0;
@@ -2273,10 +2273,10 @@
         } else {
           intcolor = aValue1;
         }
-        var ac = Math.floor((intcolor % 4294967296) / 16777216);
-        var rc = Math.floor((intcolor % 16777216) / 65536);
-        var gc = Math.floor((intcolor % 65536) / 256);
-        var bc = intcolor % 256;
+        var ac = (aValue1 >>> 24) & 0xFF;
+        var rc = (aValue1 >>> 16) & 0xFF;
+        var gc = (aValue1 >>> 8) & 0xFF;
+        var bc = (aValue1) & 0xFF;;
         aColor = p.color(rc, gc, bc, ac);
       } else {
         aColor = p.color(redRange, greenRange, blueRange, opacityRange);
