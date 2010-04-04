@@ -22,18 +22,14 @@ _checkEqual(color.toString(d), "rgba(0,0,0,1)");
 a = color(#FF00FF);
 b = color(#000000);
 c = color(#884422);
-d = color(#000000);
 
 _checkEqual(color.toArray(a), [255, 0, 255, 255]);
 _checkEqual(color.toArray(b), [0, 0, 0, 255]);
 _checkEqual(color.toArray(c), [136, 68, 34, 255]);
-_checkEqual(color.toArray(d), [0, 0, 0, 255]);
 
 _checkEqual(color.toString(a), "rgba(255,0,255,1)");
 _checkEqual(color.toString(b), "rgba(0,0,0,1)");
 _checkEqual(color.toString(c), "rgba(136,68,34,1)");
-_checkEqual(color.toString(d), "rgba(0,0,0,1)");
-
 
 
 // 2 Args: Grayscale, Alpha
