@@ -1605,7 +1605,10 @@
         return str;
       },
       print: function() {
-        var output = "", digits = 3;
+
+        var digits = printMatrixHelper( this.elements );
+
+        var output = "";
         output += p.nfs(this.elements[0], digits, 4) + " " +
           p.nfs(this.elements[1], digits, 4) + " " +
           p.nfs(this.elements[2], digits, 4) + " " +
@@ -1624,7 +1627,7 @@
         output += p.nfs(this.elements[12], digits, 4) + " " +
           p.nfs(this.elements[13], digits, 4) + " " +
           p.nfs(this.elements[14], digits, 4) + " " +
-          p.nfs(this.elements[15], digits, 4) + "\n";
+          p.nfs(this.elements[15], digits, 4) + "\n\n";
 
         p.println(output);
       },
@@ -2606,6 +2609,38 @@
     ////////////////////////////////////////////////////////////////////////////
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
+    
+    /*
+      Helper function for printMatrix(). Finds the largest scalar
+      in the matrix, then number of digits left of the decimal.
+      Call from PMatrix2D and PMatrix3D's print() function.
+    */
+    var printMatrixHelper = function printMatrixHelper( elements ) {
+
+      var big = 0;
+      for ( var i = 0; i < elements.length; i++) {
+      
+        if ( i !== 0 ) {
+          big = Math.max( big, Math.abs( elements[i] ));
+        } else {
+          big = Math.abs( elements[i] );
+        }
+      }
+    
+      var digits = (big+"").indexOf(".");
+      if ( digits === 0 ) {
+        digits = 1;
+      } else if ( digits === -1 ) {
+        digits = (big+"").length;
+      }
+    
+      return digits;
+    };
+
+    p.printMatrix = function printMatrix() {
+      modelView.print();
+    };
+      
     p.translate = function translate(x, y, z) {
       if (p.use3DContext) {
         forwardTransform.translate(x, y, z);
