@@ -61,7 +61,10 @@ var canvas = {
                    uniform2i: __empty_func__,
                    uniform3i: __empty_func__,
                    uniform4i: __empty_func__,
-                   getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; }
+                   getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
+                   createImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
+                   drawImage: __empty_func__,
+                   putImageData: __empty_func__
                  };
   },
   style: {

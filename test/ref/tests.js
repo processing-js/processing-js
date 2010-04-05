@@ -15,6 +15,7 @@ var tests = [
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
   { path: "box.pde", tags: ["3D"] },
+  { path: "createimage.pde", tags: ["2D"] },
   { path: "self-1-success.pde", tags: ["Calibration"] },
   { path: "self-2-fail.pde", tags: ["Calibration"] },
   { path: "self-3-fail.pde", tags: ["Calibration"] },
