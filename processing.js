@@ -1082,6 +1082,143 @@
     p.PVector = PVector;
 
     ////////////////////////////////////////////////////////////////////////////
+    // 2D Matrix
+    ////////////////////////////////////////////////////////////////////////////
+    
+    var PMatrix2D = function(){
+      
+      if ( arguments.length === 0 ) {
+        this.reset();
+      } else if ( arguments.length === 1 && arguments[0] instanceof PMatrix2D ) {
+        this.set( arguments[0].array() );
+      } else if ( arguments.length === 6 ) {
+        this.set( arguments[0], arguments[1], arguments[2],
+            arguments[3], arguments[4], arguments[5] );
+      }
+    };
+
+    PMatrix2D.prototype = {
+      set: function(){
+        if( arguments.length === 6 ){
+          var a = arguments;
+          this.set([a[0], a[1], a[2],
+                    a[3], a[4], a[5]]);
+        }else if( arguments.length === 1 && arguments[0] instanceof PMatrix2D ){
+          this.elements = arguments[0].array();
+        }else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          this.elements = arguments[0].slice();
+        }
+      },
+      get: function(){
+        var outgoing = new PMatrix2D();
+        outgoing.set( this.elements );
+        return outgoing;
+      },
+      reset: function(){
+        this.set([1,0,0,0,1,0]);
+      },
+      /*
+        Returns a copy of the element values.
+       */
+      array: function array(){
+        return this.elements.slice();
+      },
+      translate: function(tx,ty) {                     
+        this.elements[2] = tx*this.elements[0] + ty*this.elements[1] + this.elements[2];
+        this.elements[5] = tx*this.elements[3] + ty*this.elements[4] + this.elements[5];
+      },
+      transpose: function() {
+        // Does nothing in Processing.
+      },
+      mult: function( source, target ) {
+        
+        var x, y;
+        
+        if ( source instanceof PVector ) {
+          
+          x = source.x;
+          y = source.y;
+          if (!target) {
+            target = new PVector();
+          }
+        } else if ( source instanceof Array ) {
+          
+          x = source[0];
+          y = source[1];
+          if (!target) {
+            target = [];
+          }
+        }
+        
+        if ( target instanceof Array ) {
+          
+          target[0] = this.elements[0]*x + this.elements[1]*y + this.elements[2];
+          target[1] = this.elements[3]*x + this.elements[4]*y + this.elements[5];
+        } else if ( target instanceof PVector ) {
+          target.x = this.elements[0]*x + this.elements[1]*y + this.elements[2];
+          target.y = this.elements[3]*x + this.elements[4]*y + this.elements[5];
+          target.z = 0;
+        }
+        
+        return target;
+      },
+      multX: function(x,y) {
+        return x*this.elements[0] + y*this.elements[1] + this.elements[2];
+      },
+      multY: function(x,y) {
+        return x*this.elements[3] + y*this.elements[4] + this.elements[5];
+      },
+      skewX: function(angle) {
+        this.apply(1, 0, 1,
+                   angle, 0, 0);
+      },
+      skewY: function(angle) {
+        this.apply(1, 0, 1,
+                   0, angle, 0);
+      },
+      apply: function(){
+        if( arguments.length === 1 && arguments[0] instanceof PMatrix2D ){
+          this.apply( arguments[0].array() );
+        }
+        else if( arguments.length === 6){
+          var a = arguments;
+          this.apply([a[0], a[1], a[2],
+                      a[3], a[4], a[5]]);
+        }
+        else if( arguments.length === 1 && arguments[0] instanceof Array ){
+          var source = arguments[0];
+
+          var result = [0, 0, this.elements[2],
+                        0, 0, this.elements[5]];
+          var e = 0;
+          for(var row = 0; row < 2; row++){
+            for(var col = 0; col < 3; col++, e++){
+              result[e] += this.elements[row *3 + 0] * source[col + 0] +
+              this.elements[row *3 + 1] * source[col + 3];
+
+            }
+          }
+          this.elements = result.slice();
+        }
+      },
+      print: function() {
+        
+        var digits = printMatrixHelper( this.elements );
+        
+        var output = "";
+        output += p.nfs(this.elements[0], digits, 4) + " " +
+          p.nfs(this.elements[1], digits, 4) + " " +
+          p.nfs(this.elements[2], digits, 4) + "\n";
+
+        output += p.nfs(this.elements[3], digits, 4) + " " +
+          p.nfs(this.elements[4], digits, 4) + " " +
+          p.nfs(this.elements[5], digits, 4) + "\n\n";
+        
+        p.println(output);
+      }
+    };
+    
+    ////////////////////////////////////////////////////////////////////////////
     // PMatrix3D
     ////////////////////////////////////////////////////////////////////////////    
 
@@ -3968,6 +4105,7 @@
           // size() was called without p.init() default context, ie. p.createGraphics()
           curContext = curElement.getContext("2d");
           userMatrixStack = new PMatrixStack();
+          modelView = new PMatrix2D();
         }
       }
 
@@ -7076,6 +7214,8 @@
           // Setup default 2d canvas context. 
           curContext = curElement.getContext('2d');
 
+          modelView = new PMatrix2D();
+          
           // Canvas has trouble rendering single pixel stuff on whole-pixel
           // counts, so we slightly offset it (this is super lame).
           curContext.translate(0.5, 0.5);
