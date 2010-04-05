@@ -1521,12 +1521,19 @@
     // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
 
-    var PMatrix3DStack = function PMatrix3DStack() {
+    var PMatrixStack = function PMatrixStack() {
       this.matrixStack = [];
     };
 
-    PMatrix3DStack.prototype.load = function load() {
-      var tmpMatrix = new PMatrix3D();
+    PMatrixStack.prototype.load = function load() {
+
+      var tmpMatrix;
+      if ( p.use3DContext ) {
+        tmpMatrix = new PMatrix3D();
+      } else {
+        tmpMatrix = new PMatrix2D();
+      }
+      
       if ( arguments.length === 1 ) {
         tmpMatrix.set( arguments[0] );
       } else {
@@ -1535,21 +1542,28 @@
       this.matrixStack.push( tmpMatrix );
     };
 
-    PMatrix3DStack.prototype.push = function push() {
+    PMatrixStack.prototype.push = function push() {
       this.matrixStack.push( this.peek() );
     };
 
-    PMatrix3DStack.prototype.pop = function pop() {
+    PMatrixStack.prototype.pop = function pop() {
       return this.matrixStack.pop();
     };
 
-    PMatrix3DStack.prototype.peek = function peek() {
-      var tmpMatrix = new PMatrix3D();
+    PMatrixStack.prototype.peek = function peek() {
+
+      var tmpMatrix;
+      if ( p.use3DContext ) {
+        tmpMatrix = new PMatrix3D();
+      } else {
+        tmpMatrix = new PMatrix2D();
+      }
+
       tmpMatrix.set( this.matrixStack[this.matrixStack.length - 1] );
       return tmpMatrix;
     };
 
-    PMatrix3DStack.prototype.mult = function mult( matrix ){
+    PMatrixStack.prototype.mult = function mult( matrix ){
       this.matrixStack[this.matrixStack.length - 1].apply( matrix );
     };
 
@@ -3935,7 +3949,7 @@
           forwardTransform = modelView;
           reverseTransform = modelViewInv;
 
-          userMatrixStack = new PMatrix3DStack();
+          userMatrixStack = new PMatrixStack();
 					// used by both curve and bezier, so just init here
 					curveBasisMatrix    = new PMatrix3D();
 					curveToBezierMatrix = new PMatrix3D();
@@ -3953,6 +3967,7 @@
         if (typeof curContext === "undefined") {
           // size() was called without p.init() default context, ie. p.createGraphics()
           curContext = curElement.getContext("2d");
+          userMatrixStack = new PMatrixStack();
         }
       }
 
