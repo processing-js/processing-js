@@ -1547,6 +1547,7 @@
     };
 
     p.createInput = function createInput(filename){
+	InputStream input = createInputRaw(filename);
       if ((input != null) && filename.toLowerCase().endsWith(".gz")) 
          return new GZIPInputStream(input);
       else if ( input == null ) 
