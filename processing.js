@@ -33,13 +33,13 @@
     var r = "" + aCode.match( /size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/ );
     var dimensions = r.match( /[0-9]+/g );
     
-    if(dimensions)
+    if( dimensions )
     {
-      var sketchWidth = parseInt( dimensions[0] );
-      var sketchHeight = parseInt( dimensions[1] );
+      var sketchWidth = parseInt( dimensions[0], 10 );
+      var sketchHeight = parseInt( dimensions[1], 10 );
 
       // only adjust the attributes if they differ
-      if( aElement.width != sketchWidth || aElement.height != sketchHeight )
+      if( aElement.width !== sketchWidth || aElement.height !== sketchHeight )
       {
         aElement.setAttribute( "width", sketchWidth );
         aElement.setAttribute( "height", sketchHeight );
@@ -97,12 +97,12 @@
         var r = "" + sketchSource.match( /size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/ );
         var dimensions = r.match( /[0-9]+/g );
         
-        if(dimensions) {
-          var sketchWidth = parseInt( dimensions[0] );
-          var sketchHeight = parseInt( dimensions[1] );
+        if( dimensions ) {
+          var sketchWidth = parseInt( dimensions[0], 10 );
+          var sketchHeight = parseInt( dimensions[1], 10 );
 
           // only adjust the attributes if they differ
-          if( canvas[i].width != sketchWidth || canvas[i].height != sketchHeight )
+          if( canvas[i].width !== sketchWidth || canvas[i].height !== sketchHeight )
           {
             canvas[i].setAttribute( "width", sketchWidth );
             canvas[i].setAttribute( "height", sketchHeight );
@@ -5923,7 +5923,8 @@
       
       if ( p.use3DContext ) {
         if ( typeof color !== 'undefined' ) {
-          curContext.clearColor(p.color.toGLArray(color));
+          var col = p.color.toGLArray(color);
+          curContext.clearColor( col[0], col[1], col[2], col[3] );
           curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
         } else {
           // Handle image background for 3d context. not done yet.
