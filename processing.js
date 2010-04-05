@@ -4373,7 +4373,7 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          uniformf( programObject3D, "color", p.color.toGLArray(fillStyle));
+          uniformf( programObject3D, "color", fillStyle);
 
           var v = new PMatrix3D();
           v.set(view);
@@ -4402,7 +4402,7 @@
           uniformMatrix( programObject2D, "view", true, view.array() );
           uniformMatrix( programObject2D, "projection", true, projection.array() );
 
-          uniformf(programObject2D, "color", p.color.toGLArray(strokeStyle));
+          uniformf(programObject2D, "color", strokeStyle);
           curContext.lineWidth( lineWidth );
           vertexAttribPointer( programObject2D, "Vertex", 3, boxOutlineBuffer );
           curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
@@ -4588,7 +4588,7 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          uniformf( programObject3D, "color", p.color.toGLArray(fillStyle));
+          uniformf( programObject3D, "color", fillStyle);
 
           curContext.drawArrays( curContext.TRIANGLE_STRIP, 0, sphereVerts.length/3 );
           curContext.disable( curContext.POLYGON_OFFSET_FILL );
@@ -4602,7 +4602,7 @@
           uniformMatrix( programObject2D, "view", true, view.array() );
           uniformMatrix( programObject2D, "projection", true, projection.array() );
 
-          uniformf(programObject2D, "color", p.color.toGLArray(strokeStyle));
+          uniformf(programObject2D, "color", strokeStyle);
 
           curContext.lineWidth( lineWidth );
           curContext.drawArrays( curContext.LINE_STRIP, 0, sphereVerts.length/3 );
@@ -5334,7 +5334,7 @@
         if( lineWidth > 0 && doStroke ) {
           curContext.useProgram(programObject2D);
 
-          uniformf(programObject2D, "color", p.color.toGLArray(strokeStyle));
+          uniformf(programObject2D, "color", strokeStyle);
 
           curContext.lineWidth(lineWidth);
 
@@ -5941,7 +5941,7 @@
       if ( typeof arguments[0] === 'number' ) {
         color = p.color.apply(this, arguments);
         // override alpha value, processing ignores the alpha for background color
-        color = color | p.ALPHA_MASK; 
+        //color = color | p.ALPHA_MASK; 
       } else if ( arguments.length === 1 && arguments[0] instanceof PImage ) {
         img = arguments[0];
 
@@ -5954,7 +5954,8 @@
       
       if ( p.use3DContext ) {
         if ( typeof color !== 'undefined' ) {
-          curContext.clearColor(p.color.toGLArray(color));
+          var c = p.color.toGLArray(color);
+          curContext.clearColor(c[0], c[1], c[2], c[3]);
           curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
         } else {
           // Handle image background for 3d context. not done yet.
