@@ -5450,6 +5450,22 @@
         p.set(x, y, c, this);
       };
       
+      this.blend = function(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE) {
+        if (arguments.length === 9) {
+          p.blend(this, srcImg, x, y, width, height, dx, dy, dwidth, dheight, this);
+        } else if (arguments.length === 10) {
+          p.blend(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE, this);
+        }
+      };
+      
+      this.copy = function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
+        if (arguments.length === 8) {
+          p.blend(this, srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, p.REPLACE, this);
+        } else if (arguments.length === 9) {
+          p.blend(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight, p.REPLACE, this);
+        }
+      };
+      
       this.resize = function(w, h) {
         if (this.width !== 0 || this.height !== 0) {
           // make aspect ratio if w or h is 0
@@ -5506,13 +5522,15 @@
         var imgData = Temporary2DContext.createImageData(this.width, this.height);
         var i, len;
         var dest = imgData.data;
-        if (this.ImageData && this.ImageData.width > 0) {
-          // image is based on ImageData. Copying...
-          var src = this.ImageData.data;
-          for (i = 0, len = this.width * this.height * 4; i < len; ++i) {
-            dest[i] = src[i];
-          }
-        } else {
+        // this check breaks things once we start changing pimages if we dont 
+        //update the ImageData object as well as the pixel array all the time
+//        if (this.ImageData && this.ImageData.width > 0) {
+//          // image is based on ImageData. Copying...
+//          var src = this.ImageData.data;
+//          for (i = 0, len = this.width * this.height * 4; i < len; ++i) {
+//            dest[i] = src[i];
+//          }
+//        } else {
           for (i = 0, len = this.pixels.length; i < len; ++i) {
             // convert each this.pixels[i] int to array of 4 ints of each color
             var c = this.pixels[i];
@@ -5522,7 +5540,7 @@
             dest[pos + 0] = (c >>> 16) & 0xFF;
             dest[pos + 1] = (c >>> 8) & 0xFF;
             dest[pos + 2] = c & 0xFF;
-          }
+//          }
         }
         // return a canvas ImageData object with pixel array in canvas format
         return imgData;
@@ -5538,9 +5556,7 @@
           var pos = i*4;
           // pjs uses argb, canvas stores rgba
           this.pixels[i] = p.color.toInt(canvasImg.data[pos + 0], canvasImg.data[pos + 1],
-          canvasImg.data[pos + 2], canvasImg.data[pos + 3]);
-          //(canvasImg.data[pos + 3] * 16777216) + (canvasImg.data[pos + 0] * 65536) +
-          //        (canvasImg.data[pos + 1] * 256)    +   (canvasImg.data[pos + 2]);                  
+          canvasImg.data[pos + 2], canvasImg.data[pos + 3]);                
         }
       };
 
@@ -5552,7 +5568,9 @@
         var context = canvas.getContext("2d");
         context.drawImage(htmlImg, 0, 0);
         var imageData = context.getImageData(0,0,htmlImg.width,htmlImg.height);
-        this.ImageData = imageData;
+        // we should no longer use this it is dangerous and 
+        // causes sync issues with pixel array
+        //this.ImageData = imageData;
         this.fromImageData(imageData);
       };
 
@@ -5968,29 +5986,36 @@
       p.blend(src, sx, sy, sw, sh, dx, dy, dw, dh, p.REPLACE);
     };
 
-    p.blend = function blend(src, sx, sy, sw, sh, dx, dy, dw, dh, mode){
+    p.blend = function blend(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest){
       if(arguments.length===9) {
         p.blend(this, src, sx, sy, sw, sh, dx, dy, dw, dh);
-      } else if (arguments.length===10){          
+      } else if (arguments.length===10 || arguments.length===11){
         var sx2 = sx + sw;
         var sy2 = sy + sh;
         var dx2 = dx + dw;
         var dy2 = dy + dh;
-        p.loadPixels();
+        var dest;
+        // check if pimgdest is there and pixels, if so this was a call from pimg.blend
+        if (arguments.length === 10) {
+          p.loadPixels();
+          dest = p;
+        } else if (arguments.length === 11 && pimgdest && pimgdest.pixels) {
+          dest = pimgdest;
+        } 
         if (src === this) {
           if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
-            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy),
-              0, 0, sx2 - sx - 1, sy2 - sy - 1,
-              p.pixels, p.width, p.height, dx, dy, dx2, dy2, mode);
+            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1, dest.pixels, dest.width, dest.height, dx, dy, dx2, dy2, mode);
           } else {
             // same as below, except skip the loadPixels() because it'd be redundant
-            p.blit_resize(src, sx, sy, sx2, sy2, p.pixels, p.width, p.height, dx, dy, dx2, dy2, mode);
+            p.blit_resize(src, sx, sy, sx2, sy2, dest.pixels, dest.width, dest.height, dx, dy, dx2, dy2, mode);
           }
         } else {
           src.loadPixels();
-          p.blit_resize(src, sx, sy, sx2, sy2, p.pixels, p.width, p.height, dx, dy, dx2, dy2, mode);
+          p.blit_resize(src, sx, sy, sx2, sy2, dest.pixels, dest.width, dest.height, dx, dy, dx2, dy2, mode);
         }
-        p.updatePixels();
+        if (arguments.length === 10) {
+          p.updatePixels();
+        }
       }
     };
     
