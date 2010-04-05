@@ -5941,7 +5941,7 @@
       if ( typeof arguments[0] === 'number' ) {
         color = p.color.apply(this, arguments);
         // override alpha value, processing ignores the alpha for background color
-        //color = color | p.ALPHA_MASK; 
+        color = color | p.ALPHA_MASK; 
       } else if ( arguments.length === 1 && arguments[0] instanceof PImage ) {
         img = arguments[0];
 
