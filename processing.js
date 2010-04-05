@@ -114,7 +114,7 @@
   };
   
 	/*
-    Compatibility wrapper for older browsers
+    Wrapper to easily deal with array names changes.
   */
   var newWebGLArray = function(data) {
     return new WebGLFloatArray(data);    
@@ -211,76 +211,178 @@
 
   "uniform vec4 color;" +
 
+  "uniform bool usingMat;" +
+  "uniform vec3 specular;" +
+  "uniform vec3 mat_emissive;" +
+  "uniform vec3 mat_ambient;" +
+  "uniform vec3 mat_specular;" +
+  "uniform float shininess;" +
+
   "uniform mat4 model;" +
   "uniform mat4 view;" +
   "uniform mat4 projection;" +
   "uniform mat4 normalTransform;" +
   
   "uniform int lightCount;" +
+  "uniform vec3 falloff;" +
 
   "struct Light {" +
   "  bool dummy;" +
   "	 int type;" +
   "	 vec3 color;" +
   "	 vec3 position;" +
+  "  vec3 direction;" +
+  "  float angle;" +
+  "  vec3 halfVector;" +
+  "  float concentration;" +
   "};" +
   "uniform Light lights[8];" +
 
-  "void AmbientLight( inout vec3 col, in vec3 vertColor, in Light light ) {" +
-  "  col += vertColor * light.color;" +
-  "}" +
-
-  "void DirectionalLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, in Light light ) {" +
-  "  col += vertColor * light.color * max(0.0, dot(-normalize(light.position), vertNormal));" +
-  "}" +
-
-  "void PointLight( inout vec3 col, in vec3 vertColor, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
+  "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
      // Get the vector from the light to the vertex
-  "	 vec3 VP = vec3(light.position) - ecPos;" +
+     // Get the distance from the current vector to the light position
+  "	 float d = length( light.position - ecPos );" +
+
+  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + 
+  "  totalAmbient += light.color * attenuation;" +
+  "}" +
+
+  "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" +
+  "  float powerfactor = 0.0;" +
+  "  float nDotVP = max(0.0, dot( vertNormal, light.position ));" + 
+  "  float nDotVH = max(0.0, dot( vertNormal, normalize( light.position-ecPos )));" +
+
+  "  if( nDotVP != 0.0 ){" +
+  "    powerfactor = pow( nDotVH, shininess );" + 
+  "  }" +
+
+  "  col += light.color * nDotVP;" +
+  "  spec += specular * powerfactor;" +
+  "}" +
+
+  "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+  "  float powerfactor;" + 
+  
+     // Get the vector from the light to the vertex
+  "	 vec3 VP = light.position - ecPos;" +
 
      // Get the distance from the current vector to the light position
-  "  float d = length(VP); " + 
+  "  float d = length( VP ); " + 
 
-     // Normalize the light so it can be used in the dot product operation.
-  "  VP = normalize(VP);" + 
-  "	 float nDotVP = max(0.0, dot(vertNormal, VP));"+ 
-  "  col += vertColor * light.color * nDotVP;" + 
+     // Normalize the light ray so it can be used in the dot product operation.
+  "  VP = normalize( VP );" + 
+  
+  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + 
+
+  "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
+  "  vec3 halfVector = normalize( VP + eye );" +
+  "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
+
+  "  if( nDotVP == 0.0) {" +
+  "    powerfactor = 0.0;" +
+  "  }" +
+  "  else{"+
+  "    powerfactor = pow( nDotHV, shininess );" +
+  "  }" +
+
+  "  spec += specular * powerfactor * attenuation;" +  
+  "  col += light.color * nDotVP * attenuation;" + 
+  "}" +
+
+  /*
+  */
+  "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+  "	 float spotAttenuation;" +
+  "  float powerfactor;" + 
+
+	// calculate the vector from the current vertex to the light.
+  "  vec3 VP = light.position - ecPos; " + 
+  "  vec3 ldir = normalize( light.direction );" +
+
+  // get the distance from the spotlight and the vertex
+  "  float d = length( VP );" +
+  "  VP = normalize( VP );" + 
+
+  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ) );" +
+
+	// dot product of the vector from vertex to light and light direction.
+  "  float spotDot = dot( VP, ldir );" +
+
+  // if the vertex falls inside the cone
+  "  if( spotDot < cos( light.angle ) )" +
+  "  {" +
+  "    spotAttenuation = pow( spotDot, light.concentration );" +
+  "  }" +
+  "  else{" +
+  "    spotAttenuation = 1.0;" +
+  "  }" +
+  "  attenuation *= spotAttenuation;" +
+  
+  "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
+  "  vec3 halfVector = normalize( VP + eye );" +
+  "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
+
+  "  if( nDotVP == 0.0 ){" +
+  "    powerfactor = 0.0;" +
+  "  }" +
+  "  else{"+
+  "    powerfactor = pow( nDotHV, shininess );" +
+  "  }" +
+
+  "  spec += specular * powerfactor * attenuation;" +  
+  "  col += light.color * nDotVP * attenuation;" + 
   "}" +
 
   "void main(void) {" +
-  
-  "  vec3 finalColor = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
+
   "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
 
-     // If there were no lights this frame, just use the 
-     // assigned color of the shape.
+  "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
+  "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
+  "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
+  
+     // If there were no lights this draw call, just use the 
+     // assigned fill color of the shape and the specular value
   "  if( lightCount == 0 ) {" + 
-  "    gl_FrontColor = color;" +
+  "    gl_FrontColor = color + vec4(mat_specular,1.0);" +
   "  }" +
     
   "  else {" +
   "    for( int i = 0; i < lightCount; i++ ) {" +
   "      if( lights[i].type == 0 ) {"+
-  "        AmbientLight( finalColor, vec3( color[0], color[1], color[2] ), lights[i] );"+   
+  "        AmbientLight( finalAmbient, ecPos, lights[i] );"+   
   "      }" +
   "      else if( lights[i].type == 1 ) {" +
-  "        DirectionalLight( finalColor, vec3( color[0], color[1], color[2] ), norm, lights[i] );" +
+  "        DirectionalLight( finalDiffuse,ecPos, finalSpecular, norm, lights[i] );" +
   "      }" +
   "      else if( lights[i].type == 2 ) {" +
-  
-          // Place the current vertex into view space
-          // ecPos = eye coordinate position.
-  "       vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
-
-           // the current vertex in eye coordinate space
-           // perspective divide
-  "        vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
-  "        PointLight( finalColor, vec3( color[0], color[1], color[2] ), norm, ecPos, lights[i] );" +
+  "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
+  "      }" +
+  "      else if( lights[i].type == 3 ) {" +
+  "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
   "      }" +
   "    }" +
-  "    gl_FrontColor = vec4( finalColor, color[3] );" +
-  "  }" +
+  
+  "   if( usingMat == false ) {" + 
+  "    gl_FrontColor = vec4(  " +
+  "                           vec3(color) * finalAmbient +" +
+  "                           vec3(color) * finalDiffuse +" +
+  "                           vec3(color) * finalSpecular," +
+  "                           color[3] );" +
+  "   }" +
+  "   else{" +
+  "     gl_FrontColor = vec4( " +
+  "                           mat_emissive + " +
+  "                           (vec3(color) * mat_ambient * finalAmbient) + " +
+  "                           (vec3(color) * finalDiffuse) + " +
+  "                           ( mat_specular * finalSpecular), " +
+  "                           color[3] );" +
+  "   }" +
 
+  "  }" +
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
   "}";
 
@@ -334,6 +436,8 @@
               p.pjs.imageCache[imageName] = img;
               img.src = imageName;
             }
+          } else if (key === "opaque") {
+            p.canvas.mozOpaque = value === "true";
           } else {
             p.pjs[key] = value;
           }
@@ -416,7 +520,6 @@
         return type + " " + name + " = 0" + sep;
       }); }());
     }
-		aCode = aCode.replace(/catch\s\((\w+)\1\s(\w+)\2\)\s\{.\($2\)/g, "catch ($2$1)\n{$2$1");
 		
     // float foo = 5;
     aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
@@ -627,6 +730,7 @@
     var p = {};
     var curContext;
     p.use3DContext = false; // default '2d' canvas context
+    p.canvas = curElement;
 
     // Set Processing defaults / environment variables
     p.name = 'Processing.js Instance';
@@ -746,7 +850,7 @@
       curBackground = "rgba( 204, 204, 204, 1 )",
       curFrameRate = 1000,
       curCursor = p.ARROW,
-      oldCursor = document.body.style.cursor,
+      oldCursor = curElement.style.cursor,
       curMsPerFrame = 1,
       curShape = p.POLYGON,
       curShapeCount = 0,
@@ -815,9 +919,6 @@
 
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
-
-    // Store a line for println(), print() handline
-    p.ln = "";
 
     // Glyph path storage for textFonts
     p.glyphTable = {};
@@ -1975,7 +2076,7 @@
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
 
-    // convert rgba color strings to integer
+    // convert rgba color strings to integer <corban> I dont think we need this anymore, remember to take it out when you get bitcolor working
     p.rgbaToInt = function(color) {
       var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1, 2)[0].split(',');
       return ((rgbaAry[3] * 255) << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
@@ -1992,43 +2093,31 @@
 
     // blending modes
     p.modes = {
-      replace: function(a, b) {
-        return p.rgbaToInt(b);
+      replace: function(c1, c2) {
+        return c2;
       },
-      blend: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      blend: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | p.mix(c1 & p.RED_MASK, c2 & p.RED_MASK, f) & p.RED_MASK | p.mix(c1 & p.GREEN_MASK, c2 & p.GREEN_MASK, f) & p.GREEN_MASK | p.mix(c1 & p.BLUE_MASK, c2 & p.BLUE_MASK, f));
       },
-      add: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      add: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | Math.min(((c1 & p.RED_MASK) + ((c2 & p.RED_MASK) >> 8) * f), p.RED_MASK) & p.RED_MASK | Math.min(((c1 & p.GREEN_MASK) + ((c2 & p.GREEN_MASK) >> 8) * f), p.GREEN_MASK) & p.GREEN_MASK | Math.min((c1 & p.BLUE_MASK) + (((c2 & p.BLUE_MASK) * f) >> 8), p.BLUE_MASK));
       },
-      subtract: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      subtract: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | Math.max(((c1 & p.RED_MASK) - ((c2 & p.RED_MASK) >> 8) * f), p.GREEN_MASK) & p.RED_MASK | Math.max(((c1 & p.GREEN_MASK) - ((c2 & p.GREEN_MASK) >> 8) * f), p.BLUE_MASK) & p.GREEN_MASK | Math.max((c1 & p.BLUE_MASK) - (((c2 & p.BLUE_MASK) * f) >> 8), 0));
       },
-      lightest: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      lightest: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | Math.max(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f) & p.RED_MASK | Math.max(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f) & p.GREEN_MASK | Math.max(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8));
       },
-      darkest: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      darkest: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | p.mix(c1 & p.RED_MASK, Math.min(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f), f) & p.RED_MASK | p.mix(c1 & p.GREEN_MASK, Math.min(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f), f) & p.GREEN_MASK | p.mix(c1 & p.BLUE_MASK, Math.min(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8), f));
 
       },
-      difference: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      difference: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2043,9 +2132,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      exclusion: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      exclusion: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2060,9 +2147,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      multiply: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      multiply: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2077,9 +2162,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      screen: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      screen: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2094,9 +2177,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      hard_light: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      hard_light: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2111,9 +2192,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      soft_light: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      soft_light: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2128,9 +2207,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      overlay: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      overlay: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2145,9 +2222,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      dodge: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      dodge: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2162,9 +2237,7 @@
         // alpha blend (this portion will always be the same)
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
-      burn: function(a, b) {
-        var c1 = p.rgbaToInt(a);
-        var c2 = p.rgbaToInt(b);
+      burn: function(c1, c2) {
         var f = (c2 & p.ALPHA_MASK) >>> 24;
         var ar = (c1 & p.RED_MASK) >> 16;
         var ag = (c1 & p.GREEN_MASK) >> 8;
@@ -2181,83 +2254,60 @@
       }
     };
 
-    p.color = function(aValue1, aValue2, aValue3, aValue4) {
-      var r, g, b, rgb, aColor;
-
-      // HSB conversion function from Mootools, MIT Licensed
-      function toRGB(h, s, b) {
-        h = (h / redRange) * 360;
-        s = (s / greenRange) * 100;
-        b = (b / blueRange) * 100;
-        var br = Math.round(b / 100 * 255);
-        if (s === 0) {
-          return [br, br, br];
-        } else {
-          var hue = h % 360;
-          var f = hue % 60;
-          var p = Math.round((b * (100 - s)) / 10000 * 255);
-          var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
-          var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
-          switch (Math.floor(hue / 60)) {
-          case 0:
-            return [br, t, p];
-          case 1:
-            return [q, br, p];
-          case 2:
-            return [p, br, t];
-          case 3:
-            return [p, q, br];
-          case 4:
-            return [t, p, br];
-          case 5:
-            return [br, p, q];
-          }
-        }
-      }
-
-      function getColor(aValue, range) {
-        return Math.round(255 * (aValue / range));
-      }
-
-      if (arguments.length === 3) {
-        aColor = p.color(aValue1, aValue2, aValue3, opacityRange);
-      } else if (arguments.length === 4) {
-        var a = aValue4 / opacityRange;
-        a = isNaN(a) ? 1 : a;
+    p.color = function color(aValue1, aValue2, aValue3, aValue4) {
+      var r, g, b, a, rgb, aColor;
+      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
         if (curColorMode === p.HSB) {
-          rgb = toRGB(aValue1, aValue2, aValue3);
+          rgb = p.color.toRGB(aValue1, aValue2, aValue3);
           r = rgb[0];
           g = rgb[1];
           b = rgb[2];
         } else {
-          r = getColor(aValue1, redRange);
-          g = getColor(aValue2, greenRange);
-          b = getColor(aValue3, blueRange);
+          r = Math.round(255 * (aValue1 / redRange));
+          g = Math.round(255 * (aValue2 / greenRange));
+          b = Math.round(255 * (aValue3 / blueRange));
+          a = Math.round(255 * (aValue4 / opacityRange));
         }
-        aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
+
+        // Normalize values: values greater than range == range 
+        r = ( r > 255 ) ? 255 : r;
+        g = ( g > 255 ) ? 255 : g;
+        b = ( b > 255 ) ? 255 : b;
+        a = ( a > 255 ) ? 255 : a;
+        
+        aColor = (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+      } else if (aValue1 != null && aValue2 != null && aValue3 != null) {
+        aColor = p.color(aValue1, aValue2, aValue3, opacityRange);
+      } else if (aValue1 != null && aValue2 != null) {
+        if ( (aValue1 & p.ALPHA_MASK) ) { // colorInt and opacity
+          aColor = p.color(p.red(aValue1), p.green(aValue1), p.blue(aValue1), aValue2);
+        } else { // grayscale and alpha
+          aColor = p.color(aValue1, aValue1, aValue1, aValue2);
+        }   
       } else if (typeof aValue1 === "string") {
         aColor = aValue1;
-        if (arguments.length === 2) {
+        if (aValue2 && aValue4 == null && aValue4 == null) {
           var c = aColor.split(",");
           c[3] = (aValue2 / opacityRange) + ")";
           aColor = c.join(",");
         }
-      } else if (arguments.length === 2) {
-        aColor = p.color(aValue1, aValue1, aValue1, aValue2);
-      } else if (typeof aValue1 === "number" && aValue1 < 256 && aValue1 >= 0) {
-        aColor = p.color(aValue1, aValue1, aValue1, opacityRange);
       } else if (typeof aValue1 === "number") {
-        var intcolor = 0;
-        if (aValue1 < 0) {
-          intcolor = 4294967296 - (aValue1 * -1);
-        } else {
-          intcolor = aValue1;
+        if(aValue1 < 256 && aValue1 >= 0) {
+          aColor = p.color(aValue1, aValue1, aValue1, opacityRange);
         }
-        var ac = Math.floor((intcolor % 4294967296) / 16777216);
-        var rc = Math.floor((intcolor % 16777216) / 65536);
-        var gc = Math.floor((intcolor % 65536) / 256);
-        var bc = intcolor % 256;
-        aColor = p.color(rc, gc, bc, ac);
+        else {
+          var intcolor = 0;
+          if (aValue1 < 0) {
+            intcolor = 4294967296 - (aValue1 * -1);
+          } else {
+            intcolor = aValue1;
+          }
+          var ac = Math.floor((intcolor % 4294967296) / 16777216);
+          var rc = Math.floor((intcolor % 16777216) / 65536);
+          var gc = Math.floor((intcolor % 65536) / 256);
+          var bc = intcolor % 256;
+          aColor = p.color(rc, gc, bc, ac);
+        }
       } else {
         aColor = p.color(redRange, greenRange, blueRange, opacityRange);
       }
@@ -2270,7 +2320,7 @@
         ((colorInt & p.RED_MASK)>>>16) +","+
         ((colorInt & p.GREEN_MASK)>>>8) + "," +
         ((colorInt & p.BLUE_MASK)) +","+
-        ((colorInt & p.ALPHA_MASK)>>>24)/opacityRange +")";
+        ((colorInt & p.ALPHA_MASK)>>>24)/255 +")";
     };
 
     // Easy of use function to pack rgba values into a single bit-shifted color int.
@@ -2278,6 +2328,47 @@
       return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
     };
 
+    // Creates a simple array in [R, G, B, A] format, [255, 255, 255, 255]
+    p.color.toArray = function(colorInt) {
+      return [(colorInt & p.RED_MASK)>>>16, (colorInt & p.GREEN_MASK)>>>8, colorInt & p.BLUE_MASK, (colorInt & p.ALPHA_MASK)>>>24];
+    };
+
+    // Creates a WebGL color array in [R, G, B, A] format. WebGL wants the color ranges between 0 and 1, [1, 1, 1, 1]
+    p.color.toGLArray = function(colorInt) {
+      return [((colorInt & p.RED_MASK)>>>16)/255, ((colorInt & p.GREEN_MASK)>>>8)/255, (colorInt & p.BLUE_MASK)/255, ((colorInt & p.ALPHA_MASK)>>>24)/255];
+    };
+
+    // HSB conversion function from Mootools, MIT Licensed
+    p.color.toRGB = function (h, s, b) {
+      h = (h / redRange) * 360;
+      s = (s / greenRange) * 100;
+      b = (b / blueRange) * 100;
+      var br = Math.round(b / 100 * 255);
+      if (s === 0) {
+        return [br, br, br];
+      } else {
+        var hue = h % 360;
+        var f = hue % 60;
+        var p = Math.round((b * (100 - s)) / 10000 * 255);
+        var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
+        var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
+        switch (Math.floor(hue / 60)) {
+        case 0:
+          return [br, t, p];
+        case 1:
+          return [q, br, p];
+        case 2:
+          return [p, br, t];
+        case 3:
+          return [p, q, br];
+        case 4:
+          return [t, p, br];
+        case 5:
+          return [br, p, q];
+        }
+      }
+    };
+    
     var verifyChannel = function verifyChannel(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
@@ -2286,33 +2377,36 @@
       }
     };
 
-    p.red = function(aColor) {
-      return parseInt(verifyChannel(aColor).slice(5), 10);
-    };
-    p.green = function(aColor) {
-      return parseInt(verifyChannel(aColor).split(",")[1], 10);
-    };
-    p.blue = function(aColor) {
-      return parseInt(verifyChannel(aColor).split(",")[2], 10);
-    };
-    p.alpha = function(aColor) {
-      return parseInt(parseFloat(verifyChannel(aColor).split(",")[3]) * 255, 10);
+    p.red = function (aColor) {
+      return ((aColor & p.RED_MASK)>>>16)/255 * redRange;
     };
 
-    p.lerpColor = function(c1, c2, amt) {
+    p.green = function (aColor) {
+      return ((aColor & p.GREEN_MASK)>>>8)/255 * greenRange;
+    };
+
+    p.blue = function (aColor) {
+      return (aColor & p.BLUE_MASK)/255 * blueRange;
+    };
+
+    p.alpha = function (aColor) {
+      return ((aColor & p.ALPHA_MASK)>>>24)/255 * opacityRange;
+    };
+
+    p.lerpColor = function lerpColor(c1, c2, amt) {
       // Get RGBA values for Color 1 to floats
-      var colors1 = p.color(c1).split(",");
-      var r1 = parseInt(colors1[0].split("(")[1], 10);
-      var g1 = parseInt(colors1[1], 10);
-      var b1 = parseInt(colors1[2], 10);
-      var a1 = parseFloat(colors1[3].split(")")[0], 10);
+      var colorBits1 = p.color(c1);
+      var r1 = (colorBits1 & p.RED_MASK)>>>16;
+      var g1 = (colorBits1 & p.GREEN_MASK)>>>8;
+      var b1 = (colorBits1 & p.BLUE_MASK);
+      var a1 = ((colorBits1 & p.ALPHA_MASK)>>>24)/opacityRange;
 
       // Get RGBA values for Color 2 to floats
-      var colors2 = p.color(c2).split(",");
-      var r2 = parseInt(colors2[0].split("(")[1], 10);
-      var g2 = parseInt(colors2[1], 10);
-      var b2 = parseInt(colors2[2], 10);
-      var a2 = parseFloat(colors2[3].split(")")[0], 10);
+      var colorBits2 = p.color(c2);
+      var r2 = (colorBits2 & p.RED_MASK)>>>16;
+      var g2 = (colorBits2 & p.GREEN_MASK)>>>8;
+      var b2 = (colorBits2 & p.BLUE_MASK);
+      var a2 = ((colorBits2 & p.ALPHA_MASK)>>>24)/opacityRange;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
       var r = parseInt(p.lerp(r1, r2, amt), 10);
@@ -2320,13 +2414,11 @@
       var b = parseInt(p.lerp(b1, b2, amt), 10);
       var a = parseFloat(p.lerp(a1, a2, amt), 10);
 
-      var aColor = "rgba(" + r + "," + g + "," + b + "," + a + ")";
-
-      return aColor;
+      return p.color.toInt(r, g, b, a);
     };
 
     // Forced default color mode for #aaaaaa style
-    p.defaultColor = function(aValue1, aValue2, aValue3) {
+    p.defaultColor = function (aValue1, aValue2, aValue3) {
       var tmpColorMode = curColorMode;
       curColorMode = p.RGB;
       var c = p.color(aValue1 / 255 * redRange, aValue2 / 255 * greenRange, aValue3 / 255 * blueRange);
@@ -2580,9 +2672,14 @@
       inDraw = true;
 
       if (p.use3DContext) {
-        // Delete all the lighting states the user set in the last
-        // draw() call. They will have to reset them each time.
+        // Delete all the lighting states and the materials the
+        // user set in the last draw() call.
         p.noLights();
+        p.lightFalloff( 1, 0, 0 );
+        p.shininess( 1 );
+        p.ambient( 255, 255, 255 );
+        p.specular( 0, 0, 0 );
+
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.camera();
         p.draw();
@@ -2635,8 +2732,31 @@
     ////////////////////////////////////////////////////////////////////////////
     // MISC functions
     ////////////////////////////////////////////////////////////////////////////
-    p.cursor = function cursor(mode) {
-      curCursor = document.body.style.cursor = mode;
+    p.cursor = function cursor() {
+      if( arguments.length > 1 || 
+        ( arguments.length === 1 && arguments[0] instanceof p.PImage )) {
+        var image = arguments[0], x, y;
+        if( arguments.length >= 3 ) {
+          x = arguments[1];
+          y = arguments[2];
+          if( x < 0 || y < 0 || y >= image.height || x >= image.width ) {
+            throw "x and y must be non-negative and less than the dimensions of the image";
+          }
+        } else {
+          x = image.width >>> 1;
+          y = image.height >>> 1;
+        }
+
+        // see https://developer.mozilla.org/en/Using_URL_values_for_the_cursor_property
+        var imageDataURL = image.toDataURL();
+        var style = "url(\"" + imageDataURL + "\") " + x + " " + y + ", default";
+        curCursor = curElement.style.cursor = style;
+      } else if( arguments.length === 1 ) {
+        var mode = arguments[0];
+        curCursor = curElement.style.cursor = mode;
+      } else {
+        curCursor = curElement.style.cursor = oldCursor;
+      } 
     };
 
     p.noCursor = function noCursor() {
@@ -3130,15 +3250,15 @@
     ////////////////////////////////////////////////////////////////////////////
     // I have updated this to lint, we should check it still performs faster than the other option -F1LT3R
     p.matchAll = function matchAll(aString, aRegExp) {
-      var i = 0,
-        results = [],
-        latest, regexp = new RegExp(aRegExp, "g");
-      latest = results[i] = regexp.exec(aString);
-      while (latest) {
-        i++;
-        latest = results[i] = regexp.exec(aString);
+      var results = [], latest;
+      var regexp = new RegExp(aRegExp, "g");      
+      while ( (latest = regexp.exec(aString)) !== null ) {
+        results.push(latest);
+        if(latest[0].length === 0) {
+          ++regexp.lastIndex;
+        }
       }
-      return results.slice(0, i);
+      return results.length > 0 ? results : null;
     };
 
     String.prototype.replaceAll = function (re, replace) {
@@ -3801,6 +3921,7 @@
 						sinLUT[i] = p.sin(i * (p.PI/180) * 0.5);
 						cosLUT[i] = p.cos(i * (p.PI/180) * 0.5);
           }
+          // Set defaults
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
@@ -3810,8 +3931,16 @@
           // Create the program objects to render 2D (points, lines) and 
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit, 
           // lighting calculations could be ommitted from that program object.
-          programObject2D = createProgramObject( curContext, vertexShaderSource2D, fragmentShaderSource3D );
+          programObject2D = createProgramObject( curContext, vertexShaderSource2D, fragmentShaderSource2D );
           programObject3D = createProgramObject( curContext, vertexShaderSource3D, fragmentShaderSource3D );
+
+          // Now that the programs have been compiled, we can set the default
+          // states for the lights.
+          curContext.useProgram( programObject3D );
+          p.lightFalloff( 1, 0, 0 );
+          p.shininess( 1 );
+          p.ambient( 255, 255, 255 );
+          p.specular( 0, 0, 0 );
 
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
@@ -3958,27 +4087,98 @@
     // Lights
     ////////////////////////////////////////////////////////////////////////////
     
-    p.ambientLight = function( r, g, b ) {
-      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+    /*
+    */
+    p.ambientLight = function( r, g, b, x, y, z ) {
+
+      if( p.use3DContext ) {
+            
+        if( lightCount === p.MAX_LIGHTS ) {
+          throw "can only create " + p.MAX_LIGHTS + " lights";
+        }
+        
+        var pos = new PVector( x, y, z );
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( pos, pos );
+        
         curContext.useProgram( programObject3D );
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position", pos.array() );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 0 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
     };
 
+    /*
+    */
     p.directionalLight = function( r, g, b, nx, ny, nz ) {
-      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+
+      if( p.use3DContext ) {
+            
+        if( lightCount === p.MAX_LIGHTS ) {
+          throw "can only create " + p.MAX_LIGHTS + " lights";
+        }
+
         curContext.useProgram( programObject3D );
+
+        // transform the spotlight's direction
+        // Less code than manually multiplying, but I'll fix
+        // this when I have more time.
+        var dir = [ nx, ny, nz, 0.0000001 ];     
+        view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( dir, dir );
+
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
-        uniformf( programObject3D, "lights[" + lightCount + "].position", [nx, -ny, nz] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position", [-dir[0], -dir[1], -dir[2]] );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 1 );
         uniformi( programObject3D, "lightCount", ++lightCount );
       }
     };
     
+    /*
+    */
+    p.lightFalloff = function lightFalloff( constant, linear, quadratic ) {
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "falloff", [constant, linear, quadratic] );
+      }
+    };
+    
+    /*
+    */
+    p.lightSpecular = function lightSpecular( r, g, b ) {
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "specular", [r/255, g/255, b/255] );
+      }
+    };
+    
+    /*
+     	Sets the the default ambient light, directional light,
+      falloff, and specular values. P5 Documentation says specular()
+      is set, but the code calls lightSpecular().
+    */
+    p.lights = function lights() {
+      p.ambientLight( 128, 128, 128 );
+      p.directionalLight( 128, 128, 128, 0, 0, -1 );
+      p.lightFalloff( 1, 0, 0 );
+      p.lightSpecular( 0, 0, 0 );
+    };
+    
+    /*
+    */
     p.pointLight = function( r, g, b, x, y, z ) {
-      if( p.use3DContext && lightCount < p.MAX_LIGHTS ) {
+
+      if( p.use3DContext ) {
+      
+        if( lightCount === p.MAX_LIGHTS ) {
+          throw "can only create " + p.MAX_LIGHTS + " lights";
+        }
+        
         curContext.useProgram( programObject3D );
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
 
@@ -3989,7 +4189,7 @@
         view.scale( 1, -1 , 1 );
         view.apply( modelView.array() );
         view.mult( pos, pos );
-
+        
         uniformf( programObject3D, "lights[" + lightCount + "].position", pos.array() );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 2 );
         uniformi( programObject3D, "lightCount", ++lightCount );
@@ -4000,11 +4200,54 @@
       Disables lighting so the all shapes drawn after this
       will not be lit.
     */
-    p.noLights = function() {
+    p.noLights = function noLights() {
       if( p.use3DContext ) {
         lightCount = 0;
         curContext.useProgram( programObject3D );
         uniformi( programObject3D, "lightCount", lightCount );
+      }
+    }
+    
+    /*
+      r,g,b - Color of the light
+      x,y,z - position of the light in modeling space
+      nx,ny,nz - direction of the spotlight
+      angle - in radians
+      concentration - 
+    */
+    p.spotLight = function spotLight( r, g, b, x, y, z, 
+                                      nx, ny, nz, angle, concentration) {
+      if( p.use3DContext ) {
+      
+        if( lightCount === p.MAX_LIGHTS ) {
+          throw "can only create " + p.MAX_LIGHTS + " lights";
+        }
+
+        curContext.useProgram( programObject3D );
+        
+        // place the point in view space once instead of once per vertex
+        // in the shader.
+        var pos = new PVector( x, y, z );
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( pos, pos );
+        
+        // transform the spotlight's direction
+        // need to find a solution for this one. Maybe manual mult?
+        var dir = [ nx, ny, nz, 0.0000001 ];     
+        view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+        view.mult( dir, dir );
+        
+        uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
+        uniformf( programObject3D, "lights[" + lightCount + "].position",  pos.array() );
+        uniformf( programObject3D, "lights[" + lightCount + "].direction", [dir[0],dir[1],dir[2]] );
+        uniformf( programObject3D, "lights[" + lightCount + "].concentration", concentration );
+        uniformf( programObject3D, "lights[" + lightCount + "].angle", angle );
+        uniformi( programObject3D, "lights[" + lightCount + "].type", 3 );
+        uniformi( programObject3D, "lightCount", ++lightCount );
       }
     };
 
@@ -4141,8 +4384,6 @@
     ////////////////////////////////////////////////////////////////////////////
 
     p.box = function( w, h, d ) {
-      var c;
-
       if(p.use3DContext)
       {
         // user can uniformly scale the box by  
@@ -4174,8 +4415,7 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          c = fillStyle.slice( 5, -1 ).split( "," );
-          uniformf( programObject3D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf( programObject3D, "color", p.color.toGLArray(fillStyle));
 
           var v = new PMatrix3D();
           v.set(view);
@@ -4204,9 +4444,7 @@
           uniformMatrix( programObject2D, "view", true, view.array() );
           uniformMatrix( programObject2D, "projection", true, projection.array() );
 
-          // eventually need to make this more efficient.
-          c = strokeStyle.slice( 5, -1 ).split( "," );
-          uniformf(programObject2D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf(programObject2D, "color", p.color.toGLArray(strokeStyle));
           curContext.lineWidth( lineWidth );
           vertexAttribPointer( programObject2D, "Vertex", 3, boxOutlineBuffer );
           curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
@@ -4392,8 +4630,7 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          c = fillStyle.slice( 5, -1 ).split( "," );
-          uniformf( programObject3D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf( programObject3D, "color", p.color.toGLArray(fillStyle));
 
           curContext.drawArrays( curContext.TRIANGLE_STRIP, 0, sphereVerts.length/3 );
           curContext.disable( curContext.POLYGON_OFFSET_FILL );
@@ -4407,9 +4644,7 @@
           uniformMatrix( programObject2D, "view", true, view.array() );
           uniformMatrix( programObject2D, "projection", true, projection.array() );
 
-          // eventually need to make this more efficient.
-          c = strokeStyle.slice( 5, -1 ).split( "," );
-          uniformf(programObject2D, "color", [ c[0]/255, c[1]/255, c[2]/255, c[3] ] );
+          uniformf(programObject2D, "color", p.color.toGLArray(strokeStyle));
 
           curContext.lineWidth( lineWidth );
           curContext.drawArrays( curContext.LINE_STRIP, 0, sphereVerts.length/3 );
@@ -4465,18 +4700,122 @@
       return ( ow !== 0 ) ? oz / ow : oz;
     };
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Material Properties
+    ////////////////////////////////////////////////////////////////////////////
 
+    /*
+    */
+    p.ambient = function ambient() {
+      // create an alias to shorten code
+      var a = arguments;
+      
+      // either a shade of gray or a 'color' object.
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformi( programObject3D, "usingMat", true );
+        
+        if( a.length === 1 ) {
+          // color object was passed in
+          if( typeof a[0] === "string" ) {  
+            c = a[0].slice(5, -1).split(",");
+            uniformf( programObject3D, "mat_ambient", [c[0]/255, c[1]/255, c[2]/255] );
+          }
+          // else a single number was passed in for gray shade
+          else {
+            uniformf( programObject3D, "mat_ambient", [a[0]/255, a[0]/255, a[0]/255] );
+          }
+        }
+        // Otherwise three values were provided (r,g,b)        
+        else {
+          uniformf( programObject3D, "mat_ambient", [a[0]/255, a[1]/255, a[2]/255] );
+        }
+      }
+    }
+
+    /*
+    */
+    p.emissive = function emissive() {
+      // create an alias to shorten code
+      var a = arguments;
+      
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformi( programObject3D, "usingMat", true );
+      
+        // If only one argument was provided, the user either gave us a 
+        // shade of gray or a 'color' object.
+        if( a.length === 1 ) {
+          // color object was passed in
+          if( typeof a[0] === "string" ) {  
+            c = a[0].slice(5, -1).split(",");
+            uniformf( programObject3D, "mat_emissive", [c[0]/255, c[1]/255, c[2]/255] );
+          }
+          // else a regular number was passed in for gray shade
+          else {
+            uniformf( programObject3D, "mat_emissive", [a[0]/255, a[0]/255, a[0]/255] );
+          }
+        }
+        // Otherwise three values were provided (r,g,b)
+        else
+        {
+          uniformf( programObject3D, "mat_emissive", [a[0]/255, a[1]/255, a[2]/255] );
+        }
+      }
+    }
+
+    /*
+    */
+    p.shininess = function shininess( shine ) {
+      curContext.useProgram( programObject3D );
+      uniformi( programObject3D, "usingMat", true );
+      uniformf( programObject3D, "shininess", shine );
+    }
+    
+    /*
+      Documentation says the following calls are valid, but the
+      Processing throws exceptions:
+      specular(gray, alpha)
+      specular(v1, v2, v3, alpha)
+    */
+    p.specular = function specular() {
+      var a = arguments;
+
+      if( p.use3DContext ) {
+        curContext.useProgram( programObject3D );
+        uniformi( programObject3D, "usingMat", true );
+      
+        // color object was passed in
+        if( a.length === 1 && typeof a[0] === "string" ) {
+          var c = arguments[0].slice(5, -1).split(",");
+          uniformf( programObject3D, "mat_specular", [c[0]/255, c[1]/255, c[2]/255] );
+        }
+        
+        // a single value for a gray shade was passed in
+        else if( a.length === 1 && typeof a[0] === "number" ) {
+          uniformf( programObject3D, "mat_specular", [a[0]/255, a[0]/255, a[0]/255] );
+        }
+        
+        // r, g, b
+        else if( a.length === 3 ) {
+          uniformf( programObject3D, "mat_specular", [a[0]/255, a[1]/255, a[2]/255] );
+        }
+      }
+    }
+    
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
 
     p.fill = function fill() {
       doFill = true;
+      var color = p.color.apply(this, arguments);
+      
       if( p.use3DContext ) {
-        fillStyle = p.color.apply(this, arguments);
+        fillStyle = p.color.toGLArray(color);
       }
       else {
-        curContext.fillStyle = p.color.apply(this, arguments);
+        curContext.fillStyle = p.color.toString(color);
       }
     };
 
@@ -4486,11 +4825,13 @@
 
     p.stroke = function stroke() {
       doStroke = true;
+      var color = p.color.apply(this, arguments);
+      
       if( p.use3DContext ) {
-        strokeStyle = p.color.apply(this, arguments);
+        strokeStyle = p.color.toGLArray(color);
       }
       else {
-        curContext.strokeStyle = p.color.apply(this, arguments);
+        curContext.strokeStyle = p.color.toString(color);
       }
     };
 
@@ -4516,16 +4857,18 @@
     };
 
     p.smooth = function() {
-      //curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-      //curContext.mozImageSmoothingEnabled = true;
+      if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+        curContext.mozImageSmoothingEnabled = true;
+      }
     };
 
     p.noSmooth = function() {
-      //curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-      //curContext.mozImageSmoothingEnabled = false;
+      if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+        curContext.mozImageSmoothingEnabled = false;
+      }
     };
-
-    //p.noSmooth(); // default to noSmooth // Corban: turning this on breaks 3D context
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
@@ -5011,16 +5354,15 @@
         view.scale(1, -1, 1);
         view.apply(modelView.array());
 
-        curContext.useProgram( programObject2D );
-        uniformMatrix( programObject2D, "model", true,  model.array() );
-        uniformMatrix( programObject2D, "view", true, view.array() );
-        uniformMatrix( programObject2D, "projection", true, projection.array() );
+        curContext.useProgram(programObject2D);
+        uniformMatrix(programObject2D, "model", true,  model.array());
+        uniformMatrix(programObject2D, "view", true, view.array());
+        uniformMatrix(programObject2D, "projection", true, projection.array());
 
         if( lineWidth > 0 && doStroke ) {
           curContext.useProgram(programObject2D);
-          // this will be replaced with the new bit shifting color code
-          var c = strokeStyle.slice(5, -1).split(",");
-          uniformf(programObject2D, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+
+          uniformf(programObject2D, "color", p.color.toGLArray(strokeStyle));
 
           curContext.lineWidth(lineWidth);
 
@@ -5326,6 +5668,27 @@
         return imgData;
       };
 
+      this.toDataURL = function() {
+        var canvas = document.createElement('canvas');
+        canvas.height = this.height;
+        canvas.width = this.width;
+        var ctx = canvas.getContext('2d');
+        var imgData = ctx.createImageData(this.width, this.height); 
+        for (var i = 0; i < this.pixels.length; i++) {
+          // convert each this.pixels[i] int to array of 4 ints of each color
+          var c = this.pixels[i];
+          var pos = i*4;
+          // pjs uses argb, canvas stores rgba        
+          imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
+          imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
+          imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
+          imgData.data[pos + 2] = c % 256;
+        }
+        // return data URI for a canvas
+        ctx.putImageData(imgData, 0, 0);
+        return canvas.toDataURL();
+      };
+
       this.fromImageData = function(canvasImg) {
         this.width = canvasImg.width;
         this.height = canvasImg.height;
@@ -5458,15 +5821,15 @@
         return c;
       } else if ( arguments.length === 3 ){
         // PImage.get(x,y) was called, return the color (int) at x,y of img
-        return p.color.toString(w.pixels[y * w.width + x]);
+        return w.pixels[y * w.width + x];
 	    } else if ( arguments.length === 2 ){
 	      // return the color at x,y (int) of curContext
 	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
-		    if(x < p.width && x >= 0 && y >= 0 && y < p.height){
+		    if ( x < p.width && x >= 0 && y >= 0 && y < p.height ){
 		      // x,y is inside canvas space
 		      c = new PImage(1,1,p.RGB);
 		      c.fromImageData(curContext.getImageData(x,y,1,1));
-		      return p.color.toString(c.pixels[0]);
+		      return c.pixels[0];
 		    } else {
 		      // x,y is outside image return transparent black
 		      return 0;
@@ -5495,21 +5858,9 @@
       } else if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number"){
-          // it was a color
-          // use canvas method to fill pixel with color
-          // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
           oldFill = curContext.fillStyle;
           color = obj;
           curContext.fillStyle = p.color.toString(color);
-          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-          curContext.fillStyle = oldFill;
-        } else if (typeof obj === "string"){
-          // it was a color
-          // use canvas method to fill pixel with color
-          // we need a color.toString prototype to convert ints to rgb(r,g,b) strings for canvas
-          oldFill = curContext.fillStyle;
-          color = obj;
-          curContext.fillStyle = color;
           curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
           curContext.fillStyle = oldFill;
         } else if (obj instanceof PImage) {
@@ -5525,8 +5876,7 @@
 
     // Draws a 1-Dimensional pixel array to Canvas
     p.updatePixels = function () {
-      var colors = /(\d+),(\d+),(\d+),(\d+)/,
-        pixels = {}, c;
+      var pixels = {}, c;
 
       pixels.width = p.width;
       pixels.height = p.height;
@@ -5536,101 +5886,56 @@
         pixels = curContext.createImageData(p.width, p.height);
       }
 
-      var data = pixels.data,
-        pos = 0;
-
+      var data = pixels.data, pos = 0, defaultColor;
+      
       for (var i = 0, l = p.pixels.length; i < l; i++) {
-        if (typeof p.pixels[i] === "number") {
-          c = (p.color.toString(p.pixels[i]) || "rgba(0,0,0,1)").match(colors);
-        } else if(typeof p.pixels[i] === "string") {
-          c = (p.pixels[i] || "rgba(0,0,0,1)").match(colors);
-        }
-
-        data[pos + 0] = parseInt(c[1], 10);
-        data[pos + 1] = parseInt(c[2], 10);
-        data[pos + 2] = parseInt(c[3], 10);
-        data[pos + 3] = parseFloat(c[4]) * 255;
+        c = p.pixels[i] ? p.color.toArray(p.pixels[i]) : [0,0,0,255];
+          
+        data[pos + 0] = c[0];
+        data[pos + 1] = c[1];
+        data[pos + 2] = c[2];
+        data[pos + 3] = c[3];  
 
         pos += 4;
-
       }
 
       curContext.putImageData(pixels, 0, 0);
-
     };
 
     // Draw an image or a color to the background
     p.background = function background() {
-      var c, a;
-      if (p.use3DContext) {
-        // create alias
-        var col = arguments;
+      var color, a, img;
+      
+      // background params are either a color or a PImage
+      if ( typeof arguments[0] === 'number' ) {
+        color = p.color.apply(this, arguments);
+        // override alpha value, processing ignores the alpha for background color
+        color = color | p.ALPHA_MASK; 
+      } else if ( arguments.length === 1 && arguments[0] instanceof PImage ) {
+        img = arguments[0];
 
-        // if user passes in 1 argument, they either want
-        // a shade of gray or 
-        // it is a color object or
-        // it's a hex value
-        if (arguments.length === 1) {
-          // type passed in was color()
-          if (typeof arguments[0] === "string") {
-            c = arguments[0].slice(5, -1).split(",");
-
-            // if 3 component color was passed in, alpha will be 1
-            // otherwise it will already be normalized.
-            curContext.clearColor(c[0] / 255, c[1] / 255, c[2] / 255, c[3]);
-            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
-          }
-
-          // user passes in value which ranges from 0-255, but opengl
-          // wants a normalized value.
-          else if (typeof arguments[0] === "number") {
-            curContext.clearColor(col[0] / 255, col[0] / 255, col[0] / 255, 1.0 );
-            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
-          }
-        } else if (arguments.length === 2) {
-          if (typeof arguments[0] === "string") {
-            c = arguments[0].slice(5, -1).split(",");
-            // Processing is ignoring alpha
-            // var a = arguments[0]/255;
-            curContext.clearColor(c[0] / 255, c[1] / 255, c[2] / 255, 1.0);
-            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
-          }
-          // first value is shade of gray, second is alpha
-          // background(0,255);
-          else if (typeof arguments[0] === "number") {
-            c = arguments[0] / 255;
-
-            // Processing is ignoring alpha
-            // var a = arguments[0]/255;
-            a = 1.0;
-            curContext.clearColor(c, c, c, a);
-            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
-          }
+        if ( !img.pixels || img.width !== p.width || img.height !== p.height ) {
+          throw "Background image must be the same dimensions as the canvas.";
         }
-
-        // background(255,0,0) or background(0,255,0,255);
-        else if (arguments.length === 3 || arguments.length === 4) {
-          // Processing seems to ignore this value, so just use 1.0 instead.
-          //var a = arguments.length === 3? 1.0: arguments[3]/255;
-          curContext.clearColor(col[0] / 255, col[1] / 255, col[2] / 255, 1);
+      } else {
+        throw "Incorrect background parameters.";
+      }
+      
+      if ( p.use3DContext ) {
+        if ( typeof color !== 'undefined' ) {
+          curContext.clearColor(p.color.toGLArray(color));
           curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
+        } else {
+          // Handle image background for 3d context. not done yet.
         }
       } else { // 2d context
-        if (arguments.length === 1 && arguments[0] instanceof PImage) {
-          var img = arguments[0];
-
-          if (img.pixels && img.width === p.width && img.height === p.height) {
-            curBackground = img;
-            p.image(img, 0, 0);
-          } else {
-            throw "Background image must be the same dimensions as the canvas.";
-          }
-        } else if (arguments.length > 0) {
-          curBackground = p.color.apply(this, arguments);
+        if ( typeof color !== 'undefined' ) {
           var oldFill = curContext.fillStyle;
-          curContext.fillStyle = curBackground + "";
+          curContext.fillStyle = p.color.toString(color);
           curContext.fillRect(0, 0, p.width, p.height);
           curContext.fillStyle = oldFill;
+        } else {
+          p.image(img, 0, 0);
         }
       }
       hasBackground = true;
@@ -5706,7 +6011,7 @@
       for (var i = 0, l = img.pixels.length; i < l; i++) {
 
         var pos = i * 4;
-        var c = (img.pixels[i] || "rgba(0,0,0,1)").slice(5, -1).split(",");
+        var c = img.pixels[i] || [0,0,0,255];
 
         img.data[pos + 0] = parseInt(c[0], 10);
         img.data[pos + 1] = parseInt(c[1], 10);
@@ -5833,7 +6138,9 @@
       curTint = a;
     };
 
-
+    p.noTint = function noTint() {
+      curTint = -1;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Font handling
@@ -6421,7 +6728,7 @@
           // Set default stroke and fill color
           p.stroke(0);
           p.fill(255);
-
+          p.noSmooth();
           p.disableContextMenu();
         }
 
@@ -6478,17 +6785,22 @@
       }
 
       attach(curElement, "mousemove", function (e) {
+        var element = curElement, offsetX = 0, offsetY = 0;
 
-        p.pmouseX = p.mouseX;
-        p.pmouseY = p.mouseY;
+        if (element.offsetParent) {
+          do {
+            offsetX += element.offsetLeft;
+            offsetY += element.offsetTop;
+          } while(element = element.offsetParent);
+        }
 
-        var scrollX = (window.scrollX !== null && typeof window.scrollX !== 'undefined') ? window.scrollX : window.pageXOffset;
-        var scrollY = (window.scrollY !== null && typeof window.scrollY !== 'undefined') ? window.scrollY : window.pageYOffset;
+        // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
+        // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
+        p.mouseX = e.pageX - offsetX;
+        p.mouseY = e.pageY - offsetY;
 
-        p.mouseX = e.clientX - curElement.offsetLeft + scrollX;
-        p.mouseY = e.clientY - curElement.offsetTop + scrollY;
         p.cursor(curCursor);
-
+        
         if (p.mouseMoved && !mousePressed) {
           p.mouseMoved();
         }
