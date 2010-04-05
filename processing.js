@@ -3649,7 +3649,7 @@
       } else if ( typeof val === 'object' && val.constructor === Array ) {
         var ret = new Array( val.length );
         for ( var i = 0; i < val.length; i++) {
-          ret[i] = p['int']( val[i] );
+          if( typeof val[i] === 'string' && !/^\s*[+\-]?\d+\s*$/.test(val[i]) ) { ret[i] = 0; } else {ret[i] = p['int']( val[i] );}
         }
         return ret;
       }
