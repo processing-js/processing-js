@@ -271,7 +271,7 @@
   "    spotAttenuation = 1.0;" +
   "  }" +
   "  attenuation *= spotAttenuation;" +
-  
+
   "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
   "  vec3 halfVector = normalize( VP + eye );" +
   "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
@@ -283,7 +283,7 @@
   "    powerfactor = pow( nDotHV, shininess );" +
   "  }" +
 
-  "  spec += specular * powerfactor * attenuation;" +  
+  "  spec += specular * powerfactor * attenuation;" +
   "  col += light.color * nDotVP * attenuation;" + 
   "}" +
 
@@ -332,10 +332,9 @@
   "                           mat_emissive + " +
   "                           (vec3(color) * mat_ambient * finalAmbient) + " +
   "                           (vec3(color) * finalDiffuse) + " +
-  "                           ( mat_specular * finalSpecular), " +
+  "                           (mat_specular * finalSpecular), " +
   "                           color[3] );" +
-  "   }" +
-
+  "    }" +
   "  }" +
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
   "}";
@@ -4270,11 +4269,11 @@
 
         curContext.useProgram( programObject3D );
 
-        // transform the spotlight's direction
         // Less code than manually multiplying, but I'll fix
         // this when I have more time.
-        var dir = [ nx, ny, nz, 0.0000001 ];     
-        view = new PMatrix3D();
+        var dir = [ nx, ny, nz, 0.0000001 ];
+        
+        var view = new PMatrix3D();
         view.scale( 1, -1 , 1 );
         view.apply( modelView.array() );
         view.mult( dir, dir );
@@ -4305,7 +4304,7 @@
     };
     
     /*
-      Sets the the default ambient light, directional light,
+      Sets the default ambient light, directional light,
       falloff, and specular values. P5 Documentation says specular()
       is set, but the code calls lightSpecular().
     */
@@ -4325,9 +4324,6 @@
         if( lightCount === p.MAX_LIGHTS ) {
           throw "can only create " + p.MAX_LIGHTS + " lights";
         }
-        
-        curContext.useProgram( programObject3D );
-        uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
 
         // place the point in view space once instead of once per vertex
         // in the shader.
@@ -4336,7 +4332,9 @@
         view.scale( 1, -1 , 1 );
         view.apply( modelView.array() );
         view.mult( pos, pos );
-        
+
+        curContext.useProgram( programObject3D );
+        uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );        
         uniformf( programObject3D, "lights[" + lightCount + "].position", pos.array() );
         uniformi( programObject3D, "lights[" + lightCount + "].type", 2 );
         uniformi( programObject3D, "lightCount", ++lightCount );
@@ -4386,7 +4384,7 @@
         view.scale( 1, -1 , 1 );
         view.apply( modelView.array() );
         view.mult( dir, dir );
-        
+
         uniformf( programObject3D, "lights[" + lightCount + "].color", [r/255, g/255, b/255] );
         uniformf( programObject3D, "lights[" + lightCount + "].position",  pos.array() );
         uniformf( programObject3D, "lights[" + lightCount + "].direction", [dir[0],dir[1],dir[2]] );
@@ -4585,14 +4583,14 @@
         }
 
         if( lineWidth > 0 && doStroke ) {
-          curContext.useProgram(programObject2D);
-          uniformMatrix( programObject2D, "model", true,  model.array() );
-          uniformMatrix( programObject2D, "view", true, view.array() );
-          uniformMatrix( programObject2D, "projection", true, projection.array() );
+          curContext.useProgram(programObject3D);
+          uniformMatrix( programObject3D, "model", true,  model.array() );
+          uniformMatrix( programObject3D, "view", true, view.array() );
+          uniformMatrix( programObject3D, "projection", true, projection.array() );
 
           uniformf(programObject2D, "color", strokeStyle);
           curContext.lineWidth( lineWidth );
-          vertexAttribPointer( programObject2D, "Vertex", 3, boxOutlineBuffer );
+          vertexAttribPointer( programObject3D, "Vertex", 3, boxOutlineBuffer );
           curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
         }
       }
@@ -4776,19 +4774,20 @@
           // developers can start playing around with styles. 
           curContext.enable( curContext.POLYGON_OFFSET_FILL );
           curContext.polygonOffset( 1, 1 );
-          uniformf( programObject3D, "color", fillStyle);
 
+          uniformf( programObject3D, "color", fillStyle);
+          
           curContext.drawArrays( curContext.TRIANGLE_STRIP, 0, sphereVerts.length/3 );
           curContext.disable( curContext.POLYGON_OFFSET_FILL );
         }
 
         if( lineWidth > 0 && doStroke ) {
-          curContext.useProgram( programObject2D );
-          vertexAttribPointer( programObject2D, "Vertex", 3 , sphereBuffer );
+          curContext.useProgram( programObject3D );
+          vertexAttribPointer( programObject3D, "Vertex", 3 , sphereBuffer );
 
-          uniformMatrix( programObject2D, "model", true,  model.array() );
-          uniformMatrix( programObject2D, "view", true, view.array() );
-          uniformMatrix( programObject2D, "projection", true, projection.array() );
+          uniformMatrix( programObject3D, "model", true,  model.array() );
+          uniformMatrix( programObject3D, "view", true, view.array() );
+          uniformMatrix( programObject3D, "projection", true, projection.array() );
 
           uniformf(programObject2D, "color", strokeStyle);
 
@@ -4913,9 +4912,12 @@
     /*
     */
     p.shininess = function shininess( shine ) {
-      curContext.useProgram( programObject3D );
-      uniformi( programObject3D, "usingMat", true );
-      uniformf( programObject3D, "shininess", shine );
+      if( p.use3DContext )
+      {
+        curContext.useProgram( programObject3D );
+        uniformi( programObject3D, "usingMat", true );
+        uniformf( programObject3D, "shininess", shine );
+      }
     };
     
     /*
@@ -4923,29 +4925,16 @@
       Processing throws exceptions:
       specular(gray, alpha)
       specular(v1, v2, v3, alpha)
+      So we don't support them either
+      <corban> I dont think this matters so much, let us let color handle it. alpha values are not sent anyways.
     */
     p.specular = function specular() {
-      var a = arguments;
+      var c = p.color.apply(this, arguments);
 
       if( p.use3DContext ) {
         curContext.useProgram( programObject3D );
         uniformi( programObject3D, "usingMat", true );
-      
-        // color object was passed in
-        if( a.length === 1 && typeof a[0] === "string" ) {
-          var c = arguments[0].slice(5, -1).split(",");
-          uniformf( programObject3D, "mat_specular", [c[0]/255, c[1]/255, c[2]/255] );
-        }
-        
-        // a single value for a gray shade was passed in
-        else if( a.length === 1 && typeof a[0] === "number" ) {
-          uniformf( programObject3D, "mat_specular", [a[0]/255, a[0]/255, a[0]/255] );
-        }
-        
-        // r, g, b
-        else if( a.length === 3 ) {
-          uniformf( programObject3D, "mat_specular", [a[0]/255, a[1]/255, a[2]/255] );
-        }
+        uniformf( programObject3D, "mat_specular", p.color.toGLArray(c).slice(0,3) );
       }
     };
     

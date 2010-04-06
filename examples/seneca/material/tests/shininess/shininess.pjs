@@ -1,69 +1,15 @@
-/*size(100, 100, P3D); 
-background(0); 
-noStroke(); 
-
-fill(0, 51, 102);
-lightSpecular(204, 204, 204); 
-pointLight(102,102,102,  50,50,50);
-//directionalLight(102, 102, 102, 0, 0, -1); 
-specular(255, 255, 255); 
-
-
-translate(30, 30, 20); 
-rotateY(3.14);
-shininess(25.0); 
-sphere(20);*/
-
-/*
+// Test from Processing.org
 size(100, 100, P3D); 
 background(0); 
 noStroke(); 
-
-fill(0, 0, 0);
-//ambientLight(102, 102, 102);
-//lightSpecular(204, 204, 204); 
-//specular(250, 0, 250); 
-
-translate(40, 40, 0); 
-sphere(20);
-*/
-
-/*
-size(100, 100, P3D); 
-background(0); 
-noStroke(); 
-
-fill(0, 51, 102);
-lightSpecular(204, 204, 204); 
-directionalLight(102, 102, 102, 0, 0, -1); 
-specular(255, 255, 255); 
-
-translate(30, 90, 20); 
-rotateY(3.14);
-shininess(25.0); 
-sphere(20);*/
-
-
-size(100, 100, P3D); 
-background(0); 
-noStroke(); 
-background(0); 
 fill(0, 51, 102); 
 ambientLight(102, 102, 102);
 lightSpecular(204, 204, 204); 
-directionalLight(102, 102, 102, 0, 0, -1); 
-specular(color(255, 255, 255,255)); 
+directionalLight(202, 202, 202, 0, 0, -1); 
+specular(255, 255, 255); 
 translate(30, 50, 0); 
 shininess(1.0); 
 sphere(20); 
 translate(40, 0, 0); 
 shininess(5.0); 
 sphere(20);
-
-//translate(40, 0, 0); 
-//shininess(5.0); 
-//sphere(20);
-
-
-
-
