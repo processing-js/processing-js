@@ -1953,7 +1953,7 @@
         this.length = 0;
       };
       array.remove = function (i) {
-        return this.splice(i, 1);
+        return this.splice(i, 1)[0];
       };
       array.isEmpty = function () {
         return !this.length;
