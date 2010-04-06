@@ -855,7 +855,7 @@
       inSetup = false,
       inDraw = false,
       curBackground = "rgba( 204, 204, 204, 1 )",
-      curFrameRate = 1000,
+      curFrameRate = 60,
       curCursor = p.ARROW,
       oldCursor = curElement.style.cursor,
       curMsPerFrame = 1,
