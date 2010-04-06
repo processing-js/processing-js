@@ -7366,6 +7366,9 @@
       attach(curElement, "mousemove", function (e) {
         var element = curElement, offsetX = 0, offsetY = 0;
 
+        p.pmouseX = p.mouseX;
+        p.pmouseY = p.mouseY;
+
         if (element.offsetParent) {
           do {
             offsetX += element.offsetLeft;
