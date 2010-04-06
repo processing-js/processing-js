@@ -874,7 +874,7 @@
       mouseDragging = false,
       keyPressed = false,
       curColorMode = p.RGB,
-      curTint = -1,
+      curTint = function() {},
       curTextSize = 12,
       curTextFont = "Arial",
       getLoaded = false,
@@ -6347,25 +6347,19 @@
             }
           }
         }
-
-        var oldAlpha;
-        if (curTint >= 0) { // wrong: can be color-tinted
-          oldAlpha = curContext.globalAlpha;
-          curContext.globalAlpha = curTint / opacityRange;
-        }
-
+        
+        // draw the image
+        //curContext.putImageData(obj, x, y); // this causes error if data overflows the canvas dimensions
+        
+        curTint(obj);
+        
         var c = document.createElement('canvas');
         c.width = obj.width;
         c.height = obj.height;
         var ctx = c.getContext('2d');
         ctx.putImageData(obj, 0, 0);
 
-        curContext.drawImage(c, 0, 0, img.width, img.height,
-          bounds.x, bounds.y, bounds.w, bounds.h);
-
-        if (curTint >= 0) {
-          curContext.globalAlpha = oldAlpha;
-        }
+        curContext.drawImage(c, 0, 0, img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
       }
     };
 
@@ -6378,12 +6372,26 @@
       }
     };
 
-    p.tint = function tint(rgb, a) {
-      curTint = a;
+    p.tint = function tint() {
+      var tintColor = p.color.apply(this, arguments);
+      var r = p.red(tintColor) / redRange;
+      var g = p.green(tintColor) / greenRange;
+      var b = p.blue(tintColor) / blueRange;
+      var a = p.alpha(tintColor) / opacityRange;
+ 
+      curTint = function(obj) {
+        var data = obj.data, length = 4 * obj.width * obj.height;
+        for(var i = 0; i < length;) {
+          data[i++] *= r;
+          data[i++] *= g;
+          data[i++] *= b;
+          data[i++] *= a;
+        }
+      };
     };
-
+ 
     p.noTint = function noTint() {
-      curTint = -1;
+      curTint = function() {};
     };
 
     p.copy = function copy(src, sx, sy, sw, sh, dx, dy, dw, dh) {
