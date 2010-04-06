@@ -4640,7 +4640,7 @@
           uniformMatrix( programObject3D, "view", true, view.array() );
           uniformMatrix( programObject3D, "projection", true, projection.array() );
 
-          uniformf(programObject2D, "color", strokeStyle);
+          uniformf(programObject3D, "color", strokeStyle);
           curContext.lineWidth( lineWidth );
           vertexAttribPointer( programObject3D, "Vertex", 3, boxOutlineBuffer );
           curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
@@ -4841,7 +4841,7 @@
           uniformMatrix( programObject3D, "view", true, view.array() );
           uniformMatrix( programObject3D, "projection", true, projection.array() );
 
-          uniformf(programObject2D, "color", strokeStyle);
+          uniformf(programObject3D, "color", strokeStyle);
 
           curContext.lineWidth( lineWidth );
           curContext.drawArrays( curContext.LINE_STRIP, 0, sphereVerts.length/3 );
