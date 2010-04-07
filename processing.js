@@ -6207,57 +6207,7 @@
       hasBackground = true;
     };
 
-    // Depreciating "getImage_old" from PJS - currently here to support AniSprite
-    var getImage_old = function getImage_old(img) {
-      if (typeof img === "string") {
-        return document.getElementById(img);
-      }
-      if (img.img || img.canvas) {
-        return img.img || img.canvas;
-      }
-      for (var i = 0, l = img.pixels.length; i < l; i++) {
-        var pos = i * 4;
-        var c = (img.pixels[i] || "rgba(0,0,0,1)").slice(5, -1).split(",");
-        img.data[pos + 0] = parseInt(c[0], 10);
-        img.data[pos + 1] = parseInt(c[1], 10);
-        img.data[pos + 2] = parseInt(c[2], 10);
-        img.data[pos + 3] = parseFloat(c[3]) * 100;
-      }
-      var canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      var context = canvas.getContext("2d");
-      context.putImageData(img, 0, 0);
-      img.canvas = canvas;
-      return canvas;
-    };
-
-    p.AniSprite = function (prefix, frames) {
-      this.images = [];
-      this.pos = 0;
-
-      for (var i = 0; i < frames; i++) {
-        this.images.push(prefix + p.nf(i, ("" + frames).length) + ".gif");
-      }
-
-      this.display = function (x, y) {
-        p.image_old(this.images[this.pos], x, y);
-
-        if (++this.pos >= frames) {
-          this.pos = 0;
-        }
-      };
-
-      this.getWidth = function () {
-        return getImage_old(this.images[0]).width;
-      };
-      this.getHeight = function () {
-        return getImage_old(this.images[0]).height;
-      };
-    };
-
     function getImage(img) {
-
       if (typeof img === "string") {
         return document.getElementById(img);
       }
@@ -6275,7 +6225,6 @@
       }
 
       for (var i = 0, l = img.pixels.length; i < l; i++) {
-
         var pos = i * 4;
         var c = img.pixels[i] || [0,0,0,255];
 
@@ -6283,7 +6232,6 @@
         img.data[pos + 1] = parseInt(c[1], 10);
         img.data[pos + 2] = parseInt(c[2], 10);
         img.data[pos + 3] = parseFloat(c[3]) * 100;
-
       }
 
       var canvas = document.createElement("canvas");
@@ -6297,32 +6245,6 @@
 
       return img;
     }
-
-    // Depreciating "getImage_old" from PJS - currently here to support AniSprite
-    p.image_old = function image_old(img, x, y, w, h) {
-      x = x || 0;
-      y = y || 0;
-      var obj = getImage(img),
-        oldAlpha;
-      if (curTint >= 0) {
-        oldAlpha = curContext.globalAlpha;
-        curContext.globalAlpha = curTint / opacityRange;
-      }
-      if (arguments.length === 3) {
-        curContext.drawImage(obj, x, y);
-      } else {
-        curContext.drawImage(obj, x, y, w, h);
-      }
-      if (curTint >= 0) {
-        curContext.globalAlpha = oldAlpha;
-      }
-      if (img._mask) {
-        var oldComposite = curContext.globalCompositeOperation;
-        curContext.globalCompositeOperation = "source-in";
-        p.image(img._mask, x, y);
-        curContext.globalCompositeOperation = oldComposite;
-      }
-    };
 
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
