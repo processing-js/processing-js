@@ -2288,12 +2288,6 @@
     // Color functions
     ////////////////////////////////////////////////////////////////////////////
 
-    // convert rgba color strings to integer <corban> I dont think we need this anymore, remember to take it out when you get bitcolor working
-    p.rgbaToInt = function(color) {
-      var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1, 2)[0].split(',');
-      return ((rgbaAry[3] * 255) << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
-    };
-
     // helper functions for internal blending modes
     p.mix = function(a, b, f) {
       return a + (((b - a) * f) >> 8);
@@ -2494,13 +2488,6 @@
           aColor = p.color(p.red(aValue1), p.green(aValue1), p.blue(aValue1), aValue2);
         } else { // grayscale and alpha
           aColor = p.color(aValue1, aValue1, aValue1, aValue2);
-        }
-      } else if (typeof aValue1 === "string") {
-        aColor = aValue1;
-        if (aValue2 && aValue4 == null && aValue4 == null) {
-          var c = aColor.split(",");
-          c[3] = (aValue2 / opacityRange) + ")";
-          aColor = c.join(",");
         }
       } else if (typeof aValue1 === "number") {
         if (aValue1 < 256 && aValue1 >= 0) {
@@ -3240,22 +3227,19 @@
       return hex;
     };
 
-    // note: since we cannot keep track of byte, char, and int types by default the returned string is 8 chars long
+    // note: since we cannot keep track of byte, int types by default the returned string is 8 chars long
     // if no 2nd argument is passed.  closest compromise we can use to match java implementation Feb 5 2010
     // also the char parser has issues with chars that are not digits or letters IE: !@#$%^&*
     p.hex = function hex(value, len) {
       var hexstring = "";
-      var patternRGBa = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3})(,\d?\.?\d*)?\)$/i; //match rgba(20,20,20,0) or rgba(20,20,20)
       if (arguments.length === 1) {
-        hexstring = hex(value, 8);
-      } else {
-        if (patternRGBa.test(value)) {
-          // its a color
-          hexstring = decimalToHex(p.rgbaToInt(value), len);
-        } else {
-          // its a byte, char, or int
-          hexstring = decimalToHex(value, len);
+        if (value instanceof Char) {
+          hexstring = hex(value, 4);
+        } else { // int or byte, indistinguishable at the moment, default to 8
+          hexstring = hex(value, 8);
         }
+      } else { // pad to specified length
+        hexstring = decimalToHex(value, len);
       }
       return hexstring;
     };
