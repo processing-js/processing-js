@@ -113,7 +113,7 @@
     }
   };
   
-	/*
+  /*
     Wrapper to easily deal with array names changes.
   */
   var newWebGLArray = function(data) {
@@ -178,7 +178,7 @@
   var boxBuffer;
   var boxNormBuffer;
   var boxOutlineBuffer;
-	
+  
   var sphereBuffer;
 
   var lineBuffer;
@@ -228,9 +228,9 @@
 
   "struct Light {" +
   "  bool dummy;" +
-  "	 int type;" +
-  "	 vec3 color;" +
-  "	 vec3 position;" +
+  "   int type;" +
+  "   vec3 color;" +
+  "   vec3 position;" +
   "  vec3 direction;" +
   "  float angle;" +
   "  vec3 halfVector;" +
@@ -241,7 +241,7 @@
   "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
      // Get the vector from the light to the vertex
      // Get the distance from the current vector to the light position
-  "	 float d = length( light.position - ecPos );" +
+  "   float d = length( light.position - ecPos );" +
 
   "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + 
   "  totalAmbient += light.color * attenuation;" +
@@ -264,7 +264,7 @@
   "  float powerfactor;" + 
   
      // Get the vector from the light to the vertex
-  "	 vec3 VP = light.position - ecPos;" +
+  "   vec3 VP = light.position - ecPos;" +
 
      // Get the distance from the current vector to the light position
   "  float d = length( VP ); " + 
@@ -292,10 +292,10 @@
   /*
   */
   "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
-  "	 float spotAttenuation;" +
+  "   float spotAttenuation;" +
   "  float powerfactor;" + 
 
-	// calculate the vector from the current vertex to the light.
+  // calculate the vector from the current vertex to the light.
   "  vec3 VP = light.position - ecPos; " + 
   "  vec3 ldir = normalize( light.direction );" +
 
@@ -305,7 +305,7 @@
 
   "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ) );" +
 
-	// dot product of the vector from vertex to light and light direction.
+  // dot product of the vector from vertex to light and light direction.
   "  float spotDot = dot( VP, ldir );" +
 
   // if the vertex falls inside the cone
@@ -522,7 +522,7 @@
         return type + " " + name + " = 0" + sep;
       }); }());
     }
-		
+  	
     // float foo = 5;
     aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
       if (type === "return" || type === "else") {
@@ -743,7 +743,7 @@
     p.PI = Math.PI;
     p.TWO_PI = 2 * p.PI;
     p.HALF_PI = p.PI / 2;
-		p.SINCOS_LENGTH = parseInt(360/0.5, 10);
+  	p.SINCOS_LENGTH = parseInt(360/0.5, 10);
     p.MAX_FLOAT = 3.4028235e+38;
     p.MIN_FLOAT = -3.4028235e+38;
     p.MAX_INT = 2147483647;
@@ -812,7 +812,7 @@
     p.NORMAL_MODE_SHAPE = 1;
     p.NORMAL_MODE_VERTEX = 2;
     p.MAX_LIGHTS = 8;
-		
+  	
     // Key Constants
     // both key and keyCode will be equal to these values
     p.BACKSPACE = 8;
@@ -863,8 +863,8 @@
       curShapeCount = 0,
       curvePoints = [],
       curTightness = 0,
-			curveDetail = 20,
-			curveInited = false,
+  		curveDetail = 20,
+  		curveInited = false,
       opacityRange = 255,
       redRange = 255,
       greenRange = 255,
@@ -882,17 +882,17 @@
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0,
       lastTextPos = [ 0, 0, 0 ],
-			curveBasisMatrix,
-			curveToBezierMatrix,
-			curveDrawMatrix,
-			bezierBasisInverse,
-			bezierBasisMatrix;
+  		curveBasisMatrix,
+  		curveToBezierMatrix,
+  		curveDrawMatrix,
+  		bezierBasisInverse,
+  		bezierBasisMatrix;
       
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
-		
-		//sphere stuff
-		var sphereDetailV = 0,
+  	
+  	//sphere stuff
+  	var sphereDetailV = 0,
         sphereDetailU = 0,
         sphereX     = [],
         sphereY     = [],
@@ -902,7 +902,7 @@
         sphereVerts,
         sphereNorms;
     
-		// Camera defaults and settings
+  	// Camera defaults and settings
     var cam,
       cameraInv,
       forwardTransform,
@@ -1333,10 +1333,10 @@
           tx = 0;
         }
                               
-				this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
-				this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
-				this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
-				this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
+  			this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
+  			this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
+  			this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
+  			this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
       },
       transpose: function(){
         var temp = this.elements.slice();
@@ -1703,11 +1703,11 @@
         p.println(output);
       },
       invTranslate: function( tx, ty, tz) {
-		this.preApply(	1, 0, 0, -tx,
-						0, 1, 0, -ty,
-						0, 0, 1, -tz,
-						0, 0, 0, 1);
-	  },
+  	this.preApply(	1, 0, 0, -tx,
+  					0, 1, 0, -ty,
+  					0, 0, 1, -tz,
+  					0, 0, 0, 1);
+    },
       invRotateX: function( angle ){
         var c = p.cos( -angle );
         var s = p.sin( -angle );
@@ -1826,37 +1826,37 @@
     p.concat = function(array1, array2) {
       return array1.concat(array2);
     };
-		
-		p.sort = function(array, numElem){
-			var ret = [];
+  	
+  	p.sort = function(array, numElem){
+  		var ret = [];
 
-			// depending on the type used (int, float) or string
-			// we'll need to use a different compare function
-			if(array.length > 0){
-				// copy since we need to return another array
-				var elemsToCopy = numElem > 0 ? numElem : array.length;
-				for(var i=0; i < elemsToCopy; i++){
-					ret.push(array[i]);
-				}
-				if(typeof array[0] === "string"){  
-					ret.sort();
-				}
-				// int or float
-				else{
-					ret.sort(function(a,b){return a-b;});
-				}
-						
-				// copy on the rest of the elements that were not sorted in case the user
-				// only wanted a subset of an array to be sorted.
-				if(numElem > 0){
-					for(var j = ret.length; j < array.length; j++){
-						ret.push(array[j]);
-					}
-				}
-			}
-			return ret;
-		};
-		
+  		// depending on the type used (int, float) or string
+  		// we'll need to use a different compare function
+  		if(array.length > 0){
+  			// copy since we need to return another array
+  			var elemsToCopy = numElem > 0 ? numElem : array.length;
+  			for(var i=0; i < elemsToCopy; i++){
+  				ret.push(array[i]);
+  			}
+  			if(typeof array[0] === "string"){  
+  				ret.sort();
+  			}
+  			// int or float
+  			else{
+  				ret.sort(function(a,b){return a-b;});
+  			}
+  					
+  			// copy on the rest of the elements that were not sorted in case the user
+  			// only wanted a subset of an array to be sorted.
+  			if(numElem > 0){
+  				for(var j = ret.length; j < array.length; j++){
+  					ret.push(array[j]);
+  				}
+  			}
+  		}
+  		return ret;
+  	};
+  	
     p.splice = function(array, value, index) {
       if (array.length === 0 && value.length === 0) {
         return array;
@@ -1963,9 +1963,9 @@
       array.get = function (i) {
         return this[i];
       };
-			array.contains = function(item) {
-				return this.indexOf(item) !== -1;
-			};
+  		array.contains = function(item) {
+  			return this.indexOf(item) !== -1;
+  		};
       array.add = function (item) {
         return this.push(item);
       };
@@ -2104,7 +2104,7 @@
           if(this.contains(o)) {
             removeItem(o); return true;
           }
-	        return false;
+          return false;
         };        
         this.removeAll = function(c) { 
           var it = c.iterator();
@@ -2204,7 +2204,7 @@
           buckets[index] = [ {key: key, value: value } ];
           ensureLoad();
           return null;
-        }	
+        }  
         for(var i=0; i < bucket.length; ++i) {
           if(virtEquals(bucket[i].key, key)) {
             var previous = bucket[i].value;
@@ -2732,14 +2732,14 @@
         a[ 10 ] = a [ 15 ] = 1;
       }
 
-      forwardTransform.apply( a[0],	 a[1],  a[2],	 a[3],
-                              a[4],	 a[5],  a[6],  a[7],
-                              a[8],	 a[9],  a[10], a[11],
+      forwardTransform.apply( a[0],   a[1],  a[2],	 a[3],
+                              a[4],   a[5],  a[6],  a[7],
+                              a[8],   a[9],  a[10], a[11],
                               a[12], a[13], a[14], a[15] );
-      reverseTransform.invApply(  a[0],	 a[1],  a[2],	a[3],
-								  a[4],	 a[5],  a[6],	a[7],
-								  a[8],	 a[9],  a[10],	a[11],
-								  a[12], a[13], a[14],	a[15] );
+      reverseTransform.invApply(  a[0],   a[1],  a[2],	a[3],
+  							  a[4],	 a[5],  a[6],	a[7],
+  							  a[8],	 a[9],  a[10],	a[11],
+  							  a[12], a[13], a[14],	a[15] );
       
     };
     
@@ -2757,14 +2757,14 @@
       forwardTransform.rotateY( angleInRadians );
       reverseTransform.invRotateY( angleInRadians );
     };
-		
-		p.rotate = function rotate( angleInRadians ) {
+  	
+  	p.rotate = function rotate( angleInRadians ) {
       if (p.use3DContext) {  
-				forwardTransform.rotateZ( angleInRadians );
-				reverseTransform.invRotateZ( angleInRadians );
-			}else { curContext.rotate( angleInRadians ); }
+  			forwardTransform.rotateZ( angleInRadians );
+  			reverseTransform.invRotateZ( angleInRadians );
+  		}else { curContext.rotate( angleInRadians ); }
     };
-		
+  	
     p.pushStyle = function pushStyle() {
       // Save the canvas state.
       curContext.save();
@@ -3344,7 +3344,7 @@
 
     // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
     // This breaks the join() ref-test. The Processing.org documentation says String or String[]. SHOULD BE FIXED NOW
-		p.nf = function() {
+  	p.nf = function() {
       var str, num, pad, arr, left, right, isNegative, test, i;
 
       if ( arguments.length === 2 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') === -1 ) {
@@ -3888,7 +3888,7 @@
         }
         return ret;
       }
-    };		
+    };  	
 
     ////////////////////////////////////////////////////////////////////////////
     // Math functions
@@ -4111,9 +4111,9 @@
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
         } else {
-					for (var i = 0; i < p.SINCOS_LENGTH; i++) {
-						sinLUT[i] = p.sin(i * (p.PI/180) * 0.5);
-						cosLUT[i] = p.cos(i * (p.PI/180) * 0.5);
+  				for (var i = 0; i < p.SINCOS_LENGTH; i++) {
+  					sinLUT[i] = p.sin(i * (p.PI/180) * 0.5);
+  					cosLUT[i] = p.cos(i * (p.PI/180) * 0.5);
           }
           // Set defaults
           curContext.viewport(0,0,curElement.width, curElement.height);
@@ -4152,7 +4152,7 @@
           // The sphere vertices are specified dynamically since the user
           // can change the level of detail. Everytime the user does that
           // using sphereDetail(), the new vertices are calculated.
-					sphereBuffer = curContext.createBuffer();
+  				sphereBuffer = curContext.createBuffer();
           
           lineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
@@ -4174,16 +4174,16 @@
           reverseTransform = modelViewInv;
 
           userMatrixStack = new PMatrixStack();
-					// used by both curve and bezier, so just init here
-					curveBasisMatrix    = new PMatrix3D();
-					curveToBezierMatrix = new PMatrix3D();
-					curveDrawMatrix     = new PMatrix3D();
-					bezierBasisInverse  = new PMatrix3D();
-					bezierBasisMatrix   = new PMatrix3D();
-					bezierBasisMatrix.set( -1,  3, -3,  1,
-																	3, -6,  3,  0,
-																 -3,  3,  0,  0,
-																	1,  0,  0,  0);
+  				// used by both curve and bezier, so just init here
+  				curveBasisMatrix    = new PMatrix3D();
+  				curveToBezierMatrix = new PMatrix3D();
+  				curveDrawMatrix     = new PMatrix3D();
+  				bezierBasisInverse  = new PMatrix3D();
+  				bezierBasisMatrix   = new PMatrix3D();
+  				bezierBasisMatrix.set( -1,  3, -3,  1,
+  																3, -6,  3,  0,
+  															 -3,  3,  0,  0,
+  																1,  0,  0,  0);
         }
         p.stroke(0);
         p.fill(255);
@@ -4262,7 +4262,7 @@
         else                            {curContext.uniform1i (varLocation, varValue);}
       }
     }
-		
+  	
     function vertexAttribPointer(programObj, varName, size, VBO) {
       var varLocation = curContext.getAttribLocation(programObj, varName);
       if(varLocation !== -1) {
@@ -4271,7 +4271,7 @@
         curContext.enableVertexAttribArray(varLocation);
       }
     }
-		
+  	
     function uniformMatrix( programObj, varName, transpose, matrix ) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
       // the variable won't be found if it was optimized out.
@@ -4448,7 +4448,7 @@
       }
     };
 
-		////////////////////////////////////////////////////////////////////////////
+  	////////////////////////////////////////////////////////////////////////////
     // Camera functions
     ////////////////////////////////////////////////////////////////////////////
     
@@ -4483,8 +4483,8 @@
         cameraY = curElement.height / 2;
         cameraZ = cameraY / Math.tan( cameraFOV / 2 );
         p.camera( cameraX, cameraY, cameraZ,
-			            cameraX, cameraY, 0,
-			            0 , 1 , 0 );
+  		            cameraX, cameraY, 0,
+  		            0 , 1 , 0 );
       }
       else{
         var z = new p.PVector( eyeX - centerX, eyeY - centerY, eyeZ - centerZ );
@@ -4512,7 +4512,7 @@
         cameraInv.translate( eyeX, eyeY, eyeZ );
 
         modelView.set( cam );     
-        modelViewInv.set( cameraInv );				
+        modelViewInv.set( cameraInv );  			
       }
 
     };
@@ -4566,7 +4566,7 @@
 
         frustumMode = false;
       }
-    };	
+    };  
 
     p.printProjection = function() {
       projection.print();
@@ -4575,8 +4575,8 @@
     p.printCamera = function() {
       cam.print();
     };
-		
-		////////////////////////////////////////////////////////////////////////////
+  	
+  	////////////////////////////////////////////////////////////////////////////
     // Shapes
     ////////////////////////////////////////////////////////////////////////////
 
@@ -4648,138 +4648,138 @@
         }
       }
     };
-		
+  	
 
-		var initSphere = function() {
+  	var initSphere = function() {
       var i;
-			sphereVerts = [];
+  		sphereVerts = [];
 
-			for (i = 0; i < sphereDetailU; i++) {
-				sphereVerts.push(0);
-				sphereVerts.push(-1);
-				sphereVerts.push(0);
-				sphereVerts.push( sphereX[i] );
-				sphereVerts.push( sphereY[i] );
-				sphereVerts.push( sphereZ[i] );
-			}
-			sphereVerts.push(0);
-			sphereVerts.push(-1);
-			sphereVerts.push(0);
-			sphereVerts.push( sphereX[0] );
-			sphereVerts.push( sphereY[0] );
-			sphereVerts.push( sphereZ[0] );
+  		for (i = 0; i < sphereDetailU; i++) {
+  			sphereVerts.push(0);
+  			sphereVerts.push(-1);
+  			sphereVerts.push(0);
+  			sphereVerts.push( sphereX[i] );
+  			sphereVerts.push( sphereY[i] );
+  			sphereVerts.push( sphereZ[i] );
+  		}
+  		sphereVerts.push(0);
+  		sphereVerts.push(-1);
+  		sphereVerts.push(0);
+  		sphereVerts.push( sphereX[0] );
+  		sphereVerts.push( sphereY[0] );
+  		sphereVerts.push( sphereZ[0] );
 
-			var v1,v11,v2;
+  		var v1,v11,v2;
 
-			// middle rings
-			var voff = 0;
-			for (i = 2; i < sphereDetailV; i++) {
-				v1 = v11 = voff;
-				voff += sphereDetailU;
-				v2 = voff;
-				for (var j = 0; j < sphereDetailU; j++) {
-					sphereVerts.push( parseFloat( sphereX[v1] ) );
-					sphereVerts.push( parseFloat( sphereY[v1] ) );
-					sphereVerts.push( parseFloat( sphereZ[v1++] ) );
-					sphereVerts.push( parseFloat( sphereX[v2] ) );
-					sphereVerts.push( parseFloat( sphereY[v2] ) );
-					sphereVerts.push( parseFloat( sphereZ[v2++] ) );
-				}
+  		// middle rings
+  		var voff = 0;
+  		for (i = 2; i < sphereDetailV; i++) {
+  			v1 = v11 = voff;
+  			voff += sphereDetailU;
+  			v2 = voff;
+  			for (var j = 0; j < sphereDetailU; j++) {
+  				sphereVerts.push( parseFloat( sphereX[v1] ) );
+  				sphereVerts.push( parseFloat( sphereY[v1] ) );
+  				sphereVerts.push( parseFloat( sphereZ[v1++] ) );
+  				sphereVerts.push( parseFloat( sphereX[v2] ) );
+  				sphereVerts.push( parseFloat( sphereY[v2] ) );
+  				sphereVerts.push( parseFloat( sphereZ[v2++] ) );
+  			}
 
-				// close each ring
-				v1 = v11;
-				v2 = voff;
+  			// close each ring
+  			v1 = v11;
+  			v2 = voff;
 
-				sphereVerts.push( parseFloat( sphereX[v1] ) );
-				sphereVerts.push( parseFloat( sphereY[v1] ) );
-				sphereVerts.push( parseFloat( sphereZ[v1] ) );
-				sphereVerts.push( parseFloat( sphereX[v2] ) );
-				sphereVerts.push( parseFloat( sphereY[v2] ) );
-				sphereVerts.push( parseFloat( sphereZ[v2] ) );
-			}
+  			sphereVerts.push( parseFloat( sphereX[v1] ) );
+  			sphereVerts.push( parseFloat( sphereY[v1] ) );
+  			sphereVerts.push( parseFloat( sphereZ[v1] ) );
+  			sphereVerts.push( parseFloat( sphereX[v2] ) );
+  			sphereVerts.push( parseFloat( sphereY[v2] ) );
+  			sphereVerts.push( parseFloat( sphereZ[v2] ) );
+  		}
 
-			// add the northern cap
-			for (i = 0; i < sphereDetailU; i++) {
-				v2 = voff + i;
+  		// add the northern cap
+  		for (i = 0; i < sphereDetailU; i++) {
+  			v2 = voff + i;
 
-				sphereVerts.push( parseFloat( sphereX[v2] ) );
-				sphereVerts.push( parseFloat( sphereY[v2] ) );
-				sphereVerts.push( parseFloat( sphereZ[v2] ) );
-				sphereVerts.push( 0 );
-				sphereVerts.push( 1 );
-				sphereVerts.push( 0 );
-			}
+  			sphereVerts.push( parseFloat( sphereX[v2] ) );
+  			sphereVerts.push( parseFloat( sphereY[v2] ) );
+  			sphereVerts.push( parseFloat( sphereZ[v2] ) );
+  			sphereVerts.push( 0 );
+  			sphereVerts.push( 1 );
+  			sphereVerts.push( 0 );
+  		}
 
-			sphereVerts.push( parseFloat( sphereX[voff] ) );
-			sphereVerts.push( parseFloat( sphereY[voff] ) );
-			sphereVerts.push( parseFloat( sphereZ[voff] ) );
-			sphereVerts.push(0);
-			sphereVerts.push(1);
-			sphereVerts.push(0);
+  		sphereVerts.push( parseFloat( sphereX[voff] ) );
+  		sphereVerts.push( parseFloat( sphereY[voff] ) );
+  		sphereVerts.push( parseFloat( sphereZ[voff] ) );
+  		sphereVerts.push(0);
+  		sphereVerts.push(1);
+  		sphereVerts.push(0);
       
       //set the buffer data
       curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(sphereVerts),curContext.STATIC_DRAW);
-		};
+  	};
 
-		// sphere and sphereDetail
-		// Taken and revised from:
-		// git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
-		// UNDER :License: LGPL Java
-		p.sphereDetail =  function sphereDetail(ures, vres) {
+  	// sphere and sphereDetail
+  	// Taken and revised from:
+  	// git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
+  	// UNDER :License: LGPL Java
+  	p.sphereDetail =  function sphereDetail(ures, vres) {
       var i;
 
-			if(arguments.length === 1) {
-				ures = vres = arguments[0];
-			}
+  		if(arguments.length === 1) {
+  			ures = vres = arguments[0];
+  		}
 
-			if ( ures < 3 ) { ures = 3; } // force a minimum res
-			if ( vres < 2 ) { vres = 2; } // force a minimum res
+  		if ( ures < 3 ) { ures = 3; } // force a minimum res
+  		if ( vres < 2 ) { vres = 2; } // force a minimum res
 
-			// if it hasn't changed do nothing
-			if (( ures === sphereDetailU ) && ( vres === sphereDetailV )) { return; }
+  		// if it hasn't changed do nothing
+  		if (( ures === sphereDetailU ) && ( vres === sphereDetailV )) { return; }
 
-			var delta = p.SINCOS_LENGTH/ures;
-			var cx = new Array(ures);
-			var cz = new Array(ures);
-			// calc unit circle in XZ plane
-			for (i = 0; i < ures; i++) {
-			  cx[i] = cosLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH, 10 )];
-			  cz[i] = sinLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH, 10 )];
-			}
+  		var delta = p.SINCOS_LENGTH/ures;
+  		var cx = new Array(ures);
+  		var cz = new Array(ures);
+  		// calc unit circle in XZ plane
+  		for (i = 0; i < ures; i++) {
+  		  cx[i] = cosLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH, 10 )];
+  		  cz[i] = sinLUT[ parseInt(( i * delta ) % p.SINCOS_LENGTH, 10 )];
+  		}
 
-			// computing vertexlist
-			// vertexlist starts at south pole
-			var vertCount = ures * ( vres - 1 ) + 2;
-			var currVert = 0;
+  		// computing vertexlist
+  		// vertexlist starts at south pole
+  		var vertCount = ures * ( vres - 1 ) + 2;
+  		var currVert = 0;
 
-			// re-init arrays to store vertices
-			sphereX = new Array( vertCount );
-			sphereY = new Array( vertCount );
-			sphereZ = new Array( vertCount );
+  		// re-init arrays to store vertices
+  		sphereX = new Array( vertCount );
+  		sphereY = new Array( vertCount );
+  		sphereZ = new Array( vertCount );
 
-			var angle_step = (p.SINCOS_LENGTH *0.5)/vres;
-			var angle = angle_step;
+  		var angle_step = (p.SINCOS_LENGTH *0.5)/vres;
+  		var angle = angle_step;
 
-			// step along Y axis
-			for (i = 1; i < vres; i++) {
-				var curradius = sinLUT[ parseInt( angle % p.SINCOS_LENGTH, 10 )];
-				var currY     = -cosLUT[ parseInt( angle % p.SINCOS_LENGTH, 10 )];
-				for ( var j = 0; j < ures; j++ ) {
-					sphereX[currVert]   = cx[j] * curradius;
-					sphereY[currVert]   = currY;
-					sphereZ[currVert++] = cz[j] * curradius;
-				}
-			  angle += angle_step;
-			}
-			sphereDetailU = ures;
-			sphereDetailV = vres;
+  		// step along Y axis
+  		for (i = 1; i < vres; i++) {
+  			var curradius = sinLUT[ parseInt( angle % p.SINCOS_LENGTH, 10 )];
+  			var currY     = -cosLUT[ parseInt( angle % p.SINCOS_LENGTH, 10 )];
+  			for ( var j = 0; j < ures; j++ ) {
+  				sphereX[currVert]   = cx[j] * curradius;
+  				sphereY[currVert]   = currY;
+  				sphereZ[currVert++] = cz[j] * curradius;
+  			}
+  		  angle += angle_step;
+  		}
+  		sphereDetailU = ures;
+  		sphereDetailV = vres;
 
-			// make the sphere verts and norms
-			initSphere();
-		};
+  		// make the sphere verts and norms
+  		initSphere();
+  	};
 
-		p.sphere = function() {
+  	p.sphere = function() {
       if(p.use3DContext) {
         var sRad = arguments[0], c;
 
@@ -4847,10 +4847,10 @@
           curContext.lineWidth( lineWidth );
           curContext.drawArrays( curContext.LINE_STRIP, 0, sphereVerts.length/3 );
         }
-			}
-		};
+  		}
+  	};
 
-		////////////////////////////////////////////////////////////////////////////
+  	////////////////////////////////////////////////////////////////////////////
     // Coordinates
     ////////////////////////////////////////////////////////////////////////////
     p.modelX = function modelX( x, y, z ) {
@@ -5321,19 +5321,19 @@
 
     p.curveVertex = function (x, y, z) {
       if (curvePoints.length < 3) {
-				if( p.use3DContext && z) {
-					curvePoints.push([x, y, z]);
-				} else{
-					curvePoints.push([x, y]);
-				}
-			}	else{
-				if( p.use3DContext) {
-						p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
-																	curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
-																	curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
-																	curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
-				 } else {
-					var b = [],
+  			if( p.use3DContext && z) {
+  				curvePoints.push([x, y, z]);
+  			} else{
+  				curvePoints.push([x, y]);
+  			}
+  		}	else{
+  			if( p.use3DContext) {
+  					p.curveVertexSegment( curvePoints[0][0], curvePoints[0][1], curvePoints[0][2],
+  																curvePoints[1][0], curvePoints[1][1], curvePoints[1][2],
+  																curvePoints[2][0], curvePoints[2][1], curvePoints[2][2],
+  																curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
+  			 } else {
+  				var b = [],
           s = 1 - curTightness;
           /*
           * Matrix to convert from Catmull-Rom to cubic Bezier
@@ -5344,135 +5344,135 @@
           * |0         0          0         0       |
           */
 
-					curvePoints.push([x, y]);
+  				curvePoints.push([x, y]);
 
-					b[0] = [curvePoints[1][0], curvePoints[1][1]];
-					b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
-					b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
-					b[3] = [curvePoints[2][0], curvePoints[2][1]];
+  				b[0] = [curvePoints[1][0], curvePoints[1][1]];
+  				b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
+  				b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
+  				b[3] = [curvePoints[2][0], curvePoints[2][1]];
 
-					if (!pathOpen) {
-						p.vertex(b[0][0], b[0][1]);
-					} else {
-						curShapeCount = 1;
-					}
+  				if (!pathOpen) {
+  					p.vertex(b[0][0], b[0][1]);
+  				} else {
+  					curShapeCount = 1;
+  				}
 
-					p.vertex(
-					b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
+  				p.vertex(
+  				b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
 
-					curvePoints.shift();
-				}
+  				curvePoints.shift();
+  			}
       }
     };
 
-		p.curveVertexSegment = function ( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4 ) {
-			var x0 = x2;
-			var y0 = y2;
-			var z0 = z2;
+  	p.curveVertexSegment = function ( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4 ) {
+  		var x0 = x2;
+  		var y0 = y2;
+  		var z0 = z2;
 
-			var draw = curveDrawMatrix.array();
+  		var draw = curveDrawMatrix.array();
 
-			var xplot1 = draw[4] *x1 + draw[5] *x2 + draw[6] *x3 + draw[7] *x4;
-			var xplot2 = draw[8] *x1 + draw[9] *x2 + draw[10]*x3 + draw[11]*x4;
-			var xplot3 = draw[12]*x1 + draw[13]*x2 + draw[14]*x3 + draw[15]*x4;
-			
-			var yplot1 = draw[4] *y1 + draw[5] *y2 + draw[6] *y3 + draw[7] *y4;
-			var yplot2 = draw[8] *y1 + draw[9] *y2 + draw[10]*y3 + draw[11]*y4;
-			var yplot3 = draw[12]*y1 + draw[13]*y2 + draw[14]*y3 + draw[15]*y4;
+  		var xplot1 = draw[4] *x1 + draw[5] *x2 + draw[6] *x3 + draw[7] *x4;
+  		var xplot2 = draw[8] *x1 + draw[9] *x2 + draw[10]*x3 + draw[11]*x4;
+  		var xplot3 = draw[12]*x1 + draw[13]*x2 + draw[14]*x3 + draw[15]*x4;
+  		
+  		var yplot1 = draw[4] *y1 + draw[5] *y2 + draw[6] *y3 + draw[7] *y4;
+  		var yplot2 = draw[8] *y1 + draw[9] *y2 + draw[10]*y3 + draw[11]*y4;
+  		var yplot3 = draw[12]*y1 + draw[13]*y2 + draw[14]*y3 + draw[15]*y4;
 
-			var zplot1 = draw[4] *z1 + draw[5] *z2 + draw[6]*z3 + draw[7] *z4;
-			var zplot2 = draw[8] *z1 + draw[9] *z2 + draw[10]*z3 + draw[11]*z4;
-			var zplot3 = draw[12]*z1 + draw[13]*z2 + draw[14]*z3 + draw[15]*z4;
+  		var zplot1 = draw[4] *z1 + draw[5] *z2 + draw[6]*z3 + draw[7] *z4;
+  		var zplot2 = draw[8] *z1 + draw[9] *z2 + draw[10]*z3 + draw[11]*z4;
+  		var zplot3 = draw[12]*z1 + draw[13]*z2 + draw[14]*z3 + draw[15]*z4;
 
-			p.vertex(x0, y0, z0);
-			for (var j = 0; j < curveDetail; j++) {
-				x0 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
-				y0 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
-				z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
-				p.vertex(x0, y0, z0);
-			}
-		};
+  		p.vertex(x0, y0, z0);
+  		for (var j = 0; j < curveDetail; j++) {
+  			x0 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+  			y0 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+  			z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
+  			p.vertex(x0, y0, z0);
+  		}
+  	};
 
     p.curve = function curve() {
       if( arguments.length === 8 )// curve(x1, y1, x2, y2, x3, y3, x4, y4)
-			{
-				p.beginShape();
+  		{
+  			p.beginShape();
           p.curveVertex( arguments[0], arguments[1] );
           p.curveVertex( arguments[2], arguments[3] );
           p.curveVertex( arguments[4], arguments[5] );
           p.curveVertex( arguments[6], arguments[7] );
-				p.endShape();
-			} else { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
-				if( p.use3DContext ) {
-					p.beginShape();
+  			p.endShape();
+  		} else { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+  			if( p.use3DContext ) {
+  				p.beginShape();
             p.curveVertex( arguments[0], arguments[1] , arguments[2] );
             p.curveVertex( arguments[3], arguments[4] , arguments[5] );
             p.curveVertex( arguments[6], arguments[7] , arguments[8] );
             p.curveVertex( arguments[9], arguments[10], arguments[11] );
-					p.endShape();
-				}
-			}
+  				p.endShape();
+  			}
+  		}
     };
 
     p.curveTightness = function (tightness) {
       curTightness = tightness;
     };
 
-		//used by both curveDetail and bezierDetail
-		var splineForward = function(segments, matrix) {
-			var f  = 1.0 / segments;
-			var ff = f * f;
-			var fff = ff * f;
+  	//used by both curveDetail and bezierDetail
+  	var splineForward = function(segments, matrix) {
+  		var f  = 1.0 / segments;
+  		var ff = f * f;
+  		var fff = ff * f;
 
-			matrix.set(0,     0,    0, 1,
-								 fff,   ff,   f, 0,
-								 6*fff, 2*ff, 0, 0,
-								 6*fff, 0,    0, 0);
-		};
+  		matrix.set(0,     0,    0, 1,
+  							 fff,   ff,   f, 0,
+  							 6*fff, 2*ff, 0, 0,
+  							 6*fff, 0,    0, 0);
+  	};
 
-		//internal curveInit
-		//used by curveDetail, curveTightness
-		var curveInit = function(){
-			// allocate only if/when used to save startup time
-			if ( !curveDrawMatrix ) {
-				curveBasisMatrix = new PMatrix3D();
-				curveDrawMatrix  = new PMatrix3D();
-				curveInited      = true;
-			}
+  	//internal curveInit
+  	//used by curveDetail, curveTightness
+  	var curveInit = function(){
+  		// allocate only if/when used to save startup time
+  		if ( !curveDrawMatrix ) {
+  			curveBasisMatrix = new PMatrix3D();
+  			curveDrawMatrix  = new PMatrix3D();
+  			curveInited      = true;
+  		}
 
       var s = curTightness;
       curveBasisMatrix.set( ((s-1)/2).toFixed(2), ((s+3)/2).toFixed(2),  ((-3-s)/2).toFixed(2), ((1-s)/2).toFixed(2),
-													  (1-s),    ((-5-s)/2).toFixed(2), (s+2),     ((s-1)/2).toFixed(2),
-													  ((s-1)/2).toFixed(2), 0,         ((1-s)/2).toFixed(2),  0,
-													  0,        1,          0,         0 );
-			
-			splineForward( curveDetail, curveDrawMatrix );
-			
-			if ( !bezierBasisInverse ) {
-				//bezierBasisInverse = bezierBasisMatrix.get();
-				//bezierBasisInverse.invert();
-				curveToBezierMatrix = new PMatrix3D();
-			}
+  												  (1-s),    ((-5-s)/2).toFixed(2), (s+2),     ((s-1)/2).toFixed(2),
+  												  ((s-1)/2).toFixed(2), 0,         ((1-s)/2).toFixed(2),  0,
+  												  0,        1,          0,         0 );
+  		
+  		splineForward( curveDetail, curveDrawMatrix );
+  		
+  		if ( !bezierBasisInverse ) {
+  			//bezierBasisInverse = bezierBasisMatrix.get();
+  			//bezierBasisInverse.invert();
+  			curveToBezierMatrix = new PMatrix3D();
+  		}
 
-			// TODO only needed for PGraphicsJava2D? if so, move it there
-			// actually, it's generally useful for other renderers, so keep it
-			// or hide the implementation elsewhere.
-			curveToBezierMatrix.set( curveBasisMatrix );
-			curveToBezierMatrix.preApply( bezierBasisInverse );
+  		// TODO only needed for PGraphicsJava2D? if so, move it there
+  		// actually, it's generally useful for other renderers, so keep it
+  		// or hide the implementation elsewhere.
+  		curveToBezierMatrix.set( curveBasisMatrix );
+  		curveToBezierMatrix.preApply( bezierBasisInverse );
 
-			// multiply the basis and forward diff matrices together
-			// saves much time since this needn't be done for each curve
-			curveDrawMatrix.apply( curveBasisMatrix );
-		};
+  		// multiply the basis and forward diff matrices together
+  		// saves much time since this needn't be done for each curve
+  		curveDrawMatrix.apply( curveBasisMatrix );
+  	};
 
-		//curveDetail, curveInit, splineForward
-		//Taken and revised from:
-		//git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
-		//UNDER :License: LGPL Java
-		p.curveDetail = function curveDetail(){
-			curveDetail = arguments[0];
-			curveInit();
-		};
+  	//curveDetail, curveInit, splineForward
+  	//Taken and revised from:
+  	//git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
+  	//UNDER :License: LGPL Java
+  	p.curveDetail = function curveDetail(){
+  		curveDetail = arguments[0];
+  		curveInit();
+  	};
 
     p.bezierVertex = p.vertex;
 
@@ -5599,7 +5599,7 @@
     p.bezierTangent = function bezierTangent(a, b, c, d, t) {
       return ( 3 * t * t * ( -a + 3 * b -3 * c + d ) +6 *t * ( a - 2 * b + c ) + 3 * ( -a + b ) );
     };
-	
+  
     p.curvePoint = function curvePoint(a, b, c, d, t) {
       return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
     };
@@ -5987,11 +5987,11 @@
     
     p.PImage = PImage;
     try {
-			// Opera createImageData fix
-			if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
-				CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); };
-			}
-		} catch(e) {}
+  		// Opera createImageData fix
+  		if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
+  			CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); };
+  		}
+  	} catch(e) {}
     p.createImage = function createImage(w, h, mode) {
 
       var img = new PImage(w,h,mode);
@@ -6074,28 +6074,28 @@
         return c;
       } else if ( arguments.length === 4 ){
         // return a PImage of w and h from cood x,y of curContext
-		    c = new PImage(w, h, p.RGB);
-		    c.fromImageData(curContext.getImageData(x, y, w, h)); 
+  	    c = new PImage(w, h, p.RGB);
+  	    c.fromImageData(curContext.getImageData(x, y, w, h)); 
         return c;
       } else if ( arguments.length === 3 ){
         // PImage.get(x,y) was called, return the color (int) at x,y of img
         return w.pixels[y * w.width + x];
-	    } else if ( arguments.length === 2 ){
-	      // return the color at x,y (int) of curContext
-	      // create a PImage object of size 1x1 and return the int of the pixels array element 0
-		    if ( x < p.width && x >= 0 && y >= 0 && y < p.height ){
-		      // x,y is inside canvas space
-		      c = new PImage(1,1,p.RGB);
-		      c.fromImageData(curContext.getImageData(x,y,1,1));
-		      return c.pixels[0];
-		    } else {
-		      // x,y is outside image return transparent black
-		      return 0;
-		    }
-	    } else if ( arguments.length === 1 ){
-	      // PImage.get() was called, return the PImage
-	      return x;
-	    }
+      } else if ( arguments.length === 2 ){
+        // return the color at x,y (int) of curContext
+        // create a PImage object of size 1x1 and return the int of the pixels array element 0
+  	    if ( x < p.width && x >= 0 && y >= 0 && y < p.height ){
+  	      // x,y is inside canvas space
+  	      c = new PImage(1,1,p.RGB);
+  	      c.fromImageData(curContext.getImageData(x,y,1,1));
+  	      return c.pixels[0];
+  	    } else {
+  	      // x,y is outside image return transparent black
+  	      return 0;
+  	    }
+      } else if ( arguments.length === 1 ){
+        // PImage.get() was called, return the PImage
+        return x;
+      }
     };
 
     // Creates a new Processing instance and passes it back for... processing
