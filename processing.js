@@ -4735,12 +4735,11 @@
 
     p.fill = function fill() {
       doFill = true;
-      var color = p.color.apply(this, arguments);
+      var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       
       if( p.use3DContext ) {
         fillStyle = p.color.toGLArray(color);
-      }
-      else {
+      } else {
         curContext.fillStyle = p.color.toString(color);
       }
     };
@@ -4751,12 +4750,11 @@
 
     p.stroke = function stroke() {
       doStroke = true;
-      var color = p.color.apply(this, arguments);
+      var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       
       if( p.use3DContext ) {
         strokeStyle = p.color.toGLArray(color);
-      }
-      else {
+      } else {
         curContext.strokeStyle = p.color.toString(color);
       }
     };
