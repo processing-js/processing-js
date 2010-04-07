@@ -1132,9 +1132,34 @@
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
     ////////////////////////////////////////////////////////////////////////////
+
+    /*
+      Helper function for printMatrix(). Finds the largest scalar
+      in the matrix, then number of digits left of the decimal.
+      Call from PMatrix2D and PMatrix3D's print() function.
+    */
+    var printMatrixHelper = function printMatrixHelper( elements ) {
+      var big = 0;
+      for ( var i = 0; i < elements.length; i++) {
+      
+        if ( i !== 0 ) {
+          big = Math.max( big, Math.abs( elements[i] ));
+        } else {
+          big = Math.abs( elements[i] );
+        }
+      }
+    
+      var digits = (big+"").indexOf(".");
+      if ( digits === 0 ) {
+        digits = 1;
+      } else if ( digits === -1 ) {
+        digits = (big+"").length;
+      }
+    
+      return digits;
+    };
     
     var PMatrix2D = function(){
-      
       if ( arguments.length === 0 ) {
         this.reset();
       } else if ( arguments.length === 1 && arguments[0] instanceof PMatrix2D ) {
@@ -1250,7 +1275,6 @@
         }
       },
       print: function() {
-        
         var digits = printMatrixHelper( this.elements );
         
         var output = "";
@@ -1653,7 +1677,6 @@
         return str;
       },
       print: function() {
-
         var digits = printMatrixHelper( this.elements );
 
         var output = "";
@@ -2657,33 +2680,6 @@
     ////////////////////////////////////////////////////////////////////////////
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
-    
-    /*
-      Helper function for printMatrix(). Finds the largest scalar
-      in the matrix, then number of digits left of the decimal.
-      Call from PMatrix2D and PMatrix3D's print() function.
-    */
-    var printMatrixHelper = function printMatrixHelper( elements ) {
-
-      var big = 0;
-      for ( var i = 0; i < elements.length; i++) {
-      
-        if ( i !== 0 ) {
-          big = Math.max( big, Math.abs( elements[i] ));
-        } else {
-          big = Math.abs( elements[i] );
-        }
-      }
-    
-      var digits = (big+"").indexOf(".");
-      if ( digits === 0 ) {
-        digits = 1;
-      } else if ( digits === -1 ) {
-        digits = (big+"").length;
-      }
-    
-      return digits;
-    };
 
     p.printMatrix = function printMatrix() {
       modelView.print();
