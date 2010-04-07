@@ -1,5 +1,5 @@
 /*
-  
+
     P R O C E S S I N G . J S - @VERSION@
     a port of the Processing visualization language
     
@@ -109,9 +109,7 @@
     }
   };
 
-  /*
-    Wrapper to easily deal with array names changes.
-  */
+  // Wrapper to easily deal with array names changes.
   var newWebGLArray = function(data) {
     return new WebGLFloatArray(data);
   };
@@ -384,8 +382,7 @@
 
   document.addEventListener('DOMContentLoaded', function() {
     init();
-  },
-  false);
+  }, false);
 
   // Place-holder for debugging function
   Processing.debug = function(e) {};
@@ -487,14 +484,18 @@
 
     //replace  catch (IOException e) to catch (e)
     aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g, "catch ($1)");
+
     //delete  the multiple catch block
     var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
+
     while (catchBlock.test(aCode)) {
       aCode = aCode.replace(new RegExp(catchBlock), "$1");
     }
+
     Error.prototype.printStackTrace = function() {
       this.toString();
     };
+
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 
@@ -564,11 +565,14 @@
 
       // Move arguments up from constructor and wrap contents with
       // a with(this), and unwrap constructor
-      return "function " + name + "() {with(this){\n " + (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
-      // Replace var foo = 0; with this.foo = 0;
-      // and force var foo; to become this.foo = null;
-      vars.replace(/\s*,\s*/g, ";\n  this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/this\.(\w+);/g, "this.$1 = null;") + (extend ? "extendClass(this, " + extend + ");\n" : "") + "<CLASS " + name + " " + staticVar + ">" + (typeof last === "string" ? last : name + "(");
-
+      return "function " + name + "() {with(this){\n " + 
+              (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
+              // Replace var foo = 0; with this.foo = 0;
+              // and force var foo; to become this.foo = null;
+              vars.replace(/\s*,\s*/g, ";\n  this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/this\.(\w+);/g, "this.$1 = null;") + 
+              (extend ? "extendClass(this, " + extend + ");\n" : "") + 
+              "<CLASS " + name + " " + staticVar + ">" + 
+              (typeof last === "string" ? last : name + "(");
     };
 
     var nextBrace = function(right) {
@@ -640,9 +644,7 @@
         });
       }());
 
-      var matchMethod = /ADDMETHOD([\s\S]*?\{)/,
-        mc;
-      var methods = "";
+      var matchMethod = /ADDMETHOD([\s\S]*?\{)/, mc, methods = "";
 
       while ((mc = rest.match(matchMethod))) {
         var prev = RegExp.leftContext,
@@ -765,7 +767,6 @@
 
   // Attach Processing functions to 'p'
   Processing.build = function buildProcessing(curElement) {
-
     // Create the 'p' object
     var p = {};
     var curContext;
@@ -1206,7 +1207,7 @@
         if (arguments.length === 6) {
           var a = arguments;
           this.set([a[0], a[1], a[2],
-                                a[3], a[4], a[5]]);
+                    a[3], a[4], a[5]]);
         } else if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
           this.elements = arguments[0].array();
         } else if (arguments.length === 1 && arguments[0] instanceof Array) {
@@ -1221,9 +1222,7 @@
       reset: function() {
         this.set([1, 0, 0, 0, 1, 0]);
       },
-      /*
-        Returns a copy of the element values.
-       */
+      // Returns a copy of the element values.
       array: function array() {
         return this.elements.slice();
       },
@@ -1231,8 +1230,8 @@
         this.elements[2] = tx * this.elements[0] + ty * this.elements[1] + this.elements[2];
         this.elements[5] = tx * this.elements[3] + ty * this.elements[4] + this.elements[5];
       },
+      // Does nothing in Processing.
       transpose: function() {
-        // Does nothing in Processing.
       },
       mult: function(source, target) {
         var x, y;
@@ -1335,9 +1334,7 @@
       reset: function() {
         this.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
       },
-      /*
-        Returns a copy of the element values.
-      */
+      // Returns a copy of the element values.
       array: function array() {
         return this.elements.slice();
       },
@@ -1506,9 +1503,7 @@
         var s = Math.sin(angle);
         this.apply([c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
       },
-      /*
-        Uniform scaling if only one value passed in
-      */
+      // Uniform scaling if only one value passed in
       scale: function(sx, sy, sz) {
         if (sx && !sy && !sz) {
           sy = sz = sx;
@@ -1684,7 +1679,6 @@
     };
 
     PMatrixStack.prototype.load = function load() {
-
       var tmpMatrix;
       if (p.use3DContext) {
         tmpMatrix = new PMatrix3D();
@@ -1841,7 +1835,6 @@
       for (var i = 0; i < len; i++) {
         newary[i] = ary[i];
       }
-
       newary.pop();
 
       return newary;
@@ -2722,6 +2715,7 @@
         curContext.translate(x, y);
       }
     };
+
     p.scale = function scale(x, y, z) {
       if (p.use3DContext) {
         forwardTransform.scale(x, y, z);
@@ -2730,6 +2724,7 @@
         curContext.scale(x, y || x);
       }
     };
+
     p.pushMatrix = function pushMatrix() {
       if (p.use3DContext) {
         userMatrixStack.load(modelView);
@@ -2835,7 +2830,6 @@
       }
     };
 
-
     ////////////////////////////////////////////////////////////////////////////
     // Time based functions
     ////////////////////////////////////////////////////////////////////////////
@@ -2911,19 +2905,16 @@
       }
 
       looping = window.setInterval(function() {
-
         try {
           try {
             p.focused = document.hasFocus();
           } catch(e) {}
           p.redraw();
-        }
-        catch(e_loop) {
+        } catch(e_loop) {
           window.clearInterval(looping);
           throw e_loop;
         }
-      },
-      curMsPerFrame);
+      }, curMsPerFrame);
 
       doLoop = true;
       loopStarted = true;
@@ -2982,6 +2973,9 @@
       }
     };
 
+    // PGraphics methods
+    // TODO: These functions are suppose to be called before any operations are called on the 
+    //       PGraphics object. They currently do nothing.
     p.beginDraw = function beginDraw() {};
     p.endDraw = function endDraw() {};
 
@@ -4123,8 +4117,6 @@
         try {
           if (!curContext) {
             curContext = curElement.getContext("experimental-webgl");
-
-            //document.getElementById('d').innerHTML = "<canvas id='display' width='" + newWidth + "' height='" + newHeight + "'></canvas>";
           }
         } catch(e_size) {
           Processing.debug(e_size);
@@ -4714,10 +4706,6 @@
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(sphereVerts), curContext.STATIC_DRAW);
     };
 
-    // sphere and sphereDetail
-    // Taken and revised from:
-    // git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
-    // UNDER :License: LGPL Java
     p.sphereDetail = function sphereDetail(ures, vres) {
       var i;
 
@@ -4778,8 +4766,7 @@
 
     p.sphere = function() {
       if (p.use3DContext) {
-        var sRad = arguments[0],
-          c;
+        var sRad = arguments[0], c;
 
         if ((sphereDetailU < 3) || (sphereDetailV < 2)) {
           p.sphereDetail(30);
@@ -5406,10 +5393,6 @@
       curveDrawMatrix.apply(curveBasisMatrix);
     };
 
-    //curveDetail, curveInit, splineForward
-    //Taken and revised from:
-    //git://github.com/omouse/ohprocessing.git/core/src/processing/core/PGraphics.java
-    //UNDER :License: LGPL Java
     p.curveDetail = function curveDetail() {
       curveDetail = arguments[0];
       curveInit();
@@ -5641,7 +5624,7 @@
         var c_x = C * w,
           c_y = C * h;
 
-        //!      Do we still need this? I hope the Canvas arc() more capable by now?
+        // TODO: Audit
         curContext.moveTo(x + w, y);
         curContext.bezierCurveTo(x + w, y - c_y, x + c_x, y - h, x, y - h);
         curContext.bezierCurveTo(x - c_x, y - h, x - w, y - c_y, x - w, y);
@@ -5682,6 +5665,7 @@
     // Raster drawing functions
     ////////////////////////////////////////////////////////////////////////////
 
+    // TODO: function incomplete
     p.save = function save(file) {};
 
     var buildImageObject = function(obj) {
@@ -5806,6 +5790,7 @@
         }
       };
 
+      // TODO: incomplete functions
       this.loadPixels = function() {};
 
       this.updatePixels = function() {};
@@ -6124,9 +6109,7 @@
       }
 
       if (img.img) {
-
         return img.img;
-
       } else if (img.getContext || img.canvas) {
         if (img.getContext('2d').createImageData) {
           img.pixels = img.getContext('2d').createImageData(img.width, img.height);
@@ -6161,7 +6144,6 @@
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-
         var obj = img.toImageData();
 
         if (img._mask) {
@@ -6632,7 +6614,6 @@
 
     // Sets the font size
     p.textSize = function textSize(size) {
-      //!   Was this meant to return textSize value if no arguments were passed?
       if (size) {
         curTextSize = size;
       }
@@ -6775,8 +6756,8 @@
             }
           } while (pos !== -1);
 
+          // TODO: handle case for 3d text
           if (p.use3DContext) {
-            //...
           }
 
           width = 0;
@@ -6821,8 +6802,8 @@
             curContext.restore();
           }
 
+          // TODO: Handle case for 3d text
           if (p.use3DContext) {
-            // ...
           }
 
           lastTextPos[0] = x + width;
@@ -6901,8 +6882,7 @@
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
     p.loadGlyphs = function loadGlyph(url) {
-      var x, y, cx, cy, nx, ny, d, a, lastCom, lenC, horiz_adv_x, getXY = '[0-9\\-]+',
-        path;
+      var x, y, cx, cy, nx, ny, d, a, lastCom, lenC, horiz_adv_x, getXY = '[0-9\\-]+', path;
 
       // Return arrays of SVG commands and coords
       // get this to use p.matchAll() - will need to work around the lack of null return
@@ -6937,76 +6917,70 @@
 
         // Loop through SVG commands translating to canvas eqivs functions in path object
         for (var j = 0; j < lenC; j++) {
-
-          var com = c[j][0],
-            xy = regex(getXY, com);
+          var com = c[j][0], xy = regex(getXY, com);
 
           switch (com[0]) {
+            case "M":
+              //curContext.moveTo(x,-y);
+              x = parseFloat(xy[0][0]);
+              y = parseFloat(xy[1][0]);
+              path += "curContext.moveTo(" + x + "," + (-y) + ");";
+              break;
 
-          case "M":
-            //curContext.moveTo(x,-y);
-            x = parseFloat(xy[0][0]);
-            y = parseFloat(xy[1][0]);
-            //!                 Brackets needed on (-y)?
-            path += "curContext.moveTo(" + x + "," + (-y) + ");";
-            break;
+            case "L":
+              //curContext.lineTo(x,-y);
+              x = parseFloat(xy[0][0]);
+              y = parseFloat(xy[1][0]);
+              path += "curContext.lineTo(" + x + "," + (-y) + ");";
+              break;
 
-          case "L":
-            //curContext.lineTo(x,-y);
-            x = parseFloat(xy[0][0]);
-            y = parseFloat(xy[1][0]);
-            path += "curContext.lineTo(" + x + "," + (-y) + ");";
-            break;
+            case "H":
+              //curContext.lineTo(x,-y)
+              x = parseFloat(xy[0][0]);
+              path += "curContext.lineTo(" + x + "," + (-y) + ");";
+              break;
 
-          case "H":
-            //curContext.lineTo(x,-y)
-            x = parseFloat(xy[0][0]);
-            path += "curContext.lineTo(" + x + "," + (-y) + ");";
-            break;
+            case "V":
+              //curContext.lineTo(x,-y);
+              y = parseFloat(xy[0][0]);
+              path += "curContext.lineTo(" + x + "," + (-y) + ");";
+              break;
 
-          case "V":
-            //curContext.lineTo(x,-y);
-            y = parseFloat(xy[0][0]);
-            path += "curContext.lineTo(" + x + "," + (-y) + ");";
-            break;
+            case "T":
+              //curContext.quadraticCurveTo(cx,-cy,nx,-ny);
+              nx = parseFloat(xy[0][0]);
+              ny = parseFloat(xy[1][0]);
 
-          case "T":
-            //curContext.quadraticCurveTo(cx,-cy,nx,-ny);
-            nx = parseFloat(xy[0][0]);
-            ny = parseFloat(xy[1][0]);
+              if (lastCom === "Q" || lastCom === "T") {
+                d = Math.sqrt(Math.pow(x - cx, 2) + Math.pow(cy - y, 2));
+                a = Math.PI + Math.atan2(cx - x, cy - y);
+                cx = x + (Math.sin(a) * (d));
+                cy = y + (Math.cos(a) * (d));
+              } else {
+                cx = x;
+                cy = y;
+              }
 
-            if (lastCom === "Q" || lastCom === "T") {
+              path += "curContext.quadraticCurveTo(" + cx + "," + (-cy) + "," + nx + "," + (-ny) + ");";
+              x = nx;
+              y = ny;
+              break;
 
-              d = Math.sqrt(Math.pow(x - cx, 2) + Math.pow(cy - y, 2));
-              a = Math.PI + Math.atan2(cx - x, cy - y);
-              cx = x + (Math.sin(a) * (d));
-              cy = y + (Math.cos(a) * (d));
+            case "Q":
+              //curContext.quadraticCurveTo(cx,-cy,nx,-ny);
+              cx = parseFloat(xy[0][0]);
+              cy = parseFloat(xy[1][0]);
+              nx = parseFloat(xy[2][0]);
+              ny = parseFloat(xy[3][0]);
+              path += "curContext.quadraticCurveTo(" + cx + "," + (-cy) + "," + nx + "," + (-ny) + ");";
+              x = nx;
+              y = ny;
+              break;
 
-            } else {
-              cx = x;
-              cy = y;
-            }
-
-            path += "curContext.quadraticCurveTo(" + cx + "," + (-cy) + "," + nx + "," + (-ny) + ");";
-            x = nx;
-            y = ny;
-            break;
-
-          case "Q":
-            //curContext.quadraticCurveTo(cx,-cy,nx,-ny);
-            cx = parseFloat(xy[0][0]);
-            cy = parseFloat(xy[1][0]);
-            nx = parseFloat(xy[2][0]);
-            ny = parseFloat(xy[3][0]);
-            path += "curContext.quadraticCurveTo(" + cx + "," + (-cy) + "," + nx + "," + (-ny) + ");";
-            x = nx;
-            y = ny;
-            break;
-
-          case "Z":
-            //curContext.closePath();
-            path += "curContext.closePath();";
-            break;
+            case "Z":
+              //curContext.closePath();
+              path += "curContext.closePath();";
+              break;
           }
           lastCom = com[0];
         }
@@ -7213,9 +7187,7 @@
       }
 
       attach(curElement, "mousemove", function(e) {
-        var element = curElement,
-          offsetX = 0,
-          offsetY = 0;
+        var element = curElement, offsetX = 0, offsetY = 0;
 
         p.pmouseX = p.mouseX;
         p.pmouseY = p.mouseY;
@@ -7431,4 +7403,3 @@
   };
 
 }());
-
