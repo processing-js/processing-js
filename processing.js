@@ -518,7 +518,7 @@
     });
 
     // int|float foo;
-    var intFloat = /(\n\s*(?:int|float)(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
+    var intFloat = /(\s*(?:int|float)\s+(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
     while (intFloat.test(aCode)) {
       aCode = (function() {
         return aCode.replace(new RegExp(intFloat), function(all, type, name, sep) {
