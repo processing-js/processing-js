@@ -2471,8 +2471,9 @@
           r = Math.round(255 * (aValue1 / redRange));
           g = Math.round(255 * (aValue2 / greenRange));
           b = Math.round(255 * (aValue3 / blueRange));
-          a = Math.round(255 * (aValue4 / opacityRange));
         }
+
+        a = Math.round(255 * (aValue4 / opacityRange));
 
         // Normalize values: values greater than range == range 
         r = (r > 255) ? 255 : r;
