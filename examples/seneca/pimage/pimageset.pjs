@@ -1,19 +1,36 @@
-﻿size(300,400); 
-background(0);
-PImage pi = createImage(256,256,ARGB); 
-int white = 4294967295; // white
-int red = 65536;
-int green = 256;
-int blue = 1;
-int redgreenblue = 65793;
-int c = 4294967295;
-for (int i = 0; i < pi.width; i++) {
-  for(int j = 0; j < pi.height; j++) {
-    pi.set(j, i, c);
-    c -= red;
-    c -= green;
-  }
-  white -= redgreenblue;
-  c = white;
+﻿/* @pjs preload="string.jpg" */ 
+PImage img;
+int direction = 1;
+
+float signal;
+
+void setup() {
+  size(200, 200);
+  stroke(255);
+  img = loadImage("string.jpg");
+  img.loadPixels();
+  loadPixels();
 }
-image(pi,22,22); 
+
+void draw() {
+  if (signal > img.height-1 || signal < 0) { 
+    direction = direction * -1; 
+  }
+  if (mousePressed) {
+    signal = abs(mouseY % img.height);
+  } else {
+    signal += (0.3*direction);  
+  }
+
+  if (keyPressed) {
+    set(0, 0, img);
+    line(0, signal, img.width, signal);
+  } else {
+    int signalOffset = int(signal)*img.width;
+    for (int y = 0; y < img.height; y++) {
+      arrayCopy(img.pixels, signalOffset, pixels, y*width, img.width);
+    }
+    updatePixels();
+  }
+}
+

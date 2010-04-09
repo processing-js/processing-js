@@ -1,0 +1,17 @@
+﻿<script src="../../../processing.js"></script>
+<div>Original image<br /><img src="ocean.jpg" /></div><br />
+Copy in PJS<br />
+<canvas datasrc="copy.pjs" width="200" height="200"></canvas>
+<div>P5 expected output<br /><img src="copyexpected.jpg" /></div>
+<pre>
+/* @pjs preload="ocean.jpg"; */
+size(472,266);
+PImage img = loadImage("ocean.jpg");
+image(img, 0, 0);
+copy(30, 220, 30, 30, 235, 25, 60, 60);
+copy(160, 130, 60, 60, 200, 200, 60, 60);
+noFill();
+// Rectangle shows area being copied
+rect(30, 220, 30, 30);
+rect(160, 130, 60, 60);
+</pre>

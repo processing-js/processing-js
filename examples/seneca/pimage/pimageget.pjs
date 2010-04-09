@@ -3,13 +3,14 @@ background(0);
 PImage greenSquare = createImage(100, 100, ARGB);
 for (int i = 0; i < greenSquare.pixels.length; i++) {
  // make greenSquare green
-  greenSquare.pixels[i] = 4278255360;
+  greenSquare.pixels[i] = color(0,255,0);
 }
+  println(color(0,255,0));
 image(greenSquare, 0, 0);
 PImage blueSquare = createImage(100, 100, ARGB);
 for (int i = 0; i < blueSquare.pixels.length; i++) {
  // make blueSquare blue
-  blueSquare.pixels[i] = 4278190335;
+  blueSquare.pixels[i] = color(0,0,255);
 }
 image(blueSquare, 100, 0);
 
@@ -17,7 +18,7 @@ image(blueSquare, 100, 0);
 PImage redSquare = createImage(40,40,ARGB);
 for (int i = 0; i < redSquare.pixels.length; i++) {
  // make redSquare red
-  redSquare.pixels[i] = 4294901760;
+  redSquare.pixels[i] = color(255,0,0);
 }
 image(redSquare,30,30);
 
@@ -51,5 +52,5 @@ println("createImage() makes the green square, blue square, and the red square i
 println("image() places the green red and blue squares.");
 println("getRedSquare is created by calling get(x,y,w,h) on the coordinates of where redSquare was placed");
 println("image() places getRedSquare inside blue.  no green pixels are copied");
-println(testGet3arg + " is returned from PImage.get(40,0) should be 4278255360 (green)");
-println(testGet2arg + " is returned from get(150,45) should be 4294901760 (red)");
+println(testGet3arg + " is returned from PImage.get(40,0) should be -16711936 (green)");
+println(testGet2arg + " is returned from get(150,45) should be -65536 (red)");
