@@ -1,0 +1,15 @@
+﻿<script src="../../../processing.js"></script>
+<div>Original image<br /><img src="country.jpg" /></div><br />
+Blended in PJS<br />
+<canvas datasrc="blend.pjs" width="200" height="200"></canvas>
+<div>P5 expected output<br /><img src="blendexpected.jpg" /></div>
+<pre>
+/* @pjs preload="country.jpg"; */
+size(472,266);
+PImage img = loadImage("country.jpg"); 
+image(img, 0, 0);
+blend(img, 0, 0, 100, 266, 372, 0, 100, 266, LIGHTEST);
+blend(img, 0, 0, 100, 266, 272, 0, 100, 266, DARKEST);
+blend(img, 0, 0, 100, 266, 172, 0, 100, 266, SUBTRACT);
+blend(img, 0, 0, 100, 266, 72, 0, 100, 266, BURN);
+</pre>
