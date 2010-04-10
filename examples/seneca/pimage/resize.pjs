@@ -1,0 +1,8 @@
+﻿/* @pjs preload="ref_string.jpg" */
+size(300,200);
+PImage img = loadImage("ref_string.jpg");
+image(img,0,0);
+img.resize(50,0);
+image(img, 0, 110);
+img.resize(0, 150);
+image(img, 110, 0);

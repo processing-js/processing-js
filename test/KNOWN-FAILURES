@@ -3,6 +3,8 @@
 # can temporarily remove a test from this list by commenting it out with a leading #
 # and add comments explaining why a test has been added/commented out.
 
+test/parser/Processing-Book-001/Units 43-51/43 Structure 4/_02/_02.pde
+test/parser/Processing-Book-001/Units 00-17/10 Image 1/_05/_05.pde
 test/parser/Fry-Visualizing-Data/ch05-salaryper/step_08b_web/step_08b_web.pde
 test/parser/Fry-Visualizing-Data/ch06-zipdecode/round_09c_focus_handling/round_09c_focus_handling.pde
 test/parser/Fry-Visualizing-Data/ch07-hierarchies/equator_03b/WordMap.pde
@@ -13,11 +15,6 @@ test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_06c_variable_size_nodes/s
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_07c_save_pdf/step_07c_save_pdf.pde
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_08c_graphviz/step_08c_graphviz.pde
 test/parser/Processing-Book-001/Appendixes/Appendix B/_02/_02.pde
-test/parser/Processing-Book-001/Appendixes/Appendix E/_05/_05.pde
-test/parser/Processing-Book-001/Appendixes/Appendix E/_06/_06.pde
-test/parser/Processing-Book-001/Appendixes/Appendix E/_07/_07.pde
-test/parser/Processing-Book-001/Appendixes/Appendix E/_08/_08.pde
-test/parser/Processing-Book-001/Appendixes/Appendix E/_09/_09.pde
 test/parser/Processing-Book-001/Extensions/3D/_05/_05.pde
 test/parser/Processing-Book-001/Extensions/Electronics/_01A/_01A.pde
 test/parser/Processing-Book-001/Extensions/Electronics/_03A/_03A.pde
@@ -45,7 +42,6 @@ test/parser/Processing-Book-001/Extensions/Vision/_01/_01.pde
 test/parser/Processing-Book-001/Extensions/Vision/_02/_02.pde
 test/parser/Processing-Book-001/Extensions/Vision/_03/_03.pde
 test/parser/Processing-Book-001/Extensions/Vision/_04/_04.pde
-test/parser/Processing-Book-001/Illustrations/page_094/page_094.pde
 test/parser/Processing-Book-001/Illustrations/page_100/page_100.pde
 test/parser/Processing-Book-001/Illustrations/page_110/page_110.pde
 test/parser/Processing-Book-001/Illustrations/page_126/page_126.pde
@@ -62,8 +58,6 @@ test/parser/Processing-Book-001/Synthesis/_14_pond/_14_pond.pde
 test/parser/Processing-Book-001/Synthesis/_15_tree/_15_tree.pde
 test/parser/Processing-Book-001/Synthesis/_16_sodaprocessing/_16_sodaprocessing.pde
 test/parser/Processing-Book-001/Units 00-17/01 Structure 1/_04/_04.pde
-test/parser/Processing-Book-001/Units 00-17/10 Image 1/_03/_03.pde
-test/parser/Processing-Book-001/Units 00-17/10 Image 1/_04/_04.pde
 test/parser/Processing-Book-001/Units 00-17/11 Data 2/_01/_01.pde
 test/parser/Processing-Book-001/Units 00-17/12 Data 3/_10/_10.pde
 test/parser/Processing-Book-001/Units 00-17/13 Typography 1/_09/_09.pde
@@ -76,28 +70,13 @@ test/parser/Processing-Book-001/Units 31-42/32 Motion 2/_05/_05.pde
 test/parser/Processing-Book-001/Units 31-42/32 Motion 2/_06/_06.pde
 test/parser/Processing-Book-001/Units 31-42/33 Data 4/_20/_20.pde
 test/parser/Processing-Book-001/Units 31-42/33 Data 4/_22/_22.pde
-test/parser/Processing-Book-001/Units 31-42/35 Image 3/_01/_01.pde
-test/parser/Processing-Book-001/Units 31-42/35 Image 3/_02/_02.pde
-test/parser/Processing-Book-001/Units 31-42/35 Image 3/_04/_04.pde
-test/parser/Processing-Book-001/Units 31-42/35 Image 3/_08/_08.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_03/_03.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 31-42/38 Color 2/_05/_05.pde
 test/parser/Processing-Book-001/Units 31-42/39 Image 4/_01/_01.pde
 test/parser/Processing-Book-001/Units 31-42/39 Image 4/_02/_02.pde
 test/parser/Processing-Book-001/Units 31-42/39 Image 4/_04/_04.pde
-test/parser/Processing-Book-001/Units 31-42/39 Image 4/_05/_05.pde
-test/parser/Processing-Book-001/Units 31-42/39 Image 4/_06/_06.pde
-test/parser/Processing-Book-001/Units 31-42/39 Image 4/_07/_07.pde
-test/parser/Processing-Book-001/Units 31-42/39 Image 4/_09/_09.pde
-test/parser/Processing-Book-001/Units 31-42/39 Image 4/_11/_11.pde
-test/parser/Processing-Book-001/Units 31-42/40 Image 5/_02/_02.pde
-test/parser/Processing-Book-001/Units 31-42/40 Image 5/_07/_07.pde
-test/parser/Processing-Book-001/Units 31-42/40 Image 5/_08/_08.pde
-test/parser/Processing-Book-001/Units 31-42/40 Image 5/_09/_09.pde
-test/parser/Processing-Book-001/Units 31-42/40 Image 5/_10/_10.pde
 test/parser/Processing-Book-001/Units 31-42/40 Image 5/_11/_11.pde
-test/parser/Processing-Book-001/Units 43-51/43 Structure 4/_02/_02.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_06/_06.pde

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for <a href="https://processing-js.lighthouseapp.com/projects/41284-processingjs/tickets/277-canvas-size-difference-issue">bug 277</a></h2>
+
+    <p>This page tests the fix for <a href="https://processing-js.lighthouseapp.com/projects/41284-processingjs/tickets/277-canvas-size-difference-issue">bug277</a> in <a href="http://processingjs.org/">Processing.js</a><br />
+      This page creates a canvas without a width and height and attempts to<br />
+      load a sketch which uses a call to size(100,100,P3D). That is, the dimensions in the HTML<br />
+      and Processing sketch are <b>not</b> identical in this test case.<br />
+      <br />
+      If a lit sphere is rendered in the canvas, the test has passed.<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs"></canvas>
+    </p>
+    
+    <pre>
+<b>// Test from Processing.org</b>
+void setup() {
+  size(100, 100, P3D);
+}
+
+void draw() {
+  background(0);
+  noStroke();
+  pointLight(51, 102, 126, 35, 40, 36);
+  noStroke();
+  translate(80, 50, 0);
+  sphere(30);
+}</pre>
+
+  </body>
+</html>

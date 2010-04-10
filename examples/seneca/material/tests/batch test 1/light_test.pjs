@@ -1,0 +1,573 @@
+import processing.opengl.*;
+
+int startX, startY;
+int x, y;
+int objCounter = 0;
+int NUM_OBJECTS_PER_ROW = 13;
+boolean isDone = false;
+
+void setup()
+{
+  size(500,500,OPENGL);
+
+  startX = width/2 - 60;
+  startY = height/2 - 70;
+ 
+  x = startX;
+  y = startY;
+  background(100,150,100);
+  drawObjects();
+}
+
+void drawObjects()
+{
+  camera();
+  noStroke();
+  sphereDetail(30);
+
+  fill(255);
+  drawNextObject();
+
+  // single value
+  noFill();
+  drawNextObject();
+
+  // single value
+  fill(1);
+  drawNextObject();
+  
+  fill(50);
+  drawNextObject();
+
+  fill(128);
+  drawNextObject();
+
+  fill(200);
+  drawNextObject();
+
+  fill(255);
+  drawNextObject();
+ 
+  ////////////////////////////////////////////////
+  // single values for color, color - single value
+  ////////////////////////////////////////////////
+
+  ambient( 0, 0, 255 );
+  ambientLight(0, 0, 32);
+  pointLight(0,128,128,0,-1,0);
+
+  fill(color(0));
+  drawNextObject();
+    
+  fill(color(1));
+  drawNextObject();
+  
+  fill(color(50));
+  drawNextObject();
+
+  fill(color(200));
+  drawNextObject();
+  
+  fill(color(255));
+  drawNextObject();
+  
+  ///////////////////////////////  
+  // single value - hex no alpha
+  ///////////////////////////////
+  emissive(32, 64, 32);
+  ambient( 0, 128, 255 );
+  fill(#000000);
+  drawNextObject();
+  
+  fill(#808080);
+  drawNextObject();
+    
+  fill(#FFFFFF);
+  drawNextObject();
+    
+  noFill();
+  drawNextObject();
+
+  pointLight( 0, 0, 128,  0, 100, 50 );
+  pointLight( 33, 66, 99,  -600, 100, 50 );
+
+  ambient( 128, 128, 128 );
+  fill(#00FF00);
+  drawNextObject();
+  
+  fill(#0000FF);
+  drawNextObject();
+  
+  fill(#FFFF00);
+  drawNextObject();
+  
+  fill(#FF00FF);
+  drawNextObject();
+  
+  fill(#00FFFF);
+  drawNextObject();
+  
+  fill(#214263);
+  drawNextObject();
+  
+  ///////////////////////////////////////////////
+  // single value - color, color multiple values
+  //////////////////////////////////////////////
+  fill(color(0,0,0));
+  drawNextObject();
+  
+  fill(color(128,128,128));
+  drawNextObject();
+  
+  fill(color(255,255,255));
+  drawNextObject();
+  
+  fill(color(255,0,0));
+  drawNextObject();
+  
+  fill(color(0,255,0));
+  drawNextObject();
+  
+  fill(color(0,0,255));
+  drawNextObject();
+  
+  fill(color(255,255,0));
+  drawNextObject();
+  
+  fill(color(255,0,255));
+  drawNextObject();
+  
+  fill(color(0,255,255));
+  drawNextObject();
+  
+  fill(color(33,66,99)); 
+  drawNextObject();
+  
+  /////////////////////////////////
+  // double values - color + alpha
+  /////////////////////////////////
+  ambient(64, 64, 0);
+  directionalLight( 128, 0, 0,  -1, 0, 0 );
+
+  fill(color(0,0,0),255);
+  drawNextObject();
+  
+  fill(color(128,128,128),255);
+  drawNextObject();
+  
+  fill(color(255,255,255),255);
+  drawNextObject();
+  
+  fill(color(255,0,0),255);
+  drawNextObject();
+  
+  fill(color(0,255,0),255);
+  drawNextObject();
+  
+  fill(color(0,0,255),255);
+  drawNextObject();
+  
+  fill(color(255),255);
+  drawNextObject();
+  
+  fill(color(0,0,255),255);
+  drawNextObject();
+  
+  fill(color(0,255,0),255);
+  drawNextObject();
+  
+  fill(color(255,0,0),255);
+  drawNextObject();
+  
+  fill(color(255),255);
+  drawNextObject();
+  
+  fill(color(255),255);
+  drawNextObject();
+  
+  fill(color(255),255);
+  drawNextObject();
+  
+  fill(color(128),255);
+  drawNextObject();
+  
+  fill(color(128),255);
+  drawNextObject();
+  
+   ambient( 255, 128, 0 );
+  // hex + alpha
+  fill(#000000,255);
+  drawNextObject();
+  
+  fill(#808080,255);
+  drawNextObject();
+  
+  fill(#FFFFFF,255);
+  drawNextObject();
+  
+  fill(#FF0000,255);
+  drawNextObject();
+  
+  fill(#00FF00,255);
+  drawNextObject();
+  
+  fill(#0000FF,255);
+  drawNextObject();
+  
+  fill(#FFFF00,255);
+  drawNextObject();
+  
+  emissive(64, 0, 32);
+  fill(#FF00FF,255);
+  drawNextObject();
+  
+  fill(#00FFFF,255);
+  drawNextObject();
+  
+  fill(#214263,255);
+  drawNextObject();
+
+  ////////////////
+  // gray + alpha
+  ////////////////
+  ambient(32, 0, 64);
+  fill(0, 255);
+  drawNextObject();
+  
+  fill(0, 255);
+  drawNextObject();
+  
+  fill(0, 255);
+  drawNextObject();
+  
+  fill(1, 255);
+  drawNextObject();
+  
+  fill(1, 255);
+  drawNextObject();
+  
+  fill(1, 255);
+  drawNextObject();
+  
+  fill(50, 255);
+  drawNextObject();
+  
+  fill(50, 255);
+  drawNextObject();
+  
+  ambient( 255, 0, 128 );
+  fill(50, 255);
+  drawNextObject();
+  
+  fill(128, 255);
+  drawNextObject();
+  
+  fill(128, 255);
+  drawNextObject();
+  
+  fill(128, 255);
+  drawNextObject();
+  
+  fill(255, 255);
+  drawNextObject();
+  
+  fill(255, 255);
+  drawNextObject();
+  
+  fill(255, 255);
+  drawNextObject();
+  
+  ///////////////////////
+  // triple values r,g,b
+  //////////////////////
+  noLights();
+  ambientLight(0, 32, 32);
+  ambient( 64, 64, 64);
+  pointLight(128,0,128,-300,50,0);
+  
+  fill(0,0,0);
+  drawNextObject();
+  
+  fill(128,128,128);
+  drawNextObject();
+  
+  fill(255,255,255);
+  drawNextObject();
+  
+  fill(255,0,0);
+  drawNextObject();
+  
+  noFill();
+  drawNextObject();
+  
+  fill(0,0,255);
+  drawNextObject();
+  
+  fill(255,255,0);
+  drawNextObject();
+  
+  fill(255,0,255);
+  drawNextObject();
+  
+  fill(0,255,255);
+  drawNextObject();
+  
+  fill(33,66,99);
+  drawNextObject();
+  
+  ///////////////
+  // quad values
+  ///////////////
+  directionalLight( 0, 128, 128,  1, 1, 0 );
+  emissive(0, 32, 32);
+  
+  fill(0, 255);
+  drawNextObject();
+  
+  fill(0, 255);
+  drawNextObject();
+  
+  fill(0, 255);
+  drawNextObject();
+  
+  fill(1, 255);
+  drawNextObject();
+  
+  fill(1, 255);
+  drawNextObject();
+  
+  fill(1, 255);
+  drawNextObject();
+  
+  fill(50, 255);
+  drawNextObject();
+  
+  fill(50, 255);
+  drawNextObject();
+  
+  fill(50, 255);
+  drawNextObject();
+  
+  fill(128, 255);
+  drawNextObject();
+  
+  fill(128, 255);
+  drawNextObject();
+  
+  fill(128, 255);
+  drawNextObject();
+  
+  fill(255, 255);
+  drawNextObject();
+  
+  fill(255, 255);
+  drawNextObject();
+  
+  fill(255, 255);
+  drawNextObject();
+
+  emissive(0, 32, 0);
+  fill(0,0,0,255);
+  drawNextObject();
+  
+  fill(0,0,0, 255);
+  drawNextObject();
+  
+  fill(0,0,0, 255);
+  drawNextObject();
+  
+  fill(128,128,128, 255);
+  drawNextObject();
+  
+  fill(128,128,128, 255);
+  drawNextObject();
+  
+  fill(128,128,128, 255);
+  drawNextObject();
+  
+  fill(255,255,255, 255);
+  drawNextObject();
+  
+  // !!
+  fill(255,255,255, 255);
+  drawNextObject();
+  
+  fill(255,255,255, 255);
+  drawNextObject();
+  
+  fill(255,0,0, 255);
+  drawNextObject();
+  
+  fill(255,0,0, 255);
+  drawNextObject();
+  
+  fill(255,0,0, 255);
+  drawNextObject();
+  
+  fill(0,255,0, 255);
+  drawNextObject();
+  
+  fill(0,255,0, 255);
+  drawNextObject();
+  
+  fill(0,255,0, 255);
+  drawNextObject();
+  
+  fill(33,66,99, 255);
+  drawNextObject();
+  
+  fill(33,66,99, 255);
+  drawNextObject();
+
+  fill(33,66,99, 255);
+  drawNextObject();
+
+  /// extras 
+  directionalLight( 128, 128, 128,  0, -1, 0 );
+  
+  fill(#00FF00);
+  drawNextObject();
+  
+  fill(#0000FF);
+  drawNextObject();
+  
+  fill(#FFFF00);
+  drawNextObject();
+  
+  fill(#FF00FF);
+  drawNextObject();
+  
+  fill(#00FFFF);
+  drawNextObject();
+  
+  fill(#214263);
+  drawNextObject();
+  
+  fill(#00FF00);
+  drawNextObject();
+  
+  fill(#0000FF);
+  drawNextObject();
+  
+  fill(#FFFF00);
+  drawNextObject();
+  
+  fill(#FF00FF);
+  drawNextObject();
+  
+  fill(#00FFFF);
+  drawNextObject();
+  
+  fill(#214263);
+  drawNextObject();
+ 
+  fill(255,255,255, 255);
+  drawNextObject();
+  
+  fill(255,255,255, 255);
+  drawNextObject();
+  
+  fill(255,0,0, 255);
+  drawNextObject();
+  
+  fill(255,0,0, 255);
+  drawNextObject();
+  
+  fill(255,0,0, 255);
+  drawNextObject();
+  
+  fill(0,255,0, 255);
+  drawNextObject();
+  
+  fill(0,255,0, 255);
+  drawNextObject();
+  
+  fill(0,255,0, 255);
+  drawNextObject();
+  
+  fill(33,66,99, 255);
+  drawNextObject();
+  
+  fill(33,66,99, 255);
+  drawNextObject();
+
+  strokeWeight(1);
+  stroke(128,0,0);
+  sphereDetail(10);
+  directionalLight( 64, 255, 0,  0, 0, -1 );
+    
+  fill(33,66,99, 255);
+  drawNextObject();
+  
+  fill(0, 255);
+  drawNextObject();
+  
+  fill(0, 255);
+  drawNextObject();
+  
+  fill(0, 255);
+  drawNextObject();
+  
+  fill(1, 255);
+  drawNextObject();
+  
+  fill(1, 255);
+  drawNextObject();
+  
+  fill(1, 255);
+  drawNextObject();
+  
+  fill(50, 255);
+  drawNextObject();
+  
+  fill(50, 255);
+  drawNextObject();
+  
+  fill(50, 255);
+  drawNextObject();
+  
+  fill(128, 255);
+  drawNextObject();
+  
+  fill(128, 255);
+  drawNextObject();
+  
+  fill(128, 255);
+  drawNextObject();
+  
+  fill(255, 255);
+  drawNextObject();
+  
+  fill(255, 255);
+  drawNextObject();
+  
+  fill(255, 255);
+  drawNextObject();
+  
+  isDone = true;
+}
+
+void drawNextObject()
+{
+  if(isDone){
+    isDone = false;
+    objCounter = 0;
+    x = startX;
+    y = startY;
+  }
+
+  x += 10;
+  
+  if(objCounter % NUM_OBJECTS_PER_ROW == 0)
+  {
+    y += 10;
+    x = startX;
+  }
+  
+  pushMatrix();
+  translate(x, y, 320);
+  sphere(5);
+  popMatrix();
+  
+  objCounter++;
+}
