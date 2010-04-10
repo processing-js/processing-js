@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>shininess() Test</h2>
+
+    <p>This test was taken from <a href="http://www.processing.org/">Processing.org</a> which tests to make<br />
+    sure the shininess() works correctly on a sphere.
+    </p>
+
+    <p>
+      <canvas datasrc="shininess.pjs" width="100" height="100"> </canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0;"/>
+    </p>
+    
+    <pre>
+<b>// Test from Processing.org</b>
+size(100, 100, P3D); 
+background(0); 
+noStroke();
+fill(0, 51, 102); 
+ambientLight(102, 102, 102);
+lightSpecular(204, 204, 204); 
+directionalLight(102, 102, 102, 0, 0, -1); 
+specular(255, 255, 255); 
+translate(30, 50, 0); 
+shininess(1.0); 
+sphere(20); 
+translate(40, 0, 0); 
+shininess(5.0); 
+sphere(20);</pre>
+
+  </body>
+</html>

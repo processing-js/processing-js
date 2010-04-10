@@ -1,0 +1,12 @@
+size(200, 200, P3D);
+background(0);
+noStroke();
+
+fill( 255, 128, 255 );
+
+//emissive(255,128,0);
+ambient(255,0,128);
+//directionalLight(120, 255, 120, 0.0, -1, 0);
+ambientLight(64,128,128);
+translate(width/2, height/2, 50);
+sphere(30);
