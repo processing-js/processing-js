@@ -1301,6 +1301,19 @@
         
         return ret;
       },
+      scale: function(sx, sy) {
+        
+        if (sx && !sy) {
+          sy = sx;
+        }
+        
+        if (sx && sy) {
+          this.elements[0] *= sx;
+          this.elements[1] *= sy;
+          this.elements[3] *= sx;
+          this.elements[4] *= sy;
+        }
+      },
       apply: function() {
         if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
           this.apply(arguments[0].array());
@@ -1319,6 +1332,31 @@
               result[e] += this.elements[row * 3 + 0] * source[col + 0] + this.elements[row * 3 + 1] * source[col + 3];
             }
           }
+          this.elements = result.slice();
+        }
+      },
+      preApply: function() {
+        if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
+          this.preApply(arguments[0].array());
+        } else if (arguments.length === 6) {
+          var a = arguments;
+          this.preApply([a[0], a[1], a[2],
+                         a[3], a[4], a[5]]);
+        } else if (arguments.length === 1 && arguments[0] instanceof Array) {
+          var source = arguments[0];
+          
+          var result = [0, 0, source[2],
+                        0, 0, source[5]];
+          
+          result[2]= source[2] + this.elements[2] * source[0] + this.elements[5] * source[1];
+          result[5]= source[5] + this.elements[2] * source[3] + this.elements[5] * source[4];
+
+          result[0] = this.elements[0] * source[0] + this.elements[3] * source[1];
+          result[3] = this.elements[0] * source[3] + this.elements[3] * source[4];
+
+          result[1] = this.elements[1] * source[0] + this.elements[4] * source[1];
+          result[4] = this.elements[1] * source[3] + this.elements[4] * source[4];
+          
           this.elements = result.slice();
         }
       },
