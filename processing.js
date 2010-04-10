@@ -179,6 +179,29 @@
 
   var pointBuffer;
 
+  var vertexTextShaderSource = 
+   "attribute vec3 Vertex;" +
+   "attribute vec2 aTextureCoord;" +
+
+   "uniform mat4 model;" +
+   "uniform mat4 view;" +
+   "uniform mat4 projection;" +
+   "varying vec2 vTextureCoord;"+
+   
+   "void main(void){" +
+   "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
+   "  vTextureCoord = aTextureCoord;"+
+   "}";
+   
+  var fragTextShaderSource =
+  "varying vec2 vTextureCoord;"+  
+  "uniform sampler2D uSampler;"+
+
+  "void main(void){" +
+  "  vec4 a = texture2D(uSampler,vTextureCoord);"+
+  "  gl_FragColor = a;"+
+  "}"+
+
   // Vertex shader for points and lines
   var vertexShaderSource2D = 
   "attribute vec3 Vertex;" + 
@@ -4126,6 +4149,7 @@
           // lighting calculations could be ommitted from that program object.
           programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
           programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
+          programObjectText = createProgramObject(curContext, vertexText, fragmentShaderSource3D); 
 
           // Now that the programs have been compiled, we can set the default
           // states for the lights.
@@ -6743,6 +6767,7 @@
 
           // TODO: handle case for 3d text
           if (p.use3DContext) {
+            //change to 
           }
 
           width = 0;
