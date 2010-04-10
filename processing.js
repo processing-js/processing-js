@@ -1014,6 +1014,24 @@
       array: function array(){
         return this.elements.slice();
       },
+      translate: function(tx,ty) {                     
+        this.elements[2] += tx*this.elements[0] + ty*this.elements[1] + this.elements[2];
+        this.elements[5] += tx*this.elements[3] + ty*this.elements[4] + this.elements[5];
+      },
+      transpose: function() {
+        // Does nothing in Processing.
+      },
+      mult: function(arg1,arg2) {
+        if ( arg1 instanceof PVector && arg2 instanceof PVector ) {
+        } else if ( arg1 instanceof Array && arg2 instanceof Array ) {
+        }
+      },
+      multX: function(x,y) {
+        return x*this.elements[0] + y*this.elements[1] + this.elements[2];
+      },
+      multY: function(x,y) {
+        return x*this.elements[3] + y*this.elements[4] + this.elements[5];
+      },
       skewX: function(angle) {
         this.apply(1, 0, 1,
                    angle, 0, 0);
