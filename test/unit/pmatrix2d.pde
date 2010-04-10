@@ -153,3 +153,21 @@ vect2=new PVector(99,99,99);
 PVector vect3=new PVector(34,97,0);
 m1.mult(vect1,vect2)
 _checkEqual( vect3, vect2 , 0.10);
+
+//////////////////
+//   DETERMINANT
+//////////////////
+
+m1.reset();
+m1.set([12,34,56,78,90,12]);
+_checkEqual( -1572, m1.determinant() );
+
+//////////////////
+//   INVERT
+//////////////////
+
+m1.reset();
+m1.set([12,34,56,78,90,12]);
+_checkEqual( [ -0.0573, 0.0216, 2.9466, 0.0496, -0.0076, -2.6870],
+m1.invert(), 0.0001 );
+

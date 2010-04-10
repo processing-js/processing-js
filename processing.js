@@ -1272,6 +1272,35 @@
       skewY: function(angle) {
         this.apply(1, 0, 1, 0, angle, 0);
       },
+      determinant: function() {
+        return this.elements[0] * this.elements[4] - this.elements[1] * this.elements[3];
+      },
+      invert: function() {
+        
+        var ret = false;
+        var d = this.determinant();
+        
+        if ( Math.abs( d ) > p.FLOAT_MIN ) {
+          
+          var old00 = this.elements[0];
+          var old01 = this.elements[1];
+          var old02 = this.elements[2];
+          var old10 = this.elements[3];
+          var old11 = this.elements[4];
+          var old12 = this.elements[5];
+          
+          this.elements[0] =  old11 / d;
+          this.elements[3] = -old10 / d;
+          this.elements[1] = -old01 / d;
+          this.elements[1] =  old00 / d;
+          this.elements[2] = (old01 * old12 - old11 * old02) / d;
+          this.elements[5] = (old10 * old02 - old00 * old12) / d;
+          
+          ret = true;
+        }
+        
+        return ret;
+      },
       apply: function() {
         if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
           this.apply(arguments[0].array());
