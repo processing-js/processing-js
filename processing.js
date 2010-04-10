@@ -1360,6 +1360,23 @@
           this.elements = result.slice();
         }
       },
+      rotate: function(angle) {
+        
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+        
+        var temp1 = this.elements[0];
+        var temp2 = this.elements[1];
+        this.elements[0] =  c * temp1 + s * temp2;
+        this.elements[1] = -s * temp1 + c * temp2;
+        temp1 = this.elements[3];
+        temp2 = this.elements[4];
+        this.elements[3] =  c * temp1 + s * temp2;
+        this.elements[4] = -s * temp1 + c * temp2;
+      },
+      rotateZ: function(angle) {
+        this.rotate(angle);
+      },
       print: function() {
         var digits = printMatrixHelper(this.elements);
 
