@@ -179,17 +179,22 @@
 
   var pointBuffer;
 
+  var textureBuffer;
+  var indexBuffer;
+  var textBuffer;
+
+  // A separate shader for 
   var vertexTextShaderSource = 
-   "attribute vec3 Vertex;" +
+   "attribute vec3 aVertex;" +
    "attribute vec2 aTextureCoord;" +
+   "varying vec2 vTextureCoord;"+
 
    "uniform mat4 model;" +
    "uniform mat4 view;" +
    "uniform mat4 projection;" +
-   "varying vec2 vTextureCoord;"+
    
    "void main(void){" +
-   "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
+   "  gl_Position = projection * view * model * vec4(aVertex, 1.0);" +
    "  vTextureCoord = aTextureCoord;"+
    "}";
    
@@ -198,9 +203,10 @@
   "uniform sampler2D uSampler;"+
 
   "void main(void){" +
-  "  vec4 a = texture2D(uSampler,vTextureCoord);"+
-  "  gl_FragColor = a;"+
-  "}"+
+  "  vec4 a = texture2D( uSampler, vTextureCoord );"+
+  //"  gl_FragColor = vec4( vec3(a), 1.0);" + 
+  "  gl_FragColor = a;" + 
+  "}";
 
   // Vertex shader for points and lines
   var vertexShaderSource2D = 
@@ -4149,7 +4155,7 @@
           // lighting calculations could be ommitted from that program object.
           programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
           programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
-          programObjectText = createProgramObject(curContext, vertexText, fragmentShaderSource3D); 
+          programObjectText = createProgramObject(curContext, vertexTextShaderSource, fragTextShaderSource);
 
           // Now that the programs have been compiled, we can set the default
           // states for the lights.
@@ -4178,11 +4184,26 @@
           sphereBuffer = curContext.createBuffer();
 
           lineBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
+//          curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
+
+          textBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([1,1,0,-1,1,0,-1,-1,0,1,-1,0]/*[0.5,0.5,0,-0.5,0.5,0,-0.5,-0.5,0,0.5,-0.5,0]*/), curContext.STATIC_DRAW);
+
+          //create the vertex uv coords
+          textureBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
+
+          //create the faces
+          indexBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
+          curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new WebGLUnsignedShortArray([0,1,2,2,3,0]), curContext.STATIC_DRAW);
+
 
           cam = new PMatrix3D();
           cameraInv = new PMatrix3D();
@@ -6731,6 +6752,89 @@
 
     // Print some text to the Canvas
     p.text = function text() {
+    
+    // TODO: Handle case for 3d text
+/*    if (p.use3DContext) {
+      var str = arguments[0];
+
+      var canvas = document.createElement("canvas");
+      var context2D = canvas.getContext("2d");  
+      context2D.font = curTextSize+"20pt Arial";      
+     //  context2D.font = "3pt Arial";
+       
+      canvas.width = context2D.measureText(str).width;
+      canvas.height = curTextSize * 1.2;
+
+      var c = fillStyle;   
+     // var colorMask = "rgba(" + c[0]*255 + "," + c[1]*255 + "," + c[2]*255 +"," + c[3]*255 +")";
+
+      // background
+      context2D.fillStyle = "red";
+      context2D.fillRect(0,0,canvas.width, canvas.height);
+
+      context2D.fillStyle = "rgba(" + c[0]*255 + "," + c[1]*255 + "," + c[2]*255 +"," + c[3]*255 +")";
+      context2D.textBaseline = "top";
+      
+      context2D.fillText(str, 0, 0);
+		  
+      var texture = curContext.createTexture();
+	   	curContext.bindTexture(curContext.TEXTURE_2D, texture);
+
+      //TODO: fix this when minefield is upto spec
+      try{
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,false,true);}
+      catch(e){
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,null);
+      }
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
+      curContext.generateMipmap(curContext.TEXTURE_2D);
+	   
+    //  var model = new PMatrix3D();
+//      model.scale(-170,-90,1);
+     // alert(model.array());
+     
+    // var scalefactor = 100;
+      var aspect = canvas.width/canvas.height;
+      //model.scale(-aspect*scalefactor,-scalefactor,1);
+     // model.translate(-1,-1,0);
+      // model.translate(-x/(aspect*scalefactor)-aspect/2, -y/scalefactor-1/2, z/scalefactor || 0);
+
+    var scalefactor=curTextSize;
+    model.scale(-aspect*scalefactor,-scalefactor,scalefactor);       
+//    model.translate(-x/(aspect*scalefactor)-aspect/2, -y/scalefactor-1/2, z/scalefactor || 0);
+	
+/*
+    var model = new PMatrix3D();
+    var scalefactor = curTextSize*0.4;
+    model.scale(-aspect*scalefactor,-scalefactor,scalefactor);       
+    model.translate(-x/(aspect*scalefactor)-aspect/2, -y/scalefactor-1/2, z/scalefactor || 0);
+		
+        var view = new PMatrix3D();
+        view.scale(1, -1, 1);
+        view.apply(modelView.array());
+
+		
+      curContext.useProgram(programObjectText);
+
+    vertexAttribPointer(programObjectText, "aVertex", 3, textBuffer);
+    vertexAttribPointer(programObjectText, "aTextureCoord", 2, textureBuffer);
+
+    curContext.activeTexture(curContext.TEXTURE0);
+    curContext.bindTexture(curContext.TEXTURE_2D, texture);
+	
+    uniformi(programObject2D, "uSampler", [0]);
+  
+    uniformMatrix( programObjectText, "model", true,  model.array() );
+    uniformMatrix( programObjectText, "view", true, view.array() );
+    uniformMatrix( programObjectText, "projection", true, projection.array() );
+
+    curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);      
+    }
+    else
+    {*/
+          
       if (typeof arguments[0] !== 'undefined') {
         var str = arguments[0],
           x, y, z, pos, width, height;
@@ -6765,10 +6869,70 @@
             }
           } while (pos !== -1);
 
-          // TODO: handle case for 3d text
-          if (p.use3DContext) {
-            //change to 
-          }
+if(p.use3DContext){	  
+	var canvas = document.createElement("canvas");
+  var oldContext = curContext;
+	curContext = canvas.getContext("2d");
+  curContext.font = curTextSize+"pt Arial";
+	canvas.width=curContext.measureText(str).width;
+	canvas.height=curTextSize*1.2;
+	curContext = canvas.getContext("2d");
+  curContext.font = curTextSize+"pt Arial";
+	//curContext.fillStyle="rgb(0,255,0)";
+	curContext.textBaseline="top";
+	aspect=canvas.width/canvas.height;
+	curContext.fillText(str, 0, 0);
+  curContext = oldContext;
+  var texture = curContext.createTexture();
+	curContext.bindTexture(curContext.TEXTURE_2D, texture);
+
+	//TODO: fix this when minefield is upto spec
+	try{curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,false,true);}
+	catch(e){
+          //curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,null);
+        }
+	curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+	curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
+	curContext.generateMipmap(curContext.TEXTURE_2D);
+	//curContext.bindTexture(curContext.TEXTURE_2D, null);
+	   
+        var model = new PMatrix3D();
+        //model.scale(50);
+    var scalefactor=curTextSize*0.4;
+    model.scale(-aspect*scalefactor,-scalefactor,scalefactor);       
+        model.translate(-x/(aspect*scalefactor)-aspect/2, -y/scalefactor-1/2, z/scalefactor || 0);
+		
+        var view = new PMatrix3D();
+        view.scale(1, -1, 1);
+        view.apply(modelView.array());
+	
+    //curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE);
+    //curContext.enable(curContext.BLEND);
+    //curContext.disable(curContext.DEPTH_TEST);
+	
+    curContext.useProgram(programObject2D);
+
+    vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
+    vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
+
+    //curContext.activeTexture(curContext.TEXTURE0);
+    //curContext.bindTexture(curContext.TEXTURE_2D, texture);
+	
+          uniformi(programObject2D, "uSampler", [0]);
+          uniformi(programObject2D, "picktype", 1);
+		  
+        uniformMatrix( programObject2D, "model", true,  model.array() );
+        uniformMatrix( programObject2D, "view", true, view.array() );
+        uniformMatrix( programObject2D, "projection", true, projection.array() );
+
+          var c = fillStyle.slice(5, -1).split(",");
+          //uniformf(programObject2D, "fcolor", [255/255, c[1]/255, c[2]/255, 0.5]);
+          uniformf(programObject2D, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+
+    curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
+}
+        else{
 
           width = 0;
 
@@ -6811,14 +6975,10 @@
             }
             curContext.restore();
           }
-
-          // TODO: Handle case for 3d text
-          if (p.use3DContext) {
-          }
-
           lastTextPos[0] = x + width;
           lastTextPos[1] = y;
           lastTextPos[2] = z;
+          }
         } else if (arguments.length === 5) { // for text( str, x, y , width, height)
           text(str, arguments[1], arguments[2], arguments[3], arguments[4], 0);
         } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
@@ -6887,6 +7047,7 @@
 
           } // end str != ""
         } // end arguments.length == 6
+      }
       }
     };
 
