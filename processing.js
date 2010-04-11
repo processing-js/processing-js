@@ -176,8 +176,6 @@
   var sphereBuffer;
 
   var lineBuffer;
-  
-  var fillBuffer;
 
   var pointBuffer;
 
@@ -960,7 +958,6 @@
       cameraAspect = curElement.width / curElement.height;
 
     var firstX, firstY, secondX, secondY, prevX, prevY;
-    var vertArray = new Array();
 
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
@@ -4158,9 +4155,6 @@
 
           lineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
-          
-          fillBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, fillBuffer);
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
@@ -5072,296 +5066,174 @@
       curShape = type;
       curShapeCount = 0;
       curvePoints = [];
-      //textureImage = null;
-      vertArray = [];
-      if(p.use3DContext)
-      {
-        //normalMode = NORMAL_MODE_AUTO;
-      }
     };
 
-    p.vertex = function vertex() {
-      var vert = [];
-      vert[0] = arguments[0];
-      vert[1] = arguments[1];
-      vert[2] = arguments[2] || 0;
-      vertArray.push(vert);
-    };
+    p.endShape = function endShape(close) {
+      if (curShapeCount !== 0) {
+        if (close && doFill) {
+          curContext.lineTo(firstX, firstY);
+        }
+        if (doFill) {
+          curContext.fill();
+        }
+        if (doStroke) {
+          curContext.stroke();
+        }
 
-    p.endShape = function endShape(close){
-      var last = vertArray.length - 1;
-      if(!close){
-        p.CLOSE = false;
-      }
-      if(p.use3DContext){ // 3D context
-        var vertArray3D = [];
-        for(var i = 0; i < vertArray.length; i++){
-          for(var j = 0; j < 3; j++){
-            vertArray3D.push(vertArray[i][j]);
-          }
-        }
-        
-        vertArray3D.push(vertArray[0][0]);
-        vertArray3D.push(vertArray[0][1]);
-        vertArray3D.push(vertArray[0][2]);  
-
-        if (curShape === p.POINTS){
-          for(var i = 0; i < vertArray.length; i++){
-            p.point(vertArray[i][0], vertArray[i][1], vertArray[i][2]);
-          }
-        }
-        else if(curShape === p.LINES){
-          for(var i = 0; (i + 1) < vertArray.length; i+=2){
-            p.line(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i+1][0], vertArray[i+1][1], vertArray[i+1][2]);
-          }
-        }
-        else if(curShape === p.TRIANGLES){
-          for(var i = 0; (i + 2) < vertArray.length; i+=3){
-            p.line(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i+1][0], vertArray[i+1][1], vertArray[i+1][2]);
-            p.line(vertArray[i+1][0], vertArray[i+1][1], vertArray[i+1][2], vertArray[i+2][0], vertArray[i+2][1], vertArray[i+2][2]);
-            p.line(vertArray[i+2][0], vertArray[i+2][1], vertArray[i+2][2], vertArray[i][0], vertArray[i][1], vertArray[i][2]);
-            
-            if(doFill){
-              fill2D(vertArray3D.slice(i*3, i*3+9), "TRIANGLES");
-            }
-          }    
-        }
-        else if(curShape === p.TRIANGLE_STRIP){
-          var tempArray = new Array();
-          if(vertArray.length > 2){
-            p.line(vertArray[0][0], vertArray[0][1], vertArray[0][2], vertArray[1][0], vertArray[1][1], vertArray[1][2]);
-            p.line(vertArray[1][0], vertArray[1][1], vertArray[1][2], vertArray[2][0], vertArray[2][1], vertArray[2][2]);
-            p.line(vertArray[2][0], vertArray[2][1], vertArray[2][2], vertArray[0][0], vertArray[0][1], vertArray[0][2]);
-            for(var i = 2; i < vertArray.length; i++){
-              p.line(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i-1][0], vertArray[i-1][1], vertArray[i-1][2]);
-              p.line(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i-2][0], vertArray[i-2][1], vertArray[i-2][2]);
-            }
-            if(doFill){
-              fill2D(vertArray3D);
-            }
-          }
-        }
-        else if(curShape === p.TRIANGLE_FAN){
-          if(vertArray.length > 2){
-            p.line(vertArray[0][0], vertArray[0][1], vertArray[0][2], vertArray[1][0], vertArray[1][1], vertArray[1][2]);
-            p.line(vertArray[1][0], vertArray[1][1], vertArray[1][2], vertArray[2][0], vertArray[2][1], vertArray[2][2]);
-            p.line(vertArray[2][0], vertArray[2][1], vertArray[2][2], vertArray[0][0], vertArray[0][1], vertArray[0][2]);
-            for(var i = 2; (i+1) < vertArray.length; i++){
-              p.line(vertArray[0][0], vertArray[0][1], vertArray[0][2], vertArray[i][0], vertArray[i][1], vertArray[i][2]);
-              p.line(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i+1][0], vertArray[i+1][1], vertArray[i+1][2]);
-            }
-            if(doFill){
-              fill2D(vertArray3D, "TRIANGLE_FAN");
-            }
-          }
-        }
-        else if(curShape === p.QUADS){
-          var tempArray = new Array(15);
-          for(var i = 0; (i + 3) < vertArray.length; i+=4){
-            p.line(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i+1][0], vertArray[i+1][1], vertArray[i+1][2]);
-            p.line(vertArray[i+1][0], vertArray[i+1][1], vertArray[i+1][2], vertArray[i+2][0], vertArray[i+2][1], vertArray[i+2][2]);
-            p.line(vertArray[i+2][0], vertArray[i+2][1], vertArray[i+2][2], vertArray[i+3][0], vertArray[i+3][1], vertArray[i+3][2]);
-            p.line(vertArray[i+3][0], vertArray[i+3][1], vertArray[i+3][2], vertArray[i][0], vertArray[i][1], vertArray[i][2]);
-            if(doFill){
-              tempArray = vertArray3D.splice(12);
-              vertArray3D.push(vertArray[i][0]);
-              vertArray3D.push(vertArray[i][1]);
-              vertArray3D.push(vertArray[i][2]);
-              fill2D(vertArray3D);
-              vertArray3D = tempArray;
-            }
-          }
-        }
-        else if(curShape === p.QUAD_STRIP){
-          var tempArray = new Array();
-          if(vertArray.length > 3){
-            p.line(vertArray[0][0], vertArray[0][1], vertArray[0][2], vertArray[1][0], vertArray[1][1], vertArray[1][2]);
-            if(vertArray.length > 4 && vertArray.length % 2 > 0){
-              tempArray = vertArray3D.splice(vertArray3D.length - 6);
-              vertArray.pop();
-            }
-            for(var i = 2; i < vertArray.length; i++){
-              if(i % 2 > 0){
-                p.line(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i-1][0], vertArray[i-1][1], vertArray[i-1][2]);
-              }
-              p.line(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i-2][0], vertArray[i-2][1], vertArray[i-2][2]);
-            }
-            if(doFill){
-              fill2D(vertArray3D);
-            }
-          }
-        }
-        else{
-          for(var i = 0; i < vertArray.length - 1; i++){
-            p.line(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i+1][0], vertArray[i+1][1], vertArray[i+1][2]);
-          }
-          if(p.CLOSE){
-            p.line(vertArray[last][0], vertArray[last][1], vertArray[last][2], vertArray[0][0], vertArray[0][1] - 1, vertArray[0][2]);
-          }
-          if(doFill){
-            fill2D(vertArray3D);
-          }
-        }
-      }
-      // 2D context
-      else{
-        if (curShape === p.POINTS){
-          for(var i = 0; i < vertArray.length; i++){
-            p.point(vertArray[i][0], vertArray[i][1]);
-          }
-        }
-        else if(curShape === p.LINES){
-          for(var i = 0; (i + 1) < vertArray.length; i+=2){
-            p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
-          }
-        }
-        else if(curShape === p.TRIANGLES){
-          curContext.beginPath();                 
-          for(var i = 0; (i + 2) < vertArray.length; i+=3){
-            curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-            curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-            curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-            curContext.lineTo(vertArray[i][0], vertArray[i][1]);            
-            if(doFill){
-              curContext.fill();
-            }
-            if(doStroke){
-              curContext.stroke();
-            }
-          }   
-        }
-        else if(curShape === p.TRIANGLE_STRIP){
-          if(vertArray.length > 2){
-            curContext.beginPath();
-            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-            for(var i = 2; i < vertArray.length; i++){
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              curContext.lineTo(vertArray[i-2][0], vertArray[i-2][1]);
-              if(doFill){
-                curContext.fill();
-              }
-              if(doStroke){
-                curContext.stroke();
-              }
-              curContext.moveTo(vertArray[i][0],vertArray[i][1]);
-            }
-          }
-        }
-        else if(curShape === p.TRIANGLE_FAN){
-          if(vertArray.length > 2){
-            curContext.beginPath();
-            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-            curContext.lineTo(vertArray[2][0], vertArray[2][1]);
-            if(doFill){
-                curContext.fill();
-              }
-            if(doStroke){
-                curContext.stroke();
-              }
-            for(var i = 3; i < vertArray.length; i++){
-              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-              curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              if(doFill){
-                curContext.fill();
-              }
-              if(doStroke){
-                curContext.stroke();
-              }
-            }
-          }
-        }
-        else if(curShape === p.QUADS){
-          curContext.beginPath();
-          for(var i = 0; (i + 3) < vertArray.length; i+=4){            
-            curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-            for(var j = 1; j < 4; j++){
-              curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
-            }
-            curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-            if(doFill){
-              curContext.fill();
-            }
-            if(doStroke){
-              curContext.stroke();
-            }
-          }
-        }
-        else if(curShape === p.QUAD_STRIP){
-          if(vertArray.length > 3){
-            curContext.beginPath();
-            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-            for(var i = 2; (i+1) < vertArray.length; i++){
-              if((i % 2) === 0){
-                curContext.moveTo(vertArray[i-2][0], vertArray[i-2][1]);
-                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-                curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-                if(doFill){
-                  curContext.fill();
-                }
-                if(doStroke){
-                  curContext.stroke();
-                }
-              }
-            }
-          }
-        }
-        else{
-          curContext.beginPath();
-          curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-          for(var i = 1; i < vertArray.length; i++){
-            curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-          }
-          if(p.CLOSE){
-            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-          }
-          if(doFill){
-            curContext.fill();
-          }
-          if(doStroke){
-            curContext.stroke();
-          }
-        }
         curContext.closePath();
+        curShapeCount = 0;
+        pathOpen = false;
+      }
+
+      if (pathOpen) {
+        if (doFill) {
+          curContext.fill();
+        }
+        if (doStroke) {
+          curContext.stroke();
+        }
+
+        curContext.closePath();
+        curShapeCount = 0;
+        pathOpen = false;
       }
     };
 
-    function fill2D(vArray, mode){
-      var ctxMode;
-      if(mode === "TRIANGLES"){
-        ctxMode = curContext.TRIANGLES;
-      }
-      else if(mode === "TRIANGLE_FAN"){
-        ctxMode = curContext.TRIANGLE_FAN;
-      }
-      else{
-        ctxMode = curContext.TRIANGLE_STRIP;
+    p.vertex = function vertex(x, y, x2, y2, x3, y3) {
+      if (curShapeCount === 0 && curShape !== p.POINTS) {
+        pathOpen = true;
+        curContext.beginPath();
+        curContext.moveTo(x, y);
+        firstX = x;
+        firstY = y;
+      } else {
+        if (curShape === p.POINTS) {
+          p.point(x, y);
+        } else if (arguments.length === 2) {
+          if (curShape !== p.QUAD_STRIP || curShapeCount !== 2) {
+            curContext.lineTo(x, y);
+          }
+
+          if (curShape === p.TRIANGLE_STRIP) {
+            if (curShapeCount === 2) {
+              // finish shape
+              p.endShape(p.CLOSE);
+              pathOpen = true;
+              curContext.beginPath();
+
+              // redraw last line to start next shape
+              curContext.moveTo(prevX, prevY);
+              curContext.lineTo(x, y);
+              curShapeCount = 1;
+            }
+
+            firstX = prevX;
+            firstY = prevY;
+          }
+
+          if (curShape === p.TRIANGLE_FAN && curShapeCount === 2) {
+            // finish shape
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw last line to start next shape
+            curContext.moveTo(firstX, firstY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+          }
+
+          if (curShape === p.QUAD_STRIP && curShapeCount === 3) {
+            // finish shape
+            curContext.lineTo(prevX, prevY);
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw lines to start next shape
+            curContext.moveTo(prevX, prevY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+          }
+
+          if (curShape === p.QUAD_STRIP) {
+            firstX = secondX;
+            firstY = secondY;
+            secondX = prevX;
+            secondY = prevY;
+          }
+        } else if (arguments.length === 3) {
+          if (curShape !== p.QUAD_STRIP || curShapeCount !== 2) {
+            curContext.lineTo(arguments[0], arguments[1], arguments[2]);
+          }
+
+          if (curShape === p.TRIANGLE_STRIP) {
+            if (curShapeCount === 2) {
+              // finish shape
+              p.endShape(p.CLOSE);
+              pathOpen = true;
+              curContext.beginPath();
+
+              // redraw last line to start next shape
+              curContext.moveTo(prevX, prevY);
+              curContext.lineTo(x, y);
+              curShapeCount = 1;
+            }
+
+            firstX = prevX;
+            firstY = prevY;
+          }
+
+          if (curShape === p.TRIANGLE_FAN && curShapeCount === 2) {
+            // finish shape
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw last line to start next shape
+            curContext.moveTo(firstX, firstY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+          }
+
+          if (curShape === p.QUAD_STRIP && curShapeCount === 3) {
+            // finish shape
+            curContext.lineTo(prevX, prevY);
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw lines to start next shape
+            curContext.moveTo(prevX, prevY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+          }
+
+          if (curShape === p.QUAD_STRIP) {
+            firstX = secondX;
+            firstY = secondY;
+            secondX = prevX;
+            secondY = prevY;
+          }
+        } else if (arguments.length === 4) {
+          if (curShapeCount > 1) {
+            curContext.moveTo(prevX, prevY);
+            curContext.quadraticCurveTo(firstX, firstY, x, y);
+            curShapeCount = 1;
+          }
+        } else if (arguments.length === 6) {
+          curContext.bezierCurveTo(x, y, x2, y2, x3, y3);
+        }
       }
 
-      var model = new PMatrix3D();
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
-      view.apply(modelView.array());
+      prevX = x;
+      prevY = y;
+      curShapeCount++;
 
-      curContext.useProgram( programObject2D );
-      uniformMatrix( programObject2D, "model", true,  model.array() );
-      uniformMatrix( programObject2D, "view", true, view.array() );
-      uniformMatrix( programObject2D, "projection", true, projection.array() );
-      
-      curContext.enable( curContext.POLYGON_OFFSET_FILL );
-      curContext.polygonOffset( 1, 1 );
-      uniformf( programObject2D, "color", fillStyle);
-      
-      vertexAttribPointer(programObject2D, "Vertex", 3, fillBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray),curContext.STREAM_DRAW);
-      
-      curContext.drawArrays( ctxMode, 0, vArray.length/3 );
-      curContext.disable( curContext.POLYGON_OFFSET_FILL );
-    }
+      if (curShape === p.LINES && curShapeCount === 2 || (curShape === p.TRIANGLES) && curShapeCount === 3 || (curShape === p.QUADS) && curShapeCount === 4) {
+        p.endShape(p.CLOSE);
+      }
+    };
 
     p.curveVertex = function(x, y, z) {
       if (curvePoints.length < 3) {
