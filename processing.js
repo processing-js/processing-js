@@ -775,37 +775,166 @@
 
     // Set Processing defaults / environment variables
     p.name = 'Processing.js Instance';
-    p.PI = Math.PI;
-    p.TWO_PI = 2 * p.PI;
-    p.HALF_PI = p.PI / 2;
-    p.SINCOS_LENGTH = parseInt(360 / 0.5, 10);
-    p.MAX_FLOAT = 3.4028235e+38;
-    p.MIN_FLOAT = -3.4028235e+38;
-    p.MAX_INT = 2147483647;
-    p.MIN_INT = -2147483648;
-    p.CORNER = 0;
-    p.RADIUS = 1;
-    p.CENTER_RADIUS = 1;
-    p.CENTER = 2;
-    p.POLYGON = 2;
-    p.QUADS = 5;
-    p.TRIANGLES = 6;
-    p.POINTS = 7;
-    p.LINES = 8;
-    p.TRIANGLE_STRIP = 9;
-    p.TRIANGLE_FAN = 4;
-    p.QUAD_STRIP = 3;
-    p.CORNERS = 10;
-    p.CLOSE = true;
+
+    // Color modes
     p.RGB = 1;
     p.ARGB = 2;
     p.HSB = 3;
     p.ALPHA = 4;
     p.CMYK = 5;
-    p.OPENGL = 'OPENGL';
+    
+    // Renderers
+    p.P2D = 'P2D';
     p.P3D = 'P3D';
-    p.FRAME_RATE = 0;
-    p.focused = true;
+    p.JAVA2D = 'JAVA2D';
+    p.OPENGL = 'OPENGL';
+
+    p.EPSILON = 0.0001;
+
+    p.MAX_FLOAT = 3.4028235e+38;
+    p.MIN_FLOAT = -3.4028235e+38;
+    p.MAX_INT = 2147483647;
+    p.MIN_INT = -2147483648;
+
+    p.PI          = Math.PI;
+    p.TWO_PI      = 2 * p.PI;
+    p.HALF_PI     = p.PI / 2;
+    p.THIRD_PI    = p.PI / 3;
+    p.QUARTER_PI  = p.PI / 4;
+
+    p.DEG_TO_RAD  = p.PI / 180;
+    p.RAD_TO_DEG  = 180 / p.PI;
+
+    p.WHITESPACE = " \t\n\r\f\u00A0";
+    
+    // Filter/convert types 
+    p.BLUR      = 11;
+    p.GRAY      = 12;
+    p.INVERT    = 13;
+    p.OPAQUE    = 14;
+    p.POSTERIZE = 15;
+    p.THRESHOLD = 16;
+    p.ERODE     = 17;
+    p.DILATE    = 18;
+
+    // Blend modes
+    p.REPLACE    = 0;
+    p.BLEND      = 1 << 0;
+    p.ADD        = 1 << 1;
+    p.SUBTRACT   = 1 << 2;
+    p.LIGHTEST   = 1 << 3;
+    p.DARKEST    = 1 << 4;
+    p.DIFFERENCE = 1 << 5;
+    p.EXCLUSION  = 1 << 6;
+    p.MULTIPLY   = 1 << 7;
+    p.SCREEN     = 1 << 8;
+    p.OVERLAY    = 1 << 9;
+    p.HARD_LIGHT = 1 << 10;
+    p.SOFT_LIGHT = 1 << 11;
+    p.DODGE      = 1 << 12;
+    p.BURN       = 1 << 13;
+
+    // Color component bit masks
+    p.ALPHA_MASK = 0xff000000;
+    p.RED_MASK   = 0x00ff0000;
+    p.GREEN_MASK = 0x0000ff00;
+    p.BLUE_MASK  = 0x000000ff;
+
+    // Projection matrices
+    p.CUSTOM       = 0; 
+    p.ORTHOGRAPHIC = 2;
+    p.PERSPECTIVE  = 3;
+
+    // Shapes
+    p.POINT          = 2;
+    p.POINTS         = 2;
+
+    p.LINE           = 4;
+    p.LINES          = 4;
+
+    p.TRIANGLE       = 8;
+    p.TRIANGLES      = 9;
+    p.TRIANGLE_STRIP = 10;
+    p.TRIANGLE_FAN   = 11;
+
+    p.QUAD           = 16;
+    p.QUADS          = 16;
+    p.QUAD_STRIP     = 17;
+
+    p.POLYGON        = 20;
+    p.PATH           = 21;
+
+    p.RECT           = 30;
+    p.ELLIPSE        = 31;
+    p.ARC            = 32;
+
+    p.SPHERE         = 40;
+    p.BOX            = 41;
+
+    // Shape closing modes
+    p.OPEN  = 1;
+    p.CLOSE = 2;
+
+    // Shape drawing modes
+    p.CORNER          = 0; // Draw mode convention to use (x, y) to (width, height)
+    p.CORNERS         = 1; // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
+    p.RADIUS          = 2; // Draw mode from the center, and using the radius
+    p.CENTER_RADIUS   = 2; // Deprecated! Use RADIUS instead
+    p.CENTER          = 3; // Draw from the center, using second pair of values as the diameter
+    p.DIAMETER        = 3; // Synonym for the CENTER constant. Draw from the center
+    p.CENTER_DIAMETER = 3; // Deprecated! Use DIAMETER instead
+
+    // Text vertical alignment modes
+    p.BASELINE = 0;   // Default vertical alignment for text placement
+    p.TOP      = 101; // Align text to the top
+    p.BOTTOM   = 102; // Align text from the bottom, using the baseline
+
+    // UV Texture coordinate modes
+    p.NORMAL    = 1;
+    p.NORMALIZE = 1;
+    p.IMAGE     = 2;
+
+    // Text placement modes
+    p.MODEL = 4;
+    p.SHAPE = 5;
+
+    // Stroke modes
+    p.SQUARE  = 'butt'; 
+    p.ROUND   = 'round'; 
+    p.PROJECT = 'square'; 
+    p.MITER   = 'miter'; 
+    p.BEVEL   = 'bevel'; 
+
+    // Lighting modes
+    p.AMBIENT     = 0;
+    p.DIRECTIONAL = 1;
+    //POINT       = 2; Shared with Shape constant
+    p.SPOT        = 3;
+
+    // Key constants
+
+    // Both key and keyCode will be equal to these values
+    p.BACKSPACE = 8;
+    p.TAB       = 9;
+    p.ENTER     = 10;
+    p.RETURN    = 13;
+    p.ESC       = 27;
+    p.DELETE    = 127;
+
+    p.CODED     = 0xffff;
+
+    // p.key will be CODED and p.keyCode will be this value
+    p.SHIFT     = 16;
+    p.CONTROL   = 17;
+    p.ALT       = 18;
+    p.UP        = 38;
+    p.RIGHT     = 39;
+    p.DOWN      = 40;
+    p.LEFT      = 37;
+
+    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
+
+    // Cursor types
     p.ARROW = 'default';
     p.CROSS = 'crosshair';
     p.HAND = 'pointer';
@@ -813,61 +942,43 @@
     p.TEXT = 'text';
     p.WAIT = 'wait';
     p.NOCURSOR = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
-    p.ALPHA_MASK = 0xff000000;
-    p.RED_MASK = 0x00ff0000;
-    p.GREEN_MASK = 0x0000ff00;
-    p.BLUE_MASK = 0x000000ff;
-    p.REPLACE = 0;
-    p.BLEND = 1 << 0;
-    p.ADD = 1 << 1;
-    p.SUBTRACT = 1 << 2;
-    p.LIGHTEST = 1 << 3;
-    p.DARKEST = 1 << 4;
-    p.DIFFERENCE = 1 << 5;
-    p.EXCLUSION = 1 << 6;
-    p.MULTIPLY = 1 << 7;
-    p.SCREEN = 1 << 8;
-    p.OVERLAY = 1 << 9;
-    p.HARD_LIGHT = 1 << 10;
-    p.SOFT_LIGHT = 1 << 11;
-    p.DODGE = 1 << 12;
-    p.BURN = 1 << 13;
+
+    // Hints
+    p.DISABLE_OPENGL_2X_SMOOTH    =  1;
+    p.ENABLE_OPENGL_2X_SMOOTH     = -1;
+    p.ENABLE_OPENGL_4X_SMOOTH     =  2;
+
+    p.ENABLE_NATIVE_FONTS         =  3;
+
+    p.DISABLE_DEPTH_TEST          =  4;
+    p.ENABLE_DEPTH_TEST           = -4;
+
+    p.ENABLE_DEPTH_SORT           =  5;
+    p.DISABLE_DEPTH_SORT          = -5;
+
+    p.DISABLE_OPENGL_ERROR_REPORT =  6;
+    p.ENABLE_OPENGL_ERROR_REPORT  = -6;
+
+    p.ENABLE_ACCURATE_TEXTURES    =  7;
+    p.DISABLE_ACCURATE_TEXTURES   = -7;
+
+    p.HINT_COUNT                  = 10;
+
+    // PJS defined constants
+    p.SINCOS_LENGTH = parseInt(360 / 0.5, 10);
+    p.FRAME_RATE = 0;
+    p.focused = true;
     p.PRECISIONB = 15; // fixed point precision is limited to 15 bits!! 
     p.PRECISIONF = 1 << p.PRECISIONB;
     p.PREC_MAXVAL = p.PRECISIONF - 1;
     p.PREC_ALPHA_SHIFT = 24 - p.PRECISIONB;
     p.PREC_RED_SHIFT = 16 - p.PRECISIONB;
-    p.ROUND = 'round'; // Used by both cap and join.
-    p.SQUARE = 'butt'; // Used by cap.
-    p.PROJECT = 'square'; // Used by cap.
-    p.MITER = 'miter'; // Used by join.
-    p.BEVEL = 'bevel'; // Used by join.
     p.CENTER = 88888880;
     p.NORMAL_MODE_AUTO = 0;
     p.NORMAL_MODE_SHAPE = 1;
     p.NORMAL_MODE_VERTEX = 2;
     p.MAX_LIGHTS = 8;
 
-    // Key Constants
-    // both key and keyCode will be equal to these values
-    p.BACKSPACE = 8;
-    p.TAB = 9;
-    p.ENTER = 10;
-    p.RETURN = 13;
-    p.ESC = 27;
-    p.DELETE = 127;
-
-    p.CODED = 0xffff;
-    // key will be CODED and keyCode will be this value
-    p.SHIFT = 16;
-    p.CONTROL = 17;
-    p.ALT = 18;
-    p.UP = 38;
-    p.RIGHT = 39;
-    p.DOWN = 40;
-    p.LEFT = 37;
-
-    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
 
     // "Private" variables used to maintain state
     var online = true,
@@ -5070,7 +5181,7 @@
 
     p.endShape = function endShape(close) {
       if (curShapeCount !== 0) {
-        if (close && doFill) {
+        if (close === p.CLOSE && doFill) {
           curContext.lineTo(firstX, firstY);
         }
         if (doFill) {
