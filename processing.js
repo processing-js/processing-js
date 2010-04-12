@@ -777,24 +777,24 @@
     p.name = 'Processing.js Instance';
 
     // Color modes
-    p.RGB = 1;
-    p.ARGB = 2;
-    p.HSB = 3;
+    p.RGB   = 1;
+    p.ARGB  = 2;
+    p.HSB   = 3;
     p.ALPHA = 4;
-    p.CMYK = 5;
+    p.CMYK  = 5;
     
     // Renderers
-    p.P2D = 'P2D';
-    p.P3D = 'P3D';
+    p.P2D    = 'P2D';
+    p.P3D    = 'P3D';
     p.JAVA2D = 'JAVA2D';
     p.OPENGL = 'OPENGL';
 
     p.EPSILON = 0.0001;
 
-    p.MAX_FLOAT = 3.4028235e+38;
-    p.MIN_FLOAT = -3.4028235e+38;
-    p.MAX_INT = 2147483647;
-    p.MIN_INT = -2147483648;
+    p.MAX_FLOAT   = 3.4028235e+38;
+    p.MIN_FLOAT   = -3.4028235e+38;
+    p.MAX_INT     = 2147483647;
+    p.MIN_INT     = -2147483648;
 
     p.PI          = Math.PI;
     p.TWO_PI      = 2 * p.PI;
@@ -805,7 +805,7 @@
     p.DEG_TO_RAD  = p.PI / 180;
     p.RAD_TO_DEG  = 180 / p.PI;
 
-    p.WHITESPACE = " \t\n\r\f\u00A0";
+    p.WHITESPACE  = " \t\n\r\f\u00A0";
     
     // Filter/convert types 
     p.BLUR      = 11;
@@ -935,12 +935,12 @@
     var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
 
     // Cursor types
-    p.ARROW = 'default';
-    p.CROSS = 'crosshair';
-    p.HAND = 'pointer';
-    p.MOVE = 'move';
-    p.TEXT = 'text';
-    p.WAIT = 'wait';
+    p.ARROW    = 'default';
+    p.CROSS    = 'crosshair';
+    p.HAND     = 'pointer';
+    p.MOVE     = 'move';
+    p.TEXT     = 'text';
+    p.WAIT     = 'wait';
     p.NOCURSOR = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
 
     // Hints
@@ -965,19 +965,18 @@
     p.HINT_COUNT                  = 10;
 
     // PJS defined constants
-    p.SINCOS_LENGTH = parseInt(360 / 0.5, 10);
-    p.FRAME_RATE = 0;
-    p.focused = true;
-    p.PRECISIONB = 15; // fixed point precision is limited to 15 bits!! 
-    p.PRECISIONF = 1 << p.PRECISIONB;
-    p.PREC_MAXVAL = p.PRECISIONF - 1;
-    p.PREC_ALPHA_SHIFT = 24 - p.PRECISIONB;
-    p.PREC_RED_SHIFT = 16 - p.PRECISIONB;
-    p.CENTER = 88888880;
-    p.NORMAL_MODE_AUTO = 0;
-    p.NORMAL_MODE_SHAPE = 1;
+    p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
+    p.FRAME_RATE         = 0;
+    p.focused            = true;
+    p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!! 
+    p.PRECISIONF         = 1 << p.PRECISIONB;
+    p.PREC_MAXVAL        = p.PRECISIONF - 1;
+    p.PREC_ALPHA_SHIFT   = 24 - p.PRECISIONB;
+    p.PREC_RED_SHIFT     = 16 - p.PRECISIONB;
+    p.NORMAL_MODE_AUTO   = 0;
+    p.NORMAL_MODE_SHAPE  = 1;
     p.NORMAL_MODE_VERTEX = 2;
-    p.MAX_LIGHTS = 8;
+    p.MAX_LIGHTS         = 8;
 
 
     // "Private" variables used to maintain state
