@@ -22,9 +22,11 @@ function _runTest() {
 
   // Checking that a function throws, give the function name
   _checkThrows(thisThrows);
+  _checkThrows(function() { return; }, false); // this shouldn't throw 
 }
 
 // demonstrating a function that throws
 function thisThrows() {
   throw "Error";
 }
+

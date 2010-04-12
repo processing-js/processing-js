@@ -1,0 +1,15 @@
+<script src="../../../processing.js"></script>
+	
+<canvas datasrc="tint.pjs" width="200" height="200"></canvas>
+	
+<pre>
+/* @pjs preload="string.jpg"; */
+size(472,266);
+background(0);
+PImage b;
+b = loadImage("string.jpg");
+tint(0, 153, 204); // Tint blue
+image(b, 0, 0);
+noTint(); // Disable tint
+image(b, 50, 0);
+</pre>

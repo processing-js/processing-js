@@ -1,0 +1,9 @@
+// Test from www.processing.org
+size(100, 100, P3D);
+background(0); 
+noStroke(); 
+background(0); 
+spotLight(51, 102, 126, 50, 50, 200, 
+          0, 0, -1, PI/3, 400.0 ); 
+translate(80, 50, 0); 
+sphere(30);
