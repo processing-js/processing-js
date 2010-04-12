@@ -2461,7 +2461,9 @@
 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
       var r, g, b, a, rgb, aColor;
-      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
+
+      // 4 arguments: (R, G, B, A) or (H, S, B, A)
+      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) { 
         if (curColorMode === p.HSB) {
           rgb = p.color.toRGB(aValue1, aValue2, aValue3);
           r = rgb[0];
@@ -2475,40 +2477,59 @@
 
         a = Math.round(255 * (aValue4 / opacityRange));
 
-        // Normalize values: values greater than range == range 
+        // Limit values greater than 255 
         r = (r > 255) ? 255 : r;
         g = (g > 255) ? 255 : g;
         b = (b > 255) ? 255 : b;
         a = (a > 255) ? 255 : a;
 
+        // Create color int
         aColor = (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
-      } else if (aValue1 != null && aValue2 != null && aValue3 != null) {
+      } 
+      
+      // 3 arguments: (R, G, B) or (H, S, B)
+      else if (aValue1 != null && aValue2 != null && aValue3 != null) {
         aColor = p.color(aValue1, aValue2, aValue3, opacityRange);
-      } else if (aValue1 != null && aValue2 != null) {
-        if ((aValue1 & p.ALPHA_MASK)) { // colorInt and opacity
-          aColor = p.color(p.red(aValue1), p.green(aValue1), p.blue(aValue1), aValue2);
-        } else { // grayscale and alpha
-          aColor = p.color(aValue1, aValue1, aValue1, aValue2);
-        }
-      } else if (typeof aValue1 === "number") {
-        if (aValue1 < 256 && aValue1 >= 0) {
-          aColor = p.color(aValue1, aValue1, aValue1, opacityRange);
-        } else {
-          var intcolor = 0;
-          if (aValue1 < 0) {
-            intcolor = 4294967296 - (aValue1 * -1);
-          } else {
-            intcolor = aValue1;
+      } 
+      
+      // 2 arguments: (Color, A) or (Grayscale, A)
+      else if (aValue1 != null && aValue2 != null) {
+        // Color int and alpha
+        if (aValue1 & p.ALPHA_MASK) { 
+          a = Math.round(255 * (aValue2 / opacityRange));
+          a = (a > 255) ? 255 : a;
+          
+          aColor = aValue1 - (aValue1 & p.ALPHA_MASK) + ((a << 24) & p.ALPHA_MASK);
+        } 
+        // Grayscale and alpha
+        else {
+          switch(curColorMode) {
+            case p.RGB: aColor = p.color(aValue1, aValue1, aValue1, aValue2); break;
+            case p.HSB: aColor = p.color(0, 0, (aValue1 / redRange) * blueRange, aValue2); break;
           }
-          var ac = Math.floor((intcolor % 4294967296) / 16777216);
-          var rc = Math.floor((intcolor % 16777216) / 65536);
-          var gc = Math.floor((intcolor % 65536) / 256);
-          var bc = intcolor % 256;
-          aColor = p.color(rc, gc, bc, ac);
         }
-      } else {
+      } 
+      
+      // 1 argument: (Grayscale) or (Color)
+      else if (typeof aValue1 === "number") {
+        // Grayscale
+        if (aValue1 <= redRange && aValue1 >= 0) {
+          switch(curColorMode) {
+            case p.RGB: aColor = p.color(aValue1, aValue1, aValue1, opacityRange); break;
+            case p.HSB: aColor = p.color(0, 0, (aValue1 / redRange) * blueRange, opacityRange); break;
+          }
+        }
+        // Color int
+        else if (aValue1) {
+          aColor = aValue1; 
+        } 
+      } 
+      
+      // Default
+      else {
         aColor = p.color(redRange, greenRange, blueRange, opacityRange);
       }
+
       return aColor;
     };
 
@@ -2534,11 +2555,18 @@
 
     // HSB conversion function from Mootools, MIT Licensed
     p.color.toRGB = function(h, s, b) {
+      // Limit values greater than range 
+      h = (h > redRange)   ? redRange   : h;
+      s = (s > greenRange) ? greenRange : s;
+      b = (b > blueRange)  ? blueRange  : b;
+
       h = (h / redRange) * 360;
       s = (s / greenRange) * 100;
       b = (b / blueRange) * 100;
+
       var br = Math.round(b / 100 * 255);
-      if (s === 0) {
+
+      if (s === 0) { // Grayscale
         return [br, br, br];
       } else {
         var hue = h % 360;
