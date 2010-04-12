@@ -1,26 +1,38 @@
-
-
+float a=0.0;
 void setup() 
 {
-  size(800, 600, P3D);
-  background(200);
-PFont font = loadFont("CourierNew36");
-textFont(font,50); 
+size(500, 500, P3D);
+background(0);
+PFont font = loadFont("Arial");
+textFont(font,30); 
 } 
 
 void draw(){
   
-  //background(0);
-   camera(0, 0, 400, // eyeX, eyeY, eyeZ
-  mouseX - width/2, mouseY - height/2, 0.0, // centerX, centerY, centerZ
-  0.0, 1.0, 0.0); //
-  //translate(10, 10);
-  line(30, 20, 0, 85, 20, 15);
-  stroke(126);
-  line(85, 20, 15, 85, 75, 0);
-  stroke(255);
-  line(85, 75, 0, 30, 75, -50);
+  background(0);
+  a += 0.015;
+  if(a > TWO_PI) { 
+    a = 0.0; 
+  }
   
-  fill(0);
-  text("hello",5,5,0);
+  translate(width/3, height/3,0);
+  rotateY(a);
+  //rotateY(a * 2.0);
+  
+//rect(5, 5, 20, 5);
+fill(0, 102, 153);
+text("wo\nrd", 10, -20);
+text("second");
+fill(255);
+text("wo\nrd", 10, -20, -10); 
+
+fill(255);
+text("word", 20, 40, -10); 
+fill(0, 102, 153);
+text("word", 20, 40);
+
+fill(255);
+text("word", 30, 70, -10); 
+fill(0, 102, 153);
+text("word", 30, 70);
 }
