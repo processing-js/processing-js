@@ -6755,8 +6755,10 @@
 
         if ( arguments.length === 1 ){ // for text( str )
           p.text( str, lastTextPos[0], lastTextPos[1], lastTextPos[2] );
+          return ;
         } else if ( arguments.length === 3 ) { // for text( str, x, y)
           text( str, arguments[1], arguments[2], 0 );
+          return ;
         } else if ( arguments.length === 4 ){ // for text( str, x, y, z)
           x = arguments[1];
           y = arguments[2];
@@ -6766,7 +6768,7 @@
             pos = str.indexOf("\n");
             if (pos !== -1) {
               if (pos !== 0) {
-                text(str.substring(0, pos),x,y);
+                text(str.substring(0, pos),x,y,z);
               }
               y = arguments[2] = y + curTextSize;
               str = str.substring(pos+1, str.length);
@@ -6859,13 +6861,15 @@
             curContext.bindTexture(curContext.TEXTURE_2D, null);
 
             var model = new PMatrix3D();
-            var scalefactor=curTextSize*0.4;
+            var scalefactor=curTextSize*0.5;
             model.scale(-aspect*scalefactor,-scalefactor,scalefactor);
             model.translate(-x/(aspect*scalefactor)-aspect/2, -y/scalefactor-1/2, z/scalefactor || 0);
 
             var view = new PMatrix3D();
             view.scale(1, -1, 1);
             view.apply(modelView.array());
+
+            curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE);
 
             curContext.useProgram(programObject2D);
 
@@ -6879,12 +6883,12 @@
             uniformMatrix( programObject2D, "view", true, view.array() );
             uniformMatrix( programObject2D, "projection", true, projection.array() );
 
-            var c = fillStyle.slice(5, -1).split(",");
-            uniformf(programObject2D, "color", [c[0]/255, c[1]/255, c[2]/255, c[3]]);
+            uniformf(programObject2D, "color", fillStyle);
 
             curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
             curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
 
+            curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
             width=aspect*scalefactor;
           }
           lastTextPos[0] = x + width;
@@ -6892,6 +6896,7 @@
           lastTextPos[2] = z;
         } else if (arguments.length === 5) { // for text( str, x, y , width, height)
           text(str, arguments[1], arguments[2], arguments[3], arguments[4], 0);
+          return ;
         } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
           x = arguments[1];
           y = arguments[2];
