@@ -4676,4 +4676,2574 @@
           uniformMatrix(programObject3D, "view", true, view.array());
           uniformMatrix(programObject3D, "projection", true, projection.array());
 
-        
+          uniformf(programObject3D, "color", strokeStyle);
+
+          curContext.lineWidth(lineWidth);
+          curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
+        }
+      }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Coordinates
+    ////////////////////////////////////////////////////////////////////////////
+    p.modelX = function modelX(x, y, z) {
+      var mv = modelView.array();
+      var ci = cameraInv.array();
+
+      var ax = mv[0] * x + mv[1] * y + mv[2] * z + mv[3];
+      var ay = mv[4] * x + mv[5] * y + mv[6] * z + mv[7];
+      var az = mv[8] * x + mv[9] * y + mv[10] * z + mv[11];
+      var aw = mv[12] * x + mv[13] * y + mv[14] * z + mv[15];
+
+      var ox = ci[0] * ax + ci[1] * ay + ci[2] * az + ci[3] * aw;
+      var ow = ci[12] * ax + ci[13] * ay + ci[14] * az + ci[15] * aw;
+
+      return (ow !== 0) ? ox / ow : ox;
+    };
+
+    p.modelY = function modelY(x, y, z) {
+      var mv = modelView.array();
+      var ci = cameraInv.array();
+
+      var ax = mv[0] * x + mv[1] * y + mv[2] * z + mv[3];
+      var ay = mv[4] * x + mv[5] * y + mv[6] * z + mv[7];
+      var az = mv[8] * x + mv[9] * y + mv[10] * z + mv[11];
+      var aw = mv[12] * x + mv[13] * y + mv[14] * z + mv[15];
+
+      var oy = ci[4] * ax + ci[5] * ay + ci[6] * az + ci[7] * aw;
+      var ow = ci[12] * ax + ci[13] * ay + ci[14] * az + ci[15] * aw;
+
+      return (ow !== 0) ? oy / ow : oy;
+    };
+
+    p.modelZ = function modelZ(x, y, z) {
+      var mv = modelView.array();
+      var ci = cameraInv.array();
+
+      var ax = mv[0] * x + mv[1] * y + mv[2] * z + mv[3];
+      var ay = mv[4] * x + mv[5] * y + mv[6] * z + mv[7];
+      var az = mv[8] * x + mv[9] * y + mv[10] * z + mv[11];
+      var aw = mv[12] * x + mv[13] * y + mv[14] * z + mv[15];
+
+      var oz = ci[8] * ax + ci[9] * ay + ci[10] * az + ci[11] * aw;
+      var ow = ci[12] * ax + ci[13] * ay + ci[14] * az + ci[15] * aw;
+
+      return (ow !== 0) ? oz / ow : oz;
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Material Properties
+    ////////////////////////////////////////////////////////////////////////////
+    p.ambient = function ambient() {
+      // create an alias to shorten code
+      var a = arguments;
+
+      // either a shade of gray or a 'color' object.
+      if (p.use3DContext) {
+        curContext.useProgram(programObject3D);
+        uniformi(programObject3D, "usingMat", true);
+
+        if (a.length === 1) {
+          // color object was passed in
+          if (typeof a[0] === "string") {
+            var c = a[0].slice(5, -1).split(",");
+            uniformf(programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
+          }
+          // else a single number was passed in for gray shade
+          else {
+            uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
+          }
+        }
+        // Otherwise three values were provided (r,g,b)        
+        else {
+          uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
+        }
+      }
+    };
+
+    p.emissive = function emissive() {
+      // create an alias to shorten code
+      var a = arguments;
+
+      if (p.use3DContext) {
+        curContext.useProgram(programObject3D);
+        uniformi(programObject3D, "usingMat", true);
+
+        // If only one argument was provided, the user either gave us a 
+        // shade of gray or a 'color' object.
+        if (a.length === 1) {
+          // color object was passed in
+          if (typeof a[0] === "string") {
+            var c = a[0].slice(5, -1).split(",");
+            uniformf(programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
+          }
+          // else a regular number was passed in for gray shade
+          else {
+            uniformf(programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
+          }
+        }
+        // Otherwise three values were provided (r,g,b)
+        else {
+          uniformf(programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
+        }
+      }
+    };
+
+    p.shininess = function shininess(shine) {
+      if (p.use3DContext) {
+        curContext.useProgram(programObject3D);
+        uniformi(programObject3D, "usingMat", true);
+        uniformf(programObject3D, "shininess", shine);
+      }
+    };
+
+    /*
+      Documentation says the following calls are valid, but the
+      Processing throws exceptions:
+      specular(gray, alpha)
+      specular(v1, v2, v3, alpha)
+      So we don't support them either
+      <corban> I dont think this matters so much, let us let color handle it. alpha values are not sent anyways.
+    */
+    p.specular = function specular() {
+      var c = p.color.apply(this, arguments);
+
+      if (p.use3DContext) {
+        curContext.useProgram(programObject3D);
+        uniformi(programObject3D, "usingMat", true);
+        uniformf(programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
+      }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Style functions
+    ////////////////////////////////////////////////////////////////////////////
+    p.fill = function fill() {
+      doFill = true;
+      var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
+
+      if (p.use3DContext) {
+        fillStyle = p.color.toGLArray(color);
+      } else {
+        curContext.fillStyle = p.color.toString(color);
+      }
+    };
+
+    p.noFill = function noFill() {
+      doFill = false;
+    };
+
+    p.stroke = function stroke() {
+      doStroke = true;
+      var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
+
+      if (p.use3DContext) {
+        strokeStyle = p.color.toGLArray(color);
+      } else {
+        curContext.strokeStyle = p.color.toString(color);
+      }
+    };
+
+    p.noStroke = function noStroke() {
+      doStroke = false;
+    };
+
+    p.strokeWeight = function strokeWeight(w) {
+      if (p.use3DContext) {
+        lineWidth = w;
+      } else {
+        curContext.lineWidth = w;
+      }
+    };
+
+    p.strokeCap = function strokeCap(value) {
+      curContext.lineCap = value;
+    };
+
+    p.strokeJoin = function strokeJoin(value) {
+      curContext.lineJoin = value;
+    };
+
+    p.smooth = function() {
+      if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+        curContext.mozImageSmoothingEnabled = true;
+      }
+    };
+
+    p.noSmooth = function() {
+      if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+        curContext.mozImageSmoothingEnabled = false;
+      }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Vector drawing functions
+    ////////////////////////////////////////////////////////////////////////////    
+    p.Point = function Point(x, y) {
+      this.x = x;
+      this.y = y;
+      this.copy = function() {
+        return new Point(x, y);
+      };
+    };
+
+    p.point = function point(x, y, z) {
+      if (p.use3DContext) {
+        var model = new PMatrix3D();
+
+        // move point to position
+        model.translate(x, y, z || 0);
+
+        var view = new PMatrix3D();
+        view.scale(1, -1, 1);
+        view.apply(modelView.array());
+
+        curContext.useProgram(programObject2D);
+        uniformMatrix(programObject2D, "model", true, model.array());
+        uniformMatrix(programObject2D, "view", true, view.array());
+        uniformMatrix(programObject2D, "projection", true, projection.array());
+
+        if (lineWidth > 0 && doStroke) {
+          // this will be replaced with the new bit shifting color code
+          var c = strokeStyle.slice(5, -1).split(",");
+          uniformf(programObject2D, "color", [c[0] / 255, c[1] / 255, c[2] / 255, c[3]]);
+
+          vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
+          curContext.drawArrays(curContext.POINTS, 0, 1);
+        }
+      } else {
+        var oldFill = curContext.fillStyle;
+        curContext.fillStyle = curContext.strokeStyle;
+        curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+        curContext.fillStyle = oldFill;
+      }
+    };
+
+    p.beginShape = function beginShape(type) {
+      curShape = type;
+      curShapeCount = 0;
+      curvePoints = [];
+    };
+
+    p.endShape = function endShape(close) {
+      if (curShapeCount !== 0) {
+        if (close && doFill) {
+          curContext.lineTo(firstX, firstY);
+        }
+        if (doFill) {
+          curContext.fill();
+        }
+        if (doStroke) {
+          curContext.stroke();
+        }
+
+        curContext.closePath();
+        curShapeCount = 0;
+        pathOpen = false;
+      }
+
+      if (pathOpen) {
+        if (doFill) {
+          curContext.fill();
+        }
+        if (doStroke) {
+          curContext.stroke();
+        }
+
+        curContext.closePath();
+        curShapeCount = 0;
+        pathOpen = false;
+      }
+    };
+
+    p.vertex = function vertex(x, y, x2, y2, x3, y3) {
+      if (curShapeCount === 0 && curShape !== p.POINTS) {
+        pathOpen = true;
+        curContext.beginPath();
+        curContext.moveTo(x, y);
+        firstX = x;
+        firstY = y;
+      } else {
+        if (curShape === p.POINTS) {
+          p.point(x, y);
+        } else if (arguments.length === 2) {
+          if (curShape !== p.QUAD_STRIP || curShapeCount !== 2) {
+            curContext.lineTo(x, y);
+          }
+
+          if (curShape === p.TRIANGLE_STRIP) {
+            if (curShapeCount === 2) {
+              // finish shape
+              p.endShape(p.CLOSE);
+              pathOpen = true;
+              curContext.beginPath();
+
+              // redraw last line to start next shape
+              curContext.moveTo(prevX, prevY);
+              curContext.lineTo(x, y);
+              curShapeCount = 1;
+            }
+
+            firstX = prevX;
+            firstY = prevY;
+          }
+
+          if (curShape === p.TRIANGLE_FAN && curShapeCount === 2) {
+            // finish shape
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw last line to start next shape
+            curContext.moveTo(firstX, firstY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+          }
+
+          if (curShape === p.QUAD_STRIP && curShapeCount === 3) {
+            // finish shape
+            curContext.lineTo(prevX, prevY);
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw lines to start next shape
+            curContext.moveTo(prevX, prevY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+          }
+
+          if (curShape === p.QUAD_STRIP) {
+            firstX = secondX;
+            firstY = secondY;
+            secondX = prevX;
+            secondY = prevY;
+          }
+        } else if (arguments.length === 3) {
+          if (curShape !== p.QUAD_STRIP || curShapeCount !== 2) {
+            curContext.lineTo(arguments[0], arguments[1], arguments[2]);
+          }
+
+          if (curShape === p.TRIANGLE_STRIP) {
+            if (curShapeCount === 2) {
+              // finish shape
+              p.endShape(p.CLOSE);
+              pathOpen = true;
+              curContext.beginPath();
+
+              // redraw last line to start next shape
+              curContext.moveTo(prevX, prevY);
+              curContext.lineTo(x, y);
+              curShapeCount = 1;
+            }
+
+            firstX = prevX;
+            firstY = prevY;
+          }
+
+          if (curShape === p.TRIANGLE_FAN && curShapeCount === 2) {
+            // finish shape
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw last line to start next shape
+            curContext.moveTo(firstX, firstY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+          }
+
+          if (curShape === p.QUAD_STRIP && curShapeCount === 3) {
+            // finish shape
+            curContext.lineTo(prevX, prevY);
+            p.endShape(p.CLOSE);
+            pathOpen = true;
+            curContext.beginPath();
+
+            // redraw lines to start next shape
+            curContext.moveTo(prevX, prevY);
+            curContext.lineTo(x, y);
+            curShapeCount = 1;
+          }
+
+          if (curShape === p.QUAD_STRIP) {
+            firstX = secondX;
+            firstY = secondY;
+            secondX = prevX;
+            secondY = prevY;
+          }
+        } else if (arguments.length === 4) {
+          if (curShapeCount > 1) {
+            curContext.moveTo(prevX, prevY);
+            curContext.quadraticCurveTo(firstX, firstY, x, y);
+            curShapeCount = 1;
+          }
+        } else if (arguments.length === 6) {
+          curContext.bezierCurveTo(x, y, x2, y2, x3, y3);
+        }
+      }
+
+      prevX = x;
+      prevY = y;
+      curShapeCount++;
+
+      if (curShape === p.LINES && curShapeCount === 2 || (curShape === p.TRIANGLES) && curShapeCount === 3 || (curShape === p.QUADS) && curShapeCount === 4) {
+        p.endShape(p.CLOSE);
+      }
+    };
+
+    p.curveVertex = function(x, y, z) {
+      if (curvePoints.length < 3) {
+        if (p.use3DContext && z) {
+          curvePoints.push([x, y, z]);
+        } else {
+          curvePoints.push([x, y]);
+        }
+      } else {
+        if (p.use3DContext) {
+          p.curveVertexSegment(curvePoints[0][0], curvePoints[0][1], curvePoints[0][2], curvePoints[1][0], curvePoints[1][1], curvePoints[1][2], curvePoints[2][0], curvePoints[2][1], curvePoints[2][2], curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
+        } else {
+          var b = [],
+            s = 1 - curTightness;
+          /*
+          * Matrix to convert from Catmull-Rom to cubic Bezier
+          * where t = curTightness
+          * |0         1          0         0       |
+          * |(t-1)/6   1          (1-t)/6   0       |
+          * |0         (1-t)/6    1         (t-1)/6 |
+          * |0         0          0         0       |
+          */
+
+          curvePoints.push([x, y]);
+
+          b[0] = [curvePoints[1][0], curvePoints[1][1]];
+          b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
+          b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
+          b[3] = [curvePoints[2][0], curvePoints[2][1]];
+
+          if (!pathOpen) {
+            p.vertex(b[0][0], b[0][1]);
+          } else {
+            curShapeCount = 1;
+          }
+
+          p.vertex(
+          b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
+
+          curvePoints.shift();
+        }
+      }
+    };
+
+    p.curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
+      var x0 = x2;
+      var y0 = y2;
+      var z0 = z2;
+
+      var draw = curveDrawMatrix.array();
+
+      var xplot1 = draw[4] * x1 + draw[5] * x2 + draw[6] * x3 + draw[7] * x4;
+      var xplot2 = draw[8] * x1 + draw[9] * x2 + draw[10] * x3 + draw[11] * x4;
+      var xplot3 = draw[12] * x1 + draw[13] * x2 + draw[14] * x3 + draw[15] * x4;
+
+      var yplot1 = draw[4] * y1 + draw[5] * y2 + draw[6] * y3 + draw[7] * y4;
+      var yplot2 = draw[8] * y1 + draw[9] * y2 + draw[10] * y3 + draw[11] * y4;
+      var yplot3 = draw[12] * y1 + draw[13] * y2 + draw[14] * y3 + draw[15] * y4;
+
+      var zplot1 = draw[4] * z1 + draw[5] * z2 + draw[6] * z3 + draw[7] * z4;
+      var zplot2 = draw[8] * z1 + draw[9] * z2 + draw[10] * z3 + draw[11] * z4;
+      var zplot3 = draw[12] * z1 + draw[13] * z2 + draw[14] * z3 + draw[15] * z4;
+
+      p.vertex(x0, y0, z0);
+      for (var j = 0; j < curveDetail; j++) {
+        x0 += xplot1;
+        xplot1 += xplot2;
+        xplot2 += xplot3;
+        y0 += yplot1;
+        yplot1 += yplot2;
+        yplot2 += yplot3;
+        z0 += zplot1;
+        zplot1 += zplot2;
+        zplot2 += zplot3;
+        p.vertex(x0, y0, z0);
+      }
+    };
+
+    p.curve = function curve() {
+      if (arguments.length === 8) // curve(x1, y1, x2, y2, x3, y3, x4, y4)
+      {
+        p.beginShape();
+        p.curveVertex(arguments[0], arguments[1]);
+        p.curveVertex(arguments[2], arguments[3]);
+        p.curveVertex(arguments[4], arguments[5]);
+        p.curveVertex(arguments[6], arguments[7]);
+        p.endShape();
+      } else { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+        if (p.use3DContext) {
+          p.beginShape();
+          p.curveVertex(arguments[0], arguments[1], arguments[2]);
+          p.curveVertex(arguments[3], arguments[4], arguments[5]);
+          p.curveVertex(arguments[6], arguments[7], arguments[8]);
+          p.curveVertex(arguments[9], arguments[10], arguments[11]);
+          p.endShape();
+        }
+      }
+    };
+
+    p.curveTightness = function(tightness) {
+      curTightness = tightness;
+    };
+
+    //used by both curveDetail and bezierDetail
+    var splineForward = function(segments, matrix) {
+      var f = 1.0 / segments;
+      var ff = f * f;
+      var fff = ff * f;
+
+      matrix.set(0, 0, 0, 1, fff, ff, f, 0, 6 * fff, 2 * ff, 0, 0, 6 * fff, 0, 0, 0);
+    };
+
+    //internal curveInit
+    //used by curveDetail, curveTightness
+    var curveInit = function() {
+      // allocate only if/when used to save startup time
+      if (!curveDrawMatrix) {
+        curveBasisMatrix = new PMatrix3D();
+        curveDrawMatrix = new PMatrix3D();
+        curveInited = true;
+      }
+
+      var s = curTightness;
+      curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2), ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2), (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2), ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
+
+      splineForward(curveDetail, curveDrawMatrix);
+
+      if (!bezierBasisInverse) {
+        //bezierBasisInverse = bezierBasisMatrix.get();
+        //bezierBasisInverse.invert();
+        curveToBezierMatrix = new PMatrix3D();
+      }
+
+      // TODO only needed for PGraphicsJava2D? if so, move it there
+      // actually, it's generally useful for other renderers, so keep it
+      // or hide the implementation elsewhere.
+      curveToBezierMatrix.set(curveBasisMatrix);
+      curveToBezierMatrix.preApply(bezierBasisInverse);
+
+      // multiply the basis and forward diff matrices together
+      // saves much time since this needn't be done for each curve
+      curveDrawMatrix.apply(curveBasisMatrix);
+    };
+
+    p.curveDetail = function curveDetail() {
+      curveDetail = arguments[0];
+      curveInit();
+    };
+
+    p.bezierVertex = p.vertex;
+
+    p.rectMode = function rectMode(aRectMode) {
+      curRectMode = aRectMode;
+    };
+
+    p.imageMode = function(mode) {
+      switch (mode) {
+      case p.CORNER:
+        imageModeConvert = imageModeCorner;
+        break;
+      case p.CORNERS:
+        imageModeConvert = imageModeCorners;
+        break;
+      case p.CENTER:
+        imageModeConvert = imageModeCenter;
+        break;
+      default:
+        throw "Invalid imageMode";
+      }
+    };
+
+    p.ellipseMode = function ellipseMode(aEllipseMode) {
+      curEllipseMode = aEllipseMode;
+    };
+
+    p.arc = function arc(x, y, width, height, start, stop) {
+      if (width <= 0) {
+        return;
+      }
+
+      if (curEllipseMode === p.CORNER) {
+        x += width / 2;
+        y += height / 2;
+      }
+
+      curContext.moveTo(x, y);
+      curContext.beginPath();
+      curContext.arc(x, y, curEllipseMode === p.CENTER_RADIUS ? width : width / 2, start, stop, false);
+
+      if (doStroke) {
+        curContext.stroke();
+      }
+      curContext.lineTo(x, y);
+
+      if (doFill) {
+        curContext.fill();
+      }
+      curContext.closePath();
+    };
+
+    p.line = function line() {
+      var x1, y1, z1, x2, y2, z2;
+
+      if (p.use3DContext) {
+        if (arguments.length === 6) {
+          x1 = arguments[0];
+          y1 = arguments[1];
+          z1 = arguments[2];
+          x2 = arguments[3];
+          y2 = arguments[4];
+          z2 = arguments[5];
+        } else if (arguments.length === 4) {
+          x1 = arguments[0];
+          y1 = arguments[1];
+          z1 = 0;
+          x2 = arguments[2];
+          y2 = arguments[3];
+          z2 = 0;
+        }
+
+        var lineVerts = [x1, y1, z1, x2, y2, z2];
+
+        var model = new PMatrix3D();
+        //model.scale(w, h, d);
+        var view = new PMatrix3D();
+        view.scale(1, -1, 1);
+        view.apply(modelView.array());
+
+        curContext.useProgram(programObject2D);
+        uniformMatrix(programObject2D, "model", true, model.array());
+        uniformMatrix(programObject2D, "view", true, view.array());
+        uniformMatrix(programObject2D, "projection", true, projection.array());
+
+        if (lineWidth > 0 && doStroke) {
+          curContext.useProgram(programObject2D);
+
+          uniformf(programObject2D, "color", strokeStyle);
+
+          curContext.lineWidth(lineWidth);
+
+          vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(lineVerts), curContext.STREAM_DRAW);
+          curContext.drawArrays(curContext.LINES, 0, 2);
+        }
+      } else {
+        x1 = arguments[0];
+        y1 = arguments[1];
+        x2 = arguments[2];
+        y2 = arguments[3];
+
+        curContext.beginPath();
+        curContext.moveTo(x1 || 0, y1 || 0);
+        curContext.lineTo(x2 || 0, y2 || 0);
+        curContext.stroke();
+        curContext.closePath();
+      }
+    };
+
+    p.bezier = function bezier(x1, y1, x2, y2, x3, y3, x4, y4) {
+      curContext.beginPath();
+      curContext.moveTo(x1, y1);
+      curContext.bezierCurveTo(x2, y2, x3, y3, x4, y4);
+      curContext.stroke();
+      curContext.closePath();
+    };
+
+    p.bezierPoint = function bezierPoint(a, b, c, d, t) {
+      return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
+    };
+
+    p.bezierTangent = function bezierTangent(a, b, c, d, t) {
+      return (3 * t * t * (-a + 3 * b - 3 * c + d) + 6 * t * (a - 2 * b + c) + 3 * (-a + b));
+    };
+
+    p.curvePoint = function curvePoint(a, b, c, d, t) {
+      return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
+    };
+
+    p.curveTangent = function curveTangent(a, b, c, d, t) {
+      return 0.5 * ((-a + c) + 2 * (2 * a - 5 * b + 4 * c - d) * t + 3 * (-a + 3 * b - 3 * c + d) * t * t);
+    };
+
+    p.triangle = function triangle(x1, y1, x2, y2, x3, y3) {
+      p.beginShape();
+      p.vertex(x1, y1);
+      p.vertex(x2, y2);
+      p.vertex(x3, y3);
+      p.endShape();
+    };
+
+    p.quad = function quad(x1, y1, x2, y2, x3, y3, x4, y4) {
+      curContext.lineCap = "square";
+      p.beginShape();
+      p.vertex(x1, y1);
+      p.vertex(x2, y2);
+      p.vertex(x3, y3);
+      p.vertex(x4, y4);
+      p.endShape();
+    };
+
+    p.rect = function rect(x, y, width, height) {
+      if (!width && !height) {
+        return;
+      }
+
+      curContext.beginPath();
+
+      var offsetStart = 0;
+      var offsetEnd = 0;
+
+      if (curRectMode === p.CORNERS) {
+        width -= x;
+        height -= y;
+      }
+
+      if (curRectMode === p.RADIUS) {
+        width *= 2;
+        height *= 2;
+      }
+
+      if (curRectMode === p.CENTER || curRectMode === p.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      }
+
+      curContext.rect(
+      Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
+
+      if (doFill) {
+        curContext.fill();
+      }
+      if (doStroke) {
+        curContext.stroke();
+      }
+
+      curContext.closePath();
+    };
+
+    p.ellipse = function ellipse(x, y, width, height) {
+      x = x || 0;
+      y = y || 0;
+
+      if (width <= 0 && height <= 0) {
+        return;
+      }
+
+      curContext.beginPath();
+
+      if (curEllipseMode === p.RADIUS) {
+        width *= 2;
+        height *= 2;
+      }
+
+      if (curEllipseMode === p.CORNERS) {
+        width = width - x;
+        height = height - y;
+      }
+
+      if (curEllipseMode === p.CORNER || curEllipseMode === p.CORNERS) {
+        x += width / 2;
+        y += height / 2;
+      }
+
+      var offsetStart = 0;
+
+      // Shortcut for drawing a circle
+      if (width === height) {
+        curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, p.TWO_PI, false);
+      } else {
+        var w = width / 2,
+          h = height / 2,
+          C = 0.5522847498307933;
+        var c_x = C * w,
+          c_y = C * h;
+
+        // TODO: Audit
+        curContext.moveTo(x + w, y);
+        curContext.bezierCurveTo(x + w, y - c_y, x + c_x, y - h, x, y - h);
+        curContext.bezierCurveTo(x - c_x, y - h, x - w, y - c_y, x - w, y);
+        curContext.bezierCurveTo(x - w, y + c_y, x - c_x, y + h, x, y + h);
+        curContext.bezierCurveTo(x + c_x, y + h, x + w, y + c_y, x + w, y);
+      }
+
+      if (doFill) {
+        curContext.fill();
+      }
+      if (doStroke) {
+        curContext.stroke();
+      }
+
+      curContext.closePath();
+    };
+
+
+    p.normal = function normal(nx, ny, nz) {
+      if (arguments.length !== 3 || !(typeof nx === "number" && typeof ny === "number" && typeof nz === "number")) {
+        throw "normal() requires three numeric arguments.";
+      }
+
+      normalX = nx;
+      normalY = ny;
+      normalZ = nz;
+
+      if (curShape !== 0) {
+        if (normalMode === p.NORMAL_MODE_AUTO) {
+          normalMode = p.NORMAL_MODE_SHAPE;
+        } else if (normalMode === p.NORMAL_MODE_SHAPE) {
+          normalMode = p.NORMAL_MODE_VERTEX;
+        }
+      }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Raster drawing functions
+    ////////////////////////////////////////////////////////////////////////////
+    // TODO: function incomplete
+    p.save = function save(file) {};
+
+    var buildImageObject = function(obj) {
+      var pixels = obj.data,
+        data = p.createImage(obj.width, obj.height),
+        len = pixels.length;
+
+      if (( // ECMAScript 5
+      Object.defineProperty && Object.getOwnPropertyDescriptor && !Object.getOwnPropertyDescriptor(data, "pixels").get) || ( // Legacy JavaScript
+      data.__defineGetter__ && data.__lookupGetter__ && !data.__lookupGetter__("pixels"))) {
+        var pixelsDone, pixelsGetter = function() {
+          if (pixelsDone) {
+            return pixelsDone;
+          }
+
+          pixelsDone = [];
+
+          for (var i = 0; i < len; i += 4) {
+            pixelsDone.push(
+            p.color(
+            pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]));
+          }
+
+          return pixelsDone;
+        };
+
+        if (Object.defineProperty) {
+          Object.defineProperty(data, "pixels", {
+            get: pixelsGetter
+          });
+        } else if (data.__defineGetter__) {
+          data.__defineGetter__("pixels", pixelsGetter);
+        }
+      } else {
+        data.pixels = [];
+
+        for (var i = 0; i < len; i += 4) {
+          data.pixels.push(
+          p.color(
+          pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]));
+        }
+      }
+      return data;
+    };
+
+    var Temporary2DContext = document.createElement('canvas').getContext('2d');
+
+    var PImage = function PImage(aWidth, aHeight, aFormat) {
+      this.get = function(x, y, w, h) {
+        if (!arguments.length) {
+          return p.get(this);
+        } else if (arguments.length === 2) {
+          return p.get(x, y, this);
+        } else if (arguments.length === 4) {
+          return p.get(x, y, w, h, this);
+        }
+      };
+
+      this.set = function(x, y, c) {
+        p.set(x, y, c, this);
+      };
+
+      this.blend = function(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE) {
+        if (arguments.length === 9) {
+          p.blend(this, srcImg, x, y, width, height, dx, dy, dwidth, dheight, this);
+        } else if (arguments.length === 10) {
+          p.blend(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE, this);
+        }
+      };
+
+      this.copy = function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
+        if (arguments.length === 8) {
+          p.blend(this, srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, p.REPLACE, this);
+        } else if (arguments.length === 9) {
+          p.blend(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight, p.REPLACE, this);
+        }
+      };
+
+      this.resize = function(w, h) {
+        if (this.width !== 0 || this.height !== 0) {
+          // make aspect ratio if w or h is 0
+          if (w === 0 && h !== 0) {
+            w = this.width / this.height * h;
+          } else if (h === 0 && w !== 0) {
+            h = w / (this.width / this.height);
+          }
+          // put 'this' into a new canvas
+          var pimg = this.toImageData();
+          var canvas = document.createElement('canvas');
+          canvas.width = this.width;
+          canvas.height = this.height;
+          canvas.getContext('2d').putImageData(pimg, 0, 0);
+          // pass new canvas to drawimage with w,h
+          var canvasResized = document.createElement('canvas');
+          canvasResized.width = w;
+          canvasResized.height = h;
+          canvasResized.getContext('2d').drawImage(canvas, 0, 0, w, h);
+          // pull imageData object out of canvas into ImageData object
+          var imageData = canvasResized.getContext('2d').getImageData(0, 0, w, h);
+          // set this as new pimage
+          this.ImageData = imageData;
+          this.fromImageData(imageData);
+        }
+      };
+
+      this.mask = function(mask) {
+        this._mask = undefined;
+
+        if (mask instanceof PImage) {
+          if (mask.width === this.width && mask.height === this.height) {
+            this._mask = mask;
+          } else {
+            throw "mask must have the same dimensions as PImage.";
+          }
+        } else if (typeof mask === "object" && mask.constructor === Array) { // this is a pixel array
+          // mask pixel array needs to be the same length as this.pixels
+          if (this.pixels.length === mask.length) {
+            this._mask = mask;
+          } else {
+            throw "mask array must be the same length as PImage pixels array.";
+          }
+        }
+      };
+
+      // TODO: incomplete functions
+      this.loadPixels = function() {};
+
+      this.updatePixels = function() {};
+
+      this.toImageData = function() {
+        var imgData = Temporary2DContext.createImageData(this.width, this.height);
+        var i, len;
+        var dest = imgData.data;
+        // this check breaks things once we start changing pimages if we dont 
+        //update the ImageData object as well as the pixel array all the time
+        //        if (this.ImageData && this.ImageData.width > 0) {
+        //          // image is based on ImageData. Copying...
+        //          var src = this.ImageData.data;
+        //          for (i = 0, len = this.width * this.height * 4; i < len; ++i) {
+        //            dest[i] = src[i];
+        //          }
+        //        } else {
+        for (i = 0, len = this.pixels.length; i < len; ++i) {
+          // convert each this.pixels[i] int to array of 4 ints of each color
+          var c = this.pixels[i];
+          var pos = i * 4;
+          // pjs uses argb, canvas stores rgba        
+          dest[pos + 3] = (c >>> 24) & 0xFF;
+          dest[pos + 0] = (c >>> 16) & 0xFF;
+          dest[pos + 1] = (c >>> 8) & 0xFF;
+          dest[pos + 2] = c & 0xFF;
+          //          }
+        }
+        // return a canvas ImageData object with pixel array in canvas format
+        return imgData;
+      };
+
+      this.toDataURL = function() {
+        var canvas = document.createElement('canvas');
+        canvas.height = this.height;
+        canvas.width = this.width;
+        var ctx = canvas.getContext('2d');
+        var imgData = ctx.createImageData(this.width, this.height);
+        for (var i = 0; i < this.pixels.length; i++) {
+          // convert each this.pixels[i] int to array of 4 ints of each color
+          var c = this.pixels[i];
+          var pos = i * 4;
+          // pjs uses argb, canvas stores rgba        
+          imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
+          imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
+          imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
+          imgData.data[pos + 2] = c % 256;
+        }
+        // return data URI for a canvas
+        ctx.putImageData(imgData, 0, 0);
+        return canvas.toDataURL();
+      };
+
+      this.fromImageData = function(canvasImg) {
+        this.width = canvasImg.width;
+        this.height = canvasImg.height;
+        this.pixels = new Array(canvasImg.width * canvasImg.height);
+        this.format = p.ARGB;
+        for (var i = 0; i < this.pixels.length; i++) {
+          // convert each canvasImg's colors to PImage array format
+          var pos = i * 4;
+          // pjs uses argb, canvas stores rgba
+          this.pixels[i] = p.color.toInt(canvasImg.data[pos + 0], canvasImg.data[pos + 1], canvasImg.data[pos + 2], canvasImg.data[pos + 3]);
+        }
+      };
+
+      this.fromHTMLImageData = function(htmlImg) {
+        // convert an <img> to a PImage
+        var canvas = document.createElement("canvas");
+        canvas.width = htmlImg.width;
+        canvas.height = htmlImg.height;
+        var context = canvas.getContext("2d");
+        context.drawImage(htmlImg, 0, 0);
+        var imageData = context.getImageData(0, 0, htmlImg.width, htmlImg.height);
+        // we should no longer use this it is dangerous and 
+        // causes sync issues with pixel array
+        //this.ImageData = imageData;
+        this.fromImageData(imageData);
+      };
+
+      if (arguments.length === 1) {
+        // convert an <img> to a PImage
+        this.fromHTMLImageData(arguments[0]);
+      } else if (arguments.length === 2 || arguments.length === 3) {
+        this.width = aWidth || 0;
+        this.height = aHeight || 0;
+        this.pixels = new Array(this.width * this.height);
+        this.data = this.pixels;
+        this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
+      }
+    };
+
+    p.PImage = PImage;
+
+    try {
+      // Opera createImageData fix
+      if (! ("createImageData" in CanvasRenderingContext2D.prototype)) {
+        CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {
+          return this.getImageData(0, 0, sw, sh);
+        };
+      }
+    } catch(e) {}
+
+    p.createImage = function createImage(w, h, mode) {
+      var img = new PImage(w, h, mode);
+      // make the new image transparent black by default
+      for (var i = 0; i < w * h; i++) {
+        if (mode === p.RGB) {
+          // if mode is RGB set alpha to 255, no transparency
+          img.pixels[i++] = 255;
+        } else {
+          img.pixels[i++] = 0;
+        }
+        img.pixels[i++] = 0;
+        img.pixels[i++] = 0;
+        img.pixels[i] = 0;
+      }
+      return img;
+    };
+
+    // Loads an image for display. Type is an extension. Callback is fired on load.
+    p.loadImage = function loadImage(file, type, callback) {
+      // if type is specified add it with a . to file to make the filename
+      if (type) {
+        file = file + "." + type;
+      }
+      // if image is in the preloader cache return a new PImage
+      if (p.pjs.imageCache[file]) {
+        return new PImage(p.pjs.imageCache[file]);
+      }
+      // else aysnc load it
+      else {
+        var pimg = new PImage(0, 0, p.ARGB);
+        var img = document.createElement('img');
+
+        pimg.sourceImg = img;
+
+        img.onload = (function(aImage, aPImage, aCallback) {
+          var image = aImage;
+          var pimg = aPImage;
+          var callback = aCallback;
+          return function() {
+            // change the <img> object into a PImage now that its loaded
+            pimg.fromHTMLImageData(image);
+            pimg.loaded = true;
+            if (callback) {
+              callback();
+            }
+          };
+        }(img, pimg, callback));
+
+        img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
+        return pimg;
+      }
+    };
+
+    // async loading of large images, same functionality as loadImage above
+    p.requestImage = p.loadImage;
+
+    // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
+    p.get = function get(x, y, w, h, img) {
+      var c;
+      // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
+      if (!arguments.length) {
+        //return a PImage of curContext
+        c = new PImage(p.width, p.height, p.RGB);
+        c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
+        return c;
+      } else if (arguments.length === 5) {
+        // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+        var start = y * img.width + x;
+        var end = (y + h) * img.width + x + w;
+        c = new PImage(w, h, p.RGB);
+        for (var i = start, j = 0; i < end; i++, j++) {
+          c.pixels[j] = img[i];
+          if (j + 1 % w === 0) {
+            //completed one line, increment i by offset
+            i += img.width - w;
+          }
+        }
+        return c;
+      } else if (arguments.length === 4) {
+        // return a PImage of w and h from cood x,y of curContext
+        c = new PImage(w, h, p.RGB);
+        c.fromImageData(curContext.getImageData(x, y, w, h));
+        return c;
+      } else if (arguments.length === 3) {
+        // PImage.get(x,y) was called, return the color (int) at x,y of img
+        return w.pixels[y * w.width + x];
+      } else if (arguments.length === 2) {
+        // return the color at x,y (int) of curContext
+        // create a PImage object of size 1x1 and return the int of the pixels array element 0
+        if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
+          // x,y is inside canvas space
+          c = new PImage(1, 1, p.RGB);
+          c.fromImageData(curContext.getImageData(x, y, 1, 1));
+          return c.pixels[0];
+        } else {
+          // x,y is outside image return transparent black
+          return 0;
+        }
+      } else if (arguments.length === 1) {
+        // PImage.get() was called, return the PImage
+        return x;
+      }
+    };
+
+    // Creates a new Processing instance and passes it back for... processing
+    p.createGraphics = function createGraphics(w, h) {
+      var canvas = document.createElement("canvas");
+      var ret = Processing.build(canvas);
+      ret.size(w, h);
+      ret.canvas = canvas;
+      return ret;
+    };
+
+    // Paints a pixel array into the canvas
+    p.set = function set(x, y, obj, img) {
+      var color, oldFill;
+      // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
+      if (arguments.length === 4) {
+        img.pixels[y * img.width + x] = obj;
+      } else if (arguments.length === 3) {
+        // called p.set(), was it with a color or a img ?
+        if (typeof obj === "number") {
+          oldFill = curContext.fillStyle;
+          color = obj;
+          curContext.fillStyle = p.color.toString(color);
+          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+          curContext.fillStyle = oldFill;
+        } else if (obj instanceof PImage) {
+          p.image(obj, x, y);
+        }
+      }
+    };
+
+    // Gets a 1-Dimensional pixel array from Canvas
+    p.loadPixels = function() {
+      p.pixels = p.get(0, 0, p.width, p.height).pixels;
+      //p.pixels = buildImageObject(curContext.getImageData(0, 0, p.width, p.height)).pixels;
+    };
+
+    // Draws a 1-Dimensional pixel array to Canvas
+    p.updatePixels = function() {
+      var pixels = {},
+        c;
+
+      pixels.width = p.width;
+      pixels.height = p.height;
+      pixels.data = [];
+
+      if (curContext.createImageData) {
+        pixels = curContext.createImageData(p.width, p.height);
+      }
+
+      var data = pixels.data,
+        pos = 0,
+        defaultColor;
+
+      for (var i = 0, l = p.pixels.length; i < l; i++) {
+        c = p.pixels[i] ? p.color.toArray(p.pixels[i]) : [0, 0, 0, 255];
+
+        data[pos + 0] = c[0];
+        data[pos + 1] = c[1];
+        data[pos + 2] = c[2];
+        data[pos + 3] = c[3];
+
+        pos += 4;
+      }
+
+      curContext.putImageData(pixels, 0, 0);
+    };
+
+    // Draw an image or a color to the background
+    p.background = function background() {
+      var color, a, img;
+
+      // background params are either a color or a PImage
+      if (typeof arguments[0] === 'number') {
+        color = p.color.apply(this, arguments);
+        // override alpha value, processing ignores the alpha for background color
+        color = color | p.ALPHA_MASK;
+      } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
+        img = arguments[0];
+
+        if (!img.pixels || img.width !== p.width || img.height !== p.height) {
+          throw "Background image must be the same dimensions as the canvas.";
+        }
+      } else {
+        throw "Incorrect background parameters.";
+      }
+
+      if (p.use3DContext) {
+        if (typeof color !== 'undefined') {
+          var c = p.color.toGLArray(color);
+          curContext.clearColor(c[0], c[1], c[2], c[3]);
+          curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+        } else {
+          // Handle image background for 3d context. not done yet.
+        }
+      } else { // 2d context
+        if (typeof color !== 'undefined') {
+          var oldFill = curContext.fillStyle;
+          curContext.fillStyle = p.color.toString(color);
+          curContext.fillRect(0, 0, p.width, p.height);
+          curContext.fillStyle = oldFill;
+        } else {
+          p.image(img, 0, 0);
+        }
+      }
+      hasBackground = true;
+    };
+
+    function getImage(img) {
+      if (typeof img === "string") {
+        return document.getElementById(img);
+      }
+
+      if (img.img) {
+        return img.img;
+      } else if (img.getContext || img.canvas) {
+        if (img.getContext('2d').createImageData) {
+          img.pixels = img.getContext('2d').createImageData(img.width, img.height);
+        } else {
+          img.pixels = img.getContext('2d').getImageData(0, 0, img.width, img.height);
+        }
+      }
+
+      for (var i = 0, l = img.pixels.length; i < l; i++) {
+        var pos = i * 4;
+        var c = img.pixels[i] || [0, 0, 0, 255];
+
+        img.data[pos + 0] = parseInt(c[0], 10);
+        img.data[pos + 1] = parseInt(c[1], 10);
+        img.data[pos + 2] = parseInt(c[2], 10);
+        img.data[pos + 3] = parseFloat(c[3]) * 100;
+      }
+
+      var canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      var context = canvas.getContext("2d");
+      context.putImageData(img.pixels, 0, 0);
+
+      img.canvas = canvas;
+
+      return img;
+    }
+
+    // Draws an image to the Canvas
+    p.image = function image(img, x, y, w, h) {
+      if (img.width > 0) {
+        var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
+        var obj = img.toImageData();
+
+        if (img._mask) {
+          var j, size;
+          if (img._mask instanceof PImage) {
+            var objMask = img._mask.toImageData();
+            for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+              // using it as an alpha channel
+              obj.data[j + 1] = objMask.data[j];
+              // but only the blue color channel
+            }
+          } else {
+            for (j = 0, size = img._mask.length; j < size; ++j) {
+              obj.data[(j << 2) + 3] = img._mask[j];
+            }
+          }
+        }
+
+        // draw the image
+        //curContext.putImageData(obj, x, y); // this causes error if data overflows the canvas dimensions
+        curTint(obj);
+
+        var c = document.createElement('canvas');
+        c.width = obj.width;
+        c.height = obj.height;
+        var ctx = c.getContext('2d');
+        ctx.putImageData(obj, 0, 0);
+
+        curContext.drawImage(c, 0, 0, img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
+      }
+    };
+
+    // Clears a rectangle in the Canvas element or the whole Canvas
+    p.clear = function clear(x, y, width, height) {
+      if (arguments.length === 0) {
+        curContext.clearRect(0, 0, p.width, p.height);
+      } else {
+        curContext.clearRect(x, y, width, height);
+      }
+    };
+
+    p.tint = function tint() {
+      var tintColor = p.color.apply(this, arguments);
+      var r = p.red(tintColor) / redRange;
+      var g = p.green(tintColor) / greenRange;
+      var b = p.blue(tintColor) / blueRange;
+      var a = p.alpha(tintColor) / opacityRange;
+
+      curTint = function(obj) {
+        var data = obj.data,
+          length = 4 * obj.width * obj.height;
+        for (var i = 0; i < length;) {
+          data[i++] *= r;
+          data[i++] *= g;
+          data[i++] *= b;
+          data[i++] *= a;
+        }
+      };
+    };
+
+    p.noTint = function noTint() {
+      curTint = function() {};
+    };
+
+    p.copy = function copy(src, sx, sy, sw, sh, dx, dy, dw, dh) {
+      if (arguments.length === 8) {
+        p.copy(this, src, sx, sy, sw, sh, dx, dy, dw);
+        return;
+      }
+      p.blend(src, sx, sy, sw, sh, dx, dy, dw, dh, p.REPLACE);
+    };
+
+    p.blend = function blend(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
+      if (arguments.length === 9) {
+        p.blend(this, src, sx, sy, sw, sh, dx, dy, dw, dh);
+      } else if (arguments.length === 10 || arguments.length === 11) {
+        var sx2 = sx + sw;
+        var sy2 = sy + sh;
+        var dx2 = dx + dw;
+        var dy2 = dy + dh;
+        var dest;
+        // check if pimgdest is there and pixels, if so this was a call from pimg.blend
+        if (arguments.length === 10) {
+          p.loadPixels();
+          dest = p;
+        } else if (arguments.length === 11 && pimgdest && pimgdest.pixels) {
+          dest = pimgdest;
+        }
+        if (src === this) {
+          if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
+            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1, dest.pixels, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+          } else {
+            // same as below, except skip the loadPixels() because it'd be redundant
+            p.blit_resize(src, sx, sy, sx2, sy2, dest.pixels, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+          }
+        } else {
+          src.loadPixels();
+          p.blit_resize(src, sx, sy, sx2, sy2, dest.pixels, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+        }
+        if (arguments.length === 10) {
+          p.updatePixels();
+        }
+      }
+    };
+
+    // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear()
+    // change this in the future
+    p.shared = {
+      fracU: 0,
+      ifU: 0,
+      fracV: 0,
+      ifV: 0,
+      u1: 0,
+      u2: 0,
+      v1: 0,
+      v2: 0,
+      sX: 0,
+      sY: 0,
+      iw: 0,
+      iw1: 0,
+      ih1: 0,
+      ul: 0,
+      ll: 0,
+      ur: 0,
+      lr: 0,
+      cUL: 0,
+      cLL: 0,
+      cUR: 0,
+      cLR: 0,
+      srcXOffset: 0,
+      srcYOffset: 0,
+      r: 0,
+      g: 0,
+      b: 0,
+      a: 0,
+      srcBuffer: null
+    };
+
+    p.intersect = function intersect(sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2) {
+      var sw = sx2 - sx1 + 1;
+      var sh = sy2 - sy1 + 1;
+      var dw = dx2 - dx1 + 1;
+      var dh = dy2 - dy1 + 1;
+      if (dx1 < sx1) {
+        dw += dx1 - sx1;
+        if (dw > sw) {
+          dw = sw;
+        }
+      } else {
+        var w = sw + sx1 - dx1;
+        if (dw > w) {
+          dw = w;
+        }
+      }
+      if (dy1 < sy1) {
+        dh += dy1 - sy1;
+        if (dh > sh) {
+          dh = sh;
+        }
+      } else {
+        var h = sh + sy1 - dy1;
+        if (dh > h) {
+          dh = h;
+        }
+      }
+      return ! (dw <= 0 || dh <= 0);
+    };
+
+    p.filter_new_scanline = function filter_new_scanline() {
+      p.shared.sX = p.shared.srcXOffset;
+      p.shared.fracV = p.shared.srcYOffset & p.PREC_MAXVAL;
+      p.shared.ifV = p.PREC_MAXVAL - p.shared.fracV;
+      p.shared.v1 = (p.shared.srcYOffset >> p.PRECISIONB) * p.shared.iw;
+      p.shared.v2 = Math.min((p.shared.srcYOffset >> p.PRECISIONB) + 1, p.shared.ih1) * p.shared.iw;
+    };
+
+    p.filter_bilinear = function filter_bilinear() {
+      p.shared.fracU = p.shared.sX & p.PREC_MAXVAL;
+      p.shared.ifU = p.PREC_MAXVAL - p.shared.fracU;
+      p.shared.ul = (p.shared.ifU * p.shared.ifV) >> p.PRECISIONB;
+      p.shared.ll = (p.shared.ifU * p.shared.fracV) >> p.PRECISIONB;
+      p.shared.ur = (p.shared.fracU * p.shared.ifV) >> p.PRECISIONB;
+      p.shared.lr = (p.shared.fracU * p.shared.fracV) >> p.PRECISIONB;
+      p.shared.u1 = (p.shared.sX >> p.PRECISIONB);
+      p.shared.u2 = Math.min(p.shared.u1 + 1, p.shared.iw1);
+      // get color values of the 4 neighbouring texels
+      p.shared.cUL = p.shared.srcBuffer[p.shared.v1 + p.shared.u1];
+      p.shared.cUR = p.shared.srcBuffer[p.shared.v1 + p.shared.u2];
+      p.shared.cLL = p.shared.srcBuffer[p.shared.v2 + p.shared.u1];
+      p.shared.cLR = p.shared.srcBuffer[p.shared.v2 + p.shared.u2];
+      p.shared.r = ((p.shared.ul * ((p.shared.cUL & p.RED_MASK) >> 16) + p.shared.ll * ((p.shared.cLL & p.RED_MASK) >> 16) + p.shared.ur * ((p.shared.cUR & p.RED_MASK) >> 16) + p.shared.lr * ((p.shared.cLR & p.RED_MASK) >> 16)) << p.PREC_RED_SHIFT) & p.RED_MASK;
+      p.shared.g = ((p.shared.ul * (p.shared.cUL & p.GREEN_MASK) + p.shared.ll * (p.shared.cLL & p.GREEN_MASK) + p.shared.ur * (p.shared.cUR & p.GREEN_MASK) + p.shared.lr * (p.shared.cLR & p.GREEN_MASK)) >>> p.PRECISIONB) & p.GREEN_MASK;
+      p.shared.b = (p.shared.ul * (p.shared.cUL & p.BLUE_MASK) + p.shared.ll * (p.shared.cLL & p.BLUE_MASK) + p.shared.ur * (p.shared.cUR & p.BLUE_MASK) + p.shared.lr * (p.shared.cLR & p.BLUE_MASK)) >>> p.PRECISIONB;
+      p.shared.a = ((p.shared.ul * ((p.shared.cUL & p.ALPHA_MASK) >>> 24) + p.shared.ll * ((p.shared.cLL & p.ALPHA_MASK) >>> 24) + p.shared.ur * ((p.shared.cUR & p.ALPHA_MASK) >>> 24) + p.shared.lr * ((p.shared.cLR & p.ALPHA_MASK) >>> 24)) << p.PREC_ALPHA_SHIFT) & p.ALPHA_MASK;
+      return p.shared.a | p.shared.r | p.shared.g | p.shared.b;
+    };
+
+    p.blit_resize = function blit_resize(img, srcX1, srcY1, srcX2, srcY2, destPixels, screenW, screenH, destX1, destY1, destX2, destY2, mode) {
+      var x, y; // iterator vars
+      if (srcX1 < 0) {
+        srcX1 = 0;
+      }
+      if (srcY1 < 0) {
+        srcY1 = 0;
+      }
+      if (srcX2 >= img.width) {
+        srcX2 = img.width - 1;
+      }
+      if (srcY2 >= img.height) {
+        srcY2 = img.height - 1;
+      }
+      var srcW = srcX2 - srcX1;
+      var srcH = srcY2 - srcY1;
+      var destW = destX2 - destX1;
+      var destH = destY2 - destY1;
+      var smooth = true; // may as well go with the smoothing these days
+      if (!smooth) {
+        srcW++;
+        srcH++;
+      }
+      if (destW <= 0 || destH <= 0 || srcW <= 0 || srcH <= 0 || destX1 >= screenW || destY1 >= screenH || srcX1 >= img.width || srcY1 >= img.height) {
+        return;
+      }
+      var dx = Math.floor(srcW / destW * p.PRECISIONF);
+      var dy = Math.floor(srcH / destH * p.PRECISIONF);
+      p.shared.srcXOffset = Math.floor(destX1 < 0 ? -destX1 * dx : srcX1 * p.PRECISIONF);
+      p.shared.srcYOffset = Math.floor(destY1 < 0 ? -destY1 * dy : srcY1 * p.PRECISIONF);
+      if (destX1 < 0) {
+        destW += destX1;
+        destX1 = 0;
+      }
+      if (destY1 < 0) {
+        destH += destY1;
+        destY1 = 0;
+      }
+      destW = Math.min(destW, screenW - destX1);
+      destH = Math.min(destH, screenH - destY1);
+      var destOffset = destY1 * screenW + destX1;
+      p.shared.srcBuffer = img.pixels;
+      if (smooth) {
+        // use bilinear filtering
+        p.shared.iw = img.width;
+        p.shared.iw1 = img.width - 1;
+        p.shared.ih1 = img.height - 1;
+        switch (mode) {
+        case p.BLEND:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.blend(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.ADD:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.add(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.SUBTRACT:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.subtract(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.LIGHTEST:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.lightest(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.DARKEST:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.darkest(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.REPLACE:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.filter_bilinear();
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.DIFFERENCE:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.difference(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.EXCLUSION:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.exclusion(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.MULTIPLY:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.multiply(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.SCREEN:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.screen(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.OVERLAY:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.overlay(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.HARD_LIGHT:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.hard_light(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.SOFT_LIGHT:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.soft_light(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.DODGE:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.dodge(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        case p.BURN:
+          for (y = 0; y < destH; y++) {
+            p.filter_new_scanline();
+            for (x = 0; x < destW; x++) {
+              destPixels[destOffset + x] = p.modes.burn(destPixels[destOffset + x], p.filter_bilinear());
+              p.shared.sX += dx;
+            }
+            destOffset += screenW;
+            p.shared.srcYOffset += dy;
+          }
+          break;
+        }
+      }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Font handling
+    ////////////////////////////////////////////////////////////////////////////
+    // Loads a font from an SVG or Canvas API
+    p.loadFont = function loadFont(name) {
+      if (name.indexOf(".svg") === -1) {
+        return {
+          name: name,
+          width: function(str) {
+            if (curContext.mozMeasureText) {
+              return curContext.mozMeasureText(
+              typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
+            } else {
+              return 0;
+            }
+          }
+        };
+      } else {
+        // If the font is a glyph, calculate by SVG table     
+        var font = p.loadGlyphs(name);
+
+        return {
+          name: name,
+          glyph: true,
+          units_per_em: font.units_per_em,
+          horiz_adv_x: 1 / font.units_per_em * font.horiz_adv_x,
+          ascent: font.ascent,
+          descent: font.descent,
+          width: function(str) {
+            var width = 0;
+            var len = str.length;
+            for (var i = 0; i < len; i++) {
+              try {
+                width += parseFloat(p.glyphLook(p.glyphTable[name], str[i]).horiz_adv_x);
+              }
+              catch(e) {
+                Processing.debug(e);
+              }
+            }
+            return width / p.glyphTable[name].units_per_em;
+          }
+        };
+      }
+    };
+
+    p.createFont = function(name, size) {};
+
+    // Sets a 'current font' for use
+    p.textFont = function textFont(name, size) {
+      curTextFont = name;
+      p.textSize(size);
+    };
+
+    // Sets the font size
+    p.textSize = function textSize(size) {
+      if (size) {
+        curTextSize = size;
+      }
+    };
+
+    p.textAlign = function textAlign() {};
+
+    // A lookup table for characters that can not be referenced by Object 
+    p.glyphLook = function glyphLook(font, chr) {
+      try {
+        switch (chr) {
+        case "1":
+          return font.one;
+        case "2":
+          return font.two;
+        case "3":
+          return font.three;
+        case "4":
+          return font.four;
+        case "5":
+          return font.five;
+        case "6":
+          return font.six;
+        case "7":
+          return font.seven;
+        case "8":
+          return font.eight;
+        case "9":
+          return font.nine;
+        case "0":
+          return font.zero;
+        case " ":
+          return font.space;
+        case "$":
+          return font.dollar;
+        case "!":
+          return font.exclam;
+        case '"':
+          return font.quotedbl;
+        case "#":
+          return font.numbersign;
+        case "%":
+          return font.percent;
+        case "&":
+          return font.ampersand;
+        case "'":
+          return font.quotesingle;
+        case "(":
+          return font.parenleft;
+        case ")":
+          return font.parenright;
+        case "*":
+          return font.asterisk;
+        case "+":
+          return font.plus;
+        case ",":
+          return font.comma;
+        case "-":
+          return font.hyphen;
+        case ".":
+          return font.period;
+        case "/":
+          return font.slash;
+        case "_":
+          return font.underscore;
+        case ":":
+          return font.colon;
+        case ";":
+          return font.semicolon;
+        case "<":
+          return font.less;
+        case "=":
+          return font.equal;
+        case ">":
+          return font.greater;
+        case "?":
+          return font.question;
+        case "@":
+          return font.at;
+        case "[":
+          return font.bracketleft;
+        case "\\":
+          return font.backslash;
+        case "]":
+          return font.bracketright;
+        case "^":
+          return font.asciicircum;
+        case "`":
+          return font.grave;
+        case "{":
+          return font.braceleft;
+        case "|":
+          return font.bar;
+        case "}":
+          return font.braceright;
+        case "~":
+          return font.asciitilde;
+          // If the character is not 'special', access it by object reference
+        default:
+          return font[chr];
+        }
+      } catch(e) {
+        Processing.debug(e);
+      }
+    };
+
+    // Print some text to the Canvas
+    p.text = function text() {
+      if (typeof arguments[0] !== 'undefined') {
+        var str = arguments[0],
+          x, y, z, pos, width, height;
+
+        if (typeof str === 'number' && (str + "").indexOf('.') >= 0) {
+          // Make sure .15 rounds to .1, but .151 rounds to .2.
+          if ((str * 1000) - Math.floor(str * 1000) === 0.5) {
+            str = str - 0.0001;
+          }
+          str = str.toFixed(3);
+        }
+
+        str = str.toString();
+
+        if (arguments.length === 1) { // for text( str )
+          p.text(str, lastTextPos[0], lastTextPos[1]);
+        } else if (arguments.length === 3) { // for text( str, x, y)
+          text(str, arguments[1], arguments[2], 0);
+        } else if (arguments.length === 4) { // for text( str, x, y, z)
+          x = arguments[1];
+          y = arguments[2];
+          z = arguments[3];
+
+          do {
+            pos = str.indexOf("\n");
+            if (pos !== -1) {
+              if (pos !== 0) {
+                text(str.substring(0, pos));
+              }
+              y += curTextSize;
+              str = str.substring(pos + 1, str.length);
+            }
+          } while (pos !== -1);
+
+          // TODO: handle case for 3d text
+          if (p.use3DContext) {}
+
+          width = 0;
+
+          // If the font is a standard Canvas font...
+          if (!curTextFont.glyph) {
+            if (str && (curContext.fillText || curContext.mozDrawText)) {
+              curContext.save();
+              curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+
+              if (curContext.fillText) {
+                curContext.fillText(str, x, y);
+                width = curContext.measureText(str).width;
+              } else if (curContext.mozDrawText) {
+                curContext.translate(x, y);
+                curContext.mozDrawText(str);
+                width = curContext.mozMeasureText(str);
+              }
+              curContext.restore();
+            }
+          } else {
+            // If the font is a Batik SVG font...
+            var font = p.glyphTable[curTextFont.name];
+            curContext.save();
+            curContext.translate(x, y + curTextSize);
+
+            var upem = font.units_per_em,
+              newScale = 1 / upem * curTextSize;
+
+            curContext.scale(newScale, newScale);
+
+            var len = str.length;
+
+            for (var i = 0; i < len; i++) {
+              // Test character against glyph table
+              try {
+                p.glyphLook(font, str[i]).draw();
+              } catch(e) {
+                Processing.debug(e);
+              }
+            }
+            curContext.restore();
+          }
+
+          // TODO: Handle case for 3d text
+          if (p.use3DContext) {}
+
+          lastTextPos[0] = x + width;
+          lastTextPos[1] = y;
+          lastTextPos[2] = z;
+        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
+          text(str, arguments[1], arguments[2], arguments[3], arguments[4], 0);
+        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+          x = arguments[1];
+          y = arguments[2];
+          width = arguments[3];
+          height = arguments[4];
+          z = arguments[5];
+
+          if (str.length > 0) {
+            if (curTextSize > height) {
+              return;
+            }
+            var spaceMark = -1;
+            var start = 0;
+            var lineWidth = 0;
+            var letterWidth = 0;
+            var textboxWidth = width;
+
+            lastTextPos[0] = x;
+            lastTextPos[1] = y - 0.4 * curTextSize;
+
+            curContext.font = curTextSize + "px " + curTextFont.name;
+
+            for (var j = 0; j < str.length; j++) {
+              if (curContext.fillText) {
+                letterWidth = curContext.measureText(str[j]).width;
+              } else if (curContext.mozDrawText) {
+                letterWidth = curContext.mozMeasureText(str[j]);
+              }
+              if (str[j] !== "\n" && (str[j] === " " || (str[j - 1] !== " " && str[j + 1] === " ") || lineWidth + 2 * letterWidth < textboxWidth)) { // check a line of text
+                if (str[j] === " ") {
+                  spaceMark = j;
+                }
+                lineWidth += letterWidth;
+              } else { // draw a line of text
+                if (start === spaceMark + 1) { // in case a whole line without a space
+                  spaceMark = j;
+                }
+
+                lastTextPos[0] = x;
+                lastTextPos[1] = lastTextPos[1] + curTextSize;
+                if (str[j] === "\n") {
+                  text(str.substring(start, j));
+                  start = j + 1;
+                } else {
+                  text(str.substring(start, spaceMark + 1));
+                  start = spaceMark + 1;
+                }
+
+                lineWidth = 0;
+                if (lastTextPos[1] + 2 * curTextSize > y + height + 0.6 * curTextSize) { // stop if no enough space for one more line draw
+                  return;
+                }
+                j = start - 1;
+              }
+            }
+
+            if (start !== str.length) { // draw the last line
+              lastTextPos[0] = x;
+              lastTextPos[1] = lastTextPos[1] + curTextSize;
+              for (; start < str.length; start++) {
+                text(str[start]);
+              }
+            }
+
+          } // end str != ""
+        } // end arguments.length == 6
+      }
+    };
+
+    // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
+    p.loadGlyphs = function loadGlyph(url) {
+      var x, y, cx, cy, nx, ny, d, a, lastCom, lenC, horiz_adv_x, getXY = '[0-9\\-]+',
+        path;
+
+      // Return arrays of SVG commands and coords
+      // get this to use p.matchAll() - will need to work around the lack of null return
+      var regex = function regex(needle, hay) {
+        var i = 0,
+          results = [],
+          latest, regexp = new RegExp(needle, "g");
+        latest = results[i] = regexp.exec(hay);
+        while (latest) {
+          i++;
+          latest = results[i] = regexp.exec(hay);
+        }
+        return results;
+      };
+
+      var buildPath = function buildPath(d) {
+        var c = regex("[A-Za-z][0-9\\- ]+|Z", d);
+
+        // Begin storing path object 
+        path = "var path={draw:function(){curContext.beginPath();curContext.save();";
+
+        x = 0;
+        y = 0;
+        cx = 0;
+        cy = 0;
+        nx = 0;
+        ny = 0;
+        d = 0;
+        a = 0;
+        lastCom = "";
+        lenC = c.length - 1;
+
+        // Loop through SVG commands translating to canvas eqivs functions in path object
+        for (var j = 0; j < lenC; j++) {
+          var com = c[j][0],
+            xy = regex(getXY, com);
+
+          switch (com[0]) {
+          case "M":
+            //curContext.moveTo(x,-y);
+            x = parseFloat(xy[0][0]);
+            y = parseFloat(xy[1][0]);
+            path += "curContext.moveTo(" + x + "," + (-y) + ");";
+            break;
+
+          case "L":
+            //curContext.lineTo(x,-y);
+            x = parseFloat(xy[0][0]);
+            y = parseFloat(xy[1][0]);
+            path += "curContext.lineTo(" + x + "," + (-y) + ");";
+            break;
+
+          case "H":
+            //curContext.lineTo(x,-y)
+            x = parseFloat(xy[0][0]);
+            path += "curContext.lineTo(" + x + "," + (-y) + ");";
+            break;
+
+          case "V":
+            //curContext.lineTo(x,-y);
+            y = parseFloat(xy[0][0]);
+            path += "curContext.lineTo(" + x + "," + (-y) + ");";
+            break;
+
+          case "T":
+            //curContext.quadraticCurveTo(cx,-cy,nx,-ny);
+            nx = parseFloat(xy[0][0]);
+            ny = parseFloat(xy[1][0]);
+
+            if (lastCom === "Q" || lastCom === "T") {
+              d = Math.sqrt(Math.pow(x - cx, 2) + Math.pow(cy - y, 2));
+              a = Math.PI + Math.atan2(cx - x, cy - y);
+              cx = x + (Math.sin(a) * (d));
+              cy = y + (Math.cos(a) * (d));
+            } else {
+              cx = x;
+              cy = y;
+            }
+
+            path += "curContext.quadraticCurveTo(" + cx + "," + (-cy) + "," + nx + "," + (-ny) + ");";
+            x = nx;
+            y = ny;
+            break;
+
+          case "Q":
+            //curContext.quadraticCurveTo(cx,-cy,nx,-ny);
+            cx = parseFloat(xy[0][0]);
+            cy = parseFloat(xy[1][0]);
+            nx = parseFloat(xy[2][0]);
+            ny = parseFloat(xy[3][0]);
+            path += "curContext.quadraticCurveTo(" + cx + "," + (-cy) + "," + nx + "," + (-ny) + ");";
+            x = nx;
+            y = ny;
+            break;
+
+          case "Z":
+            //curContext.closePath();
+            path += "curContext.closePath();";
+            break;
+          }
+          lastCom = com[0];
+        }
+
+        path += "doStroke?curContext.stroke():0;";
+        path += "doFill?curContext.fill():0;";
+        path += "curContext.restore();";
+        path += "curContext.translate(" + horiz_adv_x + ",0);";
+        path += "}}";
+
+        return path;
+      };
+
+
+      // Parse SVG font-file into block of Canvas commands
+      var parseSVGFont = function parseSVGFontse(svg) {
+        // Store font attributes
+        var font = svg.getElementsByTagName("font");
+        p.glyphTable[url].horiz_adv_x = font[0].getAttribute("horiz-adv-x");
+
+        var font_face = svg.getElementsByTagName("font-face")[0];
+        p.glyphTable[url].units_per_em = parseFloat(font_face.getAttribute("units-per-em"));
+        p.glyphTable[url].ascent = parseFloat(font_face.getAttribute("ascent"));
+        p.glyphTable[url].descent = parseFloat(font_face.getAttribute("descent"));
+
+        var glyph = svg.getElementsByTagName("glyph"),
+          len = glyph.length;
+
+        // Loop through each glyph in the SVG
+        for (var i = 0; i < len; i++) {
+          // Store attributes for this glyph
+          var unicode = glyph[i].getAttribute("unicode");
+          var name = glyph[i].getAttribute("glyph-name");
+          horiz_adv_x = glyph[i].getAttribute("horiz-adv-x");
+          if (horiz_adv_x === null) {
+            horiz_adv_x = p.glyphTable[url].horiz_adv_x;
+          }
+          d = glyph[i].getAttribute("d");
+          // Split path commands in glpyh 
+          if (d !== undefined) {
+            path = buildPath(d);
+            eval(path);
+            // Store glyph data to table object
+            p.glyphTable[url][name] = {
+              name: name,
+              unicode: unicode,
+              horiz_adv_x: horiz_adv_x,
+              draw: path.draw
+            };
+          }
+        } // finished adding glyphs to table            
+      };
+
+      // Load and parse Batik SVG font as XML into a Processing Glyph object
+      var loadXML = function loadXML() {
+        var xmlDoc;
+
+        try {
+          xmlDoc = document.implementation.createDocument("", "", null);
+        }
+        catch(e_fx_op) {
+          Processing.debug(e_fx_op.message);
+          return;
+        }
+
+        try {
+          xmlDoc.async = false;
+          xmlDoc.load(url);
+          parseSVGFont(xmlDoc.getElementsByTagName("svg")[0]);
+        }
+        catch(e_sf_ch) {
+          // Google Chrome, Safari etc.
+          Processing.debug(e_sf_ch);
+          try {
+            var xmlhttp = new window.XMLHttpRequest();
+            xmlhttp.open("GET", url, false);
+            xmlhttp.send(null);
+            parseSVGFont(xmlhttp.responseXML.documentElement);
+          }
+          catch(e) {
+            Processing.debug(e_sf_ch);
+          }
+        }
+      };
+
+      // Create a new object in glyphTable to store this font
+      p.glyphTable[url] = {};
+
+      // Begin loading the Batik SVG font... 
+      loadXML(url);
+
+      // Return the loaded font for attribute grabbing
+      return p.glyphTable[url];
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Class methods
+    ////////////////////////////////////////////////////////////////////////////
+    p.extendClass = function extendClass(obj, args, fn) {
+      if (arguments.length === 3) {
+        fn.apply(obj, args);
+      } else {
+        args.call(obj);
+      }
+    };
+
+    p.addMethod = function addMethod(object, name, fn) {
+      if (object[name]) {
+        var args = fn.length,
+          oldfn = object[name];
+
+        object[name] = function() {
+          if (arguments.length === args) {
+            return fn.apply(this, arguments);
+          } else {
+            return oldfn.apply(this, arguments);
+          }
+        };
+      } else {
+        object[name] = fn;
+      }
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Set up environment
+    ////////////////////////////////////////////////////////////////////////////
+    p.init = function init(code) {
+      if (code) {
+        var parsedCode = Processing.parse(code, p);
+
+        if (!p.use3DContext) {
+          // Setup default 2d canvas context. 
+          curContext = curElement.getContext('2d');
+
+          modelView = new PMatrix2D();
+
+          // Canvas has trouble rendering single pixel stuff on whole-pixel
+          // counts, so we slightly offset it (this is super lame).
+          curContext.translate(0.5, 0.5);
+
+          curContext.lineCap = 'round';
+
+          // Set default stroke and fill color
+          p.stroke(0);
+          p.fill(255);
+          p.noSmooth();
+          p.disableContextMenu();
+        }
+
+        // Step through the libraries that were attached at doc load...
+        for (var i in Processing.lib) {
+          if (Processing.lib) {
+            // Init the libraries in the context of this p_instance
+            Processing.lib[i].call(p);
+          }
+        }
+
+        var executeSketch = function(processing) {
+          with(processing) {
+            // Don't start until all specified images in the cache are preloaded
+            if (!pjs.imageCache.pending) {
+              eval(parsedCode);
+
+              // Run void setup()
+              if (setup) {
+                inSetup = true;
+                setup();
+              }
+
+              inSetup = false;
+
+              if (draw) {
+                if (!doLoop) {
+                  redraw();
+                } else {
+                  loop();
+                }
+              }
+            } else {
+              window.setTimeout(executeSketch, 10, processing);
+            }
+          }
+        };
+
+        // The parser adds custom methods to the processing context
+        // this renames p to processing so these methods will run
+        executeSketch(p);
+      }
+
+      //////////////////////////////////////////////////////////////////////////
+      // Event handling
+      //////////////////////////////////////////////////////////////////////////
+
+      function attach(elem, type, fn) {
+        if (elem.addEventListener) {
+          elem.addEventListener(type, fn, false);
+        } else {
+          elem.attachEvent("on" + type, fn);
+        }
+      }
+
+      attach(curElement, "mousemove", function(e) {
+        var element = curElement,
+          offsetX = 0,
+          offsetY = 0;
+
+        p.pmouseX = p.mouseX;
+        p.pmouseY = p.mouseY;
+
+        if (element.offsetParent) {
+          do {
+            offsetX += element.offsetLeft;
+            offsetY += element.offsetTop;
+          } while (element = element.offsetParent);
+        }
+
+        // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
+        // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
+        p.mouseX = e.pageX - offsetX;
+        p.mouseY = e.pageY - offsetY;
+
+        p.cursor(curCursor);
+
+        if (p.mouseMoved && !mousePressed) {
+          p.mouseMoved();
+        }
+        if (mousePressed && p.mouseDragged) {
+          p.mouseDragged();
+          p.mouseDragging = true;
+        }
+      });
+
+      attach(curElement, "mouseout", function(e) {
+        document.body.style.cursor = oldCursor;
+      });
+
+      attach(curElement, "mousedown", function(e) {
+        mousePressed = true;
+        p.mouseDragging = false;
+        switch (e.which) {
+        case 1:
+          p.mouseButton = p.LEFT;
+          break;
+        case 2:
+          p.mouseButton = p.CENTER;
+          break;
+        case 3:
+          p.mouseButton = p.RIGHT;
+          break;
+        }
+        p.mouseDown = true;
+        if (typeof p.mousePressed === "function") {
+          p.mousePressed();
+        } else {
+          p.mousePressed = true;
+        }
+      });
+
+      attach(curElement, "mouseup", function(e) {
+        mousePressed = false;
+        if (p.mouseClicked && !p.mouseDragging) {
+          p.mouseClicked();
+        }
+        if (typeof p.mousePressed !== "function") {
+          p.mousePressed = false;
+        }
+        if (p.mouseReleased) {
+          p.mouseReleased();
+        }
+      });
+
+      attach(document, /Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) ? "DOMMouseScroll" : "mousewheel", function(e) {
+        var delta = 0;
+
+        if (e.wheelDelta) {
+          delta = e.wheelDelta / 120;
+          if (window.opera) {
+            delta = -delta;
+          }
+        } else if (e.detail) {
+          delta = -e.detail / 3;
+        }
+
+        p.mouseScroll = delta;
+
+        if (delta && typeof p.mouseScrolled === 'function') {
+          p.mouseScrolled();
+        }
+      });
+
+      attach(document, "keydown", function(e) {
+        keyPressed = true;
+        p.keyCode = null;
+        p.key = e.keyCode;
+
+        // Letters
+        if (e.keyCode >= 65 && e.keyCode <= 90) { // A-Z
+          // Keys return ASCII for upcased letters.
+          // Convert to downcase if shiftKey is not pressed.
+          if (!e.shiftKey) {
+            p.key += 32;
+          }
+        }
+
+        // Numbers and their shift-symbols 
+        else if (e.keyCode >= 48 && e.keyCode <= 57) { // 0-9
+          if (e.shiftKey) {
+            switch (e.keyCode) {
+            case 49:
+              p.key = 33;
+              break; // !
+            case 50:
+              p.key = 64;
+              break; // @
+            case 51:
+              p.key = 35;
+              break; // #
+            case 52:
+              p.key = 36;
+              break; // $
+            case 53:
+              p.key = 37;
+              break; // %
+            case 54:
+              p.key = 94;
+              break; // ^
+            case 55:
+              p.key = 38;
+              break; // &
+            case 56:
+              p.key = 42;
+              break; // *
+            case 57:
+              p.key = 40;
+              break; // (
+            case 48:
+              p.key = 41;
+              break; // )
+            }
+          }
+        }
+
+        // Coded keys
+        else if (codedKeys.indexOf(e.keyCode) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
+          p.key = p.CODED;
+          p.keyCode = e.keyCode;
+        }
+
+        // Symbols and their shift-symbols
+        else {
+          if (e.shiftKey) {
+            switch (e.keyCode) {
+            case 107:
+              p.key = 43;
+              break; // +
+            case 219:
+              p.key = 123;
+              break; // { 
+            case 221:
+              p.key = 125;
+              break; // } 
+            case 222:
+              p.key = 34;
+              break; // "
+            }
+          } else {
+            switch (e.keyCode) {
+            case 188:
+              p.key = 44;
+              break; // , 
+            case 109:
+              p.key = 45;
+              break; // - 
+            case 190:
+              p.key = 46;
+              break; // . 
+            case 191:
+              p.key = 47;
+              break; // / 
+            case 192:
+              p.key = 96;
+              break; // ~ 
+            case 219:
+              p.key = 91;
+              break; // [ 
+            case 220:
+              p.key = 92;
+              break; // \
+            case 221:
+              p.key = 93;
+              break; // ] 
+            case 222:
+              p.key = 39;
+              break; // '
+            }
+          }
+        }
+
+        if (typeof p.keyPressed === "function") {
+          p.keyPressed();
+        } else {
+          p.keyPressed = true;
+        }
+      });
+
+      attach(document, "keyup", function(e) {
+        keyPressed = false;
+        if (typeof p.keyPressed !== "function") {
+          p.keyPressed = false;
+        }
+        if (p.keyReleased) {
+          p.keyReleased();
+        }
+      });
+    };
+
+    return p;
+  };
+
+}());
