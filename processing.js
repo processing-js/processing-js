@@ -900,10 +900,10 @@
       curTightness = 0,
       curveDetail = 20,
       curveInited = false,
-      opacityRange = 255,
-      redRange = 255,
-      greenRange = 255,
-      blueRange = 255,
+      colorModeA = 255,
+      colorModeX = 255,
+      colorModeY = 255,
+      colorModeZ = 255,
       pathOpen = false,
       mousePressed = false,
       mouseDragging = false,
@@ -2470,12 +2470,12 @@
           g = rgb[1];
           b = rgb[2];
         } else {
-          r = Math.round(255 * (aValue1 / redRange));
-          g = Math.round(255 * (aValue2 / greenRange));
-          b = Math.round(255 * (aValue3 / blueRange));
+          r = Math.round(255 * (aValue1 / colorModeX));
+          g = Math.round(255 * (aValue2 / colorModeY));
+          b = Math.round(255 * (aValue3 / colorModeZ));
         }
 
-        a = Math.round(255 * (aValue4 / opacityRange));
+        a = Math.round(255 * (aValue4 / colorModeA));
 
         // Limit values greater than 255 
         r = (r > 255) ? 255 : r;
@@ -2489,14 +2489,14 @@
       
       // 3 arguments: (R, G, B) or (H, S, B)
       else if (aValue1 != null && aValue2 != null && aValue3 != null) {
-        aColor = p.color(aValue1, aValue2, aValue3, opacityRange);
+        aColor = p.color(aValue1, aValue2, aValue3, colorModeA);
       } 
       
       // 2 arguments: (Color, A) or (Grayscale, A)
       else if (aValue1 != null && aValue2 != null) {
         // Color int and alpha
         if (aValue1 & p.ALPHA_MASK) { 
-          a = Math.round(255 * (aValue2 / opacityRange));
+          a = Math.round(255 * (aValue2 / colorModeA));
           a = (a > 255) ? 255 : a;
           
           aColor = aValue1 - (aValue1 & p.ALPHA_MASK) + ((a << 24) & p.ALPHA_MASK);
@@ -2505,7 +2505,7 @@
         else {
           switch(curColorMode) {
             case p.RGB: aColor = p.color(aValue1, aValue1, aValue1, aValue2); break;
-            case p.HSB: aColor = p.color(0, 0, (aValue1 / redRange) * blueRange, aValue2); break;
+            case p.HSB: aColor = p.color(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2); break;
           }
         }
       } 
@@ -2513,10 +2513,10 @@
       // 1 argument: (Grayscale) or (Color)
       else if (typeof aValue1 === "number") {
         // Grayscale
-        if (aValue1 <= redRange && aValue1 >= 0) {
+        if (aValue1 <= colorModeX && aValue1 >= 0) {
           switch(curColorMode) {
-            case p.RGB: aColor = p.color(aValue1, aValue1, aValue1, opacityRange); break;
-            case p.HSB: aColor = p.color(0, 0, (aValue1 / redRange) * blueRange, opacityRange); break;
+            case p.RGB: aColor = p.color(aValue1, aValue1, aValue1, colorModeA); break;
+            case p.HSB: aColor = p.color(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA); break;
           }
         }
         // Color int
@@ -2527,7 +2527,7 @@
       
       // Default
       else {
-        aColor = p.color(redRange, greenRange, blueRange, opacityRange);
+        aColor = p.color(colorModeX, colorModeY, colorModeZ, colorModeA);
       }
 
       return aColor;
@@ -2556,13 +2556,13 @@
     // HSB conversion function from Mootools, MIT Licensed
     p.color.toRGB = function(h, s, b) {
       // Limit values greater than range 
-      h = (h > redRange)   ? redRange   : h;
-      s = (s > greenRange) ? greenRange : s;
-      b = (b > blueRange)  ? blueRange  : b;
+      h = (h > colorModeX)   ? colorModeX   : h;
+      s = (s > colorModeY) ? colorModeY : s;
+      b = (b > colorModeZ)  ? colorModeZ  : b;
 
-      h = (h / redRange) * 360;
-      s = (s / greenRange) * 100;
-      b = (b / blueRange) * 100;
+      h = (h / colorModeX) * 360;
+      s = (s / colorModeY) * 100;
+      b = (b / colorModeZ) * 100;
 
       var br = Math.round(b / 100 * 255);
 
@@ -2600,19 +2600,19 @@
     };
 
     p.red = function(aColor) {
-      return ((aColor & p.RED_MASK) >>> 16) / 255 * redRange;
+      return ((aColor & p.RED_MASK) >>> 16) / 255 * colorModeX;
     };
 
     p.green = function(aColor) {
-      return ((aColor & p.GREEN_MASK) >>> 8) / 255 * greenRange;
+      return ((aColor & p.GREEN_MASK) >>> 8) / 255 * colorModeY;
     };
 
     p.blue = function(aColor) {
-      return (aColor & p.BLUE_MASK) / 255 * blueRange;
+      return (aColor & p.BLUE_MASK) / 255 * colorModeZ;
     };
 
     p.alpha = function(aColor) {
-      return ((aColor & p.ALPHA_MASK) >>> 24) / 255 * opacityRange;
+      return ((aColor & p.ALPHA_MASK) >>> 24) / 255 * colorModeA;
     };
 
     p.lerpColor = function lerpColor(c1, c2, amt) {
@@ -2621,14 +2621,14 @@
       var r1 = (colorBits1 & p.RED_MASK) >>> 16;
       var g1 = (colorBits1 & p.GREEN_MASK) >>> 8;
       var b1 = (colorBits1 & p.BLUE_MASK);
-      var a1 = ((colorBits1 & p.ALPHA_MASK) >>> 24) / opacityRange;
+      var a1 = ((colorBits1 & p.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Get RGBA values for Color 2 to floats
       var colorBits2 = p.color(c2);
       var r2 = (colorBits2 & p.RED_MASK) >>> 16;
       var g2 = (colorBits2 & p.GREEN_MASK) >>> 8;
       var b2 = (colorBits2 & p.BLUE_MASK);
-      var a2 = ((colorBits2 & p.ALPHA_MASK) >>> 24) / opacityRange;
+      var a2 = ((colorBits2 & p.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
       var r = parseInt(p.lerp(r1, r2, amt), 10);
@@ -2643,7 +2643,7 @@
     p.defaultColor = function(aValue1, aValue2, aValue3) {
       var tmpColorMode = curColorMode;
       curColorMode = p.RGB;
-      var c = p.color(aValue1 / 255 * redRange, aValue2 / 255 * greenRange, aValue3 / 255 * blueRange);
+      var c = p.color(aValue1 / 255 * colorModeX, aValue2 / 255 * colorModeY, aValue3 / 255 * colorModeZ);
       curColorMode = tmpColorMode;
       return c;
     };
@@ -2651,12 +2651,12 @@
     p.colorMode = function colorMode(mode, range1, range2, range3, range4) {
       curColorMode = mode;
       if (arguments.length >= 4) {
-        redRange = range1;
-        greenRange = range2;
-        blueRange = range3;
+        colorModeX = range1;
+        colorModeY = range2;
+        colorModeZ = range3;
       }
       if (arguments.length === 5) {
-        opacityRange = range4;
+        colorModeA = range4;
       }
       if (arguments.length === 2) {
         p.colorMode(mode, range1, range1, range1, range1);
@@ -2811,10 +2811,10 @@
         'curTint': curTint,
         'curRectMode': curRectMode,
         'curColorMode': curColorMode,
-        'redRange': redRange,
-        'blueRange': blueRange,
-        'greenRange': greenRange,
-        'opacityRange': opacityRange,
+        'colorModeX': colorModeX,
+        'colorModeZ': colorModeZ,
+        'colorModeY': colorModeY,
+        'colorModeA': colorModeA,
         'curTextFont': curTextFont,
         'curTextSize': curTextSize
       };
@@ -2835,10 +2835,10 @@
         curTint = oldState.curTint;
         curRectMode = oldState.curRectmode;
         curColorMode = oldState.curColorMode;
-        redRange = oldState.redRange;
-        blueRange = oldState.blueRange;
-        greenRange = oldState.greenRange;
-        opacityRange = oldState.opacityRange;
+        colorModeX = oldState.colorModeX;
+        colorModeZ = oldState.colorModeZ;
+        colorModeY = oldState.colorModeY;
+        colorModeA = oldState.colorModeA;
         curTextFont = oldState.curTextFont;
         curTextSize = oldState.curTextSize;
       } else {
@@ -6200,10 +6200,10 @@
 
     p.tint = function tint() {
       var tintColor = p.color.apply(this, arguments);
-      var r = p.red(tintColor) / redRange;
-      var g = p.green(tintColor) / greenRange;
-      var b = p.blue(tintColor) / blueRange;
-      var a = p.alpha(tintColor) / opacityRange;
+      var r = p.red(tintColor) / colorModeX;
+      var g = p.green(tintColor) / colorModeY;
+      var b = p.blue(tintColor) / colorModeZ;
+      var a = p.alpha(tintColor) / colorModeA;
 
       curTint = function(obj) {
         var data = obj.data,
