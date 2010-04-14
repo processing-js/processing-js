@@ -7132,7 +7132,6 @@
         };
       } else {
         object[name] = fn;
-		return fn;
       }
     };
 
