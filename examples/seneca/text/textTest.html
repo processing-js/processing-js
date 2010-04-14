@@ -2,8 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"> 
 <head runat="server"> 
 	<title>Processing.js test of text() (1)</title> 
-	<script type="text/javascript" src="../../../processing.js"></script> 
-	<script type="text/javascript" src="../../init.js"></script> 
+	<script type="text/javascript" src="processing.js"></script> 
+	<script type="text/javascript" src="init.js"></script> 
 	<style type="text/css"> 
 	html, body
 	{
@@ -139,60 +139,7 @@ text(0, out, 280);
 	</script><br /> 
 	<b>Test written by <a href="http://zenit.senecac.on.ca/wiki/index.php/User:Mlam19">Matthew Lam</a> 
 	<pre style="border-style: dotted; border-width: 1px; background-color: #FFFFFF; padding: 2px; margin: 5px"> 
-size(200,300);
-background(50);
- 
-int input=0;
-int expect=120;
-int res=250;
-int out=300;
- 
-text("String 10", input, 20);
-text("Expected: 10", expect, 20);
-text("Result:", res, 20);
-text("10", out, 20);
- 
-text("String Joey", input, 40);
-text("Expected: Joey", expect, 40);
-text("Result:", res, 40);
-text("Joey", out, 40);
- 
-text("str(2.71828)", input, 60);
-text("Expected: 2.71828", expect, 60);
-text("Result:", res, 60);
-text(str(2.71828), out, 60);
- 
-text("Float 2.71849", input, 100);
-text("Expected: 2.718", expect, 100);
-text("Result:", res, 100);
-text(2.71849, out, 100);
-text("Float 2.7185", input, 120);
-text("Expected: 2.718", expect, 120);
-text("Result:", res, 120);
-text(2.7185, out, 120);
-text("Float 2.71851", input, 140);
-text("Expected: 2.719", expect, 140);
-text("Result:", res, 140);
-text(2.71851, out, 140);
-text("Float 2.7186", input, 160);
-text("Expected: 2.719", expect, 160);
-text("Result:", res, 160);
-text(2.7186, out, 160);
- 
-text("Float 2.7", input, 200);
-text("Expected: 2.700", expect, 200);
-text("Result:", res, 200);
-text(2.7, out, 200);
-text("Int 10", input, 220);
-text("Expected: 10", expect, 220);
-text("Result:", res, 220);
-text(10, out, 220);
- 
-byte b = -128;
-text("Byte -128", input, 260);
-text("Expected: -128", expect, 260);
-text("Result:", res, 260);
-text(b, out, 260);
+
 	</pre> 
 	<br /> 
 </body> 
