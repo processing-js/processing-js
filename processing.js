@@ -177,6 +177,8 @@
 
   var lineBuffer;
 
+  var fillBuffer;
+
   var pointBuffer;
 
   // Vertex shader for points and lines
@@ -957,7 +959,7 @@
       cameraFar = cameraZ * 10,
       cameraAspect = curElement.width / curElement.height;
 
-    var firstX, firstY, secondX, secondY, prevX, prevY;
+    var vertArray = new Array();
 
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
@@ -4156,6 +4158,9 @@
           lineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
 
+          fillBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, fillBuffer);
+
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
@@ -5048,8 +5053,7 @@
 
         if (lineWidth > 0 && doStroke) {
           // this will be replaced with the new bit shifting color code
-          var c = strokeStyle.slice(5, -1).split(",");
-          uniformf(programObject2D, "color", [c[0] / 255, c[1] / 255, c[2] / 255, c[3]]);
+          uniformf(programObject2D, "color", strokeStyle);
 
           vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
           curContext.drawArrays(curContext.POINTS, 0, 1);
