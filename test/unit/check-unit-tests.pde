@@ -22,3 +22,6 @@ _checkNotEqual(int4, int6);
 _checkIsNaN(NaN);
 _checkIsNull(null);
 _checkIsNull(undefined); // null and undefined both return true
+
+_checkThrows(function() { throw "Exception"; });
+_checkThrows(function() { return; }, false);

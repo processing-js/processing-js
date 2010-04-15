@@ -1,0 +1,7 @@
+﻿/* @pjs preload="country.jpg,lake.jpg"; */
+size(472,266);
+PImage img = loadImage("country.jpg");
+PImage img2 = loadImage("lake.jpg");
+// blend corner of lake onto country
+img.blend(img2, 272, 138, 200, 128, 272, 138, 200, 128, HARD_LIGHT);
+image(img, 0, 0);

@@ -1,3 +1,53 @@
+April 8, 2010 - Release 0.8.0
+
+  * Added spotLight
+  * Added createImage
+  * Added PImage blend prototype
+  * Added PImage resize prototype
+  * Added PImage copy prototype
+  * Added @pjs directive for moz-opaque
+  * Added copy
+  * Added noTint
+  * Added shininess
+  * Added blend
+  * Added lightSpecular
+  * Added specular
+  * Added ambient
+  * Added emissive
+  * Added PMatrix2DStack, and associated methods
+  * Added lights
+  * Added lightFalloff
+  * Added printMatrix
+  * Fixed canvas size change issue
+  * Fixed image clipping logic
+  * Fixed cursor to use PImage
+  * Fixed performance and accuracy of color
+  * Fixed smooth and noSmooth
+  * Fixed default framerate to match Processing (60fps)
+  * Fixed Math functions for performance
+  * Fixed tint
+  * Fixed parser to better handle custom classes (still known issues)
+  * Fixed array.remove
+  * Fixed style, linting issues in processing.js source
+  * Fixed OOM parser error in matchAll
+  * Fixed release target to auto-write version numbers in release files
+  * Fixed background to throw if image size is not same as canvas
+  * Fixed Boolean array bug
+  * Fixed pmouseX and pmouseY
+  * Fixed mouse offset bug when canvas in relative html elements
+  * Fixed p.color.toGLArray
+  * Fixed typo in mouseScrolled
+  * Fixed p.set to support PImage and new color code
+  * Fixed year
+  * Fixed parser bug with Windows newlines
+  * Fixed stroke and fill for performance
+  * Fixed drawing of transparent pixels to canvas
+  * Converted visual tests to unit and/or ref tests
+  * Updated _checkThrows for false case
+  * Updated ref tests to use better initial values, added calibration tests
+  * Removed dead code
+  * Added manual test tracking system
+
 March 25, 2010 - Release 0.7.1
 
   * Fixed mouseScrolled event failure
