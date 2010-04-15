@@ -126,8 +126,6 @@ function PJSBox($jq) {
 					p = Processing(canvas,codeObjText);
 					$jq("#pjsbox-canvas canvas").bind("mousemove.shim",function(e){
 						cpos = $jq("#pjsbox-canvas canvas").offset();
-						p.mouseX = p.mouseX-cpos.left;
-						p.mouseY = p.mouseY-cpos.top;
 					});
 				} catch(e) {
           tinylogLite.log("ERROR Initializing p. "+ e);
