@@ -5068,6 +5068,40 @@
       curvePoints = [];
     };
 
+    p.vertex = function vertex() {
+      var vert = [];
+      if(arguments.length === 4){ //x, y, u, v
+        vert[0] = arguments[0];
+        vert[1] = arguments[1];
+        vert[2] = 0;
+        vert[3] = arguments[2];
+        vert[4] = arguments[3];
+      }
+      else{ // x, y, z, u, v
+        vert[0] = arguments[0];
+        vert[1] = arguments[1];
+        vert[2] = arguments[2] || 0;
+        vert[3] = arguments[3] || 0;
+        vert[4] = arguments[4] || 0;
+      }
+      // fill rgba
+      vert[5] = fillStyle[0];
+      vert[6] = fillStyle[1];
+      vert[7] = fillStyle[2];
+      vert[8] = fillStyle[3];
+      // stroke rgba
+      vert[9] = strokeStyle[0];
+      vert[10] = strokeStyle[1];
+      vert[11] = strokeStyle[2];
+      vert[12] = strokeStyle[3];
+      //normals
+      vert[13] = normalX;
+      vert[14] = normalY;
+      vert[15] = normalZ;
+
+      vertArray.push(vert);
+    };
+
     p.endShape = function endShape(close) {
       if (curShapeCount !== 0) {
         if (close && doFill) {
@@ -5096,142 +5130,6 @@
         curContext.closePath();
         curShapeCount = 0;
         pathOpen = false;
-      }
-    };
-
-    p.vertex = function vertex(x, y, x2, y2, x3, y3) {
-      if (curShapeCount === 0 && curShape !== p.POINTS) {
-        pathOpen = true;
-        curContext.beginPath();
-        curContext.moveTo(x, y);
-        firstX = x;
-        firstY = y;
-      } else {
-        if (curShape === p.POINTS) {
-          p.point(x, y);
-        } else if (arguments.length === 2) {
-          if (curShape !== p.QUAD_STRIP || curShapeCount !== 2) {
-            curContext.lineTo(x, y);
-          }
-
-          if (curShape === p.TRIANGLE_STRIP) {
-            if (curShapeCount === 2) {
-              // finish shape
-              p.endShape(p.CLOSE);
-              pathOpen = true;
-              curContext.beginPath();
-
-              // redraw last line to start next shape
-              curContext.moveTo(prevX, prevY);
-              curContext.lineTo(x, y);
-              curShapeCount = 1;
-            }
-
-            firstX = prevX;
-            firstY = prevY;
-          }
-
-          if (curShape === p.TRIANGLE_FAN && curShapeCount === 2) {
-            // finish shape
-            p.endShape(p.CLOSE);
-            pathOpen = true;
-            curContext.beginPath();
-
-            // redraw last line to start next shape
-            curContext.moveTo(firstX, firstY);
-            curContext.lineTo(x, y);
-            curShapeCount = 1;
-          }
-
-          if (curShape === p.QUAD_STRIP && curShapeCount === 3) {
-            // finish shape
-            curContext.lineTo(prevX, prevY);
-            p.endShape(p.CLOSE);
-            pathOpen = true;
-            curContext.beginPath();
-
-            // redraw lines to start next shape
-            curContext.moveTo(prevX, prevY);
-            curContext.lineTo(x, y);
-            curShapeCount = 1;
-          }
-
-          if (curShape === p.QUAD_STRIP) {
-            firstX = secondX;
-            firstY = secondY;
-            secondX = prevX;
-            secondY = prevY;
-          }
-        } else if (arguments.length === 3) {
-          if (curShape !== p.QUAD_STRIP || curShapeCount !== 2) {
-            curContext.lineTo(arguments[0], arguments[1], arguments[2]);
-          }
-
-          if (curShape === p.TRIANGLE_STRIP) {
-            if (curShapeCount === 2) {
-              // finish shape
-              p.endShape(p.CLOSE);
-              pathOpen = true;
-              curContext.beginPath();
-
-              // redraw last line to start next shape
-              curContext.moveTo(prevX, prevY);
-              curContext.lineTo(x, y);
-              curShapeCount = 1;
-            }
-
-            firstX = prevX;
-            firstY = prevY;
-          }
-
-          if (curShape === p.TRIANGLE_FAN && curShapeCount === 2) {
-            // finish shape
-            p.endShape(p.CLOSE);
-            pathOpen = true;
-            curContext.beginPath();
-
-            // redraw last line to start next shape
-            curContext.moveTo(firstX, firstY);
-            curContext.lineTo(x, y);
-            curShapeCount = 1;
-          }
-
-          if (curShape === p.QUAD_STRIP && curShapeCount === 3) {
-            // finish shape
-            curContext.lineTo(prevX, prevY);
-            p.endShape(p.CLOSE);
-            pathOpen = true;
-            curContext.beginPath();
-
-            // redraw lines to start next shape
-            curContext.moveTo(prevX, prevY);
-            curContext.lineTo(x, y);
-            curShapeCount = 1;
-          }
-
-          if (curShape === p.QUAD_STRIP) {
-            firstX = secondX;
-            firstY = secondY;
-            secondX = prevX;
-            secondY = prevY;
-          }
-        } else if (arguments.length === 4) {
-          if (curShapeCount > 1) {
-            curContext.moveTo(prevX, prevY);
-            curContext.quadraticCurveTo(firstX, firstY, x, y);
-            curShapeCount = 1;
-          }
-        } else if (arguments.length === 6) {
-          curContext.bezierCurveTo(x, y, x2, y2, x3, y3);
-        }
-      }
-
-      prevX = x;
-      prevY = y;
-      curShapeCount++;
-
-      if (curShape === p.LINES && curShapeCount === 2 || (curShape === p.TRIANGLES) && curShapeCount === 3 || (curShape === p.QUADS) && curShapeCount === 4) {
-        p.endShape(p.CLOSE);
       }
     };
 
