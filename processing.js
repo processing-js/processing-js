@@ -2988,7 +2988,6 @@
     };
      
 	p.function createInput(filename) {  
-      if (window.XMLHttpRequest){
         var fileRequest = new XMLHttpRequest();  
         fileRequest.open('GET', filename, false);  
         fileRequest.send(null);  
