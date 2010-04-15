@@ -5653,49 +5653,6 @@
     // TODO: function incomplete
     p.save = function save(file) {};
 
-    var buildImageObject = function(obj) {
-      var pixels = obj.data,
-        data = p.createImage(obj.width, obj.height),
-        len = pixels.length;
-
-      if (( // ECMAScript 5
-      Object.defineProperty && Object.getOwnPropertyDescriptor && !Object.getOwnPropertyDescriptor(data, "pixels").get) || ( // Legacy JavaScript
-      data.__defineGetter__ && data.__lookupGetter__ && !data.__lookupGetter__("pixels"))) {
-        var pixelsDone, pixelsGetter = function() {
-          if (pixelsDone) {
-            return pixelsDone;
-          }
-
-          pixelsDone = [];
-
-          for (var i = 0; i < len; i += 4) {
-            pixelsDone.push(
-            p.color(
-            pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]));
-          }
-
-          return pixelsDone;
-        };
-
-        if (Object.defineProperty) {
-          Object.defineProperty(data, "pixels", {
-            get: pixelsGetter
-          });
-        } else if (data.__defineGetter__) {
-          data.__defineGetter__("pixels", pixelsGetter);
-        }
-      } else {
-        data.pixels = [];
-
-        for (var i = 0; i < len; i += 4) {
-          data.pixels.push(
-          p.color(
-          pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]));
-        }
-      }
-      return data;
-    };
-
     var Temporary2DContext = document.createElement('canvas').getContext('2d');
 
     var PImage = function PImage(aWidth, aHeight, aFormat) {
@@ -6015,7 +5972,6 @@
     // Gets a 1-Dimensional pixel array from Canvas
     p.loadPixels = function() {
       p.pixels = p.get(0, 0, p.width, p.height).pixels;
-      //p.pixels = buildImageObject(curContext.getImageData(0, 0, p.width, p.height)).pixels;
     };
 
     // Draws a 1-Dimensional pixel array to Canvas
@@ -6087,43 +6043,6 @@
       }
       hasBackground = true;
     };
-
-    function getImage(img) {
-      if (typeof img === "string") {
-        return document.getElementById(img);
-      }
-
-      if (img.img) {
-        return img.img;
-      } else if (img.getContext || img.canvas) {
-        if (img.getContext('2d').createImageData) {
-          img.pixels = img.getContext('2d').createImageData(img.width, img.height);
-        } else {
-          img.pixels = img.getContext('2d').getImageData(0, 0, img.width, img.height);
-        }
-      }
-
-      for (var i = 0, l = img.pixels.length; i < l; i++) {
-        var pos = i * 4;
-        var c = img.pixels[i] || [0, 0, 0, 255];
-
-        img.data[pos + 0] = parseInt(c[0], 10);
-        img.data[pos + 1] = parseInt(c[1], 10);
-        img.data[pos + 2] = parseInt(c[2], 10);
-        img.data[pos + 3] = parseFloat(c[3]) * 100;
-      }
-
-      var canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      var context = canvas.getContext("2d");
-      context.putImageData(img.pixels, 0, 0);
-
-      img.canvas = canvas;
-
-      return img;
-    }
 
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
@@ -6235,7 +6154,7 @@
     };
 
     // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear()
-    // change this in the future
+    // change this in the future to not be exposed to p
     p.shared = {
       fracU: 0,
       ifU: 0,
