@@ -2590,7 +2590,54 @@
         }
       }
     };
-
+    // HSB conversion function from Mootools, MIT Licensed
+    p.color.toHSB = function( red, green, blue ) {
+    
+      if ( red > 1 || green > 1 || blue > 1 ) {
+        red   = (red/255);
+        green = (green/255);
+        blue  = (blue/255);
+      }
+      var max = p.max( p.max( red,green ), blue ),
+          min = p.min( p.min( red,green ),blue ),
+          hue;
+      if (min == max) {
+        return [0, 0, max];
+      } else {
+        saturation = (max - min) / max;
+        if (red == max) {
+          hue = (green - blue) / (max - min);
+        } else if (green == max) {
+          hue = 2 + ((blue - red) / (max - min));
+        } else {
+          hue = 4 + ((red - green) / (max - min));
+        }
+        hue /= 6;
+        if (hue < 0) {
+          hue += 1;
+        }
+        if (hue > 1) {
+          hue -= 1;
+        }
+      }
+      return [hue* colorModeX, saturation* colorModeY, max* colorModeZ];
+    };
+    
+    p.brightness = function( colInt ){
+      var c = p.color.toArray( colInt );
+      return  p.color.toHSB(c[0],c[1],c[2])[2];
+    };
+    
+    p.saturation = function( colInt ){
+      var c = p.color.toArray( colInt );
+      return  p.color.toHSB(c[0],c[1],c[2])[1];
+    };
+    
+    p.hue = function( colInt ){
+      var c = p.color.toArray( colInt );
+      return  p.color.toHSB(c[0],c[1],c[2])[0];
+    };
+    
     var verifyChannel = function verifyChannel(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
