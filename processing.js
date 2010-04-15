@@ -784,10 +784,11 @@
     p.CMYK  = 5;
     
     // Renderers
-    p.P2D    = 'P2D';
-    p.P3D    = 'P3D';
-    p.JAVA2D = 'JAVA2D';
-    p.OPENGL = 'OPENGL';
+    p.P2D    = 1;
+    p.JAVA2D = 1;
+    p.WEBGL  = 2;
+    p.P3D    = 2;
+    p.OPENGL = 2;
 
     p.EPSILON = 0.0001;
 
@@ -4207,7 +4208,7 @@
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
-      if (aMode && (aMode === "OPENGL" || aMode === "P3D")) {
+      if (aMode && (aMode === p.WEBGL)) {
         // get the 3D rendering context
         try {
           if (!curContext) {
