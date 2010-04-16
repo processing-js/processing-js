@@ -4969,7 +4969,9 @@
       var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
       var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-      if ( ow != 0 ) ox /= ow;
+      if ( ow !== 0 ){
+        ox /= ow;
+      }
       return p.width * ( 1 + ox ) / 2.0;
     };
 
@@ -4985,7 +4987,9 @@
 	    var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
 	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-	    if ( ow != 0 ) oy /= ow;
+	    if ( ow !== 0 ){
+        oy /= ow;
+      }
 	    return p.height * ( 1 + oy ) / 2.0;
 	  };
 
@@ -5001,7 +5005,9 @@
 	    var oz = pj[ 8]*ax + pj[ 9]*ay + pj[10]*az + pj[11]*aw;
 	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-	    if ( ow != 0 ) oz /= ow;
+	    if ( ow !== 0 ) {
+        oz /= ow;
+      }
 	    return ( oz + 1 ) / 2.0;
 	  };
 
