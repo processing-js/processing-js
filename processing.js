@@ -600,7 +600,7 @@
 
       allRest = allRest.slice(rest.length + 1);
 
-      var matchConstructor = new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{"),
+      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
         c;
       var constructors = "";
 
@@ -630,9 +630,10 @@
 
       // Fix class method names
       // this.collide = function() { ... }
+
       rest = (function() {
         return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\((.*?)\)/g, function(all, name, args) {
-          return "ADDMETHOD(this, '" + name + "', (function(obj) { return function(" + args + ")";
+          return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
         });
       }());
 
@@ -681,7 +682,7 @@
               if (first === ".") {
                 return all;
               } else {
-                return "obj." + variable;
+                return "public." + variable;
               }
             });
           });
