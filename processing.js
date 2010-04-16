@@ -1103,6 +1103,7 @@
     p.mouseScrolled = undefined;
     p.keyPressed = undefined;
     p.keyReleased = undefined;
+    p.keyTyped = undefined;
     p.draw = undefined;
     p.setup = undefined;
 
@@ -7419,6 +7420,12 @@
         }
         if (p.keyReleased) {
           p.keyReleased();
+        }
+      });
+
+      attach(document, "keypress", function (e) {
+        if (p.keyTyped) {
+          p.keyTyped();
         }
       });
     };
