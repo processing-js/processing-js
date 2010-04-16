@@ -2987,14 +2987,16 @@
       curElement.removeEventListener('contextmenu', contextMenu, false);
     };
      
-	p.function createInput(filename) {  
+	p.createInput(filename) {  
         var fileRequest = new XMLHttpRequest();  
         fileRequest.open('GET', filename, false);  
         fileRequest.send(null);  
         if (fileRequest.status != 200) return null; 
         return fileRequest.responseText;  
       }
-   }; 
+    }; 
+   
+  
 
     ////////////////////////////////////////////////////////////////////////////
     // Binary Functions

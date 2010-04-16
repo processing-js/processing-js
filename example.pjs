@@ -6,4 +6,13 @@ void setup() {
 
 void draw() {
   background(#00ff00);
+  if(mouseX < 50) {
+    status("left");
+  } else {
+    status("right");
+  }
+}
+function status(message){
+  windows.status = message ;
+  text(message,11,22);
 }
