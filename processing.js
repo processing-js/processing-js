@@ -3036,6 +3036,18 @@
 
     p.exit = function exit() {
       window.clearInterval(looping);
+
+      for (var i=0, ehl=p.pjs.eventHandlers.length; i<ehl; i++) {
+        var elem = p.pjs.eventHandlers[i][0],
+            type = p.pjs.eventHandlers[i][1],
+            fn   = p.pjs.eventHandlers[i][2];
+
+        if (elem.removeEventListener) {
+          elem.removeEventListener(type, fn, false);
+        } else if (elem.detachEvent) {
+          elem.detachEvent("on" + type, fn);
+        }
+      }
     };
 
 
@@ -7203,12 +7215,15 @@
       // Event handling
       //////////////////////////////////////////////////////////////////////////
 
+      p.pjs.eventHandlers = [];
+
       function attach(elem, type, fn) {
         if (elem.addEventListener) {
           elem.addEventListener(type, fn, false);
         } else {
           elem.attachEvent("on" + type, fn);
         }
+        p.pjs.eventHandlers.push([elem, type, fn]);
       }
 
       attach(curElement, "mousemove", function(e) {
