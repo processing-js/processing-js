@@ -75,23 +75,32 @@
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
-      // Get data-src instead of datasrc
-      var datasrc = canvas[i].getAttribute('data-src');
-      if (datasrc === null) {
-        // Temporary fallback for datasrc
-        datasrc = canvas[i].getAttribute('datasrc');
+      // datasrc and data-src are deprecated.
+      var processingSources = canvas[i].getAttribute('data-processing-sources');
+      if (processingSources === null) {
+        // Temporary fallback for datasrc and data-src
+        processingSources = canvas[i].getAttribute('data-src');
+        if (processingSources === null) {
+          processingSources = canvas[i].getAttribute('datasrc');
+        }
       }
-      if (datasrc) {
+      if (processingSources) {
         // The problem: if the HTML canvas dimensions differ from the
         // dimensions specified in the size() call in the sketch, for
         // 3D sketches, browsers will either not render or render the
         // scene incorrectly. To fix this, we need to adjust the attributes
         // of the canvas width and height.
         // Get the source, we'll need to find what the user has used in size()
-        var sketchSource = ajax(datasrc);
+        var filenames = processingSources.split(' ');
+        var code;
+        for (var j=0, fl=filenames.length; j<fl; j++) {
+          if (filenames[j]) {
+            code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
+          }
+        }
         // get the dimensions
         // this regex needs to be cleaned up a bit
-        var r = "" + sketchSource.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/);
+        var r = "" + code.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/);
         var dimensions = r.match(/[0-9]+/g);
 
         if (dimensions) {
@@ -104,7 +113,7 @@
             canvas[i].setAttribute("height", sketchHeight);
           }
         }
-        Processing(canvas[i], sketchSource);
+        Processing(canvas[i], code);
       }
     }
   };
