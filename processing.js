@@ -4989,7 +4989,7 @@
 	    return p.height * ( 1 + oy ) / 2.0;
 	  };
 
-	  p.screenZ = function screenZ( x, y,z ) {
+	  p.screenZ = function screenZ( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
       
