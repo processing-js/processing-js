@@ -144,3 +144,10 @@ _checkEqual(color.toArray(j), [0, 0, 0, 255]);
 _checkEqual(color.toArray(k), [255, 255, 255, 128]);
 _checkEqual(color.toArray(l), [64, 64, 64, 64]);
 _checkEqual(color.toArray(m), [0, 0, 0, 255]);
+
+// Test Hue, Saturation, Brightness
+colorMode(HSB, 255);
+color c = color(0, 126, 255);
+_checkEqual(hue(c),0);
+_checkEqual(saturation(c),126);
+_checkEqual(brightness(c),255);

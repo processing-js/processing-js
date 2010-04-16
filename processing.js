@@ -2590,52 +2590,53 @@
         }
       }
     };
-    // HSB conversion function from Mootools, MIT Licensed
-    p.color.toHSB = function( red, green, blue ) {
+   
+    p.color.toHSB = function( colorInt ) {
     
-      if ( red > 1 || green > 1 || blue > 1 ) {
-        red   = (red/255);
-        green = (green/255);
-        blue  = (blue/255);
-      }
+      var red, green, blue;
+  
+      red = ((colorInt & p.RED_MASK) >>> 16) / 255;
+      green = ((colorInt & p.GREEN_MASK) >>> 8) / 255;
+      blue = (colorInt & p.BLUE_MASK) / 255;
+
       var max = p.max( p.max( red,green ), blue ),
           min = p.min( p.min( red,green ),blue ),
-          hue;
-      if (min == max) {
+          hue, saturation;
+          
+      if (min === max) {
         return [0, 0, max];
       } else {
         saturation = (max - min) / max;
-        if (red == max) {
+        
+        if (red === max) {
           hue = (green - blue) / (max - min);
-        } else if (green == max) {
+        } else if (green === max) {
           hue = 2 + ((blue - red) / (max - min));
         } else {
           hue = 4 + ((red - green) / (max - min));
         }
+        
         hue /= 6;
+        
         if (hue < 0) {
           hue += 1;
-        }
-        if (hue > 1) {
+        } else if (hue > 1) {
           hue -= 1;
         }
       }
-      return [hue* colorModeX, saturation* colorModeY, max* colorModeZ];
+      return [hue * colorModeX, saturation * colorModeY, max * colorModeZ];
     };
     
     p.brightness = function( colInt ){
-      var c = p.color.toArray( colInt );
-      return  p.color.toHSB(c[0],c[1],c[2])[2];
+      return  p.color.toHSB( colInt )[2];
     };
     
     p.saturation = function( colInt ){
-      var c = p.color.toArray( colInt );
-      return  p.color.toHSB(c[0],c[1],c[2])[1];
+      return  p.color.toHSB( colInt )[1];
     };
     
     p.hue = function( colInt ){
-      var c = p.color.toArray( colInt );
-      return  p.color.toHSB(c[0],c[1],c[2])[0];
+      return  p.color.toHSB( colInt )[0];
     };
     
     var verifyChannel = function verifyChannel(aColor) {
