@@ -75,6 +75,9 @@ check-unit:
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 
+# Most targets use commands that need a js shell path specified
+JSSHELL ?= $(error Specify a valid path to a js shell binary in ~/.profile: export JSSHELL=C:\path\js.exe or /path/js)
+
 check-one:
 	${TOOLSDIR}/runtests.py ${JSSHELL} -t ${TEST}
 
