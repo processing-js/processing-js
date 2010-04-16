@@ -1,0 +1,42 @@
+*{margin:0;padding:0;}
+body {font-family:Calibri,Helvetica,Arial;overflow:hidden}
+.bespin{width:100%;height:400px;}
+#editor{visibility:visible;}
+
+/* BUTTONS */
+#buttons{background:#4a545e;height:33px;overflow:hidden;}
+#buttons button{height:33px;border:none;background:url(../css/theme/buttons.gif);}
+
+  #buttons #transport button{width:33px;}
+    button#Run{background-position:0px 33px;}
+    button#Run:hover,button#Run:focus{background-position:0px 66px;}
+    button#Run:active{background-position:0px 99px;}
+    button#Stop{background-position:-33px 33px;margin-left:-8px;}
+    button#Stop:hover,button#Stop:focus{background-position:-33px 66px;}
+    button#Stop:active{background-position:-33px 99px;}
+
+  #buttons #file {padding-left:8px;}
+  #buttons #file button{width:22px;}
+    button#New{background-position:-73px 33px;width:22px;}
+    button#New:hover,button#New:focus{background-position:-73px 66px;}
+    button#New:active{background-position:-73px 99px;}
+    button#Open{background-position:-106px 33px;}
+    button#Open:hover,button#Open:focus{background-position:-106px 66px;}
+    button#Open:active{background-position:-106px 99px;}
+    button#Save{background-position:-139px 33px;}
+    button#Save:hover,button#Save:focus{background-position:-139px 66px;}
+    button#Save:active{background-position:-139px 99px;}
+    button#Export{background-position:-172px 33px;}
+    button#Export:hover,button#Export:focus{background-position:-172px 66px;}
+    button#Export:active{background-position:-172px 99px;}
+
+/* TABS */
+#tabs{background:#818b95;height:5px;overflow:hidden;}
+
+/* LOG */
+
+
+/*
+#Save
+#Export
+*/
