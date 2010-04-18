@@ -775,7 +775,7 @@
         });
       }());
     }
-alert(aCode);
+
     return aCode;
   };
 
