@@ -526,7 +526,7 @@
     }
 
     // float foo = 5;
-    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
+    aCode = aCode.replace(/(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
       if (type === "return" || type === "else") {
         return all;
       } else {
@@ -595,8 +595,7 @@
       var left = RegExp.leftContext,
         allRest = RegExp.rightContext,
         rest = nextBrace(allRest),
-        className = m[1],
-        staticVars = m[2] || "";
+        className = m[1];
 
       allRest = allRest.slice(rest.length + 1);
 
@@ -639,8 +638,8 @@
 
       var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[\s\S]*?\{)/,
 	    mc,
-		methods = "",
-		methodsArray = [];
+      methods = "",
+      methodsArray = [];
 
       while ((mc = rest.match(matchMethod))) {
         var prev = RegExp.leftContext,
@@ -652,28 +651,25 @@
         rest = prev + allNext.slice(next.length + 1);
       }
 	  
-	  var vars = "";
+      var vars = "";
       var publicVars  = "";
 
       // Put all member variables into "vars"
       // and keep a list of all public variables
-      rest = rest.replace(/(?:(final|private|public)\s+)?var\s+([^;]*?;)/g, function(all, access, variable) {
-        if (access === "private") {
-          variable = ("var " + variable.replace(/,\s*/g, ";\nvar "))
-		    .replace(/var\s+?(\w+);/g, "var $1 = null;");
-          vars += variable + '\n';
-        } else {
-          publicVars += variable.replace(/,\s*/g, "\n")
-		    .replace(/\s*(\w+)\s*(;|=).*\s?/g, "$1|");
-          variable = ("this." + variable.replace(/,\s*/g, ";\nthis."))
-		    .replace(/this.(\w+);/g, "this.$1 = null;");
-          vars += variable + '\n';
+      rest = rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
+        variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
+          .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
+        publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
+        if (staticVar === "static"){
+          variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, "if (typeof " + className + ".prototype.$1 === 'undefined'){ " + className + ".prototype.$1 = $2 }\n" +
+            "this.__defineGetter__('$1', function(){ return "+ className + ".prototype.$1; });\n" +
+            "this.__defineSetter__('$1', function(val){ " + className + ".prototype.$1 = val; });\n");
         }
-
+        vars += variable;
         return "";
       });
 	  
-	  // add this. to public variables used inside member functions, and constructors
+      // add this. to public variables used inside member functions, and constructors
       if (publicVars) {
         // Search functions for public variables
         for (var i = 0; i < methodsArray.length; i++) {
@@ -703,7 +699,7 @@
 
       rest = vars + "\n" + methods + "\n" + constructors;
 
-      aCode = left + rest + "\n}" + staticVars + allRest;
+      aCode = left + rest + "\n}" + allRest;
     }
 
     // Do some tidying up, where necessary
@@ -779,7 +775,7 @@
         });
       }());
     }
-
+alert(aCode);
     return aCode;
   };
 
