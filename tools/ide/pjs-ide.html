@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="css/bespin.css" type="text/css" rel="stylesheet">
+<link href="css/ide.css" type="text/css" rel="stylesheet">
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type="text/javascript" src="js/bespin.js"></script>
+<script type="text/javascript" src="../../processing.js"></script>
+<script type="text/javascript" src="js/loader.js"></script>
+</head>
+
+<body>
+
+<div id="buttons">
+  <span id="transport">
+    <button id="Run"></button>
+    <!--<button id="Stop"></button>-->
+  </span>
+  <span id="file">  
+    <!--<button id="New"></button>
+    <button id="Export"></button>-->
+  </span>
+</div>
+
+<div id="tabs"></div>
+
+<div id="editor" class="bespin" data-bespinoptions='{ "settings": { "tabstop": 2 }, "syntax": "js", "stealFocus": true }' >// comments go here
+
+void setup()
+{
+  size(200,200);
+  background(0);
+  fill(255);
+  noLoop();
+  PFont fontA = loadFont("courier");
+  textFont(fontA, 14);  
+}
+
+void draw(){  
+  text("Hello Web!",20,20);
+  println("Hello ErrorLog!");
+}
+</div>
+
+</body>
+</html>
