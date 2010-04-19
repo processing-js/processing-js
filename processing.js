@@ -6816,8 +6816,8 @@
       }
     };
 
-    var textcanvas;
     // Print some text to the Canvas
+    var textcanvas, oldContext, tempy = 0;
     p.text = function text() {
       if (typeof arguments[0] !== 'undefined') {
         var str = arguments[0],
@@ -6833,16 +6833,10 @@
 
         str = str.toString();
 
-        if ( arguments.length === 1 ){ // for text( str )
-          p.text( str, lastTextPos[0], lastTextPos[1], lastTextPos[2] );
-          return ;
-        } else if ( arguments.length === 3 ) { // for text( str, x, y)
-          text( str, arguments[1], arguments[2], 0 );
-          return ;
-        } else if ( arguments.length === 4 ){ // for text( str, x, y, z)
-          x = arguments[1];
-          y = arguments[2];
-          z = arguments[3];
+        if ( arguments.length <= 4 ){ // for text( str )
+          x = arguments.length < 3?lastTextPos[0]:arguments[1];
+          y = tempy = arguments.length < 3?lastTextPos[1]:arguments[2];
+          z = arguments.length < 4?0:arguments[3];
 
           do {
             pos = str.indexOf("\n");
@@ -6850,31 +6844,26 @@
               if (pos !== 0) {
                 text(str.substring(0, pos),x,y,z);
               }
-              y = arguments[2] = y + curTextSize;
+              y = tempy = y + curTextSize;
               str = str.substring(pos+1, str.length);
             }
           } while (pos !== -1);
 
-          var canvas,oldContext;
           if(p.use3DContext){
-            var canvas, texture;
-            if(!textcanvas){
-              canvas = document.createElement("canvas");
-              textcanvas=canvas;
-            }else{
-              canvas=textcanvas;
+            if(typeof textcanvas === 'undefined'){
+              textcanvas = document.createElement("canvas");
+              oldContext = curContext;
             }
-            oldContext = curContext;
 
-            curContext = canvas.getContext("2d");
+            curContext = textcanvas.getContext("2d");
             curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
             if (curContext.fillText) {
-              canvas.width = curContext.measureText( str ).width;
+              textcanvas.width = curContext.measureText( str ).width;
             } else if (curContext.mozDrawText) {
-              canvas.width = curContext.mozMeasureText( str );
+              textcanvas.width = curContext.mozMeasureText( str );
             }
-            canvas.height=curTextSize*1.2;
-            curContext = canvas.getContext("2d");
+            textcanvas.height=curTextSize*1.2;
+            curContext = textcanvas.getContext("2d");
             curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
             curContext.textBaseline="top";
             x = 0;
@@ -6925,20 +6914,17 @@
 
           if(p.use3DContext){
             x = arguments[1]; 
-            y = arguments[2]; 
+            y = tempy; 
 
-            aspect=canvas.width/canvas.height;
+            var aspect=textcanvas.width/textcanvas.height;
             curContext = oldContext;
 
-            curContext.bindTexture(curContext.TEXTURE_2D, texture);
-            try{curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,false,true);}
-            catch(e){
-              //curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,null);
-            }
+            //curContext.bindTexture(curContext.TEXTURE_2D, texture);
+            curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas,false,true);
             curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
             curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
             curContext.generateMipmap(curContext.TEXTURE_2D);
-            curContext.bindTexture(curContext.TEXTURE_2D, null);
+            //curContext.bindTexture(curContext.TEXTURE_2D, null);
 
             var model = new PMatrix3D();
             var scalefactor=curTextSize*0.5;
@@ -6948,8 +6934,6 @@
             var view = new PMatrix3D();
             view.scale(1, -1, 1);
             view.apply(modelView.array());
-
-            curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE);
 
             curContext.useProgram(programObject2D);
 
@@ -6968,21 +6952,17 @@
             curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
             curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
 
-            curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
             width=aspect*scalefactor;
           }
           lastTextPos[0] = x + width;
           lastTextPos[1] = y;
           lastTextPos[2] = z;
-        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-          text(str, arguments[1], arguments[2], arguments[3], arguments[4], 0);
-          return ;
-        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+        } else if (arguments.length <= 6) { // for text( stringdata, x, y , width, height, z)
           x = arguments[1];
           y = arguments[2];
           width = arguments[3];
           height = arguments[4];
-          z = arguments[5];
+          z = arguments.length === 6?arguments[5]:0;
 
           if (str.length > 0) {
             if (curTextSize > height) {
