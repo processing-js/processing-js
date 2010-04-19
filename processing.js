@@ -5394,16 +5394,16 @@
             if(doFill){
               fillVertArray = [];
               for(var j = 0; j < 3; j++){
-                fillVertArray.push(vertArray[i][j])
+                fillVertArray.push(vertArray[i][j]);
               }
               for(var j = 0; j < 3; j++){
-                fillVertArray.push(vertArray[i+1][j])
+                fillVertArray.push(vertArray[i+1][j]);
               }
               for(var j = 0; j < 3; j++){
-                fillVertArray.push(vertArray[i+3][j])
+                fillVertArray.push(vertArray[i+3][j]);
               }
               for(var j = 0; j < 3; j++){
-                fillVertArray.push(vertArray[i+2][j])
+                fillVertArray.push(vertArray[i+2][j]);
               }
               fill2D(fillVertArray, "TRIANGLE_STRIP");
             }
