@@ -5589,7 +5589,7 @@
       }
     };
 
-    function point2D(vArray){
+    var point2D = function point2D(vArray){
       var model = new PMatrix3D();
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
@@ -5606,7 +5606,7 @@
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
 
-    function line2D(vArray, mode){
+    var line2D = function line2D(vArray, mode){
       var ctxMode;
       if (mode === "LINES"){
         ctxMode = curContext.LINES;
@@ -5633,7 +5633,7 @@
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
-    function fill2D(vArray, mode){
+    var fill2D = function fill2D(vArray, mode){
       var ctxMode;
       if(mode === "TRIANGLES"){
         ctxMode = curContext.TRIANGLES;
