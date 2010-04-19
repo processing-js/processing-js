@@ -7322,7 +7322,7 @@
         }
       });
 
-      attach(document, /Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) ? "DOMMouseScroll" : "mousewheel", function(e) {
+      var mouseWheelHandler = function(e) {
         var delta = 0;
 
         if (e.wheelDelta) {
@@ -7339,7 +7339,11 @@
         if (delta && typeof p.mouseScrolled === 'function') {
           p.mouseScrolled();
         }
-      });
+      };
+
+      // Support Gecko and non-Gecko scroll events
+      attach(document, 'DOMMouseScroll', mouseWheelHandler);
+      attach(document, 'mousewheel', mouseWheelHandler);
 
       attach(document, "keydown", function(e) {
         keyPressed = true;
