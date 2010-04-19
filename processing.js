@@ -5110,6 +5110,12 @@
       vert[15] = normalZ;
 
       vertArray.push(vert);
+      
+      //will soon be depracating
+      if(arguments.length === 6){
+        curContext.bezierCurveTo(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+        curShapeCount++;
+      }
     };
 
     p.endShape = function endShape(close){
@@ -5152,29 +5158,32 @@
         else if(curShape === p.TRIANGLES){
           if(vertArray.length > 2){
             for(var i = 0; (i+2) < vertArray.length; i+=3){
+              fillVertArray = [];
               lineVertArray = [];
               for(var j = 0; j < 3; j++){
                 for(var k = 0; k < 3; k++){
                   lineVertArray.push(vertArray[i+j][k]);
+                  fillVertArray.push(vertArray[i+j][k]);
                 }
               }
               if(doStroke){
                 line2D(lineVertArray, "LINE_LOOP");
               }
-            }
-            if(doFill){
-              fill2D(fillVertArray, "TRIANGLES");
+              if(doFill){
+                fill2D(fillVertArray, "TRIANGLES");
+              }
             }
           }
         }
         else if(curShape === p.TRIANGLE_STRIP){
-          var tempArray = new Array();
           if(vertArray.length > 2){
             for(var i = 0; (i+2) < vertArray.length; i++){
               lineVertArray = [];
+              fillVertArray = [];
               for(var j = 0; j < 3; j++){
                 for(var k = 0; k < 3; k++){
                   lineVertArray.push(vertArray[i+j][k]);
+                  fillVertArray.push(vertArray[i+j][k]);
                 }
               }
               if(doFill){
@@ -5308,9 +5317,9 @@
             p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
           }
         }
-        else if(curShape === p.TRIANGLES){
-          curContext.beginPath();                 
+        else if(curShape === p.TRIANGLES){                 
           for(var i = 0; (i + 2) < vertArray.length; i+=3){
+            curContext.beginPath();
             curContext.moveTo(vertArray[i][0], vertArray[i][1]);
             curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
             curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
@@ -5321,6 +5330,7 @@
             if(doStroke){
               curContext.stroke();
             }
+            curContext.closePath();
           }   
         }
         else if(curShape === p.TRIANGLE_STRIP){
@@ -5367,8 +5377,8 @@
           }
         }
         else if(curShape === p.QUADS){
-          curContext.beginPath();
-          for(var i = 0; (i + 3) < vertArray.length; i+=4){            
+          for(var i = 0; (i + 3) < vertArray.length; i+=4){
+            curContext.beginPath();
             curContext.moveTo(vertArray[i][0], vertArray[i][1]);
             for(var j = 1; j < 4; j++){
               curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
@@ -5380,6 +5390,7 @@
             if(doStroke){
               curContext.stroke();
             }
+            curContext.closePath();
           }
         }
         else if(curShape === p.QUAD_STRIP){

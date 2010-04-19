@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head>
+  <body>
+    <h1>beginShape() and endShape() test</h1>
+
+    <p>
+    <canvas datasrc="endShape-2Dtest-triangles.pjs" width="500" height="200"></canvas>
+    <img src="p5_result.png"/>
+    </p>
+
+    <pre>
+size(500, 200);
+background(200);
+beginShape(QUADS);
+vertex(30, 20);
+vertex(30, 75);
+vertex(50, 75);
+vertex(50, 20);
+vertex(65, 20);
+vertex(65, 75);
+vertex(85, 75);
+vertex(85, 20);
+endShape();
+
+beginShape(QUADS);
+vertex(130, 20);
+vertex(130, 75);
+vertex(150, 75);
+vertex(150, 20);
+vertex(165, 20);
+vertex(165, 75);
+vertex(185, 75);
+//vertex(185, 20);
+endShape();
+
+beginShape(QUADS);
+vertex(230, 20);
+vertex(230, 75);
+vertex(250, 75);
+vertex(250, 20);
+vertex(265, 20);
+//vertex(265, 75);
+vertex(285, 75);
+vertex(285, 20);
+endShape();
+
+beginShape(QUADS);
+vertex(330, 20);
+vertex(330, 75);
+vertex(350, 75);
+//vertex(350, 20);
+vertex(365, 20);
+vertex(365, 75);
+vertex(385, 75);
+vertex(385, 20);
+endShape();
+
+beginShape(QUADS);
+vertex(430, 20);
+//vertex(430, 75);
+vertex(450, 75);
+vertex(450, 20);
+vertex(465, 20);
+vertex(465, 75);
+vertex(485, 75);
+vertex(485, 20);
+endShape();
+
+beginShape(QUADS);
+vertex(30, 120);
+vertex(30, 175);
+vertex(50, 175);
+vertex(50, 120);
+vertex(65, 120);
+vertex(65, 175);
+//vertex(85, 175);
+//vertex(85, 120);
+endShape();
+
+beginShape(QUADS);
+vertex(130, 120);
+vertex(130, 175);
+vertex(150, 175);
+vertex(150, 120);
+vertex(165, 120);
+//vertex(165, 175);
+//vertex(185, 175);
+//vertex(185, 120);
+endShape();
+
+beginShape(QUADS);
+vertex(230, 120);
+vertex(230, 175);
+vertex(250, 175);
+vertex(250, 120);
+//vertex(265, 120);
+//vertex(265, 175);
+//vertex(285, 175);
+//vertex(285, 120);
+endShape();
+
+beginShape(QUADS);
+vertex(330, 120);
+vertex(330, 175);
+vertex(350, 175);
+//vertex(350, 120);
+//vertex(365, 120);
+//vertex(365, 175);
+//vertex(385, 175);
+//vertex(385, 120);
+endShape();
+
+beginShape(QUADS);
+vertex(430, 120);
+vertex(430, 175);
+//vertex(450, 175);
+//vertex(450, 120);
+//vertex(465, 120);
+//vertex(465, 175);
+//vertex(485, 175);
+//vertex(485, 120);
+endShape();
+  </body>
+</html>
