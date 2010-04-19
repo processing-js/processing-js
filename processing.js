@@ -92,7 +92,7 @@
         // of the canvas width and height.
         // Get the source, we'll need to find what the user has used in size()
         var filenames = processingSources.split(' ');
-        var code;
+        var code = "";
         for (var j=0, fl=filenames.length; j<fl; j++) {
           if (filenames[j]) {
             code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
