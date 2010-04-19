@@ -5274,6 +5274,7 @@
     };
 
     p.endShape = function endShape(close){
+      var i, j, k;
       var last = vertArray.length - 1;
       if(!close){
         p.CLOSE = false;
@@ -5284,8 +5285,8 @@
       if(p.use3DContext){ // 3D context
         var lineVertArray = [];
         var fillVertArray = [];
-        for(var i = 0; i < vertArray.length; i++){
-          for(var j = 0; j < 3; j++){
+        for(i = 0; i < vertArray.length; i++){
+          for(j = 0; j < 3; j++){
             fillVertArray.push(vertArray[i][j]);
           }
         }
@@ -5295,16 +5296,16 @@
         fillVertArray.push(vertArray[0][2]);  
 
         if (curShape === p.POINTS){
-          for(var i = 0; i < vertArray.length; i++){
-            for(var j = 0; j < 3; j++){
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 0; j < 3; j++){
               lineVertArray.push(vertArray[i][j]);
             }
           }
           point2D(lineVertArray);
         }
         else if(curShape === p.LINES){
-          for(var i = 0; i < vertArray.length; i++){
-            for(var j = 0; j < 3; j++){
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 0; j < 3; j++){
               lineVertArray.push(vertArray[i][j]);
             }
           }
@@ -5312,11 +5313,11 @@
         }
         else if(curShape === p.TRIANGLES){
           if(vertArray.length > 2){
-            for(var i = 0; (i+2) < vertArray.length; i+=3){
+            for(i = 0; (i+2) < vertArray.length; i+=3){
               fillVertArray = [];
               lineVertArray = [];
-              for(var j = 0; j < 3; j++){
-                for(var k = 0; k < 3; k++){
+              for(j = 0; j < 3; j++){
+                for(k = 0; k < 3; k++){
                   lineVertArray.push(vertArray[i+j][k]);
                   fillVertArray.push(vertArray[i+j][k]);
                 }
@@ -5332,11 +5333,11 @@
         }
         else if(curShape === p.TRIANGLE_STRIP){
           if(vertArray.length > 2){
-            for(var i = 0; (i+2) < vertArray.length; i++){
+            for(i = 0; (i+2) < vertArray.length; i++){
               lineVertArray = [];
               fillVertArray = [];
-              for(var j = 0; j < 3; j++){
-                for(var k = 0; k < 3; k++){
+              for(j = 0; j < 3; j++){
+                for(k = 0; k < 3; k++){
                   lineVertArray.push(vertArray[i+j][k]);
                   fillVertArray.push(vertArray[i+j][k]);
                 }
@@ -5352,21 +5353,21 @@
         }
         else if(curShape === p.TRIANGLE_FAN){
           if(vertArray.length > 2){
-            for(var i = 0; i < 3; i++){
-              for(var j = 0; j < 3; j++){
+            for(i = 0; i < 3; i++){
+              for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i][j]);
               }
             }
             if(doStroke){
               line2D(lineVertArray, "LINE_LOOP");
             }
-            for(var i = 2; (i+1) < vertArray.length; i++){
+            for(i = 2; (i+1) < vertArray.length; i++){
               lineVertArray = [];
               lineVertArray.push(vertArray[0][0]);
               lineVertArray.push(vertArray[0][1]);
               lineVertArray.push(vertArray[0][2]);
-              for(var j = 0; j < 2; j++){
-                for(var k = 0; k < 3; k++){
+              for(j = 0; j < 2; j++){
+                for(k = 0; k < 3; k++){
                   lineVertArray.push(vertArray[i+j][k]);
                 }
               }
@@ -5380,10 +5381,10 @@
           }
         }
         else if(curShape === p.QUADS){
-          for(var i = 0; (i + 3) < vertArray.length; i+=4){
+          for(i = 0; (i + 3) < vertArray.length; i+=4){
             lineVertArray = [];
-            for(var j = 0; j < 4; j++){
-              for(var k = 0; k < 3; k++){
+            for(j = 0; j < 4; j++){
+              for(k = 0; k < 3; k++){
                 lineVertArray.push(vertArray[i+j][k]);
               }
             }
@@ -5393,16 +5394,16 @@
             
             if(doFill){
               fillVertArray = [];
-              for(var j = 0; j < 3; j++){
+              for(j = 0; j < 3; j++){
                 fillVertArray.push(vertArray[i][j]);
               }
-              for(var j = 0; j < 3; j++){
+              for(j = 0; j < 3; j++){
                 fillVertArray.push(vertArray[i+1][j]);
               }
-              for(var j = 0; j < 3; j++){
+              for(j = 0; j < 3; j++){
                 fillVertArray.push(vertArray[i+3][j]);
               }
-              for(var j = 0; j < 3; j++){
+              for(j = 0; j < 3; j++){
                 fillVertArray.push(vertArray[i+2][j]);
               }
               fill2D(fillVertArray, "TRIANGLE_STRIP");
@@ -5412,8 +5413,8 @@
         else if(curShape === p.QUAD_STRIP){
           var tempArray = [];
           if(vertArray.length > 3){
-            for(var i = 0; i < 2; i++){
-              for(var j = 0; j < 3; j++){
+            for(i = 0; i < 2; i++){
+              for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i][j]);
               }
             }
@@ -5422,18 +5423,18 @@
               tempArray = fillVertArray.splice(fillVertArray.length - 6);
               vertArray.pop();
             }
-            for(var i = 0; (i+3) < vertArray.length; i+=2){
+            for(i = 0; (i+3) < vertArray.length; i+=2){
               lineVertArray = [];
-              for(var j = 0; j < 3; j++){
+              for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i+1][j]);
               }
-              for(var j = 0; j < 3; j++){
+              for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i+3][j]);
               }
-              for(var j = 0; j < 3; j++){
+              for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i+2][j]);
               }
-              for(var j = 0; j < 3; j++){
+              for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i+0][j]);
               }
               line2D(lineVertArray, "LINE_STRIP");
@@ -5444,8 +5445,8 @@
           }
         }
         else{
-          for(var i = 0; i < vertArray.length; i++){
-            for(var j = 0; j < 3; j++){
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 0; j < 3; j++){
               lineVertArray.push(vertArray[i][j]);
             }
           }
@@ -5463,17 +5464,17 @@
       // 2D context
       else{
         if (curShape === p.POINTS){
-          for(var i = 0; i < vertArray.length; i++){
+          for(i = 0; i < vertArray.length; i++){
             p.point(vertArray[i][0], vertArray[i][1]);
           }
         }
         else if(curShape === p.LINES){
-          for(var i = 0; (i + 1) < vertArray.length; i+=2){
+          for(i = 0; (i + 1) < vertArray.length; i+=2){
             p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
           }
         }
         else if(curShape === p.TRIANGLES){                 
-          for(var i = 0; (i + 2) < vertArray.length; i+=3){
+          for(i = 0; (i + 2) < vertArray.length; i+=3){
             curContext.beginPath();
             curContext.moveTo(vertArray[i][0], vertArray[i][1]);
             curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
@@ -5493,7 +5494,7 @@
             curContext.beginPath();
             curContext.moveTo(vertArray[0][0], vertArray[0][1]);
             curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-            for(var i = 2; i < vertArray.length; i++){
+            for(i = 2; i < vertArray.length; i++){
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
               curContext.lineTo(vertArray[i-2][0], vertArray[i-2][1]);
               if(doFill){
@@ -5518,7 +5519,7 @@
             if(doStroke){
                 curContext.stroke();
               }
-            for(var i = 3; i < vertArray.length; i++){
+            for(i = 3; i < vertArray.length; i++){
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
@@ -5532,10 +5533,10 @@
           }
         }
         else if(curShape === p.QUADS){
-          for(var i = 0; (i + 3) < vertArray.length; i+=4){
+          for(i = 0; (i + 3) < vertArray.length; i+=4){
             curContext.beginPath();
             curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-            for(var j = 1; j < 4; j++){
+            for(j = 1; j < 4; j++){
               curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
             }
             curContext.lineTo(vertArray[i][0], vertArray[i][1]);
@@ -5553,7 +5554,7 @@
             curContext.beginPath();
             curContext.moveTo(vertArray[0][0], vertArray[0][1]);
             curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-            for(var i = 2; (i+1) < vertArray.length; i++){
+            for(i = 2; (i+1) < vertArray.length; i++){
               if((i % 2) === 0){
                 curContext.moveTo(vertArray[i-2][0], vertArray[i-2][1]);
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
@@ -5572,7 +5573,7 @@
         else{
           curContext.beginPath();
           curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-          for(var i = 1; i < vertArray.length; i++){
+          for(i = 1; i < vertArray.length; i++){
             curContext.lineTo(vertArray[i][0], vertArray[i][1]);
           }
           if(p.CLOSE){
