@@ -5604,7 +5604,7 @@
       vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
-    }
+    };
 
     function line2D(vArray, mode){
       var ctxMode;
@@ -5631,7 +5631,7 @@
       vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
-    }
+    };
 
     function fill2D(vArray, mode){
       var ctxMode;
@@ -5664,7 +5664,7 @@
       
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
-    }
+    };
 
     p.curveVertex = function(x, y, z) {
       if (curvePoints.length < 3) {
