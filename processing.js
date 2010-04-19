@@ -5425,16 +5425,16 @@
             for(var i = 0; (i+3) < vertArray.length; i+=2){
               lineVertArray = [];
               for(var j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i+1][j])
+                lineVertArray.push(vertArray[i+1][j]);
               }
               for(var j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i+3][j])
+                lineVertArray.push(vertArray[i+3][j]);
               }
               for(var j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i+2][j])
+                lineVertArray.push(vertArray[i+2][j]);
               }
               for(var j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i+0][j])
+                lineVertArray.push(vertArray[i+0][j]);
               }
               line2D(lineVertArray, "LINE_STRIP");
             }
