@@ -1079,7 +1079,7 @@
       cameraFar = cameraZ * 10,
       cameraAspect = curElement.width / curElement.height;
 
-    var firstX, firstY, secondX, secondY, prevX, prevY;
+    var vertArray = new Array();
 
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
