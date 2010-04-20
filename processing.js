@@ -4031,68 +4031,125 @@
     p.random = function random(aMin, aMax) {
       return arguments.length === 2 ? aMin + (Math.random() * (aMax - aMin)) : Math.random() * aMin;
     };
-
-    var noiseGen = function noiseGen(x, y) {
-      var n = x + y * 57;
-      n = (n << 13) ^ n;
-      return Math.abs(1.0 - (((n * ((n * n * 15731) + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0));
+    // ---------------------------
+    // Noise functions and helpers
+    
+    // Random generator: can be used for random seed
+    function Marsaglia(i1, i2) {
+      // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
+      var z=i1 || 362436069, w= i2 || 521288629;
+      this.nextInt = function() {
+        return ((z=36969*(z&65535)+(z>>>16))<<16) | ((w=18000*(w&65535)+(w>>>16))&65535);
+      };
+      this.nextDouble = function() {
+        return 0.5 + this.nextInt() / 2147483648;
+      };
+    }
+    Marsaglia.createRandomized = function() {
+      var now = new Date();
+      return new Marsaglia(now | 0, (now / 4294967296) | 0);
     };
 
-    var smoothedNoise = function smoothedNoise(x, y) {
-      var corners = (noiseGen(x - 1, y - 1) + noiseGen(x + 1, y - 1) + noiseGen(x - 1, y + 1) + noiseGen(x + 1, y + 1)) / 16,
-        sides = (noiseGen(x - 1, y) + noiseGen(x + 1, y) + noiseGen(x, y - 1) + noiseGen(x, y + 1)) / 8,
-        center = noiseGen(x, y) / 4;
-      return corners + sides + center;
-    };
-
-    var interpolate = function interpolate(a, b, x) {
-      var ft = x * p.PI;
-      var f = (1 - Math.cos(ft)) * 0.5;
-      return a * (1 - f) + b * f;
-    };
-
-    var interpolatedNoise = function interpolatedNoise(x, y) {
-      var integer_X = Math.floor(x);
-      var fractional_X = x - integer_X;
-      var integer_Y = Math.floor(y);
-      var fractional_Y = y - integer_Y;
-      var v1 = smoothedNoise(integer_X, integer_Y),
-        v2 = smoothedNoise(integer_X + 1, integer_Y),
-        v3 = smoothedNoise(integer_X, integer_Y + 1),
-        v4 = smoothedNoise(integer_X + 1, integer_Y + 1);
-      var i1 = interpolate(v1, v2, fractional_X),
-        i2 = interpolate(v3, v4, fractional_X);
-      return interpolate(i1, i2, fractional_Y);
-    };
-
-    var perlinNoise_2D = function perlinNoise_2D(x, y) {
-      var total = 0,
-        p = 0.25,
-        n = 3;
-      for (var i = 0; i <= n; i++) {
-        var frequency = Math.pow(2, i);
-        var amplitude = Math.pow(p, i);
-        total += interpolatedNoise(x * frequency, y * frequency) * amplitude;
+    function PerlinNoise(seed) {
+      var rnd = seed !== undefined ? new Marsaglia(seed) : Marsaglia.createRandomized();
+      var i, j;
+      // http://www.noisemachine.com/talk1/17b.html
+      // http://mrl.nyu.edu/~perlin/noise/
+      // generate permutation
+      var p = new Array(513); 
+      for(i=0;i<256;++i) { p[i] = i; }
+      for(i=0;i<256;++i) { var t = p[j = rnd.nextInt() & 0xFF]; p[i] = p[j]; p[j] = t; }
+      // copy to avoid taking mod in p[0];
+      for(i=0;i<256;++i) { p[i + 256] = p[i]; } 
+      p[512] = p[0];
+      
+      // generate gradient(s)
+      var g = new Array(256), gu = new Array(256), gv = new Array(256);
+      for(i=0;i<256;++i) { g[i] = rnd.nextDouble(); }
+      for(i=0;i<256;++i) { gu[i] = rnd.nextDouble() * 2 * Math.PI; }
+      for(i=0;i<256;++i) { gv[i] = rnd.nextDouble() * Math.PI; }
+      
+      function grad3d(i,x,y,z) { 
+        return g[i] * ((x * Math.sin(gu[i]) + y * Math.cos(gu[i])) * Math.sin(gv[i]) +
+          z * Math.cos(gv[i]));
       }
 
-      return total;
-    };
+      function grad2d(i,x,y,z) { 
+        return g[i] * (x * Math.sin(gu[i]) + y * Math.cos(gu[i]));
+      }
+      
+      function grad1d(i,x) { 
+        return g[i] * x * Math.cos(gv[i]);
+      }
+      
+      function lerp(t,a,b) { return a + t * (b - a); }
+        
+      this.noise3d = function(x, y, z) {
+        var X = x&255, Y = y&255, Z = z&255;
+        x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+        var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y, fz = (3-2*z)*z*z;
+        var p0 = p[X]+Y, p00 = p[p0] + Z, p01 = p[p0 + 1] + Z, p1  = p[X + 1] + Y, p10 = p[p1] + Z, p11 = p[p1 + 1] + Z;
+        return lerp(fz, 
+          lerp(fy, lerp(fx, grad3d(p[p00], x, y, z), grad3d(p[p10], x-1, y, z)),
+                   lerp(fx, grad3d(p[p01], x, y-1, z), grad3d(p[p11], x-1, y-1,z))),
+          lerp(fy, lerp(fx, grad3d(p[p00], x, y, z-1), grad3d(p[p10], x-1, y, z-1)),
+                   lerp(fx, grad3d(p[p01], x, y-1, z-1), grad3d(p[p11], x-1, y-1,z-1))));
+      };
+      
+      this.noise2d = function(x, y) {
+        var X = x&255, Y = y&255;
+        x -= Math.floor(x); y -= Math.floor(y);
+        var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y;
+        var p0 = p[X]+Y, p1  = p[X + 1] + Y;
+        return lerp(fy, 
+          lerp(fx, grad2d(p[p0], x, y), grad2d(p[p1], x-1, y)),
+          lerp(fx, grad2d(p[p0], x, y-1), grad2d(p[p1], x-1, y-1)));
+      };
 
-    // Add Thomas Saunders 3D noiseGen code here....
-    var perlinNoise_3D = function perlinNoise_3D() {
-      return 0;
-    };
+      this.noise1d = function(x) {
+        var X = x&255;
+        x -= Math.floor(x);
+        var fx = (3-2*x)*x*x;
+        return lerp(fx, grad1d(p[X], x), grad1d(p[X+1], x-1));
+      };
+    }
+    
+    // processing defaults
+    var noiseProfile = { generator: undefined, octaves: 4, fallout: 0.5, seed: undefined};
 
-    // From: http://freespace.virgin.net/hugo.elias/models/m_perlin.htm
     p.noise = function(x, y, z) {
-      switch (arguments.length) {
-      case 2:
-        return perlinNoise_2D(x, y);
-      case 3:
-        return perlinNoise_3D(x, y, z);
-      case 1:
-        return perlinNoise_2D(x, x);
+      if(noiseProfile.generator === undefined) {
+        // caching
+        noiseProfile.generator = new PerlinNoise(noiseProfile.seed);
       }
+      var generator = noiseProfile.generator;
+      var effect = 1, k = 1, sum = 0;
+      for(var i=0; i<noiseProfile.octaves; ++i) {
+        effect *= noiseProfile.fallout;        
+        switch (arguments.length) {
+        case 1:
+          sum += effect * (1 + generator.noise1d(k*x))/2; break;
+        case 2:
+          sum += effect * (1 + generator.noise2d(k*x, k*y))/2; break;
+        case 3:
+          sum += effect * (1 + generator.noise3d(k*x, k*y, k*z))/2; break;
+        }
+        k *= 2;
+      }
+      return sum;
+    };
+    
+    p.noiseDetail = function(octaves, fallout) {
+      noiseProfile.octaves = octaves;
+      if(fallout !== undefined) {
+        noiseProfile.fallout = fallout;
+      }
+      noiseProfile.generator = undefined;
+    };
+    
+    p.noiseSeed = function(seed) {
+      noiseProfile.seed = seed;
+      noiseProfile.generator = undefined;
     };
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
