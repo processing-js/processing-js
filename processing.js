@@ -6927,9 +6927,10 @@
             //curContext.bindTexture(curContext.TEXTURE_2D, null);
 
             var model = new PMatrix3D();
-            var scalefactor=curTextSize*0.5;
+            var scalefactor=curTextSize*0.65;
+            model.translate(x-scalefactor/2, y-scalefactor, z);
             model.scale(-aspect*scalefactor,-scalefactor,scalefactor);
-            model.translate(-x/(aspect*scalefactor)-aspect/2, -y/scalefactor-1/2, z/scalefactor || 0);
+            model.translate(-1,-1,-1);
 
             var view = new PMatrix3D();
             view.scale(1, -1, 1);
