@@ -571,13 +571,13 @@
 
     var nextBrace = function(right) {
       var rest = right,
-        position = 0,
-        leftCount = 1,
-        rightCount = 0;
+          position = 0,
+          leftCount = 1,
+          rightCount = 0;
 
       while (leftCount !== rightCount) {
         var nextLeft = rest.indexOf("{"),
-          nextRight = rest.indexOf("}");
+            nextRight = rest.indexOf("}");
 
         if (nextLeft < nextRight && nextLeft !== -1) {
           leftCount++;
@@ -598,27 +598,27 @@
     aCode = aCode.replace(matchClasses, classReplace);
 
     var matchClass = /<CLASS (\w+) >/,
-      m;
+        m;
 
     while ((m = aCode.match(matchClass))) {
       var left = RegExp.leftContext,
-        allRest = RegExp.rightContext,
-        rest = nextBrace(allRest),
-        className = m[1],
-        staticVars = m[2] || "";
+          allRest = RegExp.rightContext,
+          rest = nextBrace(allRest),
+          className = m[1],
+          staticVars = m[2] || "";
 
       allRest = allRest.slice(rest.length + 1);
 
       var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
-        c;
-      var constructors = "";
+          c,
+          constructors = "";
 
       // Extract all constructors and put them into the variable "constructors"
       while ((c = rest.match(matchConstructor))) {
         var prev = RegExp.leftContext,
-          allNext = RegExp.rightContext,
-          next = nextBrace(allNext),
-          args = c[1];
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext),
+            args = c[1];
 
           args = args.split(/,\s*?/);
 
@@ -628,12 +628,11 @@
         
         constructors += "if ( arguments.length === " + args.length + " ) {\n";
 
-        for (var i = 0; i < args.length; i++) {
+        for (var i = 0, aLength = args.length; i < aLength; i++) {
           constructors += " var " + args[i] + " = arguments[" + i + "];\n";
         }
         
         constructors += next + "}\n";
-
         rest = prev + allNext.slice(next.length + 1);
       }
 
@@ -646,35 +645,35 @@
       }());
 
       var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[\s\S]*?\{)/,
-        mc,
-        methods = "",
-        methodsArray = [];
+          mc,
+          methods = "",
+          methodsArray = [];
 
       while ((mc = rest.match(matchMethod))) {
         var prev = RegExp.leftContext,
-          allNext = RegExp.rightContext,
-          next = nextBrace(allNext);
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext);
 
         methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));" + "var " + mc[2] + " = this." + mc[2] + ";\n");
 
         rest = prev + allNext.slice(next.length + 1);
       }
 
-      var vars = "";
-      var publicVars  = "";
+      var vars = "",
+          publicVars  = "";
 
       // Put all member variables into "vars"
       // and keep a list of all public variables
       rest = rest.replace(/(?:(final|private|public)\s+)?var\s+([^;]*?;)/g, function(all, access, variable) {
         if (access === "private") {
           variable = ("var " + variable.replace(/,\s*/g, ";\nvar "))
-            .replace(/var\s+?(\w+);/g, "var $1 = null;");
+                                       .replace(/var\s+?(\w+);/g, "var $1 = null;");
           vars += variable + '\n';
         } else {
           publicVars += variable.replace(/,\s*/g, "\n")
-            .replace(/\s*(\w+)\s*(;|=).*\s?/g, "$1|");
+                                .replace(/\s*(\w+)\s*(;|=).*\s?/g, "$1|");
           variable = ("this." + variable.replace(/,\s*/g, ";\nthis."))
-            .replace(/this.(\w+);/g, "this.$1 = null;");
+                                        .replace(/this.(\w+);/g, "this.$1 = null;");
           vars += variable + '\n';
         }
 
@@ -684,7 +683,7 @@
       // add this. to public variables used inside member functions, and constructors
       if (publicVars) {
         // Search functions for public variables
-        for (var i = 0; i < methodsArray.length; i++) {
+        for (var i = 0, aLength = methodsArray.length; i < aLength; i++) {
           methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{.*?\{)([^\}]*?\};)/g, function(all, header, body) {
             return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
               if (first === ".") {
@@ -705,7 +704,7 @@
         });
       }
     
-      for (var i = 0; i < methodsArray.length; i++){
+      for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
         methods += methodsArray[i];
       }
       rest = vars + "\n" + methods + "\n" + constructors;
