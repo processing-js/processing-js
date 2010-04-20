@@ -151,3 +151,10 @@ color c = color(0, 126, 255);
 _checkEqual(hue(c),0);
 _checkEqual(saturation(c),126);
 _checkEqual(brightness(c),255);
+
+// Test color.toHSB
+colorMode(RGB);
+color c1 = color(204, 153, 0);
+color c2 = #FFCC00;
+_checkEqual(color.toHSB(c1), [31.875, 255,204], 0.001);
+_checkEqual(color.toHSB(c2), [34, 255,255], 0.001);

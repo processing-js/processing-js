@@ -2592,7 +2592,6 @@
     };
    
     p.color.toHSB = function( colorInt ) {
-    
       var red, green, blue;
   
       red = ((colorInt & p.RED_MASK) >>> 16) / 255;
@@ -2600,7 +2599,7 @@
       blue = (colorInt & p.BLUE_MASK) / 255;
 
       var max = p.max( p.max( red,green ), blue ),
-          min = p.min( p.min( red,green ),blue ),
+          min = p.min( p.min( red,green ), blue ),
           hue, saturation;
           
       if (min === max) {
@@ -2624,7 +2623,7 @@
           hue -= 1;
         }
       }
-      return [hue * colorModeX, saturation * colorModeY, max * colorModeZ];
+      return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
     };
     
     p.brightness = function( colInt ){
