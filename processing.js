@@ -4034,20 +4034,23 @@
     // ---------------------------
     // Noise functions and helpers
     
-    // Random generator: can be used for random seed
+    // Random generator: can be used with random seed(s)
     function Marsaglia(i1, i2) {
       // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
       var z=i1 || 362436069, w= i2 || 521288629;
       this.nextInt = function() {
-        return ((z=36969*(z&65535)+(z>>>16))<<16) | ((w=18000*(w&65535)+(w>>>16))&65535);
+        z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
+        w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
+        return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
       };
       this.nextDouble = function() {
-        return 0.5 + this.nextInt() / 2147483648;
+        var i = this.nextInt() / 4294967296;
+        return i < 0 ? 1 + i : i;
       };
     }
     Marsaglia.createRandomized = function() {
       var now = new Date();
-      return new Marsaglia(now | 0, (now / 4294967296) | 0);
+      return new Marsaglia(now & 0xFFFFFFFF, Math.floor(now / 4294967296));
     };
 
     function PerlinNoise(seed) {
@@ -4056,36 +4059,39 @@
       // http://www.noisemachine.com/talk1/17b.html
       // http://mrl.nyu.edu/~perlin/noise/
       // generate permutation
-      var p = new Array(513); 
+      var p = new Array(512); 
       for(i=0;i<256;++i) { p[i] = i; }
       for(i=0;i<256;++i) { var t = p[j = rnd.nextInt() & 0xFF]; p[i] = p[j]; p[j] = t; }
       // copy to avoid taking mod in p[0];
       for(i=0;i<256;++i) { p[i + 256] = p[i]; } 
-      p[512] = p[0];
-      
-      // generate gradient(s)
+
+      // sin and cos tables: 0..255->sin(0..2*PI), 64..319->cos(0..2*PI)
+      var tables = new Array(320);
+      for(i=0;i<256;++i) { tables[i] = Math.sin(2 * Math.PI * i / 256); }
+      for(i=0;i<64;++i) { tables[i + 256] = tables[i]; }
+            
+      // generate gradient(s): g - length, u and v - parameters of sphere
       var g = new Array(256), gu = new Array(256), gv = new Array(256);
-      for(i=0;i<256;++i) { g[i] = rnd.nextDouble(); }
-      for(i=0;i<256;++i) { gu[i] = rnd.nextDouble() * 2 * Math.PI; }
-      for(i=0;i<256;++i) { gv[i] = rnd.nextDouble() * Math.PI; }
+      for(i=0;i<256;++i) { g[i] = 1; rnd.nextDouble(); }
+      for(i=0;i<256;++i) { gu[i] = rnd.nextInt()&255; } // 0..2*PI
+      for(i=0;i<256;++i) { gv[i] = rnd.nextInt()&127; } // 0..PI
       
       function grad3d(i,x,y,z) { 
-        return g[i] * ((x * Math.sin(gu[i]) + y * Math.cos(gu[i])) * Math.sin(gv[i]) +
-          z * Math.cos(gv[i]));
+        return g[i] * ((x * tables[gu[i]] + y * tables[gu[i] + 64]) * tables[gv[i]] + z * tables[gv[i] + 64]);
       }
 
-      function grad2d(i,x,y,z) { 
-        return g[i] * (x * Math.sin(gu[i]) + y * Math.cos(gu[i]));
+      function grad2d(i,x,y) { 
+        return g[i] * (x * tables[gu[i]] + y * tables[gu[i] + 64]);
       }
       
       function grad1d(i,x) { 
-        return g[i] * x * Math.cos(gv[i]);
+        return g[i] * x * tables[gv[i] + 64];
       }
       
       function lerp(t,a,b) { return a + t * (b - a); }
         
       this.noise3d = function(x, y, z) {
-        var X = x&255, Y = y&255, Z = z&255;
+        var X = Math.floor(x)&255, Y = Math.floor(y)&255, Z = Math.floor(z)&255;
         x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
         var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y, fz = (3-2*z)*z*z;
         var p0 = p[X]+Y, p00 = p[p0] + Z, p01 = p[p0 + 1] + Z, p1  = p[X + 1] + Y, p10 = p[p1] + Z, p11 = p[p1 + 1] + Z;
@@ -4097,17 +4103,17 @@
       };
       
       this.noise2d = function(x, y) {
-        var X = x&255, Y = y&255;
+        var X = Math.floor(x)&255, Y = Math.floor(y)&255;
         x -= Math.floor(x); y -= Math.floor(y);
         var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y;
         var p0 = p[X]+Y, p1  = p[X + 1] + Y;
         return lerp(fy, 
           lerp(fx, grad2d(p[p0], x, y), grad2d(p[p1], x-1, y)),
-          lerp(fx, grad2d(p[p0], x, y-1), grad2d(p[p1], x-1, y-1)));
+          lerp(fx, grad2d(p[p0 + 1], x, y-1), grad2d(p[p1 + 1], x-1, y-1)));
       };
 
       this.noise1d = function(x) {
-        var X = x&255;
+        var X = Math.floor(x)&255;
         x -= Math.floor(x);
         var fx = (3-2*x)*x*x;
         return lerp(fx, grad1d(p[X], x), grad1d(p[X+1], x-1));
@@ -4144,7 +4150,6 @@
       if(fallout !== undefined) {
         noiseProfile.fallout = fallout;
       }
-      noiseProfile.generator = undefined;
     };
     
     p.noiseSeed = function(seed) {
