@@ -1058,7 +1058,7 @@
       lastTextPos = [0, 0, 0],
       textcanvas,
       oldContext,
-      tempy = 0;
+      tempy = 0,
       curveBasisMatrix, 
       curveToBezierMatrix, 
       curveDrawMatrix, 
