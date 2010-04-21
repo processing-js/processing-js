@@ -4050,7 +4050,7 @@
     }
     Marsaglia.createRandomized = function() {
       var now = new Date();
-      return new Marsaglia(now & 0xFFFFFFFF, Math.floor(now / 4294967296));
+      return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
     };
 
     function PerlinNoise(seed) {
@@ -4061,31 +4061,24 @@
       // generate permutation
       var p = new Array(512); 
       for(i=0;i<256;++i) { p[i] = i; }
-      for(i=0;i<256;++i) { var t = p[j = rnd.nextInt() & 0xFF]; p[i] = p[j]; p[j] = t; }
+      for(i=0;i<256;++i) { var t = p[j = rnd.nextInt() & 0xFF]; p[j] = p[i]; p[i] = t; }
       // copy to avoid taking mod in p[0];
       for(i=0;i<256;++i) { p[i + 256] = p[i]; } 
-
-      // sin and cos tables: 0..255->sin(0..2*PI), 64..319->cos(0..2*PI)
-      var tables = new Array(320);
-      for(i=0;i<256;++i) { tables[i] = Math.sin(2 * Math.PI * i / 256); }
-      for(i=0;i<64;++i) { tables[i + 256] = tables[i]; }
-            
-      // generate gradient(s): g - length, u and v - parameters of sphere
-      var g = new Array(256), gu = new Array(256), gv = new Array(256);
-      for(i=0;i<256;++i) { g[i] = 1; rnd.nextDouble(); }
-      for(i=0;i<256;++i) { gu[i] = rnd.nextInt()&255; } // 0..2*PI
-      for(i=0;i<256;++i) { gv[i] = rnd.nextInt()&127; } // 0..PI
       
-      function grad3d(i,x,y,z) { 
-        return g[i] * ((x * tables[gu[i]] + y * tables[gu[i] + 64]) * tables[gv[i]] + z * tables[gv[i] + 64]);
+      function grad3d(i,x,y,z) {        
+        var h = i & 15; // convert into 12 gradient directions
+        var u = h<8 ? x : y,                 
+            v = h<4 ? y : h===12||h===14 ? x : z;
+        return ((h&1) === 0 ? u : -u) + ((h&2) === 0 ? v : -v);
       }
 
       function grad2d(i,x,y) { 
-        return g[i] * (x * tables[gu[i]] + y * tables[gu[i] + 64]);
+        var v = (i & 1) === 0 ? x : y;
+        return (i&2) === 0 ? -v : v;
       }
       
       function grad1d(i,x) { 
-        return g[i] * x * tables[gv[i] + 64];
+        return (i&1) === 0 ? -x : x;
       }
       
       function lerp(t,a,b) { return a + t * (b - a); }
@@ -4098,8 +4091,8 @@
         return lerp(fz, 
           lerp(fy, lerp(fx, grad3d(p[p00], x, y, z), grad3d(p[p10], x-1, y, z)),
                    lerp(fx, grad3d(p[p01], x, y-1, z), grad3d(p[p11], x-1, y-1,z))),
-          lerp(fy, lerp(fx, grad3d(p[p00], x, y, z-1), grad3d(p[p10], x-1, y, z-1)),
-                   lerp(fx, grad3d(p[p01], x, y-1, z-1), grad3d(p[p11], x-1, y-1,z-1))));
+          lerp(fy, lerp(fx, grad3d(p[p00 + 1], x, y, z-1), grad3d(p[p10 + 1], x-1, y, z-1)),
+                   lerp(fx, grad3d(p[p01 + 1], x, y-1, z-1), grad3d(p[p11 + 1], x-1, y-1,z-1))));
       };
       
       this.noise2d = function(x, y) {
