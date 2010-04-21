@@ -399,6 +399,31 @@
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   Processing.parse = function parse(aCode, p) {
 
+    // Function to grab all code in the opening and closing of two characters
+    var nextBrace = function(right, openChar, closeChar) {
+      var rest = right,
+          position = 0,
+          leftCount = 1,
+          rightCount = 0;
+
+      while (leftCount !== rightCount) {
+        var nextLeft = rest.indexOf(openChar),
+            nextRight = rest.indexOf(closeChar);
+
+        if (nextLeft < nextRight && nextLeft !== -1) {
+          leftCount++;
+          rest = rest.slice(nextLeft + 1);
+          position += nextLeft + 1;
+        } else {
+          rightCount++;
+          rest = rest.slice(nextRight + 1);
+          position += nextRight + 1;
+        }
+      }
+
+      return right.slice(0, position - 1);
+    };
+  
     // Force characters-as-bytes to work.
     //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
     aCode = aCode.replace(/'.{1}'/g, function(all) {
@@ -505,6 +530,36 @@
       this.toString();
     };
 
+    // changes pixels[n] into pixels.getPixels(n)
+    // and pixels[n] = n2 into pixels.setPixels(n, n2)
+    var matchPixels = /pixels\s*\[/,
+        mp;
+
+    while ((mp = aCode.match(matchPixels))) {
+      var left = RegExp.leftContext,
+          allRest = RegExp.rightContext,
+          rest = nextBrace(allRest, "[", "]"),
+          getOrSet = "getPixels";
+
+      allRest = allRest.slice(rest.length + 1);
+
+      allRest = allRest.replace(/^\s*=([^,;]*)([,;])/, function(all, middle, end){
+        rest += ", " + middle;
+        getOrSet = "setPixels";
+        return end;
+      });
+
+      aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
+    }
+    
+    // changes pixel.length to pixels.getLength()
+    aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
+    /*
+  <humph>	pixels.length needs to be pixels.getLength()
+	<humph>	c = pixels[4]; needs to be pixels.getPixel(4);
+	<humph>	pixels[4] = 7; needs to be pixels.setPixel(4, 7);
+  */
+
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 
@@ -584,30 +639,6 @@
               (typeof last === "string" ? last : name + "(");
     };
 
-    var nextBrace = function(right) {
-      var rest = right,
-        position = 0,
-        leftCount = 1,
-        rightCount = 0;
-
-      while (leftCount !== rightCount) {
-        var nextLeft = rest.indexOf("{"),
-          nextRight = rest.indexOf("}");
-
-        if (nextLeft < nextRight && nextLeft !== -1) {
-          leftCount++;
-          rest = rest.slice(nextLeft + 1);
-          position += nextLeft + 1;
-        } else {
-          rightCount++;
-          rest = rest.slice(nextRight + 1);
-          position += nextRight + 1;
-        }
-      }
-
-      return right.slice(0, position - 1);
-    };
-
     var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)\b\1\s*\(/g;
     var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(processing)/g;
 
@@ -620,7 +651,7 @@
     while ((m = aCode.match(matchClass))) {
       var left = RegExp.leftContext,
         allRest = RegExp.rightContext,
-        rest = nextBrace(allRest),
+        rest = nextBrace(allRest, "[", "]");
         className = m[1],
         staticVars = m[2] || "";
 
@@ -658,7 +689,7 @@
       while ((mc = rest.match(matchMethod))) {
         var prev = RegExp.leftContext,
           allNext = RegExp.rightContext,
-          next = nextBrace(allNext);
+          next = nextBrace(allNext, "[", "]");
 
         methods += "addMethod" + mc[1] + next + "});";
 
@@ -743,7 +774,7 @@
         });
       }());
     }
-
+alert(aCode);
     return aCode;
   };
 
