@@ -1056,6 +1056,9 @@
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0,
       lastTextPos = [0, 0, 0],
+      textcanvas,
+      oldContext,
+      tempy = 0;
       curveBasisMatrix, 
       curveToBezierMatrix, 
       curveDrawMatrix, 
@@ -6817,7 +6820,6 @@
     };
 
     // Print some text to the Canvas
-    var textcanvas, oldContext, tempy = 0;
     p.text = function text() {
       if (typeof arguments[0] !== 'undefined') {
         var str = arguments[0],
@@ -6833,7 +6835,7 @@
 
         str = str.toString();
 
-        if ( arguments.length <= 4 ){ // for text( str )
+        if ( arguments.length <= 4 ){
           x = arguments.length < 3?lastTextPos[0]:arguments[1];
           y = tempy = arguments.length < 3?lastTextPos[1]:arguments[2];
           z = arguments.length < 4?0:arguments[3];
@@ -6915,16 +6917,13 @@
           if(p.use3DContext){
             x = arguments[1]; 
             y = tempy; 
-
             var aspect=textcanvas.width/textcanvas.height;
             curContext = oldContext;
 
-            //curContext.bindTexture(curContext.TEXTURE_2D, texture);
             curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas,false,true);
             curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
             curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
             curContext.generateMipmap(curContext.TEXTURE_2D);
-            //curContext.bindTexture(curContext.TEXTURE_2D, null);
 
             var model = new PMatrix3D();
             var scalefactor=curTextSize*0.65;
@@ -6937,19 +6936,14 @@
             view.apply(modelView.array());
 
             curContext.useProgram(programObject2D);
-
             vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
             vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
-
             uniformi(programObject2D, "uSampler", [0]);
             uniformi(programObject2D, "picktype", 1);
-
             uniformMatrix( programObject2D, "model", true,  model.array() );
             uniformMatrix( programObject2D, "view", true, view.array() );
             uniformMatrix( programObject2D, "projection", true, projection.array() );
-
             uniformf(programObject2D, "color", fillStyle);
-
             curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
             curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
 
@@ -6958,7 +6952,8 @@
           lastTextPos[0] = x + width;
           lastTextPos[1] = y;
           lastTextPos[2] = z;
-        } else if (arguments.length <= 6) { // for text( stringdata, x, y , width, height, z)
+
+        } else if (arguments.length <= 6) {
           x = arguments[1];
           y = arguments[2];
           width = arguments[3];
@@ -6974,10 +6969,8 @@
             var lineWidth = 0;
             var letterWidth = 0;
             var textboxWidth = width;
-
             lastTextPos[0] = x;
             lastTextPos[1] = y - 0.4 * curTextSize;
-
             curContext.font = curTextSize + "px " + curTextFont.name;
 
             for (var j = 0; j < str.length; j++) {
@@ -7023,8 +7016,8 @@
               }
             }
 
-          } // end str != ""
-        } // end arguments.length == 6
+          }
+        }
       }
     };
 
