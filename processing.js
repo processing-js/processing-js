@@ -5956,31 +5956,6 @@
 
       this.toImageData = function() {
         // changed for 0.9
-//        var imgData = Temporary2DContext.createImageData(this.width, this.height);
-//        var i, len;
-//        var dest = imgData.data;
-        // this check breaks things once we start changing pimages if we dont 
-        //update the ImageData object as well as the pixel array all the time
-        //        if (this.ImageData && this.ImageData.width > 0) {
-        //          // image is based on ImageData. Copying...
-        //          var src = this.ImageData.data;
-        //          for (i = 0, len = this.width * this.height * 4; i < len; ++i) {
-        //            dest[i] = src[i];
-        //          }
-        //        } else {
-//        for (i = 0, len = this.pixels.length; i < len; ++i) {
-//          // convert each this.pixels[i] int to array of 4 ints of each color
-//          var c = this.pixels[i];
-//          var pos = i * 4;
-//          // pjs uses argb, canvas stores rgba        
-//          dest[pos + 3] = (c >>> 24) & 0xFF;
-//          dest[pos + 0] = (c >>> 16) & 0xFF;
-//          dest[pos + 1] = (c >>> 8) & 0xFF;
-//          dest[pos + 2] = c & 0xFF;
-//          //          }
-//        }
-        // return a canvas ImageData object with pixel array in canvas format
-//        return imgData;
         return this.imageData;
       };
 
@@ -5991,18 +5966,6 @@
         var ctx = canvas.getContext('2d');
         var imgData = ctx.createImageData(this.width, this.height);
         // changed for 0.9
-//        for (var i = 0; i < this.pixels.length; i++) {
-//          // convert each this.pixels[i] int to array of 4 ints of each color
-//          var c = this.pixels[i];
-//          var pos = i * 4;
-//          // pjs uses argb, canvas stores rgba        
-//          imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
-//          imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
-//          imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
-//          imgData.data[pos + 2] = c % 256;
-//        }
-//        // return data URI for a canvas
-//        ctx.putImageData(imgData, 0, 0);
         ctx.putImageData(this.imageData, 0, 0);
         return canvas.toDataURL();
       };
@@ -6012,15 +5975,8 @@
         this.height = canvasImg.height;
         this.imageData = canvasImg;
         // changed for 0.9
-        // this.pixels = new Array(canvasImg.width * canvasImg.height);
         this.format = p.ARGB;
         // changed for 0.9
-//        for (var i = 0; i < this.pixels.length; i++) {
-//          // convert each canvasImg's colors to PImage array format
-//          var pos = i * 4;
-//          // pjs uses argb, canvas stores rgba
-//          this.pixels[i] = p.color.toInt(canvasImg.data[pos + 0], canvasImg.data[pos + 1], canvasImg.data[pos + 2], canvasImg.data[pos + 3]);
-//        }
       };
 
       this.fromHTMLImageData = function(htmlImg) {
@@ -6041,10 +5997,7 @@
         this.width = aWidth || 1;
         this.height = aHeight || 1;        
         // changed for 0.9
-        //this.pixels = new Array(this.width * this.height);
-        
         this.imageData = curContext.createImageData(this.width, this.height);
-        //this.data = this.imageData.data;
         this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
       }
     };
@@ -6062,21 +6015,6 @@
 
     p.createImage = function createImage(w, h, mode) {
       // changed for 0.9
-      // no need to set pixels black , createImageData does it for us in PImage constructor now for 0.9
-//      var img = new PImage(w, h, mode);
-      // make the new image transparent black by default
-//      for (var i = 0; i < w * h; i++) {
-//        if (mode === p.RGB) {
-//          // if mode is RGB set alpha to 255, no transparency
-//          img.pixels[i++] = 255;
-//        } else {
-//          img.pixels[i++] = 0;
-//        }
-//        img.pixels[i++] = 0;
-//        img.pixels[i++] = 0;
-//        img.pixels[i] = 0;
-//      }
-//      return img;
       return new PImage(w,h,mode);
     };
 
@@ -6136,8 +6074,7 @@
         c = new PImage(w, h, p.RGB);
         for (var i = start, j = 0; i < end; i++, j++) {
           // changed in 0.9
-          //c.pixels[j] = img[i]; // btw ??? shouldnt this be img.pixels[i] in 0.8 ? bug ?
-          c.imageData[j] = img.imageData[i];
+          c.imageData.data[j] = img.imageData.data[i];
           if (j*4 + 1 % w === 0) {
             //completed one line, increment i by offset
             i += (img.width - w) * 4;
@@ -6152,7 +6089,6 @@
       } else if (arguments.length === 3) {
         // PImage.get(x,y) was called, return the color (int) at x,y of img
         // changed in 0.9
-        //return w.pixels[y * w.width + x];
         var offset = y * w.width * 4 + (x * 4);
         return p.color.toInt(w.imageData.data[offset],
                            w.imageData.data[offset + 1],
@@ -6166,7 +6102,6 @@
           c = new PImage(1, 1, p.RGB);
           c.fromImageData(curContext.getImageData(x, y, 1, 1));
           // changed for 0.9
-          //return c.pixels[0];
           return p.color.toInt(c.imageData.data[0],
                                c.imageData.data[1],
                                c.imageData.data[2],
@@ -6196,7 +6131,6 @@
       // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
       if (arguments.length === 4) {
         // changed in 0.9
-        //img.pixels[y * img.width + x] = obj;
         var c = p.color.toArray(obj);
         var offset = y * img.width * 4 + (x*4);
         img.imageData.data[offset] = c[0];
@@ -6217,7 +6151,8 @@
       }
     };
     p.imageData = {};
-    // handle the sketch code for pixels[i] = c
+    
+    // handle the sketch code for pixels[]
     p.pixels = {
       getLength : function(){ return p.imageData.data.length ? p.imageData.data.length/4 : 0},
       getPixel : function(i) {
@@ -6248,32 +6183,6 @@
     // Draws a 1-Dimensional pixel array to Canvas
     p.updatePixels = function() {
       // changed in 0.9
-//      var pixels = {}, c;
-
-//      pixels.width = p.width;
-//      pixels.height = p.height;
-//      pixels.data = [];
-
-//      if (curContext.createImageData) {
-//        pixels = curContext.createImageData(p.width, p.height);
-//      }
-
-//      var data = pixels.data,
-//        pos = 0,
-//        defaultColor;
-
-//      for (var i = 0, l = p.pixels.length; i < l; i++) {
-//        c = p.pixels[i] ? p.color.toArray(p.pixels[i]) : [0, 0, 0, 255];
-
-//        data[pos + 0] = c[0];
-//        data[pos + 1] = c[1];
-//        data[pos + 2] = c[2];
-//        data[pos + 3] = c[3];
-
-//        pos += 4;
-//      }
-
-//      curContext.putImageData(pixels, 0, 0);
       if (p.imageData) {
         curContext.putImageData(p.imageData, 0, 0);
       }
