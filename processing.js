@@ -5121,7 +5121,7 @@
     p.screenX = function screenX( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
-      
+
       var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
       var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
       var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
@@ -5136,41 +5136,41 @@
       return p.width * ( 1 + ox ) / 2.0;
     };
 
-	  p.screenY = function screenY( x, y, z ) {
+    p.screenY = function screenY( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
-      
+
       var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
       var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
       var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
       var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-	    var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
-	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+      var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-	    if ( ow !== 0 ){
+      if ( ow !== 0 ){
         oy /= ow;
       }
-	    return p.height * ( 1 + oy ) / 2.0;
-	  };
+      return p.height * ( 1 + oy ) / 2.0;
+    };
 
-	  p.screenZ = function screenZ( x, y, z ) {
+    p.screenZ = function screenZ( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
-      
+
       var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
       var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
       var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
       var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-	    var oz = pj[ 8]*ax + pj[ 9]*ay + pj[10]*az + pj[11]*aw;
-	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+      var oz = pj[ 8]*ax + pj[ 9]*ay + pj[10]*az + pj[11]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-	    if ( ow !== 0 ) {
+      if ( ow !== 0 ) {
         oz /= ow;
       }
-	    return ( oz + 1 ) / 2.0;
-	  };
+      return ( oz + 1 ) / 2.0;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
