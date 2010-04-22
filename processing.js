@@ -769,7 +769,6 @@
         });
       }());
     }
-//alert(aCode);
     return aCode;
   };
 
@@ -5920,6 +5919,9 @@
         }
       };
       
+      // handle the sketch code for pixels[] and pixels.length
+      // parser code converts pixels[] to getPixels()
+      // or setPixels(), .length becomes getLength()
       this.pixels = {
         getLength : (function(aImg) {
           return function() { 
@@ -6153,14 +6155,16 @@
     p.imageData = {};
     
     // handle the sketch code for pixels[]
+    // parser code converts pixels[] to getPixels()
+    // or setPixels(), .length becomes getLength()
     p.pixels = {
       getLength : function(){ return p.imageData.data.length ? p.imageData.data.length/4 : 0},
-      getPixel : function(i) {
+      getPixels : function(i) {
         var offset = i*4;
         return p.color.toInt(p.imageData.data[offset], p.imageData.data[offset+1],
                              p.imageData.data[offset+2], p.imageData.data[offset+3]);
       },
-      setPixel : function(i,c){
+      setPixels : function(i,c){
         if(c && typeof c == "number") {
           var offset = i*4;
           // split c into array
