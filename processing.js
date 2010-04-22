@@ -539,13 +539,13 @@
       var left = RegExp.leftContext,
           allRest = RegExp.rightContext,
           rest = nextBrace(allRest, "[", "]"),
-          getOrSet = "getPixels";
+          getOrSet = "getPixel";
 
       allRest = allRest.slice(rest.length + 1);
 
       allRest = allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
         rest += ", " + middle;
-        getOrSet = "setPixels";
+        getOrSet = "setPixel";
         return end;
       });
 
@@ -5928,14 +5928,14 @@
             return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
           }
         })(this),
-        getPixels : (function(aImg) {
+        getPixel : (function(aImg) {
           return function(i) {
             var offset = i*4;
             return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
                                  aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
           }
         })(this),
-        setPixels : (function(aImg) {
+        setPixel : (function(aImg) {
           return function(i,c) {
             if(c && typeof c == "number") {
               var offset = i*4;
@@ -6159,12 +6159,12 @@
     // or setPixels(), .length becomes getLength()
     p.pixels = {
       getLength : function(){ return p.imageData.data.length ? p.imageData.data.length/4 : 0},
-      getPixels : function(i) {
+      getPixel : function(i) {
         var offset = i*4;
         return p.color.toInt(p.imageData.data[offset], p.imageData.data[offset+1],
                              p.imageData.data[offset+2], p.imageData.data[offset+3]);
       },
-      setPixels : function(i,c){
+      setPixel : function(i,c){
         if(c && typeof c == "number") {
           var offset = i*4;
           // split c into array
