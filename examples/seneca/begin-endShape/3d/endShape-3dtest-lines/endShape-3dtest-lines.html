@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head>
+  <body>
+    <h1>beginShape() and endShape() test</h1>
+
+    <p>
+    <canvas datasrc="endShape-3Dtest-lines.pjs" width="500" height="100"></canvas>
+    <img src="p5_result.png"/>
+    </p>
+
+    <pre>
+size(500, 100, P3D);
+background(200);
+box(10);
+beginShape(LINES);
+vertex(20, 20);
+vertex(40, 20);
+vertex(40, 40);
+vertex(60, 40);
+vertex(60, 60);
+vertex(20, 60);
+endShape();
+
+beginShape(LINES);
+vertex(120, 20);
+vertex(140, 20);
+vertex(140, 40);
+vertex(160, 40);
+vertex(160, 60);
+//vertex(120, 60);
+endShape();
+
+beginShape(LINES);
+vertex(220, 20);
+vertex(240, 20);
+vertex(240, 40);
+vertex(260, 40);
+//vertex(260, 60);
+//vertex(220, 60);
+endShape();
+
+beginShape(LINES);
+vertex(320, 20);
+vertex(340, 20);
+vertex(340, 40);
+//vertex(360, 40);
+//vertex(360, 60);
+//vertex(320, 60);
+endShape();
+
+beginShape(LINES);
+vertex(420, 20);
+vertex(440, 20);
+//vertex(440, 40);
+//vertex(460, 40);
+//vertex(460, 60);
+//vertex(420, 60);
+endShape();
+    </pre>
+  </body>
+</html>
