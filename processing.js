@@ -477,7 +477,7 @@
     aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/, "$1p.FRAME_RATE$2");
 
     // Simple convert a function-like thing to function
-    aCode = aCode.replace(/(?:static )?(\w+(?:\[\])* )(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
+    aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
       if (name === "if" || name === "for" || name === "while") {
         return all;
       } else {
@@ -485,8 +485,6 @@
       }
     });
 
-    // Attach import() to p{} bypassing JS command, allowing for extrernal library loading
-    //aCode = aCode.replace(/import \(|import\(/g, "p.Import(");
     // Delete import statements, ie. import processing.video.*;
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
@@ -522,7 +520,7 @@
     });
 
     // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
-    aCode = aCode.replace(/(?:static )?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function(all) {
+    aCode = aCode.replace(/(?:static\s+)?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function(all) {
       return all.replace(/\{/g, "[").replace(/\}/g, "]");
     });
 
@@ -554,45 +552,32 @@
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
     // implements Int1, Int2 
-    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*) \{/g, function(all, interfaces) {
+    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s+\{/g, function(all, interfaces) {
       var names = interfaces.replace(/\s+/g, "").split(",");
       return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
     });
 
     var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
 
-    var classReplace = function(all, name, extend, vars, last) {
+    var classReplace = function(all, name, extend) {
       classes.push(name);
 
-      var staticVar = "";
-
-      vars = vars.replace(/final\s+var\s+(\w+\s*=\s*.*?;)/g, function(all, setting) {
-        staticVar += " " + name + "." + setting;
-        return "";
-      });
-
-
-      // Move arguments up from constructor and wrap contents with
-      // a with(this), and unwrap constructor
-      return "function " + name + "() {with(this){\n " + 
+    // Move arguments up from constructor
+    return "function " + name + "() {\n " + 
               (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
-              // Replace var foo = 0; with this.foo = 0;
-              // and force var foo; to become this.foo = null;
-              vars.replace(/\s*,\s*/g, ";\n  this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/this\.(\w+);/g, "this.$1 = null;") + 
               (extend ? "extendClass(this, " + extend + ");\n" : "") + 
-              "<CLASS " + name + " " + staticVar + ">" + 
-              (typeof last === "string" ? last : name + "(");
+              "<CLASS " + name + " >";
     };
 
     var nextBrace = function(right) {
       var rest = right,
-        position = 0,
-        leftCount = 1,
-        rightCount = 0;
+          position = 0,
+          leftCount = 1,
+          rightCount = 0;
 
       while (leftCount !== rightCount) {
         var nextLeft = rest.indexOf("{"),
-          nextRight = rest.indexOf("}");
+            nextRight = rest.indexOf("}");
 
         if (nextLeft < nextRight && nextLeft !== -1) {
           leftCount++;
@@ -608,66 +593,123 @@
       return right.slice(0, position - 1);
     };
 
-    var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)\b\1\s*\(/g;
-    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(processing)/g;
+    var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
 
     aCode = aCode.replace(matchClasses, classReplace);
-    aCode = aCode.replace(matchNoCon, classReplace);
 
-    var matchClass = /<CLASS (\w+) (.*?)>/,
-      m;
+    var matchClass = /<CLASS (\w+) >/,
+        m;
 
     while ((m = aCode.match(matchClass))) {
       var left = RegExp.leftContext,
-        allRest = RegExp.rightContext,
-        rest = nextBrace(allRest),
-        className = m[1],
-        staticVars = m[2] || "";
+          allRest = RegExp.rightContext,
+          rest = nextBrace(allRest),
+          className = m[1],
+          staticVars = m[2] || "";
 
       allRest = allRest.slice(rest.length + 1);
 
-      rest = (function() {
-        return rest.replace(new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), function(all, args) {
+      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
+          c,
+          constructors = "";
+
+      // Extract all constructors and put them into the variable "constructors"
+      while ((c = rest.match(matchConstructor))) {
+        var prev = RegExp.leftContext,
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext),
+            args = c[1];
+
           args = args.split(/,\s*?/);
 
-          if (args[0].match(/^\s*$/)) {
-            args.shift();
-          }
+        if (args[0].match(/^\s*$/)) {
+          args.shift();
+        }
+        
+        constructors += "if ( arguments.length === " + args.length + " ) {\n";
 
-          var fn = "if ( arguments.length === " + args.length + " ) {\n";
-
-          for (var i = 0; i < args.length; i++) {
-            fn += " var " + args[i] + " = arguments[" + i + "];\n";
-          }
-
-          return fn;
-        });
-      }());
+        for (var i = 0, aLength = args.length; i < aLength; i++) {
+          constructors += " var " + args[i] + " = arguments[" + i + "];\n";
+        }
+        
+        constructors += next + "}\n";
+        rest = prev + allNext.slice(next.length + 1);
+      }
 
       // Fix class method names
       // this.collide = function() { ... }
-      // and add closing } for with(this) ...
       rest = (function() {
-        return rest.replace(/(?:public )?processing.\w+ = function (\w+)\((.*?)\)/g, function(all, name, args) {
-          return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
+        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\((.*?)\)/g, function(all, name, args) {
+          return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
         });
       }());
 
-      var matchMethod = /ADDMETHOD([\s\S]*?\{)/, mc, methods = "";
+      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[\s\S]*?\{)/,
+          mc,
+          methods = "",
+          methodsArray = [];
 
       while ((mc = rest.match(matchMethod))) {
         var prev = RegExp.leftContext,
-          allNext = RegExp.rightContext,
-          next = nextBrace(allNext);
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext);
 
-        methods += "addMethod" + mc[1] + next + "});";
+        methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));" + "var " + mc[2] + " = this." + mc[2] + ";\n");
 
         rest = prev + allNext.slice(next.length + 1);
       }
 
-      rest = methods + rest;
+      var vars = "",
+          publicVars  = "";
 
-      aCode = left + rest + "\n}}" + staticVars + allRest;
+      // Put all member variables into "vars"
+      // and keep a list of all public variables
+      rest = rest.replace(/(?:(final|private|public)\s+)?var\s+([^;]*?;)/g, function(all, access, variable) {
+        if (access === "private") {
+          variable = ("var " + variable.replace(/,\s*/g, ";\nvar "))
+                                       .replace(/var\s+?(\w+);/g, "var $1 = null;");
+          vars += variable + '\n';
+        } else {
+          publicVars += variable.replace(/,\s*/g, "\n")
+                                .replace(/\s*(\w+)\s*(;|=).*\s?/g, "$1|");
+          variable = ("this." + variable.replace(/,\s*/g, ";\nthis."))
+                                        .replace(/this.(\w+);/g, "this.$1 = null;");
+          vars += variable + '\n';
+        }
+
+        return "";
+      });
+    
+      // add this. to public variables used inside member functions, and constructors
+      if (publicVars) {
+        // Search functions for public variables
+        for (var i = 0, aLength = methodsArray.length; i < aLength; i++) {
+          methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{.*?\{)([^\}]*?\};)/g, function(all, header, body) {
+            return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+              if (first === ".") {
+                return all;
+              } else {
+                return "public." + variable;
+              }
+            });
+          });
+        }
+        // Search constructors for public variables
+        constructors = constructors.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+          if (/var\s*?$/.test(first) || first === ".") {
+            return all;
+          } else {
+            return "this." + variable;
+          }
+        });
+      }
+    
+      for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
+        methods += methodsArray[i];
+      }
+      rest = vars + "\n" + methods + "\n" + constructors;
+
+      aCode = left + rest + "\n}" + staticVars + allRest;
     }
 
     // Do some tidying up, where necessary
