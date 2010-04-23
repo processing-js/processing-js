@@ -3,7 +3,6 @@
 # can temporarily remove a test from this list by commenting it out with a leading #
 # and add comments explaining why a test has been added/commented out.
 
-test/parser/Processing-Book-001/Units 43-51/43 Structure 4/_02/_02.pde
 test/parser/Processing-Book-001/Units 00-17/10 Image 1/_05/_05.pde
 test/parser/Fry-Visualizing-Data/ch05-salaryper/step_08b_web/step_08b_web.pde
 test/parser/Fry-Visualizing-Data/ch06-zipdecode/round_09c_focus_handling/round_09c_focus_handling.pde
@@ -75,7 +74,6 @@ test/parser/Processing-Book-001/Units 31-42/39 Image 4/_04/_04.pde
 test/parser/Processing-Book-001/Units 31-42/40 Image 5/_11/_11.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
-test/parser/Processing-Book-001/Units 43-51/46 Input 6/_06/_06.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_07/_07.pde
 # this test fails because the char parser converts singled quoted 1 character strings to Char objects
 test/parser/stringParsing/singleQuotedStrings/3.pde
