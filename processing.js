@@ -2711,7 +2711,54 @@
         }
       }
     };
+   
+    p.color.toHSB = function( colorInt ) {
+      var red, green, blue;
+  
+      red = ((colorInt & p.RED_MASK) >>> 16) / 255;
+      green = ((colorInt & p.GREEN_MASK) >>> 8) / 255;
+      blue = (colorInt & p.BLUE_MASK) / 255;
 
+      var max = p.max(p.max(red,green), blue),
+          min = p.min(p.min(red,green), blue),
+          hue, saturation;
+          
+      if (min === max) {
+        return [0, 0, max];
+      } else {
+        saturation = (max - min) / max;
+        
+        if (red === max) {
+          hue = (green - blue) / (max - min);
+        } else if (green === max) {
+          hue = 2 + ((blue - red) / (max - min));
+        } else {
+          hue = 4 + ((red - green) / (max - min));
+        }
+        
+        hue /= 6;
+        
+        if (hue < 0) {
+          hue += 1;
+        } else if (hue > 1) {
+          hue -= 1;
+        }
+      }
+      return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
+    };
+    
+    p.brightness = function(colInt){
+      return  p.color.toHSB(colInt)[2];
+    };
+    
+    p.saturation = function(colInt){
+      return  p.color.toHSB(colInt)[1];
+    };
+    
+    p.hue = function(colInt){
+      return  p.color.toHSB(colInt)[0];
+    };
+    
     var verifyChannel = function verifyChannel(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
