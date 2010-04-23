@@ -3138,9 +3138,9 @@
         p.camera();
         p.draw();
       } else {
-        p.pushMatrix();
+        curContext.save();
         p.draw();
-        p.popMatrix();
+        curContext.restore();
       }
 
       inDraw = false;
