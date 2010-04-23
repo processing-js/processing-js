@@ -464,6 +464,9 @@
     // Windows newlines cause problems: 
     aCode = aCode.replace(/\r\n?/g, "\n");
 
+    // Remove multi-line comments
+    aCode = aCode.replace(/\/\*[\s\S]*?\*\//g, "");
+
     // Remove end-of-line comments
     aCode = aCode.replace(/\/\/.*\n/g, "\n");
 
