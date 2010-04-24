@@ -3266,7 +3266,7 @@
     };
 
     p.noCursor = function noCursor() {
-      curCursor = document.body.style.cursor = p.NOCURSOR;
+      curCursor = curElement.style.cursor = p.NOCURSOR;
     };
 
     p.link = function(href, target) {
@@ -7538,8 +7538,6 @@
         p.mouseX = e.pageX - offsetX;
         p.mouseY = e.pageY - offsetY;
 
-        p.cursor(curCursor);
-
         if (p.mouseMoved && !mousePressed) {
           p.mouseMoved();
         }
@@ -7550,7 +7548,6 @@
       });
 
       attach(curElement, "mouseout", function(e) {
-        document.body.style.cursor = oldCursor;
       });
 
       attach(curElement, "mousedown", function(e) {
