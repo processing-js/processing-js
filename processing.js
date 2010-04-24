@@ -646,7 +646,7 @@
     while ((m = aCode.match(matchClass))) {
       var left = RegExp.leftContext,
         allRest = RegExp.rightContext,
-        rest = nextBrace(allRest, "[", "]");
+        rest = nextBrace(allRest, "{", "}");
         className = m[1],
         staticVars = m[2] || "";
 
@@ -684,7 +684,7 @@
       while ((mc = rest.match(matchMethod))) {
         var prev = RegExp.leftContext,
           allNext = RegExp.rightContext,
-          next = nextBrace(allNext, "[", "]");
+          next = nextBrace(allNext, "{", "}");
 
         methods += "addMethod" + mc[1] + next + "});";
 
