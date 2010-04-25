@@ -487,6 +487,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     // Windows newlines cause problems: 
     aCode = aCode.replace(/\r\n?/g, "\n");
 
+    // Remove multi-line comments
+    aCode = aCode.replace(/\/\*[\s\S]*?\*\//g, "");
+
     // Remove end-of-line comments
     aCode = aCode.replace(/\/\/.*\n/g, "\n");
 
@@ -1421,7 +1424,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       },
       mult: function(source, target) {
         var x, y;
-
         if (source instanceof PVector) {
           x = source.x;
           y = source.y;
@@ -1435,7 +1437,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             target = [];
           }
         }
-
         if (target instanceof Array) {
           target[0] = this.elements[0] * x + this.elements[1] * y + this.elements[2];
           target[1] = this.elements[3] * x + this.elements[4] * y + this.elements[5];
@@ -1458,6 +1459,39 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       skewY: function(angle) {
         this.apply(1, 0, 1, 0, angle, 0);
       },
+      determinant: function() {
+        return this.elements[0] * this.elements[4] - this.elements[1] * this.elements[3];
+      },
+      invert: function() {
+        var d = this.determinant();
+        if ( Math.abs( d ) > p.FLOAT_MIN ) {
+          var old00 = this.elements[0];
+          var old01 = this.elements[1];
+          var old02 = this.elements[2];
+          var old10 = this.elements[3];
+          var old11 = this.elements[4];
+          var old12 = this.elements[5];
+          this.elements[0] =  old11 / d;
+          this.elements[3] = -old10 / d;
+          this.elements[1] = -old01 / d;
+          this.elements[1] =  old00 / d;
+          this.elements[2] = (old01 * old12 - old11 * old02) / d;
+          this.elements[5] = (old10 * old02 - old00 * old12) / d;
+          return true;
+        }
+        return false;
+      },
+      scale: function(sx, sy) {
+        if (sx && !sy) {
+          sy = sx;
+        }
+        if (sx && sy) {
+          this.elements[0] *= sx;
+          this.elements[1] *= sy;
+          this.elements[3] *= sx;
+          this.elements[4] *= sy;
+        }
+      },
       apply: function() {
         if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
           this.apply(arguments[0].array());
@@ -1467,7 +1501,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                       a[3], a[4], a[5]]);
         } else if (arguments.length === 1 && arguments[0] instanceof Array) {
           var source = arguments[0];
-
           var result = [0, 0, this.elements[2],
                         0, 0, this.elements[5]];
           var e = 0;
@@ -1479,13 +1512,46 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           this.elements = result.slice();
         }
       },
+      preApply: function() {
+        if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
+          this.preApply(arguments[0].array());
+        } else if (arguments.length === 6) {
+          var a = arguments;
+          this.preApply([a[0], a[1], a[2],
+                         a[3], a[4], a[5]]);
+        } else if (arguments.length === 1 && arguments[0] instanceof Array) {
+          var source = arguments[0];
+          var result = [0, 0, source[2],
+                        0, 0, source[5]];
+          result[2]= source[2] + this.elements[2] * source[0] + this.elements[5] * source[1];
+          result[5]= source[5] + this.elements[2] * source[3] + this.elements[5] * source[4];
+          result[0] = this.elements[0] * source[0] + this.elements[3] * source[1];
+          result[3] = this.elements[0] * source[3] + this.elements[3] * source[4];
+          result[1] = this.elements[1] * source[0] + this.elements[4] * source[1];
+          result[4] = this.elements[1] * source[3] + this.elements[4] * source[4];
+          this.elements = result.slice();
+        }
+      },
+      rotate: function(angle) {
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+        var temp1 = this.elements[0];
+        var temp2 = this.elements[1];
+        this.elements[0] =  c * temp1 + s * temp2;
+        this.elements[1] = -s * temp1 + c * temp2;
+        temp1 = this.elements[3];
+        temp2 = this.elements[4];
+        this.elements[3] =  c * temp1 + s * temp2;
+        this.elements[4] = -s * temp1 + c * temp2;
+      },
+      rotateZ: function(angle) {
+        this.rotate(angle);
+      },
       print: function() {
         var digits = printMatrixHelper(this.elements);
-
         var output = "";
         output += p.nfs(this.elements[0], digits, 4) + " " + p.nfs(this.elements[1], digits, 4) + " " + p.nfs(this.elements[2], digits, 4) + "\n";
         output += p.nfs(this.elements[3], digits, 4) + " " + p.nfs(this.elements[4], digits, 4) + " " + p.nfs(this.elements[5], digits, 4) + "\n\n";
-
         p.println(output);
       }
     };
@@ -2776,7 +2842,54 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
       }
     };
+   
+    p.color.toHSB = function( colorInt ) {
+      var red, green, blue;
+  
+      red = ((colorInt & p.RED_MASK) >>> 16) / 255;
+      green = ((colorInt & p.GREEN_MASK) >>> 8) / 255;
+      blue = (colorInt & p.BLUE_MASK) / 255;
 
+      var max = p.max(p.max(red,green), blue),
+          min = p.min(p.min(red,green), blue),
+          hue, saturation;
+          
+      if (min === max) {
+        return [0, 0, max];
+      } else {
+        saturation = (max - min) / max;
+        
+        if (red === max) {
+          hue = (green - blue) / (max - min);
+        } else if (green === max) {
+          hue = 2 + ((blue - red) / (max - min));
+        } else {
+          hue = 4 + ((red - green) / (max - min));
+        }
+        
+        hue /= 6;
+        
+        if (hue < 0) {
+          hue += 1;
+        } else if (hue > 1) {
+          hue -= 1;
+        }
+      }
+      return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
+    };
+    
+    p.brightness = function(colInt){
+      return  p.color.toHSB(colInt)[2];
+    };
+    
+    p.saturation = function(colInt){
+      return  p.color.toHSB(colInt)[1];
+    };
+    
+    p.hue = function(colInt){
+      return  p.color.toHSB(colInt)[0];
+    };
+    
     var verifyChannel = function verifyChannel(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
@@ -3093,9 +3206,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         p.camera();
         p.draw();
       } else {
-        p.pushMatrix();
+        curContext.save();
         p.draw();
-        p.popMatrix();
+        curContext.restore();
       }
 
       inDraw = false;
@@ -5181,6 +5294,63 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         uniformi(programObject3D, "usingMat", true);
         uniformf(programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
       }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Coordinates
+    ////////////////////////////////////////////////////////////////////////////
+    p.screenX = function screenX( x, y, z ) {
+      var mv = modelView.array();
+      var pj = projection.array();
+
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+      if ( ow !== 0 ){
+        ox /= ow;
+      }
+      return p.width * ( 1 + ox ) / 2.0;
+    };
+
+    p.screenY = function screenY( x, y, z ) {
+      var mv = modelView.array();
+      var pj = projection.array();
+
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+
+      var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+      if ( ow !== 0 ){
+        oy /= ow;
+      }
+      return p.height * ( 1 + oy ) / 2.0;
+    };
+
+    p.screenZ = function screenZ( x, y, z ) {
+      var mv = modelView.array();
+      var pj = projection.array();
+
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+
+      var oz = pj[ 8]*ax + pj[ 9]*ay + pj[10]*az + pj[11]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+      if ( ow !== 0 ) {
+        oz /= ow;
+      }
+      return ( oz + 1 ) / 2.0;
     };
 
     ////////////////////////////////////////////////////////////////////////////
