@@ -1,0 +1,43 @@
+import processing.opengl.*;
+
+float E = 0.001;
+
+void setup() {
+
+size(100,100,OPENGL);
+
+if( checkEqual( screenX( 0, 0, 0 ) , -5.9604645E-6, E) &&
+    checkEqual( screenX( 10, 0, 0 ), 10.000006, E) &&
+    checkEqual( screenX( 0, -10, 0 ), 0.0, E) &&
+    checkEqual( screenX( 0, 0, 90 ), 1324.5187, E) &&
+    checkEqual( screenX( 5, 5, 5 ), 2.2427292, E) &&
+    checkEqual( screenX( -5, -5, -5 ), -1.997906, E) &&
+
+    checkEqual( screenY( 0, 0, 0 ), 0.0, E) &&
+    checkEqual( screenY( 10, 0, 0 ), -5.9604645E-6, E) &&
+    checkEqual( screenY( 0, -10, 0 ), -10.000002, E) &&
+    checkEqual( screenY( 0, 0, 90 ), 1324.5187, E) &&
+    checkEqual( screenY( 5, 5, 5 ), 2.2427292, E) &&
+    checkEqual( screenY( -5, -5, -5 ), -1.997906, E) &&
+
+    checkEqual( screenZ( 0, 0, 0 ), 0.9090909, E) &&
+    checkEqual( screenZ( 10, 0, 0 ), 0.9090909, E) &&
+    checkEqual( screenZ( 0, -10, 0 ), 0.90909094, E) &&
+    checkEqual( screenZ( 0, 0, 90 ), 3.584886, E) &&
+    checkEqual( screenZ( 5, 5, 5 ), 0.90290177, E) &&
+    checkEqual( screenZ( -5, -5, -5 ), 0.9146044, E) 
+  )
+  {
+    background( 0, 255, 0);
+  }
+  else{
+    background( 255, 0, 0);
+  }
+}
+
+boolean checkEqual( a, b, e ){
+  if( abs(a-b) < e){
+    return true;
+  }
+  return false;
+}
