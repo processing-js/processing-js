@@ -1,0 +1,8 @@
+﻿/* @pjs preload="ref_string.jpg"; */
+size(200,200);
+PImage b;
+b = loadImage("ref_string.jpg");
+imageMode(CORNERS);
+image(b, 10, 10, 60, 60);
+imageMode(CORNER);
+image(b, 35, 35, 50, 50);

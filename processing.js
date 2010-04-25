@@ -466,6 +466,9 @@
     // Windows newlines cause problems: 
     aCode = aCode.replace(/\r\n?/g, "\n");
 
+    // Remove multi-line comments
+    aCode = aCode.replace(/\/\*[\s\S]*?\*\//g, "");
+
     // Remove end-of-line comments
     aCode = aCode.replace(/\/\/.*\n/g, "\n");
 
@@ -479,7 +482,7 @@
     aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/, "$1p.FRAME_RATE$2");
 
     // Simple convert a function-like thing to function
-    aCode = aCode.replace(/(?:static )?(\w+(?:\[\])* )(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
+    aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
       if (name === "if" || name === "for" || name === "while") {
         return all;
       } else {
@@ -487,8 +490,6 @@
       }
     });
 
-    // Attach import() to p{} bypassing JS command, allowing for extrernal library loading
-    //aCode = aCode.replace(/import \(|import\(/g, "p.Import(");
     // Delete import statements, ie. import processing.video.*;
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
@@ -524,7 +525,7 @@
     });
 
     // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
-    aCode = aCode.replace(/(?:static )?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function(all) {
+    aCode = aCode.replace(/(?:static\s+)?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function(all) {
       return all.replace(/\{/g, "[").replace(/\}/g, "]");
     });
 
@@ -556,45 +557,32 @@
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
     // implements Int1, Int2 
-    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*) \{/g, function(all, interfaces) {
+    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s+\{/g, function(all, interfaces) {
       var names = interfaces.replace(/\s+/g, "").split(",");
       return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
     });
 
     var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
 
-    var classReplace = function(all, name, extend, vars, last) {
+    var classReplace = function(all, name, extend) {
       classes.push(name);
 
-      var staticVar = "";
-
-      vars = vars.replace(/final\s+var\s+(\w+\s*=\s*.*?;)/g, function(all, setting) {
-        staticVar += " " + name + "." + setting;
-        return "";
-      });
-
-
-      // Move arguments up from constructor and wrap contents with
-      // a with(this), and unwrap constructor
-      return "function " + name + "() {with(this){\n " + 
+    // Move arguments up from constructor
+    return "function " + name + "() {\n " + 
               (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
-              // Replace var foo = 0; with this.foo = 0;
-              // and force var foo; to become this.foo = null;
-              vars.replace(/\s*,\s*/g, ";\n  this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/this\.(\w+);/g, "this.$1 = null;") + 
               (extend ? "extendClass(this, " + extend + ");\n" : "") + 
-              "<CLASS " + name + " " + staticVar + ">" + 
-              (typeof last === "string" ? last : name + "(");
+              "<CLASS " + name + " >";
     };
 
     var nextBrace = function(right) {
       var rest = right,
-        position = 0,
-        leftCount = 1,
-        rightCount = 0;
+          position = 0,
+          leftCount = 1,
+          rightCount = 0;
 
       while (leftCount !== rightCount) {
         var nextLeft = rest.indexOf("{"),
-          nextRight = rest.indexOf("}");
+            nextRight = rest.indexOf("}");
 
         if (nextLeft < nextRight && nextLeft !== -1) {
           leftCount++;
@@ -610,66 +598,123 @@
       return right.slice(0, position - 1);
     };
 
-    var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)\b\1\s*\(/g;
-    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(processing)/g;
+    var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
 
     aCode = aCode.replace(matchClasses, classReplace);
-    aCode = aCode.replace(matchNoCon, classReplace);
 
-    var matchClass = /<CLASS (\w+) (.*?)>/,
-      m;
+    var matchClass = /<CLASS (\w+) >/,
+        m;
 
     while ((m = aCode.match(matchClass))) {
       var left = RegExp.leftContext,
-        allRest = RegExp.rightContext,
-        rest = nextBrace(allRest),
-        className = m[1],
-        staticVars = m[2] || "";
+          allRest = RegExp.rightContext,
+          rest = nextBrace(allRest),
+          className = m[1],
+          staticVars = m[2] || "";
 
       allRest = allRest.slice(rest.length + 1);
 
-      rest = (function() {
-        return rest.replace(new RegExp("\\b" + className + "\\(([^\\)]*?)\\)\\s*{", "g"), function(all, args) {
+      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
+          c,
+          constructors = "";
+
+      // Extract all constructors and put them into the variable "constructors"
+      while ((c = rest.match(matchConstructor))) {
+        var prev = RegExp.leftContext,
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext),
+            args = c[1];
+
           args = args.split(/,\s*?/);
 
-          if (args[0].match(/^\s*$/)) {
-            args.shift();
-          }
+        if (args[0].match(/^\s*$/)) {
+          args.shift();
+        }
+        
+        constructors += "if ( arguments.length === " + args.length + " ) {\n";
 
-          var fn = "if ( arguments.length === " + args.length + " ) {\n";
-
-          for (var i = 0; i < args.length; i++) {
-            fn += " var " + args[i] + " = arguments[" + i + "];\n";
-          }
-
-          return fn;
-        });
-      }());
+        for (var i = 0, aLength = args.length; i < aLength; i++) {
+          constructors += " var " + args[i] + " = arguments[" + i + "];\n";
+        }
+        
+        constructors += next + "}\n";
+        rest = prev + allNext.slice(next.length + 1);
+      }
 
       // Fix class method names
       // this.collide = function() { ... }
-      // and add closing } for with(this) ...
       rest = (function() {
-        return rest.replace(/(?:public )?processing.\w+ = function (\w+)\((.*?)\)/g, function(all, name, args) {
-          return "ADDMETHOD(this, '" + name + "', function(" + args + ")";
+        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\((.*?)\)/g, function(all, name, args) {
+          return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
         });
       }());
 
-      var matchMethod = /ADDMETHOD([\s\S]*?\{)/, mc, methods = "";
+      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[\s\S]*?\{)/,
+          mc,
+          methods = "",
+          methodsArray = [];
 
       while ((mc = rest.match(matchMethod))) {
         var prev = RegExp.leftContext,
-          allNext = RegExp.rightContext,
-          next = nextBrace(allNext);
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext);
 
-        methods += "addMethod" + mc[1] + next + "});";
+        methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));" + "var " + mc[2] + " = this." + mc[2] + ";\n");
 
         rest = prev + allNext.slice(next.length + 1);
       }
 
-      rest = methods + rest;
+      var vars = "",
+          publicVars  = "";
 
-      aCode = left + rest + "\n}}" + staticVars + allRest;
+      // Put all member variables into "vars"
+      // and keep a list of all public variables
+      rest = rest.replace(/(?:(final|private|public)\s+)?var\s+([^;]*?;)/g, function(all, access, variable) {
+        if (access === "private") {
+          variable = ("var " + variable.replace(/,\s*/g, ";\nvar "))
+                                       .replace(/var\s+?(\w+);/g, "var $1 = null;");
+          vars += variable + '\n';
+        } else {
+          publicVars += variable.replace(/,\s*/g, "\n")
+                                .replace(/\s*(\w+)\s*(;|=).*\s?/g, "$1|");
+          variable = ("this." + variable.replace(/,\s*/g, ";\nthis."))
+                                        .replace(/this.(\w+);/g, "this.$1 = null;");
+          vars += variable + '\n';
+        }
+
+        return "";
+      });
+    
+      // add this. to public variables used inside member functions, and constructors
+      if (publicVars) {
+        // Search functions for public variables
+        for (var i = 0, aLength = methodsArray.length; i < aLength; i++) {
+          methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{.*?\{)([^\}]*?\};)/g, function(all, header, body) {
+            return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+              if (first === ".") {
+                return all;
+              } else {
+                return "public." + variable;
+              }
+            });
+          });
+        }
+        // Search constructors for public variables
+        constructors = constructors.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+          if (/var\s*?$/.test(first) || first === ".") {
+            return all;
+          } else {
+            return "this." + variable;
+          }
+        });
+      }
+    
+      for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
+        methods += methodsArray[i];
+      }
+      rest = vars + "\n" + methods + "\n" + constructors;
+
+      aCode = left + rest + "\n}" + staticVars + allRest;
     }
 
     // Do some tidying up, where necessary
@@ -1358,7 +1403,6 @@
       },
       mult: function(source, target) {
         var x, y;
-
         if (source instanceof PVector) {
           x = source.x;
           y = source.y;
@@ -1372,7 +1416,6 @@
             target = [];
           }
         }
-
         if (target instanceof Array) {
           target[0] = this.elements[0] * x + this.elements[1] * y + this.elements[2];
           target[1] = this.elements[3] * x + this.elements[4] * y + this.elements[5];
@@ -1395,6 +1438,39 @@
       skewY: function(angle) {
         this.apply(1, 0, 1, 0, angle, 0);
       },
+      determinant: function() {
+        return this.elements[0] * this.elements[4] - this.elements[1] * this.elements[3];
+      },
+      invert: function() {
+        var d = this.determinant();
+        if ( Math.abs( d ) > p.FLOAT_MIN ) {
+          var old00 = this.elements[0];
+          var old01 = this.elements[1];
+          var old02 = this.elements[2];
+          var old10 = this.elements[3];
+          var old11 = this.elements[4];
+          var old12 = this.elements[5];
+          this.elements[0] =  old11 / d;
+          this.elements[3] = -old10 / d;
+          this.elements[1] = -old01 / d;
+          this.elements[1] =  old00 / d;
+          this.elements[2] = (old01 * old12 - old11 * old02) / d;
+          this.elements[5] = (old10 * old02 - old00 * old12) / d;
+          return true;
+        }
+        return false;
+      },
+      scale: function(sx, sy) {
+        if (sx && !sy) {
+          sy = sx;
+        }
+        if (sx && sy) {
+          this.elements[0] *= sx;
+          this.elements[1] *= sy;
+          this.elements[3] *= sx;
+          this.elements[4] *= sy;
+        }
+      },
       apply: function() {
         if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
           this.apply(arguments[0].array());
@@ -1404,7 +1480,6 @@
                       a[3], a[4], a[5]]);
         } else if (arguments.length === 1 && arguments[0] instanceof Array) {
           var source = arguments[0];
-
           var result = [0, 0, this.elements[2],
                         0, 0, this.elements[5]];
           var e = 0;
@@ -1416,13 +1491,46 @@
           this.elements = result.slice();
         }
       },
+      preApply: function() {
+        if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
+          this.preApply(arguments[0].array());
+        } else if (arguments.length === 6) {
+          var a = arguments;
+          this.preApply([a[0], a[1], a[2],
+                         a[3], a[4], a[5]]);
+        } else if (arguments.length === 1 && arguments[0] instanceof Array) {
+          var source = arguments[0];
+          var result = [0, 0, source[2],
+                        0, 0, source[5]];
+          result[2]= source[2] + this.elements[2] * source[0] + this.elements[5] * source[1];
+          result[5]= source[5] + this.elements[2] * source[3] + this.elements[5] * source[4];
+          result[0] = this.elements[0] * source[0] + this.elements[3] * source[1];
+          result[3] = this.elements[0] * source[3] + this.elements[3] * source[4];
+          result[1] = this.elements[1] * source[0] + this.elements[4] * source[1];
+          result[4] = this.elements[1] * source[3] + this.elements[4] * source[4];
+          this.elements = result.slice();
+        }
+      },
+      rotate: function(angle) {
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+        var temp1 = this.elements[0];
+        var temp2 = this.elements[1];
+        this.elements[0] =  c * temp1 + s * temp2;
+        this.elements[1] = -s * temp1 + c * temp2;
+        temp1 = this.elements[3];
+        temp2 = this.elements[4];
+        this.elements[3] =  c * temp1 + s * temp2;
+        this.elements[4] = -s * temp1 + c * temp2;
+      },
+      rotateZ: function(angle) {
+        this.rotate(angle);
+      },
       print: function() {
         var digits = printMatrixHelper(this.elements);
-
         var output = "";
         output += p.nfs(this.elements[0], digits, 4) + " " + p.nfs(this.elements[1], digits, 4) + " " + p.nfs(this.elements[2], digits, 4) + "\n";
         output += p.nfs(this.elements[3], digits, 4) + " " + p.nfs(this.elements[4], digits, 4) + " " + p.nfs(this.elements[5], digits, 4) + "\n\n";
-
         p.println(output);
       }
     };
@@ -2713,7 +2821,54 @@
         }
       }
     };
+   
+    p.color.toHSB = function( colorInt ) {
+      var red, green, blue;
+  
+      red = ((colorInt & p.RED_MASK) >>> 16) / 255;
+      green = ((colorInt & p.GREEN_MASK) >>> 8) / 255;
+      blue = (colorInt & p.BLUE_MASK) / 255;
 
+      var max = p.max(p.max(red,green), blue),
+          min = p.min(p.min(red,green), blue),
+          hue, saturation;
+          
+      if (min === max) {
+        return [0, 0, max];
+      } else {
+        saturation = (max - min) / max;
+        
+        if (red === max) {
+          hue = (green - blue) / (max - min);
+        } else if (green === max) {
+          hue = 2 + ((blue - red) / (max - min));
+        } else {
+          hue = 4 + ((red - green) / (max - min));
+        }
+        
+        hue /= 6;
+        
+        if (hue < 0) {
+          hue += 1;
+        } else if (hue > 1) {
+          hue -= 1;
+        }
+      }
+      return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
+    };
+    
+    p.brightness = function(colInt){
+      return  p.color.toHSB(colInt)[2];
+    };
+    
+    p.saturation = function(colInt){
+      return  p.color.toHSB(colInt)[1];
+    };
+    
+    p.hue = function(colInt){
+      return  p.color.toHSB(colInt)[0];
+    };
+    
     var verifyChannel = function verifyChannel(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
@@ -3030,9 +3185,9 @@
         p.camera();
         p.draw();
       } else {
-        p.pushMatrix();
+        curContext.save();
         p.draw();
-        p.popMatrix();
+        curContext.restore();
       }
 
       inDraw = false;
@@ -5118,6 +5273,63 @@
         uniformi(programObject3D, "usingMat", true);
         uniformf(programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
       }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Coordinates
+    ////////////////////////////////////////////////////////////////////////////
+    p.screenX = function screenX( x, y, z ) {
+      var mv = modelView.array();
+      var pj = projection.array();
+
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+      if ( ow !== 0 ){
+        ox /= ow;
+      }
+      return p.width * ( 1 + ox ) / 2.0;
+    };
+
+    p.screenY = function screenY( x, y, z ) {
+      var mv = modelView.array();
+      var pj = projection.array();
+
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+
+      var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+      if ( ow !== 0 ){
+        oy /= ow;
+      }
+      return p.height * ( 1 + oy ) / 2.0;
+    };
+
+    p.screenZ = function screenZ( x, y, z ) {
+      var mv = modelView.array();
+      var pj = projection.array();
+
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+
+      var oz = pj[ 8]*ax + pj[ 9]*ay + pj[10]*az + pj[11]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+      if ( ow !== 0 ) {
+        oz /= ow;
+      }
+      return ( oz + 1 ) / 2.0;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -7593,7 +7805,7 @@
         }
       });
 
-      attach(document, /Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent) ? "DOMMouseScroll" : "mousewheel", function(e) {
+      var mouseWheelHandler = function(e) {
         var delta = 0;
 
         if (e.wheelDelta) {
@@ -7610,7 +7822,11 @@
         if (delta && typeof p.mouseScrolled === 'function') {
           p.mouseScrolled();
         }
-      });
+      };
+
+      // Support Gecko and non-Gecko scroll events
+      attach(document, 'DOMMouseScroll', mouseWheelHandler);
+      attach(document, 'mousewheel', mouseWheelHandler);
 
       attach(document, "keydown", function(e) {
         keyPressed = true;

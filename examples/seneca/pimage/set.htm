@@ -1,0 +1,10 @@
+﻿<script src="../../../processing.js"></script>
+<canvas datasrc="set.pjs" width="200" height="200"></canvas>
+<pre>
+for (int i = 30; i < width-15; i++) {
+  for(int j = 20; j < height-25; j++) {
+    color c = color(254-j, 193-i, 0);
+    set(i, j, c);
+  }
+}
+</pre>
