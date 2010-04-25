@@ -5484,6 +5484,83 @@
 
       vertArray.push(vert);
     };
+    
+    var point2D = function point2D(vArray){
+      var model = new PMatrix3D();
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+
+      curContext.useProgram(programObject2D);
+      uniformMatrix(programObject2D, "model", true, model.array());
+      uniformMatrix(programObject2D, "view", true, view.array());
+      uniformMatrix(programObject2D, "projection", true, projection.array());
+
+      uniformf(programObject2D, "color", strokeStyle);
+      vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
+      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
+    };
+
+    var line2D = function line2D(vArray, mode){
+      var ctxMode;
+      if (mode === "LINES"){
+        ctxMode = curContext.LINES;
+      }
+      else if(mode === "LINE_LOOP"){
+        ctxMode = curContext.LINE_LOOP;
+      }
+      else{
+        ctxMode = curContext.LINE_STRIP;
+      }
+      var model = new PMatrix3D();
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+
+      curContext.useProgram(programObject2D);
+      uniformMatrix(programObject2D, "model", true, model.array());
+      uniformMatrix(programObject2D, "view", true, view.array());
+      uniformMatrix(programObject2D, "projection", true, projection.array());
+
+      uniformf(programObject2D, "color", strokeStyle);
+      vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
+      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.drawArrays(ctxMode, 0, vArray.length/3);
+    };
+
+    var fill2D = function fill2D(vArray, mode){
+      var ctxMode;
+      if(mode === "TRIANGLES"){
+        ctxMode = curContext.TRIANGLES;
+      }
+      else if(mode === "TRIANGLE_FAN"){
+        ctxMode = curContext.TRIANGLE_FAN;
+      }
+      else{
+        ctxMode = curContext.TRIANGLE_STRIP;
+      }
+
+      var model = new PMatrix3D();
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+
+      curContext.useProgram( programObject2D );
+      uniformMatrix( programObject2D, "model", true,  model.array() );
+      uniformMatrix( programObject2D, "view", true, view.array() );
+      uniformMatrix( programObject2D, "projection", true, projection.array() );
+      
+      curContext.enable( curContext.POLYGON_OFFSET_FILL );
+      curContext.polygonOffset( 1, 1 );
+      uniformf( programObject2D, "color", fillStyle);
+      
+      vertexAttribPointer(programObject2D, "Vertex", 3, fillBuffer);
+      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      
+      curContext.drawArrays( ctxMode, 0, vArray.length/3 );
+      curContext.disable( curContext.POLYGON_OFFSET_FILL );
+    };
 
     p.endShape = function endShape(close){
       var i, j, k;
@@ -5800,83 +5877,6 @@
         }
         curContext.closePath();
       }
-    };
-
-    var point2D = function point2D(vArray){
-      var model = new PMatrix3D();
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
-      view.apply(modelView.array());
-
-      curContext.useProgram(programObject2D);
-      uniformMatrix(programObject2D, "model", true, model.array());
-      uniformMatrix(programObject2D, "view", true, view.array());
-      uniformMatrix(programObject2D, "projection", true, projection.array());
-
-      uniformf(programObject2D, "color", strokeStyle);
-      vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
-      curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
-    };
-
-    var line2D = function line2D(vArray, mode){
-      var ctxMode;
-      if (mode === "LINES"){
-        ctxMode = curContext.LINES;
-      }
-      else if(mode === "LINE_LOOP"){
-        ctxMode = curContext.LINE_LOOP;
-      }
-      else{
-        ctxMode = curContext.LINE_STRIP;
-      }
-      var model = new PMatrix3D();
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
-      view.apply(modelView.array());
-
-      curContext.useProgram(programObject2D);
-      uniformMatrix(programObject2D, "model", true, model.array());
-      uniformMatrix(programObject2D, "view", true, view.array());
-      uniformMatrix(programObject2D, "projection", true, projection.array());
-
-      uniformf(programObject2D, "color", strokeStyle);
-      vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
-      curContext.drawArrays(ctxMode, 0, vArray.length/3);
-    };
-
-    var fill2D = function fill2D(vArray, mode){
-      var ctxMode;
-      if(mode === "TRIANGLES"){
-        ctxMode = curContext.TRIANGLES;
-      }
-      else if(mode === "TRIANGLE_FAN"){
-        ctxMode = curContext.TRIANGLE_FAN;
-      }
-      else{
-        ctxMode = curContext.TRIANGLE_STRIP;
-      }
-
-      var model = new PMatrix3D();
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
-      view.apply(modelView.array());
-
-      curContext.useProgram( programObject2D );
-      uniformMatrix( programObject2D, "model", true,  model.array() );
-      uniformMatrix( programObject2D, "view", true, view.array() );
-      uniformMatrix( programObject2D, "projection", true, projection.array() );
-      
-      curContext.enable( curContext.POLYGON_OFFSET_FILL );
-      curContext.polygonOffset( 1, 1 );
-      uniformf( programObject2D, "color", fillStyle);
-      
-      vertexAttribPointer(programObject2D, "Vertex", 3, fillBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
-      
-      curContext.drawArrays( ctxMode, 0, vArray.length/3 );
-      curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
     p.curveVertex = function(x, y, z) {
