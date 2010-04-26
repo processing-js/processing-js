@@ -1124,7 +1124,8 @@
       cameraFar = cameraZ * 10,
       cameraAspect = curElement.width / curElement.height;
 
-    var vertArray = new Array();
+    var vertArray = [],
+        isCurve = false;
 
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
@@ -5571,161 +5572,213 @@
       else{
         p.CLOSE = true;
       }
-      if(p.use3DContext){ // 3D context
-        var lineVertArray = [];
-        var fillVertArray = [];
-        for(i = 0; i < vertArray.length; i++){
-          for(j = 0; j < 3; j++){
-            fillVertArray.push(vertArray[i][j]);
+      if(isCurve && curShape === p.POLYGON || curShape === undefined){
+        if(vertArray.length > 3){
+          if(p.use3DContext){
+          }
+          else{
+            var b = [],
+                s = 1 - curTightness;
+            curContext.beginPath();
+            curContext.moveTo(vertArray[1][0], vertArray[1][1]);
+              /*
+              * Matrix to convert from Catmull-Rom to cubic Bezier
+              * where t = curTightness
+              * |0         1          0         0       |
+              * |(t-1)/6   1          (1-t)/6   0       |
+              * |0         (1-t)/6    1         (t-1)/6 |
+              * |0         0          0         0       |
+              */
+            for(i = 1; (i+2) < vertArray.length; i++){
+              b[0] = [vertArray[i][0], vertArray[i][1]];
+              b[1] = [vertArray[i][0] + (s * vertArray[i+1][0] - s * vertArray[i-1][0]) / 6, vertArray[i][1] + (s * vertArray[i+1][1] - s * vertArray[i-1][1]) / 6];
+              b[2] = [vertArray[i+1][0] + (s * vertArray[i][0] - s * vertArray[i+2][0]) / 6, vertArray[i+1][1] + (s * vertArray[i][1] - s * vertArray[i+2][1]) / 6];
+              b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
+              curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
+            }
+            if(doFill){
+              curContext.fill();
+            }
+            if(doStroke){
+              curContext.stroke();
+            }
+            curContext.closePath();
           }
         }
-        
-        fillVertArray.push(vertArray[0][0]);
-        fillVertArray.push(vertArray[0][1]);
-        fillVertArray.push(vertArray[0][2]);  
+      }
+      else{
+        if(p.use3DContext){ // 3D context
+          var lineVertArray = [];
+          var fillVertArray = [];
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 0; j < 3; j++){
+              fillVertArray.push(vertArray[i][j]);
+            }
+          }
+          
+          fillVertArray.push(vertArray[0][0]);
+          fillVertArray.push(vertArray[0][1]);
+          fillVertArray.push(vertArray[0][2]);  
 
-        if (curShape === p.POINTS){
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 0; j < 3; j++){
-              lineVertArray.push(vertArray[i][j]);
-            }
-          }
-          point2D(lineVertArray);
-        }
-        else if(curShape === p.LINES){
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 0; j < 3; j++){
-              lineVertArray.push(vertArray[i][j]);
-            }
-          }
-          line2D(lineVertArray, "LINES");
-        }
-        else if(curShape === p.TRIANGLES){
-          if(vertArray.length > 2){
-            for(i = 0; (i+2) < vertArray.length; i+=3){
-              fillVertArray = [];
-              lineVertArray = [];
+          if (curShape === p.POINTS){
+            for(i = 0; i < vertArray.length; i++){
               for(j = 0; j < 3; j++){
-                for(k = 0; k < 3; k++){
-                  lineVertArray.push(vertArray[i+j][k]);
-                  fillVertArray.push(vertArray[i+j][k]);
+                lineVertArray.push(vertArray[i][j]);
+              }
+            }
+            point2D(lineVertArray);
+          }
+          else if(curShape === p.LINES){
+            for(i = 0; i < vertArray.length; i++){
+              for(j = 0; j < 3; j++){
+                lineVertArray.push(vertArray[i][j]);
+              }
+            }
+            line2D(lineVertArray, "LINES");
+          }
+          else if(curShape === p.TRIANGLES){
+            if(vertArray.length > 2){
+              for(i = 0; (i+2) < vertArray.length; i+=3){
+                fillVertArray = [];
+                lineVertArray = [];
+                for(j = 0; j < 3; j++){
+                  for(k = 0; k < 3; k++){
+                    lineVertArray.push(vertArray[i+j][k]);
+                    fillVertArray.push(vertArray[i+j][k]);
+                  }
+                }
+                if(doStroke){
+                  line2D(lineVertArray, "LINE_LOOP");
+                }
+                if(doFill){
+                  fill2D(fillVertArray, "TRIANGLES");
+                }
+              }
+            }
+          }
+          else if(curShape === p.TRIANGLE_STRIP){
+            if(vertArray.length > 2){
+              for(i = 0; (i+2) < vertArray.length; i++){
+                lineVertArray = [];
+                fillVertArray = [];
+                for(j = 0; j < 3; j++){
+                  for(k = 0; k < 3; k++){
+                    lineVertArray.push(vertArray[i+j][k]);
+                    fillVertArray.push(vertArray[i+j][k]);
+                  }
+                }
+                if(doFill){
+                  fill2D(fillVertArray);
+                }
+                if(doStroke){
+                  line2D(lineVertArray, "LINE_LOOP");
+                }
+              }
+            }
+          }
+          else if(curShape === p.TRIANGLE_FAN){
+            if(vertArray.length > 2){
+              for(i = 0; i < 3; i++){
+                for(j = 0; j < 3; j++){
+                  lineVertArray.push(vertArray[i][j]);
                 }
               }
               if(doStroke){
                 line2D(lineVertArray, "LINE_LOOP");
               }
+              for(i = 2; (i+1) < vertArray.length; i++){
+                lineVertArray = [];
+                lineVertArray.push(vertArray[0][0]);
+                lineVertArray.push(vertArray[0][1]);
+                lineVertArray.push(vertArray[0][2]);
+                for(j = 0; j < 2; j++){
+                  for(k = 0; k < 3; k++){
+                    lineVertArray.push(vertArray[i+j][k]);
+                  }
+                }
+                if(doStroke){
+                  line2D(lineVertArray, "LINE_STRIP");
+                }
+              }
               if(doFill){
-                fill2D(fillVertArray, "TRIANGLES");
+                fill2D(fillVertArray, "TRIANGLE_FAN");
               }
             }
           }
-        }
-        else if(curShape === p.TRIANGLE_STRIP){
-          if(vertArray.length > 2){
-            for(i = 0; (i+2) < vertArray.length; i++){
+          else if(curShape === p.QUADS){
+            for(i = 0; (i + 3) < vertArray.length; i+=4){
               lineVertArray = [];
-              fillVertArray = [];
-              for(j = 0; j < 3; j++){
+              for(j = 0; j < 4; j++){
                 for(k = 0; k < 3; k++){
                   lineVertArray.push(vertArray[i+j][k]);
-                  fillVertArray.push(vertArray[i+j][k]);
                 }
+              }
+              if(doStroke){
+                line2D(lineVertArray, "LINE_LOOP");
+              }
+              
+              if(doFill){
+                fillVertArray = [];
+                for(j = 0; j < 3; j++){
+                  fillVertArray.push(vertArray[i][j]);
+                }
+                for(j = 0; j < 3; j++){
+                  fillVertArray.push(vertArray[i+1][j]);
+                }
+                for(j = 0; j < 3; j++){
+                  fillVertArray.push(vertArray[i+3][j]);
+                }
+                for(j = 0; j < 3; j++){
+                  fillVertArray.push(vertArray[i+2][j]);
+                }
+                fill2D(fillVertArray, "TRIANGLE_STRIP");
+              }
+            }
+          }
+          else if(curShape === p.QUAD_STRIP){
+            var tempArray = [];
+            if(vertArray.length > 3){
+              for(i = 0; i < 2; i++){
+                for(j = 0; j < 3; j++){
+                  lineVertArray.push(vertArray[i][j]);
+                }
+              }
+              line2D(lineVertArray, "LINE_STRIP");
+              if(vertArray.length > 4 && vertArray.length % 2 > 0){
+                tempArray = fillVertArray.splice(fillVertArray.length - 6);
+                vertArray.pop();
+              }
+              for(i = 0; (i+3) < vertArray.length; i+=2){
+                lineVertArray = [];
+                for(j = 0; j < 3; j++){
+                  lineVertArray.push(vertArray[i+1][j]);
+                }
+                for(j = 0; j < 3; j++){
+                  lineVertArray.push(vertArray[i+3][j]);
+                }
+                for(j = 0; j < 3; j++){
+                  lineVertArray.push(vertArray[i+2][j]);
+                }
+                for(j = 0; j < 3; j++){
+                  lineVertArray.push(vertArray[i+0][j]);
+                }
+                line2D(lineVertArray, "LINE_STRIP");
               }
               if(doFill){
                 fill2D(fillVertArray);
               }
-              if(doStroke){
-                line2D(lineVertArray, "LINE_LOOP");
-              }
             }
           }
-        }
-        else if(curShape === p.TRIANGLE_FAN){
-          if(vertArray.length > 2){
-            for(i = 0; i < 3; i++){
+          else{
+            for(i = 0; i < vertArray.length; i++){
               for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i][j]);
               }
             }
-            if(doStroke){
+            if(p.CLOSE){
               line2D(lineVertArray, "LINE_LOOP");
             }
-            for(i = 2; (i+1) < vertArray.length; i++){
-              lineVertArray = [];
-              lineVertArray.push(vertArray[0][0]);
-              lineVertArray.push(vertArray[0][1]);
-              lineVertArray.push(vertArray[0][2]);
-              for(j = 0; j < 2; j++){
-                for(k = 0; k < 3; k++){
-                  lineVertArray.push(vertArray[i+j][k]);
-                }
-              }
-              if(doStroke){
-                line2D(lineVertArray, "LINE_STRIP");
-              }
-            }
-            if(doFill){
-              fill2D(fillVertArray, "TRIANGLE_FAN");
-            }
-          }
-        }
-        else if(curShape === p.QUADS){
-          for(i = 0; (i + 3) < vertArray.length; i+=4){
-            lineVertArray = [];
-            for(j = 0; j < 4; j++){
-              for(k = 0; k < 3; k++){
-                lineVertArray.push(vertArray[i+j][k]);
-              }
-            }
-            if(doStroke){
-              line2D(lineVertArray, "LINE_LOOP");
-            }
-            
-            if(doFill){
-              fillVertArray = [];
-              for(j = 0; j < 3; j++){
-                fillVertArray.push(vertArray[i][j]);
-              }
-              for(j = 0; j < 3; j++){
-                fillVertArray.push(vertArray[i+1][j]);
-              }
-              for(j = 0; j < 3; j++){
-                fillVertArray.push(vertArray[i+3][j]);
-              }
-              for(j = 0; j < 3; j++){
-                fillVertArray.push(vertArray[i+2][j]);
-              }
-              fill2D(fillVertArray, "TRIANGLE_STRIP");
-            }
-          }
-        }
-        else if(curShape === p.QUAD_STRIP){
-          var tempArray = [];
-          if(vertArray.length > 3){
-            for(i = 0; i < 2; i++){
-              for(j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i][j]);
-              }
-            }
-            line2D(lineVertArray, "LINE_STRIP");
-            if(vertArray.length > 4 && vertArray.length % 2 > 0){
-              tempArray = fillVertArray.splice(fillVertArray.length - 6);
-              vertArray.pop();
-            }
-            for(i = 0; (i+3) < vertArray.length; i+=2){
-              lineVertArray = [];
-              for(j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i+1][j]);
-              }
-              for(j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i+3][j]);
-              }
-              for(j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i+2][j]);
-              }
-              for(j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i+0][j]);
-              }
+            else{
               line2D(lineVertArray, "LINE_STRIP");
             }
             if(doFill){
@@ -5733,122 +5786,68 @@
             }
           }
         }
+        // 2D context
         else{
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 0; j < 3; j++){
-              lineVertArray.push(vertArray[i][j]);
+          if (curShape === p.POINTS){
+            for(i = 0; i < vertArray.length; i++){
+              p.point(vertArray[i][0], vertArray[i][1]);
             }
           }
-          if(p.CLOSE){
-            line2D(lineVertArray, "LINE_LOOP");
-          }
-          else{
-            line2D(lineVertArray, "LINE_STRIP");
-          }
-          if(doFill){
-            fill2D(fillVertArray);
-          }
-        }
-      }
-      // 2D context
-      else{
-        if (curShape === p.POINTS){
-          for(i = 0; i < vertArray.length; i++){
-            p.point(vertArray[i][0], vertArray[i][1]);
-          }
-        }
-        else if(curShape === p.LINES){
-          for(i = 0; (i + 1) < vertArray.length; i+=2){
-            p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
-          }
-        }
-        else if(curShape === p.TRIANGLES){                 
-          for(i = 0; (i + 2) < vertArray.length; i+=3){
-            curContext.beginPath();
-            curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-            curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-            curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-            curContext.lineTo(vertArray[i][0], vertArray[i][1]);            
-            if(doFill){
-              curContext.fill();
+          else if(curShape === p.LINES){
+            for(i = 0; (i + 1) < vertArray.length; i+=2){
+              p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
             }
-            if(doStroke){
-              curContext.stroke();
-            }
-            curContext.closePath();
-          }   
-        }
-        else if(curShape === p.TRIANGLE_STRIP){
-          if(vertArray.length > 2){
-            curContext.beginPath();
-            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-            for(i = 2; i < vertArray.length; i++){
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              curContext.lineTo(vertArray[i-2][0], vertArray[i-2][1]);
+          }
+          else if(curShape === p.TRIANGLES){                 
+            for(i = 0; (i + 2) < vertArray.length; i+=3){
+              curContext.beginPath();
+              curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+              curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
+              curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
+              curContext.lineTo(vertArray[i][0], vertArray[i][1]);            
               if(doFill){
                 curContext.fill();
               }
               if(doStroke){
                 curContext.stroke();
               }
-              curContext.moveTo(vertArray[i][0],vertArray[i][1]);
-            }
+              curContext.closePath();
+            }   
           }
-        }
-        else if(curShape === p.TRIANGLE_FAN){
-          if(vertArray.length > 2){
-            curContext.beginPath();
-            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-            curContext.lineTo(vertArray[2][0], vertArray[2][1]);
-            if(doFill){
-                curContext.fill();
-              }
-            if(doStroke){
-                curContext.stroke();
-              }
-            for(i = 3; i < vertArray.length; i++){
+          else if(curShape === p.TRIANGLE_STRIP){
+            if(vertArray.length > 2){
+              curContext.beginPath();
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-              curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              if(doFill){
-                curContext.fill();
-              }
-              if(doStroke){
-                curContext.stroke();
-              }
-            }
-          }
-        }
-        else if(curShape === p.QUADS){
-          for(i = 0; (i + 3) < vertArray.length; i+=4){
-            curContext.beginPath();
-            curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-            for(j = 1; j < 4; j++){
-              curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
-            }
-            curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-            if(doFill){
-              curContext.fill();
-            }
-            if(doStroke){
-              curContext.stroke();
-            }
-            curContext.closePath();
-          }
-        }
-        else if(curShape === p.QUAD_STRIP){
-          if(vertArray.length > 3){
-            curContext.beginPath();
-            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-            for(i = 2; (i+1) < vertArray.length; i++){
-              if((i % 2) === 0){
-                curContext.moveTo(vertArray[i-2][0], vertArray[i-2][1]);
+              curContext.lineTo(vertArray[1][0], vertArray[1][1]);
+              for(i = 2; i < vertArray.length; i++){
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
+                curContext.lineTo(vertArray[i-2][0], vertArray[i-2][1]);
+                if(doFill){
+                  curContext.fill();
+                }
+                if(doStroke){
+                  curContext.stroke();
+                }
+                curContext.moveTo(vertArray[i][0],vertArray[i][1]);
+              }
+            }
+          }
+          else if(curShape === p.TRIANGLE_FAN){
+            if(vertArray.length > 2){
+              curContext.beginPath();
+              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
+              curContext.lineTo(vertArray[1][0], vertArray[1][1]);
+              curContext.lineTo(vertArray[2][0], vertArray[2][1]);
+              if(doFill){
+                  curContext.fill();
+                }
+              if(doStroke){
+                  curContext.stroke();
+                }
+              for(i = 3; i < vertArray.length; i++){
+                curContext.moveTo(vertArray[0][0], vertArray[0][1]);
                 curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
+                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                 if(doFill){
                   curContext.fill();
                 }
@@ -5858,68 +5857,68 @@
               }
             }
           }
+          else if(curShape === p.QUADS){
+            for(i = 0; (i + 3) < vertArray.length; i+=4){
+              curContext.beginPath();
+              curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+              for(j = 1; j < 4; j++){
+                curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
+              }
+              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              if(doFill){
+                curContext.fill();
+              }
+              if(doStroke){
+                curContext.stroke();
+              }
+              curContext.closePath();
+            }
+          }
+          else if(curShape === p.QUAD_STRIP){
+            if(vertArray.length > 3){
+              curContext.beginPath();
+              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
+              curContext.lineTo(vertArray[1][0], vertArray[1][1]);
+              for(i = 2; (i+1) < vertArray.length; i++){
+                if((i % 2) === 0){
+                  curContext.moveTo(vertArray[i-2][0], vertArray[i-2][1]);
+                  curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+                  curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
+                  curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
+                  if(doFill){
+                    curContext.fill();
+                  }
+                  if(doStroke){
+                    curContext.stroke();
+                  }
+                }
+              }
+            }
+          }
+          else{
+            curContext.beginPath();
+            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
+            for(i = 1; i < vertArray.length; i++){
+              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+            }
+            if(p.CLOSE){
+              curContext.lineTo(vertArray[0][0], vertArray[0][1]);
+            }
+            if(doFill){
+              curContext.fill();
+            }
+            if(doStroke){
+              curContext.stroke();
+            }
+          }
+          curContext.closePath();
         }
-        else{
-          curContext.beginPath();
-          curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-          for(i = 1; i < vertArray.length; i++){
-            curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-          }
-          if(p.CLOSE){
-            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-          }
-          if(doFill){
-            curContext.fill();
-          }
-          if(doStroke){
-            curContext.stroke();
-          }
-        }
-        curContext.closePath();
       }
     };
 
     p.curveVertex = function(x, y, z) {
-      if (curvePoints.length < 3) {
-        if (p.use3DContext && z) {
-          curvePoints.push([x, y, z]);
-        } else {
-          curvePoints.push([x, y]);
-        }
-      } else {
-        if (p.use3DContext) {
-          p.curveVertexSegment(curvePoints[0][0], curvePoints[0][1], curvePoints[0][2], curvePoints[1][0], curvePoints[1][1], curvePoints[1][2], curvePoints[2][0], curvePoints[2][1], curvePoints[2][2], curvePoints[3][0], curvePoints[3][1], curvePoints[3][2]);
-        } else {
-          var b = [],
-            s = 1 - curTightness;
-          /*
-          * Matrix to convert from Catmull-Rom to cubic Bezier
-          * where t = curTightness
-          * |0         1          0         0       |
-          * |(t-1)/6   1          (1-t)/6   0       |
-          * |0         (1-t)/6    1         (t-1)/6 |
-          * |0         0          0         0       |
-          */
-
-          curvePoints.push([x, y]);
-
-          b[0] = [curvePoints[1][0], curvePoints[1][1]];
-          b[1] = [curvePoints[1][0] + (s * curvePoints[2][0] - s * curvePoints[0][0]) / 6, curvePoints[1][1] + (s * curvePoints[2][1] - s * curvePoints[0][1]) / 6];
-          b[2] = [curvePoints[2][0] + (s * curvePoints[1][0] - s * curvePoints[3][0]) / 6, curvePoints[2][1] + (s * curvePoints[1][1] - s * curvePoints[3][1]) / 6];
-          b[3] = [curvePoints[2][0], curvePoints[2][1]];
-
-          if (!pathOpen) {
-            p.vertex(b[0][0], b[0][1]);
-          } else {
-            curShapeCount = 1;
-          }
-
-          p.vertex(
-          b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
-
-          curvePoints.shift();
-        }
-      }
+      isCurve = true;
+      p.vertex(x, y, z);      
     };
 
     p.curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
