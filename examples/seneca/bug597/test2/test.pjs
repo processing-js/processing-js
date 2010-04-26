@@ -1,0 +1,14 @@
+import processing.opengl.*;
+
+void setup() {
+  size( 100, 100, OPENGL );
+  translate( width/2, height/2, 0 );
+  box( 20, 20, 20 );
+}
+
+void draw(){
+  background( 0 );
+  fill( 200, 0, 0 );
+   translate( width/2, height/2, 0 );
+  box( 40, 20, 5 );
+}
