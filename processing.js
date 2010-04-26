@@ -2113,7 +2113,7 @@
       var createArrayList = function(args){
         var array = new Array();
         for (var i = 0; i < args[0]; i++){
-          array[i] = (args.length !== 1 ? createArrayList(args.slice(1)) : 0 );
+          array[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
         }
         
         array.get = function(i) {
