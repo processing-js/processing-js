@@ -3178,8 +3178,6 @@
         p.shininess(1);
         p.ambient(255, 255, 255);
         p.specular(0, 0, 0);
-
-        curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.camera();
         p.draw();
       } else {
