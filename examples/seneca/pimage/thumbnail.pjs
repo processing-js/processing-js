@@ -2,7 +2,7 @@
 // http://www.pagefoundry.net/matt/jquery/imgcrop.php
 // updated by Daniel Hodgin to use only Processing.js
 
-/* @pjs preload="string.jpg"; */
+/* @pjs preload="castle.jpg"; */
 
 color c = color(128,128,128,128);
 
@@ -23,7 +23,7 @@ int ypos = 0;
 int startx, starty;
 int prsd = 0;
 PImage a;  // Declare variable "a" of type PImage  
-a = loadImage("string.jpg"); // Load the images into the program 
+a = loadImage("castle.jpg"); // Load the images into the program 
 double s = 1.0;
 double r = 1.0;
 
