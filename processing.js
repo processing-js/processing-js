@@ -633,7 +633,7 @@
     while ((m = aCode.match(matchClass))) {
       var left = RegExp.leftContext,
         allRest = RegExp.rightContext,
-        rest = nextBrace(allRest, "[", "]");
+        rest = nextBrace(allRest, "{", "}");
         className = m[1],
         staticVars = m[2] || "";
         allRest = allRest.slice(rest.length + 1);
@@ -646,7 +646,7 @@
       while ((c = rest.match(matchConstructor))) {
         var prev = RegExp.leftContext,
             allNext = RegExp.rightContext,
-            next = nextBrace(allNext),
+            next = nextBrace(allNext, "{", "}"),
             args = c[1];
 
           args = args.split(/,\s*?/);
@@ -681,7 +681,7 @@
       while ((mc = rest.match(matchMethod))) {
         var prev = RegExp.leftContext,
           allNext = RegExp.rightContext,
-          next = nextBrace(allNext, "[", "]");
+          next = nextBrace(allNext, "{", "}");
         methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));" + "var " + mc[2] + " = this." + mc[2] + ";\n");
 
         rest = prev + allNext.slice(next.length + 1);
