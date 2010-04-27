@@ -5572,7 +5572,7 @@
       else{
         p.CLOSE = true;
       }
-      if(isCurve && curShape === p.POLYGON || curShape === undefined){
+      if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
         if(vertArray.length > 3){
           if(p.use3DContext){
           }
