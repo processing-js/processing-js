@@ -6284,10 +6284,10 @@
     };
 
     p.triangle = function triangle(x1, y1, x2, y2, x3, y3) {
-      p.beginShape();
-      p.vertex(x1, y1);
-      p.vertex(x2, y2);
-      p.vertex(x3, y3);
+      p.beginShape(p.TRIANGLES);
+      p.vertex(x1, y1, 0);
+      p.vertex(x2, y2, 0);
+      p.vertex(x3, y3, 0);
       p.endShape();
     };
 
