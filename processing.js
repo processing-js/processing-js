@@ -622,8 +622,7 @@
               "<CLASS " + name + " >";
     };
 
-    var matchClasses = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)\b\1\s*\(/g;
-    var matchNoCon = /(?:public |abstract |static )*class (\w+)\s*(?:extends\s*(\w+)\s*)?\{\s*((?:.|\n)*?)(processing)/g;
+    var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
 
     aCode = aCode.replace(matchClasses, classReplace);
 
