@@ -6292,12 +6292,11 @@
     };
 
     p.quad = function quad(x1, y1, x2, y2, x3, y3, x4, y4) {
-      curContext.lineCap = "square";
-      p.beginShape();
-      p.vertex(x1, y1);
-      p.vertex(x2, y2);
-      p.vertex(x3, y3);
-      p.vertex(x4, y4);
+      p.beginShape(p.QUADS);
+      p.vertex(x1, y1, 0);
+      p.vertex(x2, y2, 0);
+      p.vertex(x3, y3, 0);
+      p.vertex(x4, y4, 0);
       p.endShape();
     };
 
