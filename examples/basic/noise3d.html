@@ -12,15 +12,15 @@ Here, the third dimension ('z') is treated as time.</p>
 
 <p><a href="http://processing.org/learning/basics/noise3d.html"><b>Original Processing.org Example:</b> Noise3D</a><br>
 <script type="application/processing">
-float increment = 0.01;
+float increment = 0.04;
 // The noise function's 3rd argument, a global variable that increments once per cycle
 float zoff = 0.0;  
 // We will increment zoff differently than xoff and yoff
-float zincrement = 0.02; 
+float zincrement = 0.08; 
 
 void setup() {
   size(50,50);
-  frameRate(30);
+  frameRate(8);
 }
 
 void draw() {
@@ -41,10 +41,10 @@ void draw() {
       yoff += increment; // Increment yoff
       
       // Calculate noise and scale by 255
-      //float bright = noise(xoff,yoff,zoff)*255;
+      float bright = noise(xoff,yoff,zoff)*255;
 
       // Try using this line instead
-      float bright = random(0,255);
+      //float bright = random(0,255);
       
       // Set each pixel onscreen to a grayscale value
       pixels[x+y*width] = color(bright,bright,bright);
