@@ -662,8 +662,8 @@
         rest = prev + allNext.slice(next.length + 1);
       }
 	  
-      var vars = "";
-      var publicVars  = "";
+      var vars = "",
+          publicVars  = "";
 
       // Put all member variables into "vars"
       // and keep a list of all public variables
@@ -707,9 +707,6 @@
 	  for (var i = 0; i < methodsArray.length; i++){
         methods += methodsArray[i];
       }
-
-      var vars = "",
-          publicVars  = "";
 
       // Put all member variables into "vars"
       // and keep a list of all public variables
