@@ -689,12 +689,13 @@
         // Search functions for public variables
         for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
           methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);var \w+ = this\.\w+;)/g, function(all, header, localParams, body, footer) {
+            body = body.replace(/this\./g, "public.");
             localParams = localParams.replace(/,\s*/g, "|");
             return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
               if (first === ".") {
                 return all;
-              //} else if(localParams && new RegExp(localParams).test(variable)){
-                //return all;
+              } else if (localParams && new RegExp(localParams).test(variable)){
+                return all;
               } else {
                 return "public." + variable;
               }
@@ -706,12 +707,11 @@
           localParameters = "";
           constructorsArray[i].replace(/var\s+(\w+) = arguments\[[^\]]\];/g, function(all, localParam){
             localParameters += localParam + "|";
-            //return all;
           });
           constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
             if (/var\s*?$/.test(first) || first === ".") {
               return all;
-            } else if (localParameters !== "" && new RegExp(localParameters.substr(0, localParameters.length-1)).test(variable)){
+            } else if (localParameters && new RegExp(localParameters.substr(0, localParameters.length-1)).test(variable)){
               return all;
             } else {
               return "this." + variable;
@@ -807,7 +807,7 @@
         });
       }());
     }
-//alert(aCode);
+
     return aCode;
   };
 
