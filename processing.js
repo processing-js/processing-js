@@ -690,11 +690,11 @@
         for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
           methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);var \w+ = this\.\w+;)/g, function(all, header, localParams, body, footer) {
             body = body.replace(/this\./g, "public.");
-            localParams = localParams.replace(/,\s*/g, "|");
+            localParams = localParams.replace(/\s*,\s*/g, "|");
             return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
               if (first === ".") {
                 return all;
-              } else if (localParams && new RegExp(localParams).test(variable)){
+              } else if (localParams && new RegExp("\\b(" + localParams + ")\\b").test(variable)){
                 return all;
               } else {
                 return "public." + variable;
@@ -711,7 +711,7 @@
           constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
             if (/var\s*?$/.test(first) || first === ".") {
               return all;
-            } else if (localParameters && new RegExp(localParameters.substr(0, localParameters.length-1)).test(variable)){
+            } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
               return all;
             } else {
               return "this." + variable;
