@@ -196,8 +196,10 @@
   "uniform mat4 model;" +
   "uniform mat4 view;" +
   "uniform mat4 projection;" +
+  "uniform float pointSize;" +
 
   "void main(void) {" +
+  " gl_PointSize = pointSize;" +
   " gl_FrontColor = color;" +
   " gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
   "}";
@@ -4438,6 +4440,10 @@
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
+          // What's with these constants, why are they not defined?
+          curContext.enable(0x8642); // VERTEX_PROGRAM_POINT_SIZE
+          curContext.enable(0x0B10); // POINT_SMOOTH
+
           // Create the program objects to render 2D (points, lines) and
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
           // lighting calculations could be ommitted from that program object.
@@ -5365,6 +5371,8 @@
     p.strokeWeight = function strokeWeight(w) {
       if (p.use3DContext) {
         lineWidth = w;
+        curContext.useProgram(programObject2D);  
+        uniformf(programObject2D, "pointSize", w);
       } else {
         curContext.lineWidth = w;
       }
@@ -5422,8 +5430,7 @@
 
         if (lineWidth > 0 && doStroke) {
           // this will be replaced with the new bit shifting color code
-          var c = strokeStyle.slice(5, -1).split(",");
-          uniformf(programObject2D, "color", [c[0] / 255, c[1] / 255, c[2] / 255, c[3]]);
+          uniformf(programObject2D, "color", strokeStyle);
 
           vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
           curContext.drawArrays(curContext.POINTS, 0, 1);
