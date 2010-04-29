@@ -544,8 +544,8 @@
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 
     // foo( int foo, float bar )
-    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+| )\s*(\w+\s*[\),])/g, "$1$4");
-    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+| )\s*(\w+\s*[\),])/g, "$1$4");
+    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
+    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
 
     // float[] foo = new float[5];
     aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function(all, name, args, initVars) {
@@ -572,7 +572,7 @@
     }
 
     // float foo = 5;
-    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
+    aCode = aCode.replace(/(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
       if (type === "return" || type === "else") {
         return all;
       } else {
@@ -589,7 +589,7 @@
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
     // implements Int1, Int2 
-    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s+\{/g, function(all, interfaces) {
+    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s+?\{/g, function(all, interfaces) {
       var names = interfaces.replace(/\s+/g, "").split(",");
       return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
     });
@@ -599,8 +599,8 @@
     var classReplace = function(all, name, extend) {
       classes.push(name);
 
-    // Move arguments up from constructor
-    return "function " + name + "() {\n " + 
+      // Move arguments up from constructor
+      return "function " + name + "() {\n " + 
               (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
               (extend ? "extendClass(this, " + extend + ");\n" : "") + 
               "<CLASS " + name + " >";
@@ -617,8 +617,7 @@
       var left = RegExp.leftContext,
           allRest = RegExp.rightContext,
           rest = nextBrace(allRest),
-          className = m[1],
-          staticVars = m[2] || "";
+          className = m[1];
 
       allRest = allRest.slice(rest.length + 1);
 
@@ -646,6 +645,7 @@
         }
         
         constructors += next + "}\n";
+
         rest = prev + allNext.slice(next.length + 1);
       }
 
@@ -671,9 +671,52 @@
 
         rest = prev + allNext.slice(next.length + 1);
       }
-
+	  
       var vars = "",
           publicVars  = "";
+
+      // Put all member variables into "vars"
+      // and keep a list of all public variables
+      rest = rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
+        variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
+          .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
+        publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
+        if (staticVar === "static"){
+          variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, "if (typeof " + className + ".prototype.$1 === 'undefined'){ " + className + ".prototype.$1 = $2 }\n" +
+            "this.__defineGetter__('$1', function(){ return "+ className + ".prototype.$1; });\n" +
+            "this.__defineSetter__('$1', function(val){ " + className + ".prototype.$1 = val; });\n");
+        }
+        vars += variable;
+        return "";
+      });
+	  
+      // add this. to public variables used inside member functions, and constructors
+      if (publicVars) {
+        // Search functions for public variables
+        for (var i = 0; i < methodsArray.length; i++) {
+          methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{.*?\{)([^\}]*?\};)/g, function(all, header, body) {
+            return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+              if (first === ".") {
+                return all;
+              } else {
+                return "public." + variable;
+              }
+            });
+          });
+        }
+        // Search constructors for public variables
+        constructors = constructors.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+          if (/var\s*?$/.test(first) || first === ".") {
+            return all;
+          } else {
+            return "this." + variable;
+          }
+        });
+      }
+	  
+	  for (var i = 0; i < methodsArray.length; i++){
+        methods += methodsArray[i];
+      }
 
       // Put all member variables into "vars"
       // and keep a list of all public variables
@@ -722,7 +765,7 @@
       }
       rest = vars + "\n" + methods + "\n" + constructors;
 
-      aCode = left + rest + "\n}" + staticVars + allRest;
+      aCode = left + rest + "\n}" + allRest;
     }
 
     // Do some tidying up, where necessary
