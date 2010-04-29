@@ -805,7 +805,7 @@
     aCode = aCode.replace(/(\d+)f/g, "$1");
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-    for (var n = 0; n < strings.length; n++) {
+    for (var n = 0, sl = strings.length; n < sl; n++) {
       aCode = (function() {
         return aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd) {
           var returnString = all,
@@ -813,7 +813,7 @@
             quoteType = "",
             escape = false;
 
-          for (var x = 0; x < quoteStart.length; x++) {
+          for (var x = 0, ql = quoteStart.length; x < ql; x++) {
             if (notString) {
               if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
                 quoteType = quoteStart.charAt(x);
