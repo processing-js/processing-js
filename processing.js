@@ -488,7 +488,7 @@
       }
     });
     
-  	var nextBrace = function(right) {
+    var nextBrace = function(right) {
       var rest = right,
         position = 0,
         leftCount = 1,
@@ -511,7 +511,7 @@
 
       return right.slice(0, position - 1);
     };
-	
+
     var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
 
     while ((mc = aCode.match(matchMethod))) {
