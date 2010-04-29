@@ -655,12 +655,12 @@
       // Fix class method names
       // this.collide = function() { ... }
       rest = (function() {
-        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\((.*?)\)/g, function(all, name, args) {
+        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
           return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
         });
       }());
 
-      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[\s\S]*?\{)/,
+      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
           mc,
           methods = "",
           methodsArray = [];
