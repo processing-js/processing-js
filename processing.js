@@ -486,10 +486,44 @@
       if (name === "if" || name === "for" || name === "while") {
         return all;
       } else {
-        return "processing." + name + " = function " + name + args;
+        return "PROCESSING." + name + " = function " + name + args;
       }
     });
+    
+    var nextBrace = function(right) {
+      var rest = right,
+        position = 0,
+        leftCount = 1,
+        rightCount = 0;
 
+      while (leftCount !== rightCount) {
+        var nextLeft = rest.indexOf("{"),
+          nextRight = rest.indexOf("}");
+
+        if (nextLeft < nextRight && nextLeft !== -1) {
+          leftCount++;
+          rest = rest.slice(nextLeft + 1);
+          position += nextLeft + 1;
+        } else {
+          rightCount++;
+          rest = rest.slice(nextRight + 1);
+          position += nextRight + 1;
+        }
+      }
+
+      return right.slice(0, position - 1);
+    };
+
+    var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
+
+    while ((mc = aCode.match(matchMethod))) {
+      var prev = RegExp.leftContext,
+        allNext = RegExp.rightContext,
+        next = nextBrace(allNext);
+
+        aCode = prev + "processing." + mc[1] + next + "};" + allNext.slice(next.length + 1);
+    }
+    
     // Delete import statements, ie. import processing.video.*;
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
@@ -512,8 +546,8 @@
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 
     // foo( int foo, float bar )
-    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+| )\s*(\w+\s*[\),])/g, "$1$4");
-    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+| )\s*(\w+\s*[\),])/g, "$1$4");
+    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
+    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
 
     // float[] foo = new float[5];
     aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function(all, name, args, initVars) {
@@ -540,7 +574,7 @@
     }
 
     // float foo = 5;
-    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
+    aCode = aCode.replace(/(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
       if (type === "return" || type === "else") {
         return all;
       } else {
@@ -557,45 +591,24 @@
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
     // implements Int1, Int2 
-    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s+\{/g, function(all, interfaces) {
+    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s*\{/g, function(all, interfaces) {
       var names = interfaces.replace(/\s+/g, "").split(",");
       return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
     });
+
+    // Simply turns an interface into a class
+    aCode = aCode.replace(/interface/g, "class");
 
     var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
 
     var classReplace = function(all, name, extend) {
       classes.push(name);
 
-    // Move arguments up from constructor
-    return "function " + name + "() {\n " + 
+      // Move arguments up from constructor
+      return "function " + name + "() {\n " + 
               (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
               (extend ? "extendClass(this, " + extend + ");\n" : "") + 
               "<CLASS " + name + " >";
-    };
-
-    var nextBrace = function(right) {
-      var rest = right,
-          position = 0,
-          leftCount = 1,
-          rightCount = 0;
-
-      while (leftCount !== rightCount) {
-        var nextLeft = rest.indexOf("{"),
-            nextRight = rest.indexOf("}");
-
-        if (nextLeft < nextRight && nextLeft !== -1) {
-          leftCount++;
-          rest = rest.slice(nextLeft + 1);
-          position += nextLeft + 1;
-        } else {
-          rightCount++;
-          rest = rest.slice(nextRight + 1);
-          position += nextRight + 1;
-        }
-      }
-
-      return right.slice(0, position - 1);
     };
 
     var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
@@ -609,8 +622,7 @@
       var left = RegExp.leftContext,
           allRest = RegExp.rightContext,
           rest = nextBrace(allRest),
-          className = m[1],
-          staticVars = m[2] || "";
+          className = m[1];
 
       allRest = allRest.slice(rest.length + 1);
 
@@ -638,18 +650,19 @@
         }
         
         constructors += next + "}\n";
+
         rest = prev + allNext.slice(next.length + 1);
       }
 
       // Fix class method names
       // this.collide = function() { ... }
       rest = (function() {
-        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\((.*?)\)/g, function(all, name, args) {
+        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
           return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
         });
       }());
 
-      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[\s\S]*?\{)/,
+      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
           mc,
           methods = "",
           methodsArray = [];
@@ -663,9 +676,52 @@
 
         rest = prev + allNext.slice(next.length + 1);
       }
-
+	  
       var vars = "",
           publicVars  = "";
+
+      // Put all member variables into "vars"
+      // and keep a list of all public variables
+      rest = rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
+        variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
+          .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
+        publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
+        if (staticVar === "static"){
+          variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, "if (typeof " + className + ".prototype.$1 === 'undefined'){ " + className + ".prototype.$1 = $2 }\n" +
+            "this.__defineGetter__('$1', function(){ return "+ className + ".prototype.$1; });\n" +
+            "this.__defineSetter__('$1', function(val){ " + className + ".prototype.$1 = val; });\n");
+        }
+        vars += variable;
+        return "";
+      });
+	  
+      // add this. to public variables used inside member functions, and constructors
+      if (publicVars) {
+        // Search functions for public variables
+        for (var i = 0; i < methodsArray.length; i++) {
+          methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{.*?\{)([^\}]*?\};)/g, function(all, header, body) {
+            return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+              if (first === ".") {
+                return all;
+              } else {
+                return "public." + variable;
+              }
+            });
+          });
+        }
+        // Search constructors for public variables
+        constructors = constructors.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+          if (/var\s*?$/.test(first) || first === ".") {
+            return all;
+          } else {
+            return "this." + variable;
+          }
+        });
+      }
+	  
+	  for (var i = 0; i < methodsArray.length; i++){
+        methods += methodsArray[i];
+      }
 
       // Put all member variables into "vars"
       // and keep a list of all public variables
@@ -714,7 +770,7 @@
       }
       rest = vars + "\n" + methods + "\n" + constructors;
 
-      aCode = left + rest + "\n}" + staticVars + allRest;
+      aCode = left + rest + "\n}" + allRest;
     }
 
     // Do some tidying up, where necessary
@@ -754,7 +810,7 @@
     aCode = aCode.replace(/(\d+)f/g, "$1");
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-    for (var n = 0; n < strings.length; n++) {
+    for (var n = 0, sl = strings.length; n < sl; n++) {
       aCode = (function() {
         return aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd) {
           var returnString = all,
@@ -762,7 +818,7 @@
             quoteType = "",
             escape = false;
 
-          for (var x = 0; x < quoteStart.length; x++) {
+          for (var x = 0, ql = quoteStart.length; x < ql; x++) {
             if (notString) {
               if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
                 quoteType = quoteStart.charAt(x);
@@ -2112,56 +2168,45 @@
       }
     };
 
-    p.ArrayList = function(size, size2, size3) {
-      var array = new Array(0 | size);
-
-      if (size2) {
-        for (var i = 0; i < size; i++) {
-          array[i] = [];
-
-          for (var j = 0; j < size2; j++) {
-            var a = array[i][j] = size3 ? new Array(size3) : 0;
-            for (var k = 0; k < size3; k++) {
-              a[k] = 0;
-            }
+    p.ArrayList = function() {
+      var createArrayList = function(args){
+        var array = new Array();
+        for (var i = 0; i < args[0]; i++){
+          array[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
+        }
+        
+        array.get = function(i) {
+          return this[i];
+        };
+        array.contains = function(item) {
+          return this.indexOf(item) !== -1;
+        };
+        array.add = function(item) {
+          return this.push(item);
+        };
+        array.size = function() {
+          return this.length;
+        };
+        array.clear = function() {
+          this.length = 0;
+        };
+        array.remove = function(i) {
+          return this.splice(i, 1)[0];
+        };
+        array.isEmpty = function() {
+          return !this.length;
+        };
+        array.clone = function() {
+          var a = new p.ArrayList(size);
+          for (var i = 0; i < size; i++) {
+            a[i] = this[i];
           }
-        }
-      } else {
-        for (var l = 0; l < size; l++) {
-          array[l] = 0;
-        }
-      }
-
-      array.get = function(i) {
-        return this[i];
+          return a;
+        };
+        
+        return array;
       };
-      array.contains = function(item) {
-        return this.indexOf(item) !== -1;
-      };
-      array.add = function(item) {
-        return this.push(item);
-      };
-      array.size = function() {
-        return this.length;
-      };
-      array.clear = function() {
-        this.length = 0;
-      };
-      array.remove = function(i) {
-        return this.splice(i, 1)[0];
-      };
-      array.isEmpty = function() {
-        return !this.length;
-      };
-      array.clone = function() {
-        var a = new p.ArrayList(size);
-        for (var i = 0; i < size; i++) {
-          a[i] = this[i];
-        }
-        return a;
-      };
-
-      return array;
+      return createArrayList(Array.prototype.slice.call(arguments));
     };
 
     p.reverse = function(array) {
@@ -4320,10 +4365,47 @@
     
     p.tan = Math.tan;
 
+    var currentRandom = Math.random;
+    
+    p.random = function random() {
+      if(arguments.length === 0) {
+        return currentRandom();
+      } else if(arguments.length === 1) {
+        return currentRandom() * arguments[0];
+      } else {
+        var aMin = arguments[0], aMax = arguments[1];
+        return currentRandom() * (aMax - aMin) + aMin;
+      }
+    };
+
+    // Pseudo-random generator
+    function Marsaglia(i1, i2) {
+      // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
+      var z=i1 || 362436069, w= i2 || 521288629;
+      var nextInt = function() {
+        z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
+        w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
+        return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
+      };
+     
+      this.nextDouble = function() {
+        var i = nextInt() / 4294967296;
+        return i < 0 ? 1 + i : i;
+      };
+      this.nextInt = nextInt;
+    }
+    Marsaglia.createRandomized = function() {
+      var now = new Date();
+      return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
+    };
+
+    p.randomSeed = function(seed) {
+      currentRandom = (new Marsaglia(seed)).nextDouble;
+    };
+
     // Random
-    p.Random = function() {
-      var haveNextNextGaussian = false,
-        nextNextGaussian;
+    p.Random = function(seed) {
+      var haveNextNextGaussian = false, nextNextGaussian, random;
 
       this.nextGaussian = function() {
         if (haveNextNextGaussian) {
@@ -4332,8 +4414,8 @@
         } else {
           var v1, v2, s;
           do {
-            v1 = 2 * p.random(1) - 1; // between -1.0 and 1.0
-            v2 = 2 * p.random(1) - 1; // between -1.0 and 1.0
+            v1 = 2 * random() - 1; // between -1.0 and 1.0
+            v2 = 2 * random() - 1; // between -1.0 and 1.0
             s = v1 * v1 + v2 * v2;
           }
           while (s >= 1 || s === 0);
@@ -4345,33 +4427,12 @@
           return v1 * multiplier;
         }
       };
+      
+      // by default use standard random, otherwise seeded
+      random = seed === undefined ? Math.random : (new Marsaglia(seed)).nextDouble;
     };
 
-    p.random = function random(aMin, aMax) {
-      return arguments.length === 2 ? aMin + (Math.random() * (aMax - aMin)) : Math.random() * aMin;
-    };
-    // ---------------------------
     // Noise functions and helpers
-    
-    // Random generator: can be used with random seed(s)
-    function Marsaglia(i1, i2) {
-      // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
-      var z=i1 || 362436069, w= i2 || 521288629;
-      this.nextInt = function() {
-        z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
-        w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
-        return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
-      };
-      this.nextDouble = function() {
-        var i = this.nextInt() / 4294967296;
-        return i < 0 ? 1 + i : i;
-      };
-    }
-    Marsaglia.createRandomized = function() {
-      var now = new Date();
-      return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
-    };
-
     function PerlinNoise(seed) {
       var rnd = seed !== undefined ? new Marsaglia(seed) : Marsaglia.createRandomized();
       var i, j;
