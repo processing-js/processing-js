@@ -484,10 +484,44 @@
       if (name === "if" || name === "for" || name === "while") {
         return all;
       } else {
-        return "processing." + name + " = function " + name + args;
+        return "PROCESSING." + name + " = function " + name + args;
       }
     });
+    
+  	var nextBrace = function(right) {
+      var rest = right,
+        position = 0,
+        leftCount = 1,
+        rightCount = 0;
 
+      while (leftCount !== rightCount) {
+        var nextLeft = rest.indexOf("{"),
+          nextRight = rest.indexOf("}");
+
+        if (nextLeft < nextRight && nextLeft !== -1) {
+          leftCount++;
+          rest = rest.slice(nextLeft + 1);
+          position += nextLeft + 1;
+        } else {
+          rightCount++;
+          rest = rest.slice(nextRight + 1);
+          position += nextRight + 1;
+        }
+      }
+
+      return right.slice(0, position - 1);
+    };
+	
+    var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
+
+    while ((mc = aCode.match(matchMethod))) {
+      var prev = RegExp.leftContext,
+        allNext = RegExp.rightContext,
+        next = nextBrace(allNext);
+
+        aCode = prev + "processing." + mc[1] + next + "};" + allNext.slice(next.length + 1);
+    }
+    
     // Delete import statements, ie. import processing.video.*;
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
@@ -570,30 +604,6 @@
               (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
               (extend ? "extendClass(this, " + extend + ");\n" : "") + 
               "<CLASS " + name + " >";
-    };
-
-    var nextBrace = function(right) {
-      var rest = right,
-          position = 0,
-          leftCount = 1,
-          rightCount = 0;
-
-      while (leftCount !== rightCount) {
-        var nextLeft = rest.indexOf("{"),
-            nextRight = rest.indexOf("}");
-
-        if (nextLeft < nextRight && nextLeft !== -1) {
-          leftCount++;
-          rest = rest.slice(nextLeft + 1);
-          position += nextLeft + 1;
-        } else {
-          rightCount++;
-          rest = rest.slice(nextRight + 1);
-          position += nextRight + 1;
-        }
-      }
-
-      return right.slice(0, position - 1);
     };
 
     var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
