@@ -2165,56 +2165,45 @@
       }
     };
 
-    p.ArrayList = function(size, size2, size3) {
-      var array = new Array(0 | size);
-
-      if (size2) {
-        for (var i = 0; i < size; i++) {
-          array[i] = [];
-
-          for (var j = 0; j < size2; j++) {
-            var a = array[i][j] = size3 ? new Array(size3) : 0;
-            for (var k = 0; k < size3; k++) {
-              a[k] = 0;
-            }
+    p.ArrayList = function() {
+      var createArrayList = function(args){
+        var array = new Array();
+        for (var i = 0; i < args[0]; i++){
+          array[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
+        }
+        
+        array.get = function(i) {
+          return this[i];
+        };
+        array.contains = function(item) {
+          return this.indexOf(item) !== -1;
+        };
+        array.add = function(item) {
+          return this.push(item);
+        };
+        array.size = function() {
+          return this.length;
+        };
+        array.clear = function() {
+          this.length = 0;
+        };
+        array.remove = function(i) {
+          return this.splice(i, 1)[0];
+        };
+        array.isEmpty = function() {
+          return !this.length;
+        };
+        array.clone = function() {
+          var a = new p.ArrayList(size);
+          for (var i = 0; i < size; i++) {
+            a[i] = this[i];
           }
-        }
-      } else {
-        for (var l = 0; l < size; l++) {
-          array[l] = 0;
-        }
-      }
-
-      array.get = function(i) {
-        return this[i];
+          return a;
+        };
+        
+        return array;
       };
-      array.contains = function(item) {
-        return this.indexOf(item) !== -1;
-      };
-      array.add = function(item) {
-        return this.push(item);
-      };
-      array.size = function() {
-        return this.length;
-      };
-      array.clear = function() {
-        this.length = 0;
-      };
-      array.remove = function(i) {
-        return this.splice(i, 1)[0];
-      };
-      array.isEmpty = function() {
-        return !this.length;
-      };
-      array.clone = function() {
-        var a = new p.ArrayList(size);
-        for (var i = 0; i < size; i++) {
-          a[i] = this[i];
-        }
-        return a;
-      };
-
-      return array;
+      return createArrayList(Array.prototype.slice.call(arguments));
     };
 
     p.reverse = function(array) {
