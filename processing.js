@@ -4317,10 +4317,47 @@
     
     p.tan = Math.tan;
 
+    var currentRandom = Math.random;
+    
+    p.random = function random() {
+      if(arguments.length === 0) {
+        return currentRandom();
+      } else if(arguments.length === 1) {
+        return currentRandom() * arguments[0];
+      } else {
+        var aMin = arguments[0], aMax = arguments[1];
+        return currentRandom() * (aMax - aMin) + aMin;
+      }
+    };
+
+    // Pseudo-random generator
+    function Marsaglia(i1, i2) {
+      // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
+      var z=i1 || 362436069, w= i2 || 521288629;
+      var nextInt = function() {
+        z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
+        w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
+        return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
+      };
+     
+      this.nextDouble = function() {
+        var i = nextInt() / 4294967296;
+        return i < 0 ? 1 + i : i;
+      };
+      this.nextInt = nextInt;
+    }
+    Marsaglia.createRandomized = function() {
+      var now = new Date();
+      return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
+    };
+
+    p.randomSeed = function(seed) {
+      currentRandom = (new Marsaglia(seed)).nextDouble;
+    };
+
     // Random
-    p.Random = function() {
-      var haveNextNextGaussian = false,
-        nextNextGaussian;
+    p.Random = function(seed) {
+      var haveNextNextGaussian = false, nextNextGaussian, random;
 
       this.nextGaussian = function() {
         if (haveNextNextGaussian) {
@@ -4329,8 +4366,8 @@
         } else {
           var v1, v2, s;
           do {
-            v1 = 2 * p.random(1) - 1; // between -1.0 and 1.0
-            v2 = 2 * p.random(1) - 1; // between -1.0 and 1.0
+            v1 = 2 * random() - 1; // between -1.0 and 1.0
+            v2 = 2 * random() - 1; // between -1.0 and 1.0
             s = v1 * v1 + v2 * v2;
           }
           while (s >= 1 || s === 0);
@@ -4342,33 +4379,12 @@
           return v1 * multiplier;
         }
       };
+      
+      // by default use standard random, otherwise seeded
+      random = seed === undefined ? Math.random : (new Marsaglia(seed)).nextDouble;
     };
 
-    p.random = function random(aMin, aMax) {
-      return arguments.length === 2 ? aMin + (Math.random() * (aMax - aMin)) : Math.random() * aMin;
-    };
-    // ---------------------------
     // Noise functions and helpers
-    
-    // Random generator: can be used with random seed(s)
-    function Marsaglia(i1, i2) {
-      // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
-      var z=i1 || 362436069, w= i2 || 521288629;
-      this.nextInt = function() {
-        z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
-        w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
-        return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
-      };
-      this.nextDouble = function() {
-        var i = this.nextInt() / 4294967296;
-        return i < 0 ? 1 + i : i;
-      };
-    }
-    Marsaglia.createRandomized = function() {
-      var now = new Date();
-      return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
-    };
-
     function PerlinNoise(seed) {
       var rnd = seed !== undefined ? new Marsaglia(seed) : Marsaglia.createRandomized();
       var i, j;
