@@ -420,6 +420,7 @@
         return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, '');
       };
 
+
       for (var i = 0, dl = directives.length; i < dl; i++) {
         var pair = directives[i].split('=');
         if (pair && pair.length === 2) {
@@ -550,7 +551,7 @@
     // float[] foo = new float[5];
     aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function(all, name, args, initVars) {
       if (initVars) {
-        return initVars;
+        return initVars.replace(/\{/g, "[").replace(/\}/g, "]");
       } else {
         return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
       }
