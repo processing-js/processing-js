@@ -552,7 +552,7 @@
     // float[] foo = new float[5];
     aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function(all, name, args, initVars) {
       if (initVars) {
-        return initVars;
+        return initVars.replace(/\{/g, "[").replace(/\}/g, "]");
       } else {
         return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
       }
@@ -625,6 +625,29 @@
           className = m[1];
 
       allRest = allRest.slice(rest.length + 1);
+  
+      // Fix class method names
+      // this.collide = function() { ... }
+      rest = (function() {
+        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
+          return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
+        });
+      }());
+
+      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
+          mc,
+          methods = "",
+          methodsArray = [];
+
+      while ((mc = rest.match(matchMethod))) {
+        var prev = RegExp.leftContext,
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext);
+
+        methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));" + "var " + mc[2] + " = this." + mc[2] + ";\n");
+
+        rest = prev + allNext.slice(next.length + 1);
+      }
 
       var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
           c,
@@ -653,30 +676,7 @@
 
         rest = prev + allNext.slice(next.length + 1);
       }
-
-      // Fix class method names
-      // this.collide = function() { ... }
-      rest = (function() {
-        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
-          return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
-        });
-      }());
-
-      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
-          mc,
-          methods = "",
-          methodsArray = [];
-
-      while ((mc = rest.match(matchMethod))) {
-        var prev = RegExp.leftContext,
-            allNext = RegExp.rightContext,
-            next = nextBrace(allNext);
-
-        methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));" + "var " + mc[2] + " = this." + mc[2] + ";\n");
-
-        rest = prev + allNext.slice(next.length + 1);
-      }
-	  
+  
       var vars = "",
           publicVars  = "";
 
