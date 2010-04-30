@@ -420,7 +420,6 @@
         return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, '');
       };
 
-
       for (var i = 0, dl = directives.length; i < dl; i++) {
         var pair = directives[i].split('=');
         if (pair && pair.length === 2) {
