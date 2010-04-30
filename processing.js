@@ -5886,19 +5886,27 @@
             }
           }
           else{
-            for(i = 0; i < vertArray.length; i++){
+            if(vertArray.length === 1){
               for(j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[i][j]);
+                lineVertArray.push(vertArray[0][j]);
               }
-            }
-            if(p.CLOSE){
-              line2D(lineVertArray, "LINE_LOOP");
+              point2D(lineVertArray);
             }
             else{
-              line2D(lineVertArray, "LINE_STRIP");
-            }
-            if(doFill){
-              fill2D(fillVertArray);
+              for(i = 0; i < vertArray.length; i++){
+                for(j = 0; j < 3; j++){
+                  lineVertArray.push(vertArray[i][j]);
+                }
+              }
+              if(p.CLOSE){
+                line2D(lineVertArray, "LINE_LOOP");
+              }
+              else{
+                line2D(lineVertArray, "LINE_STRIP");
+              }
+              if(doFill){
+                fill2D(fillVertArray);
+              }
             }
           }
         }
