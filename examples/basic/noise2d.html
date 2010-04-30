@@ -16,7 +16,7 @@ Using 2D noise to create simple texture.</p>
 float increment = 0.02;
 
 void setup() {
-  size(100,100);
+  size(200,200);
   noLoop();
 }
 
@@ -38,10 +38,10 @@ void draw() {
       yoff += increment; // Increment yoff
       
       // Calculate noise and scale by 255
-      //float bright = noise(xoff,yoff)*255;
+      float bright = noise(xoff,yoff)*255;
 
       // Try using this line instead
-      float bright = random(0,255);
+      //float bright = random(0,255);
       
       // Set each pixel onscreen to a grayscale value
       pixels[x+y*width] = color(bright);
