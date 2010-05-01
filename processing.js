@@ -716,10 +716,6 @@
           }
         });
       }
-	  
-	  for (var i = 0; i < methodsArray.length; i++){
-        methods += methodsArray[i];
-      }
 
       // Put all member variables into "vars"
       // and keep a list of all public variables
