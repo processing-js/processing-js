@@ -400,6 +400,32 @@
 
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   Processing.parse = function parse(aCode, p) {
+  
+    // Function to grab all code in the opening and closing of two characters
+    var nextBrace = function(right, openChar, closeChar) {
+      var rest = right,
+          position = 0,
+          leftCount = 1,
+          rightCount = 0;
+
+      while (leftCount !== rightCount) {
+        var nextLeft = rest.indexOf(openChar),
+            nextRight = rest.indexOf(closeChar);
+
+        if (nextLeft < nextRight && nextLeft !== -1) {
+          leftCount++;
+          rest = rest.slice(nextLeft + 1);
+          position += nextLeft + 1;
+        } else {
+          rightCount++;
+          rest = rest.slice(nextRight + 1);
+          position += nextRight + 1;
+        }
+      }
+
+      return right.slice(0, position - 1);
+    };
+
 
     // Force characters-as-bytes to work.
     //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
@@ -489,37 +515,13 @@
         return "PROCESSING." + name + " = function " + name + args;
       }
     });
-    
-    var nextBrace = function(right) {
-      var rest = right,
-        position = 0,
-        leftCount = 1,
-        rightCount = 0;
-
-      while (leftCount !== rightCount) {
-        var nextLeft = rest.indexOf("{"),
-          nextRight = rest.indexOf("}");
-
-        if (nextLeft < nextRight && nextLeft !== -1) {
-          leftCount++;
-          rest = rest.slice(nextLeft + 1);
-          position += nextLeft + 1;
-        } else {
-          rightCount++;
-          rest = rest.slice(nextRight + 1);
-          position += nextRight + 1;
-        }
-      }
-
-      return right.slice(0, position - 1);
-    };
 
     var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
 
     while ((mc = aCode.match(matchMethod))) {
       var prev = RegExp.leftContext,
         allNext = RegExp.rightContext,
-        next = nextBrace(allNext);
+        next = nextBrace(allNext, "{", "}");
 
         aCode = prev + "processing." + mc[1] + next + "};" + allNext.slice(next.length + 1);
     }
@@ -541,6 +543,31 @@
     Error.prototype.printStackTrace = function() {
       this.toString();
     };
+
+    // changes pixels[n] into pixels.getPixels(n)
+    // and pixels[n] = n2 into pixels.setPixels(n, n2)
+    var matchPixels = /pixels\s*\[/,
+        mp;
+
+    while ((mp = aCode.match(matchPixels))) {
+      var left = RegExp.leftContext,
+          allRest = RegExp.rightContext,
+          rest = nextBrace(allRest, "[", "]"),
+          getOrSet = "getPixel";
+
+      allRest = allRest.slice(rest.length + 1);
+
+      allRest = allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
+        rest += ", " + middle;
+        getOrSet = "setPixel";
+        return end;
+      });
+
+      aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
+    }
+
+    // changes pixel.length to pixels.getLength()
+    aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
 
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
@@ -621,7 +648,7 @@
     while ((m = aCode.match(matchClass))) {
       var left = RegExp.leftContext,
           allRest = RegExp.rightContext,
-          rest = nextBrace(allRest),
+          rest = nextBrace(allRest, "{", "}"),
           className = m[1];
 
       allRest = allRest.slice(rest.length + 1);
@@ -642,7 +669,7 @@
       while ((mc = rest.match(matchMethod))) {
         var prev = RegExp.leftContext,
             allNext = RegExp.rightContext,
-            next = nextBrace(allNext);
+            next = nextBrace(allNext, "{", "}");
 
         methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));" + "var " + mc[2] + " = this." + mc[2] + ";\n");
 
@@ -657,7 +684,7 @@
       while ((c = rest.match(matchConstructor))) {
         var prev = RegExp.leftContext,
             allNext = RegExp.rightContext,
-            next = nextBrace(allNext),
+            next = nextBrace(allNext, "{", "}"),
             args = c[1];
 
           args = args.split(/,\s*?/);
