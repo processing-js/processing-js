@@ -678,7 +678,8 @@
 
       var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
           c,
-          constructors = "";
+          constructor = "",
+          constructorsArray = [];
 
       // Extract all constructors and put them into the variable "constructors"
       while ((c = rest.match(matchConstructor))) {
@@ -693,13 +694,16 @@
           args.shift();
         }
         
-        constructors += "if ( arguments.length === " + args.length + " ) {\n";
+        constructor = "if ( arguments.length === " + args.length + " ) {\n";
 
         for (var i = 0, aLength = args.length; i < aLength; i++) {
-          constructors += " var " + args[i] + " = arguments[" + i + "];\n";
+          constructor += " var " + args[i] + " = arguments[" + i + "];\n";
         }
         
-        constructors += next + "}\n";
+        constructor += next + "}\n";
+        constructorsArray.push(constructor);
+        rest = prev + allNext.slice(next.length + 1);
+      }
 
         rest = prev + allNext.slice(next.length + 1);
       }
@@ -771,29 +775,47 @@
       // add this. to public variables used inside member functions, and constructors
       if (publicVars) {
         // Search functions for public variables
-        for (var i = 0, aLength = methodsArray.length; i < aLength; i++) {
-          methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{.*?\{)([^\}]*?\};)/g, function(all, header, body) {
+        for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
+          methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);var \w+ = this\.\w+;)/g, function(all, header, localParams, body, footer) {
+            body = body.replace(/this\./g, "public.");
+            localParams = localParams.replace(/\s*,\s*/g, "|");
             return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
               if (first === ".") {
+                return all;
+              } else if (localParams && new RegExp("\\b(" + localParams + ")\\b").test(variable)){
                 return all;
               } else {
                 return "public." + variable;
               }
-            });
+            }) + footer;
           });
         }
         // Search constructors for public variables
-        constructors = constructors.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-          if (/var\s*?$/.test(first) || first === ".") {
-            return all;
-          } else {
-            return "this." + variable;
-          }
-        });
+        for (var i = 0, localParameters = "", aLength = constructorsArray.length; i < aLength; i++){
+          localParameters = "";
+          constructorsArray[i].replace(/var\s+(\w+) = arguments\[[^\]]\];/g, function(all, localParam){
+            localParameters += localParam + "|";
+          });
+          constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+            if (/var\s*?$/.test(first) || first === ".") {
+              return all;
+            } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
+              return all;
+            } else {
+              return "this." + variable;
+            }
+          });
+        }
       }
+    
+      var methods = "",
+          constructors = "";
     
       for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
         methods += methodsArray[i];
+      }
+      for (var i = 0, aLength = constructorsArray.length; i < aLength; i++){
+        constructors += constructorsArray[i];
       }
       rest = vars + "\n" + methods + "\n" + constructors;
 
