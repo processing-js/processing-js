@@ -1,0 +1,4 @@
+size(100, 100, P3D);
+background(200);
+box(10);
+triangle(30, 75, 58, 20, 86, 75);

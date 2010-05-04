@@ -19,27 +19,27 @@ class Ball {
   }
   
   void render() {
-    if ( vel.y >= (height - d/2 - loc.y) ) {
-      bounceAcc = vel.y;
-      vel.y = height - d/2 - loc.y;
+    if ( this.vel.y >= (height - d/2 - this.loc.y) ) {
+      bounceAcc = this.vel.y;
+      this.vel.y = height - d/2 - this.loc.y;
     } else {
       this.addAcc(g);
     }
 
-    loc.add(vel);
+    this.loc.add(this.vel);
 
     stroke(round((float)(Math.sin(frameCount/30f) + 1) * 128), round((float)(Math.cos(frameCount/40f) + 1) * 128) + index, round((float)(Math.cos(frameCount/30f) + 1) * 128) + index/2);
 
-    if ( loc.y >= height - d/2 ) {
-      vel = new PVector();
+    if ( this.loc.y >= height - d/2 ) {
+      this.vel = new PVector();
       this.addAcc(new PVector(0, -bounceAcc));
     }
   }
   
   void addAcc(PVector v) {
-    acc.add(v);
-    vel.add(acc);
-    acc = new PVector();
+    this.acc.add(v);
+    this.vel.add(this.acc);
+    this.acc = new PVector();
   }
 }
 
