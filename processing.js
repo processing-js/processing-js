@@ -704,9 +704,6 @@
         constructorsArray.push(constructor);
         rest = prev + allNext.slice(next.length + 1);
       }
-
-        rest = prev + allNext.slice(next.length + 1);
-      }
   
       var vars = "",
           publicVars  = "";
@@ -725,34 +722,6 @@
         vars += variable;
         return "";
       });
-	  
-      // add this. to public variables used inside member functions, and constructors
-      if (publicVars) {
-        // Search functions for public variables
-        for (var i = 0; i < methodsArray.length; i++) {
-          methodsArray[i] = methodsArray[i].replace(/(addMethod.*?\{.*?\{)([^\}]*?\};)/g, function(all, header, body) {
-            return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-              if (first === ".") {
-                return all;
-              } else {
-                return "public." + variable;
-              }
-            });
-          });
-        }
-        // Search constructors for public variables
-        constructors = constructors.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-          if (/var\s*?$/.test(first) || first === ".") {
-            return all;
-          } else {
-            return "this." + variable;
-          }
-        });
-      }
-	  
-	  for (var i = 0; i < methodsArray.length; i++){
-        methods += methodsArray[i];
-      }
 
       // Put all member variables into "vars"
       // and keep a list of all public variables
