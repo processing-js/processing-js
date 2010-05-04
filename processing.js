@@ -427,6 +427,31 @@
     };
 
 
+    // Function to grab all code in the opening and closing of two characters
+    var nextBrace = function(right, openChar, closeChar) {
+      var rest = right,
+          position = 0,
+          leftCount = 1,
+          rightCount = 0;
+
+      while (leftCount !== rightCount) {
+        var nextLeft = rest.indexOf(openChar),
+            nextRight = rest.indexOf(closeChar);
+
+        if (nextLeft < nextRight && nextLeft !== -1) {
+          leftCount++;
+          rest = rest.slice(nextLeft + 1);
+          position += nextLeft + 1;
+        } else {
+          rightCount++;
+          rest = rest.slice(nextRight + 1);
+          position += nextRight + 1;
+        }
+      }
+
+      return right.slice(0, position - 1);
+    };
+  
     // Force characters-as-bytes to work.
     //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
     aCode = aCode.replace(/'.{1}'/g, function(all) {
@@ -873,7 +898,6 @@
         });
       }());
     }
-
     return aCode;
   };
 
@@ -6487,12 +6511,12 @@
           } else if (h === 0 && w !== 0) {
             h = w / (this.width / this.height);
           }
-          // put 'this' into a new canvas
-          var pimg = this.toImageData();
+          // put 'this.imageData' into a new canvas
           var canvas = document.createElement('canvas');
           canvas.width = this.width;
-          canvas.height = this.height;
-          canvas.getContext('2d').putImageData(pimg, 0, 0);
+          canvas.height = this.height;          
+          // changed for 0.9 slightly this one line
+          canvas.getContext('2d').putImageData(this.imageData, 0, 0);
           // pass new canvas to drawimage with w,h
           var canvasResized = document.createElement('canvas');
           canvasResized.width = w;
@@ -6501,7 +6525,6 @@
           // pull imageData object out of canvas into ImageData object
           var imageData = canvasResized.getContext('2d').getImageData(0, 0, w, h);
           // set this as new pimage
-          this.ImageData = imageData;
           this.fromImageData(imageData);
         }
       };
@@ -6517,6 +6540,8 @@
           }
         } else if (typeof mask === "object" && mask.constructor === Array) { // this is a pixel array
           // mask pixel array needs to be the same length as this.pixels
+          // how do we update this for 0.9 this.imageData holding pixels ^^
+          // mask.constructor ? and this.pixels.length = this.imageData.data.length instead ?
           if (this.pixels.length === mask.length) {
             this._mask = mask;
           } else {
@@ -6524,38 +6549,47 @@
           }
         }
       };
-
-      // TODO: incomplete functions
+      
+      // handle the sketch code for pixels[] and pixels.length
+      // parser code converts pixels[] to getPixels()
+      // or setPixels(), .length becomes getLength()
+      this.pixels = {
+        getLength : (function(aImg) {
+          return function() { 
+            return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
+          }
+        })(this),
+        getPixel : (function(aImg) {
+          return function(i) {
+            var offset = i*4;
+            return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
+                                 aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
+          }
+        })(this),
+        setPixel : (function(aImg) {
+          return function(i,c) {
+            if(c && typeof c == "number") {
+              var offset = i*4;
+              // split c into array
+              var c2 = p.color.toArray(c);
+              // change pixel to c
+              aImg.imageData.data[offset] = c2[0];
+              aImg.imageData.data[offset+1] = c2[1];
+              aImg.imageData.data[offset+2] = c2[2];
+              aImg.imageData.data[offset+3] = c2[3];
+            }
+          }
+        })(this)
+      };
+      
+      // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
       this.loadPixels = function() {};
 
       this.updatePixels = function() {};
 
       this.toImageData = function() {
-        var imgData = Temporary2DContext.createImageData(this.width, this.height);
-        var i, len;
-        var dest = imgData.data;
-        // this check breaks things once we start changing pimages if we dont 
-        //update the ImageData object as well as the pixel array all the time
-        //        if (this.ImageData && this.ImageData.width > 0) {
-        //          // image is based on ImageData. Copying...
-        //          var src = this.ImageData.data;
-        //          for (i = 0, len = this.width * this.height * 4; i < len; ++i) {
-        //            dest[i] = src[i];
-        //          }
-        //        } else {
-        for (i = 0, len = this.pixels.length; i < len; ++i) {
-          // convert each this.pixels[i] int to array of 4 ints of each color
-          var c = this.pixels[i];
-          var pos = i * 4;
-          // pjs uses argb, canvas stores rgba        
-          dest[pos + 3] = (c >>> 24) & 0xFF;
-          dest[pos + 0] = (c >>> 16) & 0xFF;
-          dest[pos + 1] = (c >>> 8) & 0xFF;
-          dest[pos + 2] = c & 0xFF;
-          //          }
-        }
-        // return a canvas ImageData object with pixel array in canvas format
-        return imgData;
+        // changed for 0.9
+        return this.imageData;
       };
 
       this.toDataURL = function() {
@@ -6564,32 +6598,18 @@
         canvas.width = this.width;
         var ctx = canvas.getContext('2d');
         var imgData = ctx.createImageData(this.width, this.height);
-        for (var i = 0; i < this.pixels.length; i++) {
-          // convert each this.pixels[i] int to array of 4 ints of each color
-          var c = this.pixels[i];
-          var pos = i * 4;
-          // pjs uses argb, canvas stores rgba        
-          imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
-          imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
-          imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
-          imgData.data[pos + 2] = c % 256;
-        }
-        // return data URI for a canvas
-        ctx.putImageData(imgData, 0, 0);
+        // changed for 0.9
+        ctx.putImageData(this.imageData, 0, 0);
         return canvas.toDataURL();
       };
 
       this.fromImageData = function(canvasImg) {
         this.width = canvasImg.width;
         this.height = canvasImg.height;
-        this.pixels = new Array(canvasImg.width * canvasImg.height);
+        this.imageData = canvasImg;
+        // changed for 0.9
         this.format = p.ARGB;
-        for (var i = 0; i < this.pixels.length; i++) {
-          // convert each canvasImg's colors to PImage array format
-          var pos = i * 4;
-          // pjs uses argb, canvas stores rgba
-          this.pixels[i] = p.color.toInt(canvasImg.data[pos + 0], canvasImg.data[pos + 1], canvasImg.data[pos + 2], canvasImg.data[pos + 3]);
-        }
+        // changed for 0.9
       };
 
       this.fromHTMLImageData = function(htmlImg) {
@@ -6600,9 +6620,6 @@
         var context = canvas.getContext("2d");
         context.drawImage(htmlImg, 0, 0);
         var imageData = context.getImageData(0, 0, htmlImg.width, htmlImg.height);
-        // we should no longer use this it is dangerous and 
-        // causes sync issues with pixel array
-        //this.ImageData = imageData;
         this.fromImageData(imageData);
       };
 
@@ -6610,10 +6627,10 @@
         // convert an <img> to a PImage
         this.fromHTMLImageData(arguments[0]);
       } else if (arguments.length === 2 || arguments.length === 3) {
-        this.width = aWidth || 0;
-        this.height = aHeight || 0;
-        this.pixels = new Array(this.width * this.height);
-        this.data = this.pixels;
+        this.width = aWidth || 1;
+        this.height = aHeight || 1;        
+        // changed for 0.9
+        this.imageData = curContext.createImageData(this.width, this.height);
         this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
       }
     };
@@ -6630,20 +6647,8 @@
     } catch(e) {}
 
     p.createImage = function createImage(w, h, mode) {
-      var img = new PImage(w, h, mode);
-      // make the new image transparent black by default
-      for (var i = 0; i < w * h; i++) {
-        if (mode === p.RGB) {
-          // if mode is RGB set alpha to 255, no transparency
-          img.pixels[i++] = 255;
-        } else {
-          img.pixels[i++] = 0;
-        }
-        img.pixels[i++] = 0;
-        img.pixels[i++] = 0;
-        img.pixels[i] = 0;
-      }
-      return img;
+      // changed for 0.9
+      return new PImage(w,h,mode);
     };
 
     // Loads an image for display. Type is an extension. Callback is fired on load.
@@ -6696,14 +6701,16 @@
         return c;
       } else if (arguments.length === 5) {
         // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
-        var start = y * img.width + x;
-        var end = (y + h) * img.width + x + w;
+        // changed for 0.9, offset start point needs to be *4
+        var start = y * img.width * 4 + (x*4);
+        var end = (y + h) * img.width * 4 + ((x + w) * 4);
         c = new PImage(w, h, p.RGB);
         for (var i = start, j = 0; i < end; i++, j++) {
-          c.pixels[j] = img[i];
-          if (j + 1 % w === 0) {
+          // changed in 0.9
+          c.imageData.data[j] = img.imageData.data[i];
+          if (j*4 + 1 % w === 0) {
             //completed one line, increment i by offset
-            i += img.width - w;
+            i += (img.width - w) * 4;
           }
         }
         return c;
@@ -6714,7 +6721,12 @@
         return c;
       } else if (arguments.length === 3) {
         // PImage.get(x,y) was called, return the color (int) at x,y of img
-        return w.pixels[y * w.width + x];
+        // changed in 0.9
+        var offset = y * w.width * 4 + (x * 4);
+        return p.color.toInt(w.imageData.data[offset],
+                           w.imageData.data[offset + 1],
+                           w.imageData.data[offset + 2],
+                           w.imageData.data[offset + 3]);
       } else if (arguments.length === 2) {
         // return the color at x,y (int) of curContext
         // create a PImage object of size 1x1 and return the int of the pixels array element 0
@@ -6722,7 +6734,11 @@
           // x,y is inside canvas space
           c = new PImage(1, 1, p.RGB);
           c.fromImageData(curContext.getImageData(x, y, 1, 1));
-          return c.pixels[0];
+          // changed for 0.9
+          return p.color.toInt(c.imageData.data[0],
+                               c.imageData.data[1],
+                               c.imageData.data[2],
+                               c.imageData.data[3]);                               
         } else {
           // x,y is outside image return transparent black
           return 0;
@@ -6747,7 +6763,13 @@
       var color, oldFill;
       // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
       if (arguments.length === 4) {
-        img.pixels[y * img.width + x] = obj;
+        // changed in 0.9
+        var c = p.color.toArray(obj);
+        var offset = y * img.width * 4 + (x*4);
+        img.imageData.data[offset] = c[0];
+        img.imageData.data[offset+1] = c[1];
+        img.imageData.data[offset+2] = c[2];
+        img.imageData.data[offset+3] = c[3];
       } else if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number") {
@@ -6761,40 +6783,44 @@
         }
       }
     };
+    p.imageData = {};
+    
+    // handle the sketch code for pixels[]
+    // parser code converts pixels[] to getPixels()
+    // or setPixels(), .length becomes getLength()
+    p.pixels = {
+      getLength : function(){ return p.imageData.data.length ? p.imageData.data.length/4 : 0},
+      getPixel : function(i) {
+        var offset = i*4;
+        return p.color.toInt(p.imageData.data[offset], p.imageData.data[offset+1],
+                             p.imageData.data[offset+2], p.imageData.data[offset+3]);
+      },
+      setPixel : function(i,c){
+        if(c && typeof c == "number") {
+          var offset = i*4;
+          // split c into array
+          var c2 = p.color.toArray(c);
+          // change pixel to c
+          p.imageData.data[offset] = c2[0];
+          p.imageData.data[offset+1] = c2[1];
+          p.imageData.data[offset+2] = c2[2];
+          p.imageData.data[offset+3] = c2[3];
+        }
+      }
+    };
 
     // Gets a 1-Dimensional pixel array from Canvas
     p.loadPixels = function() {
-      p.pixels = p.get(0, 0, p.width, p.height).pixels;
+      // changed in 0.9
+      p.imageData = p.get(0, 0, p.width, p.height).imageData;
     };
 
     // Draws a 1-Dimensional pixel array to Canvas
     p.updatePixels = function() {
-      var pixels = {}, c;
-
-      pixels.width = p.width;
-      pixels.height = p.height;
-      pixels.data = [];
-
-      if (curContext.createImageData) {
-        pixels = curContext.createImageData(p.width, p.height);
+      // changed in 0.9
+      if (p.imageData) {
+        curContext.putImageData(p.imageData, 0, 0);
       }
-
-      var data = pixels.data,
-        pos = 0,
-        defaultColor;
-
-      for (var i = 0, l = p.pixels.length; i < l; i++) {
-        c = p.pixels[i] ? p.color.toArray(p.pixels[i]) : [0, 0, 0, 255];
-
-        data[pos + 0] = c[0];
-        data[pos + 1] = c[1];
-        data[pos + 2] = c[2];
-        data[pos + 3] = c[3];
-
-        pos += 4;
-      }
-
-      curContext.putImageData(pixels, 0, 0);
     };
 
     // Draw an image or a color to the background
@@ -6926,19 +6952,19 @@
         if (arguments.length === 10) {
           p.loadPixels();
           dest = p;
-        } else if (arguments.length === 11 && pimgdest && pimgdest.pixels) {
+        } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
           dest = pimgdest;
         }
         if (src === this) {
           if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
-            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1, dest.pixels, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
           } else {
             // same as below, except skip the loadPixels() because it'd be redundant
-            p.blit_resize(src, sx, sy, sx2, sy2, dest.pixels, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+            p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
           }
         } else {
           src.loadPixels();
-          p.blit_resize(src, sx, sy, sx2, sy2, dest.pixels, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+          p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
         }
         if (arguments.length === 10) {
           p.updatePixels();
@@ -7027,10 +7053,15 @@
       p.shared.u1 = (p.shared.sX >> p.PRECISIONB);
       p.shared.u2 = Math.min(p.shared.u1 + 1, p.shared.iw1);
       // get color values of the 4 neighbouring texels
-      p.shared.cUL = p.shared.srcBuffer[p.shared.v1 + p.shared.u1];
-      p.shared.cUR = p.shared.srcBuffer[p.shared.v1 + p.shared.u2];
-      p.shared.cLL = p.shared.srcBuffer[p.shared.v2 + p.shared.u1];
-      p.shared.cLR = p.shared.srcBuffer[p.shared.v2 + p.shared.u2];
+      // changed for 0.9
+      var cULoffset = (p.shared.v1 + p.shared.u1) * 4;
+      var cURoffset = (p.shared.v1 + p.shared.u2) * 4;
+      var cLLoffset = (p.shared.v2 + p.shared.u1) * 4;
+      var cLRoffset = (p.shared.v2 + p.shared.u2) * 4;
+      p.shared.cUL = p.color.toInt(p.shared.srcBuffer[cULoffset], p.shared.srcBuffer[cULoffset+1], p.shared.srcBuffer[cULoffset+2], p.shared.srcBuffer[cULoffset+3]);
+      p.shared.cUR = p.color.toInt(p.shared.srcBuffer[cURoffset], p.shared.srcBuffer[cURoffset+1], p.shared.srcBuffer[cURoffset+2], p.shared.srcBuffer[cURoffset+3]);
+      p.shared.cLL = p.color.toInt(p.shared.srcBuffer[cLLoffset], p.shared.srcBuffer[cLLoffset+1], p.shared.srcBuffer[cLLoffset+2], p.shared.srcBuffer[cLLoffset+3]);
+      p.shared.cLR = p.color.toInt(p.shared.srcBuffer[cLRoffset], p.shared.srcBuffer[cLRoffset+1], p.shared.srcBuffer[cLRoffset+2], p.shared.srcBuffer[cLRoffset+3]);
       p.shared.r = ((p.shared.ul * ((p.shared.cUL & p.RED_MASK) >> 16) + p.shared.ll * ((p.shared.cLL & p.RED_MASK) >> 16) + p.shared.ur * ((p.shared.cUR & p.RED_MASK) >> 16) + p.shared.lr * ((p.shared.cLR & p.RED_MASK) >> 16)) << p.PREC_RED_SHIFT) & p.RED_MASK;
       p.shared.g = ((p.shared.ul * (p.shared.cUL & p.GREEN_MASK) + p.shared.ll * (p.shared.cLL & p.GREEN_MASK) + p.shared.ur * (p.shared.cUR & p.GREEN_MASK) + p.shared.lr * (p.shared.cLR & p.GREEN_MASK)) >>> p.PRECISIONB) & p.GREEN_MASK;
       p.shared.b = (p.shared.ul * (p.shared.cUL & p.BLUE_MASK) + p.shared.ll * (p.shared.cLL & p.BLUE_MASK) + p.shared.ur * (p.shared.cUR & p.BLUE_MASK) + p.shared.lr * (p.shared.cLR & p.BLUE_MASK)) >>> p.PRECISIONB;
@@ -7078,8 +7109,10 @@
       }
       destW = Math.min(destW, screenW - destX1);
       destH = Math.min(destH, screenH - destY1);
+      // changed in 0.9, TODO
       var destOffset = destY1 * screenW + destX1;
-      p.shared.srcBuffer = img.pixels;
+      var destColor;
+      p.shared.srcBuffer = img.imageData.data;
       if (smooth) {
         // use bilinear filtering
         p.shared.iw = img.width;
@@ -7090,7 +7123,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.blend(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.blend(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.blend(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7101,7 +7141,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.add(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.add(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7112,7 +7159,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.subtract(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.subtract(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.subtract(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7123,7 +7177,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.lightest(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.lightest(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.lightest(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7134,7 +7195,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.darkest(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.darkest(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.darkest(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7145,7 +7213,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.filter_bilinear();
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.filter_bilinear());
+              //destPixels[destOffset + x] = p.filter_bilinear();
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];              
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7156,7 +7231,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.difference(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.difference(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.difference(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7167,7 +7249,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.exclusion(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.exclusion(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.exclusion(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7178,7 +7267,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.multiply(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.multiply(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.multiply(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7189,7 +7285,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.screen(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.screen(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.screen(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7200,7 +7303,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.overlay(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.overlay(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.overlay(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7211,7 +7321,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.hard_light(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.hard_light(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.hard_light(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7222,7 +7339,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.soft_light(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.soft_light(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.soft_light(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7233,7 +7357,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.dodge(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.dodge(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.dodge(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -7244,7 +7375,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              destPixels[destOffset + x] = p.modes.burn(destPixels[destOffset + x], p.filter_bilinear());
+              // changed for 0.9            
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.burn(destColor, p.filter_bilinear()));
+              //destPixels[destOffset + x] = p.modes.burn(destPixels[destOffset + x], p.filter_bilinear());
+              destPixels[(destOffset + x) * 4] = destColor[0];
+              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
+              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
