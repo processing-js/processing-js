@@ -5595,10 +5595,12 @@
           curContext.drawArrays(curContext.POINTS, 0, 1);
         }
       } else {
-        var oldFill = curContext.fillStyle;
-        curContext.fillStyle = curContext.strokeStyle;
-        curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-        curContext.fillStyle = oldFill;
+        if (doStroke) {
+          var oldFill = curContext.fillStyle;
+          curContext.fillStyle = curContext.strokeStyle;
+          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+          curContext.fillStyle = oldFill;
+        }
       }
     };
 
@@ -6297,11 +6299,13 @@
         x2 = arguments[2];
         y2 = arguments[3];
 
-        curContext.beginPath();
-        curContext.moveTo(x1 || 0, y1 || 0);
-        curContext.lineTo(x2 || 0, y2 || 0);
-        curContext.stroke();
-        curContext.closePath();
+        if (doStroke) {
+          curContext.beginPath();
+          curContext.moveTo(x1 || 0, y1 || 0);
+          curContext.lineTo(x2 || 0, y2 || 0);
+          curContext.stroke();
+          curContext.closePath();
+        }
       }
     };
 
