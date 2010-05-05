@@ -7452,6 +7452,15 @@
 
     p.textAlign = function textAlign() {};
 
+    p.textWidth = function textWidth(str) {
+      curContext.font = curTextSize + "px " + curTextFont.name;
+      if (curContext.fillText) {
+        return curContext.measureText(str).width;
+      } else if (curContext.mozDrawText) {
+        return curContext.mozMeasureText(str);
+      }
+    };
+
     // A lookup table for characters that can not be referenced by Object 
     p.glyphLook = function glyphLook(font, chr) {
       try {
