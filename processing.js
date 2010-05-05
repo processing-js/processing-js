@@ -24,6 +24,10 @@
       aElement = document.getElementById(aElement);
     }
 
+    if(typeof aCode === "function") {
+      // HACK: make function behave as string aCode
+      aCode.match = function() { return null; };
+    }
     // The problem: if the HTML canvas dimensions differ from the
     // dimensions specified in the size() call in the sketch, for
     // 3D sketches, browsers will either not render or render the
@@ -459,11 +463,6 @@
     });
 
     // Parse out @pjs directive, if any.
-    p.pjs = {
-      imageCache: {
-        pending: 0
-      }
-    }; // by default we have an empty imageCache, no more.
     var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
     if (dm && dm.length === 2) {
       var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
@@ -7944,7 +7943,13 @@
 
     p.init = function init(code) {
       if (code) {
-        var parsedCode = Processing.parse(code, p);
+        p.pjs = {
+           imageCache: {
+             pending: 0
+           }
+        }; // by default we have an empty imageCache, no more.
+
+        var parsedCode = typeof code === "function" ? undefined : Processing.parse(code, p);
 
         if (!p.use3DContext) {
           // Setup default 2d canvas context. 
@@ -7977,7 +7982,11 @@
           with(processing) {
             // Don't start until all specified images in the cache are preloaded
             if (!pjs.imageCache.pending) {
-              eval(parsedCode);
+              if(typeof code === "function") {
+                code(processing);
+              } else {
+                eval(parsedCode);
+              }
 
               // Run void setup()
               if (setup) {
