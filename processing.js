@@ -24,30 +24,6 @@
       aElement = document.getElementById(aElement);
     }
 
-    if(typeof aCode === "function") {
-      // HACK: make function behave as string aCode
-      aCode.match = function() { return null; };
-    }
-    // The problem: if the HTML canvas dimensions differ from the
-    // dimensions specified in the size() call in the sketch, for
-    // 3D sketches, browsers will either not render or render the
-    // scene incorrectly. To fix this, we need to adjust the attributes
-    // of the canvas width and height.
-    // this regex needs to be cleaned up a bit
-    var r = "" + aCode.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/);
-    var dimensions = r.match(/[0-9]+/g);
-
-    if (dimensions) {
-      var sketchWidth = parseInt(dimensions[0], 10);
-      var sketchHeight = parseInt(dimensions[1], 10);
-
-      // only adjust the attributes if they differ
-      if (aElement.width !== sketchWidth || aElement.height !== sketchHeight) {
-        aElement.setAttribute("width", sketchWidth);
-        aElement.setAttribute("height", sketchHeight);
-      }
-    }
-
     // Build an Processing functions and env. vars into 'p'  
     var p = Processing.build(aElement);
 
@@ -100,21 +76,6 @@
         for (var j=0, fl=filenames.length; j<fl; j++) {
           if (filenames[j]) {
             code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
-          }
-        }
-        // get the dimensions
-        // this regex needs to be cleaned up a bit
-        var r = "" + code.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/);
-        var dimensions = r.match(/[0-9]+/g);
-
-        if (dimensions) {
-          var sketchWidth = parseInt(dimensions[0], 10);
-          var sketchHeight = parseInt(dimensions[1], 10);
-
-          // only adjust the attributes if they differ
-          if (canvas[i].width !== sketchWidth || canvas[i].height !== sketchHeight) {
-            canvas[i].setAttribute("width", sketchWidth);
-            canvas[i].setAttribute("height", sketchHeight);
           }
         }
         Processing(canvas[i], code);
@@ -4541,9 +4502,16 @@
       if (aMode && (aMode === p.WEBGL)) {
         // get the 3D rendering context
         try {
-          if (!curContext) {
-            curContext = curElement.getContext("experimental-webgl");
+          // If the HTML <canvas> dimensions differ from the
+          // dimensions specified in the size() call in the sketch, for
+          // 3D sketches, browsers will either not render or render the
+          // scene incorrectly. To fix this, we need to adjust the
+          // width and height attributes of the canvas.
+          if (curElement.width !== aWidth || curElement.height !== aHeight) {
+            curElement.setAttribute("width", aWidth);
+            curElement.setAttribute("height", aHeight);
           }
+          curContext = curElement.getContext("experimental-webgl");
         } catch(e_size) {
           Processing.debug(e_size);
         }

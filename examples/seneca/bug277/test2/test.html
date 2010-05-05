@@ -14,7 +14,7 @@
       load a sketch which uses a call to size(100,100,P3D). That is, the dimensions in the HTML<br />
       and Processing sketch are <b>not</b> the same in this test case.<br />
       <br />
-      If a lit sphere is rendered in the canvas, the test has passed.<br />
+      If a sphere is rendered in the canvas, the test has passed.<br />
     </p>
 
     <p>
@@ -23,6 +23,11 @@
     
     <pre>
 <b>// Test from Processing.org</b>
+import processing.opengl.*;
+
+// next line tests the parser
+// size(100, 100, P3D); 
+
 void setup() {
   size(100, 100, P3D);
 }
@@ -30,7 +35,7 @@ void setup() {
 void draw() {
   background(33,66,99);
   translate(width/2, height/2, 0);
-  sphere(10);
+  sphere(30);
 }</pre>
 
   </body>
