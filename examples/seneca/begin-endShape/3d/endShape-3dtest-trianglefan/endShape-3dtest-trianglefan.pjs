@@ -1,0 +1,92 @@
+size(500, 200, P3D);
+background(200);
+box(10);
+beginShape(TRIANGLE_FAN);
+vertex(60, 50);
+vertex(60, 15); 
+vertex(95, 50); 
+vertex(60, 85); 
+vertex(25, 50); 
+vertex(60, 15); 
+endShape();
+
+beginShape(TRIANGLE_FAN);
+vertex(160, 50);
+vertex(160, 15); 
+vertex(195, 50); 
+vertex(160, 85); 
+vertex(125, 50); 
+//vertex(160, 15); 
+endShape();
+
+beginShape(TRIANGLE_FAN);
+vertex(260, 50);
+vertex(260, 15); 
+vertex(295, 50); 
+vertex(260, 85); 
+//vertex(225, 50); 
+vertex(260, 15); 
+endShape();
+
+beginShape(TRIANGLE_FAN);
+vertex(360, 50);
+vertex(360, 15); 
+vertex(395, 50); 
+//vertex(360, 85); 
+vertex(325, 50); 
+vertex(360, 15); 
+endShape();
+
+beginShape(TRIANGLE_FAN);
+vertex(460, 50);
+vertex(460, 15); 
+//vertex(495, 50); 
+vertex(460, 85); 
+vertex(425, 50); 
+vertex(460, 15); 
+endShape();
+
+beginShape(TRIANGLE_FAN);
+vertex(60, 150);
+//vertex(60, 115); 
+vertex(95, 150); 
+vertex(60, 185); 
+vertex(25, 150); 
+vertex(60, 115); 
+endShape();
+
+beginShape(TRIANGLE_FAN);
+//vertex(160, 150);
+vertex(160, 115); 
+vertex(195, 150); 
+vertex(160, 185); 
+vertex(125, 150); 
+vertex(160, 115); 
+endShape();
+
+beginShape(TRIANGLE_FAN);
+vertex(260, 150);
+vertex(260, 115); 
+vertex(295, 150); 
+vertex(260, 185); 
+//vertex(225, 150); 
+//vertex(260, 115); 
+endShape();
+
+beginShape(TRIANGLE_FAN);
+vertex(360, 150);
+vertex(360, 115); 
+vertex(395, 150); 
+//vertex(360, 185); 
+//vertex(325, 150); 
+//vertex(360, 115); 
+endShape();
+
+beginShape(TRIANGLE_FAN);
+vertex(460, 150);
+vertex(460, 115); 
+//vertex(495, 150); 
+//vertex(460, 185); 
+//vertex(425, 150); 
+//vertex(460, 115); 
+endShape();

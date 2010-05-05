@@ -1,0 +1,29 @@
+size(500, 100);
+background(200);
+beginShape(POINTS);
+vertex(30, 20);
+vertex(85, 20);
+vertex(85, 75);
+vertex(30, 75);
+endShape(CLOSE);
+
+beginShape(POINTS);
+vertex(130, 20);
+vertex(185, 20);
+vertex(185, 75);
+//vertex(130, 75);
+endShape(CLOSE);
+
+beginShape(POINTS);
+vertex(230, 20);
+vertex(285, 20);
+//vertex(285, 75);
+//vertex(230, 75);
+endShape(CLOSE);
+
+beginShape(POINTS);
+vertex(330, 20);
+//vertex(385, 20);
+//vertex(385, 75);
+//vertex(330, 75);
+endShape(CLOSE);

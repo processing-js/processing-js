@@ -1,0 +1,91 @@
+size(500, 200);
+background(200);
+beginShape(TRIANGLES);
+vertex(30, 75);
+vertex(40, 20);
+vertex(50, 75);
+vertex(60, 20);
+vertex(70, 75);
+vertex(80, 20);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(130, 75);
+vertex(140, 20);
+vertex(150, 75);
+vertex(160, 20);
+vertex(170, 75);
+//vertex(180, 20);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(230, 75);
+vertex(240, 20);
+vertex(250, 75);
+//vertex(260, 20);
+vertex(270, 75);
+vertex(280, 20);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(330, 75);
+//vertex(340, 20);
+vertex(350, 75);
+vertex(360, 20);
+vertex(370, 75);
+vertex(380, 20);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(430, 75);
+vertex(440, 20);
+vertex(450, 75);
+vertex(460, 20);
+//vertex(470, 75);
+//vertex(480, 20);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(30, 175);
+vertex(40, 120);
+vertex(50, 175);
+//vertex(60, 120);
+//vertex(70, 175);
+//vertex(80, 120);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(130, 175);
+vertex(140, 120);
+//vertex(150, 175);
+//vertex(160, 120);
+//vertex(170, 175);
+//vertex(180, 120);
+endShape();
+
+beginShape(TRIANGLES);
+//vertex(230, 175);
+vertex(240, 120);
+vertex(250, 175);
+vertex(260, 120);
+vertex(270, 175);
+vertex(280, 120);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(330, 175);
+vertex(340, 120);
+//vertex(350, 175);
+vertex(360, 120);
+vertex(370, 175);
+vertex(380, 120);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(430, 175);
+vertex(440, 120);
+vertex(450, 175);
+vertex(460, 120);
+//vertex(470, 175);
+vertex(480, 120);
+endShape();
