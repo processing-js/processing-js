@@ -1,45 +1,8 @@
-
 void setup() {
   size(200, 200, OPENGL);
-
-  background(33,66, 99);
-//
-//translate(50,30,-50); 
- // box(50);
-
-//translate(0,-30,50); 
-
-//fill(0,0,0,0.9);
-
- // text("test", 10, 10);
-
 }
 
 void draw(){
   background(0);
-  a += 0.015;
-  if(a > TWO_PI) { 
-    a = 0.0; 
-  }
-  
-  translate(width/2, height/2,0);
-  //translate(width/2, height/2);
-  rotateY(a);
-  //rotateY(a * 2.0);
-  
-//rect(5, 5, 20, 5);
-fill(0, 102, 153);
-text("word", 10, 10);
-fill(255);
-text("word", 10, 10, -10); 
-
-fill(255);
-text("word", 20, 40, -10); 
-fill(0, 102, 153);
-text("word", 20, 40);
-
-fill(255);
-text("word", 30, 70, -10); 
-fill(0, 102, 153);
-text("word", 30, 70);
+  box(50);
 }

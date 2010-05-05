@@ -1,0 +1,7 @@
+﻿/* @pjs preload="red.jpg, green.jpg"; */
+size(40,40);
+background(0);
+PImage imgred = loadImage("red.jpg"); 
+PImage imggreen = loadImage("green.jpg"); 
+imgred.blend(imggreen, 0, 0, 5, 5, 0, 0, 5, 5, LIGHTEST);
+image(imgred, 5, 5);
