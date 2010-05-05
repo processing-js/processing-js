@@ -4,7 +4,7 @@ size(100,100);
 
 _checkEqual(0.0, textWidth(""));
 _checkEqual(8.0, textWidth("X"));
-_checkEqual(16.0, textWidth("XX");
+_checkEqual(16.0, textWidth("XX"));
 
 _checkEqual(4.0, textWidth(" "));
 _checkEqual(8.0, textWidth("  "));
