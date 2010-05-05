@@ -4,7 +4,7 @@ void setup() {
   PFont font;
   font = loadFont("Arial"); 
   textFont(font, 14);
-  fill(0, 0, 0);
+  fill(32, 111, 175);
 }
 
 PImage img = loadImage("ref_string.jpg");

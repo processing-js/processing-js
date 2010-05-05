@@ -1,5 +1,5 @@
 // Parser test for converting pixels[] into pixels()
-void pixels(){}
+loadPixels();
 int[][] blah = new int[5][];
 int a = pixels[9];
 pixels [1];
