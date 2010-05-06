@@ -715,15 +715,17 @@
               localParameters += localParam + "|";
             });
           }());
-        constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-            if (/var\s*?$/.test(first) || first === ".") {
-              return all;
-            } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
-              return all;
-            } else {
-              return "this." + variable;
-            }
-          });
+          (function(){
+            constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+              if (/var\s*?$/.test(first) || first === ".") {
+                return all;
+              } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
+                return all;
+              } else {
+                return "this." + variable;
+              }
+            });
+          }());
         }
       }
     
@@ -6479,21 +6481,21 @@
       // parser code converts pixels[] to getPixels()
       // or setPixels(), .length becomes getLength()
       this.pixels = {
-        getLength : (function(aImg) {
+        getLength: (function(aImg) {
           return function() { 
             return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
-          }
-        })(this),
-        getPixel : (function(aImg) {
+          };
+        }(this)),
+        getPixel: (function(aImg) {
           return function(i) {
             var offset = i*4;
             return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
                                  aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
-          }
-        })(this),
-        setPixel : (function(aImg) {
+          };
+        }(this)),
+        setPixel: (function(aImg) {
           return function(i,c) {
-            if(c && typeof c == "number") {
+            if(c && typeof c === "number") {
               var offset = i*4;
               // split c into array
               var c2 = p.color.toArray(c);
@@ -6503,8 +6505,8 @@
               aImg.imageData.data[offset+2] = c2[2];
               aImg.imageData.data[offset+3] = c2[3];
             }
-          }
-        })(this)
+          };
+        }(this))
       };
       
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
@@ -6714,14 +6716,14 @@
     // parser code converts pixels[] to getPixels()
     // or setPixels(), .length becomes getLength()
     p.pixels = {
-      getLength : function(){ return p.imageData.data.length ? p.imageData.data.length/4 : 0},
-      getPixel : function(i) {
+      getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
+      getPixel: function(i) {
         var offset = i*4;
         return p.color.toInt(p.imageData.data[offset], p.imageData.data[offset+1],
                              p.imageData.data[offset+2], p.imageData.data[offset+3]);
       },
-      setPixel : function(i,c){
-        if(c && typeof c == "number") {
+      setPixel: function(i,c) {
+        if(c && typeof c === "number") {
           var offset = i*4;
           // split c into array
           var c2 = p.color.toArray(c);
