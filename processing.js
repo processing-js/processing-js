@@ -6482,14 +6482,14 @@
           return function() { 
             return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
           };
-        })(this),
+        }(this)),
         getPixel: (function(aImg) {
           return function(i) {
             var offset = i*4;
             return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
                                  aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
           };
-        })(this),
+        }(this)),
         setPixel: (function(aImg) {
           return function(i,c) {
             if(c && typeof c === "number") {
@@ -6503,7 +6503,7 @@
               aImg.imageData.data[offset+3] = c2[3];
             }
           };
-        })(this)
+        }(this))
       };
       
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
