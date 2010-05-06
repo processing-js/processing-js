@@ -4,6 +4,7 @@ class Particle{
   float age;
   float lifeTime;
   float opacity;
+  float size;
   
   Particle(){
     xPos = 0;
@@ -13,6 +14,7 @@ class Particle{
     age = 0;
     lifeTime = 0;
     opacity = 255;
+    size = 20;
   }
   
   float getAge(){return age;}
@@ -30,29 +32,31 @@ class Particle{
   
   void reset(){
     opacity = 255;
+    size = 20;
   }
   
   void update(){
     age += 0.1; //fix
+    yVel += 0.1;
     xPos += xVel;
     yPos += yVel;
     
-    if(opacity > 3){
-      opacity-=3;
-    }
+    opacity = 255 - 250*(age/lifeTime);
+    size = 20 - 20*(age/lifeTime);
   }
   
   void draw(){
-    stroke(255, opacity);
+    strokeWeight(size);
+    stroke(opacity-50, 0, 255-opacity,opacity);
     point(xPos,yPos,0);
   }
 }
 
-int NUM_PARTICLES = 100;
+int NUM_PARTICLES = 500;
 
 class ParticleSystem{
   ArrayList p;
-  
+
   ParticleSystem(){
     p = new ArrayList();
     for(var i = 0; i < NUM_PARTICLES; i++){
@@ -99,7 +103,6 @@ void setup(){
 void draw(){
   background(0);
   stroke(255);
-  
   psys.update();
   psys.draw();
 }
