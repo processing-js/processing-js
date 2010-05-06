@@ -2139,7 +2139,7 @@
 
     p.ArrayList = function() {
       var createArrayList = function(args){
-        var array = new Array();
+        var array = [];
         for (var i = 0; i < args[0]; i++){
           array[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
         }
