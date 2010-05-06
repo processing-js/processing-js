@@ -4572,6 +4572,11 @@
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
           // lighting calculations could be ommitted from that program object.
           programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
+
+          // set the defaults
+          curContext.useProgram(programObject2D);
+          p.strokeWeight(1.0);
+
           programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
 
           // Now that the programs have been compiled, we can set the default
