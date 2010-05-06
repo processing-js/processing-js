@@ -6478,19 +6478,19 @@
       // parser code converts pixels[] to getPixels()
       // or setPixels(), .length becomes getLength()
       this.pixels = {
-        getLength : (function(aImg) {
+        getLength: (function(aImg) {
           return function() { 
             return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
-          }
+          };
         })(this),
-        getPixel : (function(aImg) {
+        getPixel: (function(aImg) {
           return function(i) {
             var offset = i*4;
             return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
                                  aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
-          }
+          };
         })(this),
-        setPixel : (function(aImg) {
+        setPixel: (function(aImg) {
           return function(i,c) {
             if(c && typeof c == "number") {
               var offset = i*4;
@@ -6502,7 +6502,7 @@
               aImg.imageData.data[offset+2] = c2[2];
               aImg.imageData.data[offset+3] = c2[3];
             }
-          }
+          };
         })(this)
       };
       
@@ -6713,13 +6713,13 @@
     // parser code converts pixels[] to getPixels()
     // or setPixels(), .length becomes getLength()
     p.pixels = {
-      getLength : function(){ return p.imageData.data.length ? p.imageData.data.length/4 : 0},
-      getPixel : function(i) {
+      getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
+      getPixel: function(i) {
         var offset = i*4;
         return p.color.toInt(p.imageData.data[offset], p.imageData.data[offset+1],
                              p.imageData.data[offset+2], p.imageData.data[offset+3]);
       },
-      setPixel : function(i,c){
+      setPixel: function(i,c) {
         if(c && typeof c == "number") {
           var offset = i*4;
           // split c into array
