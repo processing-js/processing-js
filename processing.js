@@ -6492,7 +6492,7 @@
         })(this),
         setPixel: (function(aImg) {
           return function(i,c) {
-            if(c && typeof c == "number") {
+            if(c && typeof c === "number") {
               var offset = i*4;
               // split c into array
               var c2 = p.color.toArray(c);
@@ -6720,7 +6720,7 @@
                              p.imageData.data[offset+2], p.imageData.data[offset+3]);
       },
       setPixel: function(i,c) {
-        if(c && typeof c == "number") {
+        if(c && typeof c === "number") {
           var offset = i*4;
           // split c into array
           var c2 = p.color.toArray(c);
