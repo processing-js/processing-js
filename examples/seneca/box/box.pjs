@@ -2,7 +2,7 @@ void setup() {
   size(200, 200, OPENGL);
 }
 
-void draw() {
-  background(255, 0, 0);
+void draw(){
+  background(0);
   box(50);
 }

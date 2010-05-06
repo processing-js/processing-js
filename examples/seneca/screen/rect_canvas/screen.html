@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for screenX(), screenY(), screenZ()</h2>
+
+    <p>This pages tests screenX(), screenY() and screenZ(). If all the tests pass,<br />
+    a green background is displayed. Otherwise a red background is displayed.<br />
+    </p>
+
+    <p>
+      <canvas datasrc="screen.pjs"></canvas>
+    </p>
+    
+    <pre>
+<b>// Test By Andor Salga</b>
+import processing.opengl.*;
+
+float E = 0.01;
+
+void setup() {
+
+size( 250, 100, OPENGL );
+
+if( checkEqual( screenX( 0, 0, 0 ) , 0, E) &&
+    checkEqual( screenX( 10, 0, 0 ), 9.999998, E) &&
+    checkEqual( screenX( 0, -10, 0 ), 0.0, E) &&
+    checkEqual( screenX( 0, 0, 90 ), 3311.2964, E) &&
+    checkEqual( screenX( 5, 5, 5 ), -2.3527145, E) &&
+    checkEqual( screenX( -5, -5, -5 ), 2.0958707, E) &&
+
+    checkEqual( screenY( 0, 0, 0 ), -5.9604645E-6, E) &&
+    checkEqual( screenY( 10, 0, 0 ), -5.9604645E-6, E) &&
+    checkEqual( screenY( 0, -10, 0 ), -10.000002, E) &&
+    checkEqual( screenY( 0, 0, 90 ), 1324.5187, E) &&
+    checkEqual( screenY( 5, 5, 5 ), 2.2427292, E) &&
+    checkEqual( screenY( -5, -5, -5 ), -1.997906, E) &&
+
+    checkEqual( screenZ( 0, 0, 0 ), 0.90909094, E) &&
+    checkEqual( screenZ( 10, 0, 0 ), 0.90909094, E) &&
+    checkEqual( screenZ( 0, -10, 0 ), 0.90909094, E) &&
+    checkEqual( screenZ( 0, 0, 90 ), 3.584886, E) &&
+    checkEqual( screenZ( 5, 5, 5 ), 0.90290177, E) &&
+    checkEqual( screenZ( -5, -5, -5 ), 0.9146044, E) 
+  )
+  {
+    background( 0, 255, 0);
+  }
+  else{
+    background( 255, 0, 0);
+  }
+}
+
+boolean checkEqual( a, b, e ){
+  if( abs( a - b ) < e ){
+    return true;
+  }
+  return false;
+}</pre>
+
+  </body>
+</html>

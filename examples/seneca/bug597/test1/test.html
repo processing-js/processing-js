@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for <a href="https://processing-js.lighthouseapp.com/projects/41284/tickets/597-empty-draw-call-clears-background">bug 597</a></h2>
+
+    <p>This page tests the fix for <a href="https://processing-js.lighthouseapp.com/projects/41284/tickets/597-empty-draw-call-clears-background">bug 597</a> for <a href="http://processingjs.org/">Processing.js</a><br />
+    If the canvas and image below are identical, the test has passed.<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs" style="width:200;height:200;"></canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0;" />
+    </p>
+    
+    <pre>
+<b>// Test by Andor Salga</b>
+import processing.opengl.*;
+
+void setup() {
+  size( 100, 100, OPENGL );
+  translate( width/2, height/2, 0 );
+  box( 20 );
+}
+
+void draw(){}</pre>
+
+  </body>
+</html>
