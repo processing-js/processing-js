@@ -2137,7 +2137,7 @@
 
     p.ArrayList = function() {
       var createArrayList = function(args){
-        var array = new Array();
+        var array = [];
         for (var i = 0; i < args[0]; i++){
           array[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
         }
@@ -2164,6 +2164,7 @@
           return !this.length;
         };
         array.clone = function() {
+          var size = this.length;
           var a = new p.ArrayList(size);
           for (var i = 0; i < size; i++) {
             a[i] = this[i];
