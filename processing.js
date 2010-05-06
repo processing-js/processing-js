@@ -715,15 +715,17 @@
               localParameters += localParam + "|";
             });
           }());
-        constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-            if (/var\s*?$/.test(first) || first === ".") {
-              return all;
-            } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
-              return all;
-            } else {
-              return "this." + variable;
-            }
-          });
+          (function(){
+            constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+              if (/var\s*?$/.test(first) || first === ".") {
+                return all;
+              } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
+                return all;
+              } else {
+                return "this." + variable;
+              }
+            });
+          }());
         }
       }
     
