@@ -1106,7 +1106,7 @@
       strokeStyle = "rgba( 204, 204, 204, 1 )",
       lineWidth = 1,
       loopStarted = false,
-      hasBackground = false,
+      refreshBackground = function() {},
       doLoop = true,
       looping = 0,
       curRectMode = p.CORNER,
@@ -4655,9 +4655,7 @@
       }
 
       // redraw the background if background was called before size
-      if (hasBackground) {
-        p.background();
-      }
+      refreshBackground();
 
       p.context = curContext; // added for createGraphics
       p.toImageData = function() {
@@ -6804,22 +6802,29 @@
       if (p.use3DContext) {
         if (typeof color !== 'undefined') {
           var c = p.color.toGLArray(color);
-          curContext.clearColor(c[0], c[1], c[2], c[3]);
-          curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+          refreshBackground = function() {
+            curContext.clearColor(c[0], c[1], c[2], c[3]);
+            curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+          };
         } else {
           // Handle image background for 3d context. not done yet.
+          refreshBackground = function() {};
         }
       } else { // 2d context
         if (typeof color !== 'undefined') {
-          var oldFill = curContext.fillStyle;
-          curContext.fillStyle = p.color.toString(color);
-          curContext.fillRect(0, 0, p.width, p.height);
-          curContext.fillStyle = oldFill;
+          refreshBackground = function() {
+            var oldFill = curContext.fillStyle;
+            curContext.fillStyle = p.color.toString(color);
+            curContext.fillRect(0, 0, p.width, p.height);
+            curContext.fillStyle = oldFill;
+          };
         } else {
-          p.image(img, 0, 0);
+          refreshBackground = function() {
+            p.image(img, 0, 0);
+          };
         }
       }
-      hasBackground = true;
+      refreshBackground();
     };
 
     // Draws an image to the Canvas
