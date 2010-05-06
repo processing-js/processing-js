@@ -1,0 +1,84 @@
+﻿// originally written by Matt Schoen
+// http://www.pagefoundry.net/matt/jquery/imgcrop.php
+// updated by Daniel Hodgin to use only Processing.js
+
+/* @pjs preload="castle.jpg"; */
+
+color c = color(128,128,128,128);
+
+void setup(){
+    size(600, 600);     //for internal size variables
+    frameRate(30);      //set our draw rate
+    stroke(0);    //all lines will be black
+    PFont font;
+    font = loadFont("Arial"); 
+    textFont(font, 18);
+    fill(c);        //all filled rects will be 50% gray with 50% transparency
+}
+
+int xoffset = 0;        //temp variable while we're dragging the mouse 
+int yoffset = 0;
+int xpos = 0;      //where to draw the image
+int ypos = 0;
+int startx, starty;
+int prsd = 0;
+PImage a;  // Declare variable "a" of type PImage  
+a = loadImage("castle.jpg"); // Load the images into the program 
+double s = 1.0;
+double r = 1.0;
+
+void draw(){    //this method is called by processingjs at the above frame rate
+    background(0);  //draw a black background
+    //for testing purposes, to figure out the scaling
+    scale(s);
+    image(a, xpos - xoffset, ypos - yoffset);       //draw scaled image
+    scale(1/s);     
+    //for whatever reason, using "scale(1.0);" didn't reset the scale here.  I have no idea why...
+    //draw ghosting frame
+    noStroke();     //we don't want borders on these rects
+    rect(0,0,600,100);
+    rect(0,500,600,100);
+    rect(0,100,100,400);
+    rect(500,100,100,400);
+    //draw the "button" regions
+    line(0,570,100,570);
+    line(100,570,100,600);
+    line(50,570,50,600);
+    line(560, 0, 560, 30);
+    line(560, 30, 600, 30);
+    text("-", 20,589);
+    text("+", 70,589);
+    text("GO", 565,23);
+}
+
+void mousePressed(){
+    if(mouseY> 570){
+        if(mouseX> 50 && mouseX < 100){
+            s += .1;
+        }
+        else if(mouseX < 50){
+            s -= .1;
+        }
+    }
+    if(mouseY <30 && mouseX> 560){
+        PImage img = createImage(400,400);
+        img = get(100,100,400,400);
+        link(img.toDataURL());
+    }    
+    prsd = 1;
+    startx = mouseX;
+    starty = mouseY;
+}
+void mouseDragged(){
+    if(prsd> 0){
+    xoffset = startx - mouseX;
+    yoffset = starty - mouseY;
+    }
+}
+void mouseReleased(){
+    prsd = 0;
+    xpos -= xoffset;
+    ypos -= yoffset;
+    xoffset = 0;
+    yoffset = 0;    
+}
