@@ -630,7 +630,7 @@
       // this.collide = function() { ... }
       rest = (function() {
         return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
-          thisSuperClass.classFunctions.push(name);
+          thisSuperClass.classFunctions.push(name + "|");
           return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
         });
       }());
@@ -646,14 +646,15 @@
             allNext = RegExp.rightContext,
             next = nextBrace(allNext, "{", "}");
 
-        methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));" + "var " + mc[2] + " = this." + mc[2] + ";\n");
+        methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));\n");
+        publicVars += mc[2] + "|";
         
         if (extendingClass){
           for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
             if (extendingClass === arrayOfSuperClasses[i].className){
               publicVars += arrayOfSuperClasses[i].classVariables;
               for (var x = 0, fLength = arrayOfSuperClasses[i].classFunctions.length; x < fLength; x++){
-                methods += "var " + arrayOfSuperClasses[i].classFunctions[x] + " = this." + arrayOfSuperClasses[i].classFunctions[x] + ";\n";
+                publicVars += arrayOfSuperClasses[i].classFunctions[x];
               }
             }
           }
@@ -728,7 +729,7 @@
         // Search functions for public variables
         for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
           methodsArray[i] = (function(){
-            return methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);var \w+ = this\.\w+;)/g, function(all, header, localParams, body, footer) {
+            return methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);)/g, function(all, header, localParams, body, footer) {
               body = body.replace(/this\./g, "public.");
               localParams = localParams.replace(/\s*,\s*/g, "|");
               return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
