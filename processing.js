@@ -6584,7 +6584,12 @@
 
       this.toImageData = function() {
         // changed for 0.9
-        return this.imageData;
+        var canvas = document.createElement('canvas');
+        canvas.height = this.height;
+        canvas.width = this.width;
+        var ctx = canvas.getContext('2d');
+        var imgData = ctx.createImageData(this.width, this.height);
+        return ctx.getImageData(0, 0, this.width, this.height);
       };
 
       this.toDataURL = function() {
