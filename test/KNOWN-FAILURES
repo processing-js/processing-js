@@ -3,6 +3,7 @@
 # can temporarily remove a test from this list by commenting it out with a leading #
 # and add comments explaining why a test has been added/commented out.
 
+test/parser/Processing-Book-001/Synthesis/_10_chronodraw/_10_chronodraw.pde
 test/parser/Processing-Book-001/Units 00-17/10 Image 1/_05/_05.pde
 test/parser/Fry-Visualizing-Data/ch05-salaryper/step_08b_web/step_08b_web.pde
 test/parser/Fry-Visualizing-Data/ch06-zipdecode/round_09c_focus_handling/round_09c_focus_handling.pde
