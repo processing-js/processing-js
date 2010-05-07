@@ -577,6 +577,16 @@
 
     // super() is a reserved word
     aCode = aCode.replace(/super\(/g, "superMethod(");
+    
+    // Stores the variables and mathods of a single class
+    var SuperClass = function(name){
+      return {
+        className: name,
+        classVariables: "",
+        classFunctions: []
+      };
+    };
+    var arrayOfSuperClasses = [];
 
     // implements Int1, Int2 
     aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s*\{/g, function(all, interfaces) {
@@ -596,21 +606,23 @@
       return "function " + name + "() {\n " + 
               (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
               (extend ? "extendClass(this, " + extend + ");\n" : "") + 
-              "<CLASS " + name + " >";
+              "<CLASS " + name + " " + extend + ">";
     };
 
     var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
 
     aCode = aCode.replace(matchClasses, classReplace);
 
-    var matchClass = /<CLASS (\w+) >/,
+    var matchClass = /<CLASS (\w+) (\w+)?>/,
         m;
 
     while ((m = aCode.match(matchClass))) {
       var left = RegExp.leftContext,
           allRest = RegExp.rightContext,
           rest = nextBrace(allRest, "{", "}"),
-          className = m[1];
+          className = m[1],
+          thisSuperClass = new SuperClass(className),
+          extendingClass = m[2];
 
       allRest = allRest.slice(rest.length + 1);
   
@@ -618,6 +630,7 @@
       // this.collide = function() { ... }
       rest = (function() {
         return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
+          thisSuperClass.classFunctions.push(name);
           return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
         });
       }());
@@ -625,6 +638,7 @@
       var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
           mc,
           methods = "",
+          publicVars  = "",
           methodsArray = [];
 
       while ((mc = rest.match(matchMethod))) {
@@ -633,6 +647,17 @@
             next = nextBrace(allNext, "{", "}");
 
         methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));" + "var " + mc[2] + " = this." + mc[2] + ";\n");
+        
+        if (extendingClass){
+          for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
+            if (extendingClass === arrayOfSuperClasses[i].className){
+              publicVars += arrayOfSuperClasses[i].classVariables;
+              for (var x = 0, fLength = arrayOfSuperClasses[i].classFunctions.length; x < fLength; x++){
+                methods += "var " + arrayOfSuperClasses[i].classFunctions[x] + " = this." + arrayOfSuperClasses[i].classFunctions[x] + ";\n";
+              }
+            }
+          }
+        }
 
         rest = prev + allNext.slice(next.length + 1);
       }
@@ -668,7 +693,6 @@
       }
   
       var vars = "",
-          publicVars  = "",
           staticVars = "",
           localStaticVars = [];
 
@@ -678,7 +702,10 @@
         rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
           variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
             .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
+          
           publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
+          thisSuperClass.classVariables += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
+          
           if (staticVar === "static"){
             // Fix static methods
             variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, function(all, sVariable, value){
@@ -695,6 +722,7 @@
         });
       }());
     
+      
       // add this. to public variables used inside member functions, and constructors
       if (publicVars) {
         // Search functions for public variables
@@ -737,8 +765,7 @@
         }
       }
     
-      var methods = "",
-          constructors = "";
+      var constructors = "";
     
       for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
         methods += methodsArray[i];
@@ -746,14 +773,13 @@
       for (var i = 0, aLength = constructorsArray.length; i < aLength; i++){
         constructors += constructorsArray[i];
       }
+      arrayOfSuperClasses.push(thisSuperClass);
       rest = vars + "\n" + methods + "\n" + constructors;
-
       aCode = left + rest + "\n}" + staticVars + allRest;
     }
 
     // Do some tidying up, where necessary
     aCode = aCode.replace(/processing.\w+ = function addMethod/g, "addMethod");
-
 
     // Check if 3D context is invoked -- this is not the best way to do this.
     if (aCode.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
