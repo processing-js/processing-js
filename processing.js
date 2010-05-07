@@ -154,6 +154,11 @@
   var fillBuffer;
 
   var pointBuffer;
+  
+  // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
+  // in Minefield does nothing and does not report any errors.
+  var VERTEX_PROGRAM_POINT_SIZE = 0x8642;
+  var POINT_SMOOTH              = 0x0B10;
 
   // Vertex shader for points and lines
   var vertexShaderSource2D = 
@@ -4534,9 +4539,10 @@
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
-          // What's with these constants, why are they not defined?
-          curContext.enable(0x8642); // VERTEX_PROGRAM_POINT_SIZE
-          curContext.enable(0x0B10); // POINT_SMOOTH
+          // We declare our own constants since Minefield doesn't do anything
+          // when ctx.VERTEX_PROGRAM_POINT_SIZE is used.
+          curContext.enable(VERTEX_PROGRAM_POINT_SIZE);
+          curContext.enable(POINT_SMOOTH);
 
           // Create the program objects to render 2D (points, lines) and
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
