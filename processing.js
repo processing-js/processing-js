@@ -24,30 +24,6 @@
       aElement = document.getElementById(aElement);
     }
 
-    if(typeof aCode === "function") {
-      // HACK: make function behave as string aCode
-      aCode.match = function() { return null; };
-    }
-    // The problem: if the HTML canvas dimensions differ from the
-    // dimensions specified in the size() call in the sketch, for
-    // 3D sketches, browsers will either not render or render the
-    // scene incorrectly. To fix this, we need to adjust the attributes
-    // of the canvas width and height.
-    // this regex needs to be cleaned up a bit
-    var r = "" + aCode.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/);
-    var dimensions = r.match(/[0-9]+/g);
-
-    if (dimensions) {
-      var sketchWidth = parseInt(dimensions[0], 10);
-      var sketchHeight = parseInt(dimensions[1], 10);
-
-      // only adjust the attributes if they differ
-      if (aElement.width !== sketchWidth || aElement.height !== sketchHeight) {
-        aElement.setAttribute("width", sketchWidth);
-        aElement.setAttribute("height", sketchHeight);
-      }
-    }
-
     // Build an Processing functions and env. vars into 'p'  
     var p = Processing.build(aElement);
 
@@ -100,21 +76,6 @@
         for (var j=0, fl=filenames.length; j<fl; j++) {
           if (filenames[j]) {
             code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
-          }
-        }
-        // get the dimensions
-        // this regex needs to be cleaned up a bit
-        var r = "" + code.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/);
-        var dimensions = r.match(/[0-9]+/g);
-
-        if (dimensions) {
-          var sketchWidth = parseInt(dimensions[0], 10);
-          var sketchHeight = parseInt(dimensions[1], 10);
-
-          // only adjust the attributes if they differ
-          if (canvas[i].width !== sketchWidth || canvas[i].height !== sketchHeight) {
-            canvas[i].setAttribute("width", sketchWidth);
-            canvas[i].setAttribute("height", sketchHeight);
           }
         }
         Processing(canvas[i], code);
@@ -756,15 +717,17 @@
               localParameters += localParam + "|";
             });
           }());
-        constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-            if (/var\s*?$/.test(first) || first === ".") {
-              return all;
-            } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
-              return all;
-            } else {
-              return "this." + variable;
-            }
-          });
+          (function(){
+            constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+              if (/var\s*?$/.test(first) || first === ".") {
+                return all;
+              } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
+                return all;
+              } else {
+                return "this." + variable;
+              }
+            });
+          }());
         }
       }
     
@@ -1108,7 +1071,7 @@
       strokeStyle = "rgba( 204, 204, 204, 1 )",
       lineWidth = 1,
       loopStarted = false,
-      hasBackground = false,
+      refreshBackground = function() {},
       doLoop = true,
       looping = 0,
       curRectMode = p.CORNER,
@@ -2178,7 +2141,7 @@
 
     p.ArrayList = function() {
       var createArrayList = function(args){
-        var array = new Array();
+        var array = [];
         for (var i = 0; i < args[0]; i++){
           array[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
         }
@@ -2205,6 +2168,7 @@
           return !this.length;
         };
         array.clone = function() {
+          var size = this.length;
           var a = new p.ArrayList(size);
           for (var i = 0; i < size; i++) {
             a[i] = this[i];
@@ -3234,8 +3198,6 @@
         p.shininess(1);
         p.ambient(255, 255, 255);
         p.specular(0, 0, 0);
-
-        curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.camera();
         p.draw();
       } else {
@@ -4543,9 +4505,16 @@
       if (aMode && (aMode === p.WEBGL)) {
         // get the 3D rendering context
         try {
-          if (!curContext) {
-            curContext = curElement.getContext("experimental-webgl");
+          // If the HTML <canvas> dimensions differ from the
+          // dimensions specified in the size() call in the sketch, for
+          // 3D sketches, browsers will either not render or render the
+          // scene incorrectly. To fix this, we need to adjust the
+          // width and height attributes of the canvas.
+          if (curElement.width !== aWidth || curElement.height !== aHeight) {
+            curElement.setAttribute("width", aWidth);
+            curElement.setAttribute("height", aHeight);
           }
+          curContext = curElement.getContext("experimental-webgl");
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -4560,6 +4529,7 @@
           // Set defaults
           curContext.viewport(0, 0, curElement.width, curElement.height);
           curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
+          curContext.clear(curContext.COLOR_BUFFER_BIT);
           curContext.enable(curContext.DEPTH_TEST);
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
@@ -4666,9 +4636,7 @@
       }
 
       // redraw the background if background was called before size
-      if (hasBackground) {
-        p.background();
-      }
+      refreshBackground();
 
       p.context = curContext; // added for createGraphics
       p.toImageData = function() {
@@ -6526,21 +6494,21 @@
       // parser code converts pixels[] to getPixels()
       // or setPixels(), .length becomes getLength()
       this.pixels = {
-        getLength : (function(aImg) {
+        getLength: (function(aImg) {
           return function() { 
             return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
-          }
-        })(this),
-        getPixel : (function(aImg) {
+          };
+        }(this)),
+        getPixel: (function(aImg) {
           return function(i) {
             var offset = i*4;
             return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
                                  aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
-          }
-        })(this),
-        setPixel : (function(aImg) {
+          };
+        }(this)),
+        setPixel: (function(aImg) {
           return function(i,c) {
-            if(c && typeof c == "number") {
+            if(c && typeof c === "number") {
               var offset = i*4;
               // split c into array
               var c2 = p.color.toArray(c);
@@ -6550,8 +6518,8 @@
               aImg.imageData.data[offset+2] = c2[2];
               aImg.imageData.data[offset+3] = c2[3];
             }
-          }
-        })(this)
+          };
+        }(this))
       };
       
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
@@ -6761,14 +6729,14 @@
     // parser code converts pixels[] to getPixels()
     // or setPixels(), .length becomes getLength()
     p.pixels = {
-      getLength : function(){ return p.imageData.data.length ? p.imageData.data.length/4 : 0},
-      getPixel : function(i) {
+      getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
+      getPixel: function(i) {
         var offset = i*4;
         return p.color.toInt(p.imageData.data[offset], p.imageData.data[offset+1],
                              p.imageData.data[offset+2], p.imageData.data[offset+3]);
       },
-      setPixel : function(i,c){
-        if(c && typeof c == "number") {
+      setPixel: function(i,c) {
+        if(c && typeof c === "number") {
           var offset = i*4;
           // split c into array
           var c2 = p.color.toArray(c);
@@ -6817,22 +6785,29 @@
       if (p.use3DContext) {
         if (typeof color !== 'undefined') {
           var c = p.color.toGLArray(color);
-          curContext.clearColor(c[0], c[1], c[2], c[3]);
-          curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+          refreshBackground = function() {
+            curContext.clearColor(c[0], c[1], c[2], c[3]);
+            curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+          };
         } else {
           // Handle image background for 3d context. not done yet.
+          refreshBackground = function() {};
         }
       } else { // 2d context
         if (typeof color !== 'undefined') {
-          var oldFill = curContext.fillStyle;
-          curContext.fillStyle = p.color.toString(color);
-          curContext.fillRect(0, 0, p.width, p.height);
-          curContext.fillStyle = oldFill;
+          refreshBackground = function() {
+            var oldFill = curContext.fillStyle;
+            curContext.fillStyle = p.color.toString(color);
+            curContext.fillRect(0, 0, p.width, p.height);
+            curContext.fillStyle = oldFill;
+          };
         } else {
-          p.image(img, 0, 0);
+          refreshBackground = function() {
+            p.image(img, 0, 0);
+          };
         }
       }
-      hasBackground = true;
+      refreshBackground();
     };
 
     // Draws an image to the Canvas
