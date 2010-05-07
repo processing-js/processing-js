@@ -707,7 +707,9 @@
       }
   
       var vars = "",
-          publicVars  = "";
+          publicVars  = "",
+          staticVars = "",
+          localStaticVars = [];
 
       // Put all member variables into "vars"
       // and keep a list of all public variables
@@ -717,9 +719,15 @@
             .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
           publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
           if (staticVar === "static"){
-            variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, "if (typeof " + className + ".prototype.$1 === 'undefined'){ " + className + ".prototype.$1 = $2 }\n" +
-              "this.__defineGetter__('$1', function(){ return "+ className + ".prototype.$1; });\n" +
-              "this.__defineSetter__('$1', function(val){ " + className + ".prototype.$1 = val; });\n");
+            // Fix static methods
+            variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, function(all, sVariable, value){
+              localStaticVars.push(sVariable);
+              value = value.replace(new RegExp("(" + localStaticVars.join("|") + ")", "g"), className + ".$1");
+              staticVars += className + "." + sVariable + " = " + value;
+              return "if (typeof " + className + "." + sVariable + " === 'undefined'){ " + className + "." + sVariable + " = " + value + " }\n" +
+                "this.__defineGetter__('" + sVariable + "', function(){ return "+ className + "." + sVariable + "; });\n" +
+                "this.__defineSetter__('" + sVariable + "', function(val){ " + className + "." + sVariable + " = val; });\n";
+            });
           }
           vars += variable;
           return "";
@@ -777,7 +785,7 @@
       }
       rest = vars + "\n" + methods + "\n" + constructors;
 
-      aCode = left + rest + "\n}" + allRest;
+      aCode = left + rest + "\n}" + staticVars + allRest;
     }
 
     // Do some tidying up, where necessary
