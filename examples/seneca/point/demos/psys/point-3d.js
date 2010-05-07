@@ -1,6 +1,6 @@
 class Particle{
-  float xPos, yPos;
-  float xVel, yVel;
+  float xPos, yPos, zPos;
+  float xVel, yVel, zPos;
   float age;
   float lifeTime;
   float opacity;
@@ -9,8 +9,10 @@ class Particle{
   Particle(){
     xPos = 0;
     yPos = 0;
-    xVel = 0.8;
-    yVel = 0.8;
+    zPos = 0;
+    xVel = 1.4;
+    yVel = 1.2;
+    zVel = 2.0;
     age = 0;
     lifeTime = 0;
     opacity = 255;
@@ -21,12 +23,17 @@ class Particle{
   float getLifeTime(){return lifeTime;}
   float getX(){return xPos;}
   float getY(){return yPos;}
+  float getZ(){return zPos;}
 
   void setAge(a){age = a;}
+
   void setX(float x){xPos = x;}
   void setY(float y){yPos = y;}
+  void setZ(float z){zPos = z;}
+  
   void setXVelocity(float x){xVel = x;}
   void setYVelocity(float y){yVel = y;}
+  void setZVelocity(float z){zVel = z;}
   
   void setLifeTime(float l){lifeTime = l;}
   
@@ -37,9 +44,12 @@ class Particle{
   
   void update(){
     age += 0.1; //fix
+    
     yVel += 0.1;
+    
     xPos += xVel;
     yPos += yVel;
+    zPos += zVel;
     
     opacity = 255 - 250*(age/lifeTime);
     size = 20 - 20*(age/lifeTime);
@@ -47,8 +57,8 @@ class Particle{
   
   void draw(){
     strokeWeight(size);
-    stroke(opacity-50, 0, 255-opacity,opacity);
-    point(xPos,yPos,0);
+    stroke(opacity-50, 0, 255-opacity,opacity/3);
+    point(xPos,yPos,zPos);
   }
 }
 
@@ -70,6 +80,7 @@ class ParticleSystem{
     p[i].reset();
     p[i].setX(mouseX);
     p[i].setY(mouseY);
+    p[i].setZ(0);
     p[i].setXVelocity(random(0,2));
     p[i].setYVelocity(random(0,2));
     p[i].setLifeTime(random(1,15));
