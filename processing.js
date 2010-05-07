@@ -467,14 +467,15 @@
     aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/, "$1p.FRAME_RATE$2");
 
     // Simple convert a function-like thing to function
+    alert(aCode);
     aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
-      if (name === "if" || name === "for" || name === "while") {
+      if (name === "if" || name === "for" || name === "while" || type === "public ") {
         return all;
       } else {
         return "PROCESSING." + name + " = function " + name + args;
       }
     });
-
+    alert(aCode);
     var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
 
     while ((mc = aCode.match(matchMethod))) {
@@ -849,7 +850,7 @@
           return returnString;
         });
       }());
-    }
+    }alert(aCode);
     return aCode;
   };
 
