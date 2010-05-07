@@ -6968,6 +6968,57 @@
       }
     };
 
+    p.filter = function filter(kind, param){
+      p.loadPixels();
+      switch (kind) {
+        case p.BLUR:
+          filter(p.BLUR, 1);
+        break;
+        case p.GRAY:
+          if (format == p.ALPHA) {
+            // for an alpha image, convert it to an opaque grayscale
+            for (var i = 0; i < pixels.length; i++) {
+              var col = 255 - pixels[i];
+              pixels[i] = 0xff000000 | (col << 16) | (col << 8) | col;
+            }
+            format = p.RGB;
+
+          } else {
+            for (var i = 0; i < pixels.length; i++) {
+              var col = pixels[i];
+              var lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
+              pixels[i] = (col & p.ALPHA_MASK) | lum<<16 | lum<<8 | lum;
+            }
+          }
+          break;
+        case p.INVERT:
+          for (var i = 0; i < pixels.length; i++) {
+            pixels[i] ^= 0xffffff;
+          }
+          break;
+        case p.POSTERIZE:
+          throw new RuntimeException("Use filter(POSTERIZE, int levels) " +
+          "instead of filter(POSTERIZE)");
+        case p.OPAQUE:
+          for (var i = 0; i < pixels.length; i++) {
+            pixels[i] |= 0xff000000;
+          }
+          format = p.RGB;
+          break;
+        case p.THRESHOLD:
+          filter(p.THRESHOLD, 0.5f);
+          break;
+        case p.ERODE:
+          dilate(true);
+          break;
+        case p.DILATE:
+          dilate(false);
+          break;
+      }
+      p.updatePixels();
+    }
+
+
     // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear()
     // change this in the future to not be exposed to p
     p.shared = {
