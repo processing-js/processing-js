@@ -32,6 +32,7 @@ var canvas = {
                    bezierCurveTo: __empty_func__,
                    viewport: __empty_func__,
                    clearColor: __empty_func__,
+                   clear: __empty_func__,
                    enable: __empty_func__,
                    createShader: __empty_func__,
                    shaderSource: __empty_func__,
