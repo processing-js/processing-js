@@ -6588,7 +6588,6 @@
         canvas.height = this.height;
         canvas.width = this.width;
         var ctx = canvas.getContext('2d');
-        ctx.createImageData(this.width, this.height);
         ctx.putImageData(this.imageData, 0, 0);
         return ctx.getImageData(0, 0, this.width, this.height);
       };
