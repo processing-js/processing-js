@@ -11,3 +11,7 @@ rect(30, 220, 30, 30);
 rect(160, 130, 60, 60);
 // copy a 50x50 piece of ref_string to 50,50 on canvas
 copy(img2,25,25,50,50,50,50,50,50);
+// get piece of ref_string and place at 100,100
+PImage result = img2.get(0,0,50,80);
+image(result,100,100);
+image(img2,372,0);
