@@ -6588,7 +6588,7 @@
         canvas.height = this.height;
         canvas.width = this.width;
         var ctx = canvas.getContext('2d');
-        ctx.createImageData(this.width, this.height);
+        //ctx.createImageData(this.width, this.height);
         ctx.putImageData(this.imageData, 0, 0);
         return ctx.getImageData(0, 0, this.width, this.height);
       };
@@ -6709,7 +6709,8 @@
         for (var i = start, j = 0; i < end; i++, j++) {
           // changed in 0.9
           c.imageData.data[j] = img.imageData.data[i];
-          if (j*4 + 1 % w === 0) {
+          //if (j*4 + 1 % w === 0) {
+          if (j % (w*4) === 0) {
             //completed one line, increment i by offset
             i += (img.width - w) * 4;
           }
@@ -7018,7 +7019,7 @@
           format = p.RGB;
           break;
         case p.THRESHOLD:
-          filter(p.THRESHOLD, 0.5f);
+          filter(p.THRESHOLD, 0.5);
           break;
         case p.ERODE:
           dilate(true);
