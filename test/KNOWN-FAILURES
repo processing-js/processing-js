@@ -71,3 +71,5 @@ test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_07/_07.pde
 # this test fails because the char parser converts singled quoted 1 character strings to Char objects
 test/parser/stringParsing/singleQuotedStrings/3.pde
+# this test wass added with ticket #637. An issue that was in the way of the 0.9 release
+test/unit/baseClassVariable.pde
