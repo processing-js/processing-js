@@ -6632,6 +6632,11 @@
         // changed for 0.9
         this.imageData = curContext.createImageData(this.width, this.height);
         this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
+      } else {
+        this.width = 0;
+        this.height = 0;
+        this.imageData = curContext.createImageData(1, 1);
+        this.format = p.ARGB;
       }
     };
 
