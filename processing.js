@@ -732,8 +732,11 @@
             return methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);)/g, function(all, header, localParams, body, footer) {
               body = body.replace(/this\./g, "public.");
               localParams = localParams.replace(/\s*,\s*/g, "|");
-              return header + body.replace(new RegExp("(\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+              return header + body.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
                 if (first === ".") {
+                  return all;
+                } else if (/var\s*?$/.test(first)) {
+                  localParams += "|" + variable;
                   return all;
                 } else if (localParams && new RegExp("\\b(" + localParams + ")\\b").test(variable)){
                   return all;
@@ -754,7 +757,10 @@
           }());
           (function(){
             constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-              if (/var\s*?$/.test(first) || first === ".") {
+              if (first === ".") {
+                return all;
+              } else if (/var\s*?$/.test(first)) {
+                localParameters += variable + "|";
                 return all;
               } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
                 return all;
@@ -1185,7 +1191,7 @@
       cameraAspect = curElement.width / curElement.height;
 
     var vertArray = [],
-        isCurve = false;
+        isCurve = false,
         isBezier = false,
         firstVert = true;
 
