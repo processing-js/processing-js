@@ -1191,7 +1191,7 @@
       cameraAspect = curElement.width / curElement.height;
 
     var vertArray = [],
-        isCurve = false;
+        isCurve = false,
         isBezier = false,
         firstVert = true;
 
