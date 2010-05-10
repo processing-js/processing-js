@@ -6709,7 +6709,7 @@
         for (var i = start, j = 0; i < end; i++, j++) {
           // changed in 0.9
           c.imageData.data[j] = img.imageData.data[i];
-          if (j*4 + 1 % w === 0) {
+          if ((j+1) % (w*4) === 0) {
             //completed one line, increment i by offset
             i += (img.width - w) * 4;
           }
