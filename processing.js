@@ -6609,7 +6609,6 @@
         this.imageData = canvasImg;
         // changed for 0.9
         this.format = p.ARGB;
-        // changed for 0.9
       };
 
       this.fromHTMLImageData = function(htmlImg) {
@@ -6632,6 +6631,11 @@
         // changed for 0.9
         this.imageData = curContext.createImageData(this.width, this.height);
         this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
+      } else {
+        this.width = 0;
+        this.height = 0;
+        this.imageData = curContext.createImageData(1, 1);
+        this.format = p.ARGB;
       }
     };
 
@@ -6708,8 +6712,7 @@
         for (var i = start, j = 0; i < end; i++, j++) {
           // changed in 0.9
           c.imageData.data[j] = img.imageData.data[i];
-          //if (j*4 + 1 % w === 0) {
-          if (j % (w*4) === 0) {
+          if ((j+1) % (w*4) === 0) {
             //completed one line, increment i by offset
             i += (img.width - w) * 4;
           }
@@ -6984,10 +6987,11 @@
       p.loadPixels();
       switch (kind) {
         case p.BLUR:
-          filter(p.BLUR, 1);
+          var radius = param || 1;
+          blurARGB(radius);
         break;
         case p.GRAY:
-          if (format == p.ALPHA) {
+          if (format === p.ALPHA) {
             // for an alpha image, convert it to an opaque grayscale
             for (var i = 0; i < pixels.length; i++) {
               var col = 255 - pixels[i];
@@ -7028,8 +7032,119 @@
           break;
       }
       p.updatePixels();
-    }
+    };
 
+    blurARGB = function blurARGB(r) {
+      var sum, cr, cg, cb, ca;
+      var read, ri, ym, ymi, bk0;
+      var wh = pixels.length;
+      var r2[] = new Array[wh];
+      var g2[] = new Array[wh];
+      var b2[] = new Array[wh];
+      var a2[] = new Array[wh];
+      var yi = 0;
+
+      buildBlurKernel(r);
+
+      for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+          cb = cg = cr = ca = sum = 0;
+          read = x - blurRadius;
+          if (read<0) {
+            bk0=-read;
+            read=0;
+          } else {
+            if (read >= width)
+              break;
+            bk0=0;
+          }
+          for (var i = bk0; i < blurKernelSize; i++) {
+            if (read >= width)
+              break;
+            var c = pixels[read + yi];
+            var[] bm=blurMult[i];
+            ca += bm[(c & ALPHA_MASK) >>> 24];
+            cr += bm[(c & RED_MASK) >> 16];
+            cg += bm[(c & GREEN_MASK) >> 8];
+            cb += bm[c & BLUE_MASK];
+            sum += blurKernel[i];
+            read++;
+          }
+          ri = yi + x;
+          a2[ri] = ca / sum;
+          r2[ri] = cr / sum;
+          g2[ri] = cg / sum;
+          b2[ri] = cb / sum;
+        }
+        yi += width;
+      }
+
+      yi = 0;
+      ym=-blurRadius;
+      ymi=ym*width;
+
+      for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+          cb = cg = cr = ca = sum = 0;
+          if (ym<0) {
+            bk0 = ri = -ym;
+            read = x;
+          } else {
+            if (ym >= height)
+              break;
+            bk0 = 0;
+            ri = ym;
+            read = x + ymi;
+          }
+          for (var i = bk0; i < blurKernelSize; i++) {
+            if (ri >= height)
+              break;
+            var[] bm=blurMult[i];
+            ca += bm[a2[read]];
+            cr += bm[r2[read]];
+            cg += bm[g2[read]];
+            cb += bm[b2[read]];
+            sum += blurKernel[i];
+            ri++;
+            read += width;
+          }
+          pixels[x+yi] = (ca/sum)<<24 | (cr/sum)<<16 | (cg/sum)<<8 | (cb/sum);
+        }
+        yi += width;
+        ymi += width;
+        ym++;
+      }
+    };
+    
+    // helper function for filter()
+    buildBlurKernel = function buildBlurKernel(r) {
+      var radius = p.floor(r * 3.5);
+      radius = (radius < 1) ? 1 : ((radius < 248) ? radius : 248);
+      if (blurRadius != radius) {
+        blurRadius = radius;
+        blurKernelSize = 1 + blurRadius<<1;
+        blurKernel = new Array(blurKernelSize);
+        blurMult = new int[blurKernelSize][256];
+
+        var bk,bki;
+        //int[] bm,bmi;
+        var bm,bmi;
+
+        for (var i = 1, radiusi = radius - 1; i < radius; i++) {
+          blurKernel[radius+i] = blurKernel[radiusi] = bki = radiusi * radiusi;
+          bm=blurMult[radius+i];
+          bmi=blurMult[radiusi--];
+          for (var j = 0; j < 256; j++) {
+            bm[j] = bmi[j] = bki*j;
+          }
+        }
+        bk = blurKernel[radius] = radius * radius;
+        bm = blurMult[radius];
+        for (var j = 0; j < 256; j++) {
+          bm[j] = bk*j;
+        }
+      }
+    };
 
     // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear()
     // change this in the future to not be exposed to p
