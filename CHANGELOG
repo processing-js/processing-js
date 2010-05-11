@@ -38,6 +38,7 @@ May 8, 2010 - Release 0.9
   * Added mousewheel support for Minefield 
   * Added parser static keyword  support
   * Added parser Support minified processing code
+  * Added data-processing-sources support
   * Fixed parser to handle local parameter names same as public variable names
   * Fixed parsing of whitespace between constructor and () 
   * Fixed parsing of function parameter newlines
@@ -65,7 +66,8 @@ May 8, 2010 - Release 0.9
   * Fixed Events continue to get processed after exit() is called
   * Fixed p.point to not use .slice.split with strokeStyle 
   * Fixed Processing.js class functions not use with() 
-  * Fixed 3keyTyped(
+  * Fixed keyTyped()
+  * Fixed lerpColor()
   * Ensured p.set(x,y,c) fully tested after color() changes 
   * Final Linting for v0.9.0 Release 
   * Remove jsbeautify from release target 
@@ -74,6 +76,7 @@ May 8, 2010 - Release 0.9
   * Remove buildImageObject and getImage
   * Cleaned up curveVertex.htm example 
   * Get rid of with(p) in p.init
+  * Optimized p.redraw()
 
 April 8, 2010 - Release 0.8.0
 
