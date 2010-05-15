@@ -7034,87 +7034,87 @@
       p.updatePixels();
     };
 
-    blurARGB = function blurARGB(r) {
-      var sum, cr, cg, cb, ca;
-      var read, ri, ym, ymi, bk0;
-      var wh = pixels.length;
-      var r2[] = new Array[wh];
-      var g2[] = new Array[wh];
-      var b2[] = new Array[wh];
-      var a2[] = new Array[wh];
-      var yi = 0;
+//    blurARGB = function blurARGB(r) {
+//      var sum, cr, cg, cb, ca;
+//      var read, ri, ym, ymi, bk0;
+//      var wh = pixels.length;
+//      var r2[] = new Array[wh];
+//      var g2[] = new Array[wh];
+//      var b2[] = new Array[wh];
+//      var a2[] = new Array[wh];
+//      var yi = 0;
 
-      buildBlurKernel(r);
+//      buildBlurKernel(r);
 
-      for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
-          cb = cg = cr = ca = sum = 0;
-          read = x - blurRadius;
-          if (read<0) {
-            bk0=-read;
-            read=0;
-          } else {
-            if (read >= width)
-              break;
-            bk0=0;
-          }
-          for (var i = bk0; i < blurKernelSize; i++) {
-            if (read >= width)
-              break;
-            var c = pixels[read + yi];
-            var[] bm=blurMult[i];
-            ca += bm[(c & ALPHA_MASK) >>> 24];
-            cr += bm[(c & RED_MASK) >> 16];
-            cg += bm[(c & GREEN_MASK) >> 8];
-            cb += bm[c & BLUE_MASK];
-            sum += blurKernel[i];
-            read++;
-          }
-          ri = yi + x;
-          a2[ri] = ca / sum;
-          r2[ri] = cr / sum;
-          g2[ri] = cg / sum;
-          b2[ri] = cb / sum;
-        }
-        yi += width;
-      }
+//      for (var y = 0; y < height; y++) {
+//        for (var x = 0; x < width; x++) {
+//          cb = cg = cr = ca = sum = 0;
+//          read = x - blurRadius;
+//          if (read<0) {
+//            bk0=-read;
+//            read=0;
+//          } else {
+//            if (read >= width)
+//              break;
+//            bk0=0;
+//          }
+//          for (var i = bk0; i < blurKernelSize; i++) {
+//            if (read >= width)
+//              break;
+//            var c = pixels[read + yi];
+//            var[] bm=blurMult[i];
+//            ca += bm[(c & ALPHA_MASK) >>> 24];
+//            cr += bm[(c & RED_MASK) >> 16];
+//            cg += bm[(c & GREEN_MASK) >> 8];
+//            cb += bm[c & BLUE_MASK];
+//            sum += blurKernel[i];
+//            read++;
+//          }
+//          ri = yi + x;
+//          a2[ri] = ca / sum;
+//          r2[ri] = cr / sum;
+//          g2[ri] = cg / sum;
+//          b2[ri] = cb / sum;
+//        }
+//        yi += width;
+//      }
 
-      yi = 0;
-      ym=-blurRadius;
-      ymi=ym*width;
+//      yi = 0;
+//      ym=-blurRadius;
+//      ymi=ym*width;
 
-      for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
-          cb = cg = cr = ca = sum = 0;
-          if (ym<0) {
-            bk0 = ri = -ym;
-            read = x;
-          } else {
-            if (ym >= height)
-              break;
-            bk0 = 0;
-            ri = ym;
-            read = x + ymi;
-          }
-          for (var i = bk0; i < blurKernelSize; i++) {
-            if (ri >= height)
-              break;
-            var[] bm=blurMult[i];
-            ca += bm[a2[read]];
-            cr += bm[r2[read]];
-            cg += bm[g2[read]];
-            cb += bm[b2[read]];
-            sum += blurKernel[i];
-            ri++;
-            read += width;
-          }
-          pixels[x+yi] = (ca/sum)<<24 | (cr/sum)<<16 | (cg/sum)<<8 | (cb/sum);
-        }
-        yi += width;
-        ymi += width;
-        ym++;
-      }
-    };
+//      for (var y = 0; y < height; y++) {
+//        for (var x = 0; x < width; x++) {
+//          cb = cg = cr = ca = sum = 0;
+//          if (ym<0) {
+//            bk0 = ri = -ym;
+//            read = x;
+//          } else {
+//            if (ym >= height)
+//              break;
+//            bk0 = 0;
+//            ri = ym;
+//            read = x + ymi;
+//          }
+//          for (var i = bk0; i < blurKernelSize; i++) {
+//            if (ri >= height)
+//              break;
+//            var[] bm=blurMult[i];
+//            ca += bm[a2[read]];
+//            cr += bm[r2[read]];
+//            cg += bm[g2[read]];
+//            cb += bm[b2[read]];
+//            sum += blurKernel[i];
+//            ri++;
+//            read += width;
+//          }
+//          pixels[x+yi] = (ca/sum)<<24 | (cr/sum)<<16 | (cg/sum)<<8 | (cb/sum);
+//        }
+//        yi += width;
+//        ymi += width;
+//        ym++;
+//      }
+//    };
     
     // helper function for filter()
     buildBlurKernel = function buildBlurKernel(r) {
