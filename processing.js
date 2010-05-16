@@ -3192,7 +3192,7 @@
         str = new Array(arr.length);
 
         for (i = 0; i < arr.length && str !== undefined; i++) {
-          test = this.nf(arr[i], pad);
+          test = p.nf(arr[i], pad);
           if (test === undefined) {
             str = undefined;
           } else {
@@ -3247,7 +3247,7 @@
         str = new Array(arr.length);
 
         for (i = 0; i < arr.length && str !== undefined; i++) {
-          test = this.nf(arr[i], left, right);
+          test = p.nf(arr[i], left, right);
           if (test === undefined) {
             str = undefined;
           } else {
@@ -4005,7 +4005,7 @@
           }
           curContext = curElement.getContext("experimental-webgl");
         } catch(e_size) {
-          Processing.debug(e_size);
+          p.debug(e_size);
         }
 
         if (!curContext) {
@@ -7636,10 +7636,7 @@
         p.keyTyped();
       }
     });
-    
-    // Share lib space
-    p.lib = {};
-    
+        
     // Place-holder for debugging function
     p.debug = function(e) {};
 
@@ -8227,6 +8224,9 @@
 
     }
   };
+  
+  // Share lib space
+  Processing.lib = {};
 
   // Automatic Initialization Method
   var init = function() {
