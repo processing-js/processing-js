@@ -8139,7 +8139,7 @@
             return returnString;
           });
         }());
-      }alert(aCode);
+      }
       return aCode;
     };
 
