@@ -93,13 +93,13 @@ function _checkThrows(f) {
 
 // Parser tests are automatically generated from Processing files to call this.
 function _checkParser() {
-  eval(Processing(canvas, parserTest.body));
+  eval(new Processing(canvas, parserTest.body));
   _pass();
 }
 
 function _doSetup() {
   // Build a Processing environment we can test against.
-  this._pctx = Processing(canvas, '');
+  this._pctx = new Processing(canvas, '');
 
   if (this._setup)
     this._setup();

@@ -18,26 +18,6 @@
 
 (function() {
 
-  this.Processing = function Processing(aElement, aCode) {
-    // Get the DOM element if string was passed
-    if (typeof aElement === "string") {
-      aElement = document.getElementById(aElement);
-    }
-
-    // Build an Processing functions and env. vars into 'p'  
-    var p = Processing.build(aElement);
-
-    // Send aCode Processing syntax to be converted to JavaScript
-    if (aCode) {
-      p.init(aCode);
-    }
-
-    return p;
-  };
-
-  // Share lib space
-  Processing.lib = {};
-
   // IE Unfriendly AJAX Method
   var ajax = function(url) {
     var AJAX = new window.XMLHttpRequest();
@@ -47,39 +27,6 @@
       return AJAX.responseText;
     } else {
       return false;
-    }
-  };
-
-  // Automatic Initialization Method
-  var init = function() {
-    var canvas = document.getElementsByTagName('canvas');
-
-    for (var i = 0, l = canvas.length; i < l; i++) {
-      // datasrc and data-src are deprecated.
-      var processingSources = canvas[i].getAttribute('data-processing-sources');
-      if (processingSources === null) {
-        // Temporary fallback for datasrc and data-src
-        processingSources = canvas[i].getAttribute('data-src');
-        if (processingSources === null) {
-          processingSources = canvas[i].getAttribute('datasrc');
-        }
-      }
-      if (processingSources) {
-        // The problem: if the HTML canvas dimensions differ from the
-        // dimensions specified in the size() call in the sketch, for
-        // 3D sketches, browsers will either not render or render the
-        // scene incorrectly. To fix this, we need to adjust the attributes
-        // of the canvas width and height.
-        // Get the source, we'll need to find what the user has used in size()
-        var filenames = processingSources.split(' ');
-        var code = "";
-        for (var j=0, fl=filenames.length; j<fl; j++) {
-          if (filenames[j]) {
-            code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
-          }
-        }
-        Processing(canvas[i], code);
-      }
     }
   };
 
@@ -150,7 +97,7 @@
   var sphereBuffer;
 
   var lineBuffer;
-  
+
   var fillBuffer;
 
   var pointBuffer;
@@ -356,542 +303,44 @@
   "  gl_FragColor = gl_Color;" + 
   "}";
 
-  document.addEventListener('DOMContentLoaded', function() {
-    init();
-  }, false);
+  var Processing = this.Processing = function Processing(curElement, aCode) {
 
-  // Place-holder for debugging function
-  Processing.debug = function(e) {};
-
-  // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
-  Processing.parse = function parse(aCode, p) {
-  
-    // Function to grab all code in the opening and closing of two characters
-    var nextBrace = function(right, openChar, closeChar) {
-      var rest = right,
-          position = 0,
-          leftCount = 1,
-          rightCount = 0;
-
-      while (leftCount !== rightCount) {
-        var nextLeft = rest.indexOf(openChar),
-            nextRight = rest.indexOf(closeChar);
-
-        if (nextLeft < nextRight && nextLeft !== -1) {
-          leftCount++;
-          rest = rest.slice(nextLeft + 1);
-          position += nextLeft + 1;
-        } else {
-          rightCount++;
-          rest = rest.slice(nextRight + 1);
-          position += nextRight + 1;
-        }
-      }
-
-      return right.slice(0, position - 1);
-    };
-  
-    // Force characters-as-bytes to work.
-    //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
-    aCode = aCode.replace(/'.{1}'/g, function(all) {
-      return "(new Char(" + all + "))";
-    });
-
-    // Parse out @pjs directive, if any.
-    var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
-    if (dm && dm.length === 2) {
-      var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
-
-      // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
-      var clean = function(s) {
-        return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, '');
-      };
-
-      for (var i = 0, dl = directives.length; i < dl; i++) {
-        var pair = directives[i].split('=');
-        if (pair && pair.length === 2) {
-          var key = clean(pair[0]);
-          var value = clean(pair[1]);
-
-          // A few directives require work beyond storying key/value pairings
-          if (key === "preload") {
-            var list = value.split(',');
-            // All pre-loaded images will get put in imageCache, keyed on filename
-            for (var j = 0, ll = list.length; j < ll; j++) {
-              var imageName = clean(list[j]);
-              var img = new Image();
-              img.onload = (function() {
-                return function() {
-                  p.pjs.imageCache.pending--;
-                };
-              }());
-              p.pjs.imageCache.pending++;
-              p.pjs.imageCache[imageName] = img;
-              img.src = imageName;
-            }
-          } else if (key === "opaque") {
-            p.canvas.mozOpaque = value === "true";
-          } else {
-            p.pjs[key] = value;
-          }
-        }
-      }
-      aCode = aCode.replace(dm[0], '');
-    }
-
-    // Saves all strings into an array
-    // masks all strings into <STRING n>
-    // to be replaced with the array strings after parsing is finished
-    var strings = [];
-    aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
-      strings.push(all);
-      return "<STRING " + (strings.length - 1) + ">";
-    });
-
-    // Windows newlines cause problems: 
-    aCode = aCode.replace(/\r\n?/g, "\n");
-
-    // Remove multi-line comments
-    aCode = aCode.replace(/\/\*[\s\S]*?\*\//g, "");
-
-    // Remove end-of-line comments
-    aCode = aCode.replace(/\/\/.*\n/g, "\n");
-
-    // Weird parsing errors with %
-    aCode = aCode.replace(/([^\s])%([^\s])/g, "$1 % $2");
-
-    // Since frameRate() and frameRate are different things,
-    // we need to differentiate them somehow. So when we parse
-    // the Processing.js source, replace frameRate so it isn't
-    // confused with frameRate().
-    aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/, "$1p.FRAME_RATE$2");
-
-    // Simple convert a function-like thing to function
-    aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
-      if (name === "if" || name === "for" || name === "while" || type === "public ") {
-        return all;
-      } else {
-        return "PROCESSING." + name + " = function " + name + args;
-      }
-    });
-
-    var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
-
-    while ((mc = aCode.match(matchMethod))) {
-      var prev = RegExp.leftContext,
-        allNext = RegExp.rightContext,
-        next = nextBrace(allNext, "{", "}");
-
-        aCode = prev + "processing." + mc[1] + next + "};" + allNext.slice(next.length + 1);
-    }
-    
-    // Delete import statements, ie. import processing.video.*;
-    // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
-    aCode = aCode.replace(/import\s+(.+);/g, "");
-
-    //replace  catch (IOException e) to catch (e)
-    aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g, "catch ($1)");
-
-    //delete  the multiple catch block
-    var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
-
-    while (catchBlock.test(aCode)) {
-      aCode = aCode.replace(new RegExp(catchBlock), "$1");
-    }
-
-    Error.prototype.printStackTrace = function() {
-      this.toString();
-    };
-
-    // changes pixels[n] into pixels.getPixels(n)
-    // and pixels[n] = n2 into pixels.setPixels(n, n2)
-    var matchPixels = /pixels\s*\[/,
-        mp;
-
-    while ((mp = aCode.match(matchPixels))) {
-      var left = RegExp.leftContext,
-          allRest = RegExp.rightContext,
-          rest = nextBrace(allRest, "[", "]"),
-          getOrSet = "getPixel";
-
-      allRest = allRest.slice(rest.length + 1);
-
-      allRest = (function(){
-        return allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
-          rest += ", " + middle;
-          getOrSet = "setPixel";
-          return end;
-        });
-      }());
-
-      aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
-    }
-
-    // changes pixel.length to pixels.getLength()
-    aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
-
-    // Force .length() to be .length
-    aCode = aCode.replace(/\.length\(\)/g, ".length");
-
-    // foo( int foo, float bar )
-    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
-    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
-
-    // float[] foo = new float[5];
-    aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function(all, name, args, initVars) {
-      if (initVars) {
-        return initVars.replace(/\{/g, "[").replace(/\}/g, "]");
-      } else {
-        return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
-      }
-    });
-
-    // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
-    aCode = aCode.replace(/(?:static\s+)?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function(all) {
-      return all.replace(/\{/g, "[").replace(/\}/g, "]");
-    });
-
-    // int|float foo;
-    var intFloat = /(\s*(?:int|float)\s+(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
-    while (intFloat.test(aCode)) {
-      aCode = (function() {
-        return aCode.replace(new RegExp(intFloat), function(all, type, name, sep) {
-          return type + " " + name + " = 0" + sep;
-        });
-      }());
-    }
-
-    // float foo = 5;
-    aCode = aCode.replace(/(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
-      if (type === "return" || type === "else") {
-        return all;
-      } else {
-        return "var " + name + sep;
-      }
-    });
-
-    // Fix Array[] foo = {...} to [...]
-    aCode = aCode.replace(/\=\s*\{((.|\s)*?\};)/g, function(all, data) {
-      return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]");
-    });
-
-    // super() is a reserved word
-    aCode = aCode.replace(/super\(/g, "superMethod(");
-    
-    // Stores the variables and mathods of a single class
-    var SuperClass = function(name){
-      return {
-        className: name,
-        classVariables: "",
-        classFunctions: []
-      };
-    };
-    var arrayOfSuperClasses = [];
-
-    // implements Int1, Int2 
-    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s*\{/g, function(all, interfaces) {
-      var names = interfaces.replace(/\s+/g, "").split(",");
-      return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
-    });
-
-    // Simply turns an interface into a class
-    aCode = aCode.replace(/interface/g, "class");
-
-    var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
-
-    var classReplace = function(all, name, extend) {
-      classes.push(name);
-
-      // Move arguments up from constructor
-      return "function " + name + "() {\n " + 
-              (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
-              (extend ? "extendClass(this, " + extend + ");\n" : "") + 
-              "<CLASS " + name + " " + extend + ">";
-    };
-
-    var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
-
-    aCode = aCode.replace(matchClasses, classReplace);
-
-    var matchClass = /<CLASS (\w+) (\w+)?>/,
-        m;
-
-    while ((m = aCode.match(matchClass))) {
-      var left = RegExp.leftContext,
-          allRest = RegExp.rightContext,
-          rest = nextBrace(allRest, "{", "}"),
-          className = m[1],
-          thisSuperClass = new SuperClass(className),
-          extendingClass = m[2];
-
-      allRest = allRest.slice(rest.length + 1);
-  
-      // Fix class method names
-      // this.collide = function() { ... }
-      rest = (function() {
-        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
-          thisSuperClass.classFunctions.push(name + "|");
-          return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
-        });
-      }());
-
-      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
-          mc,
-          methods = "",
-          publicVars  = "",
-          methodsArray = [];
-
-      while ((mc = rest.match(matchMethod))) {
-        var prev = RegExp.leftContext,
-            allNext = RegExp.rightContext,
-            next = nextBrace(allNext, "{", "}");
-
-        methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));\n");
-        publicVars += mc[2] + "|";
-        
-        if (extendingClass){
-          for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
-            if (extendingClass === arrayOfSuperClasses[i].className){
-              publicVars += arrayOfSuperClasses[i].classVariables;
-              for (var x = 0, fLength = arrayOfSuperClasses[i].classFunctions.length; x < fLength; x++){
-                publicVars += arrayOfSuperClasses[i].classFunctions[x];
-              }
-            }
-          }
-        }
-
-        rest = prev + allNext.slice(next.length + 1);
-      }
-
-      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
-          c,
-          constructor = "",
-          constructorsArray = [];
-
-      // Extract all constructors and put them into the variable "constructors"
-      while ((c = rest.match(matchConstructor))) {
-        var prev = RegExp.leftContext,
-            allNext = RegExp.rightContext,
-            next = nextBrace(allNext, "{", "}"),
-            args = c[1];
-
-          args = args.split(/,\s*?/);
-
-        if (args[0].match(/^\s*$/)) {
-          args.shift();
-        }
-        
-        constructor = "if ( arguments.length === " + args.length + " ) {\n";
-
-        for (var i = 0, aLength = args.length; i < aLength; i++) {
-          constructor += " var " + args[i] + " = arguments[" + i + "];\n";
-        }
-        
-        constructor += next + "}\n";
-
-        constructorsArray.push(constructor);
-        rest = prev + allNext.slice(next.length + 1);
-      }
-  
-      var vars = "",
-          staticVars = "",
-          localStaticVars = [];
-
-      // Put all member variables into "vars"
-      // and keep a list of all public variables
-      rest = (function(){
-        rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
-          variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
-            .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
-          
-          publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
-          thisSuperClass.classVariables += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
-          
-          if (staticVar === "static"){
-            // Fix static methods
-            variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, function(all, sVariable, value){
-              localStaticVars.push(sVariable);
-              value = value.replace(new RegExp("(" + localStaticVars.join("|") + ")", "g"), className + ".$1");
-              staticVars += className + "." + sVariable + " = " + value;
-              return "if (typeof " + className + "." + sVariable + " === 'undefined'){ " + className + "." + sVariable + " = " + value + " }\n" +
-                "this.__defineGetter__('" + sVariable + "', function(){ return "+ className + "." + sVariable + "; });\n" +
-                "this.__defineSetter__('" + sVariable + "', function(val){ " + className + "." + sVariable + " = val; });\n";
-            });
-          }
-          vars += variable;
-          return "";
-        });
-      }());
-    
-      
-      // add this. to public variables used inside member functions, and constructors
-      if (publicVars) {
-        // Search functions for public variables
-        for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
-          methodsArray[i] = (function(){
-            return methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);)/g, function(all, header, localParams, body, footer) {
-              body = body.replace(/this\./g, "public.");
-              localParams = localParams.replace(/\s*,\s*/g, "|");
-              return header + body.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-                if (first === ".") {
-                  return all;
-                } else if (/var\s*?$/.test(first)) {
-                  localParams += "|" + variable;
-                  return all;
-                } else if (localParams && new RegExp("\\b(" + localParams + ")\\b").test(variable)){
-                  return all;
-                } else {
-                  return "public." + variable;
-                }
-              }) + footer;
-            });
-          }());
-        }
-        // Search constructors for public variables
-        for (var i = 0, localParameters = "", aLength = constructorsArray.length; i < aLength; i++){
-          localParameters = "";
-          (function(){
-            constructorsArray[i].replace(/var\s+(\w+) = arguments\[[^\]]\];/g, function(all, localParam){
-              localParameters += localParam + "|";
-            });
-          }());
-          (function(){
-            constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-              if (first === ".") {
-                return all;
-              } else if (/var\s*?$/.test(first)) {
-                localParameters += variable + "|";
-                return all;
-              } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
-                return all;
-              } else {
-                return "this." + variable;
-              }
-            });
-          }());
-        }
-      }
-    
-      var constructors = "";
-    
-      for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
-        methods += methodsArray[i];
-      }
-      for (var i = 0, aLength = constructorsArray.length; i < aLength; i++){
-        constructors += constructorsArray[i];
-      }
-      arrayOfSuperClasses.push(thisSuperClass);
-      rest = vars + "\n" + methods + "\n" + constructors;
-      aCode = left + rest + "\n}" + staticVars + allRest;
-    }
-
-    // Do some tidying up, where necessary
-    aCode = aCode.replace(/processing.\w+ = function addMethod/g, "addMethod");
-
-    // Check if 3D context is invoked -- this is not the best way to do this.
-    if (aCode.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
-      p.use3DContext = true;
-    }
-
-    // Handle (int) Casting
-    aCode = aCode.replace(/\(int\)/g, "0|");
-
-    // Remove Casting
-    aCode = aCode.replace(new RegExp("\\((" + classes.join("|") + ")(\\[\\])*\\)", "g"), "");
-
-    // Force numbers to exist //
-    //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
-    var toNumbers = function(str) {
-      var ret = [];
-
-      str.replace(/(..)/g, function(str) {
-        ret.push(parseInt(str, 16));
-      });
-
-      return ret;
-    };
-
-    // Convert #aaaaaa into color
-    aCode = aCode.replace(/#([a-f0-9]{6})/ig, function(m, hex) {
-      var num = toNumbers(hex);
-      return "defaultColor(" + num[0] + "," + num[1] + "," + num[2] + ")";
-    });
-
-    // Convert 3.0f to just 3.0
-    aCode = aCode.replace(/(\d+)f/g, "$1");
-
-    // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-    for (var n = 0, sl = strings.length; n < sl; n++) {
-      aCode = (function() {
-        return aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd) {
-          var returnString = all,
-            notString = true,
-            quoteType = "",
-            escape = false;
-
-          for (var x = 0, ql = quoteStart.length; x < ql; x++) {
-            if (notString) {
-              if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
-                quoteType = quoteStart.charAt(x);
-                notString = false;
-              }
-            } else {
-              if (!escape) {
-                if (quoteStart.charAt(x) === "\\") {
-                  escape = true;
-                } else if (quoteStart.charAt(x) === quoteType) {
-                  notString = true;
-                  quoteType = "";
-                }
-              } else {
-                escape = false;
-              }
-            }
-          }
-
-          if (notString) { // Match is not inside a string
-            returnString = quoteStart + strings[n] + quoteEnd;
-          }
-
-          return returnString;
-        });
-      }());
-    }
-    return aCode;
-  };
-
-  function imageModeCorner(x, y, w, h, whAreSizes) {
-    return {
-      x: x,
-      y: y,
-      w: w,
-      h: h
-    };
-  }
-
-  function imageModeCorners(x, y, w, h, whAreSizes) {
-    return {
-      x: x,
-      y: y,
-      w: whAreSizes ? w : w - x,
-      h: whAreSizes ? h : h - y
-    };
-  }
-
-  function imageModeCenter(x, y, w, h, whAreSizes) {
-    return {
-      x: x - w / 2,
-      y: y - h / 2,
-      w: w,
-      h: h
-    };
-  }
-
-  // Attach Processing functions to 'p'
-  Processing.build = function buildProcessing(curElement) {
-    // Create the 'p' object
-    var p = {};
+    var p = this;
     var curContext;
+
+    p.pjs = {
+       imageCache: {
+         pending: 0
+       }
+    }; // by default we have an empty imageCache, no more.
+
+    function imageModeCorner(x, y, w, h, whAreSizes) {
+      return {
+        x: x,
+        y: y,
+        w: w,
+        h: h
+      };
+    }
+
+    function imageModeCorners(x, y, w, h, whAreSizes) {
+      return {
+        x: x,
+        y: y,
+        w: whAreSizes ? w : w - x,
+        h: whAreSizes ? h : h - y
+      };
+    }
+
+    function imageModeCenter(x, y, w, h, whAreSizes) {
+      return {
+        x: x - w / 2,
+        y: y - h / 2,
+        w: w,
+        h: h
+      };
+    }
+
     p.use3DContext = false; // default '2d' canvas context
     p.canvas = curElement;
 
@@ -904,7 +353,7 @@
     p.HSB   = 3;
     p.ALPHA = 4;
     p.CMYK  = 5;
-    
+
     // Renderers
     p.P2D    = 1;
     p.JAVA2D = 1;
@@ -929,7 +378,7 @@
     p.RAD_TO_DEG  = 180 / p.PI;
 
     p.WHITESPACE  = " \t\n\r\f\u00A0";
-    
+
     // Filter/convert types 
     p.BLUR      = 11;
     p.GRAY      = 12;
@@ -1101,7 +550,6 @@
     p.NORMAL_MODE_VERTEX = 2;
     p.MAX_LIGHTS         = 8;
 
-
     // "Private" variables used to maintain state
     var online = true,
       doFill = true,
@@ -1152,8 +600,8 @@
       lastTextPos = [0, 0, 0],
       curveBasisMatrix, 
       curveToBezierMatrix, 
-      curveDrawMatrix, 
-      bezierBasisInverse, 
+      curveDrawMatrix,
+      bezierBasisInverse,
       bezierBasisMatrix;
 
     // User can only have MAX_LIGHTS lights
@@ -2179,7 +1627,7 @@
         }
       }
     };
-
+    
     p.ArrayList = function() {
       var createArrayList = function(args){
         var array = [];
@@ -2883,7 +2331,7 @@
    
     p.color.toHSB = function( colorInt ) {
       var red, green, blue;
-  
+
       red = ((colorInt & p.RED_MASK) >>> 16) / 255;
       green = ((colorInt & p.GREEN_MASK) >>> 8) / 255;
       blue = (colorInt & p.BLUE_MASK) / 255;
@@ -3744,7 +3192,7 @@
         str = new Array(arr.length);
 
         for (i = 0; i < arr.length && str !== undefined; i++) {
-          test = this.nf(arr[i], pad);
+          test = p.nf(arr[i], pad);
           if (test === undefined) {
             str = undefined;
           } else {
@@ -3799,7 +3247,7 @@
         str = new Array(arr.length);
 
         for (i = 0; i < arr.length && str !== undefined; i++) {
-          test = this.nf(arr[i], left, right);
+          test = p.nf(arr[i], left, right);
           if (test === undefined) {
             str = undefined;
           } else {
@@ -4557,7 +4005,7 @@
           }
           curContext = curElement.getContext("experimental-webgl");
         } catch(e_size) {
-          Processing.debug(e_size);
+          p.debug(e_size);
         }
 
         if (!curContext) {
@@ -6759,7 +6207,7 @@
     // Creates a new Processing instance and passes it back for... processing
     p.createGraphics = function createGraphics(w, h) {
       var canvas = document.createElement("canvas");
-      var ret = Processing.build(canvas);
+      var ret = new Processing(canvas);
       ret.size(w, h);
       ret.canvas = canvas;
       return ret;
@@ -6947,7 +6395,7 @@
 
     p.copy = function copy(src, sx, sy, sw, sh, dx, dy, dw, dh) {
       if (arguments.length === 8) {
-        p.copy(this, src, sx, sy, sw, sh, dx, dy, dw);
+        p.copy(p, src, sx, sy, sw, sh, dx, dy, dw);
         return;
       }
       p.blend(src, sx, sy, sw, sh, dx, dy, dw, dh, p.REPLACE);
@@ -6955,7 +6403,7 @@
 
     p.blend = function blend(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
       if (arguments.length === 9) {
-        p.blend(this, src, sx, sy, sw, sh, dx, dy, dw, dh);
+        p.blend(p, src, sx, sy, sw, sh, dx, dy, dw, dh);
       } else if (arguments.length === 10 || arguments.length === 11) {
         var sx2 = sx + sw;
         var sy2 = sy + sh;
@@ -6969,7 +6417,7 @@
         } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
           dest = pimgdest;
         }
-        if (src === this) {
+        if (src === p) {
           if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
             p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
           } else {
@@ -7157,6 +6605,7 @@
             for (x = 0; x < destW; x++) {
               // changed for 0.9            
               destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
               destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.add(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -7728,7 +7177,7 @@
         } // end arguments.length == 6
       }
     };
-
+    
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
     p.loadGlyphs = function loadGlyph(url) {
       var x, y, cx, cy, nx, ny, d, a, lastCom, lenC, horiz_adv_x, getXY = '[0-9\\-]+', path;
@@ -7924,12 +7373,11 @@
       // Return the loaded font for attribute grabbing
       return p.glyphTable[url];
     };
-
-
+    
     ////////////////////////////////////////////////////////////////////////////
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
-
+    
     p.extendClass = function extendClass(obj, args, fn) {
       if (arguments.length === 3) {
         fn.apply(obj, args);
@@ -7954,321 +7402,867 @@
         object[name] = fn;
       }
     };
+    
+    //////////////////////////////////////////////////////////////////////////
+    // Event handling
+    //////////////////////////////////////////////////////////////////////////
 
+    p.pjs.eventHandlers = [];
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Set up environment
-    ////////////////////////////////////////////////////////////////////////////
+    function attach(elem, type, fn) {
+      if (elem.addEventListener) {
+        elem.addEventListener(type, fn, false);
+      } else {
+        elem.attachEvent("on" + type, fn);
+      }
+      p.pjs.eventHandlers.push([elem, type, fn]);
+    }
 
-    p.init = function init(code) {
-      if (code) {
-        p.pjs = {
-           imageCache: {
-             pending: 0
-           }
-        }; // by default we have an empty imageCache, no more.
+    attach(curElement, "mousemove", function(e) {
+      var element = curElement, offsetX = 0, offsetY = 0;
 
-        var parsedCode = typeof code === "function" ? undefined : Processing.parse(code, p);
+      p.pmouseX = p.mouseX;
+      p.pmouseY = p.mouseY;
 
-        if (!p.use3DContext) {
-          // Setup default 2d canvas context. 
-          curContext = curElement.getContext('2d');
-
-          modelView = new PMatrix2D();
-
-          // Canvas has trouble rendering single pixel stuff on whole-pixel
-          // counts, so we slightly offset it (this is super lame).
-          curContext.translate(0.5, 0.5);
-
-          curContext.lineCap = 'round';
-
-          // Set default stroke and fill color
-          p.stroke(0);
-          p.fill(255);
-          p.noSmooth();
-          p.disableContextMenu();
-        }
-
-        // Step through the libraries that were attached at doc load...
-        for (var i in Processing.lib) {
-          if (Processing.lib) {
-            // Init the libraries in the context of this p_instance
-            Processing.lib[i].call(p);
-          }
-        }
-
-        var executeSketch = function(processing) {
-          with(processing) {
-            // Don't start until all specified images in the cache are preloaded
-            if (!pjs.imageCache.pending) {
-              if(typeof code === "function") {
-                code(processing);
-              } else {
-                eval(parsedCode);
-              }
-
-              // Run void setup()
-              if (setup) {
-                inSetup = true;
-                setup();
-              }
-
-              inSetup = false;
-
-              if (draw) {
-                if (!doLoop) {
-                  redraw();
-                } else {
-                  loop();
-                }
-              }
-            } else {
-              window.setTimeout(executeSketch, 10, processing);
-            }
-          }
-        };
-
-        // The parser adds custom methods to the processing context
-        // this renames p to processing so these methods will run
-        executeSketch(p);
+      if (element.offsetParent) {
+        do {
+          offsetX += element.offsetLeft;
+          offsetY += element.offsetTop;
+        } while (element = element.offsetParent);
       }
 
-      //////////////////////////////////////////////////////////////////////////
-      // Event handling
-      //////////////////////////////////////////////////////////////////////////
+      // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
+      // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
+      p.mouseX = e.pageX - offsetX;
+      p.mouseY = e.pageY - offsetY;
 
-      p.pjs.eventHandlers = [];
+      if (p.mouseMoved && !mousePressed) {
+        p.mouseMoved();
+      }
+      if (mousePressed && p.mouseDragged) {
+        p.mouseDragged();
+        p.mouseDragging = true;
+      }
+    });
 
-      function attach(elem, type, fn) {
-        if (elem.addEventListener) {
-          elem.addEventListener(type, fn, false);
-        } else {
-          elem.attachEvent("on" + type, fn);
+    attach(curElement, "mouseout", function(e) {
+    });
+
+    attach(curElement, "mousedown", function(e) {
+      mousePressed = true;
+      p.mouseDragging = false;
+      switch (e.which) {
+      case 1:
+        p.mouseButton = p.LEFT;
+        break;
+      case 2:
+        p.mouseButton = p.CENTER;
+        break;
+      case 3:
+        p.mouseButton = p.RIGHT;
+        break;
+      }
+      p.mouseDown = true;
+      if (typeof p.mousePressed === "function") {
+        p.mousePressed();
+      } else {
+        p.mousePressed = true;
+      }
+    });
+
+    attach(curElement, "mouseup", function(e) {
+      mousePressed = false;
+      if (p.mouseClicked && !p.mouseDragging) {
+        p.mouseClicked();
+      }
+      if (typeof p.mousePressed !== "function") {
+        p.mousePressed = false;
+      }
+      if (p.mouseReleased) {
+        p.mouseReleased();
+      }
+    });
+
+    var mouseWheelHandler = function(e) {
+      var delta = 0;
+
+      if (e.wheelDelta) {
+        delta = e.wheelDelta / 120;
+        if (window.opera) {
+          delta = -delta;
         }
-        p.pjs.eventHandlers.push([elem, type, fn]);
+      } else if (e.detail) {
+        delta = -e.detail / 3;
       }
 
-      attach(curElement, "mousemove", function(e) {
-        var element = curElement, offsetX = 0, offsetY = 0;
+      p.mouseScroll = delta;
 
-        p.pmouseX = p.mouseX;
-        p.pmouseY = p.mouseY;
-
-        if (element.offsetParent) {
-          do {
-            offsetX += element.offsetLeft;
-            offsetY += element.offsetTop;
-          } while (element = element.offsetParent);
-        }
-
-        // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
-        // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
-        p.mouseX = e.pageX - offsetX;
-        p.mouseY = e.pageY - offsetY;
-
-        if (p.mouseMoved && !mousePressed) {
-          p.mouseMoved();
-        }
-        if (mousePressed && p.mouseDragged) {
-          p.mouseDragged();
-          p.mouseDragging = true;
-        }
-      });
-
-      attach(curElement, "mouseout", function(e) {
-      });
-
-      attach(curElement, "mousedown", function(e) {
-        mousePressed = true;
-        p.mouseDragging = false;
-        switch (e.which) {
-        case 1:
-          p.mouseButton = p.LEFT;
-          break;
-        case 2:
-          p.mouseButton = p.CENTER;
-          break;
-        case 3:
-          p.mouseButton = p.RIGHT;
-          break;
-        }
-        p.mouseDown = true;
-        if (typeof p.mousePressed === "function") {
-          p.mousePressed();
-        } else {
-          p.mousePressed = true;
-        }
-      });
-
-      attach(curElement, "mouseup", function(e) {
-        mousePressed = false;
-        if (p.mouseClicked && !p.mouseDragging) {
-          p.mouseClicked();
-        }
-        if (typeof p.mousePressed !== "function") {
-          p.mousePressed = false;
-        }
-        if (p.mouseReleased) {
-          p.mouseReleased();
-        }
-      });
-
-      var mouseWheelHandler = function(e) {
-        var delta = 0;
-
-        if (e.wheelDelta) {
-          delta = e.wheelDelta / 120;
-          if (window.opera) {
-            delta = -delta;
-          }
-        } else if (e.detail) {
-          delta = -e.detail / 3;
-        }
-
-        p.mouseScroll = delta;
-
-        if (delta && typeof p.mouseScrolled === 'function') {
-          p.mouseScrolled();
-        }
-      };
-
-      // Support Gecko and non-Gecko scroll events
-      attach(document, 'DOMMouseScroll', mouseWheelHandler);
-      attach(document, 'mousewheel', mouseWheelHandler);
-
-      attach(document, "keydown", function(e) {
-        keyPressed = true;
-        p.keyCode = null;
-        p.key = e.keyCode;
-
-        // Letters
-        if (e.keyCode >= 65 && e.keyCode <= 90) { // A-Z
-          // Keys return ASCII for upcased letters.
-          // Convert to downcase if shiftKey is not pressed.
-          if (!e.shiftKey) {
-            p.key += 32;
-          }
-        }
-
-        // Numbers and their shift-symbols 
-        else if (e.keyCode >= 48 && e.keyCode <= 57) { // 0-9
-          if (e.shiftKey) {
-            switch (e.keyCode) {
-            case 49:
-              p.key = 33;
-              break; // !
-            case 50:
-              p.key = 64;
-              break; // @
-            case 51:
-              p.key = 35;
-              break; // #
-            case 52:
-              p.key = 36;
-              break; // $
-            case 53:
-              p.key = 37;
-              break; // %
-            case 54:
-              p.key = 94;
-              break; // ^
-            case 55:
-              p.key = 38;
-              break; // &
-            case 56:
-              p.key = 42;
-              break; // *
-            case 57:
-              p.key = 40;
-              break; // (
-            case 48:
-              p.key = 41;
-              break; // )
-            }
-          }
-        }
-
-        // Coded keys
-        else if (codedKeys.indexOf(e.keyCode) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
-          p.key = p.CODED;
-          p.keyCode = e.keyCode;
-        }
-
-        // Symbols and their shift-symbols
-        else {
-          if (e.shiftKey) {
-            switch (e.keyCode) {
-            case 107:
-              p.key = 43;
-              break; // +
-            case 219:
-              p.key = 123;
-              break; // { 
-            case 221:
-              p.key = 125;
-              break; // } 
-            case 222:
-              p.key = 34;
-              break; // "
-            }
-          } else {
-            switch (e.keyCode) {
-            case 188:
-              p.key = 44;
-              break; // , 
-            case 109:
-              p.key = 45;
-              break; // - 
-            case 190:
-              p.key = 46;
-              break; // . 
-            case 191:
-              p.key = 47;
-              break; // / 
-            case 192:
-              p.key = 96;
-              break; // ~ 
-            case 219:
-              p.key = 91;
-              break; // [ 
-            case 220:
-              p.key = 92;
-              break; // \
-            case 221:
-              p.key = 93;
-              break; // ] 
-            case 222:
-              p.key = 39;
-              break; // '
-            }
-          }
-        }
-
-        if (typeof p.keyPressed === "function") {
-          p.keyPressed();
-        } else {
-          p.keyPressed = true;
-        }
-      });
-
-      attach(document, "keyup", function(e) {
-        keyPressed = false;
-        if (typeof p.keyPressed !== "function") {
-          p.keyPressed = false;
-        }
-        if (p.keyReleased) {
-          p.keyReleased();
-        }
-      });
-
-      attach(document, "keypress", function (e) {
-        if (p.keyTyped) {
-          p.keyTyped();
-        }
-      });
+      if (delta && typeof p.mouseScrolled === 'function') {
+        p.mouseScrolled();
+      }
     };
 
-    return p;
+    // Support Gecko and non-Gecko scroll events
+    attach(document, 'DOMMouseScroll', mouseWheelHandler);
+    attach(document, 'mousewheel', mouseWheelHandler);
+
+    attach(document, "keydown", function(e) {
+      keyPressed = true;
+      p.keyCode = null;
+      p.key = e.keyCode;
+
+      // Letters
+      if (e.keyCode >= 65 && e.keyCode <= 90) { // A-Z
+        // Keys return ASCII for upcased letters.
+        // Convert to downcase if shiftKey is not pressed.
+        if (!e.shiftKey) {
+          p.key += 32;
+        }
+      }
+
+      // Numbers and their shift-symbols 
+      else if (e.keyCode >= 48 && e.keyCode <= 57) { // 0-9
+        if (e.shiftKey) {
+          switch (e.keyCode) {
+          case 49:
+            p.key = 33;
+            break; // !
+          case 50:
+            p.key = 64;
+            break; // @
+          case 51:
+            p.key = 35;
+            break; // #
+          case 52:
+            p.key = 36;
+            break; // $
+          case 53:
+            p.key = 37;
+            break; // %
+          case 54:
+            p.key = 94;
+            break; // ^
+          case 55:
+            p.key = 38;
+            break; // &
+          case 56:
+            p.key = 42;
+            break; // *
+          case 57:
+            p.key = 40;
+            break; // (
+          case 48:
+            p.key = 41;
+            break; // )
+          }
+        }
+      }
+
+      // Coded keys
+      else if (codedKeys.indexOf(e.keyCode) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
+        p.key = p.CODED;
+        p.keyCode = e.keyCode;
+      }
+
+      // Symbols and their shift-symbols
+      else {
+        if (e.shiftKey) {
+          switch (e.keyCode) {
+          case 107:
+            p.key = 43;
+            break; // +
+          case 219:
+            p.key = 123;
+            break; // { 
+          case 221:
+            p.key = 125;
+            break; // } 
+          case 222:
+            p.key = 34;
+            break; // "
+          }
+        } else {
+          switch (e.keyCode) {
+          case 188:
+            p.key = 44;
+            break; // , 
+          case 109:
+            p.key = 45;
+            break; // - 
+          case 190:
+            p.key = 46;
+            break; // . 
+          case 191:
+            p.key = 47;
+            break; // / 
+          case 192:
+            p.key = 96;
+            break; // ~ 
+          case 219:
+            p.key = 91;
+            break; // [ 
+          case 220:
+            p.key = 92;
+            break; // \
+          case 221:
+            p.key = 93;
+            break; // ] 
+          case 222:
+            p.key = 39;
+            break; // '
+          }
+        }
+      }
+
+      if (typeof p.keyPressed === "function") {
+        p.keyPressed();
+      } else {
+        p.keyPressed = true;
+      }
+    });
+
+    attach(document, "keyup", function(e) {
+      keyPressed = false;
+      if (typeof p.keyPressed !== "function") {
+        p.keyPressed = false;
+      }
+      if (p.keyReleased) {
+        p.keyReleased();
+      }
+    });
+
+    attach(document, "keypress", function (e) {
+      if (p.keyTyped) {
+        p.keyTyped();
+      }
+    });
+        
+    // Place-holder for debugging function
+    p.debug = function(e) {};
+
+    // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
+    parse = function parse(aCode) {
+    
+      // Function to grab all code in the opening and closing of two characters
+      var nextBrace = function(right, openChar, closeChar) {
+        var rest = right,
+            position = 0,
+            leftCount = 1,
+            rightCount = 0;
+
+        while (leftCount !== rightCount) {
+          var nextLeft = rest.indexOf(openChar),
+              nextRight = rest.indexOf(closeChar);
+
+          if (nextLeft < nextRight && nextLeft !== -1) {
+            leftCount++;
+            rest = rest.slice(nextLeft + 1);
+            position += nextLeft + 1;
+          } else {
+            rightCount++;
+            rest = rest.slice(nextRight + 1);
+            position += nextRight + 1;
+          }
+        }
+
+        return right.slice(0, position - 1);
+      };
+    
+      // Force characters-as-bytes to work.
+      //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+      aCode = aCode.replace(/'.{1}'/g, function(all) {
+        return "(new Char(" + all + "))";
+      });
+
+      // Parse out @pjs directive, if any.
+      var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
+      if (dm && dm.length === 2) {
+        var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
+
+        // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
+        var clean = function(s) {
+          return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, '');
+        };
+
+        for (var i = 0, dl = directives.length; i < dl; i++) {
+          var pair = directives[i].split('=');
+          if (pair && pair.length === 2) {
+            var key = clean(pair[0]);
+            var value = clean(pair[1]);
+
+            // A few directives require work beyond storying key/value pairings
+            if (key === "preload") {
+              var list = value.split(',');
+              // All pre-loaded images will get put in imageCache, keyed on filename
+              for (var j = 0, ll = list.length; j < ll; j++) {
+                var imageName = clean(list[j]);
+                var img = new Image();
+                img.onload = (function() {
+                  return function() {
+                    p.pjs.imageCache.pending--;
+                  };
+                }());
+                p.pjs.imageCache.pending++;
+                p.pjs.imageCache[imageName] = img;
+                img.src = imageName;
+              }
+            } else if (key === "opaque") {
+              p.canvas.mozOpaque = value === "true";
+            } else {
+              p.pjs[key] = value;
+            }
+          }
+        }
+        aCode = aCode.replace(dm[0], '');
+      }
+
+      // Saves all strings into an array
+      // masks all strings into <STRING n>
+      // to be replaced with the array strings after parsing is finished
+      var strings = [];
+      aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
+        strings.push(all);
+        return "<STRING " + (strings.length - 1) + ">";
+      });
+
+      // Windows newlines cause problems: 
+      aCode = aCode.replace(/\r\n?/g, "\n");
+
+      // Remove multi-line comments
+      aCode = aCode.replace(/\/\*[\s\S]*?\*\//g, "");
+
+      // Remove end-of-line comments
+      aCode = aCode.replace(/\/\/.*\n/g, "\n");
+
+      // Weird parsing errors with %
+      aCode = aCode.replace(/([^\s])%([^\s])/g, "$1 % $2");
+
+      // Since frameRate() and frameRate are different things,
+      // we need to differentiate them somehow. So when we parse
+      // the Processing.js source, replace frameRate so it isn't
+      // confused with frameRate().
+      aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/, "$1p.FRAME_RATE$2");
+
+      // Simple convert a function-like thing to function
+      aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
+        if (name === "if" || name === "for" || name === "while" || type === "public ") {
+          return all;
+        } else {
+          return "PROCESSING." + name + " = function " + name + args;
+        }
+      });
+
+      var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
+
+      while ((mc = aCode.match(matchMethod))) {
+        var prev = RegExp.leftContext,
+          allNext = RegExp.rightContext,
+          next = nextBrace(allNext, "{", "}");
+
+          aCode = prev + "processing." + mc[1] + next + "};" + allNext.slice(next.length + 1);
+      }
+      
+      // Delete import statements, ie. import processing.video.*;
+      // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
+      aCode = aCode.replace(/import\s+(.+);/g, "");
+
+      //replace  catch (IOException e) to catch (e)
+      aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g, "catch ($1)");
+
+      //delete  the multiple catch block
+      var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
+
+      while (catchBlock.test(aCode)) {
+        aCode = aCode.replace(new RegExp(catchBlock), "$1");
+      }
+
+      Error.prototype.printStackTrace = function() {
+        this.toString();
+      };
+
+      // changes pixels[n] into pixels.getPixels(n)
+      // and pixels[n] = n2 into pixels.setPixels(n, n2)
+      var matchPixels = /pixels\s*\[/,
+          mp;
+
+      while ((mp = aCode.match(matchPixels))) {
+        var left = RegExp.leftContext,
+            allRest = RegExp.rightContext,
+            rest = nextBrace(allRest, "[", "]"),
+            getOrSet = "getPixel";
+
+        allRest = allRest.slice(rest.length + 1);
+
+        allRest = (function(){
+          return allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
+            rest += ", " + middle;
+            getOrSet = "setPixel";
+            return end;
+          });
+        }());
+
+        aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
+      }
+
+      // changes pixel.length to pixels.getLength()
+      aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
+
+      // Force .length() to be .length
+      aCode = aCode.replace(/\.length\(\)/g, ".length");
+
+      // foo( int foo, float bar )
+      aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
+      aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
+
+      // float[] foo = new float[5];
+      aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function(all, name, args, initVars) {
+        if (initVars) {
+          return initVars.replace(/\{/g, "[").replace(/\}/g, "]");
+        } else {
+          return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
+        }
+      });
+
+      // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
+      aCode = aCode.replace(/(?:static\s+)?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function(all) {
+        return all.replace(/\{/g, "[").replace(/\}/g, "]");
+      });
+
+      // int|float foo;
+      var intFloat = /(\s*(?:int|float)\s+(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
+      while (intFloat.test(aCode)) {
+        aCode = (function() {
+          return aCode.replace(new RegExp(intFloat), function(all, type, name, sep) {
+            return type + " " + name + " = 0" + sep;
+          });
+        }());
+      }
+
+      // float foo = 5;
+      aCode = aCode.replace(/(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
+        if (type === "return" || type === "else") {
+          return all;
+        } else {
+          return "var " + name + sep;
+        }
+      });
+
+      // Fix Array[] foo = {...} to [...]
+      aCode = aCode.replace(/\=\s*\{((.|\s)*?\};)/g, function(all, data) {
+        return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]");
+      });
+
+      // super() is a reserved word
+      aCode = aCode.replace(/super\(/g, "superMethod(");
+      
+      // Stores the variables and mathods of a single class
+      var SuperClass = function(name){
+        return {
+          className: name,
+          classVariables: "",
+          classFunctions: []
+        };
+      };
+      var arrayOfSuperClasses = [];
+
+      // implements Int1, Int2 
+      aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s*\{/g, function(all, interfaces) {
+        var names = interfaces.replace(/\s+/g, "").split(",");
+        return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
+      });
+
+      // Simply turns an interface into a class
+      aCode = aCode.replace(/interface/g, "class");
+
+      var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
+
+      var classReplace = function(all, name, extend) {
+        classes.push(name);
+
+        // Move arguments up from constructor
+        return "function " + name + "() {\n " + 
+                (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
+                (extend ? "extendClass(this, " + extend + ");\n" : "") + 
+                "<CLASS " + name + " " + extend + ">";
+      };
+
+      var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
+
+      aCode = aCode.replace(matchClasses, classReplace);
+
+      var matchClass = /<CLASS (\w+) (\w+)?>/,
+          m;
+
+      while ((m = aCode.match(matchClass))) {
+        var left = RegExp.leftContext,
+            allRest = RegExp.rightContext,
+            rest = nextBrace(allRest, "{", "}"),
+            className = m[1],
+            thisSuperClass = new SuperClass(className),
+            extendingClass = m[2];
+
+        allRest = allRest.slice(rest.length + 1);
+    
+        // Fix class method names
+        // this.collide = function() { ... }
+        rest = (function() {
+          return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
+            thisSuperClass.classFunctions.push(name + "|");
+            return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
+          });
+        }());
+
+        var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
+            mc,
+            methods = "",
+            publicVars  = "",
+            methodsArray = [];
+
+        while ((mc = rest.match(matchMethod))) {
+          var prev = RegExp.leftContext,
+              allNext = RegExp.rightContext,
+              next = nextBrace(allNext, "{", "}");
+
+          methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));\n");
+          publicVars += mc[2] + "|";
+          
+          if (extendingClass){
+            for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
+              if (extendingClass === arrayOfSuperClasses[i].className){
+                publicVars += arrayOfSuperClasses[i].classVariables;
+                for (var x = 0, fLength = arrayOfSuperClasses[i].classFunctions.length; x < fLength; x++){
+                  publicVars += arrayOfSuperClasses[i].classFunctions[x];
+                }
+              }
+            }
+          }
+
+          rest = prev + allNext.slice(next.length + 1);
+        }
+
+        var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
+            c,
+            constructor = "",
+            constructorsArray = [];
+
+        // Extract all constructors and put them into the variable "constructors"
+        while ((c = rest.match(matchConstructor))) {
+          var prev = RegExp.leftContext,
+              allNext = RegExp.rightContext,
+              next = nextBrace(allNext, "{", "}"),
+              args = c[1];
+
+            args = args.split(/,\s*?/);
+
+          if (args[0].match(/^\s*$/)) {
+            args.shift();
+          }
+          
+          constructor = "if ( arguments.length === " + args.length + " ) {\n";
+
+          for (var i = 0, aLength = args.length; i < aLength; i++) {
+            constructor += " var " + args[i] + " = arguments[" + i + "];\n";
+          }
+          
+          constructor += next + "}\n";
+
+          constructorsArray.push(constructor);
+          rest = prev + allNext.slice(next.length + 1);
+        }
+    
+        var vars = "",
+            staticVars = "",
+            localStaticVars = [];
+
+        // Put all member variables into "vars"
+        // and keep a list of all public variables
+        rest = (function(){
+          rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
+            variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
+              .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
+            
+            publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
+            thisSuperClass.classVariables += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
+            
+            if (staticVar === "static"){
+              // Fix static methods
+              variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, function(all, sVariable, value){
+                localStaticVars.push(sVariable);
+                value = value.replace(new RegExp("(" + localStaticVars.join("|") + ")", "g"), className + ".$1");
+                staticVars += className + "." + sVariable + " = " + value;
+                return "if (typeof " + className + "." + sVariable + " === 'undefined'){ " + className + "." + sVariable + " = " + value + " }\n" +
+                  "this.__defineGetter__('" + sVariable + "', function(){ return "+ className + "." + sVariable + "; });\n" +
+                  "this.__defineSetter__('" + sVariable + "', function(val){ " + className + "." + sVariable + " = val; });\n";
+              });
+            }
+            vars += variable;
+            return "";
+          });
+        }());
+      
+        
+        // add this. to public variables used inside member functions, and constructors
+        if (publicVars) {
+          // Search functions for public variables
+          for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
+            methodsArray[i] = (function(){
+              return methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);)/g, function(all, header, localParams, body, footer) {
+                body = body.replace(/this\./g, "public.");
+                localParams = localParams.replace(/\s*,\s*/g, "|");
+                return header + body.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+                  if (first === ".") {
+                    return all;
+                  } else if (/var\s*?$/.test(first)) {
+                    localParams += "|" + variable;
+                    return all;
+                  } else if (localParams && new RegExp("\\b(" + localParams + ")\\b").test(variable)){
+                    return all;
+                  } else {
+                    return "public." + variable;
+                  }
+                }) + footer;
+              });
+            }());
+          }
+          // Search constructors for public variables
+          for (var i = 0, localParameters = "", aLength = constructorsArray.length; i < aLength; i++){
+            localParameters = "";
+            (function(){
+              constructorsArray[i].replace(/var\s+(\w+) = arguments\[[^\]]\];/g, function(all, localParam){
+                localParameters += localParam + "|";
+              });
+            }());
+            (function(){
+              constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+                if (first === ".") {
+                  return all;
+                } else if (/var\s*?$/.test(first)) {
+                  localParameters += variable + "|";
+                  return all;
+                } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
+                  return all;
+                } else {
+                  return "this." + variable;
+                }
+              });
+            }());
+          }
+        }
+      
+        var constructors = "";
+      
+        for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
+          methods += methodsArray[i];
+        }
+        for (var i = 0, aLength = constructorsArray.length; i < aLength; i++){
+          constructors += constructorsArray[i];
+        }
+        arrayOfSuperClasses.push(thisSuperClass);
+        rest = vars + "\n" + methods + "\n" + constructors;
+        aCode = left + rest + "\n}" + staticVars + allRest;
+      }
+
+      // Do some tidying up, where necessary
+      aCode = aCode.replace(/processing.\w+ = function addMethod/g, "addMethod");
+      
+      // Remove processing. from leftover functions
+      aCode = aCode.replace(/processing\.((\w+) = function)/g, "$1");
+
+      // Check if 3D context is invoked -- this is not the best way to do this.
+      if (aCode.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
+        p.use3DContext = true;
+      }
+
+      // Handle (int) Casting
+      aCode = aCode.replace(/\(int\)/g, "0|");
+
+      // Remove Casting
+      aCode = aCode.replace(new RegExp("\\((" + classes.join("|") + ")(\\[\\])*\\)", "g"), "");
+
+      // Force numbers to exist //
+      //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
+      var toNumbers = function(str) {
+        var ret = [];
+
+        str.replace(/(..)/g, function(str) {
+          ret.push(parseInt(str, 16));
+        });
+
+        return ret;
+      };
+
+      // Convert #aaaaaa into color
+      aCode = aCode.replace(/#([a-f0-9]{6})/ig, function(m, hex) {
+        var num = toNumbers(hex);
+        return "defaultColor(" + num[0] + "," + num[1] + "," + num[2] + ")";
+      });
+
+      // Convert 3.0f to just 3.0
+      aCode = aCode.replace(/(\d+)f/g, "$1");
+
+      // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
+      for (var n = 0, sl = strings.length; n < sl; n++) {
+        aCode = (function() {
+          return aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd) {
+            var returnString = all,
+              notString = true,
+              quoteType = "",
+              escape = false;
+
+            for (var x = 0, ql = quoteStart.length; x < ql; x++) {
+              if (notString) {
+                if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
+                  quoteType = quoteStart.charAt(x);
+                  notString = false;
+                }
+              } else {
+                if (!escape) {
+                  if (quoteStart.charAt(x) === "\\") {
+                    escape = true;
+                  } else if (quoteStart.charAt(x) === quoteType) {
+                    notString = true;
+                    quoteType = "";
+                  }
+                } else {
+                  escape = false;
+                }
+              }
+            }
+
+            if (notString) { // Match is not inside a string
+              returnString = quoteStart + strings[n] + quoteEnd;
+            }
+
+            return returnString;
+          });
+        }());
+      }
+      return aCode;
+    };
+
+    
+    // Get the DOM element if string was passed
+    if (typeof curElement === "string") {
+      curElement = document.getElementById(curElement);
+    }
+
+    // Send aCode Processing syntax to be converted to JavaScript
+    if (aCode) {
+      var parsedCode = typeof aCode === "function" ? undefined : parse(aCode);
+
+      if (!this.use3DContext) {
+        // Setup default 2d canvas context. 
+        curContext = curElement.getContext('2d');
+
+        modelView = new PMatrix2D();
+
+        // Canvas has trouble rendering single pixel stuff on whole-pixel
+        // counts, so we slightly offset it (this is super lame).
+        curContext.translate(0.5, 0.5);
+
+        curContext.lineCap = 'round';
+
+        // Set default stroke and fill color
+        p.stroke(0);
+        p.fill(255);
+        p.noSmooth();
+        p.disableContextMenu();
+      }
+
+      // Step through the libraries that were attached at doc load...
+      for (var i in Processing.lib) {
+        if (Processing.lib) {
+          // Init the libraries in the context of this p_instance
+          Processing.lib[i].call(this);
+        }
+      }
+
+      var executeSketch = function(processing) {
+          // Don't start until all specified images in the cache are preloaded
+          if (!processing.pjs.imageCache.pending) {
+            if(typeof aCode === "function") {
+              aCode(processing);
+            } else {
+              var localizedProperties = "";
+              for (var propertyName in processing) {
+                localizedProperties += "var " + propertyName + " = processing." + propertyName + ";\n";
+                if (typeof processing[propertyName] !== "function" || typeof processing[propertyName] !== "object") {
+                  localizedProperties += "processing.__defineGetter__('" + propertyName + "', function() { return " + propertyName + "; });\n" +
+                                         "processing.__defineSetter__('" + propertyName + "', function(val) { " + propertyName + " = val; });\n";
+                }
+              }
+              eval ("(function(){ " + 
+                    localizedProperties + parsedCode +
+                    // Run void setup()
+                    "  if (setup) {" +
+                    "    processing.setup = setup;" +
+                    "    inSetup = true;" +
+                    "    setup();" +
+                    "  }" +
+                    "  inSetup = false;" +
+                    "  if (draw) {" +
+                    "    processing.draw = draw;" +
+                    "    if (!doLoop) {" +
+                    "      redraw();" +
+                    "    } else {" +
+                    "      loop();" +
+                    "    }" +
+                    "  }" +
+                    "}());"
+              );
+            }
+
+
+          } else {
+            window.setTimeout(executeSketch, 10, processing);
+          }
+      };
+
+      // The parser adds custom methods to the processing context
+      // this renames p to processing so these methods will run
+      executeSketch(this);
+
+    }
+  };
+  
+  // Share lib space
+  Processing.lib = {};
+
+  // Automatic Initialization Method
+  var init = function() {
+    var canvas = document.getElementsByTagName('canvas');
+
+    for (var i = 0, l = canvas.length; i < l; i++) {
+      // datasrc and data-src are deprecated.
+      var processingSources = canvas[i].getAttribute('data-processing-sources');
+      if (processingSources === null) {
+        // Temporary fallback for datasrc and data-src
+        processingSources = canvas[i].getAttribute('data-src');
+        if (processingSources === null) {
+          processingSources = canvas[i].getAttribute('datasrc');
+        }
+      }
+      if (processingSources) {
+        // The problem: if the HTML canvas dimensions differ from the
+        // dimensions specified in the size() call in the sketch, for
+        // 3D sketches, browsers will either not render or render the
+        // scene incorrectly. To fix this, we need to adjust the attributes
+        // of the canvas width and height.
+        // Get the source, we'll need to find what the user has used in size()
+        var filenames = processingSources.split(' ');
+        var code = "";
+        for (var j=0, fl=filenames.length; j<fl; j++) {
+          if (filenames[j]) {
+            code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
+          }
+        }
+        new Processing(canvas[i], code);
+      }
+    }
   };
 
+  document.addEventListener('DOMContentLoaded', function() {
+    init();
+  }, false);
+  
 }());

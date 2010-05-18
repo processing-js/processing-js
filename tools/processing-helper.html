@@ -34,7 +34,7 @@
         runSketch: function() {
           try {
             this.output.value = '';
-            p = Processing(this.canvas, this.code.value);
+            p = new Processing(this.canvas, this.code.value);
             return true;
           } catch (e) {
             this.output.value = "Error! Error was:\n" + e.toString();
@@ -46,7 +46,7 @@
           try {
             this.output.value = js_beautify(
                                   Processing.parse(
-                                    this.code.value, Processing(
+                                    this.code.value, new Processing(
                                       this.canvas, this.code.value))).replace(/\n\n\n+/g, '\n\n');
             this.output.select();
           } catch (e) {

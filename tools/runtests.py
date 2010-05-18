@@ -197,7 +197,7 @@ class ProcessingTests(object):
                              '-f', os.path.join(self.toolsdir, 'test-harness-lib.js'),
                              '-f', os.path.join(self.toolsdir, 'cleaner.js'),
                              '-f', tmpFile,
-                             '-e', 'eval(Processing(canvas, \'UnitTests();\' + __unescape_string() + \'_printTestSummary();\'));']
+                             '-e', 'eval(new Processing(canvas, \'UnitTests();\' + __unescape_string() + \'_printTestSummary();\'));']
               else:
                 continue
 
