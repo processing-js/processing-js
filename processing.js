@@ -8218,7 +8218,7 @@
             code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
           }
         }
-        var pro = new Processing(canvas[i], code);
+        new Processing(canvas[i], code);
       }
     }
   };
