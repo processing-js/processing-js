@@ -63,6 +63,7 @@
     p.mousePressed = undefined;
     p.mouseReleased = undefined;
     p.mouseScrolled = undefined;
+    p.key = undefined;
     p.keyPressed = undefined;
     p.keyReleased = undefined;
     p.keyTyped = undefined;
@@ -7791,7 +7792,7 @@
     // we need to differentiate them somehow. So when we parse
     // the Processing.js source, replace frameRate so it isn't
     // confused with frameRate().
-    aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/, "$1p.FRAME_RATE$2");
+    aCode = aCode.replace(/frameRate\s*([^\(])/g, "FRAME_RATE$1");
 
     // Simple convert a function-like thing to function
     aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
