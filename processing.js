@@ -30,322 +30,246 @@
     }
   };
 
-  // Wrapper to easily deal with array names changes.
-  var newWebGLArray = function(data) {
-    return new WebGLFloatArray(data);
-  };
-
-  var createProgramObject = function(curContext, vetexShaderSource, fragmentShaderSource) {
-    var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
-    curContext.shaderSource(vertexShaderObject, vetexShaderSource);
-    curContext.compileShader(vertexShaderObject);
-    if (!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)) {
-      throw curContext.getShaderInfoLog(vertexShaderObject);
-    }
-
-    var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
-    curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
-    curContext.compileShader(fragmentShaderObject);
-    if (!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS)) {
-      throw curContext.getShaderInfoLog(fragmentShaderObject);
-    }
-
-    var programObject = curContext.createProgram();
-    curContext.attachShader(programObject, vertexShaderObject);
-    curContext.attachShader(programObject, fragmentShaderObject);
-    curContext.linkProgram(programObject);
-    if (!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)) {
-      throw "Error linking shaders.";
-    }
-
-    return programObject;
-  };
-
-  var programObject3D;
-  var programObject2D;
-
-  // Vertices are specified in a counter-clockwise order
-  // triangles are in this order: back, front, right, bottom, left, top
-  var boxVerts = [0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-                 -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
-                 -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5,
-                  0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5,
-                  0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5,
-                 -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
-                 -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
-                 -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
-                 -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
-
-  var boxNorms = [0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
-                  0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-                  1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-                  0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
-                  -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
-                  0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
-
-  var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5,
-                        -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5,
-                         0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5,
-                        -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-                         0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-                        -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
-
-  var boxBuffer;
-  var boxNormBuffer;
-  var boxOutlineBuffer;
-
-  var sphereBuffer;
-
-  var lineBuffer;
-
-  var fillBuffer;
-
-  var pointBuffer;
-
-  // Vertex shader for points and lines
-  var vertexShaderSource2D = 
-  "attribute vec3 Vertex;" + 
-  "uniform vec4 color;" +
-
-  "uniform mat4 model;" + 
-  "uniform mat4 view;" + 
-  "uniform mat4 projection;" +
-
-  "void main(void) {" + 
-  "  gl_FrontColor = color;" + 
-  "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" + 
-  "}";
-
-  var fragmentShaderSource2D = 
-  "void main(void){" + 
-  "  gl_FragColor = gl_Color;" + 
-  "}";
-
-  // Vertex shader for boxes and spheres
-  var vertexShaderSource3D = 
-  "attribute vec3 Vertex;" + 
-  "attribute vec3 Normal;" +
-
-  "uniform vec4 color;" +
-
-  "uniform bool usingMat;" + 
-  "uniform vec3 specular;" + 
-  "uniform vec3 mat_emissive;" + 
-  "uniform vec3 mat_ambient;" + 
-  "uniform vec3 mat_specular;" + 
-  "uniform float shininess;" +
-
-  "uniform mat4 model;" + 
-  "uniform mat4 view;" + 
-  "uniform mat4 projection;" + 
-  "uniform mat4 normalTransform;" +
-
-  "uniform int lightCount;" + 
-  "uniform vec3 falloff;" +
-
-  "struct Light {" + 
-  "  bool dummy;" + 
-  "   int type;" + 
-  "   vec3 color;" + 
-  "   vec3 position;" + 
-  "  vec3 direction;" + 
-  "  float angle;" + 
-  "  vec3 halfVector;" + 
-  "  float concentration;" + 
-  "};" + 
-  "uniform Light lights[8];" +
-
-  "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
-  // Get the vector from the light to the vertex
-  // Get the distance from the current vector to the light position
-  "  float d = length( light.position - ecPos );" +
-  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + "  totalAmbient += light.color * attenuation;" + 
-  "}" +
-
-  "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" + 
-  "  float powerfactor = 0.0;" + 
-  "  float nDotVP = max(0.0, dot( vertNormal, light.position ));" + 
-  "  float nDotVH = max(0.0, dot( vertNormal, normalize( light.position-ecPos )));" +
-
-  "  if( nDotVP != 0.0 ){" + 
-  "    powerfactor = pow( nDotVH, shininess );" + 
-  "  }" +
-
-  "  col += light.color * nDotVP;" + 
-  "  spec += specular * powerfactor;" + 
-  "}" +
-
-  "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
-  "  float powerfactor;" +
-
-  // Get the vector from the light to the vertex
-  "   vec3 VP = light.position - ecPos;" +
-
-  // Get the distance from the current vector to the light position
-  "  float d = length( VP ); " +
-
-  // Normalize the light ray so it can be used in the dot product operation.
-  "  VP = normalize( VP );" +
-
-  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
-
-  "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
-  "  vec3 halfVector = normalize( VP + eye );" + 
-  "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
-
-  "  if( nDotVP == 0.0) {" + 
-  "    powerfactor = 0.0;" + 
-  "  }" + 
-  "  else{" + 
-  "    powerfactor = pow( nDotHV, shininess );" + 
-  "  }" +
-
-  "  spec += specular * powerfactor * attenuation;" + 
-  "  col += light.color * nDotVP * attenuation;" + 
-  "}" +
-
-  /*
-  */
-  "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
-  "  float spotAttenuation;" + 
-  "  float powerfactor;" +
-
-  // calculate the vector from the current vertex to the light.
-  "  vec3 VP = light.position - ecPos; " + 
-  "  vec3 ldir = normalize( light.direction );" +
-
-  // get the distance from the spotlight and the vertex
-  "  float d = length( VP );" + 
-  "  VP = normalize( VP );" +
-
-  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ) );" +
-
-  // dot product of the vector from vertex to light and light direction.
-  "  float spotDot = dot( VP, ldir );" +
-
-  // if the vertex falls inside the cone
-  "  if( spotDot < cos( light.angle ) ) {" + 
-  "    spotAttenuation = pow( spotDot, light.concentration );" + 
-  "  }" + 
-  "  else{" + 
-  "    spotAttenuation = 1.0;" + 
-  "  }" + 
-  "  attenuation *= spotAttenuation;" +
-
-  "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
-  "  vec3 halfVector = normalize( VP + eye );" + 
-  "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
-
-  "  if( nDotVP == 0.0 ) {" + 
-  "    powerfactor = 0.0;" + 
-  "  }" + 
-  "  else {" + 
-  "    powerfactor = pow( nDotHV, shininess );" + 
-  "  }" +
-
-  "  spec += specular * powerfactor * attenuation;" + 
-  "  col += light.color * nDotVP * attenuation;" + 
-  "}" +
-
-  "void main(void) {" + 
-  "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" + 
-  "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" + 
-  "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
-
-  "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
-
-  "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" + 
-  "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" + 
-  "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
-
-  // If there were no lights this draw call, just use the 
-  // assigned fill color of the shape and the specular value
-  "  if( lightCount == 0 ) {" + 
-  "    gl_FrontColor = color + vec4(mat_specular,1.0);" + 
-  "  }" +
-  "  else {" + 
-  "    for( int i = 0; i < lightCount; i++ ) {" + 
-  "      if( lights[i].type == 0 ) {" + 
-  "        AmbientLight( finalAmbient, ecPos, lights[i] );" + 
-  "      }" + 
-  "      else if( lights[i].type == 1 ) {" + 
-  "        DirectionalLight( finalDiffuse,ecPos, finalSpecular, norm, lights[i] );" + 
-  "      }" + 
-  "      else if( lights[i].type == 2 ) {" + 
-  "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" + 
-  "      }" + 
-  "      else if( lights[i].type == 3 ) {" + 
-  "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" + 
-  "      }" + 
-  "    }" +
-
-  "   if( usingMat == false ) {" + 
-  "    gl_FrontColor = vec4(  " + 
-  "      vec3(color) * finalAmbient +" + 
-  "      vec3(color) * finalDiffuse +" + 
-  "      vec3(color) * finalSpecular," + 
-  "      color[3] );" + 
-  "   }" + 
-  "   else{" + 
-  "     gl_FrontColor = vec4( " + 
-  "       mat_emissive + " + 
-  "       (vec3(color) * mat_ambient * finalAmbient) + " + 
-  "       (vec3(color) * finalDiffuse) + " + 
-  "       (mat_specular * finalSpecular), " + 
-  "       color[3] );" + 
-  "    }" + 
-  "  }" + 
-  "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" + 
-  "}";
-
-  var fragmentShaderSource3D = 
-  "void main(void){" + 
-  "  gl_FragColor = gl_Color;" + 
-  "}";
-
   var Processing = this.Processing = function Processing(curElement, aCode) {
+  
+    // Vertices are specified in a counter-clockwise order
+    // triangles are in this order: back, front, right, bottom, left, top
+    var boxVerts = [0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+                   -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
+                   -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5,
+                    0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5,
+                    0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
+                   -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
+                   -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
+                   -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+
+    var boxNorms = [0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
+                    0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+                    1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
+                    0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
+                    -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
+                    0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+
+    var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5,
+                          -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5,
+                           0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5,
+                          -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                           0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+                          -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
+
+    // Vertex shader for points and lines
+    var vertexShaderSource2D = 
+      "attribute vec3 Vertex;" + 
+      "uniform vec4 color;" +
+
+      "uniform mat4 model;" + 
+      "uniform mat4 view;" + 
+      "uniform mat4 projection;" +
+
+      "void main(void) {" + 
+      "  gl_FrontColor = color;" + 
+      "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" + 
+      "}";
+
+    var fragmentShaderSource2D = 
+      "void main(void){" + 
+      "  gl_FragColor = gl_Color;" + 
+      "}";
+
+    // Vertex shader for boxes and spheres
+    var vertexShaderSource3D = 
+      "attribute vec3 Vertex;" + 
+      "attribute vec3 Normal;" +
+
+      "uniform vec4 color;" +
+
+      "uniform bool usingMat;" + 
+      "uniform vec3 specular;" + 
+      "uniform vec3 mat_emissive;" + 
+      "uniform vec3 mat_ambient;" + 
+      "uniform vec3 mat_specular;" + 
+      "uniform float shininess;" +
+
+      "uniform mat4 model;" + 
+      "uniform mat4 view;" + 
+      "uniform mat4 projection;" + 
+      "uniform mat4 normalTransform;" +
+
+      "uniform int lightCount;" + 
+      "uniform vec3 falloff;" +
+
+      "struct Light {" + 
+      "  bool dummy;" + 
+      "   int type;" + 
+      "   vec3 color;" + 
+      "   vec3 position;" + 
+      "  vec3 direction;" + 
+      "  float angle;" + 
+      "  vec3 halfVector;" + 
+      "  float concentration;" + 
+      "};" + 
+      "uniform Light lights[8];" +
+
+      "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
+      // Get the vector from the light to the vertex
+      // Get the distance from the current vector to the light position
+      "  float d = length( light.position - ecPos );" +
+      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + "  totalAmbient += light.color * attenuation;" + 
+      "}" +
+
+      "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" + 
+      "  float powerfactor = 0.0;" + 
+      "  float nDotVP = max(0.0, dot( vertNormal, light.position ));" + 
+      "  float nDotVH = max(0.0, dot( vertNormal, normalize( light.position-ecPos )));" +
+
+      "  if( nDotVP != 0.0 ){" + 
+      "    powerfactor = pow( nDotVH, shininess );" + 
+      "  }" +
+
+      "  col += light.color * nDotVP;" + 
+      "  spec += specular * powerfactor;" + 
+      "}" +
+
+      "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
+      "  float powerfactor;" +
+
+      // Get the vector from the light to the vertex
+      "   vec3 VP = light.position - ecPos;" +
+
+      // Get the distance from the current vector to the light position
+      "  float d = length( VP ); " +
+
+      // Normalize the light ray so it can be used in the dot product operation.
+      "  VP = normalize( VP );" +
+
+      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
+
+      "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
+      "  vec3 halfVector = normalize( VP + eye );" + 
+      "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
+
+      "  if( nDotVP == 0.0) {" + 
+      "    powerfactor = 0.0;" + 
+      "  }" + 
+      "  else{" + 
+      "    powerfactor = pow( nDotHV, shininess );" + 
+      "  }" +
+
+      "  spec += specular * powerfactor * attenuation;" + 
+      "  col += light.color * nDotVP * attenuation;" + 
+      "}" +
+
+      /*
+      */
+      "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
+      "  float spotAttenuation;" + 
+      "  float powerfactor;" +
+
+      // calculate the vector from the current vertex to the light.
+      "  vec3 VP = light.position - ecPos; " + 
+      "  vec3 ldir = normalize( light.direction );" +
+
+      // get the distance from the spotlight and the vertex
+      "  float d = length( VP );" + 
+      "  VP = normalize( VP );" +
+
+      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ) );" +
+
+      // dot product of the vector from vertex to light and light direction.
+      "  float spotDot = dot( VP, ldir );" +
+
+      // if the vertex falls inside the cone
+      "  if( spotDot < cos( light.angle ) ) {" + 
+      "    spotAttenuation = pow( spotDot, light.concentration );" + 
+      "  }" + 
+      "  else{" + 
+      "    spotAttenuation = 1.0;" + 
+      "  }" + 
+      "  attenuation *= spotAttenuation;" +
+
+      "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
+      "  vec3 halfVector = normalize( VP + eye );" + 
+      "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
+
+      "  if( nDotVP == 0.0 ) {" + 
+      "    powerfactor = 0.0;" + 
+      "  }" + 
+      "  else {" + 
+      "    powerfactor = pow( nDotHV, shininess );" + 
+      "  }" +
+
+      "  spec += specular * powerfactor * attenuation;" + 
+      "  col += light.color * nDotVP * attenuation;" + 
+      "}" +
+
+      "void main(void) {" + 
+      "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" + 
+      "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" + 
+      "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
+
+      "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
+
+      "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" + 
+      "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" + 
+      "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
+
+      // If there were no lights this draw call, just use the 
+      // assigned fill color of the shape and the specular value
+      "  if( lightCount == 0 ) {" + 
+      "    gl_FrontColor = color + vec4(mat_specular,1.0);" + 
+      "  }" +
+      "  else {" + 
+      "    for( int i = 0; i < lightCount; i++ ) {" + 
+      "      if( lights[i].type == 0 ) {" + 
+      "        AmbientLight( finalAmbient, ecPos, lights[i] );" + 
+      "      }" + 
+      "      else if( lights[i].type == 1 ) {" + 
+      "        DirectionalLight( finalDiffuse,ecPos, finalSpecular, norm, lights[i] );" + 
+      "      }" + 
+      "      else if( lights[i].type == 2 ) {" + 
+      "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" + 
+      "      }" + 
+      "      else if( lights[i].type == 3 ) {" + 
+      "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" + 
+      "      }" + 
+      "    }" +
+
+      "   if( usingMat == false ) {" + 
+      "    gl_FrontColor = vec4(  " + 
+      "      vec3(color) * finalAmbient +" + 
+      "      vec3(color) * finalDiffuse +" + 
+      "      vec3(color) * finalSpecular," + 
+      "      color[3] );" + 
+      "   }" + 
+      "   else{" + 
+      "     gl_FrontColor = vec4( " + 
+      "       mat_emissive + " + 
+      "       (vec3(color) * mat_ambient * finalAmbient) + " + 
+      "       (vec3(color) * finalDiffuse) + " + 
+      "       (mat_specular * finalSpecular), " + 
+      "       color[3] );" + 
+      "    }" + 
+      "  }" + 
+      "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" + 
+      "}";
+
+    var fragmentShaderSource3D = 
+      "void main(void){" + 
+      "  gl_FragColor = gl_Color;" + 
+      "}";
 
     var p = this;
-    var curContext;
-
+      
     p.pjs = {
        imageCache: {
          pending: 0
        }
     }; // by default we have an empty imageCache, no more.
-
-    function imageModeCorner(x, y, w, h, whAreSizes) {
-      return {
-        x: x,
-        y: y,
-        w: w,
-        h: h
-      };
-    }
-
-    function imageModeCorners(x, y, w, h, whAreSizes) {
-      return {
-        x: x,
-        y: y,
-        w: whAreSizes ? w : w - x,
-        h: whAreSizes ? h : h - y
-      };
-    }
-
-    function imageModeCenter(x, y, w, h, whAreSizes) {
-      return {
-        x: x - w / 2,
-        y: y - h / 2,
-        w: w,
-        h: h
-      };
-    }
-
+    
+    p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
     p.canvas = curElement;
-
-    // Set Processing defaults / environment variables
-    p.name = 'Processing.js Instance';
 
     // Color modes
     p.RGB   = 1;
@@ -549,9 +473,10 @@
     p.NORMAL_MODE_SHAPE  = 1;
     p.NORMAL_MODE_VERTEX = 2;
     p.MAX_LIGHTS         = 8;
-
+    
     // "Private" variables used to maintain state
-    var online = true,
+    var curContext,
+      online = true,
       doFill = true,
       fillStyle = "rgba( 255, 255, 255, 1 )",
       doStroke = true,
@@ -602,7 +527,16 @@
       curveToBezierMatrix, 
       curveDrawMatrix,
       bezierBasisInverse,
-      bezierBasisMatrix;
+      bezierBasisMatrix,
+      programObject3D,
+      programObject2D,
+      boxBuffer,
+      boxNormBuffer,
+      boxOutlineBuffer,
+      sphereBuffer,
+      lineBuffer,
+      fillBuffer,
+      pointBuffer;
 
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
@@ -677,6 +611,64 @@
 
     // The current animation frame
     p.frameCount = 0;
+   
+    // Wrapper to easily deal with array names changes.
+    var newWebGLArray = function(data) {
+      return new WebGLFloatArray(data);
+    };
+
+    function imageModeCorner(x, y, w, h, whAreSizes) {
+      return {
+        x: x,
+        y: y,
+        w: w,
+        h: h
+      };
+    }
+
+    function imageModeCorners(x, y, w, h, whAreSizes) {
+      return {
+        x: x,
+        y: y,
+        w: whAreSizes ? w : w - x,
+        h: whAreSizes ? h : h - y
+      };
+    }
+
+    function imageModeCenter(x, y, w, h, whAreSizes) {
+      return {
+        x: x - w / 2,
+        y: y - h / 2,
+        w: w,
+        h: h
+      };
+    }
+   
+    var createProgramObject = function(curContext, vetexShaderSource, fragmentShaderSource) {
+      var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
+      curContext.shaderSource(vertexShaderObject, vetexShaderSource);
+      curContext.compileShader(vertexShaderObject);
+      if (!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)) {
+        throw curContext.getShaderInfoLog(vertexShaderObject);
+      }
+
+      var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
+      curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
+      curContext.compileShader(fragmentShaderObject);
+      if (!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS)) {
+        throw curContext.getShaderInfoLog(fragmentShaderObject);
+      }
+
+      var programObject = curContext.createProgram();
+      curContext.attachShader(programObject, vertexShaderObject);
+      curContext.attachShader(programObject, fragmentShaderObject);
+      curContext.linkProgram(programObject);
+      if (!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)) {
+        throw "Error linking shaders.";
+      }
+
+      return programObject;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
@@ -1674,7 +1666,6 @@
       return array.reverse();
     };
 
-
     ////////////////////////////////////////////////////////////////////////////
     // HashMap
     ////////////////////////////////////////////////////////////////////////////
@@ -2020,7 +2011,6 @@
         return result;
       };
     };
-
 
     ////////////////////////////////////////////////////////////////////////////
     // Color functions
@@ -2740,7 +2730,6 @@
       }
     };
 
-
     ////////////////////////////////////////////////////////////////////////////
     // MISC functions
     ////////////////////////////////////////////////////////////////////////////
@@ -2809,7 +2798,6 @@
     p.enableContextMenu = function enableContextMenu() {
       curElement.removeEventListener('contextmenu', contextMenu, false);
     };
-
 
     ////////////////////////////////////////////////////////////////////////////
     // Binary Functions
@@ -3144,7 +3132,6 @@
       }
       return value;
     };
-
 
     // Load a file or URL into strings     
     p.loadStrings = function loadStrings(url) {
@@ -4521,7 +4508,6 @@
       }
     };
 
-
     var initSphere = function() {
       var i;
       sphereVerts = [];
@@ -5893,7 +5879,6 @@
 
       curContext.closePath();
     };
-
 
     p.normal = function normal(nx, ny, nz) {
       if (arguments.length !== 3 || !(typeof nx === "number" && typeof ny === "number" && typeof nz === "number")) {
@@ -7292,7 +7277,6 @@
         return path;
       };
 
-
       // Parse SVG font-file into block of Canvas commands
       var parseSVGFont = function parseSVGFontse(svg) {
         // Store font attributes
@@ -7639,507 +7623,6 @@
         
     // Place-holder for debugging function
     p.debug = function(e) {};
-
-    // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
-    parse = function parse(aCode) {
-    
-      // Function to grab all code in the opening and closing of two characters
-      var nextBrace = function(right, openChar, closeChar) {
-        var rest = right,
-            position = 0,
-            leftCount = 1,
-            rightCount = 0;
-
-        while (leftCount !== rightCount) {
-          var nextLeft = rest.indexOf(openChar),
-              nextRight = rest.indexOf(closeChar);
-
-          if (nextLeft < nextRight && nextLeft !== -1) {
-            leftCount++;
-            rest = rest.slice(nextLeft + 1);
-            position += nextLeft + 1;
-          } else {
-            rightCount++;
-            rest = rest.slice(nextRight + 1);
-            position += nextRight + 1;
-          }
-        }
-
-        return right.slice(0, position - 1);
-      };
-    
-      // Force characters-as-bytes to work.
-      //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
-      aCode = aCode.replace(/'.{1}'/g, function(all) {
-        return "(new Char(" + all + "))";
-      });
-
-      // Parse out @pjs directive, if any.
-      var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
-      if (dm && dm.length === 2) {
-        var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
-
-        // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
-        var clean = function(s) {
-          return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, '');
-        };
-
-        for (var i = 0, dl = directives.length; i < dl; i++) {
-          var pair = directives[i].split('=');
-          if (pair && pair.length === 2) {
-            var key = clean(pair[0]);
-            var value = clean(pair[1]);
-
-            // A few directives require work beyond storying key/value pairings
-            if (key === "preload") {
-              var list = value.split(',');
-              // All pre-loaded images will get put in imageCache, keyed on filename
-              for (var j = 0, ll = list.length; j < ll; j++) {
-                var imageName = clean(list[j]);
-                var img = new Image();
-                img.onload = (function() {
-                  return function() {
-                    p.pjs.imageCache.pending--;
-                  };
-                }());
-                p.pjs.imageCache.pending++;
-                p.pjs.imageCache[imageName] = img;
-                img.src = imageName;
-              }
-            } else if (key === "opaque") {
-              p.canvas.mozOpaque = value === "true";
-            } else {
-              p.pjs[key] = value;
-            }
-          }
-        }
-        aCode = aCode.replace(dm[0], '');
-      }
-
-      // Saves all strings into an array
-      // masks all strings into <STRING n>
-      // to be replaced with the array strings after parsing is finished
-      var strings = [];
-      aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
-        strings.push(all);
-        return "<STRING " + (strings.length - 1) + ">";
-      });
-
-      // Windows newlines cause problems: 
-      aCode = aCode.replace(/\r\n?/g, "\n");
-
-      // Remove multi-line comments
-      aCode = aCode.replace(/\/\*[\s\S]*?\*\//g, "");
-
-      // Remove end-of-line comments
-      aCode = aCode.replace(/\/\/.*\n/g, "\n");
-
-      // Weird parsing errors with %
-      aCode = aCode.replace(/([^\s])%([^\s])/g, "$1 % $2");
-
-      // Since frameRate() and frameRate are different things,
-      // we need to differentiate them somehow. So when we parse
-      // the Processing.js source, replace frameRate so it isn't
-      // confused with frameRate().
-      aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/, "$1p.FRAME_RATE$2");
-
-      // Simple convert a function-like thing to function
-      aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
-        if (name === "if" || name === "for" || name === "while" || type === "public ") {
-          return all;
-        } else {
-          return "PROCESSING." + name + " = function " + name + args;
-        }
-      });
-
-      var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
-
-      while ((mc = aCode.match(matchMethod))) {
-        var prev = RegExp.leftContext,
-          allNext = RegExp.rightContext,
-          next = nextBrace(allNext, "{", "}");
-
-          aCode = prev + "processing." + mc[1] + next + "};" + allNext.slice(next.length + 1);
-      }
-      
-      // Delete import statements, ie. import processing.video.*;
-      // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
-      aCode = aCode.replace(/import\s+(.+);/g, "");
-
-      //replace  catch (IOException e) to catch (e)
-      aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g, "catch ($1)");
-
-      //delete  the multiple catch block
-      var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
-
-      while (catchBlock.test(aCode)) {
-        aCode = aCode.replace(new RegExp(catchBlock), "$1");
-      }
-
-      Error.prototype.printStackTrace = function() {
-        this.toString();
-      };
-
-      // changes pixels[n] into pixels.getPixels(n)
-      // and pixels[n] = n2 into pixels.setPixels(n, n2)
-      var matchPixels = /pixels\s*\[/,
-          mp;
-
-      while ((mp = aCode.match(matchPixels))) {
-        var left = RegExp.leftContext,
-            allRest = RegExp.rightContext,
-            rest = nextBrace(allRest, "[", "]"),
-            getOrSet = "getPixel";
-
-        allRest = allRest.slice(rest.length + 1);
-
-        allRest = (function(){
-          return allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
-            rest += ", " + middle;
-            getOrSet = "setPixel";
-            return end;
-          });
-        }());
-
-        aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
-      }
-
-      // changes pixel.length to pixels.getLength()
-      aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
-
-      // Force .length() to be .length
-      aCode = aCode.replace(/\.length\(\)/g, ".length");
-
-      // foo( int foo, float bar )
-      aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
-      aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
-
-      // float[] foo = new float[5];
-      aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function(all, name, args, initVars) {
-        if (initVars) {
-          return initVars.replace(/\{/g, "[").replace(/\}/g, "]");
-        } else {
-          return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
-        }
-      });
-
-      // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
-      aCode = aCode.replace(/(?:static\s+)?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function(all) {
-        return all.replace(/\{/g, "[").replace(/\}/g, "]");
-      });
-
-      // int|float foo;
-      var intFloat = /(\s*(?:int|float)\s+(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
-      while (intFloat.test(aCode)) {
-        aCode = (function() {
-          return aCode.replace(new RegExp(intFloat), function(all, type, name, sep) {
-            return type + " " + name + " = 0" + sep;
-          });
-        }());
-      }
-
-      // float foo = 5;
-      aCode = aCode.replace(/(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
-        if (type === "return" || type === "else") {
-          return all;
-        } else {
-          return "var " + name + sep;
-        }
-      });
-
-      // Fix Array[] foo = {...} to [...]
-      aCode = aCode.replace(/\=\s*\{((.|\s)*?\};)/g, function(all, data) {
-        return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]");
-      });
-
-      // super() is a reserved word
-      aCode = aCode.replace(/super\(/g, "superMethod(");
-      
-      // Stores the variables and mathods of a single class
-      var SuperClass = function(name){
-        return {
-          className: name,
-          classVariables: "",
-          classFunctions: []
-        };
-      };
-      var arrayOfSuperClasses = [];
-
-      // implements Int1, Int2 
-      aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s*\{/g, function(all, interfaces) {
-        var names = interfaces.replace(/\s+/g, "").split(",");
-        return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
-      });
-
-      // Simply turns an interface into a class
-      aCode = aCode.replace(/interface/g, "class");
-
-      var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
-
-      var classReplace = function(all, name, extend) {
-        classes.push(name);
-
-        // Move arguments up from constructor
-        return "function " + name + "() {\n " + 
-                (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
-                (extend ? "extendClass(this, " + extend + ");\n" : "") + 
-                "<CLASS " + name + " " + extend + ">";
-      };
-
-      var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
-
-      aCode = aCode.replace(matchClasses, classReplace);
-
-      var matchClass = /<CLASS (\w+) (\w+)?>/,
-          m;
-
-      while ((m = aCode.match(matchClass))) {
-        var left = RegExp.leftContext,
-            allRest = RegExp.rightContext,
-            rest = nextBrace(allRest, "{", "}"),
-            className = m[1],
-            thisSuperClass = new SuperClass(className),
-            extendingClass = m[2];
-
-        allRest = allRest.slice(rest.length + 1);
-    
-        // Fix class method names
-        // this.collide = function() { ... }
-        rest = (function() {
-          return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
-            thisSuperClass.classFunctions.push(name + "|");
-            return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
-          });
-        }());
-
-        var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
-            mc,
-            methods = "",
-            publicVars  = "",
-            methodsArray = [];
-
-        while ((mc = rest.match(matchMethod))) {
-          var prev = RegExp.leftContext,
-              allNext = RegExp.rightContext,
-              next = nextBrace(allNext, "{", "}");
-
-          methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));\n");
-          publicVars += mc[2] + "|";
-          
-          if (extendingClass){
-            for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
-              if (extendingClass === arrayOfSuperClasses[i].className){
-                publicVars += arrayOfSuperClasses[i].classVariables;
-                for (var x = 0, fLength = arrayOfSuperClasses[i].classFunctions.length; x < fLength; x++){
-                  publicVars += arrayOfSuperClasses[i].classFunctions[x];
-                }
-              }
-            }
-          }
-
-          rest = prev + allNext.slice(next.length + 1);
-        }
-
-        var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
-            c,
-            constructor = "",
-            constructorsArray = [];
-
-        // Extract all constructors and put them into the variable "constructors"
-        while ((c = rest.match(matchConstructor))) {
-          var prev = RegExp.leftContext,
-              allNext = RegExp.rightContext,
-              next = nextBrace(allNext, "{", "}"),
-              args = c[1];
-
-            args = args.split(/,\s*?/);
-
-          if (args[0].match(/^\s*$/)) {
-            args.shift();
-          }
-          
-          constructor = "if ( arguments.length === " + args.length + " ) {\n";
-
-          for (var i = 0, aLength = args.length; i < aLength; i++) {
-            constructor += " var " + args[i] + " = arguments[" + i + "];\n";
-          }
-          
-          constructor += next + "}\n";
-
-          constructorsArray.push(constructor);
-          rest = prev + allNext.slice(next.length + 1);
-        }
-    
-        var vars = "",
-            staticVars = "",
-            localStaticVars = [];
-
-        // Put all member variables into "vars"
-        // and keep a list of all public variables
-        rest = (function(){
-          rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
-            variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
-              .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
-            
-            publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
-            thisSuperClass.classVariables += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
-            
-            if (staticVar === "static"){
-              // Fix static methods
-              variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, function(all, sVariable, value){
-                localStaticVars.push(sVariable);
-                value = value.replace(new RegExp("(" + localStaticVars.join("|") + ")", "g"), className + ".$1");
-                staticVars += className + "." + sVariable + " = " + value;
-                return "if (typeof " + className + "." + sVariable + " === 'undefined'){ " + className + "." + sVariable + " = " + value + " }\n" +
-                  "this.__defineGetter__('" + sVariable + "', function(){ return "+ className + "." + sVariable + "; });\n" +
-                  "this.__defineSetter__('" + sVariable + "', function(val){ " + className + "." + sVariable + " = val; });\n";
-              });
-            }
-            vars += variable;
-            return "";
-          });
-        }());
-      
-        
-        // add this. to public variables used inside member functions, and constructors
-        if (publicVars) {
-          // Search functions for public variables
-          for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
-            methodsArray[i] = (function(){
-              return methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);)/g, function(all, header, localParams, body, footer) {
-                body = body.replace(/this\./g, "public.");
-                localParams = localParams.replace(/\s*,\s*/g, "|");
-                return header + body.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-                  if (first === ".") {
-                    return all;
-                  } else if (/var\s*?$/.test(first)) {
-                    localParams += "|" + variable;
-                    return all;
-                  } else if (localParams && new RegExp("\\b(" + localParams + ")\\b").test(variable)){
-                    return all;
-                  } else {
-                    return "public." + variable;
-                  }
-                }) + footer;
-              });
-            }());
-          }
-          // Search constructors for public variables
-          for (var i = 0, localParameters = "", aLength = constructorsArray.length; i < aLength; i++){
-            localParameters = "";
-            (function(){
-              constructorsArray[i].replace(/var\s+(\w+) = arguments\[[^\]]\];/g, function(all, localParam){
-                localParameters += localParam + "|";
-              });
-            }());
-            (function(){
-              constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-                if (first === ".") {
-                  return all;
-                } else if (/var\s*?$/.test(first)) {
-                  localParameters += variable + "|";
-                  return all;
-                } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
-                  return all;
-                } else {
-                  return "this." + variable;
-                }
-              });
-            }());
-          }
-        }
-      
-        var constructors = "";
-      
-        for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
-          methods += methodsArray[i];
-        }
-        for (var i = 0, aLength = constructorsArray.length; i < aLength; i++){
-          constructors += constructorsArray[i];
-        }
-        arrayOfSuperClasses.push(thisSuperClass);
-        rest = vars + "\n" + methods + "\n" + constructors;
-        aCode = left + rest + "\n}" + staticVars + allRest;
-      }
-
-      // Do some tidying up, where necessary
-      aCode = aCode.replace(/processing.\w+ = function addMethod/g, "addMethod");
-      
-      // Remove processing. from leftover functions
-      aCode = aCode.replace(/processing\.((\w+) = function)/g, "$1");
-
-      // Check if 3D context is invoked -- this is not the best way to do this.
-      if (aCode.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
-        p.use3DContext = true;
-      }
-
-      // Handle (int) Casting
-      aCode = aCode.replace(/\(int\)/g, "0|");
-
-      // Remove Casting
-      aCode = aCode.replace(new RegExp("\\((" + classes.join("|") + ")(\\[\\])*\\)", "g"), "");
-
-      // Force numbers to exist //
-      //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
-      var toNumbers = function(str) {
-        var ret = [];
-
-        str.replace(/(..)/g, function(str) {
-          ret.push(parseInt(str, 16));
-        });
-
-        return ret;
-      };
-
-      // Convert #aaaaaa into color
-      aCode = aCode.replace(/#([a-f0-9]{6})/ig, function(m, hex) {
-        var num = toNumbers(hex);
-        return "defaultColor(" + num[0] + "," + num[1] + "," + num[2] + ")";
-      });
-
-      // Convert 3.0f to just 3.0
-      aCode = aCode.replace(/(\d+)f/g, "$1");
-
-      // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-      for (var n = 0, sl = strings.length; n < sl; n++) {
-        aCode = (function() {
-          return aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd) {
-            var returnString = all,
-              notString = true,
-              quoteType = "",
-              escape = false;
-
-            for (var x = 0, ql = quoteStart.length; x < ql; x++) {
-              if (notString) {
-                if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
-                  quoteType = quoteStart.charAt(x);
-                  notString = false;
-                }
-              } else {
-                if (!escape) {
-                  if (quoteStart.charAt(x) === "\\") {
-                    escape = true;
-                  } else if (quoteStart.charAt(x) === quoteType) {
-                    notString = true;
-                    quoteType = "";
-                  }
-                } else {
-                  escape = false;
-                }
-              }
-            }
-
-            if (notString) { // Match is not inside a string
-              returnString = quoteStart + strings[n] + quoteEnd;
-            }
-
-            return returnString;
-          });
-        }());
-      }
-      return aCode;
-    };
-
     
     // Get the DOM element if string was passed
     if (typeof curElement === "string") {
@@ -8148,7 +7631,7 @@
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
-      var parsedCode = typeof aCode === "function" ? undefined : parse(aCode);
+      var parsedCode = typeof aCode === "function" ? undefined : Processing.parse(aCode, p);
 
       if (!this.use3DContext) {
         // Setup default 2d canvas context. 
@@ -8212,7 +7695,6 @@
               );
             }
 
-
           } else {
             window.setTimeout(executeSketch, 10, processing);
           }
@@ -8227,6 +7709,506 @@
   
   // Share lib space
   Processing.lib = {};
+
+  // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
+  Processing.parse = function parse(aCode, p) {
+  
+    // Function to grab all code in the opening and closing of two characters
+    var nextBrace = function(right, openChar, closeChar) {
+      var rest = right,
+          position = 0,
+          leftCount = 1,
+          rightCount = 0;
+
+      while (leftCount !== rightCount) {
+        var nextLeft = rest.indexOf(openChar),
+            nextRight = rest.indexOf(closeChar);
+
+        if (nextLeft < nextRight && nextLeft !== -1) {
+          leftCount++;
+          rest = rest.slice(nextLeft + 1);
+          position += nextLeft + 1;
+        } else {
+          rightCount++;
+          rest = rest.slice(nextRight + 1);
+          position += nextRight + 1;
+        }
+      }
+
+      return right.slice(0, position - 1);
+    };
+  
+    // Force characters-as-bytes to work.
+    //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+    aCode = aCode.replace(/'.{1}'/g, function(all) {
+      return "(new Char(" + all + "))";
+    });
+
+    // Parse out @pjs directive, if any.
+    var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
+    if (dm && dm.length === 2) {
+      var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
+
+      // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
+      var clean = function(s) {
+        return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, '');
+      };
+
+      for (var i = 0, dl = directives.length; i < dl; i++) {
+        var pair = directives[i].split('=');
+        if (pair && pair.length === 2) {
+          var key = clean(pair[0]);
+          var value = clean(pair[1]);
+
+          // A few directives require work beyond storying key/value pairings
+          if (key === "preload") {
+            var list = value.split(',');
+            // All pre-loaded images will get put in imageCache, keyed on filename
+            for (var j = 0, ll = list.length; j < ll; j++) {
+              var imageName = clean(list[j]);
+              var img = new Image();
+              img.onload = (function() {
+                return function() {
+                  p.pjs.imageCache.pending--;
+                };
+              }());
+              p.pjs.imageCache.pending++;
+              p.pjs.imageCache[imageName] = img;
+              img.src = imageName;
+            }
+          } else if (key === "opaque") {
+            p.canvas.mozOpaque = value === "true";
+          } else {
+            p.pjs[key] = value;
+          }
+        }
+      }
+      aCode = aCode.replace(dm[0], '');
+    }
+
+    // Saves all strings into an array
+    // masks all strings into <STRING n>
+    // to be replaced with the array strings after parsing is finished
+    var strings = [];
+    aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
+      strings.push(all);
+      return "<STRING " + (strings.length - 1) + ">";
+    });
+
+    // Windows newlines cause problems: 
+    aCode = aCode.replace(/\r\n?/g, "\n");
+
+    // Remove multi-line comments
+    aCode = aCode.replace(/\/\*[\s\S]*?\*\//g, "");
+
+    // Remove end-of-line comments
+    aCode = aCode.replace(/\/\/.*\n/g, "\n");
+
+    // Weird parsing errors with %
+    aCode = aCode.replace(/([^\s])%([^\s])/g, "$1 % $2");
+
+    // Since frameRate() and frameRate are different things,
+    // we need to differentiate them somehow. So when we parse
+    // the Processing.js source, replace frameRate so it isn't
+    // confused with frameRate().
+    aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/, "$1p.FRAME_RATE$2");
+
+    // Simple convert a function-like thing to function
+    aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
+      if (name === "if" || name === "for" || name === "while" || type === "public ") {
+        return all;
+      } else {
+        return "PROCESSING." + name + " = function " + name + args;
+      }
+    });
+
+    var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
+
+    while ((mc = aCode.match(matchMethod))) {
+      var prev = RegExp.leftContext,
+        allNext = RegExp.rightContext,
+        next = nextBrace(allNext, "{", "}");
+
+        aCode = prev + "processing." + mc[1] + next + "};" + allNext.slice(next.length + 1);
+    }
+    
+    // Delete import statements, ie. import processing.video.*;
+    // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
+    aCode = aCode.replace(/import\s+(.+);/g, "");
+
+    //replace  catch (IOException e) to catch (e)
+    aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g, "catch ($1)");
+
+    //delete  the multiple catch block
+    var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
+
+    while (catchBlock.test(aCode)) {
+      aCode = aCode.replace(new RegExp(catchBlock), "$1");
+    }
+
+    Error.prototype.printStackTrace = function() {
+      this.toString();
+    };
+
+    // changes pixels[n] into pixels.getPixels(n)
+    // and pixels[n] = n2 into pixels.setPixels(n, n2)
+    var matchPixels = /pixels\s*\[/,
+        mp;
+
+    while ((mp = aCode.match(matchPixels))) {
+      var left = RegExp.leftContext,
+          allRest = RegExp.rightContext,
+          rest = nextBrace(allRest, "[", "]"),
+          getOrSet = "getPixel";
+
+      allRest = allRest.slice(rest.length + 1);
+
+      allRest = (function(){
+        return allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
+          rest += ", " + middle;
+          getOrSet = "setPixel";
+          return end;
+        });
+      }());
+
+      aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
+    }
+
+    // changes pixel.length to pixels.getLength()
+    aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
+
+    // Force .length() to be .length
+    aCode = aCode.replace(/\.length\(\)/g, ".length");
+
+    // foo( int foo, float bar )
+    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
+    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
+
+    // float[] foo = new float[5];
+    aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function(all, name, args, initVars) {
+      if (initVars) {
+        return initVars.replace(/\{/g, "[").replace(/\}/g, "]");
+      } else {
+        return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
+      }
+    });
+
+    // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
+    aCode = aCode.replace(/(?:static\s+)?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function(all) {
+      return all.replace(/\{/g, "[").replace(/\}/g, "]");
+    });
+
+    // int|float foo;
+    var intFloat = /(\s*(?:int|float)\s+(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
+    while (intFloat.test(aCode)) {
+      aCode = (function() {
+        return aCode.replace(new RegExp(intFloat), function(all, type, name, sep) {
+          return type + " " + name + " = 0" + sep;
+        });
+      }());
+    }
+
+    // float foo = 5;
+    aCode = aCode.replace(/(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
+      if (type === "return" || type === "else") {
+        return all;
+      } else {
+        return "var " + name + sep;
+      }
+    });
+
+    // Fix Array[] foo = {...} to [...]
+    aCode = aCode.replace(/\=\s*\{((.|\s)*?\};)/g, function(all, data) {
+      return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]");
+    });
+
+    // super() is a reserved word
+    aCode = aCode.replace(/super\(/g, "superMethod(");
+    
+    // Stores the variables and mathods of a single class
+    var SuperClass = function(name){
+      return {
+        className: name,
+        classVariables: "",
+        classFunctions: []
+      };
+    };
+    var arrayOfSuperClasses = [];
+
+    // implements Int1, Int2 
+    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s*\{/g, function(all, interfaces) {
+      var names = interfaces.replace(/\s+/g, "").split(",");
+      return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
+    });
+
+    // Simply turns an interface into a class
+    aCode = aCode.replace(/interface/g, "class");
+
+    var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
+
+    var classReplace = function(all, name, extend) {
+      classes.push(name);
+
+      // Move arguments up from constructor
+      return "function " + name + "() {\n " + 
+              (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
+              (extend ? "extendClass(this, " + extend + ");\n" : "") + 
+              "<CLASS " + name + " " + extend + ">";
+    };
+
+    var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
+
+    aCode = aCode.replace(matchClasses, classReplace);
+
+    var matchClass = /<CLASS (\w+) (\w+)?>/,
+        m;
+
+    while ((m = aCode.match(matchClass))) {
+      var left = RegExp.leftContext,
+          allRest = RegExp.rightContext,
+          rest = nextBrace(allRest, "{", "}"),
+          className = m[1],
+          thisSuperClass = new SuperClass(className),
+          extendingClass = m[2];
+
+      allRest = allRest.slice(rest.length + 1);
+  
+      // Fix class method names
+      // this.collide = function() { ... }
+      rest = (function() {
+        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
+          thisSuperClass.classFunctions.push(name + "|");
+          return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
+        });
+      }());
+
+      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
+          mc,
+          methods = "",
+          publicVars  = "",
+          methodsArray = [];
+
+      while ((mc = rest.match(matchMethod))) {
+        var prev = RegExp.leftContext,
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext, "{", "}");
+
+        methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));\n");
+        publicVars += mc[2] + "|";
+        
+        if (extendingClass){
+          for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
+            if (extendingClass === arrayOfSuperClasses[i].className){
+              publicVars += arrayOfSuperClasses[i].classVariables;
+              for (var x = 0, fLength = arrayOfSuperClasses[i].classFunctions.length; x < fLength; x++){
+                publicVars += arrayOfSuperClasses[i].classFunctions[x];
+              }
+            }
+          }
+        }
+
+        rest = prev + allNext.slice(next.length + 1);
+      }
+
+      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
+          c,
+          constructor = "",
+          constructorsArray = [];
+
+      // Extract all constructors and put them into the variable "constructors"
+      while ((c = rest.match(matchConstructor))) {
+        var prev = RegExp.leftContext,
+            allNext = RegExp.rightContext,
+            next = nextBrace(allNext, "{", "}"),
+            args = c[1];
+
+          args = args.split(/,\s*?/);
+
+        if (args[0].match(/^\s*$/)) {
+          args.shift();
+        }
+        
+        constructor = "if ( arguments.length === " + args.length + " ) {\n";
+
+        for (var i = 0, aLength = args.length; i < aLength; i++) {
+          constructor += " var " + args[i] + " = arguments[" + i + "];\n";
+        }
+        
+        constructor += next + "}\n";
+
+        constructorsArray.push(constructor);
+        rest = prev + allNext.slice(next.length + 1);
+      }
+  
+      var vars = "",
+          staticVars = "",
+          localStaticVars = [];
+
+      // Put all member variables into "vars"
+      // and keep a list of all public variables
+      rest = (function(){
+        rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
+          variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
+            .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
+          
+          publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
+          thisSuperClass.classVariables += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
+          
+          if (staticVar === "static"){
+            // Fix static methods
+            variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, function(all, sVariable, value){
+              localStaticVars.push(sVariable);
+              value = value.replace(new RegExp("(" + localStaticVars.join("|") + ")", "g"), className + ".$1");
+              staticVars += className + "." + sVariable + " = " + value;
+              return "if (typeof " + className + "." + sVariable + " === 'undefined'){ " + className + "." + sVariable + " = " + value + " }\n" +
+                "this.__defineGetter__('" + sVariable + "', function(){ return "+ className + "." + sVariable + "; });\n" +
+                "this.__defineSetter__('" + sVariable + "', function(val){ " + className + "." + sVariable + " = val; });\n";
+            });
+          }
+          vars += variable;
+          return "";
+        });
+      }());
+    
+      
+      // add this. to public variables used inside member functions, and constructors
+      if (publicVars) {
+        // Search functions for public variables
+        for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
+          methodsArray[i] = (function(){
+            return methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);)/g, function(all, header, localParams, body, footer) {
+              body = body.replace(/this\./g, "public.");
+              localParams = localParams.replace(/\s*,\s*/g, "|");
+              return header + body.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+                if (first === ".") {
+                  return all;
+                } else if (/var\s*?$/.test(first)) {
+                  localParams += "|" + variable;
+                  return all;
+                } else if (localParams && new RegExp("\\b(" + localParams + ")\\b").test(variable)){
+                  return all;
+                } else {
+                  return "public." + variable;
+                }
+              }) + footer;
+            });
+          }());
+        }
+        // Search constructors for public variables
+        for (var i = 0, localParameters = "", aLength = constructorsArray.length; i < aLength; i++){
+          localParameters = "";
+          (function(){
+            constructorsArray[i].replace(/var\s+(\w+) = arguments\[[^\]]\];/g, function(all, localParam){
+              localParameters += localParam + "|";
+            });
+          }());
+          (function(){
+            constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
+              if (first === ".") {
+                return all;
+              } else if (/var\s*?$/.test(first)) {
+                localParameters += variable + "|";
+                return all;
+              } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
+                return all;
+              } else {
+                return "this." + variable;
+              }
+            });
+          }());
+        }
+      }
+    
+      var constructors = "";
+    
+      for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
+        methods += methodsArray[i];
+      }
+      for (var i = 0, aLength = constructorsArray.length; i < aLength; i++){
+        constructors += constructorsArray[i];
+      }
+      arrayOfSuperClasses.push(thisSuperClass);
+      rest = vars + "\n" + methods + "\n" + constructors;
+      aCode = left + rest + "\n}" + staticVars + allRest;
+    }
+
+    // Do some tidying up, where necessary
+    aCode = aCode.replace(/processing.\w+ = function addMethod/g, "addMethod");
+    
+    // Remove processing. from leftover functions
+    aCode = aCode.replace(/processing\.((\w+) = function)/g, "$1");
+
+    // Check if 3D context is invoked -- this is not the best way to do this.
+    if (aCode.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
+      p.use3DContext = true;
+    }
+
+    // Handle (int) Casting
+    aCode = aCode.replace(/\(int\)/g, "0|");
+
+    // Remove Casting
+    aCode = aCode.replace(new RegExp("\\((" + classes.join("|") + ")(\\[\\])*\\)", "g"), "");
+
+    // Force numbers to exist //
+    //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
+    var toNumbers = function(str) {
+      var ret = [];
+
+      str.replace(/(..)/g, function(str) {
+        ret.push(parseInt(str, 16));
+      });
+
+      return ret;
+    };
+
+    // Convert #aaaaaa into color
+    aCode = aCode.replace(/#([a-f0-9]{6})/ig, function(m, hex) {
+      var num = toNumbers(hex);
+      return "defaultColor(" + num[0] + "," + num[1] + "," + num[2] + ")";
+    });
+
+    // Convert 3.0f to just 3.0
+    aCode = aCode.replace(/(\d+)f/g, "$1");
+
+    // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
+    for (var n = 0, sl = strings.length; n < sl; n++) {
+      aCode = (function() {
+        return aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd) {
+          var returnString = all,
+            notString = true,
+            quoteType = "",
+            escape = false;
+
+          for (var x = 0, ql = quoteStart.length; x < ql; x++) {
+            if (notString) {
+              if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
+                quoteType = quoteStart.charAt(x);
+                notString = false;
+              }
+            } else {
+              if (!escape) {
+                if (quoteStart.charAt(x) === "\\") {
+                  escape = true;
+                } else if (quoteStart.charAt(x) === quoteType) {
+                  notString = true;
+                  quoteType = "";
+                }
+              } else {
+                escape = false;
+              }
+            }
+          }
+
+          if (notString) { // Match is not inside a string
+            returnString = quoteStart + strings[n] + quoteEnd;
+          }
+
+          return returnString;
+        });
+      }());
+    }
+    return aCode;
+  };
 
   // Automatic Initialization Method
   var init = function() {
