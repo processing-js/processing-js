@@ -32,6 +32,340 @@
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
   
+    var p = this;
+      
+    p.pjs = {
+       imageCache: {
+         pending: 0
+       }
+    }; // by default we have an empty imageCache, no more.
+    
+    p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
+    p.use3DContext = false; // default '2d' canvas context
+    p.canvas = curElement;
+
+    // Glyph path storage for textFonts
+    p.glyphTable = {};
+
+    // Global vars for tracking mouse position
+    p.pmouseX = 0;
+    p.pmouseY = 0;
+    p.mouseX = 0;
+    p.mouseY = 0;
+    p.mouseButton = 0;
+    p.mouseDown = false;
+    p.mouseScroll = 0;
+
+    // Undefined event handlers to be replaced by user when needed
+    p.mouseClicked = undefined;
+    p.mouseDragged = undefined;
+    p.mouseMoved = undefined;
+    p.mousePressed = undefined;
+    p.mouseReleased = undefined;
+    p.mouseScrolled = undefined;
+    p.keyPressed = undefined;
+    p.keyReleased = undefined;
+    p.keyTyped = undefined;
+    p.draw = undefined;
+    p.setup = undefined;
+
+    // The height/width of the canvas
+    p.width = curElement.width - 0;
+    p.height = curElement.height - 0;
+
+    // The current animation frame
+    p.frameCount = 0;
+
+    // Color modes
+    p.RGB   = 1;
+    p.ARGB  = 2;
+    p.HSB   = 3;
+    p.ALPHA = 4;
+    p.CMYK  = 5;
+
+    // Renderers
+    p.P2D    = 1;
+    p.JAVA2D = 1;
+    p.WEBGL  = 2;
+    p.P3D    = 2;
+    p.OPENGL = 2;
+    p.EPSILON = 0.0001;
+    p.MAX_FLOAT   = 3.4028235e+38;
+    p.MIN_FLOAT   = -3.4028235e+38;
+    p.MAX_INT     = 2147483647;
+    p.MIN_INT     = -2147483648;
+    p.PI          = Math.PI;
+    p.TWO_PI      = 2 * p.PI;
+    p.HALF_PI     = p.PI / 2;
+    p.THIRD_PI    = p.PI / 3;
+    p.QUARTER_PI  = p.PI / 4;
+    p.DEG_TO_RAD  = p.PI / 180;
+    p.RAD_TO_DEG  = 180 / p.PI;
+    p.WHITESPACE  = " \t\n\r\f\u00A0";
+
+    // Filter/convert types 
+    p.BLUR      = 11;
+    p.GRAY      = 12;
+    p.INVERT    = 13;
+    p.OPAQUE    = 14;
+    p.POSTERIZE = 15;
+    p.THRESHOLD = 16;
+    p.ERODE     = 17;
+    p.DILATE    = 18;
+
+    // Blend modes
+    p.REPLACE    = 0;
+    p.BLEND      = 1 << 0;
+    p.ADD        = 1 << 1;
+    p.SUBTRACT   = 1 << 2;
+    p.LIGHTEST   = 1 << 3;
+    p.DARKEST    = 1 << 4;
+    p.DIFFERENCE = 1 << 5;
+    p.EXCLUSION  = 1 << 6;
+    p.MULTIPLY   = 1 << 7;
+    p.SCREEN     = 1 << 8;
+    p.OVERLAY    = 1 << 9;
+    p.HARD_LIGHT = 1 << 10;
+    p.SOFT_LIGHT = 1 << 11;
+    p.DODGE      = 1 << 12;
+    p.BURN       = 1 << 13;
+
+    // Color component bit masks
+    p.ALPHA_MASK = 0xff000000;
+    p.RED_MASK   = 0x00ff0000;
+    p.GREEN_MASK = 0x0000ff00;
+    p.BLUE_MASK  = 0x000000ff;
+
+    // Projection matrices
+    p.CUSTOM       = 0; 
+    p.ORTHOGRAPHIC = 2;
+    p.PERSPECTIVE  = 3;
+
+    // Shapes
+    p.POINT          = 2;
+    p.POINTS         = 2;
+    p.LINE           = 4;
+    p.LINES          = 4;
+    p.TRIANGLE       = 8;
+    p.TRIANGLES      = 9;
+    p.TRIANGLE_STRIP = 10;
+    p.TRIANGLE_FAN   = 11;
+    p.QUAD           = 16;
+    p.QUADS          = 16;
+    p.QUAD_STRIP     = 17;
+    p.POLYGON        = 20;
+    p.PATH           = 21;
+    p.RECT           = 30;
+    p.ELLIPSE        = 31;
+    p.ARC            = 32;
+    p.SPHERE         = 40;
+    p.BOX            = 41;
+
+    // Shape closing modes
+    p.OPEN  = 1;
+    p.CLOSE = 2;
+
+    // Shape drawing modes
+    p.CORNER          = 0; // Draw mode convention to use (x, y) to (width, height)
+    p.CORNERS         = 1; // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
+    p.RADIUS          = 2; // Draw mode from the center, and using the radius
+    p.CENTER_RADIUS   = 2; // Deprecated! Use RADIUS instead
+    p.CENTER          = 3; // Draw from the center, using second pair of values as the diameter
+    p.DIAMETER        = 3; // Synonym for the CENTER constant. Draw from the center
+    p.CENTER_DIAMETER = 3; // Deprecated! Use DIAMETER instead
+
+    // Text vertical alignment modes
+    p.BASELINE = 0;   // Default vertical alignment for text placement
+    p.TOP      = 101; // Align text to the top
+    p.BOTTOM   = 102; // Align text from the bottom, using the baseline
+
+    // UV Texture coordinate modes
+    p.NORMAL    = 1;
+    p.NORMALIZE = 1;
+    p.IMAGE     = 2;
+
+    // Text placement modes
+    p.MODEL = 4;
+    p.SHAPE = 5;
+
+    // Stroke modes
+    p.SQUARE  = 'butt'; 
+    p.ROUND   = 'round'; 
+    p.PROJECT = 'square'; 
+    p.MITER   = 'miter'; 
+    p.BEVEL   = 'bevel'; 
+
+    // Lighting modes
+    p.AMBIENT     = 0;
+    p.DIRECTIONAL = 1;
+    //POINT       = 2; Shared with Shape constant
+    p.SPOT        = 3;
+
+    // Key constants
+
+    // Both key and keyCode will be equal to these values
+    p.BACKSPACE = 8;
+    p.TAB       = 9;
+    p.ENTER     = 10;
+    p.RETURN    = 13;
+    p.ESC       = 27;
+    p.DELETE    = 127;
+    p.CODED     = 0xffff;
+
+    // p.key will be CODED and p.keyCode will be this value
+    p.SHIFT     = 16;
+    p.CONTROL   = 17;
+    p.ALT       = 18;
+    p.UP        = 38;
+    p.RIGHT     = 39;
+    p.DOWN      = 40;
+    p.LEFT      = 37;
+
+    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
+
+    // Cursor types
+    p.ARROW    = 'default';
+    p.CROSS    = 'crosshair';
+    p.HAND     = 'pointer';
+    p.MOVE     = 'move';
+    p.TEXT     = 'text';
+    p.WAIT     = 'wait';
+    p.NOCURSOR = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
+
+    // Hints
+    p.DISABLE_OPENGL_2X_SMOOTH    =  1;
+    p.ENABLE_OPENGL_2X_SMOOTH     = -1;
+    p.ENABLE_OPENGL_4X_SMOOTH     =  2;
+    p.ENABLE_NATIVE_FONTS         =  3;
+    p.DISABLE_DEPTH_TEST          =  4;
+    p.ENABLE_DEPTH_TEST           = -4;
+    p.ENABLE_DEPTH_SORT           =  5;
+    p.DISABLE_DEPTH_SORT          = -5;
+    p.DISABLE_OPENGL_ERROR_REPORT =  6;
+    p.ENABLE_OPENGL_ERROR_REPORT  = -6;
+    p.ENABLE_ACCURATE_TEXTURES    =  7;
+    p.DISABLE_ACCURATE_TEXTURES   = -7;
+    p.HINT_COUNT                  = 10;
+
+    // PJS defined constants
+    p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
+    p.FRAME_RATE         = 0;
+    p.focused            = true;
+    p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!! 
+    p.PRECISIONF         = 1 << p.PRECISIONB;
+    p.PREC_MAXVAL        = p.PRECISIONF - 1;
+    p.PREC_ALPHA_SHIFT   = 24 - p.PRECISIONB;
+    p.PREC_RED_SHIFT     = 16 - p.PRECISIONB;
+    p.NORMAL_MODE_AUTO   = 0;
+    p.NORMAL_MODE_SHAPE  = 1;
+    p.NORMAL_MODE_VERTEX = 2;
+    p.MAX_LIGHTS         = 8;
+    
+    // "Private" variables used to maintain state
+    var curContext,
+        online = true,
+        doFill = true,
+        fillStyle = "rgba( 255, 255, 255, 1 )",
+        doStroke = true,
+        strokeStyle = "rgba( 204, 204, 204, 1 )",
+        lineWidth = 1,
+        loopStarted = false,
+        refreshBackground = function() {},
+        doLoop = true,
+        looping = 0,
+        curRectMode = p.CORNER,
+        curEllipseMode = p.CENTER,
+        normalX = 0,
+        normalY = 0,
+        normalZ = 0,
+        normalMode = p.NORMAL_MODE_AUTO,
+        inSetup = false,
+        inDraw = false,
+        curBackground = "rgba( 204, 204, 204, 1 )",
+        curFrameRate = 60,
+        curCursor = p.ARROW,
+        oldCursor = curElement.style.cursor,
+        curMsPerFrame = 1,
+        curShape = p.POLYGON,
+        curShapeCount = 0,
+        curvePoints = [],
+        curTightness = 0,
+        curveDetail = 20,
+        curveInited = false,
+        colorModeA = 255,
+        colorModeX = 255,
+        colorModeY = 255,
+        colorModeZ = 255,
+        pathOpen = false,
+        mousePressed = false,
+        mouseDragging = false,
+        keyPressed = false,
+        curColorMode = p.RGB,
+        curTint = function() {},
+        curTextSize = 12,
+        curTextFont = "Arial",
+        getLoaded = false,
+        start = new Date().getTime(),
+        timeSinceLastFPS = start,
+        framesSinceLastFPS = 0,
+        lastTextPos = [0, 0, 0],
+        curveBasisMatrix, 
+        curveToBezierMatrix, 
+        curveDrawMatrix,
+        bezierBasisInverse,
+        bezierBasisMatrix,
+        programObject3D,
+        programObject2D,
+        boxBuffer,
+        boxNormBuffer,
+        boxOutlineBuffer,
+        sphereBuffer,
+        lineBuffer,
+        fillBuffer,
+        pointBuffer;
+
+    // User can only have MAX_LIGHTS lights
+    var lightCount = 0;
+
+    //sphere stuff
+    var sphereDetailV = 0,
+        sphereDetailU = 0,
+        sphereX = [],
+        sphereY = [],
+        sphereZ = [],
+        sinLUT = new Array(p.SINCOS_LENGTH),
+        cosLUT = new Array(p.SINCOS_LENGTH),
+        sphereVerts, 
+        sphereNorms;
+
+    // Camera defaults and settings
+    var cam, 
+        cameraInv, 
+        forwardTransform, 
+        reverseTransform, 
+        modelView, 
+        modelViewInv, 
+        userMatrixStack, 
+        inverseCopy, 
+        projection, 
+        manipulatingCamera = false,
+        frustumMode = false,
+        cameraFOV = 60 * (Math.PI / 180),
+        cameraX = curElement.width / 2,
+        cameraY = curElement.height / 2,
+        cameraZ = cameraY / Math.tan(cameraFOV / 2),
+        cameraNear = cameraZ / 10,
+        cameraFar = cameraZ * 10,
+        cameraAspect = curElement.width / curElement.height;
+
+    var vertArray = [],
+        isCurve = false,
+        isBezier = false,
+        firstVert = true;
+
+    // Stores states for pushStyle() and popStyle().
+    var styleArray = new Array(0);
+
     // Vertices are specified in a counter-clockwise order
     // triangles are in this order: back, front, right, bottom, left, top
     var boxVerts = [0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
@@ -259,390 +593,38 @@
       "  gl_FragColor = gl_Color;" + 
       "}";
 
-    var p = this;
-      
-    p.pjs = {
-       imageCache: {
-         pending: 0
-       }
-    }; // by default we have an empty imageCache, no more.
-    
-    p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
-    p.use3DContext = false; // default '2d' canvas context
-    p.canvas = curElement;
-
-    // Color modes
-    p.RGB   = 1;
-    p.ARGB  = 2;
-    p.HSB   = 3;
-    p.ALPHA = 4;
-    p.CMYK  = 5;
-
-    // Renderers
-    p.P2D    = 1;
-    p.JAVA2D = 1;
-    p.WEBGL  = 2;
-    p.P3D    = 2;
-    p.OPENGL = 2;
-
-    p.EPSILON = 0.0001;
-
-    p.MAX_FLOAT   = 3.4028235e+38;
-    p.MIN_FLOAT   = -3.4028235e+38;
-    p.MAX_INT     = 2147483647;
-    p.MIN_INT     = -2147483648;
-
-    p.PI          = Math.PI;
-    p.TWO_PI      = 2 * p.PI;
-    p.HALF_PI     = p.PI / 2;
-    p.THIRD_PI    = p.PI / 3;
-    p.QUARTER_PI  = p.PI / 4;
-
-    p.DEG_TO_RAD  = p.PI / 180;
-    p.RAD_TO_DEG  = 180 / p.PI;
-
-    p.WHITESPACE  = " \t\n\r\f\u00A0";
-
-    // Filter/convert types 
-    p.BLUR      = 11;
-    p.GRAY      = 12;
-    p.INVERT    = 13;
-    p.OPAQUE    = 14;
-    p.POSTERIZE = 15;
-    p.THRESHOLD = 16;
-    p.ERODE     = 17;
-    p.DILATE    = 18;
-
-    // Blend modes
-    p.REPLACE    = 0;
-    p.BLEND      = 1 << 0;
-    p.ADD        = 1 << 1;
-    p.SUBTRACT   = 1 << 2;
-    p.LIGHTEST   = 1 << 3;
-    p.DARKEST    = 1 << 4;
-    p.DIFFERENCE = 1 << 5;
-    p.EXCLUSION  = 1 << 6;
-    p.MULTIPLY   = 1 << 7;
-    p.SCREEN     = 1 << 8;
-    p.OVERLAY    = 1 << 9;
-    p.HARD_LIGHT = 1 << 10;
-    p.SOFT_LIGHT = 1 << 11;
-    p.DODGE      = 1 << 12;
-    p.BURN       = 1 << 13;
-
-    // Color component bit masks
-    p.ALPHA_MASK = 0xff000000;
-    p.RED_MASK   = 0x00ff0000;
-    p.GREEN_MASK = 0x0000ff00;
-    p.BLUE_MASK  = 0x000000ff;
-
-    // Projection matrices
-    p.CUSTOM       = 0; 
-    p.ORTHOGRAPHIC = 2;
-    p.PERSPECTIVE  = 3;
-
-    // Shapes
-    p.POINT          = 2;
-    p.POINTS         = 2;
-
-    p.LINE           = 4;
-    p.LINES          = 4;
-
-    p.TRIANGLE       = 8;
-    p.TRIANGLES      = 9;
-    p.TRIANGLE_STRIP = 10;
-    p.TRIANGLE_FAN   = 11;
-
-    p.QUAD           = 16;
-    p.QUADS          = 16;
-    p.QUAD_STRIP     = 17;
-
-    p.POLYGON        = 20;
-    p.PATH           = 21;
-
-    p.RECT           = 30;
-    p.ELLIPSE        = 31;
-    p.ARC            = 32;
-
-    p.SPHERE         = 40;
-    p.BOX            = 41;
-
-    // Shape closing modes
-    p.OPEN  = 1;
-    p.CLOSE = 2;
-
-    // Shape drawing modes
-    p.CORNER          = 0; // Draw mode convention to use (x, y) to (width, height)
-    p.CORNERS         = 1; // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
-    p.RADIUS          = 2; // Draw mode from the center, and using the radius
-    p.CENTER_RADIUS   = 2; // Deprecated! Use RADIUS instead
-    p.CENTER          = 3; // Draw from the center, using second pair of values as the diameter
-    p.DIAMETER        = 3; // Synonym for the CENTER constant. Draw from the center
-    p.CENTER_DIAMETER = 3; // Deprecated! Use DIAMETER instead
-
-    // Text vertical alignment modes
-    p.BASELINE = 0;   // Default vertical alignment for text placement
-    p.TOP      = 101; // Align text to the top
-    p.BOTTOM   = 102; // Align text from the bottom, using the baseline
-
-    // UV Texture coordinate modes
-    p.NORMAL    = 1;
-    p.NORMALIZE = 1;
-    p.IMAGE     = 2;
-
-    // Text placement modes
-    p.MODEL = 4;
-    p.SHAPE = 5;
-
-    // Stroke modes
-    p.SQUARE  = 'butt'; 
-    p.ROUND   = 'round'; 
-    p.PROJECT = 'square'; 
-    p.MITER   = 'miter'; 
-    p.BEVEL   = 'bevel'; 
-
-    // Lighting modes
-    p.AMBIENT     = 0;
-    p.DIRECTIONAL = 1;
-    //POINT       = 2; Shared with Shape constant
-    p.SPOT        = 3;
-
-    // Key constants
-
-    // Both key and keyCode will be equal to these values
-    p.BACKSPACE = 8;
-    p.TAB       = 9;
-    p.ENTER     = 10;
-    p.RETURN    = 13;
-    p.ESC       = 27;
-    p.DELETE    = 127;
-
-    p.CODED     = 0xffff;
-
-    // p.key will be CODED and p.keyCode will be this value
-    p.SHIFT     = 16;
-    p.CONTROL   = 17;
-    p.ALT       = 18;
-    p.UP        = 38;
-    p.RIGHT     = 39;
-    p.DOWN      = 40;
-    p.LEFT      = 37;
-
-    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
-
-    // Cursor types
-    p.ARROW    = 'default';
-    p.CROSS    = 'crosshair';
-    p.HAND     = 'pointer';
-    p.MOVE     = 'move';
-    p.TEXT     = 'text';
-    p.WAIT     = 'wait';
-    p.NOCURSOR = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
-
-    // Hints
-    p.DISABLE_OPENGL_2X_SMOOTH    =  1;
-    p.ENABLE_OPENGL_2X_SMOOTH     = -1;
-    p.ENABLE_OPENGL_4X_SMOOTH     =  2;
-
-    p.ENABLE_NATIVE_FONTS         =  3;
-
-    p.DISABLE_DEPTH_TEST          =  4;
-    p.ENABLE_DEPTH_TEST           = -4;
-
-    p.ENABLE_DEPTH_SORT           =  5;
-    p.DISABLE_DEPTH_SORT          = -5;
-
-    p.DISABLE_OPENGL_ERROR_REPORT =  6;
-    p.ENABLE_OPENGL_ERROR_REPORT  = -6;
-
-    p.ENABLE_ACCURATE_TEXTURES    =  7;
-    p.DISABLE_ACCURATE_TEXTURES   = -7;
-
-    p.HINT_COUNT                  = 10;
-
-    // PJS defined constants
-    p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
-    p.FRAME_RATE         = 0;
-    p.focused            = true;
-    p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!! 
-    p.PRECISIONF         = 1 << p.PRECISIONB;
-    p.PREC_MAXVAL        = p.PRECISIONF - 1;
-    p.PREC_ALPHA_SHIFT   = 24 - p.PRECISIONB;
-    p.PREC_RED_SHIFT     = 16 - p.PRECISIONB;
-    p.NORMAL_MODE_AUTO   = 0;
-    p.NORMAL_MODE_SHAPE  = 1;
-    p.NORMAL_MODE_VERTEX = 2;
-    p.MAX_LIGHTS         = 8;
-    
-    // "Private" variables used to maintain state
-    var curContext,
-      online = true,
-      doFill = true,
-      fillStyle = "rgba( 255, 255, 255, 1 )",
-      doStroke = true,
-      strokeStyle = "rgba( 204, 204, 204, 1 )",
-      lineWidth = 1,
-      loopStarted = false,
-      refreshBackground = function() {},
-      doLoop = true,
-      looping = 0,
-      curRectMode = p.CORNER,
-      curEllipseMode = p.CENTER,
-      imageModeConvert = imageModeCorner,
-      normalX = 0,
-      normalY = 0,
-      normalZ = 0,
-      normalMode = p.NORMAL_MODE_AUTO,
-      inSetup = false,
-      inDraw = false,
-      curBackground = "rgba( 204, 204, 204, 1 )",
-      curFrameRate = 60,
-      curCursor = p.ARROW,
-      oldCursor = curElement.style.cursor,
-      curMsPerFrame = 1,
-      curShape = p.POLYGON,
-      curShapeCount = 0,
-      curvePoints = [],
-      curTightness = 0,
-      curveDetail = 20,
-      curveInited = false,
-      colorModeA = 255,
-      colorModeX = 255,
-      colorModeY = 255,
-      colorModeZ = 255,
-      pathOpen = false,
-      mousePressed = false,
-      mouseDragging = false,
-      keyPressed = false,
-      curColorMode = p.RGB,
-      curTint = function() {},
-      curTextSize = 12,
-      curTextFont = "Arial",
-      getLoaded = false,
-      start = new Date().getTime(),
-      timeSinceLastFPS = start,
-      framesSinceLastFPS = 0,
-      lastTextPos = [0, 0, 0],
-      curveBasisMatrix, 
-      curveToBezierMatrix, 
-      curveDrawMatrix,
-      bezierBasisInverse,
-      bezierBasisMatrix,
-      programObject3D,
-      programObject2D,
-      boxBuffer,
-      boxNormBuffer,
-      boxOutlineBuffer,
-      sphereBuffer,
-      lineBuffer,
-      fillBuffer,
-      pointBuffer;
-
-    // User can only have MAX_LIGHTS lights
-    var lightCount = 0;
-
-    //sphere stuff
-    var sphereDetailV = 0,
-      sphereDetailU = 0,
-      sphereX = [],
-      sphereY = [],
-      sphereZ = [],
-      sinLUT = new Array(p.SINCOS_LENGTH),
-      cosLUT = new Array(p.SINCOS_LENGTH),
-      sphereVerts, 
-      sphereNorms;
-
-    // Camera defaults and settings
-    var cam, 
-      cameraInv, 
-      forwardTransform, 
-      reverseTransform, 
-      modelView, 
-      modelViewInv, 
-      userMatrixStack, 
-      inverseCopy, 
-      projection, 
-      manipulatingCamera = false,
-      frustumMode = false,
-      cameraFOV = 60 * (Math.PI / 180),
-      cameraX = curElement.width / 2,
-      cameraY = curElement.height / 2,
-      cameraZ = cameraY / Math.tan(cameraFOV / 2),
-      cameraNear = cameraZ / 10,
-      cameraFar = cameraZ * 10,
-      cameraAspect = curElement.width / curElement.height;
-
-    var vertArray = [],
-        isCurve = false,
-        isBezier = false,
-        firstVert = true;
-
-    // Stores states for pushStyle() and popStyle().
-    var styleArray = new Array(0);
-
-    // Glyph path storage for textFonts
-    p.glyphTable = {};
-
-    // Global vars for tracking mouse position
-    p.pmouseX = 0;
-    p.pmouseY = 0;
-    p.mouseX = 0;
-    p.mouseY = 0;
-    p.mouseButton = 0;
-    p.mouseDown = false;
-    p.mouseScroll = 0;
-
-    // Undefined event handlers to be replaced by user when needed
-    p.mouseClicked = undefined;
-    p.mouseDragged = undefined;
-    p.mouseMoved = undefined;
-    p.mousePressed = undefined;
-    p.mouseReleased = undefined;
-    p.mouseScrolled = undefined;
-    p.keyPressed = undefined;
-    p.keyReleased = undefined;
-    p.keyTyped = undefined;
-    p.draw = undefined;
-    p.setup = undefined;
-
-    // The height/width of the canvas
-    p.width = curElement.width - 0;
-    p.height = curElement.height - 0;
-
-    // The current animation frame
-    p.frameCount = 0;
-   
     // Wrapper to easily deal with array names changes.
     var newWebGLArray = function(data) {
       return new WebGLFloatArray(data);
     };
 
-    function imageModeCorner(x, y, w, h, whAreSizes) {
+    var imageModeCorner = function imageModeCorner(x, y, w, h, whAreSizes) {
       return {
         x: x,
         y: y,
         w: w,
         h: h
       };
-    }
+    };
+    var imageModeConvert = imageModeCorner;
 
-    function imageModeCorners(x, y, w, h, whAreSizes) {
+    var imageModeCorners = function imageModeCorners(x, y, w, h, whAreSizes) {
       return {
         x: x,
         y: y,
         w: whAreSizes ? w : w - x,
         h: whAreSizes ? h : h - y
       };
-    }
+    };
 
-    function imageModeCenter(x, y, w, h, whAreSizes) {
+    var imageModeCenter = function imageModeCenter(x, y, w, h, whAreSizes) {
       return {
         x: x - w / 2,
         y: y - h / 2,
         w: w,
         h: h
       };
-    }
+    };
    
     var createProgramObject = function(curContext, vetexShaderSource, fragmentShaderSource) {
       var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
@@ -7660,50 +7642,48 @@
         }
       }
 
-      var executeSketch = function(processing) {
+      var localizedProperties = "";
+      for (var propertyName in p) {
+        localizedProperties += "var " + propertyName + "=processing." + propertyName + ";";
+        if (typeof p[propertyName] !== "function" || typeof p[propertyName] !== "object") {
+          localizedProperties += "processing.__defineGetter__('" + propertyName + "',function(){return " + propertyName + ";});" +
+                                 "processing.__defineSetter__('" + propertyName + "',function(v){" + propertyName + "=v;});";
+        }
+      }
+
+      var executeSketch = function() {
           // Don't start until all specified images in the cache are preloaded
-          if (!processing.pjs.imageCache.pending) {
+          if (!p.pjs.imageCache.pending) {
             if(typeof aCode === "function") {
-              aCode(processing);
+              aCode(p);
             } else {
-              var localizedProperties = "";
-              for (var propertyName in processing) {
-                localizedProperties += "var " + propertyName + " = processing." + propertyName + ";\n";
-                if (typeof processing[propertyName] !== "function" || typeof processing[propertyName] !== "object") {
-                  localizedProperties += "processing.__defineGetter__('" + propertyName + "', function() { return " + propertyName + "; });\n" +
-                                         "processing.__defineSetter__('" + propertyName + "', function(val) { " + propertyName + " = val; });\n";
-                }
-              }
-              eval ("(function(){ " + 
-                    localizedProperties + parsedCode +
-                    // Run void setup()
-                    "  if (setup) {" +
-                    "    processing.setup = setup;" +
-                    "    inSetup = true;" +
-                    "    setup();" +
-                    "  }" +
-                    "  inSetup = false;" +
-                    "  if (draw) {" +
-                    "    processing.draw = draw;" +
-                    "    if (!doLoop) {" +
-                    "      redraw();" +
-                    "    } else {" +
-                    "      loop();" +
-                    "    }" +
-                    "  }" +
-                    "}());"
+              eval (" (function(processing) { " + 
+                        localizedProperties + 
+                        parsedCode +
+                    "   if (setup) {" +
+                    "     processing.setup = setup;" +
+                    "     inSetup = true;" +
+                    "     setup();" +
+                    "   }" +
+                    "   inSetup = false;" +
+                    "   if (draw) {" +
+                    "     processing.draw = draw;" +
+                    "     if (!doLoop) {" +
+                    "       redraw();" +
+                    "     } else {" +
+                    "       loop();" +
+                    "     }" +
+                    "   }" +
+                    " })(p);"
               );
             }
-
           } else {
-            window.setTimeout(executeSketch, 10, processing);
+            window.setTimeout(executeSketch, 10);
           }
       };
-
+      
       // The parser adds custom methods to the processing context
-      // this renames p to processing so these methods will run
-      executeSketch(this);
-
+      executeSketch();
     }
   };
   
@@ -8238,7 +8218,7 @@
             code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
           }
         }
-        new Processing(canvas[i], code);
+        var pro = new Processing(canvas[i], code);
       }
     }
   };
