@@ -2,10 +2,10 @@
 
     P R O C E S S I N G . J S - @VERSION@
     a port of the Processing visualization language
-    
-    License       : MIT 
+
+    License       : MIT
     Developer     : John Resig: http://ejohn.org
-    Web Site      : http://processingjs.org  
+    Web Site      : http://processingjs.org
     Java Version  : http://processing.org
     Github Repo.  : http://github.com/jeresig/processing-js
     Bug Tracking  : http://processing-js.lighthouseapp.com
@@ -13,33 +13,21 @@
     Maintained by : Seneca: http://zenit.senecac.on.ca/wiki/index.php/Processing.js
                     Hyper-Metrix: http://hyper-metrix.com/#Processing
                     BuildingSky: http://weare.buildingsky.net/pages/processing-js
-  
+
  */
 
 (function() {
 
-  // IE Unfriendly AJAX Method
-  var ajax = function(url) {
-    var AJAX = new window.XMLHttpRequest();
-    if (AJAX) {
-      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
-      AJAX.send(null);
-      return AJAX.responseText;
-    } else {
-      return false;
-    }
-  };
-
   var Processing = this.Processing = function Processing(curElement, aCode) {
-  
+
     var p = this;
-      
+
     p.pjs = {
        imageCache: {
          pending: 0
        }
     }; // by default we have an empty imageCache, no more.
-    
+
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
     p.canvas = curElement;
@@ -104,7 +92,7 @@
     p.RAD_TO_DEG  = 180 / p.PI;
     p.WHITESPACE  = " \t\n\r\f\u00A0";
 
-    // Filter/convert types 
+    // Filter/convert types
     p.BLUR      = 11;
     p.GRAY      = 12;
     p.INVERT    = 13;
@@ -138,7 +126,7 @@
     p.BLUE_MASK  = 0x000000ff;
 
     // Projection matrices
-    p.CUSTOM       = 0; 
+    p.CUSTOM       = 0;
     p.ORTHOGRAPHIC = 2;
     p.PERSPECTIVE  = 3;
 
@@ -190,11 +178,11 @@
     p.SHAPE = 5;
 
     // Stroke modes
-    p.SQUARE  = 'butt'; 
-    p.ROUND   = 'round'; 
-    p.PROJECT = 'square'; 
-    p.MITER   = 'miter'; 
-    p.BEVEL   = 'bevel'; 
+    p.SQUARE  = 'butt';
+    p.ROUND   = 'round';
+    p.PROJECT = 'square';
+    p.MITER   = 'miter';
+    p.BEVEL   = 'bevel';
 
     // Lighting modes
     p.AMBIENT     = 0;
@@ -252,7 +240,7 @@
     p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
     p.FRAME_RATE         = 0;
     p.focused            = true;
-    p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!! 
+    p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!!
     p.PRECISIONF         = 1 << p.PRECISIONB;
     p.PREC_MAXVAL        = p.PRECISIONF - 1;
     p.PREC_ALPHA_SHIFT   = 24 - p.PRECISIONB;
@@ -261,7 +249,7 @@
     p.NORMAL_MODE_SHAPE  = 1;
     p.NORMAL_MODE_VERTEX = 2;
     p.MAX_LIGHTS         = 8;
-    
+
     // "Private" variables used to maintain state
     var curContext,
         online = true,
@@ -280,7 +268,6 @@
         normalY = 0,
         normalZ = 0,
         normalMode = p.NORMAL_MODE_AUTO,
-        inSetup = false,
         inDraw = false,
         curBackground = "rgba( 204, 204, 204, 1 )",
         curFrameRate = 60,
@@ -310,8 +297,8 @@
         timeSinceLastFPS = start,
         framesSinceLastFPS = 0,
         lastTextPos = [0, 0, 0],
-        curveBasisMatrix, 
-        curveToBezierMatrix, 
+        curveBasisMatrix,
+        curveToBezierMatrix,
         curveDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
@@ -336,19 +323,19 @@
         sphereZ = [],
         sinLUT = new Array(p.SINCOS_LENGTH),
         cosLUT = new Array(p.SINCOS_LENGTH),
-        sphereVerts, 
+        sphereVerts,
         sphereNorms;
 
     // Camera defaults and settings
-    var cam, 
-        cameraInv, 
-        forwardTransform, 
-        reverseTransform, 
-        modelView, 
-        modelViewInv, 
-        userMatrixStack, 
-        inverseCopy, 
-        projection, 
+    var cam,
+        cameraInv,
+        forwardTransform,
+        reverseTransform,
+        modelView,
+        modelViewInv,
+        userMatrixStack,
+        inverseCopy,
+        projection,
         manipulatingCamera = false,
         frustumMode = false,
         cameraFOV = 60 * (Math.PI / 180),
@@ -394,79 +381,79 @@
                           -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
 
     // Vertex shader for points and lines
-    var vertexShaderSource2D = 
-      "attribute vec3 Vertex;" + 
+    var vertexShaderSource2D =
+      "attribute vec3 Vertex;" +
       "uniform vec4 color;" +
 
-      "uniform mat4 model;" + 
-      "uniform mat4 view;" + 
+      "uniform mat4 model;" +
+      "uniform mat4 view;" +
       "uniform mat4 projection;" +
 
-      "void main(void) {" + 
-      "  gl_FrontColor = color;" + 
-      "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" + 
+      "void main(void) {" +
+      "  gl_FrontColor = color;" +
+      "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
       "}";
 
-    var fragmentShaderSource2D = 
-      "void main(void){" + 
-      "  gl_FragColor = gl_Color;" + 
+    var fragmentShaderSource2D =
+      "void main(void){" +
+      "  gl_FragColor = gl_Color;" +
       "}";
 
     // Vertex shader for boxes and spheres
-    var vertexShaderSource3D = 
-      "attribute vec3 Vertex;" + 
+    var vertexShaderSource3D =
+      "attribute vec3 Vertex;" +
       "attribute vec3 Normal;" +
 
       "uniform vec4 color;" +
 
-      "uniform bool usingMat;" + 
-      "uniform vec3 specular;" + 
-      "uniform vec3 mat_emissive;" + 
-      "uniform vec3 mat_ambient;" + 
-      "uniform vec3 mat_specular;" + 
+      "uniform bool usingMat;" +
+      "uniform vec3 specular;" +
+      "uniform vec3 mat_emissive;" +
+      "uniform vec3 mat_ambient;" +
+      "uniform vec3 mat_specular;" +
       "uniform float shininess;" +
 
-      "uniform mat4 model;" + 
-      "uniform mat4 view;" + 
-      "uniform mat4 projection;" + 
+      "uniform mat4 model;" +
+      "uniform mat4 view;" +
+      "uniform mat4 projection;" +
       "uniform mat4 normalTransform;" +
 
-      "uniform int lightCount;" + 
+      "uniform int lightCount;" +
       "uniform vec3 falloff;" +
 
-      "struct Light {" + 
-      "  bool dummy;" + 
-      "   int type;" + 
-      "   vec3 color;" + 
-      "   vec3 position;" + 
-      "  vec3 direction;" + 
-      "  float angle;" + 
-      "  vec3 halfVector;" + 
-      "  float concentration;" + 
-      "};" + 
+      "struct Light {" +
+      "  bool dummy;" +
+      "   int type;" +
+      "   vec3 color;" +
+      "   vec3 position;" +
+      "  vec3 direction;" +
+      "  float angle;" +
+      "  vec3 halfVector;" +
+      "  float concentration;" +
+      "};" +
       "uniform Light lights[8];" +
 
       "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
       // Get the vector from the light to the vertex
       // Get the distance from the current vector to the light position
       "  float d = length( light.position - ecPos );" +
-      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + "  totalAmbient += light.color * attenuation;" + 
+      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + "  totalAmbient += light.color * attenuation;" +
       "}" +
 
-      "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" + 
-      "  float powerfactor = 0.0;" + 
-      "  float nDotVP = max(0.0, dot( vertNormal, light.position ));" + 
+      "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" +
+      "  float powerfactor = 0.0;" +
+      "  float nDotVP = max(0.0, dot( vertNormal, light.position ));" +
       "  float nDotVH = max(0.0, dot( vertNormal, normalize( light.position-ecPos )));" +
 
-      "  if( nDotVP != 0.0 ){" + 
-      "    powerfactor = pow( nDotVH, shininess );" + 
+      "  if( nDotVP != 0.0 ){" +
+      "    powerfactor = pow( nDotVH, shininess );" +
       "  }" +
 
-      "  col += light.color * nDotVP;" + 
-      "  spec += specular * powerfactor;" + 
+      "  col += light.color * nDotVP;" +
+      "  spec += specular * powerfactor;" +
       "}" +
 
-      "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
+      "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
       "  float powerfactor;" +
 
       // Get the vector from the light to the vertex
@@ -480,33 +467,33 @@
 
       "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
 
-      "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
-      "  vec3 halfVector = normalize( VP + eye );" + 
+      "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
+      "  vec3 halfVector = normalize( VP + eye );" +
       "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 
-      "  if( nDotVP == 0.0) {" + 
-      "    powerfactor = 0.0;" + 
-      "  }" + 
-      "  else{" + 
-      "    powerfactor = pow( nDotHV, shininess );" + 
+      "  if( nDotVP == 0.0) {" +
+      "    powerfactor = 0.0;" +
+      "  }" +
+      "  else{" +
+      "    powerfactor = pow( nDotHV, shininess );" +
       "  }" +
 
-      "  spec += specular * powerfactor * attenuation;" + 
-      "  col += light.color * nDotVP * attenuation;" + 
+      "  spec += specular * powerfactor * attenuation;" +
+      "  col += light.color * nDotVP * attenuation;" +
       "}" +
 
       /*
       */
-      "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
-      "  float spotAttenuation;" + 
+      "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+      "  float spotAttenuation;" +
       "  float powerfactor;" +
 
       // calculate the vector from the current vertex to the light.
-      "  vec3 VP = light.position - ecPos; " + 
+      "  vec3 VP = light.position - ecPos; " +
       "  vec3 ldir = normalize( light.direction );" +
 
       // get the distance from the spotlight and the vertex
-      "  float d = length( VP );" + 
+      "  float d = length( VP );" +
       "  VP = normalize( VP );" +
 
       "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ) );" +
@@ -515,83 +502,83 @@
       "  float spotDot = dot( VP, ldir );" +
 
       // if the vertex falls inside the cone
-      "  if( spotDot < cos( light.angle ) ) {" + 
-      "    spotAttenuation = pow( spotDot, light.concentration );" + 
-      "  }" + 
-      "  else{" + 
-      "    spotAttenuation = 1.0;" + 
-      "  }" + 
+      "  if( spotDot < cos( light.angle ) ) {" +
+      "    spotAttenuation = pow( spotDot, light.concentration );" +
+      "  }" +
+      "  else{" +
+      "    spotAttenuation = 1.0;" +
+      "  }" +
       "  attenuation *= spotAttenuation;" +
 
-      "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
-      "  vec3 halfVector = normalize( VP + eye );" + 
+      "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
+      "  vec3 halfVector = normalize( VP + eye );" +
       "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 
-      "  if( nDotVP == 0.0 ) {" + 
-      "    powerfactor = 0.0;" + 
-      "  }" + 
-      "  else {" + 
-      "    powerfactor = pow( nDotHV, shininess );" + 
+      "  if( nDotVP == 0.0 ) {" +
+      "    powerfactor = 0.0;" +
+      "  }" +
+      "  else {" +
+      "    powerfactor = pow( nDotHV, shininess );" +
       "  }" +
 
-      "  spec += specular * powerfactor * attenuation;" + 
-      "  col += light.color * nDotVP * attenuation;" + 
+      "  spec += specular * powerfactor * attenuation;" +
+      "  col += light.color * nDotVP * attenuation;" +
       "}" +
 
-      "void main(void) {" + 
-      "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" + 
-      "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" + 
+      "void main(void) {" +
+      "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" +
+      "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" +
       "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
 
       "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
 
-      "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" + 
-      "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" + 
+      "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
+      "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
       "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
 
-      // If there were no lights this draw call, just use the 
+      // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
-      "  if( lightCount == 0 ) {" + 
-      "    gl_FrontColor = color + vec4(mat_specular,1.0);" + 
+      "  if( lightCount == 0 ) {" +
+      "    gl_FrontColor = color + vec4(mat_specular,1.0);" +
       "  }" +
-      "  else {" + 
-      "    for( int i = 0; i < lightCount; i++ ) {" + 
-      "      if( lights[i].type == 0 ) {" + 
-      "        AmbientLight( finalAmbient, ecPos, lights[i] );" + 
-      "      }" + 
-      "      else if( lights[i].type == 1 ) {" + 
-      "        DirectionalLight( finalDiffuse,ecPos, finalSpecular, norm, lights[i] );" + 
-      "      }" + 
-      "      else if( lights[i].type == 2 ) {" + 
-      "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" + 
-      "      }" + 
-      "      else if( lights[i].type == 3 ) {" + 
-      "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" + 
-      "      }" + 
+      "  else {" +
+      "    for( int i = 0; i < lightCount; i++ ) {" +
+      "      if( lights[i].type == 0 ) {" +
+      "        AmbientLight( finalAmbient, ecPos, lights[i] );" +
+      "      }" +
+      "      else if( lights[i].type == 1 ) {" +
+      "        DirectionalLight( finalDiffuse,ecPos, finalSpecular, norm, lights[i] );" +
+      "      }" +
+      "      else if( lights[i].type == 2 ) {" +
+      "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
+      "      }" +
+      "      else if( lights[i].type == 3 ) {" +
+      "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
+      "      }" +
       "    }" +
 
-      "   if( usingMat == false ) {" + 
-      "    gl_FrontColor = vec4(  " + 
-      "      vec3(color) * finalAmbient +" + 
-      "      vec3(color) * finalDiffuse +" + 
-      "      vec3(color) * finalSpecular," + 
-      "      color[3] );" + 
-      "   }" + 
-      "   else{" + 
-      "     gl_FrontColor = vec4( " + 
-      "       mat_emissive + " + 
-      "       (vec3(color) * mat_ambient * finalAmbient) + " + 
-      "       (vec3(color) * finalDiffuse) + " + 
-      "       (mat_specular * finalSpecular), " + 
-      "       color[3] );" + 
-      "    }" + 
-      "  }" + 
-      "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" + 
+      "   if( usingMat == false ) {" +
+      "    gl_FrontColor = vec4(  " +
+      "      vec3(color) * finalAmbient +" +
+      "      vec3(color) * finalDiffuse +" +
+      "      vec3(color) * finalSpecular," +
+      "      color[3] );" +
+      "   }" +
+      "   else{" +
+      "     gl_FrontColor = vec4( " +
+      "       mat_emissive + " +
+      "       (vec3(color) * mat_ambient * finalAmbient) + " +
+      "       (vec3(color) * finalDiffuse) + " +
+      "       (mat_specular * finalSpecular), " +
+      "       color[3] );" +
+      "    }" +
+      "  }" +
+      "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
       "}";
 
-    var fragmentShaderSource3D = 
-      "void main(void){" + 
-      "  gl_FragColor = gl_Color;" + 
+    var fragmentShaderSource3D =
+      "void main(void){" +
+      "  gl_FragColor = gl_Color;" +
       "}";
 
     // Wrapper to easily deal with array names changes.
@@ -626,7 +613,7 @@
         h: h
       };
     };
-   
+
     var createProgramObject = function(curContext, vetexShaderSource, fragmentShaderSource) {
       var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
       curContext.shaderSource(vertexShaderObject, vetexShaderSource);
@@ -655,7 +642,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
-    ////////////////////////////////////////////////////////////////////////////    
+    ////////////////////////////////////////////////////////////////////////////
     var charMap = {};
 
     var Char = function Char(chr) {
@@ -1029,7 +1016,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // PMatrix3D
-    ////////////////////////////////////////////////////////////////////////////    
+    ////////////////////////////////////////////////////////////////////////////
     var PMatrix3D = function PMatrix3D() {
       //When a matrix is created, it is set to an identity matrix
       this.reset();
@@ -1443,7 +1430,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
-    ////////////////////////////////////////////////////////////////////////////    
+    ////////////////////////////////////////////////////////////////////////////
     p.split = function(str, delim) {
       return str.split(delim);
     };
@@ -1602,14 +1589,14 @@
         }
       }
     };
-    
+
     p.ArrayList = function() {
       var createArrayList = function(args){
         var array = [];
         for (var i = 0; i < args[0]; i++){
           array[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
         }
-        
+
         array.get = function(i) {
           return this[i];
         };
@@ -1639,7 +1626,7 @@
           }
           return a;
         };
-        
+
         return array;
       };
       return createArrayList(Array.prototype.slice.call(arguments));
@@ -2174,7 +2161,7 @@
       var r, g, b, a, rgb, aColor;
 
       // 4 arguments: (R, G, B, A) or (H, S, B, A)
-      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) { 
+      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
         if (curColorMode === p.HSB) {
           rgb = p.color.toRGB(aValue1, aValue2, aValue3);
           r = rgb[0];
@@ -2188,7 +2175,7 @@
 
         a = Math.round(255 * (aValue4 / colorModeA));
 
-        // Limit values greater than 255 
+        // Limit values greater than 255
         r = (r > 255) ? 255 : r;
         g = (g > 255) ? 255 : g;
         b = (b > 255) ? 255 : b;
@@ -2196,22 +2183,22 @@
 
         // Create color int
         aColor = (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
-      } 
-      
+      }
+
       // 3 arguments: (R, G, B) or (H, S, B)
       else if (aValue1 != null && aValue2 != null && aValue3 != null) {
         aColor = p.color(aValue1, aValue2, aValue3, colorModeA);
-      } 
-      
+      }
+
       // 2 arguments: (Color, A) or (Grayscale, A)
       else if (aValue1 != null && aValue2 != null) {
         // Color int and alpha
-        if (aValue1 & p.ALPHA_MASK) { 
+        if (aValue1 & p.ALPHA_MASK) {
           a = Math.round(255 * (aValue2 / colorModeA));
           a = (a > 255) ? 255 : a;
-          
+
           aColor = aValue1 - (aValue1 & p.ALPHA_MASK) + ((a << 24) & p.ALPHA_MASK);
-        } 
+        }
         // Grayscale and alpha
         else {
           switch(curColorMode) {
@@ -2219,8 +2206,8 @@
             case p.HSB: aColor = p.color(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2); break;
           }
         }
-      } 
-      
+      }
+
       // 1 argument: (Grayscale) or (Color)
       else if (typeof aValue1 === "number") {
         // Grayscale
@@ -2232,10 +2219,10 @@
         }
         // Color int
         else if (aValue1) {
-          aColor = aValue1; 
-        } 
-      } 
-      
+          aColor = aValue1;
+        }
+      }
+
       // Default
       else {
         aColor = p.color(colorModeX, colorModeY, colorModeZ, colorModeA);
@@ -2266,7 +2253,7 @@
 
     // HSB conversion function from Mootools, MIT Licensed
     p.color.toRGB = function(h, s, b) {
-      // Limit values greater than range 
+      // Limit values greater than range
       h = (h > colorModeX)   ? colorModeX   : h;
       s = (s > colorModeY) ? colorModeY : s;
       b = (b > colorModeZ)  ? colorModeZ  : b;
@@ -2301,7 +2288,7 @@
         }
       }
     };
-   
+
     p.color.toHSB = function( colorInt ) {
       var red, green, blue;
 
@@ -2312,12 +2299,12 @@
       var max = p.max(p.max(red,green), blue),
           min = p.min(p.min(red,green), blue),
           hue, saturation;
-          
+
       if (min === max) {
         return [0, 0, max];
       } else {
         saturation = (max - min) / max;
-        
+
         if (red === max) {
           hue = (green - blue) / (max - min);
         } else if (green === max) {
@@ -2325,9 +2312,9 @@
         } else {
           hue = 4 + ((red - green) / (max - min));
         }
-        
+
         hue /= 6;
-        
+
         if (hue < 0) {
           hue += 1;
         } else if (hue > 1) {
@@ -2336,19 +2323,19 @@
       }
       return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
     };
-    
+
     p.brightness = function(colInt){
       return  p.color.toHSB(colInt)[2];
     };
-    
+
     p.saturation = function(colInt){
       return  p.color.toHSB(colInt)[1];
     };
-    
+
     p.hue = function(colInt){
       return  p.color.toHSB(colInt)[0];
     };
-    
+
     var verifyChannel = function verifyChannel(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
@@ -2757,7 +2744,7 @@
     };
 
     // PGraphics methods
-    // TODO: These functions are suppose to be called before any operations are called on the 
+    // TODO: These functions are suppose to be called before any operations are called on the
     //       PGraphics object. They currently do nothing.
     p.beginDraw = function beginDraw() {};
     p.endDraw = function endDraw() {};
@@ -2766,7 +2753,7 @@
     p.Import = function Import(lib) {
       // Replace evil-eval method with a DOM <script> tag insert method that
       // binds new lib code to the Processing.lib names-space and the current
-      // p context. -F1LT3R 
+      // p context. -F1LT3R
     };
 
     var contextMenu = function(e) {
@@ -3116,7 +3103,7 @@
       return value;
     };
 
-    // Load a file or URL into strings     
+    // Load a file or URL into strings
     p.loadStrings = function loadStrings(url) {
       return ajax(url).split("\n");
     };
@@ -3395,7 +3382,7 @@
 
           createLog = tinylogLite[log] = function(message) {
             // don't show output log until called once
-            var uninit, 
+            var uninit,
               originalPadding = docElemStyle.paddingBottom,
               container = createElement($div),
               containerStyle = container[$style],
@@ -3540,7 +3527,7 @@
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
-    // passed in, and will come out as numbers. 
+    // passed in, and will come out as numbers.
     p.str = function str(val) {
       var ret;
 
@@ -3678,11 +3665,11 @@
     p.abs = Math.abs;
 
     p.ceil = Math.ceil;
-    
+
     p.constrain = function(aNumber, aMin, aMax) {
       return aNumber > aMax ? aMax : aNumber < aMin ? aMin : aNumber;
     };
-    
+
     p.dist = function() {
       var dx, dy, dz;
       if (arguments.length === 4) {
@@ -3698,15 +3685,15 @@
     };
 
     p.exp = Math.exp;
-    
+
     p.floor = Math.floor;
-    
+
     p.lerp = function(value1, value2, amt) {
       return ((value2 - value1) * amt) + value1;
     };
-    
+
     p.log = Math.log;
-    
+
     p.mag = function(a, b, c) {
       if (arguments.length === 2) {
         return Math.sqrt(a * a + b * b);
@@ -3714,11 +3701,11 @@
         return Math.sqrt(a * a + b * b + c * c);
       }
     };
-    
+
     p.map = function(value, istart, istop, ostart, ostop) {
       return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
     };
-    
+
     p.max = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
@@ -3737,7 +3724,7 @@
         return max;
       }
     };
-    
+
     p.min = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
@@ -3756,46 +3743,46 @@
         return min;
       }
     };
-    
+
     p.norm = function(aNumber, low, high) {
       return (aNumber - low) / (high - low);
     };
-    
+
     p.pow = Math.pow;
-    
+
     p.round = Math.round;
-    
+
     p.sq = function(aNumber) {
       return aNumber * aNumber;
     };
-    
+
     p.sqrt = Math.sqrt;
 
-    // Trigonometry 
+    // Trigonometry
     p.acos = Math.acos;
 
     p.asin = Math.asin;
-    
+
     p.atan = Math.atan;
-    
+
     p.atan2 = Math.atan2;
-    
+
     p.cos = Math.cos;
-    
+
     p.degrees = function(aAngle) {
       return (aAngle * 180) / Math.PI;
     };
-    
+
     p.radians = function(aAngle) {
       return (aAngle / 180) * Math.PI;
     };
-    
+
     p.sin = Math.sin;
-    
+
     p.tan = Math.tan;
 
     var currentRandom = Math.random;
-    
+
     p.random = function random() {
       if(arguments.length === 0) {
         return currentRandom();
@@ -3816,7 +3803,7 @@
         w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
         return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
       };
-     
+
       this.nextDouble = function() {
         var i = nextInt() / 4294967296;
         return i < 0 ? 1 + i : i;
@@ -3856,7 +3843,7 @@
           return v1 * multiplier;
         }
       };
-      
+
       // by default use standard random, otherwise seeded
       random = seed === undefined ? Math.random : (new Marsaglia(seed)).nextDouble;
     };
@@ -3868,48 +3855,48 @@
       // http://www.noisemachine.com/talk1/17b.html
       // http://mrl.nyu.edu/~perlin/noise/
       // generate permutation
-      var p = new Array(512); 
+      var p = new Array(512);
       for(i=0;i<256;++i) { p[i] = i; }
       for(i=0;i<256;++i) { var t = p[j = rnd.nextInt() & 0xFF]; p[j] = p[i]; p[i] = t; }
       // copy to avoid taking mod in p[0];
-      for(i=0;i<256;++i) { p[i + 256] = p[i]; } 
-      
-      function grad3d(i,x,y,z) {        
+      for(i=0;i<256;++i) { p[i + 256] = p[i]; }
+
+      function grad3d(i,x,y,z) {
         var h = i & 15; // convert into 12 gradient directions
-        var u = h<8 ? x : y,                 
+        var u = h<8 ? x : y,
             v = h<4 ? y : h===12||h===14 ? x : z;
         return ((h&1) === 0 ? u : -u) + ((h&2) === 0 ? v : -v);
       }
 
-      function grad2d(i,x,y) { 
+      function grad2d(i,x,y) {
         var v = (i & 1) === 0 ? x : y;
         return (i&2) === 0 ? -v : v;
       }
-      
-      function grad1d(i,x) { 
+
+      function grad1d(i,x) {
         return (i&1) === 0 ? -x : x;
       }
-      
+
       function lerp(t,a,b) { return a + t * (b - a); }
-        
+
       this.noise3d = function(x, y, z) {
         var X = Math.floor(x)&255, Y = Math.floor(y)&255, Z = Math.floor(z)&255;
         x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
         var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y, fz = (3-2*z)*z*z;
         var p0 = p[X]+Y, p00 = p[p0] + Z, p01 = p[p0 + 1] + Z, p1  = p[X + 1] + Y, p10 = p[p1] + Z, p11 = p[p1 + 1] + Z;
-        return lerp(fz, 
+        return lerp(fz,
           lerp(fy, lerp(fx, grad3d(p[p00], x, y, z), grad3d(p[p10], x-1, y, z)),
                    lerp(fx, grad3d(p[p01], x, y-1, z), grad3d(p[p11], x-1, y-1,z))),
           lerp(fy, lerp(fx, grad3d(p[p00 + 1], x, y, z-1), grad3d(p[p10 + 1], x-1, y, z-1)),
                    lerp(fx, grad3d(p[p01 + 1], x, y-1, z-1), grad3d(p[p11 + 1], x-1, y-1,z-1))));
       };
-      
+
       this.noise2d = function(x, y) {
         var X = Math.floor(x)&255, Y = Math.floor(y)&255;
         x -= Math.floor(x); y -= Math.floor(y);
         var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y;
         var p0 = p[X]+Y, p1  = p[X + 1] + Y;
-        return lerp(fy, 
+        return lerp(fy,
           lerp(fx, grad2d(p[p0], x, y), grad2d(p[p1], x-1, y)),
           lerp(fx, grad2d(p[p0 + 1], x, y-1), grad2d(p[p1 + 1], x-1, y-1)));
       };
@@ -3921,7 +3908,7 @@
         return lerp(fx, grad1d(p[X], x), grad1d(p[X+1], x-1));
       };
     }
-    
+
     // processing defaults
     var noiseProfile = { generator: undefined, octaves: 4, fallout: 0.5, seed: undefined};
 
@@ -3933,7 +3920,7 @@
       var generator = noiseProfile.generator;
       var effect = 1, k = 1, sum = 0;
       for(var i=0; i<noiseProfile.octaves; ++i) {
-        effect *= noiseProfile.fallout;        
+        effect *= noiseProfile.fallout;
         switch (arguments.length) {
         case 1:
           sum += effect * (1 + generator.noise1d(k*x))/2; break;
@@ -3946,14 +3933,14 @@
       }
       return sum;
     };
-    
+
     p.noiseDetail = function(octaves, fallout) {
       noiseProfile.octaves = octaves;
       if(fallout !== undefined) {
         noiseProfile.fallout = fallout;
       }
     };
-    
+
     p.noiseSeed = function(seed) {
       noiseProfile.seed = seed;
       noiseProfile.generator = undefined;
@@ -3993,8 +3980,8 @@
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
-          // Create the program objects to render 2D (points, lines) and 
-          // 3D (spheres, boxes) shapes. Because 2D shapes are not lit, 
+          // Create the program objects to render 2D (points, lines) and
+          // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
           // lighting calculations could be ommitted from that program object.
           programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
           programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
@@ -4027,7 +4014,7 @@
 
           lineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
-          
+
           fillBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, fillBuffer);
 
@@ -4067,8 +4054,8 @@
         }
       }
 
-      // The default 2d context has already been created in the p.init() stage if 
-      // a 3d context was not specified. This is so that a 2d context will be 
+      // The default 2d context has already been created in the p.init() stage if
+      // a 3d context was not specified. This is so that a 2d context will be
       // available if size() was not called.
       var props = {
         fillStyle: curContext.fillStyle,
@@ -4100,7 +4087,7 @@
 
     /*
       Sets the uniform variable 'varName' to the value specified by 'value'.
-      Before calling this function, make sure the correct program object 
+      Before calling this function, make sure the correct program object
       has been installed as part of the current rendering state.
 
       On some systems, if the variable exists in the shader but isn't used,
@@ -4274,7 +4261,7 @@
       x,y,z - position of the light in modeling space
       nx,ny,nz - direction of the spotlight
       angle - in radians
-      concentration - 
+      concentration -
     */
     p.spotLight = function spotLight(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
       if (p.use3DContext) {
@@ -4426,7 +4413,7 @@
 
     p.box = function(w, h, d) {
       if (p.use3DContext) {
-        // user can uniformly scale the box by  
+        // user can uniformly scale the box by
         // passing in only one argument.
         if (!h || !d) {
           h = d = w;
@@ -4451,7 +4438,7 @@
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
           // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles. 
+          // developers can start playing around with styles.
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
           uniformf(programObject3D, "color", fillStyle);
@@ -4666,7 +4653,7 @@
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
           // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles. 
+          // developers can start playing around with styles.
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
 
@@ -4765,7 +4752,7 @@
             uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
           }
         }
-        // Otherwise three values were provided (r,g,b)        
+        // Otherwise three values were provided (r,g,b)
         else {
           uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
         }
@@ -4780,7 +4767,7 @@
         curContext.useProgram(programObject3D);
         uniformi(programObject3D, "usingMat", true);
 
-        // If only one argument was provided, the user either gave us a 
+        // If only one argument was provided, the user either gave us a
         // shade of gray or a 'color' object.
         if (a.length === 1) {
           // color object was passed in
@@ -4836,7 +4823,7 @@
       var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
       var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
       var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
-      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
       var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
       var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
@@ -4949,7 +4936,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
-    ////////////////////////////////////////////////////////////////////////////    
+    ////////////////////////////////////////////////////////////////////////////
 
     p.Point = function Point(x, y) {
       this.x = x;
@@ -5038,7 +5025,7 @@
 
       vertArray.push(vert);
     };
-    
+
     var point2D = function point2D(vArray){
       var model = new PMatrix3D();
       var view = new PMatrix3D();
@@ -5104,14 +5091,14 @@
       uniformMatrix( programObject2D, "model", true,  model.array() );
       uniformMatrix( programObject2D, "view", true, view.array() );
       uniformMatrix( programObject2D, "projection", true, projection.array() );
-      
+
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
       uniformf( programObject2D, "color", fillStyle);
-      
+
       vertexAttribPointer(programObject2D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
-      
+
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
@@ -5183,10 +5170,10 @@
               fillVertArray.push(vertArray[i][j]);
             }
           }
-          
+
           fillVertArray.push(vertArray[0][0]);
           fillVertArray.push(vertArray[0][1]);
-          fillVertArray.push(vertArray[0][2]);  
+          fillVertArray.push(vertArray[0][2]);
 
           if (curShape === p.POINTS){
             for(i = 0; i < vertArray.length; i++){
@@ -5284,7 +5271,7 @@
               if(doStroke){
                 line2D(lineVertArray, "LINE_LOOP");
               }
-              
+
               if(doFill){
                 fillVertArray = [];
                 for(j = 0; j < 3; j++){
@@ -5374,13 +5361,13 @@
               p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
             }
           }
-          else if(curShape === p.TRIANGLES){                 
+          else if(curShape === p.TRIANGLES){
             for(i = 0; (i + 2) < vertArray.length; i+=3){
               curContext.beginPath();
               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
               curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);            
+              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
               if(doFill){
                 curContext.fill();
               }
@@ -5388,7 +5375,7 @@
                 curContext.stroke();
               }
               curContext.closePath();
-            }   
+            }
           }
           else if(curShape === p.TRIANGLE_STRIP){
             if(vertArray.length > 2){
@@ -5512,7 +5499,7 @@
 
     p.curveVertex = function(x, y, z) {
       isCurve = true;
-      p.vertex(x, y, z);      
+      p.vertex(x, y, z);
     };
 
     p.curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
@@ -5932,7 +5919,7 @@
           // put 'this.imageData' into a new canvas
           var canvas = document.createElement('canvas');
           canvas.width = this.width;
-          canvas.height = this.height;          
+          canvas.height = this.height;
           // changed for 0.9 slightly this one line
           canvas.getContext('2d').putImageData(this.imageData, 0, 0);
           // pass new canvas to drawimage with w,h
@@ -5967,13 +5954,13 @@
           }
         }
       };
-      
+
       // handle the sketch code for pixels[] and pixels.length
       // parser code converts pixels[] to getPixels()
       // or setPixels(), .length becomes getLength()
       this.pixels = {
         getLength: (function(aImg) {
-          return function() { 
+          return function() {
             return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
           };
         }(this)),
@@ -5999,7 +5986,7 @@
           };
         }(this))
       };
-      
+
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
       this.loadPixels = function() {};
 
@@ -6051,7 +6038,7 @@
         this.fromHTMLImageData(arguments[0]);
       } else if (arguments.length === 2 || arguments.length === 3) {
         this.width = aWidth || 1;
-        this.height = aHeight || 1;        
+        this.height = aHeight || 1;
         // changed for 0.9
         this.imageData = curContext.createImageData(this.width, this.height);
         this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
@@ -6161,7 +6148,7 @@
           return p.color.toInt(c.imageData.data[0],
                                c.imageData.data[1],
                                c.imageData.data[2],
-                               c.imageData.data[3]);                               
+                               c.imageData.data[3]);
         } else {
           // x,y is outside image return transparent black
           return 0;
@@ -6207,7 +6194,7 @@
       }
     };
     p.imageData = {};
-    
+
     // handle the sketch code for pixels[]
     // parser code converts pixels[] to getPixels()
     // or setPixels(), .length becomes getLength()
@@ -6553,8 +6540,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.blend(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.blend(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6571,8 +6558,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
               destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.add(destPixels[destOffset + x], p.filter_bilinear());
@@ -6590,8 +6577,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.subtract(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.subtract(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6609,7 +6596,7 @@
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
               // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.lightest(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.lightest(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6627,7 +6614,7 @@
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
               // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.darkest(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.darkest(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6644,14 +6631,14 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.filter_bilinear());
               //destPixels[destOffset + x] = p.filter_bilinear();
               destPixels[(destOffset + x) * 4] = destColor[0];
               destPixels[(destOffset + x) * 4 + 1] = destColor[1];
               destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];              
+              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
               p.shared.sX += dx;
             }
             destOffset += screenW;
@@ -6662,8 +6649,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.difference(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.difference(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6680,8 +6667,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.exclusion(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.exclusion(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6698,8 +6685,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.multiply(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.multiply(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6716,8 +6703,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.screen(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.screen(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6734,8 +6721,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.overlay(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.overlay(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6752,8 +6739,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.hard_light(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.hard_light(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6770,8 +6757,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.soft_light(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.soft_light(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6788,8 +6775,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.dodge(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.dodge(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6806,8 +6793,8 @@
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
-              // changed for 0.9            
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]); 
+              // changed for 0.9
+              destColor = p.color.toInt(destPixels[(destOffset + x) * 4], destPixels[((destOffset + x) * 4) + 1], destPixels[((destOffset + x) * 4) + 2], destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.burn(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.burn(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
@@ -6843,7 +6830,7 @@
           }
         };
       } else {
-        // If the font is a glyph, calculate by SVG table     
+        // If the font is a glyph, calculate by SVG table
         var font = p.loadGlyphs(name);
 
         return {
@@ -6887,7 +6874,7 @@
 
     p.textAlign = function textAlign() {};
 
-    // A lookup table for characters that can not be referenced by Object 
+    // A lookup table for characters that can not be referenced by Object
     p.glyphLook = function glyphLook(font, chr) {
       try {
         switch (chr) {
@@ -7145,8 +7132,8 @@
         } // end arguments.length == 6
       }
     };
-    
-    // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
+
+    // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
     p.loadGlyphs = function loadGlyph(url) {
       var x, y, cx, cy, nx, ny, d, a, lastCom, lenC, horiz_adv_x, getXY = '[0-9\\-]+', path;
 
@@ -7167,7 +7154,7 @@
       var buildPath = function buildPath(d) {
         var c = regex("[A-Za-z][0-9\\- ]+|Z", d);
 
-        // Begin storing path object 
+        // Begin storing path object
         path = "var path={draw:function(){curContext.beginPath();curContext.save();";
 
         x = 0;
@@ -7284,7 +7271,7 @@
             horiz_adv_x = p.glyphTable[url].horiz_adv_x;
           }
           d = glyph[i].getAttribute("d");
-          // Split path commands in glpyh 
+          // Split path commands in glpyh
           if (d !== undefined) {
             path = buildPath(d);
             eval(path);
@@ -7296,7 +7283,7 @@
               draw: path.draw
             };
           }
-        } // finished adding glyphs to table            
+        } // finished adding glyphs to table
       };
 
       // Load and parse Batik SVG font as XML into a Processing Glyph object
@@ -7334,17 +7321,17 @@
       // Create a new object in glyphTable to store this font
       p.glyphTable[url] = {};
 
-      // Begin loading the Batik SVG font... 
+      // Begin loading the Batik SVG font...
       loadXML(url);
 
       // Return the loaded font for attribute grabbing
       return p.glyphTable[url];
     };
-    
+
     ////////////////////////////////////////////////////////////////////////////
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
-    
+
     p.extendClass = function extendClass(obj, args, fn) {
       if (arguments.length === 3) {
         fn.apply(obj, args);
@@ -7369,7 +7356,7 @@
         object[name] = fn;
       }
     };
-    
+
     //////////////////////////////////////////////////////////////////////////
     // Event handling
     //////////////////////////////////////////////////////////////////////////
@@ -7487,7 +7474,7 @@
         }
       }
 
-      // Numbers and their shift-symbols 
+      // Numbers and their shift-symbols
       else if (e.keyCode >= 48 && e.keyCode <= 57) { // 0-9
         if (e.shiftKey) {
           switch (e.keyCode) {
@@ -7540,10 +7527,10 @@
             break; // +
           case 219:
             p.key = 123;
-            break; // { 
+            break; // {
           case 221:
             p.key = 125;
-            break; // } 
+            break; // }
           case 222:
             p.key = 34;
             break; // "
@@ -7552,28 +7539,28 @@
           switch (e.keyCode) {
           case 188:
             p.key = 44;
-            break; // , 
+            break; // ,
           case 109:
             p.key = 45;
-            break; // - 
+            break; // -
           case 190:
             p.key = 46;
-            break; // . 
+            break; // .
           case 191:
             p.key = 47;
-            break; // / 
+            break; // /
           case 192:
             p.key = 96;
-            break; // ~ 
+            break; // ~
           case 219:
             p.key = 91;
-            break; // [ 
+            break; // [
           case 220:
             p.key = 92;
             break; // \
           case 221:
             p.key = 93;
-            break; // ] 
+            break; // ]
           case 222:
             p.key = 39;
             break; // '
@@ -7603,10 +7590,10 @@
         p.keyTyped();
       }
     });
-        
+
     // Place-holder for debugging function
     p.debug = function(e) {};
-    
+
     // Get the DOM element if string was passed
     if (typeof curElement === "string") {
       curElement = document.getElementById(curElement);
@@ -7617,7 +7604,7 @@
       var parsedCode = typeof aCode === "function" ? undefined : Processing.parse(aCode, p);
 
       if (!this.use3DContext) {
-        // Setup default 2d canvas context. 
+        // Setup default 2d canvas context.
         curContext = curElement.getContext('2d');
 
         modelView = new PMatrix2D();
@@ -7645,10 +7632,10 @@
 
       var localizedProperties = "";
       for (var propertyName in p) {
-        localizedProperties += "var " + propertyName + "=processing." + propertyName + ";";
+        localizedProperties += "var " + propertyName + "=__p__." + propertyName + ";";
         if (typeof p[propertyName] !== "function" || typeof p[propertyName] !== "object") {
-          localizedProperties += "processing.__defineGetter__('" + propertyName + "',function(){return " + propertyName + ";});" +
-                                 "processing.__defineSetter__('" + propertyName + "',function(v){" + propertyName + "=v;});";
+          localizedProperties += "__p__.__defineGetter__('" + propertyName + "',function(){return " + propertyName + ";});" +
+                                 "__p__.__defineSetter__('" + propertyName + "',function(v){" + propertyName + "=v;});";
         }
       }
 
@@ -7658,17 +7645,15 @@
             if(typeof aCode === "function") {
               aCode(p);
             } else {
-              eval (" (function(processing) { " + 
-                        localizedProperties + 
+              eval (" (function(__p__) { " +
+                        localizedProperties +
                         parsedCode +
                     "   if (setup) {" +
-                    "     processing.setup = setup;" +
-                    "     inSetup = true;" +
+                    "     __p__.setup = setup;" +
                     "     setup();" +
                     "   }" +
-                    "   inSetup = false;" +
                     "   if (draw) {" +
-                    "     processing.draw = draw;" +
+                    "     __p__.draw = draw;" +
                     "     if (!doLoop) {" +
                     "       redraw();" +
                     "     } else {" +
@@ -7682,18 +7667,18 @@
             window.setTimeout(executeSketch, 10);
           }
       };
-      
+
       // The parser adds custom methods to the processing context
       executeSketch();
     }
   };
-  
+
   // Share lib space
   Processing.lib = {};
 
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   Processing.parse = function parse(aCode, p) {
-  
+
     // Function to grab all code in the opening and closing of two characters
     var nextBrace = function(right, openChar, closeChar) {
       var rest = right,
@@ -7718,7 +7703,7 @@
 
       return right.slice(0, position - 1);
     };
-  
+
     // Force characters-as-bytes to work.
     //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
     aCode = aCode.replace(/'.{1}'/g, function(all) {
@@ -7776,7 +7761,7 @@
       return "<STRING " + (strings.length - 1) + ">";
     });
 
-    // Windows newlines cause problems: 
+    // Windows newlines cause problems:
     aCode = aCode.replace(/\r\n?/g, "\n");
 
     // Remove multi-line comments
@@ -7812,7 +7797,7 @@
 
         aCode = prev + "processing." + mc[1] + next + "};" + allNext.slice(next.length + 1);
     }
-    
+
     // Delete import statements, ie. import processing.video.*;
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
@@ -7905,7 +7890,7 @@
 
     // super() is a reserved word
     aCode = aCode.replace(/super\(/g, "superMethod(");
-    
+
     // Stores the variables and mathods of a single class
     var SuperClass = function(name){
       return {
@@ -7916,7 +7901,7 @@
     };
     var arrayOfSuperClasses = [];
 
-    // implements Int1, Int2 
+    // implements Int1, Int2
     aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s*\{/g, function(all, interfaces) {
       var names = interfaces.replace(/\s+/g, "").split(",");
       return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
@@ -7931,9 +7916,9 @@
       classes.push(name);
 
       // Move arguments up from constructor
-      return "function " + name + "() {\n " + 
+      return "function " + name + "() {\n " +
               (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
-              (extend ? "extendClass(this, " + extend + ");\n" : "") + 
+              (extend ? "extendClass(this, " + extend + ");\n" : "") +
               "<CLASS " + name + " " + extend + ">";
     };
 
@@ -7953,7 +7938,7 @@
           extendingClass = m[2];
 
       allRest = allRest.slice(rest.length + 1);
-  
+
       // Fix class method names
       // this.collide = function() { ... }
       rest = (function() {
@@ -7976,7 +7961,7 @@
 
         methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));\n");
         publicVars += mc[2] + "|";
-        
+
         if (extendingClass){
           for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
             if (extendingClass === arrayOfSuperClasses[i].className){
@@ -8008,19 +7993,19 @@
         if (args[0].match(/^\s*$/)) {
           args.shift();
         }
-        
+
         constructor = "if ( arguments.length === " + args.length + " ) {\n";
 
         for (var i = 0, aLength = args.length; i < aLength; i++) {
           constructor += " var " + args[i] + " = arguments[" + i + "];\n";
         }
-        
+
         constructor += next + "}\n";
 
         constructorsArray.push(constructor);
         rest = prev + allNext.slice(next.length + 1);
       }
-  
+
       var vars = "",
           staticVars = "",
           localStaticVars = [];
@@ -8031,10 +8016,10 @@
         rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
           variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
             .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
-          
+
           publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
           thisSuperClass.classVariables += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
-          
+
           if (staticVar === "static"){
             // Fix static methods
             variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, function(all, sVariable, value){
@@ -8050,8 +8035,8 @@
           return "";
         });
       }());
-    
-      
+
+
       // add this. to public variables used inside member functions, and constructors
       if (publicVars) {
         // Search functions for public variables
@@ -8099,9 +8084,9 @@
           }());
         }
       }
-    
+
       var constructors = "";
-    
+
       for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
         methods += methodsArray[i];
       }
@@ -8115,7 +8100,7 @@
 
     // Do some tidying up, where necessary
     aCode = aCode.replace(/processing.\w+ = function addMethod/g, "addMethod");
-    
+
     // Remove processing. from leftover functions
     aCode = aCode.replace(/processing\.((\w+) = function)/g, "$1");
 
@@ -8191,6 +8176,18 @@
     return aCode;
   };
 
+  // IE Unfriendly AJAX Method
+  var ajax = function(url) {
+    var AJAX = new window.XMLHttpRequest();
+    if (AJAX) {
+      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
+      AJAX.send(null);
+      return AJAX.responseText;
+    } else {
+      return false;
+    }
+  };
+
   // Automatic Initialization Method
   var init = function() {
     var canvas = document.getElementsByTagName('canvas');
@@ -8227,5 +8224,6 @@
   document.addEventListener('DOMContentLoaded', function() {
     init();
   }, false);
-  
+
 }());
+
