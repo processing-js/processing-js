@@ -21,7 +21,7 @@ if ( window.addEventListener ) {
 				}
 
 				if ( canvas ) {
-					Processing(canvas, scripts[i].text);
+					new Processing(canvas, scripts[i].text);
 				}
 			}
 		}
