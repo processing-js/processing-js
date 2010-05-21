@@ -1,6 +1,8 @@
+import processing.opengl.*;
+
 class Particle{
   float xPos, yPos, zPos;
-  float xVel, yVel, zPos;
+  float xVel, yVel, zVel;
   float age;
   float lifeTime;
   float opacity;
@@ -25,7 +27,7 @@ class Particle{
   float getY(){return yPos;}
   float getZ(){return zPos;}
 
-  void setAge(a){age = a;}
+  void setAge(float a){age = a;}
 
   void setX(float x){xPos = x;}
   void setY(float y){yPos = y;}
@@ -69,28 +71,30 @@ class ParticleSystem{
 
   ParticleSystem(){
     p = new ArrayList();
-    for(var i = 0; i < NUM_PARTICLES; i++){
-      var particle = new Particle(); 
-      p.push(particle);
+    for(int i = 0; i < NUM_PARTICLES; i++){
+      Particle particle = new Particle(); 
+      p.add(particle);
       resetParticle(i);
     }
   }
   
   void resetParticle(int i){
-    p[i].reset();
-    p[i].setX(mouseX);
-    p[i].setY(mouseY);
-    p[i].setZ(0);
-    p[i].setXVelocity(random(0,2));
-    p[i].setYVelocity(random(0,2));
-    p[i].setLifeTime(random(1,15));
-    p[i].setAge(0);
+    Particle particle = (Particle)p.get(i);
+    particle.reset();
+    particle.setX(mouseX);
+    particle.setY(mouseY);
+    particle.setZ(0);
+    particle.setXVelocity(random(0,2));
+    particle.setYVelocity(random(0,2));
+    particle.setLifeTime(random(1,15));
+    particle.setAge(0);
   }
   
   void update(){
     for(int i=0; i < NUM_PARTICLES; i++){
-      p[i].update();
-      if(p[i].getAge() > p[i].getLifeTime()){
+      Particle particle = (Particle)p.get(i);
+      particle.update();
+      if(particle.getAge() > particle.getLifeTime()){
         resetParticle(i);
       }
     }
@@ -98,7 +102,8 @@ class ParticleSystem{
   
   void draw(){
     for(int i=0; i < NUM_PARTICLES; i++){
-      p[i].draw();
+      Particle particle = (Particle)p.get(i);
+      particle.draw();
     }
   }
 }
@@ -109,7 +114,6 @@ void setup(){
   size(500,500,OPENGL);
   psys = new ParticleSystem();
 }
-
 
 void draw(){
   background(0);
