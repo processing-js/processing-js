@@ -393,8 +393,10 @@
       "uniform mat4 model;" +
       "uniform mat4 view;" +
       "uniform mat4 projection;" +
+      "uniform float pointSize;" +
 
       "void main(void) {" +
+      "  gl_PointSize = pointSize;" +
       "  gl_FrontColor = color;" +
       "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
       "}";
@@ -3985,8 +3987,8 @@
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
-          // We declare our own constants since Minefield doesn't do anything
-          // when ctx.VERTEX_PROGRAM_POINT_SIZE is used.
+          // We declare our own constants since Minefield doesn't 
+          // do anything when curContext.VERTEX_PROGRAM_POINT_SIZE is used.
           curContext.enable(VERTEX_PROGRAM_POINT_SIZE);
           curContext.enable(POINT_SMOOTH);
 
