@@ -312,6 +312,11 @@
         fillBuffer,
         pointBuffer;
 
+    // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
+    // in Minefield does nothing and does not report any errors.
+    var VERTEX_PROGRAM_POINT_SIZE = 0x8642;
+    var POINT_SMOOTH = 0x0B10;
+    
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
 
