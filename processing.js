@@ -280,6 +280,7 @@
         curTightness = 0,
         curveDetail = 20,
         curveInited = false,
+		bezierDetail = 20,
         colorModeA = 255,
         colorModeX = 255,
         colorModeY = 255,
@@ -300,6 +301,7 @@
         curveBasisMatrix,
         curveToBezierMatrix,
         curveDrawMatrix,
+		bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
         programObject3D,
@@ -5578,6 +5580,7 @@
         curveBasisMatrix = new PMatrix3D();
         curveDrawMatrix = new PMatrix3D();
         curveInited = true;
+		bezierDrawMatrix = new PMatrix3D();
       }
 
       var s = curTightness;
@@ -5716,14 +5719,96 @@
       }
     };
 
-    p.bezier = function bezier(x1, y1, x2, y2, x3, y3, x4, y4) {
-      curContext.beginPath();
-      curContext.moveTo(x1, y1);
-      curContext.bezierCurveTo(x2, y2, x3, y3, x4, y4);
-      curContext.stroke();
-      curContext.closePath();
+    p.bezier = function bezier( x1, y1, x2, y2, x3, y3, x4, y4 ) {
+      if( arguments.length == 8  && p.use3DContext === false )
+      {
+        curContext.beginPath();
+        curContext.moveTo( x1, y1 );
+        curContext.bezierCurveTo( x2, y2, x3, y3, x4, y4 );
+        curContext.stroke();
+        curContext.closePath();
+      }
+      else{
+        if( arguments.length == 8 )
+        {
+          p.beginShape();
+          p.vertex( arguments[0], arguments[1] );
+          p.bezierVertex( arguments[2], arguments[3], 
+                          arguments[4], arguments[5],
+                          arguments[6], arguments[7] );
+          p.endShape();
+        }
+        else{
+          p.beginShape();
+          p.vertex( arguments[0], arguments[1], arguments[2] );
+          p.bezierVertex( arguments[3], arguments[4], arguments[5],
+                          arguments[6], arguments[7], arguments[8],
+                          arguments[9], arguments[10], arguments[11] );
+          p.endShape();
+        }
+      }
     };
-
+    p.bezierDetail = function bezierDetail( detail ){
+      bezierDetail = detail;
+      if ( bezierDrawMatrix == null ) {
+        bezierDrawMatrix = new PMatrix3D();
+      }
+      // setup matrix for forward differencing to speed up drawing
+      splineForward( detail, bezierDrawMatrix );
+      bezierDrawMatrix.apply( bezierBasisMatrix );
+    };
+    
+    p.bezierVertex = function bezierVertex() {
+      if(arguments.length == 9){
+        var x2 = arguments[0],
+        y2 = arguments[1],
+        z2 = arguments[2],
+        x3 = arguments[3],
+        y3 = arguments[4],
+        z3 = arguments[5],
+        x4 = arguments[6],
+        y4 = arguments[7],
+        z4 = arguments[8];
+      }
+      else
+      {
+        var x2 = arguments[0],
+        y2 = arguments[1],
+        x3 = arguments[2],
+        y3 = arguments[3],
+        x4 = arguments[4],
+        y4 = arguments[5];
+      }
+      var draw = bezierDrawMatrix.array();
+      var prev = vertArray[vertArray.length -1];
+      var x1 = prev[0];
+      var y1 = prev[1];
+      if(arguments.length == 9){
+        var z1 = prev[2];
+      }
+      var xplot1 = draw[4]  *x1 + draw[5]  *x2 + draw[6]  *x3  + draw[7] *x4;
+      var xplot2 = draw[8]  *x1 + draw[9]  *x2 + draw[10] *x3 + draw[11] *x4;
+      var xplot3 = draw[12] *x1 + draw[13] *x2 + draw[14] *x3 + draw[15] *x4;
+      var yplot1 = draw[4]  *y1 + draw[5]  *y2 + draw[6]  *y3 + draw[7]  *y4;
+      var yplot2 = draw[8]  *y1 + draw[9]  *y2 + draw[10] *y3 + draw[11] *y4;
+      var yplot3 = draw[12] *y1 + draw[13] *y2 + draw[14] *y3 + draw[15] *y4;
+      if(arguments.length == 9){
+        var zplot1 = draw[4]  *z1 + draw[5]  *z2 + draw[6]  *z3 + draw[7] * z4;
+        var zplot2 = draw[8]  *z1 + draw[9]  *z2 + draw[10] *z3 + draw[11] * z4;
+        var zplot3 = draw[12] *z1 + draw[13] *z2 + draw[14] *z3 + draw[15] * z4;
+      }
+      for (var j = 0; j < bezierDetail; j++) {
+        x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+        y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+        if(arguments.length == 9){
+          z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
+          p.vertex(x1, y1, z1);
+        }
+        else{
+          p.vertex(x1, y1);
+        }
+      }
+    }; 
     p.bezierPoint = function bezierPoint(a, b, c, d, t) {
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
