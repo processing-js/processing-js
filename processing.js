@@ -52,6 +52,7 @@
     p.mouseReleased = undefined;
     p.mouseScrolled = undefined;
     p.key = undefined;
+    p.keyCode = undefined;
     p.keyPressed = undefined;
     p.keyReleased = undefined;
     p.keyTyped = undefined;
