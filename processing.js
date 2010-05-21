@@ -7460,113 +7460,100 @@
     attach(document, 'DOMMouseScroll', mouseWheelHandler);
     attach(document, 'mousewheel', mouseWheelHandler);
 
-    attach(document, "keydown", function(e) {
-      keyPressed = true;
-      p.keyCode = null;
-      p.key = e.keyCode;
-
+    //////////////////////////////////////////////////////////////////////////
+    // Keyboard Events
+    //////////////////////////////////////////////////////////////////////////
+    
+    function keyCodeMap(code, shift) {
       // Letters
-      if (e.keyCode >= 65 && e.keyCode <= 90) { // A-Z
+      if (code >= 65 && code <= 90) { // A-Z
         // Keys return ASCII for upcased letters.
         // Convert to downcase if shiftKey is not pressed.
-        if (!e.shiftKey) {
-          p.key += 32;
+        if (shift) {
+          return code;
+        }
+        else {
+          return code + 32;
         }
       }
 
       // Numbers and their shift-symbols
-      else if (e.keyCode >= 48 && e.keyCode <= 57) { // 0-9
-        if (e.shiftKey) {
-          switch (e.keyCode) {
+      else if (code >= 48 && code <= 57) { // 0-9
+        if (shift) {
+          switch (code) {
           case 49:
-            p.key = 33;
-            break; // !
+            return 33; // !
           case 50:
-            p.key = 64;
-            break; // @
+            return 64; // @
           case 51:
-            p.key = 35;
-            break; // #
+            return 35; // #
           case 52:
-            p.key = 36;
-            break; // $
+            return 36; // $
           case 53:
-            p.key = 37;
-            break; // %
+            return 37; // %
           case 54:
-            p.key = 94;
-            break; // ^
+            return 94; // ^
           case 55:
-            p.key = 38;
-            break; // &
+            return 38; // &
           case 56:
-            p.key = 42;
-            break; // *
+            return 42; // *
           case 57:
-            p.key = 40;
-            break; // (
+            return 40; // (
           case 48:
-            p.key = 41;
-            break; // )
+            return 41; // )
           }
         }
       }
 
       // Coded keys
-      else if (codedKeys.indexOf(e.keyCode) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
-        p.key = p.CODED;
-        p.keyCode = e.keyCode;
+      else if (codedKeys.indexOf(code) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
+        p.keyCode = code;
+        return p.CODED;
       }
 
       // Symbols and their shift-symbols
       else {
-        if (e.shiftKey) {
-          switch (e.keyCode) {
+        if (shift) {
+          switch (code) {
           case 107:
-            p.key = 43;
-            break; // +
+            return 43; // +
           case 219:
-            p.key = 123;
-            break; // {
+            return 123; // {
           case 221:
-            p.key = 125;
-            break; // }
+            return 125; // }
           case 222:
-            p.key = 34;
-            break; // "
+            return 34; // "
           }
         } else {
           switch (e.keyCode) {
           case 188:
-            p.key = 44;
-            break; // ,
+            return 44; // ,
           case 109:
-            p.key = 45;
-            break; // -
+            return 45; // -
           case 190:
-            p.key = 46;
-            break; // .
+            return 46; // .
           case 191:
-            p.key = 47;
-            break; // /
+            return 47; // /
           case 192:
-            p.key = 96;
-            break; // ~
+            return 96; // ~
           case 219:
-            p.key = 91;
-            break; // [
+            return 91; // [
           case 220:
-            p.key = 92;
-            break; // \
+            return 92; // \
           case 221:
-            p.key = 93;
-            break; // ]
+            return 93; // ]
           case 222:
-            p.key = 39;
-            break; // '
+            return 39; // '
           }
         }
       }
+      return code;
+    }
+
+    attach(document, "keydown", function(e) {
+      keyPressed = true;
+      p.keyCode = null;
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
 
       if (typeof p.keyPressed === "function") {
         p.keyPressed();
@@ -7576,6 +7563,10 @@
     });
 
     attach(document, "keyup", function(e) {
+      p.keyCode = null;
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+
+      //TODO: This needs to only be made false if all keys have been released.
       keyPressed = false;
       if (typeof p.keyPressed !== "function") {
         p.keyPressed = false;
@@ -7586,6 +7577,13 @@
     });
 
     attach(document, "keypress", function (e) {
+      // In Firefox, e.keyCode is not currently set with keypress.
+      //
+      // keypress will always happen after a keydown, so p.keyCode and p.key
+      // should remain correct. Some browsers (chrome) refire keydown when
+      // key repeats happen, others (firefox) don't. Either way keyCode and
+      // key should remain correct.
+      
       if (p.keyTyped) {
         p.keyTyped();
       }
