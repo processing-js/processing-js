@@ -1,0 +1,35 @@
+import processing.opengl.*;
+
+float r = 0;
+
+void setup(){
+  size(200,200,OPENGL);
+}
+
+void draw(){
+  background(0);
+  
+  translate(width/2, height/2, 0);
+  pushMatrix();
+  rotateZ(r+=0.05);
+  
+  float f=50;
+
+  for(int i=0; i < 100; i++, f-= 0.5){
+    strokeWeight(i/8);
+    stroke(250, 200, 50, 100-i);
+    point(sin(i)* f * 2, cos(i)*f*2, 0);
+  }
+  popMatrix();
+
+  pushMatrix();
+  rotateZ(-r);
+  f=50;
+
+  for(int i=0; i < 100; i++, f-= 0.5){
+    strokeWeight(i/8);
+    stroke(50,100,200, 200-i);
+    point(cos(i)*f*2, sin(i)* f * 2, 0);
+  }
+  popMatrix();
+}
