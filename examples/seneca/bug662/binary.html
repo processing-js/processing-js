@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../../../processing.js"></script>
+  <script src="../../init.js"></script>
+</head>
+<body><h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+<h2>Test for bug 662</h2>
+
+<p>This page tests to make sure my implementation of <a href="http://processing.org/reference/binary.html">binary</a> works for the<br />
+<a href="http://processingjs.org/">Processing.js</a> library.
+</p>
+
+<p>
+
+<script type="application/processing">
+import processing.opengl.*;
+float r = 0;
+void setup()
+{
+  size(400,400,OPENGL);
+
+}
+
+void draw(){
+background(0);
+  translate(width/2, height/2, 0);
+rotate(r+=0.1);
+box(40);
+}
+</script>
+<canvas></canvas>
+</p>
+
+</body>
+</html>
