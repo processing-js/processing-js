@@ -7334,7 +7334,6 @@
 
     p.extendClass = function extendClass(subClass, baseClass, args) {
       baseClass.constructor.apply(baseClass, args);
-      //baseClass = new baseClass.constructor(); // TODO
       var baseProperties = '';
       for (var propertyName in baseClass) {
         if (typeof subClass[propertyName] === 'undefined') {
