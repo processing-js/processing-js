@@ -3,6 +3,7 @@
 void setup(){
     size(600, 400);     //for internal size variables
     stroke(0);    //all lines will be black
+    frameRate(1);
     PFont font;
     font = loadFont("Arial"); 
     textFont(font, 18);
