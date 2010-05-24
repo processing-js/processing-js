@@ -7925,7 +7925,7 @@
               (extend ? "var __this__ = this;" : "") +
               (extend ? "var super = new " + extend + "();" : "") +
               (extend ? "function superConstructor(){return extendClass(__this__, super, arguments);};" : "") +
-              "<CLASS " + name + " " + extend + ">";
+              "<CLASS " + name + " " + (extend ? extend : "") + ">";
     };
 
     var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
@@ -8104,6 +8104,7 @@
       }
 
       arrayOfSuperClasses.push(thisSuperClass);
+
       rest = vars + "\n" + methods + "\n" + (extendingClass ? "eval(superConstructor());" : "") + constructors;
       aCode = left + rest + "\n}" + staticVars + allRest;
     }
