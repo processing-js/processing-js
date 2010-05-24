@@ -6469,8 +6469,11 @@
     // Raster drawing functions
     ////////////////////////////////////////////////////////////////////////////
 
-    // TODO: function incomplete
-    p.save = function save(file) {};
+    p.save = function save(file) {
+      // file is unused at the moment
+      // may implement this differently in later release
+      return window.open(p.canvas.toDataURL(),"_blank");
+    };
 
     var Temporary2DContext = document.createElement('canvas').getContext('2d');
 
