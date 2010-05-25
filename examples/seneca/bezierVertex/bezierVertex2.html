@@ -16,19 +16,23 @@
 	</p>
 
     <!-- include your processing file below -->
-    <canvas datasrc="bezierVertex1.pjs" width="300" height="300" ></canvas>
-    <canvas datasrc="bezierVertex2.pjs" width="300" height="300"></canvas>
+    <canvas datasrc="bezierVertex1.pjs"></canvas>
+    <img src="bezierVertex_.gif" valign="top" />
+    <canvas datasrc="bezierVertex2.pjs"></canvas>
+    <img src="bezierVertex_2.gif" valign="top" />
      <br />
    
     <h1>
         Source Code:</h1>
     <pre>
+background(125);
 noFill();
 beginShape();
 vertex(30, 20);
 bezierVertex(80, 0, 80, 75, 30, 75);
 endShape();
 
+background(125);
 beginShape();
 vertex(30, 20);
 bezierVertex(80, 0, 80, 75, 30, 75);

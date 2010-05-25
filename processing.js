@@ -301,7 +301,7 @@
         curveBasisMatrix,
         curveToBezierMatrix,
         curveDrawMatrix,
-		bezierDrawMatrix,
+        bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
         programObject3D,
@@ -5483,21 +5483,53 @@
       isBezier = false;
     };
 
-    p.bezierVertex = function(){
+    p.bezierVertex = function bezierVertex() {
       isBezier = true;
       var vert = [];
       if(firstVert){
         throw ("vertex() must be used at least once before calling bezierVertex()");
       }
       else{
-        if(arguments.length === 6){
-          for(var i = 0; i < arguments.length; i++){ vert[i] = arguments[i]; }
+      //bezierDrawMatrix = new PMatrix3D();
+        var draw = bezierDrawMatrix.array(); 	
+        var x1 = vertArray[0][0],
+            y1 = vertArray[0][1];
+        if(arguments.length === 9){
+          var z1 = vertArray[3];
+          var xplot1 = draw[4] * x1 + draw[5] * arguments[0] + draw[6] * arguments[3] + draw[7] * arguments[6];
+          var xplot2 = draw[8] * x1 + draw[9] * arguments[0] + draw[10]* arguments[3] + draw[11]* arguments[6];
+          var xplot3 = draw[12]* x1 + draw[13]* arguments[0] + draw[14]* arguments[3] + draw[15]* arguments[6];
+
+          var yplot1 = draw[4] * y1 + draw[5] * arguments[1] + draw[6] * arguments[4] + draw[7] * arguments[7];
+          var yplot2 = draw[8] * y1 + draw[9] * arguments[1] + draw[10]* arguments[4] + draw[11]* arguments[7];
+          var yplot3 = draw[12]* y1 + draw[13]* arguments[1] + draw[14]* arguments[4] + draw[15]* arguments[7];
+
+          var zplot1 = draw[4] * z1 + draw[5] * arguments[2] + draw[6] * arguments[5] + draw[7] * arguments[8];
+          var zplot2 = draw[8] * z1 + draw[9] * arguments[2] + draw[10]* arguments[5] + draw[11]* arguments[8];
+          var zplot3 = draw[12]* z1 + draw[13]* arguments[2] + draw[14]* arguments[5] + draw[15]* arguments[8];
         }
-        else{ //for 9 arguments (3d)
-        }
-        vertArray.push(vert);
+        else{
+          var xplot1 = draw[4] *x1 + draw[5] * arguments[0] + draw[6] * arguments[2] + draw[7] * arguments[4];
+          var xplot2 = draw[8] *x1 + draw[9] * arguments[0] + draw[10]* arguments[2] + draw[11]* arguments[4];
+          var xplot3 = draw[12]*x1 + draw[13]* arguments[0] + draw[14]* arguments[2] + draw[15]* arguments[4];
+
+          var yplot1 = draw[4] *y1 + draw[5] * arguments[1] + draw[6] * arguments[3] + draw[7] * arguments[5];
+          var yplot2 = draw[8] *y1 + draw[9] * arguments[1] + draw[10]* arguments[3] + draw[11]* arguments[5];
+          var yplot3 = draw[12]*y1 + draw[13]* arguments[1] + draw[14]* arguments[3] + draw[15]* arguments[5];
+          for (var j = 0; j < bezierDetail; j++) {
+            x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+            y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+            alert(x1+","+y1);
+            
+           //vert[0] = x1;
+           //vert[1] = y1;
+           //vertArray.push(vert);
+           p.vertex(x1, y1);
+          }
+        } 
+       // vertArray.push(vert);
       }
-    };
+    }; 
 
     p.curveVertex = function(x, y, z) {
       isCurve = true;
@@ -5580,8 +5612,7 @@
         curveBasisMatrix = new PMatrix3D();
         curveDrawMatrix = new PMatrix3D();
         curveInited = true;
-		bezierDrawMatrix = new PMatrix3D();
-      }
+	    }
 
       var s = curTightness;
       curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2), ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2), (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2), ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
@@ -5755,60 +5786,11 @@
       }
       // setup matrix for forward differencing to speed up drawing
       splineForward( detail, bezierDrawMatrix );
+      
       bezierDrawMatrix.apply( bezierBasisMatrix );
+      alert("here" +bezierDrawMatrix.array());
     };
     
-    p.bezierVertex = function bezierVertex() {
-      if(arguments.length == 9){
-        var x2 = arguments[0],
-        y2 = arguments[1],
-        z2 = arguments[2],
-        x3 = arguments[3],
-        y3 = arguments[4],
-        z3 = arguments[5],
-        x4 = arguments[6],
-        y4 = arguments[7],
-        z4 = arguments[8];
-      }
-      else
-      {
-        var x2 = arguments[0],
-        y2 = arguments[1],
-        x3 = arguments[2],
-        y3 = arguments[3],
-        x4 = arguments[4],
-        y4 = arguments[5];
-      }
-      var draw = bezierDrawMatrix.array();
-      var prev = vertArray[vertArray.length -1];
-      var x1 = prev[0];
-      var y1 = prev[1];
-      if(arguments.length == 9){
-        var z1 = prev[2];
-      }
-      var xplot1 = draw[4]  *x1 + draw[5]  *x2 + draw[6]  *x3  + draw[7] *x4;
-      var xplot2 = draw[8]  *x1 + draw[9]  *x2 + draw[10] *x3 + draw[11] *x4;
-      var xplot3 = draw[12] *x1 + draw[13] *x2 + draw[14] *x3 + draw[15] *x4;
-      var yplot1 = draw[4]  *y1 + draw[5]  *y2 + draw[6]  *y3 + draw[7]  *y4;
-      var yplot2 = draw[8]  *y1 + draw[9]  *y2 + draw[10] *y3 + draw[11] *y4;
-      var yplot3 = draw[12] *y1 + draw[13] *y2 + draw[14] *y3 + draw[15] *y4;
-      if(arguments.length == 9){
-        var zplot1 = draw[4]  *z1 + draw[5]  *z2 + draw[6]  *z3 + draw[7] * z4;
-        var zplot2 = draw[8]  *z1 + draw[9]  *z2 + draw[10] *z3 + draw[11] * z4;
-        var zplot3 = draw[12] *z1 + draw[13] *z2 + draw[14] *z3 + draw[15] * z4;
-      }
-      for (var j = 0; j < bezierDetail; j++) {
-        x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
-        y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
-        if(arguments.length == 9){
-          z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
-          p.vertex(x1, y1, z1);
-        }
-        else{
-          p.vertex(x1, y1);
-        }
-      }
-    }; 
     p.bezierPoint = function bezierPoint(a, b, c, d, t) {
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
