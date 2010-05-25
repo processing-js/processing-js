@@ -7332,20 +7332,19 @@
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
 
-    p.extendClass = function extendClass(subClass, baseClass, args) {
-      baseClass.constructor.apply(baseClass, args);
+    p.extendClass = function extendClass(subClass, baseClass) {
       var baseProperties = '';
       for (var propertyName in baseClass) {
         if (typeof subClass[propertyName] === 'undefined') {
           if (typeof baseClass[propertyName] === 'function') {
-            baseProperties += 'this.' + propertyName + ' = super.' + propertyName + ';';
+            baseProperties += "subClass." + propertyName + " = baseClass." + propertyName + ";";
           } else {
-            baseProperties += 'this.__defineGetter__(\"' + propertyName + '\",function(){return super.' + propertyName + ';});';
-            baseProperties += 'this.__defineSetter__(\"' + propertyName + '\",function(v){super.' + propertyName + '=v;});';
+            baseProperties += "subClass.__defineGetter__('" + propertyName + "',function(){return baseClass." + propertyName + ";});";
+            baseProperties += "subClass.__defineSetter__('" + propertyName + "',function(v){baseClass." + propertyName + "=v;});";
           }
         }
       }
-      return baseProperties;
+      eval(baseProperties);
     };
 
     p.addMethod = function addMethod(object, name, fn) {
@@ -7922,9 +7921,11 @@
 
       // Move arguments up from constructor
       return "function " + name + "() {\n " +
-              (extend ? "var __this__ = this;" : "") +
-              (extend ? "var super = new " + extend + "();" : "") +
-              (extend ? "function superConstructor(){return extendClass(__this__, super, arguments);};" : "") +
+              "var __this__ = this;\n" +
+              (extend ? "var super = {};\n" +
+                        "function superConstructor(){\n" + 
+                        extend + ".prototype.constructor.apply(super, arguments);\n" + 
+                        "extendClass(__this__, super);};" : "") +
               "<CLASS " + name + " " + (extend ? extend : "") + ">";
     };
 
@@ -7944,9 +7945,6 @@
           extendingClass = m[2];
 
       allRest = allRest.slice(rest.length + 1);
-
-      // call the superClass method contained inside this class
-      rest = rest.replace(/super\(/g, "superConstructor(");
       
       // Fix class method names
       // this.collide = function() { ... }
@@ -7985,7 +7983,7 @@
         rest = prev + allNext.slice(next.length + 1);
       }
 
-      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
+      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*\\{"),
           c,
           constructor = "",
           constructorsArray = [];
@@ -7997,7 +7995,7 @@
             next = nextBrace(allNext, "{", "}"),
             args = c[1];
 
-          args = args.split(/,\s*?/);
+        args = args.split(/,\s*?/);
 
         if (args[0].match(/^\s*$/)) {
           args.shift();
@@ -8008,11 +8006,20 @@
         for (var i = 0, aLength = args.length; i < aLength; i++) {
           constructor += " var " + args[i] + " = arguments[" + i + "];\n";
         }
+        
+        if (/super\s*\(/.test(next)) {
+          next = next.replace(/super\s*\(/g, "superConstructor(");
+        } else if (extendingClass) {
+          constructor += "superConstructor();\n";
+        }
 
         constructor += next + "}\n";
 
         constructorsArray.push(constructor);
         rest = prev + allNext.slice(next.length + 1);
+      }
+      if (constructorsArray.length === 0 && extendingClass){
+        constructorsArray.push("superConstructor();\n");
       }
 
       var vars = "",
@@ -8103,9 +8110,17 @@
         constructors += constructorsArray[i];
       }
 
+      if (extendingClass) {
+        for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
+          if (arrayOfSuperClasses[i].className === extendingClass){
+            thisSuperClass.classVariables += arrayOfSuperClasses[i].classVariables;
+            thisSuperClass.classFunctions = thisSuperClass.classFunctions.concat(arrayOfSuperClasses[i].classFunctions);
+          }
+        }
+      }
       arrayOfSuperClasses.push(thisSuperClass);
 
-      rest = vars + "\n" + methods + "\n" + (extendingClass ? "eval(superConstructor());" : "") + constructors;
+      rest = vars + "\n" + methods + "\n" + constructors;
       aCode = left + rest + "\n}" + staticVars + allRest;
     }
 
