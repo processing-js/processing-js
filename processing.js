@@ -7333,7 +7333,6 @@
     ////////////////////////////////////////////////////////////////////////////
 
     p.extendClass = function extendClass(subClass, baseClass) {
-      var baseProperties = '';
       for (var propertyName in baseClass) {
         if (typeof subClass[propertyName] === 'undefined') {
           if (typeof baseClass[propertyName] === 'function') {
