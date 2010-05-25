@@ -7337,14 +7337,19 @@
       for (var propertyName in baseClass) {
         if (typeof subClass[propertyName] === 'undefined') {
           if (typeof baseClass[propertyName] === 'function') {
-            baseProperties += "subClass." + propertyName + " = baseClass." + propertyName + ";";
+            subClass[propertyName] = baseClass[propertyName];
+            
           } else {
-            baseProperties += "subClass.__defineGetter__('" + propertyName + "',function(){return baseClass." + propertyName + ";});";
-            baseProperties += "subClass.__defineSetter__('" + propertyName + "',function(v){baseClass." + propertyName + "=v;});";
+            subClass.__defineGetter__(propertyName, (function(propertyName) { 
+              return function(){return baseClass[propertyName];};
+            })(propertyName));
+            subClass.__defineSetter__(propertyName, (function(propertyName) { 
+              return function(v){baseClass[propertyName]=v;};
+            })(propertyName));
           }
         }
       }
-      eval(baseProperties);
+      //eval(baseProperties);
     };
 
     p.addMethod = function addMethod(object, name, fn) {
