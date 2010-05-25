@@ -41,7 +41,6 @@
     p.mouseX = 0;
     p.mouseY = 0;
     p.mouseButton = 0;
-    p.mouseDown = false;
     p.mouseScroll = 0;
 
     // Undefined event handlers to be replaced by user when needed
@@ -239,6 +238,7 @@
     // PJS defined constants
     p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
     p.FRAME_RATE         = 0;
+    p.MOUSE_PRESSED      = false;
     p.focused            = true;
     p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!!
     p.PRECISIONF         = 1 << p.PRECISIONB;
@@ -285,7 +285,6 @@
         colorModeY = 255,
         colorModeZ = 255,
         pathOpen = false,
-        mousePressed = false,
         mouseDragging = false,
         keyPressed = false,
         curColorMode = p.RGB,
@@ -7390,10 +7389,10 @@
       p.mouseX = e.pageX - offsetX;
       p.mouseY = e.pageY - offsetY;
 
-      if (p.mouseMoved && !mousePressed) {
+      if (p.mouseMoved && !p.MOUSE_PRESSED) {
         p.mouseMoved();
       }
-      if (mousePressed && p.mouseDragged) {
+      if (p.MOUSE_PRESSED && p.mouseDragged) {
         p.mouseDragged();
         p.mouseDragging = true;
       }
@@ -7403,7 +7402,7 @@
     });
 
     attach(curElement, "mousedown", function(e) {
-      mousePressed = true;
+      p.MOUSE_PRESSED = true;
       p.mouseDragging = false;
       switch (e.which) {
       case 1:
@@ -7416,21 +7415,13 @@
         p.mouseButton = p.RIGHT;
         break;
       }
-      p.mouseDown = true;
-      if (typeof p.mousePressed === "function") {
-        p.mousePressed();
-      } else {
-        p.mousePressed = true;
-      }
+      p.mousePressed();
     });
 
     attach(curElement, "mouseup", function(e) {
-      mousePressed = false;
+      p.MOUSE_PRESSED = false;
       if (p.mouseClicked && !p.mouseDragging) {
         p.mouseClicked();
-      }
-      if (typeof p.mousePressed !== "function") {
-        p.mousePressed = false;
       }
       if (p.mouseReleased) {
         p.mouseReleased();
@@ -7778,6 +7769,7 @@
     // the Processing.js source, replace frameRate so it isn't
     // confused with frameRate().
     aCode = aCode.replace(/frameRate\s*([^\(])/g, "FRAME_RATE$1");
+    aCode = aCode.replace(/mousePressed\s*([^\(])/g, "MOUSE_PRESSED$1");
 
     // Simple convert a function-like thing to function
     aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
