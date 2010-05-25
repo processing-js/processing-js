@@ -7349,7 +7349,6 @@
           }
         }
       }
-      //eval(baseProperties);
     };
 
     p.addMethod = function addMethod(object, name, fn) {
