@@ -14,6 +14,8 @@ var tests = [
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
+  { path: "point_3D_stroke.pde", tags: ["3D"] },
+  { path: "point_3D_strokeWeight.pde", tags: ["3D"] },
   { path: "box.pde", tags: ["3D"] },
   { path: "ambientLight_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_1.pde", tags: ["3D"] },
