@@ -7525,7 +7525,7 @@
             return 34; // "
           }
         } else {
-          switch (e.keyCode) {
+          switch (code) {
           case 188:
             return 44; // ,
           case 109:
