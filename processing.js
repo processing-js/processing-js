@@ -131,6 +131,7 @@
     p.PERSPECTIVE  = 3;
 
     // Shapes
+    p.GROUP          = 1 << 2;
     p.POINT          = 2;
     p.POINTS         = 2;
     p.LINE           = 4;
@@ -187,7 +188,6 @@
     // Lighting modes
     p.AMBIENT     = 0;
     p.DIRECTIONAL = 1;
-    //POINT       = 2; Shared with Shape constant
     p.SPOT        = 3;
 
     // Key constants
@@ -662,6 +662,128 @@
     Char.prototype.valueOf = function() {
       return this.code;
     };
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // PShape
+    ////////////////////////////////////////////////////////////////////////////
+    var PShape = function(family) {
+      this.family   = family || p.GROUP;
+      this.visible  = true;
+      this.style    = true;
+      this.children = [];
+      this.nameTable = [];
+      this.name      = "";
+      this.matrix; 
+     
+    };
+    // PShape Functions
+    PShape.prototype = {
+      isVisible: function(){
+        return this.visible;
+      },
+      setVisible: function (visible){
+        this.visible = visible;
+      },
+      disableStyle: function(){
+        this.style = false;
+        for(var i=0; i<children.length; i++)
+        {
+          this.children[i].disableStyle();
+        }
+      },
+      enableStyle: function(){
+        this.style = true;
+        for(var i=0; i<children.length; i++)
+        {
+          this.children[i].enableStyle();
+        }
+      },
+      getWidth: function(){
+        return width;
+      },
+      getHeight: function(){
+        return height;
+      },
+      setName: function( name ){
+        this.name = name;
+      }
+      getName: function(){
+        return this.name;
+      }
+      //pre, post, styles, draw, drawGroup, drawPrimitives, drawGeometry, drawPath,  not in yet
+      // return the PShape at the specific index from the children array or
+      // return the Phape from a parent shape specified by its name
+      getChild: function( child ){
+        if (typeof child === 'number') {
+          return children[index];
+        }else {
+          var found,
+              i;
+          if( child === "" || this.name === child){
+            return this;
+          }else {
+            if( this.nameTable.length > 0)
+            {
+              for(i=0; i<this.nameTable.length || found;i++)
+              {
+                if(nameTable[i].getName === child){
+                  found = nameTable[i];
+                }
+              }
+              if (found) { return found; }
+            }
+            for(i=0; i<this.children.lenth; i++)
+            {
+              found = this.children[i].getChild( target );
+              if( found ) { return found; }
+            }
+          }
+          return null;
+        }              
+      },
+      // findChild, addChild, addName not in yet
+      translate: function(){
+        if( arguments.length === 2)
+        {
+          this.checkMatrix( 2 );
+          this.matrix.translate( arguments[0], arguments[1]);
+        }else {
+          this.checkMatrix( 3 );
+          this.matrix.translate( arguments[0], arguments[1], 0);
+        }
+      },
+      checkMatrix: function( dimensions ){
+        if(this.matrix === null){
+          if( dimensions === 2){
+            matrix = new p.PMatrix2D();
+          } else {
+            matrix = new p.PMatrix3D();
+          }
+        }else if( dimensions ===3 && matrix instanceof PMatrix2D {
+          matrix = new p.PMatrix3D();
+        }
+      },
+      rotateX: function( angle ){
+        this.rotate( angle, 1, 0, 0);
+      },
+      rotateY: function( angle ){
+        this.rotate( angle, 0, 1, 0);
+      },
+      rotateZ: function( angle ){
+        this.rotate( angle, 0, 0, 1);
+      },
+      rotate: function(){
+        if(arguments.length === 1){
+          this.checkMatrix(2);
+          this.matrix.rotate( arguments[0] );
+        } else {
+          this.checkMatrix(3);
+          this.matrix.rotate( arguments[0], arguments[1], arguments[2] ,arguments[3] );
+        }
+      };
+    
+    };
+    
 
     ////////////////////////////////////////////////////////////////////////////
     // PVector
