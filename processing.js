@@ -5245,7 +5245,7 @@
                 colorVertArray.push(vertArray[i][j]);
               }
             }
-            line2D(lineVertArray, "LINES", colorVertArray);
+            line2D(lineVertArray, "LINES", strokeVertArray);
           }
           else if(curShape === p.TRIANGLES){
             if(vertArray.length > 2){
