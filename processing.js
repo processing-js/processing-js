@@ -310,6 +310,7 @@
         sphereBuffer,
         lineBuffer,
         fillBuffer,
+        colorBuffer,
         pointBuffer;
 
     // User can only have MAX_LIGHTS lights
@@ -403,6 +404,7 @@
     var vertexShaderSource3D =
       "attribute vec3 Vertex;" +
       "attribute vec3 Normal;" +
+      "attribute vec4 aColor;" + 
 
       "uniform vec4 color;" +
 
@@ -539,7 +541,7 @@
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
       "  if( lightCount == 0 ) {" +
-      "    gl_FrontColor = color + vec4(mat_specular,1.0);" +
+      "    gl_FrontColor = aColor + vec4(mat_specular,1.0);" +
       "  }" +
       "  else {" +
       "    for( int i = 0; i < lightCount; i++ ) {" +
@@ -559,18 +561,18 @@
 
       "   if( usingMat == false ) {" +
       "    gl_FrontColor = vec4(  " +
-      "      vec3(color) * finalAmbient +" +
-      "      vec3(color) * finalDiffuse +" +
-      "      vec3(color) * finalSpecular," +
+      "      vec3(aColor) * finalAmbient +" +
+      "      vec3(aColor) * finalDiffuse +" +
+      "      vec3(aColor) * finalSpecular," +
       "      color[3] );" +
       "   }" +
       "   else{" +
       "     gl_FrontColor = vec4( " +
       "       mat_emissive + " +
-      "       (vec3(color) * mat_ambient * finalAmbient) + " +
-      "       (vec3(color) * finalDiffuse) + " +
+      "       (vec3(aColor) * mat_ambient * finalAmbient) + " +
+      "       (vec3(aColor) * finalDiffuse) + " +
       "       (mat_specular * finalSpecular), " +
-      "       color[3] );" +
+      "       aColor[3] );" +
       "    }" +
       "  }" +
       "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
@@ -4013,10 +4015,13 @@
           sphereBuffer = curContext.createBuffer();
 
           lineBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
+  //        curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
 
           fillBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, fillBuffer);
+//          curContext.bindBuffer(curContext.ARRAY_BUFFER, fillBuffer);
+
+          colorBuffer = curContext.createBuffer();
+    //      curContext.bindBuffer(curContext.ARRAY_BUFFER, fillBuffer);
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
@@ -5070,7 +5075,7 @@
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
-    var fill2D = function fill2D(vArray, mode){
+    var fill2D = function fill2D(vArray, mode, cArray){
       var ctxMode;
       if(mode === "TRIANGLES"){
         ctxMode = curContext.TRIANGLES;
@@ -5087,17 +5092,20 @@
       view.scale(1, -1, 1);
       view.apply(modelView.array());
 
-      curContext.useProgram( programObject2D );
-      uniformMatrix( programObject2D, "model", true,  model.array() );
-      uniformMatrix( programObject2D, "view", true, view.array() );
-      uniformMatrix( programObject2D, "projection", true, projection.array() );
+      curContext.useProgram( programObject3D );
+      uniformMatrix( programObject3D, "model", true,  model.array() );
+      uniformMatrix( programObject3D, "view", true, view.array() );
+      uniformMatrix( programObject3D, "projection", true, projection.array() );
 
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
-      uniformf( programObject2D, "color", fillStyle);
+      uniformf( programObject3D, "color", fillStyle);
 
-      vertexAttribPointer(programObject2D, "Vertex", 3, fillBuffer);
+      vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+
+      vertexAttribPointer(programObject3D, "aColor", 3, colorBuffer);
+      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
 
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
@@ -5205,8 +5213,8 @@
                 if(doStroke){
                   line2D(lineVertArray, "LINE_LOOP");
                 }
-                if(doFill){
-                  fill2D(fillVertArray, "TRIANGLES");
+                if(doFill){alert("1");
+                  fill2D(fillVertArray, "TRIANGLES",fillVertArray);
                 }
               }
             }
@@ -5222,7 +5230,7 @@
                     fillVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                if(doFill){
+                if(doFill){alert("2");
                   fill2D(fillVertArray);
                 }
                 if(doStroke){
@@ -5255,7 +5263,7 @@
                   line2D(lineVertArray, "LINE_STRIP");
                 }
               }
-              if(doFill){
+              if(doFill){alert("3");
                 fill2D(fillVertArray, "TRIANGLE_FAN");
               }
             }
@@ -5285,7 +5293,7 @@
                 }
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i+2][j]);
-                }
+                }alert("4");
                 fill2D(fillVertArray, "TRIANGLE_STRIP");
               }
             }
@@ -5319,7 +5327,7 @@
                 }
                 line2D(lineVertArray, "LINE_STRIP");
               }
-              if(doFill){
+              if(doFill){alert("5");
                 fill2D(fillVertArray);
               }
             }
@@ -5343,7 +5351,7 @@
               else{
                 line2D(lineVertArray, "LINE_STRIP");
               }
-              if(doFill){
+              if(doFill){alert("6");
                 fill2D(fillVertArray);
               }
             }
