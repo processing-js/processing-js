@@ -1,6 +1,7 @@
+size(200,200,P3D);
 background(125);
 beginShape();
 vertex(30, 20);
-bezierVertex(80, 0, 80, 75, 30, 75);
-bezierVertex(50, 80, 60, 25, 30, 20);
+bezierVertex(80, 0, 20,80, 75, 20,30, 75,40);
+bezierVertex(50, 80,20, 60, 25, 20,30, 20,40);
 endShape();
