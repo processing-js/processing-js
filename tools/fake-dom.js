@@ -12,6 +12,7 @@ var canvas = {
   addEventListener: __empty_func__,
   appendChild: __elem_func__,
   removeChild: __empty_func__,
+  toDataURL: __empty_func__,
   getContext:  function() {
                  return {
                    translate: __empty_func__,
@@ -118,6 +119,7 @@ var window = {
   removeChild: __empty_func__,
   setInterval: __empty_func__,
   XMLHttpRequest: __empty_func__,
+  open: __empty_func__,
   print: print,
   document: document,
   createElement: function() { return elem; },
