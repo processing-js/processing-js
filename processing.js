@@ -537,8 +537,7 @@
       "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
       "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
-      
-      
+            
       "  vec4 col = color;" +
       "  if(color[0] == -1.0){" +
       "    col = aColor;" +
@@ -5105,8 +5104,9 @@
 
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
-      //uniformf( programObject3D, "color", fillStyle);
-      uniformf( programObject3D, "color", [-1,0,0,0]);
+            
+      // turn off using a single color for all vertices with -1
+      uniformf( programObject3D, "color", [-1,0,0,1]);
 
       vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
@@ -5199,6 +5199,11 @@
           fillVertArray.push(vertArray[0][0]);
           fillVertArray.push(vertArray[0][1]);
           fillVertArray.push(vertArray[0][2]);
+          
+          colorVertArray.push(vertArray[0][5]);
+          colorVertArray.push(vertArray[0][6]);
+          colorVertArray.push(vertArray[0][7]);
+          colorVertArray.push(vertArray[0][8]);
 
           if (curShape === p.POINTS){
             for(i = 0; i < vertArray.length; i++){
@@ -5299,18 +5304,35 @@
 
               if(doFill){
                 fillVertArray = [];
+                colorVertArray = [];
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i][j]);
                 }
+                for(j = 5; j < 9; j++){
+                  colorVertArray.push(vertArray[i][j]);
+                }
+                
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i+1][j]);
                 }
+                for(j = 5; j < 9; j++){
+                  colorVertArray.push(vertArray[i+1][j]);
+                }
+                
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i+3][j]);
                 }
+                for(j = 5; j < 9; j++){
+                  colorVertArray.push(vertArray[i+3][j]);
+                }
+                
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i+2][j]);
-                }//tinylogLite.log("4");
+                }
+                for(j = 5; j < 9; j++){
+                  colorVertArray.push(vertArray[i+2][j]);
+                }
+                //tinylogLite.log("4");
                 fill2D(fillVertArray, "TRIANGLE_STRIP",colorVertArray);
               }
             }

@@ -11,7 +11,8 @@ void setup()
 void draw() 
 { 
   background(0);
-  
+  strokeWeight(5);
+
   pushMatrix(); 
  
   translate(width/2, height/2, -30); 
