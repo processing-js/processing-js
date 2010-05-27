@@ -264,6 +264,7 @@
         looping = 0,
         curRectMode = p.CORNER,
         curEllipseMode = p.CENTER,
+        curShapeMode = p.CORNER,
         normalX = 0,
         normalY = 0,
         normalZ = 0,
@@ -780,11 +781,64 @@
           this.checkMatrix(3);
           this.matrix.rotate( arguments[0], arguments[1], arguments[2] ,arguments[3] );
         }
+      },
+      scale: function(){
+      	if( arguments.length === 2 ){
+      		this.checkMatrix(2);
+      		this.matrix.scale( arguments[0], arguments[1] );
+      	} else if( arguments.length === 3 ) {
+      		this.checkMatrix(2);
+      		this.matrix.scale( arguments[0], arguments[1], arguments[2] );
+      	} else {
+      		this.checkMatrix(2);
+      		this.matrix.scale( arguments[0] );
+      	}
+      },
+      resetMatrix: function(){
+      	this.checkMatrix(2);
+      	this.matrix.reset();
       };
-    
+      //applyMatrix not done yet
     };
+    p.PShape = PShape;
     
-
+    p.shape = function( shape, x, y, width, height ){
+    	if( shape.isVisible()){
+    		p.pushMatrix();
+    		if( curShapeMode === p.CENTER ){
+    			x = x || 0;
+    			y = y || 0;
+    			if ( arguments.length === 5 ){
+    				p.translate( x - width/2, y - height/2 );
+    				p.scale( width / shape.getWidth(), height / shape.getHeight() );
+    			}else {
+    				p.translate( x - shape.getWidth()/2, - shape.getHeight()/2 );
+    			}    				
+    		} else if( curShapeMode === p.CORNER ){
+    			p.translate( x, y );
+    			if( arguments.length === 5 ){
+    				p.scale( width / shape.getWidth(), height / shape.getHeight() );
+    			}
+    		} else if ( curShapeMode === p.CORNERS ){
+    			p.translate( x, y );
+    			if( arguments.length === 5 ){
+    				width  -= x;
+    				height -= y;
+    				p.scale( width / shape.getWidth(), height / shape.getHeight() );
+    			}
+    		}
+    		//shape.draw( this
+    	}    	
+    };
+    p.shapeMode = function ( mode ){
+    		curShapeMode = mode;
+    }
+    p.loadShape = function ( filename ){
+    	if( filename.toLowerCase().slice( filename.length - 4 ) === ".svg" ){
+    		return p.PShapeSVG( filename );
+    	}
+    	return null;
+    }
     ////////////////////////////////////////////////////////////////////////////
     // PVector
     ////////////////////////////////////////////////////////////////////////////
