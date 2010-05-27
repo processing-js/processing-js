@@ -281,6 +281,7 @@
         curTightness = 0,
         curveDetail = 20,
         curveInited = false,
+		bezierDetail = 20,
         colorModeA = 255,
         colorModeX = 255,
         colorModeY = 255,
@@ -301,6 +302,7 @@
         curveBasisMatrix,
         curveToBezierMatrix,
         curveDrawMatrix,
+        bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
         programObject3D,
@@ -5326,27 +5328,24 @@
             }
           }
           else{
-            if(vertArray.length === 1){
+            for(i = 0; i < vertArray.length; i++){
               for(j = 0; j < 3; j++){
-                lineVertArray.push(vertArray[0][j]);
+                lineVertArray.push(vertArray[i][j]);
               }
-              point2D(lineVertArray);
             }
-            else{
-              for(i = 0; i < vertArray.length; i++){
-                for(j = 0; j < 3; j++){
-                  lineVertArray.push(vertArray[i][j]);
-                }
-              }
-              if(p.CLOSE){
-                line2D(lineVertArray, "LINE_LOOP");
+            if(p.CLOSE){
+              if(vertArray.length === 1){
+                point2D(lineVertArray);
               }
               else{
-                line2D(lineVertArray, "LINE_STRIP");
+                line2D(lineVertArray, "LINE_LOOP");
               }
-              if(doFill){
-                fill2D(fillVertArray);
-              }
+            }
+            else{
+              line2D(lineVertArray, "LINE_STRIP");
+            }
+            if(doFill){
+              fill2D(fillVertArray);
             }
           }
         }
@@ -5482,21 +5481,53 @@
       isBezier = false;
     };
 
-    p.bezierVertex = function(){
+    p.bezierVertex = function bezierVertex() {
       isBezier = true;
       var vert = [];
       if(firstVert){
         throw ("vertex() must be used at least once before calling bezierVertex()");
       }
       else{
-        if(arguments.length === 6){
-          for(var i = 0; i < arguments.length; i++){ vert[i] = arguments[i]; }
+      //bezierDrawMatrix = new PMatrix3D();
+        var draw = bezierDrawMatrix.array(); 	
+        var x1 = vertArray[0][0],
+            y1 = vertArray[0][1];
+        if(arguments.length === 9){
+          var z1 = vertArray[3];
+          var xplot1 = draw[4] * x1 + draw[5] * arguments[0] + draw[6] * arguments[3] + draw[7] * arguments[6];
+          var xplot2 = draw[8] * x1 + draw[9] * arguments[0] + draw[10]* arguments[3] + draw[11]* arguments[6];
+          var xplot3 = draw[12]* x1 + draw[13]* arguments[0] + draw[14]* arguments[3] + draw[15]* arguments[6];
+
+          var yplot1 = draw[4] * y1 + draw[5] * arguments[1] + draw[6] * arguments[4] + draw[7] * arguments[7];
+          var yplot2 = draw[8] * y1 + draw[9] * arguments[1] + draw[10]* arguments[4] + draw[11]* arguments[7];
+          var yplot3 = draw[12]* y1 + draw[13]* arguments[1] + draw[14]* arguments[4] + draw[15]* arguments[7];
+
+          var zplot1 = draw[4] * z1 + draw[5] * arguments[2] + draw[6] * arguments[5] + draw[7] * arguments[8];
+          var zplot2 = draw[8] * z1 + draw[9] * arguments[2] + draw[10]* arguments[5] + draw[11]* arguments[8];
+          var zplot3 = draw[12]* z1 + draw[13]* arguments[2] + draw[14]* arguments[5] + draw[15]* arguments[8];
         }
-        else{ //for 9 arguments (3d)
-        }
-        vertArray.push(vert);
+        else{
+          var xplot1 = draw[4] *x1 + draw[5] * arguments[0] + draw[6] * arguments[2] + draw[7] * arguments[4];
+          var xplot2 = draw[8] *x1 + draw[9] * arguments[0] + draw[10]* arguments[2] + draw[11]* arguments[4];
+          var xplot3 = draw[12]*x1 + draw[13]* arguments[0] + draw[14]* arguments[2] + draw[15]* arguments[4];
+
+          var yplot1 = draw[4] *y1 + draw[5] * arguments[1] + draw[6] * arguments[3] + draw[7] * arguments[5];
+          var yplot2 = draw[8] *y1 + draw[9] * arguments[1] + draw[10]* arguments[3] + draw[11]* arguments[5];
+          var yplot3 = draw[12]*y1 + draw[13]* arguments[1] + draw[14]* arguments[3] + draw[15]* arguments[5];
+          for (var j = 0; j < bezierDetail; j++) {
+            x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+            y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+            alert(x1+","+y1);
+            
+           //vert[0] = x1;
+           //vert[1] = y1;
+           //vertArray.push(vert);
+           p.vertex(x1, y1);
+          }
+        } 
+       // vertArray.push(vert);
       }
-    };
+    }; 
 
     p.curveVertex = function(x, y, z) {
       isCurve = true;
@@ -5579,7 +5610,7 @@
         curveBasisMatrix = new PMatrix3D();
         curveDrawMatrix = new PMatrix3D();
         curveInited = true;
-      }
+	    }
 
       var s = curTightness;
       curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2), ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2), (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2), ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
@@ -5717,14 +5748,47 @@
       }
     };
 
-    p.bezier = function bezier(x1, y1, x2, y2, x3, y3, x4, y4) {
-      curContext.beginPath();
-      curContext.moveTo(x1, y1);
-      curContext.bezierCurveTo(x2, y2, x3, y3, x4, y4);
-      curContext.stroke();
-      curContext.closePath();
+    p.bezier = function bezier( x1, y1, x2, y2, x3, y3, x4, y4 ) {
+      if( arguments.length == 8  && p.use3DContext === false )
+      {
+        curContext.beginPath();
+        curContext.moveTo( x1, y1 );
+        curContext.bezierCurveTo( x2, y2, x3, y3, x4, y4 );
+        curContext.stroke();
+        curContext.closePath();
+      }
+      else{
+        if( arguments.length == 8 )
+        {
+          p.beginShape();
+          p.vertex( arguments[0], arguments[1] );
+          p.bezierVertex( arguments[2], arguments[3], 
+                          arguments[4], arguments[5],
+                          arguments[6], arguments[7] );
+          p.endShape();
+        }
+        else{
+          p.beginShape();
+          p.vertex( arguments[0], arguments[1], arguments[2] );
+          p.bezierVertex( arguments[3], arguments[4], arguments[5],
+                          arguments[6], arguments[7], arguments[8],
+                          arguments[9], arguments[10], arguments[11] );
+          p.endShape();
+        }
+      }
     };
-
+    p.bezierDetail = function bezierDetail( detail ){
+      bezierDetail = detail;
+      if ( bezierDrawMatrix == null ) {
+        bezierDrawMatrix = new PMatrix3D();
+      }
+      // setup matrix for forward differencing to speed up drawing
+      splineForward( detail, bezierDrawMatrix );
+      
+      bezierDrawMatrix.apply( bezierBasisMatrix );
+      alert("here" +bezierDrawMatrix.array());
+    };
+    
     p.bezierPoint = function bezierPoint(a, b, c, d, t) {
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };

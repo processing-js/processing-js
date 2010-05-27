@@ -23,6 +23,7 @@ endShape();
 stroke(126);
 beginShape();
 vertex(60, 40);
+bezierDetail(30);
 bezierVertex(160, 10, 170, 150, 60, 150);
 endShape();
 
