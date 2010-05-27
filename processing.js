@@ -281,7 +281,7 @@
         curTightness = 0,
         curveDetail = 20,
         curveInited = false,
-		bezierDetail = 20,
+        bezierDetail = 20,
         colorModeA = 255,
         colorModeX = 255,
         colorModeY = 255,
