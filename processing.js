@@ -5069,14 +5069,21 @@
       view.scale(1, -1, 1);
       view.apply(modelView.array());
 
-      curContext.useProgram(programObject2D);
-      uniformMatrix(programObject2D, "model", true, model.array());
-      uniformMatrix(programObject2D, "view", true, view.array());
-      uniformMatrix(programObject2D, "projection", true, projection.array());
+      curContext.useProgram(programObject3D);
+      uniformMatrix(programObject3D, "model", true, model.array());
+      uniformMatrix(programObject3D, "view", true, view.array());
+      uniformMatrix(programObject3D, "projection", true, projection.array());
 
-      uniformf(programObject2D, "color", strokeStyle);
-      vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
+  //    uniformf(programObject3D, "color", strokeStyle);
+      vertexAttribPointer(programObject3D, "Vertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      
+      // turn off using a single color for all vertices with -1
+      uniformf( programObject3D, "color", [1,0,0,1]);
+      
+      //vertexAttribPointer(programObject3D, "aColor", 4, colorBuffer);
+      //curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+            
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
@@ -5106,14 +5113,14 @@
       curContext.polygonOffset( 1, 1 );
             
       // turn off using a single color for all vertices with -1
-      uniformf( programObject3D, "color", [-1,0,0,1]);
+      //uniformf( programObject3D, "color", [1,0,0,1]);
 
       vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObject3D, "aColor", 4, colorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
-
+     // vertexAttribPointer(programObject3D, "aColor", 4, colorBuffer);
+     // curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+//tinylogLite.log(vArray);
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
@@ -5181,6 +5188,7 @@
           var lineVertArray = [];
           var fillVertArray = [];
           var colorVertArray = [];
+          //var strokeVertArray = [];
           
           for(i = 0; i < vertArray.length; i++){
             for(j = 0; j < 3; j++){
@@ -5196,14 +5204,32 @@
             }
           }
 
-          fillVertArray.push(vertArray[0][0]);
-          fillVertArray.push(vertArray[0][1]);
-          fillVertArray.push(vertArray[0][2]);
+          // 9,10,11,12
+          // R, G, B, A
+          /*for(i = 0; i < vertArray.length; i++){
+            for(j = 9; j < 13; j++){
+              strokeVertArray.push(vertArray[i][j]);
+            }
+          }*/
+
+          //
+          //for(i = 0; i < 3; i++){
+            fillVertArray.push(vertArray[0][0]);
+            fillVertArray.push(vertArray[0][1]);
+            fillVertArray.push(vertArray[0][2]);
+         // }
+
+          for(i = 5; i < 9; i++){
+            colorVertArray.push(vertArray[0][i]);
+          }
+
+         // for(i = 9; i < 13; i++){
+          ////  strokeVertArray.push(vertArray[0][i]);
+         // }          
           
-          colorVertArray.push(vertArray[0][5]);
-          colorVertArray.push(vertArray[0][6]);
-          colorVertArray.push(vertArray[0][7]);
-          colorVertArray.push(vertArray[0][8]);
+          
+          
+          
 
           if (curShape === p.POINTS){
             for(i = 0; i < vertArray.length; i++){
@@ -5219,6 +5245,11 @@
                 lineVertArray.push(vertArray[i][j]);
               }
             }
+            for(i = 0; i < vertArray.length; i++){
+              for(j = 5; j < 9; j++){
+                colorVertArray.push(vertArray[i][j]);
+              }
+            }//tinylogLite.log(strokeVertArray);
             line2D(lineVertArray, "LINES");
           }
           else if(curShape === p.TRIANGLES){
@@ -5333,7 +5364,7 @@
                   colorVertArray.push(vertArray[i+2][j]);
                 }
                 //tinylogLite.log("4");
-                fill2D(fillVertArray, "TRIANGLE_STRIP",colorVertArray);
+                fill2D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
               }
             }
           }
@@ -5391,7 +5422,7 @@
                 line2D(lineVertArray, "LINE_STRIP");
               }
               if(doFill){tinylogLite.log("6");
-                fill2D(fillVertArray,0, colorVertArray);
+                fill2D(fillVertArray, 0, colorVertArray);
               }
             }
           }
