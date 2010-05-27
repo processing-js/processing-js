@@ -311,6 +311,7 @@
         lineBuffer,
         fillBuffer,
         fillColorBuffer,
+        strokeColorBuffer,
         pointBuffer;
 
     // User can only have MAX_LIGHTS lights
@@ -4024,6 +4025,7 @@
 
           fillBuffer = curContext.createBuffer();
           fillColorBuffer = curContext.createBuffer();
+          strokeColorBuffer = curContext.createBuffer(); 
 //          curContext.bindBuffer(curContext.ARRAY_BUFFER, fillBuffer);
 
           pointBuffer = curContext.createBuffer();
@@ -5082,9 +5084,11 @@
       vertexAttribPointer(programObject3D, "Vertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObject3D, "aColor", 4, lineBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      vertexAttribPointer(programObject3D, "aColor", 4, strokeColorBuffer);
+      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
 
+      curContext.lineWidth(lineWidth);
+      
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
@@ -5189,12 +5193,16 @@
           var lineVertArray = [];
           var fillVertArray = [];
           var colorVertArray = [];
+          var strokeVertArray = [];
           
           for(i = 0; i < vertArray.length; i++){
             for(j = 0; j < 3; j++){
               fillVertArray.push(vertArray[i][j]);
             }
           }
+          fillVertArray.push(vertArray[0][0]);
+          fillVertArray.push(vertArray[0][1]);
+          fillVertArray.push(vertArray[0][2]);
 
           // 5,6,7,8
           // R,G,B,A
@@ -5203,22 +5211,28 @@
               colorVertArray.push(vertArray[i][j]);
             }
           }
-          
           for(i = 5; i < 9; i++){
             colorVertArray.push(vertArray[0][i]);
           }
           
-          fillVertArray.push(vertArray[0][0]);
-          fillVertArray.push(vertArray[0][1]);
-          fillVertArray.push(vertArray[0][2]);
-
+          // 9,10,11,12
+          // R, G, B, A
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 9; j < 13; j++){
+              strokeVertArray.push(vertArray[i][j]);
+            }
+          }
+          for(i = 9; i < 13; i++){
+            strokeVertArray.push(vertArray[0][i]);
+          }
+                   
           if (curShape === p.POINTS){
             for(i = 0; i < vertArray.length; i++){
               for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i][j]);
               }
             }
-            point2D(lineVertArray, colorVertArray);
+            point2D(lineVertArray, strokeVertArray);
           }
           else if(curShape === p.LINES){
             for(i = 0; i < vertArray.length; i++){
@@ -5245,7 +5259,8 @@
                   }
                 }
                 if(doStroke){
-                  line2D(lineVertArray, "LINE_LOOP");
+                  tinylogLite.log(">"+strokeVertArray);
+                  line2D(lineVertArray, "LINE_LOOP", strokeVertArray );
                 }
                 if(doFill){tinylogLite.log("TRIANGLES");
                 tinylogLite.log(colorVertArray);
@@ -5312,7 +5327,7 @@
                 }
               }
               if(doStroke){
-                line2D(lineVertArray, "LINE_LOOP");
+                line2D(lineVertArray, "LINE_LOOP",strokeVertArray);
               }
 
               if(doFill){

@@ -15,11 +15,27 @@
 
     <p>
       <canvas datasrc="test.pjs"></canvas>
+      <img src="p5_result.jpg" style="margin:10px 0px;" />
     </p>
     
     <pre>
 <b>// Test by Andor Salga</b>
-</pre>
+import processing.opengl.*;
+
+void setup(){
+  size(100,100,OPENGL);
+  translate(width/2, height/2,0);
+  stroke(0);
+
+  beginShape(TRIANGLES);
+  fill(256,0,0);
+  vertex(0,-20,0);
+  fill(0,256,0);
+  vertex(-30,20,0);
+  fill(0,0,256);
+  vertex(30,20,0);
+  endShape();
+}</pre>
 
   </body>
 </html>
