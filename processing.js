@@ -5111,12 +5111,22 @@
       firstVert = true;
       var i, j, k;
       var last = vertArray.length - 1;
+      var lineVertArray = [];
+      var fillVertArray = [];
       if(!close){
         p.CLOSE = false;
       }
       else{
         p.CLOSE = true;
       }
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 0; j < 3; j++){
+          fillVertArray.push(vertArray[i][j]);
+        }
+      }
+      fillVertArray.push(vertArray[0][0]);
+      fillVertArray.push(vertArray[0][1]);
+      fillVertArray.push(vertArray[0][2]);
       if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
         if(vertArray.length > 3){
           if(p.use3DContext){
@@ -5152,33 +5162,30 @@
         }
       }
       else if(isBezier && curShape === p.POLYGON || isBezier && curShape === undefined){
-        curContext.beginPath();
-        curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-        for(i = 1; i < vertArray.length; i++){
-          curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
+        if(p.use3DContext){
+          var tempArray = [];
+          lineVertArray = fillVertArray;
+          lineVertArray.splice(lineVertArray.length - 3);
+          line2D(lineVertArray, "LINES");
+          fill2D(fillVertArray, "TRIANGLE_STRIP");
         }
-        if(doFill){
-          curContext.fill();
+        else{
+          curContext.beginPath();
+          curContext.moveTo(vertArray[0][0], vertArray[0][1]);
+          for(i = 1; i < vertArray.length; i++){
+            curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
+          }
+          if(doFill){
+            curContext.fill();
+          }
+          if(doStroke){
+            curContext.stroke();
+          }
+          curContext.closePath();
         }
-        if(doStroke){
-          curContext.stroke();
-        }
-        curContext.closePath();
       }
       else{
         if(p.use3DContext){ // 3D context
-          var lineVertArray = [];
-          var fillVertArray = [];
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 0; j < 3; j++){
-              fillVertArray.push(vertArray[i][j]);
-            }
-          }
-
-          fillVertArray.push(vertArray[0][0]);
-          fillVertArray.push(vertArray[0][1]);
-          fillVertArray.push(vertArray[0][2]);
-
           if (curShape === p.POINTS){
             for(i = 0; i < vertArray.length; i++){
               for(j = 0; j < 3; j++){
@@ -5493,10 +5500,16 @@
       }
       else{
         if(arguments.length === 9){
-          if( p.use3DContext){
+          if(p.use3DContext){
+            if ( bezierDrawMatrix == null ) {
+              bezierDrawMatrix = new PMatrix3D();
+            }
+            // setup matrix for forward differencing to speed up drawing
+            splineForward( bezierDetail, bezierDrawMatrix );
+            bezierDrawMatrix.apply( bezierBasisMatrix );
             var draw = bezierDrawMatrix.array(); 	
             var x1 = vertArray[0][0],
-                y1 = vertArray[0][1];
+                y1 = vertArray[0][1],
                 z1 = vertArray[0][2];
             var xplot1 = draw[4] * x1 + draw[5] * arguments[0] + draw[6] * arguments[3] + draw[7] * arguments[6];
             var xplot2 = draw[8] * x1 + draw[9] * arguments[0] + draw[10]* arguments[3] + draw[11]* arguments[6];
@@ -5513,10 +5526,7 @@
               x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
               y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
               z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
-              vert[0] = x1;
-              vert[1] = y1;
-              vert[2] = z1;
-             vertArray.push(vert);
+              p.vertex(x1, y1, z1);
             }
           }
         }
@@ -5777,13 +5787,6 @@
     };
     p.bezierDetail = function bezierDetail( detail ){
       bezierDetail = detail;
-      if ( bezierDrawMatrix == null ) {
-        bezierDrawMatrix = new PMatrix3D();
-      }
-      // setup matrix for forward differencing to speed up drawing
-      splineForward( detail, bezierDrawMatrix );
-      
-      bezierDrawMatrix.apply( bezierBasisMatrix );
     };
     
     p.bezierPoint = function bezierPoint(a, b, c, d, t) {
