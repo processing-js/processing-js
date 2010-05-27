@@ -52,6 +52,7 @@
     p.mouseReleased = undefined;
     p.mouseScrolled = undefined;
     p.key = undefined;
+    p.keyCode = undefined;
     p.keyPressed = undefined;
     p.keyReleased = undefined;
     p.keyTyped = undefined;
@@ -7332,11 +7333,21 @@
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
 
-    p.extendClass = function extendClass(obj, args, fn) {
-      if (arguments.length === 3) {
-        fn.apply(obj, args);
-      } else {
-        args.call(obj);
+    p.extendClass = function extendClass(subClass, baseClass) {
+      for (var propertyName in baseClass) {
+        if (typeof subClass[propertyName] === 'undefined') {
+          if (typeof baseClass[propertyName] === 'function') {
+            subClass[propertyName] = baseClass[propertyName];
+            
+          } else {
+            subClass.__defineGetter__(propertyName, (function(propertyName) { 
+              return function(){return baseClass[propertyName];};
+            })(propertyName));
+            subClass.__defineSetter__(propertyName, (function(propertyName) { 
+              return function(v){baseClass[propertyName]=v;};
+            })(propertyName));
+          }
+        }
       }
     };
 
@@ -7886,9 +7897,6 @@
       return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]");
     });
 
-    // super() is a reserved word
-    aCode = aCode.replace(/super\(/g, "superMethod(");
-
     // Stores the variables and mathods of a single class
     var SuperClass = function(name){
       return {
@@ -7915,9 +7923,12 @@
 
       // Move arguments up from constructor
       return "function " + name + "() {\n " +
-              (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
-              (extend ? "extendClass(this, " + extend + ");\n" : "") +
-              "<CLASS " + name + " " + extend + ">";
+              "var __this__ = this;\n" +
+              (extend ? "var super = {};\n" +
+                        "function superConstructor(){\n" + 
+                        extend + ".prototype.constructor.apply(super, arguments);\n" + 
+                        "extendClass(__this__, super);};" : "") +
+              "<CLASS " + name + " " + (extend ? extend : "") + ">";
     };
 
     var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
@@ -7936,7 +7947,7 @@
           extendingClass = m[2];
 
       allRest = allRest.slice(rest.length + 1);
-
+      
       // Fix class method names
       // this.collide = function() { ... }
       rest = (function() {
@@ -7974,7 +7985,7 @@
         rest = prev + allNext.slice(next.length + 1);
       }
 
-      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
+      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*\\{"),
           c,
           constructor = "",
           constructorsArray = [];
@@ -7986,7 +7997,7 @@
             next = nextBrace(allNext, "{", "}"),
             args = c[1];
 
-          args = args.split(/,\s*?/);
+        args = args.split(/,\s*?/);
 
         if (args[0].match(/^\s*$/)) {
           args.shift();
@@ -7997,11 +8008,20 @@
         for (var i = 0, aLength = args.length; i < aLength; i++) {
           constructor += " var " + args[i] + " = arguments[" + i + "];\n";
         }
+        
+        if (/super\s*\(/.test(next)) {
+          next = next.replace(/super\s*\(/g, "superConstructor(");
+        } else if (extendingClass) {
+          constructor += "superConstructor();\n";
+        }
 
         constructor += next + "}\n";
 
         constructorsArray.push(constructor);
         rest = prev + allNext.slice(next.length + 1);
+      }
+      if (constructorsArray.length === 0 && extendingClass){
+        constructorsArray.push("superConstructor();\n");
       }
 
       var vars = "",
@@ -8012,9 +8032,8 @@
       // and keep a list of all public variables
       rest = (function(){
         rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
-          variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
-            .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
-
+          variable = "this." + variable.replace(/,\s*/g, ";\nthis.");
+          variable = variable.replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
           publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
           thisSuperClass.classVariables += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
 
@@ -8054,7 +8073,8 @@
                 } else {
                   return "public." + variable;
                 }
-              }) + footer;
+              }).replace(/public\.(\w+\s*\()/g, "this.$1") + footer;
+              
             });
           }());
         }
@@ -8091,7 +8111,17 @@
       for (var i = 0, aLength = constructorsArray.length; i < aLength; i++){
         constructors += constructorsArray[i];
       }
+
+      if (extendingClass) {
+        for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
+          if (arrayOfSuperClasses[i].className === extendingClass){
+            thisSuperClass.classVariables += arrayOfSuperClasses[i].classVariables;
+            thisSuperClass.classFunctions = thisSuperClass.classFunctions.concat(arrayOfSuperClasses[i].classFunctions);
+          }
+        }
+      }
       arrayOfSuperClasses.push(thisSuperClass);
+
       rest = vars + "\n" + methods + "\n" + constructors;
       aCode = left + rest + "\n}" + staticVars + allRest;
     }
