@@ -10,10 +10,9 @@ void setup()
  
 void draw() 
 { 
-  background(0);
-  
+  background(0);  
   pushMatrix(); 
- 
+
   translate(width/2, height/2, -30); 
   
   newXmag = mouseX/float(width) * TWO_PI;
