@@ -6,9 +6,7 @@ void setup()
  
 void draw() 
 { 
-  background(0);  
-  pushMatrix(); 
-
+  background(0);
   translate(width/2, height/2, -30); 
   
   rotateX(PI/4);
@@ -52,6 +50,4 @@ void draw()
   fill(0, 0, 1); vertex(-1, -1,  1);
 
   endShape();
-  
-  popMatrix(); 
-} 
+}

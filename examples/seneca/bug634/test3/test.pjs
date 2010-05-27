@@ -2,11 +2,9 @@ void setup()
 { 
   size(100, 100, P3D);
   background(0);
-
   colorMode(RGB, 1); 
   strokeWeight(5);
 
-  pushMatrix(); 
   translate(width/2, height/2, 0); 
   scale(30);
 
@@ -41,5 +39,4 @@ void setup()
   stroke(0, 0, 0); vertex(-1, -1, -1);
 
   endShape();
-  popMatrix(); 
 } 
