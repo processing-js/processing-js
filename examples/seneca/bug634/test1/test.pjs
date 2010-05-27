@@ -5,12 +5,12 @@ void setup(){
   translate(width/2, height/2,10);
   noStroke();
   
-  beginShape(TRIANGLES);
-  fill(255,0,0);
+  beginShape();//TRIANGLES
+  fill(127,0,0);
   vertex(0,-20,0);
-  fill(0,255,0);
+  fill(0,127,0);
   vertex(-30,20,0);
-  fill(0,0,255);
+  fill(0,0,127);
   vertex(30,20,0);
   endShape();
 }

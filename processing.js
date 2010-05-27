@@ -425,9 +425,9 @@
 
       "struct Light {" +
       "  bool dummy;" +
-      "   int type;" +
-      "   vec3 color;" +
-      "   vec3 position;" +
+      "  int type;" +
+      "  vec3 color;" +
+      "  vec3 position;" +
       "  vec3 direction;" +
       "  float angle;" +
       "  vec3 halfVector;" +
@@ -537,11 +537,17 @@
       "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
       "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
-
+      
+      
+      "  vec4 col = color;" +
+      "  if(color[0] == -1.0){" +
+      "    col = aColor;" +
+      "  }" +
+      
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
       "  if( lightCount == 0 ) {" +
-      "    gl_FrontColor = aColor + vec4(mat_specular,1.0);" +
+      "    gl_FrontColor = col + vec4(mat_specular,1.0);" +
       "  }" +
       "  else {" +
       "    for( int i = 0; i < lightCount; i++ ) {" +
@@ -561,18 +567,18 @@
 
       "   if( usingMat == false ) {" +
       "    gl_FrontColor = vec4(  " +
-      "      vec3(aColor) * finalAmbient +" +
-      "      vec3(aColor) * finalDiffuse +" +
-      "      vec3(aColor) * finalSpecular," +
+      "      vec3(col) * finalAmbient +" +
+      "      vec3(col) * finalDiffuse +" +
+      "      vec3(col) * finalSpecular," +
       "      color[3] );" +
       "   }" +
       "   else{" +
       "     gl_FrontColor = vec4( " +
       "       mat_emissive + " +
-      "       (vec3(aColor) * mat_ambient * finalAmbient) + " +
-      "       (vec3(aColor) * finalDiffuse) + " +
+      "       (vec3(col) * mat_ambient * finalAmbient) + " +
+      "       (vec3(col) * finalDiffuse) + " +
       "       (mat_specular * finalSpecular), " +
-      "       aColor[3] );" +
+      "       col[3] );" +
       "    }" +
       "  }" +
       "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
@@ -5099,12 +5105,13 @@
 
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
-      uniformf( programObject3D, "color", fillStyle);
+      //uniformf( programObject3D, "color", fillStyle);
+      uniformf( programObject3D, "color", [-1,0,0,0]);
 
       vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObject3D, "aColor", 3, colorBuffer);
+      vertexAttribPointer(programObject3D, "aColor", 4, colorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
 
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
@@ -5173,9 +5180,19 @@
         if(p.use3DContext){ // 3D context
           var lineVertArray = [];
           var fillVertArray = [];
+          var colorVertArray = [];
+          
           for(i = 0; i < vertArray.length; i++){
             for(j = 0; j < 3; j++){
               fillVertArray.push(vertArray[i][j]);
+            }
+          }
+
+          // 5,6,7,8
+          // R,G,B,A
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 5; j < 9; j++){
+              colorVertArray.push(vertArray[i][j]);
             }
           }
 
@@ -5213,8 +5230,8 @@
                 if(doStroke){
                   line2D(lineVertArray, "LINE_LOOP");
                 }
-                if(doFill){alert("1");
-                  fill2D(fillVertArray, "TRIANGLES",fillVertArray);
+                if(doFill){tinylogLite.log("1");
+                  fill2D(fillVertArray, "TRIANGLES", colorVertArray);
                 }
               }
             }
@@ -5230,7 +5247,7 @@
                     fillVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                if(doFill){alert("2");
+                if(doFill){tinylogLite.log("2");
                   fill2D(fillVertArray);
                 }
                 if(doStroke){
@@ -5263,7 +5280,7 @@
                   line2D(lineVertArray, "LINE_STRIP");
                 }
               }
-              if(doFill){alert("3");
+              if(doFill){tinylogLite.log("3");
                 fill2D(fillVertArray, "TRIANGLE_FAN");
               }
             }
@@ -5293,8 +5310,8 @@
                 }
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i+2][j]);
-                }alert("4");
-                fill2D(fillVertArray, "TRIANGLE_STRIP");
+                }//tinylogLite.log("4");
+                fill2D(fillVertArray, "TRIANGLE_STRIP",colorVertArray);
               }
             }
           }
@@ -5327,7 +5344,7 @@
                 }
                 line2D(lineVertArray, "LINE_STRIP");
               }
-              if(doFill){alert("5");
+              if(doFill){tinylogLite.log("5");
                 fill2D(fillVertArray);
               }
             }
@@ -5351,8 +5368,8 @@
               else{
                 line2D(lineVertArray, "LINE_STRIP");
               }
-              if(doFill){alert("6");
-                fill2D(fillVertArray);
+              if(doFill){tinylogLite.log("6");
+                fill2D(fillVertArray,0, colorVertArray);
               }
             }
           }
