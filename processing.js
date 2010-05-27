@@ -7780,7 +7780,7 @@
     // the Processing.js source, replace frameRate so it isn't
     // confused with frameRate().
     aCode = aCode.replace(/frameRate\s*([^\(])/g, "FRAME_RATE$1");
-    aCode = aCode.replace(/mousePressed\s*([^\(])/g, "MOUSE_PRESSED$1");
+    aCode = aCode.replace(/\bmousePressed\b\s*([^\(])/g, "MOUSE_PRESSED$1");
 
     // Simple convert a function-like thing to function
     aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
