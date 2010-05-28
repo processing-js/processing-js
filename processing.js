@@ -5450,7 +5450,14 @@
                   lineVertArray.push(vertArray[i][j]);
                 }
               }
-              line3D(lineVertArray, "LINE_STRIP");
+
+              for(i = 0; i < 2; i++){
+                for(j = 9; j < 13; j++){
+                  strokeVertArray.push(vertArray[i][j]);
+                }
+              }
+              
+              line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               if(vertArray.length > 4 && vertArray.length % 2 > 0){
                 tempArray = fillVertArray.splice(fillVertArray.length - 6);
                 vertArray.pop();
@@ -5469,10 +5476,10 @@
                 for(j = 0; j < 3; j++){
                   lineVertArray.push(vertArray[i+0][j]);
                 }
-                //line2D(lineVertArray, "LINE_STRIP");
+                line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
               if(doFill){
-                fill2D(fillVertArray);
+                fill2D(fillVertArray,"dummy", colorVertArray);
               }
             }
           }
