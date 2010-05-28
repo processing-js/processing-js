@@ -382,6 +382,25 @@
                            0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
                           -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
 
+
+    // Vertex shader for points and lines
+    var vShaderSrcUnlitShape =
+      "attribute vec3 aVertex;" +
+      "attribute vec4 aColor;" +
+
+      "uniform mat4 uView;" +
+      "uniform mat4 uProjection;" +
+
+      "void main(void) {" +
+      "  gl_FrontColor = aColor;" +
+      "  gl_Position = uProjection * uView * vec4(aVertex, 1.0);" +
+      "}";
+
+    var fShaderSrcUnlitShape =
+      "void main(void){" +
+      "  gl_FragColor = gl_Color;" +
+      "}";
+
     // Vertex shader for points and lines
     var vertexShaderSource2D =
       "attribute vec3 Vertex;" +
@@ -536,6 +555,7 @@
       "  vec4 col = color;" +
       "  if(color[0] == -1.0){" +
       "    col = aColor;" +
+    //"col = vec4(1.0, 0.0, 0.0, 1.0);"+
       "  }" +
 
       "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
@@ -3993,6 +4013,7 @@
           // lighting calculations could be ommitted from that program object.
           programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
           programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
+          programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
 
           // Now that the programs have been compiled, we can set the default
           // states for the lights.
@@ -4021,12 +4042,10 @@
           sphereBuffer = curContext.createBuffer();
 
           lineBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
 
           fillBuffer = curContext.createBuffer();
           fillColorBuffer = curContext.createBuffer();
-          strokeColorBuffer = curContext.createBuffer(); 
-//          curContext.bindBuffer(curContext.ARRAY_BUFFER, fillBuffer);
+          strokeColorBuffer = curContext.createBuffer();
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
@@ -4449,14 +4468,13 @@
         view.scale(1, -1, 1);
         view.apply(modelView.array());
 
-        curContext.useProgram(programObject3D);
-        uniformMatrix(programObject3D, "model", true, model.array());
-        uniformMatrix(programObject3D, "view", true, view.array());
-        uniformMatrix(programObject3D, "projection", true, projection.array());
-
-        disableVertexAttribPointer(programObject3D, "aColor");
-
         if (doFill === true) {
+          curContext.useProgram(programObject3D);
+
+          uniformMatrix(programObject3D, "model", true, model.array());
+          uniformMatrix(programObject3D, "view", true, view.array());
+          uniformMatrix(programObject3D, "projection", true, projection.array());
+        
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
           // working, but it's a start for drawing the outline. So
@@ -4482,19 +4500,23 @@
           vertexAttribPointer(programObject3D, "Vertex", 3, boxBuffer);
           vertexAttribPointer(programObject3D, "Normal", 3, boxNormBuffer);
 
+          // Ugly hack. Can't simply disable the vertex attribute
+          // array. No idea why, so I'm passing in dummy data.
+          vertexAttribPointer(programObject3D, "aColor", 3, boxNormBuffer);
+        
           curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
         }
 
         if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject3D);
-          uniformMatrix(programObject3D, "model", true, model.array());
-          uniformMatrix(programObject3D, "view", true, view.array());
-          uniformMatrix(programObject3D, "projection", true, projection.array());
+          curContext.useProgram(programObject2D);
+          uniformMatrix(programObject2D, "model", true, model.array());
+          uniformMatrix(programObject2D, "view", true, view.array());
+          uniformMatrix(programObject2D, "projection", true, projection.array());
 
-          uniformf(programObject3D, "color", strokeStyle);
+          uniformf(programObject2D, "color", strokeStyle);
           curContext.lineWidth(lineWidth);
-          vertexAttribPointer(programObject3D, "Vertex", 3, boxOutlineBuffer);
+          vertexAttribPointer(programObject2D, "Vertex", 3, boxOutlineBuffer);
           curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
         }
       }
@@ -4647,31 +4669,36 @@
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
         view.apply(modelView.array());
-
-        curContext.useProgram(programObject3D);
-
-        uniformMatrix(programObject3D, "model", true, model.array());
-        uniformMatrix(programObject3D, "view", true, view.array());
-        uniformMatrix(programObject3D, "projection", true, projection.array());
-
-        var v = new PMatrix3D();
-        v.set(view);
-
-        var m = new PMatrix3D();
-        m.set(model);
-
-        v.mult(m);
-
-        var normalMatrix = new PMatrix3D();
-        normalMatrix.set(v);
-        normalMatrix.invert();
-
-        uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
-
-        vertexAttribPointer(programObject3D, "Vertex", 3, sphereBuffer);
-        vertexAttribPointer(programObject3D, "Normal", 3, sphereBuffer);
-
+ 
         if (doFill === true) {
+          // Create a normal transformation matrix
+          var v = new PMatrix3D();
+          v.set(view);
+
+          var m = new PMatrix3D();
+          m.set(model);
+
+          v.mult(m);
+
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+        
+          curContext.useProgram(programObject3D);
+          
+          uniformMatrix(programObject3D, "model", true, model.array());
+          uniformMatrix(programObject3D, "view", true, view.array());
+          uniformMatrix(programObject3D, "projection", true, projection.array());
+        
+          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+
+          vertexAttribPointer(programObject3D, "Vertex", 3, sphereBuffer);
+          vertexAttribPointer(programObject3D, "Normal", 3, sphereBuffer);
+        
+          // Ugly hack. Can't simply disable the vertex attribute
+          // array. No idea why, so I'm passing in dummy data.
+          vertexAttribPointer(programObject3D, "aColor", 3, sphereBuffer);
+
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
           // working, but it's a start for drawing the outline. So
@@ -4686,14 +4713,14 @@
         }
 
         if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject3D);
-          vertexAttribPointer(programObject3D, "Vertex", 3, sphereBuffer);
+          curContext.useProgram(programObject2D);
+          vertexAttribPointer(programObject2D, "Vertex", 3, sphereBuffer);
 
-          uniformMatrix(programObject3D, "model", true, model.array());
-          uniformMatrix(programObject3D, "view", true, view.array());
-          uniformMatrix(programObject3D, "projection", true, projection.array());
+          uniformMatrix(programObject2D, "model", true, model.array());
+          uniformMatrix(programObject2D, "view", true, view.array());
+          uniformMatrix(programObject2D, "projection", true, projection.array());
 
-          uniformf(programObject3D, "color", strokeStyle);
+          uniformf(programObject2D, "color", strokeStyle);
 
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
@@ -5048,29 +5075,37 @@
       vertArray.push(vert);
     };
 
-    var point2D = function point2D(vArray,cArray){
-      var model = new PMatrix3D();
+    /*
+      Draw 3D points created from calls to vertex:
+      
+      beginShape(POINT);
+      vertex(x, y, 0);
+      ...
+      endShape();
+    */
+    var point3D = function point3D(vArray, cArray){
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
       view.apply(modelView.array());
 
-      curContext.useProgram(programObject3D);
-      uniformMatrix(programObject3D, "model", true, model.array());
-      uniformMatrix(programObject3D, "view", true, view.array());
-      uniformMatrix(programObject3D, "projection", true, projection.array());
+      curContext.useProgram(programObjectUnlitShape);
+      uniformMatrix(programObjectUnlitShape, "uView", true, view.array());
+      uniformMatrix(programObjectUnlitShape, "uProjection", true, projection.array());
 
-      uniformf(programObject3D, "color", [-1,0,0,1]);
-      
-      vertexAttribPointer(programObject3D, "Vertex", 3, pointBuffer);
+      vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObject3D, "aColor", 4, fillColorBuffer);
+      vertexAttribPointer(programObjectUnlitShape, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
 
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
 
-    var line2D = function line2D(vArray, mode, cArray){
+    /*
+      Draw 3D lines created from calls to beginShape/vertex/endShape
+      LINES, LINE_LOOP, etc.
+    */
+    var line3D = function line3D(vArray, mode, cArray){
       var ctxMode;
       if (mode === "LINES"){
         ctxMode = curContext.LINES;
@@ -5081,22 +5116,19 @@
       else{
         ctxMode = curContext.LINE_STRIP;
       }
-      var model = new PMatrix3D();
+
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
       view.apply(modelView.array());
 
-      curContext.useProgram(programObject3D);
-      uniformMatrix(programObject3D, "model", true, model.array());
-      uniformMatrix(programObject3D, "view", true, view.array());
-      uniformMatrix(programObject3D, "projection", true, projection.array());
-
-      uniformf(programObject3D, "color", [-1,0,0,0]);
+      curContext.useProgram(programObjectUnlitShape);
+      uniformMatrix(programObjectUnlitShape, "uView", true, view.array());
+      uniformMatrix(programObjectUnlitShape, "uProjection", true, projection.array());
       
-      vertexAttribPointer(programObject3D, "Vertex", 3, lineBuffer);
+      vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObject3D, "aColor", 4, strokeColorBuffer);
+      vertexAttribPointer(programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
 
       curContext.lineWidth(lineWidth);
@@ -5244,7 +5276,7 @@
                 lineVertArray.push(vertArray[i][j]);
               }
             }
-            point2D(lineVertArray, strokeVertArray);
+            point3D(lineVertArray, strokeVertArray);
           }
           else if(curShape === p.LINES){
             for(i = 0; i < vertArray.length; i++){
@@ -5257,25 +5289,31 @@
                 colorVertArray.push(vertArray[i][j]);
               }
             }
-            line2D(lineVertArray, "LINES", strokeVertArray);
+            line3D(lineVertArray, "LINES", strokeVertArray);
           }
           else if(curShape === p.TRIANGLES){
             if(vertArray.length > 2){
               for(i = 0; (i+2) < vertArray.length; i+=3){
                 fillVertArray = [];
                 lineVertArray = [];
+                colorVertArray = [];
+                strokeVertArray = [];
                 for(j = 0; j < 3; j++){
                   for(k = 0; k < 3; k++){
                     lineVertArray.push(vertArray[i+j][k]);
                     fillVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                if(doStroke){
-                  tinylogLite.log(">"+strokeVertArray);
-                  line2D(lineVertArray, "LINE_LOOP", strokeVertArray );
+                for(j = 0; j < 3; j++){
+                  for(k = 5; k < 9; k++){
+                    colorVertArray.push(vertArray[i+j][k]);
+                    strokeVertArray.push(vertArray[i+j][k+4]);
+                  }
                 }
-                if(doFill){tinylogLite.log("TRIANGLES");
-                tinylogLite.log(colorVertArray);
+                if(doStroke){
+                  line3D(lineVertArray, "LINE_LOOP", strokeVertArray );
+                }
+                if(doFill){
                   fill2D(fillVertArray, "TRIANGLES", colorVertArray);
                 }
               }
@@ -5286,17 +5324,26 @@
               for(i = 0; (i+2) < vertArray.length; i++){
                 lineVertArray = [];
                 fillVertArray = [];
+                strokeVertArray = [];
+                colorVertArray = [];
                 for(j = 0; j < 3; j++){
                   for(k = 0; k < 3; k++){
                     lineVertArray.push(vertArray[i+j][k]);
                     fillVertArray.push(vertArray[i+j][k]);
                   }
                 }
+                for(j = 0; j < 3; j++){
+                  for(k = 5; k < 9; k++){
+                    strokeVertArray.push(vertArray[i+j][k+4]);
+                    colorVertArray.push(vertArray[i+j][k]);
+                  }
+                }
+                
                 if(doFill){
-                  fill2D(fillVertArray);
+                  fill2D(fillVertArray, "dummy", colorVertArray);
                 }
                 if(doStroke){
-                  line2D(lineVertArray, "LINE_LOOP");
+                  line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
                 }
               }
             }
@@ -5322,11 +5369,11 @@
                   }
                 }
                 if(doStroke){
-                  line2D(lineVertArray, "LINE_STRIP");
+                  line3D(lineVertArray, "LINE_STRIP");
                 }
               }
               if(doFill){
-                fill2D(fillVertArray, "TRIANGLE_FAN");
+                fill3D(fillVertArray, "TRIANGLE_FAN");
               }
             }
           }
@@ -5410,12 +5457,18 @@
               }
             }
           }
+          // If the user didn't specify a type (LINES, TRIANGLES, etc)
           else{
+          
+            // If only one vertex was specified, it must be a point
             if(vertArray.length === 1){
               for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[0][j]);
               }
-              point2D(lineVertArray);
+              for(j = 9; j < 13; j++){
+                strokeVertArray.push(vertArray[0][j]);
+              }
+              point3D(lineVertArray,strokeVertArray);
             }
             else{
               for(i = 0; i < vertArray.length; i++){
