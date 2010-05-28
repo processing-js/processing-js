@@ -5355,25 +5355,44 @@
                   lineVertArray.push(vertArray[i][j]);
                 }
               }
-              if(doStroke){
-                line2D(lineVertArray, "LINE_LOOP");
+              for(i = 0; i < 3; i++){
+                for(j = 9; j < 13; j++){
+                  strokeVertArray.push(vertArray[i][j]);
+                }
               }
+              if(doStroke){
+                line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
+              }
+
+              
               for(i = 2; (i+1) < vertArray.length; i++){
                 lineVertArray = [];
+                strokeVertArray = [];
                 lineVertArray.push(vertArray[0][0]);
                 lineVertArray.push(vertArray[0][1]);
                 lineVertArray.push(vertArray[0][2]);
+                
+                strokeVertArray.push(vertArray[0][9]);
+                strokeVertArray.push(vertArray[0][10]);
+                strokeVertArray.push(vertArray[0][11]);
+                strokeVertArray.push(vertArray[0][12]);
+
                 for(j = 0; j < 2; j++){
                   for(k = 0; k < 3; k++){
                     lineVertArray.push(vertArray[i+j][k]);
                   }
                 }
+                for(j = 0; j < 2; j++){
+                  for(k = 9; k < 13; k++){
+                    strokeVertArray.push(vertArray[i+j][k]);
+                  }
+                }
                 if(doStroke){
-                  line3D(lineVertArray, "LINE_STRIP");
+                  line3D(lineVertArray, "LINE_STRIP",strokeVertArray);
                 }
               }
               if(doFill){
-                fill3D(fillVertArray, "TRIANGLE_FAN");
+                fill2D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
               }
             }
           }
@@ -5386,7 +5405,7 @@
                 }
               }
               if(doStroke){
-                line2D(lineVertArray, "LINE_LOOP",strokeVertArray);
+                line3D(lineVertArray, "LINE_LOOP",strokeVertArray);
               }
 
               if(doFill){
@@ -5431,7 +5450,7 @@
                   lineVertArray.push(vertArray[i][j]);
                 }
               }
-              line2D(lineVertArray, "LINE_STRIP");
+              line3D(lineVertArray, "LINE_STRIP");
               if(vertArray.length > 4 && vertArray.length % 2 > 0){
                 tempArray = fillVertArray.splice(fillVertArray.length - 6);
                 vertArray.pop();
