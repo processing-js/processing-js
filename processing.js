@@ -41,7 +41,6 @@
     p.mouseX = 0;
     p.mouseY = 0;
     p.mouseButton = 0;
-    p.mouseDown = false;
     p.mouseScroll = 0;
 
     // Undefined event handlers to be replaced by user when needed
@@ -52,6 +51,7 @@
     p.mouseReleased = undefined;
     p.mouseScrolled = undefined;
     p.key = undefined;
+    p.keyCode = undefined;
     p.keyPressed = undefined;
     p.keyReleased = undefined;
     p.keyTyped = undefined;
@@ -239,6 +239,7 @@
     // PJS defined constants
     p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
     p.FRAME_RATE         = 0;
+    p.MOUSE_PRESSED      = false;
     p.focused            = true;
     p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!!
     p.PRECISIONF         = 1 << p.PRECISIONB;
@@ -285,7 +286,6 @@
         colorModeY = 255,
         colorModeZ = 255,
         pathOpen = false,
-        mousePressed = false,
         mouseDragging = false,
         keyPressed = false,
         curColorMode = p.RGB,
@@ -7332,11 +7332,21 @@
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
 
-    p.extendClass = function extendClass(obj, args, fn) {
-      if (arguments.length === 3) {
-        fn.apply(obj, args);
-      } else {
-        args.call(obj);
+    p.extendClass = function extendClass(subClass, baseClass) {
+      for (var propertyName in baseClass) {
+        if (typeof subClass[propertyName] === 'undefined') {
+          if (typeof baseClass[propertyName] === 'function') {
+            subClass[propertyName] = baseClass[propertyName];
+            
+          } else {
+            subClass.__defineGetter__(propertyName, (function(propertyName) { 
+              return function(){return baseClass[propertyName];};
+            })(propertyName));
+            subClass.__defineSetter__(propertyName, (function(propertyName) { 
+              return function(v){baseClass[propertyName]=v;};
+            })(propertyName));
+          }
+        }
       }
     };
 
@@ -7390,10 +7400,10 @@
       p.mouseX = e.pageX - offsetX;
       p.mouseY = e.pageY - offsetY;
 
-      if (p.mouseMoved && !mousePressed) {
+      if (p.mouseMoved && !p.MOUSE_PRESSED) {
         p.mouseMoved();
       }
-      if (mousePressed && p.mouseDragged) {
+      if (p.MOUSE_PRESSED && p.mouseDragged) {
         p.mouseDragged();
         p.mouseDragging = true;
       }
@@ -7403,7 +7413,7 @@
     });
 
     attach(curElement, "mousedown", function(e) {
-      mousePressed = true;
+      p.MOUSE_PRESSED = true;
       p.mouseDragging = false;
       switch (e.which) {
       case 1:
@@ -7416,21 +7426,13 @@
         p.mouseButton = p.RIGHT;
         break;
       }
-      p.mouseDown = true;
-      if (typeof p.mousePressed === "function") {
-        p.mousePressed();
-      } else {
-        p.mousePressed = true;
-      }
+      p.mousePressed();
     });
 
     attach(curElement, "mouseup", function(e) {
-      mousePressed = false;
+      p.MOUSE_PRESSED = false;
       if (p.mouseClicked && !p.mouseDragging) {
         p.mouseClicked();
-      }
-      if (typeof p.mousePressed !== "function") {
-        p.mousePressed = false;
       }
       if (p.mouseReleased) {
         p.mouseReleased();
@@ -7460,113 +7462,100 @@
     attach(document, 'DOMMouseScroll', mouseWheelHandler);
     attach(document, 'mousewheel', mouseWheelHandler);
 
-    attach(document, "keydown", function(e) {
-      keyPressed = true;
-      p.keyCode = null;
-      p.key = e.keyCode;
-
+    //////////////////////////////////////////////////////////////////////////
+    // Keyboard Events
+    //////////////////////////////////////////////////////////////////////////
+    
+    function keyCodeMap(code, shift) {
       // Letters
-      if (e.keyCode >= 65 && e.keyCode <= 90) { // A-Z
+      if (code >= 65 && code <= 90) { // A-Z
         // Keys return ASCII for upcased letters.
         // Convert to downcase if shiftKey is not pressed.
-        if (!e.shiftKey) {
-          p.key += 32;
+        if (shift) {
+          return code;
+        }
+        else {
+          return code + 32;
         }
       }
 
       // Numbers and their shift-symbols
-      else if (e.keyCode >= 48 && e.keyCode <= 57) { // 0-9
-        if (e.shiftKey) {
-          switch (e.keyCode) {
+      else if (code >= 48 && code <= 57) { // 0-9
+        if (shift) {
+          switch (code) {
           case 49:
-            p.key = 33;
-            break; // !
+            return 33; // !
           case 50:
-            p.key = 64;
-            break; // @
+            return 64; // @
           case 51:
-            p.key = 35;
-            break; // #
+            return 35; // #
           case 52:
-            p.key = 36;
-            break; // $
+            return 36; // $
           case 53:
-            p.key = 37;
-            break; // %
+            return 37; // %
           case 54:
-            p.key = 94;
-            break; // ^
+            return 94; // ^
           case 55:
-            p.key = 38;
-            break; // &
+            return 38; // &
           case 56:
-            p.key = 42;
-            break; // *
+            return 42; // *
           case 57:
-            p.key = 40;
-            break; // (
+            return 40; // (
           case 48:
-            p.key = 41;
-            break; // )
+            return 41; // )
           }
         }
       }
 
       // Coded keys
-      else if (codedKeys.indexOf(e.keyCode) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
-        p.key = p.CODED;
-        p.keyCode = e.keyCode;
+      else if (codedKeys.indexOf(code) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
+        p.keyCode = code;
+        return p.CODED;
       }
 
       // Symbols and their shift-symbols
       else {
-        if (e.shiftKey) {
-          switch (e.keyCode) {
+        if (shift) {
+          switch (code) {
           case 107:
-            p.key = 43;
-            break; // +
+            return 43; // +
           case 219:
-            p.key = 123;
-            break; // {
+            return 123; // {
           case 221:
-            p.key = 125;
-            break; // }
+            return 125; // }
           case 222:
-            p.key = 34;
-            break; // "
+            return 34; // "
           }
         } else {
-          switch (e.keyCode) {
+          switch (code) {
           case 188:
-            p.key = 44;
-            break; // ,
+            return 44; // ,
           case 109:
-            p.key = 45;
-            break; // -
+            return 45; // -
           case 190:
-            p.key = 46;
-            break; // .
+            return 46; // .
           case 191:
-            p.key = 47;
-            break; // /
+            return 47; // /
           case 192:
-            p.key = 96;
-            break; // ~
+            return 96; // ~
           case 219:
-            p.key = 91;
-            break; // [
+            return 91; // [
           case 220:
-            p.key = 92;
-            break; // \
+            return 92; // \
           case 221:
-            p.key = 93;
-            break; // ]
+            return 93; // ]
           case 222:
-            p.key = 39;
-            break; // '
+            return 39; // '
           }
         }
       }
+      return code;
+    }
+
+    attach(document, "keydown", function(e) {
+      keyPressed = true;
+      p.keyCode = null;
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
 
       if (typeof p.keyPressed === "function") {
         p.keyPressed();
@@ -7576,6 +7565,10 @@
     });
 
     attach(document, "keyup", function(e) {
+      p.keyCode = null;
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+
+      //TODO: This needs to only be made false if all keys have been released.
       keyPressed = false;
       if (typeof p.keyPressed !== "function") {
         p.keyPressed = false;
@@ -7586,6 +7579,13 @@
     });
 
     attach(document, "keypress", function (e) {
+      // In Firefox, e.keyCode is not currently set with keypress.
+      //
+      // keypress will always happen after a keydown, so p.keyCode and p.key
+      // should remain correct. Some browsers (chrome) refire keydown when
+      // key repeats happen, others (firefox) don't. Either way keyCode and
+      // key should remain correct.
+      
       if (p.keyTyped) {
         p.keyTyped();
       }
@@ -7777,7 +7777,8 @@
     // we need to differentiate them somehow. So when we parse
     // the Processing.js source, replace frameRate so it isn't
     // confused with frameRate().
-    aCode = aCode.replace(/(\s*=\s*|\(*\s*)frameRate(\s*\)+?|\s*;)/, "$1p.FRAME_RATE$2");
+    aCode = aCode.replace(/frameRate\s*([^\(])/g, "FRAME_RATE$1");
+    aCode = aCode.replace(/\bmousePressed\b\s*([^\(])/g, "MOUSE_PRESSED$1");
 
     // Simple convert a function-like thing to function
     aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
@@ -7888,9 +7889,6 @@
       return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]");
     });
 
-    // super() is a reserved word
-    aCode = aCode.replace(/super\(/g, "superMethod(");
-
     // Stores the variables and mathods of a single class
     var SuperClass = function(name){
       return {
@@ -7917,9 +7915,12 @@
 
       // Move arguments up from constructor
       return "function " + name + "() {\n " +
-              (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
-              (extend ? "extendClass(this, " + extend + ");\n" : "") +
-              "<CLASS " + name + " " + extend + ">";
+              "var __this__ = this;\n" +
+              (extend ? "var super = {};\n" +
+                        "function superConstructor(){\n" + 
+                        extend + ".prototype.constructor.apply(super, arguments);\n" + 
+                        "extendClass(__this__, super);};" : "") +
+              "<CLASS " + name + " " + (extend ? extend : "") + ">";
     };
 
     var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
@@ -7938,7 +7939,7 @@
           extendingClass = m[2];
 
       allRest = allRest.slice(rest.length + 1);
-
+      
       // Fix class method names
       // this.collide = function() { ... }
       rest = (function() {
@@ -7976,7 +7977,7 @@
         rest = prev + allNext.slice(next.length + 1);
       }
 
-      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*{"),
+      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*\\{"),
           c,
           constructor = "",
           constructorsArray = [];
@@ -7988,7 +7989,7 @@
             next = nextBrace(allNext, "{", "}"),
             args = c[1];
 
-          args = args.split(/,\s*?/);
+        args = args.split(/,\s*?/);
 
         if (args[0].match(/^\s*$/)) {
           args.shift();
@@ -7999,11 +8000,20 @@
         for (var i = 0, aLength = args.length; i < aLength; i++) {
           constructor += " var " + args[i] + " = arguments[" + i + "];\n";
         }
+        
+        if (/super\s*\(/.test(next)) {
+          next = next.replace(/super\s*\(/g, "superConstructor(");
+        } else if (extendingClass) {
+          constructor += "superConstructor();\n";
+        }
 
         constructor += next + "}\n";
 
         constructorsArray.push(constructor);
         rest = prev + allNext.slice(next.length + 1);
+      }
+      if (constructorsArray.length === 0 && extendingClass){
+        constructorsArray.push("superConstructor();\n");
       }
 
       var vars = "",
@@ -8014,9 +8024,8 @@
       // and keep a list of all public variables
       rest = (function(){
         rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
-          variable = "this." + variable.replace(/,\s*/g, ";\nthis.")
-            .replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
-
+          variable = "this." + variable.replace(/,\s*/g, ";\nthis.");
+          variable = variable.replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
           publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
           thisSuperClass.classVariables += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
 
@@ -8056,7 +8065,8 @@
                 } else {
                   return "public." + variable;
                 }
-              }) + footer;
+              }).replace(/public\.(\w+\s*\()/g, "this.$1") + footer;
+              
             });
           }());
         }
@@ -8093,7 +8103,17 @@
       for (var i = 0, aLength = constructorsArray.length; i < aLength; i++){
         constructors += constructorsArray[i];
       }
+
+      if (extendingClass) {
+        for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
+          if (arrayOfSuperClasses[i].className === extendingClass){
+            thisSuperClass.classVariables += arrayOfSuperClasses[i].classVariables;
+            thisSuperClass.classFunctions = thisSuperClass.classFunctions.concat(arrayOfSuperClasses[i].classFunctions);
+          }
+        }
+      }
       arrayOfSuperClasses.push(thisSuperClass);
+
       rest = vars + "\n" + methods + "\n" + constructors;
       aCode = left + rest + "\n}" + staticVars + allRest;
     }

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../processing.js"></script>
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <h1>mousePressed() and mousePressed test</h1>
+
+    <p>
+    <canvas datasrc="mousePressed.pjs" width="100" height="100"></canvas>
+    </p>
+
+    <pre>
+int value = 0;
+
+void setup(){
+  size(200, 200);
+}
+
+void draw() {
+  fill(value);
+  rect(125, 125, 50, 50);
+  
+  if (mousePressed == true) {
+    fill(0);
+  } else {
+    fill(255);
+  }
+  rect(25, 25, 50, 50);
+}
+
+void mousePressed() {
+  if(value == 0) {
+    value = 255;
+  } else {
+    value = 0;
+  }
+}
+    </pre>
+  </body>
+</html>
