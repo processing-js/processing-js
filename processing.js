@@ -707,10 +707,10 @@
       },
       setName: function( name ){
         this.name = name;
-      }
+      },
       getName: function(){
         return this.name;
-      }
+      },
       //pre, post, styles, draw, drawGroup, drawPrimitives, drawGeometry, drawPath,  not in yet
       // return the PShape at the specific index from the children array or
       // return the Phape from a parent shape specified by its name
@@ -742,7 +742,21 @@
           return null;
         }              
       },
-      // findChild, addChild, addName not in yet
+      addChild: function( child ){
+        this.children.push( child );
+        child.parent = this;
+        if (child.getName() != null) {
+          this.addName(child.getName(), child);
+        }
+      },
+      addName: function( name,  shape) {
+        if (this.parent != null) {
+          this.parent.addName(name, shape);
+        } else {
+          this.nameTable.push([name, shape]);
+        }
+      },
+      // findChild not in yet
       translate: function(){
         if( arguments.length === 2)
         {
@@ -760,7 +774,7 @@
           } else {
             matrix = new p.PMatrix3D();
           }
-        }else if( dimensions ===3 && matrix instanceof PMatrix2D {
+        }else if( dimensions ===3 && matrix instanceof PMatrix2D ) {
           matrix = new p.PMatrix3D();
         }
       },
@@ -797,7 +811,7 @@
       resetMatrix: function(){
       	this.checkMatrix(2);
       	this.matrix.reset();
-      };
+      }
       //applyMatrix not done yet
     };
     p.PShape = PShape;
@@ -829,16 +843,734 @@
     		}
     		//shape.draw( this
     	}    	
-    };
+    }; 
     p.shapeMode = function ( mode ){
     		curShapeMode = mode;
-    }
+    };
     p.loadShape = function ( filename ){
-    	if( filename.toLowerCase().slice( filename.length - 4 ) === ".svg" ){
-    		return p.PShapeSVG( filename );
+    	if( filename.indexOf(".svg") > -1){
+     // alert("here");                                  
+    		return PShapeSVG( filename );
     	}
-    	return null;
-    }
+    	//return null;
+    };
+    var PShapeSVG = function( info ){
+      if( arguments.length == 1){
+        if( info.indexOf(".svg") > -1){//its a filename
+          var xml = new XMLElement( info );
+        } 
+        if ( xml ) {
+        
+            PShapeSVG.call(this, xml );
+         }
+      }
+      else if( arguments.length == 2){
+        if(arguments[0] == null){
+          // set values to their defaults according to the SVG spec
+          this.stroke = false;
+          this.strokeColor = 0xff000000;
+          this.strokeWeight = 1;
+          this.strokeCap = p.SQUARE;  // equivalent to BUTT in svg spec
+          this.strokeJoin = p.MITER;
+          this.strokeGradient = "";
+          this.strokeGradientPaint = "";
+          this.strokeName = "";
+          this.fill = true;
+          this.fillColor = 0xff000000;        
+          this.fillGradient = null;
+          this.fillGradientPaint = null;
+          this.strokeOpacity = 1;
+          this.fillOpacity = 1;
+          this.opacity = 1;
+        } else {
+          this.stroke = arguments[0].stroke;
+          this.strokeColor = arguments[0].strokeColor;
+          this.strokeWeight = arguments[0].strokeWeight;
+          this.strokeCap = arguments[0].strokeCap;
+          this.strokeJoin = arguments[0].strokeJoin;
+          this.strokeGradient = arguments[0].strokeGradient;
+          this.strokeGradientPaint = arguments[0].strokeGradientPaint;
+          this.strokeName = arguments[0].strokeName;
+
+          this.fill = arguments[0].fill;
+          this.fillColor = arguments[0].fillColor;
+          this.fillGradient = arguments[0].fillGradient;
+          this.fillGradientPaint = arguments[0].fillGradientPaint;
+          this.fillName = arguments[0].fillName;
+
+          //hasTransform = parent.hasTransform;
+          //transformation = parent.transformation;
+
+          this.opacity = arguments[0].opacity;
+        
+        }
+        this.element = arguments[1] ;
+        
+        var str = arguments[1].getAttribute( "transform" );
+        if( str ){
+          matrix = this.parseMatrix( str );
+        }
+        
+        this.parseColors( xml ); 
+        this.parseChildren( xml );
+        
+      }
+    };
+    PShapeSVG.prototype = {
+      parseMatrix: function( str ) {;},
+      parseChildren:function( element ){
+        var newelement = element.getChildren();
+        for (var i=0; i< newelement.length; i++) {
+          var kid = this.parseChild(newelement[i]);
+          if (kid != null) {
+            PShape.addChild(kid);
+          }
+        }
+      },
+      parseChild: function( elem ){
+        var name = elem.getName();
+        var shape;
+
+        if ( name === "g" ) {
+          shape = new PShapeSVG(this, elem);
+
+        } else if ( name === "defs" ) {
+          // generally this will contain gradient info, so may
+          // as well just throw it into a group element for parsing
+          shape = new PShapeSVG(this, elem);
+
+        } else if ( name === "line" ) {
+          shape = new PShapeSVG(this, elem);
+          shape.parseLine();
+
+        } else if (name === "circle") {
+          shape = new PShapeSVG(this, elem);
+          shape.parseEllipse(true);
+
+        } else if (name.equals("ellipse")) {
+          //return new BaseObject(this, elem, ELLIPSE);
+          shape = new PShapeSVG(this, elem);
+          shape.parseEllipse(false);
+
+        } else if (name === "rect") {
+          shape = new PShapeSVG(this, elem);
+          shape.parseRect();
+
+        } else if (name === "polygon") {
+          shape = new PShapeSVG(this, elem);
+          shape.parsePoly(true);
+
+        } else if (name.equals("polyline")) {
+          //return new BaseObject(this, elem, POLYGON);
+          shape = new PShapeSVG(this, elem);
+          shape.parsePoly(false);
+
+        } else if (name === "path") {
+          shape = new PShapeSVG(this, elem);
+          shape.parsePath();
+
+        } else if (name === "radialGradient") {
+          //return new RadialGradient(this, elem);
+
+        } else if (name === "linearGradient") {
+          //return new LinearGradient(this, elem);
+
+        } else if (name === "text") {
+          p.println("Text in SVG files is not currently supported, " +
+                                "convert text to outlines instead.");
+
+        } else if (name === "filter") {
+          p.println("Filters are not supported.");
+
+        } else if (name === "mask") {
+          p.println("Masks are not supported.");
+
+        } else {
+          p.println("Ignoring  <" + name + "> tag.");
+        }
+        return shape;
+      },
+      parsePath: function(){
+        this.family = PATH;
+        this.kind = 0;
+
+        var pathData = element.getAttribute("d");
+        if (pathData == null) return;
+        var pathDataChars = pathData.toCharArray();
+
+        var pathBuffer = "";
+        var lastSeparate = false;
+
+        for (var i = 0; i < pathDataChars.length; i++) {
+          var c = pathDataChars[i];
+          var separate = false;
+
+          if (c == 'M' || c == 'm' ||
+              c == 'L' || c == 'l' ||
+              c == 'H' || c == 'h' ||
+              c == 'V' || c == 'v' ||
+              c == 'C' || c == 'c' ||  // beziers
+              c == 'S' || c == 's' ||
+              c == 'Q' || c == 'q' ||  // quadratic beziers
+              c == 'T' || c == 't' ||
+              c == 'Z' || c == 'z' ||  // closepath
+              c == ',') {
+            separate = true;
+            if (i != 0) {
+              pathBuffer +="|";
+            }
+          }
+          if (c == 'Z' || c == 'z') {
+            separate = false;
+          }
+          if (c == '-' && !lastSeparate) {
+            // allow for 'e' notation in numbers, e.g. 2.10e-9 
+            // http://dev.processing.org/bugs/show_bug.cgi?id=1408
+            if (i == 0 || pathDataChars[i-1] != 'e') {
+              pathBuffer +="|";
+            }
+          }
+          if (c != ',') {
+            pathBuffer +="c"; //"" + pathDataBuffer.charAt(i));
+          }
+          if (separate && c != ',' && c != '-') {
+            pathBuffer +="|";
+          }
+          lastSeparate = separate;
+        }
+
+        // use whitespace constant to get rid of extra spaces and CR or LF
+        var pathDataKeys = pathBuffer.split("|");
+        vertices = [];
+        vertexCodes = [];
+
+        var cx = 0;
+        var cy = 0;
+
+        var i = 0;
+        while (i < pathDataKeys.length) {
+          var c = trim(pathDataKeys[i].charAt(0));
+          switch (c) {
+
+            case 'M':  // M - move to (absolute)
+              cx = pathDataKeys[i + 1];
+              cy = pathDataKeys[i + 2];
+              this.parsePathMoveto(cx, cy);
+              i += 3;
+              break;
+
+            case 'm':  // m - move to (relative)
+              cx = cx + pathDataKeys[i + 1];
+              cy = cy + pathDataKeys[i + 2];
+              this.parsePathMoveto(cx, cy);
+              i += 3;
+              break;
+
+            case 'L':
+              cx = pathDataKeys[i + 1];
+              cy = pathDataKeys[i + 2];
+              this.parsePathLineto(cx, cy);
+              i += 3;
+              break;
+
+            case 'l':
+              cx = cx + pathDataKeys[i + 1];
+              cy = cy + pathDataKeys[i + 2];
+              this.parsePathLineto(cx, cy);
+              i += 3;
+              break;
+
+              // horizontal lineto absolute
+            case 'H':
+              cx = pathDataKeys[i + 1];
+              this.parsePathLineto(cx, cy);
+              i += 2;
+              break;
+
+              // horizontal lineto relative
+            case 'h':
+              cx = cx + pathDataKeys[i + 1];
+              this.parsePathLineto(cx, cy);
+              i += 2;
+              break;
+
+            case 'V':
+              cy = pathDataKeys[i + 1];
+              this.parsePathLineto(cx, cy);
+              i += 2;
+              break;
+
+            case 'v':
+              cy = cy + pathDataKeys[i + 1];
+              this.parsePathLineto(cx, cy);
+              i += 2;
+              break;
+
+              // C - curve to (absolute)
+            case 'C': {
+              var ctrlX1 = pathDataKeys[i + 1];
+              var ctrlY1 = pathDataKeys[i + 2];
+              var ctrlX2 = pathDataKeys[i + 3];
+              var ctrlY2 = pathDataKeys[i + 4];
+              var endX   = pathDataKeys[i + 5];
+              var endY   = pathDataKeys[i + 6];
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 7;
+            }
+            break;
+
+            // c - curve to (relative)
+            case 'c': {
+              var ctrlX1 = cx + pathDataKeys[i + 1];
+              var ctrlY1 = cy + pathDataKeys[i + 2];
+              var ctrlX2 = cx + pathDataKeys[i + 3];
+              var ctrlY2 = cy + pathDataKeys[i + 4];
+              var endX   = cx + pathDataKeys[i + 5];
+              var endY   = cy + pathDataKeys[i + 6];
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 7;
+            }
+              break;
+
+              // S - curve to shorthand (absolute)
+            case 'S': {
+              var ppx = vertices[vertexCount-2][X];
+              var ppy = vertices[vertexCount-2][Y];
+              var px = vertices[vertexCount-1][X];
+              var py = vertices[vertexCount-1][Y];
+              var ctrlX1 = px + (px - ppx);
+              var ctrlY1 = py + (py - ppy);
+              var ctrlX2 = pathDataKeys[i + 1];
+              var ctrlY2 = pathDataKeys[i + 2];
+              var endX   = pathDataKeys[i + 3];
+              var endY   = pathDataKeys[i + 4];
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 5;
+            }
+              break;
+
+              // s - curve to shorthand (relative)
+            case 's': {
+              var ppx = vertices[vertexCount-2][X];
+              var ppy = vertices[vertexCount-2][Y];
+              var px = vertices[vertexCount-1][X];
+              var py = vertices[vertexCount-1][Y];
+              var ctrlX1 = px + (px - ppx);
+              var ctrlY1 = py + (py - ppy);
+              var ctrlX2 = cx + pathDataKeys[i + 1];
+              var ctrlY2 = cy + pathDataKeys[i + 2];
+              var endX   = cx + pathDataKeys[i + 3];
+              var endY   = cy + pathDataKeys[i + 4];
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 5;
+            }
+              break;
+
+              // Q - quadratic curve to (absolute)
+            case 'Q': {
+              var ctrlX = pathDataKeys[i + 1];
+              var ctrlY = pathDataKeys[i + 2];
+              var endX  = pathDataKeys[i + 3];
+              var endY  = pathDataKeys[i + 4];
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 5;
+            }
+            break;
+
+              // q - quadratic curve to (relative)
+            case 'q': {
+              var ctrlX = cx + pathDataKeys[i + 1];
+              var ctrlY = cy + pathDataKeys[i + 2];
+              var endX  = cx + pathDataKeys[i + 3];
+              var endY  = cy + pathDataKeys[i + 4];
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 5;
+            }
+              break;
+
+              // T - quadratic curve to shorthand (absolute)
+              // The control point is assumed to be the reflection of the
+              // control point on the previous command relative to the
+              // current point. (If there is no previous command or if the
+              // previous command was not a Q, q, T or t, assume the control
+              // point is coincident with the current point.)
+            case 'T': {
+              var ppx = vertices[vertexCount-2][X];
+              var ppy = vertices[vertexCount-2][Y];
+              var px = vertices[vertexCount-1][X];
+              var py = vertices[vertexCount-1][Y];
+              var ctrlX = px + (px - ppx);
+              var ctrlY = py + (py - ppy);
+              var endX  = pathDataKeys[i + 1];
+              var endY  = pathDataKeys[i + 2];
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 3;
+            }
+              break;
+
+              // t - quadratic curve to shorthand (relative)
+            case 't': {
+              var ppx = vertices[vertexCount-2][X];
+              var ppy = vertices[vertexCount-2][Y];
+              var px = vertices[vertexCount-1][X];
+              var py = vertices[vertexCount-1][Y];
+              var ctrlX = px + (px - ppx);
+              var ctrlY = py + (py - ppy);
+              var endX  = cx + pathDataKeys[i + 1];
+              var endY  = cy + pathDataKeys[i + 2];
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 3;
+            }
+              break;
+
+            case 'Z':
+            case 'z':
+              this.close = true;
+              i++;
+              break;
+
+            default:
+              /*String parsed =
+                PApplet.join(PApplet.subset(pathDataKeys, 0, i), ",");
+              String unparsed =
+                PApplet.join(PApplet.subset(pathDataKeys, i), ",");
+              System.err.println("parsed: " + parsed);
+              System.err.println("unparsed: " + unparsed);
+              if (pathDataKeys[i].equals("a") || pathDataKeys[i].equals("A")) {
+                String msg = "Sorry, elliptical arc support for SVG files " +
+                  "is not yet implemented (See bug #996 for details)";
+                throw new RuntimeException(msg);
+              }
+              throw new RuntimeException("shape command not handled: " + pathDataKeys[i]);
+            }*/
+          }
+        }
+      },
+      parsePathQuadto: function( x1, y1, cx, cy, x2, y2){
+        this.parsePathCode(p.BEZIER_VERTEX);
+        // x1/y1 already covered by last moveto, lineto, or curveto
+        this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
+        this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
+        this.parsePathVertex(x2, y2);
+      },
+      parsePathCurveto : function( x1,  y1, x2, y2, x3, y3) {
+        this.parsePathCode(p.BEZIER_VERTEX);
+        this.parsePathVertex(x1, y1);
+        this.parsePathVertex(x2, y2);
+        this.parsePathVertex(x3, y3);
+      },
+      parsePathLineto: function( px, py) {
+        this.parsePathCode(p.VERTEX);
+        this.parsePathVertex(px, py);
+      },
+      parsePathMoveto: function( px, py ) {
+        if (vertexCount > 0) {
+          this.parsePathCode(p.BREAK);
+        }
+        this.parsePathCode(p.VERTEX);
+        this.parsePathVertex(px, py);
+      },
+      parsePathVertex: function( x,  y) {
+        /*if (vertexCount == vertices.length) {
+          //vertices = (float[][]) PApplet.expand(vertices);
+          float[][] temp = new float[vertexCount << 1][2];
+          System.arraycopy(vertices, 0, temp, 0, vertexCount);
+          vertices = temp;
+        }
+        vertices[vertexCount][X] = x;
+        vertices[vertexCount][Y] = y;
+        vertexCount++;*/
+      },
+      parsePathCode: function( what) {
+        if (vertexCodeCount == vertexCodes.length) {
+          vertexCodes = PApplet.expand(vertexCodes);
+        }
+        vertexCodes[vertexCodeCount++] = what;
+      },
+      parsePoly: function( val ){
+        this.family = PATH;
+        this.close = close;
+
+        var pointsAttr = element.getAttribute("points");
+        if (pointsAttr != null) {
+          var pointsBuffer = pointsAttr.split(" ");
+          var verts = [];
+          for (var i = 0; i < pointsBuffer.length; i++) {
+            var pb = pointsBuffer[i].split(',');
+            verts[0] = pb[0];
+            verts[1] = pb[1];
+          }
+          vertArray.push( verts );
+        }
+      },
+      parseRect: function(){
+        this.kind = RECT;
+        this.family = PRIMITIVE;
+        this.params = [];
+        this.params[0] = element.getAttribute("x");
+        this.params[1] = element.getFloatAttribute("y");
+        this.params[2] = element.getFloatAttribute("width");
+        this.params[4] = element.getFloatAttribute("height");
+    
+      },
+      parseEllipse: function( val ){
+        this.kind = ELLIPSE;
+        this.family = PRIMITIVE;
+        this.params = [];
+
+        this.params[0] = element.getAttribute("cx");
+        this.params[1] = element.getAttribute("cy");
+
+        var rx, ry;
+        if ( val ) {
+          rx = ry = element.getAttribute("r");
+        } else {
+          rx = element.getAttribute("rx");
+          ry = element.getAttribute("ry");
+        }
+        this.params[0] -= rx;
+        this.params[1] -= ry;
+
+        this.params[2] = rx*2;
+        this.params[3] = ry*2;
+      },
+      parseLine: function(){
+        this.kind = LINE;
+        this.family = PRIMITIVE;
+        this.params = [];
+        this.params[0] = this.element.getAttribute("x1");
+        this.params[1] = this.element.getAttribute("y1");
+        this.params[2] = this.element.getAttribute("x2");
+        this.params[3] = this.element.getAttribute("y2");
+      },
+      parseColors: function( element ){
+        if (element.hasAttribute("opacity")) {
+          this.setOpacity(element.getAttribute("opacity"));
+        }
+
+        if (element.hasAttribute("stroke")) {
+          this.setStroke(element.getAttribute("stroke"));
+        }
+
+        if (element.hasAttribute("stroke-width")) {
+          // if NaN (i.e. if it's 'inherit') then default back to the inherit setting
+          this.setStrokeWeight(element.getAttribute("stroke-width"));
+        }
+
+        if (element.hasAttribute("stroke-linejoin")) {
+          this.setStrokeJoin(element.getAttribute("stroke-linejoin"));
+        }
+
+        if (element.hasAttribute("stroke-linecap")) {
+          this.setStrokeCap(element.getStringAttribute("stroke-linecap"));
+        }
+      },
+      setOpacity: function( opacity ){
+        this.strokeColor = parseInt(opacity * 255) << 24 | this.strokeColor & 0xFFFFFF;
+        this.fillColor   = parseInt(opacity * 255) << 24 | this.fillColor & 0xFFFFFF;
+      },
+      setStroke: function( strokeText ){
+        var opacityMask = this.strokeColor & 0xFF000000;
+        if (strokeText === "none") {
+          this.stroke = false;
+        } else if (strokeText.charAt(0) === "#") {
+          this.stroke = true;
+          this.strokeColor = opacityMask |
+            parseInt(this.strokeText.substring(1), 16) & 0xFFFFFF;
+        } else if (strokeText.indexOf("rgb") === 0 ) {
+          this.stroke = true;
+          this.strokeColor = opacityMask | this.parseRGB(strokeText);
+        } else if (strokeText.indexOf("url(#") === 0 ) {
+          this.strokeName = strokeText.substring(5, strokeText.length - 1);
+            //this.strokeObject = findChild(strokeName);
+          /*if (strokeObject instanceof Gradient) {
+            strokeGradient = (Gradient) strokeObject;
+            strokeGradientPaint = calcGradientPaint(strokeGradient); //, opacity);
+          } else {
+            System.err.println("url " + strokeName + " refers to unexpected data");
+          }*/
+        }
+      },
+      setStrokeWeight: function( weight ){
+        this.strokeWeight = weight;
+      },
+      setStrokeJoin: function( linejoin ){
+        if (linejoin === "miter") {
+          this.strokeJoin = p.MITER;
+
+        } else if (linejoin === "round" ) {
+          this.strokeJoin = p.ROUND;
+
+        } else if (linejoin === "bevel" ) {
+          this.strokeJoin = p.BEVEL;
+        }
+      },
+      setStrokeCap: function (linecap ){
+        if (linecap === "butt" ) {
+          this.strokeCap = p.SQUARE;
+
+        } else if (linecap === "round") {
+          this.strokeCap = p.ROUND;
+
+        } else if (linecap === "square") {
+          tihs.strokeCap = p.PROJECT;
+        }
+      },
+      parseRGB: function( color ){
+        var sub = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
+        var values = sub.split(", ");
+        return (values[0] << 16) | (values[1] << 8) | (values[2]);
+      }      
+    };
+    
+    var XMLElement = function( ){
+      if( arguments.length === 4 ){
+        this.attributes = [];
+        this.children = [];
+        this.fullName = arguments[0];
+        if ( arguments[1] ) {
+            this.name = arguments[1];
+        } else {
+            var index = this.fullName.indexOf(':');
+            if( index >= 0 ) {
+                this.name = this.fullName.substring(index + 1);
+            } else {
+                this.name = this.fullName;
+            }
+        }
+        this.namespace = arguments[1];
+        this.content = "";
+        this.lineNr = arguments[3];
+        this.systemID = arguments[2];
+        this.parent = "";
+      }
+      else if( arguments.length === 1 ){// filename or svg xml element
+        if( arguments[0].indexOf(".svg") > -1){//its a filename
+          return this.parse(  arguments[0] );
+        } else {}
+      }
+      
+    };
+    XMLElement.prototype = {
+      parse: function( filename ){
+        var xmlDoc;
+        try {
+          xmlDoc = document.implementation.createDocument("", "", null);
+        }
+        catch(e_fx_op) {
+          //Processing.debug(e_fx_op.message);
+          return;
+        }
+        try {
+          xmlDoc.async = false;
+          xmlDoc.load( filename );
+          //parseSVGFont(xmlDoc.getElementsByTagName("svg")[0]);
+        }
+        catch(e_sf_ch) {
+          // Google Chrome, Safari etc.
+          //Processing.debug(e_sf_ch);
+          try {
+            var xmlhttp = new window.XMLHttpRequest();
+            xmlhttp.open("GET", filename, false);
+            xmlhttp.send(null);
+            //parseSVGFont(xmlhttp.responseXML.documentElement);
+          }
+          catch(e) {
+            //Processing.debug(e_sf_ch);
+          }
+        }
+        try{
+          var elements = xmlDoc.getElementsByTagName("svg")[0];
+          return elements;
+        }
+          catch (e) {
+        }
+        //go through each element
+        for(var i in elements.children){
+          //elements.getChildren[i];
+          i.attributes;
+        }
+        //var xmlElement = new XMLElement( filename );
+      },
+      hasAttribute: function ( name ){
+        return this.getAttribute( name ) != null;
+        //2 parameter call missing
+      },
+      getAttribute: function (){
+        if( arguments.length === 2 ){
+          var attribute = this.findAttribute( arguments[0] );
+          if( attribute ){
+            return attribute.getValue();
+          } else {
+            return arguments[1];
+          }
+        }else if( arguments.length === 1 ){
+          var attribute = this.findAttribute( arguments[0] );
+          if( attribute ){
+            return attribute.getValue();
+          } else {
+            return null;
+          }
+        }
+      },
+      findAttribute: function( name ){
+        for( var i in this.attributes){
+          if( i.getName() === name ){
+            return i;
+          }
+        }
+        return null; 
+      },
+      getChildren: function(){
+        return this.children;
+      }
+    };
+    var XMLAttribute = function ( fullname, name, namespace, value, type){
+      this.fullName = fullName;
+      this.name = name;
+      this.namespace = namespace;
+      this.value = value;
+      this.type = type;
+    };
+    XMLAttribute.prototype = {
+      getName: function(){ //g , defs
+        return this.name;
+      },
+      getFullName: function() {
+        return this.fullName;
+      },
+      getNamespace: function() {
+        return this.namespace;
+      }, 
+      getValue: function() {
+        return this.value;
+      },
+      getType: function() {
+        return this.type;
+      },
+      setValue: function( newval ){
+        this.value = newval;
+      }
+    };
+    var SVGShapeParser = function( svg ){
+    
+    };
     ////////////////////////////////////////////////////////////////////////////
     // PVector
     ////////////////////////////////////////////////////////////////////////////
@@ -7343,7 +8075,6 @@
         a = 0;
         lastCom = "";
         lenC = c.length - 1;
-
         // Loop through SVG commands translating to canvas eqivs functions in path object
         for (var j = 0; j < lenC; j++) {
           var com = c[j][0], xy = regex(getXY, com);
@@ -7425,7 +8156,6 @@
 
       // Parse SVG font-file into block of Canvas commands
       var parseSVGFont = function parseSVGFontse(svg) {
-        // Store font attributes
         var font = svg.getElementsByTagName("font");
         p.glyphTable[url].horiz_adv_x = font[0].getAttribute("horiz-adv-x");
 
@@ -7481,7 +8211,7 @@
         }
         catch(e_sf_ch) {
           // Google Chrome, Safari etc.
-          Processing.debug(e_sf_ch);
+          //Processing.debug(e_sf_ch);
           try {
             var xmlhttp = new window.XMLHttpRequest();
             xmlhttp.open("GET", url, false);
