@@ -547,7 +547,7 @@
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
       "  if( lightCount == 0 ) {" +
-      "    gl_FrontColor = col + vec4(mat_specular,1.0);" +
+      "    gl_FrontColor = col + vec4(mat_specular,0.0);" +
       "  }" +
       "  else {" +
       "    for( int i = 0; i < lightCount; i++ ) {" +
@@ -4144,6 +4144,16 @@
       }
     }
 
+   function disableVertexAttribPointer(programObj, varName){
+     var varLocation = curContext.getAttribLocation(programObj, varName);
+     //tinylogLite.log(varLocation);
+     if (varLocation !== -1) {
+       curContext.disableVertexAttribArray(varLocation);
+     }else{
+     //tinylogLite.log(varLocation);
+     }
+   }
+
     function uniformMatrix(programObj, varName, transpose, matrix) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
       // the variable won't be found if it was optimized out.
@@ -4428,7 +4438,7 @@
         if (!h || !d) {
           h = d = w;
         }
-
+    
         // Modeling transformation
         var model = new PMatrix3D();
         model.scale(w, h, d);
@@ -4443,6 +4453,8 @@
         uniformMatrix(programObject3D, "model", true, model.array());
         uniformMatrix(programObject3D, "view", true, view.array());
         uniformMatrix(programObject3D, "projection", true, projection.array());
+
+        disableVertexAttribPointer(programObject3D, "aColor");
 
         if (doFill === true) {
           // fix stitching problems. (lines get occluded by triangles
