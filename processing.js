@@ -5984,7 +5984,12 @@
               aImg.imageData.data[offset+3] = c2[3];
             }
           };
-        }(this))
+        }(this)),
+        set: function(arr) {
+          for (var i = 0, aL = arr.Length; i < aL; i++) {
+            this.setPixel(i, arr[i]);
+          }
+        }
       };
 
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
@@ -6042,6 +6047,11 @@
         // changed for 0.9
         this.imageData = curContext.createImageData(this.width, this.height);
         this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
+      } else {
+        this.width = 0;
+        this.height = 0;
+        this.imageData = curContext.createImageData(1, 1);
+        this.format = p.ARGB;
       }
     };
 
@@ -6215,6 +6225,11 @@
           p.imageData.data[offset+1] = c2[1];
           p.imageData.data[offset+2] = c2[2];
           p.imageData.data[offset+3] = c2[3];
+        }
+      },
+      set: function(arr) {
+        for (var i = 0, aL = arr.Length; i < aL; i++) {
+          this.setPixel(i, arr[i]);
         }
       }
     };
@@ -7817,33 +7832,6 @@
       this.toString();
     };
 
-    // changes pixels[n] into pixels.getPixels(n)
-    // and pixels[n] = n2 into pixels.setPixels(n, n2)
-    var matchPixels = /pixels\s*\[/,
-        mp;
-
-    while ((mp = aCode.match(matchPixels))) {
-      var left = RegExp.leftContext,
-          allRest = RegExp.rightContext,
-          rest = nextBrace(allRest, "[", "]"),
-          getOrSet = "getPixel";
-
-      allRest = allRest.slice(rest.length + 1);
-
-      allRest = (function(){
-        return allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
-          rest += ", " + middle;
-          getOrSet = "setPixel";
-          return end;
-        });
-      }());
-
-      aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
-    }
-
-    // changes pixel.length to pixels.getLength()
-    aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
-
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 
@@ -8155,6 +8143,38 @@
 
     // Convert 3.0f to just 3.0
     aCode = aCode.replace(/(\d+)f/g, "$1");
+
+    // changes pixels[n] into pixels.getPixels(n)
+    // and pixels[n] = n2 into pixels.setPixels(n, n2)
+    var matchPixels = /pixels\s*\[/,
+        mp;
+
+    while ((mp = aCode.match(matchPixels))) {
+      var left = RegExp.leftContext,
+          allRest = RegExp.rightContext,
+          rest = nextBrace(allRest, "[", "]"),
+          getOrSet = "getPixel";
+
+      allRest = allRest.slice(rest.length + 1);
+
+      allRest = (function(){
+        return allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
+          rest += ", " + middle;
+          getOrSet = "setPixel";
+          return end;
+        });
+      }());
+
+      aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
+    }
+
+    // changes pixel.length to pixels.getLength()
+    aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
+
+    // pixels = ... ; <-- pixels.set(...);    
+    aCode = aCode.replace(/pixels\s=\s([^;]*?);/g, function(all, params){
+      return "pixels.set(" + params + ")";
+    });
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
     for (var n = 0, sl = strings.length; n < sl; n++) {
