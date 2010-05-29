@@ -2844,20 +2844,28 @@
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
 
-      if (isNaN(binaryString)) {
-        throw "NaN_Err";
+      if (typeof binaryString === 'object' && binaryString.constructor === Array) {
+        var values = [];
+        for (var i = 0; i < binaryString.length; i++) {
+          values[i] = p.unbinary(binaryString[i]);
+        }
+        return values;
       } else {
-        if (arguments.length === 1 || binaryString.length === 8) {
-          if (binaryPattern.test(binaryString)) {
-            for (var i = 0; i < 8; i++) {
-              addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
-            }
-            return addUp + "";
-          } else {
-            throw "notBinary: the value passed into unbinary was not an 8 bit binary number";
-          }
+        if (isNaN(binaryString)) {
+          throw "NaN_Err";
         } else {
-          throw "longErr";
+          if (arguments.length === 1 || binaryString.length === 8) {
+            if (binaryPattern.test(binaryString)) {
+              for (var i = 0; i < 8; i++) {
+                addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
+              }
+              return addUp + "";
+            } else {
+              throw "notBinary: the value passed into unbinary was not an 8 bit binary number";
+            }
+          } else {
+            throw "longErr";
+          }
         }
       }
     };
