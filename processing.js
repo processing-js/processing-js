@@ -5340,7 +5340,7 @@
                 }
                 
                 if(doFill){
-                  fill2D(fillVertArray, "dummy", colorVertArray);
+                  fill2D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
                 }
                 if(doStroke){
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
@@ -5437,7 +5437,7 @@
                 }
                 for(j = 5; j < 9; j++){
                   colorVertArray.push(vertArray[i+2][j]);
-                }
+                }tinylogLite.log(colorVertArray);
                 fill2D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
               }
             }
@@ -5479,7 +5479,7 @@
                 line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
               if(doFill){
-                fill2D(fillVertArray,"dummy", colorVertArray);
+                fill2D(fillVertArray, "TRIANGLE_LIST", colorVertArray);
               }
             }
           }
@@ -5501,15 +5501,18 @@
                 for(j = 0; j < 3; j++){
                   lineVertArray.push(vertArray[i][j]);
                 }
+                for(j = 9; j < 13; j++){
+                  strokeVertArray.push(vertArray[i][j]);
+                }
               }
               if(p.CLOSE){
-                line2D(lineVertArray, "LINE_LOOP");
+                line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
               }
               else{
-                line2D(lineVertArray, "LINE_STRIP");
+                line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
               if(doFill){
-                fill2D(fillVertArray);
+                //fill2D(fillVertArray);
               }
             }
           }
