@@ -7365,6 +7365,13 @@
         } while (element = element.offsetParent);
       }
 
+      // Add padding and border style widths to offset
+      offsetX += parseInt(curElement.style.paddingLeft, 10);
+      offsetY += parseInt(curElement.style.paddingTop, 10);
+
+      offsetX += parseInt(curElement.style.borderLeft, 10);
+      offsetY += parseInt(curElement.style.borderTop, 10);
+
       // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
       // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
       p.mouseX = e.pageX - offsetX;
