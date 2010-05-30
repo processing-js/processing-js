@@ -2844,14 +2844,14 @@
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
 
-      if (typeof binaryString === 'object' && binaryString.constructor === Array) {
+      if (binaryString instanceof Array) {
         var values = [];
         for (var i = 0; i < binaryString.length; i++) {
           values[i] = p.unbinary(binaryString[i]);
         }
         return values;
       } else {
-        if (isNaN(binaryString)) {
+        if (binaryString != binaryString) { // isNaN
           throw "NaN_Err";
         } else {
           if (arguments.length === 1 || binaryString.length === 8) {
