@@ -36,34 +36,39 @@
     p.glyphTable = {};
 
     // Global vars for tracking mouse position
-    p.pmouseX = 0;
-    p.pmouseY = 0;
-    p.mouseX = 0;
-    p.mouseY = 0;
-    p.mouseButton = 0;
-    p.mouseScroll = 0;
+    p.pmouseX         = 0;
+    p.pmouseY         = 0;
+    p.mouseX          = 0;
+    p.mouseY          = 0;
+    p.mouseButton     = 0;
+    p.mouseScroll     = 0;
 
     // Undefined event handlers to be replaced by user when needed
-    p.mouseClicked = undefined;
-    p.mouseDragged = undefined;
-    p.mouseMoved = undefined;
-    p.mousePressed = undefined;
-    p.mouseReleased = undefined;
-    p.mouseScrolled = undefined;
-    p.key = undefined;
-    p.keyCode = undefined;
-    p.keyPressed = undefined;
-    p.keyReleased = undefined;
-    p.keyTyped = undefined;
-    p.draw = undefined;
-    p.setup = undefined;
+    p.mouseClicked    = undefined;
+    p.mouseDragged    = undefined;
+    p.mouseMoved      = undefined;
+    p.mousePressed    = undefined;
+    p.mouseReleased   = undefined;
+    p.mouseScrolled   = undefined;
+    p.key             = undefined;
+    p.keyCode         = undefined;
+    p.keyPressed      = undefined;
+    p.keyReleased     = undefined;
+    p.keyTyped        = undefined;
+    p.draw            = undefined;
+    p.setup           = undefined;
+
+    // Remapped vars 
+    p.__mousePressed  = false;
+    p.__keyPressed    = false;
+    p.__frameRate     = 0;
+
+    // The current animation frame
+    p.frameCount = 0;
 
     // The height/width of the canvas
     p.width = curElement.width - 0;
     p.height = curElement.height - 0;
-
-    // The current animation frame
-    p.frameCount = 0;
 
     // Color modes
     p.RGB   = 1;
@@ -238,9 +243,6 @@
 
     // PJS defined constants
     p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
-    p.FRAME_RATE         = 0;
-    p.MOUSE_PRESSED      = false;
-    p.focused            = true;
     p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!!
     p.PRECISIONF         = 1 << p.PRECISIONB;
     p.PREC_MAXVAL        = p.PRECISIONF - 1;
@@ -250,6 +252,8 @@
     p.NORMAL_MODE_SHAPE  = 1;
     p.NORMAL_MODE_VERTEX = 2;
     p.MAX_LIGHTS         = 8;
+
+    p.focused            = true;
 
     // "Private" variables used to maintain state
     var curContext,
@@ -287,7 +291,6 @@
         colorModeZ = 255,
         pathOpen = false,
         mouseDragging = false,
-        keyPressed = false,
         curColorMode = p.RGB,
         curTint = function() {},
         curTextSize = 12,
@@ -2632,7 +2635,7 @@
       if (sec > 0.5) {
         timeSinceLastFPS = new Date().getTime();
         framesSinceLastFPS = 0;
-        p.FRAME_RATE = fps;
+        p.__frameRate = fps;
       }
 
       p.frameCount++;
@@ -7400,10 +7403,10 @@
       p.mouseX = e.pageX - offsetX;
       p.mouseY = e.pageY - offsetY;
 
-      if (p.mouseMoved && !p.MOUSE_PRESSED) {
+      if (p.mouseMoved && !p.__mousePressed) {
         p.mouseMoved();
       }
-      if (p.MOUSE_PRESSED && p.mouseDragged) {
+      if (p.__mousePressed && p.mouseDragged) {
         p.mouseDragged();
         p.mouseDragging = true;
       }
@@ -7413,7 +7416,7 @@
     });
 
     attach(curElement, "mousedown", function(e) {
-      p.MOUSE_PRESSED = true;
+      p.__mousePressed = true;
       p.mouseDragging = false;
       switch (e.which) {
       case 1:
@@ -7430,7 +7433,7 @@
     });
 
     attach(curElement, "mouseup", function(e) {
-      p.MOUSE_PRESSED = false;
+      p.__mousePressed = false;
       if (p.mouseClicked && !p.mouseDragging) {
         p.mouseClicked();
       }
@@ -7553,15 +7556,13 @@
     }
 
     attach(document, "keydown", function(e) {
-      keyPressed = true;
+      p.__keyPressed = true;
       p.keyCode = null;
       p.key = keyCodeMap(e.keyCode, e.shiftKey);
 
       if (typeof p.keyPressed === "function") {
         p.keyPressed();
-      } else {
-        p.keyPressed = true;
-      }
+      } 
     });
 
     attach(document, "keyup", function(e) {
@@ -7569,11 +7570,9 @@
       p.key = keyCodeMap(e.keyCode, e.shiftKey);
 
       //TODO: This needs to only be made false if all keys have been released.
-      keyPressed = false;
-      if (typeof p.keyPressed !== "function") {
-        p.keyPressed = false;
-      }
-      if (p.keyReleased) {
+      p.__keyPressed = false;
+
+      if (typeof p.keyReleased === "function") {
         p.keyReleased();
       }
     });
@@ -7777,8 +7776,9 @@
     // we need to differentiate them somehow. So when we parse
     // the Processing.js source, replace frameRate so it isn't
     // confused with frameRate().
-    aCode = aCode.replace(/frameRate\s*([^\(])/g, "FRAME_RATE$1");
-    aCode = aCode.replace(/\bmousePressed\b\s*([^\(])/g, "MOUSE_PRESSED$1");
+    aCode = aCode.replace(/frameRate\s*([^\(])/g, "__frameRate$1");
+    aCode = aCode.replace(/\bmousePressed\b\s*([^\(])/g, "__mousePressed$1");
+    aCode = aCode.replace(/\bkeyPressed\b\s*([^\(])/g, "__keyPressed$1");
 
     // Simple convert a function-like thing to function
     aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
