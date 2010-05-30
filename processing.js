@@ -3027,20 +3027,24 @@
     };
 
     p.unhex = function(hex) {
-      if (typeof hex === "object" && hex.constructor === Array) {
-        var values = [];
+      var value;
+
+      if (hex instanceof Array) {
+        value = [];
+
         for (var i = 0; i < hex.length; i++) {
-          values[i] = p.unhex(hex[i]);
+          value[i] = p.unhex(hex[i]);
         }
-        return values;
       } else {
-        var value = parseInt("0x" + hex); 
+        value = parseInt("0x" + hex, 16); 
+
         // correct for int overflow java expectation
         if (value > 2147483647) {
           value -= 4294967296;
         }
-        return value;
       }
+
+      return value;
     };
 
     // Load a file or URL into strings
