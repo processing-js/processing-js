@@ -7358,17 +7358,25 @@
       p.pmouseX = p.mouseX;
       p.pmouseY = p.mouseY;
 
+      // Fine element offset
       if (element.offsetParent) {
         do {
           offsetX += element.offsetLeft;
           offsetY += element.offsetTop;
         } while (element = element.offsetParent);
       }
+      
+      // Find Scroll offset
+      element = curElement;
+      do {
+        offsetX -= element.scrollLeft || 0;
+        offsetY -= element.scrollTop || 0;
+      } while (element = element.parentNode);
 
       // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
       // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
-      p.mouseX = e.pageX - offsetX;
-      p.mouseY = e.pageY - offsetY;
+      p.mouseX = e.clientX - offsetX;
+      p.mouseY = e.clientY - offsetY;
 
       if (p.mouseMoved && !p.__mousePressed) {
         p.mouseMoved();
