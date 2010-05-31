@@ -1,44 +1,29 @@
+// Test by Andor Salga
+import processing.opengl.*;
+
 void setup() 
 { 
-  size(100, 100, P3D);
+  size(100, 100, OPENGL);
   background(0);
-  colorMode(RGB, 1); 
-  strokeWeight(5);
 
-  translate(width/2, height/2, 0); 
-  scale(30);
+  stroke(255, 0, 0);
+  for(int x = 0; x < 100; x++){
+    beginShape();
+    vertex(x, x, 0);
+    endShape();
+  }
 
-  directionalLight(255,255,0, 0, 0, -1);
+  stroke(0, 255, 0);
+  for(int x = 0; x < 100; x++){
+    beginShape();
+    vertex(100-x, x, 0);
+    endShape();
+  }
 
-  beginShape(LINES);
-
-  stroke(0, 1, 1); vertex(-1,  1,  1);
-  stroke(1, 1, 1); vertex( 1,  1,  1);
-  stroke(0, 1, 1); vertex(-1,  1,  1);
-  stroke(0, 0, 1); vertex(-1, -1,  1);
-  stroke(1, 0, 1); vertex( 1, -1,  1);
-  stroke(0, 0, 1); vertex(-1, -1,  1);
-
-  stroke(1, 1, 1); vertex( 1,  1,  1);
-  stroke(1, 1, 0); vertex( 1,  1, -1);
-  stroke(1, 1, 1); vertex( 1,  1,  1);
-  stroke(1, 0, 1); vertex( 1, -1,  1);
-  stroke(1, 0, 0); vertex( 1, -1, -1);
-  stroke(1, 0, 1); vertex( 1, -1,  1);
-
-  stroke(1, 1, 0); vertex( 1,  1, -1);
-  stroke(0, 1, 0); vertex(-1,  1, -1);
-  stroke(1, 1, 0); vertex( 1,  1, -1);
-  stroke(1, 0, 0); vertex( 1, -1, -1);
-  stroke(0, 0, 0); vertex(-1, -1, -1);
-  stroke(1, 0, 0); vertex( 1, -1, -1);
-
-  stroke(0, 1, 0); vertex(-1,  1, -1);
-  stroke(0, 1, 1); vertex(-1,  1,  1);
-  stroke(0, 1, 0); vertex(-1,  1, -1);
-  stroke(0, 0, 0); vertex(-1, -1, -1);
-  stroke(0, 0, 1); vertex(-1, -1,  1);
-  stroke(0, 0, 0); vertex(-1, -1, -1);
-
-  endShape();
-} 
+  stroke(0 ,0, 255);
+  for(int x = 0; x < 100; x++){
+    beginShape();
+    vertex(100-x, 50, 0);
+    endShape();
+  }
+}

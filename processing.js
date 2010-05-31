@@ -5360,7 +5360,6 @@
               if(doStroke){
                 line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
               }
-
               
               for(i = 2; (i+1) < vertArray.length; i++){
                 lineVertArray = [];
@@ -5461,6 +5460,7 @@
               }
               for(i = 0; (i+3) < vertArray.length; i+=2){
                 lineVertArray = [];
+                strokeVertArray = [];
                 for(j = 0; j < 3; j++){
                   lineVertArray.push(vertArray[i+1][j]);
                 }
@@ -5473,8 +5473,21 @@
                 for(j = 0; j < 3; j++){
                   lineVertArray.push(vertArray[i+0][j]);
                 }
+                for(j = 9; j < 13; j++){
+                  strokeVertArray.push(vertArray[i+1][j]);
+                }
+                for(j = 9; j < 13; j++){
+                  strokeVertArray.push(vertArray[i+3][j]);
+                }
+                for(j = 9; j < 13; j++){
+                  strokeVertArray.push(vertArray[i+2][j]);
+                }
+                for(j = 9; j < 13; j++){
+                  strokeVertArray.push(vertArray[i+0][j]);
+                }
                 line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
+
               if(doFill){
                 fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray);
               }
