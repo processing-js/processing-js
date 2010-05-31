@@ -36,34 +36,39 @@
     p.glyphTable = {};
 
     // Global vars for tracking mouse position
-    p.pmouseX = 0;
-    p.pmouseY = 0;
-    p.mouseX = 0;
-    p.mouseY = 0;
-    p.mouseButton = 0;
-    p.mouseScroll = 0;
+    p.pmouseX         = 0;
+    p.pmouseY         = 0;
+    p.mouseX          = 0;
+    p.mouseY          = 0;
+    p.mouseButton     = 0;
+    p.mouseScroll     = 0;
 
     // Undefined event handlers to be replaced by user when needed
-    p.mouseClicked = undefined;
-    p.mouseDragged = undefined;
-    p.mouseMoved = undefined;
-    p.mousePressed = undefined;
-    p.mouseReleased = undefined;
-    p.mouseScrolled = undefined;
-    p.key = undefined;
-    p.keyCode = undefined;
-    p.keyPressed = undefined;
-    p.keyReleased = undefined;
-    p.keyTyped = undefined;
-    p.draw = undefined;
-    p.setup = undefined;
+    p.mouseClicked    = undefined;
+    p.mouseDragged    = undefined;
+    p.mouseMoved      = undefined;
+    p.mousePressed    = undefined;
+    p.mouseReleased   = undefined;
+    p.mouseScrolled   = undefined;
+    p.key             = undefined;
+    p.keyCode         = undefined;
+    p.keyPressed      = undefined;
+    p.keyReleased     = undefined;
+    p.keyTyped        = undefined;
+    p.draw            = undefined;
+    p.setup           = undefined;
+
+    // Remapped vars 
+    p.__mousePressed  = false;
+    p.__keyPressed    = false;
+    p.__frameRate     = 0;
+
+    // The current animation frame
+    p.frameCount = 0;
 
     // The height/width of the canvas
     p.width = curElement.width - 0;
     p.height = curElement.height - 0;
-
-    // The current animation frame
-    p.frameCount = 0;
 
     // Color modes
     p.RGB   = 1;
@@ -238,9 +243,6 @@
 
     // PJS defined constants
     p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
-    p.FRAME_RATE         = 0;
-    p.MOUSE_PRESSED      = false;
-    p.focused            = true;
     p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!!
     p.PRECISIONF         = 1 << p.PRECISIONB;
     p.PREC_MAXVAL        = p.PRECISIONF - 1;
@@ -250,6 +252,8 @@
     p.NORMAL_MODE_SHAPE  = 1;
     p.NORMAL_MODE_VERTEX = 2;
     p.MAX_LIGHTS         = 8;
+
+    p.focused            = true;
 
     // "Private" variables used to maintain state
     var curContext,
@@ -287,7 +291,6 @@
         colorModeZ = 255,
         pathOpen = false,
         mouseDragging = false,
-        keyPressed = false,
         curColorMode = p.RGB,
         curTint = function() {},
         curTextSize = 12,
@@ -2632,7 +2635,7 @@
       if (sec > 0.5) {
         timeSinceLastFPS = new Date().getTime();
         framesSinceLastFPS = 0;
-        p.FRAME_RATE = fps;
+        p.__frameRate = fps;
       }
 
       p.frameCount++;
@@ -2844,20 +2847,28 @@
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
 
-      if (isNaN(binaryString)) {
-        throw "NaN_Err";
+      if (binaryString instanceof Array) {
+        var values = [];
+        for (var i = 0; i < binaryString.length; i++) {
+          values[i] = p.unbinary(binaryString[i]);
+        }
+        return values;
       } else {
-        if (arguments.length === 1 || binaryString.length === 8) {
-          if (binaryPattern.test(binaryString)) {
-            for (var i = 0; i < 8; i++) {
-              addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
-            }
-            return addUp + "";
-          } else {
-            throw "notBinary: the value passed into unbinary was not an 8 bit binary number";
-          }
+        if (binaryString != binaryString) { // isNaN
+          throw "NaN_Err";
         } else {
-          throw "longErr";
+          if (arguments.length === 1 || binaryString.length === 8) {
+            if (binaryPattern.test(binaryString)) {
+              for (var i = 0; i < 8; i++) {
+                addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
+              }
+              return addUp + "";
+            } else {
+              throw "notBinary: the value passed into unbinary was not an 8 bit binary number";
+            }
+          } else {
+            throw "longErr";
+          }
         }
       }
     };
@@ -3026,80 +3037,24 @@
       return hexstring;
     };
 
-    p.unhex = function(str) {
-      var value = 0, multiplier = 1, num = 0;
+    p.unhex = function(hex) {
+      var value;
 
-      var len = str.length - 1;
-      for (var i = len; i >= 0; i--) {
-        try {
-          switch (str[i]) {
-          case "0":
-            num = 0;
-            break;
-          case "1":
-            num = 1;
-            break;
-          case "2":
-            num = 2;
-            break;
-          case "3":
-            num = 3;
-            break;
-          case "4":
-            num = 4;
-            break;
-          case "5":
-            num = 5;
-            break;
-          case "6":
-            num = 6;
-            break;
-          case "7":
-            num = 7;
-            break;
-          case "8":
-            num = 8;
-            break;
-          case "9":
-            num = 9;
-            break;
-          case "A":
-          case "a":
-            num = 10;
-            break;
-          case "B":
-          case "b":
-            num = 11;
-            break;
-          case "C":
-          case "c":
-            num = 12;
-            break;
-          case "D":
-          case "d":
-            num = 13;
-            break;
-          case "E":
-          case "e":
-            num = 14;
-            break;
-          case "F":
-          case "f":
-            num = 15;
-            break;
-          default:
-            return 0;
-          }
-          value += num * multiplier;
-          multiplier *= 16;
-        } catch(e) {
-          Processing.debug(e);
+      if (hex instanceof Array) {
+        value = [];
+
+        for (var i = 0; i < hex.length; i++) {
+          value[i] = p.unhex(hex[i]);
         }
+      } else {
+        value = parseInt("0x" + hex, 16); 
+
         // correct for int overflow java expectation
         if (value > 2147483647) {
           value -= 4294967296;
         }
       }
+
       return value;
     };
 
@@ -5984,7 +5939,12 @@
               aImg.imageData.data[offset+3] = c2[3];
             }
           };
-        }(this))
+        }(this)),
+        set: function(arr) {
+          for (var i = 0, aL = arr.Length; i < aL; i++) {
+            this.setPixel(i, arr[i]);
+          }
+        }
       };
 
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
@@ -6042,6 +6002,11 @@
         // changed for 0.9
         this.imageData = curContext.createImageData(this.width, this.height);
         this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
+      } else {
+        this.width = 0;
+        this.height = 0;
+        this.imageData = curContext.createImageData(1, 1);
+        this.format = p.ARGB;
       }
     };
 
@@ -6215,6 +6180,11 @@
           p.imageData.data[offset+1] = c2[1];
           p.imageData.data[offset+2] = c2[2];
           p.imageData.data[offset+3] = c2[3];
+        }
+      },
+      set: function(arr) {
+        for (var i = 0, aL = arr.Length; i < aL; i++) {
+          this.setPixel(i, arr[i]);
         }
       }
     };
@@ -7400,10 +7370,10 @@
       p.mouseX = e.pageX - offsetX;
       p.mouseY = e.pageY - offsetY;
 
-      if (p.mouseMoved && !p.MOUSE_PRESSED) {
+      if (p.mouseMoved && !p.__mousePressed) {
         p.mouseMoved();
       }
-      if (p.MOUSE_PRESSED && p.mouseDragged) {
+      if (p.__mousePressed && p.mouseDragged) {
         p.mouseDragged();
         p.mouseDragging = true;
       }
@@ -7413,7 +7383,7 @@
     });
 
     attach(curElement, "mousedown", function(e) {
-      p.MOUSE_PRESSED = true;
+      p.__mousePressed = true;
       p.mouseDragging = false;
       switch (e.which) {
       case 1:
@@ -7430,7 +7400,7 @@
     });
 
     attach(curElement, "mouseup", function(e) {
-      p.MOUSE_PRESSED = false;
+      p.__mousePressed = false;
       if (p.mouseClicked && !p.mouseDragging) {
         p.mouseClicked();
       }
@@ -7553,15 +7523,13 @@
     }
 
     attach(document, "keydown", function(e) {
-      keyPressed = true;
+      p.__keyPressed = true;
       p.keyCode = null;
       p.key = keyCodeMap(e.keyCode, e.shiftKey);
 
       if (typeof p.keyPressed === "function") {
         p.keyPressed();
-      } else {
-        p.keyPressed = true;
-      }
+      } 
     });
 
     attach(document, "keyup", function(e) {
@@ -7569,11 +7537,9 @@
       p.key = keyCodeMap(e.keyCode, e.shiftKey);
 
       //TODO: This needs to only be made false if all keys have been released.
-      keyPressed = false;
-      if (typeof p.keyPressed !== "function") {
-        p.keyPressed = false;
-      }
-      if (p.keyReleased) {
+      p.__keyPressed = false;
+
+      if (typeof p.keyReleased === "function") {
         p.keyReleased();
       }
     });
@@ -7777,8 +7743,9 @@
     // we need to differentiate them somehow. So when we parse
     // the Processing.js source, replace frameRate so it isn't
     // confused with frameRate().
-    aCode = aCode.replace(/frameRate\s*([^\(])/g, "FRAME_RATE$1");
-    aCode = aCode.replace(/\bmousePressed\b\s*([^\(])/g, "MOUSE_PRESSED$1");
+    aCode = aCode.replace(/frameRate\s*([^\(])/g, "__frameRate$1");
+    aCode = aCode.replace(/\bmousePressed\b\s*([^\(])/g, "__mousePressed$1");
+    aCode = aCode.replace(/\bkeyPressed\b\s*([^\(])/g, "__keyPressed$1");
 
     // Simple convert a function-like thing to function
     aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
@@ -7816,33 +7783,6 @@
     Error.prototype.printStackTrace = function() {
       this.toString();
     };
-
-    // changes pixels[n] into pixels.getPixels(n)
-    // and pixels[n] = n2 into pixels.setPixels(n, n2)
-    var matchPixels = /pixels\s*\[/,
-        mp;
-
-    while ((mp = aCode.match(matchPixels))) {
-      var left = RegExp.leftContext,
-          allRest = RegExp.rightContext,
-          rest = nextBrace(allRest, "[", "]"),
-          getOrSet = "getPixel";
-
-      allRest = allRest.slice(rest.length + 1);
-
-      allRest = (function(){
-        return allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
-          rest += ", " + middle;
-          getOrSet = "setPixel";
-          return end;
-        });
-      }());
-
-      aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
-    }
-
-    // changes pixel.length to pixels.getLength()
-    aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
 
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
@@ -8155,6 +8095,38 @@
 
     // Convert 3.0f to just 3.0
     aCode = aCode.replace(/(\d+)f/g, "$1");
+
+    // changes pixels[n] into pixels.getPixels(n)
+    // and pixels[n] = n2 into pixels.setPixels(n, n2)
+    var matchPixels = /pixels\s*\[/,
+        mp;
+
+    while ((mp = aCode.match(matchPixels))) {
+      var left = RegExp.leftContext,
+          allRest = RegExp.rightContext,
+          rest = nextBrace(allRest, "[", "]"),
+          getOrSet = "getPixel";
+
+      allRest = allRest.slice(rest.length + 1);
+
+      allRest = (function(){
+        return allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
+          rest += ", " + middle;
+          getOrSet = "setPixel";
+          return end;
+        });
+      }());
+
+      aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
+    }
+
+    // changes pixel.length to pixels.getLength()
+    aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
+
+    // pixels = ... ; <-- pixels.set(...);    
+    aCode = aCode.replace(/pixels\s=\s([^;]*?);/g, function(all, params){
+      return "pixels.set(" + params + ")";
+    });
 
     // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
     for (var n = 0, sl = strings.length; n < sl; n++) {
