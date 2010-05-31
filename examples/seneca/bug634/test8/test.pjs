@@ -1,3 +1,4 @@
+// Test by Andor Salga
 import processing.opengl.*;
 
 void setup() 

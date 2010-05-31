@@ -5233,7 +5233,7 @@
       }
       else{
         if(p.use3DContext){ // 3D context
-          
+
           var lineVertArray = [];
           var fillVertArray = [];
           var colorVertArray = [];
@@ -5485,7 +5485,6 @@
           }
           // If the user didn't specify a type (LINES, TRIANGLES, etc)
           else{
-          
             // If only one vertex was specified, it must be a point
             if(vertArray.length === 1){
               for(j = 0; j < 3; j++){
@@ -5501,8 +5500,11 @@
                 for(j = 0; j < 3; j++){
                   lineVertArray.push(vertArray[i][j]);
                 }
-                for(j = 9; j < 13; j++){
+                for(j = 5; j < 9; j++){
                   strokeVertArray.push(vertArray[i][j]);
+                }
+                for(j = 9; j < 13; j++){
+                  colorVertArray.push(vertArray[i][j]);
                 }
               }
               if(p.CLOSE){
@@ -5512,7 +5514,7 @@
                 line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
               if(doFill){
-                //fill2D(fillVertArray);
+                fill2D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
               }
             }
           }

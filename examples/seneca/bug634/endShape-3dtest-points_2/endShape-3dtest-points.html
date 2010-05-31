@@ -6,35 +6,27 @@
   </head>
   <body>
     <h1>beginShape() and endShape() test</h1>
+    <p>P5 doesn't give the same result, is it broken?</p>
 
     <p>
-    <canvas datasrc="endShape-3Dtest-points.pjs" width="500" height="100"></canvas>
+    <canvas datasrc="endShape-3Dtest-points.pjs"></canvas>
+    <img src="p5_result.jpg" style="margin: 10px 0px;" />
     </p>
+    
 
-    <pre>
-size(500, 100, P3D);
-background(200);
+    <pre>import processing.opengl.*;
 
-beginShape(POINTS);
-stroke(255,0,0);vertex(30, 20);
-stroke(0,0,255);vertex(85, 20);
-stroke(0,255,0);vertex(85, 75);
-stroke(255,0,0);vertex(30, 75);
-endShape(CLOSE);
+void setup(){
+  size(500, 500, P3D);
 
-beginShape(POINTS);
-stroke(0,0,255);vertex(130, 20);
-stroke(255,0,0);vertex(185, 20);
-stroke(255,0,0);vertex(185, 75);
-endShape(CLOSE);
-
-beginShape(POINTS);
-stroke(0,0,0);vertex(230, 20);
-stroke(255,0,0);vertex(285, 20);
-endShape(CLOSE);
-
-beginShape(POINTS);
-stroke(0,0,255);vertex(330, 20);
-endShape(CLOSE);</pre>
+  beginShape(POINTS);
+  for(int x = 0; x < 255; x++){
+    for(int y = 0; y < 255; y++){
+      stroke(x,y,255-x);
+      vertex( x * 2, y * 2, 0);
+    }
+  }
+  endShape(CLOSE);
+}</pre>
   </body>
 </html>
