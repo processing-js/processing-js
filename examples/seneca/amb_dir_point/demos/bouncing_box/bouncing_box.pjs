@@ -18,8 +18,7 @@ void draw()
   background(0);
 
   camera();
-strokeWeight(5);
- // noStroke();
+  noStroke();
 
   directionalLight(128, 0, 0, 0, 1, 0);
   directionalLight(0, 0, 128, 0, -1, 0);

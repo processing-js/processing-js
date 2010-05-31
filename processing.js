@@ -302,8 +302,10 @@
         curveDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
+        // Shaders
         programObject3D,
         programObject2D,
+        programObjectUnlitShape,
         boxBuffer,
         boxNormBuffer,
         boxOutlineBuffer,
@@ -555,7 +557,6 @@
       "  vec4 col = color;" +
       "  if(color[0] == -1.0){" +
       "    col = aColor;" +
-    //"col = vec4(1.0, 0.0, 0.0, 1.0);"+
       "  }" +
 
       "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
@@ -567,7 +568,7 @@
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
       "  if( lightCount == 0 ) {" +
-      "    gl_FrontColor = col + vec4(mat_specular,0.0);" +
+      "    gl_FrontColor = col + vec4(mat_specular,1.0);" +
       "  }" +
       "  else {" +
       "    for( int i = 0; i < lightCount; i++ ) {" +
@@ -5230,7 +5231,6 @@
       }
       else{
         if(p.use3DContext){ // 3D context
-
           var lineVertArray = [];
           var fillVertArray = [];
           var colorVertArray = [];
@@ -5241,6 +5241,7 @@
               fillVertArray.push(vertArray[i][j]);
             }
           }
+          
           fillVertArray.push(vertArray[0][0]);
           fillVertArray.push(vertArray[0][1]);
           fillVertArray.push(vertArray[0][2]);
