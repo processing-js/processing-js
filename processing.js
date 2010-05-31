@@ -4165,11 +4165,8 @@
 
    function disableVertexAttribPointer(programObj, varName){
      var varLocation = curContext.getAttribLocation(programObj, varName);
-     //tinylogLite.log(varLocation);
      if (varLocation !== -1) {
        curContext.disableVertexAttribArray(varLocation);
-     }else{
-     //tinylogLite.log(varLocation);
      }
    }
 
@@ -5437,7 +5434,7 @@
                 }
                 for(j = 5; j < 9; j++){
                   colorVertArray.push(vertArray[i+2][j]);
-                }tinylogLite.log(colorVertArray);
+                }
                 fill2D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
               }
             }

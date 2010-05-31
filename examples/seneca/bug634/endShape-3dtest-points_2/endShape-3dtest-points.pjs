@@ -1,8 +1,8 @@
 
 
 void setup(){
-  size(500, 500);
-strokeWeight(1);
+  size(500, 500, P3D);
+  strokeWeight(2);
 
   beginShape(POINTS);
   for(int x = 0; x < 255; x++){
