@@ -5133,7 +5133,7 @@
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
-    var fill2D = function fill2D(vArray, mode, cArray){
+    var fill3D = function fill3D(vArray, mode, cArray){
       var ctxMode;
       if(mode === "TRIANGLES"){
         ctxMode = curContext.TRIANGLES;
@@ -5311,7 +5311,7 @@
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray );
                 }
                 if(doFill){
-                  fill2D(fillVertArray, "TRIANGLES", colorVertArray);
+                  fill3D(fillVertArray, "TRIANGLES", colorVertArray);
                 }
               }
             }
@@ -5337,7 +5337,7 @@
                 }
                 
                 if(doFill){
-                  fill2D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
+                  fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
                 }
                 if(doStroke){
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
@@ -5389,7 +5389,7 @@
                 }
               }
               if(doFill){
-                fill2D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
               }
             }
           }
@@ -5435,7 +5435,7 @@
                 for(j = 5; j < 9; j++){
                   colorVertArray.push(vertArray[i+2][j]);
                 }
-                fill2D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
+                fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
               }
             }
           }
@@ -5476,7 +5476,7 @@
                 line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
               if(doFill){
-                fill2D(fillVertArray, "TRIANGLE_LIST", colorVertArray);
+                fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray);
               }
             }
           }
@@ -5511,7 +5511,7 @@
                 line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
               if(doFill){
-                fill2D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
               }
             }
           }
