@@ -8536,13 +8536,10 @@
       return res;
     };
 
-    function AstStatementsBlock(statements) {
-      this.statements = statements;
-    }
-    AstStatementsBlock.prototype.toString = function() {
+    function getLocalNames(statements) {
       var localNames = [];
-      for(var i=0,l=this.statements.length;i<l;++i) {
-        var statement = this.statements[i];
+      for(var i=0,l=statements.length;i<l;++i) {
+        var statement = statements[i];
         if(statement instanceof AstVar) {
           localNames = localNames.concat(statement.getNames());
         } else if(statement instanceof AstForStatement &&
@@ -8550,6 +8547,14 @@
           localNames = localNames.concat(statement.argument.initStatement.getNames());        
         }
       }
+      return localNames;
+    }
+    
+    function AstStatementsBlock(statements) {
+      this.statements = statements;
+    }
+    AstStatementsBlock.prototype.toString = function() {
+      var localNames = getLocalNames(this.statements);
       var oldContext = replaceContext;
       replaceContext = function(name) {
         return inArray(localNames, name) ? name : oldContext(name);
@@ -8568,8 +8573,9 @@
       this.statements = statements;
     }
     AstRoot.prototype.toString = function() {
+      var localNames = getLocalNames(this.statements);
       replaceContext = function(name) {
-        if(name in globalMembers) {
+        if(name in globalMembers && !inArray(localNames, name)) {
           return "processing." + name;
         }
         return name;
