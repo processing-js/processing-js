@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for <a href="https://processing-js.lighthouseapp.com/projects/41284-processingjs/tickets/596">bug 596</a></h2>
+
+    <p>This page tests the fix for <a href="https://processing-js.lighthouseapp.com/projects/41284-processingjs/tickets/596">bug 596</a> in <a href="http://processingjs.org/">Processing.js</a><br />
+      This<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs" width="100" height="100"> </canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0px;" />
+    </p>
+    
+    <pre>
+<b>// Test by Andor Salga</b>
+import processing.opengl.*;
+
+void setup(){
+  size(100, 100, OPENGL);
+  translate(width/2, height/2, 0);
+  box(20);
+}</pre>
+
+  </body>
+</html>
