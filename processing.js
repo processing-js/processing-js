@@ -7366,11 +7366,18 @@
       }
 
       // Add padding and border style widths to offset
-      offsetX += parseInt(curElement.style.paddingLeft, 10) || 0;
-      offsetY += parseInt(curElement.style.paddingTop, 10) || 0;
+      if (document.defaultView.getComputedStyle) {
+        var paddingLeft = document.defaultView.getComputedStyle(curElement, null)['paddingLeft'];
+        var paddingTop  = document.defaultView.getComputedStyle(curElement, null)['paddingTop'];
+        var borderLeft  = document.defaultView.getComputedStyle(curElement, null)['borderLeftWidth'];
+        var borderTop   = document.defaultView.getComputedStyle(curElement, null)['borderTopWidth'];
 
-      offsetX += parseInt(curElement.style.borderLeft, 10) || 0;
-      offsetY += parseInt(curElement.style.borderTop, 10) || 0;
+        offsetX += parseInt(paddingLeft, 10) || 0;
+        offsetY += parseInt(paddingTop, 10)  || 0;
+
+        offsetX += parseInt(borderLeft, 10)  || 0;
+        offsetY += parseInt(borderTop, 10)   || 0;
+      }
 
       // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
       // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
