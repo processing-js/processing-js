@@ -32,7 +32,6 @@ var canvas = {
                    bezierCurveTo: __empty_func__,
                    viewport: __empty_func__,
                    clearColor: __empty_func__,
-                   clear: __empty_func__,
                    enable: __empty_func__,
                    createShader: __empty_func__,
                    shaderSource: __empty_func__,
@@ -138,6 +137,7 @@ Table.prototype.getTableMax = __empty_func__;
 var FloatTable = __empty_func__;
 FloatTable.prototype.getRowCount = __empty_func__;
 FloatTable.prototype.getColumnCount = __empty_func__;
+FloatTable.prototype.getColumnName = function() { return "name"; };
 FloatTable.prototype.getRowNames = function() { return ["2004","2005", "2006", "2007", "2008", "2009", "2010"]; };
 FloatTable.prototype.getTableMax = function() { return 4; };
 
@@ -174,3 +174,4 @@ var SpinSpots = __empty_func__;
 
 var SearchClient = __empty_func__;
 var WebSearchRequest = __empty_func__;
+
