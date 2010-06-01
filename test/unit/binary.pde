@@ -1,11 +1,3 @@
-//color c = color(255, 204, 0);
-//_checkEqual(binary(c), "11111111111111111100110000000000");     // Prints 11111111111111111100110000000000
-//_checkEqual(binary(c, 16), "1100110000000000"); // Prints 1100110000000000
-
-function sbin(bin,d){
-  return new String("" + binary(bin,d));
-}
-
 // INTEGER
 int i1_32 = 0;
 String si1_32 = "00000000000000000000000000000000";
@@ -37,16 +29,19 @@ String si9_25 = "1011010111110000100011000";
 int i10_31 = 1431655765;
 String si10_31 = "1010101010101010101010101010101";
 
-_checkEqual(sbin(i1_32), si1_32);
-_checkEqual(sbin(i2_32), si2_32);
-_checkEqual(sbin(i3_32), si3_32);
-_checkEqual(sbin(i4_32), si4_32);
-_checkEqual(sbin(i5_32), si5_32);
-_checkEqual(sbin(i6_32), si6_32);
-_checkEqual(sbin(i7_32), si7_32);
-_checkEqual(sbin(i8_32), si8_32);
-_checkEqual(sbin(i9_25,25), si9_25);
-_checkEqual(sbin(i10_31,31), si10_31);
+int i11 = 0;
+String si10_31 = "1010101010101010101010101010101";
+
+_checkEqual(binary(i1_32), si1_32);
+_checkEqual(binary(i2_32), si2_32);
+_checkEqual(binary(i3_32), si3_32);
+_checkEqual(binary(i4_32), si4_32);
+_checkEqual(binary(i5_32), si5_32);
+_checkEqual(binary(i6_32), si6_32);
+_checkEqual(binary(i7_32), si7_32);
+_checkEqual(binary(i8_32), si8_32);
+_checkEqual(binary(i9_25,25), si9_25);
+_checkEqual(binary(i10_31,31), si10_31);
 
 // COLORS
 color cr1 = color(0,0,0);
@@ -68,10 +63,10 @@ color cr6_32 = color(255,0,0,255);
 String scr6_32 = "11111111111111110000000000000000";
 
 color cr7_32 = color(127,127,127,127);
-String scr7_32 = "1111111011111110111111101111111";  
+String scr7_32 = "1111111011111110111111101111111";
 
 color cr8 = color(0,127,0,127);
-String scr8 = "1111111000000000111111100000000";  
+String scr8 = "1111111000000000111111100000000";
 
 color cr9_32 = color(128,128,128,128);
 String scr9_32 = "10000000100000001000000010000000";
@@ -94,23 +89,30 @@ String scr14_1 = "0";
 color cr15_2 = color(0,0,2,0);
 String scr15_2 = "10";
 
+color cr16 = color(255,204,0);
+String scr16 = "11111111111111111100110000000000";
 
-_checkEqual(sbin(cr1), scr1);
-//_checkEqual(sbin(cr2), scr2);
-_checkEqual(sbin(cr3_24,24), scr3_24);
-//_checkEqual(sbin(cr4), scr4);
-_checkEqual(sbin(cr5), scr5);
-_checkEqual(sbin(cr6_32,32), scr6_32);
-//_checkEqual(sbin(cr7_32,32), scr7_32);
+color cr17_16 = color(255,204,0);
+String scr16_16 = "1100110000000000";
 
-//_checkEqual(sbin(cr8), scr8);
-_checkEqual(sbin(cr9_32,32), scr9_32);
-//_checkEqual(sbin(cr10), scr10);
-//_checkEqual(sbin(cr11_13,13), scr13_32);
-//_checkEqual(sbin(cr12_25,25), cr12_25);
-_checkEqual(sbin(cr13_32,32), scr13_32);
-_checkEqual(sbin(cr14_1,1), scr14_1);
-_checkEqual(sbin(cr15_2,2), scr15_2);
+_checkEqual(binary(cr1), scr1);
+//_checkEqual(binary(cr2), scr2);
+_checkEqual(binary(cr3_24,24), scr3_24);
+//_checkEqual(binary(cr4), scr4);
+_checkEqual(binary(cr5), scr5);
+_checkEqual(binary(cr6_32,32), scr6_32);
+//_checkEqual(binary(cr7_32,32), scr7_32);
+
+//_checkEqual(binary(cr8), scr8);
+_checkEqual(binary(cr9_32,32), scr9_32);
+//_checkEqual(binary(cr10), scr10);
+//_checkEqual(binary(cr11_13,13), scr13_32);
+//_checkEqual(binary(cr12_25,25), cr12_25);
+_checkEqual(binary(cr13_32,32), scr13_32);
+_checkEqual(binary(cr14_1,1), scr14_1);
+_checkEqual(binary(cr15_2,2), scr15_2);
+_checkEqual(binary(cr16), scr16);
+//_checkEqual(binary(cr15_2,2), scr15_2);
 
 // BYTE
 byte b1_32 = 0;
@@ -143,16 +145,16 @@ String sb9_8 = "00101010";
 byte b10_4 = 42;
 String sb10_4 = "1010";
 
-_checkEqual(sbin(b1_32,32), sb1_32);
-_checkEqual(sbin(b2_8,8), b2_8);
-_checkEqual(sbin(b3_3,3), sb3_3);
-_checkEqual(sbin(b4_8,8), sb4_8);
-_checkEqual(sbin(b5_8,8), sb5_8);
-_checkEqual(sbin(b6_5,5), sb6_5);
-_checkEqual(sbin(b7_8,8), sb7_8);
-_checkEqual(sbin(b8_8,8), sb8_8);
-_checkEqual(sbin(b9_8,8), sb9_8);
-_checkEqual(sbin(b10_4,4),sb10_4);
+_checkEqual(binary(b1_32,32), sb1_32);
+_checkEqual(binary(b2_8,8), b2_8);
+_checkEqual(binary(b3_3,3), sb3_3);
+_checkEqual(binary(b4_8,8), sb4_8);
+_checkEqual(binary(b5_8,8), sb5_8);
+_checkEqual(binary(b6_5,5), sb6_5);
+_checkEqual(binary(b7_8,8), sb7_8);
+_checkEqual(binary(b8_8,8), sb8_8);
+_checkEqual(binary(b9_8,8), sb9_8);
+_checkEqual(binary(b10_4,4),sb10_4);
 
 
 // CHAR
@@ -192,31 +194,15 @@ String sc11_12 = "000000101010";
 char c12_32 = (char)-1;
 String sc12_32 = "00000000000000001111111111111111"; 
 
-_checkEqual(sbin(c1_17,17), sc1_17);
-_checkEqual(sbin(c2_32,32), sc2_32);
-_checkEqual(sbin(c3_32,32), sc3_32);
-_checkEqual(sbin(c4_32,32), sc4_32);
-_checkEqual(sbin(c5_15,15), sc5_15);
-//_checkEqual(sbin(c6_32), sc6_32);
-_checkEqual(sbin(c7), sc7);
-//_checkEqual(sbin(c8), sc8);
-_checkEqual(sbin(c9_32,32), sc9_32);
-_checkEqual(sbin(c10_30,30), sc10_30);
-_checkEqual(sbin(c11_12,12), sc11_12);
-//_checkEqual(sbin(c12_32), sc12_32);
-
-
-
-/*
-    color cr2 = color(0,0,0,0);
-    String scr2 = "0";
-    color cr4 = color(0,0,0,1);
-    String scr4 = "1000000000000000000000000";
-    color cr10 = color(255,128,64,8);
-    String scr10 = "1000111111111000000001000000";
-*/
-
-//_checkEqual(sbin(color(0,0,0)),"000000000000000000000000");
-//_checkEqual(binary(color(0,0,0),000000000000000000000000));
-//_checkEqual(binary(color(0,0,0,1),1000000000000000000000000));
-//_checkEqual(binary(color(0,0,0,255),11111111000000000000000000000000));
+_checkEqual(binary(c1_17,17), sc1_17);
+_checkEqual(binary(c2_32,32), sc2_32);
+_checkEqual(binary(c3_32,32), sc3_32);
+_checkEqual(binary(c4_32,32), sc4_32);
+_checkEqual(binary(c5_15,15), sc5_15);
+_checkEqual(binary(c6_32,32), sc6_32);
+_checkEqual(binary(c7), sc7);
+//_checkEqual(binary(c8), sc8);
+_checkEqual(binary(c9_32,32), sc9_32);
+_checkEqual(binary(c10_30,30), sc10_30);
+_checkEqual(binary(c11_12,12), sc11_12);
+//_checkEqual(binary(c12_32,32), sc12_32);
