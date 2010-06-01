@@ -7598,7 +7598,7 @@
 
       var executeSketch = function(processing) {
         // Don't start until all specified images in the cache are preloaded
-        if (!processing.pjs.imageCache.pending) {
+        if (!p.pjs.imageCache.pending) {
           eval(parsedCode);
 
           // Run void setup()
