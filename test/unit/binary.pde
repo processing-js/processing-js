@@ -3,12 +3,7 @@
 //_checkEqual(binary(c, 16), "1100110000000000"); // Prints 1100110000000000
 
 function sbin(bin,d){
-//if(d){
   return new String("" + binary(bin,d));
-//}
-//else{
- // return new String("" + binary(bin));
-//}
 }
 
 // integer
@@ -39,6 +34,21 @@ _checkEqual(sbin(color(0,0,0),25),"1000000000000000000000000");
 _checkEqual(sbin(color(0,0,0,0)),"00000000000000000000000000000000");
 _checkEqual(sbin(color(0,0,0,0),1),"0");
 _checkEqual(sbin(color(0,0,2,0),2),"10");
+
+// "byte"
+_checkEqual(sbin(0),"00000000000000000000000000000000");
+_checkEqual(sbin(5,3),"101");
+_checkEqual(sbin(-5,5),"11011");
+_checkEqual(sbin(42,4),"1010");
+
+_checkEqual(sbin(1,8),"00000001");
+_checkEqual(sbin(-1,8),"11111111");
+_checkEqual(sbin(-5,8),"11111011");
+_checkEqual(sbin(127,8),"01111111");
+_checkEqual(sbin(-127,8),"10000001");
+_checkEqual(sbin(42,8),"00101010");
+
+
 
 /*
     color cr2 = color(0,0,0,0);
