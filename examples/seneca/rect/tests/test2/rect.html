@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for rect() 3D in Pjs</h2>
+
+
+    <p>
+      <canvas datasrc="rect.pjs"> </canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0;"/>
+    </p>
+    
+    <pre><b>// Test by Andor Salga</b>
+import processing.opengl.*;
+
+int START_X = 10;
+
+int counter = 0;
+int currX = START_X;
+int currY = 10;
+
+int RECTS_PER_ROW = 10;
+int RECT_SIZE = 30;
+
+int Y_OFFSET = 50;
+int X_OFFSET = 50;
+
+void setup()
+{
+  size(500,500, OPENGL);
+  strokeWeight(6);
+
+  // default
+  drawRect();
+  
+  fill(0);
+  drawRect();
+  
+  fill(0);
+  drawRect();
+  
+  fill(0);
+  drawRect();
+  
+  fill(0);
+  drawRect();
+
+  fill(0);  
+  drawRect();
+
+  fill(128,0,0);  
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+  
+  fill(128,128,0);
+  drawRect();
+
+  noStroke();
+  fill(0,128,0);
+  drawRect();  
+
+  stroke(0);
+  fill(0,128,0);
+  drawRect();    
+
+  stroke(255,0,0);
+  fill(0,128,0);
+  drawRect();    
+
+  stroke(255,0,0);
+  fill(0,128,0);
+  drawRect();
+
+  stroke(255,128,0);
+  fill(128,128,128);
+  drawRect(); 
+ 
+  stroke(255,0,0);
+  fill(128,128,128);
+  drawRect();
+  
+  stroke(255,0,0);
+  fill(128,128,198);
+  drawRect();
+  
+  stroke(255,0,0);
+  fill(128,128,128);
+  drawRect();
+  
+  
+  ///////////////
+  
+  fill(255);
+  drawRect();
+
+  fill(0);
+  drawRect();
+  
+  fill(0);
+  drawRect();
+  
+  fill(0);
+  drawRect();
+  
+  fill(0);
+  drawRect();
+
+  fill(0);  
+  drawRect();
+
+  fill(128,0,0);  
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+
+  fill(128,0,0);
+  drawRect();
+  
+  fill(128);
+  drawRect();
+
+  noStroke();
+  fill(0,128,0);
+  drawRect();  
+
+  stroke(0);
+  fill(0,128,0);
+  drawRect();    
+
+  stroke(255,0,0);
+  fill(0,128,0);
+  drawRect();    
+
+  stroke(255,0,0);
+  fill(0,128,0);
+  drawRect();
+
+  stroke(255,128,0);
+  fill(128,128,128);
+  drawRect(); 
+ 
+  stroke(255,0,0);
+  fill(128,128,128);
+  drawRect();
+  
+  stroke(255,0,0);
+  fill(128,128,128);
+  drawRect();
+  
+  stroke(255,0,0);
+  fill(0,32,128);
+  drawRect();
+}
+
+void drawRect(){
+  
+  rect(currX, currY, RECT_SIZE, RECT_SIZE);
+
+  if(counter % RECTS_PER_ROW == 0 && counter > 0){
+    currX = START_X;
+    currY += Y_OFFSET;
+  }else{
+    currX += X_OFFSET;
+  }
+
+  counter++;
+}</pre>
+
+  </body>
+</html>
