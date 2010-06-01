@@ -1,0 +1,32 @@
+// 	Processing.js Example
+
+void setup() {
+  size(200, 200);
+  frameRate(25); // frameRate() function
+}
+
+void draw() {
+  background(#00ff00);
+  if (frameCount % 100 == 0) {
+    println("FPS:" + frameRate); // frameRate var
+  }
+  
+  if (mousePressed) { // mousePressed var
+    background(#ff0000);  
+  }
+  
+  if (keyPressed) { //keyPressed var
+    background(#0000ff);
+  }
+}
+
+// mousePressed() function
+void mousePressed() { 
+  println("Mouse pressed");
+}
+
+// keyPressed() function
+void keyPressed() { 
+  println("Key pressed");
+}
+
