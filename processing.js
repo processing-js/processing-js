@@ -7320,7 +7320,7 @@
       }
     };
 
-    p.addMethod = function addMethod(object, name, fn) {
+    p.addMethod = function addMethod(object, name, fn, superAccessor) {
       if (object[name]) {
         var args = fn.length,
           oldfn = object[name];
@@ -7900,8 +7900,8 @@
           return "" + next;
         }
       });
-      // super() -> superMethod();
-      s = s.replace(/\bsuper(\s*"B\d+")/g, "superMethod$1");
+      // super() -> $superCstr(), super. -> $super.;
+      s = s.replace(/\bsuper(\s*"B\d+")/g, "$$superCstr$1").replace(/\bsuper(\s*\.)/g, "$$super$1");
       // 3.0f -> 3.0
       s = s.replace(/\b(\.?\d+)[fF]/g, "$1");
       // Weird (?) parsing errors with %
@@ -8241,13 +8241,13 @@
       replaceContext = function(name) {
         return inArray(paramNames, name) ? name : oldContext(name);
       };
-      var prefix = "function $constr_" + this.params.params.length + this.params + "{\n";
+      var prefix = "function $constr_" + this.params.params.length + this.params.toString();
       var body = this.body.toString();
-      if(!/\bsuperMethod\b/.test(body)) {
-        body = "superMethod();\n" + body;
+      if(!/\b\$superCstr\b/.test(body)) {
+        body = "{\n$superCstr();\n" + body.substring(1);
       }
       replaceContext = oldContext;
-      return prefix + body + "}\n";
+      return prefix + body + "\n";
     };
 
     function transformConstructor(cstr) {
@@ -8310,27 +8310,29 @@
         if(name === "this") {
           return selfId;
         } else if(inArray(thisClassNames, name)) {
+          if(inArray(members.methods, name)) {
+            return "this." + name;
+          }
           return selfId + "." + name;
         }
         return oldContext(name);
       };
 
       if(this.baseClassName) {
-        s += "var $superProxy;\n";
-        s += "function superMethod(){ $superProxy = processing.extendClass(" + selfId + ",arguments," +
-          this.baseClassName + "); $initMembers(); }\n";
+        s += "var $super = {};\n";
+        s += "function $superCstr(){\n" + 
+                        this.baseClassName + ".prototype.constructor.apply($super, arguments);\n" + 
+                        "processing.extendClass(" + selfId + ", $super); }\n";
       } else {
-        s += "function superMethod() { $initMembers(); }\n";
+        s += "function $superCstr() { }\n";
       }
 
       s += this.functions.join('\n') + '\n';
       s += this.innerClasses.join('\n');
 
-      s += "$initMembers = function() {\n";
       s += this.fields.join(";\n") + ";\n";
       s += this.methods.join('\n') + '\n';
       s += this.misc.tail;
-      s += "}\n";
 
       s += this.cstrs.join('\n') + '\n';
 
@@ -8345,7 +8347,7 @@
         s += cstrsIfs.join(" else ") + " else \n";
       }
       // ??? add check if length is 0, otherwise fail
-      s += " superMethod();\n";
+      s += " $superCstr();\n";
 
       replaceContext = oldContext;
       return s;
@@ -8634,8 +8636,9 @@
       for(id in declaredClasses) {
         if(declaredClasses.hasOwnProperty(id)) {
           class_ = declaredClasses[id];
-          if(class_.baseClassName) {
-            class_.base = findInScopes(class_, class_.baseClassName);
+          var baseClassName = class_.body.baseClassName;
+          if(baseClassName) {
+            class_.base = findInScopes(class_, baseClassName);
           }
         }
       }

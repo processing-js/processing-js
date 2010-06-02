@@ -62,4 +62,5 @@ test/parser/Processing-Book-001/Units 31-42/40 Image 5/_11/_11.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_07/_07.pde
+test/unit/overloadedMethodCall.pde
 
