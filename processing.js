@@ -7748,10 +7748,10 @@
     s = s.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g,
     function(all, quoted, aposed, regexCtx, prefix, regex, singleComment, comment) {
       var index;
-      if(quoted !== "" || aposed !== "") { // replace strings
+      if(quoted || aposed) { // replace strings
         index = strings.length; strings.push(all);
         return "'" + index + "'";
-      } else if(regexCtx !== "") { // replace RegExps
+      } else if(regexCtx) { // replace RegExps
         index = strings.length; strings.push(regex);
         return prefix + "'" + index + "'";
       } else { // kill comments
