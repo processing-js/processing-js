@@ -10,6 +10,7 @@ test/parser/Fry-Visualizing-Data/ch07-hierarchies/filetreemap_06b/filetreemap_06
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_06c_variable_size_nodes/step_06c_variable_size_nodes.pde
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_07c_save_pdf/step_07c_save_pdf.pde
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_08c_graphviz/step_08c_graphviz.pde
+test/parser/Processing-Book-001/Appendixes/Appendix B/_02/_02.pde
 test/parser/Processing-Book-001/Extensions/3D/_05/_05.pde
 test/parser/Processing-Book-001/Extensions/Electronics/_01A/_01A.pde
 test/parser/Processing-Book-001/Extensions/Electronics/_03A/_03A.pde

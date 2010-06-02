@@ -7784,9 +7784,9 @@
 
     var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
     var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:else|new|return|throw|function)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
-    var fieldTest = /^\s*((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
+    var fieldTest = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
     var cstrsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+")/g;
-    var attrAndTypeRegex = /^\s*((?:(?:public|private|final|protected|static)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*/;
+    var attrAndTypeRegex = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*/;
     var functionsRegex = /\bfunction(?:\s+([A-Za-z_$][\w$]*))?\s*("B\d+")\s*("A\d+")/g;
 
     function extractClassesAndMethods(code) {
@@ -8145,7 +8145,7 @@
 
     function transformForExpression(expr) {
       var content = expr.substring(1, expr.length - 1).split(";");
-      return new AstForExpression(transformStatement(content[0]),
+      return new AstForExpression(transformStatement(content[0].trim()),
         transformExpression(content[1]), transformExpression(content[2]));
     }
 
@@ -8206,9 +8206,10 @@
         transformStatementsBlock(atoms[getAtomIndex(m[6])]) );
     }
 
-    function AstClassField(definitions, fieldType) {
+    function AstClassField(definitions, fieldType, isStatic) {
       this.definitions = definitions;
       this.fieldType = fieldType;
+      this.isStatic = isStatic;
     }
     AstClassField.prototype.getNames = function() {
       var names = [];
@@ -8219,17 +8220,33 @@
     };
     AstClassField.prototype.toString = function() {
       var thisPrefix = replaceContext("this") + ".";
-      return thisPrefix + this.definitions.join("; " + thisPrefix);
+      if(this.isStatic) {
+        var className = this.owner.name;
+        var staticDeclarations = [];
+        for(var i=0,l=this.definitions.length;i<l;++i) {
+          var definition = this.definitions[i];
+          var name = definition.name, staticName = className + "." + name;
+          var declaration = "if(" + staticName + " === undefined) {\n" +
+            " " + staticName + " = " + definition.value + "; }\n" +
+            thisPrefix + "__defineGetter__('" + name + "',function(){return " + staticName + ";});\n" +
+            thisPrefix + "__defineSetter__('" + name + "',function(val){" + staticName + " = val;});\n";
+          staticDeclarations.push(declaration);
+        }
+        return staticDeclarations.join("");        
+      } else {
+        return thisPrefix + this.definitions.join("; " + thisPrefix);
+      }
     };
 
     function transformClassField(statement) {
       var attrAndType = attrAndTypeRegex.exec(statement);
+      var isStatic = attrAndType[1].indexOf("static") >= 0;
       var definitions = statement.substring(attrAndType[0].length).split(/,\s*/g);
       var defaultTypeValue = getDefaultValueForType(attrAndType[2]);
       for(var i=0; i < definitions.length; ++i) {
         definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
       }
-      return new AstClassField(definitions, attrAndType[2]);
+      return new AstClassField(definitions, attrAndType[2], isStatic);
     }
 
     function AstConstructor(params, body) {
@@ -8258,7 +8275,9 @@
       return new AstConstructor(params, transformStatementsBlock(atoms[m[2]]));
     }
 
-    function AstClassBody(baseClassName, functions, methods, fields, cstrs, innerClasses, misc) {
+    function AstClassBody(name, baseClassName, functions, methods, fields, cstrs, innerClasses, misc) {
+      var i,l;
+      this.name = name;
       this.baseClassName = baseClassName;
       this.functions = functions;
       this.methods = methods;
@@ -8266,6 +8285,9 @@
       this.cstrs = cstrs;
       this.innerClasses = innerClasses;
       this.misc = misc;
+      for(i=0,l=fields.length; i<l; ++i) {
+        fields[i].owner = this;
+      }
     }
     AstClassBody.prototype.getMembers = function() {
       var members;
@@ -8391,7 +8413,7 @@
         classes[i] = transformInnerClass(atoms[classes[i]]);
       }
 
-      return new AstClassBody(baseClassName, functions, methods, fields, cstrs,
+      return new AstClassBody(name, baseClassName, functions, methods, fields, cstrs,
         classes, { tail: tail });
     };
 
