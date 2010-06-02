@@ -7644,9 +7644,9 @@
   "directionalLight","disableContextMenu","dist","DODGE","DOWN","draw","ellipse","ellipseMode",
   "emissive","enableContextMenu","endCamera","endDraw","endShape","ENTER","ESC","EXCLUSION",
   "exit","exp","expand","fill","filter_bilinear","filter_new_scanline","float","floor","focused",
-  "frameCount","frameRate","FRAME_RATE","frustum","get","glyphLook","glyphTable","green",
-  "GREEN_MASK","HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hour","HSB","hue","image",
-  "imageMode","Import","int","intersect","JAVA2D","join","key","keyPressed","keyReleased","LEFT","lerp",
+  "frameCount","frameRate","frustum","get","glyphLook","glyphTable","green","GREEN_MASK",
+  "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hour","HSB","hue","image","imageMode",
+  "Import","int","intersect","JAVA2D","join","key","keyPressed","keyReleased","LEFT","lerp",
   "lerpColor","LIGHTEST","lightFalloff","lights","lightSpecular","line","LINES","link","loadBytes",
   "loadFont","loadGlyphs","loadImage","loadPixels","loadStrings","log","loop","mag","map","match",
   "matchAll","max","MAX_FLOAT","MAX_INT","MAX_LIGHTS","millis","min","MIN_FLOAT","MIN_INT","minute",
@@ -7667,7 +7667,8 @@
   "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
   "textSize","textWidth","tint",
   "translate","triangle","TRIANGLE_FAN","TRIANGLES","TRIANGLE_STRIP","trim","TWO_PI","unbinary",
-  "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","year"];
+  "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","year",
+  "__frameRate","__mousePressed","__keyPressed"];
     var members = {};
     var i, l;
     for(i=0,l=names.length;i<l;++i) {
@@ -7909,8 +7910,8 @@
       // Since frameRate() and frameRate are different things,
       // we need to differentiate them somehow. So when we parse
       // the Processing.js source, replace frameRate so it isn't
-      // confused with frameRate().
-      s = s.replace(/\bframeRate(?!\s*"B)/, "p.FRAME_RATE");
+      // confused with frameRate(), as well as keyPressed and mousePressed
+      s = s.replace(/\b(frameRate|keyPressed|mousePressed)(?!\s*"B)/, "__$1");
 
       return s;
     }
