@@ -315,6 +315,14 @@
         fillBuffer,
         pointBuffer;
 
+    // Get padding and border style widths for mouse offsets
+    if (document.defaultView && document.defaultView.getComputedStyle) {
+      var paddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingLeft'], 10)      || 0,
+          paddingTop  = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingTop'], 10)       || 0,
+          borderLeft  = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderLeftWidth'], 10)  || 0,
+          borderTop   = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderTopWidth'], 10)   || 0;
+    }
+
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
 
@@ -7366,18 +7374,11 @@
       }
 
       // Add padding and border style widths to offset
-      if (document.defaultView.getComputedStyle) {
-        var paddingLeft = document.defaultView.getComputedStyle(curElement, null)['paddingLeft'];
-        var paddingTop  = document.defaultView.getComputedStyle(curElement, null)['paddingTop'];
-        var borderLeft  = document.defaultView.getComputedStyle(curElement, null)['borderLeftWidth'];
-        var borderTop   = document.defaultView.getComputedStyle(curElement, null)['borderTopWidth'];
+      offsetX += paddingLeft;
+      offsetY += paddingTop;
 
-        offsetX += parseInt(paddingLeft, 10) || 0;
-        offsetY += parseInt(paddingTop, 10)  || 0;
-
-        offsetX += parseInt(borderLeft, 10)  || 0;
-        offsetY += parseInt(borderTop, 10)   || 0;
-      }
+      offsetX += borderLeft;
+      offsetY += borderTop;
 
       // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
       // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
