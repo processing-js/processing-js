@@ -5120,8 +5120,8 @@
           var tempArray = [];
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
-          line2D(lineVertArray, "LINES");
-          fill2D(fillVertArray, "TRIANGLE_STRIP");
+          line2D(lineVertArray);
+          //fill2D(fillVertArray, "TRIANGLE_STRIP");
         }
         else{
           curContext.beginPath();
@@ -5459,12 +5459,13 @@
               bezierDrawMatrix = new PMatrix3D();
             }
             // setup matrix for forward differencing to speed up drawing
+            var lastPoint = vertArray.length - 1;
             splineForward( bezierDetail, bezierDrawMatrix );
             bezierDrawMatrix.apply( bezierBasisMatrix );
             var draw = bezierDrawMatrix.array(); 	
-            var x1 = vertArray[0][0],
-                y1 = vertArray[0][1],
-                z1 = vertArray[0][2];
+            var x1 = vertArray[lastPoint][0],
+                y1 = vertArray[lastPoint][1],
+                z1 = vertArray[lastPoint][2];
             var xplot1 = draw[4] * x1 + draw[5] * arguments[0] + draw[6] * arguments[3] + draw[7] * arguments[6];
             var xplot2 = draw[8] * x1 + draw[9] * arguments[0] + draw[10]* arguments[3] + draw[11]* arguments[6];
             var xplot3 = draw[12]* x1 + draw[13]* arguments[0] + draw[14]* arguments[3] + draw[15]* arguments[6];
