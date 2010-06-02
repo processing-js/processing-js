@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head>
+  <body>
+    <h1>beginShape() and endShape() test</h1>
+
+    <p>
+    <canvas datasrc="endShape-3Dtest-quads.pjs" width="500" height="200"></canvas>
+    <img src="p5_result.jpg" style="margin: 10px 0px;" />
+    </p>
+
+    <pre>size(500, 200, P3D);
+background(200);
+
+beginShape(QUADS);
+stroke(255,0,0);vertex(30, 20);
+vertex(30, 75);
+fill(0,255,0);vertex(50, 75);
+vertex(50, 20);
+endShape();
+
+beginShape(QUADS);
+stroke(0,0,255);vertex(65, 20);
+vertex(65, 75);
+fill(0,0,255);vertex(85, 75);
+stroke(0,255,0);vertex(85, 20);
+endShape();
+
+beginShape(QUADS);
+vertex(130, 20);
+vertex(130, 75);
+fill(0,0,255);vertex(150, 75);
+fill(255,0,255);vertex(150, 20);
+endShape();
+
+beginShape(QUADS);
+fill(255,0,255);vertex(190, 20);
+vertex(165, 20);
+fill(255,0,0);vertex(165, 75);
+vertex(185, 75);
+endShape();
+
+beginShape(QUADS);
+vertex(230, 20);
+fill(0,0,255);vertex(230, 75);
+vertex(250, 75);
+fill(255,0,0);vertex(250, 20);
+endShape();
+
+beginShape(QUADS);
+vertex(330, 20);
+fill(0,0,255);vertex(330, 75);
+vertex(350, 75);
+fill(0,0,255);vertex(365, 20);
+endShape();
+
+stroke(255);
+
+
+
+beginShape(QUADS);
+vertex(445, 45);
+vertex(465, 75);
+vertex(485, 75);
+fill(255,0,255);vertex(485, 20);
+endShape();
+
+beginShape(QUADS);
+fill(255,0,0);vertex(30, 120);
+vertex(30, 175);
+vertex(50, 175);
+fill(255,0,255);vertex(50, 120);
+endShape();
+
+beginShape(QUADS);
+fill(255,128,64);vertex(130, 120);
+vertex(130, 175);
+vertex(150, 175);
+fill(0,128,255);vertex(150, 120);
+endShape();
+
+beginShape(QUADS);
+vertex(230, 120);
+vertex(230, 175);
+fill(0,128,255);vertex(250, 175);
+vertex(250, 120);
+endShape();
+
+beginShape(QUADS);
+vertex(330, 120);
+fill(255,0,255);vertex(330, 175);
+vertex(350, 175);
+vertex(430, 120);
+endShape();</pre>
+  </body>
+</html>

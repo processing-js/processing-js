@@ -1,0 +1,29 @@
+// Test by Andor Salga
+import processing.opengl.*;
+
+void setup() 
+{ 
+  size(100, 100, OPENGL);
+  background(0);
+
+  stroke(255, 0, 0);
+  for(int x = 0; x < 100; x++){
+    beginShape();
+    vertex(x, x, 0);
+    endShape();
+  }
+
+  stroke(0, 255, 0);
+  for(int x = 0; x < 100; x++){
+    beginShape();
+    vertex(100-x, x, 0);
+    endShape();
+  }
+
+  stroke(0 ,0, 255);
+  for(int x = 0; x < 100; x++){
+    beginShape();
+    vertex(100-x, 50, 0);
+    endShape();
+  }
+}

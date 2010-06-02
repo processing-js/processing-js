@@ -1,0 +1,40 @@
+float o = 0.1;
+float c = 1;
+
+void setup() 
+{ 
+  size(200, 200, P3D); 
+
+  colorMode(RGB, 1); 
+  background(0);
+  stroke(1);
+  
+  translate(width/2, height/2, 0); 
+  rotateX(-PI/7); 
+  rotateY(PI/7); 
+  scale(50);
+
+  beginShape(QUADS);
+
+  fill(c, 0, 0,o); vertex(-1,  1,  1);
+  fill(c, 0, 0,o); vertex( 1,  1,  1);
+  fill(c, 0, 0,o); vertex( 1, -1,  1);
+  fill(c, 0, 0,o); vertex(-1, -1,  1);
+
+  fill(0, c, 0,o); vertex( 1,  1,  1);
+  fill(0, c, 0,o); vertex( 1,  1, -1);
+  fill(0, c, 0,o); vertex( 1, -1, -1);
+  fill(0, c, 0,o); vertex( 1, -1,  1);
+
+  fill(0, 0, c,o); vertex( 1,  1, -1);
+  fill(0, 0, c,o); vertex(-1,  1, -1);
+  fill(0, 0, c,o); vertex(-1, -1, -1);
+  fill(0, 0, c,o); vertex( 1, -1, -1);
+
+  fill(c, c, 0,o); vertex(-1,  1, -1);
+  fill(c, c, 0,o); vertex(-1,  1,  1);
+  fill(c, c, 0,o); vertex(-1, -1,  1);
+  fill(c, c, 0,o); vertex(-1, -1, -1);
+
+  endShape();
+}

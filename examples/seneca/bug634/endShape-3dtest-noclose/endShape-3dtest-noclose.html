@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head>
+  <body>
+    <h1>beginShape() and endShape() test</h1>
+
+    <p>
+    <canvas datasrc="endShape-3Dtest-noclose.pjs"></canvas>
+    <img src="p5_result.jpg" style="margin: 10px 0px;" />
+    </p>
+
+    <pre>size(300, 100, P3D);
+background(0);
+
+strokeWeight(3);
+
+beginShape();
+stroke(0,255,0);fill(255,0,0);vertex(30, 20);
+stroke(0,0,255);fill(0,255,0);vertex(85, 20);
+stroke(255,0,0);fill(0,0,255);vertex(85, 75);
+stroke(255,255,255);fill(0,128,128);vertex(30, 75);
+endShape();
+
+beginShape();
+stroke(0,255,0);fill(0,128,128);vertex(130, 20);
+stroke(255,255,255);fill(128,0,128);vertex(185, 20);
+stroke(0,128,128);fill(128,128,0);vertex(185, 75);
+endShape();
+
+beginShape();
+stroke(0,0,255);fill(0);vertex(230, 20);
+stroke(255,0,0);fill(255);vertex(285, 20);
+endShape();
+
+beginShape();
+fill(255,0,0);vertex(330, 20);
+endShape();</pre>
+  </body>
+</html>

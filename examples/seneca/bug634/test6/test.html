@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for <a href="http://processing-js.lighthouseapp.com/projects/41284/tickets/634">bug 634</a></h2>
+
+    <p>This page tests the fix for <a href="http://processing-js.lighthouseapp.com/projects/41284/tickets/634">bug 634</a> for <a href="http://processingjs.org/">Processing.js</a><br />
+    This test fails, but ticket has been filed.<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs"></canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0px;" />
+    </p>
+    
+    <pre>
+<b>// Test by Andor Salga</b>
+float o = 0.1;
+float c = 1;
+
+void setup() 
+{ 
+  size(200, 200, P3D); 
+
+  colorMode(RGB, 1); 
+  background(0);
+  stroke(1);
+  
+  translate(width/2, height/2, 0); 
+  rotateX(-PI/7); 
+  rotateY(PI/7); 
+  scale(50);
+
+  beginShape(QUADS);
+
+  fill(c, 0, 0,o); vertex(-1,  1,  1);
+  fill(c, 0, 0,o); vertex( 1,  1,  1);
+  fill(c, 0, 0,o); vertex( 1, -1,  1);
+  fill(c, 0, 0,o); vertex(-1, -1,  1);
+
+  fill(0, c, 0,o); vertex( 1,  1,  1);
+  fill(0, c, 0,o); vertex( 1,  1, -1);
+  fill(0, c, 0,o); vertex( 1, -1, -1);
+  fill(0, c, 0,o); vertex( 1, -1,  1);
+
+  fill(0, 0, c,o); vertex( 1,  1, -1);
+  fill(0, 0, c,o); vertex(-1,  1, -1);
+  fill(0, 0, c,o); vertex(-1, -1, -1);
+  fill(0, 0, c,o); vertex( 1, -1, -1);
+
+  fill(c, c, 0,o); vertex(-1,  1, -1);
+  fill(c, c, 0,o); vertex(-1,  1,  1);
+  fill(c, c, 0,o); vertex(-1, -1,  1);
+  fill(c, c, 0,o); vertex(-1, -1, -1);
+
+  endShape();
+}</pre>
+
+  </body>
+</html>
