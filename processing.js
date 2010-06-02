@@ -319,6 +319,14 @@
         strokeColorBuffer,
         pointBuffer;
 
+    // Get padding and border style widths for mouse offsets
+    if (document.defaultView && document.defaultView.getComputedStyle) {
+      var stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingLeft'], 10)      || 0,
+          stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingTop'], 10)       || 0,
+          styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderLeftWidth'], 10)  || 0,
+          styleBorderTop   = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderTopWidth'], 10)   || 0;
+    }
+
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
 
@@ -7545,6 +7553,13 @@
           offsetY += element.offsetTop;
         } while (element = element.offsetParent);
       }
+
+      // Add padding and border style widths to offset
+      offsetX += stylePaddingLeft;
+      offsetY += stylePaddingTop;
+
+      offsetX += styleBorderLeft;
+      offsetY += styleBorderTop;
 
       // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
       // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
