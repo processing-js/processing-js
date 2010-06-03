@@ -19,7 +19,6 @@
 (function() {
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
-    Processing.version = "@VERSION@";
   
     var p = this;
 
@@ -7835,6 +7834,8 @@
       executeSketch();
     }
   };
+
+  Processing.version = "@VERSION@";
 
   // Share lib space
   Processing.lib = {};
