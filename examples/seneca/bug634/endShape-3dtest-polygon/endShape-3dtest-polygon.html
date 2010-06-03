@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head>
+  <body>
+    <h1>beginShape() and endShape() test</h1>
+<p>The white triangles outside polygons is a known issue</p>
+    <p>
+    <canvas datasrc="endShape-3Dtest-polygon.pjs" width="500" height="100"></canvas>
+    <img src="p5_result.jpg" style="margin: 10px 0px;" />
+    </p>
+
+    <pre>size(500, 100, P3D);
+background(200);
+
+strokeWeight(3);
+
+beginShape();
+stroke(255,0,0);vertex(20, 20);
+stroke(0,0,255);vertex(40, 20);
+stroke(0,255,0);vertex(40, 40);
+stroke(0,0,255);vertex(60, 40);
+stroke(128,0,255);vertex(60, 60);
+stroke(128,0,64);vertex(20, 60);
+endShape(CLOSE);
+
+beginShape();
+stroke(255,0,0);vertex(120, 20);
+stroke(128,0,64);vertex(140, 20);
+stroke(128,0,255);vertex(140, 40);
+vertex(160, 40);
+stroke(128,64,0);stroke(0);vertex(160, 60);
+endShape(CLOSE);
+
+beginShape();
+stroke(0,255,0);vertex(220, 20);
+vertex(240, 20);
+stroke(64,128,0);vertex(240, 40);
+stroke(255,0,255);vertex(260, 40);
+endShape(CLOSE);
+
+beginShape();
+stroke(0,255,64);vertex(320, 20);
+stroke(64,64,0);vertex(340, 20);
+stroke(0,255,0);vertex(340, 40);
+endShape(CLOSE);
+
+beginShape();
+stroke(128,64,255);vertex(420, 20);
+stroke(0,64,128);vertex(440, 20);
+endShape(CLOSE);</pre>
+  </body>
+</html>
