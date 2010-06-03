@@ -7918,7 +7918,33 @@
       // we need to differentiate them somehow. So when we parse
       // the Processing.js source, replace frameRate so it isn't
       // confused with frameRate(), as well as keyPressed and mousePressed
-      s = s.replace(/\b(frameRate|keyPressed|mousePressed)(?!\s*"B)/, "__$1");
+      s = s.replace(/\b(frameRate|keyPressed|mousePressed)(?!\s*"B)/g, "__$1");
+      // "pixels" replacements: 
+      //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
+      //   pixels.length => pixels.getLength()
+      //   pixels = ar => pixels.set(ar) | pixels => pixels.toArray()
+      s = s.replace(/\bpixels\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}\?\:]+))?/g, 
+        function(all, indexOrLength, index, atomIndex, equalsPart, rightSide) {
+          if(index) {
+            var atom = atoms[atomIndex];
+            if(equalsPart) {
+              return "pixels.setPixel" + addAtom("(" +atom.substring(1, atom.length - 1) + 
+                "," + rightSide + ")", 'B');
+            } else {
+              return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
+                ")", 'B');
+            }
+          } else if(indexOrLength) {
+            // length
+            return "pixels.getLength" + addAtom("()", 'B');
+          } else {
+            if(equalsPart) {
+              return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
+            } else {
+              return "pixels.toArray" + addAtom("()", 'B');
+            }
+          }
+        });
 
       return s;
     }
