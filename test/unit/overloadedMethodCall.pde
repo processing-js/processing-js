@@ -18,4 +18,4 @@ class B extends A {
 }
 
 B s = new B();
-_checkEqual(4, s.call());
+_checkEqual(4, s.call(3));
