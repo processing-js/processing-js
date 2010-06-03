@@ -7567,8 +7567,6 @@
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
-      var parsedCode = typeof aCode === "function" ? undefined : Processing.parse(aCode, p);
-
       if (!this.use3DContext) {
         // Setup default 2d canvas context.
         curContext = curElement.getContext('2d');
@@ -7588,6 +7586,15 @@
         p.disableContextMenu();
       }
 
+      // Compile the code
+      var compiledSketch;
+      if(typeof aCode === "function") {
+        compiledSketch = aCode;
+      } else {
+        var parsedCode = Processing.parse(aCode, p);
+        compiledSketch = eval(parsedCode);
+      }
+
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
         if (Processing.lib) {
@@ -7599,7 +7606,7 @@
       var executeSketch = function(processing) {
         // Don't start until all specified images in the cache are preloaded
         if (!p.pjs.imageCache.pending) {
-          eval(parsedCode);
+          compiledSketch(processing);
 
           // Run void setup()
           if (processing.setup) {
@@ -7790,7 +7797,7 @@
     var transformClassBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
 
     var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
-    var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:else|new|return|throw|function)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
+    var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
     var fieldTest = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
     var cstrsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+")/g;
     var attrAndTypeRegex = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*/;
@@ -7945,6 +7952,8 @@
             }
           }
         });
+      // this() -> $constr()
+      s = s.replace(/\bthis(\s*"B\d+")/g, "$$constr$1");
 
       return s;
     }
@@ -8295,7 +8304,7 @@
       };
       var prefix = "function $constr_" + this.params.params.length + this.params.toString();
       var body = this.body.toString();
-      if(!/\b\$superCstr\b/.test(body)) {
+      if(!/\$(superCstr|constr)\b/.test(body)) {
         body = "{\n$superCstr();\n" + body.substring(1);
       }
       replaceContext = oldContext;
@@ -8357,7 +8366,7 @@
       var scopeLevel = getScopeLevel(this.owner);
       
       var selfId = "$this_" + scopeLevel;
-      var s = "var " + selfId + " = this, $initMembers;\n";
+      var s = "var " + selfId + " = this;\n";
 
       var members = this.getMembers();
       var thisClassFields = appendToLookupTable({}, members.fields),
@@ -8394,18 +8403,20 @@
 
       s += this.cstrs.join('\n') + '\n';
 
+      s += "function $constr() {\n";
       var cstrsIfs = [];
       for(var i=0,l=this.cstrs.length;i<l;++i) {
         var paramsLength = this.cstrs[i].params.params.length;
         // ??? will it be faster to expand to regular call, e.g. $constr_1(argument[0]);
-        cstrsIfs.push("if(arguments.length === " + paramsLength + ") {\n" +
-          "$constr_" + paramsLength + ".apply(this, arguments);\n}");
+        cstrsIfs.push("if(arguments.length === " + paramsLength + ") { " +
+          "$constr_" + paramsLength + ".apply(" + selfId + ", arguments); }");
       }
       if(cstrsIfs.length > 0) {
         s += cstrsIfs.join(" else ") + " else \n";
       }
       // ??? add check if length is 0, otherwise fail
-      s += " $superCstr();\n";
+      s += " $superCstr();\n}\n";
+      s += "$constr.apply(undefined, arguments);\n";
 
       replaceContext = oldContext;
       return s;
@@ -8493,8 +8504,15 @@
       this.body = body;
     }
     AstMethod.prototype.toString = function(){
-      return "function " + this.name + this.params + " " + this.body + "\n" +
+      var paramNames = appendToLookupTable({}, this.params.getNames());
+      var oldContext = replaceContext;
+      replaceContext = function(name) {
+        return name in paramNames ? name : oldContext(name);
+      };
+      var result = "function " + this.name + this.params + " " + this.body + "\n" +
         "processing." + this.name + " = " + this.name + ";";
+      replaceContext = oldContext;
+      return result;
     };
 
     function transformGlobalMethod(method) {
@@ -8646,7 +8664,8 @@
         return name;
       };
       var result = "// this code was autogenerated from PJS\n" +
-        this.statements.join('') + "\n";
+        "(function(processing) {\n" +
+        this.statements.join('') + "\n})";
       replaceContext = undefined;
       return result;
     };
