@@ -7731,13 +7731,20 @@
       return result;
     }
     
-    function inArray(array, item) {
+    function appendToLookupTable(table, array) {
       for(var i=0,l=array.length;i<l;++i) {
-        if(array[i] === item) { 
-          return true;
+        table[array[i]] = undefined;
+      }
+      return table;
+    }
+
+    function isLookupTableEmpty(table) {
+      for(var i in table) {
+        if(table.hasOwnProperty(i)) {
+          return false;
         }
       }
-      return false;
+      return true;
     }
 
     function getAtomIndex(templ) { return templ.substring(2, templ.length - 1); }
@@ -7949,9 +7956,9 @@
     AstFunction.prototype.toString = function() {
       var oldContext = replaceContext; 
       // saving "this." and parameters
-      var names = ["this"].concat(this.params.getNames());
+      var names = appendToLookupTable({"this":undefined}, this.params.getNames());
       replaceContext = function(name) {
-        return inArray(name) ? name : oldContext(name); 
+        return name in names ? name : oldContext(name);
       };
       var result = "function";
       if(this.name) {
@@ -8188,10 +8195,11 @@
       this.body = body;
     }
     AstClassMethod.prototype.toString = function(){
-      var thisReplacement = replaceContext("this"), paramNames = this.params.getNames();
+      var thisReplacement = replaceContext("this");
+      var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return inArray(paramNames, name) ? name : oldContext(name);
+        return name in paramNames ? name : oldContext(name);
       };
       var result = "processing.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
         this.body +");";
@@ -8254,10 +8262,10 @@
       this.body = body;
     }
     AstConstructor.prototype.toString = function() {
-      var paramNames = this.params.getNames();
+      var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return inArray(paramNames, name) ? name : oldContext(name);
+        return name in paramNames ? name : oldContext(name);
       };
       var prefix = "function $constr_" + this.params.params.length + this.params.toString();
       var body = this.body.toString();
@@ -8326,17 +8334,18 @@
       var s = "var " + selfId + " = this, $initMembers;\n";
 
       var members = this.getMembers();
-      var thisClassNames = [].concat(members.fields, members.methods, members.innerClasses);
+      var thisClassFields = appendToLookupTable({}, members.fields),
+        thisClassMethods = appendToLookupTable({}, members.methods),
+        thisClassInners = appendToLookupTable({}, members.innerClasses);
       
       var oldContext = replaceContext;
       replaceContext = function(name) {
         if(name === "this") {
           return selfId;
-        } else if(inArray(thisClassNames, name)) {
-          if(inArray(members.methods, name)) {
-            return "this." + name;
-          }
+        } else if(name in thisClassFields || name in thisClassInners) {
           return selfId + "." + name;
+        } else if(name in thisClassMethods) {
+          return "this." + name;
         }
         return oldContext(name);
       };
@@ -8572,18 +8581,23 @@
           localNames = localNames.concat(statement.argument.initStatement.getNames());        
         }
       }
-      return localNames;
+      return appendToLookupTable({}, localNames);
     }
     
     function AstStatementsBlock(statements) {
       this.statements = statements;
     }
-    AstStatementsBlock.prototype.toString = function() {
+    AstStatementsBlock.prototype.toString = function() {      
       var localNames = getLocalNames(this.statements);
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return inArray(localNames, name) ? name : oldContext(name);
-      };
+      
+      // replacing context only when necessary
+      if(!isLookupTableEmpty(localNames)) {
+        replaceContext = function(name) {
+          return name in localNames ? name : oldContext(name);
+        };
+      }
+      
       var result = "{\n" + this.statements.join('') + "\n}";
       replaceContext = oldContext;
       return result;
@@ -8600,7 +8614,7 @@
     AstRoot.prototype.toString = function() {
       var localNames = getLocalNames(this.statements);
       replaceContext = function(name) {
-        if(name in globalMembers && !inArray(localNames, name)) {
+        if(name in globalMembers && !(name in localNames)) {
           return "processing." + name;
         }
         return name;
