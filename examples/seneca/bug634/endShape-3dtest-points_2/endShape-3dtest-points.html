@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head>
+  <body>
+    <h1>beginShape() and endShape() test</h1>
+    <p>P5 doesn't give the same result, is it broken?</p>
+
+    <p>
+    <canvas datasrc="endShape-3Dtest-points.pjs"></canvas>
+    <img src="p5_result.jpg" style="margin: 10px 0px;" />
+    </p>
+    
+
+    <pre>import processing.opengl.*;
+
+void setup(){
+  size(500, 500, P3D);
+
+  beginShape(POINTS);
+  for(int x = 0; x < 255; x++){
+    for(int y = 0; y < 255; y++){
+      stroke(x,y,255-x);
+      vertex( x * 2, y * 2, 0);
+    }
+  }
+  endShape(CLOSE);
+}</pre>
+  </body>
+</html>
