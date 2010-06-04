@@ -5344,6 +5344,7 @@
                 fillVertArray = [];
                 strokeVertArray = [];
                 colorVertArray = [];
+                texVertArray = [];
                 for(j = 0; j < 3; j++){
                   for(k = 0; k < 3; k++){
                     lineVertArray.push(vertArray[i+j][k]);
@@ -5351,14 +5352,19 @@
                   }
                 }
                 for(j = 0; j < 3; j++){
+                  for(k = 3; k < 5; k++){
+                    texVertArray.push(vertArray[i+j][k]);
+                  }
+                }
+                for(j = 0; j < 3; j++){
                   for(k = 5; k < 9; k++){
                     strokeVertArray.push(vertArray[i+j][k+4]);
-                    colorVertArray.push(vertArray[i+j][k]);
+                    colorVertArray.push(vertArray[i+j][k]);// !!!
                   }
                 }
                 
                 if(doFill){
-                  fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
+                  fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
                 }
                 if(doStroke){
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray);

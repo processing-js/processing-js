@@ -27,7 +27,7 @@ void draw() {
   rotateX(map(mouseY, 0, height, -PI, PI));
   rotateY(map(mouseX, 0, width, -PI, PI));
   beginShape(QUAD_STRIP);
-  texture(img);
+ // texture(img);
   for (int i = 0; i < tubeRes; i++) {
     float x = tubeX[i] * 100;
     float z = tubeY[i] * 100;
@@ -37,7 +37,7 @@ void draw() {
   }
   endShape();
   beginShape(QUADS);
-  texture(img);
+ // texture(img);
   vertex(0, -100, 0, 0, 0);
   vertex(100, -100, 0, 100, 0);
   vertex(100, 100, 0, 100, 100);
