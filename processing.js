@@ -4670,6 +4670,7 @@
           normalMatrix.invert();
         
           curContext.useProgram(programObject3D);
+          disableVertexAttribPointer(programObject3D, "aTexture");
           
           uniformMatrix(programObject3D, "model", true, model.array());
           uniformMatrix(programObject3D, "view", true, view.array());
@@ -5173,8 +5174,6 @@
           if( tArray[i+1] > 1.0 ){ tArray[i+1] -= (tArray[i+1] - 1.0);}
         }
                           
-      //  p.println(curTexture.width);
-      //p.println(vArray.length + "  -  " + tArray.length + " -  " + cArray.length);
         uniformi(programObject3D, "usingTexture", usingTexture);
         vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
         curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
