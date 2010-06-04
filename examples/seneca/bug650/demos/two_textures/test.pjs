@@ -1,28 +1,33 @@
 import processing.opengl.*;
-/* @pjs preload="wallpaper.png,flower.jpg"; */
+/* @pjs preload="fire.jpg,pjs.jpg"; */
 
 float r = 0.0;
 float s = 0.0;
+float temp;
 
-PImage wallpaper, flower;
+PImage fire, pjs_;
 
 void setup() 
 {
   size(640, 360, OPENGL);
-  flower = loadImage("flower.jpg");
-  wallpaper = loadImage("wallpaper.png");
+  pjs_ = loadImage("pjs.jpg");
+  fire = loadImage("fire.jpg");
   textureMode(NORMALIZED);
-strokeWeight(0);
 }
 
 void drawBox(int i){
   beginShape(QUADS);
 
   if(i == 0){
-    texture(flower);
+    texture(pjs_);
+    temp = s;
+    s = 0.0;
+    stroke(0);
   }
   else{
-    texture(wallpaper);
+    texture(fire);
+    s = temp;
+    noStroke();
   }
 
   // -Z "back" face
@@ -43,10 +48,10 @@ void drawBox(int i){
   vertex(-1,  1, -1, 0+s, 1);
 
   // -Y "top" face
-  vertex(-1, -1, -1, s, 1);
-  vertex( 1, -1, -1, 1+s, 1);
-  vertex( 1, -1,  1, 1+s, 0);
-  vertex(-1, -1,  1, s, 0);
+  vertex(-1, -1, -1,   s, 0);
+  vertex( 1, -1, -1, 1+s, 0);
+  vertex( 1, -1,  1, 1+s, 1);
+  vertex(-1, -1,  1,   s, 1);
 
   // +X "right" face
   vertex( 1, -1,  1, 0-s, 0);
@@ -73,15 +78,14 @@ void draw()
 
   pushMatrix();
     scale(15);
- //   rotateZ(s);
+    rotateZ(s);
     rotateY(-s);
     drawBox(0);
   popMatrix();
 
   pushMatrix();
     scale(60);
-   // rotateZ(s);
-    rotateY(s);
+    rotateZ(s);
     drawBox(1);
   popMatrix();
 

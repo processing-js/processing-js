@@ -3,7 +3,7 @@
  * 
  * Load an image and draw it onto a cylinder and a quad. 
  */
-/* @pjs preload="berlin-1.jpg" */
+/* @pjs preload="berlin.jpg" */
 
 int tubeRes = 32;
 float[] tubeX = new float[tubeRes];
@@ -12,7 +12,7 @@ PImage img;
 
 void setup() {
   size(640, 360, P3D);
-  img = loadImage("berlin-1.jpg");
+  img = loadImage("berlin.jpg");
   float angle = 270.0 / tubeRes;
   for (int i = 0; i < tubeRes; i++) {
     tubeX[i] = cos(radians(i * angle));
@@ -26,7 +26,7 @@ void draw() {
   translate(width / 2, height / 2, 0);
   rotateX(map(mouseY, 0, height, -PI, PI));
   rotateY(map(mouseX, 0, width, -PI, PI));
- /* beginShape(QUAD_STRIP);
+  beginShape(QUAD_STRIP);
   texture(img);
   for (int i = 0; i < tubeRes; i++) {
     float x = tubeX[i] * 100;
@@ -35,7 +35,7 @@ void draw() {
     vertex(x, -100, z, u, 0);
     vertex(x, 100, z, u, img.height);
   }
-  endShape();*/
+  endShape();
   beginShape(QUADS);
   texture(img);
   vertex(0, -100, 0, 0, 0);

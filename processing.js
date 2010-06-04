@@ -5158,14 +5158,21 @@
       disableVertexAttribPointer(programObject3D, "Normal");
 
       if(usingTexture){
-      
-        //
+
         if(curTextureMode === p.IMAGE){
           for(var i = 0; i < tArray.length; i += 2){
             tArray[i] = tArray[i]/curTexture.width;
             tArray[i+1] /= curTexture.height;
           }
         }
+
+        // hack to handle when users specifies values 
+        // greater than 1.0 for texture coords.
+        for(var i = 0; i < tArray.length; i += 2){
+          if( tArray[i+0] > 1.0 ){ tArray[i+0] -= (tArray[i+0] - 1.0);}
+          if( tArray[i+1] > 1.0 ){ tArray[i+1] -= (tArray[i+1] - 1.0);}
+        }
+                          
       //  p.println(curTexture.width);
       //p.println(vArray.length + "  -  " + tArray.length + " -  " + cArray.length);
         uniformi(programObject3D, "usingTexture", usingTexture);
@@ -5512,11 +5519,13 @@
                 for(j = 9; j < 13; j++){
                   strokeVertArray.push(vertArray[i+0][j]);
                 }
-                line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
+                if(doStroke){
+                  line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
+                }
               }
 
               if(doFill){
-                fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray);
+                fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
               }
             }
           }
@@ -5541,9 +5550,9 @@
                 for(j = 5; j < 9; j++){
                   strokeVertArray.push(vertArray[i][j]);
                 }
-                for(j = 9; j < 13; j++){
-                  //colorVertArray.push(vertArray[i][j]);
-                }
+//                for(j = 9; j < 13; j++){
+  //                colorVertArray.push(vertArray[i][j]);
+    //            }
               }
               if(p.CLOSE){
                 line3D(lineVertArray, "LINE_LOOP", strokeVertArray);

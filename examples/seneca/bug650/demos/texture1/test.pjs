@@ -1,3 +1,10 @@
+/* @pjs preload="berlin.jpg" */
+/**
+ * Texture 1. 
+ * 
+ * Load an image and draw it onto a quad. The texture() function sets
+ * the texture image. The vertex() function maps the image to the geometry.
+ */
 /**
  * Texture 1. 
  * 
@@ -5,13 +12,12 @@
  * the texture image. The vertex() function maps the image to the geometry.
  */
 
-/* @pjs preload="berlin.jpg" */
-
 PImage img;
 
 void setup() {
   size(640, 360, P3D);
   img = loadImage("berlin.jpg");
+  noStroke();
 }
 
 void draw() {
@@ -19,7 +25,7 @@ void draw() {
   translate(width / 2, height / 2, 0);
   rotateY(map(mouseX, 0, width, -PI, PI));
   rotateZ(PI/6);
-  beginShape(QUADS);
+  beginShape();
   texture(img);
   vertex(-100, -100, 0, 0, 0);
   vertex(100, -100, 0, 400, 0);
