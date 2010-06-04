@@ -22,12 +22,6 @@
 
     var p = this;
 
-    if(!"".trim) {
-      String.prototype.trim = function() {
-        return(this.replace(/^\s+/,'').replace(/\s+$/,''));
-      }
-    }
-
     p.pjs = {
        imageCache: {
          pending: 0
@@ -7498,18 +7492,22 @@
     ////////////////////////////////////////////////////////////////////////////
 
     p.extendClass = function extendClass(subClass, baseClass) {
+      function extendGetterSetter(propertyName) {
+        subClass.__defineGetter__(propertyName, function() {
+          return baseClass[propertyName];
+        });
+        subClass.__defineSetter__(propertyName, function(v) {
+          baseClass[propertyName]=v;
+        });
+      }
+      var undef;
+      
       for (var propertyName in baseClass) {
-        if (typeof subClass[propertyName] === 'undefined') {
+        if (subClass[propertyName] === undef) {
           if (typeof baseClass[propertyName] === 'function') {
             subClass[propertyName] = baseClass[propertyName];
-            
           } else {
-            subClass.__defineGetter__(propertyName, (function(propertyName) { 
-              return function(){return baseClass[propertyName];};
-            })(propertyName));
-            subClass.__defineSetter__(propertyName, (function(propertyName) { 
-              return function(v){baseClass[propertyName]=v;};
-            })(propertyName));
+            extendGetterSetter(propertyName);
           }
         }
       }
@@ -7812,11 +7810,8 @@
 
           // Run void setup()
           if (processing.setup) {
-            inSetup = true;
             processing.setup();
           }
-
-          inSetup = false;
 
           if (processing.draw) {
             if (!doLoop) {
@@ -7883,13 +7878,13 @@
     var members = {};
     var i, l;
     for(i=0,l=names.length;i<l;++i) {
-      members[names[i]] = undefined;
+      members[names[i]] = null;
     }
     for(var lib in Processing.lib) {
       if(Processing.lib[lib] && Processing.lib[lib].exports) {
        var exportedNames = Processing.lib[lib].exports;
        for(i=0,l=exportedNames.length;i<l;++i) {
-         members[exportedNames[i]] = undefined;
+         members[exportedNames[i]] = null;
        }
       }
     }
@@ -7900,27 +7895,29 @@
   function parseProcessing(code) {
     var globalMembers = getGlobalMembers();
 
-    function splitToAtoms(s) {
-      var atoms = [], stack = [];
-      var items = s.split(/([\{\[\(\)\]\}])/);
-      s = items[0];
+    function splitToAtoms(code) {
+      var atoms = [];
+      var items = code.split(/([\{\[\(\)\]\}])/);
+      var result = items[0];
+
+      var stack = [];
       for(var i=1; i < items.length; i += 2) {
         var item = items[i];
         if(item === '[' || item === '{' || item === '(') {
-          stack.push(s); s = item;
+          stack.push(result); result = item;
         } else if(item === ']' || item === '}' || item === ')') {
           var kind = item === '}' ? 'A' : item === ')' ? 'B' : 'C';
-          var index = atoms.length; atoms.push(s + item);
-          s = stack.pop() + '"' + kind + (index + 1) + '"';
+          var index = atoms.length; atoms.push(result + item);
+          result = stack.pop() + '"' + kind + (index + 1) + '"';
         }
-        s += items[i + 1];
+        result += items[i + 1];
       }
-      atoms.unshift(s);
+      atoms.unshift(result);
       return atoms;
     }
 
-    function injectStrings(s, strings) {
-      return s.replace(/'(\d+)'/g, function(all, index) {
+    function injectStrings(code, strings) {
+      return code.replace(/'(\d+)'/g, function(all, index) {
         var val = strings[index];
         if(val.charAt(0) === "/") {
           return val;
@@ -7930,21 +7927,25 @@
       });
     }
 
-    function trimSpaces(s) {
-      var m1 = /^\s*/.exec(s), result;
-      if(m1[0].length === s.length) {
+    function trimSpaces(string) {
+      var m1 = /^\s*/.exec(string), result;
+      if(m1[0].length === string.length) {
         result = {left: m1[0], middle: "", right: ""};
       } else {
-        var m2 = /\s*$/.exec(s);
-        result = {left: m1[0], middle: s.substring(m1[0].length, m2.index), right: m2[0]};
+        var m2 = /\s*$/.exec(string);
+        result = {left: m1[0], middle: string.substring(m1[0].length, m2.index), right: m2[0]};
       }
       result.untrim = function(t) { return this.left + t + this.right; };
       return result;
     }
     
+    function trim(string) {
+      return string.replace(/^\s+/,'').replace(/\s+$/,'');
+    }
+    
     function appendToLookupTable(table, array) {
       for(var i=0,l=array.length;i<l;++i) {
-        table[array[i]] = undefined;
+        table[array[i]] = null;
       }
       return table;
     }
@@ -7960,10 +7961,10 @@
 
     function getAtomIndex(templ) { return templ.substring(2, templ.length - 1); }
 
-    var s = code.replace(/\r\n?|\n\r/g, "\n"); // remove extra CR
-    var strings = [];
+    var codeWoExtraCr = code.replace(/\r\n?|\n\r/g, "\n");
 
-    s = s.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g,
+    var strings = [];
+    var codeWoStrings = codeWoExtraCr.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g,
     function(all, quoted, aposed, regexCtx, prefix, regex, singleComment, comment) {
       var index;
       if(quoted || aposed) { // replace strings
@@ -7977,13 +7978,13 @@
       }
     });
 
-    var atoms = splitToAtoms(s);
+    var atoms = splitToAtoms(codeWoStrings);
     var replaceContext;
     var declaredClasses = {}, currentClassId, classIdSeed = 0;
 
-    function addAtom(s, type) {
+    function addAtom(text, type) {
       var lastIndex = atoms.length;
-      atoms.push(s);
+      atoms.push(text);
       return '"' + type + lastIndex + '"';
     }
 
@@ -8022,15 +8023,14 @@
     }
 
     function extractConstructors(code, className) {
-      var s = code;
-      s = s.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
+      var result = code.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
         if(name !== className) {
           return all;
         } else {
           return addAtom(all, 'G');
         }
       });
-      return s;
+      return result;
     }
 
     function AstParam(name) {
@@ -8053,15 +8053,15 @@
       if(this.params.length === 0) {
         return "()";
       }
-      var s = "(";
+      var result = "(";
       for(var i=0,l=this.params.length;i<l;++i) {
-        s += this.params[i] + ", ";
+        result += this.params[i] + ", ";
       }
-      return s.substring(0, s.length - 2) + ")";
+      return result.substring(0, result.length - 2) + ")";
     };
 
     function transformParams(params) {
-      var paramsWoPars = params.substring(1, params.length - 1).trim();
+      var paramsWoPars = trim(params.substring(1, params.length - 1));
       var result = [];
       if(paramsWoPars !== "") {
         var paramList = paramsWoPars.split(",");
@@ -8174,7 +8174,7 @@
     function transformInlineClass(class_) {
       var m = new RegExp(/\bnew\s*(Runnable)\s*"B\d+"\s*"A(\d+)"/).exec(class_);
       if(m === null) {
-        return "undefined";
+        return "null";
       } else {
         var oldClassId = currentClassId, newClassId = generateClassId();
         currentClassId = newClassId;
@@ -8195,7 +8195,7 @@
     AstFunction.prototype.toString = function() {
       var oldContext = replaceContext; 
       // saving "this." and parameters
-      var names = appendToLookupTable({"this":undefined}, this.params.getNames());
+      var names = appendToLookupTable({"this":null}, this.params.getNames());
       replaceContext = function(name) {
         return name in names ? name : oldContext(name);
       };
@@ -8210,7 +8210,7 @@
 
     function transformFunction(class_) {
       var m = new RegExp(/\b([A-Za-z_$][\w$]*)\s*"B(\d+)"\s*"A(\d+)"/).exec(class_);
-      return new AstFunction( m[1] !== "function" ? m[1] : undefined,
+      return new AstFunction( m[1] !== "function" ? m[1] : null,
         transformParams(atoms[m[2]]), transformStatementsBlock(atoms[m[3]]));
     }
 
@@ -8222,15 +8222,15 @@
       replaceContext = function(name) {
           return name === "this"? name : oldContext(name); // saving "this."
       };
-      var s = "";
+      var result = "";
       for(var i=0,l=this.members.length;i<l;++i) {
         if(this.members[i].label) {
-          s += this.members[i].label + ": ";
+          result += this.members[i].label + ": ";
         }
-        s += this.members[i].value.toString() + ", ";
+        result += this.members[i].value.toString() + ", ";
       }
       replaceContext = oldContext;
-      return s.substring(0, s.length - 2);
+      return result.substring(0, result.length - 2);
     };
 
     function transformInlineObject(obj) {
@@ -8240,8 +8240,8 @@
         if(label < 0) {
           members[i] = { value: transformExpression(members[i]) };
         } else {
-          members[i] = { label: members[i].substring(0, label).trim(),
-            value: transformExpression(members[i].substring(label + 1).trim()) };
+          members[i] = { label: trim(members[i].substring(0, label)),
+            value: transformExpression( trim(members[i].substring(label + 1)) ) };
         }
       }
       return new AstInlineObject(members);
@@ -8258,11 +8258,11 @@
         }
       } else {
         var trimmed = trimSpaces(expr);
-        var s = preExpressionTransform(trimmed.middle);
-        s = s.replace(/"[ABC](\d+)"/g, function(all, index) {
+        var result = preExpressionTransform(trimmed.middle);
+        result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
           return expandExpression(atoms[index]);
         });
-        return trimmed.untrim( s );
+        return trimmed.untrim(result);
       }
     }
 
@@ -8329,7 +8329,7 @@
         value = transformExpression(def.substring(eqIndex + 1));
         isDefault = false;
       }
-      return new AstVarDefinition(name.replace(/(\s*"C\d+")+/g, "").trim(),
+      return new AstVarDefinition( trim(name.replace(/(\s*"C\d+")+/g, "")),
         value, isDefault);
     }
 
@@ -8391,7 +8391,7 @@
 
     function transformForExpression(expr) {
       var content = expr.substring(1, expr.length - 1).split(";");
-      return new AstForExpression(transformStatement(content[0].trim()),
+      return new AstForExpression( transformStatement(trim(content[0])),
         transformExpression(content[1]), transformExpression(content[2]));
     }
 
@@ -8473,7 +8473,7 @@
         for(var i=0,l=this.definitions.length;i<l;++i) {
           var definition = this.definitions[i];
           var name = definition.name, staticName = className + "." + name;
-          var declaration = "if(" + staticName + " === undefined) {\n" +
+          var declaration = "if(" + staticName + " === void(0)) {\n" +
             " " + staticName + " = " + definition.value + "; }\n" +
             thisPrefix + "__defineGetter__('" + name + "',function(){return " + staticName + ";});\n" +
             thisPrefix + "__defineSetter__('" + name + "',function(val){" + staticName + " = val;});\n";
@@ -8570,7 +8570,7 @@
       var scopeLevel = getScopeLevel(this.owner);
       
       var selfId = "$this_" + scopeLevel;
-      var s = "var " + selfId + " = this;\n";
+      var result = "var " + selfId + " = this;\n";
 
       var members = this.getMembers();
       var thisClassFields = appendToLookupTable({}, members.fields),
@@ -8590,43 +8590,43 @@
       };
 
       if(this.baseClassName) {
-        s += "var $super = {};\n";
-        s += "function $superCstr(){\n" + 
+        result += "var $super = {};\n";
+        result += "function $superCstr(){\n" + 
                         this.baseClassName + ".prototype.constructor.apply($super, arguments);\n" + 
                         "processing.extendClass(" + selfId + ", $super); }\n";
       } else {
-        s += "function $superCstr() { }\n";
+        result += "function $superCstr() { }\n";
       }
 
-      s += this.functions.join('\n') + '\n';
-      s += this.innerClasses.join('\n');
+      result += this.functions.join('\n') + '\n';
+      result += this.innerClasses.join('\n');
 
-      s += this.fields.join(";\n") + ";\n";
-      s += this.methods.join('\n') + '\n';
-      s += this.misc.tail;
+      result += this.fields.join(";\n") + ";\n";
+      result += this.methods.join('\n') + '\n';
+      result += this.misc.tail;
 
-      s += this.cstrs.join('\n') + '\n';
+      result += this.cstrs.join('\n') + '\n';
 
-      s += "function $constr() {\n";
+      result += "function $constr() {\n";
       var cstrsIfs = [];
       for(var i=0,l=this.cstrs.length;i<l;++i) {
         var paramsLength = this.cstrs[i].params.params.length;
-        // ??? will it be faster to expand to regular call, e.g. $constr_1(argument[0]);
         cstrsIfs.push("if(arguments.length === " + paramsLength + ") { " +
           "$constr_" + paramsLength + ".apply(" + selfId + ", arguments); }");
       }
       if(cstrsIfs.length > 0) {
-        s += cstrsIfs.join(" else ") + " else \n";
+        result += cstrsIfs.join(" else ") + " else ";
       }
       // ??? add check if length is 0, otherwise fail
-      s += " $superCstr();\n}\n";
-      s += "$constr.apply(undefined, arguments);\n";
+      result += "$superCstr(); }\n";
+      result += "$constr.apply(null, arguments);\n";
 
       replaceContext = oldContext;
-      return s;
+      return result;
     };
 
-    transformClassBody = function(body, name, base, impls) {
+    transformClassBody = function(body, name, baseName, impls) {
+      var undef;
       var declarations = body.substring(1, body.length - 1);
       declarations = extractClassesAndMethods(declarations);
       declarations = extractConstructors(declarations, name);
@@ -8639,10 +8639,11 @@
         return "";
       });
       var fields = declarations.split(';');
-      var i, baseClassName;
+      var baseClassName;
+      var i;
 
-      if(base !== undefined) {
-        baseClassName = base.replace(/^\s*extends\s+([A-Za-z_$][\w$]*)\s*$/g, "$1");
+      if(baseName !== undef) {
+        baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*)\s*$/g, "$1");
       }
 
       for(i = 0; i < functions.length; ++i) {
@@ -8762,8 +8763,9 @@
       this.misc = misc;
     }
     AstPrefixStatement.prototype.toString = function() {
+      var undef;
       var result = this.misc.prefix;
-      if(this.argument !== undefined) {
+      if(this.argument !== undef) {
         result += this.argument.toString();
       }
       return result;
@@ -8776,12 +8778,13 @@
     };
 
     transformStatements = function(statements, transformMethod, transformClass) {
+      var undef;
       var nextStatement = new RegExp(/\b(catch|for|if|switch|while|with)\s*"B(\d+)"|\b(do|else|finally|return|throw|try|break|continue)\b|("[ADEH](\d+)")|\b((?:case\s[^:]+|[A-Za-z_$][\w$]*\s*):)|(;)/g);
       var res = [];
       statements = preStatementsTransform(statements);
       var lastIndex = 0, m, space;
       while((m = nextStatement.exec(statements)) !== null) {
-        if(m[1] !== undefined) { // catch, for ...
+        if(m[1] !== undef) { // catch, for ...
           var i = statements.lastIndexOf('"B', nextStatement.lastIndex);
           var statementsPrefix = statements.substring(lastIndex, i);
           if(m[1] === "for") {
@@ -8794,12 +8797,12 @@
             res.push(new AstPrefixStatement(m[1], transformExpression(atoms[m[2]]),
               { prefix: statementsPrefix }) );
           }
-        } else if(m[3] !== undefined) { // do, else, ...
-            res.push(new AstPrefixStatement(m[3], undefined,
+        } else if(m[3] !== undef) { // do, else, ...
+            res.push(new AstPrefixStatement(m[3], undef,
               { prefix: statements.substring(lastIndex, nextStatement.lastIndex) }) );
-        } else if(m[4] !== undefined) { // block, class and methods
+        } else if(m[4] !== undef) { // block, class and methods
           space = statements.substring(lastIndex, nextStatement.lastIndex - m[4].length);
-          if(space.trim().length !== 0) { continue; } // avoiding new type[] {} construct
+          if(trim(space).length !== 0) { continue; } // avoiding new type[] {} construct
           res.push(space);
           var kind = m[4].charAt(1), atomIndex = m[5];
           if(kind === 'D') {
@@ -8811,9 +8814,9 @@
           } else {
             res.push(transformStatementsBlock(atoms[atomIndex]));
           }
-        } else if(m[6] !== undefined) { // label
+        } else if(m[6] !== undef) { // label
           space = statements.substring(lastIndex, nextStatement.lastIndex - m[6].length);
-          if(space.trim().length !== 0) { continue; } // avoiding ?: construct
+          if(trim(space).length !== 0) { continue; } // avoiding ?: construct
           res.push(new AstLabel(statements.substring(lastIndex, nextStatement.lastIndex)) );
         } else { // semicolon
           var statement = trimSpaces(statements.substring(lastIndex, nextStatement.lastIndex - 1));
@@ -8879,7 +8882,7 @@
       var result = "// this code was autogenerated from PJS\n" +
         "(function(processing) {\n" +
         this.statements.join('') + "\n})";
-      replaceContext = undefined;
+      replaceContext = null;
       return result;
     };
 
@@ -8891,6 +8894,7 @@
     };
     
     function generateMetadata(ast) {
+      var undef;
       var globalScope = {};
       var id, class_;
       for(id in declaredClasses) {
@@ -8900,7 +8904,7 @@
           if(scopeId) {
             var scope = declaredClasses[scopeId];
             class_.scope = scope;
-            if(scope.inScope === undefined) {
+            if(scope.inScope === undef) {
               scope.inScope = {};
             }
             scope.inScope[name] = class_;
@@ -8919,7 +8923,7 @@
           }
           currentScope = currentScope.scope;
         }
-        if(found === undefined) {
+        if(found === undef) {
           found = globalScope[parts[0]];
         }
         for(var i=1,l=parts.length;i<l && found;++i) {
