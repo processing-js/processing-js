@@ -7789,12 +7789,12 @@
       }
 
       // Compile the code
-      var compiledSketch;
+      var compiledSketchFunction;
       if(typeof aCode === "function") {
-        compiledSketch = aCode;
+        compiledSketchFunction = aCode;
       } else {
         var parsedCode = Processing.parse(aCode, p);
-        compiledSketch = eval(parsedCode);
+        compiledSketchFunction = eval(parsedCode);
       }
 
       // Step through the libraries that were attached at doc load...
@@ -7808,7 +7808,7 @@
       var executeSketch = function(processing) {
         // Don't start until all specified images in the cache are preloaded
         if (!p.pjs.imageCache.pending) {
-          compiledSketch(processing);
+          compiledSketchFunction(processing);
 
           // Run void setup()
           if (processing.setup) {
@@ -8683,7 +8683,6 @@
       var staticVars = "";
       for (var i = 0, l = this.body.fields.length; i < l; i++) {
         if (this.body.fields[i].isStatic) {
-          //staticVars += "var " + this.body.fields[i].name + " = " + this.body.name + "." + this.body.fields[i].definitions + ";";
           for (var x = 0, xl = this.body.fields[i].definitions.length; x < xl; x++) {
             staticVars += "var " + this.body.fields[i].definitions[x].name + " = " + this.body.name + "." + this.body.fields[i].definitions[x] + ";";
           }
