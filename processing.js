@@ -5415,7 +5415,7 @@
                 }
               }
               if(doFill){
-                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
           }
