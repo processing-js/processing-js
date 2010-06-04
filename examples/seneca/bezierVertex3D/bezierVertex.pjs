@@ -1,19 +1,4 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <script src="../../../processing.js"></script>
-    <link rel="stylesheet" href="../../style.css" />
-  </head>
-  <body>
-    <h1>bezierVertex() test</h1>
-
-    <p>
-    <canvas datasrc="bezierVertex.pjs" width="200" height="200"></canvas>
-    <img src="p5_result.png" style="margin: 10px 0;"/>
-    </p>
-
-    <pre>
-size(200, 200);
+size(200, 200, P3D);
 background(0);
 noFill();
 
@@ -38,7 +23,8 @@ endShape();
 stroke(126);
 beginShape();
 vertex(60, 40);
-bezierVertex(160, 10, 170, 150, 60, 150);
+bezierDetail(30);
+bezierVertex(160, 10, 0, 170, 150, 0, 60, 150, 0);
 endShape();
 
 stroke(255);
@@ -48,6 +34,3 @@ vertex(160, 10);
 vertex(170, 150);
 vertex(60, 150);
 endShape();
-    </pre>
-  </body>
-</html>

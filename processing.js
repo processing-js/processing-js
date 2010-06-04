@@ -285,7 +285,7 @@
         curTightness = 0,
         curveDetail = 20,
         curveInited = false,
-        bezierDetail = 20,
+        bezDetail = 20,
         colorModeA = 255,
         colorModeX = 255,
         colorModeY = 255,
@@ -5225,8 +5225,12 @@
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
           strokeVertArray.splice(strokeVertArray.length - 4);
-          line3D(lineVertArray, null, strokeVertArray);
-          fill3D(fillVertArray, "TRIANGLES", colorVertArray);
+          if(doStroke){
+            line3D(lineVertArray, null, strokeVertArray);
+          }
+          if(doFill){
+            fill3D(fillVertArray, "TRIANGLES", colorVertArray);
+          }
           /*fillVertArray = [];  //***Fill not properly working yet*** will fix later
           colorVertArray = [];
           tempArray.reverse();
@@ -5685,7 +5689,7 @@
             }
             // setup matrix for forward differencing to speed up drawing
             var lastPoint = vertArray.length - 1;
-            splineForward( bezierDetail, bezierDrawMatrix );
+            splineForward( bezDetail, bezierDrawMatrix );
             bezierDrawMatrix.apply( bezierBasisMatrix );
             var draw = bezierDrawMatrix.array(); 	
             var x1 = vertArray[lastPoint][0],
@@ -5702,7 +5706,7 @@
             var zplot1 = draw[4] * z1 + draw[5] * arguments[2] + draw[6] * arguments[5] + draw[7] * arguments[8];
             var zplot2 = draw[8] * z1 + draw[9] * arguments[2] + draw[10]* arguments[5] + draw[11]* arguments[8];
             var zplot3 = draw[12]* z1 + draw[13]* arguments[2] + draw[14]* arguments[5] + draw[15]* arguments[8];
-            for (var j = 0; j < bezierDetail; j++) {          
+            for (var j = 0; j < bezDetail; j++) {          
               x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
               y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
               z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
@@ -5936,37 +5940,29 @@
       }
     };
 
-    p.bezier = function bezier( x1, y1, x2, y2, x3, y3, x4, y4 ) {
-      if( arguments.length == 8  && p.use3DContext === false )
-      {
-        curContext.beginPath();
-        curContext.moveTo( x1, y1 );
-        curContext.bezierCurveTo( x2, y2, x3, y3, x4, y4 );
-        curContext.stroke();
-        curContext.closePath();
-      }
-      else{
-        if( arguments.length == 8 )
-        {
+    p.bezier = function bezier() {
+      if( arguments.length === 8 && !p.use3DContext ){
           p.beginShape();
           p.vertex( arguments[0], arguments[1] );
           p.bezierVertex( arguments[2], arguments[3], 
                           arguments[4], arguments[5],
                           arguments[6], arguments[7] );
           p.endShape();
-        }
-        else{
+      }
+      else if( arguments.length === 12 && p.use3DContext ){
           p.beginShape();
           p.vertex( arguments[0], arguments[1], arguments[2] );
           p.bezierVertex( arguments[3], arguments[4], arguments[5],
                           arguments[6], arguments[7], arguments[8],
                           arguments[9], arguments[10], arguments[11] );
           p.endShape();
-        }
+      }
+      else {
+        throw("Please use the proper parameters!");
       }
     };
     p.bezierDetail = function bezierDetail( detail ){
-      bezierDetail = detail;
+      bezDetail = detail;
     };
     
     p.bezierPoint = function bezierPoint(a, b, c, d, t) {
