@@ -5119,7 +5119,7 @@
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
-    var fill3D = function fill3D(vArray, mode, cArray){
+    var fill3D = function fill3D(vArray, mode, cArray, tArray){
       var ctxMode;
       if(mode === "TRIANGLES"){
         ctxMode = curContext.TRIANGLES;
@@ -5152,6 +5152,12 @@
       vertexAttribPointer(programObject3D, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
 
+      if(usingTexture){
+        uniformi(programObject3D, "usingTexture", usingTexture);
+        vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
+        curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
+      }  
+      
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
@@ -5393,6 +5399,7 @@
               if(doFill){
                 fillVertArray = [];
                 colorVertArray = [];
+                texVertArray = [];
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i][j]);
                 }
@@ -5420,7 +5427,19 @@
                 for(j = 5; j < 9; j++){
                   colorVertArray.push(vertArray[i+2][j]);
                 }
-                fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
+                
+                if(usingTexture){
+                  texVertArray.push(vertArray[i+0][3]);
+                  texVertArray.push(vertArray[i+0][4]);
+                  texVertArray.push(vertArray[i+1][3]);
+                  texVertArray.push(vertArray[i+1][4]);
+                  texVertArray.push(vertArray[i+3][3]);
+                  texVertArray.push(vertArray[i+3][4]);
+                  texVertArray.push(vertArray[i+2][3]);
+                  texVertArray.push(vertArray[i+2][4]);
+                }
+                
+                fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
               }
             }
           }
