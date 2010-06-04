@@ -7,7 +7,7 @@ background(200);
 
 PImage img = loadImage("berlin-1.jpg");
 textureMode(NORMALIZED);
-
+noFill();
 beginShape(TRIANGLES);
 texture(img);
 vertex(30, 75, 0, 0, 0);

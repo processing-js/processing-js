@@ -5184,43 +5184,38 @@
     };
 
     p.endShape = function endShape(close){
-              var lineVertArray = [];
-          var fillVertArray = [];
-          var colorVertArray = [];
-          var strokeVertArray = [];
-          var texVertArray = [];
-          
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 0; j < 3; j++){
-              fillVertArray.push(vertArray[i][j]);
-            }
-          }
-          
-   
-          // 5,6,7,8
-          // R,G,B,A
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 5; j < 9; j++){
-              colorVertArray.push(vertArray[i][j]);
-            }
-          }
+      var lineVertArray = [];
+      var fillVertArray = [];
+      var colorVertArray = [];
+      var strokeVertArray = [];
+      var texVertArray = [];
+      
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 0; j < 3; j++){
+          fillVertArray.push(vertArray[i][j]);
+        }
+      }
+         
+      // 5,6,7,8
+      // R,G,B,A
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 5; j < 9; j++){
+          colorVertArray.push(vertArray[i][j]);
+        }
+      }
+            
+      // 9,10,11,12
+      // R, G, B, A
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 9; j < 13; j++){
+          strokeVertArray.push(vertArray[i][j]);
+        }
+      }
 
-          
-          // 9,10,11,12
-          // R, G, B, A
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 9; j < 13; j++){
-              strokeVertArray.push(vertArray[i][j]);
-            }
-          }
-
-          
-          for(i = 0; i < vertArray.length; i++){
-            texVertArray.push(vertArray[i][3]);
-            texVertArray.push(vertArray[i][4]);
-          }
-
-          
+      for(i = 0; i < vertArray.length; i++){
+        texVertArray.push(vertArray[i][3]);
+        texVertArray.push(vertArray[i][4]);
+      }
 
       firstVert = true;
       var i, j, k;
@@ -5346,7 +5341,7 @@
                 if(doStroke){
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray );
                 }
-                if(doFill){
+                if(doFill || usingTexture){
                   fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);
                 }
               }
@@ -5378,7 +5373,7 @@
                   }
                 }
                 
-                if(doFill){
+                if(doFill || usingTexture){
                   fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
                 }
                 if(doStroke){
@@ -5429,7 +5424,7 @@
                   line3D(lineVertArray, "LINE_STRIP",strokeVertArray);
                 }
               }
-              if(doFill){
+              if(doFill || usingTexture){
                 fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
@@ -5545,7 +5540,7 @@
                 }
               }
 
-              if(doFill){
+              if(doFill || usingTexture){
                 fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
               }
             }
@@ -5570,9 +5565,6 @@
                 for(j = 5; j < 9; j++){
                   strokeVertArray.push(vertArray[i][j]);
                 }
-//                for(j = 9; j < 13; j++){
-  //                colorVertArray.push(vertArray[i][j]);
-    //            }
               }
               if(p.CLOSE){
                 line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
@@ -5587,6 +5579,13 @@
               }
             }
           }
+          // everytime beginShape is followed by a call to
+          // texture(), texturing it turned back on. We do this to
+          // figure out if the shape should be textured or filled
+          // with a color.
+          usingTexture = false;
+          curContext.useProgram(programObject3D);
+          uniformi(programObject3D, "usingTexture", usingTexture);
         }
         // 2D context
         else{
