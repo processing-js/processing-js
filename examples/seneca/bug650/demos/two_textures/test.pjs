@@ -3,7 +3,6 @@ import processing.opengl.*;
 
 float r = 0.0;
 float s = 0.0;
-float temp;
 
 PImage fire, pjs_;
 
@@ -15,18 +14,13 @@ void setup()
   textureMode(NORMALIZED);
 }
 
-void drawBox(int i){
+void drawBox(PImage img){
   beginShape(QUADS);
 
-  if(i == 0){
-    texture(pjs_);
-    temp = s;
-    s = 0.0;
-    stroke(0);
-  }
-  else{
-    texture(fire);
-    s = 0;
+  texture(img);
+
+  stroke(0);
+  if(img == fire){
     noStroke();
   }
 
@@ -36,6 +30,7 @@ void drawBox(int i){
   vertex(-1,  1, -1, 1-s, 1);
   vertex( 1,  1, -1, 0-s, 1);
 
+  //
   vertex(-1, -1,  1, 0-s, 0);
   vertex( 1, -1,  1, 1-s, 0);
   vertex( 1,  1,  1, 1-s, 1);
@@ -80,7 +75,7 @@ void draw()
     scale(15);
     rotateZ(r);
     rotateY(-r);
-    drawBox(0);
+    drawBox(pjs_);
   popMatrix();
 
   pushMatrix();
@@ -88,7 +83,7 @@ void draw()
     rotateZ(r);
     rotateX(r);
     rotateY(-r);
-    drawBox(1);
+    drawBox(fire);
   popMatrix();
 
   popMatrix();

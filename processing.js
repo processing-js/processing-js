@@ -5763,11 +5763,12 @@
         pimage.__cvs = cvs;
 
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);        
-        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
         curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
+        curContext.generateMipmap(curContext.TEXTURE_2D);
       }
       else{
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
