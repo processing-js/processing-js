@@ -5185,6 +5185,44 @@
     };
 
     p.endShape = function endShape(close){
+              var lineVertArray = [];
+          var fillVertArray = [];
+          var colorVertArray = [];
+          var strokeVertArray = [];
+          var texVertArray = [];
+          
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 0; j < 3; j++){
+              fillVertArray.push(vertArray[i][j]);
+            }
+          }
+          
+   
+          // 5,6,7,8
+          // R,G,B,A
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 5; j < 9; j++){
+              colorVertArray.push(vertArray[i][j]);
+            }
+          }
+
+          
+          // 9,10,11,12
+          // R, G, B, A
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 9; j < 13; j++){
+              strokeVertArray.push(vertArray[i][j]);
+            }
+          }
+
+          
+          for(i = 0; i < vertArray.length; i++){
+            texVertArray.push(vertArray[i][3]);
+            texVertArray.push(vertArray[i][4]);
+          }
+
+          
+
       firstVert = true;
       var i, j, k;
       var last = vertArray.length - 1;
@@ -5193,6 +5231,21 @@
       }
       else{
         p.CLOSE = true;
+        
+        fillVertArray.push(vertArray[0][0]);
+        fillVertArray.push(vertArray[0][1]);
+        fillVertArray.push(vertArray[0][2]);
+
+        for(i = 5; i < 9; i++){
+          colorVertArray.push(vertArray[0][i]);
+        }
+        
+       for(i = 9; i < 13; i++){
+          strokeVertArray.push(vertArray[0][i]);
+        }
+        
+        texVertArray.push(vertArray[0][3]);
+        texVertArray.push(vertArray[0][4]);
       }
       if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
         if(vertArray.length > 3){
@@ -5244,50 +5297,7 @@
       }
       else{
         if(p.use3DContext){ // 3D context
-          var lineVertArray = [];
-          var fillVertArray = [];
-          var colorVertArray = [];
-          var strokeVertArray = [];
-          var texVertArray = [];
-          
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 0; j < 3; j++){
-              fillVertArray.push(vertArray[i][j]);
-            }
-          }
-          fillVertArray.push(vertArray[0][0]);
-          fillVertArray.push(vertArray[0][1]);
-          fillVertArray.push(vertArray[0][2]);
-
-          // 5,6,7,8
-          // R,G,B,A
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 5; j < 9; j++){
-              colorVertArray.push(vertArray[i][j]);
-            }
-          }
-          for(i = 5; i < 9; i++){
-            colorVertArray.push(vertArray[0][i]);
-          }
-          
-          // 9,10,11,12
-          // R, G, B, A
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 9; j < 13; j++){
-              strokeVertArray.push(vertArray[i][j]);
-            }
-          }
-          for(i = 9; i < 13; i++){
-            strokeVertArray.push(vertArray[0][i]);
-          }
-          
-          for(i = 0; i < vertArray.length; i++){
-            texVertArray.push(vertArray[i][3]);
-            texVertArray.push(vertArray[i][4]);
-          }
-          texVertArray.push(vertArray[0][3]);
-          texVertArray.push(vertArray[0][4]);
-                   
+ 
           if (curShape === p.POINTS){
             for(i = 0; i < vertArray.length; i++){
               for(j = 0; j < 3; j++){
@@ -5365,7 +5375,7 @@
                 for(j = 0; j < 3; j++){
                   for(k = 5; k < 9; k++){
                     strokeVertArray.push(vertArray[i+j][k+4]);
-                    colorVertArray.push(vertArray[i+j][k]);// !!!
+                    colorVertArray.push(vertArray[i+j][k]);
                   }
                 }
                 
@@ -5542,8 +5552,7 @@
             }
           }
           // If the user didn't specify a type (LINES, TRIANGLES, etc)
-          else{//!!!
-          //p.println(colorVertArray.length);
+          else{
             // If only one vertex was specified, it must be a point
             if(vertArray.length === 1){
               for(j = 0; j < 3; j++){
@@ -5575,8 +5584,6 @@
               
               // fill is ignored if textures are used
               if(doFill || usingTexture){
-              //!!!!!
-              //p.println(texVertArray.length + " - " + colorVertArray.length);
                 fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
