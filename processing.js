@@ -5313,6 +5313,7 @@
             if(vertArray.length > 2){
               for(i = 0; (i+2) < vertArray.length; i+=3){
                 fillVertArray = [];
+                texVertArray = [];
                 lineVertArray = [];
                 colorVertArray = [];
                 strokeVertArray = [];
@@ -5320,6 +5321,11 @@
                   for(k = 0; k < 3; k++){
                     lineVertArray.push(vertArray[i+j][k]);
                     fillVertArray.push(vertArray[i+j][k]);
+                  }
+                }
+                for(j = 0; j < 3; j++){
+                  for(k = 3; k < 5; k++){
+                    texVertArray.push(vertArray[i+j][k]);
                   }
                 }
                 for(j = 0; j < 3; j++){
@@ -5332,7 +5338,7 @@
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray );
                 }
                 if(doFill){
-                  fill3D(fillVertArray, "TRIANGLES", colorVertArray);
+                  fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);
                 }
               }
             }
