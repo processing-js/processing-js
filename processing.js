@@ -706,7 +706,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // PShape
     ////////////////////////////////////////////////////////////////////////////
-    var PShape = function(family) {
+    var PShape = function( family ) {
       this.family   = family || p.GROUP;
       this.visible  = true;
       this.style    = true;
@@ -892,12 +892,34 @@
     	}
     	//return null;
     };
-    var PShapeSVG = function( info ){
+    var PShapeSVG = function(){
       var xml;
       if( arguments.length == 1){
-        if( info.indexOf(".svg") > -1){//its a filename
+        var xml = new XMLElement( arguments[0] );
+        // set values to their defaults according to the SVG spec
+        this.stroke = false;
+        this.strokeColor = 0xff000000;
+        this.strokeWeight = 1;
+        this.strokeCap = p.SQUARE;  // equivalent to BUTT in svg spec
+        this.strokeJoin = p.MITER;
+        this.strokeGradient = null;
+        this.strokeGradientPaint = null;
+        this.strokeName = null;
+
+        this.fill = true;
+        this.fillColor = 0xff000000;
+        this.fillGradient = null;
+        this.fillGradientPaint = null;
+        this.fillName = null;
+
+        this.strokeOpacity = 1;
+        this.fillOpacity = 1;
+        this.opacity = 1;
+      }
+      else if( arguments.length == 2){
+        if( arguments[1].indexOf(".svg") > -1){//its a filename
+          var xml = new XMLElement( arguments[1] );
           // set values to their defaults according to the SVG spec
-          var xml = new XMLElement( info );
           this.stroke = false;
           this.strokeColor = 0xff000000;
           this.strokeWeight = 1;
@@ -913,49 +935,85 @@
           this.strokeOpacity = 1;
           this.fillOpacity = 1;
           this.opacity = 1;
-        } 
+        } else { // XMLElement
+          if( arguments[0] ) { // PShapeSVG 
+            var xml = arguments[1];
+            this.stroke = arguments[0].stroke;
+            this.strokeColor = arguments[0].strokeColor;
+            this.strokeWeight = arguments[0].strokeWeight;
+            this.strokeCap = arguments[0].strokeCap;
+            this.strokeJoin = arguments[0].strokeJoin;
+            this.strokeGradient = arguments[0].strokeGradient;
+            this.strokeGradientPaint = arguments[0].strokeGradientPaint;
+            this.strokeName = arguments[0].strokeName;
+
+            this.fill = arguments[0].fill;
+            this.fillColor = arguments[0].fillColor;
+            this.fillGradient = arguments[0].fillGradient;
+            this.fillGradientPaint = arguments[0].fillGradientPaint;
+            this.fillName = arguments[0].fillName;
+            this.strokeOpacity = arguments[0].strokeOpacity;
+            this.fillOpacity = arguments[0].fillOpacity;
+            this.opacity = arguments[0].opacity;
+          }       
+        }     
       }
-      else if( arguments.length == 2){
-        xml = arguments[1];
-        this.stroke = arguments[0].stroke;
-        this.strokeColor = arguments[0].strokeColor;
-        this.strokeWeight = arguments[0].strokeWeight;
-        this.strokeCap = arguments[0].strokeCap;
-        this.strokeJoin = arguments[0].strokeJoin;
-        this.strokeGradient = arguments[0].strokeGradient;
-        this.strokeGradientPaint = arguments[0].strokeGradientPaint;
-        this.strokeName = arguments[0].strokeName;
-
-        this.fill = arguments[0].fill;
-        this.fillColor = arguments[0].fillColor;
-        this.fillGradient = arguments[0].fillGradient;
-        this.fillGradientPaint = arguments[0].fillGradientPaint;
-        this.fillName = arguments[0].fillName;
-
-        //hasTransform = parent.hasTransform;
-        //transformation = parent.transformation;
-
-        this.opacity = arguments[0].opacity;
-        
+      this.element = xml;
+      if (!this.element.getName()==="svg" ) {
+        throw("root is not <svg>, it's <" + !this.element.getName() + ">");
+        println("root is not <svg> it's <" + !this.element.getName() + ">");
       }
-      /*this.element = xml;
-      
+      this.name = this.element.getStringAttribute("id");
+      var displayStr = this.element.getStringAttribute("display", "inline");
+      this.visible = !(displayStr === "none");
       var str = this.element.getAttribute( "transform" );
       if( str ){
-        matrix = this.parseMatrix( str );
+        this.matrix = this.parseMatrix( str );
       }
-      
-      this.parseColors( xml ); 
-      this.parseChildren( xml );*/
+      // not proper parsing of the viewBox, but will cover us for cases where
+      // the width and height of the object is not specified
+      var viewBoxStr = this.element.getStringAttribute("viewBox");
+      if (viewBoxStr != null) {
+        var viewBox = viewBoxStr.split(" ");
+        this.width = viewBox[2];
+        this.height = viewBox[3];
+      }
+
+      // TODO if viewbox is not same as width/height, then use it to scale
+      // the original objects. for now, viewbox only used when width/height
+      // are empty values (which by the spec means w/h of "100%"
+      var unitWidth = this.element.getStringAttribute("width");
+      var unitHeight = this.element.getStringAttribute("height");
+      if (unitWidth != null) {
+        this.width = unitWidth;
+        this.height = unitHeight;
+      } else {
+        if ((this.width == 0) || (this.height == 0)) {
+          //show warning
+          println("The width and/or height is not " +
+                                "readable in the <svg> tag of this file.");
+          // For the spec, the default is 100% and 100%. For purposes
+          // here, insert a dummy value because this is prolly just a
+          // font or something for which the w/h doesn't matter.
+          this.width = 1;
+          this.height = 1;
+        }
+      }
+      this.parseColors( this.element ); 
+      this.parseChildren( this.element );
+
     };
     PShapeSVG.prototype = {
       parseMatrix: function( str ) {;},
       parseChildren:function( element ){
         var newelement = element.getChildren();
+        children = new p.PShape();
         for (var i=0; i< newelement.length; i++) {
           var kid = this.parseChild(newelement[i]);
           if (kid != null) {
-            PShape.addChild(kid);
+          //for(var w in PShape.prototype){alert(w);}
+          //alert(PShape);
+            children.addChild(kid);
           }
         }
       },
