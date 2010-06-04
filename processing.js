@@ -7137,7 +7137,7 @@
       var str = arguments[0], x, y, z, pos, width, height;
 
       if (typeof str === "string" || typeof str === "number" || str instanceof Char ) {
-        if (typeof str === "number" && (str + "").indexof('.') >= 0) {
+        if (typeof str === "number" && (str + "").indexOf('.') >= 0) {
           str = str.toFixed(3);
         }
 
