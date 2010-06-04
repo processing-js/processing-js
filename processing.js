@@ -19,7 +19,7 @@
 (function() {
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
-
+  
     var p = this;
 
     p.pjs = {
@@ -7663,10 +7663,10 @@
       p.mouseX = e.pageX - offsetX;
       p.mouseY = e.pageY - offsetY;
 
-      if (p.mouseMoved && !p.__mousePressed) {
+      if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
         p.mouseMoved();
       }
-      if (p.__mousePressed && p.mouseDragged) {
+      if (typeof p.mouseDragged === "function" && p.__mousePressed) {
         p.mouseDragged();
         p.mouseDragging = true;
       }
@@ -7689,15 +7689,20 @@
         p.mouseButton = p.RIGHT;
         break;
       }
-      p.mousePressed();
+
+      if (typeof p.mousePressed === "function") {
+        p.mousePressed();
+      }
     });
 
     attach(curElement, "mouseup", function(e) {
       p.__mousePressed = false;
-      if (p.mouseClicked && !p.mouseDragging) {
+
+      if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
         p.mouseClicked();
       }
-      if (p.mouseReleased) {
+
+      if (typeof p.mouseReleased == "function") {
         p.mouseReleased();
       }
     });
@@ -7931,6 +7936,8 @@
       executeSketch();
     }
   };
+
+  Processing.version = "@VERSION@";
 
   // Share lib space
   Processing.lib = {};
