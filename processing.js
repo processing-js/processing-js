@@ -8447,8 +8447,7 @@
         transformStatementsBlock(atoms[getAtomIndex(m[6])]) );
     }
 
-    function AstClassField(name, definitions, fieldType, isStatic) {
-      this.name = name;
+    function AstClassField(definitions, fieldType, isStatic) {
       this.definitions = definitions;
       this.fieldType = fieldType;
       this.isStatic = isStatic;
@@ -8484,12 +8483,11 @@
       var attrAndType = attrAndTypeRegex.exec(statement);
       var isStatic = attrAndType[1].indexOf("static") >= 0;
       var definitions = statement.substring(attrAndType[0].length).split(/,\s*/g);
-      var name = /^[A-Za-z_$][\w$]*\b/.exec(definitions);
       var defaultTypeValue = getDefaultValueForType(attrAndType[2]);
       for(var i=0; i < definitions.length; ++i) {
         definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
       }
-      return new AstClassField(name, definitions, attrAndType[2], isStatic);
+      return new AstClassField(definitions, attrAndType[2], isStatic);
     }
 
     function AstConstructor(params, body) {
@@ -8679,7 +8677,10 @@
       var staticVars = "";
       for (var i = 0, l = this.body.fields.length; i < l; i++) {
         if (this.body.fields[i].isStatic) {
-          staticVars += "var " + this.body.fields[i].name + " = " + this.body.name + "." + this.body.fields[i].definitions + ";";
+          //staticVars += "var " + this.body.fields[i].name + " = " + this.body.name + "." + this.body.fields[i].definitions + ";";
+          for (var x = 0, xl = this.body.fields[i].definitions.length; x < xl; x++) {
+            staticVars += "var " + this.body.fields[i].definitions[x].name + " = " + this.body.name + "." + this.body.fields[i].definitions[x] + ";";
+          }
         }
       }
       return "function " + this.name + "() {\n" + this.body + "}\n" +
