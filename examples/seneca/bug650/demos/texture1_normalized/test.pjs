@@ -19,6 +19,7 @@ void draw() {
   translate(width / 2, height / 2,0);
   rotateY(map(mouseX, 0, width, -PI, PI));
   rotateZ(PI/6);
+  textureMode(NORMALIZED);
   beginShape(QUADS);
   texture(img);
   vertex(-100, -100, 0, 0, 0);

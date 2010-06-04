@@ -319,6 +319,8 @@
         strokeColorBuffer,
         pointBuffer,
         shapeTexVBO,
+        curTexture = {width:0,height:0},
+        curTextureMode = p.IMAGE,
         usingTexture = false;
 
     // Get padding and border style widths for mouse offsets
@@ -5152,13 +5154,26 @@
       vertexAttribPointer(programObject3D, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
 
+      // No support for lights....yet
+      disableVertexAttribPointer(programObject3D, "Normal");
+
       if(usingTexture){
+      
+        //
+        if(curTextureMode === p.IMAGE){
+          for(var i = 0; i < tArray.length; i += 2){
+            tArray[i] = tArray[i]/curTexture.width;
+            tArray[i+1] /= curTexture.height;
+          }
+        }
+      //  p.println(curTexture.width);
+      //p.println(vArray.length + "  -  " + tArray.length + " -  " + cArray.length);
         uniformi(programObject3D, "usingTexture", usingTexture);
         vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
         curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
-      }  
+      }
       
-      curContext.drawArrays( ctxMode, 0, vArray.length/3 );
+      curContext.drawArrays( ctxMode, 0, (vArray.length/3) );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
@@ -5226,13 +5241,13 @@
           var fillVertArray = [];
           var colorVertArray = [];
           var strokeVertArray = [];
+          var texVertArray = [];
           
           for(i = 0; i < vertArray.length; i++){
             for(j = 0; j < 3; j++){
               fillVertArray.push(vertArray[i][j]);
             }
           }
-          
           fillVertArray.push(vertArray[0][0]);
           fillVertArray.push(vertArray[0][1]);
           fillVertArray.push(vertArray[0][2]);
@@ -5258,6 +5273,13 @@
           for(i = 9; i < 13; i++){
             strokeVertArray.push(vertArray[0][i]);
           }
+          
+          for(i = 0; i < vertArray.length; i++){
+            texVertArray.push(vertArray[i][3]);
+            texVertArray.push(vertArray[i][4]);
+          }
+          texVertArray.push(vertArray[0][3]);
+          texVertArray.push(vertArray[0][4]);
                    
           if (curShape === p.POINTS){
             for(i = 0; i < vertArray.length; i++){
@@ -5499,7 +5521,8 @@
             }
           }
           // If the user didn't specify a type (LINES, TRIANGLES, etc)
-          else{
+          else{//!!!
+          //p.println(colorVertArray.length);
             // If only one vertex was specified, it must be a point
             if(vertArray.length === 1){
               for(j = 0; j < 3; j++){
@@ -5519,7 +5542,7 @@
                   strokeVertArray.push(vertArray[i][j]);
                 }
                 for(j = 9; j < 13; j++){
-                  colorVertArray.push(vertArray[i][j]);
+                  //colorVertArray.push(vertArray[i][j]);
                 }
               }
               if(p.CLOSE){
@@ -5528,8 +5551,9 @@
               else{
                 line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
-              if(doFill){
-                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+              if(doFill){//!!!!!
+              //p.println(texVertArray.length + " - " + colorVertArray.length);
+                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
           }
@@ -5710,19 +5734,24 @@
 
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);        
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
-        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+//        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
+  //      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
         curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
       }
       else{
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
       }
-            
+      
+      curTexture.width = pimage.width;
+      curTexture.height = pimage.height;
       usingTexture = true;
       curContext.useProgram(programObject3D);
       uniformi(programObject3D, "usingTexture", usingTexture);
     };
     
-    p.textureMode = function(){
+    p.textureMode = function(mode){
+      curTextureMode = mode;
     }
 
     p.curveVertex = function(x, y, z) {

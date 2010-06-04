@@ -11,7 +11,7 @@ PImage img;
 void setup() {
   size(640, 360, P3D);
   img = loadImage("berlin.jpg");
-//  noStroke();
+  noStroke();
 }
 
 void draw() {
@@ -21,8 +21,7 @@ void draw() {
   beginShape();
   texture(img);
   vertex(-100, -100, 0, 0, 0);
-  vertex(100, -40, 0, 1, 0.3);// 400, 120);
-  vertex(0, 100, 0, 0.5, 1);//200, 400);
-  vertex(0, 100, 0, 0.5, 1);//200, 400);
+  vertex(100, -40, 0, 300, 120);
+  vertex(0, 100, 0, 200, 300);
   endShape();
 }

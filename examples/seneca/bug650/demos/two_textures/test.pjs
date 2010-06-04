@@ -67,22 +67,21 @@ void draw()
 {
   background(0);
 
-  //s = 1 + abs(sin(frameCount/70)* 2.0);
-  //s += 0.01;
-
+  s += 0.01;
   pushMatrix();
   translate(width/2.0, height/2.0, 250);
 
   pushMatrix();
     scale(15);
-   // rotateZ(s);
-   // rotateY(-s);
+ //   rotateZ(s);
+    rotateY(-s);
     drawBox(0);
   popMatrix();
 
   pushMatrix();
     scale(60);
-  //  rotateY(s);
+   // rotateZ(s);
+    rotateY(s);
     drawBox(1);
   popMatrix();
 
