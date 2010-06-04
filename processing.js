@@ -174,9 +174,9 @@
     p.BOTTOM   = 102; // Align text from the bottom, using the baseline
 
     // UV Texture coordinate modes
-    p.NORMAL    = 1;
-    p.NORMALIZE = 1;
-    p.IMAGE     = 2;
+    p.NORMAL     = 1;
+    p.NORMALIZED = 1;
+    p.IMAGE      = 2;
 
     // Text placement modes
     p.MODEL = 4;
@@ -317,7 +317,9 @@
         fillBuffer,
         fillColorBuffer,
         strokeColorBuffer,
-        pointBuffer;
+        pointBuffer,
+        shapeTexVBO,
+        usingTexture = false;
 
     // Get padding and border style widths for mouse offsets
     if (document.defaultView && document.defaultView.getComputedStyle) {
@@ -438,7 +440,9 @@
       "attribute vec3 Vertex;" +
       "attribute vec3 Normal;" +
       "attribute vec4 aColor;" +
-
+      "attribute vec2 aTexture;" +
+      "varying   vec2 vTexture;" +
+      
       "uniform vec4 color;" +
 
       "uniform bool usingMat;" +
@@ -613,12 +617,23 @@
       "       col[3] );" +
       "    }" +
       "  }" +
+      "  vTexture.xy = aTexture.xy;" +
       "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
       "}";
 
     var fragmentShaderSource3D =
+      "uniform sampler2D sampler;" +
+      "uniform bool usingTexture;" +
+      "varying vec2 vTexture;" +
+      
+      // In Processing, when a texture is used, the fill color is ignored
       "void main(void){" +
-      "  gl_FragColor = gl_Color;" +
+      "  if(usingTexture){" +
+      "    gl_FragColor =  vec4(texture2D(sampler, vTexture.xy));" +
+      "  }"+
+      "  else{" + 
+      "    gl_FragColor = vec4(gl_Color);" +
+      "  }" +
       "}";
 
     // Wrapper to easily deal with array names changes.
@@ -3982,6 +3997,9 @@
           // Now that the programs have been compiled, we can set the default
           // states for the lights.
           curContext.useProgram(programObject3D);
+          
+          // assume we aren't using textures by default
+          uniformi(programObject3D, "usingTexture", usingTexture);
           p.lightFalloff(1, 0, 0);
           p.shininess(1);
           p.ambient(255, 255, 255);
@@ -4007,9 +4025,11 @@
 
           lineBuffer = curContext.createBuffer();
 
+          // Shape buffers
           fillBuffer = curContext.createBuffer();
           fillColorBuffer = curContext.createBuffer();
           strokeColorBuffer = curContext.createBuffer();
+          shapeTexVBO = curContext.createBuffer();
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
@@ -4431,6 +4451,8 @@
 
         if (doFill === true) {
           curContext.useProgram(programObject3D);
+
+          disableVertexAttribPointer(programObject3D, "aTexture");
 
           uniformMatrix(programObject3D, "model", true, model.array());
           uniformMatrix(programObject3D, "view", true, view.array());
@@ -5640,6 +5662,49 @@
         vertArray.push(vert);
       }
     };
+
+    p.texture = function(pimage){
+      if(!pimage.__texture)
+      {
+        var texture = curContext.createTexture();
+        pimage.__texture = texture;
+        
+        var cvs = document.createElement('canvas');
+        cvs.width = pimage.width;
+        cvs.height = pimage.height;
+        var ctx = cvs.getContext('2d');
+        var textureImage = ctx.createImageData(cvs.width, cvs.height);
+
+        var imgData = pimage.toImageData();
+
+        for (var i = 0; i < cvs.width; i += 1) {
+          for (var j = 0; j < cvs.height; j += 1) {
+            var index = (j * cvs.width + i) * 4;
+            textureImage.data[index + 0] = imgData.data[index + 0];
+            textureImage.data[index + 1] = imgData.data[index + 1];
+            textureImage.data[index + 2] = imgData.data[index + 2];
+            textureImage.data[index + 3] = 255;
+          }
+        }
+        ctx.putImageData(textureImage, 0, 0);
+        pimage.__cvs = cvs;
+
+        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);        
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
+      }
+      else{
+        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+      }
+            
+      usingTexture = true;
+      curContext.useProgram(programObject3D);
+      uniformi(programObject3D, "usingTexture", usingTexture);
+    };
+    
+    p.textureMode = function(){
+    }
 
     p.curveVertex = function(x, y, z) {
       isCurve = true;

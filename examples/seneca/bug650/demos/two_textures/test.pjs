@@ -1,0 +1,90 @@
+import processing.opengl.*;
+/* @pjs preload="wallpaper.png,flower.jpg"; */
+
+float r = 0.0;
+float s = 0.0;
+
+PImage wallpaper, flower;
+
+void setup() 
+{
+  size(640, 360, OPENGL);
+  flower = loadImage("flower.jpg");
+  wallpaper = loadImage("wallpaper.png");
+  textureMode(NORMALIZED);
+strokeWeight(0);
+}
+
+void drawBox(int i){
+  beginShape(QUADS);
+
+  if(i == 0){
+    texture(flower);
+  }
+  else{
+    texture(wallpaper);
+  }
+
+  // -Z "back" face
+  vertex( 1, -1, -1, 0-s, 0);
+  vertex(-1, -1, -1, 1-s, 0);
+  vertex(-1,  1, -1, 1-s, 1);
+  vertex( 1,  1, -1, 0-s, 1);
+
+  vertex(-1, -1,  1, 0-s, 0);
+  vertex( 1, -1,  1, 1-s, 0);
+  vertex( 1,  1,  1, 1-s, 1);
+  vertex(-1,  1,  1, 0-s, 1);
+
+  // +Y "bottom" face
+  vertex(-1,  1,  1, 0+s, 0);
+  vertex( 1,  1,  1, 1+s, 0);
+  vertex( 1,  1, -1, 1+s, 1);
+  vertex(-1,  1, -1, 0+s, 1);
+
+  // -Y "top" face
+  vertex(-1, -1, -1, s, 1);
+  vertex( 1, -1, -1, 1+s, 1);
+  vertex( 1, -1,  1, 1+s, 0);
+  vertex(-1, -1,  1, s, 0);
+
+  // +X "right" face
+  vertex( 1, -1,  1, 0-s, 0);
+  vertex( 1, -1, -1, 1-s, 0);
+  vertex( 1,  1, -1, 1-s, 1);
+  vertex( 1,  1,  1, 0-s, 1);
+
+  // -X "left" face
+  vertex(-1, -1, -1, 0-s, 0);
+  vertex(-1, -1,  1, 1-s, 0);
+  vertex(-1,  1,  1, 1-s, 1);
+  vertex(-1,  1, -1, 0-s, 1);
+
+  endShape();
+}
+
+void draw() 
+{
+  background(0);
+
+  //s = 1 + abs(sin(frameCount/70)* 2.0);
+  //s += 0.01;
+
+  pushMatrix();
+  translate(width/2.0, height/2.0, 250);
+
+  pushMatrix();
+    scale(15);
+   // rotateZ(s);
+   // rotateY(-s);
+    drawBox(0);
+  popMatrix();
+
+  pushMatrix();
+    scale(60);
+  //  rotateY(s);
+    drawBox(1);
+  popMatrix();
+
+  popMatrix();
+}
