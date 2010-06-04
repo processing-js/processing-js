@@ -1,0 +1,11 @@
+size(100, 100, P3D);
+ellipseMode(CENTER);
+ellipse(35, 35, 50, 50);
+ellipseMode(CORNER);
+fill(102);
+ellipse(35, 35, 50, 50);
+ellipseMode(CORNERS);
+fill(225);
+ellipse(35, 35, 50, 50);
+ellipse(35, 35, 75, 15);
+ellipse(35, 35, 15, 75);
