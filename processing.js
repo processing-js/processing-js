@@ -766,7 +766,7 @@
           xmlDoc = document.implementation.createDocument("", "", null);
         }
         catch(e_fx_op) {
-          println(e_fx_op.message);
+          p.println(e_fx_op.message);
           return;
         }
         try {
@@ -774,21 +774,21 @@
           xmlDoc.load( filename );
         }
         catch(e) {
-          println(e);
+          p.println(e);
           try {
             var xmlhttp = new window.XMLHttpRequest();
             xmlhttp.open("GET", filename, false);
             xmlhttp.send(null);
           }
           catch(e) {
-            println(e);
+            p.println(e);
           }
         }
         var elements = xmlDoc.documentElement;
         if(elements){
           this.parseChildrenRecursive( null, elements );
         } else {
-          println("Error loading document");
+          p.println("Error loading document");
         }          
         return this;        
       },
