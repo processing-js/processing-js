@@ -5137,188 +5137,6 @@
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
-    function calcPolygonTriangles() {
-
-      // this clipping algorithm only works in 2D, so in cases where a
-      // polygon is drawn perpendicular to the z-axis, the area will be zero,
-      // and triangulation will fail. as such, when the area calculates to
-      // zero, figure out whether x or y is empty, and calculate based on the
-      // two dimensions that actually contain information.
-      // http://dev.processing.org/bugs/show_bug.cgi?id=111
-      var tempVertArray = vertArray;
-      var vert = [];
-      var retArray = [];
-      var vertexOrder = [];
-      var d1 = 0;
-      var d2 = 1;
-      var shapeFirst = 0;
-      var shapeLast = tempVertArray.length - 1;
-      var EPSILON = 0.0001
-      
-      // first we check if the polygon goes clockwise or counterclockwise
-      var area = 0;
-      for (var p = shapeLast - 1, q = shapeFirst; q < shapeLast; p = q++) {
-        area += (tempVertArray[q][d1] * tempVertArray[p][d2] -
-                 tempVertArray[p][d1] * tempVertArray[q][d2]);
-      }
-      // rather than checking for the perpendicular case first, only do it
-      // when the area calculates to zero. checking for perpendicular would be
-      // a needless waste of time for the 99% case.
-      if (area == 0) {
-        // figure out which dimension is the perpendicular axis
-        var foundValidX = false;
-        var foundValidY = false;
-
-        for (var i = shapeFirst; i < shapeLast; i++) {
-          for (var j = i; j < shapeLast; j++){
-            if ( tempVertArray[i][0] != tempVertArray[j][0] ) foundValidX = true;
-            if ( tempVertArray[i][1] != tempVertArray[j][1] ) foundValidY = true;
-          }
-        }
-
-        if (foundValidX) {
-          //d1 = MX;  // already the case
-          d2 = 2;
-        } else if (foundValidY) {
-          // ermm.. which is the proper order for cw/ccw here?
-          d1 = 1;
-          d2 = 2;
-        } else {
-          // screw it, this polygon is just f-ed up
-          return;
-        }
-
-        // re-calculate the area, with what should be good values
-        for (var p = shapeLast - 1, q = shapeFirst; q < shapeLast; p = q++) {
-          area += (tempVertArray[q][d1] * tempVertArray[p][d2] -
-                   tempVertArray[p][d1] * tempVertArray[q][d2]);
-        }
-      }
-
-      // don't allow polygons to come back and meet themselves,
-      // otherwise it will anger the triangulator
-      // http://dev.processing.org/bugs/show_bug.cgi?id=97
-      var vfirst = tempVertArray[shapeFirst];
-      var vlast = tempVertArray[shapeLast-1];
-      if ((Math.abs(vfirst[0] - vlast[0]) < EPSILON) &&
-          (Math.abs(vfirst[1] - vlast[1]) < EPSILON) &&
-          (Math.abs(vfirst[2] - vlast[2]) < EPSILON)) {
-        shapeLast--;
-      }
-
-      // then sort the vertices so they are always in a counterclockwise order
-      var j = 0;
-      if (area > 0) {
-        for (var i = shapeFirst; i < shapeLast; i++) {
-          j = i - shapeFirst;
-          vertexOrder[j] = i;
-        }
-      } else {
-        for (var i = shapeFirst; i < shapeLast; i++) {
-          j = i - shapeFirst;
-          vertexOrder[j] = (shapeLast - 1) - j;
-        }
-      }
-
-      // remove vc-2 Vertices, creating 1 triangle every time
-      var vc = shapeLast - shapeFirst;
-      var count = 2*vc;  // complex polygon detection
-
-      for (var m = 0, v = vc - 1; vc > 2; ) {
-        var snip = true;
-
-        // if we start over again, is a complex polygon
-        if (0 >= (count--)) {
-          break; // triangulation failed
-        }
-
-        // get 3 consecutive vertices <u,v,w>
-        var u = v ; if (vc <= u) u = 0;    // previous
-        v = u + 1; if (vc <= v) v = 0;     // current
-        var w = v + 1; if (vc <= w) w = 0; // next
-
-        // Upgrade values to doubles, and multiply by 10 so that we can have
-        // some better accuracy as we tessellate. This seems to have negligible
-        // speed differences on Windows and Intel Macs, but causes a 50% speed
-        // drop for PPC Macs with the bug's example code that draws ~200 points
-        // in a concave polygon. Apple has abandoned PPC so we may as well too.
-        // http://dev.processing.org/bugs/show_bug.cgi?id=774
-
-        // triangle A B C
-        var Ax = -10 * tempVertArray[vertexOrder[u]][d1];
-        var Ay =  10 * tempVertArray[vertexOrder[u]][d2];
-        var Bx = -10 * tempVertArray[vertexOrder[v]][d1];
-        var By =  10 * tempVertArray[vertexOrder[v]][d2];
-        var Cx = -10 * tempVertArray[vertexOrder[w]][d1];
-        var Cy =  10 * tempVertArray[vertexOrder[w]][d2];
-
-        // first we check if <u,v,w> continues going ccw
-        if (EPSILON > (((Bx-Ax) * (Cy-Ay)) - ((By-Ay) * (Cx-Ax)))) {
-          continue;
-        }
-
-        for (var p = 0; p < vc; p++) {
-          if ((p == u) || (p == v) || (p == w)) {
-            continue;
-          }
-
-          var Px = -10 * tempVertArray[vertexOrder[p]][d1];
-          var Py =  10 * tempVertArray[vertexOrder[p]][d2];
-
-          var ax  = Cx - Bx;  var ay  = Cy - By;
-          var bx  = Ax - Cx;  var by  = Ay - Cy;
-          var cx  = Bx - Ax;  var cy  = By - Ay;
-          var apx = Px - Ax;  var apy = Py - Ay;
-          var bpx = Px - Bx;  var bpy = Py - By;
-          var cpx = Px - Cx;  var cpy = Py - Cy;
-
-          var aCROSSbp = ax * bpy - ay * bpx;
-          var cCROSSap = cx * apy - cy * apx;
-          var bCROSScp = bx * cpy - by * cpx;
-
-          if ((aCROSSbp >= 0.0) && (bCROSScp >= 0.0) && (cCROSSap >= 0.0)) {
-            snip = false;
-          }
-        }
-
-        if (snip) {
-          /*retArray.push(tempVertArray[vertexOrder[u]][0]);
-          retArray.push(tempVertArray[vertexOrder[u]][1]);
-          retArray.push(tempVertArray[vertexOrder[u]][2]);
-          retArray.push(tempVertArray[vertexOrder[v]][0]);
-          retArray.push(tempVertArray[vertexOrder[v]][1]);
-          retArray.push(tempVertArray[vertexOrder[v]][2]);
-          retArray.push(tempVertArray[vertexOrder[w]][0]);
-          retArray.push(tempVertArray[vertexOrder[w]][1]);
-          retArray.push(tempVertArray[vertexOrder[w]][2]);*/
-
-          m++;
-
-          // remove v from remaining polygon
-          for (var s = v, t = v + 1; t < vc; s++, t++) {
-            vertexOrder[s] = vertexOrder[t];
-          }
-          vc--;
-
-          // reset error detection counter
-          count = 2 * vc;
-        }
-      }
-      for(var i = 0, j = 0; i < vertexOrder.length; i++){
-        if(vert[j] != vertexOrder[i]){
-          vert[j] = vertexOrder[i]
-          j++;
-        }
-      }
-      for(var i = 0; i < vert.length; i++){
-        retArray.push(tempVertArray[vert[i]][0]);
-        retArray.push(tempVertArray[vert[i]][1]);
-        retArray.push(tempVertArray[vert[i]][2]);
-      }
-      return retArray;
-    }
-
-
     p.endShape = function endShape(close){
       firstVert = true;
       var i, j, k;
@@ -5368,8 +5186,6 @@
         strokeVertArray.push(vertArray[0][i]);
       }
 
-      var tempArray = calcPolygonTriangles();
-
       if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
         if(vertArray.length > 3){
           if(p.use3DContext){
@@ -5410,6 +5226,31 @@
           lineVertArray.splice(lineVertArray.length - 3);
           strokeVertArray.splice(strokeVertArray.length - 4);
           line3D(lineVertArray, null, strokeVertArray);
+          fill3D(fillVertArray, "TRIANGLES", colorVertArray);
+          /*fillVertArray = [];  //***Fill not properly working yet*** will fix later
+          colorVertArray = [];
+          tempArray.reverse();
+          for(i = 0; (i+1) < 10; i++){
+            for(j = 0; j < 3; j++){
+              fillVertArray.push(tempArray[i][j]);
+            }
+            for(j = 5; j < 9; j++){
+              colorVertArray.push(tempArray[i][j]);
+            }
+            for(j = 0; j < 3; j++){
+              fillVertArray.push(vertArray[i][j]);
+            }
+            for(j = 5; j < 9; j++){
+              colorVertArray.push(vertArray[i][j]);
+            }
+            for(j = 0; j < 3; j++){
+              fillVertArray.push(vertArray[i+1][j]);
+            }
+            for(j = 5; j < 9; j++){
+              colorVertArray.push(vertArray[i][j]);
+            }
+          }
+          
           strokeVertArray = [];
           for(i = 0; i < tempArray.length/3; i++){
             strokeVertArray.push(255);
@@ -5417,8 +5258,7 @@
             strokeVertArray.push(0);
             strokeVertArray.push(255);
           }
-          point3D(tempArray, strokeVertArray);
-          fill3D(tempArray, "TRIANGLE_FAN", strokeVertArray);
+          point3D(tempArray, strokeVertArray);*/
         }
         else{
           curContext.beginPath();
