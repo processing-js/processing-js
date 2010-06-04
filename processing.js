@@ -19,8 +19,14 @@
 (function() {
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
-  
+
     var p = this;
+
+    if(!"".trim) {
+      String.prototype.trim = function() {
+        return(this.replace(/^\s+/,'').replace(/\s+$/,''));
+      }
+    }
 
     p.pjs = {
        imageCache: {
@@ -7893,7 +7899,7 @@
   // Parser starts
   function parseProcessing(code) {
     var globalMembers = getGlobalMembers();
-
+    String.trim = function(s) { return /^\s+/.replace(/\s+$/.replace(s, ""), ""); };
     function splitToAtoms(s) {
       var atoms = [], stack = [];
       var items = s.split(/([\{\[\(\)\]\}])/);
