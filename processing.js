@@ -366,6 +366,9 @@
         isBezier = false,
         firstVert = true;
 
+    //PShape stuff
+    var curShapeMode = p.CORNER;
+    
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
 
@@ -707,14 +710,19 @@
     // PShape
     ////////////////////////////////////////////////////////////////////////////
     var PShape = function( family ) {
-      this.family   = family || p.GROUP;
-      this.visible  = true;
-      this.style    = true;
-      this.children = [];
+      this.family    = family || p.GROUP;
+      this.visible   = true;
+      this.style     = true;
+      this.children  = [];
       this.nameTable = [];
+      this.params    = [];
       this.name      = "";
+      this.image     = null;  //type PImage
       this.matrix; 
-     
+      this.kind;
+      this.close;
+      this.width;
+      this.height;
     };
     // PShape Functions
     PShape.prototype = {
@@ -739,10 +747,10 @@
         }
       },
       getWidth: function(){
-        return width;
+        return this.width;
       },
       getHeight: function(){
-        return height;
+        return this.height;
       },
       setName: function( name ){
         this.name = name;
@@ -750,7 +758,207 @@
       getName: function(){
         return this.name;
       },
-      //pre, post, styles, draw, drawGroup, drawPrimitives, drawGeometry, drawPath,  not in yet
+      draw: function(){
+        if (this.visible) {
+          this.pre();
+          this.drawImpl();
+          this.post();
+        }
+      },
+      drawImpl: function(){
+        if (this.family === p.GROUP) {
+          this.drawGroup();
+        } else if (this.family === p.PRIMITIVE) {
+          this.drawPrimitive();
+        } else if (this.family === p.GEOMETRY) {
+          this.drawGeometry();
+        } else if (this.family === p.PATH) {
+          this.drawPath();
+        }
+      },
+      drawPath: function(){
+        if (this.vertices.length === 0) return;
+
+        p.beginShape();
+
+        if (this.vertexCodes.length === 0) {  // each point is a simple vertex
+          if (this.vertices[0].length === 2) {  // drawing 2D vertices
+            for (var i = 0; i < this.vertices.length; i++) {
+              p.vertex( this.vertices[i][0], this.vertices[i][1]);
+            }
+          } else {  // drawing 3D vertices
+            for (var i = 0; i < this.vertices.length; i++) {
+              p.vertex( this.vertices[i][0], this.vertices[i][1], this.vertices[i][2]);
+            }
+          }
+
+        } else {  // coded set of vertices
+          var index = 0;
+
+          if ( this.vertices[0].length === 2) {  // drawing a 2D path
+            for (var j = 0; j < this.vertexCodes.length; j++) {
+              switch ( this.vertexCodes[j] ) {
+
+              case p.VERTEX:
+                p.vertex( this.vertices[index][0], this.vertices[index][1]);
+                index++;
+                break;
+
+              case p.BEZIER_VERTEX:
+                p.bezierVertex( this.vertices[index+0][0], this.vertices[index+0][1],
+                                this.vertices[index+1][0], this.vertices[index+1][1],
+                                this.vertices[index+2][0], this.vertices[index+2][1]);
+                index += 3;
+                break;
+
+              case p.CURVE_VERTEX:
+                p.curveVertex( this.vertices[index][0], this.vertices[index][1]);
+                index++;
+
+              case p.BREAK:
+                p.breakShape();
+              }
+            }
+          } else {  // drawing a 3D path
+            for (var j = 0; j < this.vertexCodes.length; j++) {
+              switch ( this.vertexCodes[j] ) {
+
+              case p.VERTEX:
+                p.vertex( this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                index++;
+                break;
+
+              case p.BEZIER_VERTEX:
+                p.bezierVertex( this.vertices[index+0][0], this.vertices[index+0][1], this.vertices[index+0][2],
+                                this.vertices[index+1][0], vertices[index+1][1], vertices[index+1][2],
+                                this.vertices[index+2][0], vertices[index+2][1], vertices[index+2][2]);
+                index += 3;
+                break;
+
+              case p.CURVE_VERTEX:
+                p.curveVertex( this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                index++;
+
+              case p.BREAK:
+                p.breakShape();
+              }
+            }
+          }
+        }
+        p.endShape(this.close ? p.CLOSE : p.OPEN);
+      },
+      drawGeometry: function(){
+        p.beginShape( this.kind );
+        if ( this.style ) {
+          for (var i = 0; i < this.vertices.length; i++) {
+            p.vertex( this.vertices[i] );
+          }
+        } else {
+          for (var i = 0; i < this.vertices.length; i++) {
+            var vert = this.vertices[i];
+            if ( vert[2] === 0 ) {
+              p.vertex(vert[0], vert[1]);
+            } else {
+              p.vertex(vert[0], vert[1], vert[2]);
+            }
+          }
+        }
+        p.endShape();
+      },
+      drawGroup: function(){
+        for (var i = 0; i < this.children.length; i++) {
+          this.children[i].draw();
+        }
+      },
+      drawPrimitive: function(){
+        if ( this.kind === p.POINT ) {
+          p.point( this.params[0], this.params[1] );
+
+        } else if ( this.kind === p.LINE ) {
+          if ( this.params.length == 4 ) {  // 2D
+            p.line( this.params[0], this.params[1],
+                    this.params[2], this.params[3]);
+          } else {  // 3D
+            p.line( this.params[0], this.params[1], this.params[2],
+                    this.params[3], this.params[4], this.params[5]);
+          }
+
+        } else if ( this.kind == p.TRIANGLE )  {
+          p.triangle( this.params[0], this.params[1],
+                      this.params[2], this.params[3],
+                      this.params[4], this.params[5]);
+
+        } else if (this.kind === p.QUAD ) {
+          p.quad( this.params[0], this.params[1],
+                  this.params[2], this.params[3],
+                  this.params[4], this.params[5],
+                  this.params[6], this.params[7]);
+
+        } else if ( this.kind === p.RECT ) {
+          if ( this.image != null) {
+            p.imageMode(CORNER);
+            p.image( this.image, this.params[0], this.params[1], this.params[2], this.params[3] );
+          } else {
+            p.rectMode( p.CORNER );
+            p.rect( this.params[0], this.params[1], this.params[2], this.params[3] );
+          }
+
+        } else if ( this.kind == p.ELLIPSE ) {
+          p.ellipseMode( p.CORNER );
+          p.ellipse( this.params[0], this.params[1], this.params[2], this.params[3]);
+
+        } else if ( this.kind === p.ARC ) {
+          p.ellipseMode(p.CORNER);
+          p.arc( this.params[0], this.params[1], this.params[2], this.params[3], this.params[4], this.params[5]);
+
+        } else if ( this.kind === p.BOX ) {
+          if ( this.params.length === 1 ) {
+            p.box( this.params[0] );
+          } else {
+            p.box( this.params[0], this.params[1], this.params[2] );
+          }
+
+        } else if ( this.kind === p.SPHERE ) {
+          p.sphere( this.params[0] );
+        }
+      },
+      pre: function(){
+        if (this.matrix != null) {
+          p.pushMatrix();
+          p.applyMatrix(matrix);
+        }
+        if (this.style) {
+          p.pushStyle();
+          //styles(g);
+        }
+      },
+      post: function(){
+        if (this.matrix != null) {
+          p.popMatrix();
+        }
+
+        if (this.style) {
+          p.popStyle();
+        }
+      },
+      styles: function(){
+        if (p.stroke) {
+          p.stroke(this.strokeColor);
+          p.strokeWeight(this.strokeWeight);
+          p.strokeCap(this.strokeCap);
+          p.strokeJoin(this.strokeJoin);
+        } else {
+          p.noStroke();
+        }
+
+        if (p.fill) {
+          //System.out.println("filling " + PApplet.hex(fillColor));
+          p.fill(this.fillColor);
+        } else {
+          p.noFill();
+        }
+      },
+      
       // return the PShape at the specific index from the children array or
       // return the Phape from a parent shape specified by its name
       getChild: function( child ){
@@ -880,7 +1088,8 @@
     				p.scale( width / shape.getWidth(), height / shape.getHeight() );
     			}
     		}
-    		//shape.draw( this
+        shape.draw();
+        p.popMatrix();
     	}    	
     }; 
     p.shapeMode = function ( mode ){
@@ -888,7 +1097,13 @@
     };
     p.loadShape = function ( filename ){
     	if( filename.indexOf(".svg") > -1){
-        return new PShapeSVG( filename );
+        var p = new PShapeSVG( null, filename );
+        var ps = new PShape( p );
+        ps.matrix = p.matrix;
+        ps.width  = p.width;
+        ps.height = p.height;
+        //return new PShapeSVG( filename );
+        return ps;
     	}
     	//return null;
     };
@@ -897,6 +1112,8 @@
       if( arguments.length == 1){
         var xml = new XMLElement( arguments[0] );
         // set values to their defaults according to the SVG spec
+        this.vertexCodes = [];
+        this.vertices = [];
         this.stroke = false;
         this.strokeColor = 0xff000000;
         this.strokeWeight = 1;
@@ -921,6 +1138,8 @@
           if( arguments[1].indexOf(".svg") > -1){//its a filename
             var xml = new XMLElement( arguments[1] );
             // set values to their defaults according to the SVG spec
+            this.vertexCodes = [];
+            this.vertices = [];
             this.stroke = false;
             this.strokeColor = 0xff000000;
             this.strokeWeight = 1;
@@ -940,6 +1159,8 @@
         } else { // XMLElement
           if( arguments[0] ) { // PShapeSVG 
             var xml = arguments[1];
+            this.vertexCodes =  arguments[0].vertexCodes.slice();
+            this.vertices = arguments[0].vertices.slice();
             this.stroke = arguments[0].stroke;
             this.strokeColor = arguments[0].strokeColor;
             this.strokeWeight = arguments[0].strokeWeight;
@@ -975,7 +1196,7 @@
       // not proper parsing of the viewBox, but will cover us for cases where
       // the width and height of the object is not specified
       var viewBoxStr = this.element.getStringAttribute("viewBox");
-      if (viewBoxStr != null && typeof viewBoxStr === 'string') {
+      if ( viewBoxStr != null ) {
         var viewBox = viewBoxStr.split(" ");
         this.width = viewBox[2];
         this.height = viewBox[3];
@@ -1018,6 +1239,9 @@
             children.addChild(kid);
           }
         }
+      },
+      getName: function(){
+        return this.name;
       },
       parseChild: function( elem ){
         var name = elem.getName();
@@ -1083,10 +1307,10 @@
         return shape;
       },
       parsePath: function(){
-        this.family = PATH;
+        this.family = p.PATH;
         this.kind = 0;
 
-        var pathData = element.getAttribute("d");
+        var pathData = this.element.getAttribute("d");
         if (pathData == null) return;
         var pathDataChars = pathData.toCharArray();
 
@@ -1141,7 +1365,7 @@
 
         var i = 0;
         while (i < pathDataKeys.length) {
-          var c = trim(pathDataKeys[i].charAt(0));
+          var c = p.trim(pathDataKeys[i].charAt(0));
           switch (c) {
 
             case 'M':  // M - move to (absolute)
@@ -1299,10 +1523,10 @@
               // previous command was not a Q, q, T or t, assume the control
               // point is coincident with the current point.)
             case 'T': {
-              var ppx = vertices[vertexCount-2][X];
-              var ppy = vertices[vertexCount-2][Y];
-              var px = vertices[vertexCount-1][X];
-              var py = vertices[vertexCount-1][Y];
+              var ppx = this.vertices[vertices.length-2][0];
+              var ppy = this.vertices[vertices.length-2][1];
+              var px = this.vertices[vertices.length-1][0];
+              var py = this.vertices[vertices.length-1][1];
               var ctrlX = px + (px - ppx);
               var ctrlY = py + (py - ppy);
               var endX  = pathDataKeys[i + 1];
@@ -1316,10 +1540,10 @@
 
               // t - quadratic curve to shorthand (relative)
             case 't': {
-              var ppx = vertices[vertexCount-2][X];
-              var ppy = vertices[vertexCount-2][Y];
-              var px = vertices[vertexCount-1][X];
-              var py = vertices[vertexCount-1][Y];
+              var ppx = this.vertices[vertices.length-2][0];
+              var ppy = this.vertices[vertices.length-2][1];
+              var px = this.vertices[vertices.length-1][0];
+              var py = this.vertices[vertices.length-1][1];
               var ctrlX = px + (px - ppx);
               var ctrlY = py + (py - ppy);
               var endX  = cx + pathDataKeys[i + 1];
@@ -1379,27 +1603,17 @@
         this.parsePathVertex(px, py);
       },
       parsePathVertex: function( x,  y) {
-        /*if (vertexCount == vertices.length) {
-          //vertices = (float[][]) PApplet.expand(vertices);
-          float[][] temp = new float[vertexCount << 1][2];
-          System.arraycopy(vertices, 0, temp, 0, vertexCount);
-          vertices = temp;
-        }
-        vertices[vertexCount][X] = x;
-        vertices[vertexCount][Y] = y;
-        vertexCount++;*/
+        this.vertices[0] = x;
+        this.vertices[1] = y;
       },
       parsePathCode: function( what) {
-        if (vertexCodeCount == vertexCodes.length) {
-          vertexCodes = PApplet.expand(vertexCodes);
-        }
-        vertexCodes[vertexCodeCount++] = what;
+        this.vertexCodes.push = what;
       },
       parsePoly: function( val ){
-        this.family = PATH;
+        this.family = p.PATH;
         this.close = close;
 
-        var pointsAttr = element.getAttribute("points");
+        var pointsAttr = this.element.getAttribute("points");
         if (pointsAttr != null) {
           var pointsBuffer = pointsAttr.split(" ");
           var verts = [];
@@ -1412,29 +1626,29 @@
         }
       },
       parseRect: function(){
-        this.kind = RECT;
-        this.family = PRIMITIVE;
+        this.kind = p.RECT;
+        this.family = p.PRIMITIVE;
         this.params = [];
-        this.params[0] = element.getAttribute("x");
-        this.params[1] = element.getFloatAttribute("y");
-        this.params[2] = element.getFloatAttribute("width");
-        this.params[4] = element.getFloatAttribute("height");
+        this.params[0] = this.element.getAttribute("x");
+        this.params[1] = this.element.getFloatAttribute("y");
+        this.params[2] = this.element.getFloatAttribute("width");
+        this.params[4] = this.element.getFloatAttribute("height");
     
       },
       parseEllipse: function( val ){
-        this.kind = ELLIPSE;
-        this.family = PRIMITIVE;
+        this.kind = p.ELLIPSE;
+        this.family = p.PRIMITIVE;
         this.params = [];
 
-        this.params[0] = element.getAttribute("cx");
-        this.params[1] = element.getAttribute("cy");
+        this.params[0] = this.element.getAttribute("cx");
+        this.params[1] = this.element.getAttribute("cy");
 
         var rx, ry;
         if ( val ) {
-          rx = ry = element.getAttribute("r");
+          rx = ry = this.element.getAttribute("r");
         } else {
-          rx = element.getAttribute("rx");
-          ry = element.getAttribute("ry");
+          rx = this.element.getAttribute("rx");
+          ry = this.element.getAttribute("ry");
         }
         this.params[0] -= rx;
         this.params[1] -= ry;
@@ -1443,8 +1657,8 @@
         this.params[3] = ry*2;
       },
       parseLine: function(){
-        this.kind = LINE;
-        this.family = PRIMITIVE;
+        this.kind = p.LINE;
+        this.family = p.PRIMITIVE;
         this.params = [];
         this.params[0] = this.element.getAttribute("x1");
         this.params[1] = this.element.getAttribute("y1");
@@ -1483,8 +1697,7 @@
           this.stroke = false;
         } else if (strokeText.charAt(0) === "#") {
           this.stroke = true;
-          this.strokeColor = opacityMask |
-            parseInt(this.strokeText.substring(1), 16) & 0xFFFFFF;
+          this.strokeColor = opacityMask | strokeText.substring(1) & 0xFFFFFF;
         } else if (strokeText.indexOf("rgb") === 0 ) {
           this.stroke = true;
           this.strokeColor = opacityMask | this.parseRGB(strokeText);
