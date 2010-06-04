@@ -10,10 +10,10 @@
 
 
 	<script id="script" type="application/processing">
-size(300,250);
-background(50);
-var p = loadShape("bot1.svg");
-
+PShape s;
+s = loadShape("bot.svg");
+smooth();
+shape(s, 10, 10, 80, 80);
 	</script>
 	<canvas id="display" style="width:200;height:100;"></canvas>
 

@@ -7,6 +7,11 @@
 ]>
 <svg  version="1.0" xmlns="&ns_svg;" xmlns:xlink="&ns_xlink;" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
 	 width="281" height="285" viewBox="-0.826 -0.359 281 285" enable-background="new -0.826 -0.359 281 285" xml:space="preserve">
+<defs>
+</defs>
+<path fill-rule="evenodd" clip-rule="evenodd" fill="#010101" stroke="#010101" stroke-width="9.6086" d="M113.433,30.168
+	c0,13.984-10.961,25.318-24.484,25.316C75.426,55.479,64.46,44.14,64.46,30.155S75.422,4.836,88.944,4.839
+	C102.467,4.846,113.433,16.184,113.433,30.168z"/>
 <g>
 	<path fill="#DCD1C9" d="M39.651,46.68c-44.969,43.663-50.07,140.646-1.164,192.438c51.409,54.444,145.329,53.947,195.813,3.567
 		c51.877-51.769,54.604-131.891,8.549-188.207C192.479-7.108,104.535-16.322,39.651,46.68z"/>
