@@ -917,24 +917,26 @@
         this.opacity = 1;
       }
       else if( arguments.length == 2){
-        if( arguments[1].indexOf(".svg") > -1){//its a filename
-          var xml = new XMLElement( arguments[1] );
-          // set values to their defaults according to the SVG spec
-          this.stroke = false;
-          this.strokeColor = 0xff000000;
-          this.strokeWeight = 1;
-          this.strokeCap = p.SQUARE;  // equivalent to BUTT in svg spec
-          this.strokeJoin = p.MITER;
-          this.strokeGradient = "";
-          this.strokeGradientPaint = "";
-          this.strokeName = "";
-          this.fill = true;
-          this.fillColor = 0xff000000;        
-          this.fillGradient = null;
-          this.fillGradientPaint = null;
-          this.strokeOpacity = 1;
-          this.fillOpacity = 1;
-          this.opacity = 1;
+        if( typeof arguments[1] === 'string' ){
+          if( arguments[1].indexOf(".svg") > -1){//its a filename
+            var xml = new XMLElement( arguments[1] );
+            // set values to their defaults according to the SVG spec
+            this.stroke = false;
+            this.strokeColor = 0xff000000;
+            this.strokeWeight = 1;
+            this.strokeCap = p.SQUARE;  // equivalent to BUTT in svg spec
+            this.strokeJoin = p.MITER;
+            this.strokeGradient = "";
+            this.strokeGradientPaint = "";
+            this.strokeName = "";
+            this.fill = true;
+            this.fillColor = 0xff000000;        
+            this.fillGradient = null;
+            this.fillGradientPaint = null;
+            this.strokeOpacity = 1;
+            this.fillOpacity = 1;
+            this.opacity = 1;
+          }
         } else { // XMLElement
           if( arguments[0] ) { // PShapeSVG 
             var xml = arguments[1];
@@ -973,7 +975,7 @@
       // not proper parsing of the viewBox, but will cover us for cases where
       // the width and height of the object is not specified
       var viewBoxStr = this.element.getStringAttribute("viewBox");
-      if (viewBoxStr != null) {
+      if (viewBoxStr != null && typeof viewBoxStr === 'string') {
         var viewBox = viewBoxStr.split(" ");
         this.width = viewBox[2];
         this.height = viewBox[3];
@@ -1592,7 +1594,7 @@
           xmlDoc = document.implementation.createDocument("", "", null);
         }
         catch(e_fx_op) {
-          p.println(e_fx_op.message);
+          throw(e_fx_op.message);
           return;
         }
         try {
@@ -1600,21 +1602,21 @@
           xmlDoc.load( filename );
         }
         catch(e) {
-          p.println(e);
+          throw(e);
           try {
             var xmlhttp = new window.XMLHttpRequest();
             xmlhttp.open("GET", filename, false);
             xmlhttp.send(null);
           }
           catch(e) {
-            p.println(e);
+            throw(e);
           }
         }
         var elements = xmlDoc.documentElement;
         if(elements){
           this.parseChildrenRecursive( null, elements );
         } else {
-          p.println("Error loading document");
+          throw("Error loading document");
         }          
         return this;        
       },
@@ -1677,7 +1679,7 @@
       },
       getStringAttribute: function(){
         if( arguments.length == 1 ){
-          return this.getAttribute( arguments[0], 0 );
+          return this.getAttribute( arguments[0] );
         } else if( arguments.length == 2 ){
           return this.getAttribute( arguments[0], arguments[1] );
         } else{
