@@ -851,7 +851,7 @@
       },
       getStringAttribute: function(){
         if( arguments.length == 1 ){
-          return this.getAttribute( arguments[0], 0 );
+          return this.getAttribute( arguments[0] );
         } else if( arguments.length == 2 ){
           return this.getAttribute( arguments[0], arguments[1] );
         } else{
