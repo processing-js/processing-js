@@ -136,7 +136,6 @@
     p.PERSPECTIVE  = 3;
 
     // Shapes
-    p.GROUP          = 1 << 2;
     p.POINT          = 2;
     p.POINTS         = 2;
     p.LINE           = 4;
@@ -193,6 +192,7 @@
     // Lighting modes
     p.AMBIENT     = 0;
     p.DIRECTIONAL = 1;
+    //POINT       = 2; Shared with Shape constant
     p.SPOT        = 3;
 
     // Key constants
@@ -269,7 +269,6 @@
         looping = 0,
         curRectMode = p.CORNER,
         curEllipseMode = p.CENTER,
-        curShapeMode = p.CORNER,
         normalX = 0,
         normalY = 0,
         normalZ = 0,
@@ -890,23 +889,16 @@
     p.loadShape = function ( filename ){
     	if( filename.indexOf(".svg") > -1){
      // alert("here");                                  
-    		return PShapeSVG( filename );
+    		return new PShapeSVG( filename );
     	}
     	//return null;
     };
     var PShapeSVG = function( info ){
+      var xml;
       if( arguments.length == 1){
         if( info.indexOf(".svg") > -1){//its a filename
-          var xml = new XMLElement( info );
-        } 
-        if ( xml ) {
-        
-            PShapeSVG.call(this, xml );
-         }
-      }
-      else if( arguments.length == 2){
-        if(arguments[0] == null){
           // set values to their defaults according to the SVG spec
+          var xml = new XMLElement( info );
           this.stroke = false;
           this.strokeColor = 0xff000000;
           this.strokeWeight = 1;
@@ -922,39 +914,40 @@
           this.strokeOpacity = 1;
           this.fillOpacity = 1;
           this.opacity = 1;
-        } else {
-          this.stroke = arguments[0].stroke;
-          this.strokeColor = arguments[0].strokeColor;
-          this.strokeWeight = arguments[0].strokeWeight;
-          this.strokeCap = arguments[0].strokeCap;
-          this.strokeJoin = arguments[0].strokeJoin;
-          this.strokeGradient = arguments[0].strokeGradient;
-          this.strokeGradientPaint = arguments[0].strokeGradientPaint;
-          this.strokeName = arguments[0].strokeName;
+        } 
+      }
+      else if( arguments.length == 2){
+        xml = arguments[1];
+        this.stroke = arguments[0].stroke;
+        this.strokeColor = arguments[0].strokeColor;
+        this.strokeWeight = arguments[0].strokeWeight;
+        this.strokeCap = arguments[0].strokeCap;
+        this.strokeJoin = arguments[0].strokeJoin;
+        this.strokeGradient = arguments[0].strokeGradient;
+        this.strokeGradientPaint = arguments[0].strokeGradientPaint;
+        this.strokeName = arguments[0].strokeName;
 
-          this.fill = arguments[0].fill;
-          this.fillColor = arguments[0].fillColor;
-          this.fillGradient = arguments[0].fillGradient;
-          this.fillGradientPaint = arguments[0].fillGradientPaint;
-          this.fillName = arguments[0].fillName;
+        this.fill = arguments[0].fill;
+        this.fillColor = arguments[0].fillColor;
+        this.fillGradient = arguments[0].fillGradient;
+        this.fillGradientPaint = arguments[0].fillGradientPaint;
+        this.fillName = arguments[0].fillName;
 
-          //hasTransform = parent.hasTransform;
-          //transformation = parent.transformation;
+        //hasTransform = parent.hasTransform;
+        //transformation = parent.transformation;
 
-          this.opacity = arguments[0].opacity;
-        
-        }
-        this.element = arguments[1] ;
-        
-        var str = arguments[1].getAttribute( "transform" );
-        if( str ){
-          matrix = this.parseMatrix( str );
-        }
-        
-        this.parseColors( xml ); 
-        this.parseChildren( xml );
+        this.opacity = arguments[0].opacity;
         
       }
+      /*this.element = xml;
+      
+      var str = this.element.getAttribute( "transform" );
+      if( str ){
+        matrix = this.parseMatrix( str );
+      }
+      
+      this.parseColors( xml ); 
+      this.parseChildren( xml );*/
     };
     PShapeSVG.prototype = {
       parseMatrix: function( str ) {;},
@@ -1478,12 +1471,14 @@
         return (values[0] << 16) | (values[1] << 8) | (values[2]);
       }      
     };
-    
+    ////////////////////////////////////////////////////////////////////////////
+    // XMLElement
+    ////////////////////////////////////////////////////////////////////////////
     var XMLElement = function( ){
       if( arguments.length === 4 ){
         this.attributes = [];
         this.children = [];
-        this.fullName = arguments[0];
+        this.fullName = arguments[0] || "";
         if ( arguments[1] ) {
             this.name = arguments[1];
         } else {
@@ -1498,15 +1493,41 @@
         this.content = "";
         this.lineNr = arguments[3];
         this.systemID = arguments[2];
-        this.parent = "";
+        this.parent = null;
       }
-      else if( arguments.length === 1 ){// filename or svg xml element
-        if( arguments[0].indexOf(".svg") > -1){//its a filename
-          return this.parse(  arguments[0] );
-        } else {}
+      else if( (arguments.length === 1 && arguments[0].indexOf(".") > -1) || arguments.length === 2 ){// filename or svg xml element
+        if( arguments[arguments.length -1].indexOf(".") > -1){//its a filename
+          this.attributes = [];
+          this.children = [];
+          this.fullName = "";
+          this.name = "";
+          this.namespace = "";
+          this.content = "";
+          this.systemID = "";
+          this.lineNr = "";
+          this.parent = null;
+          this.parse(  arguments[arguments.length -1] );
+        } else { //xml string
+          this.parse(  arguments[arguments.length -1] );
+        }
       }
-      
+      else{ //empty ctor
+        this.attributes = [];
+        this.children = [];
+        this.fullName = "";
+        this.name = "";
+        this.namespace = "";
+        this.content = "";
+        this.systemID = "";
+        this.lineNr = "";
+        this.parent = null;    
+      }
+      return this;
     };
+    /*XMLElement methods
+      missing: enumerateAttributeNames(), enumerateChildren(),
+      NOTE: parse does not work when a url is passed in  
+    */
     XMLElement.prototype = {
       parse: function( filename ){
         var xmlDoc;
@@ -1514,43 +1535,71 @@
           xmlDoc = document.implementation.createDocument("", "", null);
         }
         catch(e_fx_op) {
-          //Processing.debug(e_fx_op.message);
+          println(e_fx_op.message);
           return;
         }
         try {
           xmlDoc.async = false;
           xmlDoc.load( filename );
-          //parseSVGFont(xmlDoc.getElementsByTagName("svg")[0]);
         }
-        catch(e_sf_ch) {
-          // Google Chrome, Safari etc.
-          //Processing.debug(e_sf_ch);
+        catch(e) {
+          println(e);
           try {
             var xmlhttp = new window.XMLHttpRequest();
             xmlhttp.open("GET", filename, false);
             xmlhttp.send(null);
-            //parseSVGFont(xmlhttp.responseXML.documentElement);
           }
           catch(e) {
-            //Processing.debug(e_sf_ch);
+            println(e);
           }
         }
-        try{
-          var elements = xmlDoc.getElementsByTagName("svg")[0];
-          return elements;
+        var elements = xmlDoc.documentElement;
+        if(elements){
+          this.parseChildrenRecursive( null, elements );
+        } else {
+          println("Error loading document");
+        }          
+        return this;        
+      },
+      createElement: function( ){
+        if( arguments.length === 2 ){
+          return new XMLElement( arguments[0], arguments[1], null, null);
+        } else {
+          return new XMLElement( arguments[0], arguments[1], arguments[2], arguments[3]);
         }
-          catch (e) {
-        }
-        //go through each element
-        for(var i in elements.children){
-          //elements.getChildren[i];
-          i.attributes;
-        }
-        //var xmlElement = new XMLElement( filename );
       },
       hasAttribute: function ( name ){
         return this.getAttribute( name ) != null;
         //2 parameter call missing
+      },
+      createPCDataElement: function (){
+        return new XMLElement();
+      },
+      equals: function( object){
+        if( typeof object === "Object"){
+          return this.equalsXMLElement( object );
+        }
+      },
+      equalsXMLElement: function ( object ){
+        if( object instanceof XMLElement ){
+          if( this.name !== object.getLocalName ){ return false; }
+          if( this.attributes.length != object.getAttributeCount()) { return false; }
+          for( var i =0; i < this.attributes.length; i++){
+            if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
+            if( this.attributes[i].getValue() !== object.attributes[i].getValue() ) { return flase; }
+            if( this.attributes[i].getType()  !== object.attributes[i].getType() ) { return flase; }
+          }
+          if (this.children.length !== object.getChildCount()) { return false; }
+          for ( i = 0; i < this.children.length; i++) {
+            child1 = this.getChildAtIndex(i);
+            child2 = object.getChildAtIndex(i);
+            if (! child1.equalsXMLElement( child2 )) { return false; }
+          }
+          return true;
+        }
+      },
+      getContent: function(){
+         return this.content;
       },
       getAttribute: function (){
         if( arguments.length === 2 ){
@@ -1569,27 +1618,243 @@
           }
         }
       },
-      findAttribute: function( name ){
-        for( var i in this.attributes){
-          if( i.getName() === name ){
-            return i;
-          }
+      getStringAttribute: function(){
+        if( arguments.length == 1 ){
+          return this.getAttribute( arguments[0], 0 );
+        } else if( arguments.length == 2 ){
+          return this.getAttribute( arguments[0], arguments[1] );
+        } else{
+          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
         }
-        return null; 
+      },
+      getFloatAttribute: function(){
+        if( arguments.length == 1 ){
+          return this.getAttribute( arguments[0], 0 );
+        } else if( arguments.length == 2 ){
+          return this.getAttribute( arguments[0], arguments[1] );
+        } else{
+          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
+        }
+      },
+      getIntAttribute: function(){
+        if( arguments.length == 1 ){
+          return this.getAttribute( arguments[0], 0 );
+        } else if( arguments.length == 2 ){
+          return this.getAttribute( arguments[0], arguments[1] );
+        } else{
+          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
+        }
+      },
+      hasChildren: function(){
+        return this.children.length > 0 ;
+      },
+      addChild: function( child ){
+        if (child != null) {
+          child.parent = this;
+          this.children.push( child );
+        }
+      },
+      insertChild: function( child, index ){
+        if( child ){
+          if ((child.getLocalName() === null) && (! this.hasChildren())) {
+            lastChild = this.children[this.children.length -1];
+            if (lastChild.getLocalName() === null) {
+                lastChild.setContent(lastChild.getContent()
+                                     + child.getContent());
+                return;
+            }
+          }
+          child.parent = this;
+          this.children.splice(index,0,child); 
+        }
+      },
+      getChild: function( index ){
+        if( typeof index  === "number" ){
+          return this.children[ index ];
+        }
+        else if( index.indexOf('/') != -1) { //path was given
+          this.getChildRecursive( index.split("/"), 0 );
+        } else {
+          for (var i = 0; i < this.getChildCount(); i++) {
+            kid = this.getChild(i);
+            kidName = kid.getName();
+            if (kidName != null && kidName === index) {
+                return kid;
+            }
+          }
+          return null;
+        }
       },
       getChildren: function(){
-        return this.children;
+        if (arguments.length === 1){
+          if( typeof arguments[0]  === "number" ){
+            return this.getChild( arguments[0] );
+          }
+          else if( arguments[0].indexOf('/') != -1) { //path was given
+            return this.getChildrenRecursive( arguments[0].split("/"), 0 );
+          }else {
+            var matches = [];
+            for (var i = 0; i < this.getChildCount(); i++) {
+              kid = this.getChild(i);
+              kidName = kid.getName();
+              if (kidName != null && kidName === arguments[0] ) {
+                matches.push( kid );
+              }
+            }
+            return matches;
+          } 
+        }else{
+          return this.children;
+        }
+      },
+      getChildCount: function(){
+        return this.children.length;
+      },
+      getChildRecursive: function ( items, offset ){
+        for(var i = 0; i < this.getChildCount(); i++) {
+            kid = this.getChild(i);
+            kidName = kid.getName();
+            if( kidName !== null && kidName === items[offset] ) {
+              if (offset === items.length-1) {
+                  return kid;
+              } else {
+                offset += 1;
+                return kid.getChildRecursive(items, offset);
+              }
+            }
+        }
+        return null;
+      },
+      getChildrenRecursive: function ( items, offset ){
+        if (offset == items.length-1) {
+          return this.getChildren( items[offset] );
+        }
+        var matches = this.getChildren( items[offset] );
+        for (var i = 0; i < matches.length; i++) {
+          kidMatches = matches[i].getChildrenRecursive(items, offset+1);
+        }
+        return kidMatches;
+      },
+      parseChildrenRecursive: function ( parent , elementpath ){
+         var xmlelement;
+         if(!parent) {
+           this.fullName = elementpath.localName;
+           this.name = elementpath.nodeName;
+           this.content = elementpath.textContent || "";
+           xmlelement = this;
+         } else { //a parent
+           xmlelement = new XMLElement( elementpath.localName, elementpath.nodeName, "", "" );
+           xmlelement.content = elementpath.textContent || "";
+           xmlelement.parent = parent;
+         }
+
+         for( var l=0; l< elementpath.attributes.length; l++) {
+           tmpattrib = elementpath.attributes[l];
+           xmlattribute = new XMLAttribute(tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType);
+           xmlelement.attributes.push( xmlattribute );
+         }
+
+         for( var m =0; m< elementpath.childElementCount; m++) {
+           xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.children[m]) );
+         }
+
+         return xmlelement;
+      },
+      isLeaf: function(){
+        return this.hasChildren();
+      },
+      listChildren: function(){
+        var arr = [];
+        for(var i=0; i< this.children.length; i++){
+          arr.push( getChild(i).getName());
+        }
+        return arr;
+      },
+      removeAttribute: function ( name , namespace ){
+        namespace = namespace || "";
+        for(var i=0; i< this.attributes.length; i++){
+          if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === namespace){
+            this.attributes.splice(i,0);
+          } 
+        }
+      },
+      removeChild: function( child ){
+        if( child ){ 
+          for( var i =0; i< this.children.length; i++){
+            if (this.children[i].equalsXMLElement( child )){
+              this.children.splice(i,0);
+            }
+          }  
+        }
+      },
+      removeChildAtIndex: function( index ){
+        if( this.children.length > index ) {//make sure its not outofbounds
+          this.children.splice( index, 0 );
+        }
+      },
+      findAttribute: function ( name, namespace ){
+        namespace = namespace || "";
+        for(var i=0; i< this.attributes.length; i++){
+          if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === namespace){
+             return this.attributes[i];
+          } 
+        }
+      },      
+      setAttribute: function(){
+        if( arguments.length == 3){
+          index = arguments[0].indexOf(':');
+          name = arguments[0].substring(index + 1);
+          attr = this.findAttribute( name, arguments[1] );
+          if(attr){
+            attr.setValue( arguments[2] );
+          } else {
+            attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
+              this.attributes.addElement(attr);
+          }
+        } else {
+          attr = this.findAttribute( arguments[0] );
+          if(attr){
+            attr.setValue( arguments[1] );
+          } else {
+            attr = new XMLAttribute( arguments[0], arguments[0], null, arguments[1], "CDATA" );
+              this.attributes.addElement(attr);
+          }
+        }     
+      },
+      setContent: function( content ){
+        this.content = content;
+      },
+      setName: function(){
+        if( arguments.length ==1 ){
+          this.name      = arguments[0];
+          this.fullName  = arguments[0];
+          this.namespace = arguments[0];
+        } else {
+          var index = arguments[0].indexOf(':');
+          if ((arguments[1] === null) || (index < 0)) {
+              this.name = arguments[0];
+          } else {
+              this.name = arguments[0].substring(index + 1);
+          }
+          this.fullName  = arguments[0];
+          this.namespace = arguments[1];
+        }
+      },
+      getName: function(){
+        return this.fullName;
       }
     };
-    var XMLAttribute = function ( fullname, name, namespace, value, type){
-      this.fullName = fullName;
-      this.name = name;
-      this.namespace = namespace;
-      this.value = value;
-      this.type = type;
+    p.XMLElement = XMLElement;
+    
+    var XMLAttribute = function ( fname, n, nameSpace, v, t){
+      this.fullName = fname || "";
+      this.name = n || "";
+      this.namespace = nameSpace || "";
+      this.value = v;
+      this.type = t;
     };
     XMLAttribute.prototype = {
-      getName: function(){ //g , defs
+      getName: function(){ 
         return this.name;
       },
       getFullName: function() {
@@ -1607,9 +1872,6 @@
       setValue: function( newval ){
         this.value = newval;
       }
-    };
-    var SVGShapeParser = function( svg ){
-    
     };
     ////////////////////////////////////////////////////////////////////////////
     // PVector
@@ -8234,6 +8496,7 @@
         a = 0;
         lastCom = "";
         lenC = c.length - 1;
+
         // Loop through SVG commands translating to canvas eqivs functions in path object
         for (var j = 0; j < lenC; j++) {
           var com = c[j][0], xy = regex(getXY, com);
@@ -8315,6 +8578,7 @@
 
       // Parse SVG font-file into block of Canvas commands
       var parseSVGFont = function parseSVGFontse(svg) {
+        // Store font attributes
         var font = svg.getElementsByTagName("font");
         p.glyphTable[url].horiz_adv_x = font[0].getAttribute("horiz-adv-x");
 
@@ -8370,7 +8634,7 @@
         }
         catch(e_sf_ch) {
           // Google Chrome, Safari etc.
-          //Processing.debug(e_sf_ch);
+          Processing.debug(e_sf_ch);
           try {
             var xmlhttp = new window.XMLHttpRequest();
             xmlhttp.open("GET", url, false);
