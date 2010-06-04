@@ -26,7 +26,7 @@ void drawBox(int i){
   }
   else{
     texture(fire);
-    s = temp;
+    s = 0;
     noStroke();
   }
 
@@ -48,10 +48,10 @@ void drawBox(int i){
   vertex(-1,  1, -1, 0+s, 1);
 
   // -Y "top" face
-  vertex(-1, -1, -1,   s, 0);
-  vertex( 1, -1, -1, 1+s, 0);
-  vertex( 1, -1,  1, 1+s, 1);
-  vertex(-1, -1,  1,   s, 1);
+  vertex(-1, -1, -1, 0-s, 0);
+  vertex( 1, -1, -1, 1-s, 0);
+  vertex( 1, -1,  1, 1-s, 1);
+  vertex(-1, -1,  1, 0-s, 1);
 
   // +X "right" face
   vertex( 1, -1,  1, 0-s, 0);
@@ -72,20 +72,22 @@ void draw()
 {
   background(0);
 
-  s += 0.01;
+  r += 0.01;
   pushMatrix();
   translate(width/2.0, height/2.0, 250);
 
   pushMatrix();
     scale(15);
-    rotateZ(s);
-    rotateY(-s);
+    rotateZ(r);
+    rotateY(-r);
     drawBox(0);
   popMatrix();
 
   pushMatrix();
     scale(60);
-    rotateZ(s);
+    rotateZ(r);
+    rotateX(r);
+    rotateY(-r);
     drawBox(1);
   popMatrix();
 
