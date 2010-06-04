@@ -7134,19 +7134,14 @@
 
     // Print some text to the Canvas
     p.text = function text() {
-      if (typeof arguments[0] !== 'undefined') {
-        var str = arguments[0],
-          x, y, z, pos, width, height;
+      var str = arguments[0], x, y, z, pos, width, height;
 
-        if (typeof str === 'number' && (str + "").indexOf('.') >= 0) {
-          // Make sure .15 rounds to .1, but .151 rounds to .2.
-          if ((str * 1000) - Math.floor(str * 1000) === 0.5) {
-            str = str - 0.0001;
-          }
+      if (typeof str === "string" || typeof str === "number" || str instanceof Char ) {
+        if (typeof str === "number" && (str + "").indexOf('.') >= 0) {
           str = str.toFixed(3);
         }
 
-        str = str.toString();
+        str = str.toString(); // convert number or Char to string
 
         if (arguments.length === 1) { // for text( str )
           p.text(str, lastTextPos[0], lastTextPos[1]);
