@@ -14,6 +14,7 @@
 
     <p>
       <canvas datasrc="test.pjs"></canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0px;" />
     </p>
     
     <pre>
@@ -36,9 +37,10 @@ void setup() {
 
 void draw() {
   background(0);
-  translate(width / 2, height / 2, 0);
+  translate(width / 2, height / 2,0);
   rotateY(map(mouseX, 0, width, -PI, PI));
   rotateZ(PI/6);
+  textureMode(NORMALIZED);
   beginShape(QUADS);
   texture(img);
   vertex(-100, -100, 0, 0, 0);
