@@ -6179,7 +6179,6 @@
                              p.imageData.data[offset+2], p.imageData.data[offset+3]);
       },
       setPixel: function(i,c) {
-        if(c && typeof c === "number") {
           var offset = i*4;
           // split c into array
           var c2 = p.color.toArray(c);
@@ -6188,7 +6187,6 @@
           p.imageData.data[offset+1] = c2[1];
           p.imageData.data[offset+2] = c2[2];
           p.imageData.data[offset+3] = c2[3];
-        }
       },
       set: function(arr) {
         for (var i = 0, aL = arr.Length; i < aL; i++) {
@@ -6484,12 +6482,12 @@
             if (read >= aImg.width)
               break;
             var c = aImg.pixels.getPixel(read + yi);
-            var bm = p.shared.blurMult[i]; //trouble var[] bm
-            ca += bm[(c & p.ALPHA_MASK) >>> 24];
-            cr += bm[(c & p.RED_MASK) >> 16];
-            cg += bm[(c & p.GREEN_MASK) >> 8];
-            cb += bm[c & p.BLUE_MASK];
-            sum += p.shared.blurKernel[i];
+            var m = p.shared.blurKernel[i];
+            ca += m * ((c & p.ALPHA_MASK) >>> 24);
+            cr += m * ((c & p.RED_MASK) >> 16);
+            cg += m * ((c & p.GREEN_MASK) >> 8);
+            cb += m * (c & p.BLUE_MASK);
+            sum += m;
             read++;
           }
           ri = yi + x;
@@ -6521,12 +6519,12 @@
           for (var i = bk0; i < p.shared.blurKernelSize; i++) {
             if (ri >= aImg.height)
               break;
-            var bm = p.shared.blurMult[i]; //trouble var[] bm
-            ca += bm[a2[read]];
-            cr += bm[r2[read]];
-            cg += bm[g2[read]];
-            cb += bm[b2[read]];
-            sum += p.shared.blurKernel[i];
+            var m = p.shared.blurKernel[i];
+            ca += m * a2[read];
+            cr += m * r2[read];
+            cg += m * g2[read];
+            cb += m * b2[read];
+            sum += m;
             ri++;
             read += aImg.width;
           }
@@ -6544,27 +6542,17 @@
       radius = (radius < 1) ? 1 : ((radius < 248) ? radius : 248);
       if (p.shared.blurRadius != radius) {
         p.shared.blurRadius = radius;
-        p.shared.blurKernelSize = 1 + p.shared.blurRadius<<1;
+        p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
         p.shared.blurKernel = new Array(p.shared.blurKernelSize);
-        p.shared.blurMult = new Array(p.shared.blurKernelSize);//[256]; // trouble
-
-        var bk,bki;
-        //int[] bm,bmi;
-        var bm,bmi;
+        // init blurKernel
+        for(var i=0;i<p.shared.blurKernelSize; i++) {          
+          p.shared.blurKernel[i] = 0;
+        }
 
         for (var i = 1, radiusi = radius - 1; i < radius; i++) {
-          p.shared.blurKernel[radius+i] = p.shared.blurKernel[radiusi] = bki = radiusi * radiusi;
-          bm=p.shared.blurMult[radius+i];
-          bmi=p.shared.blurMult[radiusi--];
-          for (var j = 0; j < 256; j++) {
-            bm[j] = bmi[j] = bki*j;
-          }
+          p.shared.blurKernel[radius+i] = p.shared.blurKernel[radiusi] = radiusi * radiusi;
         }
-        bk = p.shared.blurKernel[radius] = radius * radius;
-        bm = p.shared.blurMult[radius];
-        for (var j = 0; j < 256; j++) {
-          bm[j] = bk*j;
-        }
+        p.shared.blurKernel[radius] = radius * radius;
       }
     };
     
@@ -6689,7 +6677,7 @@
       //p.arraycopy(out,0,pixels,0,maxIdx);
     };
 
-    // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear()
+    // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear(), filter()
     // change this in the future to not be exposed to p
     p.shared = {
       fracU: 0,
@@ -6722,8 +6710,7 @@
       srcBuffer: null,
       blurRadius: 0,
       blurKernelSize: 0,
-      blurKernel: null,
-      blurMult: null
+      blurKernel: null
     };
 
     p.intersect = function intersect(sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2) {
