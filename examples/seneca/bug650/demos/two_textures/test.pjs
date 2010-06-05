@@ -30,7 +30,7 @@ void drawBox(PImage img){
   vertex(-1,  1, -1, 1-s, 1);
   vertex( 1,  1, -1, 0-s, 1);
 
-  //
+  // +Z "front" face"
   vertex(-1, -1,  1, 0-s, 0);
   vertex( 1, -1,  1, 1-s, 0);
   vertex( 1,  1,  1, 1-s, 1);
