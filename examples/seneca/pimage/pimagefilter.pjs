@@ -46,3 +46,5 @@ PImage i;
 i = loadImage("ref_string.jpg");
 i.filter(BLUR, 3);
 image(i, 220, 220);
+
+println(millis());

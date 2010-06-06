@@ -5937,20 +5937,15 @@
         }(this)),
         setPixel: (function(aImg) {
           return function(i,c) {
-            if(c && typeof c === "number") {
-              var offset = i*4;
-              // split c into array
-              var c2 = p.color.toArray(c);
-              // change pixel to c
-              aImg.imageData.data[offset] = c2[0];
-              aImg.imageData.data[offset+1] = c2[1];
-              aImg.imageData.data[offset+2] = c2[2];
-              aImg.imageData.data[offset+3] = c2[3];
-            }
+            var offset = i*4;
+            aImg.imageData.data[offset] = (c & p.RED_MASK) >>> 16;
+            aImg.imageData.data[offset+1] = (c & p.GREEN_MASK) >>> 8;
+            aImg.imageData.data[offset+2] = (c & p.BLUE_MASK);
+            aImg.imageData.data[offset+3] = (c & p.ALPHA_MASK) >>> 24;
           };
         }(this)),
         set: function(arr) {
-          for (var i = 0, aL = arr.Length; i < aL; i++) {
+          for (var i = 0, aL = arr.length; i < aL; i++) {
             this.setPixel(i, arr[i]);
           }
         }
@@ -6146,13 +6141,11 @@
       var color, oldFill;
       // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
       if (arguments.length === 4) {
-        // changed in 0.9
-        var c = p.color.toArray(obj);
         var offset = y * img.width * 4 + (x*4);
-        img.imageData.data[offset] = c[0];
-        img.imageData.data[offset+1] = c[1];
-        img.imageData.data[offset+2] = c[2];
-        img.imageData.data[offset+3] = c[3];
+        img.imageData.data[offset] = (obj & p.RED_MASK) >>> 16;
+        img.imageData.data[offset+1] = (obj & p.GREEN_MASK) >>> 8;
+        img.imageData.data[offset+2] = (obj & p.BLUE_MASK);
+        img.imageData.data[offset+3] = (obj & p.ALPHA_MASK) >>> 24;
       } else if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number") {
@@ -6179,17 +6172,14 @@
                              p.imageData.data[offset+2], p.imageData.data[offset+3]);
       },
       setPixel: function(i,c) {
-          var offset = i*4;
-          // split c into array
-          var c2 = p.color.toArray(c);
-          // change pixel to c
-          p.imageData.data[offset] = c2[0];
-          p.imageData.data[offset+1] = c2[1];
-          p.imageData.data[offset+2] = c2[2];
-          p.imageData.data[offset+3] = c2[3];
+        var offset = i*4;
+        p.imageData.data[offset] = (c & p.RED_MASK) >>> 16;
+        p.imageData.data[offset+1] = (c & p.GREEN_MASK) >>> 8;
+        p.imageData.data[offset+2] = (c & p.BLUE_MASK);
+        p.imageData.data[offset+3] = (c & p.ALPHA_MASK) >>> 24;
       },
       set: function(arr) {
-        for (var i = 0, aL = arr.Length; i < aL; i++) {
+        for (var i = 0, aL = arr.length; i < aL; i++) {
           this.setPixel(i, arr[i]);
         }
       }
