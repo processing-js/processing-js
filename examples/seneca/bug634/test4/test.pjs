@@ -1,0 +1,53 @@
+void setup() 
+{ 
+  size(100, 100, P3D); 
+  colorMode(RGB, 1); 
+} 
+ 
+void draw() 
+{ 
+  background(0);
+  translate(width/2, height/2, -30); 
+  
+  rotateX(PI/4);
+  rotateZ(PI/4);
+  
+  strokeWeight(10);
+  stroke(1);
+
+  scale(30);
+ 
+  beginShape(QUADS);
+
+  fill(0, 1, 1); vertex(-1,  1,  1);
+  fill(1, 1, 1); vertex( 1,  1,  1);
+  fill(1, 0, 1); vertex( 1, -1,  1);
+  fill(0, 0, 1); vertex(-1, -1,  1);
+
+  fill(1, 1, 1); vertex( 1,  1,  1);
+  fill(1, 1, 0); vertex( 1,  1, -1);
+  fill(1, 0, 0); vertex( 1, -1, -1);
+  fill(1, 0, 1); vertex( 1, -1,  1);
+
+  fill(1, 1, 0); vertex( 1,  1, -1);
+  fill(0, 1, 0); vertex(-1,  1, -1);
+  fill(0, 0, 0); vertex(-1, -1, -1);
+  fill(1, 0, 0); vertex( 1, -1, -1);
+
+  fill(0, 1, 0); vertex(-1,  1, -1);
+  fill(0, 1, 1); vertex(-1,  1,  1);
+  fill(0, 0, 1); vertex(-1, -1,  1);
+  fill(0, 0, 0); vertex(-1, -1, -1);
+
+  fill(0, 1, 0); vertex(-1,  1, -1);
+  fill(1, 1, 0); vertex( 1,  1, -1);
+  fill(1, 1, 1); vertex( 1,  1,  1);
+  fill(0, 1, 1); vertex(-1,  1,  1);
+
+  fill(0, 0, 0); vertex(-1, -1, -1);
+  fill(1, 0, 0); vertex( 1, -1, -1);
+  fill(1, 0, 1); vertex( 1, -1,  1);
+  fill(0, 0, 1); vertex(-1, -1,  1);
+
+  endShape();
+}

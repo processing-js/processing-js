@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for <a href="http://processing-js.lighthouseapp.com/projects/41284/tickets/634">bug 634</a></h2>
+
+    <p>This page tests the fix for <a href="http://processing-js.lighthouseapp.com/projects/41284/tickets/634">bug 634</a> for <a href="http://processingjs.org/">Processing.js</a><br />
+    No P5 screenshot because it has issues with this test.<br />
+    Testing case when vertex is called without providing type (POINTS, TRIANGLES, etc)<br />
+    <br />
+    beginShape();<br />
+    vertex(0, 0, 0);<br />
+    endShape();<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs"></canvas>
+    </p>
+    
+    <pre>
+<b>// Test by Andor Salga</b>
+import processing.opengl.*;
+
+void setup() 
+{ 
+  size(100, 100, OPENGL);
+  background(0);
+
+  stroke(255, 0, 0);
+  for(int x = 0; x < 100; x++){
+    beginShape();
+    vertex(x, x, 0);
+    endShape();
+  }
+
+  stroke(0, 255, 0);
+  for(int x = 0; x < 100; x++){
+    beginShape();
+    vertex(100-x, x, 0);
+    endShape();
+  }
+
+  stroke(0 ,0, 255);
+  for(int x = 0; x < 100; x++){
+    beginShape();
+    vertex(100-x, 50, 0);
+    endShape();
+  }
+}</pre>
+
+  </body>
+</html>
