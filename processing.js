@@ -363,7 +363,7 @@
 
     var vertArray = [],
         curveVertArray = [],
-        curveVertCount = 0;
+        curveVertCount = 0,
         isCurve = false,
         isBezier = false,
         firstVert = true;
