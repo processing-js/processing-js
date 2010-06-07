@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Processing.js test of keyCode</title>
+    <script type="text/javascript" src="../../../processing.js"></script>
+    <style type="text/css">
+        html, body
+        {
+            background: #EEE;
+            font-family: Arial;
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+        h1
+        {
+            background: #385C85;
+            color: #FFF;
+            padding: 10px;
+            padding-left: 20px;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+        h1 a
+        {
+            color: #FFF;
+        }
+        h2
+        {
+            padding-left: 20px;
+        }
+        p
+        {
+            padding-left: 20px;
+            line-height: 1.3em;
+        }
+        p a
+        {
+            color: #385C85;
+        }
+        canvas
+        {
+            margin: 10px 0;
+        }
+        pre
+        {
+            margin-left: 20px;
+            margin-right: 20px;
+            padding: 5px;
+            background: #FFF;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+        }
+        div.ref-col
+        {
+            float: left;
+            width: 32%;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+		<!-- name of your function and test description -->
+		keyCode
+    </h1>
+    <h2>
+        Pressing buttons generates the keyCode</h2>
+	
+    <!-- include your processing file below -->
+    <canvas datasrc="keyCode.pjs" width="150" height="150" style="margin-left: 10px;"></canvas>
+    <h1>
+        Source Code:</h1>
+    <pre class="brush: processing;">
+void draw() { } // Empty draw() needed to keep the program running
+
+void keyPressed() {
+  println("pressed " + int(key) + " " + keyCode);
+}
+
+void keyTyped() {
+  println("typed " + int(key) + " " + keyCode);
+}
+
+void keyReleased() {
+  println("released " + int(key) + " " + keyCode);
+}
+        </pre>
+    <br />
+</body>
+</html>

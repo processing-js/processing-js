@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for <a href="http://processing-js.lighthouseapp.com/projects/41284/tickets/634">bug 634</a></h2>
+
+    <p>This page tests the fix for <a href="http://processing-js.lighthouseapp.com/projects/41284/tickets/634">bug 634</a> for <a href="http://processingjs.org/">Processing.js</a><br />
+    If the canvas and image below are identical, the test has passed.<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs"></canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0;"/>
+    </p>
+    
+    <pre>
+<b>// Test by Andor Salga</b>
+void setup() 
+{ 
+  size(100, 100, P3D); 
+  colorMode(RGB, 1); 
+} 
+ 
+void draw() 
+{ 
+  background(0);
+  translate(width/2, height/2, -30); 
+  
+  rotateX(PI/4);
+  rotateZ(PI/4);
+  
+  strokeWeight(10);
+  stroke(1);
+
+  scale(30);
+ 
+  beginShape(QUADS);
+
+  fill(0, 1, 1); vertex(-1,  1,  1);
+  fill(1, 1, 1); vertex( 1,  1,  1);
+  fill(1, 0, 1); vertex( 1, -1,  1);
+  fill(0, 0, 1); vertex(-1, -1,  1);
+
+  fill(1, 1, 1); vertex( 1,  1,  1);
+  fill(1, 1, 0); vertex( 1,  1, -1);
+  fill(1, 0, 0); vertex( 1, -1, -1);
+  fill(1, 0, 1); vertex( 1, -1,  1);
+
+  fill(1, 1, 0); vertex( 1,  1, -1);
+  fill(0, 1, 0); vertex(-1,  1, -1);
+  fill(0, 0, 0); vertex(-1, -1, -1);
+  fill(1, 0, 0); vertex( 1, -1, -1);
+
+  fill(0, 1, 0); vertex(-1,  1, -1);
+  fill(0, 1, 1); vertex(-1,  1,  1);
+  fill(0, 0, 1); vertex(-1, -1,  1);
+  fill(0, 0, 0); vertex(-1, -1, -1);
+
+  fill(0, 1, 0); vertex(-1,  1, -1);
+  fill(1, 1, 0); vertex( 1,  1, -1);
+  fill(1, 1, 1); vertex( 1,  1,  1);
+  fill(0, 1, 1); vertex(-1,  1,  1);
+
+  fill(0, 0, 0); vertex(-1, -1, -1);
+  fill(1, 0, 0); vertex( 1, -1, -1);
+  fill(1, 0, 1); vertex( 1, -1,  1);
+  fill(0, 0, 1); vertex(-1, -1,  1);
+
+  endShape();
+}</pre>
+
+  </body>
+</html>
