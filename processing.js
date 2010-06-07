@@ -2811,7 +2811,7 @@
 
     p.status = function(text) {
       window.status = text;
-    }
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Binary Functions
