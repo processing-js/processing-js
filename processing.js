@@ -7835,11 +7835,6 @@
     }
   };
 
-  Processing.version = "@VERSION@";
-
-  // Share lib space
-  Processing.lib = {};
-
   // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
   Processing.parse = function parse(aCode, p) {
 
@@ -8366,6 +8361,50 @@
     return aCode;
   };
 
+  Processing.version = "@VERSION@";
+
+  // Share lib space
+  Processing.lib = {};
+
+  // instances is a data structure of all Processing instances created
+  Processing.instances = (function() {
+    var keys = [];
+    var data = {};
+
+    return {
+      getInstance: function(index) {
+        return data[keys[index]];
+      },
+      getInstanceById: function(name)  {
+        return data[name];
+      },
+      addInstance: function(processing) {
+        if (typeof processing.canvas.id === 'undefined') {
+          processing.canvas.id = "__default" + keys.length;
+        }
+        data[processing.canvas.id] = processing;
+        keys.push(processing.canvas.id);
+      },
+      length: keys.length
+    };
+  }());
+
+  Processing.addInstance = function(processing) {
+    Processing.instances.addInstance(processing);
+  };
+
+  Processing.getInstance = function(index) {
+    return Processing.instances.getInstance(index);
+  };
+
+  Processing.getInstanceById = function(name) {
+    return Processing.instances.getInstanceById(name);
+  };
+
+  Processing.length = function() {
+    return Processing.instances.length;
+  };
+
   // IE Unfriendly AJAX Method
   var ajax = function(url) {
     var AJAX = new window.XMLHttpRequest();
@@ -8406,7 +8445,7 @@
             code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
           }
         }
-        new Processing(canvas[i], code);
+        Processing.addInstance(new Processing(canvas[i], code));
       }
     }
   };
