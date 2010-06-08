@@ -7767,7 +7767,16 @@
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
-      if (!this.use3DContext) {
+      // Compile the code
+      var compiledSketchFunction;
+      if(typeof aCode === "function") {
+        compiledSketchFunction = aCode;
+      } else {
+        var parsedCode = Processing.parse(aCode, p);
+        compiledSketchFunction = eval(parsedCode);
+      }
+
+      if (!p.use3DContext) {
         // Setup default 2d canvas context.
         curContext = curElement.getContext('2d');
 
@@ -7784,15 +7793,6 @@
         p.fill(255);
         p.noSmooth();
         p.disableContextMenu();
-      }
-
-      // Compile the code
-      var compiledSketchFunction;
-      if(typeof aCode === "function") {
-        compiledSketchFunction = aCode;
-      } else {
-        var parsedCode = Processing.parse(aCode, p);
-        compiledSketchFunction = eval(parsedCode);
       }
 
       // Step through the libraries that were attached at doc load...
