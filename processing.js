@@ -8389,10 +8389,28 @@
       return "(" + this.initStatement + "; " + this.condition + "; " + this.step + ")";
     };
 
+    function AstForInExpression(initStatement, container) {
+      this.initStatement = initStatement;
+      this.container = container;
+    }
+    AstForInExpression.prototype.toString = function() {
+      var init = this.initStatement.toString();
+      if(init.indexOf("=") >= 0) { // can be without var declaration
+        init = init.substring(0, init.indexOf("="));
+      }
+      return "(" + init + " in " + this.container + ")";
+    };
+
     function transformForExpression(expr) {
-      var content = expr.substring(1, expr.length - 1).split(";");
-      return new AstForExpression( transformStatement(trim(content[0])),
-        transformExpression(content[1]), transformExpression(content[2]));
+      if(/\bin\b/.test(expr)) {
+        var content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
+        return new AstForInExpression( transformStatement(trim(content[0])),
+          transformExpression(content[1]));
+      } else {
+        var content = expr.substring(1, expr.length - 1).split(";");
+        return new AstForExpression( transformStatement(trim(content[0])),
+          transformExpression(content[1]), transformExpression(content[2]));
+      }
     }
 
     function AstInnerInterface(name) {
