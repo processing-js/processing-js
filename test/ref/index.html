@@ -251,7 +251,7 @@
             var startTime = (new Date).getTime(), totalTime = 0;
             var p;
             try {
-              p = Processing(current, test.code);
+              p = new Processing(current, test.code);
             } catch (e) {
               title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed: " + e.toString());
               failedCount++;
