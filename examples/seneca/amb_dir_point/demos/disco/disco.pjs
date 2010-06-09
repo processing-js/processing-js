@@ -13,12 +13,12 @@ float spinDirLightY = 0.0;
 float spinDirLightZ = -1.0;
 
 float spinDirLightX2 = 0.0;
-float spinDirLightY2 = 1.0
+float spinDirLightY2 = 1.0;
 float spinDirLightZ2 = 0.0;
 
 float theta = 0.0;
 float theta2 = 1.0;
-bool redGoingUp = true;
+boolean redGoingUp = true;
 
 void setup()
 {
