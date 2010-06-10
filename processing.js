@@ -792,23 +792,10 @@
     */
     XMLElement.prototype = {
       parse: function( filename ){
-        var xmlDoc, e;
+        var xmlDoc;
         try {
-          xmlDoc = document.implementation.createDocument( "", "", null );
-          try {
-            xmlDoc.async = false;
-            xmlDoc.load( filename );
-          }
-          catch( e ) {
-            try {
-              var xmlhttp = new window.XMLHttpRequest();
-              xmlhttp.open("GET", filename, false);
-              xmlhttp.send( null );
-            }
-            catch( e ) {
-              throw( e );
-            }
-          }
+          xmlDoc=new DOMParser().parseFromString( ajax( filename ),"text/xml");
+          
           var elements = xmlDoc.documentElement;
           if( elements ){
             this.parseChildrenRecursive( null, elements );
@@ -817,8 +804,8 @@
           }          
           return this;        
         }
-        catch(e_fx_op) {
-          throw(e_fx_op.message);
+        catch( e ) {
+          throw( e );
         }
         
       },
@@ -845,7 +832,7 @@
         if( object instanceof XMLElement ){
           if( this.name !== object.getLocalName ){ return false; }
           if( this.attributes.length !== object.getAttributeCount() ) { return false; }
-          for( var i =0; i < this.attributes.length; i++ ){
+          for( var i = 0; i < this.attributes.length; i++ ){
             if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
             if( this.attributes[i].getValue() !== object.attributes[i].getValue() ) { return false; }
             if( this.attributes[i].getType()  !== object.attributes[i].getType() ) { return false; }
@@ -1016,13 +1003,13 @@
            xmlelement.parent  = parent;
          }
 
-         for( var l=0; l< elementpath.attributes.length; l++ ) {
+         for( var l = 0; l < elementpath.attributes.length; l++ ) {
            tmpattrib    = elementpath.attributes[l];
            xmlattribute = new XMLAttribute( tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType );
            xmlelement.attributes.push( xmlattribute );
          }
 
-         for( var m =0; m< elementpath.childElementCount; m++ ) {
+         for( var m = 0; m < elementpath.childElementCount; m++ ) {
            xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.children[m]) );
          }
          return xmlelement;
@@ -1032,24 +1019,24 @@
       },
       listChildren: function(){
         var arr = [];
-        for( var i=0; i< this.children.length; i++ ){
+        for( var i = 0; i < this.children.length; i++ ){
           arr.push( this.getChild(i).getName() );
         }
         return arr;
       },
       removeAttribute: function ( name , namespace ){
         namespace = namespace || "";
-        for( var i=0; i< this.attributes.length; i++ ){
+        for( var i = 0; i < this.attributes.length; i++ ){
           if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === namespace ){
-            this.attributes.splice( i,0 );
+            this.attributes.splice( i, 0 );
           } 
         }
       },
       removeChild: function( child ){
         if( child ){ 
-          for( var i =0; i< this.children.length; i++ ){
+          for( var i = 0; i< this.children.length; i++ ){
             if (this.children[i].equalsXMLElement( child )){
-              this.children.splice( i,0 );
+              this.children.splice( i, 0 );
             }
           }  
         }
@@ -1061,7 +1048,7 @@
       },
       findAttribute: function ( name, namespace ){
         namespace = namespace || "";
-        for( var i=0; i< this.attributes.length; i++ ){
+        for( var i = 0; i < this.attributes.length; i++ ){
           if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === namespace ){
              return this.attributes[i];
           } 
