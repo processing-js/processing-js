@@ -19,7 +19,7 @@
 (function() {
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
-  
+
     var p = this;
 
     p.pjs = {
@@ -7629,24 +7629,28 @@
     ////////////////////////////////////////////////////////////////////////////
 
     p.extendClass = function extendClass(subClass, baseClass) {
+      function extendGetterSetter(propertyName) {
+        subClass.__defineGetter__(propertyName, function() {
+          return baseClass[propertyName];
+        });
+        subClass.__defineSetter__(propertyName, function(v) {
+          baseClass[propertyName]=v;
+        });
+      }
+      var undef;
+      
       for (var propertyName in baseClass) {
-        if (typeof subClass[propertyName] === 'undefined') {
+        if (subClass[propertyName] === undef) {
           if (typeof baseClass[propertyName] === 'function') {
             subClass[propertyName] = baseClass[propertyName];
-            
           } else {
-            subClass.__defineGetter__(propertyName, (function(propertyName) { 
-              return function(){return baseClass[propertyName];};
-            })(propertyName));
-            subClass.__defineSetter__(propertyName, (function(propertyName) { 
-              return function(v){baseClass[propertyName]=v;};
-            })(propertyName));
+            extendGetterSetter(propertyName);
           }
         }
       }
     };
 
-    p.addMethod = function addMethod(object, name, fn) {
+    p.addMethod = function addMethod(object, name, fn, superAccessor) {
       if (object[name]) {
         var args = fn.length,
           oldfn = object[name];
@@ -7905,9 +7909,16 @@
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
-      var parsedCode = typeof aCode === "function" ? undefined : Processing.parse(aCode, p);
+      // Compile the code
+      var compiledSketchFunction;
+      if(typeof aCode === "function") {
+        compiledSketchFunction = aCode;
+      } else {
+        var parsedCode = Processing.parse(aCode, p);
+        compiledSketchFunction = eval(parsedCode);
+      }
 
-      if (!this.use3DContext) {
+      if (!p.use3DContext) {
         // Setup default 2d canvas context.
         curContext = curElement.getContext('2d');
 
@@ -7934,46 +7945,31 @@
         }
       }
 
-      var localizedProperties = "";
-      for (var propertyName in p) {
-        localizedProperties += "var " + propertyName + "=__p__." + propertyName + ";";
-        if (typeof p[propertyName] !== "function" || typeof p[propertyName] !== "object") {
-          localizedProperties += "__p__.__defineGetter__('" + propertyName + "',function(){return " + propertyName + ";});" +
-                                 "__p__.__defineSetter__('" + propertyName + "',function(v){" + propertyName + "=v;});";
-        }
-      }
+      var executeSketch = function(processing) {
+        // Don't start until all specified images in the cache are preloaded
+        if (!p.pjs.imageCache.pending) {
+          compiledSketchFunction(processing);
 
-      var executeSketch = function() {
-          // Don't start until all specified images in the cache are preloaded
-          if (!p.pjs.imageCache.pending) {
-            if(typeof aCode === "function") {
-              aCode(p);
-            } else {
-              eval (" (function(__p__) { " +
-                        localizedProperties +
-                        parsedCode +
-                    "   if (setup) {" +
-                    "     __p__.setup = setup;" +
-                    "     setup();" +
-                    "   }" +
-                    "   if (draw) {" +
-                    "     __p__.draw = draw;" +
-                    "     if (!doLoop) {" +
-                    "       redraw();" +
-                    "     } else {" +
-                    "       loop();" +
-                    "     }" +
-                    "   }" +
-                    " })(p);"
-              );
-            }
-          } else {
-            window.setTimeout(executeSketch, 10);
+          // Run void setup()
+          if (processing.setup) {
+            processing.setup();
           }
+
+          if (processing.draw) {
+            if (!doLoop) {
+              processing.redraw();
+            } else {
+              processing.loop();
+            }
+          }
+        } else {
+          window.setTimeout(executeSketch, 10, processing);
+        }
       };
 
       // The parser adds custom methods to the processing context
-      executeSketch();
+      // this renames p to processing so these methods will run
+      executeSketch(p);
     }
   };
 
@@ -7982,40 +7978,1143 @@
   // Share lib space
   Processing.lib = {};
 
-  // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
-  Processing.parse = function parse(aCode, p) {
+  // Processing global methods and constants for the parser
+  function getGlobalMembers() {
+    var names =
+  ["abs","acos","ADD","alpha","ALPHA","ALT","ambient","ambientLight","append","applyMatrix","arc",
+  "ARGB","arrayCopy","ArrayList","ARROW","asin","atan","atan2","background","BACKSPACE","beginCamera",
+  "beginDraw","beginShape","BEVEL","bezier","bezierPoint","bezierTangent","bezierVertex","binary",
+  "blend","BLEND","blendColor","blue","BLUE_MASK","boolean","box","brightness","BURN","byte","camera","ceil",
+  "CENTER","CENTER_RADIUS","char","clear","CLOSE","CMYK","CODED","color","colorMode","concat",
+  "console","constrain","CONTROL","copy","CORNER","CORNERS","cos","createFont","createGraphics",
+  "createImage","CROSS","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
+  "curveVertex","curveVertexSegment","DARKEST","day","defaultColor","degrees","DELETE","DIFFERENCE",
+  "directionalLight","disableContextMenu","dist","DODGE","DOWN","draw","ellipse","ellipseMode",
+  "emissive","enableContextMenu","endCamera","endDraw","endShape","ENTER","ESC","EXCLUSION",
+  "exit","exp","expand","fill","filter_bilinear","filter_new_scanline","float","floor","focused",
+  "frameCount","frameRate","frustum","get","glyphLook","glyphTable","green","GREEN_MASK",
+  "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hour","HSB","hue","image","imageMode",
+  "Import","int","intersect","JAVA2D","join","key","keyPressed","keyReleased","LEFT","lerp",
+  "lerpColor","LIGHTEST","lightFalloff","lights","lightSpecular","line","LINES","link","loadBytes",
+  "loadFont","loadGlyphs","loadImage","loadPixels","loadStrings","log","loop","mag","map","match",
+  "matchAll","max","MAX_FLOAT","MAX_INT","MAX_LIGHTS","millis","min","MIN_FLOAT","MIN_INT","minute",
+  "MITER","mix","modelX","modelY","modelZ","modes","month","mouseButton","mouseClicked","mouseDown",
+  "mouseDragged","mouseMoved","mousePressed","mouseReleased","mouseScroll","mouseScrolled","mouseX",
+  "mouseY","MOVE","MULTIPLY","nf","nfc","nfp","nfs","noCursor","NOCURSOR","noFill","noise","noiseSeed",
+  "noLights","noLoop","norm","normal","NORMAL_MODE_AUTO","NORMAL_MODE_SHAPE","NORMAL_MODE_VERTEX",
+  "noSmooth","noStroke","noTint","OPENGL","OVERLAY","P3D","peg","perspective","PI","PImage","pixels",
+  "pmouseX","pmouseY","point","Point","pointLight","POINTS","POLYGON","popMatrix","popStyle",
+  "pow","PREC_ALPHA_SHIFT","PRECISIONB","PRECISIONF","PREC_MAXVAL","PREC_RED_SHIFT","print",
+  "printCamera","println","printMatrix","printProjection","PROJECT","pushMatrix","pushStyle",
+  "PVector","quad","QUADS","QUAD_STRIP","radians","RADIUS","random","Random","randomSeed", "rect",
+  "rectMode","red","RED_MASK","redraw","REPLACE","requestImage","resetMatrix","RETURN","reverse","RGB",
+  "RIGHT","rotate","rotateX","rotateY","rotateZ","round","ROUND","saturation","save","scale","SCREEN",
+  "second","set","setup","shared","SHIFT","shininess","shorten","sin","SINCOS_LENGTH","size",
+  "smooth","SOFT_LIGHT","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
+  "spotLight","sq","sqrt","SQUARE","str","stroke","strokeCap","strokeJoin","strokeWeight",
+  "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
+  "textSize","textWidth","tint",
+  "translate","triangle","TRIANGLE_FAN","TRIANGLES","TRIANGLE_STRIP","trim","TWO_PI","unbinary",
+  "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","year",
+  "__frameRate","__mousePressed","__keyPressed"];
+    var members = {};
+    var i, l;
+    for(i=0,l=names.length;i<l;++i) {
+      members[names[i]] = null;
+    }
+    for(var lib in Processing.lib) {
+      if(Processing.lib[lib] && Processing.lib[lib].exports) {
+       var exportedNames = Processing.lib[lib].exports;
+       for(i=0,l=exportedNames.length;i<l;++i) {
+         members[exportedNames[i]] = null;
+       }
+      }
+    }
+    return members;
+  }
 
-    // Function to grab all code in the opening and closing of two characters
-    var nextBrace = function(right, openChar, closeChar) {
-      var rest = right,
-          position = 0,
-          leftCount = 1,
-          rightCount = 0;
+  // Parser starts
+  function parseProcessing(code) {
+    var globalMembers = getGlobalMembers();
 
-      while (leftCount !== rightCount) {
-        var nextLeft = rest.indexOf(openChar),
-            nextRight = rest.indexOf(closeChar);
+    function splitToAtoms(code) {
+      var atoms = [];
+      var items = code.split(/([\{\[\(\)\]\}])/);
+      var result = items[0];
 
-        if (nextLeft < nextRight && nextLeft !== -1) {
-          leftCount++;
-          rest = rest.slice(nextLeft + 1);
-          position += nextLeft + 1;
+      var stack = [];
+      for(var i=1; i < items.length; i += 2) {
+        var item = items[i];
+        if(item === '[' || item === '{' || item === '(') {
+          stack.push(result); result = item;
+        } else if(item === ']' || item === '}' || item === ')') {
+          var kind = item === '}' ? 'A' : item === ')' ? 'B' : 'C';
+          var index = atoms.length; atoms.push(result + item);
+          result = stack.pop() + '"' + kind + (index + 1) + '"';
+        }
+        result += items[i + 1];
+      }
+      atoms.unshift(result);
+      return atoms;
+    }
+
+    function injectStrings(code, strings) {
+      return code.replace(/'(\d+)'/g, function(all, index) {
+        var val = strings[index];
+        if(val.charAt(0) === "/") {
+          return val;
         } else {
-          rightCount++;
-          rest = rest.slice(nextRight + 1);
-          position += nextRight + 1;
+          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new Char(" + val + "))" : val;
+        }
+      });
+    }
+
+    function trimSpaces(string) {
+      var m1 = /^\s*/.exec(string), result;
+      if(m1[0].length === string.length) {
+        result = {left: m1[0], middle: "", right: ""};
+      } else {
+        var m2 = /\s*$/.exec(string);
+        result = {left: m1[0], middle: string.substring(m1[0].length, m2.index), right: m2[0]};
+      }
+      result.untrim = function(t) { return this.left + t + this.right; };
+      return result;
+    }
+    
+    function trim(string) {
+      return string.replace(/^\s+/,'').replace(/\s+$/,'');
+    }
+    
+    function appendToLookupTable(table, array) {
+      for(var i=0,l=array.length;i<l;++i) {
+        table[array[i]] = null;
+      }
+      return table;
+    }
+
+    function isLookupTableEmpty(table) {
+      for(var i in table) {
+        if(table.hasOwnProperty(i)) {
+          return false;
         }
       }
+      return true;
+    }
 
-      return right.slice(0, position - 1);
-    };
+    function getAtomIndex(templ) { return templ.substring(2, templ.length - 1); }
 
-    // Force characters-as-bytes to work.
-    //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
-    aCode = aCode.replace(/'.{1}'/g, function(all) {
-      return "(new Char(" + all + "))";
+    var codeWoExtraCr = code.replace(/\r\n?|\n\r/g, "\n");
+
+    var strings = [];
+    var codeWoStrings = codeWoExtraCr.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g,
+    function(all, quoted, aposed, regexCtx, prefix, regex, singleComment, comment) {
+      var index;
+      if(quoted || aposed) { // replace strings
+        index = strings.length; strings.push(all);
+        return "'" + index + "'";
+      } else if(regexCtx) { // replace RegExps
+        index = strings.length; strings.push(regex);
+        return prefix + "'" + index + "'";
+      } else { // kill comments
+        return comment !== "" ? " " : "\n";
+      }
     });
 
+    var atoms = splitToAtoms(codeWoStrings);
+    var replaceContext;
+    var declaredClasses = {}, currentClassId, classIdSeed = 0;
+
+    function addAtom(text, type) {
+      var lastIndex = atoms.length;
+      atoms.push(text);
+      return '"' + type + lastIndex + '"';
+    }
+
+    function generateClassId() {
+      return "class" + (++classIdSeed);
+    }
+
+    function appendClass(class_, classId, scopeId) {
+      class_.classId = classId;
+      class_.scopeId = scopeId;
+      declaredClasses[classId] = class_;
+    }
+
+    // function defined below
+    var transformClassBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
+
+    var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
+    var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
+    var fieldTest = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
+    var cstrsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+")/g;
+    var attrAndTypeRegex = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*/;
+    var functionsRegex = /\bfunction(?:\s+([A-Za-z_$][\w$]*))?\s*("B\d+")\s*("A\d+")/g;
+
+    function extractClassesAndMethods(code) {
+      var s = code;
+      s = s.replace(classesRegex, function(all) {
+        return addAtom(all, 'E');
+      });
+      s = s.replace(methodsRegex, function(all) {
+        return addAtom(all, 'D');
+      });
+      s = s.replace(functionsRegex, function(all) {
+        return addAtom(all, 'H');
+      });
+      return s;
+    }
+
+    function extractConstructors(code, className) {
+      var result = code.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
+        if(name !== className) {
+          return all;
+        } else {
+          return addAtom(all, 'G');
+        }
+      });
+      return result;
+    }
+
+    function AstParam(name) {
+      this.name = name;
+    }
+    AstParam.prototype.toString = function() {
+      return this.name;
+    };
+    function AstParams(params) {
+      this.params = params;
+    }
+    AstParams.prototype.getNames = function() {
+      var names = [];
+      for(var i=0,l=this.params.length;i<l;++i) {
+        names.push(this.params[i].name);
+      }
+      return names;
+    };
+    AstParams.prototype.toString = function() {
+      if(this.params.length === 0) {
+        return "()";
+      }
+      var result = "(";
+      for(var i=0,l=this.params.length;i<l;++i) {
+        result += this.params[i] + ", ";
+      }
+      return result.substring(0, result.length - 2) + ")";
+    };
+
+    function transformParams(params) {
+      var paramsWoPars = trim(params.substring(1, params.length - 1));
+      var result = [];
+      if(paramsWoPars !== "") {
+        var paramList = paramsWoPars.split(",");
+        for(var i=0; i < paramList.length; ++i) {
+          var param = /\b([A-Za-z_$][\w$]*\b)\s*("[ABC][\d]*")?$/.exec(paramList[i]);
+          result.push(new AstParam(param[1]));
+        }
+      }
+      return new AstParams(result);
+    }
+
+    function preExpressionTransform(expr) {
+      var s = expr;
+      // new type[] {...} --> {...}
+      s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s*"C\d+")+\s*("A\d+")/g, function(all, type, init) {
+        return init;
+      });
+      // new Runnable() {...} --> "F???"
+      s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s*"B\d+")\s*("A\d+")/g, function(all, type, init) {
+        return addAtom(all, 'F');
+      });
+      // function(...) { } --> "H???"
+      s = s.replace(functionsRegex, function(all) {
+        return addAtom(all, 'H');
+      });
+      // new type[?] --> new ArrayList(?)
+      s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*("C\d+"(?:\s*"C\d+")*)/g, function(all, type, index) {
+        var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; }).
+          replace(/\[\s*\]/g, "[0]").replace(/\s*\]\s*\[\s*/g, ", ");
+
+        var arrayInitializer = "(" + args.substring(1, args.length - 1) + ")";
+        return 'new ArrayList' + addAtom(arrayInitializer, 'B');
+      });
+      // .length() --> .length
+      s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");
+      // #000000 --> 0x000000
+      s = s.replace(/#([0-9A-Fa-f]+)/g, function(all, digits) {
+        return digits.length < 6 ? "0x" + digits : "0xFF000000".substring(0, 10 - digits.length) + digits;
+      });
+      // delete (type)???, (int)??? -> 0|???
+      s = s.replace(/"B(\d+)"(\s*[\w$']|"B)/g, function(all, index, next) {
+        var atom = atoms[index];
+        if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
+          return all;
+        } else if(/^\(\s*int\s*\)$/.test(atom)) {
+          return "0|" + next;
+        } else {
+          var indexParts = atom.split(/"C(\d+)"/g);
+          if(indexParts.length > 1) {
+            // even items contains atom numbers, can check only first
+            if(! /^\[\s*\]$/.test(atoms[indexParts[1]])) {
+              return all; // fallback - not a cast
+            }
+          }
+          return "" + next;
+        }
+      });
+      // super() -> $superCstr(), super. -> $super.;
+      s = s.replace(/\bsuper(\s*"B\d+")/g, "$$superCstr$1").replace(/\bsuper(\s*\.)/g, "$$super$1");
+      // 3.0f -> 3.0
+      s = s.replace(/\b(\.?\d+)[fF]/g, "$1");
+      // Weird (?) parsing errors with %
+      s = s.replace(/([^\s])%([^=\s])/g, "$1 % $2");
+      // Since frameRate() and frameRate are different things,
+      // we need to differentiate them somehow. So when we parse
+      // the Processing.js source, replace frameRate so it isn't
+      // confused with frameRate(), as well as keyPressed and mousePressed
+      s = s.replace(/\b(frameRate|keyPressed|mousePressed)(?!\s*"B)/g, "__$1");
+      // "pixels" replacements: 
+      //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
+      //   pixels.length => pixels.getLength()
+      //   pixels = ar => pixels.set(ar) | pixels => pixels.toArray()
+      s = s.replace(/\bpixels\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}\?\:]+))?/g, 
+        function(all, indexOrLength, index, atomIndex, equalsPart, rightSide) {
+          if(index) {
+            var atom = atoms[atomIndex];
+            if(equalsPart) {
+              return "pixels.setPixel" + addAtom("(" +atom.substring(1, atom.length - 1) + 
+                "," + rightSide + ")", 'B');
+            } else {
+              return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
+                ")", 'B');
+            }
+          } else if(indexOrLength) {
+            // length
+            return "pixels.getLength" + addAtom("()", 'B');
+          } else {
+            if(equalsPart) {
+              return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
+            } else {
+              return "pixels.toArray" + addAtom("()", 'B');
+            }
+          }
+        });
+      // this() -> $constr()
+      s = s.replace(/\bthis(\s*"B\d+")/g, "$$constr$1");
+
+      return s;
+    }
+
+    function AstInlineClass(baseInterfaceName, body) {
+      this.baseInterfaceName = baseInterfaceName;
+      this.body = body;
+      body.owner = this;
+    }
+    AstInlineClass.prototype.toString = function() {
+      return "new (function() {\n" + this.body + "})";
+    };
+
+    function transformInlineClass(class_) {
+      var m = new RegExp(/\bnew\s*(Runnable)\s*"B\d+"\s*"A(\d+)"/).exec(class_);
+      if(m === null) {
+        return "null";
+      } else {
+        var oldClassId = currentClassId, newClassId = generateClassId();
+        currentClassId = newClassId;
+        // only Runnable supported
+        var inlineClass = new AstInlineClass("Runnable", transformClassBody(atoms[m[2]], m[1]));
+        appendClass(inlineClass, newClassId, oldClassId);
+
+        currentClassId = oldClassId;
+        return inlineClass;
+      }
+    }
+
+    function AstFunction(name, params, body) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+    AstFunction.prototype.toString = function() {
+      var oldContext = replaceContext; 
+      // saving "this." and parameters
+      var names = appendToLookupTable({"this":null}, this.params.getNames());
+      replaceContext = function(name) {
+        return name in names ? name : oldContext(name);
+      };
+      var result = "function";
+      if(this.name) {
+        result += " " + this.name;
+      }
+      result += this.params + " " + this.body;
+      replaceContext = oldContext;
+      return result;
+    };
+
+    function transformFunction(class_) {
+      var m = new RegExp(/\b([A-Za-z_$][\w$]*)\s*"B(\d+)"\s*"A(\d+)"/).exec(class_);
+      return new AstFunction( m[1] !== "function" ? m[1] : null,
+        transformParams(atoms[m[2]]), transformStatementsBlock(atoms[m[3]]));
+    }
+
+    function AstInlineObject(members) {
+      this.members = members;
+    }
+    AstInlineObject.prototype.toString = function() {
+      var oldContext = replaceContext; 
+      replaceContext = function(name) {
+          return name === "this"? name : oldContext(name); // saving "this."
+      };
+      var result = "";
+      for(var i=0,l=this.members.length;i<l;++i) {
+        if(this.members[i].label) {
+          result += this.members[i].label + ": ";
+        }
+        result += this.members[i].value.toString() + ", ";
+      }
+      replaceContext = oldContext;
+      return result.substring(0, result.length - 2);
+    };
+
+    function transformInlineObject(obj) {
+      var members = obj.split(',');
+      for(var i=0; i < members.length; ++i) {
+        var label = members[i].indexOf(':');
+        if(label < 0) {
+          members[i] = { value: transformExpression(members[i]) };
+        } else {
+          members[i] = { label: trim(members[i].substring(0, label)),
+            value: transformExpression( trim(members[i].substring(label + 1)) ) };
+        }
+      }
+      return new AstInlineObject(members);
+    }
+
+    function expandExpression(expr) {
+      if(expr.charAt(0) === '(' || expr.charAt(0) === '[') {
+        return expr.charAt(0) + expandExpression(expr.substring(1, expr.length - 1)) + expr.charAt(expr.length - 1);
+      } else if(expr.charAt(0) === '{') {
+        if(/^\{\s*(?:[A-Za-z_$][\w$]*|'\d+')\s*:/.test(expr)) {
+          return "{" + addAtom(expr.substring(1, expr.length - 1), 'I') + "}";
+        } else {
+          return "[" + expandExpression(expr.substring(1, expr.length - 1)) + "]";
+        }
+      } else {
+        var trimmed = trimSpaces(expr);
+        var result = preExpressionTransform(trimmed.middle);
+        result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
+          return expandExpression(atoms[index]);
+        });
+        return trimmed.untrim(result);
+      }
+    }
+
+    function replaceContextInVars(expr) {
+      return expr.replace(/(\.\s*)?(\b[A-Za-z_$][\w$]*\b)/g,
+        function(all, memberAccessSign, identifier) {
+          if(memberAccessSign) {
+            return all;
+          } else {
+            return replaceContext(identifier);
+          }
+        });
+    }
+
+    function AstExpression(expr, transforms) {
+      this.expr = expr;
+      this.transforms = transforms;
+    }
+    AstExpression.prototype.toString = function() {
+      var transforms = this.transforms;
+      var expr = replaceContextInVars(this.expr);
+      return expr.replace(/"!(\d+)"/g, function(all, index) {
+        return transforms[index].toString();
+      });
+    };
+
+    transformExpression = function(expr) {
+      var transforms = [];
+      var s = expandExpression(expr);
+      s = s.replace(/"H(\d+)"/g, function(all, index) {
+        transforms.push(transformFunction(atoms[index]));
+        return '"!' + (transforms.length - 1) + '"';
+      });
+      s = s.replace(/"F(\d+)"/g, function(all, index) {
+        transforms.push(transformInlineClass(atoms[index]));
+        return '"!' + (transforms.length - 1) + '"';
+      });
+      s = s.replace(/"I(\d+)"/g, function(all, index) {
+        transforms.push(transformInlineObject(atoms[index]));
+        return '"!' + (transforms.length - 1) + '"';
+      });
+
+      return new AstExpression(s, transforms);
+    };
+
+    function AstVarDefinition(name, value, isDefault) {
+      this.name = name;
+      this.value = value;
+      this.isDefault = isDefault;
+    }
+    AstVarDefinition.prototype.toString = function() {
+      return this.name + ' = ' + this.value;
+    };
+
+    function transformVarDefinition(def, defaultTypeValue) {
+      var eqIndex = def.indexOf("=");
+      var name, value, isDefault;
+      if(eqIndex < 0) {
+        name = def;
+        value = defaultTypeValue;
+        isDefault = true;
+      } else {
+        name = def.substring(0, eqIndex);
+        value = transformExpression(def.substring(eqIndex + 1));
+        isDefault = false;
+      }
+      return new AstVarDefinition( trim(name.replace(/(\s*"C\d+")+/g, "")),
+        value, isDefault);
+    }
+
+    function getDefaultValueForType(type) {
+        if(type === "int" || type === "float") {
+          return "0";
+        } else if(type === "boolean") {
+          return "false";
+        } else if(type === "color") {
+          return "0x00000000";
+        } else {
+          return "null";
+        }
+    }
+
+    function AstVar(definitions, varType) {
+      this.definitions = definitions;
+      this.varType = varType;
+    }
+    AstVar.prototype.getNames = function() {
+      var names = [];
+      for(var i=0,l=this.definitions.length;i<l;++i) {
+        names.push(this.definitions[i].name);
+      }
+      return names;
+    };
+    AstVar.prototype.toString = function() {
+      return "var " + this.definitions.join(",");
+    };
+    function AstStatement(expression) {
+      this.expression = expression;
+    }
+    AstStatement.prototype.toString = function() {
+      return this.expression.toString();
+    };
+
+    function transformStatement(statement) {
+      if(fieldTest.test(statement)) {
+        var attrAndType = attrAndTypeRegex.exec(statement);
+        var definitions = statement.substring(attrAndType[0].length).split(",");
+        var defaultTypeValue = getDefaultValueForType(attrAndType[2]);
+        for(var i=0; i < definitions.length; ++i) {
+          definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
+        }
+        return new AstVar(definitions, attrAndType[2]);
+      } else {
+        return new AstStatement(transformExpression(statement));
+      }
+    }
+
+    function AstForExpression(initStatement, condition, step) {
+      this.initStatement = initStatement;
+      this.condition = condition;
+      this.step = step;
+    }
+    AstForExpression.prototype.toString = function() {
+      return "(" + this.initStatement + "; " + this.condition + "; " + this.step + ")";
+    };
+
+    function AstForInExpression(initStatement, container) {
+      this.initStatement = initStatement;
+      this.container = container;
+    }
+    AstForInExpression.prototype.toString = function() {
+      var init = this.initStatement.toString();
+      if(init.indexOf("=") >= 0) { // can be without var declaration
+        init = init.substring(0, init.indexOf("="));
+      }
+      return "(" + init + " in " + this.container + ")";
+    };
+
+    function transformForExpression(expr) {
+      if(/\bin\b/.test(expr)) {
+        var content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
+        return new AstForInExpression( transformStatement(trim(content[0])),
+          transformExpression(content[1]));
+      } else {
+        var content = expr.substring(1, expr.length - 1).split(";");
+        return new AstForExpression( transformStatement(trim(content[0])),
+          transformExpression(content[1]), transformExpression(content[2]));
+      }
+    }
+
+    function AstInnerInterface(name) {
+      this.name = name;
+    }
+    AstInnerInterface.prototype.toString = function() {
+      return  "this." + this.name + " = function " + this.name + "() { "+
+        "throw 'This is an interface'; };";
+    };
+    function AstInnerClass(name, body) {
+      this.name = name;
+      this.body = body;
+      body.owner = this;
+    }
+    AstInnerClass.prototype.toString = function() {
+      return "this." + this.name + " = function " + this.name + "() {\n" +
+        this.body + "};";
+    };
+
+    function transformInnerClass(class_) {
+      var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
+      classesRegex.lastIndex = 0;
+      var body = atoms[getAtomIndex(m[6])];
+      if(m[2] === "interface") {
+        return new AstInnerInterface(m[3]);
+      } else {
+        var oldClassId = currentClassId, newClassId = generateClassId();
+        currentClassId = newClassId;
+        var innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]));
+        appendClass(innerClass, newClassId, oldClassId);
+        currentClassId = oldClassId;
+        return innerClass;
+      }
+    }
+
+    function AstClassMethod(name, params, body) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+    AstClassMethod.prototype.toString = function(){
+      var thisReplacement = replaceContext("this");
+      var paramNames = appendToLookupTable({}, this.params.getNames());
+      var oldContext = replaceContext;
+      replaceContext = function(name) {
+        return name in paramNames ? name : oldContext(name);
+      };
+      var result = "processing.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
+        this.body +");";
+      replaceContext = oldContext;
+      return result;
+    };
+
+    function transformClassMethod(method) {
+      var m = methodsRegex.exec(method);
+      methodsRegex.lastIndex = 0;
+      return new AstClassMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
+        transformStatementsBlock(atoms[getAtomIndex(m[6])]) );
+    }
+
+    function AstClassField(definitions, fieldType, isStatic) {
+      this.definitions = definitions;
+      this.fieldType = fieldType;
+      this.isStatic = isStatic;
+    }
+    AstClassField.prototype.getNames = function() {
+      var names = [];
+      for(var i=0,l=this.definitions.length;i<l;++i) {
+        names.push(this.definitions[i].name);
+      }
+      return names;
+    };
+    AstClassField.prototype.toString = function() {
+      var thisPrefix = replaceContext("this") + ".";
+      if(this.isStatic) {
+        var className = this.owner.name;
+        var staticDeclarations = [];
+        for(var i=0,l=this.definitions.length;i<l;++i) {
+          var definition = this.definitions[i];
+          var name = definition.name, staticName = className + "." + name;
+          var declaration = "if(" + staticName + " === void(0)) {\n" +
+            " " + staticName + " = " + definition.value + "; }\n" +
+            thisPrefix + "__defineGetter__('" + name + "',function(){return " + staticName + ";});\n" +
+            thisPrefix + "__defineSetter__('" + name + "',function(val){" + staticName + " = val;});\n";
+          staticDeclarations.push(declaration);
+        }
+        return staticDeclarations.join("");        
+      } else {
+        return thisPrefix + this.definitions.join("; " + thisPrefix);
+      }
+    };
+
+    function transformClassField(statement) {
+      var attrAndType = attrAndTypeRegex.exec(statement);
+      var isStatic = attrAndType[1].indexOf("static") >= 0;
+      var definitions = statement.substring(attrAndType[0].length).split(/,\s*/g);
+      var defaultTypeValue = getDefaultValueForType(attrAndType[2]);
+      for(var i=0; i < definitions.length; ++i) {
+        definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
+      }
+      return new AstClassField(definitions, attrAndType[2], isStatic);
+    }
+
+    function AstConstructor(params, body) {
+      this.params = params;
+      this.body = body;
+    }
+    AstConstructor.prototype.toString = function() {
+      var paramNames = appendToLookupTable({}, this.params.getNames());
+      var oldContext = replaceContext;
+      replaceContext = function(name) {
+        return name in paramNames ? name : oldContext(name);
+      };
+      var prefix = "function $constr_" + this.params.params.length + this.params.toString();
+      var body = this.body.toString();
+      if(!/\$(superCstr|constr)\b/.test(body)) {
+        body = "{\n$superCstr();\n" + body.substring(1);
+      }
+      replaceContext = oldContext;
+      return prefix + body + "\n";
+    };
+
+    function transformConstructor(cstr) {
+      var m = new RegExp(/"B(\d+)"\s*"A(\d+)"/).exec(cstr);
+      var params = transformParams(atoms[m[1]]);
+
+      return new AstConstructor(params, transformStatementsBlock(atoms[m[2]]));
+    }
+
+    function AstClassBody(name, baseClassName, functions, methods, fields, cstrs, innerClasses, misc) {
+      var i,l;
+      this.name = name;
+      this.baseClassName = baseClassName;
+      this.functions = functions;
+      this.methods = methods;
+      this.fields = fields;
+      this.cstrs = cstrs;
+      this.innerClasses = innerClasses;
+      this.misc = misc;
+      for(i=0,l=fields.length; i<l; ++i) {
+        fields[i].owner = this;
+      }
+    }
+    AstClassBody.prototype.getMembers = function() {
+      var members;
+      if(this.owner.base) {
+        members = this.owner.base.body.getMembers();     
+      } else {
+        members = { fields: [], methods: [], innerClasses: [] };
+      }
+      var i, j, l, m;
+      for(i=0,l=this.fields.length;i<l;++i) {
+        members.fields = members.fields.concat(this.fields[i].getNames());
+      }
+      for(i=0,l=this.methods.length;i<l;++i) {
+        var method = this.methods[i];
+        members.methods.push(method.name);
+      }
+      for(i=0,l=this.innerClasses.length;i<l;++i) {
+        var innerClass = this.innerClasses[i];
+        members.innerClasses.push(innerClass.name);
+      }
+      return members;
+    };
+    AstClassBody.prototype.toString = function() {
+      function getScopeLevel(p) {
+        var i = 0;
+        while(p) {
+          ++i;
+          p=p.scope;
+        }
+        return i;
+      }
+      
+      var scopeLevel = getScopeLevel(this.owner);
+      
+      var selfId = "$this_" + scopeLevel;
+      var result = "var " + selfId + " = this;\n";
+
+      var members = this.getMembers();
+      var thisClassFields = appendToLookupTable({}, members.fields),
+        thisClassMethods = appendToLookupTable({}, members.methods),
+        thisClassInners = appendToLookupTable({}, members.innerClasses);
+      
+      var oldContext = replaceContext;
+      replaceContext = function(name) {
+        if(name === "this") {
+          return selfId;
+        } else if(name in thisClassFields || name in thisClassInners) {
+          return selfId + "." + name;
+        } else if(name in thisClassMethods) {
+          return "this." + name;
+        }
+        return oldContext(name);
+      };
+
+      if(this.baseClassName) {
+        result += "var $super = {};\n";
+        result += "function $superCstr(){\n" + 
+                        this.baseClassName + ".prototype.constructor.apply($super, arguments);\n" + 
+                        "processing.extendClass(" + selfId + ", $super); }\n";
+      } else {
+        result += "function $superCstr() { }\n";
+      }
+
+      result += this.functions.join('\n') + '\n';
+      result += this.innerClasses.join('\n');
+
+      result += this.fields.join(";\n") + ";\n";
+      result += this.methods.join('\n') + '\n';
+      result += this.misc.tail;
+
+      result += this.cstrs.join('\n') + '\n';
+
+      result += "function $constr() {\n";
+      var cstrsIfs = [];
+      for(var i=0,l=this.cstrs.length;i<l;++i) {
+        var paramsLength = this.cstrs[i].params.params.length;
+        cstrsIfs.push("if(arguments.length === " + paramsLength + ") { " +
+          "$constr_" + paramsLength + ".apply(" + selfId + ", arguments); }");
+      }
+      if(cstrsIfs.length > 0) {
+        result += cstrsIfs.join(" else ") + " else ";
+      }
+      // ??? add check if length is 0, otherwise fail
+      result += "$superCstr(); }\n";
+      result += "$constr.apply(null, arguments);\n";
+
+      replaceContext = oldContext;
+      return result;
+    };
+
+    transformClassBody = function(body, name, baseName, impls) {
+      var undef;
+      var declarations = body.substring(1, body.length - 1);
+      declarations = extractClassesAndMethods(declarations);
+      declarations = extractConstructors(declarations, name);
+      var methods = [], classes = [], cstrs = [], functions = [];
+      declarations = declarations.replace(/"([DEGH])(\d+)"/g, function(all, type, index) {
+        if(type === 'D') { methods.push(index); }
+        else if(type === 'E') { classes.push(index); }
+        else if(type === 'H') { functions.push(index); }
+        else { cstrs.push(index); }
+        return "";
+      });
+      var fields = declarations.split(';');
+      var baseClassName;
+      var i;
+
+      if(baseName !== undef) {
+        baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*)\s*$/g, "$1");
+      }
+
+      for(i = 0; i < functions.length; ++i) {
+        functions[i] = transformFunction(atoms[functions[i]]);
+      }
+      for(i = 0; i < methods.length; ++i) {
+        methods[i] = transformClassMethod(atoms[methods[i]]);
+      }
+      for(i = 0; i < fields.length - 1; ++i) {
+        var field = trimSpaces(fields[i]);
+        fields[i] = transformClassField(field.middle);
+      }
+      var tail = fields.pop();
+      for(i = 0; i < cstrs.length; ++i) {
+        cstrs[i] = transformConstructor(atoms[cstrs[i]]);
+      }
+      for(i = 0; i < classes.length; ++i) {
+        classes[i] = transformInnerClass(atoms[classes[i]]);
+      }
+
+      return new AstClassBody(name, baseClassName, functions, methods, fields, cstrs,
+        classes, { tail: tail });
+    };
+
+    function AstInterface(name) {
+      this.name = name;
+    }
+    AstInterface.prototype.toString = function() {
+      return "function " + this.name + "() {  throw 'This is an interface'; }\n" +
+        "processing." + this.name + " = " + this.name + ";";
+    };
+    function AstClass(name, body) {
+      this.name = name;
+      this.body = body;
+      body.owner = this;
+    }
+    AstClass.prototype.toString = function() {
+      var staticVars = "";
+      for (var i = 0, l = this.body.fields.length; i < l; i++) {
+        if (this.body.fields[i].isStatic) {
+          for (var x = 0, xl = this.body.fields[i].definitions.length; x < xl; x++) {
+            staticVars += "var " + this.body.fields[i].definitions[x].name + " = " + this.body.name + "." + this.body.fields[i].definitions[x] + ";";
+          }
+        }
+      }
+      return "function " + this.name + "() {\n" + this.body + "}\n" +
+        staticVars + "\n" + 
+        "processing." + this.name + " = " + this.name + ";";
+    };
+
+
+    function transformGlobalClass(class_) {
+      var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
+      classesRegex.lastIndex = 0;
+      var body = atoms[getAtomIndex(m[6])];
+      if(m[2] === "interface") {
+        return new AstInterface(m[3]);
+      } else {
+        var oldClassId = currentClassId, newClassId = generateClassId();
+        currentClassId = newClassId;
+        var globalClass = new AstClass(m[3], transformClassBody(body, m[3], m[4], m[5]) );
+        appendClass(globalClass, newClassId, oldClassId);
+
+        currentClassId = oldClassId;
+        return globalClass;
+      }
+    }
+
+    function AstMethod(name, params, body) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+    AstMethod.prototype.toString = function(){
+      var paramNames = appendToLookupTable({}, this.params.getNames());
+      var oldContext = replaceContext;
+      replaceContext = function(name) {
+        return name in paramNames ? name : oldContext(name);
+      };
+      var result = "function " + this.name + this.params + " " + this.body + "\n" +
+        "processing." + this.name + " = " + this.name + ";";
+      replaceContext = oldContext;
+      return result;
+    };
+
+    function transformGlobalMethod(method) {
+      var m = methodsRegex.exec(method);
+      var result =
+      methodsRegex.lastIndex = 0;
+      return new AstMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
+        transformStatementsBlock(atoms[getAtomIndex(m[6])]));
+    }
+
+    function preStatementsTransform(statements) {
+      var s = statements;
+      s = s.replace(/\b(catch\s*"B\d+"\s*"A\d+")(\s*catch\s*"B\d+"\s*"A\d+")+/g, "$1");
+      return s;
+    }
+
+    function AstForStatement(argument, misc) {
+      this.argument = argument;
+      this.misc = misc;
+    }
+    AstForStatement.prototype.toString = function() {
+      return this.misc.prefix + this.argument.toString();
+    };
+    function AstCatchStatement(argument, misc) {
+      this.argument = argument;
+      this.misc = misc;
+    }
+    AstCatchStatement.prototype.toString = function() {
+      return this.misc.prefix + this.argument.toString();
+    };
+    function AstPrefixStatement(name, argument, misc) {
+      this.name = name;
+      this.argument = argument;
+      this.misc = misc;
+    }
+    AstPrefixStatement.prototype.toString = function() {
+      var undef;
+      var result = this.misc.prefix;
+      if(this.argument !== undef) {
+        result += this.argument.toString();
+      }
+      return result;
+    };
+    function AstLabel(label) {
+      this.label = label;
+    }
+    AstLabel.prototype.toString = function() {
+      return this.label;
+    };
+
+    transformStatements = function(statements, transformMethod, transformClass) {
+      var undef;
+      var nextStatement = new RegExp(/\b(catch|for|if|switch|while|with)\s*"B(\d+)"|\b(do|else|finally|return|throw|try|break|continue)\b|("[ADEH](\d+)")|\b((?:case\s[^:]+|[A-Za-z_$][\w$]*\s*):)|(;)/g);
+      var res = [];
+      statements = preStatementsTransform(statements);
+      var lastIndex = 0, m, space;
+      while((m = nextStatement.exec(statements)) !== null) {
+        if(m[1] !== undef) { // catch, for ...
+          var i = statements.lastIndexOf('"B', nextStatement.lastIndex);
+          var statementsPrefix = statements.substring(lastIndex, i);
+          if(m[1] === "for") {
+            res.push(new AstForStatement(transformForExpression(atoms[m[2]]),
+              { prefix: statementsPrefix }) );
+          } else if(m[1] === "catch") {
+            res.push(new AstCatchStatement(transformParams(atoms[m[2]]),
+              { prefix: statementsPrefix }) );
+          } else {
+            res.push(new AstPrefixStatement(m[1], transformExpression(atoms[m[2]]),
+              { prefix: statementsPrefix }) );
+          }
+        } else if(m[3] !== undef) { // do, else, ...
+            res.push(new AstPrefixStatement(m[3], undef,
+              { prefix: statements.substring(lastIndex, nextStatement.lastIndex) }) );
+        } else if(m[4] !== undef) { // block, class and methods
+          space = statements.substring(lastIndex, nextStatement.lastIndex - m[4].length);
+          if(trim(space).length !== 0) { continue; } // avoiding new type[] {} construct
+          res.push(space);
+          var kind = m[4].charAt(1), atomIndex = m[5];
+          if(kind === 'D') {
+            res.push(transformMethod(atoms[atomIndex]));
+          } else if(kind === 'E') {
+            res.push(transformClass(atoms[atomIndex]));
+          } else if(kind === 'H') {
+            res.push(transformFunction(atoms[atomIndex]));
+          } else {
+            res.push(transformStatementsBlock(atoms[atomIndex]));
+          }
+        } else if(m[6] !== undef) { // label
+          space = statements.substring(lastIndex, nextStatement.lastIndex - m[6].length);
+          if(trim(space).length !== 0) { continue; } // avoiding ?: construct
+          res.push(new AstLabel(statements.substring(lastIndex, nextStatement.lastIndex)) );
+        } else { // semicolon
+          var statement = trimSpaces(statements.substring(lastIndex, nextStatement.lastIndex - 1));
+          res.push(statement.left);
+          res.push(transformStatement(statement.middle));
+          res.push(statement.right + ";");
+        }
+        lastIndex = nextStatement.lastIndex;
+      }
+      res.push(statements.substring(lastIndex));
+      return res;
+    };
+
+    function getLocalNames(statements) {
+      var localNames = [];
+      for(var i=0,l=statements.length;i<l;++i) {
+        var statement = statements[i];
+        if(statement instanceof AstVar) {
+          localNames = localNames.concat(statement.getNames());
+        } else if(statement instanceof AstForStatement &&
+          statement.argument.initStatement instanceof AstVar) {
+          localNames = localNames.concat(statement.argument.initStatement.getNames());        
+        }
+      }
+      return appendToLookupTable({}, localNames);
+    }
+    
+    function AstStatementsBlock(statements) {
+      this.statements = statements;
+    }
+    AstStatementsBlock.prototype.toString = function() {      
+      var localNames = getLocalNames(this.statements);
+      var oldContext = replaceContext;
+      
+      // replacing context only when necessary
+      if(!isLookupTableEmpty(localNames)) {
+        replaceContext = function(name) {
+          return name in localNames ? name : oldContext(name);
+        };
+      }
+      
+      var result = "{\n" + this.statements.join('') + "\n}";
+      replaceContext = oldContext;
+      return result;
+    };
+
+    transformStatementsBlock = function(block) {
+      var content = trimSpaces(block.substring(1, block.length - 1));
+      return new AstStatementsBlock(transformStatements(content.middle));
+    };
+
+    function AstRoot(statements) {
+      this.statements = statements;
+    }
+    AstRoot.prototype.toString = function() {
+      var localNames = getLocalNames(this.statements);
+      replaceContext = function(name) {
+        if(name in globalMembers && !(name in localNames)) {
+          return "processing." + name;
+        }
+        return name;
+      };
+      var result = "// this code was autogenerated from PJS\n" +
+        "(function(processing) {\n" +
+        this.statements.join('') + "\n})";
+      replaceContext = null;
+      return result;
+    };
+
+    transformMain = function() {
+      var statements = extractClassesAndMethods(atoms[0]);
+      statements = statements.replace(/\bimport\s+[^;]+;/g, "");
+      return new AstRoot( transformStatements(statements,
+        transformGlobalMethod, transformGlobalClass) );
+    };
+    
+    function generateMetadata(ast) {
+      var undef;
+      var globalScope = {};
+      var id, class_;
+      for(id in declaredClasses) {
+        if(declaredClasses.hasOwnProperty(id)) {
+          class_ = declaredClasses[id];
+          var scopeId = class_.scopeId, name = class_.name;
+          if(scopeId) {
+            var scope = declaredClasses[scopeId];
+            class_.scope = scope;
+            if(scope.inScope === undef) {
+              scope.inScope = {};
+            }
+            scope.inScope[name] = class_;
+          } else {
+            globalScope[name] = class_;
+          }
+        }
+      }
+      
+      function findInScopes(class_, name) {
+        var parts = name.split('.');
+        var currentScope = class_.scope, found;
+        while(currentScope) {
+          if(parts[0] in currentScope) {
+            found = currentScope[parts[0]]; break;
+          }
+          currentScope = currentScope.scope;
+        }
+        if(found === undef) {
+          found = globalScope[parts[0]];
+        }
+        for(var i=1,l=parts.length;i<l && found;++i) {
+          found = found.inScope[parts[i]];
+        }
+        return found;
+      }
+      
+      for(id in declaredClasses) {
+        if(declaredClasses.hasOwnProperty(id)) {
+          class_ = declaredClasses[id];
+          var baseClassName = class_.body.baseClassName;
+          if(baseClassName) {
+            class_.base = findInScopes(class_, baseClassName);
+          }
+        }
+      }
+    }
+
+    var transformed = transformMain();
+    generateMetadata(transformed);
+
+    // remove empty extra lines with space
+    var redendered = transformed.toString();
+    redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
+
+    return injectStrings(redendered, strings);
+  }// Parser ends
+
+  // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
+  Processing.parse = function parse(aCode, p) {
     // Parse out @pjs directive, if any.
     var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
     if (dm && dm.length === 2) {
@@ -8058,452 +9157,15 @@
       aCode = aCode.replace(dm[0], '');
     }
 
-    // Saves all strings into an array
-    // masks all strings into <STRING n>
-    // to be replaced with the array strings after parsing is finished
-    var strings = [];
-    aCode = aCode.replace(/(["'])(\\\1|.)*?(\1)/g, function(all) {
-      strings.push(all);
-      return "<STRING " + (strings.length - 1) + ">";
-    });
-
-    // Windows newlines cause problems:
-    aCode = aCode.replace(/\r\n?/g, "\n");
-
-    // Remove multi-line comments
-    aCode = aCode.replace(/\/\*[\s\S]*?\*\//g, "");
-
-    // Remove end-of-line comments
-    aCode = aCode.replace(/\/\/.*\n/g, "\n");
-
-    // Weird parsing errors with %
-    aCode = aCode.replace(/([^\s])%([^\s])/g, "$1 % $2");
-
-    // Since frameRate() and frameRate are different things,
-    // we need to differentiate them somehow. So when we parse
-    // the Processing.js source, replace frameRate so it isn't
-    // confused with frameRate().
-    aCode = aCode.replace(/frameRate\s*([^\(])/g, "__frameRate$1");
-    aCode = aCode.replace(/\bmousePressed\b\s*([^\(])/g, "__mousePressed$1");
-    aCode = aCode.replace(/\bkeyPressed\b\s*([^\(])/g, "__keyPressed$1");
-
-    // Simple convert a function-like thing to function
-    aCode = aCode.replace(/(?:static )?(\w+(?:\[\])*\s+)(\w+)\s*(\([^\)]*\)\s*\{)/g, function(all, type, name, args) {
-      if (name === "if" || name === "for" || name === "while" || type === "public ") {
-        return all;
-      } else {
-        return "PROCESSING." + name + " = function " + name + args;
-      }
-    });
-
-    var matchMethod = /PROCESSING\.(\w+ = function \w+\([^\)]*\)\s*\{)/, mc;
-
-    while ((mc = aCode.match(matchMethod))) {
-      var prev = RegExp.leftContext,
-        allNext = RegExp.rightContext,
-        next = nextBrace(allNext, "{", "}");
-
-        aCode = prev + "processing." + mc[1] + next + "};" + allNext.slice(next.length + 1);
-    }
-
-    // Delete import statements, ie. import processing.video.*;
-    // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
-    aCode = aCode.replace(/import\s+(.+);/g, "");
-
-    //replace  catch (IOException e) to catch (e)
-    aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g, "catch ($1)");
-
-    //delete  the multiple catch block
-    var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
-
-    while (catchBlock.test(aCode)) {
-      aCode = aCode.replace(new RegExp(catchBlock), "$1");
-    }
-
     Error.prototype.printStackTrace = function() {
-      this.toString();
+       this.toString();
     };
-
-    // Force .length() to be .length
-    aCode = aCode.replace(/\.length\(\)/g, ".length");
-
-    // foo( int foo, float bar )
-    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
-    aCode = aCode.replace(/([\(,]\s*)(\w+)((?:\[\])+|\s+)\s*(\w+\s*[\),])/g, "$1$4");
-
-    // float[] foo = new float[5];
-    aCode = aCode.replace(/new\s+(\w+)\s*((?:\[(?:[^\]]*)\])+)\s*(\{[^;]*\}\s*;)*/g, function(all, name, args, initVars) {
-      if (initVars) {
-        return initVars.replace(/\{/g, "[").replace(/\}/g, "]");
-      } else {
-        return "new ArrayList(" + args.replace(/\[\]/g, "[0]").slice(1, -1).split("][").join(", ") + ");";
-      }
-    });
-
-    // What does this do? This does the same thing as "Fix Array[] foo = {...} to [...]" below
-    aCode = aCode.replace(/(?:static\s+)?\w+\[\]\s*(\w+)\[?\]?\s*=\s*\{.*?\};/g, function(all) {
-      return all.replace(/\{/g, "[").replace(/\}/g, "]");
-    });
-
-    // int|float foo;
-    var intFloat = /(\s*(?:int|float)\s+(?!\[\])*(?:\s*|[^\(;]*?,\s*))([a-zA-Z]\w*)\s*(,|;)/i;
-    while (intFloat.test(aCode)) {
-      aCode = (function() {
-        return aCode.replace(new RegExp(intFloat), function(all, type, name, sep) {
-          return type + " " + name + " = 0" + sep;
-        });
-      }());
-    }
-
-    // float foo = 5;
-    aCode = aCode.replace(/(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function(all, type, arr, name, sep) {
-      if (type === "return" || type === "else") {
-        return all;
-      } else {
-        return "var " + name + sep;
-      }
-    });
-
-    // Fix Array[] foo = {...} to [...]
-    aCode = aCode.replace(/\=\s*\{((.|\s)*?\};)/g, function(all, data) {
-      return "= [" + data.replace(/\{/g, "[").replace(/\}/g, "]");
-    });
-
-    // Stores the variables and mathods of a single class
-    var SuperClass = function(name){
-      return {
-        className: name,
-        classVariables: "",
-        classFunctions: []
-      };
-    };
-    var arrayOfSuperClasses = [];
-
-    // implements Int1, Int2
-    aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*)\s*\{/g, function(all, interfaces) {
-      var names = interfaces.replace(/\s+/g, "").split(",");
-      return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
-    });
-
-    // Simply turns an interface into a class
-    aCode = aCode.replace(/interface/g, "class");
-
-    var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
-
-    var classReplace = function(all, name, extend) {
-      classes.push(name);
-
-      // Move arguments up from constructor
-      return "function " + name + "() {\n " +
-              "var __this__ = this;\n" +
-              (extend ? "var super = {};\n" +
-                        "function superConstructor(){\n" + 
-                        extend + ".prototype.constructor.apply(super, arguments);\n" + 
-                        "extendClass(__this__, super);};" : "") +
-              "<CLASS " + name + " " + (extend ? extend : "") + ">";
-    };
-
-    var matchClasses = /(?:public\s+|abstract\s+|static\s+)*class\s+?(\w+)\s*(?:extends\s*(\w+)\s*)?\{/g;
-
-    aCode = aCode.replace(matchClasses, classReplace);
-
-    var matchClass = /<CLASS (\w+) (\w+)?>/,
-        m;
-
-    while ((m = aCode.match(matchClass))) {
-      var left = RegExp.leftContext,
-          allRest = RegExp.rightContext,
-          rest = nextBrace(allRest, "{", "}"),
-          className = m[1],
-          thisSuperClass = new SuperClass(className),
-          extendingClass = m[2];
-
-      allRest = allRest.slice(rest.length + 1);
-      
-      // Fix class method names
-      // this.collide = function() { ... }
-      rest = (function() {
-        return rest.replace(/(?:public\s+)?processing.\w+ = function (\w+)\(([^\)]*?)\)/g, function(all, name, args) {
-          thisSuperClass.classFunctions.push(name + "|");
-          return "ADDMETHOD(this, '" + name + "', (function(public) { return function(" + args + ")";
-        });
-      }());
-
-      var matchMethod = /ADDMETHOD([^,]+, \s*?')([^']*)('[\s\S]*?\{[^\{]*?\{)/,
-          mc,
-          methods = "",
-          publicVars  = "",
-          methodsArray = [];
-
-      while ((mc = rest.match(matchMethod))) {
-        var prev = RegExp.leftContext,
-            allNext = RegExp.rightContext,
-            next = nextBrace(allNext, "{", "}");
-
-        methodsArray.push("addMethod" + mc[1] + mc[2] + mc[3] + next + "};})(this));\n");
-        publicVars += mc[2] + "|";
-
-        if (extendingClass){
-          for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
-            if (extendingClass === arrayOfSuperClasses[i].className){
-              publicVars += arrayOfSuperClasses[i].classVariables;
-              for (var x = 0, fLength = arrayOfSuperClasses[i].classFunctions.length; x < fLength; x++){
-                publicVars += arrayOfSuperClasses[i].classFunctions[x];
-              }
-            }
-          }
-        }
-
-        rest = prev + allNext.slice(next.length + 1);
-      }
-
-      var matchConstructor = new RegExp("\\b" + className + "\\s*\\(([^\\)]*?)\\)\\s*\\{"),
-          c,
-          constructor = "",
-          constructorsArray = [];
-
-      // Extract all constructors and put them into the variable "constructors"
-      while ((c = rest.match(matchConstructor))) {
-        var prev = RegExp.leftContext,
-            allNext = RegExp.rightContext,
-            next = nextBrace(allNext, "{", "}"),
-            args = c[1];
-
-        args = args.split(/,\s*?/);
-
-        if (args[0].match(/^\s*$/)) {
-          args.shift();
-        }
-
-        constructor = "if ( arguments.length === " + args.length + " ) {\n";
-
-        for (var i = 0, aLength = args.length; i < aLength; i++) {
-          constructor += " var " + args[i] + " = arguments[" + i + "];\n";
-        }
-        
-        if (/super\s*\(/.test(next)) {
-          next = next.replace(/super\s*\(/g, "superConstructor(");
-        } else if (extendingClass) {
-          constructor += "superConstructor();\n";
-        }
-
-        constructor += next + "}\n";
-
-        constructorsArray.push(constructor);
-        rest = prev + allNext.slice(next.length + 1);
-      }
-      if (constructorsArray.length === 0 && extendingClass){
-        constructorsArray.push("superConstructor();\n");
-      }
-
-      var vars = "",
-          staticVars = "",
-          localStaticVars = [];
-
-      // Put all member variables into "vars"
-      // and keep a list of all public variables
-      rest = (function(){
-        rest.replace(/(?:final|private|public)?\s*?(?:(static)\s+)?var\s+([^;]*?;)/g, function(all, staticVar, variable) {
-          variable = "this." + variable.replace(/,\s*/g, ";\nthis.");
-          variable = variable.replace(/this.(\w+);/g, "this.$1 = null;") + '\n';
-          publicVars += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
-          thisSuperClass.classVariables += variable.replace(/\s*this\.(\w+)\s*(;|=).*\s?/g, "$1|");
-
-          if (staticVar === "static"){
-            // Fix static methods
-            variable = variable.replace(/this\.(\w+)\s*=\s*([^;]*?;)/g, function(all, sVariable, value){
-              localStaticVars.push(sVariable);
-              value = value.replace(new RegExp("(" + localStaticVars.join("|") + ")", "g"), className + ".$1");
-              staticVars += className + "." + sVariable + " = " + value;
-              return "if (typeof " + className + "." + sVariable + " === 'undefined'){ " + className + "." + sVariable + " = " + value + " }\n" +
-                "this.__defineGetter__('" + sVariable + "', function(){ return "+ className + "." + sVariable + "; });\n" +
-                "this.__defineSetter__('" + sVariable + "', function(val){ " + className + "." + sVariable + " = val; });\n";
-            });
-          }
-          vars += variable;
-          return "";
-        });
-      }());
-
-
-      // add this. to public variables used inside member functions, and constructors
-      if (publicVars) {
-        // Search functions for public variables
-        for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
-          methodsArray[i] = (function(){
-            return methodsArray[i].replace(/(addMethod.*?\{ return function\((.*?)\)\s*\{)([\s\S]*?)(\};\}\)\(this\)\);)/g, function(all, header, localParams, body, footer) {
-              body = body.replace(/this\./g, "public.");
-              localParams = localParams.replace(/\s*,\s*/g, "|");
-              return header + body.replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-                if (first === ".") {
-                  return all;
-                } else if (/var\s*?$/.test(first)) {
-                  localParams += "|" + variable;
-                  return all;
-                } else if (localParams && new RegExp("\\b(" + localParams + ")\\b").test(variable)){
-                  return all;
-                } else {
-                  return "public." + variable;
-                }
-              }).replace(/public\.(\w+\s*\()/g, "this.$1") + footer;
-              
-            });
-          }());
-        }
-        // Search constructors for public variables
-        for (var i = 0, localParameters = "", aLength = constructorsArray.length; i < aLength; i++){
-          localParameters = "";
-          (function(){
-            constructorsArray[i].replace(/var\s+(\w+) = arguments\[[^\]]\];/g, function(all, localParam){
-              localParameters += localParam + "|";
-            });
-          }());
-          (function(){
-            constructorsArray[i] = constructorsArray[i].replace(new RegExp("(var\\s+?|\\.)?\\b(" + publicVars.substr(0, publicVars.length-1) + ")\\b", "g"), function (all, first, variable) {
-              if (first === ".") {
-                return all;
-              } else if (/var\s*?$/.test(first)) {
-                localParameters += variable + "|";
-                return all;
-              } else if (localParameters && new RegExp("\\b(" + localParameters.substr(0, localParameters.length-1) + ")\\b").test(variable)){
-                return all;
-              } else {
-                return "this." + variable;
-              }
-            });
-          }());
-        }
-      }
-
-      var constructors = "";
-
-      for (var i = 0, aLength = methodsArray.length; i < aLength; i++){
-        methods += methodsArray[i];
-      }
-      for (var i = 0, aLength = constructorsArray.length; i < aLength; i++){
-        constructors += constructorsArray[i];
-      }
-
-      if (extendingClass) {
-        for (var i = 0, aLength = arrayOfSuperClasses.length; i < aLength; i++){
-          if (arrayOfSuperClasses[i].className === extendingClass){
-            thisSuperClass.classVariables += arrayOfSuperClasses[i].classVariables;
-            thisSuperClass.classFunctions = thisSuperClass.classFunctions.concat(arrayOfSuperClasses[i].classFunctions);
-          }
-        }
-      }
-      arrayOfSuperClasses.push(thisSuperClass);
-
-      rest = vars + "\n" + methods + "\n" + constructors;
-      aCode = left + rest + "\n}" + staticVars + allRest;
-    }
-
-    // Do some tidying up, where necessary
-    aCode = aCode.replace(/processing.\w+ = function addMethod/g, "addMethod");
-
-    // Remove processing. from leftover functions
-    aCode = aCode.replace(/processing\.((\w+) = function)/g, "$1");
-
+    
+    aCode = parseProcessing(aCode);
+    
     // Check if 3D context is invoked -- this is not the best way to do this.
-    if (aCode.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
+    if (aCode.match(/\bsize\((?:.+),(?:.+),\s*processing.(OPENGL|P3D)\s*\);/)) {
       p.use3DContext = true;
-    }
-
-    // Handle (int) Casting
-    aCode = aCode.replace(/\(int\)/g, "0|");
-
-    // Remove Casting
-    aCode = aCode.replace(new RegExp("\\((" + classes.join("|") + ")(\\[\\])*\\)", "g"), "");
-
-    // Force numbers to exist //
-    //aCode = aCode.replace(/([^.])(\w+)\s*\+=/g, "$1$2 = ($2||0) +");
-    var toNumbers = function(str) {
-      var ret = [];
-
-      str.replace(/(..)/g, function(str) {
-        ret.push(parseInt(str, 16));
-      });
-
-      return ret;
-    };
-
-    // Convert #aaaaaa into color
-    aCode = aCode.replace(/#([a-f0-9]{6})/ig, function(m, hex) {
-      var num = toNumbers(hex);
-      return "defaultColor(" + num[0] + "," + num[1] + "," + num[2] + ")";
-    });
-
-    // Convert 3.0f to just 3.0
-    aCode = aCode.replace(/(\d+)f/g, "$1");
-
-    // changes pixels[n] into pixels.getPixels(n)
-    // and pixels[n] = n2 into pixels.setPixels(n, n2)
-    var matchPixels = /pixels\s*\[/,
-        mp;
-
-    while ((mp = aCode.match(matchPixels))) {
-      var left = RegExp.leftContext,
-          allRest = RegExp.rightContext,
-          rest = nextBrace(allRest, "[", "]"),
-          getOrSet = "getPixel";
-
-      allRest = allRest.slice(rest.length + 1);
-
-      allRest = (function(){
-        return allRest.replace(/^\s*=([^;]*)([;])/, function(all, middle, end){
-          rest += ", " + middle;
-          getOrSet = "setPixel";
-          return end;
-        });
-      }());
-
-      aCode = left + "pixels." + getOrSet + "(" + rest + ")" + allRest;
-    }
-
-    // changes pixel.length to pixels.getLength()
-    aCode = aCode.replace(/pixels.length/g, "pixels.getLength()");
-
-    // pixels = ... ; <-- pixels.set(...);    
-    aCode = aCode.replace(/pixels\s=\s([^;]*?);/g, function(all, params){
-      return "pixels.set(" + params + ")";
-    });
-
-    // replaces all masked strings from <STRING n> to the appropriate string contained in the strings array
-    for (var n = 0, sl = strings.length; n < sl; n++) {
-      aCode = (function() {
-        return aCode.replace(new RegExp("(.*)(<STRING " + n + ">)(.*)", "g"), function(all, quoteStart, match, quoteEnd) {
-          var returnString = all,
-            notString = true,
-            quoteType = "",
-            escape = false;
-
-          for (var x = 0, ql = quoteStart.length; x < ql; x++) {
-            if (notString) {
-              if (quoteStart.charAt(x) === "\"" || quoteStart.charAt(x) === "'") {
-                quoteType = quoteStart.charAt(x);
-                notString = false;
-              }
-            } else {
-              if (!escape) {
-                if (quoteStart.charAt(x) === "\\") {
-                  escape = true;
-                } else if (quoteStart.charAt(x) === quoteType) {
-                  notString = true;
-                  quoteType = "";
-                }
-              } else {
-                escape = false;
-              }
-            }
-          }
-
-          if (notString) { // Match is not inside a string
-            returnString = quoteStart + strings[n] + quoteEnd;
-          }
-
-          return returnString;
-        });
-      }());
     }
     return aCode;
   };
