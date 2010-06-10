@@ -1,24 +1,32 @@
 ﻿size(300,340);
 background(0);
-PImage pi = createImage(256,256,ARGB);
+PImage pi = createImage(128,128,ARGB);
 int c = 255;
 float range = 1;
-for (int i = 0; i < pi.width; i++) {
-  for(int j = 0; j < pi.height; j++) {
-    pi.set(j, i, color(c-(range*j),c-(range*j),c));    
-  }
-  c--;
-  range = c/255;
-}
-stroke(255);
-rect(22,22,256,256);
-image(pi,22,22);
 
-PFont font;
-font = loadFont("Arial"); 
-textFont(font, 16);
-fill(255, 255, 255);
-text("Select a color", 22,316);
+void draw() {
+    for (int i = 0; i < pi.width; i++) {
+      for(int j = 0; j < pi.height; j++) {
+        pi.set(j, i, color(c,c-(range*j),c-(range*j)));    
+      }
+      c--;
+      range = c/255;
+    }
+    rect(2,2,100,19);
+    stroke(255);
+    rect(22,22,256,256);
+    image(pi,22,22);
+
+    PFont font;
+    font = loadFont("Arial"); 
+    textFont(font, 16);
+    fill(255, 255, 255);
+    text("Select a color", 22,316);
+    text("FPS: " + int(frameRate), 22,18);
+    
+    range = 1;
+    c = 255;
+}
 
 void mouseClicked() {
   color s = get(mouseX,mouseY);
