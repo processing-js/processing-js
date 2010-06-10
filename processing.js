@@ -8129,7 +8129,7 @@
       // we need to differentiate them somehow. So when we parse
       // the Processing.js source, replace frameRate so it isn't
       // confused with frameRate(), as well as keyPressed and mousePressed
-      s = s.replace(/\b(frameRate|keyPressed|mousePressed)(?!\s*"B)/g, "__$1");
+      s = s.replace(/\b(frameRate|keyPressed|mousePressed)\b(?!\s*"B)/g, "__$1");
       // "pixels" replacements: 
       //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
       //   pixels.length => pixels.getLength()
