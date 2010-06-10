@@ -3,13 +3,10 @@
 # can temporarily remove a test from this list by commenting it out with a leading #
 # and add comments explaining why a test has been added/commented out.
 
-test/parser/Processing-Book-001/Units 00-17/10 Image 1/_05/_05.pde
 test/parser/Fry-Visualizing-Data/ch05-salaryper/step_08b_web/step_08b_web.pde
 test/parser/Fry-Visualizing-Data/ch06-zipdecode/round_09c_focus_handling/round_09c_focus_handling.pde
-test/parser/Fry-Visualizing-Data/ch07-hierarchies/equator_03b/WordMap.pde
 test/parser/Fry-Visualizing-Data/ch07-hierarchies/file_tree_queue_08b/file_tree_queue_08b.pde
 test/parser/Fry-Visualizing-Data/ch07-hierarchies/filetreemap_06b/filetreemap_06b.pde
-test/parser/Fry-Visualizing-Data/ch07-hierarchies/filetreemap_06b/FolderItem.pde
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_06c_variable_size_nodes/step_06c_variable_size_nodes.pde
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_07c_save_pdf/step_07c_save_pdf.pde
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_08c_graphviz/step_08c_graphviz.pde
@@ -45,13 +42,11 @@ test/parser/Processing-Book-001/Illustrations/page_110/page_110.pde
 test/parser/Processing-Book-001/Illustrations/page_126/page_126.pde
 test/parser/Processing-Book-001/Illustrations/page_222/page_222.pde
 test/parser/Processing-Book-001/Illustrations/page_250/page_250.pde
-test/parser/Processing-Book-001/Illustrations/page_278/page_278.pde
 test/parser/Processing-Book-001/Illustrations/page_326/page_326.pde
 test/parser/Processing-Book-001/Illustrations/page_346/page_346.pde
 test/parser/Processing-Book-001/Illustrations/page_xx/page_xx.pde
 test/parser/Processing-Book-001/Synthesis/_03_grids/_05_grids/_05_grids.pde
 test/parser/Processing-Book-001/Synthesis/_13_withoutTitle/_13_withoutTitle.pde
-test/parser/Processing-Book-001/Synthesis/_14_pond/_14_pond.pde
 test/parser/Processing-Book-001/Synthesis/_15_tree/_15_tree.pde
 test/parser/Processing-Book-001/Synthesis/_16_sodaprocessing/_16_sodaprocessing.pde
 test/parser/Processing-Book-001/Units 00-17/01 Structure 1/_04/_04.pde
@@ -68,5 +63,5 @@ test/parser/Processing-Book-001/Units 31-42/40 Image 5/_11/_11.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_07/_07.pde
-# this test fails because the char parser converts singled quoted 1 character strings to Char objects
-test/parser/stringParsing/singleQuotedStrings/3.pde
+test/unit/overloadedMethodCall.pde
+
