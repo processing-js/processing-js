@@ -2196,8 +2196,6 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       }
     };
-
-    p.color = function color(aValue1, aValue2, aValue3, aValue4) {
       function color$4(aValue1, aValue2, aValue3, aValue4) {
         var r, g, b, a, rgb;
 
@@ -2223,6 +2221,8 @@
         // Create color int
         return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
       }
+
+    p.color = function color(aValue1, aValue2, aValue3, aValue4) {
 
       // 4 arguments: (R, G, B, A) or (H, S, B, A)
       if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
