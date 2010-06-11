@@ -7132,158 +7132,163 @@
       }
     };
 
+    function toP5String(obj) {
+      var undef;
+      if(obj instanceof String) {
+        return obj;
+      } else if(typeof obj === 'number') {
+        // check if an int
+        if(obj === (0 | obj)) {
+          return obj.toString();
+        } else {
+          return p.nf(obj, 0, 3);
+        }
+      } else if(obj === null || obj === undef) {
+        return "";
+      } else {
+        return obj.toString();
+      }
+    }
+
     // Print some text to the Canvas
     p.text = function text() {
-      var str = arguments[0], x, y, z, pos, width, height;
-
-      if (typeof str === "string" || typeof str === "number" || str instanceof Char ) {
-        if (typeof str === "number" && (str + "").indexOf('.') >= 0) {
-          str = str.toFixed(3);
+      function text$line(str, x, y, z) {
+        // TODO: handle case for 3d text
+        if (p.use3DContext) {
         }
 
-        str = str.toString(); // convert number or Char to string
-
-        if (arguments.length === 1) { // for text( str )
-          p.text(str, lastTextPos[0], lastTextPos[1]);
-        } else if (arguments.length === 3) { // for text( str, x, y)
-          text(str, arguments[1], arguments[2], 0);
-        } else if (arguments.length === 4) { // for text( str, x, y, z)
-          x = arguments[1];
-          y = arguments[2];
-          z = arguments[3];
-
-          do {
-            pos = str.indexOf("\n");
-            if (pos !== -1) {
-              if (pos !== 0) {
-                text(str.substring(0, pos));
-              }
-              y += curTextSize;
-              str = str.substring(pos + 1, str.length);
-            }
-          } while (pos !== -1);
-
-          // TODO: handle case for 3d text
-          if (p.use3DContext) {
-          }
-
-          width = 0;
-
-          // If the font is a standard Canvas font...
-          if (!curTextFont.glyph) {
-            if (str && (curContext.fillText || curContext.mozDrawText)) {
-              curContext.save();
-              curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-
-              if (curContext.fillText) {
-                curContext.fillText(str, x, y);
-                width = curContext.measureText(str).width;
-              } else if (curContext.mozDrawText) {
-                curContext.translate(x, y);
-                curContext.mozDrawText(str);
-                width = curContext.mozMeasureText(str);
-              }
-              curContext.restore();
-            }
-          } else {
-            // If the font is a Batik SVG font...
-            var font = p.glyphTable[curTextFont.name];
+        // If the font is a standard Canvas font...
+        if (!curTextFont.glyph) {
+          if (str && (curContext.fillText || curContext.mozDrawText)) {
             curContext.save();
-            curContext.translate(x, y + curTextSize);
+            curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
-            var upem = font.units_per_em,
-              newScale = 1 / upem * curTextSize;
-
-            curContext.scale(newScale, newScale);
-
-            var len = str.length;
-
-            for (var i = 0; i < len; i++) {
-              // Test character against glyph table
-              try {
-                p.glyphLook(font, str[i]).draw();
-              } catch(e) {
-                Processing.debug(e);
-              }
+            if (curContext.fillText) {
+              curContext.fillText(str, x, y);
+            } else if (curContext.mozDrawText) {
+              curContext.translate(x, y);
+              curContext.mozDrawText(str);
             }
             curContext.restore();
           }
+        } else {
+          // If the font is a Batik SVG font...
+          var font = p.glyphTable[curTextFont.name];
+          curContext.save();
+          curContext.translate(x, y + curTextSize);
 
-          // TODO: Handle case for 3d text
-          if (p.use3DContext) {
+          var upem = font.units_per_em,
+            newScale = 1 / upem * curTextSize;
+
+          curContext.scale(newScale, newScale);
+
+          for (var i=0, len=str.length; i < len; i++) {
+            // Test character against glyph table
+            try {
+              p.glyphLook(font, str[i]).draw();
+            } catch(e) {
+              Processing.debug(e);
+            }
+          }
+          curContext.restore();
+        }
+
+        // TODO: Handle case for 3d text
+        if (p.use3DContext) {
+        }
+      }
+
+      function text$4(str, x, y, z) {
+        // handle text line-by-line
+        var lines = str.split('\n');
+        for(var il=0, ll=lines.length;il<ll;++il) {
+          text$line(lines[il], x, y + il * curTextSize, z);
+        }
+      }
+
+      function text$6(str, x, y, width, height, z) {
+        if (str.length === 0) { // is empty string
+          return;
+        }
+        if(curTextSize > height) { // is text height larger than box
+          return;
+        }
+
+        var spaceMark = -1;
+        var start = 0;
+        var lineWidth = 0;
+        var textboxWidth = width;
+
+        var baselineOffset = 0.2; // per cent
+        var yOffset = (1-baselineOffset) * curTextSize;
+
+        curContext.font = curTextSize + "px " + curTextFont.name;
+
+        var drawCommands = [];
+        var hadSpaceBefore = false;
+        for (var j=0, len=str.length; j < len; j++) {
+          var currentChar = str[j];
+          var letterWidth;
+
+          if (curContext.fillText) {
+            letterWidth = curContext.measureText(currentChar).width;
+          } else if (curContext.mozDrawText) {
+            letterWidth = curContext.mozMeasureText(currentChar);
           }
 
-          lastTextPos[0] = x + width;
-          lastTextPos[1] = y;
-          lastTextPos[2] = z;
-        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-          text(str, arguments[1], arguments[2], arguments[3], arguments[4], 0);
-        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
-          x = arguments[1];
-          y = arguments[2];
-          width = arguments[3];
-          height = arguments[4];
-          z = arguments[5];
-
-          if (str.length > 0) {
-            if (curTextSize > height) {
-              return;
+          if (currentChar !== "\n" && (currentChar === " " || (hadSpaceBefore && str[j + 1] === " ") ||
+              lineWidth + 2 * letterWidth < textboxWidth)) { // check a line of text
+            if (currentChar === " ") {
+              spaceMark = j;
             }
-            var spaceMark = -1;
-            var start = 0;
-            var lineWidth = 0;
-            var letterWidth = 0;
-            var textboxWidth = width;
-
-            lastTextPos[0] = x;
-            lastTextPos[1] = y - 0.4 * curTextSize;
-
-            curContext.font = curTextSize + "px " + curTextFont.name;
-
-            for (var j = 0; j < str.length; j++) {
-              if (curContext.fillText) {
-                letterWidth = curContext.measureText(str[j]).width;
-              } else if (curContext.mozDrawText) {
-                letterWidth = curContext.mozMeasureText(str[j]);
-              }
-              if (str[j] !== "\n" && (str[j] === " " || (str[j - 1] !== " " && str[j + 1] === " ") || lineWidth + 2 * letterWidth < textboxWidth)) { // check a line of text
-                if (str[j] === " ") {
-                  spaceMark = j;
-                }
-                lineWidth += letterWidth;
-              } else { // draw a line of text
-                if (start === spaceMark + 1) { // in case a whole line without a space
-                  spaceMark = j;
-                }
-
-                lastTextPos[0] = x;
-                lastTextPos[1] = lastTextPos[1] + curTextSize;
-                if (str[j] === "\n") {
-                  text(str.substring(start, j));
-                  start = j + 1;
-                } else {
-                  text(str.substring(start, spaceMark + 1));
-                  start = spaceMark + 1;
-                }
-
-                lineWidth = 0;
-                if (lastTextPos[1] + 2 * curTextSize > y + height + 0.6 * curTextSize) { // stop if no enough space for one more line draw
-                  return;
-                }
-                j = start - 1;
-              }
+            lineWidth += letterWidth;
+          } else { // draw a line of text
+            if (start === spaceMark + 1) { // in case a whole line without a space
+              spaceMark = j;
             }
 
-            if (start !== str.length) { // draw the last line
-              lastTextPos[0] = x;
-              lastTextPos[1] = lastTextPos[1] + curTextSize;
-              for (; start < str.length; start++) {
-                text(str[start]);
-              }
+            if (str[j] === "\n") {
+              drawCommands.push({text:str.substring(start, j), width: lineWidth, offset: yOffset});
+//              text$4(str.substring(start, j), x, y + yOffset, z);
+              start = j + 1;
+            } else {
+              drawCommands.push({text:str.substring(start, spaceMark + 1), width: lineWidth, offset: yOffset});
+//              text$4(str.substring(start, spaceMark + 1), x, y + yOffset, z);
+              start = spaceMark + 1;
             }
+            yOffset += curTextSize;
 
-          } // end str != ""
-        } // end arguments.length == 6
+            lineWidth = 0;
+            j = start - 1;
+          }
+          hadSpaceBefore = currentChar === " ";
+        } // for (var j=
+
+        if (start < len) { // draw the last line
+          drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
+          yOffset += curTextSize;
+        }
+
+        // TODO box alignment
+
+        // actual draw
+        for(var il=0,ll=drawCommands.length; il<ll; ++il) {
+          var command = drawCommands[il];
+          if(command.offset + curTextSize > height + baselineOffset * curTextSize) {            
+            break; // stop if no enough space for one more line draw
+          }
+          text$line(command.text, x, y + command.offset, z);
+        }
+      }
+
+      if (arguments.length === 3) { // for text( str, x, y)
+        text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
+      } else if (arguments.length === 4) { // for text( str, x, y, z)
+        text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
+      } else if (arguments.length === 5) { // for text( str, x, y , width, height)
+        text$6(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], 0);
+      } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+        text$6(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
       }
     };
 
