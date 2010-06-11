@@ -2198,10 +2198,9 @@
     };
 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
-      var r, g, b, a, rgb, aColor;
+      function color$4(aValue1, aValue2, aValue3, aValue4) {
+        var r, g, b, a, rgb;
 
-      // 4 arguments: (R, G, B, A) or (H, S, B, A)
-      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
         if (curColorMode === p.HSB) {
           rgb = p.color.toRGB(aValue1, aValue2, aValue3);
           r = rgb[0];
@@ -2222,12 +2221,17 @@
         a = (a > 255) ? 255 : a;
 
         // Create color int
-        aColor = (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+        return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+      }
+
+      // 4 arguments: (R, G, B, A) or (H, S, B, A)
+      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
+        return color$4(aValue1, aValue2, aValue3, aValue4);
       }
 
       // 3 arguments: (R, G, B) or (H, S, B)
       else if (aValue1 != null && aValue2 != null && aValue3 != null) {
-        aColor = p.color(aValue1, aValue2, aValue3, colorModeA);
+        return color$4(aValue1, aValue2, aValue3, colorModeA);
       }
 
       // 2 arguments: (Color, A) or (Grayscale, A)
@@ -2237,13 +2241,13 @@
           a = Math.round(255 * (aValue2 / colorModeA));
           a = (a > 255) ? 255 : a;
 
-          aColor = aValue1 - (aValue1 & p.ALPHA_MASK) + ((a << 24) & p.ALPHA_MASK);
+          return aValue1 - (aValue1 & p.ALPHA_MASK) + ((a << 24) & p.ALPHA_MASK);
         }
         // Grayscale and alpha
         else {
           switch(curColorMode) {
-            case p.RGB: aColor = p.color(aValue1, aValue1, aValue1, aValue2); break;
-            case p.HSB: aColor = p.color(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2); break;
+            case p.RGB: return color$4(aValue1, aValue1, aValue1, aValue2);
+            case p.HSB: return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
           }
         }
       }
@@ -2253,22 +2257,20 @@
         // Grayscale
         if (aValue1 <= colorModeX && aValue1 >= 0) {
           switch(curColorMode) {
-            case p.RGB: aColor = p.color(aValue1, aValue1, aValue1, colorModeA); break;
-            case p.HSB: aColor = p.color(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA); break;
+            case p.RGB: return color$4(aValue1, aValue1, aValue1, colorModeA);
+            case p.HSB: return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA);
           }
         }
         // Color int
         else if (aValue1) {
-          aColor = aValue1;
+          return aValue1;
         }
       }
 
       // Default
       else {
-        aColor = p.color(colorModeX, colorModeY, colorModeZ, colorModeA);
+        return color$4(colorModeX, colorModeY, colorModeZ, colorModeA);
       }
-
-      return aColor;
     };
 
     // Ease of use function to extract the colour bits into a string
