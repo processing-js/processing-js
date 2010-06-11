@@ -7151,144 +7151,146 @@
     }
 
     // Print some text to the Canvas
-    p.text = function text() {
-      function text$line(str, x, y, z) {
-        // TODO: handle case for 3d text
-        if (p.use3DContext) {
-        }
+    function text$line(str, x, y, z) {
+      // TODO: handle case for 3d text
+      if (p.use3DContext) {
+      }
 
-        // If the font is a standard Canvas font...
-        if (!curTextFont.glyph) {
-          if (str && (curContext.fillText || curContext.mozDrawText)) {
-            curContext.save();
-            curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-
-            if (curContext.fillText) {
-              curContext.fillText(str, x, y);
-            } else if (curContext.mozDrawText) {
-              curContext.translate(x, y);
-              curContext.mozDrawText(str);
-            }
-            curContext.restore();
-          }
-        } else {
-          // If the font is a Batik SVG font...
-          var font = p.glyphTable[curTextFont.name];
+      // If the font is a standard Canvas font...
+      if (!curTextFont.glyph) {
+        if (str && (curContext.fillText || curContext.mozDrawText)) {
           curContext.save();
-          curContext.translate(x, y + curTextSize);
+          curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
-          var upem = font.units_per_em,
-            newScale = 1 / upem * curTextSize;
-
-          curContext.scale(newScale, newScale);
-
-          for (var i=0, len=str.length; i < len; i++) {
-            // Test character against glyph table
-            try {
-              p.glyphLook(font, str[i]).draw();
-            } catch(e) {
-              Processing.debug(e);
-            }
+          if (curContext.fillText) {
+            curContext.fillText(str, x, y);
+          } else if (curContext.mozDrawText) {
+            curContext.translate(x, y);
+            curContext.mozDrawText(str);
           }
           curContext.restore();
         }
+      } else {
+        // If the font is a Batik SVG font...
+        var font = p.glyphTable[curTextFont.name];
+        curContext.save();
+        curContext.translate(x, y + curTextSize);
 
-        // TODO: Handle case for 3d text
-        if (p.use3DContext) {
+        var upem   = font.units_per_em,
+          newScale = 1 / upem * curTextSize;
+
+        curContext.scale(newScale, newScale);
+
+        for (var i=0, len=str.length; i < len; i++) {
+          // Test character against glyph table
+          try {
+            p.glyphLook(font, str[i]).draw();
+          } catch(e) {
+            Processing.debug(e);
+          }
         }
+        curContext.restore();
       }
 
-      function text$4(str, x, y, z) {
+      // TODO: Handle case for 3d text
+      if (p.use3DContext) {
+      }
+    }
+
+    function text$4(str, x, y, z) {
+      if(str.indexOf('\n') < 0) {
+        text$line(str, x, y, z);
+      } else {
         // handle text line-by-line
         var lines = str.split('\n');
         for(var il=0, ll=lines.length;il<ll;++il) {
           text$line(lines[il], x, y + il * curTextSize, z);
         }
       }
+    }
 
-      function text$6(str, x, y, width, height, z) {
-        if (str.length === 0) { // is empty string
-          return;
-        }
-        if(curTextSize > height) { // is text height larger than box
-          return;
-        }
-
-        var spaceMark = -1;
-        var start = 0;
-        var lineWidth = 0;
-        var textboxWidth = width;
-
-        var baselineOffset = 0.2; // per cent
-        var yOffset = (1-baselineOffset) * curTextSize;
-
-        curContext.font = curTextSize + "px " + curTextFont.name;
-
-        var drawCommands = [];
-        var hadSpaceBefore = false;
-        for (var j=0, len=str.length; j < len; j++) {
-          var currentChar = str[j];
-          var letterWidth;
-
-          if (curContext.fillText) {
-            letterWidth = curContext.measureText(currentChar).width;
-          } else if (curContext.mozDrawText) {
-            letterWidth = curContext.mozMeasureText(currentChar);
-          }
-
-          if (currentChar !== "\n" && (currentChar === " " || (hadSpaceBefore && str[j + 1] === " ") ||
-              lineWidth + 2 * letterWidth < textboxWidth)) { // check a line of text
-            if (currentChar === " ") {
-              spaceMark = j;
-            }
-            lineWidth += letterWidth;
-          } else { // draw a line of text
-            if (start === spaceMark + 1) { // in case a whole line without a space
-              spaceMark = j;
-            }
-
-            if (str[j] === "\n") {
-              drawCommands.push({text:str.substring(start, j), width: lineWidth, offset: yOffset});
-//              text$4(str.substring(start, j), x, y + yOffset, z);
-              start = j + 1;
-            } else {
-              drawCommands.push({text:str.substring(start, spaceMark + 1), width: lineWidth, offset: yOffset});
-//              text$4(str.substring(start, spaceMark + 1), x, y + yOffset, z);
-              start = spaceMark + 1;
-            }
-            yOffset += curTextSize;
-
-            lineWidth = 0;
-            j = start - 1;
-          }
-          hadSpaceBefore = currentChar === " ";
-        } // for (var j=
-
-        if (start < len) { // draw the last line
-          drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
-          yOffset += curTextSize;
-        }
-
-        // TODO box alignment
-
-        // actual draw
-        for(var il=0,ll=drawCommands.length; il<ll; ++il) {
-          var command = drawCommands[il];
-          if(command.offset + curTextSize > height + baselineOffset * curTextSize) {            
-            break; // stop if no enough space for one more line draw
-          }
-          text$line(command.text, x, y + command.offset, z);
-        }
+    function text$6(str, x, y, width, height, z) {
+      if (str.length === 0) { // is empty string
+        return;
+      }
+      if(curTextSize > height) { // is text height larger than box
+        return;
       }
 
+      var spaceMark = -1;
+      var start = 0;
+      var lineWidth = 0;
+      var textboxWidth = width;
+
+      var baselineOffset = 0.2; // per cent
+      var yOffset = (1-baselineOffset) * curTextSize;
+
+      curContext.font = curTextSize + "px " + curTextFont.name;
+
+      var drawCommands = [];
+      var hadSpaceBefore = false;
+      for (var j=0, len=str.length; j < len; j++) {
+        var currentChar = str[j];
+        var letterWidth;
+
+        if (curContext.fillText) {
+          letterWidth = curContext.measureText(currentChar).width;
+        } else if (curContext.mozDrawText) {
+          letterWidth = curContext.mozMeasureText(currentChar);
+        }
+
+        if (currentChar !== "\n" && (currentChar === " " || (hadSpaceBefore && str[j + 1] === " ") ||
+            lineWidth + 2 * letterWidth < textboxWidth)) { // check a line of text
+          if (currentChar === " ") {
+            spaceMark = j;
+          }
+          lineWidth += letterWidth;
+        } else { // draw a line of text
+          if (start === spaceMark + 1) { // in case a whole line without a space
+            spaceMark = j;
+          }
+
+          if (str[j] === "\n") {
+            drawCommands.push({text:str.substring(start, j), width: lineWidth, offset: yOffset});
+            start = j + 1;
+          } else {
+            drawCommands.push({text:str.substring(start, spaceMark + 1), width: lineWidth, offset: yOffset});
+            start = spaceMark + 1;
+          }
+          yOffset += curTextSize;
+
+          lineWidth = 0;
+          j = start - 1;
+        }
+        hadSpaceBefore = currentChar === " ";
+      } // for (var j=
+
+      if (start < len) { // draw the last line
+        drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
+        yOffset += curTextSize;
+      }
+
+      // TODO box alignment
+
+      // actual draw
+      for(var il=0,ll=drawCommands.length; il<ll; ++il) {
+        var command = drawCommands[il];
+        if(command.offset + curTextSize > height + baselineOffset * curTextSize) {            
+          break; // stop if no enough space for one more line draw
+        }
+        text$line(command.text, x, y + command.offset, z);
+      }
+    }
+
+    p.text = function text() {
       if (arguments.length === 3) { // for text( str, x, y)
         text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
       } else if (arguments.length === 4) { // for text( str, x, y, z)
         text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
       } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-        text$6(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], 0);
+        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
       } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
-        text$6(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
       }
     };
 
