@@ -6475,32 +6475,39 @@
       setPixelsCached = 0;
     }
 
+    function set$4(x, y, obj, img) {
+      // changed in 0.9
+      var c = p.color.toArray(obj);
+      var offset = y * img.width * 4 + (x*4);
+      var data = img.imageData.data;
+      data[offset] = c[0];
+      data[offset+1] = c[1];
+      data[offset+2] = c[2];
+      data[offset+3] = c[3];
+    }
+    function set$3(x, y, c) {
+      if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
+        replaceContext();
+        p.pixels.setPixel((0|x)+p.width*(0|y), c);
+        if(setPixelsCached > maxPixelsCached) {
+          resetContext();
+        }
+      }
+    }
     // Paints a pixel array into the canvas
     p.set = function set(x, y, obj, img) {
       var color, oldFill;
-      // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
-      if (arguments.length === 4) {
-        // changed in 0.9
-        var c = p.color.toArray(obj);
-        var offset = y * img.width * 4 + (x*4);
-        img.imageData.data[offset] = c[0];
-        img.imageData.data[offset+1] = c[1];
-        img.imageData.data[offset+2] = c[2];
-        img.imageData.data[offset+3] = c[3];
-      } else if (arguments.length === 3) {
+      if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number") {
-          if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
-            replaceContext();
-            p.pixels.setPixel((0|x)+p.width*(0|y), obj);
-            if(setPixelsCached > maxPixelsCached) {
-              resetContext();
-            }
-          }
+          set$3(x, y, obj);
         } else if (obj instanceof PImage) {
           p.image(obj, x, y);
         }
-      }
+      } else if (arguments.length === 4) {
+        // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
+        set$4(x, y, obj, img);
+      } 
     };
     p.imageData = {};
 
