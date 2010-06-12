@@ -6369,18 +6369,14 @@
       getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
       getPixel: function(i) {
         var offset = i*4;
-        return p.color.toInt(p.imageData.data[offset], p.imageData.data[offset+1],
-                             p.imageData.data[offset+2], p.imageData.data[offset+3]);
+        return (p.imageData.data[offset+3] << 24) & 0xff000000 | (p.imageData.data[offset+0] << 16) & 0x00ff0000 | (p.imageData.data[offset+1] << 8) & 0x0000ff00 | p.imageData.data[offset+2] & 0x000000ff;
       },
       setPixel: function(i,c) {
-        if(c && typeof c === "number") {
           var offset = i*4;
-          // change pixel to c
-          p.imageData.data[offset+0] = c & p.RED_MASK >>> 16;
-          p.imageData.data[offset+1] = c & p.GREEN_MASK >>> 8;
-          p.imageData.data[offset+2] = c & p.BLUE_MASK;
-          p.imageData.data[offset+3] = c & p.ALPHA_MASK >>> 24;
-        }
+          p.imageData.data[offset+0] = (c & 0x00ff0000) >>> 16;
+          p.imageData.data[offset+1] = (c & 0x0000ff00) >>> 8;
+          p.imageData.data[offset+2] = (c & 0x000000ff);
+          p.imageData.data[offset+3] = (c & 0xff000000) >>> 24;
       },
       set: function(arr) {
         for (var i = 0, aL = arr.Length; i < aL; i++) {
