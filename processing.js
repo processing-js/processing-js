@@ -6032,7 +6032,28 @@
     // TODO: function incomplete
     p.save = function save(file) {};
 
-    var Temporary2DContext = document.createElement('canvas').getContext('2d');
+    var canvasDataCache = [undefined, undefined, undefined]; // we need three for now
+    function getCanvasData(obj, w, h) {
+      var canvasData = canvasDataCache.shift();
+      if(canvasData === undefined) {
+        canvasData = {};
+        canvasData.canvas = document.createElement("canvas");
+        canvasData.context = canvasData.canvas.getContext('2d');
+      }
+      canvasDataCache.push(canvasData);
+      var canvas = canvasData.canvas, context = canvasData.context,
+        width = w || obj.width, height = h || obj.height;
+      canvas.width = width; canvas.height = height;
+      if(!obj) {
+        context.clearRect(0, 0, width, height);
+      } else if("data" in obj) { // ImageData
+        context.putImageData(obj, 0, 0);
+      } else {
+        context.clearRect(0, 0, width, height);
+        context.drawImage(obj, 0, 0, width, height);
+      }
+      return canvasData;
+    }
 
     var PImage = function PImage(aWidth, aHeight, aFormat) {
       this.get = function(x, y, w, h) {
@@ -6074,18 +6095,9 @@
             h = w / (this.width / this.height);
           }
           // put 'this.imageData' into a new canvas
-          var canvas = document.createElement('canvas');
-          canvas.width = this.width;
-          canvas.height = this.height;
-          // changed for 0.9 slightly this one line
-          canvas.getContext('2d').putImageData(this.imageData, 0, 0);
-          // pass new canvas to drawimage with w,h
-          var canvasResized = document.createElement('canvas');
-          canvasResized.width = w;
-          canvasResized.height = h;
-          canvasResized.getContext('2d').drawImage(canvas, 0, 0, w, h);
+          var canvas = getCanvasData(this.imageData).canvas;
           // pull imageData object out of canvas into ImageData object
-          var imageData = canvasResized.getContext('2d').getImageData(0, 0, w, h);
+          var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
           // set this as new pimage
           this.fromImageData(imageData);
         }
@@ -6156,23 +6168,13 @@
 
       this.toImageData = function() {
         // changed for 0.9
-        var canvas = document.createElement('canvas');
-        canvas.height = this.height;
-        canvas.width = this.width;
-        var ctx = canvas.getContext('2d');
-        ctx.putImageData(this.imageData, 0, 0);
-        return ctx.getImageData(0, 0, this.width, this.height);
+        var canvasData = getCanvasData(this.imageData);
+        return canvasData.context.getImageData(0, 0, this.width, this.height);
       };
 
       this.toDataURL = function() {
-        var canvas = document.createElement('canvas');
-        canvas.height = this.height;
-        canvas.width = this.width;
-        var ctx = canvas.getContext('2d');
-        var imgData = ctx.createImageData(this.width, this.height);
-        // changed for 0.9
-        ctx.putImageData(this.imageData, 0, 0);
-        return canvas.toDataURL();
+        var canvasData = getCanvasData(this.imageData);
+        return canvasData.canvas.toDataURL();
       };
 
       this.fromImageData = function(canvasImg) {
@@ -6186,12 +6188,8 @@
 
       this.fromHTMLImageData = function(htmlImg) {
         // convert an <img> to a PImage
-        var canvas = document.createElement("canvas");
-        canvas.width = htmlImg.width;
-        canvas.height = htmlImg.height;
-        var context = canvas.getContext("2d");
-        context.drawImage(htmlImg, 0, 0);
-        var imageData = context.getImageData(0, 0, htmlImg.width, htmlImg.height);
+        var canvasData = getCanvasData(htmlImg);
+        var imageData = canvasData.context.getImageData(0, 0, htmlImg.width, htmlImg.height);
         this.fromImageData(imageData);
       };
 
@@ -6469,16 +6467,10 @@
         }
 
         // draw the image
-        //curContext.putImageData(obj, x, y); // this causes error if data overflows the canvas dimensions
         curTint(obj);
 
-        var c = document.createElement('canvas');
-        c.width = obj.width;
-        c.height = obj.height;
-        var ctx = c.getContext('2d');
-        ctx.putImageData(obj, 0, 0);
-
-        curContext.drawImage(c, 0, 0, img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
+        curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height, 
+          bounds.x, bounds.y, bounds.w, bounds.h);
       }
     };
 
