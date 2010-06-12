@@ -147,13 +147,10 @@ void drawMagnets()
          case 3: textFont(courier, 25);break;
          case 4: textFont(comic, 20);break;
         }
-        rect((int)coordsX.get(i), (int)coordsY.get(i),
-           textWidth((String)strings.get(i)),
-           MAGNET_HEIGHT);
+        rect((int)coordsX.get(i), (int)coordsY.get(i), textWidth((String)strings.get(i)), MAGNET_HEIGHT);
         fill(0);
         
-        text((String)strings.get(i), (int)coordsX.get(i),
-                                  (int)coordsY.get(i)+15);
+        text((String)strings.get(i), (int)coordsX.get(i), (int)coordsY.get(i)+15);
       }
     }
     
@@ -173,20 +170,17 @@ void drawMagnets()
       // shadow
       noStroke();
       fill(0,0,0,150);      
-      rect(mouseX-clickedOffsetX, mouseY-clickedOffsetY,
-          textWidth((String)strings.get(i)),MAGNET_HEIGHT);
+      rect(mouseX-clickedOffsetX, mouseY-clickedOffsetY, textWidth((String)strings.get(i)),MAGNET_HEIGHT);
       
       strokeWeight(2);
       stroke(0);
       fill(255,255,255);
       
-      rect(mouseX-clickedOffsetX-5,mouseY-clickedOffsetY-5, 
-          textWidth((String)strings.get(i)),MAGNET_HEIGHT);
+      rect(mouseX-clickedOffsetX-5,mouseY-clickedOffsetY-5, textWidth((String)strings.get(i)),MAGNET_HEIGHT);
       
       fill(0);
                 
-      text((String)strings.get(i), mouseX-clickedOffsetX-5,
-           mouseY-clickedOffsetY+10);
+      text((String)strings.get(i), mouseX-clickedOffsetX-5, mouseY-clickedOffsetY+10);
     }
 }
 
@@ -221,10 +215,8 @@ void draw()
     {
       if( mx > coordsX.get(i) &&
           mx < coordsX.get(i) + textWidth((String)strings.get(i)) &&
-
           my >= coordsY.get(i) && 
-          my <= coordsY.get(i) + 20 )
-      {
+          my <= coordsY.get(i) + 20 ){
         // keep overwriting the value
         isHoldingMagnet = i;
 
