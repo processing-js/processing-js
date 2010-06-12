@@ -2196,31 +2196,65 @@
         return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) | (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) | (p.peg(ab + (((cb - ab) * f) >> 8))));
       }
     };
-      function color$4(aValue1, aValue2, aValue3, aValue4) {
-        var r, g, b, a, rgb;
 
-        if (curColorMode === p.HSB) {
-          rgb = p.color.toRGB(aValue1, aValue2, aValue3);
-          r = rgb[0];
-          g = rgb[1];
-          b = rgb[2];
-        } else {
-          r = Math.round(255 * (aValue1 / colorModeX));
-          g = Math.round(255 * (aValue2 / colorModeY));
-          b = Math.round(255 * (aValue3 / colorModeZ));
-        }
+    function color$4(aValue1, aValue2, aValue3, aValue4) {
+      var r, g, b, a, rgb;
 
-        a = Math.round(255 * (aValue4 / colorModeA));
+      if (curColorMode === p.HSB) {
+        rgb = p.color.toRGB(aValue1, aValue2, aValue3);
+        r = rgb[0];
+        g = rgb[1];
+        b = rgb[2];
+      } else {
+        r = Math.round(255 * (aValue1 / colorModeX));
+        g = Math.round(255 * (aValue2 / colorModeY));
+        b = Math.round(255 * (aValue3 / colorModeZ));
+      }
 
-        // Limit values greater than 255
-        r = (r > 255) ? 255 : r;
-        g = (g > 255) ? 255 : g;
-        b = (b > 255) ? 255 : b;
+      a = Math.round(255 * (aValue4 / colorModeA));
+
+      // Limit values greater than 255
+      r = (r > 255) ? 255 : r;
+      g = (g > 255) ? 255 : g;
+      b = (b > 255) ? 255 : b;
+      a = (a > 255) ? 255 : a;
+
+      // Create color int
+      return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+    }
+
+    function color$2(aValue1, aValue2) {
+      // Color int and alpha
+      if (aValue1 & p.ALPHA_MASK) {
+        a = Math.round(255 * (aValue2 / colorModeA));
         a = (a > 255) ? 255 : a;
 
-        // Create color int
-        return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+        return aValue1 - (aValue1 & p.ALPHA_MASK) + ((a << 24) & p.ALPHA_MASK);
       }
+      // Grayscale and alpha
+      else {
+        if (curColorMode === p.RGB) {
+          return color$4(aValue1, aValue1, aValue1, aValue2);
+        } else if (curColorMode === p.HSB) {
+          return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
+        }
+      }
+    }
+
+    function color$1(aValue1) {
+      // Grayscale
+      if (aValue1 <= colorModeX && aValue1 >= 0) {
+          if (curColorMode === p.RGB) {
+            return color$4(aValue1, aValue1, aValue1, colorModeA);
+          } else if (curColorMode == p.HSB) {
+            return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA);
+          }
+      }
+      // Color int
+      else if (aValue1) {
+        return aValue1;
+      }
+    }
 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
 
@@ -2236,35 +2270,12 @@
 
       // 2 arguments: (Color, A) or (Grayscale, A)
       else if (aValue1 != null && aValue2 != null) {
-        // Color int and alpha
-        if (aValue1 & p.ALPHA_MASK) {
-          a = Math.round(255 * (aValue2 / colorModeA));
-          a = (a > 255) ? 255 : a;
-
-          return aValue1 - (aValue1 & p.ALPHA_MASK) + ((a << 24) & p.ALPHA_MASK);
-        }
-        // Grayscale and alpha
-        else {
-          switch(curColorMode) {
-            case p.RGB: return color$4(aValue1, aValue1, aValue1, aValue2);
-            case p.HSB: return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
-          }
-        }
+        return color$2(aValue1, aValue2);
       }
 
       // 1 argument: (Grayscale) or (Color)
       else if (typeof aValue1 === "number") {
-        // Grayscale
-        if (aValue1 <= colorModeX && aValue1 >= 0) {
-          switch(curColorMode) {
-            case p.RGB: return color$4(aValue1, aValue1, aValue1, colorModeA);
-            case p.HSB: return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA);
-          }
-        }
-        // Color int
-        else if (aValue1) {
-          return aValue1;
-        }
+        return color$1(aValue1);
       }
 
       // Default
@@ -6364,13 +6375,11 @@
       setPixel: function(i,c) {
         if(c && typeof c === "number") {
           var offset = i*4;
-          // split c into array
-          var c2 = p.color.toArray(c);
           // change pixel to c
-          p.imageData.data[offset] = c2[0];
-          p.imageData.data[offset+1] = c2[1];
-          p.imageData.data[offset+2] = c2[2];
-          p.imageData.data[offset+3] = c2[3];
+          p.imageData.data[offset+0] = c & p.RED_MASK >>> 16;
+          p.imageData.data[offset+1] = c & p.GREEN_MASK >>> 8;
+          p.imageData.data[offset+2] = c & p.BLUE_MASK;
+          p.imageData.data[offset+3] = c & p.ALPHA_MASK >>> 24;
         }
       },
       set: function(arr) {
@@ -7856,7 +7865,7 @@
   "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hour","HSB","hue","image","imageMode",
   "Import","int","intersect","JAVA2D","join","key","keyPressed","keyReleased","LEFT","lerp",
   "lerpColor","LIGHTEST","lightFalloff","lights","lightSpecular","line","LINES","link","loadBytes",
-  "loadFont","loadGlyphs","loadImage","loadPixels","loadStrings","log","loop","mag","map","match",
+  "loadFont","loadGlyphs","loadImage","loadPixels","imageData", "loadStrings","log","loop","mag","map","match",
   "matchAll","max","MAX_FLOAT","MAX_INT","MAX_LIGHTS","millis","min","MIN_FLOAT","MIN_INT","minute",
   "MITER","mix","modelX","modelY","modelZ","modes","month","mouseButton","mouseClicked","mouseDown",
   "mouseDragged","mouseMoved","mousePressed","mouseReleased","mouseScroll","mouseScrolled","mouseX",
