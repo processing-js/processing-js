@@ -12,6 +12,7 @@ var canvas = {
   addEventListener: __empty_func__,
   appendChild: __elem_func__,
   removeChild: __empty_func__,
+  toDataURL: __empty_func__,
   getContext:  function() {
                  return {
                    translate: __empty_func__,
@@ -118,6 +119,7 @@ var window = {
   removeChild: __empty_func__,
   setInterval: __empty_func__,
   XMLHttpRequest: __empty_func__,
+  open: __empty_func__,
   print: print,
   document: document,
   createElement: function() { return elem; },
@@ -138,6 +140,7 @@ Table.prototype.getTableMax = __empty_func__;
 var FloatTable = __empty_func__;
 FloatTable.prototype.getRowCount = __empty_func__;
 FloatTable.prototype.getColumnCount = __empty_func__;
+FloatTable.prototype.getColumnName = function() { return "name"; };
 FloatTable.prototype.getRowNames = function() { return ["2004","2005", "2006", "2007", "2008", "2009", "2010"]; };
 FloatTable.prototype.getTableMax = function() { return 4; };
 
@@ -174,3 +177,4 @@ var SpinSpots = __empty_func__;
 
 var SearchClient = __empty_func__;
 var WebSearchRequest = __empty_func__;
+

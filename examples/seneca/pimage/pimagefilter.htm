@@ -1,0 +1,55 @@
+﻿<script src="../../../processing.js"></script>
+<canvas style="margin-top: 30px; margin-left:10px;" datasrc="pimagefilter.pjs" width="200" height="200"></canvas>
+<div style="float:left;"><img src="filter.jpg" /></div>
+<pre>
+/* @pjs preload="ref_string.jpg"; */
+size(320,320);
+
+PImage a;
+a = loadImage("ref_string.jpg");
+a.filter(THRESHOLD);
+image(a, 0, 0);
+
+PImage b;
+b = loadImage("ref_string.jpg");
+b.filter(GRAY);
+image(b, 110, 0);
+
+PImage c;
+c = loadImage("ref_string.jpg");
+c.filter(INVERT);
+image(c, 220, 0);
+
+PImage d;
+d = loadImage("ref_string.jpg");
+d.filter(POSTERIZE, 4);
+image(d, 0, 110);
+
+PImage e;
+e = loadImage("ref_string.jpg");
+e.filter(DILATE);
+image(e, 110, 110);
+
+PImage f;
+f = loadImage("ref_string.jpg");
+f.filter(ERODE);
+image(f, 220, 110);
+
+PImage g;
+g = loadImage("ref_string.jpg");
+g.filter(OPAQUE);
+image(g, 0, 220);
+
+PImage h;
+h = loadImage("ref_string.jpg");
+h.filter(GRAY);
+h.filter(POSTERIZE, 6);
+image(h, 110, 220);
+
+PImage i;
+i = loadImage("ref_string.jpg");
+i.filter(BLUR, 3);
+image(i, 220, 220);
+
+println(millis());
+</pre>

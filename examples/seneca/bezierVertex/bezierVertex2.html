@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Processing.js test of bezierVertex()</title>
+    <script type="text/javascript" src="../../../processing.js"></script>
+   
+</head>
+<body>
+    <h1>
+		<!-- name of your function and test description -->
+		bezier()
+    </h1>
+    
+    <p>
+         	Draws a Bezier curve on the screen. 
+	</p>
+
+    <!-- include your processing file below -->
+    <canvas datasrc="bezierVertex1.pjs"></canvas>
+    <img src="bezierVertex_.gif" valign="top" />
+    <canvas datasrc="bezierVertex2.pjs"></canvas>
+    <img src="bezierVertex_2.gif" valign="top" />
+     <br />
+   
+    <h1>
+        Source Code:</h1>
+    <pre>
+background(125);
+noFill();
+beginShape();
+vertex(30, 20);
+bezierVertex(80, 0, 80, 75, 30, 75);
+endShape();
+
+background(125);
+beginShape();
+vertex(30, 20);
+bezierVertex(80, 0, 80, 75, 30, 75);
+bezierVertex(50, 80, 60, 25, 30, 20);
+endShape();
+        </pre>
+    <br />
+</body>
+</html>

@@ -1,0 +1,18 @@
+size(150,150,P3D);
+background(128);
+fill(255);
+
+beginShape();
+  curveVertex(5,26,0);
+  curveVertex(5,26,0);
+  curveVertex(73,24,0);
+  curveVertex(73,61,0);
+endShape();
+
+beginShape();
+  curveVertex(5,26,0);
+  curveVertex(73,24,0);
+  curveVertex(73,61,0);
+  curveVertex(73,61,0);
+  curveVertex(15,65,0);
+endShape();
