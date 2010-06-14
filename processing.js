@@ -5186,39 +5186,6 @@
         }
       }
 
-      //0, 1, 2
-      //X, Y, Z coordinates
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 0; j < 3; j++){
-          fillVertArray.push(vertArray[i][j]);
-        }
-      }
-      for(i = 0; i < 3; i++){
-        fillVertArray.push(vertArray[0][i]);
-      }
-
-      // 5,6,7,8
-      // R,G,B,A color
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 5; j < 9; j++){
-          colorVertArray.push(vertArray[i][j]);
-        }
-      }
-      for(i = 5; i < 9; i++){
-        colorVertArray.push(vertArray[0][i]);
-      }
-      
-      // 9,10,11,12
-      // R, G, B, A stroke
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 9; j < 13; j++){
-          strokeVertArray.push(vertArray[i][j]);
-        }
-      }
-      for(i = 9; i < 13; i++){
-        strokeVertArray.push(vertArray[0][i]);
-      }
-
       if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
 
         if(p.use3DContext){
@@ -8003,7 +7970,7 @@
     var names =
   ["abs","acos","ADD","alpha","ALPHA","ALT","ambient","ambientLight","append","applyMatrix","arc",
   "ARGB","arrayCopy","ArrayList","ARROW","asin","atan","atan2","background","BACKSPACE","beginCamera",
-  "beginDraw","beginShape","BEVEL","bezier","bezierPoint","bezierTangent","bezierVertex","binary",
+  "beginDraw","beginShape","BEVEL","bezier","bezierDetail","bezierPoint","bezierTangent","bezierVertex","binary",
   "blend","BLEND","blendColor","blue","BLUE_MASK","boolean","box","brightness","BURN","byte","camera","ceil",
   "CENTER","CENTER_RADIUS","char","clear","CLOSE","CMYK","CODED","color","colorMode","concat",
   "console","constrain","CONTROL","copy","CORNER","CORNERS","cos","createFont","createGraphics",
@@ -8020,7 +7987,7 @@
   "matchAll","max","MAX_FLOAT","MAX_INT","MAX_LIGHTS","millis","min","MIN_FLOAT","MIN_INT","minute",
   "MITER","mix","modelX","modelY","modelZ","modes","month","mouseButton","mouseClicked","mouseDown",
   "mouseDragged","mouseMoved","mousePressed","mouseReleased","mouseScroll","mouseScrolled","mouseX",
-  "mouseY","MOVE","MULTIPLY","nf","nfc","nfp","nfs","noCursor","NOCURSOR","noFill","noise","noiseSeed",
+  "mouseY","MOVE","MULTIPLY","nf","nfc","nfp","nfs","noCursor","NOCURSOR","noFill","noise","noiseDetail","noiseSeed",
   "noLights","noLoop","norm","normal","NORMAL_MODE_AUTO","NORMAL_MODE_SHAPE","NORMAL_MODE_VERTEX",
   "noSmooth","noStroke","noTint","OPENGL","OVERLAY","P3D","peg","perspective","PI","PImage","pixels",
   "pmouseX","pmouseY","point","Point","pointLight","POINTS","POLYGON","popMatrix","popStyle",
