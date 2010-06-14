@@ -13,6 +13,8 @@ class ProcessingTests(object):
   testsPassed = 0
   testsFailed = 0
   testsFailedKnown = 0
+  linesCalled = set()
+  codeLines = set()
 
   def __init__(self):
       self.knownFailures = set()
@@ -123,7 +125,7 @@ class ProcessingTests(object):
                             print "KNOWN-FAILURE: " + fullpath
                           else:
                             print "TEST-FAILED: " + fullpath
-                            print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
+                            print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)(\nLINES-CALLED: ([\d,]+))?\n?", "", stdout)
                             print stderr
                       else:
                         if summaryOnly:
@@ -150,6 +152,10 @@ class ProcessingTests(object):
                       else:
                         print "TEST-FAILED: " + fullpath + ". Test died:"
                         print stdout
+                    m2 = re.search('^LINES-CALLED: ([\d,]+)', stdout, re.MULTILINE)
+                    if m2 and m2.group:
+                      for ln in m2.group(1).split(','):
+                        self.linesCalled.add(int(ln))
 
                   jsshellhelper.cleanUp(tmpFile)
 
@@ -226,7 +232,7 @@ class ProcessingTests(object):
                         print "KNOWN-FAILURE: " + fullpath
                       else:
                         print "TEST-FAILED: " + fullpath
-                        print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)\n?", "", stdout)
+                        print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)(\nLINES-CALLED: ([\d,]+))?\n?", "", stdout)
                         print stderr
                   else:
                     if summaryOnly:
@@ -263,8 +269,27 @@ class ProcessingTests(object):
                   print "TEST-FAILED: " + fullpath + ". Test exited early:"
                   print stderr
 
+              m2 = re.search('^LINES-CALLED: ([\d,]+)', stdout, re.MULTILINE)
+              if m2 and m2.group:
+                for ln in m2.group(1).split(','):
+                  self.linesCalled.add(int(ln))
+
               if tmpFile:
                 jsshellhelper.cleanUp(tmpFile)
+
+  def initCodeLines(self, processingPath):
+      if processingPath:
+        processing_js =os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep))
+      else:
+        processing_js = os.path.join(self.toolsdir, '..', 'processing.js')
+
+      f = open(processing_js, 'r')
+      for line in f.readlines():
+          if line.startswith('var __pjsCodeLines'):
+              for ln in line.partition('[')[2].partition(']')[0].split(','):
+                self.codeLines.add(int(ln))
+              break
+      f.close()
 
 def main():
     parser = OptionParser()
@@ -284,6 +309,9 @@ def main():
     parser.add_option("-l", "--library",
                       type="string", dest="processingPath", default=None,
                       help="use a different processing.js library")
+    parser.add_option("-c", "--test-coverage",
+                      type="string", dest="coverageResultPath", default=None,
+                      help="save test coverage results to the file")
     options, args = parser.parse_args()
 
     if len(args) < 1:
@@ -292,6 +320,8 @@ def main():
         sys.exit(1)
 
     ptests = ProcessingTests()
+
+    ptests.initCodeLines(options.processingPath)
 
     if options.parserOnly:
         ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly, processingPath=options.processingPath)
@@ -305,6 +335,19 @@ def main():
                                                                          ptests.testsFailed,
                                                                          ptests.testsFailedKnown,
                                                                          (ptests.testsPassed + ptests.testsFailed + ptests.testsFailedKnown))
+
+    if len(ptests.codeLines) > 0:
+      print "\nCODE COVERAGE: %s called, %s total, %s percent" % (len(ptests.linesCalled),
+                                                                         len(ptests.codeLines),
+                                                                         round(len(ptests.linesCalled) * 100.0 / len(ptests.codeLines), 1))
+      if options.coverageResultPath:
+        f = open(options.coverageResultPath, 'w')
+        for line in sorted(ptests.codeLines):
+            if line in ptests.linesCalled:
+                f.write("+%s\n" % (line))
+            else:
+                f.write("-%s\n" % (line))
+        f.close()
 
 if __name__ == '__main__':
     main()

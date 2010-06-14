@@ -97,6 +97,13 @@ Processing.lib.UnitTests = function() {
 
     this._printTestSummary = function() {
       print('TEST-SUMMARY: ' + _passCount + '/' + _failCount);
+      if(__pjsCalledLines) {
+        var numbers = [];
+        for(var i in __pjsCalledLines) {
+          if(0|i > 0 && __pjsCalledLines[i]) { numbers.push(i); }
+        }
+        print('LINES-CALLED: ' + numbers.join(","));
+      }
     };
   };
 };
