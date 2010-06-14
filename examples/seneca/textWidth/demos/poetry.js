@@ -1,0 +1,260 @@
+//
+// Poetry by Andor Salga
+//
+
+int isHoldingMagnet = -1;
+
+// using arraylist because i think classes are buggy
+ArrayList strings = new ArrayList();
+ArrayList coordsX = new ArrayList();
+ArrayList coordsY = new ArrayList();
+ArrayList widths = new ArrayList();
+ArrayList fonts = new ArrayList();
+
+int MAGNET_HEIGHT = 20;
+int numMagnets = 0;
+
+// user will click somewhere on the magnet, need to save 
+// this value so the magnet is drawn in same cursor spot
+int clickedOffsetX = 0;
+int clickedOffsetY = 0;
+
+PFont courier;
+PFont arial;
+PFont verdana;
+PFont helvetica;
+PFont comic;
+
+//
+//
+//
+void setup()
+{
+  size(500, 500);
+  fill(0);
+  
+  courier = loadFont("courier");
+  arial = loadFont("arial");
+  helvetica = loadFont("helvetica");
+  verdana = loadFont("Verdana");
+  comic = loadFont("Comic Sans MS");
+  
+  // add magnets in specific locations
+  int xStart = 350;
+  addMagnet("By", xStart, height - 30);
+  addMagnet("Andor", xStart + textWidth("By") + 5, 
+                              height - 30);
+  addMagnet("Salga", xStart + textWidth("By") + 5 + textWidth("Andor") + 5, height - 30);
+
+  // hascanvas was being a pain with arrays
+  addMagnetRandom("a");
+  addMagnetRandom("a");
+  addMagnetRandom("a");
+  addMagnetRandom("a");
+  addMagnetRandom("s");
+  addMagnetRandom("s");
+  addMagnetRandom("the");
+  addMagnetRandom("the");
+  addMagnetRandom("ed");
+
+  addMagnetRandom("Seneca");
+  addMagnetRandom("Firefox");
+  addMagnetRandom("DPS911");
+  addMagnetRandom("Processing");
+
+  addMagnetRandom("Miri");
+  addMagnetRandom("robot");
+  addMagnetRandom("jolty");
+  addMagnetRandom("cookie");
+  addMagnetRandom("magic");
+  addMagnetRandom("cow");
+
+  addMagnetRandom("free");
+  addMagnetRandom("love");
+  addMagnetRandom("cried");
+  addMagnetRandom("rain");
+  addMagnetRandom("forest");
+  addMagnetRandom("dream");
+  addMagnetRandom("gloom");
+  addMagnetRandom("dark");
+  addMagnetRandom("leap");
+
+  addMagnetRandom("who");
+  addMagnetRandom("what");
+  addMagnetRandom("where");
+  addMagnetRandom("when");
+  addMagnetRandom("how");
+
+  addMagnetRandom("I");
+  addMagnetRandom("know");
+  addMagnetRandom("my");
+  addMagnetRandom("will");
+  addMagnetRandom("you");
+  addMagnetRandom("how");
+
+  addMagnetRandom("see");
+  addMagnetRandom("smell");
+  addMagnetRandom("taste");
+  addMagnetRandom("hear");
+  addMagnetRandom("touch");
+}
+
+
+// Add a magnet to a random place
+void addMagnetRandom(String str)
+{
+  strings.add(str);
+  
+  int r = (int)random(0,5);
+  fonts.add(r);
+  
+  coordsX.add((int)random(20,width-textWidth(str)));
+
+  // don't let the random words go over my name
+  coordsY.add((int)random(20,height-60));
+  widths.add((int)textWidth(str));
+  numMagnets++;
+}
+
+void addMagnet(String str, int x, int y)
+{
+  strings.add(str);
+  coordsX.add(x);
+  coordsY.add(y);
+  widths.add((int)textWidth(str));
+  fonts.add(1);
+  numMagnets++;
+}
+
+//
+//
+//
+void drawMagnets()
+{
+  stroke(0);
+
+    for(int i=0; i < strings.size(); i++)
+    {
+      if( i != isHoldingMagnet)
+      {
+        strokeWeight(2);
+        fill(250 - fonts.get(i)*30,20 + fonts.get(i)*40, 255);
+        
+        switch(fonts.get(i)){
+         case 0: textFont(arial,16);break;
+         case 1: textFont(verdana,10);break;
+         case 2: textFont(helvetica,18);break;
+         case 3: textFont(courier, 25);break;
+         case 4: textFont(comic, 20);break;
+        }
+        rect((int)coordsX.get(i), (int)coordsY.get(i), textWidth((String)strings.get(i)), MAGNET_HEIGHT);
+        fill(0);
+        
+        text((String)strings.get(i), (int)coordsX.get(i), (int)coordsY.get(i)+15);
+      }
+    }
+    
+    //
+    if( isHoldingMagnet != -1)
+    {
+      int i = isHoldingMagnet;
+
+       switch(fonts.get(i)){
+         case 0: textFont(arial,16);break;
+         case 1: textFont(verdana,10);break;
+         case 2: textFont(helvetica,18);break;
+         case 3: textFont(courier, 25);break;
+         case 4: textFont(comic, 20);break;
+        }
+        
+      // shadow
+      noStroke();
+      fill(0,0,0,150);      
+      rect(mouseX-clickedOffsetX, mouseY-clickedOffsetY, textWidth((String)strings.get(i)),MAGNET_HEIGHT);
+      
+      strokeWeight(2);
+      stroke(0);
+      fill(255,255,255);
+      
+      rect(mouseX-clickedOffsetX-5,mouseY-clickedOffsetY-5, textWidth((String)strings.get(i)),MAGNET_HEIGHT);
+      
+      fill(0);
+                
+      text((String)strings.get(i), mouseX-clickedOffsetX-5, mouseY-clickedOffsetY+10);
+    }
+}
+
+//
+//
+//
+void draw()
+{
+  background(255);
+
+  // canvas border
+  strokeWeight(1);
+  stroke(100);
+  noFill();
+  rect(0,0,width,height);
+  
+  drawMagnets();
+  
+  // User tries to pick up a magnet
+  if(mousePressed && isHoldingMagnet == -1)
+  {
+    // did he pick up a magnet or miss?
+    int indexOfMagnet = -1;
+    
+    int mx = mouseX;
+    int my = mouseY;
+
+    // Pick up the LAST magnet drawn out of all 
+    // the magnets the user clicked on which 
+    // will be the 'top' magnet.
+    for(int i = 0; i < numMagnets; i++)
+    {
+      if( mx > coordsX.get(i) &&
+          mx < coordsX.get(i) + textWidth((String)strings.get(i)) &&
+          my >= coordsY.get(i) && 
+          my <= coordsY.get(i) + 20 ){
+        // keep overwriting the value
+        isHoldingMagnet = i;
+
+        clickedOffsetX = mx - coordsX.get(i);
+        clickedOffsetY = my - coordsY.get(i);
+      }
+    }
+  }
+
+  // if the user picked up a magnet and dropped it
+  if(!mousePressed && isHoldingMagnet != -1)
+  {
+    coordsX[isHoldingMagnet] = mouseX - clickedOffsetX;
+    coordsY[isHoldingMagnet] = mouseY - clickedOffsetY;
+    	
+    int idx = isHoldingMagnet;
+    
+    // save values
+    String s = (String)strings.get(idx);
+    int x = (int)coordsX.get(idx);
+    int y = (int)coordsY.get(idx);
+    int w = (int)widths.get(idx);
+    int f = (int)fonts.get(idx);
+      
+    // remove
+    strings.remove(idx);
+    coordsX.remove(idx);
+    coordsY.remove(idx);
+    widths.remove(idx);
+    fonts.remove(idx);
+    
+    // add to end of list
+    strings.add(s);
+    coordsX.add(x);
+    coordsY.add(y);
+    widths.add(w);
+    fonts.add(f);
+    				
+    isHoldingMagnet = -1;				
+  }
+}
