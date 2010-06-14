@@ -709,6 +709,404 @@
     Char.prototype.valueOf = function() {
       return this.code;
     };
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // XMLAttribute
+    ////////////////////////////////////////////////////////////////////////////
+    var XMLAttribute = function ( fname, n, nameSpace, v, t){
+      this.fullName = fname || "";
+      this.name = n || "";
+      this.namespace = nameSpace || "";
+      this.value = v;
+      this.type = t;
+    };
+    XMLAttribute.prototype = {
+      getName: function(){ 
+        return this.name;
+      },
+      getFullName: function() {
+        return this.fullName;
+      },
+      getNamespace: function() {
+        return this.namespace;
+      }, 
+      getValue: function() {
+        return this.value;
+      },
+      getType: function() {
+        return this.type;
+      },
+      setValue: function( newval ){
+        this.value = newval;
+      }
+    };
+    ////////////////////////////////////////////////////////////////////////////
+    // XMLElement
+    ////////////////////////////////////////////////////////////////////////////
+    var XMLElement = function( ){
+      if( arguments.length === 4 ){
+        this.attributes = [];
+        this.children   = [];
+        this.fullName   = arguments[0] || "";
+        if ( arguments[1] ) {
+            this.name = arguments[1];
+        } else {
+            var index = this.fullName.indexOf(':');
+            if( index >= 0 ) {
+                this.name = this.fullName.substring(index + 1);
+            } else {
+                this.name = this.fullName;
+            }
+        }
+        this.namespace = arguments[1];
+        this.content   = "";
+        this.lineNr    = arguments[3];
+        this.systemID  = arguments[2];
+        this.parent    = null;
+      }
+      else if( ( arguments.length === 1 && arguments[0].indexOf(".") > -1 ) || arguments.length === 2 ){ // filename or svg xml element
+        if( arguments[arguments.length -1].indexOf(".") > -1 ){ //its a filename
+          this.attributes = [];
+          this.children   = [];
+          this.fullName   = "";
+          this.name       = "";
+          this.namespace  = "";
+          this.content    = "";
+          this.systemID   = "";
+          this.lineNr     = "";
+          this.parent     = null;
+          this.parse(  arguments[arguments.length -1] );
+        } else { //xml string
+          this.parse(  arguments[arguments.length -1] );
+        }
+      }
+      else{ //empty ctor
+        this.attributes = [];
+        this.children   = [];
+        this.fullName   = "";
+        this.name       = "";
+        this.namespace  = "";
+        this.content    = "";
+        this.systemID   = "";
+        this.lineNr     = "";
+        this.parent     = null;    
+      }
+      return this;
+    };
+    /*XMLElement methods
+      missing: enumerateAttributeNames(), enumerateChildren(),
+      NOTE: parse does not work when a url is passed in  
+    */
+    XMLElement.prototype = {
+      parse: function( filename ){
+        var xmlDoc;
+        try {
+          xmlDoc=new DOMParser().parseFromString( ajax( filename ),"text/xml");
+          
+          var elements = xmlDoc.documentElement;
+          if( elements ){
+            this.parseChildrenRecursive( null, elements );
+          } else {
+            throw("Error loading document");
+          }          
+          return this;        
+        }
+        catch( e ) {
+          throw( e );
+        }
+        
+      },
+      createElement: function( ){
+        if( arguments.length === 2 ){
+          return new XMLElement( arguments[0], arguments[1], null, null );
+        } else {
+          return new XMLElement( arguments[0], arguments[1], arguments[2], arguments[3] );
+        }
+      },
+      hasAttribute: function ( name ){
+        return this.getAttribute( name ) !== null;
+        //2 parameter call missing
+      },
+      createPCDataElement: function (){
+        return new XMLElement();
+      },
+      equals: function( object ){
+        if( typeof object === "Object"){
+          return this.equalsXMLElement( object );
+        }
+      },
+      equalsXMLElement: function ( object ){
+        if( object instanceof XMLElement ){
+          if( this.name !== object.getLocalName ){ return false; }
+          if( this.attributes.length !== object.getAttributeCount() ) { return false; }
+          for( var i = 0; i < this.attributes.length; i++ ){
+            if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
+            if( this.attributes[i].getValue() !== object.attributes[i].getValue() ) { return false; }
+            if( this.attributes[i].getType()  !== object.attributes[i].getType() ) { return false; }
+          }
+          if (this.children.length !== object.getChildCount()) { return false; }
+          var child1, child2;
+          for ( i = 0; i < this.children.length; i++) {
+            child1 = this.getChildAtIndex( i );
+            child2 = object.getChildAtIndex( i );
+            if (! child1.equalsXMLElement( child2 )) { return false; }
+          }
+          return true;
+        }
+      },
+      getContent: function(){
+         return this.content;
+      },
+      getAttribute: function (){
+        var attribute;
+        if( arguments.length === 2 ){
+          attribute = this.findAttribute( arguments[0] );
+          if( attribute ){
+            return attribute.getValue();
+          } else {
+            return arguments[1];
+          }
+        }else if( arguments.length === 1 ){
+          attribute = this.findAttribute( arguments[0] );
+          if( attribute ){
+            return attribute.getValue();
+          } else {
+            return null;
+          }
+        }
+      },
+      getStringAttribute: function(){
+        if( arguments.length === 1 ){
+          return this.getAttribute( arguments[0] );
+        } else if( arguments.length === 2 ){
+          return this.getAttribute( arguments[0], arguments[1] );
+        } else {
+          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
+        }
+      },
+      getFloatAttribute: function(){
+        if( arguments.length === 1 ){
+          return this.getAttribute( arguments[0], 0 );
+        } else if( arguments.length === 2 ){
+          return this.getAttribute( arguments[0], arguments[1] );
+        } else {
+          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
+        }
+      },
+      getIntAttribute: function(){
+        if( arguments.length === 1 ){
+          return this.getAttribute( arguments[0], 0 );
+        } else if( arguments.length === 2 ){
+          return this.getAttribute( arguments[0], arguments[1] );
+        } else {
+          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
+        }
+      },
+      hasChildren: function(){
+        return this.children.length > 0 ;
+      },
+      addChild: function( child ){
+        if (child !== null) {
+          child.parent = this;
+          this.children.push( child );
+        }
+      },
+      insertChild: function( child, index ){
+        if( child ){
+          if ((child.getLocalName() === null) && (! this.hasChildren())) {
+            var lastChild = this.children[this.children.length -1];
+            if ( lastChild.getLocalName() === null ) {
+                lastChild.setContent( lastChild.getContent() + child.getContent() );
+                return;
+            }
+          }
+          child.parent = this;
+          this.children.splice( index,0,child ); 
+        }
+      },
+      getChild: function( index ){
+        if( typeof index  === "number" ){
+          return this.children[ index ];
+        }
+        else if( index.indexOf('/') !== -1) { // path was given
+          this.getChildRecursive( index.split("/"), 0 );
+        } else {
+          var kid, kidName;
+          for ( var i = 0; i < this.getChildCount(); i++ ) {
+            kid = this.getChild(i);
+            kidName = kid.getName();
+            if ( kidName !== null && kidName === index ) {
+                return kid;
+            }
+          }
+          return null;
+        }
+      },
+      getChildren: function(){
+        if ( arguments.length === 1 ){
+          if( typeof arguments[0]  === "number" ){
+            return this.getChild( arguments[0] );
+          }
+          else if( arguments[0].indexOf('/') !== -1) { // path was given
+            return this.getChildrenRecursive( arguments[0].split("/"), 0 );
+          }else {
+            var matches = [];
+            var kid, kidName;
+            for ( var i = 0; i < this.getChildCount(); i++ ) {
+              kid = this.getChild( i );
+              kidName = kid.getName();
+              if ( kidName !== null && kidName === arguments[0] ) {
+                matches.push( kid );
+              }
+            }
+            return matches;
+          } 
+        }else {
+          return this.children;
+        }
+      },
+      getChildCount: function(){
+        return this.children.length;
+      },
+      getChildRecursive: function ( items, offset ){
+        var kid, kidName;
+        for( var i = 0; i < this.getChildCount(); i++ ) {
+            kid = this.getChild(i);
+            kidName = kid.getName();
+            if( kidName !== null && kidName === items[offset] ) {
+              if ( offset === items.length-1 ) {
+                return kid;
+              } else {
+                offset += 1;
+                return kid.getChildRecursive( items, offset );
+              }
+            }
+        }
+        return null;
+      },
+      getChildrenRecursive: function ( items, offset ){
+        if ( offset === items.length-1 ) {
+          return this.getChildren( items[offset] );
+        }
+        var matches = this.getChildren( items[offset] );
+        var kidMatches;
+        for ( var i = 0; i < matches.length; i++ ) {
+          kidMatches = matches[i].getChildrenRecursive( items, offset+1 );
+        }
+        return kidMatches;
+      },
+      parseChildrenRecursive: function ( parent , elementpath ){
+         var xmlelement,
+             xmlattribute,
+             tmpattrib;
+         if( !parent ) {
+           this.fullName = elementpath.localName;
+           this.name     = elementpath.nodeName;
+           this.content  = elementpath.textContent || "";
+           xmlelement    = this;
+         } else { // a parent
+           xmlelement         = new XMLElement( elementpath.localName, elementpath.nodeName, "", "" );
+           xmlelement.content = elementpath.textContent || "";
+           xmlelement.parent  = parent;
+         }
+
+         for( var l = 0; l < elementpath.attributes.length; l++ ) {
+           tmpattrib    = elementpath.attributes[l];
+           xmlattribute = new XMLAttribute( tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType );
+           xmlelement.attributes.push( xmlattribute );
+         }
+
+         for( var m = 0; m < elementpath.childElementCount; m++ ) {
+           xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.children[m]) );
+         }
+         return xmlelement;
+      },
+      isLeaf: function(){
+        return this.hasChildren();
+      },
+      listChildren: function(){
+        var arr = [];
+        for( var i = 0; i < this.children.length; i++ ){
+          arr.push( this.getChild(i).getName() );
+        }
+        return arr;
+      },
+      removeAttribute: function ( name , namespace ){
+        namespace = namespace || "";
+        for( var i = 0; i < this.attributes.length; i++ ){
+          if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === namespace ){
+            this.attributes.splice( i, 0 );
+          } 
+        }
+      },
+      removeChild: function( child ){
+        if( child ){ 
+          for( var i = 0; i< this.children.length; i++ ){
+            if (this.children[i].equalsXMLElement( child )){
+              this.children.splice( i, 0 );
+            }
+          }  
+        }
+      },
+      removeChildAtIndex: function( index ){
+        if( this.children.length > index ) {//make sure its not outofbounds
+          this.children.splice( index, 0 );
+        }
+      },
+      findAttribute: function ( name, namespace ){
+        namespace = namespace || "";
+        for( var i = 0; i < this.attributes.length; i++ ){
+          if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === namespace ){
+             return this.attributes[i];
+          } 
+        }
+      },      
+      setAttribute: function(){
+        var attr;
+        if( arguments.length === 3){
+          var index = arguments[0].indexOf(':');
+          var name  = arguments[0].substring(index + 1);
+          attr      = this.findAttribute( name, arguments[1] );
+          if( attr ){
+            attr.setValue( arguments[2] );
+          } else {
+            attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
+            this.attributes.addElement( attr );
+          }
+        } else {
+          attr = this.findAttribute( arguments[0] );
+          if( attr ){
+            attr.setValue( arguments[1] );
+          } else {
+            attr = new XMLAttribute( arguments[0], arguments[0], null, arguments[1], "CDATA" );
+              this.attributes.addElement( attr );
+          }
+        }     
+      },
+      setContent: function( content ){
+        this.content = content;
+      },
+      setName: function(){
+        if( arguments.length === 1 ){
+          this.name      = arguments[0];
+          this.fullName  = arguments[0];
+          this.namespace = arguments[0];
+        } else {
+          var index = arguments[0].indexOf(':');
+          if (( arguments[1] === null ) || ( index < 0 )) {
+              this.name = arguments[0];
+          } else {
+              this.name = arguments[0].substring( index + 1 );
+          }
+          this.fullName  = arguments[0];
+          this.namespace = arguments[1];
+        }
+      },
+      getName: function(){
+        return this.fullName;
+      }
+    };
+    p.XMLElement = XMLElement;
 
     ////////////////////////////////////////////////////////////////////////////
     // PVector
