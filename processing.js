@@ -1501,7 +1501,7 @@
       },
       translate: function(tx, ty, tz) {
         if (typeof tz === 'undefined') {
-          tx = 0;
+          tz = 0;
         }
 
         this.elements[3] += tx * this.elements[0] + ty * this.elements[1] + tz * this.elements[2];
