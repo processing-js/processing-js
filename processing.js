@@ -6156,6 +6156,7 @@
               z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
               p.vertex(x1, y1, z1);
             }
+            p.vertex(arguments[6], arguments[7], arguments[8]);
           }
         }
         else{
