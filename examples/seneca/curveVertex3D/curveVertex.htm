@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Processing.js test of curveVertex() using fill()</title>
+    <script type="text/javascript" src="../../../processing.js"></script>
+    <style type="text/css">
+        html, body
+        {
+            background: #EEE;
+            font-family: Arial;
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+        h1
+        {
+            background: #385C85;
+            color: #FFF;
+            padding: 10px;
+            padding-left: 20px;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+        h1 a
+        {
+            color: #FFF;
+        }
+        h2
+        {
+            padding-left: 20px;
+        }
+        p
+        {
+            padding-left: 20px;
+            line-height: 1.3em;
+        }
+        p a
+        {
+            color: #385C85;
+        }
+        canvas
+        {
+            margin: 10px 0;
+        }
+        pre
+        {
+            margin-left: 20px;
+            margin-right: 20px;
+            padding: 5px;
+            background: #FFF;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+        }
+        div.ref-col
+        {
+            float: left;
+            width: 32%;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+		<!-- name of your function and test description -->
+		curveVertex() with fill()
+    </h1>
+    <h2>
+        curveVertex() and fill() should not form a solid outline.</h2>
+    <p>
+        This generates a shape using curveVertex() with fill().  The end result should NOT be a completely connected (outlined) box.  The line should only go through the specified
+		coordinates.  The expected result is shown via image on the right.
+	</p>
+	
+    <!-- include your processing file below -->
+    <canvas datasrc="curveVertex.pjs" width="150" height="150" style="margin-left: 10px;"></canvas>
+    <img src="curveVertex-PJava.png" alt="curveVertex running in PJava"/>
+    <br />
+    <b>Test written by <a href="mailto:dominic.baranski@gmail.com">Dominic Baranski</a></b><br />
+    <h1>
+        Source Code:</h1>
+    <pre class="brush: processing;">
+size(150,150,P3D);
+background(128);
+fill(255);
+
+beginShape();
+  curveVertex(5,26,0);
+  curveVertex(5,26,0);
+  curveVertex(73,24,0);
+  curveVertex(73,61,0);
+endShape();
+
+beginShape();
+  curveVertex(5,26,0);
+  curveVertex(73,24,0);
+  curveVertex(73,61,0);
+  curveVertex(73,61,0);
+  curveVertex(15,65,0);
+endShape();
+        </pre>
+    <br />
+</body>
+</html>
