@@ -2796,40 +2796,17 @@
     p.binary = function(num, numBits) {
       var numBitsInValue = 32;
 
-      // color
-      if (typeof num === "number" && num.length > 1) {
-        var c = num.slice(5, -1).split(",");
-
-        var sbin = [
-          decToBin(c[3], 8),
-          decToBin(c[0], 8),
-          decToBin(c[1], 8),
-          decToBin(c[2], 8)
-          ];
-
-        var s = sbin[0] + sbin[1] + sbin[2] + sbin[3];
-
-        if (numBits) {
-          s = s.substr(-numBits);
+      // color, int, byte
+      if (typeof num === "number") {
+        if(numBits){
+          numBitsInValue = numBits;
         }
-        // if the user didn't specify number of bits,
-        // trim leading zeros.
-        else {
-          s = s.replace(/^0+$/g, "0");
-          s = s.replace(/^0{1,}1/g, "1");
-        }
-        return s;
+        return decToBin(num, numBitsInValue);
       }
-
+      
       // char
-      if (typeof num === "object" || num instanceof Char) {
-
-        if (num instanceof Char) {
-          num = num.toString().charCodeAt(0);
-        } else {
-          num = num.charCodeAt(0);
-        }
-
+      if (num instanceof Char) {
+        num = num.toString().charCodeAt(0);
         if (numBits) {
           numBitsInValue = 32;
         } else {
