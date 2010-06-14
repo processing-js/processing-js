@@ -1,0 +1,53 @@
+﻿/* @pjs preload="ref_string.jpg"; */
+size(220,220);
+background(128);
+PImage b;
+b = loadImage("ref_string.jpg");
+int count = 0;
+
+void mouseClicked() {
+  if(count == 0) {
+    image(b, 0, 0);
+    filter(GRAY);
+    image(b, 110, 110);
+  }
+  if(count == 1) {
+    image(b, 0, 0);
+    filter(BLUR);
+    image(b, 110, 110);
+  }
+  if(count == 2) {
+    image(b, 0, 0);
+    filter(POSTERIZE, 4);
+    image(b, 110, 110);
+  }
+  if(count == 3) {
+    image(b, 0, 0);
+    filter(INVERT);
+    image(b, 110, 110);
+  }
+  if(count == 4) {
+    image(b, 0, 0);
+    filter(THRESHOLD);
+    image(b, 110, 110);
+  }
+  if(count == 5) {
+    image(b, 0, 0);
+    filter(DILATE);
+    image(b, 110, 110);
+  }
+  if(count == 6) {
+    image(b, 0, 0);
+    filter(ERODE);
+    image(b, 110, 110);
+  }
+  if(count == 7) {
+    image(b, 0, 0);
+    filter(OPAQUE);
+    image(b, 110, 110);
+  }  
+  count++;
+  if(count > 7) {
+    count = 0; 
+  }
+}

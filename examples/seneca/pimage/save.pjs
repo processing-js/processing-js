@@ -1,0 +1,34 @@
+﻿/* @pjs preload="string.jpg"; */
+
+void setup(){
+    size(600, 400);     //for internal size variables
+    stroke(0);    //all lines will be black
+    frameRate(1);
+    PFont font;
+    font = loadFont("Arial"); 
+    textFont(font, 18);
+}
+
+int prsd = 0;
+PImage a;  // Declare variable "a" of type PImage  
+a = loadImage("string.jpg"); // Load the images into the program 
+
+void draw(){    //this method is called by processingjs at the above frame rate
+    background(0);  //draw a black background
+    image(a, 50, 50);
+    fill(128);
+    rect(0,0,130,30);
+    rect(425,0,175,30);
+    fill(255);
+    text("SAVE CANVAS", 5,23);
+    text("SAVE ONLY IMAGE", 432,23);
+}
+
+void mousePressed(){
+    if(mouseY < 30 && mouseX < 130){
+      save();
+    }
+    if(mouseY < 30 && mouseX > 430){
+        a.save();
+    }
+}
