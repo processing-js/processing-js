@@ -5387,14 +5387,6 @@
     // Vector drawing functions
     ////////////////////////////////////////////////////////////////////////////
 
-    p.Point = function Point(x, y) {
-      this.x = x;
-      this.y = y;
-      this.copy = function() {
-        return new Point(x, y);
-      };
-    };
-
     p.point = function point(x, y, z) {
       if (p.use3DContext) {
         var model = new PMatrix3D();
