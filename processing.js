@@ -2064,12 +2064,10 @@
           return !this.length;
         };
         array.clone = function() {
-          var size = this.length;
-          var a = new p.ArrayList(size);
-          for (var i = 0; i < size; i++) {
-            a[i] = this[i];
-          }
-          return a;
+          return this.slice(0);
+        };
+        array.toArray = function() {
+          return this.slice(0);
         };
 
         return array;
