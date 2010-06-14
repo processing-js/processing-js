@@ -7323,7 +7323,7 @@
     p.loadFont = function loadFont(name) {
       if (name.indexOf(".svg") === -1) {
         return {
-          name: name,
+          name: "\"" + name + "\", sans-serif",
           width: function(str) {
             if (curContext.mozMeasureText) {
               return curContext.mozMeasureText(
