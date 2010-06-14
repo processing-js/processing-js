@@ -283,8 +283,9 @@
         curShapeCount = 0,
         curvePoints = [],
         curTightness = 0,
-        curveDetail = 20,
+        curveDet = 20,
         curveInited = false,
+        bezDetail = 20,
         colorModeA = 255,
         colorModeX = 255,
         colorModeY = 255,
@@ -303,6 +304,7 @@
         curveBasisMatrix,
         curveToBezierMatrix,
         curveDrawMatrix,
+        bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
         // Shaders
@@ -312,6 +314,8 @@
         boxBuffer,
         boxNormBuffer,
         boxOutlineBuffer,
+        rectBuffer,
+        rectNormBuffer,
         sphereBuffer,
         lineBuffer,
         fillBuffer,
@@ -367,6 +371,8 @@
         cameraAspect = curElement.width / curElement.height;
 
     var vertArray = [],
+        curveVertArray = [],
+        curveVertCount = 0,
         isCurve = false,
         isBezier = false,
         firstVert = true;
@@ -400,7 +406,11 @@
                            0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
                           -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
 
-
+    // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP
+    var rectVerts = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
+    
+    var rectNorms = [0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1];
+    
     // Vertex shader for points and lines
     var vShaderSrcUnlitShape =
       "attribute vec3 aVertex;" +
@@ -1495,7 +1505,7 @@
       },
       translate: function(tx, ty, tz) {
         if (typeof tz === 'undefined') {
-          tx = 0;
+          tz = 0;
         }
 
         this.elements[3] += tx * this.elements[0] + ty * this.elements[1] + tz * this.elements[2];
@@ -4417,6 +4427,15 @@
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts), curContext.STATIC_DRAW);
 
+          // used to draw the rectangle and the outline
+          rectBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectVerts), curContext.STATIC_DRAW);
+
+          rectNormBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectNorms), curContext.STATIC_DRAW);
+
           // The sphere vertices are specified dynamically since the user
           // can change the level of detail. Everytime the user does that
           // using sphereDetail(), the new vertices are calculated.
@@ -4449,6 +4468,7 @@
           curveBasisMatrix = new PMatrix3D();
           curveToBezierMatrix = new PMatrix3D();
           curveDrawMatrix = new PMatrix3D();
+          bezierDrawMatrix = new PMatrix3D();
           bezierBasisInverse = new PMatrix3D();
           bezierBasisMatrix = new PMatrix3D();
           bezierBasisMatrix.set(-1, 3, -3, 1, 3, -6, 3, 0, -3, 3, 0, 0, 1, 0, 0, 0);
@@ -5554,20 +5574,65 @@
     };
 
     p.endShape = function endShape(close){
+      var lineVertArray = [];
+      var fillVertArray = [];
+      var colorVertArray = [];
+      var strokeVertArray = [];
       firstVert = true;
       var i, j, k;
       var last = vertArray.length - 1;
+
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 0; j < 3; j++){
+          fillVertArray.push(vertArray[i][j]);
+        }
+      }
+
+      // 5,6,7,8
+      // R,G,B,A
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 5; j < 9; j++){
+          colorVertArray.push(vertArray[i][j]);
+        }
+      }
+      
+      // 9,10,11,12
+      // R, G, B, A
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 9; j < 13; j++){
+          strokeVertArray.push(vertArray[i][j]);
+        }
+      }
+
       if(!close){
         p.CLOSE = false;
       }
       else{
         p.CLOSE = true;
+        for(i = 0; i < 3; i++){
+          fillVertArray.push(vertArray[0][i]);
+        }
+        for(i = 5; i < 9; i++){
+          colorVertArray.push(vertArray[0][i]);
+        }
+        for(i = 9; i < 13; i++){
+          strokeVertArray.push(vertArray[0][i]);
+        }
       }
+
       if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
-        if(vertArray.length > 3){
-          if(p.use3DContext){
+
+        if(p.use3DContext){
+          lineVertArray = fillVertArray;
+          if(doStroke){
+            line3D(lineVertArray, null, strokeVertArray);
           }
-          else{
+          if(doFill){
+            fill3D(fillVertArray, null, colorVertArray); // fill isn't working in 3d curveVertex
+          }
+        }
+        else{
+          if(vertArray.length > 3){
             var b = [],
                 s = 1 - curTightness;
             curContext.beginPath();
@@ -5598,58 +5663,66 @@
         }
       }
       else if(isBezier && curShape === p.POLYGON || isBezier && curShape === undefined){
-        curContext.beginPath();
-        curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-        for(i = 1; i < vertArray.length; i++){
-          curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
-        }
-        if(doFill){
-          curContext.fill();
-        }
-        if(doStroke){
-          curContext.stroke();
-        }
-        curContext.closePath();
-      }
-      else{
-        if(p.use3DContext){ // 3D context
-          var lineVertArray = [];
-          var fillVertArray = [];
-          var colorVertArray = [];
-          var strokeVertArray = [];
-          
-          for(i = 0; i < vertArray.length; i++){
+        if(p.use3DContext){
+          lineVertArray = fillVertArray;
+          lineVertArray.splice(lineVertArray.length - 3);
+          strokeVertArray.splice(strokeVertArray.length - 4);
+          if(doStroke){
+            line3D(lineVertArray, null, strokeVertArray);
+          }
+          if(doFill){
+            fill3D(fillVertArray, "TRIANGLES", colorVertArray);
+          }
+          /*fillVertArray = [];  //***Fill not properly working yet*** will fix later
+          colorVertArray = [];
+          tempArray.reverse();
+          for(i = 0; (i+1) < 10; i++){
+            for(j = 0; j < 3; j++){
+              fillVertArray.push(tempArray[i][j]);
+            }
+            for(j = 5; j < 9; j++){
+              colorVertArray.push(tempArray[i][j]);
+            }
             for(j = 0; j < 3; j++){
               fillVertArray.push(vertArray[i][j]);
             }
-          }
-          
-          fillVertArray.push(vertArray[0][0]);
-          fillVertArray.push(vertArray[0][1]);
-          fillVertArray.push(vertArray[0][2]);
-
-          // 5,6,7,8
-          // R,G,B,A
-          for(i = 0; i < vertArray.length; i++){
+            for(j = 5; j < 9; j++){
+              colorVertArray.push(vertArray[i][j]);
+            }
+            for(j = 0; j < 3; j++){
+              fillVertArray.push(vertArray[i+1][j]);
+            }
             for(j = 5; j < 9; j++){
               colorVertArray.push(vertArray[i][j]);
             }
           }
-          for(i = 5; i < 9; i++){
-            colorVertArray.push(vertArray[0][i]);
-          }
           
-          // 9,10,11,12
-          // R, G, B, A
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 9; j < 13; j++){
-              strokeVertArray.push(vertArray[i][j]);
-            }
+          strokeVertArray = [];
+          for(i = 0; i < tempArray.length/3; i++){
+            strokeVertArray.push(255);
+            strokeVertArray.push(0);
+            strokeVertArray.push(0);
+            strokeVertArray.push(255);
           }
-          for(i = 9; i < 13; i++){
-            strokeVertArray.push(vertArray[0][i]);
+          point3D(tempArray, strokeVertArray);*/
+        }
+        else{
+          curContext.beginPath();
+          curContext.moveTo(vertArray[0][0], vertArray[0][1]);
+          for(i = 1; i < vertArray.length; i++){
+            curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
           }
-                   
+          if(doFill){
+            curContext.fill();
+          }
+          if(doStroke){
+            curContext.stroke();
+          }
+          curContext.closePath();
+        }
+      }
+      else{
+        if(p.use3DContext){ // 3D context                   
           if (curShape === p.POINTS){
             for(i = 0; i < vertArray.length; i++){
               for(j = 0; j < 3; j++){
@@ -6042,30 +6115,91 @@
       }
       isCurve = false;
       isBezier = false;
+      curveVertArray = [];
+      curveVertCount = 0;
     };
 
-    p.bezierVertex = function(){
+    p.bezierVertex = function bezierVertex() {
       isBezier = true;
       var vert = [];
       if(firstVert){
         throw ("vertex() must be used at least once before calling bezierVertex()");
       }
       else{
-        if(arguments.length === 6){
+        if(arguments.length === 9){
+          if(p.use3DContext){
+            if ( bezierDrawMatrix == null ) {
+              bezierDrawMatrix = new PMatrix3D();
+            }
+            // setup matrix for forward differencing to speed up drawing
+            var lastPoint = vertArray.length - 1;
+            splineForward( bezDetail, bezierDrawMatrix );
+            bezierDrawMatrix.apply( bezierBasisMatrix );
+            var draw = bezierDrawMatrix.array(); 	
+            var x1 = vertArray[lastPoint][0],
+                y1 = vertArray[lastPoint][1],
+                z1 = vertArray[lastPoint][2];
+            var xplot1 = draw[4] * x1 + draw[5] * arguments[0] + draw[6] * arguments[3] + draw[7] * arguments[6];
+            var xplot2 = draw[8] * x1 + draw[9] * arguments[0] + draw[10]* arguments[3] + draw[11]* arguments[6];
+            var xplot3 = draw[12]* x1 + draw[13]* arguments[0] + draw[14]* arguments[3] + draw[15]* arguments[6];
+
+            var yplot1 = draw[4] * y1 + draw[5] * arguments[1] + draw[6] * arguments[4] + draw[7] * arguments[7];
+            var yplot2 = draw[8] * y1 + draw[9] * arguments[1] + draw[10]* arguments[4] + draw[11]* arguments[7];
+            var yplot3 = draw[12]* y1 + draw[13]* arguments[1] + draw[14]* arguments[4] + draw[15]* arguments[7];
+
+            var zplot1 = draw[4] * z1 + draw[5] * arguments[2] + draw[6] * arguments[5] + draw[7] * arguments[8];
+            var zplot2 = draw[8] * z1 + draw[9] * arguments[2] + draw[10]* arguments[5] + draw[11]* arguments[8];
+            var zplot3 = draw[12]* z1 + draw[13]* arguments[2] + draw[14]* arguments[5] + draw[15]* arguments[8];
+            for (var j = 0; j < bezDetail; j++) {          
+              x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+              y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+              z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
+              p.vertex(x1, y1, z1);
+            }
+            p.vertex(arguments[6], arguments[7], arguments[8]);
+          }
+        }
+        else{
           for(var i = 0; i < arguments.length; i++){ vert[i] = arguments[i]; }
+          vertArray.push(vert);
         }
-        else{ //for 9 arguments (3d)
-        }
-        vertArray.push(vert);
       }
-    };
+    }; 
 
     p.curveVertex = function(x, y, z) {
       isCurve = true;
-      p.vertex(x, y, z);
+      if(p.use3DContext){
+        if (!curveInited){
+          curveInit();
+        }
+        var vert = [];
+        vert[0] = x;
+        vert[1] = y;
+        vert[2] = z;
+        curveVertArray.push(vert);
+        curveVertCount++;
+        
+        if (curveVertCount > 3){
+          curveVertexSegment( curveVertArray[curveVertCount-4][0],
+                              curveVertArray[curveVertCount-4][1],
+                              curveVertArray[curveVertCount-4][2],
+                              curveVertArray[curveVertCount-3][0],
+                              curveVertArray[curveVertCount-3][1],
+                              curveVertArray[curveVertCount-3][2],
+                              curveVertArray[curveVertCount-2][0],
+                              curveVertArray[curveVertCount-2][1],
+                              curveVertArray[curveVertCount-2][2],
+                              curveVertArray[curveVertCount-1][0],
+                              curveVertArray[curveVertCount-1][1],
+                              curveVertArray[curveVertCount-1][2] );
+        }
+      }
+      else{
+        p.vertex(x, y, z);
+      }
     };
 
-    p.curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
+    var curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
       var x0 = x2;
       var y0 = y2;
       var z0 = z2;
@@ -6085,16 +6219,10 @@
       var zplot3 = draw[12] * z1 + draw[13] * z2 + draw[14] * z3 + draw[15] * z4;
 
       p.vertex(x0, y0, z0);
-      for (var j = 0; j < curveDetail; j++) {
-        x0 += xplot1;
-        xplot1 += xplot2;
-        xplot2 += xplot3;
-        y0 += yplot1;
-        yplot1 += yplot2;
-        yplot2 += yplot3;
-        z0 += zplot1;
-        zplot1 += zplot2;
-        zplot2 += zplot3;
+      for (var j = 0; j < curveDet; j++) {
+        x0 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+        y0 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+        z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
         p.vertex(x0, y0, z0);
       }
     };
@@ -6141,12 +6269,12 @@
         curveBasisMatrix = new PMatrix3D();
         curveDrawMatrix = new PMatrix3D();
         curveInited = true;
-      }
+	    }
 
       var s = curTightness;
       curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2), ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2), (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2), ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
 
-      splineForward(curveDetail, curveDrawMatrix);
+      splineForward(curveDet, curveDrawMatrix);
 
       if (!bezierBasisInverse) {
         //bezierBasisInverse = bezierBasisMatrix.get();
@@ -6165,8 +6293,8 @@
       curveDrawMatrix.apply(curveBasisMatrix);
     };
 
-    p.curveDetail = function curveDetail() {
-      curveDetail = arguments[0];
+    p.curveDetail = function curveDetail( detail ) {
+      curveDet = detail;
       curveInit();
     };
 
@@ -6279,14 +6407,31 @@
       }
     };
 
-    p.bezier = function bezier(x1, y1, x2, y2, x3, y3, x4, y4) {
-      curContext.beginPath();
-      curContext.moveTo(x1, y1);
-      curContext.bezierCurveTo(x2, y2, x3, y3, x4, y4);
-      curContext.stroke();
-      curContext.closePath();
+    p.bezier = function bezier() {
+      if( arguments.length === 8 && !p.use3DContext ){
+          p.beginShape();
+          p.vertex( arguments[0], arguments[1] );
+          p.bezierVertex( arguments[2], arguments[3], 
+                          arguments[4], arguments[5],
+                          arguments[6], arguments[7] );
+          p.endShape();
+      }
+      else if( arguments.length === 12 && p.use3DContext ){
+          p.beginShape();
+          p.vertex( arguments[0], arguments[1], arguments[2] );
+          p.bezierVertex( arguments[3], arguments[4], arguments[5],
+                          arguments[6], arguments[7], arguments[8],
+                          arguments[9], arguments[10], arguments[11] );
+          p.endShape();
+      }
+      else {
+        throw("Please use the proper parameters!");
+      }
     };
-
+    p.bezierDetail = function bezierDetail( detail ){
+      bezDetail = detail;
+    };
+    
     p.bezierPoint = function bezierPoint(a, b, c, d, t) {
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
@@ -6321,41 +6466,104 @@
     };
 
     p.rect = function rect(x, y, width, height) {
-      if (!width && !height) {
-        return;
+      if (p.use3DContext) {
+      
+        // Modeling transformation
+        var model = new PMatrix3D();
+        model.translate(x, y, 0);
+        model.scale(width, height, 1);
+
+        // viewing transformation needs to have Y flipped
+        // becuase that's what Processing does.
+        var view = new PMatrix3D();
+        view.scale(1, -1, 1);
+        view.apply(modelView.array());
+        
+        if (lineWidth > 0 && doStroke) {
+          curContext.useProgram(programObject2D);
+          uniformMatrix(programObject2D, "model", true, model.array());
+          uniformMatrix(programObject2D, "view", true, view.array());
+          uniformMatrix(programObject2D, "projection", true, projection.array());
+
+          uniformf(programObject2D, "color", strokeStyle);
+          curContext.lineWidth(lineWidth);
+          vertexAttribPointer(programObject2D, "Vertex", 3, rectBuffer);
+          curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
+        }
+        
+        if (doFill) {
+          curContext.useProgram(programObject3D);
+          uniformMatrix(programObject3D, "model", true, model.array());
+          uniformMatrix(programObject3D, "view", true, view.array());
+          uniformMatrix(programObject3D, "projection", true, projection.array());
+
+          // fix stitching problems. (lines get occluded by triangles
+          // since they share the same depth values). This is not entirely
+          // working, but it's a start for drawing the outline. So
+          // developers can start playing around with styles. 
+          curContext.enable(curContext.POLYGON_OFFSET_FILL);
+          curContext.polygonOffset(1, 1);
+
+          uniformf(programObject3D, "color", fillStyle);
+          
+          var v = new PMatrix3D();
+          v.set(view);
+
+          var m = new PMatrix3D();
+          m.set(model);
+
+          v.mult(m);
+
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+
+          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+
+          vertexAttribPointer(programObject3D, "Vertex", 3, rectBuffer);
+          vertexAttribPointer(programObject3D, "Normal", 3, rectNormBuffer);
+
+          curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
+          curContext.disable(curContext.POLYGON_OFFSET_FILL);
+        }
       }
+      else{
+        if (!width && !height) {
+          return;
+        }
 
-      curContext.beginPath();
+        curContext.beginPath();
 
-      var offsetStart = 0;
-      var offsetEnd = 0;
+        var offsetStart = 0;
+        var offsetEnd = 0;
 
-      if (curRectMode === p.CORNERS) {
-        width -= x;
-        height -= y;
+        if (curRectMode === p.CORNERS) {
+          width -= x;
+          height -= y;
+        }
+
+        if (curRectMode === p.RADIUS) {
+          width *= 2;
+          height *= 2;
+        }
+
+        if (curRectMode === p.CENTER || curRectMode === p.RADIUS) {
+          x -= width / 2;
+          y -= height / 2;
+        }
+
+        curContext.rect(
+        Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
+
+        if (doFill) {
+          curContext.fill();
+        }
+        if (doStroke) {
+          curContext.stroke();
+        }
+
+        curContext.closePath();
       }
-
-      if (curRectMode === p.RADIUS) {
-        width *= 2;
-        height *= 2;
-      }
-
-      if (curRectMode === p.CENTER || curRectMode === p.RADIUS) {
-        x -= width / 2;
-        y -= height / 2;
-      }
-
-      curContext.rect(
-      Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
-
-      if (doFill) {
-        curContext.fill();
-      }
-      if (doStroke) {
-        curContext.stroke();
-      }
-
-      curContext.closePath();
     };
 
     p.ellipse = function ellipse(x, y, width, height) {
@@ -6365,8 +6573,6 @@
       if (width <= 0 && height <= 0) {
         return;
       }
-
-      curContext.beginPath();
 
       if (curEllipseMode === p.RADIUS) {
         width *= 2;
@@ -6385,32 +6591,79 @@
 
       var offsetStart = 0;
 
-      // Shortcut for drawing a circle
-      if (width === height) {
+      // Shortcut for drawing a 2D circle
+      if ((!p.use3DContext) && (width === height)) {
+        curContext.beginPath();
         curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, p.TWO_PI, false);
-      } else {
+        curContext.stroke();
+        curContext.fill();
+        curContext.closePath();
+      } 
+      else {
         var w = width / 2,
           h = height / 2,
           C = 0.5522847498307933;
         var c_x = C * w,
           c_y = C * h;
 
-        // TODO: Audit
-        curContext.moveTo(x + w, y);
-        curContext.bezierCurveTo(x + w, y - c_y, x + c_x, y - h, x, y - h);
-        curContext.bezierCurveTo(x - c_x, y - h, x - w, y - c_y, x - w, y);
-        curContext.bezierCurveTo(x - w, y + c_y, x - c_x, y + h, x, y + h);
-        curContext.bezierCurveTo(x + c_x, y + h, x + w, y + c_y, x + w, y);
-      }
+        if(!p.use3DContext){
+          // TODO: Audit
+          p.beginShape();
+          p.vertex(x + w, y);
+          p.bezierVertex(x + w, y - c_y, x + c_x, y - h, x, y - h);
+          p.bezierVertex(x - c_x, y - h, x - w, y - c_y, x - w, y);
+          p.bezierVertex(x - w, y + c_y, x - c_x, y + h, x, y + h);
+          p.bezierVertex(x + c_x, y + h, x + w, y + c_y, x + w, y);
+          p.endShape();
+        }
+        else{
+          p.beginShape();
+          p.vertex(x + w, y);
+          p.bezierVertex(x + w, y - c_y, 0, x + c_x, y - h, 0, x, y - h, 0);
+          p.bezierVertex(x - c_x, y - h, 0, x - w, y - c_y, 0, x - w, y, 0);
+          p.bezierVertex(x - w, y + c_y, 0, x - c_x, y + h, 0, x, y + h, 0);
+          p.bezierVertex(x + c_x, y + h, 0, x + w, y + c_y, 0, x + w, y, 0);
+          p.endShape();
 
-      if (doFill) {
-        curContext.fill();
+          //temporary workaround to not working fills for bezier -- will fix later
+          var xAv = 0, yAv = 0;
+          for(var i = 0; i < vertArray.length; i++){
+            xAv += vertArray[i][0];
+            yAv += vertArray[i][1];
+          }
+          xAv /= vertArray.length;
+          yAv /= vertArray.length;
+          var vert = [],
+              fillVertArray = [],
+              colorVertArray = [];
+          vert[0] = xAv;
+          vert[1] = yAv;
+          vert[2] = 0;
+          vert[3] = 0;
+          vert[4] = 0;
+          vert[5] = fillStyle[0];
+          vert[6] = fillStyle[1];
+          vert[7] = fillStyle[2];
+          vert[8] = fillStyle[3];
+          vert[9] = strokeStyle[0];
+          vert[10] = strokeStyle[1];
+          vert[11] = strokeStyle[2];
+          vert[12] = strokeStyle[3];
+          vert[13] = normalX;
+          vert[14] = normalY;
+          vert[15] = normalZ;
+          vertArray.unshift(vert);
+          for(var i = 0; i < vertArray.length; i++){
+            for(var j = 0; j < 3; j++){
+              fillVertArray.push(vertArray[i][j]);
+            }
+            for(var j = 5; j < 9; j++){
+              colorVertArray.push(vertArray[i][j]);
+            }
+          }
+          fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+        }
       }
-      if (doStroke) {
-        curContext.stroke();
-      }
-
-      curContext.closePath();
     };
 
     p.normal = function normal(nx, ny, nz) {
@@ -8590,7 +8843,7 @@
     var names =
   ["abs","acos","ADD","alpha","ALPHA","ALT","ambient","ambientLight","append","applyMatrix","arc",
   "ARGB","arrayCopy","ArrayList","ARROW","asin","atan","atan2","background","BACKSPACE","beginCamera",
-  "beginDraw","beginShape","BEVEL","bezier","bezierPoint","bezierTangent","bezierVertex","binary",
+  "beginDraw","beginShape","BEVEL","bezier","bezierDetail","bezierPoint","bezierTangent","bezierVertex","binary",
   "blend","BLEND","blendColor","blue","BLUE_MASK","BLUR","boolean","box","brightness","BURN","byte","camera","ceil",
   "CENTER","CENTER_RADIUS","char","clear","CLOSE","CMYK","CODED","color","colorMode","concat",
   "console","constrain","CONTROL","copy","CORNER","CORNERS","cos","createFont","createGraphics",
@@ -8607,7 +8860,7 @@
   "matchAll","max","MAX_FLOAT","MAX_INT","MAX_LIGHTS","millis","min","MIN_FLOAT","MIN_INT","minute",
   "MITER","mix","modelX","modelY","modelZ","modes","month","mouseButton","mouseClicked","mouseDown",
   "mouseDragged","mouseMoved","mousePressed","mouseReleased","mouseScroll","mouseScrolled","mouseX",
-  "mouseY","MOVE","MULTIPLY","nf","nfc","nfp","nfs","noCursor","NOCURSOR","noFill","noise","noiseSeed",
+  "mouseY","MOVE","MULTIPLY","nf","nfc","nfp","nfs","noCursor","NOCURSOR","noFill","noise","noiseDetail","noiseSeed",
   "noLights","noLoop","norm","normal","NORMAL_MODE_AUTO","NORMAL_MODE_SHAPE","NORMAL_MODE_VERTEX",
   "noSmooth","noStroke","noTint","OPAQUE","OPENGL","OVERLAY","P3D","peg","perspective","PI","PImage","pixels",
   "pmouseX","pmouseY","point","Point","pointLight","POINTS","POLYGON","popMatrix","popStyle","POSTERIZE",

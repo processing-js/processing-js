@@ -1,4 +1,4 @@
-size(200, 200);
+size(200, 200, P3D);
 background(0);
 noFill();
 
@@ -24,7 +24,7 @@ stroke(126);
 beginShape();
 vertex(60, 40);
 bezierDetail(30);
-bezierVertex(160, 10, 170, 150, 60, 150);
+bezierVertex(160, 10, 0, 170, 150, 0, 60, 150, 0);
 endShape();
 
 stroke(255);
