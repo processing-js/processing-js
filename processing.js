@@ -312,6 +312,8 @@
         boxBuffer,
         boxNormBuffer,
         boxOutlineBuffer,
+        rectBuffer,
+        rectNormBuffer,
         sphereBuffer,
         lineBuffer,
         fillBuffer,
@@ -400,7 +402,11 @@
                            0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
                           -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
 
-
+    // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP
+    var rectVerts = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
+    
+    var rectNorms = [0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1];
+    
     // Vertex shader for points and lines
     var vShaderSrcUnlitShape =
       "attribute vec3 aVertex;" +
@@ -4417,6 +4423,15 @@
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts), curContext.STATIC_DRAW);
 
+          // used to draw the rectangle and the outline
+          rectBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectVerts), curContext.STATIC_DRAW);
+
+          rectNormBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectNorms), curContext.STATIC_DRAW);
+
           // The sphere vertices are specified dynamically since the user
           // can change the level of detail. Everytime the user does that
           // using sphereDetail(), the new vertices are calculated.
@@ -6321,41 +6336,104 @@
     };
 
     p.rect = function rect(x, y, width, height) {
-      if (!width && !height) {
-        return;
+      if (p.use3DContext) {
+      
+        // Modeling transformation
+        var model = new PMatrix3D();
+        model.translate(x, y, 0);
+        model.scale(width, height, 1);
+
+        // viewing transformation needs to have Y flipped
+        // becuase that's what Processing does.
+        var view = new PMatrix3D();
+        view.scale(1, -1, 1);
+        view.apply(modelView.array());
+        
+        if (lineWidth > 0 && doStroke) {
+          curContext.useProgram(programObject2D);
+          uniformMatrix(programObject2D, "model", true, model.array());
+          uniformMatrix(programObject2D, "view", true, view.array());
+          uniformMatrix(programObject2D, "projection", true, projection.array());
+
+          uniformf(programObject2D, "color", strokeStyle);
+          curContext.lineWidth(lineWidth);
+          vertexAttribPointer(programObject2D, "Vertex", 3, rectBuffer);
+          curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
+        }
+        
+        if (doFill) {
+          curContext.useProgram(programObject3D);
+          uniformMatrix(programObject3D, "model", true, model.array());
+          uniformMatrix(programObject3D, "view", true, view.array());
+          uniformMatrix(programObject3D, "projection", true, projection.array());
+
+          // fix stitching problems. (lines get occluded by triangles
+          // since they share the same depth values). This is not entirely
+          // working, but it's a start for drawing the outline. So
+          // developers can start playing around with styles. 
+          curContext.enable(curContext.POLYGON_OFFSET_FILL);
+          curContext.polygonOffset(1, 1);
+
+          uniformf(programObject3D, "color", fillStyle);
+          
+          var v = new PMatrix3D();
+          v.set(view);
+
+          var m = new PMatrix3D();
+          m.set(model);
+
+          v.mult(m);
+
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+
+          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+
+          vertexAttribPointer(programObject3D, "Vertex", 3, rectBuffer);
+          vertexAttribPointer(programObject3D, "Normal", 3, rectNormBuffer);
+
+          curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
+          curContext.disable(curContext.POLYGON_OFFSET_FILL);
+        }
       }
+      else{
+        if (!width && !height) {
+          return;
+        }
 
-      curContext.beginPath();
+        curContext.beginPath();
 
-      var offsetStart = 0;
-      var offsetEnd = 0;
+        var offsetStart = 0;
+        var offsetEnd = 0;
 
-      if (curRectMode === p.CORNERS) {
-        width -= x;
-        height -= y;
+        if (curRectMode === p.CORNERS) {
+          width -= x;
+          height -= y;
+        }
+
+        if (curRectMode === p.RADIUS) {
+          width *= 2;
+          height *= 2;
+        }
+
+        if (curRectMode === p.CENTER || curRectMode === p.RADIUS) {
+          x -= width / 2;
+          y -= height / 2;
+        }
+
+        curContext.rect(
+        Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
+
+        if (doFill) {
+          curContext.fill();
+        }
+        if (doStroke) {
+          curContext.stroke();
+        }
+
+        curContext.closePath();
       }
-
-      if (curRectMode === p.RADIUS) {
-        width *= 2;
-        height *= 2;
-      }
-
-      if (curRectMode === p.CENTER || curRectMode === p.RADIUS) {
-        x -= width / 2;
-        y -= height / 2;
-      }
-
-      curContext.rect(
-      Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
-
-      if (doFill) {
-        curContext.fill();
-      }
-      if (doStroke) {
-        curContext.stroke();
-      }
-
-      curContext.closePath();
     };
 
     p.ellipse = function ellipse(x, y, width, height) {
