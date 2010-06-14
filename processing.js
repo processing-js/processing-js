@@ -6056,6 +6056,15 @@
         }
       };
 
+      this.filter = function(mode, param) {
+        if (arguments.length === 2) {
+          p.filter(mode, param, this);
+        } else if (arguments.length === 1) {
+          // no param specified, send null to show its invalid
+          p.filter(mode, null, this);
+        }
+      };
+      
       this.resize = function(w, h) {
         if (this.width !== 0 || this.height !== 0) {
           // make aspect ratio if w or h is 0
@@ -6121,20 +6130,15 @@
         }(this)),
         setPixel: (function(aImg) {
           return function(i,c) {
-            if(c && typeof c === "number") {
-              var offset = i*4;
-              // split c into array
-              var c2 = p.color.toArray(c);
-              // change pixel to c
-              aImg.imageData.data[offset] = c2[0];
-              aImg.imageData.data[offset+1] = c2[1];
-              aImg.imageData.data[offset+2] = c2[2];
-              aImg.imageData.data[offset+3] = c2[3];
-            }
+            var offset = i*4;
+            aImg.imageData.data[offset] = (c & p.RED_MASK) >>> 16;
+            aImg.imageData.data[offset+1] = (c & p.GREEN_MASK) >>> 8;
+            aImg.imageData.data[offset+2] = (c & p.BLUE_MASK);
+            aImg.imageData.data[offset+3] = (c & p.ALPHA_MASK) >>> 24;
           };
         }(this)),
         set: function(arr) {
-          for (var i = 0, aL = arr.Length; i < aL; i++) {
+          for (var i = 0, aL = arr.length; i < aL; i++) {
             this.setPixel(i, arr[i]);
           }
         }
@@ -6172,7 +6176,6 @@
         this.imageData = canvasImg;
         // changed for 0.9
         this.format = p.ARGB;
-        // changed for 0.9
       };
 
       this.fromHTMLImageData = function(htmlImg) {
@@ -6331,13 +6334,11 @@
       var color, oldFill;
       // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
       if (arguments.length === 4) {
-        // changed in 0.9
-        var c = p.color.toArray(obj);
         var offset = y * img.width * 4 + (x*4);
-        img.imageData.data[offset] = c[0];
-        img.imageData.data[offset+1] = c[1];
-        img.imageData.data[offset+2] = c[2];
-        img.imageData.data[offset+3] = c[3];
+        img.imageData.data[offset] = (obj & p.RED_MASK) >>> 16;
+        img.imageData.data[offset+1] = (obj & p.GREEN_MASK) >>> 8;
+        img.imageData.data[offset+2] = (obj & p.BLUE_MASK);
+        img.imageData.data[offset+3] = (obj & p.ALPHA_MASK) >>> 24;
       } else if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number") {
@@ -6364,19 +6365,14 @@
                              p.imageData.data[offset+2], p.imageData.data[offset+3]);
       },
       setPixel: function(i,c) {
-        if(c && typeof c === "number") {
-          var offset = i*4;
-          // split c into array
-          var c2 = p.color.toArray(c);
-          // change pixel to c
-          p.imageData.data[offset] = c2[0];
-          p.imageData.data[offset+1] = c2[1];
-          p.imageData.data[offset+2] = c2[2];
-          p.imageData.data[offset+3] = c2[3];
-        }
+        var offset = i*4;
+        p.imageData.data[offset] = (c & p.RED_MASK) >>> 16;
+        p.imageData.data[offset+1] = (c & p.GREEN_MASK) >>> 8;
+        p.imageData.data[offset+2] = (c & p.BLUE_MASK);
+        p.imageData.data[offset+3] = (c & p.ALPHA_MASK) >>> 24;
       },
       set: function(arr) {
-        for (var i = 0, aL = arr.Length; i < aL; i++) {
+        for (var i = 0, aL = arr.length; i < aL; i++) {
           this.setPixel(i, arr[i]);
         }
       }
@@ -6552,7 +6548,319 @@
       }
     };
 
-    // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear()
+    p.filter = function filter(kind, param, aImg){
+      var img;
+      if(arguments.length === 3) {
+        aImg.loadPixels();
+        img = aImg;
+      } else {
+        p.loadPixels();
+        img = p;
+      }
+      var imglen = img.pixels.getLength();
+      switch (kind) {
+        case p.BLUR:
+          var radius = param || 1; // if no param specified, use 1 (default for p5)
+          blurARGB(radius, img);
+        break;
+        case p.GRAY:
+          if (img.format === p.ALPHA) { //trouble
+            // for an alpha image, convert it to an opaque grayscale
+            for (var i = 0; i < imglen; i++) {
+              var col = 255 - img.pixels.getPixel(i); 
+              img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
+            }
+            img.format = p.RGB; //trouble
+
+          } else {
+            for (var i = 0; i < imglen; i++) {
+              var col = img.pixels.getPixel(i);
+              var lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
+              img.pixels.setPixel(i,((col & p.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
+            }
+          }
+          break;
+        case p.INVERT:
+          for (var i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
+          }
+          break;
+        case p.POSTERIZE:
+          if(param == null) {
+            throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
+          }
+          var levels = p.floor(param);
+          if ((levels < 2) || (levels > 255)) {
+            throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
+          }
+          var levels1 = levels - 1;
+          for (var i = 0; i < imglen; i++) {
+            var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
+            var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
+            var blevel = img.pixels.getPixel(i) & 0xff;
+            rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
+            glevel = (((glevel * levels) >> 8) * 255) / levels1;
+            blevel = (((blevel * levels) >> 8) * 255) / levels1;
+            img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | 
+              (rlevel << 16) | (glevel << 8) | blevel));
+          }
+          break;          
+        case p.OPAQUE:
+          for (var i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
+          }
+          img.format = p.RGB; //trouble
+          break;
+        case p.THRESHOLD:
+          if (param == null) {
+            param = 0.5;
+          }
+          if ((param < 0) || (param > 1)) {
+            throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
+          }         
+          var thresh = p.floor(param * 255);
+          for (var i = 0; i < imglen; i++) {
+            var max = p.max((img.pixels.getPixel(i) & p.RED_MASK) >> 16,
+                             p.max((img.pixels.getPixel(i) & p.GREEN_MASK) >> 8,
+                                      (img.pixels.getPixel(i) & p.BLUE_MASK)));
+            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & p.ALPHA_MASK) | 
+              ((max < thresh) ? 0x000000 : 0xffffff)));
+          }
+          break;
+        case p.ERODE:
+          dilate(true, img);
+          break;
+        case p.DILATE:
+          dilate(false, img);
+          break;
+      }
+      img.updatePixels();
+    };
+
+    blurARGB = function blurARGB(r, aImg) {
+      var sum, cr, cg, cb, ca;
+      var read, ri, ym, ymi, bk0;
+      var wh = aImg.pixels.getLength();
+      var r2 = new Array(wh);
+      var g2 = new Array(wh);
+      var b2 = new Array(wh);
+      var a2 = new Array(wh);
+      var yi = 0;
+
+      buildBlurKernel(r);
+
+      for (var y = 0; y < aImg.height; y++) {
+        for (var x = 0; x < aImg.width; x++) {
+          cb = cg = cr = ca = sum = 0;
+          read = x - p.shared.blurRadius;
+          if (read<0) {
+            bk0 = -read;
+            read = 0;
+          } else {
+            if (read >= aImg.width)
+              break;
+            bk0=0;
+          }
+          for (var i = bk0; i < p.shared.blurKernelSize; i++) {
+            if (read >= aImg.width)
+              break;
+            var c = aImg.pixels.getPixel(read + yi);
+            var m = p.shared.blurKernel[i];
+            ca += m * ((c & p.ALPHA_MASK) >>> 24);
+            cr += m * ((c & p.RED_MASK) >> 16);
+            cg += m * ((c & p.GREEN_MASK) >> 8);
+            cb += m * (c & p.BLUE_MASK);
+            sum += m;
+            read++;
+          }
+          ri = yi + x;
+          a2[ri] = ca / sum;
+          r2[ri] = cr / sum;
+          g2[ri] = cg / sum;
+          b2[ri] = cb / sum;
+        }
+        yi += aImg.width;
+      }
+
+      yi = 0;
+      ym = -p.shared.blurRadius;
+      ymi = ym*aImg.width;
+
+      for (var y = 0; y < aImg.height; y++) {
+        for (var x = 0; x < aImg.width; x++) {
+          cb = cg = cr = ca = sum = 0;
+          if (ym<0) {
+            bk0 = ri = -ym;
+            read = x;
+          } else {
+            if (ym >= aImg.height)
+              break;
+            bk0 = 0;
+            ri = ym;
+            read = x + ymi;
+          }
+          for (var i = bk0; i < p.shared.blurKernelSize; i++) {
+            if (ri >= aImg.height)
+              break;
+            var m = p.shared.blurKernel[i];
+            ca += m * a2[read];
+            cr += m * r2[read];
+            cg += m * g2[read];
+            cb += m * b2[read];
+            sum += m;
+            ri++;
+            read += aImg.width;
+          }
+          aImg.pixels.setPixel(x+yi, ((ca/sum)<<24 | (cr/sum)<<16 | (cg/sum)<<8 | (cb/sum)));
+        }
+        yi += aImg.width;
+        ymi += aImg.width;
+        ym++;
+      }
+    };
+    
+    // helper function for filter()
+    buildBlurKernel = function buildBlurKernel(r) {
+      var radius = p.floor(r * 3.5);
+      radius = (radius < 1) ? 1 : ((radius < 248) ? radius : 248);
+      if (p.shared.blurRadius != radius) {
+        p.shared.blurRadius = radius;
+        p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
+        p.shared.blurKernel = new Array(p.shared.blurKernelSize);
+        // init blurKernel
+        for(var i=0;i<p.shared.blurKernelSize; i++) {          
+          p.shared.blurKernel[i] = 0;
+        }
+
+        for (var i = 1, radiusi = radius - 1; i < radius; i++) {
+          p.shared.blurKernel[radius+i] = p.shared.blurKernel[radiusi] = radiusi * radiusi;
+        }
+        p.shared.blurKernel[radius] = radius * radius;
+      }
+    };
+    
+    // helper funtion for ERODE and DILATE modes of filter()
+    dilate = function dilate(isInverted, aImg) {
+      var currIdx = 0;
+      var maxIdx = aImg.pixels.getLength();
+      var out = new Array(maxIdx);
+
+      if (!isInverted) {
+        // erosion (grow light areas)
+        while (currIdx<maxIdx) {
+          var currRowIdx = currIdx;
+          var maxRowIdx = currIdx + aImg.width;
+          while (currIdx < maxRowIdx) {
+            var colOrig,colOut;
+            colOrig = colOut = aImg.pixels.getPixel(currIdx);
+            var idxLeft = currIdx - 1;
+            var idxRight = currIdx + 1;
+            var idxUp = currIdx - aImg.width;
+            var idxDown = currIdx + aImg.width;
+            if (idxLeft < currRowIdx) {
+              idxLeft = currIdx;
+            }
+            if (idxRight >= maxRowIdx) {
+              idxRight = currIdx;
+            }
+            if (idxUp < 0) {
+              idxUp = 0;
+            }
+            if (idxDown >= maxIdx) {
+              idxDown = currIdx;
+            }
+            var colUp = aImg.pixels.getPixel(idxUp);
+            var colLeft = aImg.pixels.getPixel(idxLeft);
+            var colDown = aImg.pixels.getPixel(idxDown);
+            var colRight = aImg.pixels.getPixel(idxRight);
+
+            // compute luminance
+            var currLum = 77*(colOrig>>16&0xff) + 151*(colOrig>>8&0xff) + 28*(colOrig&0xff);
+            var lumLeft = 77*(colLeft>>16&0xff) + 151*(colLeft>>8&0xff) + 28*(colLeft&0xff);
+            var lumRight = 77*(colRight>>16&0xff) + 151*(colRight>>8&0xff) + 28*(colRight&0xff);
+            var lumUp = 77*(colUp>>16&0xff) + 151*(colUp>>8&0xff) + 28*(colUp&0xff);
+            var lumDown = 77*(colDown>>16&0xff) + 151*(colDown>>8&0xff) + 28*(colDown&0xff);
+
+            if (lumLeft > currLum) {
+              colOut = colLeft;
+              currLum = lumLeft;
+            }
+            if (lumRight > currLum) {
+              colOut = colRight;
+              currLum = lumRight;
+            }
+            if (lumUp > currLum) {
+              colOut = colUp;
+              currLum = lumUp;
+            }
+            if (lumDown > currLum) {
+              colOut = colDown;
+              currLum = lumDown;
+            }
+            out[currIdx++] = colOut;
+          }
+        }
+      } else {
+        // dilate (grow dark areas)
+        while (currIdx < maxIdx) {
+          var currRowIdx = currIdx;
+          var maxRowIdx = currIdx + aImg.width;
+          while (currIdx < maxRowIdx) {
+            var colOrig,colOut;
+            colOrig = colOut = aImg.pixels.getPixel(currIdx);
+            var idxLeft = currIdx - 1;
+            var idxRight = currIdx + 1;
+            var idxUp = currIdx - aImg.width;
+            var idxDown = currIdx + aImg.width;
+            if (idxLeft < currRowIdx) {
+              idxLeft = currIdx;
+            }
+            if (idxRight >= maxRowIdx) {
+              idxRight = currIdx;
+            }
+            if (idxUp < 0) {
+              idxUp = 0;
+            }
+            if (idxDown >= maxIdx) {
+              idxDown = currIdx;
+            }
+            var colUp = aImg.pixels.getPixel(idxUp);
+            var colLeft = aImg.pixels.getPixel(idxLeft);
+            var colDown = aImg.pixels.getPixel(idxDown);
+            var colRight = aImg.pixels.getPixel(idxRight);
+
+            // compute luminance
+            var currLum = 77*(colOrig>>16&0xff) + 151*(colOrig>>8&0xff) + 28*(colOrig&0xff);
+            var lumLeft = 77*(colLeft>>16&0xff) + 151*(colLeft>>8&0xff) + 28*(colLeft&0xff);
+            var lumRight = 77*(colRight>>16&0xff) + 151*(colRight>>8&0xff) + 28*(colRight&0xff);
+            var lumUp = 77*(colUp>>16&0xff) + 151*(colUp>>8&0xff) + 28*(colUp&0xff);
+            var lumDown = 77*(colDown>>16&0xff) + 151*(colDown>>8&0xff) + 28*(colDown&0xff);
+
+            if (lumLeft < currLum) {
+              colOut = colLeft;
+              currLum = lumLeft;
+            }
+            if (lumRight < currLum) {
+              colOut = colRight;
+              currLum = lumRight;
+            }
+            if (lumUp < currLum) {
+              colOut = colUp;
+              currLum = lumUp;
+            }
+            if (lumDown < currLum) {
+              colOut = colDown;
+              currLum = lumDown;
+            }
+            out[currIdx++]=colOut;
+          }
+        }
+      }
+      aImg.pixels.set(out);
+      //p.arraycopy(out,0,pixels,0,maxIdx);
+    };
+
+    // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear(), filter()
     // change this in the future to not be exposed to p
     p.shared = {
       fracU: 0,
@@ -6582,7 +6890,10 @@
       g: 0,
       b: 0,
       a: 0,
-      srcBuffer: null
+      srcBuffer: null,
+      blurRadius: 0,
+      blurKernelSize: 0,
+      blurKernel: null
     };
 
     p.intersect = function intersect(sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2) {

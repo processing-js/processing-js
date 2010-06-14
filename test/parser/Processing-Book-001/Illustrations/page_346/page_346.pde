@@ -2,7 +2,7 @@
 // Based on code 39-03 (p. 349)
 
 
-size(750, 2775);
+size(75, 75);
 background(255);
 smooth();
 strokeWeight(1.0);
