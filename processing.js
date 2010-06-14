@@ -283,7 +283,7 @@
         curShapeCount = 0,
         curvePoints = [],
         curTightness = 0,
-        curveDetail = 20,
+        curveDet = 20,
         curveInited = false,
         bezDetail = 20,
         colorModeA = 255,
@@ -371,6 +371,8 @@
         cameraAspect = curElement.width / curElement.height;
 
     var vertArray = [],
+        curveVertArray = [],
+        curveVertCount = 0,
         isCurve = false,
         isBezier = false,
         firstVert = true;
@@ -5572,59 +5574,65 @@
     };
 
     p.endShape = function endShape(close){
-      firstVert = true;
-      var i, j, k;
-      var last = vertArray.length - 1;
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
       var strokeVertArray = [];
+      firstVert = true;
+      var i, j, k;
+      var last = vertArray.length - 1;
+
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 0; j < 3; j++){
+          fillVertArray.push(vertArray[i][j]);
+        }
+      }
+
+      // 5,6,7,8
+      // R,G,B,A
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 5; j < 9; j++){
+          colorVertArray.push(vertArray[i][j]);
+        }
+      }
+      
+      // 9,10,11,12
+      // R, G, B, A
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 9; j < 13; j++){
+          strokeVertArray.push(vertArray[i][j]);
+        }
+      }
 
       if(!close){
         p.CLOSE = false;
       }
       else{
         p.CLOSE = true;
-      }
-
-      //0, 1, 2
-      //X, Y, Z coordinates
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 0; j < 3; j++){
-          fillVertArray.push(vertArray[i][j]);
+        for(i = 0; i < 3; i++){
+          fillVertArray.push(vertArray[0][i]);
         }
-      }
-      for(i = 0; i < 3; i++){
-        fillVertArray.push(vertArray[0][i]);
-      }
-
-      // 5,6,7,8
-      // R,G,B,A color
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 5; j < 9; j++){
-          colorVertArray.push(vertArray[i][j]);
+        for(i = 5; i < 9; i++){
+          colorVertArray.push(vertArray[0][i]);
         }
-      }
-      for(i = 5; i < 9; i++){
-        colorVertArray.push(vertArray[0][i]);
-      }
-      
-      // 9,10,11,12
-      // R, G, B, A stroke
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 9; j < 13; j++){
-          strokeVertArray.push(vertArray[i][j]);
+        for(i = 9; i < 13; i++){
+          strokeVertArray.push(vertArray[0][i]);
         }
-      }
-      for(i = 9; i < 13; i++){
-        strokeVertArray.push(vertArray[0][i]);
       }
 
       if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
-        if(vertArray.length > 3){
-          if(p.use3DContext){
+
+        if(p.use3DContext){
+          lineVertArray = fillVertArray;
+          if(doStroke){
+            line3D(lineVertArray, null, strokeVertArray);
           }
-          else{
+          if(doFill){
+            fill3D(fillVertArray, null, colorVertArray); // fill isn't working in 3d curveVertex
+          }
+        }
+        else{
+          if(vertArray.length > 3){
             var b = [],
                 s = 1 - curTightness;
             curContext.beginPath();
@@ -6107,6 +6115,8 @@
       }
       isCurve = false;
       isBezier = false;
+      curveVertArray = [];
+      curveVertCount = 0;
     };
 
     p.bezierVertex = function bezierVertex() {
@@ -6157,10 +6167,38 @@
 
     p.curveVertex = function(x, y, z) {
       isCurve = true;
-      p.vertex(x, y, z);
+      if(p.use3DContext){
+        if (!curveInited){
+          curveInit();
+        }
+        var vert = [];
+        vert[0] = x;
+        vert[1] = y;
+        vert[2] = z;
+        curveVertArray.push(vert);
+        curveVertCount++;
+        
+        if (curveVertCount > 3){
+          curveVertexSegment( curveVertArray[curveVertCount-4][0],
+                              curveVertArray[curveVertCount-4][1],
+                              curveVertArray[curveVertCount-4][2],
+                              curveVertArray[curveVertCount-3][0],
+                              curveVertArray[curveVertCount-3][1],
+                              curveVertArray[curveVertCount-3][2],
+                              curveVertArray[curveVertCount-2][0],
+                              curveVertArray[curveVertCount-2][1],
+                              curveVertArray[curveVertCount-2][2],
+                              curveVertArray[curveVertCount-1][0],
+                              curveVertArray[curveVertCount-1][1],
+                              curveVertArray[curveVertCount-1][2] );
+        }
+      }
+      else{
+        p.vertex(x, y, z);
+      }
     };
 
-    p.curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
+    var curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
       var x0 = x2;
       var y0 = y2;
       var z0 = z2;
@@ -6180,16 +6218,10 @@
       var zplot3 = draw[12] * z1 + draw[13] * z2 + draw[14] * z3 + draw[15] * z4;
 
       p.vertex(x0, y0, z0);
-      for (var j = 0; j < curveDetail; j++) {
-        x0 += xplot1;
-        xplot1 += xplot2;
-        xplot2 += xplot3;
-        y0 += yplot1;
-        yplot1 += yplot2;
-        yplot2 += yplot3;
-        z0 += zplot1;
-        zplot1 += zplot2;
-        zplot2 += zplot3;
+      for (var j = 0; j < curveDet; j++) {
+        x0 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+        y0 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+        z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
         p.vertex(x0, y0, z0);
       }
     };
@@ -6241,7 +6273,7 @@
       var s = curTightness;
       curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2), ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2), (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2), ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
 
-      splineForward(curveDetail, curveDrawMatrix);
+      splineForward(curveDet, curveDrawMatrix);
 
       if (!bezierBasisInverse) {
         //bezierBasisInverse = bezierBasisMatrix.get();
@@ -6260,8 +6292,8 @@
       curveDrawMatrix.apply(curveBasisMatrix);
     };
 
-    p.curveDetail = function curveDetail() {
-      curveDetail = arguments[0];
+    p.curveDetail = function curveDetail( detail ) {
+      curveDet = detail;
       curveInit();
     };
 
