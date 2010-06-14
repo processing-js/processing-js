@@ -6020,8 +6020,15 @@
     // Raster drawing functions
     ////////////////////////////////////////////////////////////////////////////
 
-    // TODO: function incomplete
-    p.save = function save(file) {};
+    p.save = function save(file, img) {
+      // file is unused at the moment
+      // may implement this differently in later release
+      if (img != null) {
+        return window.open(img.toDataURL(),"_blank");
+      } else {
+        return window.open(p.canvas.toDataURL(),"_blank");
+      }
+    };
 
     var Temporary2DContext = document.createElement('canvas').getContext('2d');
 
@@ -6063,6 +6070,10 @@
           // no param specified, send null to show its invalid
           p.filter(mode, null, this);
         }
+      };
+
+      this.save = function(file){
+        p.save(file,this);
       };
       
       this.resize = function(w, h) {
