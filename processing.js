@@ -319,6 +319,11 @@
         strokeColorBuffer,
         pointBuffer;
 
+    // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
+    // in Minefield does nothing and does not report any errors.
+    var VERTEX_PROGRAM_POINT_SIZE = 0x8642;
+    var POINT_SMOOTH = 0x0B10;
+    
     // Get padding and border style widths for mouse offsets
     if (document.defaultView && document.defaultView.getComputedStyle) {
       var stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingLeft'], 10)      || 0,
@@ -422,8 +427,10 @@
       "uniform mat4 model;" +
       "uniform mat4 view;" +
       "uniform mat4 projection;" +
+      "uniform float pointSize;" +
 
       "void main(void) {" +
+      "  gl_PointSize = pointSize;" +
       "  gl_FrontColor = color;" +
       "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
       "}";
@@ -3976,10 +3983,20 @@
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
+          // We declare our own constants since Minefield doesn't 
+          // do anything when curContext.VERTEX_PROGRAM_POINT_SIZE is used.
+          curContext.enable(VERTEX_PROGRAM_POINT_SIZE);
+          curContext.enable(POINT_SMOOTH);
+
           // Create the program objects to render 2D (points, lines) and
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
           // lighting calculations could be ommitted from that program object.
           programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
+
+          // set the defaults
+          curContext.useProgram(programObject2D);
+          p.strokeWeight(1.0);
+
           programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
           programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
 
@@ -4921,6 +4938,8 @@
     p.strokeWeight = function strokeWeight(w) {
       if (p.use3DContext) {
         lineWidth = w;
+        curContext.useProgram(programObject2D);  
+        uniformf(programObject2D, "pointSize", w);
       } else {
         curContext.lineWidth = w;
       }

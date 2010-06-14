@@ -28,7 +28,7 @@ class Ball {
 
     this.loc.add(this.vel);
 
-    //stroke(round((float)(Math.sin(frameCount/30f) + 1) * 128), round((float)(Math.cos(frameCount/40f) + 1) * 128) + index, round((float)(Math.cos(frameCount/30f) + 1) * 128) + index/2);
+    stroke(round((float)(Math.sin(frameCount/30f) + 1) * 128), round((float)(Math.cos(frameCount/40f) + 1) * 128) + index, round((float)(Math.cos(frameCount/30f) + 1) * 128) + index/2);
 
     if ( this.loc.y >= height - d/2 ) {
       this.vel = new PVector();

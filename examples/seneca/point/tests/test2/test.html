@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test stroke() and point() in WebGL context</h2>
+
+    <p><b>Please be patient</b>, this page may take a while to load.<br />
+    This tests to make sure setting point colors with stroke works properly.<br />
+    If the canvas on the left matches the image on the right, the test passed.<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs"></canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0;" />
+    </p>
+    
+    <pre>
+<b>// Test by Andor Salga</b>
+import processing.opengl.*;
+
+void setup(){
+  size(500,500,OPENGL);
+
+  background(0);
+  stroke(255);
+  strokeWeight(1);
+
+  for(int x = 0; x < 255; x++){
+    for(int y = 0; y < 255; y++){
+      stroke(x,y,255-x);
+      point( x * 2, y * 2, 0);
+    }
+  }
+}</pre>
+
+  </body>
+</html>
