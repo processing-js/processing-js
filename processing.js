@@ -346,13 +346,15 @@
     // in Minefield does nothing and does not report any errors.
     var VERTEX_PROGRAM_POINT_SIZE = 0x8642;
     var POINT_SMOOTH = 0x0B10;
-    
+
     // Get padding and border style widths for mouse offsets
+    var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
+    
     if (document.defaultView && document.defaultView.getComputedStyle) {
-      var stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingLeft'], 10)      || 0,
-          stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingTop'], 10)       || 0,
-          styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderLeftWidth'], 10)  || 0,
-          styleBorderTop   = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderTopWidth'], 10)   || 0;
+      stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingLeft'], 10)      || 0;
+      stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingTop'], 10)       || 0;
+      styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderLeftWidth'], 10)  || 0;
+      styleBorderTop   = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderTopWidth'], 10)   || 0;
     }
 
     // User can only have MAX_LIGHTS lights
@@ -2720,19 +2722,20 @@
     }
 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
+      var undef;
 
       // 4 arguments: (R, G, B, A) or (H, S, B, A)
-      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
+      if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef && aValue4 !== undef) {
         return color$4(aValue1, aValue2, aValue3, aValue4);
       }
 
       // 3 arguments: (R, G, B) or (H, S, B)
-      else if (aValue1 != null && aValue2 != null && aValue3 != null) {
+      else if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef) {
         return color$4(aValue1, aValue2, aValue3, colorModeA);
       }
 
       // 2 arguments: (Color, A) or (Grayscale, A)
-      else if (aValue1 != null && aValue2 != null) {
+      else if (aValue1 !== undef && aValue2 !== undef) {
         return color$2(aValue1, aValue2);
       }
 
@@ -7469,13 +7472,15 @@
             bk0 = -read;
             read = 0;
           } else {
-            if (read >= aImg.width)
+            if (read >= aImg.width) {
               break;
+            }
             bk0=0;
           }
           for (var i = bk0; i < p.shared.blurKernelSize; i++) {
-            if (read >= aImg.width)
+            if (read >= aImg.width) {
               break;
+            }
             var c = aImg.pixels.getPixel(read + yi);
             var m = p.shared.blurKernel[i];
             ca += m * ((c & p.ALPHA_MASK) >>> 24);
@@ -7505,15 +7510,17 @@
             bk0 = ri = -ym;
             read = x;
           } else {
-            if (ym >= aImg.height)
+            if (ym >= aImg.height) {
               break;
+            }
             bk0 = 0;
             ri = ym;
             read = x + ymi;
           }
           for (var i = bk0; i < p.shared.blurKernelSize; i++) {
-            if (ri >= aImg.height)
+            if (ri >= aImg.height) {
               break;
+            }
             var m = p.shared.blurKernel[i];
             ca += m * a2[read];
             cr += m * r2[read];
