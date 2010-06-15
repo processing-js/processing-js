@@ -3259,45 +3259,25 @@
       return str;
     }
 
+    /*
+      This function does not always work when trying to convert
+      colors and bytes to binary values because the types passed in
+      cannot be determined.
+    */
     p.binary = function(num, numBits) {
       var numBitsInValue = 32;
 
-      // color
-      if (typeof num === "string" && num.length > 1) {
-        var c = num.slice(5, -1).split(",");
-
-        // if all components are zero, a single "0" is returned for some reason
-        // [0] alpha is normalized, [1] r, [2] g, [3] b
-        var sbin = [
-          decToBin(c[3] * 255, 8),
-          decToBin(c[0], 8),
-          decToBin(c[1], 8),
-          decToBin(c[2], 8)
-          ];
-
-        var s = sbin[0] + sbin[1] + sbin[2] + sbin[3];
-
-        if (numBits) {
-          s = s.substr(-numBits);
+      // color, int, byte
+      if (typeof num === "number") {
+        if(numBits){
+          numBitsInValue = numBits;
         }
-        // if the user didn't specify number of bits,
-        // trim leading zeros.
-        else {
-          s = s.replace(/^0+$/g, "0");
-          s = s.replace(/^0{1,}1/g, "1");
-        }
-        return s;
+        return decToBin(num, numBitsInValue);
       }
-
+      
       // char
-      if (typeof num === "string" || num instanceof Char) {
-
-        if (num instanceof Char) {
-          num = num.toString().charCodeAt(0);
-        } else {
-          num = num.charCodeAt(0);
-        }
-
+      if (num instanceof Char) {
+        num = num.toString().charCodeAt(0);
         if (numBits) {
           numBitsInValue = 32;
         } else {
