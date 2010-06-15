@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../../../processing.js"></script>
+  <script src="../../init.js"></script>
+  <link rel="stylesheet" href="../../style.css" />
+</head>
+
+<body>
+  <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+
+  <h2>Test for bug <a href="https://processing-js.lighthouseapp.com/projects/41284-processingjs/tickets/662-chromium-does-not-render-3d-sketches">662</a></h2>
+
+<p>
+<script type="application/processing">
+import processing.opengl.*;
+float r = 0;
+void setup()
+{
+  size(400,400,OPENGL);
+}
+
+void draw(){
+  background(0);
+  translate(width/2, height/2, 0);
+  rotate(r+=0.1);
+  rotateY(r/2);
+  rotateX(-r);
+  box(50);
+}
+</script>
+
+<canvas></canvas>
+</p>
+
+</body>
+</html>

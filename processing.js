@@ -4901,21 +4901,28 @@
         // Modeling transformation
         var model = new PMatrix3D();
         model.scale(w, h, d);
-
+        model.transpose();
+        
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
         view.apply(modelView.array());
+        view.transpose();
+        
+        var proj = new PMatrix3D();
+        proj.set(projection);
+        proj.transpose();
 
         if (doFill === true) {
+        
           curContext.useProgram(programObject3D);
 
           disableVertexAttribPointer(programObject3D, "aTexture");
 
-          uniformMatrix(programObject3D, "model", true, model.array());
-          uniformMatrix(programObject3D, "view", true, view.array());
-          uniformMatrix(programObject3D, "projection", true, projection.array());
+          uniformMatrix(programObject3D, "model", false, model.array());
+          uniformMatrix(programObject3D, "view", false, view.array());
+          uniformMatrix(programObject3D, "projection", false, proj.array());
         
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -4925,6 +4932,7 @@
           curContext.polygonOffset(1, 1);
           uniformf(programObject3D, "color", fillStyle);
 
+          // Create the normal transformation matrix
           var v = new PMatrix3D();
           v.set(view);
 
@@ -4952,9 +4960,9 @@
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", true, model.array());
-          uniformMatrix(programObject2D, "view", true, view.array());
-          uniformMatrix(programObject2D, "projection", true, projection.array());
+          uniformMatrix(programObject2D, "model", false, model.array());
+          uniformMatrix(programObject2D, "view", false, view.array());
+          uniformMatrix(programObject2D, "projection", false, proj.array());
 
           uniformf(programObject2D, "color", strokeStyle);
           curContext.lineWidth(lineWidth);
@@ -5105,18 +5113,24 @@
         // Modeling transformation
         var model = new PMatrix3D();
         model.scale(sRad, sRad, sRad);
-
+          
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
         view.apply(modelView.array());
+        view.transpose();
+
+        var proj = new PMatrix3D();
+        proj.set(projection);
+        proj.transpose();
  
         if (doFill === true) {
+
           // Create a normal transformation matrix
           var v = new PMatrix3D();
           v.set(view);
-
+          
           var m = new PMatrix3D();
           m.set(model);
 
@@ -5125,14 +5139,13 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
-        
+                    
           curContext.useProgram(programObject3D);
           disableVertexAttribPointer(programObject3D, "aTexture");
           
-          uniformMatrix(programObject3D, "model", true, model.array());
-          uniformMatrix(programObject3D, "view", true, view.array());
-          uniformMatrix(programObject3D, "projection", true, projection.array());
-        
+          uniformMatrix(programObject3D, "model", false, model.array());
+          uniformMatrix(programObject3D, "view", false, view.array());
+          uniformMatrix(programObject3D, "projection", false, proj.array());
           uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
 
           vertexAttribPointer(programObject3D, "Vertex", 3, sphereBuffer);
@@ -5157,12 +5170,11 @@
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
+          uniformMatrix(programObject2D, "model", false, model.array());
+          uniformMatrix(programObject2D, "view", false, view.array());
+          uniformMatrix(programObject2D, "projection", false, proj.array());
+
           vertexAttribPointer(programObject2D, "Vertex", 3, sphereBuffer);
-
-          uniformMatrix(programObject2D, "model", true, model.array());
-          uniformMatrix(programObject2D, "view", true, view.array());
-          uniformMatrix(programObject2D, "projection", true, projection.array());
-
           uniformf(programObject2D, "color", strokeStyle);
 
           curContext.lineWidth(lineWidth);
@@ -5438,15 +5450,21 @@
 
         // move point to position
         model.translate(x, y, z || 0);
+        model.transpose();
 
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
         view.apply(modelView.array());
+        view.transpose();
+        
+        var proj = new PMatrix3D();
+        proj.set(projection);
+        proj.transpose();
 
         curContext.useProgram(programObject2D);
-        uniformMatrix(programObject2D, "model", true, model.array());
-        uniformMatrix(programObject2D, "view", true, view.array());
-        uniformMatrix(programObject2D, "projection", true, projection.array());
+        uniformMatrix(programObject2D, "model", false, model.array());
+        uniformMatrix(programObject2D, "view", false, view.array());        
+        uniformMatrix(programObject2D, "projection", false, proj.array());
 
         if (lineWidth > 0 && doStroke) {
           // this will be replaced with the new bit shifting color code
@@ -5524,10 +5542,15 @@
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
       view.apply(modelView.array());
+      view.transpose();
+      
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix(programObjectUnlitShape, "uView", true, view.array());
-      uniformMatrix(programObjectUnlitShape, "uProjection", true, projection.array());
+      uniformMatrix(programObjectUnlitShape, "uView", false, view.array());
+      uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
 
       vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
@@ -5557,10 +5580,15 @@
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
       view.apply(modelView.array());
-
+      view.transpose();
+            
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+      
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix(programObjectUnlitShape, "uView", true, view.array());
-      uniformMatrix(programObjectUnlitShape, "uProjection", true, projection.array());
+      uniformMatrix(programObjectUnlitShape, "uView", false, view.array());
+      uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
       
       vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
@@ -5584,16 +5612,20 @@
       else{
         ctxMode = curContext.TRIANGLE_STRIP;
       }
-
-      var model = new PMatrix3D();
+      
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
       view.apply(modelView.array());
-
+      view.transpose();
+      
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+      
       curContext.useProgram( programObject3D );
-      uniformMatrix( programObject3D, "model", true,  model.array() );
-      uniformMatrix( programObject3D, "view", true, view.array() );
-      uniformMatrix( programObject3D, "projection", true, projection.array() );
+      uniformMatrix( programObject3D, "model", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
+      uniformMatrix( programObject3D, "view", false, view.array() );
+      uniformMatrix( programObject3D, "projection", false, proj.array() );
 
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
@@ -5629,7 +5661,7 @@
         curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
       }
       
-      curContext.drawArrays( ctxMode, 0, (vArray.length/3) );
+      curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
@@ -6524,20 +6556,22 @@
 
         var lineVerts = [x1, y1, z1, x2, y2, z2];
 
-        var model = new PMatrix3D();
-        //model.scale(w, h, d);
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
         view.apply(modelView.array());
+        view.transpose();
 
-        curContext.useProgram(programObject2D);
-        uniformMatrix(programObject2D, "model", true, model.array());
-        uniformMatrix(programObject2D, "view", true, view.array());
-        uniformMatrix(programObject2D, "projection", true, projection.array());
-
+        var proj = new PMatrix3D();
+        proj.set(projection);
+        proj.transpose();
+        
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
           uniformi(programObject2D, "picktype", 0);
+          uniformMatrix(programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+          uniformMatrix(programObject2D, "view", false, view.array());
+          uniformMatrix(programObject2D, "projection", false, proj.array());
+
           uniformf(programObject2D, "color", strokeStyle);
 
           curContext.lineWidth(lineWidth);
