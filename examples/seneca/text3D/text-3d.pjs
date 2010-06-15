@@ -1,0 +1,39 @@
+float a=0.0;
+void setup() 
+{
+size(500, 500, P3D);
+background(0);
+PFont font = loadFont("Arial");
+textFont(font,30); 
+} 
+
+void draw(){
+  
+  background(0);
+  a += 0.015;
+  if(a > TWO_PI) { 
+    a = 0.0; 
+  }
+  
+  translate(width/3, height/3,0);
+  rotateY(a);
+  //rotateY(a * 2.0);
+  
+//rect(5, 5, 20, 5);
+fill(0, 102, 153);
+text("wo\nrdsecond", 10, -20, 0);
+//text("second");
+fill(255);
+text("wo\nrd", 10, -20, -10); 
+
+fill(255);
+text("word", 20, 40, -10); 
+fill(0, 102, 153);
+text("word", 20, 40, 0);
+
+fill(255);
+text("word", 30, 70, -10); 
+fill(0, 102, 153);
+text("word", 30, 70, 0);
+}
+

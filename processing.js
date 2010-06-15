@@ -259,9 +259,9 @@
     var curContext,
         online = true,
         doFill = true,
-        fillStyle = "rgba( 255, 255, 255, 1 )",
+        fillStyle = [1.0, 1.0, 1.0, 1.0],
         doStroke = true,
-        strokeStyle = "rgba( 204, 204, 204, 1 )",
+        strokeStyle = [0.8, 0.8, 0.8, 1.0],
         lineWidth = 1,
         loopStarted = false,
         refreshBackground = function() {},
@@ -274,7 +274,6 @@
         normalZ = 0,
         normalMode = p.NORMAL_MODE_AUTO,
         inDraw = false,
-        curBackground = "rgba( 204, 204, 204, 1 )",
         curFrameRate = 60,
         curCursor = p.ARROW,
         oldCursor = curElement.style.cursor,
@@ -300,7 +299,7 @@
         start = new Date().getTime(),
         timeSinceLastFPS = start,
         framesSinceLastFPS = 0,
-        lastTextPos = [0, 0, 0],
+        textcanvas,
         curveBasisMatrix,
         curveToBezierMatrix,
         curveDrawMatrix,
@@ -325,7 +324,10 @@
         shapeTexVBO,
         curTexture = {width:0,height:0},
         curTextureMode = p.IMAGE,
-        usingTexture = false;
+        usingTexture = false,
+        textBuffer,
+        textureBuffer,
+        indexBuffer;
 
     // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
     // in Minefield does nothing and does not report any errors.
@@ -416,7 +418,7 @@
     var rectNorms = [0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1];
     
     // Vertex shader for points and lines
-    var vShaderSrcUnlitShape =
+    var vShaderSrcUnlitShape = // ???
       "attribute vec3 aVertex;" +
       "attribute vec4 aColor;" +
 
@@ -436,22 +438,35 @@
     // Vertex shader for points and lines
     var vertexShaderSource2D =
       "attribute vec3 Vertex;" +
+      "attribute vec2 aTextureCoord;" +
       "uniform vec4 color;" +
 
       "uniform mat4 model;" +
       "uniform mat4 view;" +
       "uniform mat4 projection;" +
       "uniform float pointSize;" +
+      "varying vec2 vTextureCoord;"+
 
       "void main(void) {" +
       "  gl_PointSize = pointSize;" +
       "  gl_FrontColor = color;" +
       "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
+      "  vTextureCoord = aTextureCoord;" +
       "}";
 
     var fragmentShaderSource2D =
+      "varying vec2 vTextureCoord;"+
+      "uniform vec4 color;"+
+      "uniform sampler2D uSampler;"+
+      "uniform int picktype;"+
+      
       "void main(void){" +
-      "  gl_FragColor = gl_Color;" +
+      "  if(picktype==0){"+
+      "    gl_FragColor = color;" +
+      "  }else if(picktype==1){"+
+      "    float alpha = texture2D(uSampler,vTextureCoord).a;"+
+      "    gl_FragColor = vec4(color.rgb*alpha,alpha);\n"+
+      "  }"+
       "}";
 
     // Vertex shader for boxes and spheres
@@ -4466,6 +4481,18 @@
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
 
+          textBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
+
+          textureBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
+
+          indexBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
+          curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new WebGLUnsignedShortArray([0,1,2,2,3,0]), curContext.STATIC_DRAW);
+
           cam = new PMatrix3D();
           cameraInv = new PMatrix3D();
           forwardTransform = new PMatrix3D();
@@ -6510,7 +6537,7 @@
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-
+          uniformi(programObject2D, "picktype", 0);
           uniformf(programObject2D, "color", strokeStyle);
 
           curContext.lineWidth(lineWidth);
@@ -8275,10 +8302,6 @@
 
     // Print some text to the Canvas
     function text$line(str, x, y, z) {
-      // TODO: handle case for 3d text
-      if (p.use3DContext) {
-      }
-
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
         if (str && (curContext.fillText || curContext.mozDrawText)) {
@@ -8314,20 +8337,70 @@
         }
         curContext.restore();
       }
+    }
 
-      // TODO: Handle case for 3d text
-      if (p.use3DContext) {
+    function text$line$3d(str, x, y, z) {
+      // handle case for 3d text
+      if(typeof textcanvas === 'undefined'){
+        textcanvas = document.createElement("canvas");        
       }
+      var oldContext = curContext;
+      curContext = textcanvas.getContext("2d");
+      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      if (curContext.fillText) {
+        textcanvas.width = curContext.measureText( str ).width;
+      } else if (curContext.mozDrawText) {
+        textcanvas.width = curContext.mozMeasureText( str );
+      }
+      textcanvas.height = curTextSize;
+      curContext = textcanvas.getContext("2d"); // refreshes curContext
+      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      curContext.textBaseline="top";
+
+      // paint on 2D canvas
+      text$line(str,0,0,0);
+
+      // use it as a texture
+      var aspect = textcanvas.width/textcanvas.height;
+      curContext = oldContext;
+
+      curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas, false, true);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
+      curContext.generateMipmap(curContext.TEXTURE_2D);
+
+      var model = new PMatrix3D();
+      var scalefactor = curTextSize * 0.5;
+      model.translate(x-scalefactor/2, y-scalefactor, z);
+      model.scale(-aspect*scalefactor, -scalefactor, scalefactor);
+      model.translate(-1, -1, -1);
+
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+
+      curContext.useProgram(programObject2D);
+      vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
+      vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
+      uniformi(programObject2D, "uSampler", [0]);
+      uniformi(programObject2D, "picktype", 1);
+      uniformMatrix( programObject2D, "model", true,  model.array() );
+      uniformMatrix( programObject2D, "view", true, view.array() );
+      uniformMatrix( programObject2D, "projection", true, projection.array() );
+      uniformf(programObject2D, "color", fillStyle);
+      curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
+      curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
     }
 
     function text$4(str, x, y, z) {
+      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       if(str.indexOf('\n') < 0) {
-        text$line(str, x, y, z);
+        lineFunction(str, x, y, z);
       } else {
         // handle text line-by-line
         var lines = str.split('\n');
         for(var il=0, ll=lines.length;il<ll;++il) {
-          text$line(lines[il], x, y + il * curTextSize, z);
+          lineFunction(lines[il], x, y + il * curTextSize, z);
         }
       }
     }
@@ -8396,12 +8469,13 @@
       // TODO box alignment
 
       // actual draw
+      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       for(var il=0,ll=drawCommands.length; il<ll; ++il) {
         var command = drawCommands[il];
         if(command.offset + curTextSize > height + baselineOffset * curTextSize) {            
           break; // stop if no enough space for one more line draw
         }
-        text$line(command.text, x, y + command.offset, z);
+        lineFunction(command.text, x, y + command.offset, z);
       }
     }
 
