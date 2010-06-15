@@ -4899,8 +4899,11 @@
     ////////////////////////////////////////////////////////////////////////////
 
     p.fill = function fill() {
-      doFill = true;
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
+      if(color === currentFillColor && doFill) {
+        return;
+      }
+      doFill = true;
       currentFillColor = color;
 
       if (p.use3DContext) {
@@ -4927,8 +4930,11 @@
     };
 
     p.stroke = function stroke() {
-      doStroke = true;
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
+      if(color === currentStrokeColor && doStroke) {
+        return;
+      }
+      doStroke = true;
       currentStrokeColor = color;
 
       if (p.use3DContext) {
@@ -6489,7 +6495,7 @@
       if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
         replaceContext();
         p.pixels.setPixel((0|x)+p.width*(0|y), c);
-        if(setPixelsCached > maxPixelsCached) {
+        if(++setPixelsCached > maxPixelsCached) {
           resetContext();
         }
       }
