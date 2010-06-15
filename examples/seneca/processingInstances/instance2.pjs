@@ -1,0 +1,12 @@
+// 	Processing.js Example
+
+void setup() {
+  size(200, 200);
+}
+
+void draw() {
+  background(#00ff00);
+  ellipse(mouseX, mouseY, 55, 55);
+  ellipse(Processing.getInstanceById("blue").mouseX, Processing.getInstanceById("blue").mouseY, 55, 55);
+}
+

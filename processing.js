@@ -7115,10 +7115,11 @@
     // Creates a new Processing instance and passes it back for... processing
     p.createGraphics = function createGraphics(w, h) {
       var canvas = document.createElement("canvas");
-      var ret = new Processing(canvas);
-      ret.size(w, h);
-      ret.canvas = canvas;
-      return ret;
+      var pg = new Processing(canvas);
+      pg.size(w, h);
+      pg.canvas = canvas;
+      //Processing.addInstance(pg); // TODO: this function does not exist in this scope
+      return pg;
     };
 
     // Paints a pixel array into the canvas
@@ -10145,6 +10146,27 @@
     return aCode;
   };
 
+  Processing.version = "@VERSION@";
+
+  // Share lib space
+  Processing.lib = {};
+
+  // Store Processing instances 
+  Processing.instances = [];
+  Processing.instanceIds = {};
+
+  Processing.addInstance = function(processing) {
+    if (typeof processing.canvas.id === 'undefined' || !processing.canvas.id.length) {
+      processing.canvas.id = "__processing" + Processing.instances.length;
+    }
+    Processing.instanceIds[processing.canvas.id] = Processing.instances.length;
+    Processing.instances.push(processing);
+  };
+
+  Processing.getInstanceById = function(name) {
+    return Processing.instances[Processing.instanceIds[name]];
+  };
+
   // IE Unfriendly AJAX Method
   var ajax = function(url) {
     var AJAX = new window.XMLHttpRequest();
@@ -10185,7 +10207,7 @@
             code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
           }
         }
-        new Processing(canvas[i], code);
+        Processing.addInstance(new Processing(canvas[i], code));
       }
     }
   };
