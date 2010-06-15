@@ -7214,7 +7214,6 @@
         }
         curContext.restore();
       }
-
     }
 
     function text$line$3d(str, x, y, z) {
@@ -7230,8 +7229,8 @@
       } else if (curContext.mozDrawText) {
         textcanvas.width = curContext.mozMeasureText( str );
       }
-      textcanvas.height=curTextSize*1.2;
-      curContext = textcanvas.getContext("2d");
+      textcanvas.height = curTextSize;
+      curContext = textcanvas.getContext("2d"); // refreshes curContext
       curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
       curContext.textBaseline="top";
 
@@ -7239,19 +7238,19 @@
       text$line(str,0,0,0);
 
       // use it as a texture
-      var aspect=textcanvas.width/textcanvas.height;
+      var aspect = textcanvas.width/textcanvas.height;
       curContext = oldContext;
 
-      curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas,false,true);
+      curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas, false, true);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
       curContext.generateMipmap(curContext.TEXTURE_2D);
 
       var model = new PMatrix3D();
-      var scalefactor=curTextSize*0.65;
+      var scalefactor = curTextSize * 0.5;
       model.translate(x-scalefactor/2, y-scalefactor, z);
-      model.scale(-aspect*scalefactor,-scalefactor,scalefactor);
-      model.translate(-1,-1,-1);
+      model.scale(-aspect*scalefactor, -scalefactor, scalefactor);
+      model.translate(-1, -1, -1);
 
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
@@ -7347,12 +7346,13 @@
       // TODO box alignment
 
       // actual draw
+      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       for(var il=0,ll=drawCommands.length; il<ll; ++il) {
         var command = drawCommands[il];
         if(command.offset + curTextSize > height + baselineOffset * curTextSize) {            
           break; // stop if no enough space for one more line draw
         }
-        text$line(command.text, x, y + command.offset, z);
+        lineFunction(command.text, x, y + command.offset, z);
       }
     }
 
