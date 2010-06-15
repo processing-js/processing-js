@@ -75,6 +75,7 @@ var canvas = {
 };
  
 var WebGLFloatArray = __empty_func__;
+var WebGLUnsignedShortArray = __empty_func__;
 var HTMLImageElement = __empty_func__;
 
 var document = {
