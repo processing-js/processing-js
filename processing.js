@@ -174,9 +174,9 @@
     p.BOTTOM   = 102; // Align text from the bottom, using the baseline
 
     // UV Texture coordinate modes
-    p.NORMAL    = 1;
-    p.NORMALIZE = 1;
-    p.IMAGE     = 2;
+    p.NORMAL     = 1;
+    p.NORMALIZED = 1;
+    p.IMAGE      = 2;
 
     // Text placement modes
     p.MODEL = 4;
@@ -321,7 +321,11 @@
         fillBuffer,
         fillColorBuffer,
         strokeColorBuffer,
-        pointBuffer;
+        pointBuffer,
+        shapeTexVBO,
+        curTexture = {width:0,height:0},
+        curTextureMode = p.IMAGE,
+        usingTexture = false;
 
     // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
     // in Minefield does nothing and does not report any errors.
@@ -455,7 +459,9 @@
       "attribute vec3 Vertex;" +
       "attribute vec3 Normal;" +
       "attribute vec4 aColor;" +
-
+      "attribute vec2 aTexture;" +
+      "varying   vec2 vTexture;" +
+      
       "uniform vec4 color;" +
 
       "uniform bool usingMat;" +
@@ -630,12 +636,23 @@
       "       col[3] );" +
       "    }" +
       "  }" +
+      "  vTexture.xy = aTexture.xy;" +
       "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
       "}";
 
     var fragmentShaderSource3D =
+      "uniform sampler2D sampler;" +
+      "uniform bool usingTexture;" +
+      "varying vec2 vTexture;" +
+      
+      // In Processing, when a texture is used, the fill color is ignored
       "void main(void){" +
-      "  gl_FragColor = gl_Color;" +
+      "  if(usingTexture){" +
+      "    gl_FragColor =  vec4(texture2D(sampler, vTexture.xy));" +
+      "  }"+
+      "  else{" + 
+      "    gl_FragColor = vec4(gl_Color);" +
+      "  }" +
       "}";
 
     // Wrapper to easily deal with array names changes.
@@ -4409,6 +4426,9 @@
           // Now that the programs have been compiled, we can set the default
           // states for the lights.
           curContext.useProgram(programObject3D);
+          
+          // assume we aren't using textures by default
+          uniformi(programObject3D, "usingTexture", usingTexture);
           p.lightFalloff(1, 0, 0);
           p.shininess(1);
           p.ambient(255, 255, 255);
@@ -4443,9 +4463,11 @@
 
           lineBuffer = curContext.createBuffer();
 
+          // Shape buffers
           fillBuffer = curContext.createBuffer();
           fillColorBuffer = curContext.createBuffer();
           strokeColorBuffer = curContext.createBuffer();
+          shapeTexVBO = curContext.createBuffer();
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
@@ -4869,6 +4891,8 @@
         if (doFill === true) {
           curContext.useProgram(programObject3D);
 
+          disableVertexAttribPointer(programObject3D, "aTexture");
+
           uniformMatrix(programObject3D, "model", true, model.array());
           uniformMatrix(programObject3D, "view", true, view.array());
           uniformMatrix(programObject3D, "projection", true, projection.array());
@@ -5083,6 +5107,7 @@
           normalMatrix.invert();
         
           curContext.useProgram(programObject3D);
+          disableVertexAttribPointer(programObject3D, "aTexture");
           
           uniformMatrix(programObject3D, "model", true, model.array());
           uniformMatrix(programObject3D, "view", true, view.array());
@@ -5528,7 +5553,7 @@
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
-    var fill3D = function fill3D(vArray, mode, cArray){
+    var fill3D = function fill3D(vArray, mode, cArray, tArray){
       var ctxMode;
       if(mode === "TRIANGLES"){
         ctxMode = curContext.TRIANGLES;
@@ -5561,7 +5586,30 @@
       vertexAttribPointer(programObject3D, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
 
-      curContext.drawArrays( ctxMode, 0, vArray.length/3 );
+      // No support for lights....yet
+      disableVertexAttribPointer(programObject3D, "Normal");
+
+      if(usingTexture){
+        if(curTextureMode === p.IMAGE){
+          for(var i = 0; i < tArray.length; i += 2){
+            tArray[i] = tArray[i]/curTexture.width;
+            tArray[i+1] /= curTexture.height;
+          }
+        }
+
+        // hack to handle when users specifies values 
+        // greater than 1.0 for texture coords.
+        for(var i = 0; i < tArray.length; i += 2){
+          if( tArray[i+0] > 1.0 ){ tArray[i+0] -= (tArray[i+0] - 1.0);}
+          if( tArray[i+1] > 1.0 ){ tArray[i+1] -= (tArray[i+1] - 1.0);}
+        }
+                          
+        uniformi(programObject3D, "usingTexture", usingTexture);
+        vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
+        curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
+      }
+      
+      curContext.drawArrays( ctxMode, 0, (vArray.length/3) );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
@@ -5570,6 +5618,8 @@
       var fillVertArray = [];
       var colorVertArray = [];
       var strokeVertArray = [];
+      var texVertArray = [];
+
       firstVert = true;
       var i, j, k;
       var last = vertArray.length - 1;
@@ -5595,21 +5645,32 @@
           strokeVertArray.push(vertArray[i][j]);
         }
       }
+      
+      for(i = 0; i < vertArray.length; i++){
+        texVertArray.push(vertArray[i][3]);
+        texVertArray.push(vertArray[i][4]);
+      }
 
       if(!close){
         p.CLOSE = false;
       }
       else{
         p.CLOSE = true;
-        for(i = 0; i < 3; i++){
-          fillVertArray.push(vertArray[0][i]);
-        }
+        
+        fillVertArray.push(vertArray[0][0]);
+        fillVertArray.push(vertArray[0][1]);
+        fillVertArray.push(vertArray[0][2]);
+
         for(i = 5; i < 9; i++){
           colorVertArray.push(vertArray[0][i]);
         }
-        for(i = 9; i < 13; i++){
+        
+       for(i = 9; i < 13; i++){
           strokeVertArray.push(vertArray[0][i]);
         }
+        
+        texVertArray.push(vertArray[0][3]);
+        texVertArray.push(vertArray[0][4]);
       }
 
       if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
@@ -5740,6 +5801,7 @@
             if(vertArray.length > 2){
               for(i = 0; (i+2) < vertArray.length; i+=3){
                 fillVertArray = [];
+                texVertArray = [];
                 lineVertArray = [];
                 colorVertArray = [];
                 strokeVertArray = [];
@@ -5747,6 +5809,11 @@
                   for(k = 0; k < 3; k++){
                     lineVertArray.push(vertArray[i+j][k]);
                     fillVertArray.push(vertArray[i+j][k]);
+                  }
+                }
+                for(j = 0; j < 3; j++){
+                  for(k = 3; k < 5; k++){
+                    texVertArray.push(vertArray[i+j][k]);
                   }
                 }
                 for(j = 0; j < 3; j++){
@@ -5758,8 +5825,8 @@
                 if(doStroke){
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray );
                 }
-                if(doFill){
-                  fill3D(fillVertArray, "TRIANGLES", colorVertArray);
+                if(doFill || usingTexture){
+                  fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);
                 }
               }
             }
@@ -5771,10 +5838,16 @@
                 fillVertArray = [];
                 strokeVertArray = [];
                 colorVertArray = [];
+                texVertArray = [];
                 for(j = 0; j < 3; j++){
                   for(k = 0; k < 3; k++){
                     lineVertArray.push(vertArray[i+j][k]);
                     fillVertArray.push(vertArray[i+j][k]);
+                  }
+                }
+                for(j = 0; j < 3; j++){
+                  for(k = 3; k < 5; k++){
+                    texVertArray.push(vertArray[i+j][k]);
                   }
                 }
                 for(j = 0; j < 3; j++){
@@ -5784,8 +5857,8 @@
                   }
                 }
                 
-                if(doFill){
-                  fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
+                if(doFill || usingTexture){
+                  fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
                 }
                 if(doStroke){
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
@@ -5835,8 +5908,8 @@
                   line3D(lineVertArray, "LINE_STRIP",strokeVertArray);
                 }
               }
-              if(doFill){
-                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+              if(doFill || usingTexture){
+                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
           }
@@ -5855,6 +5928,7 @@
               if(doFill){
                 fillVertArray = [];
                 colorVertArray = [];
+                texVertArray = [];
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i][j]);
                 }
@@ -5882,7 +5956,19 @@
                 for(j = 5; j < 9; j++){
                   colorVertArray.push(vertArray[i+2][j]);
                 }
-                fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray);
+                
+                if(usingTexture){
+                  texVertArray.push(vertArray[i+0][3]);
+                  texVertArray.push(vertArray[i+0][4]);
+                  texVertArray.push(vertArray[i+1][3]);
+                  texVertArray.push(vertArray[i+1][4]);
+                  texVertArray.push(vertArray[i+3][3]);
+                  texVertArray.push(vertArray[i+3][4]);
+                  texVertArray.push(vertArray[i+2][3]);
+                  texVertArray.push(vertArray[i+2][4]);
+                }
+                
+                fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
               }
             }
           }
@@ -5903,7 +5989,7 @@
               
               line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               if(vertArray.length > 4 && vertArray.length % 2 > 0){
-                tempArray = fillVertArray.splice(fillVertArray.length - 6);
+                tempArray = fillVertArray.splice(fillVertArray.length - 3);
                 vertArray.pop();
               }
               for(i = 0; (i+3) < vertArray.length; i+=2){
@@ -5933,11 +6019,13 @@
                 for(j = 9; j < 13; j++){
                   strokeVertArray.push(vertArray[i+0][j]);
                 }
-                line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
+                if(doStroke){
+                  line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
+                }
               }
 
-              if(doFill){
-                fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray);
+              if(doFill || usingTexture){
+                fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
               }
             }
           }
@@ -5961,9 +6049,6 @@
                 for(j = 5; j < 9; j++){
                   strokeVertArray.push(vertArray[i][j]);
                 }
-                for(j = 9; j < 13; j++){
-                  colorVertArray.push(vertArray[i][j]);
-                }
               }
               if(p.CLOSE){
                 line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
@@ -5971,11 +6056,20 @@
               else{
                 line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
-              if(doFill){
-                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+              
+              // fill is ignored if textures are used
+              if(doFill || usingTexture){
+                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
           }
+          // everytime beginShape is followed by a call to
+          // texture(), texturing it turned back on. We do this to
+          // figure out if the shape should be textured or filled
+          // with a color.
+          usingTexture = false;
+          curContext.useProgram(programObject3D);
+          uniformi(programObject3D, "usingTexture", usingTexture);
         }
         // 2D context
         else{
@@ -6157,6 +6251,55 @@
         }
       }
     }; 
+
+    p.texture = function(pimage){
+      if(!pimage.__texture)
+      {
+        var texture = curContext.createTexture();
+        pimage.__texture = texture;
+        
+        var cvs = document.createElement('canvas');
+        cvs.width = pimage.width;
+        cvs.height = pimage.height;
+        var ctx = cvs.getContext('2d');
+        var textureImage = ctx.createImageData(cvs.width, cvs.height);
+
+        var imgData = pimage.toImageData();
+
+        for (var i = 0; i < cvs.width; i += 1) {
+          for (var j = 0; j < cvs.height; j += 1) {
+            var index = (j * cvs.width + i) * 4;
+            textureImage.data[index + 0] = imgData.data[index + 0];
+            textureImage.data[index + 1] = imgData.data[index + 1];
+            textureImage.data[index + 2] = imgData.data[index + 2];
+            textureImage.data[index + 3] = 255;
+          }
+        }
+        ctx.putImageData(textureImage, 0, 0);
+        pimage.__cvs = cvs;
+
+        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);        
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
+        curContext.generateMipmap(curContext.TEXTURE_2D);
+      }
+      else{
+        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+      }
+      
+      curTexture.width = pimage.width;
+      curTexture.height = pimage.height;
+      usingTexture = true;
+      curContext.useProgram(programObject3D);
+      uniformi(programObject3D, "usingTexture", usingTexture);
+    };
+    
+    p.textureMode = function(mode){
+      curTextureMode = mode;
+    }
 
     p.curveVertex = function(x, y, z) {
       isCurve = true;
@@ -8853,7 +8996,7 @@
   "MITER","mix","modelX","modelY","modelZ","modes","month","mouseButton","mouseClicked","mouseDown",
   "mouseDragged","mouseMoved","mousePressed","mouseReleased","mouseScroll","mouseScrolled","mouseX",
   "mouseY","MOVE","MULTIPLY","nf","nfc","nfp","nfs","noCursor","NOCURSOR","noFill","noise","noiseDetail","noiseSeed",
-  "noLights","noLoop","norm","normal","NORMAL_MODE_AUTO","NORMAL_MODE_SHAPE","NORMAL_MODE_VERTEX",
+  "noLights","noLoop","norm","normal","NORMAL_MODE_AUTO","NORMALIZED","NORMAL_MODE_SHAPE","NORMAL_MODE_VERTEX",
   "noSmooth","noStroke","noTint","OPAQUE","OPENGL","OVERLAY","P3D","peg","perspective","PI","PImage","pixels",
   "pmouseX","pmouseY","point","Point","pointLight","POINTS","POLYGON","popMatrix","popStyle","POSTERIZE",
   "pow","PREC_ALPHA_SHIFT","PRECISIONB","PRECISIONF","PREC_MAXVAL","PREC_RED_SHIFT","print",
@@ -8863,9 +9006,9 @@
   "RIGHT","rotate","rotateX","rotateY","rotateZ","round","ROUND","saturation","save","scale","SCREEN",
   "second","set","setup","shared","SHIFT","shininess","shorten","sin","SINCOS_LENGTH","size",
   "smooth","SOFT_LIGHT","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
-  "spotLight","sq","sqrt","SQUARE","str","stroke","strokeCap","strokeJoin","strokeWeight",
+  "spotLight","sq","sqrt","SQUARE","status","str","stroke","strokeCap","strokeJoin","strokeWeight",
   "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
-  "textSize","textWidth","THRESHOLD","tint",
+  "textSize","textureMode","texture","textWidth","THRESHOLD","tint",
   "translate","triangle","TRIANGLE_FAN","TRIANGLES","TRIANGLE_STRIP","trim","TWO_PI","unbinary",
   "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","year",
   "__frameRate","__mousePressed","__keyPressed"];

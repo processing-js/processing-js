@@ -5,7 +5,7 @@
 	<script type="text/javascript" src="../../init.js"></script> 
 </head>
 <body>
-<h2> Processing-js</h2>
+<h2>Processing-js</h2>
 <h3>status ()</h3>
 <hr />
 
@@ -21,13 +21,13 @@ void setup()
 void draw() 
 {
   background(51);
-  line(width/2, 0, width/2, height)
+  line(width/2, 0, width/2, height);
   if(mouseX < width/2) {
     status("status bar: left");
-	text("status bar: left",mouseX-40,mouseY);
+	  text("status bar: left",mouseX-40,mouseY);
   } else {
     status("status bar: right");
-	text("status bar: right",mouseX-30,mouseY);
+	  text("status bar: right",mouseX-30,mouseY);
   }
 }
 

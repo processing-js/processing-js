@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Textured Bouncing Box Demo</h2>
+
+    <p>
+      <canvas datasrc="bouncing_box.pjs" width="400" height="400"></canvas>
+    </p>
+    
+    <pre>
+<b>// Demo written by <a href="http://asalga.wordpress.com/">Andor Salga</a></b>
+import processing.opengl.*;
+/* @pjs preload="crate1.jpg,crate2.jpg,crate3.jpg"; */
+
+PImage crate, crate2, crate3;
+
+void setup()
+{
+  size(400, 400, OPENGL);
+  crate = loadImage("crate1.jpg");
+  crate2 = loadImage("crate2.jpg");
+  crate3 = loadImage("crate3.jpg");
+  textureMode(NORMALIZED);
+}
+
+float yRot = 0;
+float xRot = 0;
+float zRot = 0;
+
+float frames = 0;
+float s = 1;
+float r = 0;
+
+void drawBox(PImage i){
+  beginShape(QUADS);
+
+  texture(i);
+
+  // -Z "back" face
+  vertex( 1, -1, -1, 0, 0);
+  vertex(-1, -1, -1, 1, 0);
+  vertex(-1,  1, -1, 1, 1);
+  vertex( 1,  1, -1, 0, 1);
+
+  vertex(-1, -1,  1, 0, 0);
+  vertex( 1, -1,  1, 1, 0);
+  vertex( 1,  1,  1, 1, 1);
+  vertex(-1,  1,  1, 0, 1);
+
+  // +Y "bottom" face
+  vertex(-1,  1,  1, 0, 0);
+  vertex( 1,  1,  1, 1, 0);
+  vertex( 1,  1, -1, 1, 1);
+  vertex(-1,  1, -1, 0, 1);
+
+  // -Y "top" face
+  vertex(-1, -1, -1, 0, 0);
+  vertex( 1, -1, -1, 1, 0);
+  vertex( 1, -1,  1, 1, 1);
+  vertex(-1, -1,  1, 0, 1);
+
+  // +X "right" face
+  vertex( 1, -1,  1, 0, 0);
+  vertex( 1, -1, -1, 1, 0);
+  vertex( 1,  1, -1, 1, 1);
+  vertex( 1,  1,  1, 0, 1);
+
+  // -X "left" face
+  vertex(-1, -1, -1, 0, 0);
+  vertex(-1, -1,  1, 1, 0);
+  vertex(-1,  1,  1, 1, 1);
+  vertex(-1,  1, -1, 0, 1);
+
+  endShape();
+}
+
+
+void draw()
+{
+  frames++;
+  background(0);
+
+  pushMatrix();
+    translate(width/2-80, height/2, 150);
+    translate(0, sin((100+frames)/30)* 40, 0);  
+    rotateY(yRot+=0.03);
+    rotateX(xRot+=0.035);
+    rotateZ(zRot+=0.065);
+    scale(20);
+    drawBox(crate);
+  popMatrix();
+
+  pushMatrix();
+    translate(width/2, height/2, 150);
+    translate(0, sin(frames/30)* 40, 0);  
+    rotateY(yRot + PI);
+    rotateX(xRot);
+    rotateZ(zRot);
+    scale(20);
+    drawBox(crate2);
+  popMatrix();
+
+  pushMatrix();
+    translate(width/2+80, height/2, 150);
+    translate(0, sin(250+frames/30)* 40, 0);  
+    rotateY(-yRot);
+    rotateX(-xRot);
+    rotateZ(zRot);
+    scale(20);
+    drawBox(crate3);
+  popMatrix();
+}</pre>
+
+  </body>
+</html>
