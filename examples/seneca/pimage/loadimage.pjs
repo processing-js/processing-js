@@ -25,7 +25,7 @@ void draw(){
   }
   if (frameCount % 50 == 0){
     background(0);
-    text(FRAME_RATE, 10,10);
+    text(frameRate, 10,10);
   }
   if(slideshow[i].width > 0) {
     image(slideshow[i],10,10);
