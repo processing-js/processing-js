@@ -18,19 +18,6 @@
 
 (function() {
 
-  // IE Unfriendly AJAX Method
-  var ajax = function(url) {
-    var AJAX = new window.XMLHttpRequest();
-    if (AJAX) {
-      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
-      AJAX.send(null);
-      return AJAX.responseText;
-    } else {
-      return false;
-    }
-  };
-
-
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
@@ -10316,6 +10303,17 @@
     return Processing.instances[Processing.instanceIds[name]];
   };
 
+  // IE Unfriendly AJAX Method
+  var ajax = function(url) {
+    var AJAX = new window.XMLHttpRequest();
+    if (AJAX) {
+      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
+      AJAX.send(null);
+      return AJAX.responseText;
+    } else {
+      return false;
+    }
+  };
 
   // Automatic Initialization Method
   var init = function() {
