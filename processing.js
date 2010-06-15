@@ -4381,7 +4381,7 @@
           }
           curContext = curElement.getContext("experimental-webgl");
         } catch(e_size) {
-          p.debug(e_size);
+          Processing.debug(e_size);
         }
 
         if (!curContext) {
@@ -8888,7 +8888,7 @@
     });
 
     // Place-holder for debugging function
-    p.debug = function(e) {};
+    Processing.debug = function(e) {};
 
     // Get the DOM element if string was passed
     if (typeof curElement === "string") {
