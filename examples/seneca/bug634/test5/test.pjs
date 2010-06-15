@@ -1,0 +1,21 @@
+import processing.opengl.*;
+
+void setup() 
+{ 
+  size(100, 100, OPENGL);
+  background(0);
+  colorMode(RGB, 1);
+
+  beginShape(POINT);
+  pushMatrix();
+
+  for(int y = 0; y < 100; y+=5){
+  for(int x = 0; x < 100; x+=5){
+      stroke(x/100.0f,y/100.0f,100-x/100.0f);
+      vertex(x, y, 0);
+    }
+  }
+  popMatrix();
+
+  endShape();
+}

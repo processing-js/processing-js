@@ -1,0 +1,77 @@
+size(500, 200, P3D);
+background(200);
+
+beginShape(TRIANGLES);
+stroke(255,0,0);fill(255,0,0);vertex(30, 75);
+vertex(40, 20);
+vertex(50, 75);
+stroke(255,0,255);fill(255,0,255);vertex(60, 20);
+vertex(70, 75);
+stroke(0,255,255);fill(0,255,255);vertex(80, 20);
+endShape();
+
+beginShape(TRIANGLES);
+stroke(0,0,128);vertex(130, 75);
+vertex(140, 20);
+stroke(128,0,255);vertex(150, 75);
+vertex(160, 20);
+stroke(0);vertex(170, 75);
+endShape();
+
+beginShape(TRIANGLES);
+fill(255);stroke(0);vertex(230, 75);
+fill(0);stroke(255);vertex(240, 20);
+fill(255);stroke(0);vertex(250, 75);
+fill(0);stroke(255);vertex(270, 75);
+fill(255);stroke(0);vertex(280, 20);
+endShape();
+
+beginShape(TRIANGLES);
+fill(128,0,128);vertex(330, 75);
+fill(0,128,128);vertex(350, 75);
+fill(0,128,0);vertex(360, 20);
+fill(128,128,0);vertex(370, 75);
+fill(128,0,128);vertex(380, 20);
+endShape();
+
+beginShape(TRIANGLES);
+fill(128,0,128);vertex(430, 75);
+fill(0,128,0);vertex(440, 20);
+fill(0,255,128);vertex(450, 75);
+fill(128,0,255);vertex(460, 20);
+endShape();
+
+beginShape(TRIANGLES);
+stroke(255,0,0);fill(0,255,255);vertex(30, 175);
+stroke(255,0,255);fill(0,255,0);vertex(40, 120);
+stroke(255,0,0);fill(255,255,0);vertex(50, 175);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(130, 175);
+vertex(140, 120);
+endShape();
+
+beginShape(TRIANGLES);
+vertex(240, 120);
+vertex(250, 175);
+vertex(260, 120);
+vertex(270, 175);
+vertex(280, 120);
+endShape();
+
+beginShape(TRIANGLES);
+fill(255);vertex(330, 175);
+vertex(340, 120);
+fill(0);vertex(360, 120);
+vertex(370, 175);
+fill(255);vertex(380, 120);
+endShape();
+
+beginShape(TRIANGLES);
+stroke(255,0,255);fill(0,255,255);vertex(430, 175);
+vertex(440, 120);
+vertex(450, 175);
+stroke(255,0,255);fill(0,255,255);vertex(460, 120);
+vertex(480, 120);
+endShape();

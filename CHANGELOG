@@ -1,3 +1,87 @@
+May 20, 2010 - Release 0.9.1
+
+  * Remove with(p) for performance gain
+  
+May 8, 2010 - Release 0.9.0
+
+  * Added quad() 3D 
+  * Added triangle() 3D 
+  * Added endShape() 3D 
+  * Added beginShape() 3D 
+  * Added vertex() 3D 
+  * Added more 3D ref tests 
+  * Added imageMode() 
+  * Added PMatrix2D::mult() 
+  * Added PMatrix2D::scale() 
+  * Added PMatrix2D::preApply() 
+  * Added PMatrix2D::invert(
+  * Added PMatrix2D::rotate() and PMatrix2D::rotateZ() 
+  * Added PMatrix2D::translate()
+  * Added PMatrix2D::determinant()
+  * Added PMatrix2D::multY() 
+  * Added PMatrix2D::multX() 
+  * Added PMatrix2D::transpose() 
+  * Added P2D constant 
+  * Added QUARTER_PI constant 
+  * Added interface keyword support 
+  * Added screenZ()
+  * Added screenX()
+  * Added screenY()
+  * Added HSB colour in addition to RGB color color.tostring
+  * Added randomSeed() 
+  * Added bezierVertex() 
+  * Added remaining missing constants from PConstants 
+  * Added PImage support for cursor()
+  * Added pjs directive to include multiple processing files 
+  * Added hue() 
+  * Added brightness() 
+  * Added saturation() 
+  * Added PImage: prototype for set "pimage set" 
+  * Added sketch.processing.org code in our tree 
+  * Added color.toHSB( colorInt ) 
+  * Added mousewheel support for Minefield 
+  * Added parser static keyword  support
+  * Added parser Support minified processing code
+  * Added data-processing-sources support
+  * Fixed parser to handle local parameter names same as public variable names
+  * Fixed parsing of whitespace between constructor and () 
+  * Fixed parsing of function parameter newlines
+  * Fixed parser to handle functions and constructors with the same name 
+  * Fixed parser to allow Returning array of floats 
+  * Fixed parser to allow functions before constructors
+  * Fixed Parser: Calculate upper values in for loops only once
+  * Fixed parser to allow Static variables 
+  * Fixed parser to allow Inheritance
+  * Fixed p.background() called with no arguments[0] 
+  * Fixed noStroke() for lines 
+  * Fixed make release on Windows 
+  * Fixed public ctors for parser
+  * Fixed empty draw() call clears background 
+  * Fixed noise()
+  * Fixed random()
+  * Fixed "p is undefined" errors in bespin ide 
+  * Fixed ImageData objects can't be literals, must use createImageData "cross browser" 
+  * Fixed class functions being repeated in the parsed 
+  * Fixed code in pimage.toDataURL() to use bit shifting 
+  * Fixed p.ArrayList to work for more than 3 dimensions 
+  * Fixed Multi-line comments with size() call break library parser 
+  * Fix make check-lint env var 
+  * Fixed Commented size() call for 3D context breaks lib 
+  * Fixed Events continue to get processed after exit() is called
+  * Fixed p.point to not use .slice.split with strokeStyle 
+  * Fixed Processing.js class functions not use with() 
+  * Fixed keyTyped()
+  * Fixed lerpColor()
+  * Ensured p.set(x,y,c) fully tested after color() changes 
+  * Final Linting for v0.9.0 Release 
+  * Remove jsbeautify from release target 
+  * Fixed PImage pixel array to use ImageData object
+  * Transform pixel[n] to pixel(n) 
+  * Remove buildImageObject and getImage
+  * Cleaned up curveVertex.htm example 
+  * Get rid of with(p) in p.init
+  * Optimized p.redraw()
+
 April 8, 2010 - Release 0.8.0
 
   * Added spotLight

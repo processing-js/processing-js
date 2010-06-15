@@ -21,18 +21,19 @@ void draw(){
   
 //rect(5, 5, 20, 5);
 fill(0, 102, 153);
-text("wo\nrd", 10, -20);
-text("second");
+text("wo\nrdsecond", 10, -20, 0);
+//text("second");
 fill(255);
 text("wo\nrd", 10, -20, -10); 
 
 fill(255);
 text("word", 20, 40, -10); 
 fill(0, 102, 153);
-text("word", 20, 40);
+text("word", 20, 40, 0);
 
 fill(255);
 text("word", 30, 70, -10); 
 fill(0, 102, 153);
-text("word", 30, 70);
+text("word", 30, 70, 0);
 }
+
