@@ -35,10 +35,11 @@
     var p = this;
 
     p.pjs = {
-       imageCache: {
-         pending: 0
-       }
-    }; // by default we have an empty imageCache, no more.
+       imageCache: { // by default we have an empty imageCache
+         pending: 0 
+       },
+       crispLines: false
+    };
 
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
@@ -272,8 +273,12 @@
         online = true,
         doFill = true,
         fillStyle = [1.0, 1.0, 1.0, 1.0],
+        currentFillColor = 0xFFFFFFFF,
+        isFillDirty = true,
         doStroke = true,
         strokeStyle = [0.8, 0.8, 0.8, 1.0],
+        currentStrokeColor = 0xFFFDFDFD,
+        isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
         refreshBackground = function() {},
@@ -339,7 +344,13 @@
         usingTexture = false,
         textBuffer,
         textureBuffer,
-        indexBuffer;
+        indexBuffer,
+        // Pixels cache
+        originalContext, 
+        proxyContext = null, 
+        isContextReplaced = false,
+        setPixelsCached, 
+        maxPixelsCached = 1000;
 
     // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
     // in Minefield does nothing and does not report any errors.
@@ -432,7 +443,7 @@
     var rectNorms = [0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1];
     
     // Vertex shader for points and lines
-    var vShaderSrcUnlitShape = // ???
+    var vShaderSrcUnlitShape =
       "attribute vec3 aVertex;" +
       "attribute vec4 aColor;" +
 
@@ -3056,6 +3067,16 @@
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
 
+    function saveContext() {
+      curContext.save();
+    }
+
+    function restoreContext() {
+      curContext.restore();
+      isStrokeDirty = true;
+      isFillDirty = true;
+    }
+
     p.printMatrix = function printMatrix() {
       modelView.print();
     };
@@ -3082,7 +3103,7 @@
       if (p.use3DContext) {
         userMatrixStack.load(modelView);
       } else {
-        curContext.save();
+        saveContext();
       }
     };
 
@@ -3090,7 +3111,7 @@
       if (p.use3DContext) {
         modelView.set(userMatrixStack.pop());
       } else {
-        curContext.restore();
+        restoreContext();
       }
     };
 
@@ -3138,13 +3159,15 @@
 
     p.pushStyle = function pushStyle() {
       // Save the canvas state.
-      curContext.save();
+      saveContext();
 
       p.pushMatrix();
 
       var newState = {
         'doFill': doFill,
+        'currentFillColor': currentFillColor,
         'doStroke': doStroke,
+        'currentStrokeColor': currentStrokeColor,
         'curTint': curTint,
         'curRectMode': curRectMode,
         'curColorMode': curColorMode,
@@ -3163,12 +3186,14 @@
       var oldState = styleArray.pop();
 
       if (oldState) {
-        curContext.restore();
+        restoreContext();
 
         p.popMatrix();
 
         doFill = oldState.doFill;
+        currentFillColor = oldState.currentFillColor;
         doStroke = oldState.doStroke;
+        currentStrokeColor = oldState.currentStrokeColor;
         curTint = oldState.curTint;
         curRectMode = oldState.curRectmode;
         curColorMode = oldState.curColorMode;
@@ -3242,9 +3267,9 @@
         p.camera();
         p.draw();
       } else {
-        curContext.save();
+        saveContext();
         p.draw();
-        curContext.restore();
+        restoreContext();
       }
 
       inDraw = false;
@@ -4642,6 +4667,9 @@
       // redraw the background if background was called before size
       refreshBackground();
 
+      // set 5% for pixels to cache (or 1000)
+      maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
+
       p.context = curContext; // added for createGraphics
       p.toImageData = function() {
         return curContext.getImageData(0, 0, this.width, this.height);
@@ -5400,38 +5428,67 @@
     ////////////////////////////////////////////////////////////////////////////
 
     p.fill = function fill() {
-      doFill = true;
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
+      if(color === currentFillColor && doFill) {
+        return;
+      }
+      doFill = true;
+      currentFillColor = color;
 
       if (p.use3DContext) {
         fillStyle = p.color.toGLArray(color);
       } else {
-        curContext.fillStyle = p.color.toString(color);
+        isFillDirty = true;
       }
     };
+
+    function executeContextFill() {
+      if(doFill) {
+        if(isFillDirty) {
+          curContext.fillStyle = p.color.toString(currentFillColor);
+          isFillDirty = false;
+        }
+        curContext.fill();
+      }
+    }
 
     p.noFill = function noFill() {
       doFill = false;
     };
 
     p.stroke = function stroke() {
-      doStroke = true;
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
+      if(color === currentStrokeColor && doStroke) {
+        return;
+      }
+      doStroke = true;
+      currentStrokeColor = color;
 
       if (p.use3DContext) {
         strokeStyle = p.color.toGLArray(color);
       } else {
-        curContext.strokeStyle = p.color.toString(color);
+        isStrokeDirty = true;
       }
     };
+
+    function executeContextStroke() {
+      if(doStroke) {
+        if(isStrokeDirty) {
+          curContext.strokeStyle = p.color.toString(currentStrokeColor);
+          isStrokeDirty = false;
+        }
+        curContext.stroke();
+      }
+    }
 
     p.noStroke = function noStroke() {
       doStroke = false;
     };
 
     p.strokeWeight = function strokeWeight(w) {
+      lineWidth = w;
+
       if (p.use3DContext) {
-        lineWidth = w;
         curContext.useProgram(programObject2D);  
         uniformf(programObject2D, "pointSize", w);
       } else {
@@ -5465,6 +5522,11 @@
     // Vector drawing functions
     ////////////////////////////////////////////////////////////////////////////
 
+    function colorBlendWithAlpha(c1, c2, k) {
+        var f = 0|(k * ((c2 & p.ALPHA_MASK) >>> 24));
+        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 | p.mix(c1 & p.RED_MASK, c2 & p.RED_MASK, f) & p.RED_MASK | p.mix(c1 & p.GREEN_MASK, c2 & p.GREEN_MASK, f) & p.GREEN_MASK | p.mix(c1 & p.BLUE_MASK, c2 & p.BLUE_MASK, f));
+    }
+
     p.point = function point(x, y, z) {
       if (p.use3DContext) {
         var model = new PMatrix3D();
@@ -5496,10 +5558,17 @@
         }
       } else {
         if (doStroke) {
-          var oldFill = curContext.fillStyle;
-          curContext.fillStyle = curContext.strokeStyle;
-          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-          curContext.fillStyle = oldFill;
+          // TODO if strokeWeight > 1, do circle
+
+          if(p.pjs.crispLines) {
+            var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight 
+            var c = p.get(x, y);
+            p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
+          } else {
+            curContext.fillStyle = p.color.toString(currentStrokeColor);
+            curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+            isFillDirty = true;
+          }
         }
       }
     };
@@ -5780,12 +5849,8 @@
               b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
               curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
             }
-            if(doFill){
-              curContext.fill();
-            }
-            if(doStroke){
-              curContext.stroke();
-            }
+            executeContextFill();
+            executeContextStroke();
             curContext.closePath();
           }
         }
@@ -5842,12 +5907,8 @@
           for(i = 1; i < vertArray.length; i++){
             curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
           }
-          if(doFill){
-            curContext.fill();
-          }
-          if(doStroke){
-            curContext.stroke();
-          }
+          executeContextFill();
+          executeContextStroke();
           curContext.closePath();
         }
       }
@@ -6167,12 +6228,8 @@
               curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              if(doFill){
-                curContext.fill();
-              }
-              if(doStroke){
-                curContext.stroke();
-              }
+              executeContextFill();
+              executeContextStroke();
               curContext.closePath();
             }
           }
@@ -6184,14 +6241,11 @@
               for(i = 2; i < vertArray.length; i++){
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                 curContext.lineTo(vertArray[i-2][0], vertArray[i-2][1]);
-                if(doFill){
-                  curContext.fill();
-                }
-                if(doStroke){
-                  curContext.stroke();
-                }
+                executeContextFill();
+                executeContextStroke();
                 curContext.moveTo(vertArray[i][0],vertArray[i][1]);
               }
+              curContext.closePath();
             }
           }
           else if(curShape === p.TRIANGLE_FAN){
@@ -6200,23 +6254,16 @@
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[1][0], vertArray[1][1]);
               curContext.lineTo(vertArray[2][0], vertArray[2][1]);
-              if(doFill){
-                  curContext.fill();
-                }
-              if(doStroke){
-                  curContext.stroke();
-                }
+              executeContextFill();
+              executeContextStroke();
               for(i = 3; i < vertArray.length; i++){
                 curContext.moveTo(vertArray[0][0], vertArray[0][1]);
                 curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                if(doFill){
-                  curContext.fill();
-                }
-                if(doStroke){
-                  curContext.stroke();
-                }
+                executeContextFill();
+                executeContextStroke();
               }
+              curContext.closePath();
             }
           }
           else if(curShape === p.QUADS){
@@ -6227,12 +6274,8 @@
                 curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
               }
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              if(doFill){
-                curContext.fill();
-              }
-              if(doStroke){
-                curContext.stroke();
-              }
+              executeContextFill();
+              executeContextStroke();
               curContext.closePath();
             }
           }
@@ -6247,14 +6290,11 @@
                   curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                   curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
                   curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-                  if(doFill){
-                    curContext.fill();
-                  }
-                  if(doStroke){
-                    curContext.stroke();
-                  }
+                  executeContextFill();
+                  executeContextStroke();
                 }
               }
+              curContext.closePath();
             }
           }
           else{
@@ -6266,14 +6306,10 @@
             if(p.CLOSE){
               curContext.lineTo(vertArray[0][0], vertArray[0][1]);
             }
-            if(doFill){
-              curContext.fill();
-            }
-            if(doStroke){
-              curContext.stroke();
-            }
+            executeContextFill();
+            executeContextStroke();
+            curContext.closePath();
           }
-          curContext.closePath();
         }
       }
       isCurve = false;
@@ -6548,14 +6584,10 @@
       curContext.beginPath();
       curContext.arc(x, y, curEllipseMode === p.CENTER_RADIUS ? width : width / 2, start, stop, false);
 
-      if (doStroke) {
-        curContext.stroke();
-      }
+      executeContextStroke();
       curContext.lineTo(x, y);
 
-      if (doFill) {
-        curContext.fill();
-      }
+      executeContextFill();
       curContext.closePath();
     };
 
@@ -6611,11 +6643,29 @@
         x2 = arguments[2];
         y2 = arguments[3];
 
+        // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
+        if((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && 
+           doStroke && p.pjs.crispLines) {
+          var temp; 
+          if(x1 === x2) {
+            if(y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
+            for(var y=y1;y<=y2;++y) {
+              p.set(x1, y, currentStrokeColor);
+            }
+          } else {
+            if(x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
+            for(var x=x1;x<=x2;++x) {
+              p.set(x, y1, currentStrokeColor);
+            }
+          }
+          return;
+        }
+
         if (doStroke) {
           curContext.beginPath();
           curContext.moveTo(x1 || 0, y1 || 0);
           curContext.lineTo(x2 || 0, y2 || 0);
-          curContext.stroke();
+          executeContextStroke();
           curContext.closePath();
         }
       }
@@ -6746,6 +6796,20 @@
           return;
         }
 
+        // if only stroke is enabled, do it "crisp"
+        if(doStroke && !doFill && lineWidth <= 1.0 && p.pjs.crispLines) {
+          var i, x2 = x + width - 1, y2 = y + height - 1;
+          for(i=0;i<width;++i) {
+            p.set(x + i, y, currentStrokeColor);
+            p.set(x + i, y2, currentStrokeColor);
+          }
+          for(i=0;i<height;++i) {
+            p.set(x, y + i, currentStrokeColor);
+            p.set(x2, y + i, currentStrokeColor);
+          }
+          return;
+        }
+
         curContext.beginPath();
 
         var offsetStart = 0;
@@ -6769,12 +6833,8 @@
         curContext.rect(
         Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
 
-        if (doFill) {
-          curContext.fill();
-        }
-        if (doStroke) {
-          curContext.stroke();
-        }
+        executeContextFill();
+        executeContextStroke();
 
         curContext.closePath();
       }
@@ -6809,13 +6869,8 @@
       if ((!p.use3DContext) && (width === height)) {
         curContext.beginPath();
         curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, p.TWO_PI, false);
-        
-        if (doStroke) {
-          curContext.stroke();
-        } 
-        if (doFill) {
-          curContext.fill();
-        }
+        executeContextFill();
+        executeContextStroke();        
         curContext.closePath();
       } 
       else {
@@ -7157,59 +7212,77 @@
     // async loading of large images, same functionality as loadImage above
     p.requestImage = p.loadImage;
 
+    function get$0() {
+      //return a PImage of curContext
+      var c = new PImage(p.width, p.height, p.RGB);
+      c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
+      return c;
+    }
+    function get$2(x,y) {
+      var data;
+      // return the color at x,y (int) of curContext
+      // create a PImage object of size 1x1 and return the int of the pixels array element 0
+      if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
+        if(isContextReplaced) {
+          var offset = ((0|x) + p.width * (0|y))*4;
+          data = p.imageData.data;
+          return p.color.toInt(data[offset], data[offset+1],
+                           data[offset+2], data[offset+3]);
+        }
+        // x,y is inside canvas space
+        data = curContext.getImageData(0|x, 0|y, 1, 1).data;
+        // changed for 0.9
+        return p.color.toInt(data[0], data[1], data[2], data[3]);
+      } else {
+        // x,y is outside image return transparent black
+        return 0;
+s      }
+    }
+    function get$3(x,y,img) {
+      // PImage.get(x,y) was called, return the color (int) at x,y of img
+      // changed in 0.9
+      var offset = y * img.width * 4 + (x * 4);
+      return p.color.toInt(img.imageData.data[offset],
+                         img.imageData.data[offset + 1],
+                         img.imageData.data[offset + 2],
+                         img.imageData.data[offset + 3]);
+    }
+    function get$4(x, y, w, h) {
+      // return a PImage of w and h from cood x,y of curContext
+      var c = new PImage(w, h, p.RGB);
+      c.fromImageData(curContext.getImageData(x, y, w, h));
+      return c;
+    }
+    function get$5(x, y, w, h, img) {
+      // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+      // changed for 0.9, offset start point needs to be *4
+      var start = y * img.width * 4 + (x*4);
+      var end = (y + h) * img.width * 4 + ((x + w) * 4);
+      var c = new PImage(w, h, p.RGB);
+      for (var i = start, j = 0; i < end; i++, j++) {
+        // changed in 0.9
+        c.imageData.data[j] = img.imageData.data[i];
+        if ((j+1) % (w*4) === 0) {
+          //completed one line, increment i by offset
+          i += (img.width - w) * 4;
+        }
+      }
+      return c;
+    }
+
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
     p.get = function get(x, y, w, h, img) {
-      var c;
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
-      if (!arguments.length) {
-        //return a PImage of curContext
-        c = new PImage(p.width, p.height, p.RGB);
-        c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
-        return c;
+      if (arguments.length === 2) {
+        return get$2(x, y);
+      } else if (arguments.length === 0) {
+        return get$0();
       } else if (arguments.length === 5) {
-        // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
-        // changed for 0.9, offset start point needs to be *4
-        var start = y * img.width * 4 + (x*4);
-        var end = (y + h) * img.width * 4 + ((x + w) * 4);
-        c = new PImage(w, h, p.RGB);
-        for (var i = start, j = 0; i < end; i++, j++) {
-          // changed in 0.9
-          c.imageData.data[j] = img.imageData.data[i];
-          if ((j+1) % (w*4) === 0) {
-            //completed one line, increment i by offset
-            i += (img.width - w) * 4;
-          }
-        }
-        return c;
+        return get$5(x, y, w, h, img);
       } else if (arguments.length === 4) {
-        // return a PImage of w and h from cood x,y of curContext
-        c = new PImage(w, h, p.RGB);
-        c.fromImageData(curContext.getImageData(x, y, w, h));
-        return c;
+        return get$4(x, y, w, h);
       } else if (arguments.length === 3) {
-        // PImage.get(x,y) was called, return the color (int) at x,y of img
-        // changed in 0.9
-        var offset = y * w.width * 4 + (x * 4);
-        return p.color.toInt(w.imageData.data[offset],
-                           w.imageData.data[offset + 1],
-                           w.imageData.data[offset + 2],
-                           w.imageData.data[offset + 3]);
-      } else if (arguments.length === 2) {
-        // return the color at x,y (int) of curContext
-        // create a PImage object of size 1x1 and return the int of the pixels array element 0
-        if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
-          // x,y is inside canvas space
-          c = new PImage(1, 1, p.RGB);
-          c.fromImageData(curContext.getImageData(x, y, 1, 1));
-          // changed for 0.9
-          return p.color.toInt(c.imageData.data[0],
-                               c.imageData.data[1],
-                               c.imageData.data[2],
-                               c.imageData.data[3]);
-        } else {
-          // x,y is outside image return transparent black
-          return 0;
-        }
+        return get$3(x, y, w);
       } else if (arguments.length === 1) {
         // PImage.get() was called, return the PImage
         return x;
@@ -7226,28 +7299,89 @@
       return pg;
     };
 
+    // pixels caching
+    function resetContext() {
+      if(isContextReplaced) {
+        curContext = originalContext;
+        isContextReplaced = false;
+
+        p.updatePixels();
+      }
+    }
+    function SetPixelContextWrapper() {
+      function wrapFunction(newContext, name) {
+        function wrapper() {
+          resetContext();
+          curContext[name].apply(curContext, arguments);
+        }
+        newContext[name] = wrapper;
+      }
+      function wrapProperty(newContext, name) {
+        function getter() {
+          resetContext(); 
+          return curContext[name];
+        }
+        function setter(value) {
+          resetContext(); 
+          curContext[name] = value;
+        }
+        newContext.__defineGetter__(name, getter);
+        newContext.__defineSetter__(name, setter);
+      }
+      for(var n in curContext) {
+        if(typeof curContext[n] === 'function') {
+          wrapFunction(this, n);
+        } else {
+          wrapProperty(this, n);
+        }
+      }
+    }
+    function replaceContext() {
+      if(isContextReplaced) {
+        return; 
+      }
+      p.loadPixels();
+      if(proxyContext === null) {
+        originalContext = curContext;
+        proxyContext = new SetPixelContextWrapper();
+      }
+      isContextReplaced = true;
+      curContext = proxyContext;
+      setPixelsCached = 0;
+    }
+
+    function set$3(x, y, c) {
+      if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
+        replaceContext();
+        p.pixels.setPixel((0|x)+p.width*(0|y), c);
+        if(++setPixelsCached > maxPixelsCached) {
+          resetContext();
+        }
+      }
+    }
+    function set$4(x, y, obj, img) {
+      var c = p.color.toArray(obj);
+      var offset = y * img.width * 4 + (x*4);
+      var data = img.imageData.data;
+      data[offset] = c[0];
+      data[offset+1] = c[1];
+      data[offset+2] = c[2];
+      data[offset+3] = c[3];
+    }
     // Paints a pixel array into the canvas
     p.set = function set(x, y, obj, img) {
       var color, oldFill;
-      // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
-      if (arguments.length === 4) {
-        var offset = y * img.width * 4 + (x*4);
-        img.imageData.data[offset] = (obj & p.RED_MASK) >>> 16;
-        img.imageData.data[offset+1] = (obj & p.GREEN_MASK) >>> 8;
-        img.imageData.data[offset+2] = (obj & p.BLUE_MASK);
-        img.imageData.data[offset+3] = (obj & p.ALPHA_MASK) >>> 24;
-      } else if (arguments.length === 3) {
+      if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number") {
-          oldFill = curContext.fillStyle;
-          color = obj;
-          curContext.fillStyle = p.color.toString(color);
-          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-          curContext.fillStyle = oldFill;
+          set$3(x, y, obj);
         } else if (obj instanceof PImage) {
           p.image(obj, x, y);
         }
-      }
+      } else if (arguments.length === 4) {
+        // PImage.set(x,y,c) was called, set coordinate x,y color to c of img
+        set$4(x, y, obj, img);
+      } 
     };
     p.imageData = {};
 
@@ -7277,7 +7411,7 @@
     // Gets a 1-Dimensional pixel array from Canvas
     p.loadPixels = function() {
       // changed in 0.9
-      p.imageData = p.get(0, 0, p.width, p.height).imageData;
+      p.imageData = curContext.getImageData(0, 0, p.width, p.height);
     };
 
     // Draws a 1-Dimensional pixel array to Canvas
@@ -7321,10 +7455,9 @@
       } else { // 2d context
         if (typeof color !== 'undefined') {
           refreshBackground = function() {
-            var oldFill = curContext.fillStyle;
             curContext.fillStyle = p.color.toString(color);
             curContext.fillRect(0, 0, p.width, p.height);
-            curContext.fillStyle = oldFill;
+            isFillDirty = true;
           };
         } else {
           refreshBackground = function() {
@@ -8383,7 +8516,7 @@
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
         if (str && (curContext.fillText || curContext.mozDrawText)) {
-          curContext.save();
+          saveContext();
           curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
           if (curContext.fillText) {
@@ -8392,12 +8525,12 @@
             curContext.translate(x, y);
             curContext.mozDrawText(str);
           }
-          curContext.restore();
+          restoreContext();
         }
       } else {
         // If the font is a Batik SVG font...
         var font = p.glyphTable[curTextFont.name];
-        curContext.save();
+        saveContext();
         curContext.translate(x, y + curTextSize);
 
         var upem   = font.units_per_em,
@@ -8413,7 +8546,7 @@
             Processing.debug(e);
           }
         }
-        curContext.restore();
+        restoreContext();
       }
     }
 
@@ -8591,7 +8724,7 @@
         var c = regex("[A-Za-z][0-9\\- ]+|Z", d);
 
         // Begin storing path object
-        path = "var path={draw:function(){curContext.beginPath();curContext.save();";
+        path = "var path={draw:function(){saveContext();curContext.beginPath();";
 
         x = 0;
         y = 0;
@@ -8674,9 +8807,8 @@
           lastCom = com[0];
         }
 
-        path += "doStroke?curContext.stroke():0;";
-        path += "doFill?curContext.fill():0;";
-        path += "curContext.restore();";
+        path += "executeContextFill();executeContextStroke();";
+        path += "restoreContext();";
         path += "curContext.translate(" + horiz_adv_x + ",0);";
         path += "}}";
 
@@ -9094,6 +9226,9 @@
           if (processing.setup) {
             processing.setup();
           }
+
+          // some pixels can be cached, flushing
+          resetContext();
 
           if (processing.draw) {
             if (!doLoop) {
@@ -10290,6 +10425,8 @@
             }
           } else if (key === "opaque") {
             p.canvas.mozOpaque = value === "true";
+          } else if (key === "crisp") {
+            p.pjs.crispLines = value === "true";
           } else {
             p.pjs[key] = value;
           }
