@@ -7665,6 +7665,11 @@
         p.loadPixels();
         img = p;
       }
+      
+      if (typeof param === 'undefined') {
+        param = null;
+      }
+      
       var imglen = img.pixels.getLength();
       switch (kind) {
         case p.BLUR:
