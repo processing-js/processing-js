@@ -7236,7 +7236,7 @@
       } else {
         // x,y is outside image return transparent black
         return 0;
-s      }
+      }
     }
     function get$3(x,y,img) {
       // PImage.get(x,y) was called, return the color (int) at x,y of img
