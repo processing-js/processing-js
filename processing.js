@@ -8519,6 +8519,11 @@
           saveContext();
           curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
+          if (isFillDirty) {
+            curContext.fillStyle = p.color.toString(currentFillColor);
+            isFillDirty = false;
+          }
+          
           if (curContext.fillText) {
             curContext.fillText(str, x, y);
           } else if (curContext.mozDrawText) {
