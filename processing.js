@@ -18,6 +18,18 @@
 
 (function() {
 
+  // IE Unfriendly AJAX Method
+  var ajax = function(url) {
+    var AJAX = new window.XMLHttpRequest();
+    if (AJAX) {
+      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
+      AJAX.send(null);
+      return AJAX.responseText;
+    } else {
+      return false;
+    }
+  };
+
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
@@ -672,7 +684,81 @@
       "  }" +
       "}";
 
-    // Wrapper to easily deal with array names changes.
+    ////////////////////////////////////////////////////////////////////////////
+    // 3D Functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    /*
+      Sets the uniform variable 'varName' to the value specified by 'value'.
+      Before calling this function, make sure the correct program object
+      has been installed as part of the current rendering state.
+
+      On some systems, if the variable exists in the shader but isn't used,
+      the compiler will optimize it out and this function will fail.
+    */
+    function uniformf(programObj, varName, varValue) {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if (varLocation !== -1) {
+        if (varValue.length === 4) {
+          curContext.uniform4fv(varLocation, varValue);
+        } else if (varValue.length === 3) {
+          curContext.uniform3fv(varLocation, varValue);
+        } else if (varValue.length === 2) {
+          curContext.uniform2fv(varLocation, varValue);
+        } else {
+          curContext.uniform1f(varLocation, varValue);
+        }
+      }
+    }
+
+    function uniformi(programObj, varName, varValue) {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if (varLocation !== -1) {
+        if (varValue.length === 4) {
+          curContext.uniform4iv(varLocation, varValue);
+        } else if (varValue.length === 3) {
+          curContext.uniform3iv(varLocation, varValue);
+        } else if (varValue.length === 2) {
+          curContext.uniform2iv(varLocation, varValue);
+        } else {
+          curContext.uniform1i(varLocation, varValue);
+        }
+      }
+    }
+
+    function vertexAttribPointer(programObj, varName, size, VBO) {
+      var varLocation = curContext.getAttribLocation(programObj, varName);
+      if (varLocation !== -1) {
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
+        curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
+        curContext.enableVertexAttribArray(varLocation);
+      }
+    }
+
+    function disableVertexAttribPointer(programObj, varName){
+      var varLocation = curContext.getAttribLocation(programObj, varName);
+      if (varLocation !== -1) {
+        curContext.disableVertexAttribArray(varLocation);
+      }
+    }
+
+    function uniformMatrix(programObj, varName, transpose, matrix) {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if (varLocation !== -1) {
+        if (matrix.length === 16) {
+          curContext.uniformMatrix4fv(varLocation, transpose, matrix);
+        } else if (matrix.length === 9) {
+          curContext.uniformMatrix3fv(varLocation, transpose, matrix);
+        } else {
+          curContext.uniformMatrix2fv(varLocation, transpose, matrix);
+        }
+      }
+    }
+    
+    // Wrapper to easily deal with array names changes. TODO: Don't think we need this wrapper anymore consensus has been reached.
     var newWebGLArray = function(data) {
       return new WebGLFloatArray(data);
     };
@@ -4563,80 +4649,6 @@
     };
 
     ////////////////////////////////////////////////////////////////////////////
-    // 3D Functions
-    ////////////////////////////////////////////////////////////////////////////
-
-    /*
-      Sets the uniform variable 'varName' to the value specified by 'value'.
-      Before calling this function, make sure the correct program object
-      has been installed as part of the current rendering state.
-
-      On some systems, if the variable exists in the shader but isn't used,
-      the compiler will optimize it out and this function will fail.
-    */
-    function uniformf(programObj, varName, varValue) {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
-      // the variable won't be found if it was optimized out.
-      if (varLocation !== -1) {
-        if (varValue.length === 4) {
-          curContext.uniform4fv(varLocation, varValue);
-        } else if (varValue.length === 3) {
-          curContext.uniform3fv(varLocation, varValue);
-        } else if (varValue.length === 2) {
-          curContext.uniform2fv(varLocation, varValue);
-        } else {
-          curContext.uniform1f(varLocation, varValue);
-        }
-      }
-    }
-
-    function uniformi(programObj, varName, varValue) {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
-      // the variable won't be found if it was optimized out.
-      if (varLocation !== -1) {
-        if (varValue.length === 4) {
-          curContext.uniform4iv(varLocation, varValue);
-        } else if (varValue.length === 3) {
-          curContext.uniform3iv(varLocation, varValue);
-        } else if (varValue.length === 2) {
-          curContext.uniform2iv(varLocation, varValue);
-        } else {
-          curContext.uniform1i(varLocation, varValue);
-        }
-      }
-    }
-
-    function vertexAttribPointer(programObj, varName, size, VBO) {
-      var varLocation = curContext.getAttribLocation(programObj, varName);
-      if (varLocation !== -1) {
-        curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
-        curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
-        curContext.enableVertexAttribArray(varLocation);
-      }
-    }
-
-   function disableVertexAttribPointer(programObj, varName){
-     var varLocation = curContext.getAttribLocation(programObj, varName);
-     if (varLocation !== -1) {
-       curContext.disableVertexAttribArray(varLocation);
-     }
-   }
-
-    function uniformMatrix(programObj, varName, transpose, matrix) {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
-      // the variable won't be found if it was optimized out.
-      if (varLocation !== -1) {
-        if (matrix.length === 16) {
-          curContext.uniformMatrix4fv(varLocation, transpose, matrix);
-        } else if (matrix.length === 9) {
-          curContext.uniformMatrix3fv(varLocation, transpose, matrix);
-        } else {
-          curContext.uniformMatrix2fv(varLocation, transpose, matrix);
-        }
-      }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
     // Lights
     ////////////////////////////////////////////////////////////////////////////
 
@@ -6270,6 +6282,47 @@
       curveVertCount = 0;
     };
 
+    //used by both curveDetail and bezierDetail
+    var splineForward = function(segments, matrix) {
+      var f = 1.0 / segments;
+      var ff = f * f;
+      var fff = ff * f;
+
+      matrix.set(0, 0, 0, 1, fff, ff, f, 0, 6 * fff, 2 * ff, 0, 0, 6 * fff, 0, 0, 0);
+    };
+
+    //internal curveInit
+    //used by curveDetail, curveTightness
+    var curveInit = function() {
+      // allocate only if/when used to save startup time
+      if (!curveDrawMatrix) {
+        curveBasisMatrix = new PMatrix3D();
+        curveDrawMatrix = new PMatrix3D();
+        curveInited = true;
+      }
+
+      var s = curTightness;
+      curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2), ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2), (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2), ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
+
+      splineForward(curveDet, curveDrawMatrix);
+
+      if (!bezierBasisInverse) {
+        //bezierBasisInverse = bezierBasisMatrix.get();
+        //bezierBasisInverse.invert();
+        curveToBezierMatrix = new PMatrix3D();
+      }
+
+      // TODO only needed for PGraphicsJava2D? if so, move it there
+      // actually, it's generally useful for other renderers, so keep it
+      // or hide the implementation elsewhere.
+      curveToBezierMatrix.set(curveBasisMatrix);
+      curveToBezierMatrix.preApply(bezierBasisInverse);
+
+      // multiply the basis and forward diff matrices together
+      // saves much time since this needn't be done for each curve
+      curveDrawMatrix.apply(curveBasisMatrix);
+    };
+
     p.bezierVertex = function bezierVertex() {
       isBezier = true;
       var vert = [];
@@ -6366,6 +6419,34 @@
       curTextureMode = mode;
     };
 
+    var curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
+      var x0 = x2;
+      var y0 = y2;
+      var z0 = z2;
+
+      var draw = curveDrawMatrix.array();
+
+      var xplot1 = draw[4] * x1 + draw[5] * x2 + draw[6] * x3 + draw[7] * x4;
+      var xplot2 = draw[8] * x1 + draw[9] * x2 + draw[10] * x3 + draw[11] * x4;
+      var xplot3 = draw[12] * x1 + draw[13] * x2 + draw[14] * x3 + draw[15] * x4;
+
+      var yplot1 = draw[4] * y1 + draw[5] * y2 + draw[6] * y3 + draw[7] * y4;
+      var yplot2 = draw[8] * y1 + draw[9] * y2 + draw[10] * y3 + draw[11] * y4;
+      var yplot3 = draw[12] * y1 + draw[13] * y2 + draw[14] * y3 + draw[15] * y4;
+
+      var zplot1 = draw[4] * z1 + draw[5] * z2 + draw[6] * z3 + draw[7] * z4;
+      var zplot2 = draw[8] * z1 + draw[9] * z2 + draw[10] * z3 + draw[11] * z4;
+      var zplot3 = draw[12] * z1 + draw[13] * z2 + draw[14] * z3 + draw[15] * z4;
+
+      p.vertex(x0, y0, z0);
+      for (var j = 0; j < curveDet; j++) {
+        x0 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+        y0 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+        z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
+        p.vertex(x0, y0, z0);
+      }
+    };
+
     p.curveVertex = function(x, y, z) {
       isCurve = true;
       if(p.use3DContext){
@@ -6399,34 +6480,6 @@
       }
     };
 
-    var curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
-      var x0 = x2;
-      var y0 = y2;
-      var z0 = z2;
-
-      var draw = curveDrawMatrix.array();
-
-      var xplot1 = draw[4] * x1 + draw[5] * x2 + draw[6] * x3 + draw[7] * x4;
-      var xplot2 = draw[8] * x1 + draw[9] * x2 + draw[10] * x3 + draw[11] * x4;
-      var xplot3 = draw[12] * x1 + draw[13] * x2 + draw[14] * x3 + draw[15] * x4;
-
-      var yplot1 = draw[4] * y1 + draw[5] * y2 + draw[6] * y3 + draw[7] * y4;
-      var yplot2 = draw[8] * y1 + draw[9] * y2 + draw[10] * y3 + draw[11] * y4;
-      var yplot3 = draw[12] * y1 + draw[13] * y2 + draw[14] * y3 + draw[15] * y4;
-
-      var zplot1 = draw[4] * z1 + draw[5] * z2 + draw[6] * z3 + draw[7] * z4;
-      var zplot2 = draw[8] * z1 + draw[9] * z2 + draw[10] * z3 + draw[11] * z4;
-      var zplot3 = draw[12] * z1 + draw[13] * z2 + draw[14] * z3 + draw[15] * z4;
-
-      p.vertex(x0, y0, z0);
-      for (var j = 0; j < curveDet; j++) {
-        x0 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
-        y0 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
-        z0 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
-        p.vertex(x0, y0, z0);
-      }
-    };
-
     p.curve = function curve() {
       if (arguments.length === 8) // curve(x1, y1, x2, y2, x3, y3, x4, y4)
       {
@@ -6450,47 +6503,6 @@
 
     p.curveTightness = function(tightness) {
       curTightness = tightness;
-    };
-
-    //used by both curveDetail and bezierDetail
-    var splineForward = function(segments, matrix) {
-      var f = 1.0 / segments;
-      var ff = f * f;
-      var fff = ff * f;
-
-      matrix.set(0, 0, 0, 1, fff, ff, f, 0, 6 * fff, 2 * ff, 0, 0, 6 * fff, 0, 0, 0);
-    };
-
-    //internal curveInit
-    //used by curveDetail, curveTightness
-    var curveInit = function() {
-      // allocate only if/when used to save startup time
-      if (!curveDrawMatrix) {
-        curveBasisMatrix = new PMatrix3D();
-        curveDrawMatrix = new PMatrix3D();
-        curveInited = true;
-      }
-
-      var s = curTightness;
-      curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2), ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2), (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2), ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
-
-      splineForward(curveDet, curveDrawMatrix);
-
-      if (!bezierBasisInverse) {
-        //bezierBasisInverse = bezierBasisMatrix.get();
-        //bezierBasisInverse.invert();
-        curveToBezierMatrix = new PMatrix3D();
-      }
-
-      // TODO only needed for PGraphicsJava2D? if so, move it there
-      // actually, it's generally useful for other renderers, so keep it
-      // or hide the implementation elsewhere.
-      curveToBezierMatrix.set(curveBasisMatrix);
-      curveToBezierMatrix.preApply(bezierBasisInverse);
-
-      // multiply the basis and forward diff matrices together
-      // saves much time since this needn't be done for each curve
-      curveDrawMatrix.apply(curveBasisMatrix);
     };
 
     p.curveDetail = function curveDetail( detail ) {
@@ -7448,7 +7460,7 @@
     };
 
     var blurARGB = function blurARGB(r, aImg) {
-      var sum, cr, cg, cb, ca;
+      var sum, cr, cg, cb, ca, c, m;
       var read, ri, ym, ymi, bk0;
       var wh = aImg.pixels.getLength();
       var r2 = new Array(wh);
@@ -7456,11 +7468,12 @@
       var b2 = new Array(wh);
       var a2 = new Array(wh);
       var yi = 0;
+      var x, y, i;
 
       buildBlurKernel(r);
 
-      for (var y = 0; y < aImg.height; y++) {
-        for (var x = 0; x < aImg.width; x++) {
+      for (y = 0; y < aImg.height; y++) {
+        for (x = 0; x < aImg.width; x++) {
           cb = cg = cr = ca = sum = 0;
           read = x - p.shared.blurRadius;
           if (read<0) {
@@ -7472,12 +7485,12 @@
             }
             bk0=0;
           }
-          for (var i = bk0; i < p.shared.blurKernelSize; i++) {
+          for (i = bk0; i < p.shared.blurKernelSize; i++) {
             if (read >= aImg.width) {
               break;
             }
-            var c = aImg.pixels.getPixel(read + yi);
-            var m = p.shared.blurKernel[i];
+            c = aImg.pixels.getPixel(read + yi);
+            m = p.shared.blurKernel[i];
             ca += m * ((c & p.ALPHA_MASK) >>> 24);
             cr += m * ((c & p.RED_MASK) >> 16);
             cg += m * ((c & p.GREEN_MASK) >> 8);
@@ -7498,8 +7511,8 @@
       ym = -p.shared.blurRadius;
       ymi = ym*aImg.width;
 
-      for (var y = 0; y < aImg.height; y++) {
-        for (var x = 0; x < aImg.width; x++) {
+      for (y = 0; y < aImg.height; y++) {
+        for (x = 0; x < aImg.width; x++) {
           cb = cg = cr = ca = sum = 0;
           if (ym<0) {
             bk0 = ri = -ym;
@@ -7512,11 +7525,11 @@
             ri = ym;
             read = x + ymi;
           }
-          for (var i = bk0; i < p.shared.blurKernelSize; i++) {
+          for (i = bk0; i < p.shared.blurKernelSize; i++) {
             if (ri >= aImg.height) {
               break;
             }
-            var m = p.shared.blurKernel[i];
+            m = p.shared.blurKernel[i];
             ca += m * a2[read];
             cr += m * r2[read];
             cg += m * g2[read];
@@ -7657,7 +7670,7 @@
     };
 
     p.filter = function filter(kind, param, aImg){
-      var img;
+      var img, col, lum, i;
       if(arguments.length === 3) {
         aImg.loadPixels();
         img = aImg;
@@ -7679,22 +7692,22 @@
         case p.GRAY:
           if (img.format === p.ALPHA) { //trouble
             // for an alpha image, convert it to an opaque grayscale
-            for (var i = 0; i < imglen; i++) {
-              var col = 255 - img.pixels.getPixel(i); 
+            for (i = 0; i < imglen; i++) {
+              col = 255 - img.pixels.getPixel(i); 
               img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
             }
             img.format = p.RGB; //trouble
 
           } else {
-            for (var i = 0; i < imglen; i++) {
-              var col = img.pixels.getPixel(i);
-              var lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
+            for (i = 0; i < imglen; i++) {
+              col = img.pixels.getPixel(i);
+              lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
               img.pixels.setPixel(i,((col & p.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
             }
           }
           break;
         case p.INVERT:
-          for (var i = 0; i < imglen; i++) {
+          for (i = 0; i < imglen; i++) {
             img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
           }
           break;
@@ -7707,7 +7720,7 @@
             throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
           }
           var levels1 = levels - 1;
-          for (var i = 0; i < imglen; i++) {
+          for (i = 0; i < imglen; i++) {
             var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
             var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
             var blevel = img.pixels.getPixel(i) & 0xff;
@@ -7719,7 +7732,7 @@
           }
           break;          
         case p.OPAQUE:
-          for (var i = 0; i < imglen; i++) {
+          for (i = 0; i < imglen; i++) {
             img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
           }
           img.format = p.RGB; //trouble
@@ -7732,7 +7745,7 @@
             throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
           }         
           var thresh = p.floor(param * 255);
-          for (var i = 0; i < imglen; i++) {
+          for (i = 0; i < imglen; i++) {
             var max = p.max((img.pixels.getPixel(i) & p.RED_MASK) >> 16,
                              p.max((img.pixels.getPixel(i) & p.GREEN_MASK) >> 8,
                                       (img.pixels.getPixel(i) & p.BLUE_MASK)));
@@ -8819,7 +8832,7 @@
         do {
           offsetX += element.offsetLeft;
           offsetY += element.offsetTop;
-        } while (element = element.offsetParent);
+        } while ((element = element.offsetParent));
       }
 
       // Add padding and border style widths to offset
@@ -9671,12 +9684,13 @@
     };
 
     function transformForExpression(expr) {
+      var content;
       if(/\bin\b/.test(expr)) {
-        var content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
+        content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
         return new AstForInExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
       } else {
-        var content = expr.substring(1, expr.length - 1).split(";");
+        content = expr.substring(1, expr.length - 1).split(";");
         return new AstForExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]), transformExpression(content[2]));
       }
@@ -10316,18 +10330,6 @@
 
   Processing.getInstanceById = function(name) {
     return Processing.instances[Processing.instanceIds[name]];
-  };
-
-  // IE Unfriendly AJAX Method
-  var ajax = function(url) {
-    var AJAX = new window.XMLHttpRequest();
-    if (AJAX) {
-      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
-      AJAX.send(null);
-      return AJAX.responseText;
-    } else {
-      return false;
-    }
   };
 
   // Automatic Initialization Method

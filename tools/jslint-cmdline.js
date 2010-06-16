@@ -74,6 +74,7 @@ var JSLINT = (function () {
         WebGLUnsignedShortArray: true,
         CanvasFloatArray: true,
         CanvasRenderingContext2D: true,
+        DOMParser: true,
         close: false,
         closed: false,
         defaultStatus: false,
