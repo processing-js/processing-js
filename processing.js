@@ -18,6 +18,19 @@
 
 (function() {
 
+  // IE Unfriendly AJAX Method
+  var ajax = function(url) {
+    var AJAX = new window.XMLHttpRequest();
+    if (AJAX) {
+      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
+      AJAX.send(null);
+      return AJAX.responseText;
+    } else {
+      return false;
+    }
+  };
+
+
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
@@ -344,13 +357,15 @@
     // in Minefield does nothing and does not report any errors.
     var VERTEX_PROGRAM_POINT_SIZE = 0x8642;
     var POINT_SMOOTH = 0x0B10;
-    
+
     // Get padding and border style widths for mouse offsets
+    var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
+    
     if (document.defaultView && document.defaultView.getComputedStyle) {
-      var stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingLeft'], 10)      || 0,
-          stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingTop'], 10)       || 0,
-          styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderLeftWidth'], 10)  || 0,
-          styleBorderTop   = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderTopWidth'], 10)   || 0;
+      stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingLeft'], 10)      || 0;
+      stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingTop'], 10)       || 0;
+      styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderLeftWidth'], 10)  || 0;
+      styleBorderTop   = parseInt(document.defaultView.getComputedStyle(curElement, null)['borderTopWidth'], 10)   || 0;
     }
 
     // User can only have MAX_LIGHTS lights
@@ -793,9 +808,11 @@
         this.value = newval;
       }
     };
+
     ////////////////////////////////////////////////////////////////////////////
     // XMLElement
     ////////////////////////////////////////////////////////////////////////////
+
     var XMLElement = function( ){
       if( arguments.length === 4 ){
         this.attributes = [];
@@ -854,18 +871,17 @@
       parse: function( filename ){
         var xmlDoc;
         try {
-          xmlDoc=new DOMParser().parseFromString( ajax( filename ),"text/xml");
+          xmlDoc = new DOMParser().parseFromString(ajax(filename), "text/xml");
           
           var elements = xmlDoc.documentElement;
-          if( elements ){
+          if (elements) {
             this.parseChildrenRecursive( null, elements );
           } else {
             throw("Error loading document");
           }          
           return this;        
-        }
-        catch( e ) {
-          throw( e );
+        } catch(e) {
+          throw(e);
         }
         
       },
@@ -1882,6 +1898,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
+
     var PMatrixStack = function PMatrixStack() {
       this.matrixStack = [];
     };
@@ -1929,6 +1946,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
     ////////////////////////////////////////////////////////////////////////////
+
     p.split = function(str, delim) {
       return str.split(delim);
     };
@@ -2680,6 +2698,8 @@
     }
 
     function color$2(aValue1, aValue2) {
+      var a;
+
       // Color int and alpha
       if (aValue1 & p.ALPHA_MASK) {
         a = Math.round(255 * (aValue2 / colorModeA));
@@ -2702,7 +2722,7 @@
       if (aValue1 <= colorModeX && aValue1 >= 0) {
           if (curColorMode === p.RGB) {
             return color$4(aValue1, aValue1, aValue1, colorModeA);
-          } else if (curColorMode == p.HSB) {
+          } else if (curColorMode === p.HSB) {
             return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA);
           }
       }
@@ -2713,19 +2733,20 @@
     }
 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
+      var undef;
 
       // 4 arguments: (R, G, B, A) or (H, S, B, A)
-      if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
+      if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef && aValue4 !== undef) {
         return color$4(aValue1, aValue2, aValue3, aValue4);
       }
 
       // 3 arguments: (R, G, B) or (H, S, B)
-      else if (aValue1 != null && aValue2 != null && aValue3 != null) {
+      else if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef) {
         return color$4(aValue1, aValue2, aValue3, colorModeA);
       }
 
       // 2 arguments: (Color, A) or (Grayscale, A)
-      else if (aValue1 != null && aValue2 != null) {
+      else if (aValue1 !== undef && aValue2 !== undef) {
         return color$2(aValue1, aValue2);
       }
 
@@ -3358,7 +3379,7 @@
         }
         return values;
       } else {
-        if (binaryString != binaryString) { // isNaN
+        if (isNaN(binaryString)) { 
           throw "NaN_Err";
         } else {
           if (arguments.length === 1 || binaryString.length === 8) {
@@ -5843,7 +5864,9 @@
           if(doFill){
             fill3D(fillVertArray, "TRIANGLES", colorVertArray);
           }
-          /*fillVertArray = [];  //***Fill not properly working yet*** will fix later
+          
+          // TODO: Fill not properly working yet, will fix later
+          /*fillVertArray = [];  
           colorVertArray = [];
           tempArray.reverse();
           for(i = 0; (i+1) < 10; i++){
@@ -6302,14 +6325,14 @@
       else{
         if(arguments.length === 9){
           if(p.use3DContext){
-            if ( bezierDrawMatrix == null ) {
+            if ( typeof bezierDrawMatrix === 'undefined' ) {
               bezierDrawMatrix = new PMatrix3D();
             }
             // setup matrix for forward differencing to speed up drawing
             var lastPoint = vertArray.length - 1;
             splineForward( bezDetail, bezierDrawMatrix );
             bezierDrawMatrix.apply( bezierBasisMatrix );
-            var draw = bezierDrawMatrix.array(); 	
+            var draw = bezierDrawMatrix.array(); 
             var x1 = vertArray[lastPoint][0],
                 y1 = vertArray[lastPoint][1],
                 z1 = vertArray[lastPoint][2];
@@ -6387,7 +6410,7 @@
     
     p.textureMode = function(mode){
       curTextureMode = mode;
-    }
+    };
 
     p.curveVertex = function(x, y, z) {
       isCurve = true;
@@ -6492,7 +6515,7 @@
         curveBasisMatrix = new PMatrix3D();
         curveDrawMatrix = new PMatrix3D();
         curveInited = true;
-	    }
+      }
 
       var s = curTightness;
       curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2), ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2), (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2), ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
@@ -6940,7 +6963,7 @@
     p.save = function save(file, img) {
       // file is unused at the moment
       // may implement this differently in later release
-      if (img != null) {
+      if (typeof img !== "undefined") {
         return window.open(img.toDataURL(),"_blank");
       } else {
         return window.open(p.canvas.toDataURL(),"_blank");
@@ -7513,6 +7536,7 @@
       }
       p.blend(src, sx, sy, sw, sh, dx, dy, dw, dh, p.REPLACE);
     };
+ 
 
     p.blend = function blend(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
       if (arguments.length === 9) {
@@ -7547,96 +7571,27 @@
       }
     };
 
-    p.filter = function filter(kind, param, aImg){
-      var img;
-      if(arguments.length === 3) {
-        aImg.loadPixels();
-        img = aImg;
-      } else {
-        p.loadPixels();
-        img = p;
-      }
-      var imglen = img.pixels.getLength();
-      switch (kind) {
-        case p.BLUR:
-          var radius = param || 1; // if no param specified, use 1 (default for p5)
-          blurARGB(radius, img);
-        break;
-        case p.GRAY:
-          if (img.format === p.ALPHA) { //trouble
-            // for an alpha image, convert it to an opaque grayscale
-            for (var i = 0; i < imglen; i++) {
-              var col = 255 - img.pixels.getPixel(i); 
-              img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
-            }
-            img.format = p.RGB; //trouble
+    // helper function for filter()
+    var buildBlurKernel = function buildBlurKernel(r) {
+      var radius = p.floor(r * 3.5), i, radiusi;
+      radius = (radius < 1) ? 1 : ((radius < 248) ? radius : 248);
+      if (p.shared.blurRadius !== radius) {
+        p.shared.blurRadius = radius;
+        p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
+        p.shared.blurKernel = new Array(p.shared.blurKernelSize);
+        // init blurKernel
+        for (i = 0; i < p.shared.blurKernelSize; i++) {          
+          p.shared.blurKernel[i] = 0;
+        }
 
-          } else {
-            for (var i = 0; i < imglen; i++) {
-              var col = img.pixels.getPixel(i);
-              var lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
-              img.pixels.setPixel(i,((col & p.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
-            }
-          }
-          break;
-        case p.INVERT:
-          for (var i = 0; i < imglen; i++) {
-            img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
-          }
-          break;
-        case p.POSTERIZE:
-          if(param == null) {
-            throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
-          }
-          var levels = p.floor(param);
-          if ((levels < 2) || (levels > 255)) {
-            throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
-          }
-          var levels1 = levels - 1;
-          for (var i = 0; i < imglen; i++) {
-            var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
-            var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
-            var blevel = img.pixels.getPixel(i) & 0xff;
-            rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
-            glevel = (((glevel * levels) >> 8) * 255) / levels1;
-            blevel = (((blevel * levels) >> 8) * 255) / levels1;
-            img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | 
-              (rlevel << 16) | (glevel << 8) | blevel));
-          }
-          break;          
-        case p.OPAQUE:
-          for (var i = 0; i < imglen; i++) {
-            img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
-          }
-          img.format = p.RGB; //trouble
-          break;
-        case p.THRESHOLD:
-          if (param == null) {
-            param = 0.5;
-          }
-          if ((param < 0) || (param > 1)) {
-            throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
-          }         
-          var thresh = p.floor(param * 255);
-          for (var i = 0; i < imglen; i++) {
-            var max = p.max((img.pixels.getPixel(i) & p.RED_MASK) >> 16,
-                             p.max((img.pixels.getPixel(i) & p.GREEN_MASK) >> 8,
-                                      (img.pixels.getPixel(i) & p.BLUE_MASK)));
-            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & p.ALPHA_MASK) | 
-              ((max < thresh) ? 0x000000 : 0xffffff)));
-          }
-          break;
-        case p.ERODE:
-          dilate(true, img);
-          break;
-        case p.DILATE:
-          dilate(false, img);
-          break;
+        for (i = 1, radiusi = radius - 1; i < radius; i++) {
+          p.shared.blurKernel[radius+i] = p.shared.blurKernel[radiusi] = radiusi * radiusi;
+        }
+        p.shared.blurKernel[radius] = radius * radius;
       }
-      img.updatePixels();
     };
 
-    blurARGB = function blurARGB(r, aImg) {
+    var blurARGB = function blurARGB(r, aImg) {
       var sum, cr, cg, cb, ca;
       var read, ri, ym, ymi, bk0;
       var wh = aImg.pixels.getLength();
@@ -7656,13 +7611,15 @@
             bk0 = -read;
             read = 0;
           } else {
-            if (read >= aImg.width)
+            if (read >= aImg.width) {
               break;
+            }
             bk0=0;
           }
           for (var i = bk0; i < p.shared.blurKernelSize; i++) {
-            if (read >= aImg.width)
+            if (read >= aImg.width) {
               break;
+            }
             var c = aImg.pixels.getPixel(read + yi);
             var m = p.shared.blurKernel[i];
             ca += m * ((c & p.ALPHA_MASK) >>> 24);
@@ -7692,15 +7649,17 @@
             bk0 = ri = -ym;
             read = x;
           } else {
-            if (ym >= aImg.height)
+            if (ym >= aImg.height) {
               break;
+            }
             bk0 = 0;
             ri = ym;
             read = x + ymi;
           }
           for (var i = bk0; i < p.shared.blurKernelSize; i++) {
-            if (ri >= aImg.height)
+            if (ri >= aImg.height) {
               break;
+            }
             var m = p.shared.blurKernel[i];
             ca += m * a2[read];
             cr += m * r2[read];
@@ -7718,28 +7677,8 @@
       }
     };
     
-    // helper function for filter()
-    buildBlurKernel = function buildBlurKernel(r) {
-      var radius = p.floor(r * 3.5);
-      radius = (radius < 1) ? 1 : ((radius < 248) ? radius : 248);
-      if (p.shared.blurRadius != radius) {
-        p.shared.blurRadius = radius;
-        p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
-        p.shared.blurKernel = new Array(p.shared.blurKernelSize);
-        // init blurKernel
-        for(var i=0;i<p.shared.blurKernelSize; i++) {          
-          p.shared.blurKernel[i] = 0;
-        }
-
-        for (var i = 1, radiusi = radius - 1; i < radius; i++) {
-          p.shared.blurKernel[radius+i] = p.shared.blurKernel[radiusi] = radiusi * radiusi;
-        }
-        p.shared.blurKernel[radius] = radius * radius;
-      }
-    };
-    
     // helper funtion for ERODE and DILATE modes of filter()
-    dilate = function dilate(isInverted, aImg) {
+    var dilate = function dilate(isInverted, aImg) {
       var currIdx = 0;
       var maxIdx = aImg.pixels.getLength();
       var out = new Array(maxIdx);
@@ -7858,6 +7797,96 @@
       aImg.pixels.set(out);
       //p.arraycopy(out,0,pixels,0,maxIdx);
     };
+
+    p.filter = function filter(kind, param, aImg){
+      var img;
+      if(arguments.length === 3) {
+        aImg.loadPixels();
+        img = aImg;
+      } else {
+        p.loadPixels();
+        img = p;
+      }
+      var imglen = img.pixels.getLength();
+      switch (kind) {
+        case p.BLUR:
+          var radius = param || 1; // if no param specified, use 1 (default for p5)
+          blurARGB(radius, img);
+        break;
+        case p.GRAY:
+          if (img.format === p.ALPHA) { //trouble
+            // for an alpha image, convert it to an opaque grayscale
+            for (var i = 0; i < imglen; i++) {
+              var col = 255 - img.pixels.getPixel(i); 
+              img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
+            }
+            img.format = p.RGB; //trouble
+
+          } else {
+            for (var i = 0; i < imglen; i++) {
+              var col = img.pixels.getPixel(i);
+              var lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
+              img.pixels.setPixel(i,((col & p.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
+            }
+          }
+          break;
+        case p.INVERT:
+          for (var i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
+          }
+          break;
+        case p.POSTERIZE:
+          if(param === null) {
+            throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
+          }
+          var levels = p.floor(param);
+          if ((levels < 2) || (levels > 255)) {
+            throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
+          }
+          var levels1 = levels - 1;
+          for (var i = 0; i < imglen; i++) {
+            var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
+            var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
+            var blevel = img.pixels.getPixel(i) & 0xff;
+            rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
+            glevel = (((glevel * levels) >> 8) * 255) / levels1;
+            blevel = (((blevel * levels) >> 8) * 255) / levels1;
+            img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | 
+              (rlevel << 16) | (glevel << 8) | blevel));
+          }
+          break;          
+        case p.OPAQUE:
+          for (var i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
+          }
+          img.format = p.RGB; //trouble
+          break;
+        case p.THRESHOLD:
+          if (param === null) {
+            param = 0.5;
+          }
+          if ((param < 0) || (param > 1)) {
+            throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
+          }         
+          var thresh = p.floor(param * 255);
+          for (var i = 0; i < imglen; i++) {
+            var max = p.max((img.pixels.getPixel(i) & p.RED_MASK) >> 16,
+                             p.max((img.pixels.getPixel(i) & p.GREEN_MASK) >> 8,
+                                      (img.pixels.getPixel(i) & p.BLUE_MASK)));
+            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & p.ALPHA_MASK) | 
+              ((max < thresh) ? 0x000000 : 0xffffff)));
+          }
+          break;
+        case p.ERODE:
+          dilate(true, img);
+          break;
+        case p.DILATE:
+          dilate(false, img);
+          break;
+      }
+      img.updatePixels();
+    };
+
 
     // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear(), filter()
     // change this in the future to not be exposed to p
@@ -8980,7 +9009,7 @@
         p.mouseClicked();
       }
 
-      if (typeof p.mouseReleased == "function") {
+      if (typeof p.mouseReleased === "function") {
         p.mouseReleased();
       }
     });
@@ -10430,17 +10459,6 @@
     return Processing.instances[Processing.instanceIds[name]];
   };
 
-  // IE Unfriendly AJAX Method
-  var ajax = function(url) {
-    var AJAX = new window.XMLHttpRequest();
-    if (AJAX) {
-      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
-      AJAX.send(null);
-      return AJAX.responseText;
-    } else {
-      return false;
-    }
-  };
 
   // Automatic Initialization Method
   var init = function() {
