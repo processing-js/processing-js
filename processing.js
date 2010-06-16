@@ -262,11 +262,11 @@
         doFill = true,
         fillStyle = [1.0, 1.0, 1.0, 1.0],
         currentFillColor = 0xFFFFFFFF,
-        isFillDirty = false,
+        isFillDirty = true,
         doStroke = true,
         strokeStyle = [0.8, 0.8, 0.8, 1.0],
         currentStrokeColor = 0xFFFDFDFD,
-        isStrokeDirty = false,
+        isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
         refreshBackground = function() {},
@@ -2973,6 +2973,16 @@
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
 
+    function saveContext() {
+      curContext.save();
+    }
+
+    function restoreContext() {
+      curContext.restore();
+      isStrokeDirty = true;
+      isFillDirty = true;
+    }
+
     p.printMatrix = function printMatrix() {
       modelView.print();
     };
@@ -2999,7 +3009,7 @@
       if (p.use3DContext) {
         userMatrixStack.load(modelView);
       } else {
-        curContext.save();
+        saveContext();
       }
     };
 
@@ -3007,7 +3017,7 @@
       if (p.use3DContext) {
         modelView.set(userMatrixStack.pop());
       } else {
-        curContext.restore();
+        restoreContext();
       }
     };
 
@@ -3055,13 +3065,15 @@
 
     p.pushStyle = function pushStyle() {
       // Save the canvas state.
-      curContext.save();
+      saveContext();
 
       p.pushMatrix();
 
       var newState = {
         'doFill': doFill,
+        'currentFillColor': currentFillColor,
         'doStroke': doStroke,
+        'currentStrokeColor': currentStrokeColor,
         'curTint': curTint,
         'curRectMode': curRectMode,
         'curColorMode': curColorMode,
@@ -3080,12 +3092,14 @@
       var oldState = styleArray.pop();
 
       if (oldState) {
-        curContext.restore();
+        restoreContext();
 
         p.popMatrix();
 
         doFill = oldState.doFill;
+        currentFillColor = oldState.currentFillColor;
         doStroke = oldState.doStroke;
+        currentStrokeColor = oldState.currentStrokeColor;
         curTint = oldState.curTint;
         curRectMode = oldState.curRectmode;
         curColorMode = oldState.curColorMode;
@@ -3159,9 +3173,9 @@
         p.camera();
         p.draw();
       } else {
-        curContext.save();
+        saveContext();
         p.draw();
-        curContext.restore();
+        restoreContext();
       }
 
       inDraw = false;
@@ -5407,15 +5421,13 @@
       }
     };
 
-    function ensureFillSet() {
-      if(!doFill) {
-        return false;
-      } else {
+    function executeContextFill() {
+      if(doFill) {
         if(isFillDirty) {
           curContext.fillStyle = p.color.toString(currentFillColor);
           isFillDirty = false;
         }
-        return true;
+        curContext.fill();
       }
     }
 
@@ -5438,15 +5450,13 @@
       }
     };
 
-    function ensureStrokeSet() {
-      if(!doStroke) {
-        return false;
-      } else {
+    function executeContextStroke() {
+      if(doStroke) {
         if(isStrokeDirty) {
           curContext.strokeStyle = p.color.toString(currentStrokeColor);
           isStrokeDirty = false;
         }
-        return true;
+        curContext.stroke();
       }
     }
 
@@ -5816,12 +5826,8 @@
               b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
               curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
             }
-            if(ensureFillSet()){
-              curContext.fill();
-            }
-            if(ensureStrokeSet()){
-              curContext.stroke();
-            }
+            executeContextFill();
+            executeContextStroke();
             curContext.closePath();
           }
         }
@@ -5876,12 +5882,8 @@
           for(i = 1; i < vertArray.length; i++){
             curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
           }
-          if(ensureFillSet()){
-            curContext.fill();
-          }
-          if(ensureStrokeSet()){
-            curContext.stroke();
-          }
+          executeContextFill();
+          executeContextStroke();
           curContext.closePath();
         }
       }
@@ -6201,12 +6203,8 @@
               curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              if(ensureFillSet()){
-                curContext.fill();
-              }
-              if(ensureStrokeSet()){
-                curContext.stroke();
-              }
+              executeContextFill();
+              executeContextStroke();
               curContext.closePath();
             }
           }
@@ -6218,14 +6216,11 @@
               for(i = 2; i < vertArray.length; i++){
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                 curContext.lineTo(vertArray[i-2][0], vertArray[i-2][1]);
-                if(ensureFillSet()){
-                  curContext.fill();
-                }
-                if(ensureStrokeSet()){
-                  curContext.stroke();
-                }
+                executeContextFill();
+                executeContextStroke();
                 curContext.moveTo(vertArray[i][0],vertArray[i][1]);
               }
+              curContext.closePath();
             }
           }
           else if(curShape === p.TRIANGLE_FAN){
@@ -6234,23 +6229,16 @@
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[1][0], vertArray[1][1]);
               curContext.lineTo(vertArray[2][0], vertArray[2][1]);
-              if(ensureFillSet()){
-                  curContext.fill();
-                }
-              if(ensureStrokeSet()){
-                  curContext.stroke();
-                }
+              executeContextFill();
+              executeContextStroke();
               for(i = 3; i < vertArray.length; i++){
                 curContext.moveTo(vertArray[0][0], vertArray[0][1]);
                 curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                if(ensureFillSet()){
-                  curContext.fill();
-                }
-                if(ensureStrokeSet()){
-                  curContext.stroke();
-                }
+                executeContextFill();
+                executeContextStroke();
               }
+              curContext.closePath();
             }
           }
           else if(curShape === p.QUADS){
@@ -6261,12 +6249,8 @@
                 curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
               }
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              if(ensureFillSet()){
-                curContext.fill();
-              }
-              if(ensureStrokeSet()){
-                curContext.stroke();
-              }
+              executeContextFill();
+              executeContextStroke();
               curContext.closePath();
             }
           }
@@ -6281,14 +6265,11 @@
                   curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                   curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
                   curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-                  if(ensureFillSet()){
-                    curContext.fill();
-                  }
-                  if(ensureStrokeSet()){
-                    curContext.stroke();
-                  }
+                  executeContextFill();
+                  executeContextStroke();
                 }
               }
+              curContext.closePath();
             }
           }
           else{
@@ -6300,14 +6281,10 @@
             if(p.CLOSE){
               curContext.lineTo(vertArray[0][0], vertArray[0][1]);
             }
-            if(ensureFillSet()){
-              curContext.fill();
-            }
-            if(ensureStrokeSet()){
-              curContext.stroke();
-            }
+            executeContextFill();
+            executeContextStroke();
+            curContext.closePath();
           }
-          curContext.closePath();
         }
       }
       isCurve = false;
@@ -6582,14 +6559,10 @@
       curContext.beginPath();
       curContext.arc(x, y, curEllipseMode === p.CENTER_RADIUS ? width : width / 2, start, stop, false);
 
-      if (ensureStrokeSet()) {
-        curContext.stroke();
-      }
+      executeContextStroke();
       curContext.lineTo(x, y);
 
-      if (ensureFillSet()) {
-        curContext.fill();
-      }
+      executeContextFill();
       curContext.closePath();
     };
 
@@ -6663,11 +6636,11 @@
           return;
         }
 
-        if (ensureStrokeSet()) {
+        if (doStroke) {
           curContext.beginPath();
           curContext.moveTo(x1 || 0, y1 || 0);
           curContext.lineTo(x2 || 0, y2 || 0);
-          curContext.stroke();
+          executeContextStroke();
           curContext.closePath();
         }
       }
@@ -6835,12 +6808,8 @@
         curContext.rect(
         Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
 
-        if (ensureFillSet()) {
-          curContext.fill();
-        }
-        if (ensureStrokeSet()) {
-          curContext.stroke();
-        }
+        executeContextFill();
+        executeContextStroke();
 
         curContext.closePath();
       }
@@ -6875,12 +6844,8 @@
       if ((!p.use3DContext) && (width === height)) {
         curContext.beginPath();
         curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, p.TWO_PI, false);
-        if (ensureFillSet()) {
-          curContext.fill();
-        }
-        if (ensureStrokeSet()) {
-          curContext.stroke();
-        }
+        executeContextFill();
+        executeContextStroke();        
         curContext.closePath();
       } 
       else {
@@ -8513,7 +8478,7 @@
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
         if (str && (curContext.fillText || curContext.mozDrawText)) {
-          curContext.save();
+          saveContext();
           curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
           if (curContext.fillText) {
@@ -8522,12 +8487,12 @@
             curContext.translate(x, y);
             curContext.mozDrawText(str);
           }
-          curContext.restore();
+          restoreContext();
         }
       } else {
         // If the font is a Batik SVG font...
         var font = p.glyphTable[curTextFont.name];
-        curContext.save();
+        saveContext();
         curContext.translate(x, y + curTextSize);
 
         var upem   = font.units_per_em,
@@ -8543,7 +8508,7 @@
             Processing.debug(e);
           }
         }
-        curContext.restore();
+        restoreContext();
       }
     }
 
@@ -8721,7 +8686,7 @@
         var c = regex("[A-Za-z][0-9\\- ]+|Z", d);
 
         // Begin storing path object
-        path = "var path={draw:function(){curContext.beginPath();curContext.save();";
+        path = "var path={draw:function(){saveContext();curContext.beginPath();";
 
         x = 0;
         y = 0;
@@ -8804,9 +8769,8 @@
           lastCom = com[0];
         }
 
-        path += "if(ensureStrokeSet()){curContext.stroke();}";
-        path += "if(ensureFillSet()){curContext.fill();}";
-        path += "curContext.restore();";
+        path += "executeContextFill();executeContextStroke();";
+        path += "restoreContext();";
         path += "curContext.translate(" + horiz_adv_x + ",0);";
         path += "}}";
 
