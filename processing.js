@@ -36,7 +36,7 @@
     var p = this;
 
     p.pjs = {
-       imageCache: { // by default we have an empty imageCache, no more.
+       imageCache: { // by default we have an empty imageCache
          pending: 0 
        },
        crispLines: false
@@ -7216,37 +7216,6 @@
       c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
       return c;
     }
-    function get$5(x, y, w, h, img) {
-      // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
-      // changed for 0.9, offset start point needs to be *4
-      var start = y * img.width * 4 + (x*4);
-      var end = (y + h) * img.width * 4 + ((x + w) * 4);
-      c = new PImage(w, h, p.RGB);
-      for (var i = start, j = 0; i < end; i++, j++) {
-        // changed in 0.9
-        c.imageData.data[j] = img.imageData.data[i];
-        if ((j+1) % (w*4) === 0) {
-          //completed one line, increment i by offset
-          i += (img.width - w) * 4;
-        }
-      }
-      return c;
-    }
-    function get$4(x, y, w, h) {
-      // return a PImage of w and h from cood x,y of curContext
-      var c = new PImage(w, h, p.RGB);
-      c.fromImageData(curContext.getImageData(x, y, w, h));
-      return c;
-    }
-    function get$3(x,y,img) {
-      // PImage.get(x,y) was called, return the color (int) at x,y of img
-      // changed in 0.9
-      var offset = y * img.width * 4 + (x * 4);
-      return p.color.toInt(img.imageData.data[offset],
-                         img.imageData.data[offset + 1],
-                         img.imageData.data[offset + 2],
-                         img.imageData.data[offset + 3]);
-    }
     function get$2(x,y) {
       var data;
       // return the color at x,y (int) of curContext
@@ -7265,7 +7234,38 @@
       } else {
         // x,y is outside image return transparent black
         return 0;
+s      }
+    }
+    function get$3(x,y,img) {
+      // PImage.get(x,y) was called, return the color (int) at x,y of img
+      // changed in 0.9
+      var offset = y * img.width * 4 + (x * 4);
+      return p.color.toInt(img.imageData.data[offset],
+                         img.imageData.data[offset + 1],
+                         img.imageData.data[offset + 2],
+                         img.imageData.data[offset + 3]);
+    }
+    function get$4(x, y, w, h) {
+      // return a PImage of w and h from cood x,y of curContext
+      var c = new PImage(w, h, p.RGB);
+      c.fromImageData(curContext.getImageData(x, y, w, h));
+      return c;
+    }
+    function get$5(x, y, w, h, img) {
+      // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+      // changed for 0.9, offset start point needs to be *4
+      var start = y * img.width * 4 + (x*4);
+      var end = (y + h) * img.width * 4 + ((x + w) * 4);
+      var c = new PImage(w, h, p.RGB);
+      for (var i = start, j = 0; i < end; i++, j++) {
+        // changed in 0.9
+        c.imageData.data[j] = img.imageData.data[i];
+        if ((j+1) % (w*4) === 0) {
+          //completed one line, increment i by offset
+          i += (img.width - w) * 4;
+        }
       }
+      return c;
     }
 
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
@@ -7348,16 +7348,6 @@
       setPixelsCached = 0;
     }
 
-    function set$4(x, y, obj, img) {
-      // changed in 0.9
-      var c = p.color.toArray(obj);
-      var offset = y * img.width * 4 + (x*4);
-      var data = img.imageData.data;
-      data[offset] = c[0];
-      data[offset+1] = c[1];
-      data[offset+2] = c[2];
-      data[offset+3] = c[3];
-    }
     function set$3(x, y, c) {
       if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
         replaceContext();
@@ -7366,6 +7356,15 @@
           resetContext();
         }
       }
+    }
+    function set$4(x, y, obj, img) {
+      var c = p.color.toArray(obj);
+      var offset = y * img.width * 4 + (x*4);
+      var data = img.imageData.data;
+      data[offset] = c[0];
+      data[offset+1] = c[1];
+      data[offset+2] = c[2];
+      data[offset+3] = c[3];
     }
     // Paints a pixel array into the canvas
     p.set = function set(x, y, obj, img) {
@@ -8955,7 +8954,7 @@
         do {
           offsetX += element.offsetLeft;
           offsetY += element.offsetTop;
-        } while (element = element.offsetParent);
+        } while ((element = element.offsetParent) !== null);
       }
 
       // Add padding and border style widths to offset
@@ -9810,12 +9809,13 @@
     };
 
     function transformForExpression(expr) {
+      var content;
       if(/\bin\b/.test(expr)) {
-        var content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
+        content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
         return new AstForInExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
       } else {
-        var content = expr.substring(1, expr.length - 1).split(";");
+        content = expr.substring(1, expr.length - 1).split(";");
         return new AstForExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]), transformExpression(content[2]));
       }
