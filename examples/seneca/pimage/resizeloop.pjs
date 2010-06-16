@@ -16,7 +16,7 @@ void draw() {
   img.resize(w, h);
   background(255);
   image(img, 0, 0);
-  text(int(FRAME_RATE) + "FPS", 10,15);
+  text(int(frameRate) + "FPS", 10,15);
   
   if (w < 200 && up == true){
     w++;
