@@ -6794,8 +6794,13 @@
       if ((!p.use3DContext) && (width === height)) {
         curContext.beginPath();
         curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, p.TWO_PI, false);
-        curContext.stroke();
-        curContext.fill();
+        
+        if (doStroke) {
+          curContext.stroke();
+        } 
+        if (doFill) {
+          curContext.fill();
+        }
         curContext.closePath();
       } 
       else {
