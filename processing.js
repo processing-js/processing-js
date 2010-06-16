@@ -3333,10 +3333,11 @@
     p.unbinary = function unbinary(binaryString) {
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
+      var i;
 
       if (binaryString instanceof Array) {
         var values = [];
-        for (var i = 0; i < binaryString.length; i++) {
+        for (i = 0; i < binaryString.length; i++) {
           values[i] = p.unbinary(binaryString[i]);
         }
         return values;
@@ -3346,7 +3347,7 @@
         } else {
           if (arguments.length === 1 || binaryString.length === 8) {
             if (binaryPattern.test(binaryString)) {
-              for (var i = 0; i < 8; i++) {
+              for (i = 0; i < 8; i++) {
                 addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
               }
               return addUp + "";
@@ -5649,9 +5650,11 @@
       // No support for lights....yet
       disableVertexAttribPointer(programObject3D, "Normal");
 
+      var i;
+      
       if(usingTexture){
         if(curTextureMode === p.IMAGE){
-          for(var i = 0; i < tArray.length; i += 2){
+          for(i = 0; i < tArray.length; i += 2){
             tArray[i] = tArray[i]/curTexture.width;
             tArray[i+1] /= curTexture.height;
           }
@@ -5659,7 +5662,7 @@
 
         // hack to handle when users specifies values 
         // greater than 1.0 for texture coords.
-        for(var i = 0; i < tArray.length; i += 2){
+        for(i = 0; i < tArray.length; i += 2){
           if( tArray[i+0] > 1.0 ){ tArray[i+0] -= (tArray[i+0] - 1.0);}
           if( tArray[i+1] > 1.0 ){ tArray[i+1] -= (tArray[i+1] - 1.0);}
         }
@@ -6830,8 +6833,8 @@
           p.endShape();
 
           //temporary workaround to not working fills for bezier -- will fix later
-          var xAv = 0, yAv = 0;
-          for(var i = 0; i < vertArray.length; i++){
+          var xAv = 0, yAv = 0, i, j;
+          for(i = 0; i < vertArray.length; i++){
             xAv += vertArray[i][0];
             yAv += vertArray[i][1];
           }
@@ -6857,11 +6860,11 @@
           vert[14] = normalY;
           vert[15] = normalZ;
           vertArray.unshift(vert);
-          for(var i = 0; i < vertArray.length; i++){
-            for(var j = 0; j < 3; j++){
+          for(i = 0; i < vertArray.length; i++){
+            for(j = 0; j < 3; j++){
               fillVertArray.push(vertArray[i][j]);
             }
-            for(var j = 5; j < 9; j++){
+            for(j = 5; j < 9; j++){
               colorVertArray.push(vertArray[i][j]);
             }
           }
@@ -7535,19 +7538,22 @@
       var currIdx = 0;
       var maxIdx = aImg.pixels.getLength();
       var out = new Array(maxIdx);
+      var currRowIdx, maxRowIdx, colOrig, colOut, currLum; 
+      var idxRight, idxLeft, idxUp, idxDown, 
+          colRight, colLeft, colUp, colDown,
+          lumRight, lumLeft, lumUp, lumDown;
 
       if (!isInverted) {
         // erosion (grow light areas)
         while (currIdx<maxIdx) {
-          var currRowIdx = currIdx;
-          var maxRowIdx = currIdx + aImg.width;
+          currRowIdx = currIdx;
+          maxRowIdx = currIdx + aImg.width;
           while (currIdx < maxRowIdx) {
-            var colOrig,colOut;
             colOrig = colOut = aImg.pixels.getPixel(currIdx);
-            var idxLeft = currIdx - 1;
-            var idxRight = currIdx + 1;
-            var idxUp = currIdx - aImg.width;
-            var idxDown = currIdx + aImg.width;
+            idxLeft = currIdx - 1;
+            idxRight = currIdx + 1;
+            idxUp = currIdx - aImg.width;
+            idxDown = currIdx + aImg.width;
             if (idxLeft < currRowIdx) {
               idxLeft = currIdx;
             }
@@ -7560,17 +7566,17 @@
             if (idxDown >= maxIdx) {
               idxDown = currIdx;
             }
-            var colUp = aImg.pixels.getPixel(idxUp);
-            var colLeft = aImg.pixels.getPixel(idxLeft);
-            var colDown = aImg.pixels.getPixel(idxDown);
-            var colRight = aImg.pixels.getPixel(idxRight);
+            colUp = aImg.pixels.getPixel(idxUp);
+            colLeft = aImg.pixels.getPixel(idxLeft);
+            colDown = aImg.pixels.getPixel(idxDown);
+            colRight = aImg.pixels.getPixel(idxRight);
 
             // compute luminance
-            var currLum = 77*(colOrig>>16&0xff) + 151*(colOrig>>8&0xff) + 28*(colOrig&0xff);
-            var lumLeft = 77*(colLeft>>16&0xff) + 151*(colLeft>>8&0xff) + 28*(colLeft&0xff);
-            var lumRight = 77*(colRight>>16&0xff) + 151*(colRight>>8&0xff) + 28*(colRight&0xff);
-            var lumUp = 77*(colUp>>16&0xff) + 151*(colUp>>8&0xff) + 28*(colUp&0xff);
-            var lumDown = 77*(colDown>>16&0xff) + 151*(colDown>>8&0xff) + 28*(colDown&0xff);
+            currLum = 77*(colOrig>>16&0xff) + 151*(colOrig>>8&0xff) + 28*(colOrig&0xff);
+            lumLeft = 77*(colLeft>>16&0xff) + 151*(colLeft>>8&0xff) + 28*(colLeft&0xff);
+            lumRight = 77*(colRight>>16&0xff) + 151*(colRight>>8&0xff) + 28*(colRight&0xff);
+            lumUp = 77*(colUp>>16&0xff) + 151*(colUp>>8&0xff) + 28*(colUp&0xff);
+            lumDown = 77*(colDown>>16&0xff) + 151*(colDown>>8&0xff) + 28*(colDown&0xff);
 
             if (lumLeft > currLum) {
               colOut = colLeft;
@@ -7594,15 +7600,14 @@
       } else {
         // dilate (grow dark areas)
         while (currIdx < maxIdx) {
-          var currRowIdx = currIdx;
-          var maxRowIdx = currIdx + aImg.width;
+          currRowIdx = currIdx;
+          maxRowIdx = currIdx + aImg.width;
           while (currIdx < maxRowIdx) {
-            var colOrig,colOut;
             colOrig = colOut = aImg.pixels.getPixel(currIdx);
-            var idxLeft = currIdx - 1;
-            var idxRight = currIdx + 1;
-            var idxUp = currIdx - aImg.width;
-            var idxDown = currIdx + aImg.width;
+            idxLeft = currIdx - 1;
+            idxRight = currIdx + 1;
+            idxUp = currIdx - aImg.width;
+            idxDown = currIdx + aImg.width;
             if (idxLeft < currRowIdx) {
               idxLeft = currIdx;
             }
@@ -7615,17 +7620,17 @@
             if (idxDown >= maxIdx) {
               idxDown = currIdx;
             }
-            var colUp = aImg.pixels.getPixel(idxUp);
-            var colLeft = aImg.pixels.getPixel(idxLeft);
-            var colDown = aImg.pixels.getPixel(idxDown);
-            var colRight = aImg.pixels.getPixel(idxRight);
+            colUp = aImg.pixels.getPixel(idxUp);
+            colLeft = aImg.pixels.getPixel(idxLeft);
+            colDown = aImg.pixels.getPixel(idxDown);
+            colRight = aImg.pixels.getPixel(idxRight);
 
             // compute luminance
-            var currLum = 77*(colOrig>>16&0xff) + 151*(colOrig>>8&0xff) + 28*(colOrig&0xff);
-            var lumLeft = 77*(colLeft>>16&0xff) + 151*(colLeft>>8&0xff) + 28*(colLeft&0xff);
-            var lumRight = 77*(colRight>>16&0xff) + 151*(colRight>>8&0xff) + 28*(colRight&0xff);
-            var lumUp = 77*(colUp>>16&0xff) + 151*(colUp>>8&0xff) + 28*(colUp&0xff);
-            var lumDown = 77*(colDown>>16&0xff) + 151*(colDown>>8&0xff) + 28*(colDown&0xff);
+            currLum = 77*(colOrig>>16&0xff) + 151*(colOrig>>8&0xff) + 28*(colOrig&0xff);
+            lumLeft = 77*(colLeft>>16&0xff) + 151*(colLeft>>8&0xff) + 28*(colLeft&0xff);
+            lumRight = 77*(colRight>>16&0xff) + 151*(colRight>>8&0xff) + 28*(colRight&0xff);
+            lumUp = 77*(colUp>>16&0xff) + 151*(colUp>>8&0xff) + 28*(colUp&0xff);
+            lumDown = 77*(colDown>>16&0xff) + 151*(colDown>>8&0xff) + 28*(colDown&0xff);
 
             if (lumLeft < currLum) {
               colOut = colLeft;
