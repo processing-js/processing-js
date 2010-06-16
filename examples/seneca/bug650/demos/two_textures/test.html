@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Demo for Textures</h2>
+
+    <p>This page demonstrates Pjs textures<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs" style="width:200;height:200;"></canvas>
+    </p>
+    
+    <pre>
+<b>// Demo by Andor Salga</b>
+import processing.opengl.*;
+/* @pjs preload="fire.jpg,pjs.jpg"; */
+
+float r = 0.0;
+float s = 0.0;
+
+PImage fire, pjs_;
+
+void setup() 
+{
+  size(640, 360, OPENGL);
+  pjs_ = loadImage("pjs.jpg");
+  fire = loadImage("fire.jpg");
+  textureMode(NORMALIZED);
+}
+
+void drawBox(PImage img){
+  beginShape(QUADS);
+
+  texture(img);
+
+  stroke(0);
+  if(img == fire){
+    noStroke();
+  }
+
+  // -Z "back" face
+  vertex( 1, -1, -1, 0-s, 0);
+  vertex(-1, -1, -1, 1-s, 0);
+  vertex(-1,  1, -1, 1-s, 1);
+  vertex( 1,  1, -1, 0-s, 1);
+
+  // +Z "front" face"
+  vertex(-1, -1,  1, 0-s, 0);
+  vertex( 1, -1,  1, 1-s, 0);
+  vertex( 1,  1,  1, 1-s, 1);
+  vertex(-1,  1,  1, 0-s, 1);
+
+  // +Y "bottom" face
+  vertex(-1,  1,  1, 0+s, 0);
+  vertex( 1,  1,  1, 1+s, 0);
+  vertex( 1,  1, -1, 1+s, 1);
+  vertex(-1,  1, -1, 0+s, 1);
+
+  // -Y "top" face
+  vertex(-1, -1, -1, 0-s, 0);
+  vertex( 1, -1, -1, 1-s, 0);
+  vertex( 1, -1,  1, 1-s, 1);
+  vertex(-1, -1,  1, 0-s, 1);
+
+  // +X "right" face
+  vertex( 1, -1,  1, 0-s, 0);
+  vertex( 1, -1, -1, 1-s, 0);
+  vertex( 1,  1, -1, 1-s, 1);
+  vertex( 1,  1,  1, 0-s, 1);
+
+  // -X "left" face
+  vertex(-1, -1, -1, 0-s, 0);
+  vertex(-1, -1,  1, 1-s, 0);
+  vertex(-1,  1,  1, 1-s, 1);
+  vertex(-1,  1, -1, 0-s, 1);
+
+  endShape();
+}
+
+void draw() 
+{
+  background(0);
+
+  r += 0.01;
+  pushMatrix();
+  translate(width/2.0, height/2.0, 250);
+
+  pushMatrix();
+    scale(15);
+    rotateZ(r);
+    rotateY(-r);
+    drawBox(pjs_);
+  popMatrix();
+
+  pushMatrix();
+    scale(60);
+    rotateZ(r);
+    rotateX(r);
+    rotateY(-r);
+    drawBox(fire);
+  popMatrix();
+
+  popMatrix();
+}</pre>
+
+  </body>
+</html>

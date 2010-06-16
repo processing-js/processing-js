@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../processing.js"></script>
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <h1>bezierDetail() test</h1>
+
+    <p>
+    <canvas datasrc="bezierDetail.pjs"></canvas>
+    <img src="bezierDetail.gif" style="margin: 10px 0;"/>
+    </p>
+
+    <pre>
+void setup() {
+  size(100, 100, P3D);
+  noFill();
+  noLoop();
+}
+
+void draw() {
+  bezierDetail(1);
+  bezier(85, 20, 0, 10, 10, 0, 90, 90, 0, 15, 80, 0);
+  stroke(126);
+  bezierDetail(3);
+  bezier(85, 20, 0, 10, 10, 0, 90, 90, 0, 15, 80, 0);
+  stroke(255);
+  bezierDetail(12);
+  bezier(85, 20, 0, 10, 10, 0, 90, 90, 0, 15, 80, 0);
+}
+    </pre>
+  </body>
+</html>

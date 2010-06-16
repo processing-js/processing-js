@@ -1,0 +1,65 @@
+import processing.opengl.*;
+/* @pjs preload="crate.jpg" */
+
+float r = 0.0;
+float s = 0.0;
+PImage tex;
+
+void setup() 
+{
+  size(640, 360, OPENGL);
+  tex = loadImage("crate.jpg");
+  textureMode(NORMALIZED);
+}
+
+void drawBox(){
+  beginShape(QUADS);
+  texture(tex);
+
+  // -Z "back" face
+  vertex( 1, -1, -1, -s, -s);
+  vertex(-1, -1, -1,  s, -s);
+  vertex(-1,  1, -1,  s,  s);
+  vertex( 1,  1, -1, -s,  s);
+
+  vertex(-1, -1,  1, -s, -s);
+  vertex( 1, -1,  1,  s, -s);
+  vertex( 1,  1,  1,  s,  s);
+  vertex(-1,  1,  1, -s,  s);
+
+  // +Y "bottom" face
+  vertex(-1,  1,  1, -s, -s);
+  vertex( 1,  1,  1,  s, -s);
+  vertex( 1,  1, -1,  s,  s);
+  vertex(-1,  1, -1, -s,  s);
+
+  // -Y "top" face
+  vertex(-1, -1, -1, -s, -s);
+  vertex( 1, -1, -1,  s, -s);
+  vertex( 1, -1,  1,  s,  s);
+  vertex(-1, -1,  1, -s,  s);
+
+  // +X "right" face
+  vertex( 1, -1,  1, -s, -s);
+  vertex( 1, -1, -1,  s, -s);
+  vertex( 1,  1, -1,  s,  s);
+  vertex( 1,  1,  1, -s,  s);
+
+  // -X "left" face
+  vertex(-1, -1, -1, -s, -s);
+  vertex(-1, -1,  1,  s, -s);
+  vertex(-1,  1,  1,  s,  s);
+  vertex(-1,  1, -1, -s,  s);
+
+  endShape();
+}
+
+void draw() 
+{
+  background(0);
+  s = 1 + abs(sin(frameCount/70)* 1.5);
+  translate(width/2.0, height/2.0, 250);
+  rotateZ(r+=0.02);
+  scale(100);// + 25*sin((frameCount)/10) );
+  drawBox();
+}
