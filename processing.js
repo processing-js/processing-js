@@ -9524,7 +9524,7 @@
         return digits.length < 6 ? "0x" + digits : "0xFF000000".substring(0, 10 - digits.length) + digits;
       });
       // delete (type)???, (int)??? -> 0|???
-      s = s.replace(/"B(\d+)"(\s*[\w$']|"B)/g, function(all, index, next) {
+      s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
         var atom = atoms[index];
         if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
           return all;
