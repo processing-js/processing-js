@@ -8,4 +8,5 @@ pixels [2] = 2 + 4;
 a = pixels[4] + 1;
 a = pixels[blah[3][3*4]];
 pixels[6+7] = pixels[5];
-int c = pixels[6+a] = pixels[i], b = pixels[3+a] = pixels[a];
+int i = 0;
+int c = pixels[6+i] = pixels[i], b = pixels[3+i] = pixels[i];

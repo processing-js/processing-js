@@ -33,14 +33,6 @@
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
-
-    p.pjs = {
-       imageCache: { // by default we have an empty imageCache
-         pending: 0 
-       },
-       crispLines: false
-    };
-
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
     p.canvas = curElement;
@@ -270,6 +262,7 @@
 
     // "Private" variables used to maintain state
     var curContext,
+        curSketch,
         online = true,
         doFill = true,
         fillStyle = [1.0, 1.0, 1.0, 1.0],
@@ -833,7 +826,7 @@
     ////////////////////////////////////////////////////////////////////////////
     var charMap = {};
 
-    var Char = function Char(chr) {
+    var Char = p.Character = function Char(chr) {
       if (typeof chr === 'string' && chr.length === 1) {
         this.code = chr.charCodeAt(0);
       } else {
@@ -854,7 +847,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // XMLAttribute
     ////////////////////////////////////////////////////////////////////////////
-    var XMLAttribute = function ( fname, n, nameSpace, v, t){
+    var XMLAttribute = p.XMLAttribute = function ( fname, n, nameSpace, v, t){
       this.fullName = fname || "";
       this.name = n || "";
       this.namespace = nameSpace || "";
@@ -886,7 +879,7 @@
     // XMLElement
     ////////////////////////////////////////////////////////////////////////////
 
-    var XMLElement = function( ){
+    var XMLElement = p.XMLElement = function( ){
       if( arguments.length === 4 ){
         this.attributes = [];
         this.children   = [];
@@ -1253,7 +1246,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // PVector
     ////////////////////////////////////////////////////////////////////////////
-    var PVector = function(x, y, z) {
+    var PVector = p.PVector = function(x, y, z) {
       this.x = x || 0;
       this.y = y || 0;
       this.z = z || 0;
@@ -1426,7 +1419,7 @@
       return digits;
     };
 
-    var PMatrix2D = function() {
+    var PMatrix2D = p.PMatrix2D = function() {
       if (arguments.length === 0) {
         this.reset();
       } else if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
@@ -1604,7 +1597,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // PMatrix3D
     ////////////////////////////////////////////////////////////////////////////
-    var PMatrix3D = function PMatrix3D() {
+    var PMatrix3D = p.PMatrix3D = function PMatrix3D() {
       //When a matrix is created, it is set to an identity matrix
       this.reset();
     };
@@ -1972,7 +1965,7 @@
     // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
 
-    var PMatrixStack = function PMatrixStack() {
+    var PMatrixStack = p.PMatrixStack = function PMatrixStack() {
       this.matrixStack = [];
     };
 
@@ -5560,7 +5553,7 @@
         if (doStroke) {
           // TODO if strokeWeight > 1, do circle
 
-          if(p.pjs.crispLines) {
+          if(curSketch.crispLines) {
             var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight 
             var c = p.get(x, y);
             p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
@@ -6645,7 +6638,7 @@
 
         // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
         if((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && 
-           doStroke && p.pjs.crispLines) {
+           doStroke && curSketch.crispLines) {
           var temp; 
           if(x1 === x2) {
             if(y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
@@ -6797,7 +6790,7 @@
         }
 
         // if only stroke is enabled, do it "crisp"
-        if(doStroke && !doFill && lineWidth <= 1.0 && p.pjs.crispLines) {
+        if(doStroke && !doFill && lineWidth <= 1.0 && curSketch.crispLines) {
           var i, x2 = x + width - 1, y2 = y + height - 1;
           for(i=0;i<width;++i) {
             p.set(x + i, y, currentStrokeColor);
@@ -7180,8 +7173,8 @@
         file = file + "." + type;
       }
       // if image is in the preloader cache return a new PImage
-      if (p.pjs.imageCache[file]) {
-        return new PImage(p.pjs.imageCache[file]);
+      if (curSketch.imageCache.images[file]) {
+        return new PImage(curSketch.imageCache.images[file]);
       }
       // else aysnc load it
       else {
@@ -8948,6 +8941,7 @@
     // Event handling
     //////////////////////////////////////////////////////////////////////////
 
+    p.pjs = {}; // TODO cleanup
     p.pjs.eventHandlers = [];
 
     function attach(elem, type, fn) {
@@ -9187,15 +9181,22 @@
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
       // Compile the code
-      var compiledSketchFunction;
-      if(typeof aCode === "function") {
-        compiledSketchFunction = aCode;
+      if(aCode instanceof Processing.Sketch) {
+        curSketch = aCode;
+      } else if(typeof aCode === "function") {
+        curSketch = new Processing.Sketch(aCode);
       } else {
-        var parsedCode = Processing.parse(aCode, p);
-        compiledSketchFunction = eval(parsedCode);
+        curSketch = Processing.compile(aCode);
+      }
+      p.__sketch = curSketch;
+
+      if(curSketch.isOpaque) {
+        curElement.mozOpaque = true;
       }
 
-      if (!p.use3DContext) {
+      if (curSketch.use3DContext) {
+        p.use3DContext = true;
+      } else {
         // Setup default 2d canvas context.
         curContext = curElement.getContext('2d');
 
@@ -9212,11 +9213,13 @@
         p.fill(255);
         p.noSmooth();
         p.disableContextMenu();
+
+        // TODO if opaque set p5 default background
       }
 
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
-        if (Processing.lib) {
+        if (Processing.lib) {          
           // Init the libraries in the context of this p_instance
           Processing.lib[i].call(this);
         }
@@ -9224,8 +9227,8 @@
 
       var executeSketch = function(processing) {
         // Don't start until all specified images in the cache are preloaded
-        if (!p.pjs.imageCache.pending) {
-          compiledSketchFunction(processing);
+        if (!curSketch.imageCache.pending) {
+          curSketch.attach(processing);
 
           // Run void setup()
           if (processing.setup) {
@@ -9265,7 +9268,7 @@
   "ARGB","arrayCopy","ArrayList","ARROW","asin","atan","atan2","background","BACKSPACE","beginCamera",
   "beginDraw","beginShape","BEVEL","bezier","bezierDetail","bezierPoint","bezierTangent","bezierVertex","binary",
   "blend","BLEND","blendColor","blue","BLUE_MASK","BLUR","boolean","box","brightness","BURN","byte","camera","ceil",
-  "CENTER","CENTER_RADIUS","char","clear","CLOSE","CMYK","CODED","color","colorMode","concat",
+  "CENTER","CENTER_RADIUS","char","Character","clear","CLOSE","CMYK","CODED","color","colorMode","concat",
   "console","constrain","CONTROL","copy","CORNER","CORNERS","cos","createFont","createGraphics",
   "createImage","CROSS","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
   "curveVertex","curveVertexSegment","DARKEST","day","defaultColor","degrees","DELETE","DIFFERENCE",
@@ -9283,6 +9286,7 @@
   "mouseY","MOVE","MULTIPLY","nf","nfc","nfp","nfs","noCursor","NOCURSOR","noFill","noise","noiseDetail","noiseSeed",
   "noLights","noLoop","norm","normal","NORMAL_MODE_AUTO","NORMALIZED","NORMAL_MODE_SHAPE","NORMAL_MODE_VERTEX",
   "noSmooth","noStroke","noTint","OPAQUE","OPENGL","OVERLAY","P3D","peg","perspective","PI","PImage","pixels",
+  "PMatrix2D", "PMatrix3D", "PMatrixStack",
   "pmouseX","pmouseY","point","Point","pointLight","POINTS","POLYGON","popMatrix","popStyle","POSTERIZE",
   "pow","PREC_ALPHA_SHIFT","PRECISIONB","PRECISIONF","PREC_MAXVAL","PREC_RED_SHIFT","print",
   "printCamera","println","printMatrix","printProjection","PROJECT","pushMatrix","pushStyle",
@@ -9295,7 +9299,7 @@
   "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
   "textSize","textureMode","texture","textWidth","THRESHOLD","tint",
   "translate","triangle","TRIANGLE_FAN","TRIANGLES","TRIANGLE_STRIP","trim","TWO_PI","unbinary",
-  "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","year",
+  "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","XMLAttrbute","XMLElement","year",
   "__frameRate","__mousePressed","__keyPressed"];
     var members = {};
     var i, l;
@@ -9344,7 +9348,7 @@
         if(val.charAt(0) === "/") {
           return val;
         } else {
-          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new Char(" + val + "))" : val;
+          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new processing.Character(" + val + "))" : val;
         }
       });
     }
@@ -10394,8 +10398,7 @@
     return injectStrings(redendered, strings);
   }// Parser ends
 
-  // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
-  Processing.parse = function parse(aCode, p) {
+  function preprocessCode(aCode, sketch) {
     // Parse out @pjs directive, if any.
     var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
     if (dm && dm.length === 2) {
@@ -10418,39 +10421,38 @@
             // All pre-loaded images will get put in imageCache, keyed on filename
             for (var j = 0, ll = list.length; j < ll; j++) {
               var imageName = clean(list[j]);
-              var img = new Image();
-              img.onload = (function() {
-                return function() {
-                  p.pjs.imageCache.pending--;
-                };
-              }());
-              p.pjs.imageCache.pending++;
-              p.pjs.imageCache[imageName] = img;
-              img.src = imageName;
+              sketch.imageCache.add(imageName);
             }
           } else if (key === "opaque") {
-            p.canvas.mozOpaque = value === "true";
+            sketch.options.isOpaque = value === "true";
           } else if (key === "crisp") {
-            p.pjs.crispLines = value === "true";
+            sketch.options.crispLines = value === "true";
           } else {
-            p.pjs[key] = value;
+            sketch.options[key] = value;
           }
         }
       }
-      aCode = aCode.replace(dm[0], '');
     }
 
-    Error.prototype.printStackTrace = function() {
-       this.toString();
-    };
-    
-    aCode = parseProcessing(aCode);
-    
     // Check if 3D context is invoked -- this is not the best way to do this.
-    if (aCode.match(/\bsize\((?:.+),(?:.+),\s*processing.(OPENGL|P3D)\s*\);/)) {
-      p.use3DContext = true;
+    var codeWoStrings = aCode.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g, "");
+    if (codeWoStrings.match(/\bsize\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
+      sketch.use3DContext = true;
     }
     return aCode;
+  }
+
+  // Parse/compiles Processing (Java-like) syntax to JavaScript syntax
+  Processing.compile = function(pdeCode) {
+    var sketch = new Processing.Sketch();
+    var code = preprocessCode(pdeCode, sketch);
+    var compiledPde = parseProcessing(code);
+    sketch.sourceCode = compiledPde;
+    return sketch;
+  };
+
+  Error.prototype.printStackTrace = function() {
+     return this.toString();
   };
 
   Processing.version = "@VERSION@";
@@ -10472,6 +10474,46 @@
 
   Processing.getInstanceById = function(name) {
     return Processing.instances[Processing.instanceIds[name]];
+  };
+
+  Processing.Sketch = function(attachFunction) {
+    this.attachFunction = attachFunction; // can be optional
+    this.use3DContext = false;
+    this.options = {      
+      isOpaque: undefined,
+      crispLines: false
+    };
+    this.imageCache = {
+      pending: 0,
+      images: {},
+      add: function(href) {
+        var img = new Image();
+        img.onload = (function(owner) {
+          return function() {
+            owner.pending--;
+          };
+        }(this));
+        this.pending++;
+        this.images[href] = img;
+        img.src = href;
+      }
+    };
+    this.sourceCode = undefined;
+    this.attach = function(processing) {
+      // either attachFunction or sourceCode must be present on attach
+      if(typeof this.attachFunction === "function") {
+        this.attachFunction(processing);
+      } else if(this.sourceCode) {
+        var func = eval(this.sourceCode);
+        func(processing);
+        this.attachFunction = func;
+      } else {
+        throw "Unable to attach sketch to the processing instance";
+      }
+    };
+    this.toString = function() {
+      return this.sourceCode || "[attach: " + this.attachFunction + "]";
+    };
   };
 
   // Automatic Initialization Method
