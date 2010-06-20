@@ -281,7 +281,6 @@
         isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
-        refreshBackground = function() {},
         doLoop = true,
         looping = 0,
         curRectMode = p.CORNER,
@@ -4528,11 +4527,10 @@
           }
           // Set defaults
           curContext.viewport(0, 0, curElement.width, curElement.height);
-          curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
-          curContext.clear(curContext.COLOR_BUFFER_BIT);
           curContext.enable(curContext.DEPTH_TEST);
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
+          refreshBackground(); // sets clearColor default;
 
           // We declare our own constants since Minefield doesn't 
           // do anything when curContext.VERTEX_PROGRAM_POINT_SIZE is used.
@@ -7419,6 +7417,18 @@
       // changed in 0.9
       if (p.imageData) {
         curContext.putImageData(p.imageData, 0, 0);
+      }
+    };
+
+    // Set default background behavior for 2D and 3D contexts
+    var refreshBackground = function() {
+      if (p.use3DContext) {
+        curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
+        curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+      } else {
+        curContext.fillStyle = "rgb(204, 204, 204)";
+        curContext.fillRect(0, 0, p.width, p.height);
+        isFillDirty = true;
       }
     };
 
