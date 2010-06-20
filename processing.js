@@ -38,6 +38,7 @@
        imageCache: { // by default we have an empty imageCache
          pending: 0 
        },
+       opaque: true,
        crispLines: false
     };
 
@@ -7422,13 +7423,15 @@
 
     // Set default background behavior for 2D and 3D contexts
     var refreshBackground = function() {
-      if (p.use3DContext) {
-        curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
-        curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
-      } else {
-        curContext.fillStyle = "rgb(204, 204, 204)";
-        curContext.fillRect(0, 0, p.width, p.height);
-        isFillDirty = true;
+      if (p.pjs.opaque) {
+        if (p.use3DContext) {
+          curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
+          curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+        } else {
+          curContext.fillStyle = "rgb(204, 204, 204)";
+          curContext.fillRect(0, 0, p.width, p.height);
+          isFillDirty = true;
+        }
       }
     };
 
@@ -10439,7 +10442,7 @@
               img.src = imageName;
             }
           } else if (key === "opaque") {
-            p.canvas.mozOpaque = value === "true";
+            p.pjs.opaque = value === "true";
           } else if (key === "crisp") {
             p.pjs.crispLines = value === "true";
           } else {
@@ -10447,6 +10450,11 @@
           }
         }
       }
+
+      if (p.pjs.opaque) {
+        p.canvas.mozOpaque = true;
+      }
+
       aCode = aCode.replace(dm[0], '');
     }
 
