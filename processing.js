@@ -7425,9 +7425,11 @@
     var refreshBackground = function() {
       if (p.pjs.opaque) {
         if (p.use3DContext) {
+          // fill background default opaque gray
           curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
           curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         } else {
+          // fill background default opaque gray
           curContext.fillStyle = "rgb(204, 204, 204)";
           curContext.fillRect(0, 0, p.width, p.height);
           isFillDirty = true;
@@ -7442,8 +7444,11 @@
       // background params are either a color or a PImage
       if (typeof arguments[0] === 'number') {
         color = p.color.apply(this, arguments);
+        
         // override alpha value, processing ignores the alpha for background color
-        color = color | p.ALPHA_MASK;
+        if (p.pjs.opaque) { 
+          color = color | p.ALPHA_MASK;
+        }
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
         img = arguments[0];
 
@@ -9208,6 +9213,8 @@
         compiledSketchFunction = eval(parsedCode);
       }
 
+      p.canvas.mozOpaque = p.pjs.opaque;
+
       if (!p.use3DContext) {
         // Setup default 2d canvas context.
         curContext = curElement.getContext('2d');
@@ -10449,10 +10456,6 @@
             p.pjs[key] = value;
           }
         }
-      }
-
-      if (p.pjs.opaque) {
-        p.canvas.mozOpaque = true;
       }
 
       aCode = aCode.replace(dm[0], '');
