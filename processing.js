@@ -10267,7 +10267,12 @@
         }
         lastIndex = nextStatement.lastIndex;
       }
-      res.push(statements.substring(lastIndex));
+      var statementsTail = trimSpaces(statements.substring(lastIndex));      
+      res.push(statementsTail.left);
+      if(statementsTail.middle !== "") {
+        res.push(transformStatement(statementsTail.middle));
+        res.push(";" + statementsTail.right);
+      }
       return res;
     };
 
