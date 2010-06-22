@@ -18,7 +18,7 @@
 
 (function() {
 
-  var undef; // undefined value
+  var undef; // intentionally left undefined
 
   // IE Unfriendly AJAX Method
   var ajax = function(url) {
