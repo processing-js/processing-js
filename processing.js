@@ -18,6 +18,8 @@
 
 (function() {
 
+  var undef; // undefined value
+
   // IE Unfriendly AJAX Method
   var ajax = function(url) {
     var AJAX = new window.XMLHttpRequest();
@@ -33,8 +35,6 @@
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
-
-    var undef;
 
     p.pjs = {
        imageCache: { // by default we have an empty imageCache
@@ -836,8 +836,6 @@
     var charMap = {};
 
     var Char = function Char(chr) {
-      var undef;
-
       if (typeof chr === 'string' && chr.length === 1) {
         this.code = chr.charCodeAt(0);
       } else {
@@ -1640,7 +1638,6 @@
         return this.elements.slice();
       },
       translate: function(tx, ty, tz) {
-        var undef;
         if (tz === undef) {
           tz = 0;
         }
@@ -1777,7 +1774,6 @@
         }
       },
       invApply: function() {
-        var undef;
         if (inverseCopy === undef) {
           inverseCopy = new PMatrix3D();
         }
@@ -2031,7 +2027,6 @@
     };
 
     p.splitTokens = function(str, tokens) {
-      var undef;
       if (arguments.length === 1) {
         tokens = "\n\t\r\f ";
       }
@@ -2235,7 +2230,6 @@
     ////////////////////////////////////////////////////////////////////////////
 
     var virtHashCode = function virtHashCode(obj) {
-      var undef;
       if (obj.constructor === String) {
         var hash = 0;
         for (var i = 0; i < obj.length; ++i) {
@@ -2281,7 +2275,6 @@
       var hashMap = this;
 
       function ensureLoad() {
-        var undef;
         if (count <= loadFactor * buckets.length) {
           return;
         }
@@ -2308,7 +2301,6 @@
         var endOfBuckets = false;
 
         function findNext() {
-          var undef;
           while (!endOfBuckets) {
             ++itemIndex;
             if (bucketIndex >= buckets.length) {
@@ -2408,7 +2400,6 @@
 
       function Entry(pair) {
         this._isIn = function(map) {
-          var undef;
           return map === hashMap && (pair.removed === undef);
         };
         this.equals = function(o) {
@@ -2440,7 +2431,6 @@
         return map;
       };
       this.containsKey = function(key) {
-        var undef;
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
         if (bucket === undef) {
@@ -2454,7 +2444,6 @@
         return false;
       };
       this.containsValue = function(value) {
-        var undef;
         for (var i = 0; i < buckets.length; ++i) {
           var bucket = buckets[i];
           if (bucket === undef) {
@@ -2484,7 +2473,6 @@
         });
       };
       this.get = function(key) {
-        var undef;
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
         if (bucket === undef) {
@@ -2516,7 +2504,6 @@
         });
       };
       this.put = function(key, value) {
-        var undef;
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
         if (bucket === undef) {
@@ -2550,7 +2537,6 @@
         }
       };
       this.remove = function(key) {
-        var undef;
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
         if (bucket === undef) {
@@ -3369,7 +3355,6 @@
     };
 
     p.link = function(href, target) {
-      var undef;
       if (target !== undef) {
         window.open(href, target);
       } else {
@@ -3621,7 +3606,6 @@
     };
 
     var decimalToHex = function decimalToHex(d, padding) {
-      var undef;
       //if there is no padding value added, default padding to 8 else go into while statement.
       padding = padding === undef || padding === null ? padding = 8 : padding;
       if (d < 0) {
@@ -3695,7 +3679,6 @@
     // This breaks the join() ref-test. The Processing.org documentation says String or String[]. SHOULD BE FIXED NOW
     p.nf = function() {
       var str, num, pad, arr, left, right, isNegative, test, i;
-      var undef;
 
       if (arguments.length === 2 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && (arguments[0] + "").indexOf('.') === -1) {
         num = arguments[0];
@@ -4395,10 +4378,8 @@
     // Random
     p.Random = function(seed) {
       var haveNextNextGaussian = false, nextNextGaussian, random;
-      var undef;
 
       this.nextGaussian = function() {
-        var undef;
         if (haveNextNextGaussian) {
           haveNextNextGaussian = false;
           return nextNextGaussian;
@@ -4425,7 +4406,6 @@
 
     // Noise functions and helpers
     function PerlinNoise(seed) {
-      var undef;
       var rnd = seed !== undef ? new Marsaglia(seed) : Marsaglia.createRandomized();
       var i, j;
       // http://www.noisemachine.com/talk1/17b.html
@@ -4489,7 +4469,6 @@
     var noiseProfile = { generator: undef, octaves: 4, fallout: 0.5, seed: undef};
 
     p.noise = function(x, y, z) {
-      var undef;
       if(noiseProfile.generator === undef) {
         // caching
         noiseProfile.generator = new PerlinNoise(noiseProfile.seed);
@@ -4512,7 +4491,6 @@
     };
 
     p.noiseDetail = function(octaves, fallout) {
-      var undef;
       noiseProfile.octaves = octaves;
       if(fallout !== undef) {
         noiseProfile.fallout = fallout;
@@ -4520,14 +4498,12 @@
     };
 
     p.noiseSeed = function(seed) {
-      var undef;
       noiseProfile.seed = seed;
       noiseProfile.generator = undef;
     };
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
-      var undef;
 
       if (aMode && (aMode === p.WEBGL)) {
         // get the 3D rendering context
@@ -5794,7 +5770,6 @@
       firstVert = true;
       var i, j, k;
       var last = vertArray.length - 1;
-      var undef;
 
       for(i = 0; i < vertArray.length; i++){
         for(j = 0; j < 3; j++){
@@ -6390,7 +6365,6 @@
     p.bezierVertex = function bezierVertex() {
       isBezier = true;
       var vert = [];
-      var undef;
       if (firstVert) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
       } else {
@@ -6992,7 +6966,6 @@
     ////////////////////////////////////////////////////////////////////////////
 
     p.save = function save(file, img) {
-      var undef;
       // file is unused at the moment
       // may implement this differently in later release
       if (img !== undef) {
@@ -7005,7 +6978,6 @@
     var canvasDataCache = [undef, undef, undef]; // we need three for now
     function getCanvasData(obj, w, h) {
       var canvasData = canvasDataCache.shift();
-      var undef;
 
       if(canvasData === undef) {
         canvasData = {};
@@ -7089,7 +7061,6 @@
       };
 
       this.mask = function(mask) {
-        var undef;
         this._mask = undef;
 
         if (mask instanceof PImage) {
@@ -7458,7 +7429,6 @@
     // Draw an image or a color to the background
     p.background = function background() {
       var color, a, img;
-      var undef;
       // background params are either a color or a PImage
       if (typeof arguments[0] === 'number') {
         color = p.color.apply(this, arguments);
@@ -7837,8 +7807,8 @@
 
     p.filter = function filter(kind, param, aImg){
       var img, col, lum, i;
-      var undef;
-      if(arguments.length === 3) {
+
+      if (arguments.length === 3) {
         aImg.loadPixels();
         img = aImg;
       } else {
@@ -8528,7 +8498,6 @@
     };
 
     function toP5String(obj) {
-      var undef;
       if(obj instanceof String) {
         return obj;
       } else if(typeof obj === 'number') {
@@ -8590,7 +8559,6 @@
     }
 
     function text$line$3d(str, x, y, z) {
-      var undef;
       // handle case for 3d text
       if (textcanvas === undef) {
         textcanvas = document.createElement("canvas");        
@@ -8857,7 +8825,6 @@
 
       // Parse SVG font-file into block of Canvas commands
       var parseSVGFont = function parseSVGFontse(svg) {
-        var undef;
         // Store font attributes
         var font = svg.getElementsByTagName("font");
         p.glyphTable[url].horiz_adv_x = font[0].getAttribute("horiz-adv-x");
@@ -8950,7 +8917,6 @@
           baseClass[propertyName]=v;
         });
       }
-      var undef;
       
       for (var propertyName in baseClass) {
         if (subClass[propertyName] === undef) {
@@ -10103,7 +10069,6 @@
     };
 
     transformClassBody = function(body, name, baseName, impls) {
-      var undef;
       var declarations = body.substring(1, body.length - 1);
       declarations = extractClassesAndMethods(declarations);
       declarations = extractConstructors(declarations, name);
@@ -10240,7 +10205,6 @@
       this.misc = misc;
     }
     AstPrefixStatement.prototype.toString = function() {
-      var undef;
       var result = this.misc.prefix;
       if(this.argument !== undef) {
         result += this.argument.toString();
@@ -10255,7 +10219,6 @@
     };
 
     transformStatements = function(statements, transformMethod, transformClass) {
-      var undef;
       var nextStatement = new RegExp(/\b(catch|for|if|switch|while|with)\s*"B(\d+)"|\b(do|else|finally|return|throw|try|break|continue)\b|("[ADEH](\d+)")|\b((?:case\s[^:]+|[A-Za-z_$][\w$]*\s*):)|(;)/g);
       var res = [];
       statements = preStatementsTransform(statements);
@@ -10371,7 +10334,6 @@
     };
     
     function generateMetadata(ast) {
-      var undef;
       var globalScope = {};
       var id, class_;
       for(id in declaredClasses) {
@@ -10499,7 +10461,6 @@
   Processing.instanceIds = {};
 
   Processing.addInstance = function(processing) {
-    var undef;
     if (processing.canvas.id === undef || !processing.canvas.id.length) {
       processing.canvas.id = "__processing" + Processing.instances.length;
     }
