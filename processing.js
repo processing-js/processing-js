@@ -3293,15 +3293,15 @@
       curMsPerFrame = 1000 / curFrameRate;
     };
 
-    var pjsEventHandlers = [];
+    var eventHandlers = [];
 
     p.exit = function exit() {
       window.clearInterval(looping);
 
-      for (var i=0, ehl=pjsEventHandlers.length; i<ehl; i++) {
-        var elem = pjsEventHandlers[i][0],
-            type = pjsEventHandlers[i][1],
-            fn   = pjsEventHandlers[i][2];
+      for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
+        var elem = eventHandlers[i][0],
+            type = eventHandlers[i][1],
+            fn   = eventHandlers[i][2];
 
         if (elem.removeEventListener) {
           elem.removeEventListener(type, fn, false);
@@ -8966,7 +8966,7 @@
       } else {
         elem.attachEvent("on" + type, fn);
       }
-      pjsEventHandlers.push([elem, type, fn]);
+      eventHandlers.push([elem, type, fn]);
     }
 
     attach(curElement, "mousemove", function(e) {
