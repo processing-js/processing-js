@@ -79,6 +79,10 @@ check-parser:
 check-unit:
 	${TOOLSDIR}/runtests.py -u ${JSSHELL}
 
+check-closure: create-release
+	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-closure.js
+	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-closure.js
+
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 

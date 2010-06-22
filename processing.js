@@ -5588,10 +5588,12 @@
       curvePoints = [];
       //textureImage = null;
       vertArray = [];
+      /*
       if(p.use3DContext)
       {
         //normalMode = NORMAL_MODE_AUTO;
       }
+      */
     };
 
     p.vertex = function vertex() {
@@ -10571,9 +10573,12 @@
     }
   };
 
-  document.addEventListener('DOMContentLoaded', function() {
-    init();
-  }, false);
-
+  try {
+    document.addEventListener('DOMContentLoaded', function() {
+      init();
+    }, false);
+  } catch(e) {
+    // skipping is DOM is not found
+  }
 }());
 
