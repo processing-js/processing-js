@@ -8386,11 +8386,28 @@
     p.textAlign = function textAlign() {};
 
     p.textWidth = function textWidth(str) {
-      curContext.font = curTextSize + "px " + curTextFont.name;
-      if (curContext.fillText) {
-        return curContext.measureText(str).width;
-      } else if (curContext.mozDrawText) {
-        return curContext.mozMeasureText(str);
+      if(p.use3DContext){
+        if(typeof textcanvas === 'undefined'){
+          textcanvas = document.createElement("canvas");
+        }
+        var oldContext = curContext;
+        curContext = textcanvas.getContext("2d");
+        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+        if (curContext.fillText) {
+          textcanvas.width = curContext.measureText( str ).width;
+        } else if (curContext.mozDrawText) {
+          textcanvas.width = curContext.mozMeasureText( str );
+        }
+        curContext = oldContext;
+        return textcanvas.width;
+      }
+      else{
+        curContext.font = curTextSize + "px " + curTextFont.name;
+        if (curContext.fillText) {
+          return curContext.measureText(str).width;
+        } else if (curContext.mozDrawText) {
+          return curContext.mozMeasureText(str);
+        }
       }
     };
 
@@ -8558,7 +8575,7 @@
     function text$line$3d(str, x, y, z) {
       // handle case for 3d text
       if(typeof textcanvas === 'undefined'){
-        textcanvas = document.createElement("canvas");        
+        textcanvas = document.createElement("canvas");
       }
       var oldContext = curContext;
       curContext = textcanvas.getContext("2d");
