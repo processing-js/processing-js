@@ -274,7 +274,6 @@
         isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
-        refreshBackground = function() {},
         doLoop = true,
         looping = 0,
         curRectMode = p.CORNER,
@@ -3294,13 +3293,15 @@
       curMsPerFrame = 1000 / curFrameRate;
     };
 
+    var pjsEventHandlers = [];
+
     p.exit = function exit() {
       window.clearInterval(looping);
 
-      for (var i=0, ehl=p.pjs.eventHandlers.length; i<ehl; i++) {
-        var elem = p.pjs.eventHandlers[i][0],
-            type = p.pjs.eventHandlers[i][1],
-            fn   = p.pjs.eventHandlers[i][2];
+      for (var i=0, ehl=pjsEventHandlers.length; i<ehl; i++) {
+        var elem = pjsEventHandlers[i][0],
+            type = pjsEventHandlers[i][1],
+            fn   = pjsEventHandlers[i][2];
 
         if (elem.removeEventListener) {
           elem.removeEventListener(type, fn, false);
@@ -4493,6 +4494,22 @@
       noiseProfile.generator = undefined;
     };
 
+    // Set default background behavior for 2D and 3D contexts
+    var refreshBackground = function() {
+      if (curSketch.options.isOpaque) {
+        if (p.use3DContext) {
+          // fill background default opaque gray
+          curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
+          curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+        } else {
+          // fill background default opaque gray
+          curContext.fillStyle = "rgb(204, 204, 204)";
+          curContext.fillRect(0, 0, p.width, p.height);
+          isFillDirty = true;
+        }
+      }
+    };
+
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
       if (aMode && (aMode === p.WEBGL)) {
@@ -4521,11 +4538,10 @@
           }
           // Set defaults
           curContext.viewport(0, 0, curElement.width, curElement.height);
-          curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
-          curContext.clear(curContext.COLOR_BUFFER_BIT);
           curContext.enable(curContext.DEPTH_TEST);
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
+          refreshBackground(); // sets clearColor default;
 
           // We declare our own constants since Minefield doesn't 
           // do anything when curContext.VERTEX_PROGRAM_POINT_SIZE is used.
@@ -7422,8 +7438,11 @@
       // background params are either a color or a PImage
       if (typeof arguments[0] === 'number') {
         color = p.color.apply(this, arguments);
+        
         // override alpha value, processing ignores the alpha for background color
-        color = color | p.ALPHA_MASK;
+        if (curSketch.options.isOpaque) { 
+          color = color | p.ALPHA_MASK;
+        }
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
         img = arguments[0];
 
@@ -8941,16 +8960,13 @@
     // Event handling
     //////////////////////////////////////////////////////////////////////////
 
-    p.pjs = {}; // TODO cleanup
-    p.pjs.eventHandlers = [];
-
     function attach(elem, type, fn) {
       if (elem.addEventListener) {
         elem.addEventListener(type, fn, false);
       } else {
         elem.attachEvent("on" + type, fn);
       }
-      p.pjs.eventHandlers.push([elem, type, fn]);
+      pjsEventHandlers.push([elem, type, fn]);
     }
 
     attach(curElement, "mousemove", function(e) {
@@ -9180,23 +9196,25 @@
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
-      // Compile the code
       if(aCode instanceof Processing.Sketch) {
+        // Use sketch as is
         curSketch = aCode;
       } else if(typeof aCode === "function") {
+        // Wrap function with default sketch parameters
         curSketch = new Processing.Sketch(aCode);
       } else {
+        // Compile the code
         curSketch = Processing.compile(aCode);
       }
-      p.__sketch = curSketch;
 
-      if(curSketch.isOpaque) {
-        curElement.mozOpaque = true;
-      }
+      p.use3DContext = curSketch.use3DContext;
 
-      if (curSketch.use3DContext) {
-        p.use3DContext = true;
-      } else {
+      p.canvas.mozOpaque = curSketch.options.isOpaque;
+
+      // Expose internal field for diagnostics and testing
+      p.__sketch = curSketch; 
+
+      if (!p.use3DContext) {
         // Setup default 2d canvas context.
         curContext = curElement.getContext('2d');
 
@@ -9213,13 +9231,11 @@
         p.fill(255);
         p.noSmooth();
         p.disableContextMenu();
-
-        // TODO if opaque set p5 default background
       }
 
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
-        if (Processing.lib) {          
+        if (Processing.lib) {
           // Init the libraries in the context of this p_instance
           Processing.lib[i].call(this);
         }
@@ -9253,7 +9269,13 @@
       // The parser adds custom methods to the processing context
       // this renames p to processing so these methods will run
       executeSketch(p);
+    } else {
+      // No executable sketch was specified 
+      // or called via createGraphics
+      curSketch = new Processing.Sketch();
+      curSketch.options.isOpaque = false;
     }
+
   };
 
   Processing.version = "@VERSION@";
@@ -10480,7 +10502,7 @@
     this.attachFunction = attachFunction; // can be optional
     this.use3DContext = false;
     this.options = {      
-      isOpaque: undefined,
+      isOpaque: true,
       crispLines: false
     };
     this.imageCache = {
