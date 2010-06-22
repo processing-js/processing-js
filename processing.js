@@ -35,6 +35,7 @@
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
+
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
     p.canvas = curElement;
@@ -3228,12 +3229,6 @@
       return new Date().getTime() - start;
     };
 
-    p.noLoop = function noLoop() {
-      doLoop = false;
-      loopStarted = false;
-      clearInterval(looping);
-    };
-
     p.redraw = function redraw() {
       var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
@@ -3269,6 +3264,12 @@
       inDraw = false;
     };
 
+    p.noLoop = function noLoop() {
+      doLoop = false;
+      loopStarted = false;
+      clearInterval(looping);
+    };
+
     p.loop = function loop() {
       if (loopStarted) {
         return;
@@ -3288,6 +3289,24 @@
 
       doLoop = true;
       loopStarted = true;
+    };
+
+    window.onfocus = function() {
+      // only turn looping back on if necessary
+      if (curSketch.pauseOnBlur) {
+        if (doLoop) {
+          p.loop();
+        }
+      }
+    };
+
+    window.onblur = function() {
+      if (curSketch.pauseOnBlur) {
+        if (doLoop && loopStarted) {
+          p.noLoop();
+          doLoop = true; // make sure to keep this true after the noLoop call
+        }
+      }
     };
 
     p.frameRate = function frameRate(aRate) {
@@ -5572,7 +5591,7 @@
         if (doStroke) {
           // TODO if strokeWeight > 1, do circle
 
-          if(curSketch.crispLines) {
+          if (curSketch.options.crispLines) {
             var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight 
             var c = p.get(x, y);
             p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
@@ -6656,8 +6675,7 @@
         y2 = arguments[3];
 
         // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
-        if((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && 
-           doStroke && curSketch.crispLines) {
+        if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
           var temp; 
           if(x1 === x2) {
             if(y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
@@ -6809,7 +6827,7 @@
         }
 
         // if only stroke is enabled, do it "crisp"
-        if(doStroke && !doFill && lineWidth <= 1.0 && curSketch.crispLines) {
+        if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
           var i, x2 = x + width - 1, y2 = y + height - 1;
           for(i=0;i<width;++i) {
             p.set(x + i, y, currentStrokeColor);
@@ -10439,7 +10457,6 @@
         if (pair && pair.length === 2) {
           var key = clean(pair[0]);
           var value = clean(pair[1]);
-
           // A few directives require work beyond storying key/value pairings
           if (key === "preload") {
             var list = value.split(',');
@@ -10452,6 +10469,8 @@
             sketch.options.isOpaque = value === "true";
           } else if (key === "crisp") {
             sketch.options.crispLines = value === "true";
+          } else if (key === "pauseOnBlur") {
+            sketch.options.pauseOnBlur = value === "true";
           } else {
             sketch.options[key] = value;
           }
@@ -10506,7 +10525,8 @@
     this.use3DContext = false;
     this.options = {      
       isOpaque: true,
-      crispLines: false
+      crispLines: false,
+      pauseOnBlur: false
     };
     this.imageCache = {
       pending: 0,
