@@ -18,6 +18,8 @@
 
 (function() {
 
+  var undef; // intentionally left undefined
+
   // IE Unfriendly AJAX Method
   var ajax = function(url) {
     var AJAX = new window.XMLHttpRequest();
@@ -49,19 +51,19 @@
     p.mouseScroll     = 0;
 
     // Undefined event handlers to be replaced by user when needed
-    p.mouseClicked    = undefined;
-    p.mouseDragged    = undefined;
-    p.mouseMoved      = undefined;
-    p.mousePressed    = undefined;
-    p.mouseReleased   = undefined;
-    p.mouseScrolled   = undefined;
-    p.key             = undefined;
-    p.keyCode         = undefined;
-    p.keyPressed      = undefined;
-    p.keyReleased     = undefined;
-    p.keyTyped        = undefined;
-    p.draw            = undefined;
-    p.setup           = undefined;
+    p.mouseClicked    = undef;
+    p.mouseDragged    = undef;
+    p.mouseMoved      = undef;
+    p.mousePressed    = undef;
+    p.mouseReleased   = undef;
+    p.mouseScrolled   = undef;
+    p.key             = undef;
+    p.keyCode         = undef;
+    p.keyPressed      = undef;
+    p.keyReleased     = undef;
+    p.keyTyped        = undef;
+    p.draw            = undef;
+    p.setup           = undef;
 
     // Remapped vars 
     p.__mousePressed  = false;
@@ -832,7 +834,7 @@
         this.code = NaN;
       }
 
-      return (typeof charMap[this.code] === 'undefined') ? charMap[this.code] = this : charMap[this.code];
+      return (charMap[this.code] === undef) ? charMap[this.code] = this : charMap[this.code];
     };
 
     Char.prototype.toString = function() {
@@ -1628,7 +1630,7 @@
         return this.elements.slice();
       },
       translate: function(tx, ty, tz) {
-        if (typeof tz === 'undefined') {
+        if (tz === undef) {
           tz = 0;
         }
 
@@ -1764,7 +1766,7 @@
         }
       },
       invApply: function() {
-        if (typeof inverseCopy === "undefined") {
+        if (inverseCopy === undef) {
           inverseCopy = new PMatrix3D();
         }
         var a = arguments;
@@ -2043,7 +2045,7 @@
       }
 
       if (ary.length === 0) {
-        ary = undefined;
+        ary = undef;
       }
 
       return ary;
@@ -2231,7 +2233,7 @@
       } else if ("hashCode" in obj) {
         return obj.hashCode.call(obj);
       } else {
-        if (obj.$id === undefined) {
+        if (obj.$id === undef) {
           obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
         }
         return obj.$id;
@@ -2270,7 +2272,7 @@
         }
         var allEntries = [];
         for (var i = 0; i < buckets.length; ++i) {
-          if (buckets[i] !== undefined) {
+          if (buckets[i] !== undef) {
             allEntries = allEntries.concat(buckets[i]);
           }
         }
@@ -2278,7 +2280,7 @@
         for (var j = 0; j < allEntries.length; ++j) {
           var index = virtHashCode(allEntries[j].key) % buckets.length;
           var bucket = buckets[index];
-          if (bucket === undefined) {
+          if (bucket === undef) {
             buckets[index] = bucket = [];
           }
           bucket.push(allEntries[j]);
@@ -2295,7 +2297,7 @@
             ++itemIndex;
             if (bucketIndex >= buckets.length) {
               endOfBuckets = true;
-            } else if (typeof(buckets[bucketIndex]) === 'undefined' || itemIndex >= buckets[bucketIndex].length) {
+            } else if (buckets[bucketIndex] === undef || itemIndex >= buckets[bucketIndex].length) {
               itemIndex = -1;
               ++bucketIndex;
             } else {
@@ -2390,7 +2392,7 @@
 
       function Entry(pair) {
         this._isIn = function(map) {
-          return map === hashMap && (typeof(pair.removed) === 'undefined');
+          return map === hashMap && (pair.removed === undef);
         };
         this.equals = function(o) {
           return virtEquals(pair.key, o.getKey());
@@ -2423,7 +2425,7 @@
       this.containsKey = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if (bucket === undefined) {
+        if (bucket === undef) {
           return false;
         }
         for (var i = 0; i < bucket.length; ++i) {
@@ -2436,7 +2438,7 @@
       this.containsValue = function(value) {
         for (var i = 0; i < buckets.length; ++i) {
           var bucket = buckets[i];
-          if (bucket === undefined) {
+          if (bucket === undef) {
             continue;
           }
           for (var j = 0; j < bucket.length; ++j) {
@@ -2465,7 +2467,7 @@
       this.get = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if (bucket === undefined) {
+        if (bucket === undef) {
           return null;
         }
         for (var i = 0; i < bucket.length; ++i) {
@@ -2496,7 +2498,7 @@
       this.put = function(key, value) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if (bucket === undefined) {
+        if (bucket === undef) {
           ++count;
           buckets[index] = [{
             key: key,
@@ -2529,7 +2531,7 @@
       this.remove = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if (bucket === undefined) {
+        if (bucket === undef) {
           return null;
         }
         for (var i = 0; i < bucket.length; ++i) {
@@ -2540,7 +2542,7 @@
             if (bucket.length > 1) {
               bucket.splice(i, 1);
             } else {
-              buckets[index] = undefined;
+              buckets[index] = undef;
             }
             return previous;
           }
@@ -3347,7 +3349,7 @@
     };
 
     p.link = function(href, target) {
-      if (typeof target !== 'undefined') {
+      if (target !== undef) {
         window.open(href, target);
       } else {
         window.location = href;
@@ -3599,7 +3601,7 @@
 
     var decimalToHex = function decimalToHex(d, padding) {
       //if there is no padding value added, default padding to 8 else go into while statement.
-      padding = typeof(padding) === "undefined" || padding === null ? padding = 8 : padding;
+      padding = padding === undef || padding === null ? padding = 8 : padding;
       if (d < 0) {
         d = 0xFFFFFFFF + d + 1;
       }
@@ -3696,10 +3698,10 @@
 
         str = new Array(arr.length);
 
-        for (i = 0; i < arr.length && str !== undefined; i++) {
+        for (i = 0; i < arr.length && str !== undef; i++) {
           test = p.nf(arr[i], pad);
-          if (test === undefined) {
-            str = undefined;
+          if (test === undef) {
+            str = undef;
           } else {
             str[i] = test;
           }
@@ -3751,10 +3753,10 @@
 
         str = new Array(arr.length);
 
-        for (i = 0; i < arr.length && str !== undefined; i++) {
+        for (i = 0; i < arr.length && str !== undef; i++) {
           test = p.nf(arr[i], left, right);
-          if (test === undefined) {
-            str = undefined;
+          if (test === undef) {
+            str = undef;
           } else {
             str[i] = test;
           }
@@ -4393,12 +4395,12 @@
       };
 
       // by default use standard random, otherwise seeded
-      random = seed === undefined ? Math.random : (new Marsaglia(seed)).nextDouble;
+      random = seed === undef ? Math.random : (new Marsaglia(seed)).nextDouble;
     };
 
     // Noise functions and helpers
     function PerlinNoise(seed) {
-      var rnd = seed !== undefined ? new Marsaglia(seed) : Marsaglia.createRandomized();
+      var rnd = seed !== undef ? new Marsaglia(seed) : Marsaglia.createRandomized();
       var i, j;
       // http://www.noisemachine.com/talk1/17b.html
       // http://mrl.nyu.edu/~perlin/noise/
@@ -4458,10 +4460,10 @@
     }
 
     // processing defaults
-    var noiseProfile = { generator: undefined, octaves: 4, fallout: 0.5, seed: undefined};
+    var noiseProfile = { generator: undef, octaves: 4, fallout: 0.5, seed: undef};
 
     p.noise = function(x, y, z) {
-      if(noiseProfile.generator === undefined) {
+      if(noiseProfile.generator === undef) {
         // caching
         noiseProfile.generator = new PerlinNoise(noiseProfile.seed);
       }
@@ -4484,14 +4486,14 @@
 
     p.noiseDetail = function(octaves, fallout) {
       noiseProfile.octaves = octaves;
-      if(fallout !== undefined) {
+      if(fallout !== undef) {
         noiseProfile.fallout = fallout;
       }
     };
 
     p.noiseSeed = function(seed) {
       noiseProfile.seed = seed;
-      noiseProfile.generator = undefined;
+      noiseProfile.generator = undef;
     };
 
     // Set default background behavior for 2D and 3D contexts
@@ -4512,6 +4514,7 @@
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
+
       if (aMode && (aMode === p.WEBGL)) {
         // get the 3D rendering context
         try {
@@ -4647,7 +4650,7 @@
         p.stroke(0);
         p.fill(255);
       } else {
-        if (typeof curContext === "undefined") {
+        if (curContext === undef) {
           // size() was called without p.init() default context, ie. p.createGraphics()
           curContext = curElement.getContext("2d");
           userMatrixStack = new PMatrixStack();
@@ -5826,7 +5829,7 @@
         texVertArray.push(vertArray[0][4]);
       }
 
-      if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
+      if(isCurve && curShape === p.POLYGON || isCurve && curShape === undef){
 
         if(p.use3DContext){
           lineVertArray = fillVertArray;
@@ -5864,7 +5867,7 @@
           }
         }
       }
-      else if(isBezier && curShape === p.POLYGON || isBezier && curShape === undefined){
+      else if(isBezier && curShape === p.POLYGON || isBezier && curShape === undef){
         if(p.use3DContext){
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
@@ -6371,13 +6374,12 @@
     p.bezierVertex = function bezierVertex() {
       isBezier = true;
       var vert = [];
-      if(firstVert){
+      if (firstVert) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
-      }
-      else{
-        if(arguments.length === 9){
-          if(p.use3DContext){
-            if ( typeof bezierDrawMatrix === 'undefined' ) {
+      } else {
+        if (arguments.length === 9) {
+          if (p.use3DContext) {
+            if (bezierDrawMatrix === undef) {
               bezierDrawMatrix = new PMatrix3D();
             }
             // setup matrix for forward differencing to speed up drawing
@@ -6407,9 +6409,10 @@
             }
             p.vertex(arguments[6], arguments[7], arguments[8]);
           }
-        }
-        else{
-          for(var i = 0; i < arguments.length; i++){ vert[i] = arguments[i]; }
+        } else {
+          for (var i = 0; i < arguments.length; i++) { 
+            vert[i] = arguments[i]; 
+          }
           vertArray.push(vert);
         }
       }
@@ -6974,17 +6977,18 @@
     p.save = function save(file, img) {
       // file is unused at the moment
       // may implement this differently in later release
-      if (typeof img !== "undefined") {
+      if (img !== undef) {
         return window.open(img.toDataURL(),"_blank");
       } else {
         return window.open(p.canvas.toDataURL(),"_blank");
       }
     };
 
-    var canvasDataCache = [undefined, undefined, undefined]; // we need three for now
+    var canvasDataCache = [undef, undef, undef]; // we need three for now
     function getCanvasData(obj, w, h) {
       var canvasData = canvasDataCache.shift();
-      if(canvasData === undefined) {
+
+      if(canvasData === undef) {
         canvasData = {};
         canvasData.canvas = document.createElement("canvas");
         canvasData.context = canvasData.canvas.getContext('2d');
@@ -7066,7 +7070,7 @@
       };
 
       this.mask = function(mask) {
-        this._mask = undefined;
+        this._mask = undef;
 
         if (mask instanceof PImage) {
           if (mask.width === this.width && mask.height === this.height) {
@@ -7434,7 +7438,6 @@
     // Draw an image or a color to the background
     p.background = function background() {
       var color, a, img;
-
       // background params are either a color or a PImage
       if (typeof arguments[0] === 'number') {
         color = p.color.apply(this, arguments);
@@ -7454,7 +7457,7 @@
       }
 
       if (p.use3DContext) {
-        if (typeof color !== 'undefined') {
+        if (color !== undef) {
           var c = p.color.toGLArray(color);
           refreshBackground = function() {
             curContext.clearColor(c[0], c[1], c[2], c[3]);
@@ -7465,7 +7468,7 @@
           refreshBackground = function() {};
         }
       } else { // 2d context
-        if (typeof color !== 'undefined') {
+        if (color !== undef) {
           refreshBackground = function() {
             curContext.fillStyle = p.color.toString(color);
             curContext.fillRect(0, 0, p.width, p.height);
@@ -7816,7 +7819,8 @@
 
     p.filter = function filter(kind, param, aImg){
       var img, col, lum, i;
-      if(arguments.length === 3) {
+
+      if (arguments.length === 3) {
         aImg.loadPixels();
         img = aImg;
       } else {
@@ -7824,7 +7828,7 @@
         img = p;
       }
       
-      if (typeof param === 'undefined') {
+      if (param === undef) {
         param = null;
       }
       
@@ -8506,7 +8510,6 @@
     };
 
     function toP5String(obj) {
-      var undef;
       if(obj instanceof String) {
         return obj;
       } else if(typeof obj === 'number') {
@@ -8569,7 +8572,7 @@
 
     function text$line$3d(str, x, y, z) {
       // handle case for 3d text
-      if(typeof textcanvas === 'undefined'){
+      if (textcanvas === undef) {
         textcanvas = document.createElement("canvas");        
       }
       var oldContext = curContext;
@@ -8857,7 +8860,7 @@
           }
           d = glyph[i].getAttribute("d");
           // Split path commands in glpyh
-          if (d !== undefined) {
+          if (d !== undef) {
             path = buildPath(d);
             eval(path);
             // Store glyph data to table object
@@ -8926,7 +8929,6 @@
           baseClass[propertyName]=v;
         });
       }
-      var undef;
       
       for (var propertyName in baseClass) {
         if (subClass[propertyName] === undef) {
@@ -10093,7 +10095,6 @@
     };
 
     transformClassBody = function(body, name, baseName, impls) {
-      var undef;
       var declarations = body.substring(1, body.length - 1);
       declarations = extractClassesAndMethods(declarations);
       declarations = extractConstructors(declarations, name);
@@ -10230,7 +10231,6 @@
       this.misc = misc;
     }
     AstPrefixStatement.prototype.toString = function() {
-      var undef;
       var result = this.misc.prefix;
       if(this.argument !== undef) {
         result += this.argument.toString();
@@ -10245,7 +10245,6 @@
     };
 
     transformStatements = function(statements, transformMethod, transformClass) {
-      var undef;
       var nextStatement = new RegExp(/\b(catch|for|if|switch|while|with)\s*"B(\d+)"|\b(do|else|finally|return|throw|try|break|continue)\b|("[ADEH](\d+)")|\b((?:case\s[^:]+|[A-Za-z_$][\w$]*\s*):)|(;)/g);
       var res = [];
       statements = preStatementsTransform(statements);
@@ -10366,7 +10365,6 @@
     };
     
     function generateMetadata(ast) {
-      var undef;
       var globalScope = {};
       var id, class_;
       for(id in declaredClasses) {
@@ -10492,7 +10490,7 @@
   Processing.instanceIds = {};
 
   Processing.addInstance = function(processing) {
-    if (typeof processing.canvas.id === 'undefined' || !processing.canvas.id.length) {
+    if (processing.canvas.id === undef || !processing.canvas.id.length) {
       processing.canvas.id = "__processing" + Processing.instances.length;
     }
     Processing.instanceIds[processing.canvas.id] = Processing.instances.length;
