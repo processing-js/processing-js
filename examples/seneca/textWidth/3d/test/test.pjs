@@ -3,7 +3,7 @@
 int y = 20;
 int x = 0;
 PFont font;
-int lineOffset = 10;
+int lineOffset = 8;
 
 void setup(){
   size(1300,550, OPENGL);
@@ -19,7 +19,7 @@ void setup(){
 
   x += 300;
   y = 20;
-  lineOffset -= 10;
+  lineOffset -= 5;
 
   font = loadFont("Arial");
   textFont(font);
@@ -28,6 +28,7 @@ void setup(){
 
   x += 350;
   y = 20;
+  lineOffset -= 7;
 
   font = loadFont("verdana");
   textFont(font);
