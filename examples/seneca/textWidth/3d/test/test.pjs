@@ -3,9 +3,10 @@
 int y = 20;
 int x = 0;
 PFont font;
+int lineOffset = 10;
 
 void setup(){
-  size(1500,500, OPENGL);
+  size(1300,550, OPENGL);
 
   fill(0);
   stroke(255,0,0);
@@ -18,6 +19,7 @@ void setup(){
 
   x += 300;
   y = 20;
+  lineOffset -= 10;
 
   font = loadFont("Arial");
   textFont(font);
@@ -34,6 +36,7 @@ void setup(){
 
   x += 350;
   y = 20;
+  lineOffset -= 10;
 
   font = loadFont("helvetica");
   textFont(font);
@@ -42,7 +45,7 @@ void setup(){
 }
 
 void runTest(String a){
-  line(x+10, y + 7, x+textWidth(a) + 10, y+ 7);
+  line(x+lineOffset, y + 10, x+textWidth(a) + lineOffset, y+ 10);
   text(a + "(" +textWidth(a) + ")",x ,y);
   y += 20;
 }
