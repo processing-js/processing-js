@@ -79,9 +79,27 @@ check-parser:
 check-unit:
 	${TOOLSDIR}/runtests.py -u ${JSSHELL}
 
+CLOSUREJAR ?= $(error Specify a valid path to a closure jar in ~/.profile: export CLOSUREJAR=~/compiler.jar)
+
+SKETCHRUN ?= runSketch
+SKETCHINPUT ?= $(error Specify a input filename in SKETCHINPUT when using package-sketch)
+SKETCHOUTPUT ?= ${SKETCHINPUT}.js
+
 check-closure: create-release
 	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-closure.js
 	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-closure.js
+
+compile-sketch:
+	${JSSHELL} -f processing.js -f ${TOOLSDIR}/jscompile.js < ${SKETCHINPUT} > ${SKETCHOUTPUT}
+
+package-sketch:
+	echo "function ${SKETCHRUN}(canvas) {" > ${SKETCHOUTPUT}.src
+	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js >> ${SKETCHOUTPUT}.src
+	echo "return new Processing(canvas," >> ${SKETCHOUTPUT}.src
+	${JSSHELL} -f processing.js -f ${TOOLSDIR}/jscompile.js  < ${SKETCHINPUT} >> ${SKETCHOUTPUT}.src
+	echo "); } window['${SKETCHRUN}']=${SKETCHRUN};" >> ${SKETCHOUTPUT}.src
+	java -jar ${CLOSUREJAR} --js=${SKETCHOUTPUT}.src --js_output_file=${SKETCHOUTPUT} --compilation_level ADVANCED_OPTIMIZATIONS
+	rm ${SKETCHOUTPUT}.src
 
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)

@@ -30,8 +30,9 @@
     }
   };
 
-  var Processing = this.Processing = function Processing(curElement, aCode) {
+  var isDOMPresent = "document" in this;
 
+  function Processing(curElement, aCode) {
     var p = this;
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
@@ -9205,8 +9206,12 @@
         // Wrap function with default sketch parameters
         curSketch = new Processing.Sketch(aCode);
       } else {
+//#if PARSER
         // Compile the code
         curSketch = Processing.compile(aCode);
+//#else
+        throw "PJS compile is not supported";
+//#endif
       }
 
       p.use3DContext = curSketch.use3DContext;
@@ -9278,7 +9283,7 @@
       curSketch.options.isOpaque = false;
     }
 
-  };
+  }
 
   Processing.version = "@VERSION@";
 
@@ -9340,6 +9345,8 @@
     }
     return members;
   }
+
+//#if PARSER
 
   // Parser starts
   function parseProcessing(code) {
@@ -10475,6 +10482,8 @@
     return sketch;
   };
 
+//#endif
+
   Error.prototype.printStackTrace = function() {
      return this.toString();
   };
@@ -10511,15 +10520,19 @@
       pending: 0,
       images: {},
       add: function(href) {
-        var img = new Image();
-        img.onload = (function(owner) {
-          return function() {
-            owner.pending--;
-          };
-        }(this));
-        this.pending++;
-        this.images[href] = img;
-        img.src = href;
+        if(isDOMPresent) {
+          var img = new Image();
+          img.onload = (function(owner) {
+            return function() {
+              owner.pending--;
+            };
+          }(this));
+          this.pending++;
+          this.images[href] = img;
+          img.src = href;
+        } else {
+          this.images[href] = null;
+        }
       }
     };
     this.sourceCode = undefined;
@@ -10535,9 +10548,28 @@
         throw "Unable to attach sketch to the processing instance";
       }
     };
+//#if PARSER
     this.toString = function() {
-      return this.sourceCode || "[attach: " + this.attachFunction + "]";
+      var i;
+      var code = "((function(Sketch) {\n";
+      code += "var sketch = new Sketch(\n" + this.sourceCode + ");\n";
+      code += "sketch.use3DContext = " + this.use3DContext + ";\n";
+      for(i in this.options) {
+        if(this.options.hasOwnProperty(i)) {
+          var value = this.options[i];
+          code += "sketch.options." + i + " = " +
+            (typeof value === 'string' ? '\"' + value + '\"' : "" + value) + ";\n";
+        }
+      }
+      for(i in this.imageCache) {
+        if(this.options.hasOwnProperty(i)) {
+          code += "sketch.imageCache.add(\"" + i + "\");\n";
+        }
+      }
+      code += "return sketch;\n})(Processing.Sketch))";
+      return code;
     };
+//#endif
   };
 
   // Automatic Initialization Method
@@ -10573,12 +10605,14 @@
     }
   };
 
-  try {
+  if(isDOMPresent) {
+    window['Processing'] = Processing;
     document.addEventListener('DOMContentLoaded', function() {
       init();
     }, false);
-  } catch(e) {
-    // skipping is DOM is not found
+  } else {
+    // DOM is not found
+    this['Processing'] = Processing;
   }
 }());
 
