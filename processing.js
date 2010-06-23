@@ -3291,24 +3291,6 @@
       loopStarted = true;
     };
 
-    window.onfocus = function() {
-      // only turn looping back on if necessary
-      if (curSketch.pauseOnBlur) {
-        if (doLoop) {
-          p.loop();
-        }
-      }
-    };
-
-    window.onblur = function() {
-      if (curSketch.pauseOnBlur) {
-        if (doLoop && loopStarted) {
-          p.noLoop();
-          doLoop = true; // make sure to keep this true after the noLoop call
-        }
-      }
-    };
-
     p.frameRate = function frameRate(aRate) {
       curFrameRate = aRate;
       curMsPerFrame = 1000 / curFrameRate;
@@ -9231,6 +9213,22 @@
 
       p.canvas.mozOpaque = curSketch.options.isOpaque;
 
+      if (curSketch.options.pauseOnBlur) {
+        curSketch.onfocus = function() {
+          // only turn looping back on if necessary
+          if (doLoop) {
+            p.loop();
+          }
+        };
+
+        curSketch.onblur = function() {
+          if (doLoop && loopStarted) {
+            p.noLoop();
+            doLoop = true; // make sure to keep this true after the noLoop call
+          }
+        };
+      }
+
       // Expose internal field for diagnostics and testing
       p.__sketch = curSketch; 
 
@@ -10559,6 +10557,8 @@
     this.toString = function() {
       return this.sourceCode || "[attach: " + this.attachFunction + "]";
     };
+    this.onblur = function() {};
+    this.onfocus = function() {};
   };
 
   // Automatic Initialization Method
@@ -10596,6 +10596,19 @@
 
   document.addEventListener('DOMContentLoaded', function() {
     init();
+  }, false);
+
+  // pauseOnBlur handling 
+  window.addEventListener('blur', function() {
+    for (var i = 0; i < Processing.instances.length; i++) {
+      Processing.instances[i].__sketch.onblur();
+    }
+  }, false);
+
+  window.addEventListener('focus', function() {
+    for (var i = 0; i < Processing.instances.length; i++) {
+      Processing.instances[i].__sketch.onfocus();
+    }
   }, false);
 
 }());

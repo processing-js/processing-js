@@ -118,6 +118,7 @@ var clearInterval = __empty_func__;
 var window = {
   appendChild: __elem_func__,
   removeChild: __empty_func__,
+  addEventListener: __empty_func__,
   setInterval: __empty_func__,
   XMLHttpRequest: __empty_func__,
   open: __empty_func__,
