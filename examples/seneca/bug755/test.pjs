@@ -24,7 +24,6 @@ void setup() {
   }
   popMatrix();
 
- // fill(0);
   pushMatrix();
   translate(width/2, height/2, 0);
   text("testing", 0,30,0);
