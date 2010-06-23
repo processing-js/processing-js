@@ -38,7 +38,15 @@
 
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
-    p.canvas = curElement;
+
+    // PJS specific (non-p5) methods and properties to externalize
+    p.externals = {
+      canvas:  curElement,
+      context: undef,
+      sketch:  undef,
+      onblur:  function() {},
+      onfocus: function() {}
+    };
 
     // Glyph path storage for textFonts
     p.glyphTable = {};
@@ -4683,7 +4691,9 @@
       // set 5% for pixels to cache (or 1000)
       maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
 
-      p.context = curContext; // added for createGraphics
+      // Externalize the context
+      p.externals.context = curContext;
+
       p.toImageData = function() {
         return curContext.getImageData(0, 0, this.width, this.height);
       };
@@ -6980,7 +6990,7 @@
       if (img !== undef) {
         return window.open(img.toDataURL(),"_blank");
       } else {
-        return window.open(p.canvas.toDataURL(),"_blank");
+        return window.open(p.externals.canvas.toDataURL(),"_blank");
       }
     };
 
@@ -9209,19 +9219,22 @@
         curSketch = Processing.compile(aCode);
       }
 
+      // Expose internal field for diagnostics and testing
+      p.externals.sketch = curSketch;
+
       p.use3DContext = curSketch.use3DContext;
 
-      p.canvas.mozOpaque = curSketch.options.isOpaque;
+      curElement.mozOpaque = curSketch.options.isOpaque;
 
+      // Initialize the onfocus and onblur event handler externals
       if (curSketch.options.pauseOnBlur) {
-        curSketch.onfocus = function() {
-          // only turn looping back on if necessary
+        p.externals.onfocus = function() {
           if (doLoop) {
             p.loop();
           }
         };
 
-        curSketch.onblur = function() {
+        p.externals.onblur = function() {
           if (doLoop && loopStarted) {
             p.noLoop();
             doLoop = true; // make sure to keep this true after the noLoop call
@@ -9229,12 +9242,12 @@
         };
       }
 
-      // Expose internal field for diagnostics and testing
-      p.__sketch = curSketch; 
-
-      if (!p.use3DContext) {
+      if (!curSketch.use3DContext) {
         // Setup default 2d canvas context.
         curContext = curElement.getContext('2d');
+
+        // Externalize the default context
+        p.externals.context = curContext;
 
         modelView = new PMatrix2D();
 
@@ -9313,7 +9326,7 @@
   "createImage","CROSS","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
   "curveVertex","curveVertexSegment","DARKEST","day","defaultColor","degrees","DELETE","DIFFERENCE",
   "DILATE","directionalLight","disableContextMenu","dist","DODGE","DOWN","draw","ellipse","ellipseMode",
-  "emissive","enableContextMenu","endCamera","endDraw","endShape","ENTER","ERODE","ESC","EXCLUSION",
+  "emissive","enableContextMenu","endCamera","endDraw","endShape","ENTER","ERODE","ESC","EXCLUSION","externals",
   "exit","exp","expand","fill","filter","filter_bilinear","filter_new_scanline","float","floor","focused",
   "frameCount","frameRate","frustum","get","glyphLook","glyphTable","GRAY","green","GREEN_MASK",
   "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hour","HSB","hue","image","imageMode",
@@ -10507,10 +10520,10 @@
   Processing.instanceIds = {};
 
   Processing.addInstance = function(processing) {
-    if (processing.canvas.id === undef || !processing.canvas.id.length) {
-      processing.canvas.id = "__processing" + Processing.instances.length;
+    if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
+      processing.externals.canvas.id = "__processing" + Processing.instances.length;
     }
-    Processing.instanceIds[processing.canvas.id] = Processing.instances.length;
+    Processing.instanceIds[processing.externals.canvas.id] = Processing.instances.length;
     Processing.instances.push(processing);
   };
 
@@ -10601,13 +10614,13 @@
   // pauseOnBlur handling 
   window.addEventListener('blur', function() {
     for (var i = 0; i < Processing.instances.length; i++) {
-      Processing.instances[i].__sketch.onblur();
+      Processing.instances[i].externals.onblur();
     }
   }, false);
 
   window.addEventListener('focus', function() {
     for (var i = 0; i < Processing.instances.length; i++) {
-      Processing.instances[i].__sketch.onfocus();
+      Processing.instances[i].externals.onfocus();
     }
   }, false);
 
