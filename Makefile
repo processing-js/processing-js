@@ -82,7 +82,7 @@ check-unit:
 CLOSUREJAR ?= $(error Specify a valid path to a closure jar in ~/.profile: export CLOSUREJAR=~/compiler.jar)
 
 SKETCHRUN ?= runSketch
-SKETCHINPUT ?= $(error Specify a input filename in SKETCHINPUT when using package-sketch)
+SKETCHINPUT ?= $(error Specify an input filename in SKETCHINPUT when using package-sketch)
 SKETCHOUTPUT ?= ${SKETCHINPUT}.js
 
 check-closure: create-release

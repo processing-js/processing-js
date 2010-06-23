@@ -30,7 +30,7 @@
     }
   };
 
-  var isDOMPresent = "document" in this;
+  var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
   function Processing(curElement, aCode) {
     var p = this;
@@ -9210,7 +9210,7 @@
         // Compile the code
         curSketch = Processing.compile(aCode);
 //#else
-        throw "PJS compile is not supported";
+//      throw "PJS compile is not supported";
 //#endif
       }
 
@@ -10612,7 +10612,7 @@
     }, false);
   } else {
     // DOM is not found
-    this['Processing'] = Processing;
+    this.Processing = Processing;
   }
 }());
 
