@@ -5026,8 +5026,12 @@
           uniformMatrix(programObject2D, "projection", false, proj.array());
 
           uniformf(programObject2D, "color", strokeStyle);
-          curContext.lineWidth(lineWidth);
+          uniformi(programObject2D, "picktype", 0);
+          
           vertexAttribPointer(programObject2D, "Vertex", 3, boxOutlineBuffer);
+          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          
+          curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
         }
       }
@@ -5234,9 +5238,12 @@
           uniformMatrix(programObject2D, "model", false, model.array());
           uniformMatrix(programObject2D, "view", false, view.array());
           uniformMatrix(programObject2D, "projection", false, proj.array());
-
+          
           vertexAttribPointer(programObject2D, "Vertex", 3, sphereBuffer);
+          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          
           uniformf(programObject2D, "color", strokeStyle);
+          uniformi(programObject2D, "picktype", 0);
 
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
@@ -5564,8 +5571,11 @@
         if (lineWidth > 0 && doStroke) {
           // this will be replaced with the new bit shifting color code
           uniformf(programObject2D, "color", strokeStyle);
-
+          uniformi(programObject2D, "picktype", 0);
+          
           vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
+          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          
           curContext.drawArrays(curContext.POINTS, 0, 1);
         }
       } else {
@@ -6636,16 +6646,19 @@
         
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformi(programObject2D, "picktype", 0);
+
           uniformMatrix(programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
           uniformMatrix(programObject2D, "view", false, view.array());
           uniformMatrix(programObject2D, "projection", false, proj.array());
-
+          
           uniformf(programObject2D, "color", strokeStyle);
-
+          uniformi(programObject2D, "picktype", 0);
+          
           curContext.lineWidth(lineWidth);
-
+          
           vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
+          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(lineVerts), curContext.STREAM_DRAW);
           curContext.drawArrays(curContext.LINES, 0, 2);
         }
@@ -6760,10 +6773,14 @@
           uniformMatrix(programObject2D, "model", true, model.array());
           uniformMatrix(programObject2D, "view", true, view.array());
           uniformMatrix(programObject2D, "projection", true, projection.array());
-
+          
           uniformf(programObject2D, "color", strokeStyle);
-          curContext.lineWidth(lineWidth);
+          uniformi(programObject2D, "picktype", 0);
+          
           vertexAttribPointer(programObject2D, "Vertex", 3, rectBuffer);
+          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          
+          curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
         }
         
