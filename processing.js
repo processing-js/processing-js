@@ -18,6 +18,8 @@
 
 (function() {
 
+  var undef; // intentionally left undefined
+
   // IE Unfriendly AJAX Method
   var ajax = function(url) {
     var AJAX = new window.XMLHttpRequest();
@@ -33,14 +35,6 @@
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
-
-    p.pjs = {
-       imageCache: { // by default we have an empty imageCache
-         pending: 0 
-       },
-       crispLines: false
-    };
-
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
     p.canvas = curElement;
@@ -57,19 +51,19 @@
     p.mouseScroll     = 0;
 
     // Undefined event handlers to be replaced by user when needed
-    p.mouseClicked    = undefined;
-    p.mouseDragged    = undefined;
-    p.mouseMoved      = undefined;
-    p.mousePressed    = undefined;
-    p.mouseReleased   = undefined;
-    p.mouseScrolled   = undefined;
-    p.key             = undefined;
-    p.keyCode         = undefined;
-    p.keyPressed      = undefined;
-    p.keyReleased     = undefined;
-    p.keyTyped        = undefined;
-    p.draw            = undefined;
-    p.setup           = undefined;
+    p.mouseClicked    = undef;
+    p.mouseDragged    = undef;
+    p.mouseMoved      = undef;
+    p.mousePressed    = undef;
+    p.mouseReleased   = undef;
+    p.mouseScrolled   = undef;
+    p.key             = undef;
+    p.keyCode         = undef;
+    p.keyPressed      = undef;
+    p.keyReleased     = undef;
+    p.keyTyped        = undef;
+    p.draw            = undef;
+    p.setup           = undef;
 
     // Remapped vars 
     p.__mousePressed  = false;
@@ -270,6 +264,7 @@
 
     // "Private" variables used to maintain state
     var curContext,
+        curSketch,
         online = true,
         doFill = true,
         fillStyle = [1.0, 1.0, 1.0, 1.0],
@@ -281,7 +276,6 @@
         isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
-        refreshBackground = function() {},
         doLoop = true,
         looping = 0,
         curRectMode = p.CORNER,
@@ -833,14 +827,14 @@
     ////////////////////////////////////////////////////////////////////////////
     var charMap = {};
 
-    var Char = function Char(chr) {
+    var Char = p.Character = function Char(chr) {
       if (typeof chr === 'string' && chr.length === 1) {
         this.code = chr.charCodeAt(0);
       } else {
         this.code = NaN;
       }
 
-      return (typeof charMap[this.code] === 'undefined') ? charMap[this.code] = this : charMap[this.code];
+      return (charMap[this.code] === undef) ? charMap[this.code] = this : charMap[this.code];
     };
 
     Char.prototype.toString = function() {
@@ -854,7 +848,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // XMLAttribute
     ////////////////////////////////////////////////////////////////////////////
-    var XMLAttribute = function ( fname, n, nameSpace, v, t){
+    var XMLAttribute = p.XMLAttribute = function ( fname, n, nameSpace, v, t){
       this.fullName = fname || "";
       this.name = n || "";
       this.namespace = nameSpace || "";
@@ -886,7 +880,7 @@
     // XMLElement
     ////////////////////////////////////////////////////////////////////////////
 
-    var XMLElement = function( ){
+    var XMLElement = p.XMLElement = function( ){
       if( arguments.length === 4 ){
         this.attributes = [];
         this.children   = [];
@@ -1253,7 +1247,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // PVector
     ////////////////////////////////////////////////////////////////////////////
-    var PVector = function(x, y, z) {
+    var PVector = p.PVector = function(x, y, z) {
       this.x = x || 0;
       this.y = y || 0;
       this.z = z || 0;
@@ -1426,7 +1420,7 @@
       return digits;
     };
 
-    var PMatrix2D = function() {
+    var PMatrix2D = p.PMatrix2D = function() {
       if (arguments.length === 0) {
         this.reset();
       } else if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
@@ -1604,7 +1598,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // PMatrix3D
     ////////////////////////////////////////////////////////////////////////////
-    var PMatrix3D = function PMatrix3D() {
+    var PMatrix3D = p.PMatrix3D = function PMatrix3D() {
       //When a matrix is created, it is set to an identity matrix
       this.reset();
     };
@@ -1636,7 +1630,7 @@
         return this.elements.slice();
       },
       translate: function(tx, ty, tz) {
-        if (typeof tz === 'undefined') {
+        if (tz === undef) {
           tz = 0;
         }
 
@@ -1772,7 +1766,7 @@
         }
       },
       invApply: function() {
-        if (typeof inverseCopy === "undefined") {
+        if (inverseCopy === undef) {
           inverseCopy = new PMatrix3D();
         }
         var a = arguments;
@@ -1972,7 +1966,7 @@
     // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
 
-    var PMatrixStack = function PMatrixStack() {
+    var PMatrixStack = p.PMatrixStack = function PMatrixStack() {
       this.matrixStack = [];
     };
 
@@ -2051,7 +2045,7 @@
       }
 
       if (ary.length === 0) {
-        ary = undefined;
+        ary = undef;
       }
 
       return ary;
@@ -2239,7 +2233,7 @@
       } else if ("hashCode" in obj) {
         return obj.hashCode.call(obj);
       } else {
-        if (obj.$id === undefined) {
+        if (obj.$id === undef) {
           obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
         }
         return obj.$id;
@@ -2278,7 +2272,7 @@
         }
         var allEntries = [];
         for (var i = 0; i < buckets.length; ++i) {
-          if (buckets[i] !== undefined) {
+          if (buckets[i] !== undef) {
             allEntries = allEntries.concat(buckets[i]);
           }
         }
@@ -2286,7 +2280,7 @@
         for (var j = 0; j < allEntries.length; ++j) {
           var index = virtHashCode(allEntries[j].key) % buckets.length;
           var bucket = buckets[index];
-          if (bucket === undefined) {
+          if (bucket === undef) {
             buckets[index] = bucket = [];
           }
           bucket.push(allEntries[j]);
@@ -2303,7 +2297,7 @@
             ++itemIndex;
             if (bucketIndex >= buckets.length) {
               endOfBuckets = true;
-            } else if (typeof(buckets[bucketIndex]) === 'undefined' || itemIndex >= buckets[bucketIndex].length) {
+            } else if (buckets[bucketIndex] === undef || itemIndex >= buckets[bucketIndex].length) {
               itemIndex = -1;
               ++bucketIndex;
             } else {
@@ -2398,7 +2392,7 @@
 
       function Entry(pair) {
         this._isIn = function(map) {
-          return map === hashMap && (typeof(pair.removed) === 'undefined');
+          return map === hashMap && (pair.removed === undef);
         };
         this.equals = function(o) {
           return virtEquals(pair.key, o.getKey());
@@ -2431,7 +2425,7 @@
       this.containsKey = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if (bucket === undefined) {
+        if (bucket === undef) {
           return false;
         }
         for (var i = 0; i < bucket.length; ++i) {
@@ -2444,7 +2438,7 @@
       this.containsValue = function(value) {
         for (var i = 0; i < buckets.length; ++i) {
           var bucket = buckets[i];
-          if (bucket === undefined) {
+          if (bucket === undef) {
             continue;
           }
           for (var j = 0; j < bucket.length; ++j) {
@@ -2473,7 +2467,7 @@
       this.get = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if (bucket === undefined) {
+        if (bucket === undef) {
           return null;
         }
         for (var i = 0; i < bucket.length; ++i) {
@@ -2504,7 +2498,7 @@
       this.put = function(key, value) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if (bucket === undefined) {
+        if (bucket === undef) {
           ++count;
           buckets[index] = [{
             key: key,
@@ -2537,7 +2531,7 @@
       this.remove = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
-        if (bucket === undefined) {
+        if (bucket === undef) {
           return null;
         }
         for (var i = 0; i < bucket.length; ++i) {
@@ -2548,7 +2542,7 @@
             if (bucket.length > 1) {
               bucket.splice(i, 1);
             } else {
-              buckets[index] = undefined;
+              buckets[index] = undef;
             }
             return previous;
           }
@@ -3301,13 +3295,15 @@
       curMsPerFrame = 1000 / curFrameRate;
     };
 
+    var eventHandlers = [];
+
     p.exit = function exit() {
       window.clearInterval(looping);
 
-      for (var i=0, ehl=p.pjs.eventHandlers.length; i<ehl; i++) {
-        var elem = p.pjs.eventHandlers[i][0],
-            type = p.pjs.eventHandlers[i][1],
-            fn   = p.pjs.eventHandlers[i][2];
+      for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
+        var elem = eventHandlers[i][0],
+            type = eventHandlers[i][1],
+            fn   = eventHandlers[i][2];
 
         if (elem.removeEventListener) {
           elem.removeEventListener(type, fn, false);
@@ -3353,7 +3349,7 @@
     };
 
     p.link = function(href, target) {
-      if (typeof target !== 'undefined') {
+      if (target !== undef) {
         window.open(href, target);
       } else {
         window.location = href;
@@ -3605,7 +3601,7 @@
 
     var decimalToHex = function decimalToHex(d, padding) {
       //if there is no padding value added, default padding to 8 else go into while statement.
-      padding = typeof(padding) === "undefined" || padding === null ? padding = 8 : padding;
+      padding = padding === undef || padding === null ? padding = 8 : padding;
       if (d < 0) {
         d = 0xFFFFFFFF + d + 1;
       }
@@ -3702,10 +3698,10 @@
 
         str = new Array(arr.length);
 
-        for (i = 0; i < arr.length && str !== undefined; i++) {
+        for (i = 0; i < arr.length && str !== undef; i++) {
           test = p.nf(arr[i], pad);
-          if (test === undefined) {
-            str = undefined;
+          if (test === undef) {
+            str = undef;
           } else {
             str[i] = test;
           }
@@ -3757,10 +3753,10 @@
 
         str = new Array(arr.length);
 
-        for (i = 0; i < arr.length && str !== undefined; i++) {
+        for (i = 0; i < arr.length && str !== undef; i++) {
           test = p.nf(arr[i], left, right);
-          if (test === undefined) {
-            str = undefined;
+          if (test === undef) {
+            str = undef;
           } else {
             str[i] = test;
           }
@@ -4399,12 +4395,12 @@
       };
 
       // by default use standard random, otherwise seeded
-      random = seed === undefined ? Math.random : (new Marsaglia(seed)).nextDouble;
+      random = seed === undef ? Math.random : (new Marsaglia(seed)).nextDouble;
     };
 
     // Noise functions and helpers
     function PerlinNoise(seed) {
-      var rnd = seed !== undefined ? new Marsaglia(seed) : Marsaglia.createRandomized();
+      var rnd = seed !== undef ? new Marsaglia(seed) : Marsaglia.createRandomized();
       var i, j;
       // http://www.noisemachine.com/talk1/17b.html
       // http://mrl.nyu.edu/~perlin/noise/
@@ -4464,10 +4460,10 @@
     }
 
     // processing defaults
-    var noiseProfile = { generator: undefined, octaves: 4, fallout: 0.5, seed: undefined};
+    var noiseProfile = { generator: undef, octaves: 4, fallout: 0.5, seed: undef};
 
     p.noise = function(x, y, z) {
-      if(noiseProfile.generator === undefined) {
+      if(noiseProfile.generator === undef) {
         // caching
         noiseProfile.generator = new PerlinNoise(noiseProfile.seed);
       }
@@ -4490,18 +4486,35 @@
 
     p.noiseDetail = function(octaves, fallout) {
       noiseProfile.octaves = octaves;
-      if(fallout !== undefined) {
+      if(fallout !== undef) {
         noiseProfile.fallout = fallout;
       }
     };
 
     p.noiseSeed = function(seed) {
       noiseProfile.seed = seed;
-      noiseProfile.generator = undefined;
+      noiseProfile.generator = undef;
+    };
+
+    // Set default background behavior for 2D and 3D contexts
+    var refreshBackground = function() {
+      if (curSketch.options.isOpaque) {
+        if (p.use3DContext) {
+          // fill background default opaque gray
+          curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
+          curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+        } else {
+          // fill background default opaque gray
+          curContext.fillStyle = "rgb(204, 204, 204)";
+          curContext.fillRect(0, 0, p.width, p.height);
+          isFillDirty = true;
+        }
+      }
     };
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
+
       if (aMode && (aMode === p.WEBGL)) {
         // get the 3D rendering context
         try {
@@ -4528,11 +4541,10 @@
           }
           // Set defaults
           curContext.viewport(0, 0, curElement.width, curElement.height);
-          curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
-          curContext.clear(curContext.COLOR_BUFFER_BIT);
           curContext.enable(curContext.DEPTH_TEST);
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
+          refreshBackground(); // sets clearColor default;
 
           // We declare our own constants since Minefield doesn't 
           // do anything when curContext.VERTEX_PROGRAM_POINT_SIZE is used.
@@ -4638,7 +4650,7 @@
         p.stroke(0);
         p.fill(255);
       } else {
-        if (typeof curContext === "undefined") {
+        if (curContext === undef) {
           // size() was called without p.init() default context, ie. p.createGraphics()
           curContext = curElement.getContext("2d");
           userMatrixStack = new PMatrixStack();
@@ -5560,7 +5572,7 @@
         if (doStroke) {
           // TODO if strokeWeight > 1, do circle
 
-          if(p.pjs.crispLines) {
+          if(curSketch.crispLines) {
             var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight 
             var c = p.get(x, y);
             p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
@@ -5817,7 +5829,7 @@
         texVertArray.push(vertArray[0][4]);
       }
 
-      if(isCurve && curShape === p.POLYGON || isCurve && curShape === undefined){
+      if(isCurve && curShape === p.POLYGON || isCurve && curShape === undef){
 
         if(p.use3DContext){
           lineVertArray = fillVertArray;
@@ -5855,7 +5867,7 @@
           }
         }
       }
-      else if(isBezier && curShape === p.POLYGON || isBezier && curShape === undefined){
+      else if(isBezier && curShape === p.POLYGON || isBezier && curShape === undef){
         if(p.use3DContext){
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
@@ -6362,13 +6374,12 @@
     p.bezierVertex = function bezierVertex() {
       isBezier = true;
       var vert = [];
-      if(firstVert){
+      if (firstVert) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
-      }
-      else{
-        if(arguments.length === 9){
-          if(p.use3DContext){
-            if ( typeof bezierDrawMatrix === 'undefined' ) {
+      } else {
+        if (arguments.length === 9) {
+          if (p.use3DContext) {
+            if (bezierDrawMatrix === undef) {
               bezierDrawMatrix = new PMatrix3D();
             }
             // setup matrix for forward differencing to speed up drawing
@@ -6398,9 +6409,10 @@
             }
             p.vertex(arguments[6], arguments[7], arguments[8]);
           }
-        }
-        else{
-          for(var i = 0; i < arguments.length; i++){ vert[i] = arguments[i]; }
+        } else {
+          for (var i = 0; i < arguments.length; i++) { 
+            vert[i] = arguments[i]; 
+          }
           vertArray.push(vert);
         }
       }
@@ -6645,7 +6657,7 @@
 
         // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
         if((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && 
-           doStroke && p.pjs.crispLines) {
+           doStroke && curSketch.crispLines) {
           var temp; 
           if(x1 === x2) {
             if(y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
@@ -6797,7 +6809,7 @@
         }
 
         // if only stroke is enabled, do it "crisp"
-        if(doStroke && !doFill && lineWidth <= 1.0 && p.pjs.crispLines) {
+        if(doStroke && !doFill && lineWidth <= 1.0 && curSketch.crispLines) {
           var i, x2 = x + width - 1, y2 = y + height - 1;
           for(i=0;i<width;++i) {
             p.set(x + i, y, currentStrokeColor);
@@ -6965,17 +6977,18 @@
     p.save = function save(file, img) {
       // file is unused at the moment
       // may implement this differently in later release
-      if (typeof img !== "undefined") {
+      if (img !== undef) {
         return window.open(img.toDataURL(),"_blank");
       } else {
         return window.open(p.canvas.toDataURL(),"_blank");
       }
     };
 
-    var canvasDataCache = [undefined, undefined, undefined]; // we need three for now
+    var canvasDataCache = [undef, undef, undef]; // we need three for now
     function getCanvasData(obj, w, h) {
       var canvasData = canvasDataCache.shift();
-      if(canvasData === undefined) {
+
+      if(canvasData === undef) {
         canvasData = {};
         canvasData.canvas = document.createElement("canvas");
         canvasData.context = canvasData.canvas.getContext('2d');
@@ -7057,7 +7070,7 @@
       };
 
       this.mask = function(mask) {
-        this._mask = undefined;
+        this._mask = undef;
 
         if (mask instanceof PImage) {
           if (mask.width === this.width && mask.height === this.height) {
@@ -7180,8 +7193,8 @@
         file = file + "." + type;
       }
       // if image is in the preloader cache return a new PImage
-      if (p.pjs.imageCache[file]) {
-        return new PImage(p.pjs.imageCache[file]);
+      if (curSketch.imageCache.images[file]) {
+        return new PImage(curSketch.imageCache.images[file]);
       }
       // else aysnc load it
       else {
@@ -7425,12 +7438,14 @@
     // Draw an image or a color to the background
     p.background = function background() {
       var color, a, img;
-
       // background params are either a color or a PImage
       if (typeof arguments[0] === 'number') {
         color = p.color.apply(this, arguments);
+        
         // override alpha value, processing ignores the alpha for background color
-        color = color | p.ALPHA_MASK;
+        if (curSketch.options.isOpaque) { 
+          color = color | p.ALPHA_MASK;
+        }
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
         img = arguments[0];
 
@@ -7442,7 +7457,7 @@
       }
 
       if (p.use3DContext) {
-        if (typeof color !== 'undefined') {
+        if (color !== undef) {
           var c = p.color.toGLArray(color);
           refreshBackground = function() {
             curContext.clearColor(c[0], c[1], c[2], c[3]);
@@ -7453,7 +7468,7 @@
           refreshBackground = function() {};
         }
       } else { // 2d context
-        if (typeof color !== 'undefined') {
+        if (color !== undef) {
           refreshBackground = function() {
             curContext.fillStyle = p.color.toString(color);
             curContext.fillRect(0, 0, p.width, p.height);
@@ -7804,7 +7819,8 @@
 
     p.filter = function filter(kind, param, aImg){
       var img, col, lum, i;
-      if(arguments.length === 3) {
+
+      if (arguments.length === 3) {
         aImg.loadPixels();
         img = aImg;
       } else {
@@ -7812,7 +7828,7 @@
         img = p;
       }
       
-      if (typeof param === 'undefined') {
+      if (param === undef) {
         param = null;
       }
       
@@ -8494,7 +8510,6 @@
     };
 
     function toP5String(obj) {
-      var undef;
       if(obj instanceof String) {
         return obj;
       } else if(typeof obj === 'number') {
@@ -8557,7 +8572,7 @@
 
     function text$line$3d(str, x, y, z) {
       // handle case for 3d text
-      if(typeof textcanvas === 'undefined'){
+      if (textcanvas === undef) {
         textcanvas = document.createElement("canvas");        
       }
       var oldContext = curContext;
@@ -8845,7 +8860,7 @@
           }
           d = glyph[i].getAttribute("d");
           // Split path commands in glpyh
-          if (d !== undefined) {
+          if (d !== undef) {
             path = buildPath(d);
             eval(path);
             // Store glyph data to table object
@@ -8914,7 +8929,6 @@
           baseClass[propertyName]=v;
         });
       }
-      var undef;
       
       for (var propertyName in baseClass) {
         if (subClass[propertyName] === undef) {
@@ -8948,15 +8962,13 @@
     // Event handling
     //////////////////////////////////////////////////////////////////////////
 
-    p.pjs.eventHandlers = [];
-
     function attach(elem, type, fn) {
       if (elem.addEventListener) {
         elem.addEventListener(type, fn, false);
       } else {
         elem.attachEvent("on" + type, fn);
       }
-      p.pjs.eventHandlers.push([elem, type, fn]);
+      eventHandlers.push([elem, type, fn]);
     }
 
     attach(curElement, "mousemove", function(e) {
@@ -9186,14 +9198,23 @@
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
-      // Compile the code
-      var compiledSketchFunction;
-      if(typeof aCode === "function") {
-        compiledSketchFunction = aCode;
+      if(aCode instanceof Processing.Sketch) {
+        // Use sketch as is
+        curSketch = aCode;
+      } else if(typeof aCode === "function") {
+        // Wrap function with default sketch parameters
+        curSketch = new Processing.Sketch(aCode);
       } else {
-        var parsedCode = Processing.parse(aCode, p);
-        compiledSketchFunction = eval(parsedCode);
+        // Compile the code
+        curSketch = Processing.compile(aCode);
       }
+
+      p.use3DContext = curSketch.use3DContext;
+
+      p.canvas.mozOpaque = curSketch.options.isOpaque;
+
+      // Expose internal field for diagnostics and testing
+      p.__sketch = curSketch; 
 
       if (!p.use3DContext) {
         // Setup default 2d canvas context.
@@ -9224,8 +9245,8 @@
 
       var executeSketch = function(processing) {
         // Don't start until all specified images in the cache are preloaded
-        if (!p.pjs.imageCache.pending) {
-          compiledSketchFunction(processing);
+        if (!curSketch.imageCache.pending) {
+          curSketch.attach(processing);
 
           // Run void setup()
           if (processing.setup) {
@@ -9250,7 +9271,13 @@
       // The parser adds custom methods to the processing context
       // this renames p to processing so these methods will run
       executeSketch(p);
+    } else {
+      // No executable sketch was specified 
+      // or called via createGraphics
+      curSketch = new Processing.Sketch();
+      curSketch.options.isOpaque = false;
     }
+
   };
 
   Processing.version = "@VERSION@";
@@ -9265,7 +9292,7 @@
   "ARGB","arrayCopy","ArrayList","ARROW","asin","atan","atan2","background","BACKSPACE","beginCamera",
   "beginDraw","beginShape","BEVEL","bezier","bezierDetail","bezierPoint","bezierTangent","bezierVertex","binary",
   "blend","BLEND","blendColor","blue","BLUE_MASK","BLUR","boolean","box","brightness","BURN","byte","camera","ceil",
-  "CENTER","CENTER_RADIUS","char","clear","CLOSE","CMYK","CODED","color","colorMode","concat",
+  "CENTER","CENTER_RADIUS","char","Character","clear","CLOSE","CMYK","CODED","color","colorMode","concat",
   "console","constrain","CONTROL","copy","CORNER","CORNERS","cos","createFont","createGraphics",
   "createImage","CROSS","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
   "curveVertex","curveVertexSegment","DARKEST","day","defaultColor","degrees","DELETE","DIFFERENCE",
@@ -9283,6 +9310,7 @@
   "mouseY","MOVE","MULTIPLY","nf","nfc","nfp","nfs","noCursor","NOCURSOR","noFill","noise","noiseDetail","noiseSeed",
   "noLights","noLoop","norm","normal","NORMAL_MODE_AUTO","NORMALIZED","NORMAL_MODE_SHAPE","NORMAL_MODE_VERTEX",
   "noSmooth","noStroke","noTint","OPAQUE","OPENGL","OVERLAY","P3D","peg","perspective","PI","PImage","pixels",
+  "PMatrix2D", "PMatrix3D", "PMatrixStack",
   "pmouseX","pmouseY","point","Point","pointLight","POINTS","POLYGON","popMatrix","popStyle","POSTERIZE",
   "pow","PREC_ALPHA_SHIFT","PRECISIONB","PRECISIONF","PREC_MAXVAL","PREC_RED_SHIFT","print",
   "printCamera","println","printMatrix","printProjection","PROJECT","pushMatrix","pushStyle",
@@ -9295,7 +9323,7 @@
   "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
   "textSize","textureMode","texture","textWidth","THRESHOLD","tint",
   "translate","triangle","TRIANGLE_FAN","TRIANGLES","TRIANGLE_STRIP","trim","TWO_PI","unbinary",
-  "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","year",
+  "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","XMLAttrbute","XMLElement","year",
   "__frameRate","__mousePressed","__keyPressed"];
     var members = {};
     var i, l;
@@ -9344,7 +9372,7 @@
         if(val.charAt(0) === "/") {
           return val;
         } else {
-          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new Char(" + val + "))" : val;
+          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new processing.Character(" + val + "))" : val;
         }
       });
     }
@@ -9524,7 +9552,7 @@
         return digits.length < 6 ? "0x" + digits : "0xFF000000".substring(0, 10 - digits.length) + digits;
       });
       // delete (type)???, (int)??? -> 0|???
-      s = s.replace(/"B(\d+)"(\s*[\w$']|"B)/g, function(all, index, next) {
+      s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
         var atom = atoms[index];
         if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
           return all;
@@ -10067,7 +10095,6 @@
     };
 
     transformClassBody = function(body, name, baseName, impls) {
-      var undef;
       var declarations = body.substring(1, body.length - 1);
       declarations = extractClassesAndMethods(declarations);
       declarations = extractConstructors(declarations, name);
@@ -10204,7 +10231,6 @@
       this.misc = misc;
     }
     AstPrefixStatement.prototype.toString = function() {
-      var undef;
       var result = this.misc.prefix;
       if(this.argument !== undef) {
         result += this.argument.toString();
@@ -10219,7 +10245,6 @@
     };
 
     transformStatements = function(statements, transformMethod, transformClass) {
-      var undef;
       var nextStatement = new RegExp(/\b(catch|for|if|switch|while|with)\s*"B(\d+)"|\b(do|else|finally|return|throw|try|break|continue)\b|("[ADEH](\d+)")|\b((?:case\s[^:]+|[A-Za-z_$][\w$]*\s*):)|(;)/g);
       var res = [];
       statements = preStatementsTransform(statements);
@@ -10267,7 +10292,12 @@
         }
         lastIndex = nextStatement.lastIndex;
       }
-      res.push(statements.substring(lastIndex));
+      var statementsTail = trimSpaces(statements.substring(lastIndex));      
+      res.push(statementsTail.left);
+      if(statementsTail.middle !== "") {
+        res.push(transformStatement(statementsTail.middle));
+        res.push(";" + statementsTail.right);
+      }
       return res;
     };
 
@@ -10335,7 +10365,6 @@
     };
     
     function generateMetadata(ast) {
-      var undef;
       var globalScope = {};
       var id, class_;
       for(id in declaredClasses) {
@@ -10394,8 +10423,7 @@
     return injectStrings(redendered, strings);
   }// Parser ends
 
-  // Parse Processing (Java-like) syntax to JavaScript syntax with Regex
-  Processing.parse = function parse(aCode, p) {
+  function preprocessCode(aCode, sketch) {
     // Parse out @pjs directive, if any.
     var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
     if (dm && dm.length === 2) {
@@ -10418,39 +10446,38 @@
             // All pre-loaded images will get put in imageCache, keyed on filename
             for (var j = 0, ll = list.length; j < ll; j++) {
               var imageName = clean(list[j]);
-              var img = new Image();
-              img.onload = (function() {
-                return function() {
-                  p.pjs.imageCache.pending--;
-                };
-              }());
-              p.pjs.imageCache.pending++;
-              p.pjs.imageCache[imageName] = img;
-              img.src = imageName;
+              sketch.imageCache.add(imageName);
             }
           } else if (key === "opaque") {
-            p.canvas.mozOpaque = value === "true";
+            sketch.options.isOpaque = value === "true";
           } else if (key === "crisp") {
-            p.pjs.crispLines = value === "true";
+            sketch.options.crispLines = value === "true";
           } else {
-            p.pjs[key] = value;
+            sketch.options[key] = value;
           }
         }
       }
-      aCode = aCode.replace(dm[0], '');
     }
 
-    Error.prototype.printStackTrace = function() {
-       this.toString();
-    };
-    
-    aCode = parseProcessing(aCode);
-    
     // Check if 3D context is invoked -- this is not the best way to do this.
-    if (aCode.match(/\bsize\((?:.+),(?:.+),\s*processing.(OPENGL|P3D)\s*\);/)) {
-      p.use3DContext = true;
+    var codeWoStrings = aCode.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g, "");
+    if (codeWoStrings.match(/\bsize\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
+      sketch.use3DContext = true;
     }
     return aCode;
+  }
+
+  // Parse/compiles Processing (Java-like) syntax to JavaScript syntax
+  Processing.compile = function(pdeCode) {
+    var sketch = new Processing.Sketch();
+    var code = preprocessCode(pdeCode, sketch);
+    var compiledPde = parseProcessing(code);
+    sketch.sourceCode = compiledPde;
+    return sketch;
+  };
+
+  Error.prototype.printStackTrace = function() {
+     return this.toString();
   };
 
   Processing.version = "@VERSION@";
@@ -10463,7 +10490,7 @@
   Processing.instanceIds = {};
 
   Processing.addInstance = function(processing) {
-    if (typeof processing.canvas.id === 'undefined' || !processing.canvas.id.length) {
+    if (processing.canvas.id === undef || !processing.canvas.id.length) {
       processing.canvas.id = "__processing" + Processing.instances.length;
     }
     Processing.instanceIds[processing.canvas.id] = Processing.instances.length;
@@ -10472,6 +10499,46 @@
 
   Processing.getInstanceById = function(name) {
     return Processing.instances[Processing.instanceIds[name]];
+  };
+
+  Processing.Sketch = function(attachFunction) {
+    this.attachFunction = attachFunction; // can be optional
+    this.use3DContext = false;
+    this.options = {      
+      isOpaque: true,
+      crispLines: false
+    };
+    this.imageCache = {
+      pending: 0,
+      images: {},
+      add: function(href) {
+        var img = new Image();
+        img.onload = (function(owner) {
+          return function() {
+            owner.pending--;
+          };
+        }(this));
+        this.pending++;
+        this.images[href] = img;
+        img.src = href;
+      }
+    };
+    this.sourceCode = undefined;
+    this.attach = function(processing) {
+      // either attachFunction or sourceCode must be present on attach
+      if(typeof this.attachFunction === "function") {
+        this.attachFunction(processing);
+      } else if(this.sourceCode) {
+        var func = eval(this.sourceCode);
+        func(processing);
+        this.attachFunction = func;
+      } else {
+        throw "Unable to attach sketch to the processing instance";
+      }
+    };
+    this.toString = function() {
+      return this.sourceCode || "[attach: " + this.attachFunction + "]";
+    };
   };
 
   // Automatic Initialization Method
