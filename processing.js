@@ -35,9 +35,18 @@
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
+
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
-    p.canvas = curElement;
+
+    // PJS specific (non-p5) methods and properties to externalize
+    p.externals = {
+      canvas:  curElement,
+      context: undef,
+      sketch:  undef,
+      onblur:  function() {},
+      onfocus: function() {}
+    };
 
     // Glyph path storage for textFonts
     p.glyphTable = {};
@@ -3228,12 +3237,6 @@
       return new Date().getTime() - start;
     };
 
-    p.noLoop = function noLoop() {
-      doLoop = false;
-      loopStarted = false;
-      clearInterval(looping);
-    };
-
     p.redraw = function redraw() {
       var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
@@ -3267,6 +3270,12 @@
       }
 
       inDraw = false;
+    };
+
+    p.noLoop = function noLoop() {
+      doLoop = false;
+      loopStarted = false;
+      clearInterval(looping);
     };
 
     p.loop = function loop() {
@@ -4682,7 +4691,9 @@
       // set 5% for pixels to cache (or 1000)
       maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
 
-      p.context = curContext; // added for createGraphics
+      // Externalize the context
+      p.externals.context = curContext;
+
       p.toImageData = function() {
         return curContext.getImageData(0, 0, this.width, this.height);
       };
@@ -5572,7 +5583,7 @@
         if (doStroke) {
           // TODO if strokeWeight > 1, do circle
 
-          if(curSketch.crispLines) {
+          if (curSketch.options.crispLines) {
             var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight 
             var c = p.get(x, y);
             p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
@@ -6656,8 +6667,7 @@
         y2 = arguments[3];
 
         // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
-        if((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && 
-           doStroke && curSketch.crispLines) {
+        if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
           var temp; 
           if(x1 === x2) {
             if(y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
@@ -6809,7 +6819,7 @@
         }
 
         // if only stroke is enabled, do it "crisp"
-        if(doStroke && !doFill && lineWidth <= 1.0 && curSketch.crispLines) {
+        if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
           var i, x2 = x + width - 1, y2 = y + height - 1;
           for(i=0;i<width;++i) {
             p.set(x + i, y, currentStrokeColor);
@@ -6980,7 +6990,7 @@
       if (img !== undef) {
         return window.open(img.toDataURL(),"_blank");
       } else {
-        return window.open(p.canvas.toDataURL(),"_blank");
+        return window.open(p.externals.canvas.toDataURL(),"_blank");
       }
     };
 
@@ -9209,16 +9219,35 @@
         curSketch = Processing.compile(aCode);
       }
 
+      // Expose internal field for diagnostics and testing
+      p.externals.sketch = curSketch;
+
       p.use3DContext = curSketch.use3DContext;
 
-      p.canvas.mozOpaque = curSketch.options.isOpaque;
+      curElement.mozOpaque = curSketch.options.isOpaque;
 
-      // Expose internal field for diagnostics and testing
-      p.__sketch = curSketch; 
+      // Initialize the onfocus and onblur event handler externals
+      if (curSketch.options.pauseOnBlur) {
+        p.externals.onfocus = function() {
+          if (doLoop) {
+            p.loop();
+          }
+        };
 
-      if (!p.use3DContext) {
+        p.externals.onblur = function() {
+          if (doLoop && loopStarted) {
+            p.noLoop();
+            doLoop = true; // make sure to keep this true after the noLoop call
+          }
+        };
+      }
+
+      if (!curSketch.use3DContext) {
         // Setup default 2d canvas context.
         curContext = curElement.getContext('2d');
+
+        // Externalize the default context
+        p.externals.context = curContext;
 
         modelView = new PMatrix2D();
 
@@ -9297,7 +9326,7 @@
   "createImage","CROSS","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
   "curveVertex","curveVertexSegment","DARKEST","day","defaultColor","degrees","DELETE","DIFFERENCE",
   "DILATE","directionalLight","disableContextMenu","dist","DODGE","DOWN","draw","ellipse","ellipseMode",
-  "emissive","enableContextMenu","endCamera","endDraw","endShape","ENTER","ERODE","ESC","EXCLUSION",
+  "emissive","enableContextMenu","endCamera","endDraw","endShape","ENTER","ERODE","ESC","EXCLUSION","externals",
   "exit","exp","expand","fill","filter","filter_bilinear","filter_new_scanline","float","floor","focused",
   "frameCount","frameRate","frustum","get","glyphLook","glyphTable","GRAY","green","GREEN_MASK",
   "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hour","HSB","hue","image","imageMode",
@@ -10439,7 +10468,6 @@
         if (pair && pair.length === 2) {
           var key = clean(pair[0]);
           var value = clean(pair[1]);
-
           // A few directives require work beyond storying key/value pairings
           if (key === "preload") {
             var list = value.split(',');
@@ -10452,6 +10480,8 @@
             sketch.options.isOpaque = value === "true";
           } else if (key === "crisp") {
             sketch.options.crispLines = value === "true";
+          } else if (key === "pauseOnBlur") {
+            sketch.options.pauseOnBlur = value === "true";
           } else {
             sketch.options[key] = value;
           }
@@ -10490,10 +10520,10 @@
   Processing.instanceIds = {};
 
   Processing.addInstance = function(processing) {
-    if (processing.canvas.id === undef || !processing.canvas.id.length) {
-      processing.canvas.id = "__processing" + Processing.instances.length;
+    if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
+      processing.externals.canvas.id = "__processing" + Processing.instances.length;
     }
-    Processing.instanceIds[processing.canvas.id] = Processing.instances.length;
+    Processing.instanceIds[processing.externals.canvas.id] = Processing.instances.length;
     Processing.instances.push(processing);
   };
 
@@ -10506,7 +10536,8 @@
     this.use3DContext = false;
     this.options = {      
       isOpaque: true,
-      crispLines: false
+      crispLines: false,
+      pauseOnBlur: false
     };
     this.imageCache = {
       pending: 0,
@@ -10539,6 +10570,8 @@
     this.toString = function() {
       return this.sourceCode || "[attach: " + this.attachFunction + "]";
     };
+    this.onblur = function() {};
+    this.onfocus = function() {};
   };
 
   // Automatic Initialization Method
@@ -10576,6 +10609,19 @@
 
   document.addEventListener('DOMContentLoaded', function() {
     init();
+  }, false);
+
+  // pauseOnBlur handling 
+  window.addEventListener('blur', function() {
+    for (var i = 0; i < Processing.instances.length; i++) {
+      Processing.instances[i].externals.onblur();
+    }
+  }, false);
+
+  window.addEventListener('focus', function() {
+    for (var i = 0; i < Processing.instances.length; i++) {
+      Processing.instances[i].externals.onfocus();
+    }
   }, false);
 
 }());
