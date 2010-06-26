@@ -2106,13 +2106,25 @@
       return ret;
     };
 
+    /**
+      splice inserts "value" which can be either a scalar or an array 
+      into "array" at position "index". 
+    */
     p.splice = function(array, value, index) {
-      if (array.length === 0 && value.length === 0) {
+
+      // Trying to splice an empty array into "array" in P5 won't do 
+      // anything, just return the original.
+      if(value.length === 0)
+      {
         return array;
       }
-
-      if (value instanceof Array) {
-        for (var i = 0, j = index; i < value.length; j++, i++) {
+ 
+      // If the second argument was an array, we'll need to iterate over all
+      // the "value" elements and add one by one because
+      // array.splice(index, 0, value);
+      // would create a multi-dimensional array which isn't what we want.
+      if(value instanceof Array) {
+        for(var i = 0, j = index; i < value.length; j++,i++) {
           array.splice(j, 0, value[i]);
         }
       } else {
