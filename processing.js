@@ -3819,6 +3819,7 @@
     };
 
     // tinylog lite JavaScript library
+    // http://purl.eligrey.com/tinylog/lite
     /*global tinylog,print*/
     var tinylogLite = (function() {
       "use strict";
@@ -3828,6 +3829,7 @@
         func = "function",
         False = !1,
         True = !0,
+        logLimit = 512,
         log = "log";
 
       if (typeof tinylog !== undef && typeof tinylog[log] === func) {
@@ -3957,6 +3959,7 @@
               resizingLog = False,
               previousHeight = False,
               previousScrollTop = False,
+              messages = 0,
 
               updateSafetyMargin = function() {
                 // have a blank space large enough to fit the output box at the page bottom
@@ -4047,6 +4050,12 @@
             docElem.insertBefore(container, docElem.firstChild);
 
             tinylogLite[log] = function(message) {
+              if (messages === logLimit) {
+                output.removeChild(output.firstChild);
+              } else {
+                messages++;
+              }
+              
               var entry = append(output, createElement($div)),
                 entryText = append(entry, createElement($div));
 
