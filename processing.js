@@ -8538,11 +8538,28 @@
     p.textAlign = function textAlign() {};
 
     p.textWidth = function textWidth(str) {
-      curContext.font = curTextSize + "px " + curTextFont.name;
-      if (curContext.fillText) {
-        return curContext.measureText(str).width;
-      } else if (curContext.mozDrawText) {
-        return curContext.mozMeasureText(str);
+      if(p.use3DContext){
+        if(textcanvas === undef){
+          textcanvas = document.createElement("canvas");
+        }
+        var oldContext = curContext;
+        curContext = textcanvas.getContext("2d");
+        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+        if (curContext.fillText) {
+          textcanvas.width = curContext.measureText( str ).width;
+        } else if (curContext.mozDrawText) {
+          textcanvas.width = curContext.mozMeasureText( str );
+        }
+        curContext = oldContext;
+        return textcanvas.width;
+      }
+      else{
+        curContext.font = curTextSize + "px " + curTextFont.name;
+        if (curContext.fillText) {
+          return curContext.measureText(str).width;
+        } else if (curContext.mozDrawText) {
+          return curContext.mozMeasureText(str);
+        }
       }
     };
 
