@@ -348,6 +348,10 @@
         textBuffer,
         textureBuffer,
         indexBuffer,
+        // Text alignment
+        horizontalTextAlignment = p.LEFT,
+        verticalTextAlignment = p.BASELINE,
+        baselineOffset = 0.2, // percent 
         // Pixels cache
         originalContext,
         proxyContext = null,
@@ -3815,6 +3819,7 @@
     };
 
     // tinylog lite JavaScript library
+    // http://purl.eligrey.com/tinylog/lite
     /*global tinylog,print*/
     var tinylogLite = (function() {
       "use strict";
@@ -3824,6 +3829,7 @@
         func = "function",
         False = !1,
         True = !0,
+        logLimit = 512,
         log = "log";
 
       if (typeof tinylog !== undef && typeof tinylog[log] === func) {
@@ -3953,6 +3959,7 @@
               resizingLog = False,
               previousHeight = False,
               previousScrollTop = False,
+              messages = 0,
 
               updateSafetyMargin = function() {
                 // have a blank space large enough to fit the output box at the page bottom
@@ -4043,6 +4050,12 @@
             docElem.insertBefore(container, docElem.firstChild);
 
             tinylogLite[log] = function(message) {
+              if (messages === logLimit) {
+                output.removeChild(output.firstChild);
+              } else {
+                messages++;
+              }
+              
               var entry = append(output, createElement($div)),
                 entryText = append(entry, createElement($div));
 
@@ -8535,7 +8548,14 @@
       }
     };
 
-    p.textAlign = function textAlign() {};
+    p.textAlign = function textAlign() {
+      if(arguments.length === 1) {
+        horizontalTextAlignment = arguments[0];
+      } else if(arguments.length === 2) {
+        horizontalTextAlignment = arguments[0];
+        verticalTextAlignment = arguments[1];
+      }
+    };
 
     p.textWidth = function textWidth(str) {
       if(p.use3DContext){
@@ -8680,11 +8700,11 @@
     }
 
     // Print some text to the Canvas
-    function text$line(str, x, y, z) {
+    function text$line(str, x, y, z, align) {
+      var textWidth = 0, xOffset = 0;
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
         if (str && (curContext.fillText || curContext.mozDrawText)) {
-          saveContext();
           curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
           if (isFillDirty) {
@@ -8692,19 +8712,46 @@
             isFillDirty = false;
           }
 
-          if (curContext.fillText) {
-            curContext.fillText(str, x, y);
-          } else if (curContext.mozDrawText) {
-            curContext.translate(x, y);
-            curContext.mozDrawText(str);
+          // horizontal offset/alignment
+          if(align === p.RIGHT || align === p.CENTER) {
+            if (curContext.fillText) {
+              textWidth = curContext.measureText( str ).width;
+            } else if (curContext.mozDrawText) {
+              textWidth = curContext.mozMeasureText( str );
+            }
+            
+            if(align === p.RIGHT) {
+              xOffset = -textWidth;
+            } else { // if(align === p.CENTER)
+              xOffset = -textWidth/2;
+            }
           }
-          restoreContext();
+
+          if (curContext.fillText) {
+            curContext.fillText(str, x+xOffset, y);
+          } else if (curContext.mozDrawText) {
+            saveContext();
+            curContext.translate(x+xOffset, y);
+            curContext.mozDrawText(str);
+            restoreContext();
+          }
         }
       } else {
         // If the font is a Batik SVG font...
         var font = p.glyphTable[curTextFont.name];
         saveContext();
         curContext.translate(x, y + curTextSize);
+
+        // horizontal offset/alignment
+        if(align === p.RIGHT || align === p.CENTER) {
+          textWidth = font.width(str);
+          
+          if(align === p.RIGHT) {
+            xOffset = -textWidth;
+          } else { // if(align === p.CENTER)
+            xOffset = -textWidth/2;
+          }
+        }
 
         var upem   = font.units_per_em,
           newScale = 1 / upem * curTextSize;
@@ -8723,7 +8770,7 @@
       }
     }
 
-    function text$line$3d(str, x, y, z) {
+    function text$line$3d(str, x, y, z, align) {
       // handle case for 3d text
       if (textcanvas === undef) {
         textcanvas = document.createElement("canvas");
@@ -8731,18 +8778,20 @@
       var oldContext = curContext;
       curContext = textcanvas.getContext("2d");
       curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      var textWidth = 0;
       if (curContext.fillText) {
-        textcanvas.width = curContext.measureText( str ).width;
+        textWidth = curContext.measureText( str ).width;
       } else if (curContext.mozDrawText) {
-        textcanvas.width = curContext.mozMeasureText( str );
+        textWidth = curContext.mozMeasureText( str );
       }
+      textcanvas.width = textWidth;
       textcanvas.height = curTextSize;
       curContext = textcanvas.getContext("2d"); // refreshes curContext
       curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
       curContext.textBaseline="top";
 
       // paint on 2D canvas
-      text$line(str,0,0,0);
+      text$line(str,0,0,0,p.LEFT);
 
       // use it as a texture
       var aspect = textcanvas.width/textcanvas.height;
@@ -8753,9 +8802,16 @@
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
       curContext.generateMipmap(curContext.TEXTURE_2D);
 
+      // horizontal offset/alignment
+      var xOffset = 0;
+      if(align === p.RIGHT) {
+        xOffset = -textWidth;
+      } else if(align === p.CENTER) {
+        xOffset = -textWidth/2;
+      }
       var model = new PMatrix3D();
       var scalefactor = curTextSize * 0.5;
-      model.translate(x-scalefactor/2, y-scalefactor, z);
+      model.translate(x+xOffset-scalefactor/2, y-scalefactor, z);
       model.scale(-aspect*scalefactor, -scalefactor, scalefactor);
       model.translate(-1, -1, -1);
 
@@ -8778,14 +8834,30 @@
 
     function text$4(str, x, y, z) {
       var lineFunction = p.use3DContext ?  text$line$3d : text$line;
+      var lines, linesCount;
       if(str.indexOf('\n') < 0) {
-        lineFunction(str, x, y, z);
+        lines = [str];
+        linesCount = 1;
       } else {
-        // handle text line-by-line
-        var lines = str.split('\n');
-        for(var il=0, ll=lines.length;il<ll;++il) {
-          lineFunction(lines[il], x, y + il * curTextSize, z);
-        }
+        lines = str.split(/\r?\n/g);
+        linesCount = lines.length;
+      }
+      // handle text line-by-line
+      
+      var yOffset;
+      if(verticalTextAlignment === p.TOP) {
+        yOffset = (1-baselineOffset) * curTextSize;
+      } else if(verticalTextAlignment === p.CENTER) {
+        yOffset = (1-baselineOffset - linesCount/2) * curTextSize;
+      } else if(verticalTextAlignment === p.BOTTOM) {
+        yOffset = (1-baselineOffset - linesCount) * curTextSize;
+      } else { //  if(verticalTextAlignment === p.BASELINE) {
+        yOffset = (1 - linesCount) * curTextSize;
+      }
+      for(var i=0;i<linesCount;++i) {
+        var line = lines[i];        
+        lineFunction(line, x, y + yOffset, z, horizontalTextAlignment);
+        yOffset += curTextSize;
       }
     }
 
@@ -8802,8 +8874,7 @@
       var lineWidth = 0;
       var textboxWidth = width;
 
-      var baselineOffset = 0.2; // per cent
-      var yOffset = (1-baselineOffset) * curTextSize;
+      var yOffset = 0;
 
       curContext.font = curTextSize + "px " + curTextFont.name;
 
@@ -8850,16 +8921,33 @@
         yOffset += curTextSize;
       }
 
-      // TODO box alignment
-
       // actual draw
       var lineFunction = p.use3DContext ?  text$line$3d : text$line;
+      var xOffset = 0;
+      if(horizontalTextAlignment === p.CENTER) {
+        xOffset = width / 2;
+      } else if(horizontalTextAlignment === p.RIGHT) {
+        xOffset = width;
+      }
+
+      // offsets for alignment
+      var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
+      if(verticalTextAlignment === p.BOTTOM) {
+        boxYOffset2 = height-yOffset;
+      } else if(verticalTextAlignment === p.CENTER) {
+        boxYOffset2 = (height-yOffset) / 2;
+      }
+
       for(var il=0,ll=drawCommands.length; il<ll; ++il) {
         var command = drawCommands[il];
-        if(command.offset + curTextSize > height + baselineOffset * curTextSize) {
+        if(command.offset + boxYOffset2 < 0) {
+          continue; // skip if not inside box yet
+        }
+        if(command.offset + boxYOffset2 + curTextSize > height) {
           break; // stop if no enough space for one more line draw
         }
-        lineFunction(command.text, x, y + command.offset, z);
+        lineFunction(command.text, x + xOffset, y + command.offset + boxYOffset1 + boxYOffset2, 
+                     z, horizontalTextAlignment);
       }
     }
 
@@ -9463,7 +9551,7 @@
   ["abs","acos","ADD","alpha","ALPHA","ALT","ambient","ambientLight","append","applyMatrix","arc",
   "ARGB","arrayCopy","ArrayList","ARROW","asin","atan","atan2","background","BACKSPACE","beginCamera",
   "beginDraw","beginShape","BEVEL","bezier","bezierDetail","bezierPoint","bezierTangent","bezierVertex","binary",
-  "blend","BLEND","blendColor","blue","BLUE_MASK","BLUR","boolean","box","brightness","BURN","byte","camera","ceil",
+  "blend","BLEND","blendColor","blue","BLUE_MASK","BLUR","boolean", "BOTTOM", "box","brightness","BURN","byte","camera","ceil",
   "CENTER","CENTER_RADIUS","char","Character","clear","CLOSE","CMYK","CODED","color","colorMode","concat",
   "console","constrain","CONTROL","copy","CORNER","CORNERS","cos","createFont","createGraphics",
   "createImage","CROSS","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
@@ -9493,7 +9581,7 @@
   "smooth","SOFT_LIGHT","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
   "spotLight","sq","sqrt","SQUARE","status","str","stroke","strokeCap","strokeJoin","strokeWeight",
   "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
-  "textSize","textureMode","texture","textWidth","THRESHOLD","tint",
+  "textSize","textureMode","texture","textWidth","THRESHOLD","tint", "TOP",
   "translate","triangle","TRIANGLE_FAN","TRIANGLES","TRIANGLE_STRIP","trim","TWO_PI","unbinary",
   "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","XMLAttrbute","XMLElement","year",
   "__frameRate","__mousePressed","__keyPressed"];
