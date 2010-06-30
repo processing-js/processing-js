@@ -6365,6 +6365,7 @@
           }
           else if(curShape === p.QUAD_STRIP){
             if(vertArray.length > 3){
+              /*
               curContext.beginPath();
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[1][0], vertArray[1][1]);
@@ -6379,6 +6380,24 @@
                 }
               }
               curContext.closePath();
+              */
+              for (i = 0; (i+1) < vertArray.length; i+=2) {
+                curContext.beginPath();
+                if (i+3 < vertArray.length) {
+                  curContext.moveTo(vertArray[i+2][0], vertArray[i+2][1]);
+                  curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+                  curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
+                  curContext.lineTo(vertArray[i+3][0], vertArray[i+3][1]);
+                  p.stroke(vertArray[i+3][6]);
+                  p.fill(vertArray[i+3][5]);
+                } else {
+                  curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+                  curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
+                }
+                executeContextFill();
+                executeContextStroke();
+                curContext.closePath();
+              }
             }
           }
           else{
