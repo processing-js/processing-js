@@ -5675,20 +5675,26 @@
         vert[3] = arguments[3] || 0;
         vert[4] = arguments[4] || 0;
       }
-      // fill rgba
-      vert[5] = fillStyle[0];
-      vert[6] = fillStyle[1];
-      vert[7] = fillStyle[2];
-      vert[8] = fillStyle[3];
-      // stroke rgba
-      vert[9] = strokeStyle[0];
-      vert[10] = strokeStyle[1];
-      vert[11] = strokeStyle[2];
-      vert[12] = strokeStyle[3];
-      //normals
-      vert[13] = normalX;
-      vert[14] = normalY;
-      vert[15] = normalZ;
+      if (p.use3DContext) {
+        // fill rgba
+        vert[5] = fillStyle[0];
+        vert[6] = fillStyle[1];
+        vert[7] = fillStyle[2];
+        vert[8] = fillStyle[3];
+        // stroke rgba
+        vert[9] = strokeStyle[0];
+        vert[10] = strokeStyle[1];
+        vert[11] = strokeStyle[2];
+        vert[12] = strokeStyle[3];
+        //normals
+        vert[13] = normalX;
+        vert[14] = normalY;
+        vert[15] = normalZ;
+      } else {
+        // fill and stroke color
+        vert[5] = currentFillColor;
+        vert[6] = currentStrokeColor;
+      }
 
       vertArray.push(vert);
     };
@@ -6309,17 +6315,20 @@
             }
           }
           else if(curShape === p.TRIANGLE_STRIP){
-            if(vertArray.length > 2){
+            for(i = 0; (i+1) < vertArray.length; i++) {
               curContext.beginPath();
-              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-              curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-              for(i = 2; i < vertArray.length; i++){
-                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                curContext.lineTo(vertArray[i-2][0], vertArray[i-2][1]);
-                executeContextFill();
-                executeContextStroke();
-                curContext.moveTo(vertArray[i][0],vertArray[i][1]);
+              curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
+              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              p.stroke(vertArray[i+1][6]);
+              p.fill(vertArray[i+1][5]);
+
+              if (i + 2 < vertArray.length) {
+                curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
+                p.stroke(vertArray[i+2][6]);
+                p.fill(vertArray[i+2][5]);
               }
+              executeContextFill();
+              executeContextStroke();
               curContext.closePath();
             }
           }
