@@ -7199,9 +7199,12 @@
       this.updatePixels = function() {};
 
       this.toImageData = function() {
-        // changed for 0.9
-        var canvasData = getCanvasData(this.imageData);
-        return canvasData.context.getImageData(0, 0, this.width, this.height);
+        if (this.isRemote) { // Remote images cannot access imageData, send source image instead
+          return this.sourceImg;
+        } else {
+          var canvasData = getCanvasData(this.imageData);
+          return canvasData.context.getImageData(0, 0, this.width, this.height);
+        }
       };
 
       this.toDataURL = function() {
@@ -7220,8 +7223,17 @@
       this.fromHTMLImageData = function(htmlImg) {
         // convert an <img> to a PImage
         var canvasData = getCanvasData(htmlImg);
-        var imageData = canvasData.context.getImageData(0, 0, htmlImg.width, htmlImg.height);
-        this.fromImageData(imageData);
+        try {
+          var imageData = canvasData.context.getImageData(0, 0, htmlImg.width, htmlImg.height);
+          this.fromImageData(imageData);
+        } catch(e) {
+          if (htmlImg.width && htmlImg.height) {
+            this.isRemote = true;
+            this.width = htmlImg.width;
+            this.height = htmlImg.height;
+          }
+        }
+        this.sourceImg = htmlImg;
       };
 
       if (arguments.length === 1) {
