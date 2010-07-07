@@ -3381,6 +3381,8 @@
     p.exit = function exit() {
       window.clearInterval(looping);
 
+      Processing.removeInstance(p.externals.canvas.id);
+
       for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
         var elem = eventHandlers[i][0],
             type = eventHandlers[i][1],
@@ -10749,6 +10751,11 @@
   // Store Processing instances
   Processing.instances = [];
   Processing.instanceIds = {};
+
+  Processing.removeInstance = function(id) {
+    Processing.instances.splice(Processing.instanceIds[id], 1);
+    delete Processing.instanceIds[id];
+  };
 
   Processing.addInstance = function(processing) {
     if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
