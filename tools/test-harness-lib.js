@@ -97,8 +97,21 @@ Processing.lib.UnitTests = function() {
 
     this._printTestSummary = function() {
       print('TEST-SUMMARY: ' + _passCount + '/' + _failCount);
+      try 
+      {
+        var numbers = [];
+        for(var i in __pjsCalledLines) {
+          if(0|i > 0 && __pjsCalledLines[i]) { numbers.push(i); }
+        }
+        print('LINES-CALLED: ' + numbers.join(","));
+      } catch(e) {}
     };
   };
 };
 
+Processing.lib.UnitTests.exports = ["UnitTests", "__sketch",
+  "_pass","_fail","_checkEqual","_checkNotEqual","_checkIsNaN","_checkIsNull",
+  "_checkTrue","_checkFalse","_checkThrows","_printTestSummary"];
+
 })();
+

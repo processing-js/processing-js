@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Demo for Textures</h2>
+
+    <p>This page demonstrates Pjs textures<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs"></canvas>
+    </p>
+    
+    <pre>
+<b>// Demo by Andor Salga</b>
+import processing.opengl.*;
+/* @pjs preload= 
+"PT_anim0000.gif",
+"PT_anim0001.gif", 
+"PT_anim0002.gif",
+"PT_anim0003.gif",
+"PT_anim0004.gif",
+"PT_anim0005.gif",
+"PT_anim0006.gif",
+"PT_anim0007.gif",
+"PT_anim0008.gif",
+"PT_anim0009.gif",
+"PT_anim00010.gif",
+"PT_anim00011.gif"
+*/
+
+float r = 0.0;
+float r2 = 0.0;
+float col = 0;
+
+int deltaTime = 0;
+int lastTime = 0;
+
+ArrayList gifs;
+int nextGif = 0;
+
+void setup() 
+{
+  size(640, 360, OPENGL);
+  textureMode(NORMALIZED);
+  sphereDetail(8);
+
+  gifs = new ArrayList();
+
+  for(int i = 0; i < 12; i++){
+    String s = "PT_anim000" + i + ".gif";
+    PImage pim = loadImage(s);
+    gifs.push(pim);
+  }
+}
+
+void drawBox(){
+  deltaTime +=  millis() - lastTime;
+
+ if( deltaTime > 50){
+    deltaTime = 0;
+    nextGif++; 
+    lastTime = millis();
+  }
+
+  if(nextGif >= 12){
+    nextGif = 0;
+  }
+
+  beginShape(QUADS);
+
+  texture(gifs[nextGif]);
+
+  stroke(0);
+
+  // -Z "back" face
+  vertex( 1, -1, -1, 0, 0);
+  vertex(-1, -1, -1, 1, 0);
+  vertex(-1,  1, -1, 1, 1);
+  vertex( 1,  1, -1, 0, 1);
+
+  // +Z "front" face"
+  vertex(-1, -1,  1, 0, 0);
+  vertex( 1, -1,  1, 1, 0);
+  vertex( 1,  1,  1, 1, 1);
+  vertex(-1,  1,  1, 0, 1);
+
+  // +Y "bottom" face
+  vertex(-1,  1,  1, 0, 0);
+  vertex( 1,  1,  1, 1, 0);
+  vertex( 1,  1, -1, 1, 1);
+  vertex(-1,  1, -1, 0, 1);
+
+  // -Y "top" face
+  vertex(-1, -1, -1, 0, 0);
+  vertex( 1, -1, -1, 1, 0);
+  vertex( 1, -1,  1, 1, 1);
+  vertex(-1, -1,  1, 0, 1);
+
+  // +X "right" face
+  vertex( 1, -1,  1, 0, 0);
+  vertex( 1, -1, -1, 1, 0);
+  vertex( 1,  1, -1, 1, 1);
+  vertex( 1,  1,  1, 0, 1);
+
+  // -X "left" face
+  vertex(-1, -1, -1, 0, 0);
+  vertex(-1, -1,  1, 1, 0);
+  vertex(-1,  1,  1, 1, 1);
+  vertex(-1,  1, -1, 0, 1);
+
+  endShape();
+}
+
+void drawSphere(int i){
+
+  float col = abs(sin(frameCount/10)) * 120;
+
+  noLights();
+  if( i == -1)
+    directionalLight(255-col, 255-col, 255-col, 0, 0, -1);
+  else
+    directionalLight(col, col, col, 0, 0, -1);
+
+  fill(255);
+  noStroke();
+
+  pushMatrix();
+    rotateX(r2*i);
+    rotateY(r*i);
+    translate(30*i, 0, 0);
+    sphere(3);
+  popMatrix();
+}
+
+void draw() 
+{
+  background(200);
+
+  r  += 0.1;
+  r2 += 0.01;
+
+  translate(width/2.0, height/2.0, 240);
+
+  drawSphere(-1);
+  drawSphere(1);
+  
+  rotateX(r2);
+  rotateZ(-r2);
+  scale(15);
+  drawBox();
+}</pre>
+
+  </body>
+</html>

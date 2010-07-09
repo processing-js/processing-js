@@ -15,3 +15,4 @@ copy(img2,25,25,50,50,50,50,50,50);
 PImage result = img2.get(0,0,50,80);
 image(result,100,100);
 image(img2,372,0);
+rect(372, 0, 50, 80);

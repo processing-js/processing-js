@@ -88,5 +88,11 @@ JSSHELL ?= $(error Specify a valid path to a js shell binary in ~/.profile: expo
 check-one:
 	${TOOLSDIR}/runtests.py ${JSSHELL} -t ${TEST}
 
+add-coverage: create-release
+	cat processing.js | ${JSSHELL} -f ${TOOLSDIR}/jscoverage.js > ./release/processing-cv.js
+
+check-coverage: add-coverage
+	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-cv.js -c ./release/codecoverage.txt
+
 clean:
 	rm -fr ./release

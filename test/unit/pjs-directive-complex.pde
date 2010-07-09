@@ -7,7 +7,7 @@ version =      0.7;
   foo="one/two";
 */
 
-_checkEqual(pjs.version, "0.7");
-_checkEqual(pjs.debug, "False");
-_checkEqual(pjs.foo, "one/two");
+_checkEqual(externals.sketch.options.version, "0.7");
+_checkEqual(externals.sketch.options.debug, "False");
+_checkEqual(externals.sketch.options.foo, "one/two");
 

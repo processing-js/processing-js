@@ -1,6 +1,6 @@
 // Make sure a file with no @pjs directive has the basic empty elements.
-_checkNotEqual(pjs, null);
-_checkNotEqual(pjs, undefined);
-_checkNotEqual(pjs.imageCache, null);
-_checkNotEqual(pjs.imageCache, undefined);
-_checkEqual(pjs.imageCache.pending, 0);
+_checkNotEqual(externals.sketch.options, null);
+_checkNotEqual(externals.sketch.options, undefined);
+_checkNotEqual(externals.sketch.imageCache, null);
+_checkNotEqual(externals.sketch.imageCache, undefined);
+_checkEqual(externals.sketch.imageCache.pending, 0);

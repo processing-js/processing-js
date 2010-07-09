@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for bug 455</h2>
+
+    <p>This pages tests the textWidth function for Processing.js using different fonts and sizes.<br />
+    The numbers beside the text are the result of calling textWidth(). At the top of each column is the font used and size.<br />
+    If red lines entirely 'underline' text, tests have passed.<br />
+    </p>
+
+    <p>
+      <canvas datasrc="test.pjs"></canvas>
+    </p>
+    
+    <pre>
+<b>// Test by Andor Salga</b>
+int y = 20;
+int x = 10;
+PFont font;
+
+void setup(){
+  size(1500,500);
+
+  fill(0);
+  stroke(255,0,0);
+  strokeWeight(2);
+
+  font = loadFont("comic sans MS");
+  textFont(font);
+  textSize(18);
+  runTests("comic sans MS");
+
+  x += 300;
+  y = 20;
+
+  font = loadFont("Arial");
+  textFont(font);
+  textSize(25);
+  runTests("Arial");
+
+  x += 350;
+  y = 20;
+
+  font = loadFont("verdana");
+  textFont(font);
+  textSize(18);
+  runTests("verdana");
+
+  x += 350;
+  y = 20;
+
+  font = loadFont("helvetica");
+  textFont(font);
+  textSize(22);
+  runTests("helvetica");
+}
+
+void runTest(String a){
+  line(x,y, x+textWidth(a),y);
+  text(a + "(" +textWidth(a) + ")",x,y);
+  y += 20;
+}
+
+
+void runTests(font){
+  runTest(font);
+
+  runTest("");
+  runTest(" ");
+  runTest("  ");
+
+  runTest("A");
+  runTest("AA");
+  runTest("AAA");
+  runTest(".A.A.A.A.A.A");
+
+  runTest("i");
+  runTest(".");
+  runTest(",");
+  runTest("(");
+  runTest("_");
+  runTest("~");
+  runTest("#");
+  runTest("@");
+  
+  runTest("1234567890");
+  runTest("This is a test.");
+  runTest("lalalalalala");
+  runTest("The brown fox loves pjs");
+
+  runTest("////////////");
+  runTest("..........");
+  runTest("$%^)(*%&#*(&@#%($*&");
+  runTest("This_is_a_test");
+  runTest("~~~~~~~~~");
+}</pre>
+  </body>
+</html>

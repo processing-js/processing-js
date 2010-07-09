@@ -1,0 +1,123 @@
+import processing.opengl.*;
+
+class Particle{
+  float xPos, yPos, zPos;
+  float xVel, yVel, zVel;
+  float age;
+  float lifeTime;
+  float opacity;
+  float size;
+  
+  Particle(){
+    xPos = 0;
+    yPos = 0;
+    zPos = 0;
+    xVel = 1.4;
+    yVel = 1.2;
+    zVel = 2.0;
+    age = 0;
+    lifeTime = 0;
+    opacity = 255;
+    size = 20;
+  }
+  
+  float getAge(){return age;}
+  float getLifeTime(){return lifeTime;}
+  float getX(){return xPos;}
+  float getY(){return yPos;}
+  float getZ(){return zPos;}
+
+  void setAge(float a){age = a;}
+
+  void setX(float x){xPos = x;}
+  void setY(float y){yPos = y;}
+  void setZ(float z){zPos = z;}
+  
+  void setXVelocity(float x){xVel = x;}
+  void setYVelocity(float y){yVel = y;}
+  void setZVelocity(float z){zVel = z;}
+  
+  void setLifeTime(float l){lifeTime = l;}
+  
+  void reset(){
+    opacity = 255;
+    size = 20;
+  }
+  
+  void update(){
+    age += 0.1; //fix
+    
+    yVel += 0.1;
+    
+    xPos += xVel;
+    yPos += yVel;
+    zPos += zVel;
+    
+    opacity = 255 - 250*(age/lifeTime);
+    size = 20 - 20*(age/lifeTime);
+  }
+  
+  void draw(){
+    strokeWeight(size);
+    stroke(opacity-50, 0, 255-opacity,opacity/3);
+    point(xPos,yPos,zPos);
+  }
+}
+
+int NUM_PARTICLES = 500;
+
+class ParticleSystem{
+  ArrayList p;
+
+  ParticleSystem(){
+    p = new ArrayList();
+    for(int i = 0; i < NUM_PARTICLES; i++){
+      Particle particle = new Particle(); 
+      p.add(particle);
+      resetParticle(i);
+    }
+  }
+  
+  void resetParticle(int i){
+    Particle particle = (Particle)p.get(i);
+    particle.reset();
+    particle.setX(mouseX);
+    particle.setY(mouseY);
+    particle.setZ(0);
+    particle.setXVelocity(random(0,2));
+    particle.setYVelocity(random(0,2));
+    particle.setLifeTime(random(1,15));
+    particle.setAge(0);
+  }
+  
+  void update(){
+    for(int i=0; i < NUM_PARTICLES; i++){
+      Particle particle = (Particle)p.get(i);
+      particle.update();
+      if(particle.getAge() > particle.getLifeTime()){
+        resetParticle(i);
+      }
+    }
+  }
+  
+  void draw(){
+    for(int i=0; i < NUM_PARTICLES; i++){
+      Particle particle = (Particle)p.get(i);
+      particle.draw();
+    }
+  }
+}
+
+ParticleSystem psys;
+
+void setup(){
+  size(500,500,OPENGL);
+  psys = new ParticleSystem();
+}
+
+void draw(){
+  background(0);
+  stroke(255);
+  psys.update();
+  psys.draw();
+}

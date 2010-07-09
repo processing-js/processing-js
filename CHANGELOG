@@ -1,3 +1,65 @@
+June 16, 2010 - Release 0.9.4
+
+  * Added ellipse() 3D 
+  * Added curvevertex() 3D 
+  * Added curve() 3D 
+  * Added rect() 3D 
+  * Added bezier() 3D 
+  * Added bezierVertex() 3D 
+  * Added text() 3D
+  * Added curveDetail() 
+  * Added bezierDetail() 
+  * Added strokeWeight() and point() 
+  * Added filter() 
+  * Added PImage: filter prototype "pimage filter" 
+  * Added PImage: save prototype "pimage save"
+  * Added PImage 0 argument constructor 
+  * Added filter MODEs for p.filter() and PImage.filter() 
+  * Added textureMode() 
+  * Added texture() 
+  * Added texture support 
+  * Added ArrayList.toArray 
+  * Added save() 
+  * Added XMLElement type 
+  * Added textWidth()
+  * Added status()
+  * Added a new lightweight parser
+  * Added unit tests for new parser
+  * Added a .version property 
+  * Added unit test for binary()
+  * Added support for getting a reference to a Processing object "processing reference" 
+  * Added key/keyCode argument for keyReleased 
+  * Added call to draw() in setup if translate is called
+  * Added file:/// uri support for running ref tests 
+  * Added crisp @pjs directive for crisp lines and points  
+  * Added a test coverage tool that provides simple way to check code coverage during unit/parser testing
+  * Fixed pimage.get(x,y,w,h)
+  * Fixed p.set() performance to increase speed
+  * Fixed text() performance by removing unnecessary type conversions 
+  * Fixed p.text accepts null input, this causes an error 
+  * Fixed binary() to support all primitive datatypes including arrays 
+  * Fixed unbinary() to support all primitive datatypes including arrays
+  * Fixed unhex() to support all primitive datatypes including arrays 
+  * Fixed shaders to take in color attribute for individual vertices 
+  * Fixed loadFont() to handle font with spaces in name 
+  * Fixed mouseX/mouseY are not computed with style.border taken into account 
+  * Fixed "p.mousePressed is not a function" error when clicking on a canvas that did not define it 
+  * Fixed mousePressed fails when mousePressed() is defined 
+  * Fixed keyCode is undefined in sketches
+  * Fixed p.color - optimizations  
+  * Fixed parser to handle sketch code pixels = new color[] 
+  * Fixed parser so that vars which conflict with function names use constant naming convention 
+  * Fixed parser to allow "Code" in a single line comment
+  * Fixed parser inheritance problems with variables 
+  * Fixed Processing.debug 
+  * Fixed PImage examples with Frame Rate
+  * Fixed all functions that rely on p.vertex 
+  * Fixed Chrome error for Win that appeared when image() was used chrome 
+  * Fixed functions to allow Chromium to render 3D sketches
+  * Fixed Reference test script 
+  * Fixed init.js fails to load sketch into targetted canvas
+  * Removed dead code: Point
+  
 May 20, 2010 - Release 0.9.1
 
   * Remove with(p) for performance gain
