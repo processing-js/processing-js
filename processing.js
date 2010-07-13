@@ -2205,7 +2205,7 @@
 
       // copy src to dest from index srcPos to index destPos of length recursivly on objects
       for (var i = srcPos, j = destPos; i < length + srcPos; i++, j++) {
-        if (dest[j]) {
+        if (dest[j] !== undef) {
           dest[j] = src[i];
         } else {
           throw "array index out of bounds exception";
