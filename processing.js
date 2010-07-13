@@ -2231,6 +2231,17 @@
         array.add = function(item) {
           return this.push(item);
         };
+        array.set = function() {
+          if(arguments.length === 2) {
+            if (arguments[0] >= 0 && arguments[0] <= this.length) { 
+              this.splice(arguments[0], 1, arguments[1]);
+            } else {
+              throw(arguments[0] + " is not a valid index");
+            }
+          } else {
+            throw("Please use the proper number of parameters.");
+          }
+        };
         array.size = function() {
           return this.length;
         };
