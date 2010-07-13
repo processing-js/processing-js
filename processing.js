@@ -5574,14 +5574,14 @@
     p.smooth = function() {
       if (!p.use3DContext) {
         curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-        curContext.mozImageSmoothingEnabled = true;
+        (curContext.mozImageSmoothingEnabled && (curContext.mozImageSmoothingEnabled = true));
       }
     };
 
     p.noSmooth = function() {
       if (!p.use3DContext) {
         curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-        curContext.mozImageSmoothingEnabled = false;
+        (curContext.mozImageSmoothingEnabled && (curContext.mozImageSmoothingEnabled = false));
       }
     };
 
@@ -9455,7 +9455,7 @@
 
       p.use3DContext = curSketch.use3DContext;
 
-      curElement.mozOpaque = curSketch.options.isOpaque;
+      (curElement.mozOpaque && (curElement.mozOpaque = curSketch.options.isOpaque));
 
       // Initialize the onfocus and onblur event handler externals
       if (curSketch.options.pauseOnBlur) {
