@@ -185,15 +185,13 @@
               
               // try deprecated way first (keeps code cleaner)
               var data = context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE);
-              
-              if(data){
-                return data;
-              }else{
-                // if that failed, try new way
+
+              // if that failed, try new way              
+              if(!data){
                 data = new WebGLUnsignedByteArray(aCanvas.width * aCanvas.height * 4);
                 context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE, data);
-                return data;
               }
+              return data;
             } else {
               return aCanvas.getContext('2d').getImageData(0, 0, aCanvas.width, aCanvas.height).data;
             }
