@@ -972,11 +972,16 @@
               switch ( this.vertexCodes[j] ) {
 
               case p.VERTEX:
-                if(( !isBezier && !isCurve ) || (p.breakShape === true)) { 
+                //if(( !isBezier && !isCurve ) || (p.breakShape === true)) { 
                   //you cannot call vertex in between curveVertex and bezierVertex calls, unless there is a break
                   p.vertex( this.vertices[index][0], this.vertices[index][1] );
+                  if ( this.vertices[index]["moveTo"] === true) {
+                    vertArray[vertArray.length-1]["moveTo"] = true;
+                  } else if ( this.vertices[index]["moveTo"] === false ){
+                    vertArray[vertArray.length-1]["moveTo"] = false;
+                  }
                   p.breakShape = false;
-                }
+                //}
                 index++;
                 break;
 
@@ -1003,11 +1008,14 @@
               switch ( this.vertexCodes[j] ) {
 
               case p.VERTEX:
-                if(( !isBezier && !isCurve ) || ( p.breakShape === true ) ) { 
-                  //you cannot call vertex in between curveVertex and bezierVertex calls, unless there is a break
-                  p.vertex( this.vertices[index][0], this.vertices[index][1], this.vertices[index][2] );
-                  p.breakShape = false;
+                //you cannot call vertex in between curveVertex and bezierVertex calls, unless there is a break
+                p.vertex( this.vertices[index][0], this.vertices[index][1], this.vertices[index][2] );
+                if ( this.vertices[index]["moveTo"] === true) {
+                  vertArray[vertArray.length-1]["moveTo"] = true;
+                } else if ( this.vertices[index]["moveTo"] === false ){
+                  vertArray[vertArray.length-1]["moveTo"] = false;
                 }
+                p.breakShape = false;
                 break;
 
               case p.BEZIER_VERTEX:
@@ -1795,6 +1803,8 @@
       parsePathLineto: function( px, py ) {
         this.parsePathCode( p.VERTEX );
         this.parsePathVertex( px, py );
+        // add property to distinguish between curContext.moveTo or curContext.lineTo
+        this.vertices[this.vertices.length-1]["moveTo"] = false;
       },
       parsePathMoveto: function( px, py ) {
         if ( this.vertices.length > 0 ) {
@@ -1802,6 +1812,8 @@
         }
         this.parsePathCode( p.VERTEX );
         this.parsePathVertex( px, py );
+        // add property to distinguish between curContext.moveTo or curContext.lineTo
+        this.vertices[this.vertices.length-1]["moveTo"] = true;
       },
       parsePathVertex: function( x,  y ) {
         var verts = [];
@@ -1814,8 +1826,8 @@
       },
       parsePoly: function( val ){
         this.family    = p.PATH;
-        this.close     = close;
-        var pointsAttr = this.element.getStringAttribute( "points" ).replace(/\s+/g,' ').trim();
+        this.close     = val;
+        var pointsAttr = this.element.getStringAttribute( "points" );//.replace(/\s+/g,' ').trim();
         if ( pointsAttr !== null ) {
           var pointsBuffer = pointsAttr.split(" ");
           for (var i = 0; i < pointsBuffer.length; i++) {
@@ -7174,11 +7186,15 @@
         }
         else{
           curContext.beginPath();
-          //curContext.moveTo(vertArray[0][0], vertArray[0][1]);
           for(i = 0; i < vertArray.length; i++){
             if( vertArray[i]["isVert"] === true ){ //if it is a vertex move to the position
-               //curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+              if ( vertArray[i]["moveTo"] === true) {
+                curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+              } else if (vertArray[i]["moveTo"] === false){
+                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              } else {
+                curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+              } 
             } else { //otherwise continue drawing bezier
               curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
             }
