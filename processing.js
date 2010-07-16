@@ -2232,7 +2232,7 @@
           if(arguments.length === 1) {
             this.push(arguments[0]); // for add(Object)
           } else if(arguments.length === 2) {
-            if ((arguments[0]|0) === arguments[0] && arguments[0] >= 0 && arguments[0] <= this.length) { 
+            if (typeof arguments[0] === 'number' && arguments[0] >= 0 && arguments[0] <= this.length) { 
               this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
             } else {
               throw(arguments[0] + " is not a valid index");
