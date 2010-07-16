@@ -429,10 +429,25 @@
 
     //PShape stuff
     var curShapeMode = p.CORNER;
-    var colorArray   = [ ["aqua", "#00FFFF"] , ["cyan", "#00FFFF"]  , ["gray", "#808080"] , ["navy", "#000080"]   , ["silver", "#C0C0C0"] ,
-                         ["black", "#000000"], ["green","#008000"]  , ["olive", "#808000"], ["teal", "#008080"]   , ["blue", "#0000FF"]   , 
-                         ["lime", "#00FF00"] , ["purple", "#800080"], ["white", "#FFFFFF"], ["fuchsia", "#FF00FF"], ["magenta", "#FF00FF"],
-                         ["red", "#FF0000"]  , ["maroon", "#800000"], ["yellow","#FFFF00"] ];
+    var colors = {}; 
+        colors.red     = "#FF0000"; 
+        colors.blue    = "#0000ff";
+        colors.aqua    = "#00FFFF";
+        colors.cyan    = "#00FFFF";
+        colors.gray    = "#808080";
+        colors.navy    = "#000080";
+        colors.silver  = "#C0C0C0";
+        colors.black   = "#000000";
+        colors.green   = "#008000";
+        colors.olive   = "#808000";
+        colors.teal    = "#008080";
+        colors.lime    = "#00FF00";
+        colors.purple  = "#800080";
+        colors.white   = "#FFFFFF";
+        colors.fuchsia = "#FF00FF";
+        colors.magenta = "#FF00FF";
+        colors.maroon  = "#800000";
+        colors.yellow  = "#FFFF00";
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
 
@@ -1963,12 +1978,9 @@
             System.err.println("url " + fillName + " refers to unexpected data");
           }*/
         } else {
-          for ( var i=0; i< colorArray.length; i++)
-          {
-            if( colorArray[i][0] === fillText ) {
-              this.fill      = true;
-              this.fillColor = opacityMask | ( parseInt( colorArray[i][1].substring(1), 16 ) ) & 0xFFFFFF;
-            }
+          if( colors[fillText]  ) {
+            this.fill      = true;
+            this.fillColor = opacityMask | ( parseInt( colors[fillText].substring(1), 16 ) ) & 0xFFFFFF;
           }
         }
       },
@@ -1996,12 +2008,9 @@
             System.err.println("url " + strokeName + " refers to unexpected data");
           }*/
         } else {
-          for ( var i=0; i< colorArray.length; i++)
-          {
-            if( colorArray[i][0] === strokeText ) {
-              this.stroke      = true;
-              this.strokeColor = opacityMask | (parseInt(colorArray[i][1].substring(1), 16)) & 0xFFFFFF;
-            }
+          if( colors[strokeText] ){
+            this.stroke      = true;
+            this.strokeColor = opacityMask | (parseInt(colors[strokeText].substring(1), 16)) & 0xFFFFFF;
           }
         }
       },
