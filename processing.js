@@ -1842,7 +1842,7 @@
       parsePoly: function( val ){
         this.family    = p.PATH;
         this.close     = val;
-        var pointsAttr = this.element.getStringAttribute( "points" );//.replace(/\s+/g,' ').trim();
+        var pointsAttr = this.element.getStringAttribute( "points" ).replace(/\s+/g,' ').trim();
         if ( pointsAttr !== null ) {
           var pointsBuffer = pointsAttr.split(" ");
           for (var i = 0; i < pointsBuffer.length; i++) {
