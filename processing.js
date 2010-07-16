@@ -2232,10 +2232,14 @@
           if(arguments.length === 1) {
             this.push(arguments[0]); // for add(Object)
           } else if(arguments.length === 2) {
-            if (typeof arguments[0] === 'number' && arguments[0] >= 0 && arguments[0] <= this.length) { 
-              this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
+            if (typeof arguments[0] === 'number') {
+              if (arguments[0] >= 0 && arguments[0] <= this.length) { 
+                this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
+              } else {
+                throw(arguments[0] + " is not a valid index");
+              }
             } else {
-              throw(arguments[0] + " is not a valid index");
+              throw(typeof arguments[0] + " is not a number");
             }
           } else {
             throw("Please use the proper number of parameters.");
