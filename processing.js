@@ -20,16 +20,23 @@
 
   var undef; // intentionally left undefined
 
-  // IE Unfriendly AJAX Method
-  var ajax = function(url) {
-    var AJAX = new window.XMLHttpRequest();
-    if (AJAX) {
-      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
-      AJAX.send(null);
-      return AJAX.responseText;
-    } else {
-      return false;
+  var getxhr = function () {
+    try { return new XMLHttpRequest(); }
+    catch ( requesterror ) {
+      throw (requesterror );
     }
+  }; 
+  var ajax = function ajax( url ) {
+    var xhr = getxhr();
+    if( xhr !== false ) {
+        xhr.open( "GET", url + "?t=" + new Date().getTime(), false );
+        xhr.send( null );
+        // failed request?
+        if ( xhr.status !== 200 && xhr.status !== 0 )  { return false; }
+        return xhr.responseText; 
+    }
+    // browser doesn't support xhr
+    return false; 
   };
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
@@ -12205,7 +12212,12 @@
         var code = "";
         for (var j=0, fl=filenames.length; j<fl; j++) {
           if (filenames[j]) {
-            code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
+            var block = ajax(filenames[j]);
+            if(block!==false) {
+              var closer = block.substring(0, block.length-1);
+              // also deal with files that don't end with newline
+              code += block + (closer === "\n" ? "" : ";\n"); 
+            }
           }
         }
         Processing.addInstance(new Processing(canvas[i], code));
