@@ -12214,9 +12214,7 @@
           if (filenames[j]) {
             var block = ajax(filenames[j]);
             if(block!==false) {
-              var closer = block.substring(0, block.length-1);
-              // also deal with files that don't end with newline
-              code += block + (closer === "\n" ? "" : ";\n"); 
+              code += ";\n" + block; 
             }
           }
         }
