@@ -1409,10 +1409,13 @@
             p.scale( width / shape.getWidth(), height / shape.getHeight() );
           }else if ( arguments.length === 3 ) {
             p.translate( x - shape.getWidth()/2, - shape.getHeight()/2 );
+          } else {
+            p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
           }
         } else if( curShapeMode === p.CORNER ){
 
           if( arguments.length === 5 ){
+            p.translate( x, y );
             p.scale( width / shape.getWidth(), height / shape.getHeight() );
           }else if ( arguments.length === 3 ) {
             p.translate( x, y );
@@ -1421,13 +1424,16 @@
           if( arguments.length === 5 ){
             width  -= x;
             height -= y;
+            p.translate( x, y );
             p.scale( width / shape.getWidth(), height / shape.getHeight() );
           }else if ( arguments.length === 3 ) {
             p.translate( x, y );
           }
         }
         shape.draw();
-        p.popMatrix();
+        if( ( arguments.length === 1 && curShapeMode === p.CENTER ) || arguments.length > 1 ){
+          p.popMatrix();
+        }
       }
     }; 
     p.shapeMode = function ( mode ){
@@ -10952,7 +10958,7 @@
   "PVector","quad","QUADS","QUAD_STRIP","radians","RADIUS","random","Random","randomSeed", "rect",
   "rectMode","red","RED_MASK","redraw","REPLACE","requestImage","resetMatrix","RETURN","reverse","RGB",
   "RIGHT","rotate","rotateX","rotateY","rotateZ","round","ROUND","saturation","save","scale","SCREEN",
-  "second","set","setup","shape","shared","SHIFT","shininess","shorten","sin","SINCOS_LENGTH","size",
+  "second","set","setup","shape", "shapeMode","shared","SHIFT","shininess","shorten","sin","SINCOS_LENGTH","size",
   "smooth","SOFT_LIGHT","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
   "spotLight","sq","sqrt","SQUARE","status","str","stroke","strokeCap","strokeJoin","strokeWeight",
   "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
