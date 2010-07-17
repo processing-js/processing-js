@@ -1401,38 +1401,40 @@
     };
     
     p.shape = function( shape, x, y, width, height ){
-      if( shape.isVisible()){
-        p.pushMatrix();
-        if( curShapeMode === p.CENTER ){
-          if ( arguments.length === 5 ){
-            p.translate( x - width/2, y - height/2 );
-            p.scale( width / shape.getWidth(), height / shape.getHeight() );
-          }else if ( arguments.length === 3 ) {
-            p.translate( x - shape.getWidth()/2, - shape.getHeight()/2 );
-          } else {
-            p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
-          }
-        } else if( curShapeMode === p.CORNER ){
+      if( arguments.length > 1 && arguments[0] !== null){
+        if( shape.isVisible()){
+          p.pushMatrix();
+          if( curShapeMode === p.CENTER ){
+            if ( arguments.length === 5 ){
+              p.translate( x - width/2, y - height/2 );
+              p.scale( width / shape.getWidth(), height / shape.getHeight() );
+            }else if ( arguments.length === 3 ) {
+              p.translate( x - shape.getWidth()/2, - shape.getHeight()/2 );
+            } else {
+              p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
+            }
+          } else if( curShapeMode === p.CORNER ){
 
-          if( arguments.length === 5 ){
-            p.translate( x, y );
-            p.scale( width / shape.getWidth(), height / shape.getHeight() );
-          }else if ( arguments.length === 3 ) {
-            p.translate( x, y );
+            if( arguments.length === 5 ){
+              p.translate( x, y );
+              p.scale( width / shape.getWidth(), height / shape.getHeight() );
+            }else if ( arguments.length === 3 ) {
+              p.translate( x, y );
+            }
+          } else if ( curShapeMode === p.CORNERS ){
+            if( arguments.length === 5 ){
+              width  -= x;
+              height -= y;
+              p.translate( x, y );
+              p.scale( width / shape.getWidth(), height / shape.getHeight() );
+            }else if ( arguments.length === 3 ) {
+              p.translate( x, y );
+            }
           }
-        } else if ( curShapeMode === p.CORNERS ){
-          if( arguments.length === 5 ){
-            width  -= x;
-            height -= y;
-            p.translate( x, y );
-            p.scale( width / shape.getWidth(), height / shape.getHeight() );
-          }else if ( arguments.length === 3 ) {
-            p.translate( x, y );
+          shape.draw();
+          if( ( arguments.length === 1 && curShapeMode === p.CENTER ) || arguments.length > 1 ){
+            p.popMatrix();
           }
-        }
-        shape.draw();
-        if( ( arguments.length === 1 && curShapeMode === p.CENTER ) || arguments.length > 1 ){
-          p.popMatrix();
         }
       }
     }; 
@@ -1440,9 +1442,12 @@
       curShapeMode = mode;
     };
     p.loadShape = function ( filename ){
-      if( filename.indexOf(".svg") > -1 ){
-        return new p.PShapeSVG( null, filename );
+      if( arguments.length === 1) {
+        if( filename.indexOf(".svg") > -1 ){
+          return new p.PShapeSVG( null, filename );
+        }
       }
+      return null;
     };
     
     var PShapeSVG = p.PShapeSVG = function(){
