@@ -1,0 +1,35 @@
+import processing.opengl.*;
+
+int z = 0;
+
+void setup(){
+
+  size( 100, 100, OPENGL);
+  background(204);
+  translate(width/2 + 20, height/2 + 20,  10);
+ 
+  hint(DISABLE_DEPTH_TEST);
+  drawRect();
+  drawRect();
+  drawRect();
+  
+  hint(ENABLE_DEPTH_TEST);
+  drawRect();
+  drawRect();
+  drawRect();
+
+  hint(DISABLE_DEPTH_TEST);
+  drawRect();
+ 
+  hint(ENABLE_DEPTH_TEST);
+  drawRect();
+  drawRect();
+}
+
+// always draws behind
+void drawRect(){
+  z -= 2;
+  translate( z, z, z );
+  fill( 128, z * -10, 128 );
+  box( 20, 20, 1 );
+}

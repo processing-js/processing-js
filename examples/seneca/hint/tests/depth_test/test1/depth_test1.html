@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>hint() DISABLE_DEPTH_TEST & ENABLE_DEPTH_TEST</h2>
+
+    <p>This page tests the DISABLE_DEPTH_TEST and ENABLE_DEPTH_TEST symbols used in the hint()<br /> 
+    implementation. If the canvas on the left matches the image generated from on the right, the test has passed.<br />
+    </p>
+
+    <p>
+      <canvas datasrc="depth_test1.pjs" width="400" height="400"></canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0;" />
+    </p>
+    
+    <pre>
+<b>// Test by <a href="http://asalga.wordpress.com/">Andor Salga</a></b>
+import processing.opengl.*;
+
+int z = 0;
+
+void setup(){
+
+  size( 100, 100, OPENGL);
+  background(204);
+  translate(width/2 + 20, height/2 + 20,  10);
+  
+  hint(DISABLE_DEPTH_TEST);
+  drawRect();
+  drawRect();
+  drawRect();
+  
+  hint(ENABLE_DEPTH_TEST);
+  drawRect();
+  drawRect();
+  drawRect();
+
+  hint(DISABLE_DEPTH_TEST);
+  drawRect();
+ 
+  hint(ENABLE_DEPTH_TEST);
+  drawRect();
+  drawRect();
+}
+
+// always draws behind
+void drawRect(){
+  z -= 2;
+  translate( z, z, z );
+  fill( 128, z * -10, 128 );
+  box( 20, 20, 1 );
+}</pre>
+
+  </body>
+</html>
