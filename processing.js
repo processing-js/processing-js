@@ -3549,12 +3549,10 @@
 
       // copy src to dest from index srcPos to index destPos of length recursivly on objects
       for (var i = srcPos, j = destPos; i < length + srcPos; i++, j++) {
-        if (src[i] && typeof src[i] === "object") {
-          // src[i] is not null and is another object or array. go recursive
-          p.arrayCopy(src[i], 0, dest[j], 0, src[i].length);
-        } else {
-          // standard type, just copy
+        if (dest[j] !== undef) {
           dest[j] = src[i];
+        } else {
+          throw "array index out of bounds exception";
         }
       }
     };
@@ -3581,6 +3579,21 @@
                 this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
               } else {
                 throw(arguments[0] + " is not a valid index");
+              }
+            } else {
+              throw(typeof arguments[0] + " is not a number");
+            }
+          } else {
+            throw("Please use the proper number of parameters.");
+          }
+        };
+        array.set = function() {
+          if(arguments.length === 2) {
+            if (typeof arguments[0] === 'number') {
+              if (arguments[0] >= 0 && arguments[0] < this.length) {
+                this.splice(arguments[0], 1, arguments[1]);
+              } else {
+                throw(arguments[0] + " is not a valid index.");
               }
             } else {
               throw(typeof arguments[0] + " is not a number");
@@ -4738,6 +4751,8 @@
 
     p.exit = function exit() {
       window.clearInterval(looping);
+
+      Processing.removeInstance(p.externals.canvas.id);
 
       for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
         var elem = eventHandlers[i][0],
@@ -12131,6 +12146,11 @@
   // Store Processing instances
   Processing.instances = [];
   Processing.instanceIds = {};
+
+  Processing.removeInstance = function(id) {
+    Processing.instances.splice(Processing.instanceIds[id], 1);
+    delete Processing.instanceIds[id];
+  };
 
   Processing.addInstance = function(processing) {
     if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {

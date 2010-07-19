@@ -36,3 +36,20 @@ _checkEqual(combined[2][0], "NS");
 _checkEqual(combined[2][1], "MN");
 _checkEqual(combined[3][0], "IL");  
 _checkEqual(combined[3][1], "NJ");
+
+String[] temp = {"hello", "world"};
+String[][] src = {temp};
+String[][] dst = {{"good", "day"}};
+
+_checkEqual(dst[0][0], "good"); // should print "good"
+_checkEqual(dst[0][1], "day"); // should print "day"
+
+arrayCopy(src, dst);
+
+_checkEqual(dst[0][0], "hello"); // should print "hello", "world"
+_checkEqual(dst[0][1], "world"); // should print "hello", "world"
+
+temp[1] = "planet";
+
+_checkEqual(dst[0][0], "hello"); // should print "hello", "world"
+_checkEqual(dst[0][1], "planet"); // should print "planet"
