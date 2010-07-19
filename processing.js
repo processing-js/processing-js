@@ -2432,7 +2432,7 @@
             for (var i = 0; i < this.getChildCount(); i++) {
               kid = this.getChild(i);
               kidName = kid.getName();
-              if (idName !== null && kidName === arguments[0]) {
+              if (kidName !== null && kidName === arguments[0]) {
                 matches.push(kid);
               }
             }
