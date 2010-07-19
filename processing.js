@@ -1016,7 +1016,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // PShape
     ////////////////////////////////////////////////////////////////////////////
-    var PShape = p.PShape = function( family ) {
+    var PShape = p.PShape = function(family) {
       this.family    = family || p.GROUP;
       this.visible   = true;
       this.style     = true;
@@ -1035,19 +1035,19 @@
       this.isVisible = function(){
         return this.visible;
       };
-      this.setVisible = function ( visible ){
+      this.setVisible = function (visible){
         this.visible = visible;
       };
       this.disableStyle = function(){
         this.style = false;
-        for( var i = 0; i < this.children.length; i++ )
+        for(var i = 0; i < this.children.length; i++)
         {
           this.children[i].disableStyle();
         }
       };
       this.enableStyle = function(){
         this.style = true;
-        for( var i = 0; i < this.children.length; i++ )
+        for(var i = 0; i < this.children.length; i++)
         {
           this.children[i].enableStyle();
         }
@@ -1061,226 +1061,215 @@
       this.getHeight = function(){
         return this.height;
       };
-      this.setName = function( name ){
+      this.setName = function(name){
         this.name = name;
       };
       this.getName = function(){
         return this.name;
       };
       this.draw = function(){
-        if ( this.visible ) {
+        if (this.visible) {
           this.pre();
           this.drawImpl();
           this.post();
         }
       };
       this.drawImpl = function(){
-        if ( this.family === p.GROUP ) {
+        if (this.family === p.GROUP) {
           this.drawGroup();
-        } else if ( this.family === p.PRIMITIVE ) {
+        } else if (this.family === p.PRIMITIVE) {
           this.drawPrimitive();
-        } else if ( this.family === p.GEOMETRY ) {
+        } else if (this.family === p.GEOMETRY) {
           this.drawGeometry();
-        } else if ( this.family === p.PATH ) {
+        } else if (this.family === p.PATH) {
           this.drawPath();
         }
       };
       this.drawPath = function(){
-        if ( this.vertices.length === 0 ) { return; }
+        if (this.vertices.length === 0) { return; }
 
         p.beginShape();
         var i;
-        if ( this.vertexCodes.length === 0 ) {  // each point is a simple vertex
-          if ( this.vertices[0].length === 2 ) {  // drawing 2D vertices
-            for ( i = 0; i < this.vertices.length; i++ ) {
-              p.vertex( this.vertices[i][0], this.vertices[i][1] );
+        if (this.vertexCodes.length === 0) {  // each point is a simple vertex
+          if (this.vertices[0].length === 2) {  // drawing 2D vertices
+            for (i = 0; i < this.vertices.length; i++) {
+              p.vertex(this.vertices[i][0], this.vertices[i][1]);
             }
           } else {  // drawing 3D vertices
-            for ( i = 0; i < this.vertices.length; i++ ) {
-              p.vertex( this.vertices[i][0], this.vertices[i][1], this.vertices[i][2] );
+            for (i = 0; i < this.vertices.length; i++) {
+              p.vertex(this.vertices[i][0], this.vertices[i][1], this.vertices[i][2]);
             }
           }
-
         } else {  // coded set of vertices
           var index = 0;
           var j;
-          if ( this.vertices[0].length === 2 ) {  // drawing a 2D path
-            for ( j = 0; j < this.vertexCodes.length; j++ ) {
-              switch ( this.vertexCodes[j] ) {
-
+          if (this.vertices[0].length === 2) {  // drawing a 2D path
+            for (j = 0; j < this.vertexCodes.length; j++) {
+              switch (this.vertexCodes[j]) {
               case p.VERTEX:
-                //if(( !isBezier && !isCurve ) || (p.breakShape === true)) { 
-                  //you cannot call vertex in between curveVertex and bezierVertex calls, unless there is a break
-                  p.vertex( this.vertices[index][0], this.vertices[index][1] );
-                  if ( this.vertices[index]["moveTo"] === true) {
-                    vertArray[vertArray.length-1]["moveTo"] = true;
-                  } else if ( this.vertices[index]["moveTo"] === false ){
-                    vertArray[vertArray.length-1]["moveTo"] = false;
-                  }
-                  p.breakShape = false;
-                //}
-                index++;
-                break;
-
-              case p.BEZIER_VERTEX:
-                p.bezierVertex( this.vertices[index+0][0], this.vertices[index+0][1],
-                                this.vertices[index+1][0], this.vertices[index+1][1],
-                                this.vertices[index+2][0], this.vertices[index+2][1] );
-                index += 3;
-                break;
-
-              case p.CURVE_VERTEX:
-                p.curveVertex( this.vertices[index][0], this.vertices[index][1] );
-                index++;
-                break;
-
-              case p.BREAK:
-                p.breakShape = true;
-                break;
-                         
-              }
-            }
-          } else {  // drawing a 3D path
-            for ( j = 0; j < this.vertexCodes.length; j++ ) {
-              switch ( this.vertexCodes[j] ) {
-
-              case p.VERTEX:
-                //you cannot call vertex in between curveVertex and bezierVertex calls, unless there is a break
-                p.vertex( this.vertices[index][0], this.vertices[index][1], this.vertices[index][2] );
+                p.vertex(this.vertices[index][0], this.vertices[index][1]);
                 if ( this.vertices[index]["moveTo"] === true) {
                   vertArray[vertArray.length-1]["moveTo"] = true;
-                } else if ( this.vertices[index]["moveTo"] === false ){
+                } else if ( this.vertices[index]["moveTo"] === false) {
                   vertArray[vertArray.length-1]["moveTo"] = false;
                 }
                 p.breakShape = false;
+                index++;
                 break;
-
               case p.BEZIER_VERTEX:
-                p.bezierVertex( this.vertices[index+0][0], this.vertices[index+0][1], this.vertices[index+0][2],
-                                this.vertices[index+1][0], this.vertices[index+1][1], this.vertices[index+1][2],
-                                this.vertices[index+2][0], this.vertices[index+2][1], this.vertices[index+2][2] );
+                p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1],
+                               this.vertices[index+1][0], this.vertices[index+1][1],
+                               this.vertices[index+2][0], this.vertices[index+2][1]);
                 index += 3;
                 break;
-
               case p.CURVE_VERTEX:
-                p.curveVertex( this.vertices[index][0], this.vertices[index][1], this.vertices[index][2] );
+                p.curveVertex(this.vertices[index][0], this.vertices[index][1]);
                 index++;
                 break;
               case p.BREAK:
                 p.breakShape = true;
-                break;
+                break;                  
+              }
+            }
+          } else {  // drawing a 3D path
+            for (j = 0; j < this.vertexCodes.length; j++) {
+              switch (this.vertexCodes[j]) {
+                case p.VERTEX:
+                  p.vertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                  if (this.vertices[index]["moveTo"] === true) {
+                    vertArray[vertArray.length-1]["moveTo"] = true;
+                  } else if (this.vertices[index]["moveTo"] === false) {
+                    vertArray[vertArray.length-1]["moveTo"] = false;
+                  }
+                  p.breakShape = false;
+                  break;
+                case p.BEZIER_VERTEX:
+                  p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1], this.vertices[index+0][2],
+                                 this.vertices[index+1][0], this.vertices[index+1][1], this.vertices[index+1][2],
+                                 this.vertices[index+2][0], this.vertices[index+2][1], this.vertices[index+2][2]);
+                  index += 3;
+                  break;
+                case p.CURVE_VERTEX:
+                  p.curveVertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                  index++;
+                  break;
+                case p.BREAK:
+                  p.breakShape = true;
+                  break;
               }
             }
           }
         }
-        p.endShape( this.close ? p.CLOSE : p.OPEN );
+        p.endShape(this.close ? p.CLOSE : p.OPEN);
       };
-      this.drawGeometry = function(){
-        p.beginShape( this.kind );
+      this.drawGeometry = function() {
+        p.beginShape(this.kind);
         var i;
-        if ( this.style ) {
-          for ( i = 0; i < this.vertices.length; i++ ) {
-            p.vertex( this.vertices[i] );
+        if (this.style) {
+          for (i = 0; i < this.vertices.length; i++) {
+            p.vertex(this.vertices[i]);
           }
         } else {
-          for ( i = 0; i < this.vertices.length; i++ ) {
+          for (i = 0; i < this.vertices.length; i++) {
             var vert = this.vertices[i];
-            if ( vert[2] === 0 ) {
-              p.vertex( vert[0], vert[1] );
+            if (vert[2] === 0) {
+              p.vertex(vert[0], vert[1]);
             } else {
-              p.vertex( vert[0], vert[1], vert[2] );
+              p.vertex(vert[0], vert[1], vert[2]);
             }
           }
         }
         p.endShape();
       };
-      this.drawGroup = function(){
-        for ( var i = 0; i < this.children.length; i++ ) {
+      this.drawGroup = function() {
+        for (var i = 0; i < this.children.length; i++) {
           this.children[i].draw();
         }
       };
-      this.drawPrimitive = function(){
-        if ( this.kind === p.POINT ) {
-          p.point( this.params[0], this.params[1] );
-
-        } else if ( this.kind === p.LINE ) {
-          if ( this.params.length === 4 ) {  // 2D
-            p.line( this.params[0], this.params[1],
-                    this.params[2], this.params[3]);
-          } else {  // 3D
-            p.line( this.params[0], this.params[1], this.params[2],
-                    this.params[3], this.params[4], this.params[5] );
-          }
-
-        } else if ( this.kind === p.TRIANGLE )  {
-          p.triangle( this.params[0], this.params[1],
-                      this.params[2], this.params[3],
-                      this.params[4], this.params[5] );
-
-        } else if ( this.kind === p.QUAD ) {
-          p.quad( this.params[0], this.params[1],
-                  this.params[2], this.params[3],
-                  this.params[4], this.params[5],
-                  this.params[6], this.params[7] );
-
-        } else if ( this.kind === p.RECT ) {
-          if ( this.image !== null ) {
-            p.imageMode( p.CORNER );
-            p.image( this.image, this.params[0], this.params[1], this.params[2], this.params[3] );
-          } else {
-            p.rectMode( p.CORNER );
-            p.rect( this.params[0], this.params[1], this.params[2], this.params[3] );
-          }
-
-        } else if ( this.kind === p.ELLIPSE ) {
-          p.ellipseMode( p.CORNER );
-          p.ellipse( this.params[0], this.params[1], this.params[2], this.params[3] );
-
-        } else if ( this.kind === p.ARC ) {
-          p.ellipseMode( p.CORNER );
-          p.arc( this.params[0], this.params[1], this.params[2], this.params[3], this.params[4], this.params[5] );
-
-        } else if ( this.kind === p.BOX ) {
-          if ( this.params.length === 1 ) {
-            p.box( this.params[0] );
-          } else {
-            p.box( this.params[0], this.params[1], this.params[2] );
-          }
-
-        } else if ( this.kind === p.SPHERE ) {
-          p.sphere( this.params[0] );
+      this.drawPrimitive = function() {
+        switch (this.kind) {        
+          case p.POINT:
+            p.point(this.params[0], this.params[1]);
+            break;
+          case p.LINE: 
+            if (this.params.length === 4) {  // 2D
+              p.line(this.params[0], this.params[1],
+                     this.params[2], this.params[3]);
+            } else {  // 3D
+              p.line(this.params[0], this.params[1], this.params[2],
+                     this.params[3], this.params[4], this.params[5]);
+            }
+            break;
+          case p.TRIANGLE:
+            p.triangle(this.params[0], this.params[1],
+                       this.params[2], this.params[3],
+                       this.params[4], this.params[5]);
+            break;
+          case p.QUAD:
+            p.quad(this.params[0], this.params[1],
+                   this.params[2], this.params[3],
+                   this.params[4], this.params[5],
+                   this.params[6], this.params[7]);
+            break;
+          case p.RECT:
+            if (this.image !== null) {
+              p.imageMode(p.CORNER);
+              p.image(this.image, this.params[0], this.params[1], this.params[2], this.params[3]);
+            } else {
+              p.rectMode(p.CORNER);
+              p.rect(this.params[0], this.params[1], this.params[2], this.params[3]);
+            }
+            break;
+          case p.ELLIPSE:
+            p.ellipseMode(p.CORNER);
+            p.ellipse(this.params[0], this.params[1], this.params[2], this.params[3]);
+            break;
+          case p.ARC:
+            p.ellipseMode(p.CORNER);
+            p.arc(this.params[0], this.params[1], this.params[2], this.params[3], this.params[4], this.params[5]);
+            break;
+          case p.BOX:
+            if (this.params.length === 1) {
+              p.box(this.params[0]);
+            } else {
+              p.box(this.params[0], this.params[1], this.params[2]);
+            }
+            break;
+          case p.SPHERE:
+            p.sphere(this.params[0]);
+            break;
         }
       };
-      this.pre = function(){
-        if ( this.matrix ) {
+      this.pre = function() {
+        if (this.matrix) {
           p.pushMatrix();
-          //this.applyMatrix( this.matrix );
+          //this.applyMatrix( this.matrix ); //applyMatrix missing
         }
-        if ( this.style ) {
+        if (this.style) {
           p.pushStyle();
           this.styles();
         }
       };
-      this.post = function(){
-        if ( this.matrix ) {
+      this.post = function() {
+        if (this.matrix) {
           p.popMatrix();
         }
-        if ( this.style ) {
+        if (this.style) {
           p.popStyle();
         }
       };
-      this.styles = function(){
-        if ( this.stroke ) {
-          p.stroke( this.strokeColor );
-          p.strokeWeight( this.strokeWeight );
-          p.strokeCap( this.strokeCap );
-          p.strokeJoin( this.strokeJoin );
+      this.styles = function() {
+        if (this.stroke) {
+          p.stroke(this.strokeColor);
+          p.strokeWeight(this.strokeWeight);
+          p.strokeCap(this.strokeCap);
+          p.strokeJoin(this.strokeJoin);
         } else {
           p.noStroke();
         }
 
-        if ( this.fill ) {
-          p.fill( this.fillColor );
+        if (this.fill) {
+          p.fill(this.fillColor);
         } else {
           p.noFill();
         }
@@ -1288,29 +1277,29 @@
       
       // return the PShape at the specific index from the children array or
       // return the Phape from a parent shape specified by its name
-      this.getChild = function( child ){
+      this.getChild = function(child) {
         if (typeof child === 'number') {
-          return this.children[ child ];
-        }else {
+          return this.children[child];
+        } else {
           var found,
               i;
-          if( child === "" || this.name === child ){
+          if(child === "" || this.name === child){
             return this;
-          }else {
-            if( this.nameTable.length > 0 )
+          } else {
+            if(this.nameTable.length > 0)
             {
-              for( i = 0; i < this.nameTable.length || found; i++ )
+              for(i = 0; i < this.nameTable.length || found; i++)
               {
-                if( this.nameTable[i].getName === child ){
+                if(this.nameTable[i].getName === child) {
                   found = this.nameTable[i];
                 }
               }
-              if ( found ) { return found; }
+              if (found) { return found; }
             }
-            for( i = 0; i < this.children.lenth; i++ )
+            for(i = 0; i < this.children.lenth; i++)
             {
-              found = this.children[i].getChild( child );
-              if( found ) { return found; }
+              found = this.children[i].getChild(child);
+              if(found) { return found; }
             }
           }
           return null;
@@ -1319,74 +1308,74 @@
       this.getChildCount = function () {
         return this.children.length;
       };
-      this.addChild = function( child ){
-        this.children.push( child );
+      this.addChild = function( child ) {
+        this.children.push(child);
         child.parent = this;
-        if ( child.getName() !== null ) {
-          this.addName( child.getName(), child );
+        if (child.getName() !== null) {
+          this.addName(child.getName(), child);
         }
       };
-      this.addName = function( name,  shape ) {
-        if ( this.parent !== null ) {
+      this.addName = function(name,  shape) {
+        if (this.parent !== null) {
           this.parent.addName( name, shape );
         } else {
           this.nameTable.push( [name, shape] );
         }
       };
       // findChild not in yet
-      this.translate = function(){
-        if( arguments.length === 2 )
+      this.translate = function() {
+        if(arguments.length === 2)
         {
-          this.checkMatrix( 2 );
-          this.matrix.translate( arguments[0], arguments[1] );
-        }else {
-          this.checkMatrix( 3 );
-          this.matrix.translate( arguments[0], arguments[1], 0 );
+          this.checkMatrix(2);
+          this.matrix.translate(arguments[0], arguments[1]);
+        } else {
+          this.checkMatrix(3);
+          this.matrix.translate(arguments[0], arguments[1], 0);
         }
       };
-      this.checkMatrix = function( dimensions ){
-        if( this.matrix === null ){
-          if( dimensions === 2 ){
+      this.checkMatrix = function(dimensions) {
+        if(this.matrix === null) {
+          if(dimensions === 2) {
             this.matrix = new p.PMatrix2D();
           } else {
             this.matrix = new p.PMatrix3D();
           }
-        }else if( dimensions === 3 && this.matrix instanceof p.PMatrix2D ) {
+        }else if(dimensions === 3 && this.matrix instanceof p.PMatrix2D) {
           this.matrix = new p.PMatrix3D();
         }
       };
-      this.rotateX = function( angle ){
-        this.rotate( angle, 1, 0, 0 );
+      this.rotateX = function(angle) {
+        this.rotate(angle, 1, 0, 0);
       };
-      this.rotateY = function( angle ){
-        this.rotate( angle, 0, 1, 0 );
+      this.rotateY = function(angle) {
+        this.rotate(angle, 0, 1, 0);
       };
-      this.rotateZ = function( angle ){
-        this.rotate( angle, 0, 0, 1 );
+      this.rotateZ = function(angle) {
+        this.rotate(angle, 0, 0, 1);
       };
-      this.rotate = function(){
+      this.rotate = function() {
         if(arguments.length === 1){
-          this.checkMatrix( 2 );
-          this.matrix.rotate( arguments[0] );
+          this.checkMatrix(2);
+          this.matrix.rotate(arguments[0]);
         } else {
-          this.checkMatrix( 3 );
-          this.matrix.rotate( arguments[0], arguments[1], arguments[2] ,arguments[3] );
+          this.checkMatrix(3);
+          this.matrix.rotate(arguments[0], arguments[1], arguments[2] ,arguments[3]);
         }
       };
-      this.scale = function(){
-        if( arguments.length === 2 ){
-          this.checkMatrix( 2 );
-          this.matrix.scale( arguments[0], arguments[1] );
-        } else if( arguments.length === 3 ) {
-          this.checkMatrix( 2 );
-          this.matrix.scale( arguments[0], arguments[1], arguments[2] );
+      this.scale = function() {
+        if(arguments.length === 2) {
+          this.checkMatrix(2);
+          this.matrix.scale(arguments[0], arguments[1]);
+        } else if (arguments.length === 3) {
+          this.checkMatrix(2);
+          this.matrix.scale(arguments[0], arguments[1], arguments[2]);
         } else {
-          this.checkMatrix( 2 );
-          this.matrix.scale( arguments[0] );
+          this.checkMatrix(2);
+          this.matrix.scale(arguments[0]);
         }
       };
-      this.resetMatrix = function(){
-        this.checkMatrix( 2 );
+      this.resetMatrix = function() {
+        this.checkMatrix(2);
         this.matrix.reset();
       };
       // applyMatrix missing
@@ -1400,60 +1389,59 @@
       
     };
     
-    p.shape = function( shape, x, y, width, height ){
-      if( arguments.length > 1 && arguments[0] !== null){
-        if( shape.isVisible()){
+    p.shape = function(shape, x, y, width, height) {
+      if (arguments.length >= 1 && arguments[0] !== null) {
+        if (shape.isVisible()) {
           p.pushMatrix();
-          if( curShapeMode === p.CENTER ){
-            if ( arguments.length === 5 ){
-              p.translate( x - width/2, y - height/2 );
-              p.scale( width / shape.getWidth(), height / shape.getHeight() );
-            }else if ( arguments.length === 3 ) {
-              p.translate( x - shape.getWidth()/2, - shape.getHeight()/2 );
+          if (curShapeMode === p.CENTER) {
+            if (arguments.length === 5) {
+              p.translate(x - width/2, y - height/2);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x - shape.getWidth()/2, - shape.getHeight()/2);
             } else {
               p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
             }
-          } else if( curShapeMode === p.CORNER ){
-
-            if( arguments.length === 5 ){
-              p.translate( x, y );
-              p.scale( width / shape.getWidth(), height / shape.getHeight() );
-            }else if ( arguments.length === 3 ) {
-              p.translate( x, y );
+          } else if (curShapeMode === p.CORNER) {
+            if (arguments.length === 5) {
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
             }
-          } else if ( curShapeMode === p.CORNERS ){
-            if( arguments.length === 5 ){
+          } else if (curShapeMode === p.CORNERS) {
+            if (arguments.length === 5) {
               width  -= x;
               height -= y;
-              p.translate( x, y );
-              p.scale( width / shape.getWidth(), height / shape.getHeight() );
-            }else if ( arguments.length === 3 ) {
-              p.translate( x, y );
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
             }
           }
           shape.draw();
-          if( ( arguments.length === 1 && curShapeMode === p.CENTER ) || arguments.length > 1 ){
+          if ((arguments.length === 1 && curShapeMode === p.CENTER ) || arguments.length > 1) {
             p.popMatrix();
           }
         }
       }
     }; 
-    p.shapeMode = function ( mode ){
+    p.shapeMode = function (mode) {
       curShapeMode = mode;
     };
-    p.loadShape = function ( filename ){
-      if( arguments.length === 1) {
-        if( filename.indexOf(".svg") > -1 ){
-          return new p.PShapeSVG( null, filename );
+    p.loadShape = function (filename) {
+      if (arguments.length === 1) {
+        if (filename.indexOf(".svg") > -1) {
+          return new p.PShapeSVG(null, filename);
         }
       }
       return null;
     };
     
-    var PShapeSVG = p.PShapeSVG = function(){
+    var PShapeSVG = p.PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
-      if( arguments.length === 1 ){
-        this.element  = new p.XMLElement( arguments[0] );
+      if (arguments.length === 1) {
+        this.element  = new p.XMLElement(arguments[0]);
         // set values to their defaults according to the SVG spec
         this.vertexCodes         = [];
         this.vertices            = [];
@@ -1476,14 +1464,14 @@
         this.fillName            = null;
         this.fillOpacity         = 1;
 
-        if ( this.element.getName() !== "svg" ) {
+        if (this.element.getName() !== "svg") {
           throw("root is not <svg>, it's <" + this.element.getName() + ">");
         }
       }
-      else if( arguments.length === 2 ){
-        if( typeof arguments[1] === 'string' ){
-          if( arguments[1].indexOf(".svg") > -1 ){//its a filename
-            this.element = new p.XMLElement( arguments[1] );
+      else if (arguments.length === 2) {
+        if (typeof arguments[1] === 'string') {
+          if (arguments[1].indexOf(".svg") > -1) { //its a filename
+            this.element = new p.XMLElement(arguments[1]);
             // set values to their defaults according to the SVG spec
             this.vertexCodes         = [];
             this.vertices            = [];
@@ -1507,9 +1495,9 @@
            
           }
         } else { // XMLElement
-          if( arguments[0] ) { // PShapeSVG 
+          if (arguments[0]) { // PShapeSVG 
             this.element             = arguments[1];
-            this.vertexCodes         =  arguments[0].vertexCodes.slice();
+            this.vertexCodes         = arguments[0].vertexCodes.slice();
             this.vertices            = arguments[0].vertices.slice();
             
             this.stroke              = arguments[0].stroke;
@@ -1533,16 +1521,16 @@
         }     
       }
       
-      this.name      = this.element.getStringAttribute( "id" );
-      var displayStr = this.element.getStringAttribute( "display", "inline" );
+      this.name      = this.element.getStringAttribute("id");
+      var displayStr = this.element.getStringAttribute("display", "inline");
       this.visible   = displayStr !== "none";
-      var str = this.element.getAttribute( "transform" );
-      if( str ){
-        this.matrix = this.parseMatrix( str );
+      var str = this.element.getAttribute("transform");
+      if (str) {
+        this.matrix = this.parseMatrix(str);
       }
       // not proper parsing of the viewBox, but will cover us for cases where
       // the width and height of the object is not specified
-      var viewBoxStr = this.element.getStringAttribute( "viewBox" );
+      var viewBoxStr = this.element.getStringAttribute("viewBox");
       if ( viewBoxStr !== null ) {
         var viewBox = viewBoxStr.split(" ");
         this.width  = viewBox[2];
@@ -1552,13 +1540,13 @@
       // TODO if viewbox is not same as width/height, then use it to scale
       // the original objects. for now, viewbox only used when width/height
       // are empty values (which by the spec means w/h of "100%"
-      var unitWidth  = this.element.getStringAttribute( "width" );
-      var unitHeight = this.element.getStringAttribute( "height" );
+      var unitWidth  = this.element.getStringAttribute("width");
+      var unitHeight = this.element.getStringAttribute("height");
       if (unitWidth !== null) {
-        this.width  = this.parseUnitSize( unitWidth );
-        this.height = this.parseUnitSize( unitHeight );
+        this.width  = this.parseUnitSize(unitWidth);
+        this.height = this.parseUnitSize(unitHeight);
       } else {
-        if (( this.width === 0 ) || ( this.height === 0 )) {
+        if ((this.width === 0) || (this.height === 0)) {
           // For the spec, the default is 100% and 100%. For purposes
           // here, insert a dummy value because this is prolly just a
           // font or something for which the w/h doesn't matter.
@@ -1570,8 +1558,8 @@
                                 "readable in the <svg> tag of this file.");
         }
       }
-      this.parseColors( this.element ); 
-      this.parseChildren( this.element );
+      this.parseColors(this.element); 
+      this.parseChildren(this.element);
 
     };
         
@@ -1579,79 +1567,79 @@
       // parseMatrix missing
       // getChild missing
       // print missing
-      parseMatrix: function( str ) { },
-      parseChildren:function( element ){
+      parseMatrix: function(str) { },
+      parseChildren:function(element) {
         var newelement = element.getChildren();
         var children   = new p.PShape();
-        for ( var i=0; i < newelement.length; i++ ) {
-          var kid = this.parseChild( newelement[i] );
-          if ( kid  ) {
-            children.addChild( kid );
+        for (var i = 0; i < newelement.length; i++) {
+          var kid = this.parseChild(newelement[i]);
+          if (kid) {
+            children.addChild(kid);
           }
         }
-        this.children.push( children );
+        this.children.push(children);
       },
-      getName: function(){
+      getName: function() {
         return this.name;
       },
-      parseChild: function( elem ){
+      parseChild: function( elem ) {
         var name = elem.getName();
         var shape;
-
-        if ( name === "g" ) {
-          shape = new PShapeSVG( this, elem );
-
-        } else if ( name === "defs" ) {
-          // generally this will contain gradient info, so may
-          // as well just throw it into a group element for parsing
-          shape = new PShapeSVG( this, elem );
-
-        } else if ( name === "line" ) {
-          shape = new PShapeSVG( this, elem );
-          shape.parseLine();
-
-        } else if ( name === "circle" ) {
-          shape = new PShapeSVG( this, elem );
-          shape.parseEllipse( true );
-
-        } else if ( name === "ellipse" ) {
-          shape = new PShapeSVG( this, elem );
-          shape.parseEllipse( false );
-
-        } else if ( name === "rect" ) {
-          shape = new PShapeSVG( this, elem );
-          shape.parseRect();
-
-        } else if ( name === "polygon" ) {
-          shape = new PShapeSVG( this, elem );
-          shape.parsePoly( true );
-
-        } else if ( name === "polyline" ) {
-          shape = new PShapeSVG( this, elem );
-          shape.parsePoly( false );
-
-        } else if ( name === "path" ) {
-          shape = new PShapeSVG( this, elem );
-          shape.parsePath();
-
-        } else if ( name === "radialGradient" ) {
-          //return new RadialGradient(this, elem);
-
-        } else if ( name === "linearGradient" ) {
-          //return new LinearGradient(this, elem);
-
-        } else if ( name === "text" ) {
-          p.println( "Text in SVG files is not currently supported, " +
-                                "convert text to outlines instead." );
-
-        } else if ( name === "filter" ) {
-          p.println( "Filters are not supported." );
-
-        } else if ( name === "mask" ) {
-          p.println( "Masks are not supported." );
-
-        } else {
-          p.println( "Ignoring  <" + name + "> tag." );
+        switch (name) {
+          case "g":
+            shape = new PShapeSVG(this, elem);
+            break;
+          case "defs":
+            // generally this will contain gradient info, so may
+            // as well just throw it into a group element for parsing
+            shape = new PShapeSVG(this, elem);
+            break;
+          case "line":
+            shape = new PShapeSVG(this, elem);
+            shape.parseLine();
+            break;
+          case "circle":
+            shape = new PShapeSVG(this, elem);
+            shape.parseEllipse(true);
+            break;
+          case "ellipse":
+            shape = new PShapeSVG(this, elem);
+            shape.parseEllipse(false);
+            break;
+          case "rect":
+            shape = new PShapeSVG(this, elem);
+            shape.parseRect();
+            break;
+          case "polygon":
+            shape = new PShapeSVG(this, elem);
+            shape.parsePoly(true);
+            break;
+          case "polyline":
+            shape = new PShapeSVG(this, elem);
+            shape.parsePoly(false);
+            break;
+          case "path":
+            shape = new PShapeSVG(this, elem);
+            shape.parsePath();
+            break;
+          case "radialGradient":
+            //return new RadialGradient(this, elem);
+            break;
+          case "linearGradient":
+            //return new LinearGradient(this, elem);
+            break;
+          case "text":
+            p.println("Text in SVG files is not currently supported, convert text to outlines instead." );
+            break;
+          case "filter":
+            p.println("Filters are not supported.");
+            break;
+          case "mask":
+            p.println("Masks are not supported.");
+            break;
+          default:
+            p.println("Ignoring  <" + name + "> tag.");
+            break;
         }
         return shape;
       },
@@ -1660,14 +1648,14 @@
         this.kind = 0;
          
         var c;
-        var pathData = this.element.getStringAttribute("d").replace(/\s+/g,' ').trim();
+        var pathData = p.trim(this.element.getStringAttribute("d").replace(/\s+/g,' '));
         if (pathData === null) { return; }
         var pathDataChars = pathData.toCharArray();
 
         var pathBuffer = "";
         var lastSeparate = false;
 
-        for ( var i = 0; i < pathDataChars.length; i++ ) {
+        for (var i = 0; i < pathDataChars.length; i++) {
           c = pathDataChars[i].toString();
           var separate = false;
 
@@ -1682,24 +1670,24 @@
               c === 'Z' || c === 'z' ||  // closepath
               c === ',') {
             separate = true;
-            if ( i !== 0 ) {
+            if (i !== 0 ) {
               pathBuffer +="|";
             }
           }
-          if ( c === 'Z' || c === 'z' ) {
+          if (c === 'Z' || c === 'z') {
             separate = false;
           }
-          if ( c === '-' && !lastSeparate ) {
+          if (c === '-' && !lastSeparate) {
             // allow for 'e' notation in numbers, e.g. 2.10e-9 
             // http://dev.processing.org/bugs/show_bug.cgi?id=1408
             if (i === 0 || pathDataChars[i-1] !== 'e') {
               pathBuffer +="|";
             }
           }
-          if ( c !== ',' ) {
+          if (c !== ',') {
             pathBuffer += c; //"" + pathDataBuffer.charAt(i));
           }
-          if ( separate && c !== ',' && c !== '-' ) {
+          if (separate && c !== ',' && c !== '-') {
             pathBuffer +="|";
           }
           lastSeparate = separate;
@@ -1707,8 +1695,8 @@
         // split into array
         var pathDataKeys = pathBuffer.toString().split(/[|\s+]/g);
         // loop through the array and remove spaces
-        for( i =0; i < pathDataKeys.length; i++ ){
-          if ( pathDataKeys[i] === "" ){
+        for(i =0; i < pathDataKeys.length; i++){
+          if (pathDataKeys[i] === ""){
             pathDataKeys.splice(i, 1);
           }
         }  
@@ -1728,73 +1716,73 @@
             py     = 0;  
 
         i = 0;
-        while ( i < pathDataKeys.length ) {
-          c = p.trim( pathDataKeys[i].charAt(0 ) );
+        while (i < pathDataKeys.length) {
+          c = p.trim(pathDataKeys[i].charAt(0 ));
           switch (c) {
 
             case 'M':  // M - move to (absolute)
-              cx = parseFloat( pathDataKeys[i + 1] );
-              cy = parseFloat( pathDataKeys[i + 2] );
-              this.parsePathMoveto( cx, cy );
+              cx = parseFloat(pathDataKeys[i + 1]);
+              cy = parseFloat(pathDataKeys[i + 2]);
+              this.parsePathMoveto(cx, cy);
               i += 3;
               break;
 
             case 'm':  // m - move to (relative)
-              cx = parseFloat( cx )+ parseFloat( pathDataKeys[i + 1] );
-              cy = parseFloat( cy )+ parseFloat( pathDataKeys[i + 2] );
-              this.parsePathMoveto( cx, cy );
+              cx = parseFloat(cx)+ parseFloat(pathDataKeys[i + 1]);
+              cy = parseFloat(cy)+ parseFloat(pathDataKeys[i + 2]);
+              this.parsePathMoveto(cx, cy);
               i += 3;
               break;
 
             case 'L':
-              cx = parseFloat( pathDataKeys[i + 1] );
-              cy = parseFloat( pathDataKeys[i + 2] );
-              this.parsePathLineto( cx, cy );
+              cx = parseFloat(pathDataKeys[i + 1]);
+              cy = parseFloat(pathDataKeys[i + 2]);
+              this.parsePathLineto(cx, cy);
               i += 3;
               break;
 
             case 'l':
-              cx = parseFloat( cx ) + parseFloat( pathDataKeys[i + 1] );
-              cy = parseFloat( cy ) + parseFloat( pathDataKeys[i + 2] );
-              this.parsePathLineto( cx, cy );
+              cx = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              cy = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              this.parsePathLineto(cx, cy);
               i += 3;
               break;
 
               // horizontal lineto absolute
             case 'H':
-              cx = parseFloat( pathDataKeys[i + 1] );
-              this.parsePathLineto( cx, cy );
+              cx = parseFloat(pathDataKeys[i + 1]);
+              this.parsePathLineto(cx, cy);
               i += 2;
               break;
 
               // horizontal lineto relative
             case 'h':
-              cx = parseFloat( cx ) + parseFloat( pathDataKeys[i + 1] );
-              this.parsePathLineto( cx, cy );
+              cx = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              this.parsePathLineto(cx, cy);
               i += 2;
               break;
 
             case 'V':
-              cy = parseFloat( pathDataKeys[i + 1] );
-              this.parsePathLineto( cx, cy );
+              cy = parseFloat(pathDataKeys[i + 1]);
+              this.parsePathLineto(cx, cy);
               i += 2;
               break;
 
             case 'v':
-              cy = parseFloat( cy ) + parseFloat( pathDataKeys[i + 1] );
-              this.parsePathLineto( cx, cy );
+              cy = parseFloat(cy) + parseFloat(pathDataKeys[i + 1]);
+              this.parsePathLineto(cx, cy);
               i += 2;
               break;
 
               // C - curve to (absolute)
             case 'C': 
-              ctrlX1 = parseFloat( pathDataKeys[i + 1] );
-              ctrlY1 = parseFloat( pathDataKeys[i + 2] );
-              ctrlX2 = parseFloat( pathDataKeys[i + 3] );
-              ctrlY2 = parseFloat( pathDataKeys[i + 4] );
-              endX   = parseFloat( pathDataKeys[i + 5] );
-              endY   = parseFloat( pathDataKeys[i + 6] );
-              this.parsePathCurveto( ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY );
+              ctrlX1 = parseFloat(pathDataKeys[i + 1]);
+              ctrlY1 = parseFloat(pathDataKeys[i + 2]);
+              ctrlX2 = parseFloat(pathDataKeys[i + 3]);
+              ctrlY2 = parseFloat(pathDataKeys[i + 4]);
+              endX   = parseFloat(pathDataKeys[i + 5]);
+              endY   = parseFloat(pathDataKeys[i + 6]);
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
               cx = endX;
               cy = endY;
               i += 7;
@@ -1802,13 +1790,13 @@
 
             // c - curve to (relative)
             case 'c': 
-              ctrlX1 = parseFloat( cx ) + parseFloat( pathDataKeys[i + 1] );
-              ctrlY1 = parseFloat( cy ) + parseFloat( pathDataKeys[i + 2] );
-              ctrlX2 = parseFloat( cx ) + parseFloat( pathDataKeys[i + 3] );
-              ctrlY2 = parseFloat( cy ) + parseFloat( pathDataKeys[i + 4] );
-              endX   = parseFloat( cx ) + parseFloat( pathDataKeys[i + 5] );
-              endY   = parseFloat( cy ) + parseFloat( pathDataKeys[i + 6] );
-              this.parsePathCurveto( ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY );
+              ctrlX1 = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              ctrlY1 = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              ctrlX2 = parseFloat(cx) + parseFloat(pathDataKeys[i + 3]);
+              ctrlY2 = parseFloat(cy) + parseFloat(pathDataKeys[i + 4]);
+              endX   = parseFloat(cx) + parseFloat(pathDataKeys[i + 5]);
+              endY   = parseFloat(cy) + parseFloat(pathDataKeys[i + 6]);
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
               cx = endX;
               cy = endY;
               i += 7;
@@ -1816,17 +1804,17 @@
 
               // S - curve to shorthand (absolute)
             case 'S': 
-              ppx    = parseFloat( this.vertices[ this.vertices.length-2 ][0] );
-              ppy    = parseFloat( this.vertices[ this.vertices.length-2 ][1] );
-              px     = parseFloat( this.vertices[ this.vertices.length-1 ][0] );
-              py     = parseFloat( this.vertices[ this.vertices.length-1 ][1] );
+              ppx    = parseFloat(this.vertices[ this.vertices.length-2 ][0]);
+              ppy    = parseFloat(this.vertices[ this.vertices.length-2 ][1]);
+              px     = parseFloat(this.vertices[ this.vertices.length-1 ][0]);
+              py     = parseFloat(this.vertices[ this.vertices.length-1 ][1]);
               ctrlX1 = px + (px - ppx);
               ctrlY1 = py + (py - ppy);
-              ctrlX2 = parseFloat( pathDataKeys[i + 1] );
-              ctrlY2 = parseFloat( pathDataKeys[i + 2] );
-              endX   = parseFloat( pathDataKeys[i + 3] );
-              endY   = parseFloat( pathDataKeys[i + 4] );
-              this.parsePathCurveto( ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY );
+              ctrlX2 = parseFloat(pathDataKeys[i + 1]);
+              ctrlY2 = parseFloat(pathDataKeys[i + 2]);
+              endX   = parseFloat(pathDataKeys[i + 3]);
+              endY   = parseFloat(pathDataKeys[i + 4]);
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
               cx = endX;
               cy = endY;
               i += 5;
@@ -1834,17 +1822,17 @@
 
               // s - curve to shorthand (relative)
             case 's': 
-              ppx    = parseFloat( this.vertices[this.vertices.length-2][0] );
-              ppy    = parseFloat( this.vertices[this.vertices.length-2][1] );
-              px     = parseFloat( this.vertices[this.vertices.length-1][0] );
-              py     = parseFloat( this.vertices[this.vertices.length-1][1] );
-              ctrlX1 = px + ( px - ppx );
-              ctrlY1 = py + ( py - ppy );
-              ctrlX2 = parseFloat( cx ) + parseFloat( pathDataKeys[i + 1] );
-              ctrlY2 = parseFloat( cy ) + parseFloat( pathDataKeys[i + 2] );
-              endX   = parseFloat( cx ) + parseFloat( pathDataKeys[i + 3] );
-              endY   = parseFloat( cy ) + parseFloat( pathDataKeys[i + 4] );
-              this.parsePathCurveto( ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY );
+              ppx    = parseFloat(this.vertices[this.vertices.length-2][0]);
+              ppy    = parseFloat(this.vertices[this.vertices.length-2][1]);
+              px     = parseFloat(this.vertices[this.vertices.length-1][0]);
+              py     = parseFloat(this.vertices[this.vertices.length-1][1]);
+              ctrlX1 = px + (px - ppx);
+              ctrlY1 = py + (py - ppy);
+              ctrlX2 = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              ctrlY2 = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              endX   = parseFloat(cx) + parseFloat(pathDataKeys[i + 3]);
+              endY   = parseFloat(cy) + parseFloat(pathDataKeys[i + 4]);
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
               cx = endX;
               cy = endY;
               i += 5;
@@ -1852,11 +1840,11 @@
 
               // Q - quadratic curve to (absolute)
             case 'Q': 
-              ctrlX = parseFloat( pathDataKeys[i + 1] );
-              ctrlY = parseFloat( pathDataKeys[i + 2] );
-              endX  = parseFloat( pathDataKeys[i + 3] );
-              endY  = parseFloat( pathDataKeys[i + 4] );
-              this.parsePathQuadto( cx, cy, ctrlX, ctrlY, endX, endY );
+              ctrlX = parseFloat(pathDataKeys[i + 1]);
+              ctrlY = parseFloat(pathDataKeys[i + 2]);
+              endX  = parseFloat(pathDataKeys[i + 3]);
+              endY  = parseFloat(pathDataKeys[i + 4]);
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
               cx = endX;
               cy = endY;
               i += 5;
@@ -1864,11 +1852,11 @@
 
               // q - quadratic curve to (relative)
             case 'q': 
-              ctrlX = parseFloat( cx ) + parseFloat( pathDataKeys[i + 1] );
-              ctrlY = parseFloat( cy ) + parseFloat( pathDataKeys[i + 2] );
-              endX  = parseFloat( cx ) + parseFloat( pathDataKeys[i + 3] );
-              endY  = parseFloat( cy ) + parseFloat( pathDataKeys[i + 4] );
-              this.parsePathQuadto( cx, cy, ctrlX, ctrlY, endX, endY );
+              ctrlX = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              ctrlY = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              endX  = parseFloat(cx) + parseFloat(pathDataKeys[i + 3]);
+              endY  = parseFloat(cy) + parseFloat(pathDataKeys[i + 4]);
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
               cx = endX;
               cy = endY;
               i += 5;
@@ -1881,15 +1869,15 @@
               // previous command was not a Q, q, T or t, assume the control
               // point is coincident with the current point.)
             case 'T': 
-              ppx   = this.vertices[ this.vertices.length-2 ][0];
-              ppy   = this.vertices[ this.vertices.length-2 ][1];
-              px    = this.vertices[ this.vertices.length-1 ][0];
-              py    = this.vertices[ this.vertices.length-1 ][1];
+              ppx   = this.vertices[this.vertices.length-2][0];
+              ppy   = this.vertices[this.vertices.length-2][1];
+              px    = this.vertices[this.vertices.length-1][0];
+              py    = this.vertices[this.vertices.length-1][1];
               ctrlX = px + (px - ppx);
               ctrlY = py + (py - ppy);
-              endX  = parseFloat( pathDataKeys[i + 1] );
-              endY  = parseFloat( pathDataKeys[i + 2] );
-              this.parsePathQuadto( cx, cy, ctrlX, ctrlY, endX, endY );
+              endX  = parseFloat(pathDataKeys[i + 1]);
+              endY  = parseFloat(pathDataKeys[i + 2]);
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
               cx = endX;
               cy = endY;
               i += 3;
@@ -1897,15 +1885,15 @@
 
               // t - quadratic curve to shorthand (relative)
             case 't': 
-              ppx   = this.vertices[ this.vertices.length-2 ][0];
-              ppy   = this.vertices[ this.vertices.length-2 ][1];
-              px    = this.vertices[ this.vertices.length-1 ][0];
-              py    = this.vertices[ this.vertices.length-1 ][1];
+              ppx   = this.vertices[this.vertices.length-2][0];
+              ppy   = this.vertices[this.vertices.length-2][1];
+              px    = this.vertices[this.vertices.length-1][0];
+              py    = this.vertices[this.vertices.length-1][1];
               ctrlX = px + (px - ppx);
               ctrlY = py + (py - ppy);
-              endX  = parseFloat( cx ) + parseFloat( pathDataKeys[i + 1] );
-              endY  = parseFloat( cy ) + parseFloat( pathDataKeys[i + 2] );
-              this.parsePathQuadto( cx, cy, ctrlX, ctrlY, endX, endY );
+              endX  = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              endY  = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
               cx = endX;
               cy = endY;
               i += 3;
@@ -1935,82 +1923,82 @@
           }
         }
       },
-      parsePathQuadto: function( x1, y1, cx, cy, x2, y2 ){
-        this.parsePathCode( p.BEZIER_VERTEX );
+      parsePathQuadto: function(x1, y1, cx, cy, x2, y2) {
+        this.parsePathCode(p.BEZIER_VERTEX);
         // x1/y1 already covered by last moveto, lineto, or curveto
-        this.parsePathVertex( x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3) );
-        this.parsePathVertex( x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3) );
-        this.parsePathVertex( x2, y2 );
+        this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
+        this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
+        this.parsePathVertex(x2, y2);
       },
-      parsePathCurveto : function( x1,  y1, x2, y2, x3, y3 ) {
-        this.parsePathCode( p.BEZIER_VERTEX );
-        this.parsePathVertex( x1, y1 );
-        this.parsePathVertex( x2, y2 );
-        this.parsePathVertex( x3, y3 );
+      parsePathCurveto : function(x1,  y1, x2, y2, x3, y3) {
+        this.parsePathCode(p.BEZIER_VERTEX );
+        this.parsePathVertex(x1, y1);
+        this.parsePathVertex(x2, y2);
+        this.parsePathVertex(x3, y3);
       },
-      parsePathLineto: function( px, py ) {
-        this.parsePathCode( p.VERTEX );
-        this.parsePathVertex( px, py );
+      parsePathLineto: function(px, py) {
+        this.parsePathCode(p.VERTEX);
+        this.parsePathVertex(px, py);
         // add property to distinguish between curContext.moveTo or curContext.lineTo
         this.vertices[this.vertices.length-1]["moveTo"] = false;
       },
-      parsePathMoveto: function( px, py ) {
-        if ( this.vertices.length > 0 ) {
-          this.parsePathCode( p.BREAK );
+      parsePathMoveto: function(px, py) {
+        if (this.vertices.length > 0) {
+          this.parsePathCode(p.BREAK);
         }
-        this.parsePathCode( p.VERTEX );
-        this.parsePathVertex( px, py );
+        this.parsePathCode(p.VERTEX);
+        this.parsePathVertex(px, py);
         // add property to distinguish between curContext.moveTo or curContext.lineTo
         this.vertices[this.vertices.length-1]["moveTo"] = true;
       },
-      parsePathVertex: function( x,  y ) {
+      parsePathVertex: function(x,  y) {
         var verts = [];
         verts[0]  = x;
         verts[1]  = y;
-        this.vertices.push( verts );
+        this.vertices.push(verts);
       },
-      parsePathCode: function( what) {
-        this.vertexCodes.push( what );
+      parsePathCode: function(what) {
+        this.vertexCodes.push(what);
       },
-      parsePoly: function( val ){
+      parsePoly: function(val) {
         this.family    = p.PATH;
         this.close     = val;
-        var pointsAttr = this.element.getStringAttribute( "points" ).replace(/\s+/g,' ').trim();
-        if ( pointsAttr !== null ) {
+        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/\s+/g,' '));
+        if (pointsAttr !== null) {
           var pointsBuffer = pointsAttr.split(" ");
           for (var i = 0; i < pointsBuffer.length; i++) {
             var verts = [];
             var pb    = pointsBuffer[i].split(',');
             verts[0]  = pb[0];
             verts[1]  = pb[1];
-            this.vertices.push( verts );
+            this.vertices.push(verts);
           }       
         }
       },
-      parseRect: function(){
+      parseRect: function() {
         this.kind      = p.RECT;
         this.family    = p.PRIMITIVE;
         this.params    = [];
-        this.params[0] = this.element.getFloatAttribute( "x" );
-        this.params[1] = this.element.getFloatAttribute( "y" );
-        this.params[2] = this.element.getFloatAttribute( "width" );
-        this.params[3] = this.element.getFloatAttribute( "height" );
+        this.params[0] = this.element.getFloatAttribute("x");
+        this.params[1] = this.element.getFloatAttribute("y");
+        this.params[2] = this.element.getFloatAttribute("width");
+        this.params[3] = this.element.getFloatAttribute("height");
     
       },
-      parseEllipse: function( val ){
+      parseEllipse: function(val) {
         this.kind   = p.ELLIPSE;
         this.family = p.PRIMITIVE;
         this.params = [];
 
-        this.params[0] = this.element.getFloatAttribute( "cx" );
-        this.params[1] = this.element.getFloatAttribute( "cy" );
+        this.params[0] = this.element.getFloatAttribute("cx");
+        this.params[1] = this.element.getFloatAttribute("cy");
 
         var rx, ry;
-        if ( val ) {
-          rx = ry = this.element.getFloatAttribute( "r" );
+        if (val) {
+          rx = ry = this.element.getFloatAttribute("r");
         } else {
-          rx = this.element.getFloatAttribute( "rx" );
-          ry = this.element.getFloatAttribute( "ry" );
+          rx = this.element.getFloatAttribute("rx");
+          ry = this.element.getFloatAttribute("ry");
         }
         this.params[0] -= rx;
         this.params[1] -= ry;
@@ -2018,90 +2006,89 @@
         this.params[2] = rx*2;
         this.params[3] = ry*2;
       },
-      parseLine: function(){
+      parseLine: function() {
         this.kind = p.LINE;
         this.family = p.PRIMITIVE;
         this.params = [];
-        this.params[0] = this.element.getFloatAttribute( "x1" );
-        this.params[1] = this.element.getFloatAttribute( "y1" );
-        this.params[2] = this.element.getFloatAttribute( "x2" );
-        this.params[3] = this.element.getFloatAttribute( "y2" );
+        this.params[0] = this.element.getFloatAttribute("x1");
+        this.params[1] = this.element.getFloatAttribute("y1");
+        this.params[2] = this.element.getFloatAttribute("x2");
+        this.params[3] = this.element.getFloatAttribute("y2");
       },
-      parseColors: function( element ){
+      parseColors: function(element) {
         if (element.hasAttribute("opacity")) {
           this.setOpacity(element.getAttribute("opacity"));
         }
-        if ( element.hasAttribute( "stroke" ) ) {
-          this.setStroke( element.getAttribute( "stroke" ) );
+        if (element.hasAttribute("stroke")) {
+          this.setStroke(element.getAttribute("stroke"));
         }
-        if ( element.hasAttribute( "stroke-width" ) ) {
+        if (element.hasAttribute("stroke-width")) {
           // if NaN (i.e. if it's 'inherit') then default back to the inherit setting
-          this.setStrokeWeight( element.getAttribute( "stroke-width" ) );
+          this.setStrokeWeight(element.getAttribute("stroke-width"));
         }
-        if ( element.hasAttribute("stroke-linejoin" ) ) {
-          this.setStrokeJoin( element.getAttribute( "stroke-linejoin" ) );
+        if (element.hasAttribute("stroke-linejoin") ) {
+          this.setStrokeJoin(element.getAttribute("stroke-linejoin"));
         }
-        if ( element.hasAttribute( "stroke-linecap" ) ) {
-          this.setStrokeCap( element.getStringAttribute( "stroke-linecap" ) );
+        if (element.hasAttribute("stroke-linecap")) {
+          this.setStrokeCap(element.getStringAttribute("stroke-linecap"));
         }
         // fill defaults to black (though stroke defaults to "none")
         // http://www.w3.org/TR/SVG/painting.html#FillProperties
-        if ( element.hasAttribute( "fill" ) ) {
-          this.setFill( element.getStringAttribute( "fill" ) );
+        if (element.hasAttribute("fill")) {
+          this.setFill(element.getStringAttribute("fill"));
         }
-        if ( element.hasAttribute( "style" ) ) {
+        if (element.hasAttribute("style")) {
           var styleText   = element.getStringAttribute("style");
           var styleTokens = styleText.toString().split( ";" );
 
-          for ( var i = 0; i < styleTokens.length; i++ ) {
-            var tokens = p.trim( styleTokens[i].split( ":" ) );
-            switch( tokens[0] ){
+          for (var i = 0; i < styleTokens.length; i++) {
+            var tokens = p.trim(styleTokens[i].split( ":" ));
+            switch(tokens[0]){
               case "fill":
-                this.setFill( tokens[1] );
+                this.setFill(tokens[1]);
                 break;
               case "fill-opacity":
-                this.setFillOpacity( tokens[1] );
+                this.setFillOpacity(tokens[1]);
                 break;
               case "stroke":
-                this.setStroke( tokens[1] );
+                this.setStroke(tokens[1]);
                 break;
               case "stroke-width":
-                this.setStrokeWeight( tokens[1] );
+                this.setStrokeWeight(tokens[1]);
                 break;
               case "stroke-linecap":
-                this.setStrokeCap( tokens[1] );
+                this.setStrokeCap(tokens[1]);
                 break;
               case "stroke-linejoin":
-                this.setStrokeJoin( tokens[1] );
+                this.setStrokeJoin(tokens[1]);
                 break;
               case "stroke-opacity":
-                this.setStrokeOpacity( tokens[1] );
+                this.setStrokeOpacity(tokens[1]);
                 break;
               case "opacity":
-                this.setOpacity( tokens[1] );
+                this.setOpacity(tokens[1]);
                 break;
-                
               // Other attributes are not yet implemented
             }     
           }
         }
       },
-      setFillOpacity: function( opacityText ) {
-        this.fillOpacity = parseFloat( opacityText );
-        this.fillColor   = ( parseInt( this.fillOpacity * 255, 16 ) )  << 24 | this.fillColor & 0xFFFFFF;
+      setFillOpacity: function(opacityText) {
+        this.fillOpacity = parseFloat(opacityText);
+        this.fillColor   = (parseInt(this.fillOpacity * 255, 16))  << 24 | this.fillColor & 0xFFFFFF;
       },
-      setFill: function ( fillText ) {
+      setFill: function (fillText) {
         var opacityMask = this.fillColor & 0xFF000000;
-        if ( fillText === "none" ) {
+        if (fillText === "none") {
           this.fill = false;
-        } else if ( fillText.indexOf("#") === 0 ) {
+        } else if (fillText.indexOf("#") === 0) {
           this.fill      = true;
-          this.fillColor = opacityMask | ( parseInt(fillText.substring(1), 16 ) ) & 0xFFFFFF;
-        } else if ( fillText.indexOf("rgb") === 0 ) {
+          this.fillColor = opacityMask | (parseInt(fillText.substring(1), 16 )) & 0xFFFFFF;
+        } else if (fillText.indexOf("rgb") === 0) {
           this.fill      = true;
-          this.fillColor = opacityMask | this.parseRGB( fillText );
-        } else if ( fillText.indexOf("url(#") === 0 ) {
-          this.fillName = fillText.substring( 5, fillText.length - 1 );
+          this.fillColor = opacityMask | this.parseRGB(fillText);
+        } else if (fillText.indexOf("url(#") === 0) {
+          this.fillName = fillText.substring(5, fillText.length - 1 );
           /*Object fillObject = findChild(fillName);
           if (fillObject instanceof Gradient) {
             fill = true;
@@ -2111,28 +2098,28 @@
             System.err.println("url " + fillName + " refers to unexpected data");
           }*/
         } else {
-          if( colors[fillText]  ) {
+          if (colors[fillText]) {
             this.fill      = true;
-            this.fillColor = opacityMask | ( parseInt( colors[fillText].substring(1), 16 ) ) & 0xFFFFFF;
+            this.fillColor = opacityMask | (parseInt(colors[fillText].substring(1), 16)) & 0xFFFFFF;
           }
         }
       },
-      setOpacity: function( opacity ){
-        this.strokeColor = ( parseInt( opacity * 255, 16 ) ) << 24 | this.strokeColor & 0xFFFFFF;
-        this.fillColor   = ( parseInt( opacity * 255, 16 ) ) << 24 | this.fillColor & 0xFFFFFF;
+      setOpacity: function(opacity) { 
+        this.strokeColor = (parseInt(opacity * 255, 16)) << 24 | this.strokeColor & 0xFFFFFF;
+        this.fillColor   = (parseInt(opacity * 255, 16)) << 24 | this.fillColor & 0xFFFFFF;
       },
-      setStroke: function( strokeText ){
+      setStroke: function(strokeText) {
         var opacityMask = this.strokeColor & 0xFF000000;
-        if ( strokeText === "none" ) {
+        if (strokeText === "none") {
           this.stroke = false;
         } else if (strokeText.charAt( 0 ) === "#") {
           this.stroke      = true;
-          this.strokeColor = opacityMask | ( parseInt( strokeText.substring( 1 ), 16 ) ) & 0xFFFFFF;
-        } else if ( strokeText.indexOf( "rgb" ) === 0 ) {
+          this.strokeColor = opacityMask | (parseInt( strokeText.substring( 1 ), 16 )) & 0xFFFFFF;
+        } else if (strokeText.indexOf( "rgb" ) === 0 ) {
           this.stroke = true;
-          this.strokeColor = opacityMask | this.parseRGB( strokeText );
-        } else if ( strokeText.indexOf( "url(#" ) === 0 ) {
-          this.strokeName = strokeText.substring( 5, strokeText.length - 1 );
+          this.strokeColor = opacityMask | this.parseRGB(strokeText);
+        } else if (strokeText.indexOf( "url(#" ) === 0) {
+          this.strokeName = strokeText.substring(5, strokeText.length - 1);
             //this.strokeObject = findChild(strokeName);
           /*if (strokeObject instanceof Gradient) {
             strokeGradient = (Gradient) strokeObject;
@@ -2141,63 +2128,63 @@
             System.err.println("url " + strokeName + " refers to unexpected data");
           }*/
         } else {
-          if( colors[strokeText] ){
+          if (colors[strokeText]){
             this.stroke      = true;
             this.strokeColor = opacityMask | (parseInt(colors[strokeText].substring(1), 16)) & 0xFFFFFF;
           }
         }
       },
-      setStrokeWeight: function( weight ){
-        this.strokeWeight = this.parseUnitSize( weight );
+      setStrokeWeight: function(weight) {
+        this.strokeWeight = this.parseUnitSize(weight);
       },
-      setStrokeJoin: function( linejoin ){
-        if ( linejoin === "miter" ) {
+      setStrokeJoin: function(linejoin) {
+        if (linejoin === "miter") {
           this.strokeJoin = p.MITER;
 
-        } else if ( linejoin === "round" ) {
+        } else if (linejoin === "round") {
           this.strokeJoin = p.ROUND;
 
-        } else if ( linejoin === "bevel" ) {
+        } else if (linejoin === "bevel") {
           this.strokeJoin = p.BEVEL;
         }
       },
-      setStrokeCap: function ( linecap ){
-        if ( linecap === "butt" ) {
+      setStrokeCap: function (linecap) {
+        if (linecap === "butt") {
           this.strokeCap = p.SQUARE;
 
-        } else if ( linecap === "round" ) {
+        } else if (linecap === "round") {
           this.strokeCap = p.ROUND;
 
-        } else if ( linecap === "square" ) {
+        } else if (linecap === "square") {
           this.strokeCap = p.PROJECT;
         }
       },
-      setStrokeOpacity: function ( opacityText ) {
-        this.strokeOpacity = parseFloat( opacityText );
-        this.strokeColor   = ( parseInt( this.strokeOpacity * 255, 16) ) << 24 | this.strokeColor & 0xFFFFFF;
+      setStrokeOpacity: function (opacityText) {
+        this.strokeOpacity = parseFloat(opacityText);
+        this.strokeColor   = (parseInt(this.strokeOpacity * 255, 16)) << 24 | this.strokeColor & 0xFFFFFF;
       },
-      parseRGB: function( color ){
+      parseRGB: function(color) {
         var sub    = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
         var values = sub.split(", ");
         return (values[0] << 16) | (values[1] << 8) | (values[2]);
       },
-      parseUnitSize: function (  text ) {
+      parseUnitSize: function (text) {
         var len = text.length - 2;
-        if( len < 0 ) { return text; }
-        if ( text.indexOf("pt") === len ) {
-          return parseFloat( text.substring( 0, len ) ) * 1.25;
-        } else if ( text.indexOf("pc") === len) {
-          return parseFloat( text.substring( 0, len ) ) * 15;
-        } else if ( text.indexOf("mm") === len ) {
-          return parseFloat( text.substring( 0, len ) ) * 3.543307;
-        } else if ( text.indexOf("cm") === len) {
-          return parseFloat( text.substring( 0, len ) ) * 35.43307;
-        } else if ( text.indexOf("in") === len) {
-          return parseFloat( text.substring( 0, len ) ) * 90;
-        } else if ( text.indexOf("px") === len ) {
-          return parseFloat( text.substring( 0, len ) );
+        if (len < 0) { return text; }
+        if (text.indexOf("pt") === len) {
+          return parseFloat(text.substring(0, len)) * 1.25;
+        } else if (text.indexOf("pc") === len) {
+          return parseFloat( text.substring( 0, len)) * 15;
+        } else if (text.indexOf("mm") === len) {
+          return parseFloat( text.substring(0, len)) * 3.543307;
+        } else if (text.indexOf("cm") === len) {
+          return parseFloat(text.substring(0, len)) * 35.43307;
+        } else if (text.indexOf("in") === len) {
+          return parseFloat(text.substring(0, len)) * 90;
+        } else if (text.indexOf("px") === len) {
+          return parseFloat(text.substring(0, len));
         } else {
-          return parseFloat( text );
+          return parseFloat(text);
         }
       }      
     };
@@ -2205,7 +2192,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // XMLAttribute
     ////////////////////////////////////////////////////////////////////////////
-    var XMLAttribute = p.XMLAttribute = function ( fname, n, nameSpace, v, t){
+    var XMLAttribute = p.XMLAttribute = function (fname, n, nameSpace, v, t){
       this.fullName = fname || "";
       this.name = n || "";
       this.namespace = nameSpace || "";
@@ -2213,7 +2200,7 @@
       this.type = t;
     };
     XMLAttribute.prototype = {
-      getName: function(){
+      getName: function() {
         return this.name;
       },
       getFullName: function() {
@@ -2228,7 +2215,7 @@
       getType: function() {
         return this.type;
       },
-      setValue: function( newval ){
+      setValue: function(newval) {
         this.value = newval;
       }
     };
@@ -2236,16 +2223,16 @@
     ////////////////////////////////////////////////////////////////////////////
     // XMLElement
     ////////////////////////////////////////////////////////////////////////////
-    var XMLElement = p.XMLElement = function( ){
-      if( arguments.length === 4 ){
+    var XMLElement = p.XMLElement = function() {
+      if (arguments.length === 4) {
         this.attributes = [];
         this.children   = [];
         this.fullName   = arguments[0] || "";
-        if ( arguments[1] ) {
+        if (arguments[1]) {
             this.name = arguments[1];
         } else {
             var index = this.fullName.indexOf(':');
-            if( index >= 0 ) {
+            if (index >= 0) {
                 this.name = this.fullName.substring(index + 1);
             } else {
                 this.name = this.fullName;
@@ -2257,8 +2244,8 @@
         this.systemID  = arguments[2];
         this.parent    = null;
       }
-      else if( ( arguments.length === 1 && arguments[0].indexOf(".") > -1 ) || arguments.length === 2 ){ // filename or svg xml element
-        if( arguments[arguments.length -1].indexOf(".") > -1 ){ //its a filename
+      else if ((arguments.length === 1 && arguments[0].indexOf(".") > -1) || arguments.length === 2) { // filename or svg xml element
+        if (arguments[arguments.length -1].indexOf(".") > -1) { //its a filename
           this.attributes = [];
           this.children   = [];
           this.fullName   = "";
@@ -2268,12 +2255,12 @@
           this.systemID   = "";
           this.lineNr     = "";
           this.parent     = null;
-          this.parse(  arguments[arguments.length -1] );
+          this.parse(arguments[arguments.length -1]);
         } else { //xml string
-          this.parse(  arguments[arguments.length -1] );
+          this.parse(arguments[arguments.length -1]);
         }
       }
-      else{ //empty ctor
+      else { //empty ctor
         this.attributes = [];
         this.children   = [];
         this.fullName   = "";
@@ -2291,56 +2278,56 @@
       NOTE: parse does not work when a url is passed in
     */
     XMLElement.prototype = {
-      parse: function( filename ){
+      parse: function(filename) {
         var xmlDoc;
         try {
           xmlDoc = new DOMParser().parseFromString(ajax(filename), "text/xml");
 
           var elements = xmlDoc.documentElement;
           if (elements) {
-            this.parseChildrenRecursive( null, elements );
+            this.parseChildrenRecursive(null, elements);
           } else {
-            throw("Error loading document");
+            throw ("Error loading document");
           }
           return this;
         } catch(e) {
           throw(e);
         }
       },
-      createElement: function( ){
-        if( arguments.length === 2 ){
-          return new XMLElement( arguments[0], arguments[1], null, null );
+      createElement: function () {
+        if (arguments.length === 2) {
+          return new XMLElement(arguments[0], arguments[1], null, null);
         } else {
-          return new XMLElement( arguments[0], arguments[1], arguments[2], arguments[3] );
+          return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
       },
-      hasAttribute: function ( name ){
-        return this.getAttribute( name ) !== null;
+      hasAttribute: function (name) {
+        return this.getAttribute(name) !== null;
         //2 parameter call missing
       },
-      createPCDataElement: function (){
+      createPCDataElement: function () {
         return new XMLElement();
       },
-      equals: function( object ){
-        if( typeof object === "Object"){
-          return this.equalsXMLElement( object );
+      equals: function(object){
+        if (typeof object === "Object") {
+          return this.equalsXMLElement(object);
         }
       },
-      equalsXMLElement: function ( object ){
-        if( object instanceof XMLElement ){
-          if( this.name !== object.getLocalName ){ return false; }
-          if( this.attributes.length !== object.getAttributeCount() ) { return false; }
-          for( var i = 0; i < this.attributes.length; i++ ){
+      equalsXMLElement: function (object) {
+        if (object instanceof XMLElement) {
+          if (this.name !== object.getLocalName) { return false; }
+          if (this.attributes.length !== object.getAttributeCount()) { return false; }
+          for (var i = 0; i < this.attributes.length; i++){
             if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
-            if( this.attributes[i].getValue() !== object.attributes[i].getValue() ) { return false; }
-            if( this.attributes[i].getType()  !== object.attributes[i].getType() ) { return false; }
+            if (this.attributes[i].getValue() !== object.attributes[i].getValue()) { return false; }
+            if (this.attributes[i].getType()  !== object.attributes[i].getType()) { return false; }
           }
           if (this.children.length !== object.getChildCount()) { return false; }
           var child1, child2;
-          for ( i = 0; i < this.children.length; i++) {
-            child1 = this.getChildAtIndex( i );
-            child2 = object.getChildAtIndex( i );
-            if (! child1.equalsXMLElement( child2 )) { return false; }
+          for (i = 0; i < this.children.length; i++) {
+            child1 = this.getChildAtIndex(i);
+            child2 = object.getChildAtIndex(i);
+            if (! child1.equalsXMLElement(child2)) { return false; }
           }
           return true;
         }
@@ -2351,82 +2338,82 @@
       getAttribute: function (){
         var attribute;
         if( arguments.length === 2 ){
-          attribute = this.findAttribute( arguments[0] );
-          if( attribute ){
+          attribute = this.findAttribute(arguments[0]);
+          if (attribute) {
             return attribute.getValue();
           } else {
             return arguments[1];
           }
-        }else if( arguments.length === 1 ){
-          attribute = this.findAttribute( arguments[0] );
-          if( attribute ){
+        } else if (arguments.length === 1) {
+          attribute = this.findAttribute(arguments[0]);
+          if (attribute) {
             return attribute.getValue();
           } else {
             return null;
           }
         }
       },
-      getStringAttribute: function(){
-        if( arguments.length === 1 ){
-          return this.getAttribute( arguments[0] );
-        } else if( arguments.length === 2 ){
-          return this.getAttribute( arguments[0], arguments[1] );
+      getStringAttribute: function() {
+        if (arguments.length === 1) {
+          return this.getAttribute(arguments[0]);
+        } else if (arguments.length === 2){
+          return this.getAttribute(arguments[0], arguments[1]);
         } else {
-          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
+          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
-      getFloatAttribute: function(){
-        if( arguments.length === 1 ){
+      getFloatAttribute: function() {
+        if (arguments.length === 1 ) {
+          return this.getAttribute(arguments[0], 0);
+        } else if (arguments.length === 2 ){
+          return this.getAttribute(arguments[0], arguments[1]);
+        } else {
+          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
+        }
+      },
+      getIntAttribute: function () {
+        if (arguments.length === 1) {
           return this.getAttribute( arguments[0], 0 );
-        } else if( arguments.length === 2 ){
-          return this.getAttribute( arguments[0], arguments[1] );
+        } else if (arguments.length === 2) {
+          return this.getAttribute(arguments[0], arguments[1]);
         } else {
-          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
+          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
-      getIntAttribute: function(){
-        if( arguments.length === 1 ){
-          return this.getAttribute( arguments[0], 0 );
-        } else if( arguments.length === 2 ){
-          return this.getAttribute( arguments[0], arguments[1] );
-        } else {
-          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
-        }
-      },
-      hasChildren: function(){
+      hasChildren: function () {
         return this.children.length > 0 ;
       },
-      addChild: function( child ){
+      addChild: function (child) {
         if (child !== null) {
           child.parent = this;
-          this.children.push( child );
+          this.children.push(child);
         }
       },
-      insertChild: function( child, index ){
-        if( child ){
+      insertChild: function (child, index) {
+        if (child) {
           if ((child.getLocalName() === null) && (! this.hasChildren())) {
             var lastChild = this.children[this.children.length -1];
-            if ( lastChild.getLocalName() === null ) {
-                lastChild.setContent( lastChild.getContent() + child.getContent() );
+            if (lastChild.getLocalName() === null) {
+                lastChild.setContent(lastChild.getContent() + child.getContent());
                 return;
             }
           }
           child.parent = this;
-          this.children.splice( index,0,child );
+          this.children.splice(index,0,child);
         }
       },
-      getChild: function( index ){
-        if( typeof index  === "number" ){
-          return this.children[ index ];
+      getChild: function (index){
+        if (typeof index  === "number") {
+          return this.children[index];
         }
-        else if( index.indexOf('/') !== -1) { // path was given
-          this.getChildRecursive( index.split("/"), 0 );
+        else if (index.indexOf('/') !== -1) { // path was given
+          this.getChildRecursive(index.split("/"), 0);
         } else {
           var kid, kidName;
-          for ( var i = 0; i < this.getChildCount(); i++ ) {
+          for (var i = 0; i < this.getChildCount(); i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
-            if ( kidName !== null && kidName === index ) {
+            if (kidName !== null && kidName === index) {
                 return kid;
             }
           }
@@ -2434,20 +2421,19 @@
         }
       },
       getChildren: function(){
-        if ( arguments.length === 1 ){
-          if( typeof arguments[0]  === "number" ){
-            return this.getChild( arguments[0] );
-          }
-          else if( arguments[0].indexOf('/') !== -1) { // path was given
-            return this.getChildrenRecursive( arguments[0].split("/"), 0 );
-          }else {
+        if (arguments.length === 1) {
+          if (typeof arguments[0]  === "number") {
+            return this.getChild( arguments[0]);
+          } else if (arguments[0].indexOf('/') !== -1) { // path was given
+            return this.getChildrenRecursive( arguments[0].split("/"), 0);
+          } else {
             var matches = [];
             var kid, kidName;
-            for ( var i = 0; i < this.getChildCount(); i++ ) {
-              kid = this.getChild( i );
+            for (var i = 0; i < this.getChildCount(); i++) {
+              kid = this.getChild(i);
               kidName = kid.getName();
-              if ( kidName !== null && kidName === arguments[0] ) {
-                matches.push( kid );
+              if (idName !== null && kidName === arguments[0]) {
+                matches.push(kid);
               }
             }
             return matches;
@@ -2459,57 +2445,57 @@
       getChildCount: function(){
         return this.children.length;
       },
-      getChildRecursive: function ( items, offset ){
+      getChildRecursive: function (items, offset) {
         var kid, kidName;
-        for( var i = 0; i < this.getChildCount(); i++ ) {
+        for(var i = 0; i < this.getChildCount(); i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
-            if( kidName !== null && kidName === items[offset] ) {
-              if ( offset === items.length-1 ) {
+            if (kidName !== null && kidName === items[offset]) {
+              if (offset === items.length-1) {
                 return kid;
               } else {
                 offset += 1;
-                return kid.getChildRecursive( items, offset );
+                return kid.getChildRecursive(items, offset);
               }
             }
         }
         return null;
       },
-      getChildrenRecursive: function ( items, offset ){
-        if ( offset === items.length-1 ) {
-          return this.getChildren( items[offset] );
+      getChildrenRecursive: function (items, offset) {
+        if (offset === items.length-1) {
+          return this.getChildren(items[offset]);
         }
-        var matches = this.getChildren( items[offset] );
+        var matches = this.getChildren(items[offset]);
         var kidMatches;
-        for ( var i = 0; i < matches.length; i++ ) {
-          kidMatches = matches[i].getChildrenRecursive( items, offset+1 );
+        for (var i = 0; i < matches.length; i++) {
+          kidMatches = matches[i].getChildrenRecursive(items, offset+1);
         }
         return kidMatches;
       },
-      parseChildrenRecursive: function ( parent , elementpath ){
+      parseChildrenRecursive: function (parent , elementpath){
         var xmlelement,
           xmlattribute,
           tmpattrib;
-        if( !parent ) {
+        if (!parent) {
           this.fullName = elementpath.localName;
           this.name     = elementpath.nodeName;
           this.content  = elementpath.textContent || "";
           xmlelement    = this;
         } else { // a parent
-          xmlelement         = new XMLElement( elementpath.localName, elementpath.nodeName, "", "" );
+          xmlelement         = new XMLElement(elementpath.localName, elementpath.nodeName, "", "");
           xmlelement.content = elementpath.textContent || "";
           xmlelement.parent  = parent;
         }
 
-        for( var l = 0; l < elementpath.attributes.length; l++ ) {
+        for (var l = 0; l < elementpath.attributes.length; l++) {
           tmpattrib    = elementpath.attributes[l];
-          xmlattribute = new XMLAttribute( tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType );
-          xmlelement.attributes.push( xmlattribute );
+          xmlattribute = new XMLAttribute(tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType);
+          xmlelement.attributes.push(xmlattribute);
         }
         
-        for( var node in elementpath.childNodes){
+        for (var node in elementpath.childNodes){
           if(elementpath.childNodes[node].nodeType === 1) { //ELEMENT_NODE type
-            xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]) );
+            xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
           }
         }
         /*
@@ -2521,85 +2507,85 @@
       isLeaf: function(){
         return this.hasChildren();
       },
-      listChildren: function(){
+      listChildren: function() {
         var arr = [];
-        for( var i = 0; i < this.children.length; i++ ){
-          arr.push( this.getChild(i).getName() );
+        for (var i = 0; i < this.children.length; i++) {
+          arr.push( this.getChild(i).getName());
         }
         return arr;
       },
-      removeAttribute: function ( name , namespace ){
+      removeAttribute: function (name , namespace) {
         this.namespace = namespace || "";
-        for( var i = 0; i < this.attributes.length; i++ ){
-          if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace ){
-            this.attributes.splice( i, 0 );
+        for (var i = 0; i < this.attributes.length; i++){
+          if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
+            this.attributes.splice(i, 0);
           }
         }
       },
-      removeChild: function( child ){
-        if( child ){
-          for( var i = 0; i< this.children.length; i++ ){
-            if (this.children[i].equalsXMLElement( child )){
-              this.children.splice( i, 0 );
+      removeChild: function(child) {
+        if (child) {
+          for (var i = 0; i < this.children.length; i++) {
+            if (this.children[i].equalsXMLElement(child)) {
+              this.children.splice(i, 0);
             }
           }
         }
       },
-      removeChildAtIndex: function( index ){
-        if( this.children.length > index ) {//make sure its not outofbounds
-          this.children.splice( index, 0 );
+      removeChildAtIndex: function(index) {
+        if (this.children.length > index) { //make sure its not outofbounds
+          this.children.splice(index, 0);
         }
       },
-      findAttribute: function ( name, namespace ){
+      findAttribute: function (name, namespace) {
         this.namespace = namespace || "";
-        for( var i = 0; i < this.attributes.length; i++ ){
-          if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace ){
+        for (var i = 0; i < this.attributes.length; i++ ) {
+          if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
              return this.attributes[i];
           }
         }
       },
-      setAttribute: function(){
+      setAttribute: function() {
         var attr;
-        if( arguments.length === 3){
+        if (arguments.length === 3) {
           var index = arguments[0].indexOf(':');
           var name  = arguments[0].substring(index + 1);
           attr      = this.findAttribute( name, arguments[1] );
-          if( attr ){
-            attr.setValue( arguments[2] );
+          if (attr) {
+            attr.setValue(arguments[2]);
           } else {
             attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
-            this.attributes.addElement( attr );
+            this.attributes.addElement(attr);
           }
         } else {
-          attr = this.findAttribute( arguments[0] );
-          if( attr ){
-            attr.setValue( arguments[1] );
+          attr = this.findAttribute(arguments[0]);
+          if (attr) {
+            attr.setValue(arguments[1]);
           } else {
-            attr = new XMLAttribute( arguments[0], arguments[0], null, arguments[1], "CDATA" );
-              this.attributes.addElement( attr );
+            attr = new XMLAttribute(arguments[0], arguments[0], null, arguments[1], "CDATA");
+            this.attributes.addElement(attr);
           }
         }
       },
-      setContent: function( content ){
+      setContent: function(content) {
         this.content = content;
       },
-      setName: function(){
-        if( arguments.length === 1 ){
+      setName: function() {
+        if (arguments.length === 1) {
           this.name      = arguments[0];
           this.fullName  = arguments[0];
           this.namespace = arguments[0];
         } else {
           var index = arguments[0].indexOf(':');
-          if (( arguments[1] === null ) || ( index < 0 )) {
+          if ((arguments[1] === null) || (index < 0)) {
               this.name = arguments[0];
           } else {
-              this.name = arguments[0].substring( index + 1 );
+              this.name = arguments[0].substring(index + 1);
           }
           this.fullName  = arguments[0];
           this.namespace = arguments[1];
         }
       },
-      getName: function(){
+      getName: function() {
         return this.fullName;
       }
     };

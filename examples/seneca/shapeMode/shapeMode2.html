@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
-	<title>Processing.js SVG LoadImage() bee.svg</title>
+	<title>Processing.js shapeMode() CORNER</title>
 	<script type="text/javascript" src="../../../processing.js"></script> 
 	<script type="text/javascript" src="../../init.js"></script> 
 
@@ -13,18 +13,22 @@
   PShape s;
 
   void setup() {
-    background(255);
-    size(800,800);
-    s = loadShape("bee.svg");
+    size(600,600);
+    s = loadShape("bot.svg");
+    shapeMode(CORNER);
     smooth();
     noLoop();
   }
 
   void draw() {
-    shape(s);
+    shape(s, 0, 0, width/2, height/2);
+    shape(s, width, 0, -width/2, height/2);
+    shape(s, 0, height, width/2, -height/2);
+    shape(s, width, height, -width/2, -height/2);
   }
 	</script><canvas id="display" ></canvas>
-  <div> The actual shape: <img src="bee.jpg"></div>
+  <div> The actual shape: <img src="bot4.jpg"></div>
+</div>
 </body>
 </html>
 
