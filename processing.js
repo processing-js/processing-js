@@ -3089,7 +3089,7 @@
       var r = parseInt(p.lerp(r1, r2, amt), 10);
       var g = parseInt(p.lerp(g1, g2, amt), 10);
       var b = parseInt(p.lerp(b1, b2, amt), 10);
-      var a = parseFloat(p.lerp(a1, a2, amt) * colorModeA, 10);
+      var a = parseFloat(p.lerp(a1, a2, amt) * colorModeA);
 
       return p.color.toInt(r, g, b, a);
     };
