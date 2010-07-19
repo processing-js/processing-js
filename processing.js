@@ -4728,8 +4728,8 @@
         lineCap: curContext.lineCap,
         lineJoin: curContext.lineJoin
       };
-      curElement.width = p.width = aWidth;
-      curElement.height = p.height = aHeight;
+      curElement.width = p.width = aWidth || 100;
+      curElement.height = p.height = aHeight || 100;
 
       for (var j in props) {
         if (props) {
