@@ -2164,22 +2164,16 @@
     };
 
     p.expand = function(ary, newSize) {
-      var newary = new Array(0);
-
-      var len = ary.length;
-      for (var i = 0; i < len; i++) {
-        newary[i] = ary[i];
-      }
-
+      var temp = ary.slice(0);
       if (arguments.length === 1) {
         // double size of array
-        newary.length *= 2;
+        temp.length = ary.length * 2;
+        return temp;
       } else if (arguments.length === 2) {
         // size is newSize
-        newary.length = newSize;
+        temp.length = newSize;
+        return temp;
       }
-
-      return newary;
     };
 
     p.arrayCopy = function() { // src, srcPos, dest, destPos, length) {
