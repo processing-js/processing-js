@@ -2205,12 +2205,10 @@
 
       // copy src to dest from index srcPos to index destPos of length recursivly on objects
       for (var i = srcPos, j = destPos; i < length + srcPos; i++, j++) {
-        if (src[i] && typeof src[i] === "object") {
-          // src[i] is not null and is another object or array. go recursive
-          p.arrayCopy(src[i], 0, dest[j], 0, src[i].length);
-        } else {
-          // standard type, just copy
+        if (dest[j] !== undef) {
           dest[j] = src[i];
+        } else {
+          throw "array index out of bounds exception";
         }
       }
     };
