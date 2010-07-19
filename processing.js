@@ -7571,6 +7571,18 @@
         curContext.putImageData(p.imageData, 0, 0);
       }
     };
+  
+    p.hint = function hint(which) {
+      if (which === p.DISABLE_DEPTH_TEST) {
+         curContext.disable(curContext.DEPTH_TEST);
+         curContext.depthMask(false);
+         curContext.clear(curContext.DEPTH_BUFFER_BIT);
+      }
+      else if (which === p.ENABLE_DEPTH_TEST) {
+         curContext.enable(curContext.DEPTH_TEST);
+         curContext.depthMask(true);
+      }
+    };
 
     // Draw an image or a color to the background
     p.background = function background() {
@@ -9622,11 +9634,11 @@
   "console","constrain","CONTROL","copy","CORNER","CORNERS","cos","createFont","createGraphics",
   "createImage","CROSS","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
   "curveVertex","curveVertexSegment","DARKEST","day","defaultColor","degrees","DELETE","DIFFERENCE",
-  "DILATE","directionalLight","disableContextMenu","dist","DODGE","DOWN","draw","ellipse","ellipseMode",
-  "emissive","enableContextMenu","endCamera","endDraw","endShape","ENTER","ERODE","ESC","EXCLUSION","externals",
+  "DILATE","directionalLight","disableContextMenu","DISABLE_DEPTH_TEST","dist","DODGE","DOWN","draw","ellipse","ellipseMode",
+  "emissive","enableContextMenu","ENABLE_DEPTH_TEST","endCamera","endDraw","endShape","ENTER","ERODE","ESC","EXCLUSION","externals",
   "exit","exp","expand","fill","filter","filter_bilinear","filter_new_scanline","float","floor","focused",
   "frameCount","frameRate","frustum","get","glyphLook","glyphTable","GRAY","green","GREEN_MASK",
-  "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hour","HSB","hue","image","IMAGE","imageMode",
+  "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hint","hour","HSB","hue","image","IMAGE","imageMode",
   "Import","int","intersect","INVERT","JAVA2D","join","key","keyPressed","keyReleased","LEFT","lerp",
   "lerpColor","LIGHTEST","lightFalloff","lights","lightSpecular","line","LINES","link","loadBytes",
   "loadFont","loadGlyphs","loadImage","loadPixels","loadStrings","log","loop","mag","map","match",

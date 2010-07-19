@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>hint() DISABLE_DEPTH_TEST & ENABLE_DEPTH_TEST</h2>
+
+    <p>Boxes on the left render 'on top' of each other even though they render behind one another<br />
+    in terms of the Z coordinate because depth testing was disabled.<br />
+    The same boxes are rendered on the right with depth testing on.
+    </p>
+
+    <p>
+      <canvas datasrc="depth_test2.pjs" width="400" height="400"></canvas>
+      <img src="p5_result.jpg" style="margin: 10px 0;" />
+    </p>
+    
+    <pre>
+<b>// Test by <a href="http://asalga.wordpress.com/">Andor Salga</a></b>
+import processing.opengl.*;
+
+void setup(){
+  size(300, 100, OPENGL);
+
+  translate(width/3, height/2, 0);
+
+  hint(DISABLE_DEPTH_TEST);
+
+  fill(255);
+  box(80,80,1);
+
+  translate(0,0,-10);
+  fill(100,0,0);
+  box(60,60,1);
+
+  translate(0,0,-10);
+  fill(0,100,0);
+  box(50,50,1);  
+
+  translate(0,0,20);
+  translate(width/3, 0, 0);
+
+
+  hint(ENABLE_DEPTH_TEST);
+
+  fill(255);
+  box(80,80,1);
+
+  translate(0,0,-10);
+  fill(100,0,0);
+  box(60,60,1);
+
+  translate(0,0,-10);
+  fill(0,100,0);
+  box(50,50,1);  
+}</pre>
+
+  </body>
+</html>
