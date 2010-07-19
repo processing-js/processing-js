@@ -4587,6 +4587,7 @@
             curElement.setAttribute("height", aHeight);
           }
           curContext = curElement.getContext("experimental-webgl");
+          p.use3DContext = true;
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -4712,6 +4713,7 @@
         if (curContext === undef) {
           // size() was called without p.init() default context, ie. p.createGraphics()
           curContext = curElement.getContext("2d");
+          p.use3DContext = false;
           userMatrixStack = new PMatrixStack();
           modelView = new PMatrix2D();
         }
@@ -4745,7 +4747,23 @@
       p.externals.context = curContext;
 
       p.toImageData = function() {
-        return curContext.getImageData(0, 0, this.width, this.height);
+        if(!p.use3DContext){
+          return curContext.getImageData(0, 0, this.width, this.height);
+        } else {
+          var c = document.createElement("canvas");
+          var ctx = c.getContext("2d");          
+          var obj = ctx.createImageData(this.width, this.height);
+          var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
+          if(!uBuff){
+            uBuff = new WebGLUnsignedByteArray(this.width * this.height * 4);
+            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
+          }
+          for(var i =0; i < uBuff.length; i++){
+            obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
+          }
+
+          return obj;
+        }
       };
     };
 
@@ -7415,10 +7433,10 @@
     };
 
     // Creates a new Processing instance and passes it back for... processing
-    p.createGraphics = function createGraphics(w, h) {
+    p.createGraphics = function createGraphics(w, h, render) {
       var canvas = document.createElement("canvas");
       var pg = new Processing(canvas);
-      pg.size(w, h);
+      pg.size(w, h, render);
       pg.canvas = canvas;
       //Processing.addInstance(pg); // TODO: this function does not exist in this scope
       return pg;
