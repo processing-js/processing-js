@@ -5677,15 +5677,29 @@
       } else {
         if (doStroke) {
           // TODO if strokeWeight > 1, do circle
-
+          
           if (curSketch.options.crispLines) {
             var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
             var c = p.get(x, y);
             p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
           } else {
-            curContext.fillStyle = p.color.toString(currentStrokeColor);
-            curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-            isFillDirty = true;
+            if (lineWidth > 1){
+              /*curContext.beginPath();             // included two ways to do this - first way
+              curContext.moveTo(x-0.05,y-0.05);
+              curContext.lineTo(x+0.05,y+0.05);
+              executeContextStroke();
+              curContext.closePath();*/
+              curContext.fillStyle = p.color.toString(currentStrokeColor);        //  second way
+              isFillDirty = true;
+              curContext.beginPath();
+              curContext.arc(x, y, lineWidth / 2, 0, p.TWO_PI, false);
+              curContext.fill();
+              curContext.closePath();
+            } else {
+              curContext.fillStyle = p.color.toString(currentStrokeColor);
+              curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+              isFillDirty = true;
+            }
           }
         }
       }
