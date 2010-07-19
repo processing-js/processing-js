@@ -226,12 +226,33 @@
     p.SHIFT     = 16;
     p.CONTROL   = 17;
     p.ALT       = 18;
+    p.CAPSLK    = 20;
+    p.PGUP      = 33;
+    p.PGDN      = 34;
+    p.END       = 35;
+    p.HOME      = 36;
+    p.LEFT      = 37;
     p.UP        = 38;
     p.RIGHT     = 39;
     p.DOWN      = 40;
-    p.LEFT      = 37;
+    p.INS       = 45;
+    p.DEL       = 46;
+    p.F1        = 112;
+    p.F2        = 113;
+    p.F3        = 114;
+    p.F4        = 115;
+    p.F5        = 116;
+    p.F6        = 117;
+    p.F7        = 118;
+    p.F8        = 119;
+    p.F9        = 120;
+    p.F10       = 121;
+    p.F11       = 122;
+    p.F12       = 123;
+    p.NUMLK     = 144;
 
-    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
+    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.CAPSLK, p.PGUP, p.PGDN, p.END, p.HOME, p.LEFT, p.UP, p.RIGHT, p.DOWN, p.NUMLK, p.INS,
+                     p.F1, p.F2, p.F3, p.F4, p.F5, p.F6, p.F7, p.F8, p.F9, p.F10, p.F11, p.F12];
 
     // Cursor types
     p.ARROW    = 'default';
@@ -326,6 +347,13 @@
         bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
+        // Keys and Keystrokes
+        keyPressCode,
+        howManyKeys = 0,
+        firstMDown = true,    // first Mozilla key stroke
+        firstGDown = true,    // first Google key stroke
+        gRefire = false,      // Google refire
+        mRefire = false,      // Mozilla refire
         // Shaders
         programObject3D,
         programObject2D,
@@ -9348,8 +9376,24 @@
     //////////////////////////////////////////////////////////////////////////
     // Keyboard Events
     //////////////////////////////////////////////////////////////////////////
+    
+    function keyCodeMap(code){
+      // Coded keys
+      if (codedKeys.indexOf(code) >= 0) { // listed around line 225
+        p.keyCode = code;
+        if(code === p.INS){p.keyCode = 155;}
+        return p.CODED;
+      }
+      switch(code){
+        case 13:
+          return 10;  // Enter
+        case 46:
+          return 127; // Delete
+      }
+      return code;
+    }
 
-    function keyCodeMap(code, shift) {
+    function charCodeMap(code, shift) {
       // Letters
       if (code >= 65 && code <= 90) { // A-Z
         // Keys return ASCII for upcased letters.
@@ -9388,12 +9432,6 @@
             return 41; // )
           }
         }
-      }
-
-      // Coded keys
-      else if (codedKeys.indexOf(code) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
-        p.keyCode = code;
-        return p.CODED;
       }
 
       // Symbols and their shift-symbols
@@ -9435,38 +9473,108 @@
       return code;
     }
 
-    attach(document, "keydown", function(e) {
-      p.__keyPressed = true;
-      p.keyCode = null;
-      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+    var keyFunc = function (e, type){
+      if(e.charCode !== 0){
+        p.key = charCodeMap(e.charCode, e.shiftKey);
+      } else {
+        p.key = keyCodeMap(e.keyCode, e.shiftKey);
+      }
+      switch (p.keyCode) {
+        case 19:  // Pause-Break
+        case 33:  // Page Up
+        case 34:  // Page Down
+        case 35:  // End
+        case 36:  // Home
+        case 37:  // Left Arrow
+        case 38:  // Up Arrow
+        case 39:  // Right Arrow
+        case 40:  // Down Arrow
+        case 45:  // Insert
+        case 112: // F1
+        case 113: // F2
+        case 114: // F3
+        case 115: // F4
+        case 116: // F5
+        case 117: // F6
+        case 118: // F7
+        case 119: // F8
+        case 120: // F9
+        case 121: // F10
+        case 122: // F11
+        case 123: // F12
+        case 145: // Scroll Lock
+        case 155: // Insert
+        case 224: // NumPad Up
+        case 225: // NumPad Down
+        case 226: // NumPad Left
+        case 227: // NumPad Right
+          if(type === "keydown"){
+            if(gRefire){
+              p.keyReleased();
+              p.keyPressed();
+            } else {
+              p.keyPressed();
+              gRefire = true;
+            }
+          }
+          else if(type === "keypress"){
+            if(firstMDown){
+              firstMDown = false;
+            } else {
+              p.keyReleased();
+              p.keyPressed();
+            }
+          }
+          else if(type === "keyup"){
+            p.keyReleased();
+            if(!firstMDown){ firstMDown = true; }
+          }
+          break;
+        case 16:  // Shift
+        case 17:  // Ctrl
+        case 18:  // Alt
+        case 20:  // Caps Lock
+        case 144: // Num Lock
+          if(type === "keydown"){
+            p.keyPressed();
+          }
+          else if (type === "keyup"){
+            p.keyReleased();
+          }
+          break;
+        default:
+          fKeys = true;
+          break;
+      }
+    }
 
-      if (typeof p.keyPressed === "function") {
-        p.keyPressed();
+    attach(document, "keydown", function(e) {
+      keyPressed = true;
+      howManyKeys++;
+      p.keyCode = e.keyCode;
+      if (typeof p.keyPressed !== "function") {
+        p.keyPressed = true;
+      } else {
+        keyFunc(e, "keydown");  
+      }
+    });
+    
+    attach(document, "keypress", function (e) {
+      keyPressCode = e.charCode;
+      if (p.keyTyped) {
+        keyFunc(e, "keypress");
       }
     });
 
     attach(document, "keyup", function(e) {
-      p.keyCode = null;
-      p.key = keyCodeMap(e.keyCode, e.shiftKey);
-
-      //TODO: This needs to only be made false if all keys have been released.
-      p.__keyPressed = false;
-
-      if (typeof p.keyReleased === "function") {
-        p.keyReleased();
+      if (typeof p.keyPressed !== "function") {
+        p.keyPressed = false;
       }
-    });
-
-    attach(document, "keypress", function (e) {
-      // In Firefox, e.keyCode is not currently set with keypress.
-      //
-      // keypress will always happen after a keydown, so p.keyCode and p.key
-      // should remain correct. Some browsers (chrome) refire keydown when
-      // key repeats happen, others (firefox) don't. Either way keyCode and
-      // key should remain correct.
-
-      if (p.keyTyped) {
-        p.keyTyped();
+      if (p.keyReleased) {
+        keyFunc(e, "keyup");
+      }
+      if(--howManyKeys === 0){
+        keyPressed = false;
       }
     });
 
@@ -9602,7 +9710,7 @@
   "exit","exp","expand","fill","filter","filter_bilinear","filter_new_scanline","float","floor","focused",
   "frameCount","frameRate","frustum","get","glyphLook","glyphTable","GRAY","green","GREEN_MASK",
   "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hour","HSB","hue","image","IMAGE","imageMode",
-  "Import","int","intersect","INVERT","JAVA2D","join","key","keyPressed","keyReleased","LEFT","lerp",
+  "Import","int","intersect","INVERT","JAVA2D","join","key","keyCode","keyPressed","keyReleased","LEFT","lerp",
   "lerpColor","LIGHTEST","lightFalloff","lights","lightSpecular","line","LINES","link","loadBytes",
   "loadFont","loadGlyphs","loadImage","loadPixels","loadStrings","log","loop","mag","map","match",
   "matchAll","max","MAX_FLOAT","MAX_INT","MAX_LIGHTS","millis","min","MIN_FLOAT","MIN_INT","minute",
