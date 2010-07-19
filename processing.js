@@ -2169,7 +2169,11 @@
         return ary.concat(new Array(ary.length));
       } else if (arguments.length === 2) {
         // size is newSize
-        return ary.concat(new Array(newSize - ary.length));
+        if (newSize > ary.length) {
+          return ary.concat(new Array(newSize - ary.length));
+        } else {
+          return ary.slice(0, newSize);
+        }
       }
     };
 
