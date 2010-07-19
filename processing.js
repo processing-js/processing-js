@@ -5684,12 +5684,7 @@
             p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
           } else {
             if (lineWidth > 1){
-              /*curContext.beginPath();             // included two ways to do this - first way
-              curContext.moveTo(x-0.05,y-0.05);
-              curContext.lineTo(x+0.05,y+0.05);
-              executeContextStroke();
-              curContext.closePath();*/
-              curContext.fillStyle = p.color.toString(currentStrokeColor);        //  second way
+              curContext.fillStyle = p.color.toString(currentStrokeColor);
               isFillDirty = true;
               curContext.beginPath();
               curContext.arc(x, y, lineWidth / 2, 0, p.TWO_PI, false);
