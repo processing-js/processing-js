@@ -5589,8 +5589,8 @@
 
     p.smooth = function() {
       if (!p.use3DContext) {
-        curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-        if (curContext.mozImageSmoothingEnabled) {
+        if (curContext.mozImageSmoothingEnabled !== undef) {
+          curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
           curContext.mozImageSmoothingEnabled = true;
         }
       }
@@ -5598,8 +5598,8 @@
 
     p.noSmooth = function() {
       if (!p.use3DContext) {
-        curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-        if (curContext.mozImageSmoothingEnabled) {
+        if (curContext.mozImageSmoothingEnabled !== undef) {
+          curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
           curContext.mozImageSmoothingEnabled = false;
         }
       }
@@ -8529,9 +8529,10 @@
         return {
           name: "\"" + name + "\", sans-serif",
           width: function(str) {
-            if (curContext.mozMeasureText) {
-              return curContext.mozMeasureText(
-              typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
+            if (curContext.measureText !== undef) {
+              return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
+            } else if (curContext.mozMeasureText !== undef) {
+              return curContext.mozMeasureText(typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
             } else {
               return 0;
             }
@@ -8597,19 +8598,19 @@
         var oldContext = curContext;
         curContext = textcanvas.getContext("2d");
         curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-        if (curContext.fillText) {
-          textcanvas.width = curContext.measureText( str ).width;
-        } else if (curContext.mozDrawText) {
-          textcanvas.width = curContext.mozMeasureText( str );
+        if (curContext.fillText !== undef) {
+          textcanvas.width = curContext.measureText(str).width;
+        } else if (curContext.mozDrawText !== undef) {
+          textcanvas.width = curContext.mozMeasureText(str);
         }
         curContext = oldContext;
         return textcanvas.width;
       }
       else{
         curContext.font = curTextSize + "px " + curTextFont.name;
-        if (curContext.fillText) {
+        if (curContext.fillText !== undef) {
           return curContext.measureText(str).width;
-        } else if (curContext.mozDrawText) {
+        } else if (curContext.mozDrawText !== undef) {
           return curContext.mozMeasureText(str);
         }
       }
@@ -8736,7 +8737,7 @@
       var textWidth = 0, xOffset = 0;
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
-        if (str && (curContext.fillText || curContext.mozDrawText)) {
+        if (str && (curContext.fillText !== undef || curContext.mozDrawText !== undef)) {
           curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
           if (isFillDirty) {
@@ -8746,10 +8747,10 @@
 
           // horizontal offset/alignment
           if(align === p.RIGHT || align === p.CENTER) {
-            if (curContext.fillText) {
-              textWidth = curContext.measureText( str ).width;
-            } else if (curContext.mozDrawText) {
-              textWidth = curContext.mozMeasureText( str );
+            if (curContext.fillText !== undef) {
+              textWidth = curContext.measureText(str).width;
+            } else if (curContext.mozDrawText !== undef) {
+              textWidth = curContext.mozMeasureText(str);
             }
             
             if(align === p.RIGHT) {
@@ -8759,9 +8760,9 @@
             }
           }
 
-          if (curContext.fillText) {
+          if (curContext.fillText !== undef) {
             curContext.fillText(str, x+xOffset, y);
-          } else if (curContext.mozDrawText) {
+          } else if (curContext.mozDrawText !== undef) {
             saveContext();
             curContext.translate(x+xOffset, y);
             curContext.mozDrawText(str);
@@ -8811,10 +8812,10 @@
       curContext = textcanvas.getContext("2d");
       curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
       var textWidth = 0;
-      if (curContext.fillText) {
-        textWidth = curContext.measureText( str ).width;
-      } else if (curContext.mozDrawText) {
-        textWidth = curContext.mozMeasureText( str );
+      if (curContext.fillText !== undef) {
+        textWidth = curContext.measureText(str).width;
+      } else if (curContext.mozDrawText !== undef) {
+        textWidth = curContext.mozMeasureText(str);
       }
       textcanvas.width = textWidth;
       textcanvas.height = curTextSize;
@@ -8916,9 +8917,9 @@
         var currentChar = str[j];
         var letterWidth;
 
-        if (curContext.fillText) {
+        if (curContext.fillText !== undef) {
           letterWidth = curContext.measureText(currentChar).width;
-        } else if (curContext.mozDrawText) {
+        } else if (curContext.mozDrawText !== undef) {
           letterWidth = curContext.mozMeasureText(currentChar);
         }
 
@@ -9487,7 +9488,7 @@
 
       p.use3DContext = curSketch.use3DContext;
 
-      if (curElement.mozOpaque) {
+      if (curElement.mozOpaque !== undef) {
         curElement.mozOpaque = curSketch.options.isOpaque;
       }
 
