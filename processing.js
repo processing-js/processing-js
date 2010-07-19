@@ -2164,16 +2164,15 @@
     };
 
     p.expand = function(ary, newSize) {
+      var temp = ary.slice(0);
       if (arguments.length === 1) {
         // double size of array
-        return ary.concat(new Array(ary.length));
+        temp.length = ary.length * 2;
+        return temp;
       } else if (arguments.length === 2) {
         // size is newSize
-        if (newSize > ary.length) {
-          return ary.concat(new Array(newSize - ary.length));
-        } else {
-          return ary.slice(0, newSize);
-        }
+        temp.length = newSize;
+        return temp;
       }
     };
 
