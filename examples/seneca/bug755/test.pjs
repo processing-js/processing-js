@@ -1,0 +1,86 @@
+import processing.opengl.*;
+
+void setup() {
+  size(500, 500, OPENGL);
+
+  PFont font = loadFont("Arial");
+  textFont(font,30);
+  
+  fill(0);
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  text("testing", 0,0,0);
+  popMatrix(); 
+
+  noFill();
+
+  stroke(0,0,255);
+  strokeWeight(2);
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  for(int i=0; i < 10; i++){
+    line(random(-width/2, width/2), random(-height/2, height/2), random(-height/2, height/2),
+         random(-height/2, height/2),random(-height/2, height/2),random(-height/2, height/2));
+  }
+  popMatrix();
+
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  text("testing", 0,30,0);
+  popMatrix(); 
+
+  stroke(255,0,0);
+  strokeWeight(3);
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  for(int i=0; i < 100; i++){
+    point(random(-width/2, width/2), random(-height/2, height/2), 0);
+  }
+  popMatrix();
+
+  fill(0);
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  text("testing", 0,60,0);
+  popMatrix(); 
+
+  stroke(0,255,0);
+  strokeWeight(1);
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  for(int i=0; i < 10; i++){
+    rect(random(-width/2, width/2), random(-height/2, height/2),
+        random(15,25), random(15,25));
+  }
+  popMatrix();
+
+  fill(0);
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  text("testing", 0,90,0);
+  popMatrix(); 
+
+  stroke(0,128,128);
+  strokeWeight(1);
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  for(int i=0; i < 5; i++){
+    translate(random(-width/4, width/4), random(-height/4, height/4), 0);
+    sphere(40);
+  }
+  popMatrix();
+
+  fill(0);
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  text("testing", 0,120,0);
+  popMatrix();
+
+  pushMatrix();
+  translate(width/2, height/2, 0);
+  for(int i=0; i < 5; i++){
+    translate(random(-width/4, width/4), random(-height/4, height/4), 0);
+    box(40);
+  }
+  popMatrix();
+}

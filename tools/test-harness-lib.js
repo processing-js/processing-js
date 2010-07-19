@@ -109,7 +109,7 @@ Processing.lib.UnitTests = function() {
   };
 };
 
-Processing.lib.UnitTests.exports = ["UnitTests", "pjs",
+Processing.lib.UnitTests.exports = ["UnitTests", "__sketch",
   "_pass","_fail","_checkEqual","_checkNotEqual","_checkIsNaN","_checkIsNull",
   "_checkTrue","_checkFalse","_checkThrows","_printTestSummary"];
 

@@ -1,0 +1,86 @@
+// Andor Salga
+
+int y = 20;
+int x = 0;
+PFont font;
+int lineOffset = 8;
+
+void setup(){
+  size(1300,550, OPENGL);
+
+  fill(0);
+  stroke(255,0,0);
+  strokeWeight(2);
+
+  font = loadFont("comic sans MS");
+  textFont(font);
+  textSize(18);
+  runTests("comic sans MS [" + "18]");
+
+  x += 300;
+  y = 20;
+  lineOffset -= 5;
+
+  font = loadFont("Arial");
+  textFont(font);
+  textSize(25);
+  runTests("Arial [" + "25]");
+
+  x += 350;
+  y = 20;
+  lineOffset -= 7;
+
+  font = loadFont("verdana");
+  textFont(font);
+  textSize(18);
+  runTests("verdana [" + "18]");
+
+  x += 350;
+  y = 20;
+  lineOffset -= 10;
+
+  font = loadFont("helvetica");
+  textFont(font);
+  textSize(22);
+  runTests("helvetica [" + "22]");
+}
+
+void runTest(String a){
+  line(x+lineOffset, y + 10, x+textWidth(a) + lineOffset, y+ 10);
+  text(a + "(" +textWidth(a) + ")",x ,y);
+  y += 20;
+}
+
+
+void runTests(font){
+  runTest(font);
+
+  runTest("");
+  runTest(" ");
+  runTest("  ");
+
+  runTest("A");
+  runTest("AA");
+  runTest("AAA");
+  runTest(".A.A.A.A.A.A");
+
+  runTest("i");
+  runTest(".");
+  runTest(",");
+  runTest("(");
+  runTest("_");
+  runTest("~");
+  runTest("#");
+  runTest("@");
+  
+  runTest("1234567890");
+  runTest("This is a test.");
+  runTest("lalalalalala");
+  runTest("The brown fox loves pjs");
+
+  runTest("////////////");
+  runTest("..........");
+  runTest("$%^)(*%&#*(&@#%($*&");
+  runTest("This_is_a_test");
+  runTest("~~~~~~~~~");
+}

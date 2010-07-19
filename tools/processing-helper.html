@@ -45,9 +45,7 @@
         convertToJS: function() {
           try {
             this.output.value = js_beautify(
-                                  Processing.parse(
-                                    this.code.value, new Processing(
-                                      this.canvas, this.code.value))).replace(/\n\n\n+/g, '\n\n');
+                                  Processing.compile(this.code.value).sourceCode).replace(/\n\n\n+/g, '\n\n');
             this.output.select();
           } catch (e) {
             this.output.value = "Parser Error! Error was:\n" + e.toString();
