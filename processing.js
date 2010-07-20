@@ -22,15 +22,12 @@
 
   var ajax = function ajax( url ) {
     var xhr = new XMLHttpRequest(); 
-    xhr.open( "GET", url + "?t=" + new Date().getTime(), false );
+    xhr.open( "GET", url, false );
     xhr.setRequestHeader("If-Modified-Since", "Fri, 1 Jan 1960 00:00:00 GMT");
     xhr.send( null );
     // failed request?
-    if ( xhr.status !== 200 && xhr.status !== 0 )  { return false; }
+    if ( xhr.status !== 200 && xhr.status !== 0 ) { throw ("XMLHttpRequest failed, status code "+xhr.status); }
     return xhr.responseText; 
-
-    // browser doesn't support xhr
-    return false; 
   };
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
