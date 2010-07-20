@@ -20,35 +20,15 @@
 
   var undef; // intentionally left undefined
 
-  var getxhr = function () {
-    try { return new XMLHttpRequest(); }
-<<<<<<< HEAD
-    catch (requesterror) {
-      throw (requesterror);
-    }
-  }; 
-  var ajax = function ajax(url) {
-    var xhr = getxhr();
-    if (xhr !== false) {
-        xhr.open("GET", url + "?t=" + new Date().getTime(), false);
-        xhr.send(null);
-        // failed request?
-        if (xhr.status !== 200 && xhr.status !== 0)  { return false; }
-=======
-    catch ( requesterror ) {
-      throw (requesterror );
-    }
-  }; 
   var ajax = function ajax( url ) {
-    var xhr = getxhr();
-    if( xhr !== false ) {
-        xhr.open( "GET", url + "?t=" + new Date().getTime(), false );
-        xhr.send( null );
-        // failed request?
-        if ( xhr.status !== 200 && xhr.status !== 0 )  { return false; }
->>>>>>> 9b7404480ed448e3d491ea2c41ffa7d8551b71c2
-        return xhr.responseText; 
-    }
+    var xhr = new XMLHttpRequest(); 
+    xhr.open( "GET", url + "?t=" + new Date().getTime(), false );
+    xhr.setRequestHeader("If-Modified-Since", "Fri, 1 Jan 1960 00:00:00 GMT");
+    xhr.send( null );
+    // failed request?
+    if ( xhr.status !== 200 && xhr.status !== 0 )  { return false; }
+    return xhr.responseText; 
+
     // browser doesn't support xhr
     return false; 
   };
