@@ -1441,7 +1441,7 @@
     var PShapeSVG = p.PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
       if (arguments.length === 1) {
-        this.element  = new p.XMLElement(arguments[0]);
+        this.element  = new p.XMLElement(null, arguments[0]);
         // set values to their defaults according to the SVG spec
         this.vertexCodes         = [];
         this.vertices            = [];
@@ -1471,7 +1471,7 @@
       else if (arguments.length === 2) {
         if (typeof arguments[1] === 'string') {
           if (arguments[1].indexOf(".svg") > -1) { //its a filename
-            this.element = new p.XMLElement(arguments[1]);
+            this.element = new p.XMLElement(null, arguments[1]);
             // set values to their defaults according to the SVG spec
             this.vertexCodes         = [];
             this.vertices            = [];
@@ -2244,21 +2244,29 @@
         this.systemID  = arguments[2];
         this.parent    = null;
       }
-      else if ((arguments.length === 1 && arguments[0].indexOf(".") > -1) || arguments.length === 2) { // filename or svg xml element
-        if (arguments[arguments.length -1].indexOf(".") > -1) { //its a filename
-          this.attributes = [];
-          this.children   = [];
-          this.fullName   = "";
-          this.name       = "";
-          this.namespace  = "";
-          this.content    = "";
-          this.systemID   = "";
-          this.lineNr     = "";
-          this.parent     = null;
-          this.parse(arguments[arguments.length -1]);
-        } else { //xml string
-          this.parse(arguments[arguments.length -1]);
-        }
+      else if ((arguments.length === 2 && arguments[1].indexOf(".") > -1) ) { // filename or svg xml element
+        this.attributes = [];
+        this.children   = [];
+        this.fullName   = "";
+        this.name       = "";
+        this.namespace  = "";
+        this.content    = "";
+        this.systemID   = "";
+        this.lineNr     = "";
+        this.parent     = null;
+        this.parse(arguments[arguments.length -1]);
+      } else if (arguments.length === 1 && typeof arguments[0] === "string"){
+        //xml string
+        this.attributes = [];
+        this.children   = [];
+        this.fullName   = "";
+        this.name       = "";
+        this.namespace  = "";
+        this.content    = "";
+        this.systemID   = "";
+        this.lineNr     = "";
+        this.parent     = null;
+        this.parse(arguments[0]);
       }
       else { //empty ctor
         this.attributes = [];
@@ -2270,6 +2278,7 @@
         this.systemID   = "";
         this.lineNr     = "";
         this.parent     = null;
+        
       }
       return this;
     };
@@ -2281,8 +2290,10 @@
       parse: function(filename) {
         var xmlDoc;
         try {
-          xmlDoc = new DOMParser().parseFromString(ajax(filename), "text/xml");
-
+          if (filename.indexOf(".xml") > -1 || filename.indexOf(".svg") > -1) {
+            filename = ajax(filename);
+          } 
+          xmlDoc = new DOMParser().parseFromString(filename, "text/xml");
           var elements = xmlDoc.documentElement;
           if (elements) {
             this.parseChildrenRecursive(null, elements);
@@ -2498,10 +2509,6 @@
             xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
           }
         }
-        /*
-        for( var m = 0; m < elementpath.childElementCount; m++ ) {
-         xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[m]) );
-        }*/
         return xmlelement;
       },
       isLeaf: function(){
@@ -11000,7 +11007,7 @@
   "PMatrix2D", "PMatrix3D", "PMatrixStack",
   "pmouseX","pmouseY","point","Point","pointLight","POINTS","POLYGON","popMatrix","popStyle","POSTERIZE",
   "pow","PREC_ALPHA_SHIFT","PRECISIONB","PRECISIONF","PREC_MAXVAL","PREC_RED_SHIFT","print",
-  "printCamera","println","printMatrix","printProjection","PROJECT","pushMatrix","pushStyle",
+  "printCamera","println","printMatrix","printProjection","PROJECT","pushMatrix","pushStyle","PShape","PShapeSVG",
   "PVector","quad","QUADS","QUAD_STRIP","radians","RADIUS","random","Random","randomSeed", "rect",
   "rectMode","red","RED_MASK","redraw","REPLACE","requestImage","resetMatrix","RETURN","reverse","RGB",
   "RIGHT","rotate","rotateX","rotateY","rotateZ","round","ROUND","saturation","save","scale","SCREEN",
