@@ -6946,8 +6946,8 @@
 
     p.smooth = function() {
       if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
         if ("mozImageSmoothingEnabled" in curContext) {
-          curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
           curContext.mozImageSmoothingEnabled = true;
         }
       }
@@ -6955,8 +6955,8 @@
 
     p.noSmooth = function() {
       if (!p.use3DContext) {
+        curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
         if ("mozImageSmoothingEnabled" in curContext) {
-          curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
           curContext.mozImageSmoothingEnabled = false;
         }
       }
