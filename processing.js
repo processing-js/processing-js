@@ -194,9 +194,10 @@
     ARC:            32,
     SPHERE:         40,
     BOX:            41,
+
     GROUP:          0,
     PRIMITIVE:      1, 
-    PATH:           2,
+    //PATH:         21, // shared with Shape PATH
     GEOMETRY:       3,
    
     // Shape Vertex
@@ -309,7 +310,9 @@
 
     // Include PConstants
     for (var constant in PConstants) {
-      p[constant] = PConstants[constant];
+      if (PConstants.hasOwnProperty(constant)) {
+        p[constant] = PConstants[constant];
+      }
     }
 
     // PJS specific (non-p5) methods and properties to externalize
