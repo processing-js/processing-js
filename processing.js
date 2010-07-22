@@ -6945,20 +6945,16 @@
     };
 
     p.smooth = function() {
-      if (!p.use3DContext) {
-        curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-        if ("mozImageSmoothingEnabled" in curContext) {
-          curContext.mozImageSmoothingEnabled = true;
-        }
+      curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
+        curContext.mozImageSmoothingEnabled = true;
       }
     };
 
     p.noSmooth = function() {
-      if (!p.use3DContext) {
-        curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-        if ("mozImageSmoothingEnabled" in curContext) {
-          curContext.mozImageSmoothingEnabled = false;
-        }
+      curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
+        curContext.mozImageSmoothingEnabled = false;
       }
     };
 
