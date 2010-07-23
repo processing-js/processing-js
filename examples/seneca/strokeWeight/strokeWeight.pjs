@@ -1,0 +1,14 @@
+size(400, 400);
+
+strokeWeight(1);
+point(200,10);
+ellipseMode(RADIUS);
+ellipse(300,300,25,25);
+strokeWeight(5);
+point(200,50);
+strokeWeight(10);
+point(200,125);
+strokeWeight(25);
+point(200,200);
+strokeWeight(50);
+point(200,300);
