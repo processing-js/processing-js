@@ -3683,7 +3683,7 @@
           return this.splice(i, 1)[0];
         };
         array.isEmpty = function() {
-          return !!this.length;
+          return !this.length;
         };
         array.clone = function() {
           return this.slice(0);
