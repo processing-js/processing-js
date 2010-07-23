@@ -5210,11 +5210,16 @@
     };
 
     // Load a file or URL into strings
-    p.loadStrings = function loadStrings(url) {
-      return ajax(url).split("\n");
+    p.loadStrings = function loadStrings(filename) {
+      return (localStorage[filename] ? localStorage[filename] : ajax(filename).slice(0, -1)).split("\n");
     };
 
-    p.loadBytes = function loadBytes(url) {
+    // Writes an array of strings to a file, one line per string
+    p.saveStrings = function saveStrings(filename, strings) {
+      localStorage[filename] = strings.join('\n');
+    };
+
+    p.loadBytes = function loadBytes(url, strings) {
       var string = ajax(url);
       var ret = [];
 
@@ -11090,7 +11095,7 @@
   "printCamera","println","printMatrix","printProjection","PROJECT","pushMatrix","pushStyle",
   "PVector","quad","QUADS","QUAD_STRIP","radians","RADIUS","random","Random","randomSeed", "rect",
   "rectMode","red","RED_MASK","redraw","REPLACE","requestImage","resetMatrix","RETURN","reverse","RGB",
-  "RIGHT","rotate","rotateX","rotateY","rotateZ","round","ROUND","saturation","save","scale","SCREEN",
+  "RIGHT","rotate","rotateX","rotateY","rotateZ","round","ROUND","saturation","save", "saveStrings", "scale","SCREEN",
   "second","set","setup","shape", "shapeMode","shared","SHIFT","shininess","shorten","sin","SINCOS_LENGTH","size",
   "smooth","SOFT_LIGHT","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
   "spotLight","sq","sqrt","SQUARE","status","str","stroke","strokeCap","strokeJoin","strokeWeight",
