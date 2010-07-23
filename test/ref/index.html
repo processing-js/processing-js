@@ -178,33 +178,18 @@
                  (failMessage ? " -- FAILED (" + failMessage + ")" : " -- PASSED");
         };
 
-        var getPixels = function(aCanvas, isWebGL) {
+        var getPixels = function(aCanvas, isWebGL) {        
           try {
             if (isWebGL) {
-              // Safari returns a regular JS object for readPixels.
-              // Minefield returns a WebGLUnsignedByteArray.
-              // Chromium raises an exception because of an XHR bug.
-              // So we need to handle each case differently.
-
-              var browserString = navigator.userAgent;
-              var regex = /Safari/i;
-              var isSafari = browserString.match(regex);
-
               var context = aCanvas.getContext("experimental-webgl");
+              
+              // try deprecated way first (keeps code cleaner)
+              var data = context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE);
 
-              // Safari returns null if format RGB is requested
-              var unsignedBuffer = context.readPixels(0,0,aCanvas.width,aCanvas.height,context.RGBA,context.UNSIGNED_BYTE);
-              var data;
-
-              if (isSafari) {
-                // extract the data from the WebGLUnsignedByteArray and place
-                // it in a JS array for easy manipulation.
-                data = new Array(unsignedBuffer.length);
-                for(var i = 0, ubl = unsignedBuffer.length; i < ubl; i++) {
-                  data[i] = unsignedBuffer[i];
-                }
-              } else {
-                data = unsignedBuffer.data;
+              // if that failed, try new way              
+              if(!data){
+                data = new WebGLUnsignedByteArray(aCanvas.width * aCanvas.height * 4);
+                context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE, data);
               }
               return data;
             } else {

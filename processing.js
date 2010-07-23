@@ -20,24 +20,300 @@
 
   var undef; // intentionally left undefined
 
-  // IE Unfriendly AJAX Method
-  var ajax = function(url) {
-    var AJAX = new window.XMLHttpRequest();
-    if (AJAX) {
-      AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
-      AJAX.send(null);
-      return AJAX.responseText;
-    } else {
-      return false;
-    }
+  var ajax = function ajax(url) {
+    var xhr = new XMLHttpRequest(); 
+    xhr.open("GET", url, false);
+    xhr.setRequestHeader("If-Modified-Since", "Fri, 1 Jan 1960 00:00:00 GMT");
+    xhr.send(null);
+    // failed request?
+    if (xhr.status !== 200 && xhr.status !== 0) { throw ("XMLHttpRequest failed, status code " + xhr.status); }
+    return xhr.responseText; 
+  };
+
+  var PConstants = {
+    X: 0, 
+    Y: 1,
+    Z: 2,
+
+    R: 3,
+    G: 4,
+    B: 5,
+    A: 6,
+
+    U: 7,
+    V: 8,
+
+    NX: 9,
+    NY: 10,
+    NZ: 11,
+
+    EDGE: 12,
+
+    // Stroke
+    SR: 13,
+    SG: 14,
+    SB: 15,
+    SA: 16,
+
+    SW: 17,
+
+    // Transformations (2D and 3D)
+    TX: 18,
+    TY: 19,
+    TZ: 20,
+
+    VX: 21,
+    VY: 22,
+    VZ: 23,
+    VW: 24,
+
+    // Material properties
+    AR: 25,
+    AG: 26,
+    AB: 27,
+
+    DR: 3,
+    DG: 4,
+    DB: 5,
+    DA: 6,
+
+    SPR: 28,
+    SPG: 29,
+    SPB: 30,
+    
+    SHINE: 31,
+
+    ER: 32,
+    EG: 33,
+    EB: 34,
+
+    BEEN_LIT: 35,
+
+    VERTEX_FIELD_COUNT: 36,
+
+    // Renderers
+    P2D:    1,
+    JAVA2D: 1,
+    WEBGL:  2,
+    P3D:    2,
+    OPENGL: 2,
+    PDF:    0,
+    DXF:    0,
+
+    // Platform IDs
+    OTHER:   0,
+    WINDOWS: 1,
+    MAXOSX:  2,
+    LINUX:   3,
+
+    EPSILON: 0.0001,
+
+    MAX_FLOAT:  3.4028235e+38,
+    MIN_FLOAT: -3.4028235e+38,
+    MAX_INT:    2147483647,
+    MIN_INT:   -2147483648,
+
+    PI:         Math.PI,
+    TWO_PI:     2 * Math.PI,
+    HALF_PI:    Math.PI / 2,
+    THIRD_PI:   Math.PI / 3,
+    QUARTER_PI: Math.PI / 4,
+
+    DEG_TO_RAD: Math.PI / 180,
+    RAD_TO_DEG: 180 / Math.PI,
+
+    WHITESPACE: " \t\n\r\f\u00A0",
+
+    // Color modes
+    RGB:   1,
+    ARGB:  2,
+    HSB:   3,
+    ALPHA: 4,
+    CMYK:  5,
+    
+    // Image file types
+    TIFF:  0,
+    TARGA: 1,
+    JPEG:  2,
+    GIF:   3,
+
+    // Filter/convert types
+    BLUR:      11,
+    GRAY:      12,
+    INVERT:    13,
+    OPAQUE:    14,
+    POSTERIZE: 15,
+    THRESHOLD: 16,
+    ERODE:     17,
+    DILATE:    18,
+
+    // Blend modes
+    REPLACE:    0,
+    BLEND:      1 << 0,
+    ADD:        1 << 1,
+    SUBTRACT:   1 << 2,
+    LIGHTEST:   1 << 3,
+    DARKEST:    1 << 4,
+    DIFFERENCE: 1 << 5,
+    EXCLUSION:  1 << 6,
+    MULTIPLY:   1 << 7,
+    SCREEN:     1 << 8,
+    OVERLAY:    1 << 9,
+    HARD_LIGHT: 1 << 10,
+    SOFT_LIGHT: 1 << 11,
+    DODGE:      1 << 12,
+    BURN:       1 << 13,
+
+    // Color component bit masks
+    ALPHA_MASK: 0xff000000,
+    RED_MASK:   0x00ff0000,
+    GREEN_MASK: 0x0000ff00,
+    BLUE_MASK:  0x000000ff,
+
+    // Projection matrices
+    CUSTOM:       0,
+    ORTHOGRAPHIC: 2,
+    PERSPECTIVE:  3,
+
+    // Shapes
+    POINT:          2,
+    POINTS:         2,
+    LINE:           4,
+    LINES:          4,
+    TRIANGLE:       8,
+    TRIANGLES:      9,
+    TRIANGLE_STRIP: 10,
+    TRIANGLE_FAN:   11,
+    QUAD:           16,
+    QUADS:          16,
+    QUAD_STRIP:     17,
+    POLYGON:        20,
+    PATH:           21,
+    RECT:           30,
+    ELLIPSE:        31,
+    ARC:            32,
+    SPHERE:         40,
+    BOX:            41,
+
+    GROUP:          0,
+    PRIMITIVE:      1, 
+    //PATH:         21, // shared with Shape PATH
+    GEOMETRY:       3,
+   
+    // Shape Vertex
+    VERTEX:        0,
+    BEZIER_VERTEX: 1,
+    CURVE_VERTEX:  2,
+    BREAK:         3,
+    CLOSESHAPE:    4,
+    
+    // Shape closing modes
+    OPEN:  1,
+    CLOSE: 2,
+    
+    // Shape drawing modes
+    CORNER:          0, // Draw mode convention to use (x, y) to (width, height)
+    CORNERS:         1, // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
+    RADIUS:          2, // Draw mode from the center, and using the radius
+    CENTER_RADIUS:   2, // Deprecated! Use RADIUS instead
+    CENTER:          3, // Draw from the center, using second pair of values as the diameter
+    DIAMETER:        3, // Synonym for the CENTER constant. Draw from the center
+    CENTER_DIAMETER: 3, // Deprecated! Use DIAMETER instead
+
+    // Text vertical alignment modes
+    BASELINE: 0,   // Default vertical alignment for text placement
+    TOP:      101, // Align text to the top
+    BOTTOM:   102, // Align text from the bottom, using the baseline
+
+    // UV Texture coordinate modes
+    NORMAL:     1,
+    NORMALIZED: 1,
+    IMAGE:      2,
+
+    // Text placement modes
+    MODEL: 4,
+    SHAPE: 5,
+
+    // Stroke modes
+    SQUARE:  'butt',
+    ROUND:   'round',
+    PROJECT: 'square',
+    MITER:   'miter',
+    BEVEL:   'bevel',
+
+    // Lighting modes
+    AMBIENT:     0,
+    DIRECTIONAL: 1,
+    //POINT:     2, Shared with Shape constant
+    SPOT:        3,
+
+    // Key constants
+
+    // Both key and keyCode will be equal to these values
+    BACKSPACE: 8,
+    TAB:       9,
+    ENTER:     10,
+    RETURN:    13,
+    ESC:       27,
+    DELETE:    127,
+    CODED:     0xffff,
+
+    // p.key will be CODED and p.keyCode will be this value
+    SHIFT:     16,
+    CONTROL:   17,
+    ALT:       18,
+    UP:        38,
+    RIGHT:     39,
+    DOWN:      40,
+    LEFT:      37,
+
+    // Cursor types
+    ARROW:    'default',
+    CROSS:    'crosshair',
+    HAND:     'pointer',
+    MOVE:     'move',
+    TEXT:     'text',
+    WAIT:     'wait',
+    NOCURSOR: "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto",
+
+    // Hints
+    DISABLE_OPENGL_2X_SMOOTH:     1,
+    ENABLE_OPENGL_2X_SMOOTH:     -1,
+    ENABLE_OPENGL_4X_SMOOTH:      2,
+    ENABLE_NATIVE_FONTS:          3,
+    DISABLE_DEPTH_TEST:           4,
+    ENABLE_DEPTH_TEST:           -4,
+    ENABLE_DEPTH_SORT:            5,
+    DISABLE_DEPTH_SORT:          -5,
+    DISABLE_OPENGL_ERROR_REPORT:  6,
+    ENABLE_OPENGL_ERROR_REPORT:  -6,
+    ENABLE_ACCURATE_TEXTURES:     7,
+    DISABLE_ACCURATE_TEXTURES:   -7,
+    HINT_COUNT:                  10,
+
+    // PJS defined constants
+    SINCOS_LENGTH:      parseInt(360 / 0.5, 10),
+    PRECISIONB:         15, // fixed point precision is limited to 15 bits!!
+    PRECISIONF:         1 << 15,
+    PREC_MAXVAL:        (1 << 15) - 1,
+    PREC_ALPHA_SHIFT:   24 - 15,
+    PREC_RED_SHIFT:     16 - 15,
+    NORMAL_MODE_AUTO:   0,
+    NORMAL_MODE_SHAPE:  1,
+    NORMAL_MODE_VERTEX: 2,
+    MAX_LIGHTS:         8
   };
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
 
-    p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
-    p.use3DContext = false; // default '2d' canvas context
+    // Include PConstants
+    for (var constant in PConstants) {
+      if (PConstants.hasOwnProperty(constant)) {
+        p[constant] = PConstants[constant];
+      }
+    }
 
     // PJS specific (non-p5) methods and properties to externalize
     p.externals = {
@@ -47,6 +323,9 @@
       onblur:  function() {},
       onfocus: function() {}
     };
+
+    p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
+    p.use3DContext = false; // default '2d' canvas context
 
     // Glyph path storage for textFonts
     p.glyphTable = {};
@@ -80,196 +359,15 @@
     p.__frameRate     = 0;
 
     // The current animation frame
-    p.frameCount = 0;
+    p.frameCount      = 0;
+
+    p.focused         = true;
+
+    p.breakShape      = false;
 
     // The height/width of the canvas
     p.width = curElement.width - 0;
     p.height = curElement.height - 0;
-
-    // Color modes
-    p.RGB   = 1;
-    p.ARGB  = 2;
-    p.HSB   = 3;
-    p.ALPHA = 4;
-    p.CMYK  = 5;
-
-    // Renderers
-    p.P2D    = 1;
-    p.JAVA2D = 1;
-    p.WEBGL  = 2;
-    p.P3D    = 2;
-    p.OPENGL = 2;
-    p.EPSILON = 0.0001;
-    p.MAX_FLOAT   = 3.4028235e+38;
-    p.MIN_FLOAT   = -3.4028235e+38;
-    p.MAX_INT     = 2147483647;
-    p.MIN_INT     = -2147483648;
-    p.PI          = Math.PI;
-    p.TWO_PI      = 2 * p.PI;
-    p.HALF_PI     = p.PI / 2;
-    p.THIRD_PI    = p.PI / 3;
-    p.QUARTER_PI  = p.PI / 4;
-    p.DEG_TO_RAD  = p.PI / 180;
-    p.RAD_TO_DEG  = 180 / p.PI;
-    p.WHITESPACE  = " \t\n\r\f\u00A0";
-
-    // Filter/convert types
-    p.BLUR      = 11;
-    p.GRAY      = 12;
-    p.INVERT    = 13;
-    p.OPAQUE    = 14;
-    p.POSTERIZE = 15;
-    p.THRESHOLD = 16;
-    p.ERODE     = 17;
-    p.DILATE    = 18;
-
-    // Blend modes
-    p.REPLACE    = 0;
-    p.BLEND      = 1 << 0;
-    p.ADD        = 1 << 1;
-    p.SUBTRACT   = 1 << 2;
-    p.LIGHTEST   = 1 << 3;
-    p.DARKEST    = 1 << 4;
-    p.DIFFERENCE = 1 << 5;
-    p.EXCLUSION  = 1 << 6;
-    p.MULTIPLY   = 1 << 7;
-    p.SCREEN     = 1 << 8;
-    p.OVERLAY    = 1 << 9;
-    p.HARD_LIGHT = 1 << 10;
-    p.SOFT_LIGHT = 1 << 11;
-    p.DODGE      = 1 << 12;
-    p.BURN       = 1 << 13;
-
-    // Color component bit masks
-    p.ALPHA_MASK = 0xff000000;
-    p.RED_MASK   = 0x00ff0000;
-    p.GREEN_MASK = 0x0000ff00;
-    p.BLUE_MASK  = 0x000000ff;
-
-    // Projection matrices
-    p.CUSTOM       = 0;
-    p.ORTHOGRAPHIC = 2;
-    p.PERSPECTIVE  = 3;
-
-    // Shapes
-    p.POINT          = 2;
-    p.POINTS         = 2;
-    p.LINE           = 4;
-    p.LINES          = 4;
-    p.TRIANGLE       = 8;
-    p.TRIANGLES      = 9;
-    p.TRIANGLE_STRIP = 10;
-    p.TRIANGLE_FAN   = 11;
-    p.QUAD           = 16;
-    p.QUADS          = 16;
-    p.QUAD_STRIP     = 17;
-    p.POLYGON        = 20;
-    p.PATH           = 21;
-    p.RECT           = 30;
-    p.ELLIPSE        = 31;
-    p.ARC            = 32;
-    p.SPHERE         = 40;
-    p.BOX            = 41;
-
-    // Shape closing modes
-    p.OPEN  = 1;
-    p.CLOSE = 2;
-
-    // Shape drawing modes
-    p.CORNER          = 0; // Draw mode convention to use (x, y) to (width, height)
-    p.CORNERS         = 1; // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
-    p.RADIUS          = 2; // Draw mode from the center, and using the radius
-    p.CENTER_RADIUS   = 2; // Deprecated! Use RADIUS instead
-    p.CENTER          = 3; // Draw from the center, using second pair of values as the diameter
-    p.DIAMETER        = 3; // Synonym for the CENTER constant. Draw from the center
-    p.CENTER_DIAMETER = 3; // Deprecated! Use DIAMETER instead
-
-    // Text vertical alignment modes
-    p.BASELINE = 0;   // Default vertical alignment for text placement
-    p.TOP      = 101; // Align text to the top
-    p.BOTTOM   = 102; // Align text from the bottom, using the baseline
-
-    // UV Texture coordinate modes
-    p.NORMAL     = 1;
-    p.NORMALIZED = 1;
-    p.IMAGE      = 2;
-
-    // Text placement modes
-    p.MODEL = 4;
-    p.SHAPE = 5;
-
-    // Stroke modes
-    p.SQUARE  = 'butt';
-    p.ROUND   = 'round';
-    p.PROJECT = 'square';
-    p.MITER   = 'miter';
-    p.BEVEL   = 'bevel';
-
-    // Lighting modes
-    p.AMBIENT     = 0;
-    p.DIRECTIONAL = 1;
-    //POINT       = 2; Shared with Shape constant
-    p.SPOT        = 3;
-
-    // Key constants
-
-    // Both key and keyCode will be equal to these values
-    p.BACKSPACE = 8;
-    p.TAB       = 9;
-    p.ENTER     = 10;
-    p.RETURN    = 13;
-    p.ESC       = 27;
-    p.DELETE    = 127;
-    p.CODED     = 0xffff;
-
-    // p.key will be CODED and p.keyCode will be this value
-    p.SHIFT     = 16;
-    p.CONTROL   = 17;
-    p.ALT       = 18;
-    p.UP        = 38;
-    p.RIGHT     = 39;
-    p.DOWN      = 40;
-    p.LEFT      = 37;
-
-    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
-
-    // Cursor types
-    p.ARROW    = 'default';
-    p.CROSS    = 'crosshair';
-    p.HAND     = 'pointer';
-    p.MOVE     = 'move';
-    p.TEXT     = 'text';
-    p.WAIT     = 'wait';
-    p.NOCURSOR = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
-
-    // Hints
-    p.DISABLE_OPENGL_2X_SMOOTH    =  1;
-    p.ENABLE_OPENGL_2X_SMOOTH     = -1;
-    p.ENABLE_OPENGL_4X_SMOOTH     =  2;
-    p.ENABLE_NATIVE_FONTS         =  3;
-    p.DISABLE_DEPTH_TEST          =  4;
-    p.ENABLE_DEPTH_TEST           = -4;
-    p.ENABLE_DEPTH_SORT           =  5;
-    p.DISABLE_DEPTH_SORT          = -5;
-    p.DISABLE_OPENGL_ERROR_REPORT =  6;
-    p.ENABLE_OPENGL_ERROR_REPORT  = -6;
-    p.ENABLE_ACCURATE_TEXTURES    =  7;
-    p.DISABLE_ACCURATE_TEXTURES   = -7;
-    p.HINT_COUNT                  = 10;
-
-    // PJS defined constants
-    p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
-    p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!!
-    p.PRECISIONF         = 1 << p.PRECISIONB;
-    p.PREC_MAXVAL        = p.PRECISIONF - 1;
-    p.PREC_ALPHA_SHIFT   = 24 - p.PRECISIONB;
-    p.PREC_RED_SHIFT     = 16 - p.PRECISIONB;
-    p.NORMAL_MODE_AUTO   = 0;
-    p.NORMAL_MODE_SHAPE  = 1;
-    p.NORMAL_MODE_VERTEX = 2;
-    p.MAX_LIGHTS         = 8;
-
-    p.focused            = true;
 
     // "Private" variables used to maintain state
     var curContext,
@@ -357,7 +455,8 @@
         proxyContext = null,
         isContextReplaced = false,
         setPixelsCached,
-        maxPixelsCached = 1000;
+        maxPixelsCached = 1000,
+        codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
 
     // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
     // in Minefield does nothing and does not report any errors.
@@ -415,6 +514,149 @@
         isBezier = false,
         firstVert = true;
 
+    //PShape stuff
+    var curShapeMode = p.CORNER;
+    var colors = {}; 
+        colors.aliceblue = "#f0f8ff";
+        colors.antiquewhite = "#faebd7";
+        colors.aqua = "#00ffff";
+        colors.aquamarine = "#7fffd4";
+        colors.azure = "#f0ffff";
+        colors.beige = "#f5f5dc";
+        colors.bisque = "#ffe4c4";
+        colors.black = "#000000";
+        colors.blanchedalmond = "#ffebcd";
+        colors.blue = "#0000ff";
+        colors.blueviolet = "#8a2be2";
+        colors.brown = "#a52a2a";
+        colors.burlywood = "#deb887";
+        colors.cadetblue = "#5f9ea0";
+        colors.chartreuse = "#7fff00";
+        colors.chocolate = "#d2691e";
+        colors.coral = "#ff7f50";
+        colors.cornflowerblue = "#6495ed";
+        colors.cornsilk = "#fff8dc";
+        colors.crimson = "#dc143c";
+        colors.cyan = "#00ffff";
+        colors.darkblue = "#00008b";
+        colors.darkcyan = "#008b8b";
+        colors.darkgoldenrod = "#b8860b";
+        colors.darkgray = "#a9a9a9";
+        colors.darkgreen = "#006400";
+        colors.darkkhaki = "#bdb76b";
+        colors.darkmagenta = "#8b008b";
+        colors.darkolivegreen = "#556b2f";
+        colors.darkorange = "#ff8c00";
+        colors.darkorchid = "#9932cc";
+        colors.darkred = "#8b0000";
+        colors.darksalmon = "#e9967a";
+        colors.darkseagreen = "#8fbc8f";
+        colors.darkslateblue = "#483d8b";
+        colors.darkslategray = "#2f4f4f";
+        colors.darkturquoise = "#00ced1";
+        colors.darkviolet = "#9400d3";
+        colors.deeppink = "#ff1493";
+        colors.deepskyblue = "#00bfff";
+        colors.dimgray = "#696969";
+        colors.dodgerblue = "#1e90ff";
+        colors.firebrick = "#b22222";
+        colors.floralwhite = "#fffaf0";
+        colors.forestgreen = "#228b22";
+        colors.fuchsia = "#ff00ff";
+        colors.gainsboro = "#dcdcdc";
+        colors.ghostwhite = "#f8f8ff";
+        colors.gold = "#ffd700";
+        colors.goldenrod = "#daa520";
+        colors.gray = "#808080";
+        colors.green = "#008000";
+        colors.greenyellow = "#adff2f";
+        colors.honeydew = "#f0fff0";
+        colors.hotpink = "#ff69b4";
+        colors.indianred = "#cd5c5c";
+        colors.indigo = "#4b0082";
+        colors.ivory = "#fffff0";
+        colors.khaki = "#f0e68c";
+        colors.lavender = "#e6e6fa";
+        colors.lavenderblush = "#fff0f5";
+        colors.lawngreen = "#7cfc00";
+        colors.lemonchiffon = "#fffacd";
+        colors.lightblue = "#add8e6";
+        colors.lightcoral = "#f08080";
+        colors.lightcyan = "#e0ffff";
+        colors.lightgoldenrodyellow = "#fafad2";
+        colors.lightgrey = "#d3d3d3";
+        colors.lightgreen = "#90ee90";
+        colors.lightpink = "#ffb6c1";
+        colors.lightsalmon = "#ffa07a";
+        colors.lightseagreen = "#20b2aa";
+        colors.lightskyblue = "#87cefa";
+        colors.lightslategray = "#778899";
+        colors.lightsteelblue = "#b0c4de";
+        colors.lightyellow = "#ffffe0";
+        colors.lime = "#00ff00";
+        colors.limegreen = "#32cd32";
+        colors.linen = "#faf0e6";
+        colors.magenta = "#ff00ff";
+        colors.maroon = "#800000";
+        colors.mediumaquamarine = "#66cdaa";
+        colors.mediumblue = "#0000cd";
+        colors.mediumorchid = "#ba55d3";
+        colors.mediumpurple = "#9370d8";
+        colors.mediumseagreen = "#3cb371";
+        colors.mediumslateblue = "#7b68ee";
+        colors.mediumspringgreen = "#00fa9a";
+        colors.mediumturquoise = "#48d1cc";
+        colors.mediumvioletred = "#c71585";
+        colors.midnightblue = "#191970";
+        colors.mintcream = "#f5fffa";
+        colors.mistyrose = "#ffe4e1";
+        colors.moccasin = "#ffe4b5";
+        colors.navajowhite = "#ffdead";
+        colors.navy = "#000080";
+        colors.oldlace = "#fdf5e6";
+        colors.olive = "#808000";
+        colors.olivedrab = "#6b8e23";
+        colors.orange = "#ffa500";
+        colors.orangered = "#ff4500";
+        colors.orchid = "#da70d6";
+        colors.palegoldenrod = "#eee8aa";
+        colors.palegreen = "#98fb98";
+        colors.paleturquoise = "#afeeee";
+        colors.palevioletred = "#d87093";
+        colors.papayawhip = "#ffefd5";
+        colors.peachpuff = "#ffdab9";
+        colors.peru = "#cd853f";
+        colors.pink = "#ffc0cb";
+        colors.plum = "#dda0dd";
+        colors.powderblue = "#b0e0e6";
+        colors.purple = "#800080";
+        colors.red = "#ff0000";
+        colors.rosybrown = "#bc8f8f";
+        colors.royalblue = "#4169e1";
+        colors.saddlebrown = "#8b4513";
+        colors.salmon = "#fa8072";
+        colors.sandybrown = "#f4a460";
+        colors.seagreen = "#2e8b57";
+        colors.seashell = "#fff5ee";
+        colors.sienna = "#a0522d";
+        colors.silver = "#c0c0c0";
+        colors.skyblue = "#87ceeb";
+        colors.slateblue = "#6a5acd";
+        colors.slategray = "#708090";
+        colors.snow = "#fffafa";
+        colors.springgreen = "#00ff7f";
+        colors.steelblue = "#4682b4";
+        colors.tan = "#d2b48c";
+        colors.teal = "#008080";
+        colors.thistle = "#d8bfd8";
+        colors.tomato = "#ff6347";
+        colors.turquoise = "#40e0d0";
+        colors.violet = "#ee82ee";
+        colors.wheat = "#f5deb3";
+        colors.white = "#ffffff";
+        colors.whitesmoke = "#f5f5f5";
+        colors.yellow = "#ffff00";
+        colors.yellowgreen = "#9acd32";
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
 
@@ -857,11 +1099,1187 @@
     Char.prototype.valueOf = function() {
       return this.code;
     };
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // PShape
+    ////////////////////////////////////////////////////////////////////////////
+    var PShape = p.PShape = function(family) {
+      this.family    = family || p.GROUP;
+      this.visible   = true;
+      this.style     = true;
+      this.children  = [];
+      this.nameTable = [];
+      this.params    = [];
+      this.name      = "";
+      this.image     = null;  //type PImage
+      this.matrix    = null; 
+      this.kind      = null;
+      this.close     = null;
+      this.width     = null;
+      this.height    = null;
+      this.parent    = null;
+      /* methods */
+      this.isVisible = function(){
+        return this.visible;
+      };
+      this.setVisible = function (visible){
+        this.visible = visible;
+      };
+      this.disableStyle = function(){
+        this.style = false;
+        for(var i = 0; i < this.children.length; i++)
+        {
+          this.children[i].disableStyle();
+        }
+      };
+      this.enableStyle = function(){
+        this.style = true;
+        for(var i = 0; i < this.children.length; i++)
+        {
+          this.children[i].enableStyle();
+        }
+      };
+      this.getFamily = function(){
+        return this.family;
+      };
+      this.getWidth = function(){
+        return this.width;
+      };
+      this.getHeight = function(){
+        return this.height;
+      };
+      this.setName = function(name){
+        this.name = name;
+      };
+      this.getName = function(){
+        return this.name;
+      };
+      this.draw = function(){
+        if (this.visible) {
+          this.pre();
+          this.drawImpl();
+          this.post();
+        }
+      };
+      this.drawImpl = function(){
+        if (this.family === p.GROUP) {
+          this.drawGroup();
+        } else if (this.family === p.PRIMITIVE) {
+          this.drawPrimitive();
+        } else if (this.family === p.GEOMETRY) {
+          this.drawGeometry();
+        } else if (this.family === p.PATH) {
+          this.drawPath();
+        }
+      };
+      this.drawPath = function(){
+        if (this.vertices.length === 0) { return; }
 
+        p.beginShape();
+        var i;
+        if (this.vertexCodes.length === 0) {  // each point is a simple vertex
+          if (this.vertices[0].length === 2) {  // drawing 2D vertices
+            for (i = 0; i < this.vertices.length; i++) {
+              p.vertex(this.vertices[i][0], this.vertices[i][1]);
+            }
+          } else {  // drawing 3D vertices
+            for (i = 0; i < this.vertices.length; i++) {
+              p.vertex(this.vertices[i][0], this.vertices[i][1], this.vertices[i][2]);
+            }
+          }
+        } else {  // coded set of vertices
+          var index = 0;
+          var j;
+          if (this.vertices[0].length === 2) {  // drawing a 2D path
+            for (j = 0; j < this.vertexCodes.length; j++) {
+              switch (this.vertexCodes[j]) {
+              case p.VERTEX:
+                p.vertex(this.vertices[index][0], this.vertices[index][1]);
+                if ( this.vertices[index]["moveTo"] === true) {
+                  vertArray[vertArray.length-1]["moveTo"] = true;
+                } else if ( this.vertices[index]["moveTo"] === false) {
+                  vertArray[vertArray.length-1]["moveTo"] = false;
+                }
+                p.breakShape = false;
+                index++;
+                break;
+              case p.BEZIER_VERTEX:
+                p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1],
+                               this.vertices[index+1][0], this.vertices[index+1][1],
+                               this.vertices[index+2][0], this.vertices[index+2][1]);
+                index += 3;
+                break;
+              case p.CURVE_VERTEX:
+                p.curveVertex(this.vertices[index][0], this.vertices[index][1]);
+                index++;
+                break;
+              case p.BREAK:
+                p.breakShape = true;
+                break;                  
+              }
+            }
+          } else {  // drawing a 3D path
+            for (j = 0; j < this.vertexCodes.length; j++) {
+              switch (this.vertexCodes[j]) {
+                case p.VERTEX:
+                  p.vertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                  if (this.vertices[index]["moveTo"] === true) {
+                    vertArray[vertArray.length-1]["moveTo"] = true;
+                  } else if (this.vertices[index]["moveTo"] === false) {
+                    vertArray[vertArray.length-1]["moveTo"] = false;
+                  }
+                  p.breakShape = false;
+                  break;
+                case p.BEZIER_VERTEX:
+                  p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1], this.vertices[index+0][2],
+                                 this.vertices[index+1][0], this.vertices[index+1][1], this.vertices[index+1][2],
+                                 this.vertices[index+2][0], this.vertices[index+2][1], this.vertices[index+2][2]);
+                  index += 3;
+                  break;
+                case p.CURVE_VERTEX:
+                  p.curveVertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                  index++;
+                  break;
+                case p.BREAK:
+                  p.breakShape = true;
+                  break;
+              }
+            }
+          }
+        }
+        p.endShape(this.close ? p.CLOSE : p.OPEN);
+      };
+      this.drawGeometry = function() {
+        p.beginShape(this.kind);
+        var i;
+        if (this.style) {
+          for (i = 0; i < this.vertices.length; i++) {
+            p.vertex(this.vertices[i]);
+          }
+        } else {
+          for (i = 0; i < this.vertices.length; i++) {
+            var vert = this.vertices[i];
+            if (vert[2] === 0) {
+              p.vertex(vert[0], vert[1]);
+            } else {
+              p.vertex(vert[0], vert[1], vert[2]);
+            }
+          }
+        }
+        p.endShape();
+      };
+      this.drawGroup = function() {
+        for (var i = 0; i < this.children.length; i++) {
+          this.children[i].draw();
+        }
+      };
+      this.drawPrimitive = function() {
+        switch (this.kind) {        
+          case p.POINT:
+            p.point(this.params[0], this.params[1]);
+            break;
+          case p.LINE: 
+            if (this.params.length === 4) {  // 2D
+              p.line(this.params[0], this.params[1],
+                     this.params[2], this.params[3]);
+            } else {  // 3D
+              p.line(this.params[0], this.params[1], this.params[2],
+                     this.params[3], this.params[4], this.params[5]);
+            }
+            break;
+          case p.TRIANGLE:
+            p.triangle(this.params[0], this.params[1],
+                       this.params[2], this.params[3],
+                       this.params[4], this.params[5]);
+            break;
+          case p.QUAD:
+            p.quad(this.params[0], this.params[1],
+                   this.params[2], this.params[3],
+                   this.params[4], this.params[5],
+                   this.params[6], this.params[7]);
+            break;
+          case p.RECT:
+            if (this.image !== null) {
+              p.imageMode(p.CORNER);
+              p.image(this.image, this.params[0], this.params[1], this.params[2], this.params[3]);
+            } else {
+              p.rectMode(p.CORNER);
+              p.rect(this.params[0], this.params[1], this.params[2], this.params[3]);
+            }
+            break;
+          case p.ELLIPSE:
+            p.ellipseMode(p.CORNER);
+            p.ellipse(this.params[0], this.params[1], this.params[2], this.params[3]);
+            break;
+          case p.ARC:
+            p.ellipseMode(p.CORNER);
+            p.arc(this.params[0], this.params[1], this.params[2], this.params[3], this.params[4], this.params[5]);
+            break;
+          case p.BOX:
+            if (this.params.length === 1) {
+              p.box(this.params[0]);
+            } else {
+              p.box(this.params[0], this.params[1], this.params[2]);
+            }
+            break;
+          case p.SPHERE:
+            p.sphere(this.params[0]);
+            break;
+        }
+      };
+      this.pre = function() {
+        if (this.matrix) {
+          p.pushMatrix();
+          //this.applyMatrix( this.matrix ); //applyMatrix missing
+        }
+        if (this.style) {
+          p.pushStyle();
+          this.styles();
+        }
+      };
+      this.post = function() {
+        if (this.matrix) {
+          p.popMatrix();
+        }
+        if (this.style) {
+          p.popStyle();
+        }
+      };
+      this.styles = function() {
+        if (this.stroke) {
+          p.stroke(this.strokeColor);
+          p.strokeWeight(this.strokeWeight);
+          p.strokeCap(this.strokeCap);
+          p.strokeJoin(this.strokeJoin);
+        } else {
+          p.noStroke();
+        }
+
+        if (this.fill) {
+          p.fill(this.fillColor);
+        } else {
+          p.noFill();
+        }
+      };
+      
+      // return the PShape at the specific index from the children array or
+      // return the Phape from a parent shape specified by its name
+      this.getChild = function(child) {
+        if (typeof child === 'number') {
+          return this.children[child];
+        } else {
+          var found,
+              i;
+          if(child === "" || this.name === child){
+            return this;
+          } else {
+            if(this.nameTable.length > 0)
+            {
+              for(i = 0; i < this.nameTable.length || found; i++)
+              {
+                if(this.nameTable[i].getName === child) {
+                  found = this.nameTable[i];
+                }
+              }
+              if (found) { return found; }
+            }
+            for(i = 0; i < this.children.lenth; i++)
+            {
+              found = this.children[i].getChild(child);
+              if(found) { return found; }
+            }
+          }
+          return null;
+        }              
+      };
+      this.getChildCount = function () {
+        return this.children.length;
+      };
+      this.addChild = function( child ) {
+        this.children.push(child);
+        child.parent = this;
+        if (child.getName() !== null) {
+          this.addName(child.getName(), child);
+        }
+      };
+      this.addName = function(name,  shape) {
+        if (this.parent !== null) {
+          this.parent.addName( name, shape );
+        } else {
+          this.nameTable.push( [name, shape] );
+        }
+      };
+      // findChild not in yet
+      this.translate = function() {
+        if(arguments.length === 2)
+        {
+          this.checkMatrix(2);
+          this.matrix.translate(arguments[0], arguments[1]);
+        } else {
+          this.checkMatrix(3);
+          this.matrix.translate(arguments[0], arguments[1], 0);
+        }
+      };
+      this.checkMatrix = function(dimensions) {
+        if(this.matrix === null) {
+          if(dimensions === 2) {
+            this.matrix = new p.PMatrix2D();
+          } else {
+            this.matrix = new p.PMatrix3D();
+          }
+        }else if(dimensions === 3 && this.matrix instanceof p.PMatrix2D) {
+          this.matrix = new p.PMatrix3D();
+        }
+      };
+      this.rotateX = function(angle) {
+        this.rotate(angle, 1, 0, 0);
+      };
+      this.rotateY = function(angle) {
+        this.rotate(angle, 0, 1, 0);
+      };
+      this.rotateZ = function(angle) {
+        this.rotate(angle, 0, 0, 1);
+      };
+      this.rotate = function() {
+        if(arguments.length === 1){
+          this.checkMatrix(2);
+          this.matrix.rotate(arguments[0]);
+        } else {
+          this.checkMatrix(3);
+          this.matrix.rotate(arguments[0], arguments[1], arguments[2] ,arguments[3]);
+        }
+      };
+      this.scale = function() {
+        if(arguments.length === 2) {
+          this.checkMatrix(2);
+          this.matrix.scale(arguments[0], arguments[1]);
+        } else if (arguments.length === 3) {
+          this.checkMatrix(2);
+          this.matrix.scale(arguments[0], arguments[1], arguments[2]);
+        } else {
+          this.checkMatrix(2);
+          this.matrix.scale(arguments[0]);
+        }
+      };
+      this.resetMatrix = function() {
+        this.checkMatrix(2);
+        this.matrix.reset();
+      };
+      // applyMatrix missing
+      // apply missing
+      // contains missing
+      // find child missing
+      // getPrimitive missing
+      // getVertex , getVertexCount missing
+      // getVertexCode , getVertexCodes , getVertexCodeCount missing
+      // getVertexX, getVertexY, getVertexZ missing
+      
+    };
+    
+    p.shape = function(shape, x, y, width, height) {
+      if (arguments.length >= 1 && arguments[0] !== null) {
+        if (shape.isVisible()) {
+          p.pushMatrix();
+          if (curShapeMode === p.CENTER) {
+            if (arguments.length === 5) {
+              p.translate(x - width/2, y - height/2);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x - shape.getWidth()/2, - shape.getHeight()/2);
+            } else {
+              p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
+            }
+          } else if (curShapeMode === p.CORNER) {
+            if (arguments.length === 5) {
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
+            }
+          } else if (curShapeMode === p.CORNERS) {
+            if (arguments.length === 5) {
+              width  -= x;
+              height -= y;
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
+            }
+          }
+          shape.draw();
+          if ((arguments.length === 1 && curShapeMode === p.CENTER ) || arguments.length > 1) {
+            p.popMatrix();
+          }
+        }
+      }
+    }; 
+    p.shapeMode = function (mode) {
+      curShapeMode = mode;
+    };
+    p.loadShape = function (filename) {
+      if (arguments.length === 1) {
+        if (filename.indexOf(".svg") > -1) {
+          return new p.PShapeSVG(null, filename);
+        }
+      }
+      return null;
+    };
+    
+    var PShapeSVG = p.PShapeSVG = function() {
+      p.PShape.call( this ); // PShape is the base class.
+      if (arguments.length === 1) {
+        this.element  = new p.XMLElement(arguments[0]);
+        // set values to their defaults according to the SVG spec
+        this.vertexCodes         = [];
+        this.vertices            = [];
+        this.opacity             = 1;
+        
+        this.stroke              = false;
+        this.strokeColor         = p.ALPHA_MASK;
+        this.strokeWeight        = 1;
+        this.strokeCap           = p.SQUARE;  // equivalent to BUTT in svg spec
+        this.strokeJoin          = p.MITER;
+        this.strokeGradient      = null;
+        this.strokeGradientPaint = null;
+        this.strokeName          = null;
+        this.strokeOpacity       = 1;
+
+        this.fill                = true;
+        this.fillColor           = p.ALPHA_MASK;
+        this.fillGradient        = null;
+        this.fillGradientPaint   = null;
+        this.fillName            = null;
+        this.fillOpacity         = 1;
+
+        if (this.element.getName() !== "svg") {
+          throw("root is not <svg>, it's <" + this.element.getName() + ">");
+        }
+      }
+      else if (arguments.length === 2) {
+        if (typeof arguments[1] === 'string') {
+          if (arguments[1].indexOf(".svg") > -1) { //its a filename
+            this.element = new p.XMLElement(arguments[1]);
+            // set values to their defaults according to the SVG spec
+            this.vertexCodes         = [];
+            this.vertices            = [];
+            this.opacity             = 1;
+             
+            this.stroke              = false;
+            this.strokeColor         = p.ALPHA_MASK;
+            this.strokeWeight        = 1;
+            this.strokeCap           = p.SQUARE;  // equivalent to BUTT in svg spec
+            this.strokeJoin          = p.MITER;
+            this.strokeGradient      = "";
+            this.strokeGradientPaint = "";
+            this.strokeName          = "";
+            this.strokeOpacity       = 1;
+            
+            this.fill                = true;
+            this.fillColor           = p.ALPHA_MASK;        
+            this.fillGradient        = null;
+            this.fillGradientPaint   = null;
+            this.fillOpacity         = 1;
+           
+          }
+        } else { // XMLElement
+          if (arguments[0]) { // PShapeSVG 
+            this.element             = arguments[1];
+            this.vertexCodes         = arguments[0].vertexCodes.slice();
+            this.vertices            = arguments[0].vertices.slice();
+            
+            this.stroke              = arguments[0].stroke;
+            this.strokeColor         = arguments[0].strokeColor;
+            this.strokeWeight        = arguments[0].strokeWeight;
+            this.strokeCap           = arguments[0].strokeCap;
+            this.strokeJoin          = arguments[0].strokeJoin;
+            this.strokeGradient      = arguments[0].strokeGradient;
+            this.strokeGradientPaint = arguments[0].strokeGradientPaint;
+            this.strokeName          = arguments[0].strokeName;
+
+            this.fill                = arguments[0].fill;
+            this.fillColor           = arguments[0].fillColor;
+            this.fillGradient        = arguments[0].fillGradient;
+            this.fillGradientPaint   = arguments[0].fillGradientPaint;
+            this.fillName            = arguments[0].fillName;
+            this.strokeOpacity       = arguments[0].strokeOpacity;
+            this.fillOpacity         = arguments[0].fillOpacity;
+            this.opacity             = arguments[0].opacity;
+          }       
+        }     
+      }
+      
+      this.name      = this.element.getStringAttribute("id");
+      var displayStr = this.element.getStringAttribute("display", "inline");
+      this.visible   = displayStr !== "none";
+      var str = this.element.getAttribute("transform");
+      if (str) {
+        this.matrix = this.parseMatrix(str);
+      }
+      // not proper parsing of the viewBox, but will cover us for cases where
+      // the width and height of the object is not specified
+      var viewBoxStr = this.element.getStringAttribute("viewBox");
+      if ( viewBoxStr !== null ) {
+        var viewBox = viewBoxStr.split(" ");
+        this.width  = viewBox[2];
+        this.height = viewBox[3];
+      }
+
+      // TODO if viewbox is not same as width/height, then use it to scale
+      // the original objects. for now, viewbox only used when width/height
+      // are empty values (which by the spec means w/h of "100%"
+      var unitWidth  = this.element.getStringAttribute("width");
+      var unitHeight = this.element.getStringAttribute("height");
+      if (unitWidth !== null) {
+        this.width  = this.parseUnitSize(unitWidth);
+        this.height = this.parseUnitSize(unitHeight);
+      } else {
+        if ((this.width === 0) || (this.height === 0)) {
+          // For the spec, the default is 100% and 100%. For purposes
+          // here, insert a dummy value because this is prolly just a
+          // font or something for which the w/h doesn't matter.
+          this.width  = 1;
+          this.height = 1;
+          
+          //show warning
+          throw("The width and/or height is not " +
+                                "readable in the <svg> tag of this file.");
+        }
+      }
+      this.parseColors(this.element); 
+      this.parseChildren(this.element);
+
+    };
+        
+    PShapeSVG.prototype = {
+      // parseMatrix missing
+      // getChild missing
+      // print missing
+      parseMatrix: function(str) { },
+      parseChildren:function(element) {
+        var newelement = element.getChildren();
+        var children   = new p.PShape();
+        for (var i = 0; i < newelement.length; i++) {
+          var kid = this.parseChild(newelement[i]);
+          if (kid) {
+            children.addChild(kid);
+          }
+        }
+        this.children.push(children);
+      },
+      getName: function() {
+        return this.name;
+      },
+      parseChild: function( elem ) {
+        var name = elem.getName();
+        var shape;
+        switch (name) {
+          case "g":
+            shape = new PShapeSVG(this, elem);
+            break;
+          case "defs":
+            // generally this will contain gradient info, so may
+            // as well just throw it into a group element for parsing
+            shape = new PShapeSVG(this, elem);
+            break;
+          case "line":
+            shape = new PShapeSVG(this, elem);
+            shape.parseLine();
+            break;
+          case "circle":
+            shape = new PShapeSVG(this, elem);
+            shape.parseEllipse(true);
+            break;
+          case "ellipse":
+            shape = new PShapeSVG(this, elem);
+            shape.parseEllipse(false);
+            break;
+          case "rect":
+            shape = new PShapeSVG(this, elem);
+            shape.parseRect();
+            break;
+          case "polygon":
+            shape = new PShapeSVG(this, elem);
+            shape.parsePoly(true);
+            break;
+          case "polyline":
+            shape = new PShapeSVG(this, elem);
+            shape.parsePoly(false);
+            break;
+          case "path":
+            shape = new PShapeSVG(this, elem);
+            shape.parsePath();
+            break;
+          case "radialGradient":
+            //return new RadialGradient(this, elem);
+            break;
+          case "linearGradient":
+            //return new LinearGradient(this, elem);
+            break;
+          case "text":
+            p.println("Text in SVG files is not currently supported, convert text to outlines instead." );
+            break;
+          case "filter":
+            p.println("Filters are not supported.");
+            break;
+          case "mask":
+            p.println("Masks are not supported.");
+            break;
+          default:
+            p.println("Ignoring  <" + name + "> tag.");
+            break;
+        }
+        return shape;
+      },
+      parsePath: function(){
+        this.family = p.PATH;
+        this.kind = 0;
+         
+        var c;
+        var pathData = p.trim(this.element.getStringAttribute("d").replace(/\s+/g,' '));
+        if (pathData === null) { return; }
+        var pathDataChars = pathData.toCharArray();
+
+        var pathBuffer = "";
+        var lastSeparate = false;
+
+        for (var i = 0; i < pathDataChars.length; i++) {
+          c = pathDataChars[i].toString();
+          var separate = false;
+
+          if (c === "M" || c === 'm' ||
+              c === 'L' || c === 'l' ||
+              c === 'H' || c === 'h' ||
+              c === 'V' || c === 'v' ||
+              c === 'C' || c === 'c' ||  // beziers
+              c === 'S' || c === 's' ||
+              c === 'Q' || c === 'q' ||  // quadratic beziers
+              c === 'T' || c === 't' ||
+              c === 'Z' || c === 'z' ||  // closepath
+              c === ',') {
+            separate = true;
+            if (i !== 0 ) {
+              pathBuffer +="|";
+            }
+          }
+          if (c === 'Z' || c === 'z') {
+            separate = false;
+          }
+          if (c === '-' && !lastSeparate) {
+            // allow for 'e' notation in numbers, e.g. 2.10e-9 
+            // http://dev.processing.org/bugs/show_bug.cgi?id=1408
+            if (i === 0 || pathDataChars[i-1] !== 'e') {
+              pathBuffer +="|";
+            }
+          }
+          if (c !== ',') {
+            pathBuffer += c; //"" + pathDataBuffer.charAt(i));
+          }
+          if (separate && c !== ',' && c !== '-') {
+            pathBuffer +="|";
+          }
+          lastSeparate = separate;
+        }
+        // split into array
+        var pathDataKeys = pathBuffer.toString().split(/[|\s+]/g);
+        // loop through the array and remove spaces
+        for(i =0; i < pathDataKeys.length; i++){
+          if (pathDataKeys[i] === ""){
+            pathDataKeys.splice(i, 1);
+          }
+        }  
+        var cx     = 0,
+            cy     = 0,
+            ctrlX  = 0,
+            ctrlY  = 0,
+            ctrlX1 = 0,
+            ctrlX2 = 0,
+            ctrlY1 = 0,
+            ctrlY2 = 0,
+            endX   = 0,
+            endY   = 0,
+            ppx    = 0,
+            ppy    = 0,
+            px     = 0,
+            py     = 0;  
+
+        i = 0;
+        while (i < pathDataKeys.length) {
+          c = p.trim(pathDataKeys[i].charAt(0 ));
+          switch (c) {
+
+            case 'M':  // M - move to (absolute)
+              cx = parseFloat(pathDataKeys[i + 1]);
+              cy = parseFloat(pathDataKeys[i + 2]);
+              this.parsePathMoveto(cx, cy);
+              i += 3;
+              break;
+
+            case 'm':  // m - move to (relative)
+              cx = parseFloat(cx)+ parseFloat(pathDataKeys[i + 1]);
+              cy = parseFloat(cy)+ parseFloat(pathDataKeys[i + 2]);
+              this.parsePathMoveto(cx, cy);
+              i += 3;
+              break;
+
+            case 'L':
+              cx = parseFloat(pathDataKeys[i + 1]);
+              cy = parseFloat(pathDataKeys[i + 2]);
+              this.parsePathLineto(cx, cy);
+              i += 3;
+              break;
+
+            case 'l':
+              cx = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              cy = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              this.parsePathLineto(cx, cy);
+              i += 3;
+              break;
+
+              // horizontal lineto absolute
+            case 'H':
+              cx = parseFloat(pathDataKeys[i + 1]);
+              this.parsePathLineto(cx, cy);
+              i += 2;
+              break;
+
+              // horizontal lineto relative
+            case 'h':
+              cx = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              this.parsePathLineto(cx, cy);
+              i += 2;
+              break;
+
+            case 'V':
+              cy = parseFloat(pathDataKeys[i + 1]);
+              this.parsePathLineto(cx, cy);
+              i += 2;
+              break;
+
+            case 'v':
+              cy = parseFloat(cy) + parseFloat(pathDataKeys[i + 1]);
+              this.parsePathLineto(cx, cy);
+              i += 2;
+              break;
+
+              // C - curve to (absolute)
+            case 'C': 
+              ctrlX1 = parseFloat(pathDataKeys[i + 1]);
+              ctrlY1 = parseFloat(pathDataKeys[i + 2]);
+              ctrlX2 = parseFloat(pathDataKeys[i + 3]);
+              ctrlY2 = parseFloat(pathDataKeys[i + 4]);
+              endX   = parseFloat(pathDataKeys[i + 5]);
+              endY   = parseFloat(pathDataKeys[i + 6]);
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 7;
+              break;
+
+            // c - curve to (relative)
+            case 'c': 
+              ctrlX1 = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              ctrlY1 = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              ctrlX2 = parseFloat(cx) + parseFloat(pathDataKeys[i + 3]);
+              ctrlY2 = parseFloat(cy) + parseFloat(pathDataKeys[i + 4]);
+              endX   = parseFloat(cx) + parseFloat(pathDataKeys[i + 5]);
+              endY   = parseFloat(cy) + parseFloat(pathDataKeys[i + 6]);
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 7;
+              break;
+
+              // S - curve to shorthand (absolute)
+            case 'S': 
+              ppx    = parseFloat(this.vertices[ this.vertices.length-2 ][0]);
+              ppy    = parseFloat(this.vertices[ this.vertices.length-2 ][1]);
+              px     = parseFloat(this.vertices[ this.vertices.length-1 ][0]);
+              py     = parseFloat(this.vertices[ this.vertices.length-1 ][1]);
+              ctrlX1 = px + (px - ppx);
+              ctrlY1 = py + (py - ppy);
+              ctrlX2 = parseFloat(pathDataKeys[i + 1]);
+              ctrlY2 = parseFloat(pathDataKeys[i + 2]);
+              endX   = parseFloat(pathDataKeys[i + 3]);
+              endY   = parseFloat(pathDataKeys[i + 4]);
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 5;
+              break;
+
+              // s - curve to shorthand (relative)
+            case 's': 
+              ppx    = parseFloat(this.vertices[this.vertices.length-2][0]);
+              ppy    = parseFloat(this.vertices[this.vertices.length-2][1]);
+              px     = parseFloat(this.vertices[this.vertices.length-1][0]);
+              py     = parseFloat(this.vertices[this.vertices.length-1][1]);
+              ctrlX1 = px + (px - ppx);
+              ctrlY1 = py + (py - ppy);
+              ctrlX2 = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              ctrlY2 = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              endX   = parseFloat(cx) + parseFloat(pathDataKeys[i + 3]);
+              endY   = parseFloat(cy) + parseFloat(pathDataKeys[i + 4]);
+              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 5;
+              break;
+
+              // Q - quadratic curve to (absolute)
+            case 'Q': 
+              ctrlX = parseFloat(pathDataKeys[i + 1]);
+              ctrlY = parseFloat(pathDataKeys[i + 2]);
+              endX  = parseFloat(pathDataKeys[i + 3]);
+              endY  = parseFloat(pathDataKeys[i + 4]);
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 5;
+              break;
+
+              // q - quadratic curve to (relative)
+            case 'q': 
+              ctrlX = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              ctrlY = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              endX  = parseFloat(cx) + parseFloat(pathDataKeys[i + 3]);
+              endY  = parseFloat(cy) + parseFloat(pathDataKeys[i + 4]);
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 5;
+              break;
+
+              // T - quadratic curve to shorthand (absolute)
+              // The control point is assumed to be the reflection of the
+              // control point on the previous command relative to the
+              // current point. (If there is no previous command or if the
+              // previous command was not a Q, q, T or t, assume the control
+              // point is coincident with the current point.)
+            case 'T': 
+              ppx   = this.vertices[this.vertices.length-2][0];
+              ppy   = this.vertices[this.vertices.length-2][1];
+              px    = this.vertices[this.vertices.length-1][0];
+              py    = this.vertices[this.vertices.length-1][1];
+              ctrlX = px + (px - ppx);
+              ctrlY = py + (py - ppy);
+              endX  = parseFloat(pathDataKeys[i + 1]);
+              endY  = parseFloat(pathDataKeys[i + 2]);
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 3;
+              break;
+
+              // t - quadratic curve to shorthand (relative)
+            case 't': 
+              ppx   = this.vertices[this.vertices.length-2][0];
+              ppy   = this.vertices[this.vertices.length-2][1];
+              px    = this.vertices[this.vertices.length-1][0];
+              py    = this.vertices[this.vertices.length-1][1];
+              ctrlX = px + (px - ppx);
+              ctrlY = py + (py - ppy);
+              endX  = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
+              endY  = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
+              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+              cx = endX;
+              cy = endY;
+              i += 3;
+              break;
+
+            case 'Z':
+            case 'z':
+              this.close = true;
+              i++;
+              break;
+
+            default:
+              i++;
+              /*String parsed =
+                PApplet.join(PApplet.subset(pathDataKeys, 0, i), ",");
+              String unparsed =
+                PApplet.join(PApplet.subset(pathDataKeys, i), ",");
+              System.err.println("parsed: " + parsed);
+              System.err.println("unparsed: " + unparsed);
+              if (pathDataKeys[i].equals("a") || pathDataKeys[i].equals("A")) {
+                String msg = "Sorry, elliptical arc support for SVG files " +
+                  "is not yet implemented (See bug #996 for details)";
+                throw new RuntimeException(msg);
+              }
+              throw new RuntimeException("shape command not handled: " + pathDataKeys[i]);
+            }*/
+          }
+        }
+      },
+      parsePathQuadto: function(x1, y1, cx, cy, x2, y2) {
+        this.parsePathCode(p.BEZIER_VERTEX);
+        // x1/y1 already covered by last moveto, lineto, or curveto
+        this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
+        this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
+        this.parsePathVertex(x2, y2);
+      },
+      parsePathCurveto : function(x1,  y1, x2, y2, x3, y3) {
+        this.parsePathCode(p.BEZIER_VERTEX );
+        this.parsePathVertex(x1, y1);
+        this.parsePathVertex(x2, y2);
+        this.parsePathVertex(x3, y3);
+      },
+      parsePathLineto: function(px, py) {
+        this.parsePathCode(p.VERTEX);
+        this.parsePathVertex(px, py);
+        // add property to distinguish between curContext.moveTo or curContext.lineTo
+        this.vertices[this.vertices.length-1]["moveTo"] = false;
+      },
+      parsePathMoveto: function(px, py) {
+        if (this.vertices.length > 0) {
+          this.parsePathCode(p.BREAK);
+        }
+        this.parsePathCode(p.VERTEX);
+        this.parsePathVertex(px, py);
+        // add property to distinguish between curContext.moveTo or curContext.lineTo
+        this.vertices[this.vertices.length-1]["moveTo"] = true;
+      },
+      parsePathVertex: function(x,  y) {
+        var verts = [];
+        verts[0]  = x;
+        verts[1]  = y;
+        this.vertices.push(verts);
+      },
+      parsePathCode: function(what) {
+        this.vertexCodes.push(what);
+      },
+      parsePoly: function(val) {
+        this.family    = p.PATH;
+        this.close     = val;
+        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/\s+/g,' '));
+        if (pointsAttr !== null) {
+          var pointsBuffer = pointsAttr.split(" ");
+          for (var i = 0; i < pointsBuffer.length; i++) {
+            var verts = [];
+            var pb    = pointsBuffer[i].split(',');
+            verts[0]  = pb[0];
+            verts[1]  = pb[1];
+            this.vertices.push(verts);
+          }       
+        }
+      },
+      parseRect: function() {
+        this.kind      = p.RECT;
+        this.family    = p.PRIMITIVE;
+        this.params    = [];
+        this.params[0] = this.element.getFloatAttribute("x");
+        this.params[1] = this.element.getFloatAttribute("y");
+        this.params[2] = this.element.getFloatAttribute("width");
+        this.params[3] = this.element.getFloatAttribute("height");
+    
+      },
+      parseEllipse: function(val) {
+        this.kind   = p.ELLIPSE;
+        this.family = p.PRIMITIVE;
+        this.params = [];
+
+        this.params[0] = this.element.getFloatAttribute("cx");
+        this.params[1] = this.element.getFloatAttribute("cy");
+
+        var rx, ry;
+        if (val) {
+          rx = ry = this.element.getFloatAttribute("r");
+        } else {
+          rx = this.element.getFloatAttribute("rx");
+          ry = this.element.getFloatAttribute("ry");
+        }
+        this.params[0] -= rx;
+        this.params[1] -= ry;
+
+        this.params[2] = rx*2;
+        this.params[3] = ry*2;
+      },
+      parseLine: function() {
+        this.kind = p.LINE;
+        this.family = p.PRIMITIVE;
+        this.params = [];
+        this.params[0] = this.element.getFloatAttribute("x1");
+        this.params[1] = this.element.getFloatAttribute("y1");
+        this.params[2] = this.element.getFloatAttribute("x2");
+        this.params[3] = this.element.getFloatAttribute("y2");
+      },
+      parseColors: function(element) {
+        if (element.hasAttribute("opacity")) {
+          this.setOpacity(element.getAttribute("opacity"));
+        }
+        if (element.hasAttribute("stroke")) {
+          this.setStroke(element.getAttribute("stroke"));
+        }
+        if (element.hasAttribute("stroke-width")) {
+          // if NaN (i.e. if it's 'inherit') then default back to the inherit setting
+          this.setStrokeWeight(element.getAttribute("stroke-width"));
+        }
+        if (element.hasAttribute("stroke-linejoin") ) {
+          this.setStrokeJoin(element.getAttribute("stroke-linejoin"));
+        }
+        if (element.hasAttribute("stroke-linecap")) {
+          this.setStrokeCap(element.getStringAttribute("stroke-linecap"));
+        }
+        // fill defaults to black (though stroke defaults to "none")
+        // http://www.w3.org/TR/SVG/painting.html#FillProperties
+        if (element.hasAttribute("fill")) {
+          this.setFill(element.getStringAttribute("fill"));
+        }
+        if (element.hasAttribute("style")) {
+          var styleText   = element.getStringAttribute("style");
+          var styleTokens = styleText.toString().split( ";" );
+
+          for (var i = 0; i < styleTokens.length; i++) {
+            var tokens = p.trim(styleTokens[i].split( ":" ));
+            switch(tokens[0]){
+              case "fill":
+                this.setFill(tokens[1]);
+                break;
+              case "fill-opacity":
+                this.setFillOpacity(tokens[1]);
+                break;
+              case "stroke":
+                this.setStroke(tokens[1]);
+                break;
+              case "stroke-width":
+                this.setStrokeWeight(tokens[1]);
+                break;
+              case "stroke-linecap":
+                this.setStrokeCap(tokens[1]);
+                break;
+              case "stroke-linejoin":
+                this.setStrokeJoin(tokens[1]);
+                break;
+              case "stroke-opacity":
+                this.setStrokeOpacity(tokens[1]);
+                break;
+              case "opacity":
+                this.setOpacity(tokens[1]);
+                break;
+              // Other attributes are not yet implemented
+            }     
+          }
+        }
+      },
+      setFillOpacity: function(opacityText) {
+        this.fillOpacity = parseFloat(opacityText);
+        this.fillColor   = (parseInt(this.fillOpacity * 255, 16))  << 24 | this.fillColor & 0xFFFFFF;
+      },
+      setFill: function (fillText) {
+        var opacityMask = this.fillColor & 0xFF000000;
+        if (fillText === "none") {
+          this.fill = false;
+        } else if (fillText.indexOf("#") === 0) {
+          this.fill      = true;
+          this.fillColor = opacityMask | (parseInt(fillText.substring(1), 16 )) & 0xFFFFFF;
+        } else if (fillText.indexOf("rgb") === 0) {
+          this.fill      = true;
+          this.fillColor = opacityMask | this.parseRGB(fillText);
+        } else if (fillText.indexOf("url(#") === 0) {
+          this.fillName = fillText.substring(5, fillText.length - 1 );
+          /*Object fillObject = findChild(fillName);
+          if (fillObject instanceof Gradient) {
+            fill = true;
+            fillGradient = (Gradient) fillObject;
+            fillGradientPaint = calcGradientPaint(fillGradient); //, opacity);
+          } else {
+            System.err.println("url " + fillName + " refers to unexpected data");
+          }*/
+        } else {
+          if (colors[fillText]) {
+            this.fill      = true;
+            this.fillColor = opacityMask | (parseInt(colors[fillText].substring(1), 16)) & 0xFFFFFF;
+          }
+        }
+      },
+      setOpacity: function(opacity) { 
+        this.strokeColor = (parseInt(opacity * 255, 16)) << 24 | this.strokeColor & 0xFFFFFF;
+        this.fillColor   = (parseInt(opacity * 255, 16)) << 24 | this.fillColor & 0xFFFFFF;
+      },
+      setStroke: function(strokeText) {
+        var opacityMask = this.strokeColor & 0xFF000000;
+        if (strokeText === "none") {
+          this.stroke = false;
+        } else if (strokeText.charAt( 0 ) === "#") {
+          this.stroke      = true;
+          this.strokeColor = opacityMask | (parseInt( strokeText.substring( 1 ), 16 )) & 0xFFFFFF;
+        } else if (strokeText.indexOf( "rgb" ) === 0 ) {
+          this.stroke = true;
+          this.strokeColor = opacityMask | this.parseRGB(strokeText);
+        } else if (strokeText.indexOf( "url(#" ) === 0) {
+          this.strokeName = strokeText.substring(5, strokeText.length - 1);
+            //this.strokeObject = findChild(strokeName);
+          /*if (strokeObject instanceof Gradient) {
+            strokeGradient = (Gradient) strokeObject;
+            strokeGradientPaint = calcGradientPaint(strokeGradient); //, opacity);
+          } else {
+            System.err.println("url " + strokeName + " refers to unexpected data");
+          }*/
+        } else {
+          if (colors[strokeText]){
+            this.stroke      = true;
+            this.strokeColor = opacityMask | (parseInt(colors[strokeText].substring(1), 16)) & 0xFFFFFF;
+          }
+        }
+      },
+      setStrokeWeight: function(weight) {
+        this.strokeWeight = this.parseUnitSize(weight);
+      },
+      setStrokeJoin: function(linejoin) {
+        if (linejoin === "miter") {
+          this.strokeJoin = p.MITER;
+
+        } else if (linejoin === "round") {
+          this.strokeJoin = p.ROUND;
+
+        } else if (linejoin === "bevel") {
+          this.strokeJoin = p.BEVEL;
+        }
+      },
+      setStrokeCap: function (linecap) {
+        if (linecap === "butt") {
+          this.strokeCap = p.SQUARE;
+
+        } else if (linecap === "round") {
+          this.strokeCap = p.ROUND;
+
+        } else if (linecap === "square") {
+          this.strokeCap = p.PROJECT;
+        }
+      },
+      setStrokeOpacity: function (opacityText) {
+        this.strokeOpacity = parseFloat(opacityText);
+        this.strokeColor   = (parseInt(this.strokeOpacity * 255, 16)) << 24 | this.strokeColor & 0xFFFFFF;
+      },
+      parseRGB: function(color) {
+        var sub    = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
+        var values = sub.split(", ");
+        return (values[0] << 16) | (values[1] << 8) | (values[2]);
+      },
+      parseUnitSize: function (text) {
+        var len = text.length - 2;
+        if (len < 0) { return text; }
+        if (text.indexOf("pt") === len) {
+          return parseFloat(text.substring(0, len)) * 1.25;
+        } else if (text.indexOf("pc") === len) {
+          return parseFloat( text.substring( 0, len)) * 15;
+        } else if (text.indexOf("mm") === len) {
+          return parseFloat( text.substring(0, len)) * 3.543307;
+        } else if (text.indexOf("cm") === len) {
+          return parseFloat(text.substring(0, len)) * 35.43307;
+        } else if (text.indexOf("in") === len) {
+          return parseFloat(text.substring(0, len)) * 90;
+        } else if (text.indexOf("px") === len) {
+          return parseFloat(text.substring(0, len));
+        } else {
+          return parseFloat(text);
+        }
+      }      
+    };
+ 
     ////////////////////////////////////////////////////////////////////////////
     // XMLAttribute
     ////////////////////////////////////////////////////////////////////////////
-    var XMLAttribute = p.XMLAttribute = function ( fname, n, nameSpace, v, t){
+    var XMLAttribute = p.XMLAttribute = function (fname, n, nameSpace, v, t){
       this.fullName = fname || "";
       this.name = n || "";
       this.namespace = nameSpace || "";
@@ -869,7 +2287,7 @@
       this.type = t;
     };
     XMLAttribute.prototype = {
-      getName: function(){
+      getName: function() {
         return this.name;
       },
       getFullName: function() {
@@ -884,7 +2302,7 @@
       getType: function() {
         return this.type;
       },
-      setValue: function( newval ){
+      setValue: function(newval) {
         this.value = newval;
       }
     };
@@ -892,17 +2310,16 @@
     ////////////////////////////////////////////////////////////////////////////
     // XMLElement
     ////////////////////////////////////////////////////////////////////////////
-
-    var XMLElement = p.XMLElement = function( ){
-      if( arguments.length === 4 ){
+    var XMLElement = p.XMLElement = function() {
+      if (arguments.length === 4) {
         this.attributes = [];
         this.children   = [];
         this.fullName   = arguments[0] || "";
-        if ( arguments[1] ) {
+        if (arguments[1]) {
             this.name = arguments[1];
         } else {
             var index = this.fullName.indexOf(':');
-            if( index >= 0 ) {
+            if (index >= 0) {
                 this.name = this.fullName.substring(index + 1);
             } else {
                 this.name = this.fullName;
@@ -914,8 +2331,8 @@
         this.systemID  = arguments[2];
         this.parent    = null;
       }
-      else if( ( arguments.length === 1 && arguments[0].indexOf(".") > -1 ) || arguments.length === 2 ){ // filename or svg xml element
-        if( arguments[arguments.length -1].indexOf(".") > -1 ){ //its a filename
+      else if ((arguments.length === 1 && arguments[0].indexOf(".") > -1) || arguments.length === 2) { // filename or svg xml element
+        if (arguments[arguments.length -1].indexOf(".") > -1) { //its a filename
           this.attributes = [];
           this.children   = [];
           this.fullName   = "";
@@ -925,12 +2342,12 @@
           this.systemID   = "";
           this.lineNr     = "";
           this.parent     = null;
-          this.parse(  arguments[arguments.length -1] );
+          this.parse(arguments[arguments.length -1]);
         } else { //xml string
-          this.parse(  arguments[arguments.length -1] );
+          this.parse(arguments[arguments.length -1]);
         }
       }
-      else{ //empty ctor
+      else { //empty ctor
         this.attributes = [];
         this.children   = [];
         this.fullName   = "";
@@ -948,56 +2365,56 @@
       NOTE: parse does not work when a url is passed in
     */
     XMLElement.prototype = {
-      parse: function( filename ){
+      parse: function(filename) {
         var xmlDoc;
         try {
           xmlDoc = new DOMParser().parseFromString(ajax(filename), "text/xml");
 
           var elements = xmlDoc.documentElement;
           if (elements) {
-            this.parseChildrenRecursive( null, elements );
+            this.parseChildrenRecursive(null, elements);
           } else {
-            throw("Error loading document");
+            throw ("Error loading document");
           }
           return this;
         } catch(e) {
           throw(e);
         }
       },
-      createElement: function( ){
-        if( arguments.length === 2 ){
-          return new XMLElement( arguments[0], arguments[1], null, null );
+      createElement: function () {
+        if (arguments.length === 2) {
+          return new XMLElement(arguments[0], arguments[1], null, null);
         } else {
-          return new XMLElement( arguments[0], arguments[1], arguments[2], arguments[3] );
+          return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
       },
-      hasAttribute: function ( name ){
-        return this.getAttribute( name ) !== null;
+      hasAttribute: function (name) {
+        return this.getAttribute(name) !== null;
         //2 parameter call missing
       },
-      createPCDataElement: function (){
+      createPCDataElement: function () {
         return new XMLElement();
       },
-      equals: function( object ){
-        if( typeof object === "Object"){
-          return this.equalsXMLElement( object );
+      equals: function(object){
+        if (typeof object === "Object") {
+          return this.equalsXMLElement(object);
         }
       },
-      equalsXMLElement: function ( object ){
-        if( object instanceof XMLElement ){
-          if( this.name !== object.getLocalName ){ return false; }
-          if( this.attributes.length !== object.getAttributeCount() ) { return false; }
-          for( var i = 0; i < this.attributes.length; i++ ){
+      equalsXMLElement: function (object) {
+        if (object instanceof XMLElement) {
+          if (this.name !== object.getLocalName) { return false; }
+          if (this.attributes.length !== object.getAttributeCount()) { return false; }
+          for (var i = 0; i < this.attributes.length; i++){
             if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
-            if( this.attributes[i].getValue() !== object.attributes[i].getValue() ) { return false; }
-            if( this.attributes[i].getType()  !== object.attributes[i].getType() ) { return false; }
+            if (this.attributes[i].getValue() !== object.attributes[i].getValue()) { return false; }
+            if (this.attributes[i].getType()  !== object.attributes[i].getType()) { return false; }
           }
           if (this.children.length !== object.getChildCount()) { return false; }
           var child1, child2;
-          for ( i = 0; i < this.children.length; i++) {
-            child1 = this.getChildAtIndex( i );
-            child2 = object.getChildAtIndex( i );
-            if (! child1.equalsXMLElement( child2 )) { return false; }
+          for (i = 0; i < this.children.length; i++) {
+            child1 = this.getChildAtIndex(i);
+            child2 = object.getChildAtIndex(i);
+            if (! child1.equalsXMLElement(child2)) { return false; }
           }
           return true;
         }
@@ -1008,82 +2425,82 @@
       getAttribute: function (){
         var attribute;
         if( arguments.length === 2 ){
-          attribute = this.findAttribute( arguments[0] );
-          if( attribute ){
+          attribute = this.findAttribute(arguments[0]);
+          if (attribute) {
             return attribute.getValue();
           } else {
             return arguments[1];
           }
-        }else if( arguments.length === 1 ){
-          attribute = this.findAttribute( arguments[0] );
-          if( attribute ){
+        } else if (arguments.length === 1) {
+          attribute = this.findAttribute(arguments[0]);
+          if (attribute) {
             return attribute.getValue();
           } else {
             return null;
           }
         }
       },
-      getStringAttribute: function(){
-        if( arguments.length === 1 ){
-          return this.getAttribute( arguments[0] );
-        } else if( arguments.length === 2 ){
-          return this.getAttribute( arguments[0], arguments[1] );
+      getStringAttribute: function() {
+        if (arguments.length === 1) {
+          return this.getAttribute(arguments[0]);
+        } else if (arguments.length === 2){
+          return this.getAttribute(arguments[0], arguments[1]);
         } else {
-          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
+          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
-      getFloatAttribute: function(){
-        if( arguments.length === 1 ){
+      getFloatAttribute: function() {
+        if (arguments.length === 1 ) {
+          return this.getAttribute(arguments[0], 0);
+        } else if (arguments.length === 2 ){
+          return this.getAttribute(arguments[0], arguments[1]);
+        } else {
+          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
+        }
+      },
+      getIntAttribute: function () {
+        if (arguments.length === 1) {
           return this.getAttribute( arguments[0], 0 );
-        } else if( arguments.length === 2 ){
-          return this.getAttribute( arguments[0], arguments[1] );
+        } else if (arguments.length === 2) {
+          return this.getAttribute(arguments[0], arguments[1]);
         } else {
-          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
+          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
-      getIntAttribute: function(){
-        if( arguments.length === 1 ){
-          return this.getAttribute( arguments[0], 0 );
-        } else if( arguments.length === 2 ){
-          return this.getAttribute( arguments[0], arguments[1] );
-        } else {
-          return this.getAttribute( arguments[0], arguments[1],arguments[2] );
-        }
-      },
-      hasChildren: function(){
+      hasChildren: function () {
         return this.children.length > 0 ;
       },
-      addChild: function( child ){
+      addChild: function (child) {
         if (child !== null) {
           child.parent = this;
-          this.children.push( child );
+          this.children.push(child);
         }
       },
-      insertChild: function( child, index ){
-        if( child ){
+      insertChild: function (child, index) {
+        if (child) {
           if ((child.getLocalName() === null) && (! this.hasChildren())) {
             var lastChild = this.children[this.children.length -1];
-            if ( lastChild.getLocalName() === null ) {
-                lastChild.setContent( lastChild.getContent() + child.getContent() );
+            if (lastChild.getLocalName() === null) {
+                lastChild.setContent(lastChild.getContent() + child.getContent());
                 return;
             }
           }
           child.parent = this;
-          this.children.splice( index,0,child );
+          this.children.splice(index,0,child);
         }
       },
-      getChild: function( index ){
-        if( typeof index  === "number" ){
-          return this.children[ index ];
+      getChild: function (index){
+        if (typeof index  === "number") {
+          return this.children[index];
         }
-        else if( index.indexOf('/') !== -1) { // path was given
-          this.getChildRecursive( index.split("/"), 0 );
+        else if (index.indexOf('/') !== -1) { // path was given
+          this.getChildRecursive(index.split("/"), 0);
         } else {
           var kid, kidName;
-          for ( var i = 0; i < this.getChildCount(); i++ ) {
+          for (var i = 0; i < this.getChildCount(); i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
-            if ( kidName !== null && kidName === index ) {
+            if (kidName !== null && kidName === index) {
                 return kid;
             }
           }
@@ -1091,20 +2508,19 @@
         }
       },
       getChildren: function(){
-        if ( arguments.length === 1 ){
-          if( typeof arguments[0]  === "number" ){
-            return this.getChild( arguments[0] );
-          }
-          else if( arguments[0].indexOf('/') !== -1) { // path was given
-            return this.getChildrenRecursive( arguments[0].split("/"), 0 );
-          }else {
+        if (arguments.length === 1) {
+          if (typeof arguments[0]  === "number") {
+            return this.getChild( arguments[0]);
+          } else if (arguments[0].indexOf('/') !== -1) { // path was given
+            return this.getChildrenRecursive( arguments[0].split("/"), 0);
+          } else {
             var matches = [];
             var kid, kidName;
-            for ( var i = 0; i < this.getChildCount(); i++ ) {
-              kid = this.getChild( i );
+            for (var i = 0; i < this.getChildCount(); i++) {
+              kid = this.getChild(i);
               kidName = kid.getName();
-              if ( kidName !== null && kidName === arguments[0] ) {
-                matches.push( kid );
+              if (kidName !== null && kidName === arguments[0]) {
+                matches.push(kid);
               }
             }
             return matches;
@@ -1116,146 +2532,151 @@
       getChildCount: function(){
         return this.children.length;
       },
-      getChildRecursive: function ( items, offset ){
+      getChildRecursive: function (items, offset) {
         var kid, kidName;
-        for( var i = 0; i < this.getChildCount(); i++ ) {
+        for(var i = 0; i < this.getChildCount(); i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
-            if( kidName !== null && kidName === items[offset] ) {
-              if ( offset === items.length-1 ) {
+            if (kidName !== null && kidName === items[offset]) {
+              if (offset === items.length-1) {
                 return kid;
               } else {
                 offset += 1;
-                return kid.getChildRecursive( items, offset );
+                return kid.getChildRecursive(items, offset);
               }
             }
         }
         return null;
       },
-      getChildrenRecursive: function ( items, offset ){
-        if ( offset === items.length-1 ) {
-          return this.getChildren( items[offset] );
+      getChildrenRecursive: function (items, offset) {
+        if (offset === items.length-1) {
+          return this.getChildren(items[offset]);
         }
-        var matches = this.getChildren( items[offset] );
+        var matches = this.getChildren(items[offset]);
         var kidMatches;
-        for ( var i = 0; i < matches.length; i++ ) {
-          kidMatches = matches[i].getChildrenRecursive( items, offset+1 );
+        for (var i = 0; i < matches.length; i++) {
+          kidMatches = matches[i].getChildrenRecursive(items, offset+1);
         }
         return kidMatches;
       },
-      parseChildrenRecursive: function ( parent , elementpath ){
-         var xmlelement,
-             xmlattribute,
-             tmpattrib;
-         if( !parent ) {
-           this.fullName = elementpath.localName;
-           this.name     = elementpath.nodeName;
-           this.content  = elementpath.textContent || "";
-           xmlelement    = this;
-         } else { // a parent
-           xmlelement         = new XMLElement( elementpath.localName, elementpath.nodeName, "", "" );
-           xmlelement.content = elementpath.textContent || "";
-           xmlelement.parent  = parent;
-         }
+      parseChildrenRecursive: function (parent , elementpath){
+        var xmlelement,
+          xmlattribute,
+          tmpattrib;
+        if (!parent) {
+          this.fullName = elementpath.localName;
+          this.name     = elementpath.nodeName;
+          this.content  = elementpath.textContent || "";
+          xmlelement    = this;
+        } else { // a parent
+          xmlelement         = new XMLElement(elementpath.localName, elementpath.nodeName, "", "");
+          xmlelement.content = elementpath.textContent || "";
+          xmlelement.parent  = parent;
+        }
 
-         for( var l = 0; l < elementpath.attributes.length; l++ ) {
-           tmpattrib    = elementpath.attributes[l];
-           xmlattribute = new XMLAttribute( tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType );
-           xmlelement.attributes.push( xmlattribute );
-         }
-
-         for( var m = 0; m < elementpath.childElementCount; m++ ) {
-           xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.children[m]) );
-         }
-         return xmlelement;
+        for (var l = 0; l < elementpath.attributes.length; l++) {
+          tmpattrib    = elementpath.attributes[l];
+          xmlattribute = new XMLAttribute(tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType);
+          xmlelement.attributes.push(xmlattribute);
+        }
+        
+        for (var node in elementpath.childNodes){
+          if(elementpath.childNodes[node].nodeType === 1) { //ELEMENT_NODE type
+            xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
+          }
+        }
+        /*
+        for( var m = 0; m < elementpath.childElementCount; m++ ) {
+         xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[m]) );
+        }*/
+        return xmlelement;
       },
       isLeaf: function(){
         return this.hasChildren();
       },
-      listChildren: function(){
+      listChildren: function() {
         var arr = [];
-        for( var i = 0; i < this.children.length; i++ ){
-          arr.push( this.getChild(i).getName() );
+        for (var i = 0; i < this.children.length; i++) {
+          arr.push( this.getChild(i).getName());
         }
         return arr;
       },
-      removeAttribute: function ( name , namespace ){
-        namespace = namespace || "";
-        for( var i = 0; i < this.attributes.length; i++ ){
-          if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === namespace ){
-            this.attributes.splice( i, 0 );
+      removeAttribute: function (name , namespace) {
+        this.namespace = namespace || "";
+        for (var i = 0; i < this.attributes.length; i++){
+          if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
+            this.attributes.splice(i, 0);
           }
         }
       },
-      removeChild: function( child ){
-        if( child ){
-          for( var i = 0; i< this.children.length; i++ ){
-            if (this.children[i].equalsXMLElement( child )){
-              this.children.splice( i, 0 );
+      removeChild: function(child) {
+        if (child) {
+          for (var i = 0; i < this.children.length; i++) {
+            if (this.children[i].equalsXMLElement(child)) {
+              this.children.splice(i, 0);
             }
           }
         }
       },
-      removeChildAtIndex: function( index ){
-        if( this.children.length > index ) {//make sure its not outofbounds
-          this.children.splice( index, 0 );
+      removeChildAtIndex: function(index) {
+        if (this.children.length > index) { //make sure its not outofbounds
+          this.children.splice(index, 0);
         }
       },
-      findAttribute: function ( name, namespace ){
-        namespace = namespace || "";
-        for( var i = 0; i < this.attributes.length; i++ ){
-          if( this.attributes[i].getName() === name && this.attributes[i].getNamespace() === namespace ){
+      findAttribute: function (name, namespace) {
+        this.namespace = namespace || "";
+        for (var i = 0; i < this.attributes.length; i++ ) {
+          if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
              return this.attributes[i];
           }
         }
       },
-      setAttribute: function(){
+      setAttribute: function() {
         var attr;
-        if( arguments.length === 3){
+        if (arguments.length === 3) {
           var index = arguments[0].indexOf(':');
           var name  = arguments[0].substring(index + 1);
           attr      = this.findAttribute( name, arguments[1] );
-          if( attr ){
-            attr.setValue( arguments[2] );
+          if (attr) {
+            attr.setValue(arguments[2]);
           } else {
             attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
-            this.attributes.addElement( attr );
+            this.attributes.addElement(attr);
           }
         } else {
-          attr = this.findAttribute( arguments[0] );
-          if( attr ){
-            attr.setValue( arguments[1] );
+          attr = this.findAttribute(arguments[0]);
+          if (attr) {
+            attr.setValue(arguments[1]);
           } else {
-            attr = new XMLAttribute( arguments[0], arguments[0], null, arguments[1], "CDATA" );
-              this.attributes.addElement( attr );
+            attr = new XMLAttribute(arguments[0], arguments[0], null, arguments[1], "CDATA");
+            this.attributes.addElement(attr);
           }
         }
       },
-      setContent: function( content ){
+      setContent: function(content) {
         this.content = content;
       },
-      setName: function(){
-        if( arguments.length === 1 ){
+      setName: function() {
+        if (arguments.length === 1) {
           this.name      = arguments[0];
           this.fullName  = arguments[0];
           this.namespace = arguments[0];
         } else {
           var index = arguments[0].indexOf(':');
-          if (( arguments[1] === null ) || ( index < 0 )) {
+          if ((arguments[1] === null) || (index < 0)) {
               this.name = arguments[0];
           } else {
-              this.name = arguments[0].substring( index + 1 );
+              this.name = arguments[0].substring(index + 1);
           }
           this.fullName  = arguments[0];
           this.namespace = arguments[1];
         }
       },
-      getName: function(){
+      getName: function() {
         return this.fullName;
       }
     };
-    p.XMLElement = XMLElement;
-
+   
     ////////////////////////////////////////////////////////////////////////////
     // PVector
     ////////////////////////////////////////////////////////////////////////////
@@ -2164,22 +3585,16 @@
     };
 
     p.expand = function(ary, newSize) {
-      var newary = new Array(0);
-
-      var len = ary.length;
-      for (var i = 0; i < len; i++) {
-        newary[i] = ary[i];
-      }
-
+      var temp = ary.slice(0);
       if (arguments.length === 1) {
         // double size of array
-        newary.length *= 2;
+        temp.length = ary.length * 2;
+        return temp;
       } else if (arguments.length === 2) {
         // size is newSize
-        newary.length = newSize;
+        temp.length = newSize;
+        return temp;
       }
-
-      return newary;
     };
 
     p.arrayCopy = function() { // src, srcPos, dest, destPos, length) {
@@ -2205,12 +3620,10 @@
 
       // copy src to dest from index srcPos to index destPos of length recursivly on objects
       for (var i = srcPos, j = destPos; i < length + srcPos; i++, j++) {
-        if (src[i] && typeof src[i] === "object") {
-          // src[i] is not null and is another object or array. go recursive
-          p.arrayCopy(src[i], 0, dest[j], 0, src[i].length);
-        } else {
-          // standard type, just copy
+        if (dest[j] !== undef) {
           dest[j] = src[i];
+        } else {
+          throw "array index out of bounds exception";
         }
       }
     };
@@ -2228,8 +3641,37 @@
         array.contains = function(item) {
           return this.indexOf(item) !== -1;
         };
-        array.add = function(item) {
-          return this.push(item);
+        array.add = function() {
+          if(arguments.length === 1) {
+            this.push(arguments[0]); // for add(Object)
+          } else if(arguments.length === 2) {
+            if (typeof arguments[0] === 'number') {
+              if (arguments[0] >= 0 && arguments[0] <= this.length) { 
+                this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
+              } else {
+                throw(arguments[0] + " is not a valid index");
+              }
+            } else {
+              throw(typeof arguments[0] + " is not a number");
+            }
+          } else {
+            throw("Please use the proper number of parameters.");
+          }
+        };
+        array.set = function() {
+          if(arguments.length === 2) {
+            if (typeof arguments[0] === 'number') {
+              if (arguments[0] >= 0 && arguments[0] < this.length) {
+                this.splice(arguments[0], 1, arguments[1]);
+              } else {
+                throw(arguments[0] + " is not a valid index.");
+              }
+            } else {
+              throw(typeof arguments[0] + " is not a number");
+            }
+          } else {
+            throw("Please use the proper number of parameters.");
+          }
         };
         array.size = function() {
           return this.length;
@@ -2241,7 +3683,7 @@
           return this.splice(i, 1)[0];
         };
         array.isEmpty = function() {
-          return !!this.length;
+          return !this.length;
         };
         array.clone = function() {
           return this.slice(0);
@@ -3062,7 +4504,7 @@
       var r = parseInt(p.lerp(r1, r2, amt), 10);
       var g = parseInt(p.lerp(g1, g2, amt), 10);
       var b = parseInt(p.lerp(b1, b2, amt), 10);
-      var a = parseFloat(p.lerp(a1, a2, amt) * colorModeA, 10);
+      var a = parseFloat(p.lerp(a1, a2, amt) * colorModeA);
 
       return p.color.toInt(r, g, b, a);
     };
@@ -3380,6 +4822,8 @@
 
     p.exit = function exit() {
       window.clearInterval(looping);
+
+      Processing.removeInstance(p.externals.canvas.id);
 
       for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
         var elem = eventHandlers[i][0],
@@ -4558,6 +6002,7 @@
             curElement.setAttribute("height", aHeight);
           }
           curContext = curElement.getContext("experimental-webgl");
+          p.use3DContext = true;
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -4683,6 +6128,7 @@
         if (curContext === undef) {
           // size() was called without p.init() default context, ie. p.createGraphics()
           curContext = curElement.getContext("2d");
+          p.use3DContext = false;
           userMatrixStack = new PMatrixStack();
           modelView = new PMatrix2D();
         }
@@ -4697,8 +6143,8 @@
         lineCap: curContext.lineCap,
         lineJoin: curContext.lineJoin
       };
-      curElement.width = p.width = aWidth;
-      curElement.height = p.height = aHeight;
+      curElement.width = p.width = aWidth || 100;
+      curElement.height = p.height = aHeight || 100;
 
       for (var j in props) {
         if (props) {
@@ -4716,7 +6162,23 @@
       p.externals.context = curContext;
 
       p.toImageData = function() {
-        return curContext.getImageData(0, 0, this.width, this.height);
+        if(!p.use3DContext){
+          return curContext.getImageData(0, 0, this.width, this.height);
+        } else {
+          var c = document.createElement("canvas");
+          var ctx = c.getContext("2d");          
+          var obj = ctx.createImageData(this.width, this.height);
+          var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
+          if(!uBuff){
+            uBuff = new WebGLUnsignedByteArray(this.width * this.height * 4);
+            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
+          }
+          for(var i =0; i < uBuff.length; i++){
+            obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
+          }
+
+          return obj;
+        }
       };
     };
 
@@ -5572,15 +7034,15 @@
     };
 
     p.smooth = function() {
-      if (!p.use3DContext) {
-        curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+      curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
         curContext.mozImageSmoothingEnabled = true;
       }
     };
 
     p.noSmooth = function() {
-      if (!p.use3DContext) {
-        curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+      curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
         curContext.mozImageSmoothingEnabled = false;
       }
     };
@@ -5632,15 +7094,24 @@
       } else {
         if (doStroke) {
           // TODO if strokeWeight > 1, do circle
-
+          
           if (curSketch.options.crispLines) {
             var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
             var c = p.get(x, y);
             p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
           } else {
-            curContext.fillStyle = p.color.toString(currentStrokeColor);
-            curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-            isFillDirty = true;
+            if (lineWidth > 1){
+              curContext.fillStyle = p.color.toString(currentStrokeColor);
+              isFillDirty = true;
+              curContext.beginPath();
+              curContext.arc(x, y, lineWidth / 2, 0, p.TWO_PI, false);
+              curContext.fill();
+              curContext.closePath();
+            } else {
+              curContext.fillStyle = p.color.toString(currentStrokeColor);
+              curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+              isFillDirty = true;
+            }
           }
         }
       }
@@ -5689,8 +7160,10 @@
       vert[13] = normalX;
       vert[14] = normalY;
       vert[15] = normalZ;
-
+      
+      vert["isVert"] =  true;
       vertArray.push(vert);
+      
     };
 
     /*
@@ -5978,9 +7451,18 @@
         }
         else{
           curContext.beginPath();
-          curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-          for(i = 1; i < vertArray.length; i++){
-            curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
+          for(i = 0; i < vertArray.length; i++){
+            if( vertArray[i]["isVert"] === true ){ //if it is a vertex move to the position
+              if ( vertArray[i]["moveTo"] === true) {
+                curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+              } else if (vertArray[i]["moveTo"] === false){
+                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              } else {
+                curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+              } 
+            } else { //otherwise continue drawing bezier
+              curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
+            }
           }
           executeContextFill();
           executeContextStroke();
@@ -6480,6 +7962,7 @@
             vert[i] = arguments[i];
           }
           vertArray.push(vert);
+          vertArray[vertArray.length -1]["isVert"] = false;
         }
       }
     };
@@ -7434,10 +8917,10 @@
     };
 
     // Creates a new Processing instance and passes it back for... processing
-    p.createGraphics = function createGraphics(w, h) {
+    p.createGraphics = function createGraphics(w, h, render) {
       var canvas = document.createElement("canvas");
       var pg = new Processing(canvas);
-      pg.size(w, h);
+      pg.size(w, h, render);
       pg.canvas = canvas;
       //Processing.addInstance(pg); // TODO: this function does not exist in this scope
       return pg;
@@ -7572,6 +9055,18 @@
       // changed in 0.9
       if (p.imageData) {
         curContext.putImageData(p.imageData, 0, 0);
+      }
+    };
+  
+    p.hint = function hint(which) {
+      if (which === p.DISABLE_DEPTH_TEST) {
+         curContext.disable(curContext.DEPTH_TEST);
+         curContext.depthMask(false);
+         curContext.clear(curContext.DEPTH_BUFFER_BIT);
+      }
+      else if (which === p.ENABLE_DEPTH_TEST) {
+         curContext.enable(curContext.DEPTH_TEST);
+         curContext.depthMask(true);
       }
     };
 
@@ -8575,9 +10070,10 @@
         return {
           name: "\"" + name + "\", sans-serif",
           width: function(str) {
-            if (curContext.mozMeasureText) {
-              return curContext.mozMeasureText(
-              typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
+            if ("measureText" in curContext) {
+              return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
+            } else if ("mozMeasureText" in curContext) {
+              return curContext.mozMeasureText(typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
             } else {
               return 0;
             }
@@ -8643,19 +10139,19 @@
         var oldContext = curContext;
         curContext = textcanvas.getContext("2d");
         curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-        if (curContext.fillText) {
-          textcanvas.width = curContext.measureText( str ).width;
-        } else if (curContext.mozDrawText) {
-          textcanvas.width = curContext.mozMeasureText( str );
+        if ("fillText" in curContext) {
+          textcanvas.width = curContext.measureText(str).width;
+        } else if ("mozDrawText" in curContext) {
+          textcanvas.width = curContext.mozMeasureText(str);
         }
         curContext = oldContext;
         return textcanvas.width;
       }
       else{
         curContext.font = curTextSize + "px " + curTextFont.name;
-        if (curContext.fillText) {
+        if ("fillText" in curContext) {
           return curContext.measureText(str).width;
-        } else if (curContext.mozDrawText) {
+        } else if ("mozDrawText" in curContext) {
           return curContext.mozMeasureText(str);
         }
       }
@@ -8782,7 +10278,7 @@
       var textWidth = 0, xOffset = 0;
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
-        if (str && (curContext.fillText || curContext.mozDrawText)) {
+        if (str && ("fillText" in curContext || "mozDrawText" in curContext)) {
           curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
           if (isFillDirty) {
@@ -8792,10 +10288,10 @@
 
           // horizontal offset/alignment
           if(align === p.RIGHT || align === p.CENTER) {
-            if (curContext.fillText) {
-              textWidth = curContext.measureText( str ).width;
-            } else if (curContext.mozDrawText) {
-              textWidth = curContext.mozMeasureText( str );
+            if ("fillText" in curContext) {
+              textWidth = curContext.measureText(str).width;
+            } else if ("mozDrawText" in curContext) {
+              textWidth = curContext.mozMeasureText(str);
             }
             
             if(align === p.RIGHT) {
@@ -8805,9 +10301,9 @@
             }
           }
 
-          if (curContext.fillText) {
+          if ("fillText" in curContext) {
             curContext.fillText(str, x+xOffset, y);
-          } else if (curContext.mozDrawText) {
+          } else if ("mozDrawText" in curContext) {
             saveContext();
             curContext.translate(x+xOffset, y);
             curContext.mozDrawText(str);
@@ -8857,10 +10353,10 @@
       curContext = textcanvas.getContext("2d");
       curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
       var textWidth = 0;
-      if (curContext.fillText) {
-        textWidth = curContext.measureText( str ).width;
-      } else if (curContext.mozDrawText) {
-        textWidth = curContext.mozMeasureText( str );
+      if ("fillText" in curContext) {
+        textWidth = curContext.measureText(str).width;
+      } else if ("mozDrawText" in curContext) {
+        textWidth = curContext.mozMeasureText(str);
       }
       textcanvas.width = textWidth;
       textcanvas.height = curTextSize;
@@ -8962,9 +10458,9 @@
         var currentChar = str[j];
         var letterWidth;
 
-        if (curContext.fillText) {
+        if ("fillText" in curContext) {
           letterWidth = curContext.measureText(currentChar).width;
-        } else if (curContext.mozDrawText) {
+        } else if ("mozDrawText" in curContext) {
           letterWidth = curContext.mozMeasureText(currentChar);
         }
 
@@ -9533,7 +11029,9 @@
 
       p.use3DContext = curSketch.use3DContext;
 
-      curElement.mozOpaque = curSketch.options.isOpaque;
+      if ("mozOpaque" in curElement) {
+        curElement.mozOpaque = curSketch.options.isOpaque;
+      }
 
       // Initialize the onfocus and onblur event handler externals
       if (curSketch.options.pauseOnBlur) {
@@ -9634,14 +11132,14 @@
   "console","constrain","CONTROL","copy","CORNER","CORNERS","cos","createFont","createGraphics",
   "createImage","CROSS","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
   "curveVertex","curveVertexSegment","DARKEST","day","defaultColor","degrees","DELETE","DIFFERENCE",
-  "DILATE","directionalLight","disableContextMenu","dist","DODGE","DOWN","draw","ellipse","ellipseMode",
-  "emissive","enableContextMenu","endCamera","endDraw","endShape","ENTER","ERODE","ESC","EXCLUSION","externals",
+  "DILATE","directionalLight","disableContextMenu","DISABLE_DEPTH_TEST","dist","DODGE","DOWN","draw","ellipse","ellipseMode",
+  "emissive","enableContextMenu","ENABLE_DEPTH_TEST","endCamera","endDraw","endShape","ENTER","ERODE","ESC","EXCLUSION","externals",
   "exit","exp","expand","fill","filter","filter_bilinear","filter_new_scanline","float","floor","focused",
   "frameCount","frameRate","frustum","get","glyphLook","glyphTable","GRAY","green","GREEN_MASK",
-  "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hour","HSB","hue","image","IMAGE","imageMode",
+  "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hint","hour","HSB","hue","image","IMAGE","imageMode",
   "Import","int","intersect","INVERT","JAVA2D","join","key","keyPressed","keyReleased","LEFT","lerp",
   "lerpColor","LIGHTEST","lightFalloff","lights","lightSpecular","line","LINES","link","loadBytes",
-  "loadFont","loadGlyphs","loadImage","loadPixels","loadStrings","log","loop","mag","map","match",
+  "loadFont","loadGlyphs","loadImage","loadPixels","loadShape","loadStrings","log","loop","mag","map","match",
   "matchAll","max","MAX_FLOAT","MAX_INT","MAX_LIGHTS","millis","min","MIN_FLOAT","MIN_INT","minute",
   "MITER","mix","modelX","modelY","modelZ","modes","month","mouseButton","mouseClicked","mouseDown",
   "mouseDragged","mouseMoved","mousePressed","mouseReleased","mouseScroll","mouseScrolled","mouseX",
@@ -9655,7 +11153,7 @@
   "PVector","quad","QUADS","QUAD_STRIP","radians","RADIUS","random","Random","randomSeed", "rect",
   "rectMode","red","RED_MASK","redraw","REPLACE","requestImage","resetMatrix","RETURN","reverse","RGB",
   "RIGHT","rotate","rotateX","rotateY","rotateZ","round","ROUND","saturation","save","scale","SCREEN",
-  "second","set","setup","shared","SHIFT","shininess","shorten","sin","SINCOS_LENGTH","size",
+  "second","set","setup","shape", "shapeMode","shared","SHIFT","shininess","shorten","sin","SINCOS_LENGTH","size",
   "smooth","SOFT_LIGHT","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
   "spotLight","sq","sqrt","SQUARE","status","str","stroke","strokeCap","strokeJoin","strokeWeight",
   "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
@@ -10828,6 +12326,11 @@
   Processing.instances = [];
   Processing.instanceIds = {};
 
+  Processing.removeInstance = function(id) {
+    Processing.instances.splice(Processing.instanceIds[id], 1);
+    delete Processing.instanceIds[id];
+  };
+
   Processing.addInstance = function(processing) {
     if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
       processing.externals.canvas.id = "__processing" + Processing.instances.length;
@@ -10906,9 +12409,12 @@
         // Get the source, we'll need to find what the user has used in size()
         var filenames = processingSources.split(' ');
         var code = "";
-        for (var j=0, fl=filenames.length; j<fl; j++) {
+        for (var j = 0, fl = filenames.length; j < fl; j++) {
           if (filenames[j]) {
-            code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
+            var block = ajax(filenames[j]);
+            if (block !== false) {
+              code += ";\n" + block; 
+            }
           }
         }
         Processing.addInstance(new Processing(canvas[i], code));
