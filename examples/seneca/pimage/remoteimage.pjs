@@ -1,0 +1,5 @@
+﻿/* @pjs preload="http://zenit.senecac.on.ca/wiki/skins/common/images/OSS_155x155.png"; */
+size(300,340);
+background(0);
+PImage cdot = new PImage("http://zenit.senecac.on.ca/wiki/skins/common/images/OSS_155x155.png");
+image(cdot,10,10);
