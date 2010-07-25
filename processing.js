@@ -30,12 +30,290 @@
     return xhr.responseText; 
   };
 
+  var PConstants = {
+    X: 0, 
+    Y: 1,
+    Z: 2,
+
+    R: 3,
+    G: 4,
+    B: 5,
+    A: 6,
+
+    U: 7,
+    V: 8,
+
+    NX: 9,
+    NY: 10,
+    NZ: 11,
+
+    EDGE: 12,
+
+    // Stroke
+    SR: 13,
+    SG: 14,
+    SB: 15,
+    SA: 16,
+
+    SW: 17,
+
+    // Transformations (2D and 3D)
+    TX: 18,
+    TY: 19,
+    TZ: 20,
+
+    VX: 21,
+    VY: 22,
+    VZ: 23,
+    VW: 24,
+
+    // Material properties
+    AR: 25,
+    AG: 26,
+    AB: 27,
+
+    DR: 3,
+    DG: 4,
+    DB: 5,
+    DA: 6,
+
+    SPR: 28,
+    SPG: 29,
+    SPB: 30,
+    
+    SHINE: 31,
+
+    ER: 32,
+    EG: 33,
+    EB: 34,
+
+    BEEN_LIT: 35,
+
+    VERTEX_FIELD_COUNT: 36,
+
+    // Renderers
+    P2D:    1,
+    JAVA2D: 1,
+    WEBGL:  2,
+    P3D:    2,
+    OPENGL: 2,
+    PDF:    0,
+    DXF:    0,
+
+    // Platform IDs
+    OTHER:   0,
+    WINDOWS: 1,
+    MAXOSX:  2,
+    LINUX:   3,
+
+    EPSILON: 0.0001,
+
+    MAX_FLOAT:  3.4028235e+38,
+    MIN_FLOAT: -3.4028235e+38,
+    MAX_INT:    2147483647,
+    MIN_INT:   -2147483648,
+
+    PI:         Math.PI,
+    TWO_PI:     2 * Math.PI,
+    HALF_PI:    Math.PI / 2,
+    THIRD_PI:   Math.PI / 3,
+    QUARTER_PI: Math.PI / 4,
+
+    DEG_TO_RAD: Math.PI / 180,
+    RAD_TO_DEG: 180 / Math.PI,
+
+    WHITESPACE: " \t\n\r\f\u00A0",
+
+    // Color modes
+    RGB:   1,
+    ARGB:  2,
+    HSB:   3,
+    ALPHA: 4,
+    CMYK:  5,
+    
+    // Image file types
+    TIFF:  0,
+    TARGA: 1,
+    JPEG:  2,
+    GIF:   3,
+
+    // Filter/convert types
+    BLUR:      11,
+    GRAY:      12,
+    INVERT:    13,
+    OPAQUE:    14,
+    POSTERIZE: 15,
+    THRESHOLD: 16,
+    ERODE:     17,
+    DILATE:    18,
+
+    // Blend modes
+    REPLACE:    0,
+    BLEND:      1 << 0,
+    ADD:        1 << 1,
+    SUBTRACT:   1 << 2,
+    LIGHTEST:   1 << 3,
+    DARKEST:    1 << 4,
+    DIFFERENCE: 1 << 5,
+    EXCLUSION:  1 << 6,
+    MULTIPLY:   1 << 7,
+    SCREEN:     1 << 8,
+    OVERLAY:    1 << 9,
+    HARD_LIGHT: 1 << 10,
+    SOFT_LIGHT: 1 << 11,
+    DODGE:      1 << 12,
+    BURN:       1 << 13,
+
+    // Color component bit masks
+    ALPHA_MASK: 0xff000000,
+    RED_MASK:   0x00ff0000,
+    GREEN_MASK: 0x0000ff00,
+    BLUE_MASK:  0x000000ff,
+
+    // Projection matrices
+    CUSTOM:       0,
+    ORTHOGRAPHIC: 2,
+    PERSPECTIVE:  3,
+
+    // Shapes
+    POINT:          2,
+    POINTS:         2,
+    LINE:           4,
+    LINES:          4,
+    TRIANGLE:       8,
+    TRIANGLES:      9,
+    TRIANGLE_STRIP: 10,
+    TRIANGLE_FAN:   11,
+    QUAD:           16,
+    QUADS:          16,
+    QUAD_STRIP:     17,
+    POLYGON:        20,
+    PATH:           21,
+    RECT:           30,
+    ELLIPSE:        31,
+    ARC:            32,
+    SPHERE:         40,
+    BOX:            41,
+
+    GROUP:          0,
+    PRIMITIVE:      1, 
+    //PATH:         21, // shared with Shape PATH
+    GEOMETRY:       3,
+   
+    // Shape Vertex
+    VERTEX:        0,
+    BEZIER_VERTEX: 1,
+    CURVE_VERTEX:  2,
+    BREAK:         3,
+    CLOSESHAPE:    4,
+    
+    // Shape closing modes
+    OPEN:  1,
+    CLOSE: 2,
+    
+    // Shape drawing modes
+    CORNER:          0, // Draw mode convention to use (x, y) to (width, height)
+    CORNERS:         1, // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
+    RADIUS:          2, // Draw mode from the center, and using the radius
+    CENTER_RADIUS:   2, // Deprecated! Use RADIUS instead
+    CENTER:          3, // Draw from the center, using second pair of values as the diameter
+    DIAMETER:        3, // Synonym for the CENTER constant. Draw from the center
+    CENTER_DIAMETER: 3, // Deprecated! Use DIAMETER instead
+
+    // Text vertical alignment modes
+    BASELINE: 0,   // Default vertical alignment for text placement
+    TOP:      101, // Align text to the top
+    BOTTOM:   102, // Align text from the bottom, using the baseline
+
+    // UV Texture coordinate modes
+    NORMAL:     1,
+    NORMALIZED: 1,
+    IMAGE:      2,
+
+    // Text placement modes
+    MODEL: 4,
+    SHAPE: 5,
+
+    // Stroke modes
+    SQUARE:  'butt',
+    ROUND:   'round',
+    PROJECT: 'square',
+    MITER:   'miter',
+    BEVEL:   'bevel',
+
+    // Lighting modes
+    AMBIENT:     0,
+    DIRECTIONAL: 1,
+    //POINT:     2, Shared with Shape constant
+    SPOT:        3,
+
+    // Key constants
+
+    // Both key and keyCode will be equal to these values
+    BACKSPACE: 8,
+    TAB:       9,
+    ENTER:     10,
+    RETURN:    13,
+    ESC:       27,
+    DELETE:    127,
+    CODED:     0xffff,
+
+    // p.key will be CODED and p.keyCode will be this value
+    SHIFT:     16,
+    CONTROL:   17,
+    ALT:       18,
+    UP:        38,
+    RIGHT:     39,
+    DOWN:      40,
+    LEFT:      37,
+
+    // Cursor types
+    ARROW:    'default',
+    CROSS:    'crosshair',
+    HAND:     'pointer',
+    MOVE:     'move',
+    TEXT:     'text',
+    WAIT:     'wait',
+    NOCURSOR: "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto",
+
+    // Hints
+    DISABLE_OPENGL_2X_SMOOTH:     1,
+    ENABLE_OPENGL_2X_SMOOTH:     -1,
+    ENABLE_OPENGL_4X_SMOOTH:      2,
+    ENABLE_NATIVE_FONTS:          3,
+    DISABLE_DEPTH_TEST:           4,
+    ENABLE_DEPTH_TEST:           -4,
+    ENABLE_DEPTH_SORT:            5,
+    DISABLE_DEPTH_SORT:          -5,
+    DISABLE_OPENGL_ERROR_REPORT:  6,
+    ENABLE_OPENGL_ERROR_REPORT:  -6,
+    ENABLE_ACCURATE_TEXTURES:     7,
+    DISABLE_ACCURATE_TEXTURES:   -7,
+    HINT_COUNT:                  10,
+
+    // PJS defined constants
+    SINCOS_LENGTH:      parseInt(360 / 0.5, 10),
+    PRECISIONB:         15, // fixed point precision is limited to 15 bits!!
+    PRECISIONF:         1 << 15,
+    PREC_MAXVAL:        (1 << 15) - 1,
+    PREC_ALPHA_SHIFT:   24 - 15,
+    PREC_RED_SHIFT:     16 - 15,
+    NORMAL_MODE_AUTO:   0,
+    NORMAL_MODE_SHAPE:  1,
+    NORMAL_MODE_VERTEX: 2,
+    MAX_LIGHTS:         8
+  };
+
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
 
-    p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
-    p.use3DContext = false; // default '2d' canvas context
+    // Include PConstants
+    for (var constant in PConstants) {
+      if (PConstants.hasOwnProperty(constant)) {
+        p[constant] = PConstants[constant];
+      }
+    }
 
     // PJS specific (non-p5) methods and properties to externalize
     p.externals = {
@@ -45,6 +323,9 @@
       onblur:  function() {},
       onfocus: function() {}
     };
+
+    p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
+    p.use3DContext = false; // default '2d' canvas context
 
     // Glyph path storage for textFonts
     p.glyphTable = {};
@@ -78,208 +359,15 @@
     p.__frameRate     = 0;
 
     // The current animation frame
-    p.frameCount = 0;
+    p.frameCount      = 0;
+
+    p.focused         = true;
+
+    p.breakShape      = false;
 
     // The height/width of the canvas
     p.width = curElement.width - 0;
     p.height = curElement.height - 0;
-
-    // Color modes
-    p.RGB   = 1;
-    p.ARGB  = 2;
-    p.HSB   = 3;
-    p.ALPHA = 4;
-    p.CMYK  = 5;
-
-    // Renderers
-    p.P2D    = 1;
-    p.JAVA2D = 1;
-    p.WEBGL  = 2;
-    p.P3D    = 2;
-    p.OPENGL = 2;
-    p.EPSILON = 0.0001;
-    p.MAX_FLOAT   = 3.4028235e+38;
-    p.MIN_FLOAT   = -3.4028235e+38;
-    p.MAX_INT     = 2147483647;
-    p.MIN_INT     = -2147483648;
-    p.PI          = Math.PI;
-    p.TWO_PI      = 2 * p.PI;
-    p.HALF_PI     = p.PI / 2;
-    p.THIRD_PI    = p.PI / 3;
-    p.QUARTER_PI  = p.PI / 4;
-    p.DEG_TO_RAD  = p.PI / 180;
-    p.RAD_TO_DEG  = 180 / p.PI;
-    p.WHITESPACE  = " \t\n\r\f\u00A0";
-
-    // Filter/convert types
-    p.BLUR      = 11;
-    p.GRAY      = 12;
-    p.INVERT    = 13;
-    p.OPAQUE    = 14;
-    p.POSTERIZE = 15;
-    p.THRESHOLD = 16;
-    p.ERODE     = 17;
-    p.DILATE    = 18;
-
-    // Blend modes
-    p.REPLACE    = 0;
-    p.BLEND      = 1 << 0;
-    p.ADD        = 1 << 1;
-    p.SUBTRACT   = 1 << 2;
-    p.LIGHTEST   = 1 << 3;
-    p.DARKEST    = 1 << 4;
-    p.DIFFERENCE = 1 << 5;
-    p.EXCLUSION  = 1 << 6;
-    p.MULTIPLY   = 1 << 7;
-    p.SCREEN     = 1 << 8;
-    p.OVERLAY    = 1 << 9;
-    p.HARD_LIGHT = 1 << 10;
-    p.SOFT_LIGHT = 1 << 11;
-    p.DODGE      = 1 << 12;
-    p.BURN       = 1 << 13;
-
-    // Color component bit masks
-    p.ALPHA_MASK = 0xff000000;
-    p.RED_MASK   = 0x00ff0000;
-    p.GREEN_MASK = 0x0000ff00;
-    p.BLUE_MASK  = 0x000000ff;
-
-    // Projection matrices
-    p.CUSTOM       = 0;
-    p.ORTHOGRAPHIC = 2;
-    p.PERSPECTIVE  = 3;
-
-    // Shapes
-    p.POINT          = 2;
-    p.POINTS         = 2;
-    p.LINE           = 4;
-    p.LINES          = 4;
-    p.TRIANGLE       = 8;
-    p.TRIANGLES      = 9;
-    p.TRIANGLE_STRIP = 10;
-    p.TRIANGLE_FAN   = 11;
-    p.QUAD           = 16;
-    p.QUADS          = 16;
-    p.QUAD_STRIP     = 17;
-    p.POLYGON        = 20;
-    p.PATH           = 21;
-    p.RECT           = 30;
-    p.ELLIPSE        = 31;
-    p.ARC            = 32;
-    p.SPHERE         = 40;
-    p.BOX            = 41;
-    p.GROUP          = 0;
-    p.PRIMITIVE      = 1; 
-    p.PATH           = 2;
-    p.GEOMETRY       = 3;
-    
-    p.breakShape     = false;
-    // Shape Vertex
-    p.VERTEX        = 0;
-    p.BEZIER_VERTEX = 1;
-    p.CURVE_VERTEX  = 2;
-    p.BREAK         = 3;
-    p.CLOSESHAPE    = 4;
-    
-    // Shape closing modes
-    p.OPEN  = 1;
-    p.CLOSE = 2;
-    
-    // Shape drawing modes
-    p.CORNER          = 0; // Draw mode convention to use (x, y) to (width, height)
-    p.CORNERS         = 1; // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
-    p.RADIUS          = 2; // Draw mode from the center, and using the radius
-    p.CENTER_RADIUS   = 2; // Deprecated! Use RADIUS instead
-    p.CENTER          = 3; // Draw from the center, using second pair of values as the diameter
-    p.DIAMETER        = 3; // Synonym for the CENTER constant. Draw from the center
-    p.CENTER_DIAMETER = 3; // Deprecated! Use DIAMETER instead
-
-    // Text vertical alignment modes
-    p.BASELINE = 0;   // Default vertical alignment for text placement
-    p.TOP      = 101; // Align text to the top
-    p.BOTTOM   = 102; // Align text from the bottom, using the baseline
-
-    // UV Texture coordinate modes
-    p.NORMAL     = 1;
-    p.NORMALIZED = 1;
-    p.IMAGE      = 2;
-
-    // Text placement modes
-    p.MODEL = 4;
-    p.SHAPE = 5;
-
-    // Stroke modes
-    p.SQUARE  = 'butt';
-    p.ROUND   = 'round';
-    p.PROJECT = 'square';
-    p.MITER   = 'miter';
-    p.BEVEL   = 'bevel';
-
-    // Lighting modes
-    p.AMBIENT     = 0;
-    p.DIRECTIONAL = 1;
-    //POINT       = 2; Shared with Shape constant
-    p.SPOT        = 3;
-
-    // Key constants
-
-    // Both key and keyCode will be equal to these values
-    p.BACKSPACE = 8;
-    p.TAB       = 9;
-    p.ENTER     = 10;
-    p.RETURN    = 13;
-    p.ESC       = 27;
-    p.DELETE    = 127;
-    p.CODED     = 0xffff;
-
-    // p.key will be CODED and p.keyCode will be this value
-    p.SHIFT     = 16;
-    p.CONTROL   = 17;
-    p.ALT       = 18;
-    p.UP        = 38;
-    p.RIGHT     = 39;
-    p.DOWN      = 40;
-    p.LEFT      = 37;
-
-    var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
-
-    // Cursor types
-    p.ARROW    = 'default';
-    p.CROSS    = 'crosshair';
-    p.HAND     = 'pointer';
-    p.MOVE     = 'move';
-    p.TEXT     = 'text';
-    p.WAIT     = 'wait';
-    p.NOCURSOR = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
-
-    // Hints
-    p.DISABLE_OPENGL_2X_SMOOTH    =  1;
-    p.ENABLE_OPENGL_2X_SMOOTH     = -1;
-    p.ENABLE_OPENGL_4X_SMOOTH     =  2;
-    p.ENABLE_NATIVE_FONTS         =  3;
-    p.DISABLE_DEPTH_TEST          =  4;
-    p.ENABLE_DEPTH_TEST           = -4;
-    p.ENABLE_DEPTH_SORT           =  5;
-    p.DISABLE_DEPTH_SORT          = -5;
-    p.DISABLE_OPENGL_ERROR_REPORT =  6;
-    p.ENABLE_OPENGL_ERROR_REPORT  = -6;
-    p.ENABLE_ACCURATE_TEXTURES    =  7;
-    p.DISABLE_ACCURATE_TEXTURES   = -7;
-    p.HINT_COUNT                  = 10;
-
-    // PJS defined constants
-    p.SINCOS_LENGTH      = parseInt(360 / 0.5, 10);
-    p.PRECISIONB         = 15; // fixed point precision is limited to 15 bits!!
-    p.PRECISIONF         = 1 << p.PRECISIONB;
-    p.PREC_MAXVAL        = p.PRECISIONF - 1;
-    p.PREC_ALPHA_SHIFT   = 24 - p.PRECISIONB;
-    p.PREC_RED_SHIFT     = 16 - p.PRECISIONB;
-    p.NORMAL_MODE_AUTO   = 0;
-    p.NORMAL_MODE_SHAPE  = 1;
-    p.NORMAL_MODE_VERTEX = 2;
-    p.MAX_LIGHTS         = 8;
-
-    p.focused            = true;
 
     // "Private" variables used to maintain state
     var curContext,
@@ -367,7 +455,8 @@
         proxyContext = null,
         isContextReplaced = false,
         setPixelsCached,
-        maxPixelsCached = 1000;
+        maxPixelsCached = 1000,
+        codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
 
     // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
     // in Minefield does nothing and does not report any errors.
@@ -3594,7 +3683,7 @@
           return this.splice(i, 1)[0];
         };
         array.isEmpty = function() {
-          return !!this.length;
+          return !this.length;
         };
         array.clone = function() {
           return this.slice(0);
@@ -6945,20 +7034,16 @@
     };
 
     p.smooth = function() {
-      if (!p.use3DContext) {
-        if ("mozImageSmoothingEnabled" in curContext) {
-          curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-          curContext.mozImageSmoothingEnabled = true;
-        }
+      curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
+      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
+        curContext.mozImageSmoothingEnabled = true;
       }
     };
 
     p.noSmooth = function() {
-      if (!p.use3DContext) {
-        if ("mozImageSmoothingEnabled" in curContext) {
-          curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-          curContext.mozImageSmoothingEnabled = false;
-        }
+      curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
+      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
+        curContext.mozImageSmoothingEnabled = false;
       }
     };
 
