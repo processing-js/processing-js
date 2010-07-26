@@ -166,14 +166,14 @@
     }
   }
 
-
   var Processing = this.Processing = function Processing(curElement, aCode) {
 
     var p = this;
 
-    // Include Classes
+    // Include Package Classes -- do this differently in the future.
     p.PVector = PVector;
     //p.PShapeSVG = PShapeSVG; 
+    //etc
 
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
