@@ -446,10 +446,11 @@
         textBuffer,
         textureBuffer,
         indexBuffer,
-        // Text alignment
+        // Text
         horizontalTextAlignment = p.LEFT,
         verticalTextAlignment = p.BASELINE,
         baselineOffset = 0.2, // percent 
+        textMode = p.MODEL,
         // Pixels cache
         originalContext,
         proxyContext = null,
@@ -10460,15 +10461,39 @@
     }
 
     p.text = function text() {
-      if (arguments.length === 3) { // for text( str, x, y)
-        text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
-      } else if (arguments.length === 4) { // for text( str, x, y, z)
-        text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
-      } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
-      } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
-        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+      if(textMode === p.SCREEN){
+        var tWidth = p.textWidth(arguments[0]);
+        var tHeight = p.textAscent() + p.textDescent();
+        var hud = p.createGraphics(tWidth, tHeight);
+        hud.beginDraw();
+        hud.opaque = false;
+        hud.background(0, 0, 0, 0);
+        hud.textFont(curTextFont);
+        hud.text(arguments[0], 0, tHeight - p.textDescent(), tWidth, tHeight)
+        hud.endDraw();
+        if(arguments.length === 5 || arguments.length === 6){
+          p.image(hud, arguments[1], arguments[2], arguments[3], arguments[4]);
+        } else {
+          p.image(hud, arguments[1], arguments[2]);
+        }
       }
+      else if(textmode === p.SHAPE){
+        // don't know how to implement this - requires beginRaw function
+      } else {
+        if (arguments.length === 3) { // for text( str, x, y)
+          text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
+        } else if (arguments.length === 4) { // for text( str, x, y, z)
+          text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
+        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
+          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
+        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+        }
+      }
+    };
+    
+    p.textMode = function textMode(mode){
+      textMode = mode;
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
@@ -11091,7 +11116,7 @@
   "smooth","SOFT_LIGHT","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
   "spotLight","sq","sqrt","SQUARE","status","str","stroke","strokeCap","strokeJoin","strokeWeight",
   "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
-  "textSize","textureMode","texture","textWidth","THRESHOLD","tint", "TOP",
+  "textMode","textSize","textureMode","texture","textWidth","THRESHOLD","tint", "TOP",
   "translate","triangle","TRIANGLE_FAN","TRIANGLES","TRIANGLE_STRIP","trim","TWO_PI","unbinary",
   "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","XMLAttrbute","XMLElement","year",
   "__frameRate","__mousePressed","__keyPressed"];
