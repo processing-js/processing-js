@@ -2050,16 +2050,20 @@
       parsePoly: function(val) {
         this.family    = p.PATH;
         this.close     = val;
-        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/\s+/g,' '));
+        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/[,\s]+/g,' '));
         if (pointsAttr !== null) {
+          //split into array
           var pointsBuffer = pointsAttr.split(" ");
-          for (var i = 0; i < pointsBuffer.length; i++) {
-            var verts = [];
-            var pb    = pointsBuffer[i].split(',');
-            verts[0]  = pb[0];
-            verts[1]  = pb[1];
-            this.vertices.push(verts);
-          }       
+          if (pointsBuffer.length % 2 === 0) {
+            for (var i = 0; i < pointsBuffer.length; i++) {
+              var verts = [];
+              verts[0]  = pointsBuffer[i];
+              verts[1]  = pointsBuffer[++i];
+              this.vertices.push(verts);
+            } 
+          } else {    
+            p.println("Error parsing polygon points: odd number of coordinates provided");
+          }
         }
       },
       parseRect: function() {
