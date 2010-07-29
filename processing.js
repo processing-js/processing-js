@@ -2994,7 +2994,7 @@
         this.apply(1, 0, 1, angle, 0, 0);
       },
       skewY: function(angle) {
-        this.apply(1, p.tan(angle), 0, 1 ,0, 0);
+        this.apply(1, 0, 1,  0, angle, 0);        
       },
       determinant: function() {
         return (this.elements[0] * this.elements[4] - this.elements[1] * this.elements[3]);
