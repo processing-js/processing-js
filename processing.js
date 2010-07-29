@@ -1359,6 +1359,7 @@
 
         if (this.fill) {
           p.fill(this.fillColor);
+          
         } else {
           p.noFill();
         }
@@ -1676,6 +1677,7 @@
       // getChild missing
       // print missing
       parseMatrix: function(str) {
+        this.checkMatrix(2);
         var pieces = []; 
         str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
           // get a list of transform definitions
@@ -1692,35 +1694,31 @@
              m = params.replace(/,+/g, " ").split(/\s+/);
           });        
           if (pieces[i].indexOf("matrix") !== -1) {
-            return new p.PMatrix2D(m[0], m[2], m[4], m[1], m[3], m[5]);
+            this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
           } else if (pieces[i].indexOf("translate") !== -1) {
             var tx = m[0];
             var ty = (m.length === 2) ? m[1] : 0;
-            return new p.PMatrix2D(1, 0, tx, 0, 1, ty);
+            this.matrix.translate(tx,ty);
           } else if (pieces[i].indexOf("scale") !== -1) {
             var sx = m[0];
             var sy = (m.length == 2) ? m[1] : m[0];
-            return new p.PMatrix2D(sx, 0, 0,  0, sy, 0);
+            this.matrix.scale(sx,sy);
           } else if (pieces[i].indexOf("rotate") !== -1) {
             var angle = m[0];
             if (m.length == 1) {
-              var c = p.cos(angle);
-              var s = p.sin(angle);
-              // SVG version is cos(a) sin(a) -sin(a) cos(a) 0 0
-              return new p.PMatrix2D(c, -s, 0, s, c, 0);
+              this.matrix.rotate(angle);
             } else if (m.length == 3) {
-              var mat = new p.PMatrix2D(0, 1, m[1],  1, 0, m[2]);
-              mat.rotate(m[0]);
-              mat.translate(-m[1], -m[2]);
-              return mat;
+              this.matrix.set(0, 1, m[1],  1, 0, m[2]);
+              this.matrix.rotate(m[0]);
+              this.matrix.translate(-m[1], -m[2]);     
             }
           } else if (pieces[i].indexOf("skewX") !== -1) {
-            return new p.PMatrix2D(1, 0, 1,  PApplet.tan(m[0]), 0, 0);
+            this.matrix.skewX(parseFloat(m[0]));
           } else if (pieces[i].indexOf("skewY") !== -1) {
-            return new p.PMatrix2D(1, 0, 1,  0, PApplet.tan(m[0]), 0);
+            this.matrix.skewY(m[0]);
           }
         }
-        return null;
+        return this.matrix;
       },
       parseChildren:function(element) {
         var newelement = element.getChildren();
@@ -1878,6 +1876,7 @@
               cx = parseFloat(pathDataKeys[i + 1]);
               cy = parseFloat(pathDataKeys[i + 2]);
               this.parsePathMoveto(cx, cy);
+              
               i += 3;
               break;
 
@@ -2060,8 +2059,7 @@
               break;
 
             default:
-              i++;
-              /*String parsed =
+                   /*String parsed =
                 PApplet.join(PApplet.subset(pathDataKeys, 0, i), ",");
               String unparsed =
                 PApplet.join(PApplet.subset(pathDataKeys, i), ",");
@@ -2206,7 +2204,9 @@
                 this.setFill(tokens[1]);
                 break;
               case "fill-opacity":
+              
                 this.setFillOpacity(tokens[1]);
+                
                 break;
               case "stroke":
                 this.setStroke(tokens[1]);
@@ -2233,7 +2233,7 @@
       },
       setFillOpacity: function(opacityText) {
         this.fillOpacity = parseFloat(opacityText);
-        this.fillColor   = (parseInt(this.fillOpacity * 255, 16))  << 24 | this.fillColor & 0xFFFFFF;
+        this.fillColor   = this.fillOpacity * 255  << 24 | this.fillColor & 0xFFFFFF;
       },
       setFill: function (fillText) {
         var opacityMask = this.fillColor & 0xFF000000;
@@ -2263,8 +2263,8 @@
         }
       },
       setOpacity: function(opacity) { 
-        this.strokeColor = (parseInt(opacity * 255, 16)) << 24 | this.strokeColor & 0xFFFFFF;
-        this.fillColor   = (parseInt(opacity * 255, 16)) << 24 | this.fillColor & 0xFFFFFF;
+        this.strokeColor = parseFloat(opacity) * 255 << 24 | this.strokeColor & 0xFFFFFF;
+        this.fillColor   = parseFloat(opacity) * 255 << 24 | this.fillColor & 0xFFFFFF;
       },
       setStroke: function(strokeText) {
         var opacityMask = this.strokeColor & 0xFF000000;
@@ -2319,7 +2319,7 @@
       },
       setStrokeOpacity: function (opacityText) {
         this.strokeOpacity = parseFloat(opacityText);
-        this.strokeColor   = (parseInt(this.strokeOpacity * 255, 16)) << 24 | this.strokeColor & 0xFFFFFF;
+        this.strokeColor   = this.strokeOpacity * 255 << 24 | this.strokeColor & 0xFFFFFF;
       },
       parseRGB: function(color) {
         var sub    = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
@@ -2522,7 +2522,7 @@
       },
       getFloatAttribute: function() {
         if (arguments.length === 1 ) {
-          return this.getAttribute(arguments[0], 0);
+          return parseFloat(this.getAttribute(arguments[0], 0));
         } else if (arguments.length === 2 ){
           return this.getAttribute(arguments[0], arguments[1]);
         } else {
@@ -2994,7 +2994,7 @@
         this.apply(1, 0, 1, angle, 0, 0);
       },
       skewY: function(angle) {
-        this.apply(1, 0, 1, 0, angle, 0);
+        this.apply(1, p.tan(angle), 0, 1 ,0, 0);
       },
       determinant: function() {
         return (this.elements[0] * this.elements[4] - this.elements[1] * this.elements[3]);
@@ -7435,7 +7435,6 @@
       }
 
       if(isCurve && curShape === p.POLYGON || isCurve && curShape === undef){
-
         if(p.use3DContext){
           lineVertArray = fillVertArray;
           if(doStroke){
@@ -7929,7 +7928,15 @@
             curContext.beginPath();
             curContext.moveTo(vertArray[0][0], vertArray[0][1]);
             for(i = 1; i < vertArray.length; i++){
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              if( vertArray[i]["isVert"] === true ){ //if it is a vertex move to the position
+                if ( vertArray[i]["moveTo"] === true) {
+                  curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+                } else if (vertArray[i]["moveTo"] === false){
+                  curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+                } else {
+                  curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+                } 
+              }
             }
             if(p.CLOSE){
               curContext.lineTo(vertArray[0][0], vertArray[0][1]);
