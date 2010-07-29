@@ -1331,7 +1331,8 @@
       this.pre = function() {
         if (this.matrix) {
           p.pushMatrix();
-          this.applyMatrix(this.matrix); 
+          curContext.transform(this.matrix.elements[0], this.matrix.elements[3], this.matrix.elements[1], this.matrix.elements[4], this.matrix.elements[2], this.matrix.elements[5]);
+          //p.applyMatrix(this.matrix.elements[0],this.matrix.elements[0]); 
         }
         if (this.style) {
           p.pushStyle();
