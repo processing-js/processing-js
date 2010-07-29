@@ -1683,7 +1683,7 @@
           // get a list of transform definitions
           pieces.push(p.trim(all));
         });
-        if (pieces == null) {
+        if (pieces === null) {
           p.println("Could not parse transform " + str);
           return null;
         }
@@ -1701,13 +1701,13 @@
             this.matrix.translate(tx,ty);
           } else if (pieces[i].indexOf("scale") !== -1) {
             var sx = m[0];
-            var sy = (m.length == 2) ? m[1] : m[0];
+            var sy = (m.length === 2) ? m[1] : m[0];
             this.matrix.scale(sx,sy);
           } else if (pieces[i].indexOf("rotate") !== -1) {
             var angle = m[0];
-            if (m.length == 1) {
+            if (m.length === 1) {
               this.matrix.rotate(angle);
-            } else if (m.length == 3) {
+            } else if (m.length === 3) {
               this.matrix.set(0, 1, m[1],  1, 0, m[2]);
               this.matrix.rotate(m[0]);
               this.matrix.translate(-m[1], -m[2]);     
