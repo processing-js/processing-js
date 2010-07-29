@@ -1331,7 +1331,7 @@
       this.pre = function() {
         if (this.matrix) {
           p.pushMatrix();
-          //this.applyMatrix( this.matrix ); //applyMatrix missing
+          this.applyMatrix(this.matrix); 
         }
         if (this.style) {
           p.pushStyle();
@@ -1466,7 +1466,27 @@
         this.checkMatrix(2);
         this.matrix.reset();
       };
-      // applyMatrix missing
+      this.applyMatrix = function(matrix) {
+        if (arguments.length === 1) {
+          this.applyMatrix(matrix.elements[0], matrix.elements[1], 0, matrix.elements[2],
+                          matrix.elements[3], matrix.elements[4], 0, matrix.elements[5],
+                          0, 0, 1, 0,
+                          0, 0, 0, 1);
+        } else if (arguments.length === 6) {
+          this.checkMatrix(2);
+          this.matrix.apply(arguments[0], arguments[1], arguments[2], 0,
+                            arguments[3], arguments[4], arguments[5], 0,
+                            0,   0,   1,   0,
+                            0,   0,   0,   1);
+        
+        } else if (arguments.length === 16) {
+          this.checkMatrix(3);
+          this.matrix.apply(arguments[0], arguments[1], arguments[2], arguments[3],
+                            arguments[4], arguments[5], arguments[6], arguments[7],
+                            arguments[8], arguments[9], arguments[10], arguments[11],
+                            arguments[12], arguments[13], arguments[14], arguments[15]);
+        }
+      };
       // apply missing
       // contains missing
       // find child missing
@@ -1652,10 +1672,55 @@
     };
         
     PShapeSVG.prototype = {
-      // parseMatrix missing
       // getChild missing
       // print missing
-      parseMatrix: function(str) { },
+      parseMatrix: function(str) {
+        var pieces = []; 
+        str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
+          // get a list of transform definitions
+          pieces.push(p.trim(all));
+        });
+        if (pieces == null) {
+          p.println("Could not parse transform " + str);
+          return null;
+        }
+        for (var i =0; i< pieces.length; i++) {
+          var m = [];
+          pieces[i].replace(/\((.*?)\)/, function(all, params) {
+            // get the coordinates that can be separated by spaces or a comma
+             m = params.replace(/,+/g, " ").split(/\s+/);
+          });        
+          if (pieces[i].indexOf("matrix") !== -1) {
+            return new p.PMatrix2D(m[0], m[2], m[4], m[1], m[3], m[5]);
+          } else if (pieces[i].indexOf("translate") !== -1) {
+            var tx = m[0];
+            var ty = (m.length === 2) ? m[1] : 0;
+            return new p.PMatrix2D(1, 0, tx, 0, 1, ty);
+          } else if (pieces[i].indexOf("scale") !== -1) {
+            var sx = m[0];
+            var sy = (m.length == 2) ? m[1] : m[0];
+            return new p.PMatrix2D(sx, 0, 0,  0, sy, 0);
+          } else if (pieces[i].indexOf("rotate") !== -1) {
+            var angle = m[0];
+            if (m.length == 1) {
+              var c = p.cos(angle);
+              var s = p.sin(angle);
+              // SVG version is cos(a) sin(a) -sin(a) cos(a) 0 0
+              return new p.PMatrix2D(c, -s, 0, s, c, 0);
+            } else if (m.length == 3) {
+              var mat = new p.PMatrix2D(0, 1, m[1],  1, 0, m[2]);
+              mat.rotate(m[0]);
+              mat.translate(-m[1], -m[2]);
+              return mat;
+            }
+          } else if (pieces[i].indexOf("skewX") !== -1) {
+            return new p.PMatrix2D(1, 0, 1,  PApplet.tan(m[0]), 0, 0);
+          } else if (pieces[i].indexOf("skewY") !== -1) {
+            return new p.PMatrix2D(1, 0, 1,  0, PApplet.tan(m[0]), 0);
+          }
+        }
+        return null;
+      },
       parseChildren:function(element) {
         var newelement = element.getChildren();
         var children   = new p.PShape();
