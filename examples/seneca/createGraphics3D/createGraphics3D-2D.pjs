@@ -1,0 +1,29 @@
+PGraphics pg;
+float r = 0;
+
+void setup() {
+  size(200, 200);
+  pg = createGraphics(80, 80, P3D);
+}
+
+void draw() {
+  fill(0, 12);
+  rect(0, 0, width, height);
+  fill(255);
+  noStroke();
+  ellipse(mouseX, mouseY, 60, 60);
+  
+  pg.beginDraw();
+  pg.background(255, 0, 0);
+  pg.noFill();
+  pg.stroke(255);
+  pg.pushMatrix();
+  pg.translate(40, 40, 0);
+  pg.rotateY(mouseY);
+  pg.rotateX(mouseX);
+  pg.box(20);
+  pg.popMatrix();
+  pg.endDraw();
+  
+  image(pg, 60, 60);
+}

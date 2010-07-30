@@ -7968,7 +7968,17 @@
     };
 
     p.texture = function(pimage){
-      if(!pimage.__texture)
+      if(pimage.name === "Processing.js Instance"){
+        var texture = curContext.createTexture();
+        curContext.bindTexture(curContext.TEXTURE_2D, texture);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.externals.canvas);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
+        curContext.generateMipmap(curContext.TEXTURE_2D);
+      }
+      else if(!pimage.__texture)
       {
         var texture = curContext.createTexture();
         pimage.__texture = texture;
@@ -7980,16 +7990,17 @@
         var textureImage = ctx.createImageData(cvs.width, cvs.height);
 
         var imgData = pimage.toImageData();
-
+        
         for (var i = 0; i < cvs.width; i += 1) {
           for (var j = 0; j < cvs.height; j += 1) {
-            var index = (j * cvs.width + i) * 4;
+          var index = (j * cvs.width + i) * 4;
             textureImage.data[index + 0] = imgData.data[index + 0];
             textureImage.data[index + 1] = imgData.data[index + 1];
             textureImage.data[index + 2] = imgData.data[index + 2];
             textureImage.data[index + 3] = 255;
           }
         }
+        
         ctx.putImageData(textureImage, 0, 0);
         pimage.__cvs = cvs;
 
@@ -8870,7 +8881,7 @@
 
     // Creates a new Processing instance and passes it back for... processing
     p.createGraphics = function createGraphics(w, h, render) {
-      var canvas = document.createElement("canvas");
+      var canvas = document.getElementById("canvasTest");
       var pg = new Processing(canvas);
       pg.size(w, h, render);
       pg.canvas = canvas;
@@ -9067,6 +9078,18 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
+        var wid = w || img.width;
+        var hgt = h || img.height;
+        if(p.use3DContext){
+          p.beginShape(p.QUADS);
+          p.textureMode(p.NORMAL)
+          p.texture(img);
+          p.vertex(x, y, 0, 0, 0);
+          p.vertex(x+wid, y, 0, 0, 1);
+          p.vertex(x+wid, y+hgt, 0, 1, 1);
+          p.vertex(x, y+hgt, 0, 1, 0);
+          p.endShape();
+        } else {
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
         var obj = img.toImageData();
 
@@ -9088,9 +9111,11 @@
 
         // draw the image
         curTint(obj);
-
-        curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height,
-          bounds.x, bounds.y, bounds.w, bounds.h);
+        
+        
+          curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height,
+            bounds.x, bounds.y, bounds.w, bounds.h);
+        }
       }
     };
 
