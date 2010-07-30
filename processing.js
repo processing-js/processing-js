@@ -1412,7 +1412,6 @@
           this.nameTable.push( [name, shape] );
         }
       };
-      // findChild not in yet
       this.translate = function() {
         if(arguments.length === 2)
         {
@@ -1489,10 +1488,12 @@
                             arguments[12], arguments[13], arguments[14], arguments[15]);
         }
       };
+      // findChild not in yet
       // apply missing
       // contains missing
       // find child missing
       // getPrimitive missing
+      // getParams missing
       // getVertex , getVertexCount missing
       // getVertexCode , getVertexCodes , getVertexCodeCount missing
       // getVertexX, getVertexY, getVertexZ missing
@@ -1676,6 +1677,8 @@
     PShapeSVG.prototype = {
       // getChild missing
       // print missing
+      // parse style attributes
+      // styles missing but deals with strokeGradient and fillGradient
       parseMatrix: function(str) {
         this.checkMatrix(2);
         var pieces = []; 
