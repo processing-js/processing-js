@@ -1686,16 +1686,18 @@
           // get a list of transform definitions
           pieces.push(p.trim(all));
         });
-        if (pieces === null) {
-          p.println("Could not parse transform " + str);
+        if (pieces.length === 0) {
+          p.println("Transformation:" + str + " is empty");
           return null;
         }
         for (var i =0; i< pieces.length; i++) {
           var m = [];
-          pieces[i].replace(/\((.*?)\)/, function(all, params) {
-            // get the coordinates that can be separated by spaces or a comma
-             m = params.replace(/,+/g, " ").split(/\s+/);
-          });        
+          pieces[i].replace(/\((.*?)\)/, (function() {
+            return function(all, params) {
+              // get the coordinates that can be separated by spaces or a comma
+              m = params.replace(/,+/g, " ").split(/\s+/);
+            };
+          }()));        
           if (pieces[i].indexOf("matrix") !== -1) {
             this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
           } else if (pieces[i].indexOf("translate") !== -1) {
@@ -7937,7 +7939,7 @@
                 } else if (vertArray[i]["moveTo"] === false){
                   curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                 } else {
-                  curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+                  curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                 } 
               }
             }
