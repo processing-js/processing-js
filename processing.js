@@ -1018,11 +1018,6 @@
       }
     }
 
-    // Wrapper to easily deal with array names changes. TODO: Don't think we need this wrapper anymore consensus has been reached.
-    var newWebGLArray = function(data) {
-      return new WebGLFloatArray(data);
-    };
-
     var imageModeCorner = function imageModeCorner(x, y, w, h, whAreSizes) {
       return {
         x: x,
@@ -6052,24 +6047,24 @@
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(boxVerts), curContext.STATIC_DRAW);
 
           boxNormBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxNorms), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(boxNorms), curContext.STATIC_DRAW);
 
           boxOutlineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(boxOutlineVerts), curContext.STATIC_DRAW);
 
           // used to draw the rectangle and the outline
           rectBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(rectVerts), curContext.STATIC_DRAW);
 
           rectNormBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectNorms), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(rectNorms), curContext.STATIC_DRAW);
 
           // The sphere vertices are specified dynamically since the user
           // can change the level of detail. Everytime the user does that
@@ -6086,7 +6081,7 @@
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([0, 0, 0]), curContext.STATIC_DRAW);
 
           textBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
@@ -6617,7 +6612,7 @@
 
       //set the buffer data
       curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(sphereVerts), curContext.STATIC_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(sphereVerts), curContext.STATIC_DRAW);
     };
 
     p.sphereDetail = function sphereDetail(ures, vres) {
@@ -7189,10 +7184,10 @@
       uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
 
       vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, pointBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(vArray), curContext.STREAM_DRAW);
 
       vertexAttribPointer(programObjectUnlitShape, "aColor", 4, fillColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(cArray), curContext.STREAM_DRAW);
 
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
@@ -7227,10 +7222,10 @@
       uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
 
       vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, lineBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(vArray), curContext.STREAM_DRAW);
 
       vertexAttribPointer(programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(cArray), curContext.STREAM_DRAW);
 
       curContext.lineWidth(lineWidth);
 
@@ -7269,10 +7264,10 @@
       uniformf(programObject3D, "color", [-1,0,0,0]);
 
       vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(vArray), curContext.STREAM_DRAW);
 
       vertexAttribPointer(programObject3D, "aColor", 4, fillColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(cArray), curContext.STREAM_DRAW);
 
       // No support for lights....yet
       disableVertexAttribPointer(programObject3D, "Normal");
@@ -7296,7 +7291,7 @@
 
         uniformi(programObject3D, "usingTexture", usingTexture);
         vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
-        curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
+        curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(tArray), curContext.STREAM_DRAW);
       }
 
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
@@ -8198,7 +8193,7 @@
           vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
           disableVertexAttribPointer(programObject2D, "aTextureCoord");
           
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(lineVerts), curContext.STREAM_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray(lineVerts), curContext.STREAM_DRAW);
           curContext.drawArrays(curContext.LINES, 0, 2);
         }
       } else {
