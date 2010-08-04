@@ -304,13 +304,31 @@
     MAX_LIGHTS:         8
   };
 
-  // Typed Arrays
-  var Float32Array  = Float32Array === undef ? WebGLFloatArray         : Float32Array;
-  var Uint16Array   = Uint16Array  === undef ? WebGLUnsignedShortArray : Uint16Array;
-  var Uint8Array    = Uint8Array   === undef ? WebGLUnsignedByteArray  : Uint8Array;
+  // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
+  function setupTypedArray(name, fallback) {
+    // check if TypedArray exists
+    if (typeof this[name] !== "function") {
+      // nope.. check if WebGLArray exists
+      if (typeof this[fallback] === "function") {
+        this[name] = this[fallback];
+      } else {
+        // nope.. set as Native JS array
+        this[name] = function(obj) {
+          if (obj instanceof Array) {
+            return obj;
+          } else if (typeof obj === "number") {
+            return new Array(obj);
+          }
+        };
+      }
+    } 
+  }
+
+  setupTypedArray("Float32Array", "WebGLFloatArray");
+  setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
+  setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
-
     var p = this;
 
     // Include PConstants
@@ -667,34 +685,37 @@
 
     // Vertices are specified in a counter-clockwise order
     // triangles are in this order: back, front, right, bottom, left, top
-    var boxVerts = [0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-                   -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
-                   -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5,
-                    0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5,
-                    0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5,
-                   -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
-                   -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
-                   -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
-                   -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+    var boxVerts = new Float32Array([
+       0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+      -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,
+      -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,
+       0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,
+       0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5,  0.5,
+      -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,
+      -0.5,  0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5,
+      -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5]);
 
-    var boxNorms = [0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
-                    0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-                    1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-                    0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
-                    -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
-                    0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+    var boxOutlineVerts = new Float32Array([
+       0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,
+      -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5,
+       0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5,
+      -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5,
+       0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5]);
 
-    var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5,
-                          -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5,
-                           0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5,
-                          -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-                           0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-                          -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
+    var boxNorms = new Float32Array([
+       0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,
+       0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,
+       1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,
+       0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,
+      -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0,
+       0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0]);
 
     // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP
-    var rectVerts = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
+    var rectVerts = new Float32Array([0,0,0, 0,1,0, 1,1,0, 1,0,0]);
 
-    var rectNorms = [0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1];
+    var rectNorms = new Float32Array([0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1]);
 
     // Vertex shader for points and lines
     var vShaderSrcUnlitShape =
@@ -6052,24 +6073,24 @@
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(boxVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
 
           boxNormBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(boxNorms), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, boxNorms, curContext.STATIC_DRAW);
 
           boxOutlineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(boxOutlineVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
 
           // used to draw the rectangle and the outline
           rectBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(rectVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
 
           rectNormBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(rectNorms), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, rectNorms, curContext.STATIC_DRAW);
 
           // The sphere vertices are specified dynamically since the user
           // can change the level of detail. Everytime the user does that
