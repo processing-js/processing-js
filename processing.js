@@ -1692,16 +1692,13 @@
         }
         for (var i =0; i< pieces.length; i++) {
           var m = [];
-          /*pieces[i].replace(/\((.*?)\)/, (function() {
+          pieces[i].replace(/\((.*?)\)/, (function() {
             return function(all, params) {
               // get the coordinates that can be separated by spaces or a comma
               m = params.replace(/,+/g, " ").split(/\s+/);
             };
-          }())); */
-          pieces[i].replace(/\((.*?)\)/, function(all, params) {
-             // get the coordinates that can be separated by spaces or a comma
-              m = params.replace(/,+/g, " ").split(/\s+/);
-            });  
+          }())); 
+          
           if (pieces[i].indexOf("matrix") !== -1) {
             this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
           } else if (pieces[i].indexOf("translate") !== -1) {
@@ -1827,7 +1824,7 @@
             px     = 0,
             py     = 0,
             i      = 0,
-            j      = 0; 
+            j      = 0, 
             valOf  = 0;
         var str = "";
         var tmpArray =[];
@@ -1835,26 +1832,30 @@
         while ( i< pathData.length -1) {
           valOf = pathData[i].valueOf();
           if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf.valueOf() <= 122)) { // if its a letter
-            //populate the tmpArray with coordinates
+            // populate the tmpArray with coordinates
             j = i;
               i++;
               tmpArray = []; 
               valOf = pathData[i].valueOf();
-              while (!((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf.valueOf() <= 122)) && flag === false) { // if its NOT a letter
-                if( valOf === 32 ) { //if its a space and the str isn't empty
-                  tmpArray.push(parseFloat(str));
-                  str = "";
+              while (!((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf.valueOf() <= 100) || (valOf >= 102 && valOf.valueOf() <= 122)) && flag === false) { // if its NOT a letter
+                if (valOf === 32) { //if its a space and the str isn't empty
+                  // somethimes you get a space after the letter
+                  if (str !== "") {
+                    tmpArray.push(parseFloat(str));
+                    str = "";
+                  }
                   i++;
                 } else if (valOf === 45) { //if its a -
                   // allow for 'e' notation in numbers, e.g. 2.10e-9 
-                  if (pathData[i+1].valueOf() === "e") {
-                    str += pathData[i].toString() + pathData[++i].toString();
+                  if (pathData[i-1].valueOf() === 101) {
+                    str += pathData[i].toString();
+                    i++;
                   } else {
-                    //sometimes no space separator after
+                    // sometimes no space separator after (ex: 104.535-16.322)
                     if (str !== "") {
                       tmpArray.push(parseFloat(str));
-                      str = "";
                     }
+                    str = pathData[i].toString();
                     i++;
                   }
                 } else {
@@ -1877,7 +1878,6 @@
                   cx = tmpArray[0];
                   cy = tmpArray[1];
                   this.parsePathMoveto(cx, cy);
-                  p.println("M:"+cx+","+ cy);
                   if (tmpArray.length > 2 ) {
                     for( j = 2; j < tmpArray.length - 2; j+=2) {
                       // absolute line to 
@@ -1897,7 +1897,6 @@
                     cy = cy + tmpArray[1];
                   }
                   this.parsePathMoveto(cx,cy);
-                  p.println("m:"+cx+","+ cy);
                   if (tmpArray.length > 2 ) {
                     for (j = 2; j < tmpArray.length - 2; j+=2) {
                       // relative line to 
@@ -1966,7 +1965,6 @@
                     endX   = tmpArray[j + 4];
                     endY   = tmpArray[j + 5];
                     this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                    p.println("C:"+ctrlX1+","+ ctrlY1+","+ ctrlX2+","+ ctrlY2+","+ endX+","+ endY);
                     cx = endX;
                     cy = endY;
                   }
@@ -1979,13 +1977,10 @@
                     ctrlX1 = cx + tmpArray[j];
                     ctrlY1 = cy + tmpArray[j + 1];
                     ctrlX2 = cx + tmpArray[j + 2];
-                    p.println(cy +"+"+tmpArray[j + 3]);
                     ctrlY2 = cy + tmpArray[j + 3];
                     endX   = cx + tmpArray[j + 4];
                     endY   = cy + tmpArray[j + 5];
                     this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                    p.println("c:"+ctrlX1+","+ ctrlY1+","+ ctrlX2+","+ ctrlY2+","+ endX+","+ endY);
-                    //this.parsePathCurveto(113.433,44.152,102.472,55.486,88.949,55.484);
                     cx = endX;
                     cy = endY;
                   }
@@ -2105,15 +2100,10 @@
               case 90: //Z
               case 122: //z
                 this.close = true;
-                i++;
-                break;
-            
-            
+                break;           
             } 
-          } else { i++;}
-        
-        }
-        
+          } else { i++;}  
+        }  
       },
       parsePathQuadto: function(x1, y1, cx, cy, x2, y2) {
         this.parsePathCode(p.BEZIER_VERTEX);
