@@ -18,6 +18,7 @@ var canvas = {
                    translate: __empty_func__,
                    attachEvent: __empty_func__,
                    fillRect: __empty_func__,
+                   clearRect: __empty_func__,
                    beginPath: __empty_func__,
                    moveTo: __empty_func__,
                    lineTo: __empty_func__,
