@@ -8654,9 +8654,7 @@
       this.pixels = {
         getLength: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
-            return function() {
-              throw "Image is loaded remotely. Cannot get length.";
-            };
+            throw "Image is loaded remotely. Cannot get length.";
           } else {
             return function() {
               return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
@@ -8665,9 +8663,7 @@
         }(this)),
         getPixel: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
-            return function() {
-              throw "Image is loaded remotely. Cannot get pixels.";
-            };
+            throw "Image is loaded remotely. Cannot get pixels.";
           } else {          
             return function(i) {
               var offset = i*4;
@@ -8678,9 +8674,7 @@
         }(this)),
         setPixel: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
-            return function() {
-              throw "Image is loaded remotely. Cannot set pixel.";
-            };
+            throw "Image is loaded remotely. Cannot set pixel.";
           } else {
             return function(i,c) {
               var offset = i*4;
@@ -8849,9 +8843,7 @@
     }
     function get$3(x,y,img) {
       if (img.isRemote) { // Remote images cannot access imageData
-        return function() {
-          throw "Image is loaded remotely. Cannot get x,y.";
-        };
+        throw "Image is loaded remotely. Cannot get x,y.";
       } else {
         // PImage.get(x,y) was called, return the color (int) at x,y of img
         // changed in 0.9
@@ -8870,9 +8862,7 @@
     }
     function get$5(x, y, w, h, img) {
       if (img.isRemote) { // Remote images cannot access imageData
-        return function() {
-          throw "Image is loaded remotely. Cannot get x,y,w,h.";
-        };
+        throw "Image is loaded remotely. Cannot get x,y,w,h.";
       } else {
         // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
         // changed for 0.9, offset start point needs to be *4
@@ -8982,9 +8972,7 @@
     }
     function set$4(x, y, obj, img) {
       if (img.isRemote) { // Remote images cannot access imageData
-        return function() {
-          throw "Image is loaded remotely. Cannot set x,y.";
-        };
+        throw "Image is loaded remotely. Cannot set x,y.";
       } else {
         var c = p.color.toArray(obj);
         var offset = y * img.width * 4 + (x*4);
@@ -9483,9 +9471,7 @@
         param = null;
       }
       if (img.isRemote) { // Remote images cannot access imageData
-        return function() {
-          throw "Image is loaded remotely. Cannot filter image.";
-        };
+        throw "Image is loaded remotely. Cannot filter image.";
       } else {
         // begin filter process
         var imglen = img.pixels.getLength();
