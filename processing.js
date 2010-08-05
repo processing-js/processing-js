@@ -8608,9 +8608,7 @@
 
       this.resize = function(w, h) {
         if (this.isRemote) { // Remote images cannot access imageData
-          return function() {
-            throw "Image is loaded remotely. Cannot resize.";
-          };
+          throw "Image is loaded remotely. Cannot resize.";
         } else {
           if (this.width !== 0 || this.height !== 0) {
             // make aspect ratio if w or h is 0
@@ -8695,9 +8693,7 @@
         }(this)),
         set: function(arr) {
           if (this.isRemote) { // Remote images cannot access imageData
-            return function() {
-              throw "Image is loaded remotely. Cannot set pixels.";
-            };
+            throw "Image is loaded remotely. Cannot set pixels.";
           } else {
             for (var i = 0, aL = arr.length; i < aL; i++) {
               this.setPixel(i, arr[i]);
@@ -8722,9 +8718,7 @@
 
       this.toDataURL = function() {
         if (this.isRemote) { // Remote images cannot access imageData
-          return function() {
-            throw "Image is loaded remotely. Cannot create dataURI.";
-          };
+          throw "Image is loaded remotely. Cannot create dataURI.";
         } else {
           var canvasData = getCanvasData(this.imageData);
           return canvasData.canvas.toDataURL();
@@ -9217,9 +9211,7 @@
       var dy2 = dy + dh;
       var dest;
       if (src.isRemote) { // Remote images cannot access imageData
-        return function() {
-          throw "Image is loaded remotely. Cannot blend image.";
-        };
+        throw "Image is loaded remotely. Cannot blend image.";
       } else {
         // check if pimgdest is there and pixels, if so this was a call from pimg.blend
         if (arguments.length === 10 || arguments.length === 9) {
