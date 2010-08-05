@@ -307,13 +307,13 @@
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
   function setupTypedArray(name, fallback) {
     // check if TypedArray exists
-    if (typeof this[name] !== "function") {
+    if (typeof window[name] !== "function") {
       // nope.. check if WebGLArray exists
-      if (typeof this[fallback] === "function") {
-        this[name] = this[fallback];
+      if (typeof window[fallback] === "function") {
+        window[name] = window[fallback];
       } else {
         // nope.. set as Native JS array
-        this[name] = function(obj) {
+        window[name] = function(obj) {
           if (obj instanceof Array) {
             return obj;
           } else if (typeof obj === "number") {
