@@ -10461,8 +10461,8 @@
     }
 
     p.text = function text() {
-      if(textMode === p.SCREEN){
-        var tWidth = p.textWidth(arguments[0]);
+      if(textMode === p.SCREEN){ //TODO: Waiting on p.createGraphics/p.image fix
+        /*var tWidth = p.textWidth(arguments[0]);
         var tHeight = p.textAscent() + p.textDescent();
         var hud = p.createGraphics(tWidth, tHeight);
         hud.beginDraw();
@@ -10475,7 +10475,7 @@
           p.image(hud, arguments[1], arguments[2], arguments[3], arguments[4]);
         } else {
           p.image(hud, arguments[1], arguments[2]);
-        }
+        }*/
       }
       else if(textmode === p.SHAPE){
         // don't know how to implement this - requires beginRaw function
