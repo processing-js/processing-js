@@ -7966,12 +7966,12 @@
         }
       }
     };
-
+var texture;
     p.texture = function(pimage){
-      if(pimage.name === "Processing.js Instance"){
-        var texture = curContext.createTexture();
+      if(pimage.localName === "canvas"){
+        texture = curContext.createTexture();
         curContext.bindTexture(curContext.TEXTURE_2D, texture);
-        curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.externals.canvas);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
@@ -8009,7 +8009,7 @@
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
-        curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage.__cvs);
         curContext.generateMipmap(curContext.TEXTURE_2D);
       }
       else{
@@ -9082,12 +9082,12 @@
         var hgt = h || img.height;
         if(p.use3DContext){
           p.beginShape(p.QUADS);
-          p.textureMode(p.NORMAL)
-          p.texture(img);
+          //p.textureMode(p.NORMAL)
+          p.texture(img.externals.canvas);
           p.vertex(x, y, 0, 0, 0);
-          p.vertex(x+wid, y, 0, 0, 1);
-          p.vertex(x+wid, y+hgt, 0, 1, 1);
-          p.vertex(x, y+hgt, 0, 1, 0);
+          p.vertex(x, y+hgt, 0, 0, hgt);
+          p.vertex(x+wid, y+hgt, 0, wid, hgt);
+          p.vertex(x+wid, y, 0, wid, 0);
           p.endShape();
         } else {
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
