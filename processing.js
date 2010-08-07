@@ -11318,8 +11318,8 @@
       // .length() --> .length
       s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");
       // #000000 --> 0x000000
-      s = s.replace(/#([0-9A-Fa-f]+)/g, function(all, digits) {
-        return digits.length < 6 ? "0x" + digits : "0xFF000000".substring(0, 10 - digits.length) + digits;
+      s = s.replace(/#([0-9A-Fa-f]{6})\b/g, function(all, digits) {
+        return "0xFF" + digits;
       });
       // delete (type)???, (int)??? -> 0|???
       s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
