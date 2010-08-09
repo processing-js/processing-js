@@ -10477,7 +10477,7 @@
           p.image(hud, arguments[1], arguments[2]);
         }*/
       }
-      else if(textmode === p.SHAPE){
+      else if(textMode === p.SHAPE){
         // don't know how to implement this - requires beginRaw function
       } else {
         if (arguments.length === 3) { // for text( str, x, y)
