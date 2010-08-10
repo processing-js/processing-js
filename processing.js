@@ -304,8 +304,31 @@
     MAX_LIGHTS:         8
   };
 
-  var Processing = this.Processing = function Processing(curElement, aCode) {
+  // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
+  function setupTypedArray(name, fallback) {
+    // check if TypedArray exists
+    if (typeof this[name] !== "function") {
+      // nope.. check if WebGLArray exists
+      if (typeof this[fallback] === "function") {
+        this[name] = this[fallback];
+      } else {
+        // nope.. set as Native JS array
+        this[name] = function(obj) {
+          if (obj instanceof Array) {
+            return obj;
+          } else if (typeof obj === "number") {
+            return new Array(obj);
+          }
+        };
+      }
+    } 
+  }
 
+  setupTypedArray("Float32Array", "WebGLFloatArray");
+  setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
+  setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
+
+  var Processing = this.Processing = function Processing(curElement, aCode) {
     var p = this;
 
     // PJS specific (non-p5) methods and properties to externalize
@@ -451,11 +474,6 @@
         maxPixelsCached = 1000,
         codedKeys = [PConstants.SHIFT, PConstants.CONTROL, PConstants.ALT, PConstants.UP, PConstants.RIGHT, PConstants.DOWN, PConstants.LEFT];
 
-    // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
-    // in Minefield does nothing and does not report any errors.
-    var VERTEX_PROGRAM_POINT_SIZE = 0x8642;
-    var POINT_SMOOTH = 0x0B10;
-
     // Get padding and border style widths for mouse offsets
     var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
 
@@ -509,180 +527,186 @@
 
     //PShape stuff
     var curShapeMode = PConstants.CORNER;
-    var colors = {}; 
-        colors.aliceblue = "#f0f8ff";
-        colors.antiquewhite = "#faebd7";
-        colors.aqua = "#00ffff";
-        colors.aquamarine = "#7fffd4";
-        colors.azure = "#f0ffff";
-        colors.beige = "#f5f5dc";
-        colors.bisque = "#ffe4c4";
-        colors.black = "#000000";
-        colors.blanchedalmond = "#ffebcd";
-        colors.blue = "#0000ff";
-        colors.blueviolet = "#8a2be2";
-        colors.brown = "#a52a2a";
-        colors.burlywood = "#deb887";
-        colors.cadetblue = "#5f9ea0";
-        colors.chartreuse = "#7fff00";
-        colors.chocolate = "#d2691e";
-        colors.coral = "#ff7f50";
-        colors.cornflowerblue = "#6495ed";
-        colors.cornsilk = "#fff8dc";
-        colors.crimson = "#dc143c";
-        colors.cyan = "#00ffff";
-        colors.darkblue = "#00008b";
-        colors.darkcyan = "#008b8b";
-        colors.darkgoldenrod = "#b8860b";
-        colors.darkgray = "#a9a9a9";
-        colors.darkgreen = "#006400";
-        colors.darkkhaki = "#bdb76b";
-        colors.darkmagenta = "#8b008b";
-        colors.darkolivegreen = "#556b2f";
-        colors.darkorange = "#ff8c00";
-        colors.darkorchid = "#9932cc";
-        colors.darkred = "#8b0000";
-        colors.darksalmon = "#e9967a";
-        colors.darkseagreen = "#8fbc8f";
-        colors.darkslateblue = "#483d8b";
-        colors.darkslategray = "#2f4f4f";
-        colors.darkturquoise = "#00ced1";
-        colors.darkviolet = "#9400d3";
-        colors.deeppink = "#ff1493";
-        colors.deepskyblue = "#00bfff";
-        colors.dimgray = "#696969";
-        colors.dodgerblue = "#1e90ff";
-        colors.firebrick = "#b22222";
-        colors.floralwhite = "#fffaf0";
-        colors.forestgreen = "#228b22";
-        colors.fuchsia = "#ff00ff";
-        colors.gainsboro = "#dcdcdc";
-        colors.ghostwhite = "#f8f8ff";
-        colors.gold = "#ffd700";
-        colors.goldenrod = "#daa520";
-        colors.gray = "#808080";
-        colors.green = "#008000";
-        colors.greenyellow = "#adff2f";
-        colors.honeydew = "#f0fff0";
-        colors.hotpink = "#ff69b4";
-        colors.indianred = "#cd5c5c";
-        colors.indigo = "#4b0082";
-        colors.ivory = "#fffff0";
-        colors.khaki = "#f0e68c";
-        colors.lavender = "#e6e6fa";
-        colors.lavenderblush = "#fff0f5";
-        colors.lawngreen = "#7cfc00";
-        colors.lemonchiffon = "#fffacd";
-        colors.lightblue = "#add8e6";
-        colors.lightcoral = "#f08080";
-        colors.lightcyan = "#e0ffff";
-        colors.lightgoldenrodyellow = "#fafad2";
-        colors.lightgrey = "#d3d3d3";
-        colors.lightgreen = "#90ee90";
-        colors.lightpink = "#ffb6c1";
-        colors.lightsalmon = "#ffa07a";
-        colors.lightseagreen = "#20b2aa";
-        colors.lightskyblue = "#87cefa";
-        colors.lightslategray = "#778899";
-        colors.lightsteelblue = "#b0c4de";
-        colors.lightyellow = "#ffffe0";
-        colors.lime = "#00ff00";
-        colors.limegreen = "#32cd32";
-        colors.linen = "#faf0e6";
-        colors.magenta = "#ff00ff";
-        colors.maroon = "#800000";
-        colors.mediumaquamarine = "#66cdaa";
-        colors.mediumblue = "#0000cd";
-        colors.mediumorchid = "#ba55d3";
-        colors.mediumpurple = "#9370d8";
-        colors.mediumseagreen = "#3cb371";
-        colors.mediumslateblue = "#7b68ee";
-        colors.mediumspringgreen = "#00fa9a";
-        colors.mediumturquoise = "#48d1cc";
-        colors.mediumvioletred = "#c71585";
-        colors.midnightblue = "#191970";
-        colors.mintcream = "#f5fffa";
-        colors.mistyrose = "#ffe4e1";
-        colors.moccasin = "#ffe4b5";
-        colors.navajowhite = "#ffdead";
-        colors.navy = "#000080";
-        colors.oldlace = "#fdf5e6";
-        colors.olive = "#808000";
-        colors.olivedrab = "#6b8e23";
-        colors.orange = "#ffa500";
-        colors.orangered = "#ff4500";
-        colors.orchid = "#da70d6";
-        colors.palegoldenrod = "#eee8aa";
-        colors.palegreen = "#98fb98";
-        colors.paleturquoise = "#afeeee";
-        colors.palevioletred = "#d87093";
-        colors.papayawhip = "#ffefd5";
-        colors.peachpuff = "#ffdab9";
-        colors.peru = "#cd853f";
-        colors.pink = "#ffc0cb";
-        colors.plum = "#dda0dd";
-        colors.powderblue = "#b0e0e6";
-        colors.purple = "#800080";
-        colors.red = "#ff0000";
-        colors.rosybrown = "#bc8f8f";
-        colors.royalblue = "#4169e1";
-        colors.saddlebrown = "#8b4513";
-        colors.salmon = "#fa8072";
-        colors.sandybrown = "#f4a460";
-        colors.seagreen = "#2e8b57";
-        colors.seashell = "#fff5ee";
-        colors.sienna = "#a0522d";
-        colors.silver = "#c0c0c0";
-        colors.skyblue = "#87ceeb";
-        colors.slateblue = "#6a5acd";
-        colors.slategray = "#708090";
-        colors.snow = "#fffafa";
-        colors.springgreen = "#00ff7f";
-        colors.steelblue = "#4682b4";
-        colors.tan = "#d2b48c";
-        colors.teal = "#008080";
-        colors.thistle = "#d8bfd8";
-        colors.tomato = "#ff6347";
-        colors.turquoise = "#40e0d0";
-        colors.violet = "#ee82ee";
-        colors.wheat = "#f5deb3";
-        colors.white = "#ffffff";
-        colors.whitesmoke = "#f5f5f5";
-        colors.yellow = "#ffff00";
-        colors.yellowgreen = "#9acd32";
+
+    var colors = { 
+      aliceblue:            "#f0f8ff",
+      antiquewhite:         "#faebd7",
+      aqua:                 "#00ffff",
+      aquamarine:           "#7fffd4",
+      azure:                "#f0ffff",
+      beige:                "#f5f5dc",
+      bisque:               "#ffe4c4",
+      black:                "#000000",
+      blanchedalmond:       "#ffebcd",
+      blue:                 "#0000ff",
+      blueviolet:           "#8a2be2",
+      brown:                "#a52a2a",
+      burlywood:            "#deb887",
+      cadetblue:            "#5f9ea0",
+      chartreuse:           "#7fff00",
+      chocolate:            "#d2691e",
+      coral:                "#ff7f50",
+      cornflowerblue:       "#6495ed",
+      cornsilk:             "#fff8dc",
+      crimson:              "#dc143c",
+      cyan:                 "#00ffff",
+      darkblue:             "#00008b",
+      darkcyan:             "#008b8b",
+      darkgoldenrod:        "#b8860b",
+      darkgray:             "#a9a9a9",
+      darkgreen:            "#006400",
+      darkkhaki:            "#bdb76b",
+      darkmagenta:          "#8b008b",
+      darkolivegreen:       "#556b2f",
+      darkorange:           "#ff8c00",
+      darkorchid:           "#9932cc",
+      darkred:              "#8b0000",
+      darksalmon:           "#e9967a",
+      darkseagreen:         "#8fbc8f",
+      darkslateblue:        "#483d8b",
+      darkslategray:        "#2f4f4f",
+      darkturquoise:        "#00ced1",
+      darkviolet:           "#9400d3",
+      deeppink:             "#ff1493",
+      deepskyblue:          "#00bfff",
+      dimgray:              "#696969",
+      dodgerblue:           "#1e90ff",
+      firebrick:            "#b22222",
+      floralwhite:          "#fffaf0",
+      forestgreen:          "#228b22",
+      fuchsia:              "#ff00ff",
+      gainsboro:            "#dcdcdc",
+      ghostwhite:           "#f8f8ff",
+      gold:                 "#ffd700",
+      goldenrod:            "#daa520",
+      gray:                 "#808080",
+      green:                "#008000",
+      greenyellow:          "#adff2f",
+      honeydew:             "#f0fff0",
+      hotpink:              "#ff69b4",
+      indianred:            "#cd5c5c",
+      indigo:               "#4b0082",
+      ivory:                "#fffff0",
+      khaki:                "#f0e68c",
+      lavender:             "#e6e6fa",
+      lavenderblush:        "#fff0f5",
+      lawngreen:            "#7cfc00",
+      lemonchiffon:         "#fffacd",
+      lightblue:            "#add8e6",
+      lightcoral:           "#f08080",
+      lightcyan:            "#e0ffff",
+      lightgoldenrodyellow: "#fafad2",
+      lightgrey:            "#d3d3d3",
+      lightgreen:           "#90ee90",
+      lightpink:            "#ffb6c1",
+      lightsalmon:          "#ffa07a",
+      lightseagreen:        "#20b2aa",
+      lightskyblue:         "#87cefa",
+      lightslategray:       "#778899",
+      lightsteelblue:       "#b0c4de",
+      lightyellow:          "#ffffe0",
+      lime:                 "#00ff00",
+      limegreen:            "#32cd32",
+      linen:                "#faf0e6",
+      magenta:              "#ff00ff",
+      maroon:               "#800000",
+      mediumaquamarine:     "#66cdaa",
+      mediumblue:           "#0000cd",
+      mediumorchid:         "#ba55d3",
+      mediumpurple:         "#9370d8",
+      mediumseagreen:       "#3cb371",
+      mediumslateblue:      "#7b68ee",
+      mediumspringgreen:    "#00fa9a",
+      mediumturquoise:      "#48d1cc",
+      mediumvioletred:      "#c71585",
+      midnightblue:         "#191970",
+      mintcream:            "#f5fffa",
+      mistyrose:            "#ffe4e1",
+      moccasin:             "#ffe4b5",
+      navajowhite:          "#ffdead",
+      navy:                 "#000080",
+      oldlace:              "#fdf5e6",
+      olive:                "#808000",
+      olivedrab:            "#6b8e23",
+      orange:               "#ffa500",
+      orangered:            "#ff4500",
+      orchid:               "#da70d6",
+      palegoldenrod:        "#eee8aa",
+      palegreen:            "#98fb98",
+      paleturquoise:        "#afeeee",
+      palevioletred:        "#d87093",
+      papayawhip:           "#ffefd5",
+      peachpuff:            "#ffdab9",
+      peru:                 "#cd853f",
+      pink:                 "#ffc0cb",
+      plum:                 "#dda0dd",
+      powderblue:           "#b0e0e6",
+      purple:               "#800080",
+      red:                  "#ff0000",
+      rosybrown:            "#bc8f8f",
+      royalblue:            "#4169e1",
+      saddlebrown:          "#8b4513",
+      salmon:               "#fa8072",
+      sandybrown:           "#f4a460",
+      seagreen:             "#2e8b57",
+      seashell:             "#fff5ee",
+      sienna:               "#a0522d",
+      silver:               "#c0c0c0",
+      skyblue:              "#87ceeb",
+      slateblue:            "#6a5acd",
+      slategray:            "#708090",
+      snow:                 "#fffafa",
+      springgreen:          "#00ff7f",
+      steelblue:            "#4682b4",
+      tan:                  "#d2b48c",
+      teal:                 "#008080",
+      thistle:              "#d8bfd8",
+      tomato:               "#ff6347",
+      turquoise:            "#40e0d0",
+      violet:               "#ee82ee",
+      wheat:                "#f5deb3",
+      white:                "#ffffff",
+      whitesmoke:           "#f5f5f5",
+      yellow:               "#ffff00",
+      yellowgreen:          "#9acd32"
+    };
+
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
 
     // Vertices are specified in a counter-clockwise order
     // triangles are in this order: back, front, right, bottom, left, top
-    var boxVerts = [0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-                   -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
-                   -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5,
-                    0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5,
-                    0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5,
-                   -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
-                   -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
-                   -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
-                   -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+    var boxVerts = new Float32Array([
+       0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+      -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,
+      -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,
+       0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,
+       0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5,  0.5,
+      -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,
+      -0.5,  0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5,
+      -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5]);
 
-    var boxNorms = [0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
-                    0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-                    1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-                    0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
-                    -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
-                    0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+    var boxOutlineVerts = new Float32Array([
+       0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,
+      -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5,
+       0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5,
+      -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5,
+       0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5]);
 
-    var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5,
-                          -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5,
-                           0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5,
-                          -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-                           0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-                          -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
+    var boxNorms = new Float32Array([
+       0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,
+       0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,
+       1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,
+       0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,
+      -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0,
+       0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0]);
 
     // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP
-    var rectVerts = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
+    var rectVerts = new Float32Array([0,0,0, 0,1,0, 1,1,0, 1,0,0]);
 
-    var rectNorms = [0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1];
+    var rectNorms = new Float32Array([0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1]);
 
     // Vertex shader for points and lines
     var vShaderSrcUnlitShape =
@@ -1010,11 +1034,6 @@
         }
       }
     }
-
-    // Wrapper to easily deal with array names changes. TODO: Don't think we need this wrapper anymore consensus has been reached.
-    var newWebGLArray = function(data) {
-      return new WebGLFloatArray(data);
-    };
 
     var imageModeCorner = function imageModeCorner(x, y, w, h, whAreSizes) {
       return {
@@ -1469,59 +1488,10 @@
       
     };
     
-    p.shape = function(shape, x, y, width, height) {
-      if (arguments.length >= 1 && arguments[0] !== null) {
-        if (shape.isVisible()) {
-          p.pushMatrix();
-          if (curShapeMode === PConstants.CENTER) {
-            if (arguments.length === 5) {
-              p.translate(x - width/2, y - height/2);
-              p.scale(width / shape.getWidth(), height / shape.getHeight());
-            } else if (arguments.length === 3) {
-              p.translate(x - shape.getWidth()/2, - shape.getHeight()/2);
-            } else {
-              p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
-            }
-          } else if (curShapeMode === PConstants.CORNER) {
-            if (arguments.length === 5) {
-              p.translate(x, y);
-              p.scale(width / shape.getWidth(), height / shape.getHeight());
-            } else if (arguments.length === 3) {
-              p.translate(x, y);
-            }
-          } else if (curShapeMode === PConstants.CORNERS) {
-            if (arguments.length === 5) {
-              width  -= x;
-              height -= y;
-              p.translate(x, y);
-              p.scale(width / shape.getWidth(), height / shape.getHeight());
-            } else if (arguments.length === 3) {
-              p.translate(x, y);
-            }
-          }
-          shape.draw();
-          if ((arguments.length === 1 && curShapeMode === PConstants.CENTER ) || arguments.length > 1) {
-            p.popMatrix();
-          }
-        }
-      }
-    }; 
-    p.shapeMode = function (mode) {
-      curShapeMode = mode;
-    };
-    p.loadShape = function (filename) {
-      if (arguments.length === 1) {
-        if (filename.indexOf(".svg") > -1) {
-          return new p.PShapeSVG(null, filename);
-        }
-      }
-      return null;
-    };
-    
-    var PShapeSVG = p.PShapeSVG = function() {
+    var PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
       if (arguments.length === 1) {
-        this.element  = new p.XMLElement(arguments[0]);
+        this.element  = new p.XMLElement(null, arguments[0]);
         // set values to their defaults according to the SVG spec
         this.vertexCodes         = [];
         this.vertices            = [];
@@ -1551,7 +1521,7 @@
       else if (arguments.length === 2) {
         if (typeof arguments[1] === 'string') {
           if (arguments[1].indexOf(".svg") > -1) { //its a filename
-            this.element = new p.XMLElement(arguments[1]);
+            this.element = new p.XMLElement(null, arguments[1]);
             // set values to their defaults according to the SVG spec
             this.vertexCodes         = [];
             this.vertices            = [];
@@ -2043,16 +2013,20 @@
       parsePoly: function(val) {
         this.family    = PConstants.PATH;
         this.close     = val;
-        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/\s+/g,' '));
+        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/[,\s]+/g,' '));
         if (pointsAttr !== null) {
+          //split into array
           var pointsBuffer = pointsAttr.split(" ");
-          for (var i = 0; i < pointsBuffer.length; i++) {
-            var verts = [];
-            var pb    = pointsBuffer[i].split(',');
-            verts[0]  = pb[0];
-            verts[1]  = pb[1];
-            this.vertices.push(verts);
-          }       
+          if (pointsBuffer.length % 2 === 0) {
+            for (var i = 0; i < pointsBuffer.length; i++) {
+              var verts = [];
+              verts[0]  = pointsBuffer[i];
+              verts[1]  = pointsBuffer[++i];
+              this.vertices.push(verts);
+            } 
+          } else {    
+            p.println("Error parsing polygon points: odd number of coordinates provided");
+          }
         }
       },
       parseRect: function() {
@@ -2268,11 +2242,63 @@
         }
       }      
     };
+
+    p.shape = function(shape, x, y, width, height) {
+      if (arguments.length >= 1 && arguments[0] !== null) {
+        if (shape.isVisible()) {
+          p.pushMatrix();
+          if (curShapeMode === PConstants.CENTER) {
+            if (arguments.length === 5) {
+              p.translate(x - width/2, y - height/2);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x - shape.getWidth()/2, - shape.getHeight()/2);
+            } else {
+              p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
+            }
+          } else if (curShapeMode === PConstants.CORNER) {
+            if (arguments.length === 5) {
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
+            }
+          } else if (curShapeMode === PConstants.CORNERS) {
+            if (arguments.length === 5) {
+              width  -= x;
+              height -= y;
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
+            }
+          }
+          shape.draw();
+          if ((arguments.length === 1 && curShapeMode === PConstants.CENTER ) || arguments.length > 1) {
+            p.popMatrix();
+          }
+        }
+      }
+    }; 
+
+    p.shapeMode = function (mode) {
+      curShapeMode = mode;
+    };
+
+    p.loadShape = function (filename) {
+      if (arguments.length === 1) {
+        if (filename.indexOf(".svg") > -1) {
+          return new PShapeSVG(null, filename);
+        }
+      }
+      return null;
+    };
+    
  
     ////////////////////////////////////////////////////////////////////////////
     // XMLAttribute
     ////////////////////////////////////////////////////////////////////////////
-    var XMLAttribute = p.XMLAttribute = function (fname, n, nameSpace, v, t){
+    var XMLAttribute = function(fname, n, nameSpace, v, t){
       this.fullName = fname || "";
       this.name = n || "";
       this.namespace = nameSpace || "";
@@ -2324,21 +2350,29 @@
         this.systemID  = arguments[2];
         this.parent    = null;
       }
-      else if ((arguments.length === 1 && arguments[0].indexOf(".") > -1) || arguments.length === 2) { // filename or svg xml element
-        if (arguments[arguments.length -1].indexOf(".") > -1) { //its a filename
-          this.attributes = [];
-          this.children   = [];
-          this.fullName   = "";
-          this.name       = "";
-          this.namespace  = "";
-          this.content    = "";
-          this.systemID   = "";
-          this.lineNr     = "";
-          this.parent     = null;
-          this.parse(arguments[arguments.length -1]);
-        } else { //xml string
-          this.parse(arguments[arguments.length -1]);
-        }
+      else if ((arguments.length === 2 && arguments[1].indexOf(".") > -1) ) { // filename or svg xml element
+        this.attributes = [];
+        this.children   = [];
+        this.fullName   = "";
+        this.name       = "";
+        this.namespace  = "";
+        this.content    = "";
+        this.systemID   = "";
+        this.lineNr     = "";
+        this.parent     = null;
+        this.parse(arguments[arguments.length -1]);
+      } else if (arguments.length === 1 && typeof arguments[0] === "string"){
+        //xml string
+        this.attributes = [];
+        this.children   = [];
+        this.fullName   = "";
+        this.name       = "";
+        this.namespace  = "";
+        this.content    = "";
+        this.systemID   = "";
+        this.lineNr     = "";
+        this.parent     = null;
+        this.parse(arguments[0]);
       }
       else { //empty ctor
         this.attributes = [];
@@ -2350,6 +2384,7 @@
         this.systemID   = "";
         this.lineNr     = "";
         this.parent     = null;
+        
       }
       return this;
     };
@@ -2361,8 +2396,10 @@
       parse: function(filename) {
         var xmlDoc;
         try {
-          xmlDoc = new DOMParser().parseFromString(ajax(filename), "text/xml");
-
+          if (filename.indexOf(".xml") > -1 || filename.indexOf(".svg") > -1) {
+            filename = ajax(filename);
+          } 
+          xmlDoc = new DOMParser().parseFromString(filename, "text/xml");
           var elements = xmlDoc.documentElement;
           if (elements) {
             this.parseChildrenRecursive(null, elements);
@@ -2578,10 +2615,6 @@
             xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
           }
         }
-        /*
-        for( var m = 0; m < elementpath.childElementCount; m++ ) {
-         xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[m]) );
-        }*/
         return xmlelement;
       },
       isLeaf: function(){
@@ -4809,6 +4842,12 @@
     p.frameRate = function frameRate(aRate) {
       curFrameRate = aRate;
       curMsPerFrame = 1000 / curFrameRate;
+
+      // clear and reset interval
+      if (doLoop) {
+        p.noLoop();
+        p.loop();
+      }
     };
 
     var eventHandlers = [];
@@ -5203,11 +5242,16 @@
     };
 
     // Load a file or URL into strings
-    p.loadStrings = function loadStrings(url) {
-      return ajax(url).split("\n");
+    p.loadStrings = function loadStrings(filename) {
+      return (localStorage[filename] ? localStorage[filename] : ajax(filename).slice(0, -1)).split("\n");
     };
 
-    p.loadBytes = function loadBytes(url) {
+    // Writes an array of strings to a file, one line per string
+    p.saveStrings = function saveStrings(filename, strings) {
+      localStorage[filename] = strings.join('\n');
+    };
+
+    p.loadBytes = function loadBytes(url, strings) {
       var string = ajax(url);
       var ret = [];
 
@@ -5965,7 +6009,7 @@
 
     // Set default background behavior for 2D and 3D contexts
     var refreshBackground = function() {
-      if (curSketch.options.isOpaque) {
+      if (!curSketch.options.isTransparent) {
         if (p.use3DContext) {
           // fill background default opaque gray
           curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
@@ -6014,11 +6058,6 @@
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
           refreshBackground(); // sets clearColor default;
 
-          // We declare our own constants since Minefield doesn't
-          // do anything when curContext.VERTEX_PROGRAM_POINT_SIZE is used.
-          curContext.enable(VERTEX_PROGRAM_POINT_SIZE);
-          curContext.enable(POINT_SMOOTH);
-
           // Create the program objects to render 2D (points, lines) and
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
           // lighting calculations could be ommitted from that program object.
@@ -6045,24 +6084,24 @@
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
 
           boxNormBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxNorms), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, boxNorms, curContext.STATIC_DRAW);
 
           boxOutlineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
 
           // used to draw the rectangle and the outline
           rectBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
 
           rectNormBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectNorms), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, rectNorms, curContext.STATIC_DRAW);
 
           // The sphere vertices are specified dynamically since the user
           // can change the level of detail. Everytime the user does that
@@ -6079,19 +6118,19 @@
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0, 0, 0]), curContext.STATIC_DRAW);
 
           textBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
-          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
 
           textureBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
 
           indexBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
-          curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new WebGLUnsignedShortArray([0,1,2,2,3,0]), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,2,3,0]), curContext.STATIC_DRAW);
 
           cam = new PMatrix3D();
           cameraInv = new PMatrix3D();
@@ -6163,7 +6202,7 @@
           var obj = ctx.createImageData(this.width, this.height);
           var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
           if(!uBuff){
-            uBuff = new WebGLUnsignedByteArray(this.width * this.height * 4);
+            uBuff = new Uint8Array(this.width * this.height * 4);
             curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
           }
           for(var i =0; i < uBuff.length; i++){
@@ -6610,7 +6649,7 @@
 
       //set the buffer data
       curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(sphereVerts), curContext.STATIC_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(sphereVerts), curContext.STATIC_DRAW);
     };
 
     p.sphereDetail = function sphereDetail(ures, vres) {
@@ -7123,40 +7162,48 @@
     };
 
     p.vertex = function vertex() {
-      if(firstVert){ firstVert = false; }
       var vert = [];
-      if(arguments.length === 4){ //x, y, u, v
+
+      if (firstVert) { firstVert = false; }
+
+      if (arguments.length === 4) { //x, y, u, v
         vert[0] = arguments[0];
         vert[1] = arguments[1];
         vert[2] = 0;
         vert[3] = arguments[2];
         vert[4] = arguments[3];
-      }
-      else{ // x, y, z, u, v
+      } else { // x, y, z, u, v
         vert[0] = arguments[0];
         vert[1] = arguments[1];
         vert[2] = arguments[2] || 0;
         vert[3] = arguments[3] || 0;
         vert[4] = arguments[4] || 0;
       }
-      // fill rgba
-      vert[5] = fillStyle[0];
-      vert[6] = fillStyle[1];
-      vert[7] = fillStyle[2];
-      vert[8] = fillStyle[3];
-      // stroke rgba
-      vert[9] = strokeStyle[0];
-      vert[10] = strokeStyle[1];
-      vert[11] = strokeStyle[2];
-      vert[12] = strokeStyle[3];
-      //normals
-      vert[13] = normalX;
-      vert[14] = normalY;
-      vert[15] = normalZ;
-      
+
       vert["isVert"] =  true;
+
+      if (p.use3DContext) {
+        // fill rgba
+        vert[5] = fillStyle[0];
+        vert[6] = fillStyle[1];
+        vert[7] = fillStyle[2];
+        vert[8] = fillStyle[3];
+        // stroke rgba
+        vert[9] = strokeStyle[0];
+        vert[10] = strokeStyle[1];
+        vert[11] = strokeStyle[2];
+        vert[12] = strokeStyle[3];
+        //normals
+        vert[13] = normalX;
+        vert[14] = normalY;
+        vert[15] = normalZ;
+      } else {
+        // fill and stroke color
+        vert[5] = currentFillColor;
+        vert[6] = currentStrokeColor;
+      }
+
       vertArray.push(vert);
-      
     };
 
     /*
@@ -7182,10 +7229,10 @@
       uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
 
       vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, pointBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
       vertexAttribPointer(programObjectUnlitShape, "aColor", 4, fillColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
@@ -7220,10 +7267,10 @@
       uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
 
       vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, lineBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
       vertexAttribPointer(programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       curContext.lineWidth(lineWidth);
 
@@ -7262,10 +7309,10 @@
       uniformf(programObject3D, "color", [-1,0,0,0]);
 
       vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
       vertexAttribPointer(programObject3D, "aColor", 4, fillColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       // No support for lights....yet
       disableVertexAttribPointer(programObject3D, "Normal");
@@ -7289,14 +7336,15 @@
 
         uniformi(programObject3D, "usingTexture", usingTexture);
         vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
-        curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
+        curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW);
       }
 
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
-    p.endShape = function endShape(close){
+    p.endShape = function endShape(mode){
+      var closeShape = mode === p.CLOSE;
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
@@ -7307,43 +7355,43 @@
       var i, j, k;
       var last = vertArray.length - 1;
 
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 0; j < 3; j++){
+      for (i = 0; i < vertArray.length; i++) {
+        for (j = 0; j < 3; j++) {
           fillVertArray.push(vertArray[i][j]);
         }
       }
 
       // 5,6,7,8
       // R,G,B,A
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 5; j < 9; j++){
+      for (i = 0; i < vertArray.length; i++) {
+        for (j = 5; j < 9; j++) {
           colorVertArray.push(vertArray[i][j]);
         }
       }
 
       // 9,10,11,12
       // R, G, B, A
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 9; j < 13; j++){
+      for (i = 0; i < vertArray.length; i++) {
+        for (j = 9; j < 13; j++) {
           strokeVertArray.push(vertArray[i][j]);
         }
       }
 
-      for(i = 0; i < vertArray.length; i++){
+      for (i = 0; i < vertArray.length; i++) {
         texVertArray.push(vertArray[i][3]);
         texVertArray.push(vertArray[i][4]);
       }
 
-      if(close){
+      if (closeShape) {
         fillVertArray.push(vertArray[0][0]);
         fillVertArray.push(vertArray[0][1]);
         fillVertArray.push(vertArray[0][2]);
 
-        for(i = 5; i < 9; i++){
+        for (i = 5; i < 9; i++) {
           colorVertArray.push(vertArray[0][i]);
         }
 
-        for(i = 9; i < 13; i++){
+       for (i = 9; i < 13; i++) {
           strokeVertArray.push(vertArray[0][i]);
         }
 
@@ -7351,19 +7399,17 @@
         texVertArray.push(vertArray[0][4]);
       }
 
-      if(isCurve && curShape === PConstants.POLYGON || isCurve && curShape === undef){
-
-        if(p.use3DContext){
+      if (isCurve && curShape === PConstants.POLYGON || isCurve && curShape === undef) {
+        if (p.use3DContext) {
           lineVertArray = fillVertArray;
-          if(doStroke){
+          if (doStroke) {
             line3D(lineVertArray, null, strokeVertArray);
           }
-          if(doFill){
+          if (doFill) {
             fill3D(fillVertArray, null, colorVertArray); // fill isn't working in 3d curveVertex
           }
-        }
-        else{
-          if(vertArray.length > 3){
+        } else {
+          if (vertArray.length > 3) {
             var b = [],
                 s = 1 - curTightness;
             curContext.beginPath();
@@ -7376,7 +7422,7 @@
               * |0         (1-t)/6    1         (t-1)/6 |
               * |0         0          0         0       |
               */
-            for(i = 1; (i+2) < vertArray.length; i++){
+            for (i = 1; (i+2) < vertArray.length; i++) {
               b[0] = [vertArray[i][0], vertArray[i][1]];
               b[1] = [vertArray[i][0] + (s * vertArray[i+1][0] - s * vertArray[i-1][0]) / 6,
                      vertArray[i][1] + (s * vertArray[i+1][1] - s * vertArray[i-1][1]) / 6];
@@ -7390,16 +7436,15 @@
             curContext.closePath();
           }
         }
-      }
-      else if(isBezier && curShape === PConstants.POLYGON || isBezier && curShape === undef){
-        if(p.use3DContext){
+      } else if (isBezier && curShape === PConstants.POLYGON || isBezier && curShape === undef) {
+        if (p.use3DContext) {
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
           strokeVertArray.splice(strokeVertArray.length - 4);
-          if(doStroke){
+          if (doStroke) {
             line3D(lineVertArray, null, strokeVertArray);
           }
-          if(doFill){
+          if (doFill) {
             fill3D(fillVertArray, "TRIANGLES", colorVertArray);
           }
 
@@ -7436,12 +7481,11 @@
             strokeVertArray.push(255);
           }
           point3D(tempArray, strokeVertArray);*/
-        }
-        else{
+        } else {
           curContext.beginPath();
-          for(i = 0; i < vertArray.length; i++){
-            if( vertArray[i]["isVert"] === true ){ //if it is a vertex move to the position
-              if ( vertArray[i]["moveTo"] === true) {
+          for (i = 0; i < vertArray.length; i++) {
+            if (vertArray[i]["isVert"] === true) { //if it is a vertex move to the position
+              if (vertArray[i]["moveTo"] === true) {
                 curContext.moveTo(vertArray[i][0], vertArray[i][1]);
               } else if (vertArray[i]["moveTo"] === false){
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
@@ -7456,116 +7500,111 @@
           executeContextStroke();
           curContext.closePath();
         }
-      }
-      else{
-        if(p.use3DContext){ // 3D context
-          if (curShape === PConstants.POINTS){
-            for(i = 0; i < vertArray.length; i++){
-              for(j = 0; j < 3; j++){
+      } else {
+        if (p.use3DContext) { // 3D context
+          if (curShape === PConstants.POINTS) {
+            for (i = 0; i < vertArray.length; i++) {
+              for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[i][j]);
               }
             }
             point3D(lineVertArray, strokeVertArray);
-          }
-          else if(curShape === PConstants.LINES){
-            for(i = 0; i < vertArray.length; i++){
-              for(j = 0; j < 3; j++){
+          } else if (curShape === PConstants.LINES) {
+            for (i = 0; i < vertArray.length; i++) {
+              for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[i][j]);
               }
             }
-            for(i = 0; i < vertArray.length; i++){
-              for(j = 5; j < 9; j++){
+            for (i = 0; i < vertArray.length; i++) {
+              for (j = 5; j < 9; j++) {
                 colorVertArray.push(vertArray[i][j]);
               }
             }
             line3D(lineVertArray, "LINES", strokeVertArray);
-          }
-          else if(curShape === PConstants.TRIANGLES){
-            if(vertArray.length > 2){
-              for(i = 0; (i+2) < vertArray.length; i+=3){
+          } else if (curShape === PConstants.TRIANGLES) {
+            if (vertArray.length > 2) {
+              for (i = 0; (i+2) < vertArray.length; i+=3) {
                 fillVertArray = [];
                 texVertArray = [];
                 lineVertArray = [];
                 colorVertArray = [];
                 strokeVertArray = [];
-                for(j = 0; j < 3; j++){
-                  for(k = 0; k < 3; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 0; k < 3; k++) {
                     lineVertArray.push(vertArray[i+j][k]);
                     fillVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 3; j++){
-                  for(k = 3; k < 5; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 3; k < 5; k++) {
                     texVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 3; j++){
-                  for(k = 5; k < 9; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 5; k < 9; k++) {
                     colorVertArray.push(vertArray[i+j][k]);
                     strokeVertArray.push(vertArray[i+j][k+4]);
                   }
                 }
-                if(doStroke){
+                if (doStroke) {
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray );
                 }
-                if(doFill || usingTexture){
+                if (doFill || usingTexture) {
                   fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);
                 }
               }
             }
-          }
-          else if(curShape === PConstants.TRIANGLE_STRIP){
-            if(vertArray.length > 2){
-              for(i = 0; (i+2) < vertArray.length; i++){
+          } else if (curShape === PConstants.TRIANGLE_STRIP) {
+            if (vertArray.length > 2) {
+              for (i = 0; (i+2) < vertArray.length; i++) {
                 lineVertArray = [];
                 fillVertArray = [];
                 strokeVertArray = [];
                 colorVertArray = [];
                 texVertArray = [];
-                for(j = 0; j < 3; j++){
-                  for(k = 0; k < 3; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 0; k < 3; k++) {
                     lineVertArray.push(vertArray[i+j][k]);
                     fillVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 3; j++){
-                  for(k = 3; k < 5; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 3; k < 5; k++) {
                     texVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 3; j++){
-                  for(k = 5; k < 9; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 5; k < 9; k++) {
                     strokeVertArray.push(vertArray[i+j][k+4]);
                     colorVertArray.push(vertArray[i+j][k]);
                   }
                 }
 
-                if(doFill || usingTexture){
+                if (doFill || usingTexture) {
                   fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
                 }
-                if(doStroke){
+                if (doStroke) {
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
                 }
               }
             }
-          }
-          else if(curShape === PConstants.TRIANGLE_FAN){
-            if(vertArray.length > 2){
-              for(i = 0; i < 3; i++){
-                for(j = 0; j < 3; j++){
+          } else if (curShape === PConstants.TRIANGLE_FAN) {
+            if (vertArray.length > 2) {
+              for (i = 0; i < 3; i++) {
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i][j]);
                 }
               }
-              for(i = 0; i < 3; i++){
-                for(j = 9; j < 13; j++){
+              for (i = 0; i < 3; i++) {
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i][j]);
                 }
               }
-              if(doStroke){
+              if (doStroke) {
                 line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
               }
 
-              for(i = 2; (i+1) < vertArray.length; i++){
+              for (i = 2; (i+1) < vertArray.length; i++) {
                 lineVertArray = [];
                 strokeVertArray = [];
                 lineVertArray.push(vertArray[0][0]);
@@ -7577,70 +7616,69 @@
                 strokeVertArray.push(vertArray[0][11]);
                 strokeVertArray.push(vertArray[0][12]);
 
-                for(j = 0; j < 2; j++){
-                  for(k = 0; k < 3; k++){
+                for (j = 0; j < 2; j++) {
+                  for (k = 0; k < 3; k++) {
                     lineVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 2; j++){
-                  for(k = 9; k < 13; k++){
+                for (j = 0; j < 2; j++) {
+                  for (k = 9; k < 13; k++) {
                     strokeVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                if(doStroke){
+                if (doStroke) {
                   line3D(lineVertArray, "LINE_STRIP",strokeVertArray);
                 }
               }
-              if(doFill || usingTexture){
+              if (doFill || usingTexture) {
                 fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
-          }
-          else if(curShape === PConstants.QUADS){
-            for(i = 0; (i + 3) < vertArray.length; i+=4){
+          } else if (curShape === PConstants.QUADS) {
+            for (i = 0; (i + 3) < vertArray.length; i+=4) {
               lineVertArray = [];
-              for(j = 0; j < 4; j++){
-                for(k = 0; k < 3; k++){
+              for (j = 0; j < 4; j++) {
+                for (k = 0; k < 3; k++) {
                   lineVertArray.push(vertArray[i+j][k]);
                 }
               }
-              if(doStroke){
+              if (doStroke) {
                 line3D(lineVertArray, "LINE_LOOP",strokeVertArray);
               }
 
-              if(doFill){
+              if (doFill) {
                 fillVertArray = [];
                 colorVertArray = [];
                 texVertArray = [];
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   fillVertArray.push(vertArray[i][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   colorVertArray.push(vertArray[i][j]);
                 }
 
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   fillVertArray.push(vertArray[i+1][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   colorVertArray.push(vertArray[i+1][j]);
                 }
 
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   fillVertArray.push(vertArray[i+3][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   colorVertArray.push(vertArray[i+3][j]);
                 }
 
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   fillVertArray.push(vertArray[i+2][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   colorVertArray.push(vertArray[i+2][j]);
                 }
 
-                if(usingTexture){
+                if (usingTexture) {
                   texVertArray.push(vertArray[i+0][3]);
                   texVertArray.push(vertArray[i+0][4]);
                   texVertArray.push(vertArray[i+1][3]);
@@ -7654,94 +7692,91 @@
                 fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
               }
             }
-          }
-          else if(curShape === PConstants.QUAD_STRIP){
+          } else if (curShape === PConstants.QUAD_STRIP) {
             var tempArray = [];
-            if(vertArray.length > 3){
-              for(i = 0; i < 2; i++){
-                for(j = 0; j < 3; j++){
+            if (vertArray.length > 3) {
+              for (i = 0; i < 2; i++) {
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i][j]);
                 }
               }
 
-              for(i = 0; i < 2; i++){
-                for(j = 9; j < 13; j++){
+              for (i = 0; i < 2; i++) {
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i][j]);
                 }
               }
 
               line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
-              if(vertArray.length > 4 && vertArray.length % 2 > 0){
+              if (vertArray.length > 4 && vertArray.length % 2 > 0) {
                 tempArray = fillVertArray.splice(fillVertArray.length - 3);
                 vertArray.pop();
               }
-              for(i = 0; (i+3) < vertArray.length; i+=2){
+              for (i = 0; (i+3) < vertArray.length; i+=2) {
                 lineVertArray = [];
                 strokeVertArray = [];
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i+1][j]);
                 }
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i+3][j]);
                 }
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i+2][j]);
                 }
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i+0][j]);
                 }
-                for(j = 9; j < 13; j++){
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+1][j]);
                 }
-                for(j = 9; j < 13; j++){
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+3][j]);
                 }
-                for(j = 9; j < 13; j++){
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+2][j]);
-                }
-                for(j = 9; j < 13; j++){
+                } 
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+0][j]);
                 }
-                if(doStroke){
+                if (doStroke) {
                   line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
                 }
               }
 
-              if(doFill || usingTexture){
+              if (doFill || usingTexture) {
                 fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
               }
             }
           }
           // If the user didn't specify a type (LINES, TRIANGLES, etc)
-          else{
+          else {
             // If only one vertex was specified, it must be a point
-            if(vertArray.length === 1){
-              for(j = 0; j < 3; j++){
+            if (vertArray.length === 1) {
+              for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[0][j]);
               }
-              for(j = 9; j < 13; j++){
+              for (j = 9; j < 13; j++) {
                 strokeVertArray.push(vertArray[0][j]);
               }
               point3D(lineVertArray,strokeVertArray);
-            }
-            else{
-              for(i = 0; i < vertArray.length; i++){
-                for(j = 0; j < 3; j++){
+            } else {
+              for (i = 0; i < vertArray.length; i++) {
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   strokeVertArray.push(vertArray[i][j]);
                 }
               }
-              if(close){
+              if (closeShape) {
                 line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
-              }
-              else{
+              } else {
                 line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
 
               // fill is ignored if textures are used
-              if(doFill || usingTexture){
+              if (doFill || usingTexture) {
                 fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
@@ -7754,101 +7789,113 @@
           curContext.useProgram(programObject3D);
           uniformi(programObject3D, "usingTexture", usingTexture);
         }
+
         // 2D context
-        else{
-          if (curShape === PConstants.POINTS){
-            for(i = 0; i < vertArray.length; i++){
+        else {
+          if (curShape === PConstants.POINTS) {
+            for (i = 0; i < vertArray.length; i++) {
+              p.stroke(vertArray[i][6]);
               p.point(vertArray[i][0], vertArray[i][1]);
             }
-          }
-          else if(curShape === PConstants.LINES){
-            for(i = 0; (i + 1) < vertArray.length; i+=2){
+          } else if (curShape === PConstants.LINES) {
+            for (i = 0; (i + 1) < vertArray.length; i+=2) {
+              p.stroke(vertArray[i+1][6]);
               p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
             }
-          }
-          else if(curShape === PConstants.TRIANGLES){
-            for(i = 0; (i + 2) < vertArray.length; i+=3){
+          } else if (curShape === PConstants.TRIANGLES) {
+            for (i = 0; (i + 2) < vertArray.length; i+=3) {
               curContext.beginPath();
               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
               curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              p.stroke(vertArray[i+2][6]);
+              p.fill(vertArray[i+2][5]);
               executeContextFill();
               executeContextStroke();
               curContext.closePath();
             }
-          }
-          else if(curShape === PConstants.TRIANGLE_STRIP){
-            if(vertArray.length > 2){
+          } else if (curShape === PConstants.TRIANGLE_STRIP) {
+            for (i = 0; (i+1) < vertArray.length; i++) {
               curContext.beginPath();
-              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-              curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-              for(i = 2; i < vertArray.length; i++){
-                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                curContext.lineTo(vertArray[i-2][0], vertArray[i-2][1]);
-                executeContextFill();
-                executeContextStroke();
-                curContext.moveTo(vertArray[i][0],vertArray[i][1]);
+              curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
+              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              p.stroke(vertArray[i+1][6]);
+              p.fill(vertArray[i+1][5]);
+
+              if (i + 2 < vertArray.length) {
+                curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
+                p.stroke(vertArray[i+2][6]);
+                p.fill(vertArray[i+2][5]);
               }
+              executeContextFill();
+              executeContextStroke();
               curContext.closePath();
             }
-          }
-          else if(curShape === PConstants.TRIANGLE_FAN){
-            if(vertArray.length > 2){
+          } else if (curShape === PConstants.TRIANGLE_FAN) {
+            if (vertArray.length > 2) {
               curContext.beginPath();
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[1][0], vertArray[1][1]);
               curContext.lineTo(vertArray[2][0], vertArray[2][1]);
+              p.stroke(vertArray[2][6]);
+              p.fill(vertArray[2][5]);
               executeContextFill();
               executeContextStroke();
-              for(i = 3; i < vertArray.length; i++){
+              curContext.closePath();
+              for (i = 3; i < vertArray.length; i++) {
+                curContext.beginPath();
                 curContext.moveTo(vertArray[0][0], vertArray[0][1]);
                 curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+                p.stroke(vertArray[i][6]);
+                p.fill(vertArray[i][5]);
                 executeContextFill();
                 executeContextStroke();
+                curContext.closePath();
               }
-              curContext.closePath();
             }
-          }
-          else if(curShape === PConstants.QUADS){
-            for(i = 0; (i + 3) < vertArray.length; i+=4){
+          } else if (curShape === PConstants.QUADS) {
+            for (i = 0; (i + 3) < vertArray.length; i+=4) {
               curContext.beginPath();
               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-              for(j = 1; j < 4; j++){
+              for (j = 1; j < 4; j++) {
                 curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
               }
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              p.stroke(vertArray[i+3][6]);
+              p.fill(vertArray[i+3][5]);
               executeContextFill();
               executeContextStroke();
               curContext.closePath();
             }
-          }
-          else if(curShape === PConstants.QUAD_STRIP){
-            if(vertArray.length > 3){
-              curContext.beginPath();
-              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-              curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-              for(i = 2; (i+1) < vertArray.length; i++){
-                if((i % 2) === 0){
-                  curContext.moveTo(vertArray[i-2][0], vertArray[i-2][1]);
+          } else if (curShape === PConstants.QUAD_STRIP) {
+            if (vertArray.length > 3) {
+              for (i = 0; (i+1) < vertArray.length; i+=2) {
+                curContext.beginPath();
+                if (i+3 < vertArray.length) {
+                  curContext.moveTo(vertArray[i+2][0], vertArray[i+2][1]);
                   curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                   curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-                  curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-                  executeContextFill();
-                  executeContextStroke();
+                  curContext.lineTo(vertArray[i+3][0], vertArray[i+3][1]);
+                  p.stroke(vertArray[i+3][6]);
+                  p.fill(vertArray[i+3][5]);
+                } else {
+                  curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+                  curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
                 }
+                executeContextFill();
+                executeContextStroke();
+                curContext.closePath();
               }
-              curContext.closePath();
             }
-          }
-          else{
+          } else {
             curContext.beginPath();
             curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            for(i = 1; i < vertArray.length; i++){
+            for (i = 1; i < vertArray.length; i++) {
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
             }
-            if(close){
+            if (closeShape) {
               curContext.lineTo(vertArray[0][0], vertArray[0][1]);
             }
             executeContextFill();
@@ -8186,7 +8233,7 @@
           vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
           disableVertexAttribPointer(programObject2D, "aTextureCoord");
           
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(lineVerts), curContext.STREAM_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
           curContext.drawArrays(curContext.LINES, 0, 2);
         }
       } else {
@@ -8286,18 +8333,24 @@
         var model = new PMatrix3D();
         model.translate(x, y, 0);
         model.scale(width, height, 1);
+        model.transpose();
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
         view.apply(modelView.array());
+        view.transpose();
+        
+        var proj = new PMatrix3D();
+        proj.set(projection);
+        proj.transpose();
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", true, model.array());
-          uniformMatrix(programObject2D, "view", true, view.array());
-          uniformMatrix(programObject2D, "projection", true, projection.array());
+          uniformMatrix(programObject2D, "model", false, model.array());
+          uniformMatrix(programObject2D, "view", false, view.array());
+          uniformMatrix(programObject2D, "projection", false, proj.array());
           
           uniformf(programObject2D, "color", strokeStyle);
           uniformi(programObject2D, "picktype", 0);
@@ -8311,9 +8364,9 @@
 
         if (doFill) {
           curContext.useProgram(programObject3D);
-          uniformMatrix(programObject3D, "model", true, model.array());
-          uniformMatrix(programObject3D, "view", true, view.array());
-          uniformMatrix(programObject3D, "projection", true, projection.array());
+          uniformMatrix(programObject3D, "model", false, model.array());
+          uniformMatrix(programObject3D, "view", false, view.array());
+          uniformMatrix(programObject3D, "projection", false, proj.array());
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -9012,7 +9065,7 @@
         color = p.color.apply(this, arguments);
 
         // override alpha value, processing ignores the alpha for background color
-        if (curSketch.options.isOpaque) {
+        if (!curSketch.options.isTransparent) {
           color = color | PConstants.ALPHA_MASK;
         }
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
@@ -9039,6 +9092,9 @@
       } else { // 2d context
         if (color !== undef) {
           refreshBackground = function() {
+            if (curSketch.options.isTransparent) {
+              curContext.clearRect(0,0, p.width, p.height);
+            }
             curContext.fillStyle = p.color.toString(color);
             curContext.fillRect(0, 0, p.width, p.height);
             isFillDirty = true;
@@ -10952,7 +11008,7 @@
       p.use3DContext = curSketch.use3DContext;
 
       if ("mozOpaque" in curElement) {
-        curElement.mozOpaque = curSketch.options.isOpaque;
+        curElement.mozOpaque = !curSketch.options.isTransparent;
       }
 
       // Initialize the onfocus and onblur event handler externals
@@ -10995,7 +11051,7 @@
 
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
-        if (Processing.lib) {
+        if (Processing.lib.hasOwnProperty(i)) {
           // Init the libraries in the context of this p_instance
           Processing.lib[i].call(this);
         }
@@ -11033,7 +11089,7 @@
       // No executable sketch was specified
       // or called via createGraphics
       curSketch = new Processing.Sketch();
-      curSketch.options.isOpaque = false;
+      curSketch.options.isTransparent = true;
     }
 
   };
@@ -11045,52 +11101,64 @@
 
   // Processing global methods and constants for the parser
   function getGlobalMembers() {
-    var names =
-  ["abs","acos","alpha","ambient","ambientLight","append","applyMatrix","arc",
-  "arrayCopy","ArrayList","asin","atan","atan2","background","beginCamera",
-  "beginDraw","beginShape","bezier","bezierDetail","bezierPoint","bezierTangent","bezierVertex","binary",
-  "blend","blendColor","blue","boolean", "box","brightness","byte","camera","ceil",
-  "char","Character","clear","color","colorMode","concat",
-  "console","constrain","copy","cos","createFont","createGraphics",
-  "createImage","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
-  "curveVertex","curveVertexSegment","day","defaultColor","degrees",
-  "directionalLight","disableContextMenu","dist","draw","ellipse","ellipseMode",
-  "emissive","enableContextMenu","endCamera","endDraw","endShape","externals",
-  "exit","exp","expand","fill","filter","filter_bilinear","filter_new_scanline","float","floor","focused",
-  "frameCount","frameRate","frustum","get","glyphLook","glyphTable","green",
-  "HashMap","height","hex","hint","hour","hue","image","imageMode",
-  "Import","int","intersect","join","key","keyPressed","keyReleased","lerp",
-  "lerpColor","lightFalloff","lights","lightSpecular","line","link","loadBytes",
-  "loadFont","loadGlyphs","loadImage","loadPixels","loadShape","loadStrings","log",
-  "loop","mag","map","match","matchAll","max","millis","min","minute",
-  "mix","modelX","modelY","modelZ","modes","month","mouseButton","mouseClicked","mouseDown",
-  "mouseDragged","mouseMoved","mousePressed","mouseReleased","mouseScroll","mouseScrolled","mouseX",
-  "mouseY","nf","nfc","nfp","nfs","noCursor","noFill","noise","noiseDetail","noiseSeed",
-  "noLights","noLoop","norm","normal","noSmooth","noStroke","noTint","ortho",
-  "peg","perspective","PImage","pixels","PMatrix2D", "PMatrix3D", "PMatrixStack",
-  "pmouseX","pmouseY","point","Point","pointLight","popMatrix","popStyle", "pow","print",
-  "printCamera","println","printMatrix","printProjection","pushMatrix","pushStyle",
-  "PVector","quad","radians","random","Random","randomSeed", "rect","rectMode","red","redraw",
-  "requestImage","resetMatrix","reverse","rotate","rotateX","rotateY","rotateZ",
-  "round","saturation","save","scale","screenX","screenY","screenZ",
-  "second","set","setup","shape", "shapeMode","shared","shininess","shorten","sin","size",
-  "smooth","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
-  "spotLight","sq","sqrt","status","str","stroke","strokeCap","strokeJoin","strokeWeight",
-  "subset","tan","text","textAlign","textAscent","textDescent","textFont",
-  "textSize","textureMode","texture","textWidth","tint","translate","triangle","trim","unbinary",
-  "unhex","updatePixels","use3DContext","vertex","width","XMLAttrbute","XMLElement","year",
-  "__frameRate","__mousePressed","__keyPressed"];
+    var names = [ /* this code is generated by jsglobals.js */
+      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix", 
+      "arc", "arrayCopy", "ArrayList", "asin", "atan", "atan2", "background", 
+      "beginCamera", "beginDraw", "beginShape", "bezier", "bezierDetail", 
+      "bezierPoint", "bezierTangent", "bezierVertex", "binary", "blend", 
+      "blendColor", "blit_resize", "blue", "boolean", "box", "breakShape", 
+      "brightness", "byte", "camera", "ceil", "char", "Character", "clear", 
+      "color", "colorMode", "concat", "console", "constrain", "copy", "cos", 
+      "createFont", "createGraphics", "createImage", "cursor", "curve", 
+      "curveDetail", "curvePoint", "curveTangent", "curveTightness", 
+      "curveVertex", "day", "defaultColor", "degrees", "directionalLight", 
+      "disableContextMenu", "dist", "draw", "ellipse", "ellipseMode", "emissive", 
+      "enableContextMenu", "endCamera", "endDraw", "endShape", "exit", "exp", 
+      "expand", "externals", "fill", "filter", "filter_bilinear", 
+      "filter_new_scanline", "float", "floor", "focused", "frameCount", 
+      "frameRate", "frustum", "get", "glyphLook", "glyphTable", "green", 
+      "HashMap", "height", "hex", "hint", "hour", "hue", "image", "imageMode", 
+      "Import", "int", "intersect", "join", "key", "keyCode", "keyPressed", 
+      "keyReleased", "keyTyped", "lerp", "lerpColor", "lightFalloff", "lights", 
+      "lightSpecular", "line", "link", "loadBytes", "loadFont", "loadGlyphs", 
+      "loadImage", "loadPixels", "loadShape", "loadStrings", "log", "loop", 
+      "mag", "map", "match", "matchAll", "max", "millis", "min", "minute", "mix", 
+      "modelX", "modelY", "modelZ", "modes", "month", "mouseButton", 
+      "mouseClicked", "mouseDragged", "mouseMoved", "mousePressed", 
+      "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY", 
+      "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise", 
+      "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal", 
+      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage", 
+      "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", 
+      "point", "pointLight", "popMatrix", "popStyle", "pow", "print", 
+      "printCamera", "println", "printMatrix", "printProjection", "PShape", 
+      "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random", 
+      "Random", "randomSeed", "rect", "rectMode", "red", "redraw", 
+      "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", 
+      "rotateZ", "round", "saturation", "save", "saveStrings", "scale", "screenX",
+      "screenY", "screenZ", "second", "set", "setup", "shape", "shapeMode", "shared", 
+      "shininess", "shorten", "sin", "size", "smooth", "sort", "specular", 
+      "sphere", "sphereDetail", "splice", "split", "splitTokens", "spotLight", 
+      "sq", "sqrt", "status", "str", "stroke", "strokeCap", "strokeJoin", 
+      "strokeWeight", "subset", "tan", "text", "textAlign", "textFont", 
+      "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
+      "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed", 
+      "__mousePressed"];
+
     var members = {};
     var i, l;
-    for(i=0,l=names.length;i<l;++i) {
+    for (i = 0, l = names.length; i < l ; ++i) {
       members[names[i]] = null;
     }
-    for(var lib in Processing.lib) {
-      if(Processing.lib[lib] && Processing.lib[lib].exports) {
-       var exportedNames = Processing.lib[lib].exports;
-       for(i=0,l=exportedNames.length;i<l;++i) {
-         members[exportedNames[i]] = null;
-       }
+    for (var lib in Processing.lib) {
+      if (Processing.lib.hasOwnProperty(lib)) {
+        if (Processing.lib[lib].exports) {
+          var exportedNames = Processing.lib[lib].exports;
+          for (i = 0, l = exportedNames.length; i < l; ++i) {
+           members[exportedNames[i]] = null;
+          }
+        }
       }
     }
     return members;
@@ -11303,8 +11371,8 @@
       // .length() --> .length
       s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");
       // #000000 --> 0x000000
-      s = s.replace(/#([0-9A-Fa-f]+)/g, function(all, digits) {
-        return digits.length < 6 ? "0x" + digits : "0xFF000000".substring(0, 10 - digits.length) + digits;
+      s = s.replace(/#([0-9A-Fa-f]{6})\b/g, function(all, digits) {
+        return "0xFF" + digits;
       });
       // delete (type)???, (int)??? -> 0|???
       s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
@@ -11402,7 +11470,7 @@
       // saving "this." and parameters
       var names = appendToLookupTable({"this":null}, this.params.getNames());
       replaceContext = function(name) {
-        return name in names ? name : oldContext(name);
+        return names.hasOwnProperty(name) ? name : oldContext(name);
       };
       var result = "function";
       if(this.name) {
@@ -11662,7 +11730,7 @@
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return name in paramNames ? name : oldContext(name);
+        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
       };
       var result = "processing.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
         this.body +");";
@@ -11728,7 +11796,7 @@
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return name in paramNames ? name : oldContext(name);
+        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
       };
       var prefix = "function $constr_" + this.params.params.length + this.params.toString();
       var body = this.body.toString();
@@ -11805,9 +11873,9 @@
       replaceContext = function(name) {
         if(name === "this") {
           return selfId;
-        } else if(name in thisClassFields || name in thisClassInners) {
+        } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
-        } else if(name in thisClassMethods) {
+        } else if(thisClassMethods.hasOwnProperty(name)) {
           return "this." + name;
         }
         return oldContext(name);
@@ -11944,7 +12012,7 @@
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return name in paramNames ? name : oldContext(name);
+        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
       };
       var result = "function " + this.name + this.params + " " + this.body + "\n" +
         "processing." + this.name + " = " + this.name + ";";
@@ -12084,7 +12152,7 @@
       // replacing context only when necessary
       if(!isLookupTableEmpty(localNames)) {
         replaceContext = function(name) {
-          return name in localNames ? name : oldContext(name);
+          return localNames.hasOwnProperty(name) ? name : oldContext(name);
         };
       }
 
@@ -12151,7 +12219,7 @@
         var parts = name.split('.');
         var currentScope = class_.scope, found;
         while(currentScope) {
-          if(parts[0] in currentScope) {
+          if(currentScope.hasOwnProperty(parts[0])) {
             found = currentScope[parts[0]]; break;
           }
           currentScope = currentScope.scope;
@@ -12188,7 +12256,7 @@
 
   function preprocessCode(aCode, sketch) {
     // Parse out @pjs directive, if any.
-    var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
+    var dm = new RegExp(/\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g).exec(aCode);
     if (dm && dm.length === 2) {
       var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
 
@@ -12210,8 +12278,8 @@
               var imageName = clean(list[j]);
               sketch.imageCache.add(imageName);
             }
-          } else if (key === "opaque") {
-            sketch.options.isOpaque = value === "true";
+          } else if (key === "transparent") {
+            sketch.options.isTransparent = value === "true";
           } else if (key === "crisp") {
             sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
@@ -12274,7 +12342,7 @@
     this.attachFunction = attachFunction; // can be optional
     this.use3DContext = false;
     this.options = {
-      isOpaque: true,
+      isTransparent: false,
       crispLines: false,
       pauseOnBlur: false
     };

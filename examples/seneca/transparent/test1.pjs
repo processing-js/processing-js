@@ -1,0 +1,16 @@
+/* @pjs transparent=true; */
+
+void setup() {
+  size(200, 200);
+  stroke(20, 0, 15);
+  noFill();
+}
+
+void draw() {
+  background(255, 0, 200, 50);
+  beginShape(QUAD_STRIP);
+  for (int i = 0; i < 16; i++) {
+    vertex(random(width), random(height));
+  }
+  endShape();
+}

@@ -29,6 +29,19 @@ Array.prototype.compareArrays = function(arr, eps) {
   return true;
 };
 
+Array.prototype.toString = function () {
+  var stringified = "";
+  for (var i = 0; i < this.length; i++) {
+    if (this[i].compareArrays) { //nested array?
+      stringified += this[i].toString() + ",";
+    }
+    else {
+      stringified += this[i] + ",";
+    }
+  }
+  return ("[" +stringified.slice(0,-1) + "]");
+};
+
 function _checkEqual(a, b) {
   // If user passed a third arg (Epsilon) use it for ~=
   var eps = arguments[2] || 0;
