@@ -5981,7 +5981,7 @@
 
     // Set default background behavior for 2D and 3D contexts
     var refreshBackground = function() {
-      if (curSketch.options.isOpaque) {
+      if (!curSketch.options.isTransparent) {
         if (p.use3DContext) {
           // fill background default opaque gray
           curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
@@ -9028,7 +9028,7 @@
         color = p.color.apply(this, arguments);
 
         // override alpha value, processing ignores the alpha for background color
-        if (curSketch.options.isOpaque) {
+        if (!curSketch.options.isTransparent) {
           color = color | PConstants.ALPHA_MASK;
         }
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
@@ -9055,6 +9055,9 @@
       } else { // 2d context
         if (color !== undef) {
           refreshBackground = function() {
+            if (curSketch.options.isTransparent) {
+              curContext.clearRect(0,0, p.width, p.height);
+            }
             curContext.fillStyle = p.color.toString(color);
             curContext.fillRect(0, 0, p.width, p.height);
             isFillDirty = true;
@@ -10968,7 +10971,7 @@
       p.use3DContext = curSketch.use3DContext;
 
       if ("mozOpaque" in curElement) {
-        curElement.mozOpaque = curSketch.options.isOpaque;
+        curElement.mozOpaque = !curSketch.options.isTransparent;
       }
 
       // Initialize the onfocus and onblur event handler externals
@@ -11049,7 +11052,7 @@
       // No executable sketch was specified
       // or called via createGraphics
       curSketch = new Processing.Sketch();
-      curSketch.options.isOpaque = false;
+      curSketch.options.isTransparent = true;
     }
 
   };
@@ -12214,7 +12217,7 @@
 
   function preprocessCode(aCode, sketch) {
     // Parse out @pjs directive, if any.
-    var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
+    var dm = new RegExp(/\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g).exec(aCode);
     if (dm && dm.length === 2) {
       var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
 
@@ -12236,8 +12239,8 @@
               var imageName = clean(list[j]);
               sketch.imageCache.add(imageName);
             }
-          } else if (key === "opaque") {
-            sketch.options.isOpaque = value === "true";
+          } else if (key === "transparent") {
+            sketch.options.isTransparent = value === "true";
           } else if (key === "crisp") {
             sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
@@ -12300,7 +12303,7 @@
     this.attachFunction = attachFunction; // can be optional
     this.use3DContext = false;
     this.options = {
-      isOpaque: true,
+      isTransparent: false,
       crispLines: false,
       pauseOnBlur: false
     };
