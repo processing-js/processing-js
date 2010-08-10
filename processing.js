@@ -1801,7 +1801,7 @@
         }
         return shape;
       },
-      parsePath: function(){
+      parsePath: function() {
         this.family = p.PATH;
         this.kind = 0;
         var pathDataChars = [];
@@ -1829,15 +1829,16 @@
         var str = "";
         var tmpArray =[];
         var flag = false;
-        while ( i< pathData.length -1) {
+        while (i< pathData.length) {
           valOf = pathData[i].valueOf();
-          if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf.valueOf() <= 122)) { // if its a letter
+          if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { // if its a letter
             // populate the tmpArray with coordinates
             j = i;
-              i++;
+            i++;
+            if (i < pathData.length) { // dont go over boundary of array
               tmpArray = []; 
               valOf = pathData[i].valueOf();
-              while (!((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf.valueOf() <= 100) || (valOf >= 102 && valOf.valueOf() <= 122)) && flag === false) { // if its NOT a letter
+              while (!((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 100) || (valOf >= 102 && valOf <= 122)) && flag === false) { // if its NOT a letter
                 if (valOf === 32) { //if its a space and the str isn't empty
                   // somethimes you get a space after the letter
                   if (str !== "") {
@@ -1862,12 +1863,13 @@
                   str += pathData[i].toString();
                   i++;
                 } 
-                if ( i === pathData.length) {
+                if (i === pathData.length) { // dont go over boundary of array
                   flag = true;
                 } else {
                   valOf = pathData[i].valueOf();
                 }
               }
+            }
             if (str !== "") {
               tmpArray.push(parseFloat(str));
               str = "";
@@ -1878,8 +1880,8 @@
                   cx = tmpArray[0];
                   cy = tmpArray[1];
                   this.parsePathMoveto(cx, cy);
-                  if (tmpArray.length > 2 ) {
-                    for( j = 2; j < tmpArray.length - 2; j+=2) {
+                  if (tmpArray.length > 2) {
+                    for (j = 2; j < tmpArray.length - 2; j+=2) {
                       // absolute line to 
                       cx = tmpArray[j];
                       cy = tmpArray[j+1];
@@ -1890,18 +1892,12 @@
                 break;
               case 109:  // m - move to (relative)
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                  if ( j !== 0 ) { 
-                    // If a relative moveto (m) appears as the first element of the path, 
-                    // then it is treated as a pair of absolute co-ordinates
-                    cx = cx + tmpArray[0];
-                    cy = cy + tmpArray[1];
-                  }
                   this.parsePathMoveto(cx,cy);
-                  if (tmpArray.length > 2 ) {
+                  if (tmpArray.length > 2) {
                     for (j = 2; j < tmpArray.length - 2; j+=2) {
                       // relative line to 
-                      cx = cx + tmpArray[j];
-                      cy = cy + tmpArray[j + 1];
+                      cx += tmpArray[j];
+                      cy += tmpArray[j + 1];
                       this.parsePathLineto(cx,cy);
                     }
                   }
@@ -1920,8 +1916,8 @@
               case 108: // l
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
                   for (j = 0; j < tmpArray.length; j+=2) {
-                    cx = cx + tmpArray[j];
-                    cy = cy + tmpArray[j+1];
+                    cx += tmpArray[j];
+                    cy += tmpArray[j+1];
                     this.parsePathLineto(cx,cy);
                   }
                 }
@@ -1936,7 +1932,7 @@
               
               case 104: // horizontal lineto relative
                 for (j = 0; j < tmpArray.length; j++) { // multiple x co-ordinates can be provided
-                  cx = cx + tmpArray[j];
+                  cx += tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
                 break;
@@ -1950,7 +1946,7 @@
 
               case 118:
                 for (j = 0; j < tmpArray.length; j++) { // multiple y co-ordinates can be provided
-                  cy = cy + tmpArray[j];
+                  cy += tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
                 break;
@@ -2106,23 +2102,35 @@
         }  
       },
       parsePathQuadto: function(x1, y1, cx, cy, x2, y2) {
-        this.parsePathCode(p.BEZIER_VERTEX);
-        // x1/y1 already covered by last moveto, lineto, or curveto
-        this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
-        this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
-        this.parsePathVertex(x2, y2);
+        if (this.vertices.length > 0) {
+          this.parsePathCode(p.BEZIER_VERTEX);
+          // x1/y1 already covered by last moveto, lineto, or curveto
+          this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
+          this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
+          this.parsePathVertex(x2, y2);
+        } else {
+          throw ("Path must start with M/m");
+        }
       },
       parsePathCurveto : function(x1,  y1, x2, y2, x3, y3) {
-        this.parsePathCode(p.BEZIER_VERTEX );
-        this.parsePathVertex(x1, y1);
-        this.parsePathVertex(x2, y2);
-        this.parsePathVertex(x3, y3);
+        if (this.vertices.length > 0) {
+          this.parsePathCode(p.BEZIER_VERTEX );
+          this.parsePathVertex(x1, y1);
+          this.parsePathVertex(x2, y2);
+          this.parsePathVertex(x3, y3);
+        } else {
+          throw ("Path must start with M/m");
+        }
       },
       parsePathLineto: function(px, py) {
-        this.parsePathCode(p.VERTEX);
-        this.parsePathVertex(px, py);
-        // add property to distinguish between curContext.moveTo or curContext.lineTo
-        this.vertices[this.vertices.length-1]["moveTo"] = false;
+        if (this.vertices.length > 0) {
+          this.parsePathCode(p.VERTEX);
+          this.parsePathVertex(px, py);
+          // add property to distinguish between curContext.moveTo or curContext.lineTo
+          this.vertices[this.vertices.length-1]["moveTo"] = false;
+        } else {
+          throw ("Path must start with M/m");
+        }
       },
       parsePathMoveto: function(px, py) {
         if (this.vertices.length > 0) {
@@ -7443,10 +7451,10 @@
       }
 
       if(!close){
-        p.CLOSE = false;
+        //p.CLOSE = false;
       }
       else{
-        p.CLOSE = true;
+        //p.CLOSE = true;
 
         fillVertArray.push(vertArray[0][0]);
         fillVertArray.push(vertArray[0][1]);
@@ -7496,6 +7504,10 @@
                      vertArray[i+1][1] + (s * vertArray[i][1] - s * vertArray[i+2][1]) / 6];
               b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
               curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
+            }
+            // close the shape
+            if (close === p.CLOSE){
+              curContext.lineTo(vertArray[0][0], vertArray[0][1]);
             }
             executeContextFill();
             executeContextStroke();
@@ -7563,6 +7575,10 @@
             } else { //otherwise continue drawing bezier
               curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
             }
+          }
+          // close the shape
+          if (close === p.CLOSE){
+            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
           }
           executeContextFill();
           executeContextStroke();
@@ -7968,7 +7984,7 @@
                 } 
               }
             }
-            if(p.CLOSE){
+            if(close === p.CLOSE){
               curContext.lineTo(vertArray[0][0], vertArray[0][1]);
             }
             executeContextFill();
