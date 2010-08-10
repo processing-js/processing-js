@@ -1469,56 +1469,7 @@
       
     };
     
-    p.shape = function(shape, x, y, width, height) {
-      if (arguments.length >= 1 && arguments[0] !== null) {
-        if (shape.isVisible()) {
-          p.pushMatrix();
-          if (curShapeMode === PConstants.CENTER) {
-            if (arguments.length === 5) {
-              p.translate(x - width/2, y - height/2);
-              p.scale(width / shape.getWidth(), height / shape.getHeight());
-            } else if (arguments.length === 3) {
-              p.translate(x - shape.getWidth()/2, - shape.getHeight()/2);
-            } else {
-              p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
-            }
-          } else if (curShapeMode === PConstants.CORNER) {
-            if (arguments.length === 5) {
-              p.translate(x, y);
-              p.scale(width / shape.getWidth(), height / shape.getHeight());
-            } else if (arguments.length === 3) {
-              p.translate(x, y);
-            }
-          } else if (curShapeMode === PConstants.CORNERS) {
-            if (arguments.length === 5) {
-              width  -= x;
-              height -= y;
-              p.translate(x, y);
-              p.scale(width / shape.getWidth(), height / shape.getHeight());
-            } else if (arguments.length === 3) {
-              p.translate(x, y);
-            }
-          }
-          shape.draw();
-          if ((arguments.length === 1 && curShapeMode === PConstants.CENTER ) || arguments.length > 1) {
-            p.popMatrix();
-          }
-        }
-      }
-    }; 
-    p.shapeMode = function (mode) {
-      curShapeMode = mode;
-    };
-    p.loadShape = function (filename) {
-      if (arguments.length === 1) {
-        if (filename.indexOf(".svg") > -1) {
-          return new p.PShapeSVG(null, filename);
-        }
-      }
-      return null;
-    };
-    
-    var PShapeSVG = p.PShapeSVG = function() {
+    var PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
       if (arguments.length === 1) {
         this.element  = new p.XMLElement(arguments[0]);
@@ -2268,11 +2219,63 @@
         }
       }      
     };
+
+    p.shape = function(shape, x, y, width, height) {
+      if (arguments.length >= 1 && arguments[0] !== null) {
+        if (shape.isVisible()) {
+          p.pushMatrix();
+          if (curShapeMode === PConstants.CENTER) {
+            if (arguments.length === 5) {
+              p.translate(x - width/2, y - height/2);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x - shape.getWidth()/2, - shape.getHeight()/2);
+            } else {
+              p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
+            }
+          } else if (curShapeMode === PConstants.CORNER) {
+            if (arguments.length === 5) {
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
+            }
+          } else if (curShapeMode === PConstants.CORNERS) {
+            if (arguments.length === 5) {
+              width  -= x;
+              height -= y;
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
+            }
+          }
+          shape.draw();
+          if ((arguments.length === 1 && curShapeMode === PConstants.CENTER ) || arguments.length > 1) {
+            p.popMatrix();
+          }
+        }
+      }
+    }; 
+
+    p.shapeMode = function (mode) {
+      curShapeMode = mode;
+    };
+
+    p.loadShape = function (filename) {
+      if (arguments.length === 1) {
+        if (filename.indexOf(".svg") > -1) {
+          return new PShapeSVG(null, filename);
+        }
+      }
+      return null;
+    };
+    
  
     ////////////////////////////////////////////////////////////////////////////
     // XMLAttribute
     ////////////////////////////////////////////////////////////////////////////
-    var XMLAttribute = p.XMLAttribute = function (fname, n, nameSpace, v, t){
+    var XMLAttribute = function(fname, n, nameSpace, v, t){
       this.fullName = fname || "";
       this.name = n || "";
       this.namespace = nameSpace || "";
@@ -11045,41 +11048,51 @@
 
   // Processing global methods and constants for the parser
   function getGlobalMembers() {
-    var names =
-  ["abs","acos","alpha","ambient","ambientLight","append","applyMatrix","arc",
-  "arrayCopy","ArrayList","asin","atan","atan2","background","beginCamera",
-  "beginDraw","beginShape","bezier","bezierDetail","bezierPoint","bezierTangent","bezierVertex","binary",
-  "blend","blendColor","blue","boolean", "box","brightness","byte","camera","ceil",
-  "char","Character","clear","color","colorMode","concat",
-  "console","constrain","copy","cos","createFont","createGraphics",
-  "createImage","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
-  "curveVertex","curveVertexSegment","day","defaultColor","degrees",
-  "directionalLight","disableContextMenu","dist","draw","ellipse","ellipseMode",
-  "emissive","enableContextMenu","endCamera","endDraw","endShape","externals",
-  "exit","exp","expand","fill","filter","filter_bilinear","filter_new_scanline","float","floor","focused",
-  "frameCount","frameRate","frustum","get","glyphLook","glyphTable","green",
-  "HashMap","height","hex","hint","hour","hue","image","imageMode",
-  "Import","int","intersect","join","key","keyPressed","keyReleased","lerp",
-  "lerpColor","lightFalloff","lights","lightSpecular","line","link","loadBytes",
-  "loadFont","loadGlyphs","loadImage","loadPixels","loadShape","loadStrings","log",
-  "loop","mag","map","match","matchAll","max","millis","min","minute",
-  "mix","modelX","modelY","modelZ","modes","month","mouseButton","mouseClicked","mouseDown",
-  "mouseDragged","mouseMoved","mousePressed","mouseReleased","mouseScroll","mouseScrolled","mouseX",
-  "mouseY","nf","nfc","nfp","nfs","noCursor","noFill","noise","noiseDetail","noiseSeed",
-  "noLights","noLoop","norm","normal","noSmooth","noStroke","noTint","ortho",
-  "peg","perspective","PImage","pixels","PMatrix2D", "PMatrix3D", "PMatrixStack",
-  "pmouseX","pmouseY","point","Point","pointLight","popMatrix","popStyle", "pow","print",
-  "printCamera","println","printMatrix","printProjection","pushMatrix","pushStyle",
-  "PVector","quad","radians","random","Random","randomSeed", "rect","rectMode","red","redraw",
-  "requestImage","resetMatrix","reverse","rotate","rotateX","rotateY","rotateZ",
-  "round","saturation","save","scale","screenX","screenY","screenZ",
-  "second","set","setup","shape", "shapeMode","shared","shininess","shorten","sin","size",
-  "smooth","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
-  "spotLight","sq","sqrt","status","str","stroke","strokeCap","strokeJoin","strokeWeight",
-  "subset","tan","text","textAlign","textAscent","textDescent","textFont",
-  "textSize","textureMode","texture","textWidth","tint","translate","triangle","trim","unbinary",
-  "unhex","updatePixels","use3DContext","vertex","width","XMLAttrbute","XMLElement","year",
-  "__frameRate","__mousePressed","__keyPressed"];
+    var names = [ /* this code is generated by jsglobals.js */
+      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix", 
+      "arc", "arrayCopy", "ArrayList", "asin", "atan", "atan2", "background", 
+      "beginCamera", "beginDraw", "beginShape", "bezier", "bezierDetail", 
+      "bezierPoint", "bezierTangent", "bezierVertex", "binary", "blend", 
+      "blendColor", "blit_resize", "blue", "boolean", "box", "breakShape", 
+      "brightness", "byte", "camera", "ceil", "char", "Character", "clear", 
+      "color", "colorMode", "concat", "console", "constrain", "copy", "cos", 
+      "createFont", "createGraphics", "createImage", "cursor", "curve", 
+      "curveDetail", "curvePoint", "curveTangent", "curveTightness", 
+      "curveVertex", "day", "defaultColor", "degrees", "directionalLight", 
+      "disableContextMenu", "dist", "draw", "ellipse", "ellipseMode", "emissive", 
+      "enableContextMenu", "endCamera", "endDraw", "endShape", "exit", "exp", 
+      "expand", "externals", "fill", "filter", "filter_bilinear", 
+      "filter_new_scanline", "float", "floor", "focused", "frameCount", 
+      "frameRate", "frustum", "get", "glyphLook", "glyphTable", "green", 
+      "HashMap", "height", "hex", "hint", "hour", "hue", "image", "imageMode", 
+      "Import", "int", "intersect", "join", "key", "keyCode", "keyPressed", 
+      "keyReleased", "keyTyped", "lerp", "lerpColor", "lightFalloff", "lights", 
+      "lightSpecular", "line", "link", "loadBytes", "loadFont", "loadGlyphs", 
+      "loadImage", "loadPixels", "loadShape", "loadStrings", "log", "loop", 
+      "mag", "map", "match", "matchAll", "max", "millis", "min", "minute", "mix", 
+      "modelX", "modelY", "modelZ", "modes", "month", "mouseButton", 
+      "mouseClicked", "mouseDragged", "mouseMoved", "mousePressed", 
+      "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY", 
+      "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise", 
+      "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal", 
+      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage", 
+      "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", 
+      "point", "pointLight", "popMatrix", "popStyle", "pow", "print", 
+      "printCamera", "println", "printMatrix", "printProjection", "PShape", 
+      "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random", 
+      "Random", "randomSeed", "rect", "rectMode", "red", "redraw", 
+      "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", 
+      "rotateZ", "round", "saturation", "save", "scale", "screenX", "screenY", 
+      "screenZ", "second", "set", "setup", "shape", "shapeMode", "shared", 
+      "shininess", "shorten", "sin", "size", "smooth", "sort", "specular", 
+      "sphere", "sphereDetail", "splice", "split", "splitTokens", "spotLight", 
+      "sq", "sqrt", "status", "str", "stroke", "strokeCap", "strokeJoin", 
+      "strokeWeight", "subset", "tan", "text", "textAlign", "textFont", 
+      "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
+      "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed", 
+      "__mousePressed"];
+
     var members = {};
     var i, l;
     for(i=0,l=names.length;i<l;++i) {
