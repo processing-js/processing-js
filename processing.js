@@ -4812,6 +4812,12 @@
     p.frameRate = function frameRate(aRate) {
       curFrameRate = aRate;
       curMsPerFrame = 1000 / curFrameRate;
+
+      // clear and reset interval
+      if (doLoop) {
+        p.noLoop();
+        p.loop();
+      }
     };
 
     var eventHandlers = [];
