@@ -304,16 +304,32 @@
     MAX_LIGHTS:         8
   };
 
-  var Processing = this.Processing = function Processing(curElement, aCode) {
-
-    var p = this;
-
-    // Include PConstants
-    for (var constant in PConstants) {
-      if (PConstants.hasOwnProperty(constant)) {
-        p[constant] = PConstants[constant];
+  // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
+  function setupTypedArray(name, fallback) {
+    // check if TypedArray exists
+    if (typeof this[name] !== "function") {
+      // nope.. check if WebGLArray exists
+      if (typeof this[fallback] === "function") {
+        this[name] = this[fallback];
+      } else {
+        // nope.. set as Native JS array
+        this[name] = function(obj) {
+          if (obj instanceof Array) {
+            return obj;
+          } else if (typeof obj === "number") {
+            return new Array(obj);
+          }
+        };
       }
-    }
+    } 
+  }
+
+  setupTypedArray("Float32Array", "WebGLFloatArray");
+  setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
+  setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
+
+  var Processing = this.Processing = function Processing(curElement, aCode) {
+    var p = this;
 
     // PJS specific (non-p5) methods and properties to externalize
     p.externals = {
@@ -385,18 +401,18 @@
         loopStarted = false,
         doLoop = true,
         looping = 0,
-        curRectMode = p.CORNER,
-        curEllipseMode = p.CENTER,
+        curRectMode = PConstants.CORNER,
+        curEllipseMode = PConstants.CENTER,
         normalX = 0,
         normalY = 0,
         normalZ = 0,
-        normalMode = p.NORMAL_MODE_AUTO,
+        normalMode = PConstants.NORMAL_MODE_AUTO,
         inDraw = false,
         curFrameRate = 60,
-        curCursor = p.ARROW,
+        curCursor = PConstants.ARROW,
         oldCursor = curElement.style.cursor,
         curMsPerFrame = 1,
-        curShape = p.POLYGON,
+        curShape = PConstants.POLYGON,
         curShapeCount = 0,
         curvePoints = [],
         curTightness = 0,
@@ -409,7 +425,7 @@
         colorModeZ = 255,
         pathOpen = false,
         mouseDragging = false,
-        curColorMode = p.RGB,
+        curColorMode = PConstants.RGB,
         curTint = function() {},
         curTextSize = 12,
         curTextFont = "Arial",
@@ -441,28 +457,23 @@
         pointBuffer,
         shapeTexVBO,
         curTexture = {width:0,height:0},
-        curTextureMode = p.IMAGE,
+        curTextureMode = PConstants.IMAGE,
         usingTexture = false,
         textBuffer,
         textureBuffer,
         indexBuffer,
-        // Text
-        horizontalTextAlignment = p.LEFT,
-        verticalTextAlignment = p.BASELINE,
+        // Text alignment
+        horizontalTextAlignment = PConstants.LEFT,
+        verticalTextAlignment = PConstants.BASELINE,
         baselineOffset = 0.2, // percent 
-        textMode = p.MODEL,
+        textMode = PConstants.MODEL,
         // Pixels cache
         originalContext,
         proxyContext = null,
         isContextReplaced = false,
         setPixelsCached,
         maxPixelsCached = 1000,
-        codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
-
-    // Work-around for Minefield. using ctx.VERTEX_PROGRAM_POINT_SIZE
-    // in Minefield does nothing and does not report any errors.
-    var VERTEX_PROGRAM_POINT_SIZE = 0x8642;
-    var POINT_SMOOTH = 0x0B10;
+        codedKeys = [PConstants.SHIFT, PConstants.CONTROL, PConstants.ALT, PConstants.UP, PConstants.RIGHT, PConstants.DOWN, PConstants.LEFT];
 
     // Get padding and border style widths for mouse offsets
     var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
@@ -483,8 +494,8 @@
         sphereX = [],
         sphereY = [],
         sphereZ = [],
-        sinLUT = new Array(p.SINCOS_LENGTH),
-        cosLUT = new Array(p.SINCOS_LENGTH),
+        sinLUT = new Array(PConstants.SINCOS_LENGTH),
+        cosLUT = new Array(PConstants.SINCOS_LENGTH),
         sphereVerts,
         sphereNorms;
 
@@ -516,181 +527,187 @@
         firstVert = true;
 
     //PShape stuff
-    var curShapeMode = p.CORNER;
-    var colors = {}; 
-        colors.aliceblue = "#f0f8ff";
-        colors.antiquewhite = "#faebd7";
-        colors.aqua = "#00ffff";
-        colors.aquamarine = "#7fffd4";
-        colors.azure = "#f0ffff";
-        colors.beige = "#f5f5dc";
-        colors.bisque = "#ffe4c4";
-        colors.black = "#000000";
-        colors.blanchedalmond = "#ffebcd";
-        colors.blue = "#0000ff";
-        colors.blueviolet = "#8a2be2";
-        colors.brown = "#a52a2a";
-        colors.burlywood = "#deb887";
-        colors.cadetblue = "#5f9ea0";
-        colors.chartreuse = "#7fff00";
-        colors.chocolate = "#d2691e";
-        colors.coral = "#ff7f50";
-        colors.cornflowerblue = "#6495ed";
-        colors.cornsilk = "#fff8dc";
-        colors.crimson = "#dc143c";
-        colors.cyan = "#00ffff";
-        colors.darkblue = "#00008b";
-        colors.darkcyan = "#008b8b";
-        colors.darkgoldenrod = "#b8860b";
-        colors.darkgray = "#a9a9a9";
-        colors.darkgreen = "#006400";
-        colors.darkkhaki = "#bdb76b";
-        colors.darkmagenta = "#8b008b";
-        colors.darkolivegreen = "#556b2f";
-        colors.darkorange = "#ff8c00";
-        colors.darkorchid = "#9932cc";
-        colors.darkred = "#8b0000";
-        colors.darksalmon = "#e9967a";
-        colors.darkseagreen = "#8fbc8f";
-        colors.darkslateblue = "#483d8b";
-        colors.darkslategray = "#2f4f4f";
-        colors.darkturquoise = "#00ced1";
-        colors.darkviolet = "#9400d3";
-        colors.deeppink = "#ff1493";
-        colors.deepskyblue = "#00bfff";
-        colors.dimgray = "#696969";
-        colors.dodgerblue = "#1e90ff";
-        colors.firebrick = "#b22222";
-        colors.floralwhite = "#fffaf0";
-        colors.forestgreen = "#228b22";
-        colors.fuchsia = "#ff00ff";
-        colors.gainsboro = "#dcdcdc";
-        colors.ghostwhite = "#f8f8ff";
-        colors.gold = "#ffd700";
-        colors.goldenrod = "#daa520";
-        colors.gray = "#808080";
-        colors.green = "#008000";
-        colors.greenyellow = "#adff2f";
-        colors.honeydew = "#f0fff0";
-        colors.hotpink = "#ff69b4";
-        colors.indianred = "#cd5c5c";
-        colors.indigo = "#4b0082";
-        colors.ivory = "#fffff0";
-        colors.khaki = "#f0e68c";
-        colors.lavender = "#e6e6fa";
-        colors.lavenderblush = "#fff0f5";
-        colors.lawngreen = "#7cfc00";
-        colors.lemonchiffon = "#fffacd";
-        colors.lightblue = "#add8e6";
-        colors.lightcoral = "#f08080";
-        colors.lightcyan = "#e0ffff";
-        colors.lightgoldenrodyellow = "#fafad2";
-        colors.lightgrey = "#d3d3d3";
-        colors.lightgreen = "#90ee90";
-        colors.lightpink = "#ffb6c1";
-        colors.lightsalmon = "#ffa07a";
-        colors.lightseagreen = "#20b2aa";
-        colors.lightskyblue = "#87cefa";
-        colors.lightslategray = "#778899";
-        colors.lightsteelblue = "#b0c4de";
-        colors.lightyellow = "#ffffe0";
-        colors.lime = "#00ff00";
-        colors.limegreen = "#32cd32";
-        colors.linen = "#faf0e6";
-        colors.magenta = "#ff00ff";
-        colors.maroon = "#800000";
-        colors.mediumaquamarine = "#66cdaa";
-        colors.mediumblue = "#0000cd";
-        colors.mediumorchid = "#ba55d3";
-        colors.mediumpurple = "#9370d8";
-        colors.mediumseagreen = "#3cb371";
-        colors.mediumslateblue = "#7b68ee";
-        colors.mediumspringgreen = "#00fa9a";
-        colors.mediumturquoise = "#48d1cc";
-        colors.mediumvioletred = "#c71585";
-        colors.midnightblue = "#191970";
-        colors.mintcream = "#f5fffa";
-        colors.mistyrose = "#ffe4e1";
-        colors.moccasin = "#ffe4b5";
-        colors.navajowhite = "#ffdead";
-        colors.navy = "#000080";
-        colors.oldlace = "#fdf5e6";
-        colors.olive = "#808000";
-        colors.olivedrab = "#6b8e23";
-        colors.orange = "#ffa500";
-        colors.orangered = "#ff4500";
-        colors.orchid = "#da70d6";
-        colors.palegoldenrod = "#eee8aa";
-        colors.palegreen = "#98fb98";
-        colors.paleturquoise = "#afeeee";
-        colors.palevioletred = "#d87093";
-        colors.papayawhip = "#ffefd5";
-        colors.peachpuff = "#ffdab9";
-        colors.peru = "#cd853f";
-        colors.pink = "#ffc0cb";
-        colors.plum = "#dda0dd";
-        colors.powderblue = "#b0e0e6";
-        colors.purple = "#800080";
-        colors.red = "#ff0000";
-        colors.rosybrown = "#bc8f8f";
-        colors.royalblue = "#4169e1";
-        colors.saddlebrown = "#8b4513";
-        colors.salmon = "#fa8072";
-        colors.sandybrown = "#f4a460";
-        colors.seagreen = "#2e8b57";
-        colors.seashell = "#fff5ee";
-        colors.sienna = "#a0522d";
-        colors.silver = "#c0c0c0";
-        colors.skyblue = "#87ceeb";
-        colors.slateblue = "#6a5acd";
-        colors.slategray = "#708090";
-        colors.snow = "#fffafa";
-        colors.springgreen = "#00ff7f";
-        colors.steelblue = "#4682b4";
-        colors.tan = "#d2b48c";
-        colors.teal = "#008080";
-        colors.thistle = "#d8bfd8";
-        colors.tomato = "#ff6347";
-        colors.turquoise = "#40e0d0";
-        colors.violet = "#ee82ee";
-        colors.wheat = "#f5deb3";
-        colors.white = "#ffffff";
-        colors.whitesmoke = "#f5f5f5";
-        colors.yellow = "#ffff00";
-        colors.yellowgreen = "#9acd32";
+    var curShapeMode = PConstants.CORNER;
+
+    var colors = { 
+      aliceblue:            "#f0f8ff",
+      antiquewhite:         "#faebd7",
+      aqua:                 "#00ffff",
+      aquamarine:           "#7fffd4",
+      azure:                "#f0ffff",
+      beige:                "#f5f5dc",
+      bisque:               "#ffe4c4",
+      black:                "#000000",
+      blanchedalmond:       "#ffebcd",
+      blue:                 "#0000ff",
+      blueviolet:           "#8a2be2",
+      brown:                "#a52a2a",
+      burlywood:            "#deb887",
+      cadetblue:            "#5f9ea0",
+      chartreuse:           "#7fff00",
+      chocolate:            "#d2691e",
+      coral:                "#ff7f50",
+      cornflowerblue:       "#6495ed",
+      cornsilk:             "#fff8dc",
+      crimson:              "#dc143c",
+      cyan:                 "#00ffff",
+      darkblue:             "#00008b",
+      darkcyan:             "#008b8b",
+      darkgoldenrod:        "#b8860b",
+      darkgray:             "#a9a9a9",
+      darkgreen:            "#006400",
+      darkkhaki:            "#bdb76b",
+      darkmagenta:          "#8b008b",
+      darkolivegreen:       "#556b2f",
+      darkorange:           "#ff8c00",
+      darkorchid:           "#9932cc",
+      darkred:              "#8b0000",
+      darksalmon:           "#e9967a",
+      darkseagreen:         "#8fbc8f",
+      darkslateblue:        "#483d8b",
+      darkslategray:        "#2f4f4f",
+      darkturquoise:        "#00ced1",
+      darkviolet:           "#9400d3",
+      deeppink:             "#ff1493",
+      deepskyblue:          "#00bfff",
+      dimgray:              "#696969",
+      dodgerblue:           "#1e90ff",
+      firebrick:            "#b22222",
+      floralwhite:          "#fffaf0",
+      forestgreen:          "#228b22",
+      fuchsia:              "#ff00ff",
+      gainsboro:            "#dcdcdc",
+      ghostwhite:           "#f8f8ff",
+      gold:                 "#ffd700",
+      goldenrod:            "#daa520",
+      gray:                 "#808080",
+      green:                "#008000",
+      greenyellow:          "#adff2f",
+      honeydew:             "#f0fff0",
+      hotpink:              "#ff69b4",
+      indianred:            "#cd5c5c",
+      indigo:               "#4b0082",
+      ivory:                "#fffff0",
+      khaki:                "#f0e68c",
+      lavender:             "#e6e6fa",
+      lavenderblush:        "#fff0f5",
+      lawngreen:            "#7cfc00",
+      lemonchiffon:         "#fffacd",
+      lightblue:            "#add8e6",
+      lightcoral:           "#f08080",
+      lightcyan:            "#e0ffff",
+      lightgoldenrodyellow: "#fafad2",
+      lightgrey:            "#d3d3d3",
+      lightgreen:           "#90ee90",
+      lightpink:            "#ffb6c1",
+      lightsalmon:          "#ffa07a",
+      lightseagreen:        "#20b2aa",
+      lightskyblue:         "#87cefa",
+      lightslategray:       "#778899",
+      lightsteelblue:       "#b0c4de",
+      lightyellow:          "#ffffe0",
+      lime:                 "#00ff00",
+      limegreen:            "#32cd32",
+      linen:                "#faf0e6",
+      magenta:              "#ff00ff",
+      maroon:               "#800000",
+      mediumaquamarine:     "#66cdaa",
+      mediumblue:           "#0000cd",
+      mediumorchid:         "#ba55d3",
+      mediumpurple:         "#9370d8",
+      mediumseagreen:       "#3cb371",
+      mediumslateblue:      "#7b68ee",
+      mediumspringgreen:    "#00fa9a",
+      mediumturquoise:      "#48d1cc",
+      mediumvioletred:      "#c71585",
+      midnightblue:         "#191970",
+      mintcream:            "#f5fffa",
+      mistyrose:            "#ffe4e1",
+      moccasin:             "#ffe4b5",
+      navajowhite:          "#ffdead",
+      navy:                 "#000080",
+      oldlace:              "#fdf5e6",
+      olive:                "#808000",
+      olivedrab:            "#6b8e23",
+      orange:               "#ffa500",
+      orangered:            "#ff4500",
+      orchid:               "#da70d6",
+      palegoldenrod:        "#eee8aa",
+      palegreen:            "#98fb98",
+      paleturquoise:        "#afeeee",
+      palevioletred:        "#d87093",
+      papayawhip:           "#ffefd5",
+      peachpuff:            "#ffdab9",
+      peru:                 "#cd853f",
+      pink:                 "#ffc0cb",
+      plum:                 "#dda0dd",
+      powderblue:           "#b0e0e6",
+      purple:               "#800080",
+      red:                  "#ff0000",
+      rosybrown:            "#bc8f8f",
+      royalblue:            "#4169e1",
+      saddlebrown:          "#8b4513",
+      salmon:               "#fa8072",
+      sandybrown:           "#f4a460",
+      seagreen:             "#2e8b57",
+      seashell:             "#fff5ee",
+      sienna:               "#a0522d",
+      silver:               "#c0c0c0",
+      skyblue:              "#87ceeb",
+      slateblue:            "#6a5acd",
+      slategray:            "#708090",
+      snow:                 "#fffafa",
+      springgreen:          "#00ff7f",
+      steelblue:            "#4682b4",
+      tan:                  "#d2b48c",
+      teal:                 "#008080",
+      thistle:              "#d8bfd8",
+      tomato:               "#ff6347",
+      turquoise:            "#40e0d0",
+      violet:               "#ee82ee",
+      wheat:                "#f5deb3",
+      white:                "#ffffff",
+      whitesmoke:           "#f5f5f5",
+      yellow:               "#ffff00",
+      yellowgreen:          "#9acd32"
+    };
+
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
 
     // Vertices are specified in a counter-clockwise order
     // triangles are in this order: back, front, right, bottom, left, top
-    var boxVerts = [0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-                   -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
-                   -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5,
-                    0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5,
-                    0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5,
-                   -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
-                   -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
-                   -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
-                   -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+    var boxVerts = new Float32Array([
+       0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+      -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,
+      -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,
+       0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,
+       0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5,  0.5,
+      -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,
+      -0.5,  0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5,
+      -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5]);
 
-    var boxNorms = [0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
-                    0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-                    1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-                    0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
-                    -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
-                    0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+    var boxOutlineVerts = new Float32Array([
+       0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,
+      -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5,
+       0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5,
+      -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5,
+       0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5]);
 
-    var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5,
-                          -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5,
-                           0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5,
-                          -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-                           0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-                          -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
+    var boxNorms = new Float32Array([
+       0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,
+       0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,
+       1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,
+       0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,
+      -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0,
+       0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0]);
 
     // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP
-    var rectVerts = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
+    var rectVerts = new Float32Array([0,0,0, 0,1,0, 1,1,0, 1,0,0]);
 
-    var rectNorms = [0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1];
+    var rectNorms = new Float32Array([0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1]);
 
     // Vertex shader for points and lines
     var vShaderSrcUnlitShape =
@@ -1019,11 +1036,6 @@
       }
     }
 
-    // Wrapper to easily deal with array names changes. TODO: Don't think we need this wrapper anymore consensus has been reached.
-    var newWebGLArray = function(data) {
-      return new WebGLFloatArray(data);
-    };
-
     var imageModeCorner = function imageModeCorner(x, y, w, h, whAreSizes) {
       return {
         x: x,
@@ -1105,7 +1117,7 @@
     // PShape
     ////////////////////////////////////////////////////////////////////////////
     var PShape = p.PShape = function(family) {
-      this.family    = family || p.GROUP;
+      this.family    = family || PConstants.GROUP;
       this.visible   = true;
       this.style     = true;
       this.children  = [];
@@ -1163,13 +1175,13 @@
         }
       };
       this.drawImpl = function(){
-        if (this.family === p.GROUP) {
+        if (this.family === PConstants.GROUP) {
           this.drawGroup();
-        } else if (this.family === p.PRIMITIVE) {
+        } else if (this.family === PConstants.PRIMITIVE) {
           this.drawPrimitive();
-        } else if (this.family === p.GEOMETRY) {
+        } else if (this.family === PConstants.GEOMETRY) {
           this.drawGeometry();
-        } else if (this.family === p.PATH) {
+        } else if (this.family === PConstants.PATH) {
           this.drawPath();
         }
       };
@@ -1194,7 +1206,7 @@
           if (this.vertices[0].length === 2) {  // drawing a 2D path
             for (j = 0; j < this.vertexCodes.length; j++) {
               switch (this.vertexCodes[j]) {
-              case p.VERTEX:
+              case PConstants.VERTEX:
                 p.vertex(this.vertices[index][0], this.vertices[index][1]);
                 if ( this.vertices[index]["moveTo"] === true) {
                   vertArray[vertArray.length-1]["moveTo"] = true;
@@ -1204,17 +1216,17 @@
                 p.breakShape = false;
                 index++;
                 break;
-              case p.BEZIER_VERTEX:
+              case PConstants.BEZIER_VERTEX:
                 p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1],
                                this.vertices[index+1][0], this.vertices[index+1][1],
                                this.vertices[index+2][0], this.vertices[index+2][1]);
                 index += 3;
                 break;
-              case p.CURVE_VERTEX:
+              case PConstants.CURVE_VERTEX:
                 p.curveVertex(this.vertices[index][0], this.vertices[index][1]);
                 index++;
                 break;
-              case p.BREAK:
+              case PConstants.BREAK:
                 p.breakShape = true;
                 break;                  
               }
@@ -1222,7 +1234,7 @@
           } else {  // drawing a 3D path
             for (j = 0; j < this.vertexCodes.length; j++) {
               switch (this.vertexCodes[j]) {
-                case p.VERTEX:
+                case PConstants.VERTEX:
                   p.vertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
                   if (this.vertices[index]["moveTo"] === true) {
                     vertArray[vertArray.length-1]["moveTo"] = true;
@@ -1231,24 +1243,24 @@
                   }
                   p.breakShape = false;
                   break;
-                case p.BEZIER_VERTEX:
+                case PConstants.BEZIER_VERTEX:
                   p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1], this.vertices[index+0][2],
                                  this.vertices[index+1][0], this.vertices[index+1][1], this.vertices[index+1][2],
                                  this.vertices[index+2][0], this.vertices[index+2][1], this.vertices[index+2][2]);
                   index += 3;
                   break;
-                case p.CURVE_VERTEX:
+                case PConstants.CURVE_VERTEX:
                   p.curveVertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
                   index++;
                   break;
-                case p.BREAK:
+                case PConstants.BREAK:
                   p.breakShape = true;
                   break;
               }
             }
           }
         }
-        p.endShape(this.close ? p.CLOSE : p.OPEN);
+        p.endShape(this.close ? PConstants.CLOSE : PConstants.OPEN);
       };
       this.drawGeometry = function() {
         p.beginShape(this.kind);
@@ -1276,10 +1288,10 @@
       };
       this.drawPrimitive = function() {
         switch (this.kind) {        
-          case p.POINT:
+          case PConstants.POINT:
             p.point(this.params[0], this.params[1]);
             break;
-          case p.LINE: 
+          case PConstants.LINE: 
             if (this.params.length === 4) {  // 2D
               p.line(this.params[0], this.params[1],
                      this.params[2], this.params[3]);
@@ -1288,42 +1300,42 @@
                      this.params[3], this.params[4], this.params[5]);
             }
             break;
-          case p.TRIANGLE:
+          case PConstants.TRIANGLE:
             p.triangle(this.params[0], this.params[1],
                        this.params[2], this.params[3],
                        this.params[4], this.params[5]);
             break;
-          case p.QUAD:
+          case PConstants.QUAD:
             p.quad(this.params[0], this.params[1],
                    this.params[2], this.params[3],
                    this.params[4], this.params[5],
                    this.params[6], this.params[7]);
             break;
-          case p.RECT:
+          case PConstants.RECT:
             if (this.image !== null) {
-              p.imageMode(p.CORNER);
+              p.imageMode(PConstants.CORNER);
               p.image(this.image, this.params[0], this.params[1], this.params[2], this.params[3]);
             } else {
-              p.rectMode(p.CORNER);
+              p.rectMode(PConstants.CORNER);
               p.rect(this.params[0], this.params[1], this.params[2], this.params[3]);
             }
             break;
-          case p.ELLIPSE:
-            p.ellipseMode(p.CORNER);
+          case PConstants.ELLIPSE:
+            p.ellipseMode(PConstants.CORNER);
             p.ellipse(this.params[0], this.params[1], this.params[2], this.params[3]);
             break;
-          case p.ARC:
-            p.ellipseMode(p.CORNER);
+          case PConstants.ARC:
+            p.ellipseMode(PConstants.CORNER);
             p.arc(this.params[0], this.params[1], this.params[2], this.params[3], this.params[4], this.params[5]);
             break;
-          case p.BOX:
+          case PConstants.BOX:
             if (this.params.length === 1) {
               p.box(this.params[0]);
             } else {
               p.box(this.params[0], this.params[1], this.params[2]);
             }
             break;
-          case p.SPHERE:
+          case PConstants.SPHERE:
             p.sphere(this.params[0]);
             break;
         }
@@ -1477,76 +1489,27 @@
       
     };
     
-    p.shape = function(shape, x, y, width, height) {
-      if (arguments.length >= 1 && arguments[0] !== null) {
-        if (shape.isVisible()) {
-          p.pushMatrix();
-          if (curShapeMode === p.CENTER) {
-            if (arguments.length === 5) {
-              p.translate(x - width/2, y - height/2);
-              p.scale(width / shape.getWidth(), height / shape.getHeight());
-            } else if (arguments.length === 3) {
-              p.translate(x - shape.getWidth()/2, - shape.getHeight()/2);
-            } else {
-              p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
-            }
-          } else if (curShapeMode === p.CORNER) {
-            if (arguments.length === 5) {
-              p.translate(x, y);
-              p.scale(width / shape.getWidth(), height / shape.getHeight());
-            } else if (arguments.length === 3) {
-              p.translate(x, y);
-            }
-          } else if (curShapeMode === p.CORNERS) {
-            if (arguments.length === 5) {
-              width  -= x;
-              height -= y;
-              p.translate(x, y);
-              p.scale(width / shape.getWidth(), height / shape.getHeight());
-            } else if (arguments.length === 3) {
-              p.translate(x, y);
-            }
-          }
-          shape.draw();
-          if ((arguments.length === 1 && curShapeMode === p.CENTER ) || arguments.length > 1) {
-            p.popMatrix();
-          }
-        }
-      }
-    }; 
-    p.shapeMode = function (mode) {
-      curShapeMode = mode;
-    };
-    p.loadShape = function (filename) {
-      if (arguments.length === 1) {
-        if (filename.indexOf(".svg") > -1) {
-          return new p.PShapeSVG(null, filename);
-        }
-      }
-      return null;
-    };
-    
-    var PShapeSVG = p.PShapeSVG = function() {
+    var PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
       if (arguments.length === 1) {
-        this.element  = new p.XMLElement(arguments[0]);
+        this.element  = new p.XMLElement(null, arguments[0]);
         // set values to their defaults according to the SVG spec
         this.vertexCodes         = [];
         this.vertices            = [];
         this.opacity             = 1;
         
         this.stroke              = false;
-        this.strokeColor         = p.ALPHA_MASK;
+        this.strokeColor         = PConstants.ALPHA_MASK;
         this.strokeWeight        = 1;
-        this.strokeCap           = p.SQUARE;  // equivalent to BUTT in svg spec
-        this.strokeJoin          = p.MITER;
+        this.strokeCap           = PConstants.SQUARE;  // equivalent to BUTT in svg spec
+        this.strokeJoin          = PConstants.MITER;
         this.strokeGradient      = null;
         this.strokeGradientPaint = null;
         this.strokeName          = null;
         this.strokeOpacity       = 1;
 
         this.fill                = true;
-        this.fillColor           = p.ALPHA_MASK;
+        this.fillColor           = PConstants.ALPHA_MASK;
         this.fillGradient        = null;
         this.fillGradientPaint   = null;
         this.fillName            = null;
@@ -1559,24 +1522,24 @@
       else if (arguments.length === 2) {
         if (typeof arguments[1] === 'string') {
           if (arguments[1].indexOf(".svg") > -1) { //its a filename
-            this.element = new p.XMLElement(arguments[1]);
+            this.element = new p.XMLElement(null, arguments[1]);
             // set values to their defaults according to the SVG spec
             this.vertexCodes         = [];
             this.vertices            = [];
             this.opacity             = 1;
              
             this.stroke              = false;
-            this.strokeColor         = p.ALPHA_MASK;
+            this.strokeColor         = PConstants.ALPHA_MASK;
             this.strokeWeight        = 1;
-            this.strokeCap           = p.SQUARE;  // equivalent to BUTT in svg spec
-            this.strokeJoin          = p.MITER;
+            this.strokeCap           = PConstants.SQUARE;  // equivalent to BUTT in svg spec
+            this.strokeJoin          = PConstants.MITER;
             this.strokeGradient      = "";
             this.strokeGradientPaint = "";
             this.strokeName          = "";
             this.strokeOpacity       = 1;
             
             this.fill                = true;
-            this.fillColor           = p.ALPHA_MASK;        
+            this.fillColor           = PConstants.ALPHA_MASK;        
             this.fillGradient        = null;
             this.fillGradientPaint   = null;
             this.fillOpacity         = 1;
@@ -1732,7 +1695,7 @@
         return shape;
       },
       parsePath: function(){
-        this.family = p.PATH;
+        this.family = PConstants.PATH;
         this.kind = 0;
          
         var c;
@@ -2012,29 +1975,29 @@
         }
       },
       parsePathQuadto: function(x1, y1, cx, cy, x2, y2) {
-        this.parsePathCode(p.BEZIER_VERTEX);
+        this.parsePathCode(PConstants.BEZIER_VERTEX);
         // x1/y1 already covered by last moveto, lineto, or curveto
         this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
         this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
         this.parsePathVertex(x2, y2);
       },
       parsePathCurveto : function(x1,  y1, x2, y2, x3, y3) {
-        this.parsePathCode(p.BEZIER_VERTEX );
+        this.parsePathCode(PConstants.BEZIER_VERTEX );
         this.parsePathVertex(x1, y1);
         this.parsePathVertex(x2, y2);
         this.parsePathVertex(x3, y3);
       },
       parsePathLineto: function(px, py) {
-        this.parsePathCode(p.VERTEX);
+        this.parsePathCode(PConstants.VERTEX);
         this.parsePathVertex(px, py);
         // add property to distinguish between curContext.moveTo or curContext.lineTo
         this.vertices[this.vertices.length-1]["moveTo"] = false;
       },
       parsePathMoveto: function(px, py) {
         if (this.vertices.length > 0) {
-          this.parsePathCode(p.BREAK);
+          this.parsePathCode(PConstants.BREAK);
         }
-        this.parsePathCode(p.VERTEX);
+        this.parsePathCode(PConstants.VERTEX);
         this.parsePathVertex(px, py);
         // add property to distinguish between curContext.moveTo or curContext.lineTo
         this.vertices[this.vertices.length-1]["moveTo"] = true;
@@ -2049,23 +2012,27 @@
         this.vertexCodes.push(what);
       },
       parsePoly: function(val) {
-        this.family    = p.PATH;
+        this.family    = PConstants.PATH;
         this.close     = val;
-        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/\s+/g,' '));
+        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/[,\s]+/g,' '));
         if (pointsAttr !== null) {
+          //split into array
           var pointsBuffer = pointsAttr.split(" ");
-          for (var i = 0; i < pointsBuffer.length; i++) {
-            var verts = [];
-            var pb    = pointsBuffer[i].split(',');
-            verts[0]  = pb[0];
-            verts[1]  = pb[1];
-            this.vertices.push(verts);
-          }       
+          if (pointsBuffer.length % 2 === 0) {
+            for (var i = 0; i < pointsBuffer.length; i++) {
+              var verts = [];
+              verts[0]  = pointsBuffer[i];
+              verts[1]  = pointsBuffer[++i];
+              this.vertices.push(verts);
+            } 
+          } else {    
+            p.println("Error parsing polygon points: odd number of coordinates provided");
+          }
         }
       },
       parseRect: function() {
-        this.kind      = p.RECT;
-        this.family    = p.PRIMITIVE;
+        this.kind      = PConstants.RECT;
+        this.family    = PConstants.PRIMITIVE;
         this.params    = [];
         this.params[0] = this.element.getFloatAttribute("x");
         this.params[1] = this.element.getFloatAttribute("y");
@@ -2074,8 +2041,8 @@
     
       },
       parseEllipse: function(val) {
-        this.kind   = p.ELLIPSE;
-        this.family = p.PRIMITIVE;
+        this.kind   = PConstants.ELLIPSE;
+        this.family = PConstants.PRIMITIVE;
         this.params = [];
 
         this.params[0] = this.element.getFloatAttribute("cx");
@@ -2095,8 +2062,8 @@
         this.params[3] = ry*2;
       },
       parseLine: function() {
-        this.kind = p.LINE;
-        this.family = p.PRIMITIVE;
+        this.kind = PConstants.LINE;
+        this.family = PConstants.PRIMITIVE;
         this.params = [];
         this.params[0] = this.element.getFloatAttribute("x1");
         this.params[1] = this.element.getFloatAttribute("y1");
@@ -2227,24 +2194,24 @@
       },
       setStrokeJoin: function(linejoin) {
         if (linejoin === "miter") {
-          this.strokeJoin = p.MITER;
+          this.strokeJoin = PConstants.MITER;
 
         } else if (linejoin === "round") {
-          this.strokeJoin = p.ROUND;
+          this.strokeJoin = PConstants.ROUND;
 
         } else if (linejoin === "bevel") {
-          this.strokeJoin = p.BEVEL;
+          this.strokeJoin = PConstants.BEVEL;
         }
       },
       setStrokeCap: function (linecap) {
         if (linecap === "butt") {
-          this.strokeCap = p.SQUARE;
+          this.strokeCap = PConstants.SQUARE;
 
         } else if (linecap === "round") {
-          this.strokeCap = p.ROUND;
+          this.strokeCap = PConstants.ROUND;
 
         } else if (linecap === "square") {
-          this.strokeCap = p.PROJECT;
+          this.strokeCap = PConstants.PROJECT;
         }
       },
       setStrokeOpacity: function (opacityText) {
@@ -2276,11 +2243,63 @@
         }
       }      
     };
+
+    p.shape = function(shape, x, y, width, height) {
+      if (arguments.length >= 1 && arguments[0] !== null) {
+        if (shape.isVisible()) {
+          p.pushMatrix();
+          if (curShapeMode === PConstants.CENTER) {
+            if (arguments.length === 5) {
+              p.translate(x - width/2, y - height/2);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x - shape.getWidth()/2, - shape.getHeight()/2);
+            } else {
+              p.translate(-shape.getWidth()/2, -shape.getHeight()/2);
+            }
+          } else if (curShapeMode === PConstants.CORNER) {
+            if (arguments.length === 5) {
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
+            }
+          } else if (curShapeMode === PConstants.CORNERS) {
+            if (arguments.length === 5) {
+              width  -= x;
+              height -= y;
+              p.translate(x, y);
+              p.scale(width / shape.getWidth(), height / shape.getHeight());
+            } else if (arguments.length === 3) {
+              p.translate(x, y);
+            }
+          }
+          shape.draw();
+          if ((arguments.length === 1 && curShapeMode === PConstants.CENTER ) || arguments.length > 1) {
+            p.popMatrix();
+          }
+        }
+      }
+    }; 
+
+    p.shapeMode = function (mode) {
+      curShapeMode = mode;
+    };
+
+    p.loadShape = function (filename) {
+      if (arguments.length === 1) {
+        if (filename.indexOf(".svg") > -1) {
+          return new PShapeSVG(null, filename);
+        }
+      }
+      return null;
+    };
+    
  
     ////////////////////////////////////////////////////////////////////////////
     // XMLAttribute
     ////////////////////////////////////////////////////////////////////////////
-    var XMLAttribute = p.XMLAttribute = function (fname, n, nameSpace, v, t){
+    var XMLAttribute = function(fname, n, nameSpace, v, t){
       this.fullName = fname || "";
       this.name = n || "";
       this.namespace = nameSpace || "";
@@ -2332,21 +2351,29 @@
         this.systemID  = arguments[2];
         this.parent    = null;
       }
-      else if ((arguments.length === 1 && arguments[0].indexOf(".") > -1) || arguments.length === 2) { // filename or svg xml element
-        if (arguments[arguments.length -1].indexOf(".") > -1) { //its a filename
-          this.attributes = [];
-          this.children   = [];
-          this.fullName   = "";
-          this.name       = "";
-          this.namespace  = "";
-          this.content    = "";
-          this.systemID   = "";
-          this.lineNr     = "";
-          this.parent     = null;
-          this.parse(arguments[arguments.length -1]);
-        } else { //xml string
-          this.parse(arguments[arguments.length -1]);
-        }
+      else if ((arguments.length === 2 && arguments[1].indexOf(".") > -1) ) { // filename or svg xml element
+        this.attributes = [];
+        this.children   = [];
+        this.fullName   = "";
+        this.name       = "";
+        this.namespace  = "";
+        this.content    = "";
+        this.systemID   = "";
+        this.lineNr     = "";
+        this.parent     = null;
+        this.parse(arguments[arguments.length -1]);
+      } else if (arguments.length === 1 && typeof arguments[0] === "string"){
+        //xml string
+        this.attributes = [];
+        this.children   = [];
+        this.fullName   = "";
+        this.name       = "";
+        this.namespace  = "";
+        this.content    = "";
+        this.systemID   = "";
+        this.lineNr     = "";
+        this.parent     = null;
+        this.parse(arguments[0]);
       }
       else { //empty ctor
         this.attributes = [];
@@ -2358,6 +2385,7 @@
         this.systemID   = "";
         this.lineNr     = "";
         this.parent     = null;
+        
       }
       return this;
     };
@@ -2369,8 +2397,10 @@
       parse: function(filename) {
         var xmlDoc;
         try {
-          xmlDoc = new DOMParser().parseFromString(ajax(filename), "text/xml");
-
+          if (filename.indexOf(".xml") > -1 || filename.indexOf(".svg") > -1) {
+            filename = ajax(filename);
+          } 
+          xmlDoc = new DOMParser().parseFromString(filename, "text/xml");
           var elements = xmlDoc.documentElement;
           if (elements) {
             this.parseChildrenRecursive(null, elements);
@@ -2586,10 +2616,6 @@
             xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
           }
         }
-        /*
-        for( var m = 0; m < elementpath.childElementCount; m++ ) {
-         xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[m]) );
-        }*/
         return xmlelement;
       },
       isLeaf: function(){
@@ -2931,7 +2957,7 @@
       },
       invert: function() {
         var d = this.determinant();
-        if ( Math.abs( d ) > p.FLOAT_MIN ) {
+        if ( Math.abs( d ) > PConstants.FLOAT_MIN ) {
           var old00 = this.elements[0];
           var old01 = this.elements[1];
           var old02 = this.elements[2];
@@ -4068,198 +4094,198 @@
         return c2;
       },
       blend: function(c1, c2) {
-        var f = (c2 & p.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                p.mix(c1 & p.RED_MASK, c2 & p.RED_MASK, f) & p.RED_MASK |
-                p.mix(c1 & p.GREEN_MASK, c2 & p.GREEN_MASK, f) & p.GREEN_MASK |
-                p.mix(c1 & p.BLUE_MASK, c2 & p.BLUE_MASK, f));
+        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                p.mix(c1 & PConstants.RED_MASK, c2 & PConstants.RED_MASK, f) & PConstants.RED_MASK |
+                p.mix(c1 & PConstants.GREEN_MASK, c2 & PConstants.GREEN_MASK, f) & PConstants.GREEN_MASK |
+                p.mix(c1 & PConstants.BLUE_MASK, c2 & PConstants.BLUE_MASK, f));
       },
       add: function(c1, c2) {
-        var f = (c2 & p.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                Math.min(((c1 & p.RED_MASK) + ((c2 & p.RED_MASK) >> 8) * f), p.RED_MASK) & p.RED_MASK |
-                Math.min(((c1 & p.GREEN_MASK) + ((c2 & p.GREEN_MASK) >> 8) * f), p.GREEN_MASK) & p.GREEN_MASK |
-                Math.min((c1 & p.BLUE_MASK) + (((c2 & p.BLUE_MASK) * f) >> 8), p.BLUE_MASK));
+        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                Math.min(((c1 & PConstants.RED_MASK) + ((c2 & PConstants.RED_MASK) >> 8) * f), PConstants.RED_MASK) & PConstants.RED_MASK |
+                Math.min(((c1 & PConstants.GREEN_MASK) + ((c2 & PConstants.GREEN_MASK) >> 8) * f), PConstants.GREEN_MASK) & PConstants.GREEN_MASK |
+                Math.min((c1 & PConstants.BLUE_MASK) + (((c2 & PConstants.BLUE_MASK) * f) >> 8), PConstants.BLUE_MASK));
       },
       subtract: function(c1, c2) {
-        var f = (c2 & p.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                Math.max(((c1 & p.RED_MASK) - ((c2 & p.RED_MASK) >> 8) * f), p.GREEN_MASK) & p.RED_MASK |
-                Math.max(((c1 & p.GREEN_MASK) - ((c2 & p.GREEN_MASK) >> 8) * f), p.BLUE_MASK) & p.GREEN_MASK |
-                Math.max((c1 & p.BLUE_MASK) - (((c2 & p.BLUE_MASK) * f) >> 8), 0));
+        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                Math.max(((c1 & PConstants.RED_MASK) - ((c2 & PConstants.RED_MASK) >> 8) * f), PConstants.GREEN_MASK) & PConstants.RED_MASK |
+                Math.max(((c1 & PConstants.GREEN_MASK) - ((c2 & PConstants.GREEN_MASK) >> 8) * f), PConstants.BLUE_MASK) & PConstants.GREEN_MASK |
+                Math.max((c1 & PConstants.BLUE_MASK) - (((c2 & PConstants.BLUE_MASK) * f) >> 8), 0));
       },
       lightest: function(c1, c2) {
-        var f = (c2 & p.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                Math.max(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f) & p.RED_MASK |
-                Math.max(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f) & p.GREEN_MASK |
-                Math.max(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8));
+        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                Math.max(c1 & PConstants.RED_MASK, ((c2 & PConstants.RED_MASK) >> 8) * f) & PConstants.RED_MASK |
+                Math.max(c1 & PConstants.GREEN_MASK, ((c2 & PConstants.GREEN_MASK) >> 8) * f) & PConstants.GREEN_MASK |
+                Math.max(c1 & PConstants.BLUE_MASK, ((c2 & PConstants.BLUE_MASK) * f) >> 8));
       },
       darkest: function(c1, c2) {
-        var f = (c2 & p.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                p.mix(c1 & p.RED_MASK, Math.min(c1 & p.RED_MASK, ((c2 & p.RED_MASK) >> 8) * f), f) & p.RED_MASK |
-                p.mix(c1 & p.GREEN_MASK, Math.min(c1 & p.GREEN_MASK, ((c2 & p.GREEN_MASK) >> 8) * f), f) & p.GREEN_MASK |
-                p.mix(c1 & p.BLUE_MASK, Math.min(c1 & p.BLUE_MASK, ((c2 & p.BLUE_MASK) * f) >> 8), f));
+        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                p.mix(c1 & PConstants.RED_MASK, Math.min(c1 & PConstants.RED_MASK, ((c2 & PConstants.RED_MASK) >> 8) * f), f) & PConstants.RED_MASK |
+                p.mix(c1 & PConstants.GREEN_MASK, Math.min(c1 & PConstants.GREEN_MASK, ((c2 & PConstants.GREEN_MASK) >> 8) * f), f) & PConstants.GREEN_MASK |
+                p.mix(c1 & PConstants.BLUE_MASK, Math.min(c1 & PConstants.BLUE_MASK, ((c2 & PConstants.BLUE_MASK) * f) >> 8), f));
       },
       difference: function(c1, c2) {
-        var f  = (c2 & p.ALPHA_MASK) >>> 24;
-        var ar = (c1 & p.RED_MASK) >> 16;
-        var ag = (c1 & p.GREEN_MASK) >> 8;
-        var ab = (c1 & p.BLUE_MASK);
-        var br = (c2 & p.RED_MASK) >> 16;
-        var bg = (c2 & p.GREEN_MASK) >> 8;
-        var bb = (c2 & p.BLUE_MASK);
+        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        var ar = (c1 & PConstants.RED_MASK) >> 16;
+        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
+        var ab = (c1 & PConstants.BLUE_MASK);
+        var br = (c2 & PConstants.RED_MASK) >> 16;
+        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
+        var bb = (c2 & PConstants.BLUE_MASK);
         // formula:
         var cr = (ar > br) ? (ar - br) : (br - ar);
         var cg = (ag > bg) ? (ag - bg) : (bg - ag);
         var cb = (ab > bb) ? (ab - bb) : (bb - ab);
         // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                 (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
                 (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
                 (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       exclusion: function(c1, c2) {
-        var f  = (c2 & p.ALPHA_MASK) >>> 24;
-        var ar = (c1 & p.RED_MASK) >> 16;
-        var ag = (c1 & p.GREEN_MASK) >> 8;
-        var ab = (c1 & p.BLUE_MASK);
-        var br = (c2 & p.RED_MASK) >> 16;
-        var bg = (c2 & p.GREEN_MASK) >> 8;
-        var bb = (c2 & p.BLUE_MASK);
+        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        var ar = (c1 & PConstants.RED_MASK) >> 16;
+        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
+        var ab = (c1 & PConstants.BLUE_MASK);
+        var br = (c2 & PConstants.RED_MASK) >> 16;
+        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
+        var bb = (c2 & PConstants.BLUE_MASK);
         // formula:
         var cr = ar + br - ((ar * br) >> 7);
         var cg = ag + bg - ((ag * bg) >> 7);
         var cb = ab + bb - ((ab * bb) >> 7);
         // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                 (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
                 (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
                 (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       multiply: function(c1, c2) {
-        var f  = (c2 & p.ALPHA_MASK) >>> 24;
-        var ar = (c1 & p.RED_MASK) >> 16;
-        var ag = (c1 & p.GREEN_MASK) >> 8;
-        var ab = (c1 & p.BLUE_MASK);
-        var br = (c2 & p.RED_MASK) >> 16;
-        var bg = (c2 & p.GREEN_MASK) >> 8;
-        var bb = (c2 & p.BLUE_MASK);
+        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        var ar = (c1 & PConstants.RED_MASK) >> 16;
+        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
+        var ab = (c1 & PConstants.BLUE_MASK);
+        var br = (c2 & PConstants.RED_MASK) >> 16;
+        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
+        var bb = (c2 & PConstants.BLUE_MASK);
         // formula:
         var cr = (ar * br) >> 8;
         var cg = (ag * bg) >> 8;
         var cb = (ab * bb) >> 8;
         // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                 (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
                 (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
                 (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       screen: function(c1, c2) {
-        var f  = (c2 & p.ALPHA_MASK) >>> 24;
-        var ar = (c1 & p.RED_MASK) >> 16;
-        var ag = (c1 & p.GREEN_MASK) >> 8;
-        var ab = (c1 & p.BLUE_MASK);
-        var br = (c2 & p.RED_MASK) >> 16;
-        var bg = (c2 & p.GREEN_MASK) >> 8;
-        var bb = (c2 & p.BLUE_MASK);
+        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        var ar = (c1 & PConstants.RED_MASK) >> 16;
+        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
+        var ab = (c1 & PConstants.BLUE_MASK);
+        var br = (c2 & PConstants.RED_MASK) >> 16;
+        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
+        var bb = (c2 & PConstants.BLUE_MASK);
         // formula:
         var cr = 255 - (((255 - ar) * (255 - br)) >> 8);
         var cg = 255 - (((255 - ag) * (255 - bg)) >> 8);
         var cb = 255 - (((255 - ab) * (255 - bb)) >> 8);
         // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                 (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
                 (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
                 (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       hard_light: function(c1, c2) {
-        var f  = (c2 & p.ALPHA_MASK) >>> 24;
-        var ar = (c1 & p.RED_MASK) >> 16;
-        var ag = (c1 & p.GREEN_MASK) >> 8;
-        var ab = (c1 & p.BLUE_MASK);
-        var br = (c2 & p.RED_MASK) >> 16;
-        var bg = (c2 & p.GREEN_MASK) >> 8;
-        var bb = (c2 & p.BLUE_MASK);
+        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        var ar = (c1 & PConstants.RED_MASK) >> 16;
+        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
+        var ab = (c1 & PConstants.BLUE_MASK);
+        var br = (c2 & PConstants.RED_MASK) >> 16;
+        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
+        var bb = (c2 & PConstants.BLUE_MASK);
         // formula:
         var cr = (br < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7));
         var cg = (bg < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7));
         var cb = (bb < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
         // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                 (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
                 (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
                 (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       soft_light: function(c1, c2) {
-        var f  = (c2 & p.ALPHA_MASK) >>> 24;
-        var ar = (c1 & p.RED_MASK) >> 16;
-        var ag = (c1 & p.GREEN_MASK) >> 8;
-        var ab = (c1 & p.BLUE_MASK);
-        var br = (c2 & p.RED_MASK) >> 16;
-        var bg = (c2 & p.GREEN_MASK) >> 8;
-        var bb = (c2 & p.BLUE_MASK);
+        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        var ar = (c1 & PConstants.RED_MASK) >> 16;
+        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
+        var ab = (c1 & PConstants.BLUE_MASK);
+        var br = (c2 & PConstants.RED_MASK) >> 16;
+        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
+        var bb = (c2 & PConstants.BLUE_MASK);
         // formula:
         var cr = ((ar * br) >> 7) + ((ar * ar) >> 8) - ((ar * ar * br) >> 15);
         var cg = ((ag * bg) >> 7) + ((ag * ag) >> 8) - ((ag * ag * bg) >> 15);
         var cb = ((ab * bb) >> 7) + ((ab * ab) >> 8) - ((ab * ab * bb) >> 15);
         // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                 (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
                 (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
                 (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       overlay: function(c1, c2) {
-        var f  = (c2 & p.ALPHA_MASK) >>> 24;
-        var ar = (c1 & p.RED_MASK) >> 16;
-        var ag = (c1 & p.GREEN_MASK) >> 8;
-        var ab = (c1 & p.BLUE_MASK);
-        var br = (c2 & p.RED_MASK) >> 16;
-        var bg = (c2 & p.GREEN_MASK) >> 8;
-        var bb = (c2 & p.BLUE_MASK);
+        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        var ar = (c1 & PConstants.RED_MASK) >> 16;
+        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
+        var ab = (c1 & PConstants.BLUE_MASK);
+        var br = (c2 & PConstants.RED_MASK) >> 16;
+        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
+        var bb = (c2 & PConstants.BLUE_MASK);
         // formula:
         var cr = (ar < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7));
         var cg = (ag < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7));
         var cb = (ab < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
         // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                 (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
                 (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
                 (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       dodge: function(c1, c2) {
-        var f  = (c2 & p.ALPHA_MASK) >>> 24;
-        var ar = (c1 & p.RED_MASK) >> 16;
-        var ag = (c1 & p.GREEN_MASK) >> 8;
-        var ab = (c1 & p.BLUE_MASK);
-        var br = (c2 & p.RED_MASK) >> 16;
-        var bg = (c2 & p.GREEN_MASK) >> 8;
-        var bb = (c2 & p.BLUE_MASK);
+        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        var ar = (c1 & PConstants.RED_MASK) >> 16;
+        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
+        var ab = (c1 & PConstants.BLUE_MASK);
+        var br = (c2 & PConstants.RED_MASK) >> 16;
+        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
+        var bb = (c2 & PConstants.BLUE_MASK);
         // formula:
         var cr = (br === 255) ? 255 : p.peg((ar << 8) / (255 - br)); // division requires pre-peg()-ing
         var cg = (bg === 255) ? 255 : p.peg((ag << 8) / (255 - bg)); // "
         var cb = (bb === 255) ? 255 : p.peg((ab << 8) / (255 - bb)); // "
         // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                 (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
                 (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
                 (p.peg(ab + (((cb - ab) * f) >> 8))));
       },
       burn: function(c1, c2) {
-        var f  = (c2 & p.ALPHA_MASK) >>> 24;
-        var ar = (c1 & p.RED_MASK) >> 16;
-        var ag = (c1 & p.GREEN_MASK) >> 8;
-        var ab = (c1 & p.BLUE_MASK);
-        var br = (c2 & p.RED_MASK) >> 16;
-        var bg = (c2 & p.GREEN_MASK) >> 8;
-        var bb = (c2 & p.BLUE_MASK);
+        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
+        var ar = (c1 & PConstants.RED_MASK) >> 16;
+        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
+        var ab = (c1 & PConstants.BLUE_MASK);
+        var br = (c2 & PConstants.RED_MASK) >> 16;
+        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
+        var bb = (c2 & PConstants.BLUE_MASK);
         // formula:
         var cr = (br === 0) ? 0 : 255 - p.peg(((255 - ar) << 8) / br); // division requires pre-peg()-ing
         var cg = (bg === 0) ? 0 : 255 - p.peg(((255 - ag) << 8) / bg); // "
         var cb = (bb === 0) ? 0 : 255 - p.peg(((255 - ab) << 8) / bb); // "
         // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
                 (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
                 (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
                 (p.peg(ab + (((cb - ab) * f) >> 8))));
@@ -4269,7 +4295,7 @@
     function color$4(aValue1, aValue2, aValue3, aValue4) {
       var r, g, b, a;
 
-      if (curColorMode === p.HSB) {
+      if (curColorMode === PConstants.HSB) {
         var rgb = p.color.toRGB(aValue1, aValue2, aValue3);
         r = rgb[0];
         g = rgb[1];
@@ -4289,24 +4315,24 @@
       a = (a > 255) ? 255 : a;
 
       // Create color int
-      return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+      return (a << 24) & PConstants.ALPHA_MASK | (r << 16) & PConstants.RED_MASK | (g << 8) & PConstants.GREEN_MASK | b & PConstants.BLUE_MASK;
     }
 
     function color$2(aValue1, aValue2) {
       var a;
 
       // Color int and alpha
-      if (aValue1 & p.ALPHA_MASK) {
+      if (aValue1 & PConstants.ALPHA_MASK) {
         a = Math.round(255 * (aValue2 / colorModeA));
         a = (a > 255) ? 255 : a;
 
-        return aValue1 - (aValue1 & p.ALPHA_MASK) + ((a << 24) & p.ALPHA_MASK);
+        return aValue1 - (aValue1 & PConstants.ALPHA_MASK) + ((a << 24) & PConstants.ALPHA_MASK);
       }
       // Grayscale and alpha
       else {
-        if (curColorMode === p.RGB) {
+        if (curColorMode === PConstants.RGB) {
           return color$4(aValue1, aValue1, aValue1, aValue2);
-        } else if (curColorMode === p.HSB) {
+        } else if (curColorMode === PConstants.HSB) {
           return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
         }
       }
@@ -4315,9 +4341,9 @@
     function color$1(aValue1) {
       // Grayscale
       if (aValue1 <= colorModeX && aValue1 >= 0) {
-          if (curColorMode === p.RGB) {
+          if (curColorMode === PConstants.RGB) {
             return color$4(aValue1, aValue1, aValue1, colorModeA);
-          } else if (curColorMode === p.HSB) {
+          } else if (curColorMode === PConstants.HSB) {
             return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA);
           }
       }
@@ -4356,25 +4382,25 @@
 
     // Ease of use function to extract the colour bits into a string
     p.color.toString = function(colorInt) {
-      return "rgba(" + ((colorInt & p.RED_MASK) >>> 16) + "," + ((colorInt & p.GREEN_MASK) >>> 8) +
-             "," + ((colorInt & p.BLUE_MASK)) + "," + ((colorInt & p.ALPHA_MASK) >>> 24) / 255 + ")";
+      return "rgba(" + ((colorInt & PConstants.RED_MASK) >>> 16) + "," + ((colorInt & PConstants.GREEN_MASK) >>> 8) +
+             "," + ((colorInt & PConstants.BLUE_MASK)) + "," + ((colorInt & PConstants.ALPHA_MASK) >>> 24) / 255 + ")";
     };
 
     // Easy of use function to pack rgba values into a single bit-shifted color int.
     p.color.toInt = function(r, g, b, a) {
-      return (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
+      return (a << 24) & PConstants.ALPHA_MASK | (r << 16) & PConstants.RED_MASK | (g << 8) & PConstants.GREEN_MASK | b & PConstants.BLUE_MASK;
     };
 
     // Creates a simple array in [R, G, B, A] format, [255, 255, 255, 255]
     p.color.toArray = function(colorInt) {
-      return [(colorInt & p.RED_MASK) >>> 16, (colorInt & p.GREEN_MASK) >>> 8,
-              colorInt & p.BLUE_MASK, (colorInt & p.ALPHA_MASK) >>> 24];
+      return [(colorInt & PConstants.RED_MASK) >>> 16, (colorInt & PConstants.GREEN_MASK) >>> 8,
+              colorInt & PConstants.BLUE_MASK, (colorInt & PConstants.ALPHA_MASK) >>> 24];
     };
 
     // Creates a WebGL color array in [R, G, B, A] format. WebGL wants the color ranges between 0 and 1, [1, 1, 1, 1]
     p.color.toGLArray = function(colorInt) {
-      return [((colorInt & p.RED_MASK) >>> 16) / 255, ((colorInt & p.GREEN_MASK) >>> 8) / 255,
-              (colorInt & p.BLUE_MASK) / 255, ((colorInt & p.ALPHA_MASK) >>> 24) / 255];
+      return [((colorInt & PConstants.RED_MASK) >>> 16) / 255, ((colorInt & PConstants.GREEN_MASK) >>> 8) / 255,
+              (colorInt & PConstants.BLUE_MASK) / 255, ((colorInt & PConstants.ALPHA_MASK) >>> 24) / 255];
     };
 
     // HSB conversion function from Mootools, MIT Licensed
@@ -4418,9 +4444,9 @@
     p.color.toHSB = function( colorInt ) {
       var red, green, blue;
 
-      red   = ((colorInt & p.RED_MASK) >>> 16) / 255;
-      green = ((colorInt & p.GREEN_MASK) >>> 8) / 255;
-      blue  = (colorInt & p.BLUE_MASK) / 255;
+      red   = ((colorInt & PConstants.RED_MASK) >>> 16) / 255;
+      green = ((colorInt & PConstants.GREEN_MASK) >>> 8) / 255;
+      blue  = (colorInt & PConstants.BLUE_MASK) / 255;
 
       var max = p.max(p.max(red,green), blue),
           min = p.min(p.min(red,green), blue),
@@ -4471,35 +4497,35 @@
     };
 
     p.red = function(aColor) {
-      return ((aColor & p.RED_MASK) >>> 16) / 255 * colorModeX;
+      return ((aColor & PConstants.RED_MASK) >>> 16) / 255 * colorModeX;
     };
 
     p.green = function(aColor) {
-      return ((aColor & p.GREEN_MASK) >>> 8) / 255 * colorModeY;
+      return ((aColor & PConstants.GREEN_MASK) >>> 8) / 255 * colorModeY;
     };
 
     p.blue = function(aColor) {
-      return (aColor & p.BLUE_MASK) / 255 * colorModeZ;
+      return (aColor & PConstants.BLUE_MASK) / 255 * colorModeZ;
     };
 
     p.alpha = function(aColor) {
-      return ((aColor & p.ALPHA_MASK) >>> 24) / 255 * colorModeA;
+      return ((aColor & PConstants.ALPHA_MASK) >>> 24) / 255 * colorModeA;
     };
 
     p.lerpColor = function lerpColor(c1, c2, amt) {
       // Get RGBA values for Color 1 to floats
       var colorBits1 = p.color(c1);
-      var r1 = (colorBits1 & p.RED_MASK) >>> 16;
-      var g1 = (colorBits1 & p.GREEN_MASK) >>> 8;
-      var b1 = (colorBits1 & p.BLUE_MASK);
-      var a1 = ((colorBits1 & p.ALPHA_MASK) >>> 24) / colorModeA;
+      var r1 = (colorBits1 & PConstants.RED_MASK) >>> 16;
+      var g1 = (colorBits1 & PConstants.GREEN_MASK) >>> 8;
+      var b1 = (colorBits1 & PConstants.BLUE_MASK);
+      var a1 = ((colorBits1 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Get RGBA values for Color 2 to floats
       var colorBits2 = p.color(c2);
-      var r2 = (colorBits2 & p.RED_MASK) >>> 16;
-      var g2 = (colorBits2 & p.GREEN_MASK) >>> 8;
-      var b2 = (colorBits2 & p.BLUE_MASK);
-      var a2 = ((colorBits2 & p.ALPHA_MASK) >>> 24) / colorModeA;
+      var r2 = (colorBits2 & PConstants.RED_MASK) >>> 16;
+      var g2 = (colorBits2 & PConstants.GREEN_MASK) >>> 8;
+      var b2 = (colorBits2 & PConstants.BLUE_MASK);
+      var a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
       var r = parseInt(p.lerp(r1, r2, amt), 10);
@@ -4513,7 +4539,7 @@
     // Forced default color mode for #aaaaaa style
     p.defaultColor = function(aValue1, aValue2, aValue3) {
       var tmpColorMode = curColorMode;
-      curColorMode = p.RGB;
+      curColorMode = PConstants.RGB;
       var c = p.color(aValue1 / 255 * colorModeX, aValue2 / 255 * colorModeY, aValue3 / 255 * colorModeZ);
       curColorMode = tmpColorMode;
       return c;
@@ -4532,49 +4558,49 @@
     p.blendColor = function(c1, c2, mode) {
       var color = 0;
       switch (mode) {
-      case p.REPLACE:
+      case PConstants.REPLACE:
         color = p.modes.replace(c1, c2);
         break;
-      case p.BLEND:
+      case PConstants.BLEND:
         color = p.modes.blend(c1, c2);
         break;
-      case p.ADD:
+      case PConstants.ADD:
         color = p.modes.add(c1, c2);
         break;
-      case p.SUBTRACT:
+      case PConstants.SUBTRACT:
         color = p.modes.subtract(c1, c2);
         break;
-      case p.LIGHTEST:
+      case PConstants.LIGHTEST:
         color = p.modes.lightest(c1, c2);
         break;
-      case p.DARKEST:
+      case PConstants.DARKEST:
         color = p.modes.darkest(c1, c2);
         break;
-      case p.DIFFERENCE:
+      case PConstants.DIFFERENCE:
         color = p.modes.difference(c1, c2);
         break;
-      case p.EXCLUSION:
+      case PConstants.EXCLUSION:
         color = p.modes.exclusion(c1, c2);
         break;
-      case p.MULTIPLY:
+      case PConstants.MULTIPLY:
         color = p.modes.multiply(c1, c2);
         break;
-      case p.SCREEN:
+      case PConstants.SCREEN:
         color = p.modes.screen(c1, c2);
         break;
-      case p.HARD_LIGHT:
+      case PConstants.HARD_LIGHT:
         color = p.modes.hard_light(c1, c2);
         break;
-      case p.SOFT_LIGHT:
+      case PConstants.SOFT_LIGHT:
         color = p.modes.soft_light(c1, c2);
         break;
-      case p.OVERLAY:
+      case PConstants.OVERLAY:
         color = p.modes.overlay(c1, c2);
         break;
-      case p.DODGE:
+      case PConstants.DODGE:
         color = p.modes.dodge(c1, c2);
         break;
-      case p.BURN:
+      case PConstants.BURN:
         color = p.modes.burn(c1, c2);
         break;
       }
@@ -4817,6 +4843,12 @@
     p.frameRate = function frameRate(aRate) {
       curFrameRate = aRate;
       curMsPerFrame = 1000 / curFrameRate;
+
+      // clear and reset interval
+      if (doLoop) {
+        p.noLoop();
+        p.loop();
+      }
     };
 
     var eventHandlers = [];
@@ -4871,7 +4903,7 @@
     };
 
     p.noCursor = function noCursor() {
-      curCursor = curElement.style.cursor = p.NOCURSOR;
+      curCursor = curElement.style.cursor = PConstants.NOCURSOR;
     };
 
     p.link = function(href, target) {
@@ -5211,11 +5243,16 @@
     };
 
     // Load a file or URL into strings
-    p.loadStrings = function loadStrings(url) {
-      return ajax(url).split("\n");
+    p.loadStrings = function loadStrings(filename) {
+      return (localStorage[filename] ? localStorage[filename] : ajax(filename).slice(0, -1)).split("\n");
     };
 
-    p.loadBytes = function loadBytes(url) {
+    // Writes an array of strings to a file, one line per string
+    p.saveStrings = function saveStrings(filename, strings) {
+      localStorage[filename] = strings.join('\n');
+    };
+
+    p.loadBytes = function loadBytes(url, strings) {
       var string = ajax(url);
       var ret = [];
 
@@ -5973,7 +6010,7 @@
 
     // Set default background behavior for 2D and 3D contexts
     var refreshBackground = function() {
-      if (curSketch.options.isOpaque) {
+      if (!curSketch.options.isTransparent) {
         if (p.use3DContext) {
           // fill background default opaque gray
           curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
@@ -5990,7 +6027,7 @@
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
 
-      if (aMode && (aMode === p.WEBGL)) {
+      if (aMode && (aMode === PConstants.WEBGL)) {
         // get the 3D rendering context
         try {
           // If the HTML <canvas> dimensions differ from the
@@ -6011,9 +6048,9 @@
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
         } else {
-          for (var i = 0; i < p.SINCOS_LENGTH; i++) {
-            sinLUT[i] = p.sin(i * (p.PI / 180) * 0.5);
-            cosLUT[i] = p.cos(i * (p.PI / 180) * 0.5);
+          for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
+            sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
+            cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
           }
           // Set defaults
           curContext.viewport(0, 0, curElement.width, curElement.height);
@@ -6021,11 +6058,6 @@
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
           refreshBackground(); // sets clearColor default;
-
-          // We declare our own constants since Minefield doesn't
-          // do anything when curContext.VERTEX_PROGRAM_POINT_SIZE is used.
-          curContext.enable(VERTEX_PROGRAM_POINT_SIZE);
-          curContext.enable(POINT_SMOOTH);
 
           // Create the program objects to render 2D (points, lines) and
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
@@ -6053,24 +6085,24 @@
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
 
           boxNormBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxNorms), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, boxNorms, curContext.STATIC_DRAW);
 
           boxOutlineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
 
           // used to draw the rectangle and the outline
           rectBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectVerts), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
 
           rectNormBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectNorms), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, rectNorms, curContext.STATIC_DRAW);
 
           // The sphere vertices are specified dynamically since the user
           // can change the level of detail. Everytime the user does that
@@ -6087,19 +6119,19 @@
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0, 0, 0]), curContext.STATIC_DRAW);
 
           textBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
-          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
 
           textureBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, new WebGLFloatArray([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
 
           indexBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
-          curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new WebGLUnsignedShortArray([0,1,2,2,3,0]), curContext.STATIC_DRAW);
+          curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,2,3,0]), curContext.STATIC_DRAW);
 
           cam = new PMatrix3D();
           cameraInv = new PMatrix3D();
@@ -6171,7 +6203,7 @@
           var obj = ctx.createImageData(this.width, this.height);
           var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
           if(!uBuff){
-            uBuff = new WebGLUnsignedByteArray(this.width * this.height * 4);
+            uBuff = new Uint8Array(this.width * this.height * 4);
             curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
           }
           for(var i =0; i < uBuff.length; i++){
@@ -6189,8 +6221,8 @@
 
     p.ambientLight = function(r, g, b, x, y, z) {
       if (p.use3DContext) {
-        if (lightCount === p.MAX_LIGHTS) {
-          throw "can only create " + p.MAX_LIGHTS + " lights";
+        if (lightCount === PConstants.MAX_LIGHTS) {
+          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
         }
 
         var pos = new PVector(x, y, z);
@@ -6209,8 +6241,8 @@
 
     p.directionalLight = function(r, g, b, nx, ny, nz) {
       if (p.use3DContext) {
-        if (lightCount === p.MAX_LIGHTS) {
-          throw "can only create " + p.MAX_LIGHTS + " lights";
+        if (lightCount === PConstants.MAX_LIGHTS) {
+          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
         }
 
         curContext.useProgram(programObject3D);
@@ -6259,8 +6291,8 @@
 
     p.pointLight = function(r, g, b, x, y, z) {
       if (p.use3DContext) {
-        if (lightCount === p.MAX_LIGHTS) {
-          throw "can only create " + p.MAX_LIGHTS + " lights";
+        if (lightCount === PConstants.MAX_LIGHTS) {
+          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
         }
 
         // place the point in view space once instead of once per vertex
@@ -6300,8 +6332,8 @@
     */
     p.spotLight = function spotLight(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
       if (p.use3DContext) {
-        if (lightCount === p.MAX_LIGHTS) {
-          throw "can only create " + p.MAX_LIGHTS + " lights";
+        if (lightCount === PConstants.MAX_LIGHTS) {
+          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
         }
 
         curContext.useProgram(programObject3D);
@@ -6618,7 +6650,7 @@
 
       //set the buffer data
       curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(sphereVerts), curContext.STATIC_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(sphereVerts), curContext.STATIC_DRAW);
     };
 
     p.sphereDetail = function sphereDetail(ures, vres) {
@@ -6639,13 +6671,13 @@
         return;
       }
 
-      var delta = p.SINCOS_LENGTH / ures;
+      var delta = PConstants.SINCOS_LENGTH / ures;
       var cx = new Array(ures);
       var cz = new Array(ures);
       // calc unit circle in XZ plane
       for (i = 0; i < ures; i++) {
-        cx[i] = cosLUT[parseInt((i * delta) % p.SINCOS_LENGTH, 10)];
-        cz[i] = sinLUT[parseInt((i * delta) % p.SINCOS_LENGTH, 10)];
+        cx[i] = cosLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
+        cz[i] = sinLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
       }
 
       // computing vertexlist
@@ -6658,13 +6690,13 @@
       sphereY = new Array(vertCount);
       sphereZ = new Array(vertCount);
 
-      var angle_step = (p.SINCOS_LENGTH * 0.5) / vres;
+      var angle_step = (PConstants.SINCOS_LENGTH * 0.5) / vres;
       var angle = angle_step;
 
       // step along Y axis
       for (i = 1; i < vres; i++) {
-        var curradius = sinLUT[parseInt(angle % p.SINCOS_LENGTH, 10)];
-        var currY = -cosLUT[parseInt(angle % p.SINCOS_LENGTH, 10)];
+        var curradius = sinLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
+        var currY = -cosLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
         for (var j = 0; j < ures; j++) {
           sphereX[currVert] = cx[j] * curradius;
           sphereY[currVert] = currY;
@@ -7053,11 +7085,11 @@
     ////////////////////////////////////////////////////////////////////////////
 
     function colorBlendWithAlpha(c1, c2, k) {
-        var f = 0|(k * ((c2 & p.ALPHA_MASK) >>> 24));
-        return (Math.min(((c1 & p.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                p.mix(c1 & p.RED_MASK, c2 & p.RED_MASK, f) & p.RED_MASK |
-                p.mix(c1 & p.GREEN_MASK, c2 & p.GREEN_MASK, f) & p.GREEN_MASK |
-                p.mix(c1 & p.BLUE_MASK, c2 & p.BLUE_MASK, f));
+        var f = 0|(k * ((c2 & PConstants.ALPHA_MASK) >>> 24));
+        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                p.mix(c1 & PConstants.RED_MASK, c2 & PConstants.RED_MASK, f) & PConstants.RED_MASK |
+                p.mix(c1 & PConstants.GREEN_MASK, c2 & PConstants.GREEN_MASK, f) & PConstants.GREEN_MASK |
+                p.mix(c1 & PConstants.BLUE_MASK, c2 & PConstants.BLUE_MASK, f));
     }
 
     p.point = function point(x, y, z) {
@@ -7105,7 +7137,7 @@
               curContext.fillStyle = p.color.toString(currentStrokeColor);
               isFillDirty = true;
               curContext.beginPath();
-              curContext.arc(x, y, lineWidth / 2, 0, p.TWO_PI, false);
+              curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
               curContext.fill();
               curContext.closePath();
             } else {
@@ -7190,10 +7222,10 @@
       uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
 
       vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, pointBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
       vertexAttribPointer(programObjectUnlitShape, "aColor", 4, fillColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
@@ -7228,10 +7260,10 @@
       uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
 
       vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, lineBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
       vertexAttribPointer(programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       curContext.lineWidth(lineWidth);
 
@@ -7270,10 +7302,10 @@
       uniformf(programObject3D, "color", [-1,0,0,0]);
 
       vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
       vertexAttribPointer(programObject3D, "aColor", 4, fillColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(cArray), curContext.STREAM_DRAW);
+      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       // No support for lights....yet
       disableVertexAttribPointer(programObject3D, "Normal");
@@ -7281,7 +7313,7 @@
       var i;
 
       if(usingTexture){
-        if(curTextureMode === p.IMAGE){
+        if(curTextureMode === PConstants.IMAGE){
           for(i = 0; i < tArray.length; i += 2){
             tArray[i] = tArray[i]/curTexture.width;
             tArray[i+1] /= curTexture.height;
@@ -7297,7 +7329,7 @@
 
         uniformi(programObject3D, "usingTexture", usingTexture);
         vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
-        curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
+        curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW);
       }
 
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
@@ -7342,12 +7374,7 @@
         texVertArray.push(vertArray[i][4]);
       }
 
-      if(!close){
-        p.CLOSE = false;
-      }
-      else{
-        p.CLOSE = true;
-
+      if(close){
         fillVertArray.push(vertArray[0][0]);
         fillVertArray.push(vertArray[0][1]);
         fillVertArray.push(vertArray[0][2]);
@@ -7356,7 +7383,7 @@
           colorVertArray.push(vertArray[0][i]);
         }
 
-       for(i = 9; i < 13; i++){
+        for(i = 9; i < 13; i++){
           strokeVertArray.push(vertArray[0][i]);
         }
 
@@ -7364,7 +7391,7 @@
         texVertArray.push(vertArray[0][4]);
       }
 
-      if(isCurve && curShape === p.POLYGON || isCurve && curShape === undef){
+      if(isCurve && curShape === PConstants.POLYGON || isCurve && curShape === undef){
 
         if(p.use3DContext){
           lineVertArray = fillVertArray;
@@ -7404,7 +7431,7 @@
           }
         }
       }
-      else if(isBezier && curShape === p.POLYGON || isBezier && curShape === undef){
+      else if(isBezier && curShape === PConstants.POLYGON || isBezier && curShape === undef){
         if(p.use3DContext){
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
@@ -7472,7 +7499,7 @@
       }
       else{
         if(p.use3DContext){ // 3D context
-          if (curShape === p.POINTS){
+          if (curShape === PConstants.POINTS){
             for(i = 0; i < vertArray.length; i++){
               for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i][j]);
@@ -7480,7 +7507,7 @@
             }
             point3D(lineVertArray, strokeVertArray);
           }
-          else if(curShape === p.LINES){
+          else if(curShape === PConstants.LINES){
             for(i = 0; i < vertArray.length; i++){
               for(j = 0; j < 3; j++){
                 lineVertArray.push(vertArray[i][j]);
@@ -7493,7 +7520,7 @@
             }
             line3D(lineVertArray, "LINES", strokeVertArray);
           }
-          else if(curShape === p.TRIANGLES){
+          else if(curShape === PConstants.TRIANGLES){
             if(vertArray.length > 2){
               for(i = 0; (i+2) < vertArray.length; i+=3){
                 fillVertArray = [];
@@ -7527,7 +7554,7 @@
               }
             }
           }
-          else if(curShape === p.TRIANGLE_STRIP){
+          else if(curShape === PConstants.TRIANGLE_STRIP){
             if(vertArray.length > 2){
               for(i = 0; (i+2) < vertArray.length; i++){
                 lineVertArray = [];
@@ -7562,7 +7589,7 @@
               }
             }
           }
-          else if(curShape === p.TRIANGLE_FAN){
+          else if(curShape === PConstants.TRIANGLE_FAN){
             if(vertArray.length > 2){
               for(i = 0; i < 3; i++){
                 for(j = 0; j < 3; j++){
@@ -7609,7 +7636,7 @@
               }
             }
           }
-          else if(curShape === p.QUADS){
+          else if(curShape === PConstants.QUADS){
             for(i = 0; (i + 3) < vertArray.length; i+=4){
               lineVertArray = [];
               for(j = 0; j < 4; j++){
@@ -7668,7 +7695,7 @@
               }
             }
           }
-          else if(curShape === p.QUAD_STRIP){
+          else if(curShape === PConstants.QUAD_STRIP){
             var tempArray = [];
             if(vertArray.length > 3){
               for(i = 0; i < 2; i++){
@@ -7746,7 +7773,7 @@
                   strokeVertArray.push(vertArray[i][j]);
                 }
               }
-              if(p.CLOSE){
+              if(close){
                 line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
               }
               else{
@@ -7769,17 +7796,17 @@
         }
         // 2D context
         else{
-          if (curShape === p.POINTS){
+          if (curShape === PConstants.POINTS){
             for(i = 0; i < vertArray.length; i++){
               p.point(vertArray[i][0], vertArray[i][1]);
             }
           }
-          else if(curShape === p.LINES){
+          else if(curShape === PConstants.LINES){
             for(i = 0; (i + 1) < vertArray.length; i+=2){
               p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
             }
           }
-          else if(curShape === p.TRIANGLES){
+          else if(curShape === PConstants.TRIANGLES){
             for(i = 0; (i + 2) < vertArray.length; i+=3){
               curContext.beginPath();
               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
@@ -7791,7 +7818,7 @@
               curContext.closePath();
             }
           }
-          else if(curShape === p.TRIANGLE_STRIP){
+          else if(curShape === PConstants.TRIANGLE_STRIP){
             if(vertArray.length > 2){
               curContext.beginPath();
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
@@ -7806,7 +7833,7 @@
               curContext.closePath();
             }
           }
-          else if(curShape === p.TRIANGLE_FAN){
+          else if(curShape === PConstants.TRIANGLE_FAN){
             if(vertArray.length > 2){
               curContext.beginPath();
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
@@ -7824,7 +7851,7 @@
               curContext.closePath();
             }
           }
-          else if(curShape === p.QUADS){
+          else if(curShape === PConstants.QUADS){
             for(i = 0; (i + 3) < vertArray.length; i+=4){
               curContext.beginPath();
               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
@@ -7837,7 +7864,7 @@
               curContext.closePath();
             }
           }
-          else if(curShape === p.QUAD_STRIP){
+          else if(curShape === PConstants.QUAD_STRIP){
             if(vertArray.length > 3){
               curContext.beginPath();
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
@@ -7861,7 +7888,7 @@
             for(i = 1; i < vertArray.length; i++){
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
             }
-            if(p.CLOSE){
+            if(close){
               curContext.lineTo(vertArray[0][0], vertArray[0][1]);
             }
             executeContextFill();
@@ -8114,13 +8141,13 @@
 
     p.imageMode = function(mode) {
       switch (mode) {
-      case p.CORNER:
+      case PConstants.CORNER:
         imageModeConvert = imageModeCorner;
         break;
-      case p.CORNERS:
+      case PConstants.CORNERS:
         imageModeConvert = imageModeCorners;
         break;
-      case p.CENTER:
+      case PConstants.CENTER:
         imageModeConvert = imageModeCenter;
         break;
       default:
@@ -8137,14 +8164,14 @@
         return;
       }
 
-      if (curEllipseMode === p.CORNER) {
+      if (curEllipseMode === PConstants.CORNER) {
         x += width / 2;
         y += height / 2;
       }
 
       curContext.moveTo(x, y);
       curContext.beginPath();
-      curContext.arc(x, y, curEllipseMode === p.CENTER_RADIUS ? width : width / 2, start, stop, false);
+      curContext.arc(x, y, curEllipseMode === PConstants.CENTER_RADIUS ? width : width / 2, start, stop, false);
 
       executeContextStroke();
       curContext.lineTo(x, y);
@@ -8199,7 +8226,7 @@
           vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
           disableVertexAttribPointer(programObject2D, "aTextureCoord");
           
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(lineVerts), curContext.STREAM_DRAW);
+          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
           curContext.drawArrays(curContext.LINES, 0, 2);
         }
       } else {
@@ -8277,7 +8304,7 @@
     };
 
     p.triangle = function triangle(x1, y1, x2, y2, x3, y3) {
-      p.beginShape(p.TRIANGLES);
+      p.beginShape(PConstants.TRIANGLES);
       p.vertex(x1, y1, 0);
       p.vertex(x2, y2, 0);
       p.vertex(x3, y3, 0);
@@ -8285,7 +8312,7 @@
     };
 
     p.quad = function quad(x1, y1, x2, y2, x3, y3, x4, y4) {
-      p.beginShape(p.QUADS);
+      p.beginShape(PConstants.QUADS);
       p.vertex(x1, y1, 0);
       p.vertex(x2, y2, 0);
       p.vertex(x3, y3, 0);
@@ -8299,18 +8326,24 @@
         var model = new PMatrix3D();
         model.translate(x, y, 0);
         model.scale(width, height, 1);
+        model.transpose();
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
         view.apply(modelView.array());
+        view.transpose();
+        
+        var proj = new PMatrix3D();
+        proj.set(projection);
+        proj.transpose();
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", true, model.array());
-          uniformMatrix(programObject2D, "view", true, view.array());
-          uniformMatrix(programObject2D, "projection", true, projection.array());
+          uniformMatrix(programObject2D, "model", false, model.array());
+          uniformMatrix(programObject2D, "view", false, view.array());
+          uniformMatrix(programObject2D, "projection", false, proj.array());
           
           uniformf(programObject2D, "color", strokeStyle);
           uniformi(programObject2D, "picktype", 0);
@@ -8324,9 +8357,9 @@
 
         if (doFill) {
           curContext.useProgram(programObject3D);
-          uniformMatrix(programObject3D, "model", true, model.array());
-          uniformMatrix(programObject3D, "view", true, view.array());
-          uniformMatrix(programObject3D, "projection", true, projection.array());
+          uniformMatrix(programObject3D, "model", false, model.array());
+          uniformMatrix(programObject3D, "view", false, view.array());
+          uniformMatrix(programObject3D, "projection", false, proj.array());
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -8382,17 +8415,17 @@
         var offsetStart = 0;
         var offsetEnd = 0;
 
-        if (curRectMode === p.CORNERS) {
+        if (curRectMode === PConstants.CORNERS) {
           width -= x;
           height -= y;
         }
 
-        if (curRectMode === p.RADIUS) {
+        if (curRectMode === PConstants.RADIUS) {
           width *= 2;
           height *= 2;
         }
 
-        if (curRectMode === p.CENTER || curRectMode === p.RADIUS) {
+        if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
           x -= width / 2;
           y -= height / 2;
         }
@@ -8415,17 +8448,17 @@
         return;
       }
 
-      if (curEllipseMode === p.RADIUS) {
+      if (curEllipseMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
       }
 
-      if (curEllipseMode === p.CORNERS) {
+      if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
       }
 
-      if (curEllipseMode === p.CORNER || curEllipseMode === p.CORNERS) {
+      if (curEllipseMode === PConstants.CORNER || curEllipseMode === PConstants.CORNERS) {
         x += width / 2;
         y += height / 2;
       }
@@ -8435,7 +8468,7 @@
       // Shortcut for drawing a 2D circle
       if ((!p.use3DContext) && (width === height)) {
         curContext.beginPath();
-        curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, p.TWO_PI, false);
+        curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, PConstants.TWO_PI, false);
         executeContextFill();
         executeContextStroke();
         curContext.closePath();
@@ -8517,10 +8550,10 @@
       normalZ = nz;
 
       if (curShape !== 0) {
-        if (normalMode === p.NORMAL_MODE_AUTO) {
-          normalMode = p.NORMAL_MODE_SHAPE;
-        } else if (normalMode === p.NORMAL_MODE_SHAPE) {
-          normalMode = p.NORMAL_MODE_VERTEX;
+        if (normalMode === PConstants.NORMAL_MODE_AUTO) {
+          normalMode = PConstants.NORMAL_MODE_SHAPE;
+        } else if (normalMode === PConstants.NORMAL_MODE_SHAPE) {
+          normalMode = PConstants.NORMAL_MODE_VERTEX;
         }
       }
     };
@@ -8588,9 +8621,9 @@
 
       this.copy = function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
         if (arguments.length === 8) {
-          p.blend(this, srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, p.REPLACE, this);
+          p.blend(this, srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, PConstants.REPLACE, this);
         } else if (arguments.length === 9) {
-          p.blend(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight, p.REPLACE, this);
+          p.blend(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight, PConstants.REPLACE, this);
         }
       };
 
@@ -8664,10 +8697,10 @@
         setPixel: (function(aImg) {
           return function(i,c) {
             var offset = i*4;
-            aImg.imageData.data[offset] = (c & p.RED_MASK) >>> 16;
-            aImg.imageData.data[offset+1] = (c & p.GREEN_MASK) >>> 8;
-            aImg.imageData.data[offset+2] = (c & p.BLUE_MASK);
-            aImg.imageData.data[offset+3] = (c & p.ALPHA_MASK) >>> 24;
+            aImg.imageData.data[offset] = (c & PConstants.RED_MASK) >>> 16;
+            aImg.imageData.data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
+            aImg.imageData.data[offset+2] = (c & PConstants.BLUE_MASK);
+            aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
           };
         }(this)),
         set: function(arr) {
@@ -8701,7 +8734,7 @@
         this.height = canvasImg.height;
         this.imageData = canvasImg;
         // changed for 0.9
-        this.format = p.ARGB;
+        this.format = PConstants.ARGB;
       };
 
       this.fromHTMLImageData = function(htmlImg) {
@@ -8728,12 +8761,12 @@
         this.height = aHeight || 1;
         // changed for 0.9
         this.imageData = curContext.createImageData(this.width, this.height);
-        this.format = (aFormat === p.ARGB || aFormat === p.ALPHA) ? aFormat : p.RGB;
+        this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
       } else {
         this.width = 0;
         this.height = 0;
         this.imageData = curContext.createImageData(1, 1);
-        this.format = p.ARGB;
+        this.format = PConstants.ARGB;
       }
     };
 
@@ -8765,7 +8798,7 @@
       }
       // else aysnc load it
       else {
-        var pimg = new PImage(0, 0, p.ARGB);
+        var pimg = new PImage(0, 0, PConstants.ARGB);
         var img = document.createElement('img');
 
         pimg.sourceImg = img;
@@ -8794,7 +8827,7 @@
 
     function get$0() {
       //return a PImage of curContext
-      var c = new PImage(p.width, p.height, p.RGB);
+      var c = new PImage(p.width, p.height, PConstants.RGB);
       c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
       return c;
     }
@@ -8829,7 +8862,7 @@
     }
     function get$4(x, y, w, h) {
       // return a PImage of w and h from cood x,y of curContext
-      var c = new PImage(w, h, p.RGB);
+      var c = new PImage(w, h, PConstants.RGB);
       c.fromImageData(curContext.getImageData(x, y, w, h));
       return c;
     }
@@ -8838,7 +8871,7 @@
       // changed for 0.9, offset start point needs to be *4
       var start = y * img.width * 4 + (x*4);
       var end = (y + h) * img.width * 4 + ((x + w) * 4);
-      var c = new PImage(w, h, p.RGB);
+      var c = new PImage(w, h, PConstants.RGB);
       for (var i = start, j = 0; i < end; i++, j++) {
         // changed in 0.9
         c.imageData.data[j] = img.imageData.data[i];
@@ -9006,12 +9039,12 @@
     };
   
     p.hint = function hint(which) {
-      if (which === p.DISABLE_DEPTH_TEST) {
+      if (which === PConstants.DISABLE_DEPTH_TEST) {
          curContext.disable(curContext.DEPTH_TEST);
          curContext.depthMask(false);
          curContext.clear(curContext.DEPTH_BUFFER_BIT);
       }
-      else if (which === p.ENABLE_DEPTH_TEST) {
+      else if (which === PConstants.ENABLE_DEPTH_TEST) {
          curContext.enable(curContext.DEPTH_TEST);
          curContext.depthMask(true);
       }
@@ -9025,8 +9058,8 @@
         color = p.color.apply(this, arguments);
 
         // override alpha value, processing ignores the alpha for background color
-        if (curSketch.options.isOpaque) {
-          color = color | p.ALPHA_MASK;
+        if (!curSketch.options.isTransparent) {
+          color = color | PConstants.ALPHA_MASK;
         }
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
         img = arguments[0];
@@ -9052,6 +9085,9 @@
       } else { // 2d context
         if (color !== undef) {
           refreshBackground = function() {
+            if (curSketch.options.isTransparent) {
+              curContext.clearRect(0,0, p.width, p.height);
+            }
             curContext.fillStyle = p.color.toString(color);
             curContext.fillRect(0, 0, p.width, p.height);
             isFillDirty = true;
@@ -9140,7 +9176,7 @@
         sx = src;
         src = p;
       }
-      p.blend(src, sx, sy, sw, sh, dx, dy, dw, dh, p.REPLACE);
+      p.blend(src, sx, sy, sw, sh, dx, dy, dw, dh, PConstants.REPLACE);
     };
 
     p.blend = function blend(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
@@ -9239,10 +9275,10 @@
             }
             c = aImg.pixels.getPixel(read + yi);
             m = p.shared.blurKernel[i];
-            ca += m * ((c & p.ALPHA_MASK) >>> 24);
-            cr += m * ((c & p.RED_MASK) >> 16);
-            cg += m * ((c & p.GREEN_MASK) >> 8);
-            cb += m * (c & p.BLUE_MASK);
+            ca += m * ((c & PConstants.ALPHA_MASK) >>> 24);
+            cr += m * ((c & PConstants.RED_MASK) >> 16);
+            cg += m * ((c & PConstants.GREEN_MASK) >> 8);
+            cb += m * (c & PConstants.BLUE_MASK);
             sum += m;
             read++;
           }
@@ -9434,33 +9470,33 @@
 
       var imglen = img.pixels.getLength();
       switch (kind) {
-        case p.BLUR:
+        case PConstants.BLUR:
           var radius = param || 1; // if no param specified, use 1 (default for p5)
           blurARGB(radius, img);
         break;
-        case p.GRAY:
-          if (img.format === p.ALPHA) { //trouble
+        case PConstants.GRAY:
+          if (img.format === PConstants.ALPHA) { //trouble
             // for an alpha image, convert it to an opaque grayscale
             for (i = 0; i < imglen; i++) {
               col = 255 - img.pixels.getPixel(i);
               img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
             }
-            img.format = p.RGB; //trouble
+            img.format = PConstants.RGB; //trouble
 
           } else {
             for (i = 0; i < imglen; i++) {
               col = img.pixels.getPixel(i);
               lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
-              img.pixels.setPixel(i,((col & p.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
+              img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
             }
           }
           break;
-        case p.INVERT:
+        case PConstants.INVERT:
           for (i = 0; i < imglen; i++) {
             img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
           }
           break;
-        case p.POSTERIZE:
+        case PConstants.POSTERIZE:
           if(param === null) {
             throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
           }
@@ -9479,13 +9515,13 @@
             img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
           }
           break;
-        case p.OPAQUE:
+        case PConstants.OPAQUE:
           for (i = 0; i < imglen; i++) {
             img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
           }
-          img.format = p.RGB; //trouble
+          img.format = PConstants.RGB; //trouble
           break;
-        case p.THRESHOLD:
+        case PConstants.THRESHOLD:
           if (param === null) {
             param = 0.5;
           }
@@ -9494,17 +9530,17 @@
           }
           var thresh = p.floor(param * 255);
           for (i = 0; i < imglen; i++) {
-            var max = p.max((img.pixels.getPixel(i) & p.RED_MASK) >> 16,
-                             p.max((img.pixels.getPixel(i) & p.GREEN_MASK) >> 8,
-                             (img.pixels.getPixel(i) & p.BLUE_MASK)));
-            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & p.ALPHA_MASK) |
+            var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16,
+                             p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8,
+                             (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
+            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) |
               ((max < thresh) ? 0x000000 : 0xffffff)));
           }
           break;
-        case p.ERODE:
+        case PConstants.ERODE:
           dilate(true, img);
           break;
-        case p.DILATE:
+        case PConstants.DILATE:
           dilate(false, img);
           break;
       }
@@ -9580,20 +9616,20 @@
 
     p.filter_new_scanline = function filter_new_scanline() {
       p.shared.sX = p.shared.srcXOffset;
-      p.shared.fracV = p.shared.srcYOffset & p.PREC_MAXVAL;
-      p.shared.ifV = p.PREC_MAXVAL - p.shared.fracV;
-      p.shared.v1 = (p.shared.srcYOffset >> p.PRECISIONB) * p.shared.iw;
-      p.shared.v2 = Math.min((p.shared.srcYOffset >> p.PRECISIONB) + 1, p.shared.ih1) * p.shared.iw;
+      p.shared.fracV = p.shared.srcYOffset & PConstants.PREC_MAXVAL;
+      p.shared.ifV = PConstants.PREC_MAXVAL - p.shared.fracV;
+      p.shared.v1 = (p.shared.srcYOffset >> PConstants.PRECISIONB) * p.shared.iw;
+      p.shared.v2 = Math.min((p.shared.srcYOffset >> PConstants.PRECISIONB) + 1, p.shared.ih1) * p.shared.iw;
     };
 
     p.filter_bilinear = function filter_bilinear() {
-      p.shared.fracU = p.shared.sX & p.PREC_MAXVAL;
-      p.shared.ifU = p.PREC_MAXVAL - p.shared.fracU;
-      p.shared.ul = (p.shared.ifU * p.shared.ifV) >> p.PRECISIONB;
-      p.shared.ll = (p.shared.ifU * p.shared.fracV) >> p.PRECISIONB;
-      p.shared.ur = (p.shared.fracU * p.shared.ifV) >> p.PRECISIONB;
-      p.shared.lr = (p.shared.fracU * p.shared.fracV) >> p.PRECISIONB;
-      p.shared.u1 = (p.shared.sX >> p.PRECISIONB);
+      p.shared.fracU = p.shared.sX & PConstants.PREC_MAXVAL;
+      p.shared.ifU = PConstants.PREC_MAXVAL - p.shared.fracU;
+      p.shared.ul = (p.shared.ifU * p.shared.ifV) >> PConstants.PRECISIONB;
+      p.shared.ll = (p.shared.ifU * p.shared.fracV) >> PConstants.PRECISIONB;
+      p.shared.ur = (p.shared.fracU * p.shared.ifV) >> PConstants.PRECISIONB;
+      p.shared.lr = (p.shared.fracU * p.shared.fracV) >> PConstants.PRECISIONB;
+      p.shared.u1 = (p.shared.sX >> PConstants.PRECISIONB);
       p.shared.u2 = Math.min(p.shared.u1 + 1, p.shared.iw1);
       // get color values of the 4 neighbouring texels
       // changed for 0.9
@@ -9609,17 +9645,17 @@
                      p.shared.srcBuffer[cLLoffset+2], p.shared.srcBuffer[cLLoffset+3]);
       p.shared.cLR = p.color.toInt(p.shared.srcBuffer[cLRoffset], p.shared.srcBuffer[cLRoffset+1],
                      p.shared.srcBuffer[cLRoffset+2], p.shared.srcBuffer[cLRoffset+3]);
-      p.shared.r = ((p.shared.ul * ((p.shared.cUL & p.RED_MASK) >> 16) + p.shared.ll *
-                   ((p.shared.cLL & p.RED_MASK) >> 16) + p.shared.ur * ((p.shared.cUR & p.RED_MASK) >> 16) +
-                   p.shared.lr * ((p.shared.cLR & p.RED_MASK) >> 16)) << p.PREC_RED_SHIFT) & p.RED_MASK;
-      p.shared.g = ((p.shared.ul * (p.shared.cUL & p.GREEN_MASK) + p.shared.ll * (p.shared.cLL & p.GREEN_MASK) +
-                   p.shared.ur * (p.shared.cUR & p.GREEN_MASK) + p.shared.lr *
-                   (p.shared.cLR & p.GREEN_MASK)) >>> p.PRECISIONB) & p.GREEN_MASK;
-      p.shared.b = (p.shared.ul * (p.shared.cUL & p.BLUE_MASK) + p.shared.ll * (p.shared.cLL & p.BLUE_MASK) +
-                   p.shared.ur * (p.shared.cUR & p.BLUE_MASK) + p.shared.lr * (p.shared.cLR & p.BLUE_MASK)) >>> p.PRECISIONB;
-      p.shared.a = ((p.shared.ul * ((p.shared.cUL & p.ALPHA_MASK) >>> 24) + p.shared.ll *
-                   ((p.shared.cLL & p.ALPHA_MASK) >>> 24) + p.shared.ur * ((p.shared.cUR & p.ALPHA_MASK) >>> 24) +
-                   p.shared.lr * ((p.shared.cLR & p.ALPHA_MASK) >>> 24)) << p.PREC_ALPHA_SHIFT) & p.ALPHA_MASK;
+      p.shared.r = ((p.shared.ul * ((p.shared.cUL & PConstants.RED_MASK) >> 16) + p.shared.ll *
+                   ((p.shared.cLL & PConstants.RED_MASK) >> 16) + p.shared.ur * ((p.shared.cUR & PConstants.RED_MASK) >> 16) +
+                   p.shared.lr * ((p.shared.cLR & PConstants.RED_MASK) >> 16)) << PConstants.PREC_RED_SHIFT) & PConstants.RED_MASK;
+      p.shared.g = ((p.shared.ul * (p.shared.cUL & PConstants.GREEN_MASK) + p.shared.ll * (p.shared.cLL & PConstants.GREEN_MASK) +
+                   p.shared.ur * (p.shared.cUR & PConstants.GREEN_MASK) + p.shared.lr *
+                   (p.shared.cLR & PConstants.GREEN_MASK)) >>> PConstants.PRECISIONB) & PConstants.GREEN_MASK;
+      p.shared.b = (p.shared.ul * (p.shared.cUL & PConstants.BLUE_MASK) + p.shared.ll * (p.shared.cLL & PConstants.BLUE_MASK) +
+                   p.shared.ur * (p.shared.cUR & PConstants.BLUE_MASK) + p.shared.lr * (p.shared.cLR & PConstants.BLUE_MASK)) >>> PConstants.PRECISIONB;
+      p.shared.a = ((p.shared.ul * ((p.shared.cUL & PConstants.ALPHA_MASK) >>> 24) + p.shared.ll *
+                   ((p.shared.cLL & PConstants.ALPHA_MASK) >>> 24) + p.shared.ur * ((p.shared.cUR & PConstants.ALPHA_MASK) >>> 24) +
+                   p.shared.lr * ((p.shared.cLR & PConstants.ALPHA_MASK) >>> 24)) << PConstants.PREC_ALPHA_SHIFT) & PConstants.ALPHA_MASK;
       return p.shared.a | p.shared.r | p.shared.g | p.shared.b;
     };
 
@@ -9651,10 +9687,10 @@
           destY1 >= screenH || srcX1 >= img.width || srcY1 >= img.height) {
         return;
       }
-      var dx = Math.floor(srcW / destW * p.PRECISIONF);
-      var dy = Math.floor(srcH / destH * p.PRECISIONF);
-      p.shared.srcXOffset = Math.floor(destX1 < 0 ? -destX1 * dx : srcX1 * p.PRECISIONF);
-      p.shared.srcYOffset = Math.floor(destY1 < 0 ? -destY1 * dy : srcY1 * p.PRECISIONF);
+      var dx = Math.floor(srcW / destW * PConstants.PRECISIONF);
+      var dy = Math.floor(srcH / destH * PConstants.PRECISIONF);
+      p.shared.srcXOffset = Math.floor(destX1 < 0 ? -destX1 * dx : srcX1 * PConstants.PRECISIONF);
+      p.shared.srcYOffset = Math.floor(destY1 < 0 ? -destY1 * dy : srcY1 * PConstants.PRECISIONF);
       if (destX1 < 0) {
         destW += destX1;
         destX1 = 0;
@@ -9675,7 +9711,7 @@
         p.shared.iw1 = img.width - 1;
         p.shared.ih1 = img.height - 1;
         switch (mode) {
-        case p.BLEND:
+        case PConstants.BLEND:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9696,7 +9732,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.ADD:
+        case PConstants.ADD:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9718,7 +9754,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.SUBTRACT:
+        case PConstants.SUBTRACT:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9739,7 +9775,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.LIGHTEST:
+        case PConstants.LIGHTEST:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9760,7 +9796,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.DARKEST:
+        case PConstants.DARKEST:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9781,7 +9817,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.REPLACE:
+        case PConstants.REPLACE:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9802,7 +9838,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.DIFFERENCE:
+        case PConstants.DIFFERENCE:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9823,7 +9859,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.EXCLUSION:
+        case PConstants.EXCLUSION:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9844,7 +9880,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.MULTIPLY:
+        case PConstants.MULTIPLY:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9865,7 +9901,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.SCREEN:
+        case PConstants.SCREEN:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9886,7 +9922,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.OVERLAY:
+        case PConstants.OVERLAY:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9907,7 +9943,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.HARD_LIGHT:
+        case PConstants.HARD_LIGHT:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9928,7 +9964,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.SOFT_LIGHT:
+        case PConstants.SOFT_LIGHT:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9949,7 +9985,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.DODGE:
+        case PConstants.DODGE:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -9970,7 +10006,7 @@
             p.shared.srcYOffset += dy;
           }
           break;
-        case p.BURN:
+        case PConstants.BURN:
           for (y = 0; y < destH; y++) {
             p.filter_new_scanline();
             for (x = 0; x < destW; x++) {
@@ -10222,16 +10258,16 @@
           }
 
           // horizontal offset/alignment
-          if(align === p.RIGHT || align === p.CENTER) {
+          if(align === PConstants.RIGHT || align === PConstants.CENTER) {
             if ("fillText" in curContext) {
               textWidth = curContext.measureText(str).width;
             } else if ("mozDrawText" in curContext) {
               textWidth = curContext.mozMeasureText(str);
             }
             
-            if(align === p.RIGHT) {
+            if(align === PConstants.RIGHT) {
               xOffset = -textWidth;
-            } else { // if(align === p.CENTER)
+            } else { // if(align === PConstants.CENTER)
               xOffset = -textWidth/2;
             }
           }
@@ -10252,12 +10288,12 @@
         curContext.translate(x, y + curTextSize);
 
         // horizontal offset/alignment
-        if(align === p.RIGHT || align === p.CENTER) {
+        if(align === PConstants.RIGHT || align === PConstants.CENTER) {
           textWidth = font.width(str);
           
-          if(align === p.RIGHT) {
+          if(align === PConstants.RIGHT) {
             xOffset = -textWidth;
-          } else { // if(align === p.CENTER)
+          } else { // if(align === PConstants.CENTER)
             xOffset = -textWidth/2;
           }
         }
@@ -10300,7 +10336,7 @@
       curContext.textBaseline="top";
 
       // paint on 2D canvas
-      text$line(str,0,0,0,p.LEFT);
+      text$line(str,0,0,0,PConstants.LEFT);
 
       // use it as a texture
       var aspect = textcanvas.width/textcanvas.height;
@@ -10313,9 +10349,9 @@
 
       // horizontal offset/alignment
       var xOffset = 0;
-      if(align === p.RIGHT) {
+      if(align === PConstants.RIGHT) {
         xOffset = -textWidth;
-      } else if(align === p.CENTER) {
+      } else if(align === PConstants.CENTER) {
         xOffset = -textWidth/2;
       }
       var model = new PMatrix3D();
@@ -10354,13 +10390,13 @@
       // handle text line-by-line
       
       var yOffset;
-      if(verticalTextAlignment === p.TOP) {
+      if(verticalTextAlignment === PConstants.TOP) {
         yOffset = (1-baselineOffset) * curTextSize;
-      } else if(verticalTextAlignment === p.CENTER) {
+      } else if(verticalTextAlignment === PConstants.CENTER) {
         yOffset = (1-baselineOffset - linesCount/2) * curTextSize;
-      } else if(verticalTextAlignment === p.BOTTOM) {
+      } else if(verticalTextAlignment === PConstants.BOTTOM) {
         yOffset = (1-baselineOffset - linesCount) * curTextSize;
-      } else { //  if(verticalTextAlignment === p.BASELINE) {
+      } else { //  if(verticalTextAlignment === PConstants.BASELINE) {
         yOffset = (1 - linesCount) * curTextSize;
       }
       for(var i=0;i<linesCount;++i) {
@@ -10433,17 +10469,17 @@
       // actual draw
       var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       var xOffset = 0;
-      if(horizontalTextAlignment === p.CENTER) {
+      if(horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width / 2;
-      } else if(horizontalTextAlignment === p.RIGHT) {
+      } else if(horizontalTextAlignment === PConstants.RIGHT) {
         xOffset = width;
       }
 
       // offsets for alignment
       var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
-      if(verticalTextAlignment === p.BOTTOM) {
+      if(verticalTextAlignment === PConstants.BOTTOM) {
         boxYOffset2 = height-yOffset;
-      } else if(verticalTextAlignment === p.CENTER) {
+      } else if(verticalTextAlignment === PConstants.CENTER) {
         boxYOffset2 = (height-yOffset) / 2;
       }
 
@@ -10787,13 +10823,13 @@
       p.mouseDragging = false;
       switch (e.which) {
       case 1:
-        p.mouseButton = p.LEFT;
+        p.mouseButton = PConstants.LEFT;
         break;
       case 2:
-        p.mouseButton = p.CENTER;
+        p.mouseButton = PConstants.CENTER;
         break;
       case 3:
-        p.mouseButton = p.RIGHT;
+        p.mouseButton = PConstants.RIGHT;
         break;
       }
 
@@ -10885,7 +10921,7 @@
       // Coded keys
       else if (codedKeys.indexOf(code) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
         p.keyCode = code;
-        return p.CODED;
+        return PConstants.CODED;
       }
 
       // Symbols and their shift-symbols
@@ -10989,7 +11025,7 @@
       p.use3DContext = curSketch.use3DContext;
 
       if ("mozOpaque" in curElement) {
-        curElement.mozOpaque = curSketch.options.isOpaque;
+        curElement.mozOpaque = !curSketch.options.isTransparent;
       }
 
       // Initialize the onfocus and onblur event handler externals
@@ -11041,7 +11077,7 @@
       var executeSketch = function(processing) {
         // Don't start until all specified images in the cache are preloaded
         if (!curSketch.imageCache.pending) {
-          curSketch.attach(processing);
+          curSketch.attach(processing, PConstants);
 
           // Run void setup()
           if (processing.setup) {
@@ -11070,7 +11106,7 @@
       // No executable sketch was specified
       // or called via createGraphics
       curSketch = new Processing.Sketch();
-      curSketch.options.isOpaque = false;
+      curSketch.options.isTransparent = true;
     }
 
   };
@@ -11082,44 +11118,51 @@
 
   // Processing global methods and constants for the parser
   function getGlobalMembers() {
-    var names =
-  ["abs","acos","ADD","alpha","ALPHA","ALT","ambient","ambientLight","append","applyMatrix","arc",
-  "ARGB","arrayCopy","ArrayList","ARROW","asin","atan","atan2","background","BACKSPACE","beginCamera",
-  "beginDraw","beginShape","BEVEL","bezier","bezierDetail","bezierPoint","bezierTangent","bezierVertex","binary",
-  "blend","BLEND","blendColor","blue","BLUE_MASK","BLUR","boolean", "BOTTOM", "box","brightness","BURN","byte","camera","ceil",
-  "CENTER","CENTER_RADIUS","char","Character","clear","CLOSE","CMYK","CODED","color","colorMode","concat",
-  "console","constrain","CONTROL","copy","CORNER","CORNERS","cos","createFont","createGraphics",
-  "createImage","CROSS","cursor","curve","curveDetail","curvePoint","curveTangent","curveTightness",
-  "curveVertex","curveVertexSegment","DARKEST","day","defaultColor","degrees","DELETE","DIFFERENCE",
-  "DILATE","directionalLight","disableContextMenu","DISABLE_DEPTH_TEST","dist","DODGE","DOWN","draw","ellipse","ellipseMode",
-  "emissive","enableContextMenu","ENABLE_DEPTH_TEST","endCamera","endDraw","endShape","ENTER","ERODE","ESC","EXCLUSION","externals",
-  "exit","exp","expand","fill","filter","filter_bilinear","filter_new_scanline","float","floor","focused",
-  "frameCount","frameRate","frustum","get","glyphLook","glyphTable","GRAY","green","GREEN_MASK",
-  "HALF_PI","HAND","HARD_LIGHT","HashMap","height","hex","hint","hour","HSB","hue","image","IMAGE","imageMode",
-  "Import","int","intersect","INVERT","JAVA2D","join","key","keyPressed","keyReleased","LEFT","lerp",
-  "lerpColor","LIGHTEST","lightFalloff","lights","lightSpecular","line","LINES","link","loadBytes",
-  "loadFont","loadGlyphs","loadImage","loadPixels","loadShape","loadStrings","log","loop","mag","map","match",
-  "matchAll","max","MAX_FLOAT","MAX_INT","MAX_LIGHTS","millis","min","MIN_FLOAT","MIN_INT","minute",
-  "MITER","mix","modelX","modelY","modelZ","modes","month","mouseButton","mouseClicked","mouseDown",
-  "mouseDragged","mouseMoved","mousePressed","mouseReleased","mouseScroll","mouseScrolled","mouseX",
-  "mouseY","MOVE","MULTIPLY","nf","nfc","nfp","nfs","noCursor","NOCURSOR","noFill","noise","noiseDetail","noiseSeed",
-  "noLights","noLoop","norm","normal","NORMAL_MODE_AUTO","NORMALIZED","NORMAL_MODE_SHAPE","NORMAL_MODE_VERTEX",
-  "noSmooth","noStroke","noTint","OPAQUE","OPENGL","ortho","OVERLAY","P3D","peg","perspective","PI","PImage","pixels",
-  "PMatrix2D", "PMatrix3D", "PMatrixStack",
-  "pmouseX","pmouseY","point","Point","pointLight","POINTS","POLYGON","popMatrix","popStyle","POSTERIZE",
-  "pow","PREC_ALPHA_SHIFT","PRECISIONB","PRECISIONF","PREC_MAXVAL","PREC_RED_SHIFT","print",
-  "printCamera","println","printMatrix","printProjection","PROJECT","pushMatrix","pushStyle",
-  "PVector","quad","QUADS","QUAD_STRIP","radians","RADIUS","random","Random","randomSeed", "rect",
-  "rectMode","red","RED_MASK","redraw","REPLACE","requestImage","resetMatrix","RETURN","reverse","RGB",
-  "RIGHT","rotate","rotateX","rotateY","rotateZ","round","ROUND","saturation","save","scale","SCREEN","screenX","screenY","screenZ",
-  "second","set","setup","shape", "shapeMode","shared","SHIFT","shininess","shorten","sin","SINCOS_LENGTH","size",
-  "smooth","SOFT_LIGHT","sort","specular","sphere","sphereDetail","splice","split","splitTokens",
-  "spotLight","sq","sqrt","SQUARE","status","str","stroke","strokeCap","strokeJoin","strokeWeight",
-  "subset","SUBTRACT","TAB","tan","text","TEXT","textAlign","textAscent","textDescent","textFont",
-  "textMode","textSize","textureMode","texture","textWidth","THRESHOLD","tint", "TOP",
-  "translate","triangle","TRIANGLE_FAN","TRIANGLES","TRIANGLE_STRIP","trim","TWO_PI","unbinary",
-  "unhex","UP","updatePixels","use3DContext","vertex","WAIT","width","XMLAttrbute","XMLElement","year",
-  "__frameRate","__mousePressed","__keyPressed"];
+    var names = [ /* this code is generated by jsglobals.js */
+      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix", 
+      "arc", "arrayCopy", "ArrayList", "asin", "atan", "atan2", "background", 
+      "beginCamera", "beginDraw", "beginShape", "bezier", "bezierDetail", 
+      "bezierPoint", "bezierTangent", "bezierVertex", "binary", "blend", 
+      "blendColor", "blit_resize", "blue", "boolean", "box", "breakShape", 
+      "brightness", "byte", "camera", "ceil", "char", "Character", "clear", 
+      "color", "colorMode", "concat", "console", "constrain", "copy", "cos", 
+      "createFont", "createGraphics", "createImage", "cursor", "curve", 
+      "curveDetail", "curvePoint", "curveTangent", "curveTightness", 
+      "curveVertex", "day", "defaultColor", "degrees", "directionalLight", 
+      "disableContextMenu", "dist", "draw", "ellipse", "ellipseMode", "emissive", 
+      "enableContextMenu", "endCamera", "endDraw", "endShape", "exit", "exp", 
+      "expand", "externals", "fill", "filter", "filter_bilinear", 
+      "filter_new_scanline", "float", "floor", "focused", "frameCount", 
+      "frameRate", "frustum", "get", "glyphLook", "glyphTable", "green", 
+      "HashMap", "height", "hex", "hint", "hour", "hue", "image", "imageMode", 
+      "Import", "int", "intersect", "join", "key", "keyCode", "keyPressed", 
+      "keyReleased", "keyTyped", "lerp", "lerpColor", "lightFalloff", "lights", 
+      "lightSpecular", "line", "link", "loadBytes", "loadFont", "loadGlyphs", 
+      "loadImage", "loadPixels", "loadShape", "loadStrings", "log", "loop", 
+      "mag", "map", "match", "matchAll", "max", "millis", "min", "minute", "mix", 
+      "modelX", "modelY", "modelZ", "modes", "month", "mouseButton", 
+      "mouseClicked", "mouseDragged", "mouseMoved", "mousePressed", 
+      "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY", 
+      "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise", 
+      "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal", 
+      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage", 
+      "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", 
+      "point", "pointLight", "popMatrix", "popStyle", "pow", "print", 
+      "printCamera", "println", "printMatrix", "printProjection", "PShape", 
+      "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random", 
+      "Random", "randomSeed", "rect", "rectMode", "red", "redraw", 
+      "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", 
+      "rotateZ", "round", "saturation", "save", "saveStrings", "scale", "screenX",
+      "screenY", "screenZ", "second", "set", "setup", "shape", "shapeMode", "shared", 
+      "shininess", "shorten", "sin", "size", "smooth", "sort", "specular", 
+      "sphere", "sphereDetail", "splice", "split", "splitTokens", "spotLight", 
+      "sq", "sqrt", "status", "str", "stroke", "strokeCap", "strokeJoin", 
+      "strokeWeight", "subset", "tan", "text", "textAlign", "textFont", 
+      "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
+      "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed", 
+      "__mousePressed"];
+
     var members = {};
     var i, l;
     for(i=0,l=names.length;i<l;++i) {
@@ -11343,8 +11386,8 @@
       // .length() --> .length
       s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");
       // #000000 --> 0x000000
-      s = s.replace(/#([0-9A-Fa-f]+)/g, function(all, digits) {
-        return digits.length < 6 ? "0x" + digits : "0xFF000000".substring(0, 10 - digits.length) + digits;
+      s = s.replace(/#([0-9A-Fa-f]{6})\b/g, function(all, digits) {
+        return "0xFF" + digits;
       });
       // delete (type)???, (int)??? -> 0|???
       s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
@@ -12105,6 +12148,10 @@
         } else if(statement instanceof AstForStatement &&
           statement.argument.initStatement instanceof AstVar) {
           localNames = localNames.concat(statement.argument.initStatement.getNames());
+        } else if(statement instanceof AstInnerInterface || statement instanceof AstInnerClass ||
+          statement instanceof AstInterface || statement instanceof AstClass ||
+          statement instanceof AstMethod || statement instanceof AstFunction) {
+          localNames.push(statement.name);
         }
       }
       return appendToLookupTable({}, localNames);
@@ -12140,13 +12187,17 @@
     AstRoot.prototype.toString = function() {
       var localNames = getLocalNames(this.statements);
       replaceContext = function(name) {
-        if(name in globalMembers && !(name in localNames)) {
+        if(localNames.hasOwnProperty(name)) {
+          return name;
+        } else if(globalMembers.hasOwnProperty(name)) {
           return "processing." + name;
+        } else if(PConstants.hasOwnProperty(name)) {
+          return "$constants." + name;
         }
         return name;
       };
       var result = "// this code was autogenerated from PJS\n" +
-        "(function(processing) {\n" +
+        "(function(processing, $constants) {\n" +
         this.statements.join('') + "\n})";
       replaceContext = null;
       return result;
@@ -12220,7 +12271,7 @@
 
   function preprocessCode(aCode, sketch) {
     // Parse out @pjs directive, if any.
-    var dm = /\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g.exec(aCode);
+    var dm = new RegExp(/\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g).exec(aCode);
     if (dm && dm.length === 2) {
       var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
 
@@ -12242,8 +12293,8 @@
               var imageName = clean(list[j]);
               sketch.imageCache.add(imageName);
             }
-          } else if (key === "opaque") {
-            sketch.options.isOpaque = value === "true";
+          } else if (key === "transparent") {
+            sketch.options.isTransparent = value === "true";
           } else if (key === "crisp") {
             sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
@@ -12306,7 +12357,7 @@
     this.attachFunction = attachFunction; // can be optional
     this.use3DContext = false;
     this.options = {
-      isOpaque: true,
+      isTransparent: false,
       crispLines: false,
       pauseOnBlur: false
     };
@@ -12326,13 +12377,13 @@
       }
     };
     this.sourceCode = undefined;
-    this.attach = function(processing) {
+    this.attach = function(processing, constants) {
       // either attachFunction or sourceCode must be present on attach
       if(typeof this.attachFunction === "function") {
-        this.attachFunction(processing);
+        this.attachFunction(processing, constants);
       } else if(this.sourceCode) {
         var func = eval(this.sourceCode);
-        func(processing);
+        func(processing, constants);
         this.attachFunction = func;
       } else {
         throw "Unable to attach sketch to the processing instance";
