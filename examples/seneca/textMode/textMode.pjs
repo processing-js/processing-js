@@ -1,0 +1,14 @@
+size(100, 100, P3D);
+PFont metaBold;
+metaBold = loadFont("Serif.plain-12.vlw");
+textFont(metaBold);
+String lines = "screen";
+
+rotateZ(0.1);
+translate(20,0);
+text(lines, 3, 20);
+textMode(SCREEN);
+text(lines, 3, 45);
+textMode(MODEL);
+translate(-10,0);
+text(lines, 3, 70);
