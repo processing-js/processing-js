@@ -509,147 +509,150 @@
 
     //PShape stuff
     var curShapeMode = PConstants.CORNER;
-    var colors = {}; 
-        colors.aliceblue = "#f0f8ff";
-        colors.antiquewhite = "#faebd7";
-        colors.aqua = "#00ffff";
-        colors.aquamarine = "#7fffd4";
-        colors.azure = "#f0ffff";
-        colors.beige = "#f5f5dc";
-        colors.bisque = "#ffe4c4";
-        colors.black = "#000000";
-        colors.blanchedalmond = "#ffebcd";
-        colors.blue = "#0000ff";
-        colors.blueviolet = "#8a2be2";
-        colors.brown = "#a52a2a";
-        colors.burlywood = "#deb887";
-        colors.cadetblue = "#5f9ea0";
-        colors.chartreuse = "#7fff00";
-        colors.chocolate = "#d2691e";
-        colors.coral = "#ff7f50";
-        colors.cornflowerblue = "#6495ed";
-        colors.cornsilk = "#fff8dc";
-        colors.crimson = "#dc143c";
-        colors.cyan = "#00ffff";
-        colors.darkblue = "#00008b";
-        colors.darkcyan = "#008b8b";
-        colors.darkgoldenrod = "#b8860b";
-        colors.darkgray = "#a9a9a9";
-        colors.darkgreen = "#006400";
-        colors.darkkhaki = "#bdb76b";
-        colors.darkmagenta = "#8b008b";
-        colors.darkolivegreen = "#556b2f";
-        colors.darkorange = "#ff8c00";
-        colors.darkorchid = "#9932cc";
-        colors.darkred = "#8b0000";
-        colors.darksalmon = "#e9967a";
-        colors.darkseagreen = "#8fbc8f";
-        colors.darkslateblue = "#483d8b";
-        colors.darkslategray = "#2f4f4f";
-        colors.darkturquoise = "#00ced1";
-        colors.darkviolet = "#9400d3";
-        colors.deeppink = "#ff1493";
-        colors.deepskyblue = "#00bfff";
-        colors.dimgray = "#696969";
-        colors.dodgerblue = "#1e90ff";
-        colors.firebrick = "#b22222";
-        colors.floralwhite = "#fffaf0";
-        colors.forestgreen = "#228b22";
-        colors.fuchsia = "#ff00ff";
-        colors.gainsboro = "#dcdcdc";
-        colors.ghostwhite = "#f8f8ff";
-        colors.gold = "#ffd700";
-        colors.goldenrod = "#daa520";
-        colors.gray = "#808080";
-        colors.green = "#008000";
-        colors.greenyellow = "#adff2f";
-        colors.honeydew = "#f0fff0";
-        colors.hotpink = "#ff69b4";
-        colors.indianred = "#cd5c5c";
-        colors.indigo = "#4b0082";
-        colors.ivory = "#fffff0";
-        colors.khaki = "#f0e68c";
-        colors.lavender = "#e6e6fa";
-        colors.lavenderblush = "#fff0f5";
-        colors.lawngreen = "#7cfc00";
-        colors.lemonchiffon = "#fffacd";
-        colors.lightblue = "#add8e6";
-        colors.lightcoral = "#f08080";
-        colors.lightcyan = "#e0ffff";
-        colors.lightgoldenrodyellow = "#fafad2";
-        colors.lightgrey = "#d3d3d3";
-        colors.lightgreen = "#90ee90";
-        colors.lightpink = "#ffb6c1";
-        colors.lightsalmon = "#ffa07a";
-        colors.lightseagreen = "#20b2aa";
-        colors.lightskyblue = "#87cefa";
-        colors.lightslategray = "#778899";
-        colors.lightsteelblue = "#b0c4de";
-        colors.lightyellow = "#ffffe0";
-        colors.lime = "#00ff00";
-        colors.limegreen = "#32cd32";
-        colors.linen = "#faf0e6";
-        colors.magenta = "#ff00ff";
-        colors.maroon = "#800000";
-        colors.mediumaquamarine = "#66cdaa";
-        colors.mediumblue = "#0000cd";
-        colors.mediumorchid = "#ba55d3";
-        colors.mediumpurple = "#9370d8";
-        colors.mediumseagreen = "#3cb371";
-        colors.mediumslateblue = "#7b68ee";
-        colors.mediumspringgreen = "#00fa9a";
-        colors.mediumturquoise = "#48d1cc";
-        colors.mediumvioletred = "#c71585";
-        colors.midnightblue = "#191970";
-        colors.mintcream = "#f5fffa";
-        colors.mistyrose = "#ffe4e1";
-        colors.moccasin = "#ffe4b5";
-        colors.navajowhite = "#ffdead";
-        colors.navy = "#000080";
-        colors.oldlace = "#fdf5e6";
-        colors.olive = "#808000";
-        colors.olivedrab = "#6b8e23";
-        colors.orange = "#ffa500";
-        colors.orangered = "#ff4500";
-        colors.orchid = "#da70d6";
-        colors.palegoldenrod = "#eee8aa";
-        colors.palegreen = "#98fb98";
-        colors.paleturquoise = "#afeeee";
-        colors.palevioletred = "#d87093";
-        colors.papayawhip = "#ffefd5";
-        colors.peachpuff = "#ffdab9";
-        colors.peru = "#cd853f";
-        colors.pink = "#ffc0cb";
-        colors.plum = "#dda0dd";
-        colors.powderblue = "#b0e0e6";
-        colors.purple = "#800080";
-        colors.red = "#ff0000";
-        colors.rosybrown = "#bc8f8f";
-        colors.royalblue = "#4169e1";
-        colors.saddlebrown = "#8b4513";
-        colors.salmon = "#fa8072";
-        colors.sandybrown = "#f4a460";
-        colors.seagreen = "#2e8b57";
-        colors.seashell = "#fff5ee";
-        colors.sienna = "#a0522d";
-        colors.silver = "#c0c0c0";
-        colors.skyblue = "#87ceeb";
-        colors.slateblue = "#6a5acd";
-        colors.slategray = "#708090";
-        colors.snow = "#fffafa";
-        colors.springgreen = "#00ff7f";
-        colors.steelblue = "#4682b4";
-        colors.tan = "#d2b48c";
-        colors.teal = "#008080";
-        colors.thistle = "#d8bfd8";
-        colors.tomato = "#ff6347";
-        colors.turquoise = "#40e0d0";
-        colors.violet = "#ee82ee";
-        colors.wheat = "#f5deb3";
-        colors.white = "#ffffff";
-        colors.whitesmoke = "#f5f5f5";
-        colors.yellow = "#ffff00";
-        colors.yellowgreen = "#9acd32";
+
+    var colors = { 
+      aliceblue:            "#f0f8ff",
+      antiquewhite:         "#faebd7",
+      aqua:                 "#00ffff",
+      aquamarine:           "#7fffd4",
+      azure:                "#f0ffff",
+      beige:                "#f5f5dc",
+      bisque:               "#ffe4c4",
+      black:                "#000000",
+      blanchedalmond:       "#ffebcd",
+      blue:                 "#0000ff",
+      blueviolet:           "#8a2be2",
+      brown:                "#a52a2a",
+      burlywood:            "#deb887",
+      cadetblue:            "#5f9ea0",
+      chartreuse:           "#7fff00",
+      chocolate:            "#d2691e",
+      coral:                "#ff7f50",
+      cornflowerblue:       "#6495ed",
+      cornsilk:             "#fff8dc",
+      crimson:              "#dc143c",
+      cyan:                 "#00ffff",
+      darkblue:             "#00008b",
+      darkcyan:             "#008b8b",
+      darkgoldenrod:        "#b8860b",
+      darkgray:             "#a9a9a9",
+      darkgreen:            "#006400",
+      darkkhaki:            "#bdb76b",
+      darkmagenta:          "#8b008b",
+      darkolivegreen:       "#556b2f",
+      darkorange:           "#ff8c00",
+      darkorchid:           "#9932cc",
+      darkred:              "#8b0000",
+      darksalmon:           "#e9967a",
+      darkseagreen:         "#8fbc8f",
+      darkslateblue:        "#483d8b",
+      darkslategray:        "#2f4f4f",
+      darkturquoise:        "#00ced1",
+      darkviolet:           "#9400d3",
+      deeppink:             "#ff1493",
+      deepskyblue:          "#00bfff",
+      dimgray:              "#696969",
+      dodgerblue:           "#1e90ff",
+      firebrick:            "#b22222",
+      floralwhite:          "#fffaf0",
+      forestgreen:          "#228b22",
+      fuchsia:              "#ff00ff",
+      gainsboro:            "#dcdcdc",
+      ghostwhite:           "#f8f8ff",
+      gold:                 "#ffd700",
+      goldenrod:            "#daa520",
+      gray:                 "#808080",
+      green:                "#008000",
+      greenyellow:          "#adff2f",
+      honeydew:             "#f0fff0",
+      hotpink:              "#ff69b4",
+      indianred:            "#cd5c5c",
+      indigo:               "#4b0082",
+      ivory:                "#fffff0",
+      khaki:                "#f0e68c",
+      lavender:             "#e6e6fa",
+      lavenderblush:        "#fff0f5",
+      lawngreen:            "#7cfc00",
+      lemonchiffon:         "#fffacd",
+      lightblue:            "#add8e6",
+      lightcoral:           "#f08080",
+      lightcyan:            "#e0ffff",
+      lightgoldenrodyellow: "#fafad2",
+      lightgrey:            "#d3d3d3",
+      lightgreen:           "#90ee90",
+      lightpink:            "#ffb6c1",
+      lightsalmon:          "#ffa07a",
+      lightseagreen:        "#20b2aa",
+      lightskyblue:         "#87cefa",
+      lightslategray:       "#778899",
+      lightsteelblue:       "#b0c4de",
+      lightyellow:          "#ffffe0",
+      lime:                 "#00ff00",
+      limegreen:            "#32cd32",
+      linen:                "#faf0e6",
+      magenta:              "#ff00ff",
+      maroon:               "#800000",
+      mediumaquamarine:     "#66cdaa",
+      mediumblue:           "#0000cd",
+      mediumorchid:         "#ba55d3",
+      mediumpurple:         "#9370d8",
+      mediumseagreen:       "#3cb371",
+      mediumslateblue:      "#7b68ee",
+      mediumspringgreen:    "#00fa9a",
+      mediumturquoise:      "#48d1cc",
+      mediumvioletred:      "#c71585",
+      midnightblue:         "#191970",
+      mintcream:            "#f5fffa",
+      mistyrose:            "#ffe4e1",
+      moccasin:             "#ffe4b5",
+      navajowhite:          "#ffdead",
+      navy:                 "#000080",
+      oldlace:              "#fdf5e6",
+      olive:                "#808000",
+      olivedrab:            "#6b8e23",
+      orange:               "#ffa500",
+      orangered:            "#ff4500",
+      orchid:               "#da70d6",
+      palegoldenrod:        "#eee8aa",
+      palegreen:            "#98fb98",
+      paleturquoise:        "#afeeee",
+      palevioletred:        "#d87093",
+      papayawhip:           "#ffefd5",
+      peachpuff:            "#ffdab9",
+      peru:                 "#cd853f",
+      pink:                 "#ffc0cb",
+      plum:                 "#dda0dd",
+      powderblue:           "#b0e0e6",
+      purple:               "#800080",
+      red:                  "#ff0000",
+      rosybrown:            "#bc8f8f",
+      royalblue:            "#4169e1",
+      saddlebrown:          "#8b4513",
+      salmon:               "#fa8072",
+      sandybrown:           "#f4a460",
+      seagreen:             "#2e8b57",
+      seashell:             "#fff5ee",
+      sienna:               "#a0522d",
+      silver:               "#c0c0c0",
+      skyblue:              "#87ceeb",
+      slateblue:            "#6a5acd",
+      slategray:            "#708090",
+      snow:                 "#fffafa",
+      springgreen:          "#00ff7f",
+      steelblue:            "#4682b4",
+      tan:                  "#d2b48c",
+      teal:                 "#008080",
+      thistle:              "#d8bfd8",
+      tomato:               "#ff6347",
+      turquoise:            "#40e0d0",
+      violet:               "#ee82ee",
+      wheat:                "#f5deb3",
+      white:                "#ffffff",
+      whitesmoke:           "#f5f5f5",
+      yellow:               "#ffff00",
+      yellowgreen:          "#9acd32"
+    };
+
     // Stores states for pushStyle() and popStyle().
     var styleArray = new Array(0);
 
@@ -1994,16 +1997,20 @@
       parsePoly: function(val) {
         this.family    = PConstants.PATH;
         this.close     = val;
-        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/\s+/g,' '));
+        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/[,\s]+/g,' '));
         if (pointsAttr !== null) {
+          //split into array
           var pointsBuffer = pointsAttr.split(" ");
-          for (var i = 0; i < pointsBuffer.length; i++) {
-            var verts = [];
-            var pb    = pointsBuffer[i].split(',');
-            verts[0]  = pb[0];
-            verts[1]  = pb[1];
-            this.vertices.push(verts);
-          }       
+          if (pointsBuffer.length % 2 === 0) {
+            for (var i = 0; i < pointsBuffer.length; i++) {
+              var verts = [];
+              verts[0]  = pointsBuffer[i];
+              verts[1]  = pointsBuffer[++i];
+              this.vertices.push(verts);
+            } 
+          } else {    
+            p.println("Error parsing polygon points: odd number of coordinates provided");
+          }
         }
       },
       parseRect: function() {
