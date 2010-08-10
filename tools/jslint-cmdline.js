@@ -117,7 +117,8 @@ var JSLINT = (function () {
         setTimeout: false,
         status: false,
         top: false,
-        XMLHttpRequest: false
+        XMLHttpRequest: false,
+        localStorage: true
     },
         cssAttributeData, cssAny, cssColorData = {
         "aliceblue": true,

@@ -5242,11 +5242,16 @@
     };
 
     // Load a file or URL into strings
-    p.loadStrings = function loadStrings(url) {
-      return ajax(url).split("\n");
+    p.loadStrings = function loadStrings(filename) {
+      return (localStorage[filename] ? localStorage[filename] : ajax(filename).slice(0, -1)).split("\n");
     };
 
-    p.loadBytes = function loadBytes(url) {
+    // Writes an array of strings to a file, one line per string
+    p.saveStrings = function saveStrings(filename, strings) {
+      localStorage[filename] = strings.join('\n');
+    };
+
+    p.loadBytes = function loadBytes(url, strings) {
       var string = ajax(url);
       var ret = [];
 
@@ -11122,8 +11127,8 @@
       "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random", 
       "Random", "randomSeed", "rect", "rectMode", "red", "redraw", 
       "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", 
-      "rotateZ", "round", "saturation", "save", "scale", "screenX", "screenY", 
-      "screenZ", "second", "set", "setup", "shape", "shapeMode", "shared", 
+      "rotateZ", "round", "saturation", "save", "saveStrings", "scale", "screenX",
+      "screenY", "screenZ", "second", "set", "setup", "shape", "shapeMode", "shared", 
       "shininess", "shorten", "sin", "size", "smooth", "sort", "specular", 
       "sphere", "sphereDetail", "splice", "split", "splitTokens", "spotLight", 
       "sq", "sqrt", "status", "str", "stroke", "strokeCap", "strokeJoin", 

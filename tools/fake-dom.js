@@ -180,4 +180,6 @@ var SpinSpots = __empty_func__;
 
 var SearchClient = __empty_func__;
 var WebSearchRequest = __empty_func__;
+var localStorage = __empty_func__;
+
 
