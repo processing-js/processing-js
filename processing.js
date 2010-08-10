@@ -11051,7 +11051,7 @@
 
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
-        if (Processing.lib) {
+        if (Processing.lib.hasOwnProperty(i)) {
           // Init the libraries in the context of this p_instance
           Processing.lib[i].call(this);
         }
@@ -11148,15 +11148,17 @@
 
     var members = {};
     var i, l;
-    for(i=0,l=names.length;i<l;++i) {
+    for (i = 0, l = names.length; i < l ; ++i) {
       members[names[i]] = null;
     }
-    for(var lib in Processing.lib) {
-      if(Processing.lib[lib] && Processing.lib[lib].exports) {
-       var exportedNames = Processing.lib[lib].exports;
-       for(i=0,l=exportedNames.length;i<l;++i) {
-         members[exportedNames[i]] = null;
-       }
+    for (var lib in Processing.lib) {
+      if (Processing.lib.hasOwnProperty(lib)) {
+        if (Processing.lib[lib].exports) {
+          var exportedNames = Processing.lib[lib].exports;
+          for (i = 0, l = exportedNames.length; i < l; ++i) {
+           members[exportedNames[i]] = null;
+          }
+        }
       }
     }
     return members;
@@ -11468,7 +11470,7 @@
       // saving "this." and parameters
       var names = appendToLookupTable({"this":null}, this.params.getNames());
       replaceContext = function(name) {
-        return name in names ? name : oldContext(name);
+        return names.hasOwnProperty(name) ? name : oldContext(name);
       };
       var result = "function";
       if(this.name) {
@@ -11728,7 +11730,7 @@
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return name in paramNames ? name : oldContext(name);
+        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
       };
       var result = "processing.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
         this.body +");";
@@ -11794,7 +11796,7 @@
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return name in paramNames ? name : oldContext(name);
+        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
       };
       var prefix = "function $constr_" + this.params.params.length + this.params.toString();
       var body = this.body.toString();
@@ -11871,9 +11873,9 @@
       replaceContext = function(name) {
         if(name === "this") {
           return selfId;
-        } else if(name in thisClassFields || name in thisClassInners) {
+        } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
-        } else if(name in thisClassMethods) {
+        } else if(thisClassMethods.hasOwnProperty(name)) {
           return "this." + name;
         }
         return oldContext(name);
@@ -12010,7 +12012,7 @@
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return name in paramNames ? name : oldContext(name);
+        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
       };
       var result = "function " + this.name + this.params + " " + this.body + "\n" +
         "processing." + this.name + " = " + this.name + ";";
@@ -12150,7 +12152,7 @@
       // replacing context only when necessary
       if(!isLookupTableEmpty(localNames)) {
         replaceContext = function(name) {
-          return name in localNames ? name : oldContext(name);
+          return localNames.hasOwnProperty(name) ? name : oldContext(name);
         };
       }
 
@@ -12217,7 +12219,7 @@
         var parts = name.split('.');
         var currentScope = class_.scope, found;
         while(currentScope) {
-          if(parts[0] in currentScope) {
+          if(currentScope.hasOwnProperty(parts[0])) {
             found = currentScope[parts[0]]; break;
           }
           currentScope = currentScope.scope;
