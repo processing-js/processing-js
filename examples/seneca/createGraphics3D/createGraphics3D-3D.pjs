@@ -1,5 +1,5 @@
 PGraphics pg;
-float r = 0;
+float c = 0;
 
 void setup() {
   size(200, 200, P3D);
@@ -7,14 +7,18 @@ void setup() {
 }
 
 void draw() {
-  fill(0, 12);
-  rect(0, 0, width, height);
-  fill(255);
+  background(204);
+  fill(0, 0, c, 255);
   noStroke();
-  ellipse(mouseX, mouseY, 60, 60);
+  pushMatrix();
+  translate(20, 20, 0);
+  rotateY(mouseX);
+  rotateX(mouseY);
+  box(20);
+  popMatrix();
   
   pg.beginDraw();
-  pg.background(255, 0, 0);
+  pg.background(0);
   pg.noFill();
   pg.stroke(255);
   pg.pushMatrix();
@@ -26,4 +30,5 @@ void draw() {
   pg.endDraw();
   
   image(pg, 60, 60);
+  c++;
 }

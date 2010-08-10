@@ -8,21 +8,20 @@ void setup() {
 }
 
 void draw() {
-  //fill(0, 12);
-  //rect(0, 0, width, height);
-  //fill(255);
-  //noStroke();
-  /*pushMatrix();
-  translate(mouseX, mouseY, 30);
-  box(40);
-  popMatrix();*/
+  background(204);
+  fill(0, 0, c, 255);
+  noStroke();
+  pushMatrix();
+  translate(20, 20, 0);
+  rotateY(mouseX);
+  rotateX(mouseY);
+  box(20);
+  popMatrix();
   
   pg.beginDraw();
   pg.background(0, 0, 0);
-  //pg.noFill();
   pg.stroke(255);
   pg.fill(0, 0, c, 255);
-  pg.rect(0, 0, 40, 40);
   pg.ellipse(mouseX-60, mouseY-60, 60, 60);
   pg.endDraw();
   
