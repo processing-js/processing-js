@@ -456,6 +456,7 @@
         strokeColorBuffer,
         pointBuffer,
         shapeTexVBO,
+        canTex,   // texture for createGraphics
         curTexture = {width:0,height:0},
         curTextureMode = PConstants.IMAGE,
         usingTexture = false,
@@ -6145,6 +6146,8 @@
           forwardTransform = modelView;
           reverseTransform = modelViewInv;
 
+          canTex = curContext.createTexture(); // texture
+          
           userMatrixStack = new PMatrixStack();
           // used by both curve and bezier, so just init here
           curveBasisMatrix = new PMatrix3D();
@@ -7996,7 +7999,14 @@
     };
 
     p.texture = function(pimage){
-      if(!pimage.__texture)
+      if(pimage.localName === "canvas"){
+        curContext.bindTexture(curContext.TEXTURE_2D, canTex);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage, null);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+	      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+	      curContext.generateMipmap(curContext.TEXTURE_2D);
+      }
+      else if(!pimage.__texture)
       {
         var texture = curContext.createTexture();
         pimage.__texture = texture;
@@ -8008,16 +8018,17 @@
         var textureImage = ctx.createImageData(cvs.width, cvs.height);
 
         var imgData = pimage.toImageData();
-
+        
         for (var i = 0; i < cvs.width; i += 1) {
           for (var j = 0; j < cvs.height; j += 1) {
-            var index = (j * cvs.width + i) * 4;
+          var index = (j * cvs.width + i) * 4;
             textureImage.data[index + 0] = imgData.data[index + 0];
             textureImage.data[index + 1] = imgData.data[index + 1];
             textureImage.data[index + 2] = imgData.data[index + 2];
             textureImage.data[index + 3] = 255;
           }
         }
+        
         ctx.putImageData(textureImage, 0, 0);
         pimage.__cvs = cvs;
 
@@ -8026,7 +8037,7 @@
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
-        curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage.__cvs);
         curContext.generateMipmap(curContext.TEXTURE_2D);
       }
       else{
@@ -9104,6 +9115,17 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
+        var wid = w || img.width;
+        var hgt = h || img.height;
+        if(p.use3DContext){
+          p.beginShape(p.QUADS);
+          p.texture(img.externals.canvas);
+          p.vertex(x, y, 0, 0, 0);
+          p.vertex(x, y+hgt, 0, 0, hgt);
+          p.vertex(x+wid, y+hgt, 0, wid, hgt);
+          p.vertex(x+wid, y, 0, wid, 0);
+          p.endShape();
+        } else {
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
         var obj = img.toImageData();
 
@@ -9125,9 +9147,11 @@
 
         // draw the image
         curTint(obj);
-
-        curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height,
-          bounds.x, bounds.y, bounds.w, bounds.h);
+        
+        
+          curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height,
+            bounds.x, bounds.y, bounds.w, bounds.h);
+        }
       }
     };
 
