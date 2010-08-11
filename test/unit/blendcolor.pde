@@ -1,0 +1,35 @@
+// unit test for code coverage tool to bring coverage percent up
+size(500,500);
+
+color orange = color(204, 102, 0);
+color blue = color(0, 102, 153);
+color orangebluereplace = blendColor(orange, blue, REPLACE);
+_checkEqual(orangebluereplace, color(0, 102, 153));
+color orangeblueblend = blendColor(orange, blue, BLEND);
+_checkEqual(orangeblueblend, color(0, 102, 152));
+color orangeblueadd = blendColor(orange, blue, ADD);
+_checkEqual(orangeblueadd, color(204, 203, 152));
+color orangebluesubtract = blendColor(orange, blue, SUBTRACT);
+_checkEqual(orangebluesubtract, color(204, 0, 0));
+color orangebluelightest = blendColor(orange, blue, LIGHTEST);
+_checkEqual(orangebluelightest, color(204, 102, 152));
+color orangebluedarkest = blendColor(orange, blue, DARKEST);
+_checkEqual(orangebluedarkest, color(0, 101, 0));
+color orangebluedifference = blendColor(orange, blue, DIFFERENCE);
+_checkEqual(orangebluedifference, color(204, 0, 152));
+color orangeblueexclusion = blendColor(orange, blue, EXCLUSION);
+_checkEqual(orangeblueexclusion, color(204, 122, 152));
+color orangebluemultiply = blendColor(orange, blue, MULTIPLY);
+_checkEqual(orangebluemultiply, color(0, 40, 0));
+color orangebluescreen = blendColor(orange, blue, SCREEN);
+_checkEqual(orangebluescreen, color(204, 163, 153));
+color orangeblueoverlay = blendColor(orange, blue, OVERLAY);
+_checkEqual(orangeblueoverlay, color(154, 81, 0));
+color orangebluehard_light = blendColor(orange, blue, HARD_LIGHT);
+_checkEqual(orangebluehard_light, color(0, 81, 51));
+color orangebluesoft_light = blendColor(orange, blue, SOFT_LIGHT);
+_checkEqual(orangebluesoft_light, color(162, 89, 0));
+color orangebluedodge = blendColor(orange, blue, DODGE);
+_checkEqual(orangebluedodge, color(204, 170, 0));
+color orangeblueburn = blendColor(orange, blue, BURN);
+_checkEqual(orangeblueburn, color(0, 0, 0, 255));
