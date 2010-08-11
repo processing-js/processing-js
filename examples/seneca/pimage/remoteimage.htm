@@ -1,0 +1,12 @@
+﻿<script src="../../../processing.js"></script>
+<canvas datasrc="remoteimage.pjs" width="200" height="200"></canvas>
+<pre>
+/* @pjs preload="http://zenit.senecac.on.ca/wiki/skins/common/images/OSS_155x155.png"; */
+size(300,340);
+background(0);
+PImage cdot = loadImage("http://zenit.senecac.on.ca/wiki/skins/common/images/OSS_155x155.png");
+image(cdot,10,10);
+cdot.blend(cdot, 20, 20, 50, 50, 60, 60, 50, 50, DARKEST);
+cdot.resize(cdot.width/2,0);
+println("isRemote = " + cdot.isRemote);
+</pre>

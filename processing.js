@@ -8648,19 +8648,23 @@
       };
 
       this.resize = function(w, h) {
-        if (this.width !== 0 || this.height !== 0) {
-          // make aspect ratio if w or h is 0
-          if (w === 0 && h !== 0) {
-            w = this.width / this.height * h;
-          } else if (h === 0 && w !== 0) {
-            h = w / (this.width / this.height);
+        if (this.isRemote) { // Remote images cannot access imageData
+          throw "Image is loaded remotely. Cannot resize.";
+        } else {
+          if (this.width !== 0 || this.height !== 0) {
+            // make aspect ratio if w or h is 0
+            if (w === 0 && h !== 0) {
+              w = this.width / this.height * h;
+            } else if (h === 0 && w !== 0) {
+              h = w / (this.width / this.height);
+            }
+            // put 'this.imageData' into a new canvas
+            var canvas = getCanvasData(this.imageData).canvas;
+            // pull imageData object out of canvas into ImageData object
+            var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
+            // set this as new pimage
+            this.fromImageData(imageData);
           }
-          // put 'this.imageData' into a new canvas
-          var canvas = getCanvasData(this.imageData).canvas;
-          // pull imageData object out of canvas into ImageData object
-          var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
-          // set this as new pimage
-          this.fromImageData(imageData);
         }
       };
 
@@ -8690,29 +8694,45 @@
       // or setPixels(), .length becomes getLength()
       this.pixels = {
         getLength: (function(aImg) {
-          return function() {
-            return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
-          };
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot get length.";
+          } else {
+            return function() {
+              return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
+            };            
+          }
         }(this)),
         getPixel: (function(aImg) {
-          return function(i) {
-            var offset = i*4;
-            return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
-                                 aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
-          };
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot get pixels.";
+          } else {          
+            return function(i) {
+              var offset = i*4;
+              return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
+                                   aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
+            };
+          }
         }(this)),
         setPixel: (function(aImg) {
-          return function(i,c) {
-            var offset = i*4;
-            aImg.imageData.data[offset] = (c & PConstants.RED_MASK) >>> 16;
-            aImg.imageData.data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
-            aImg.imageData.data[offset+2] = (c & PConstants.BLUE_MASK);
-            aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
-          };
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot set pixel.";
+          } else {
+            return function(i,c) {
+              var offset = i*4;
+              aImg.imageData.data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
+              aImg.imageData.data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
+              aImg.imageData.data[offset+2] = (c & PConstants.BLUE_MASK);
+              aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
+            };
+          }
         }(this)),
         set: function(arr) {
-          for (var i = 0, aL = arr.length; i < aL; i++) {
-            this.setPixel(i, arr[i]);
+          if (this.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot set pixels.";
+          } else {
+            for (var i = 0, aL = arr.length; i < aL; i++) {
+              this.setPixel(i, arr[i]);
+            }
           }
         }
       };
@@ -8732,8 +8752,12 @@
       };
 
       this.toDataURL = function() {
-        var canvasData = getCanvasData(this.imageData);
-        return canvasData.canvas.toDataURL();
+        if (this.isRemote) { // Remote images cannot access imageData
+          throw "Image is loaded remotely. Cannot create dataURI.";
+        } else {
+          var canvasData = getCanvasData(this.imageData);
+          return canvasData.canvas.toDataURL();
+        }
       };
 
       this.fromImageData = function(canvasImg) {
@@ -8859,13 +8883,17 @@
       }
     }
     function get$3(x,y,img) {
-      // PImage.get(x,y) was called, return the color (int) at x,y of img
-      // changed in 0.9
-      var offset = y * img.width * 4 + (x * 4);
-      return p.color.toInt(img.imageData.data[offset],
-                         img.imageData.data[offset + 1],
-                         img.imageData.data[offset + 2],
-                         img.imageData.data[offset + 3]);
+      if (img.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot get x,y.";
+      } else {
+        // PImage.get(x,y) was called, return the color (int) at x,y of img
+        // changed in 0.9
+        var offset = y * img.width * 4 + (x * 4);
+        return p.color.toInt(img.imageData.data[offset],
+                           img.imageData.data[offset + 1],
+                           img.imageData.data[offset + 2],
+                           img.imageData.data[offset + 3]);
+      }
     }
     function get$4(x, y, w, h) {
       // return a PImage of w and h from cood x,y of curContext
@@ -8874,20 +8902,24 @@
       return c;
     }
     function get$5(x, y, w, h, img) {
-      // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
-      // changed for 0.9, offset start point needs to be *4
-      var start = y * img.width * 4 + (x*4);
-      var end = (y + h) * img.width * 4 + ((x + w) * 4);
-      var c = new PImage(w, h, PConstants.RGB);
-      for (var i = start, j = 0; i < end; i++, j++) {
-        // changed in 0.9
-        c.imageData.data[j] = img.imageData.data[i];
-        if ((j+1) % (w*4) === 0) {
-          //completed one line, increment i by offset
-          i += (img.width - w) * 4;
+      if (img.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot get x,y,w,h.";
+      } else {
+        // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+        // changed for 0.9, offset start point needs to be *4
+        var start = y * img.width * 4 + (x*4);
+        var end = (y + h) * img.width * 4 + ((x + w) * 4);
+        var c = new PImage(w, h, PConstants.RGB);
+        for (var i = start, j = 0; i < end; i++, j++) {
+          // changed in 0.9
+          c.imageData.data[j] = img.imageData.data[i];
+          if ((j+1) % (w*4) === 0) {
+            //completed one line, increment i by offset
+            i += (img.width - w) * 4;
+          }
         }
+        return c;
       }
-      return c;
     }
 
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
@@ -8980,13 +9012,17 @@
       }
     }
     function set$4(x, y, obj, img) {
-      var c = p.color.toArray(obj);
-      var offset = y * img.width * 4 + (x*4);
-      var data = img.imageData.data;
-      data[offset] = c[0];
-      data[offset+1] = c[1];
-      data[offset+2] = c[2];
-      data[offset+3] = c[3];
+      if (img.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot set x,y.";
+      } else {
+        var c = p.color.toArray(obj);
+        var offset = y * img.width * 4 + (x*4);
+        var data = img.imageData.data;
+        data[offset] = c[0];
+        data[offset+1] = c[1];
+        data[offset+2] = c[2];
+        data[offset+3] = c[3];
+      }
     }
     // Paints a pixel array into the canvas
     p.set = function set(x, y, obj, img) {
@@ -9206,27 +9242,31 @@
       var dx2 = dx + dw;
       var dy2 = dy + dh;
       var dest;
-      // check if pimgdest is there and pixels, if so this was a call from pimg.blend
-      if (arguments.length === 10 || arguments.length === 9) {
-        p.loadPixels();
-        dest = p;
-      } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
-        dest = pimgdest;
-      }
-      if (src === p) {
-        if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
-          p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
-                        dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+      if (src.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot blend image.";
+      } else {
+        // check if pimgdest is there and pixels, if so this was a call from pimg.blend
+        if (arguments.length === 10 || arguments.length === 9) {
+          p.loadPixels();
+          dest = p;
+        } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
+          dest = pimgdest;
+        }
+        if (src === p) {
+          if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
+            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
+                          dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+          } else {
+            // same as below, except skip the loadPixels() because it'd be redundant
+            p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+          }
         } else {
-          // same as below, except skip the loadPixels() because it'd be redundant
+          src.loadPixels();
           p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
         }
-      } else {
-        src.loadPixels();
-        p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-      }
-      if (arguments.length === 10) {
-        p.updatePixels();
+        if (arguments.length === 10) {
+          p.updatePixels();
+        }
       }
     };
 
@@ -9474,84 +9514,91 @@
       if (param === undef) {
         param = null;
       }
+      if (img.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot filter image.";
+      } else {
+        // begin filter process
+        var imglen = img.pixels.getLength();
+        switch (kind) {
+          case PConstants.BLUR:
+            var radius = param || 1; // if no param specified, use 1 (default for p5)
+            blurARGB(radius, img);
+            break;
+          
+          case PConstants.GRAY:
+            if (img.format === PConstants.ALPHA) { //trouble
+              // for an alpha image, convert it to an opaque grayscale
+              for (i = 0; i < imglen; i++) {
+                col = 255 - img.pixels.getPixel(i);
+                img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
+              }
+              img.format = PConstants.RGB; //trouble
+            } else {
+              for (i = 0; i < imglen; i++) {
+                col = img.pixels.getPixel(i);
+                lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
+                img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
+              }
+            }
+            break;
 
-      var imglen = img.pixels.getLength();
-      switch (kind) {
-        case PConstants.BLUR:
-          var radius = param || 1; // if no param specified, use 1 (default for p5)
-          blurARGB(radius, img);
-        break;
-        case PConstants.GRAY:
-          if (img.format === PConstants.ALPHA) { //trouble
-            // for an alpha image, convert it to an opaque grayscale
+          case PConstants.INVERT:
             for (i = 0; i < imglen; i++) {
-              col = 255 - img.pixels.getPixel(i);
-              img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
+              img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
+            }
+            break;
+
+          case PConstants.POSTERIZE:
+            if (param === null) {
+              throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
+            }
+            var levels = p.floor(param);
+            if ((levels < 2) || (levels > 255)) {
+              throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
+            }
+            var levels1 = levels - 1;
+            for (i = 0; i < imglen; i++) {
+              var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
+              var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
+              var blevel = img.pixels.getPixel(i) & 0xff;
+              rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
+              glevel = (((glevel * levels) >> 8) * 255) / levels1;
+              blevel = (((blevel * levels) >> 8) * 255) / levels1;
+              img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
+            }
+            break;
+
+          case PConstants.OPAQUE:
+            for (i = 0; i < imglen; i++) {
+              img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
             }
             img.format = PConstants.RGB; //trouble
+            break;
 
-          } else {
-            for (i = 0; i < imglen; i++) {
-              col = img.pixels.getPixel(i);
-              lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
-              img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
+          case PConstants.THRESHOLD:
+            if (param === null) {
+              param = 0.5;
             }
-          }
-          break;
-        case PConstants.INVERT:
-          for (i = 0; i < imglen; i++) {
-            img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
-          }
-          break;
-        case PConstants.POSTERIZE:
-          if(param === null) {
-            throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
-          }
-          var levels = p.floor(param);
-          if ((levels < 2) || (levels > 255)) {
-            throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
-          }
-          var levels1 = levels - 1;
-          for (i = 0; i < imglen; i++) {
-            var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
-            var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
-            var blevel = img.pixels.getPixel(i) & 0xff;
-            rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
-            glevel = (((glevel * levels) >> 8) * 255) / levels1;
-            blevel = (((blevel * levels) >> 8) * 255) / levels1;
-            img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
-          }
-          break;
-        case PConstants.OPAQUE:
-          for (i = 0; i < imglen; i++) {
-            img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
-          }
-          img.format = PConstants.RGB; //trouble
-          break;
-        case PConstants.THRESHOLD:
-          if (param === null) {
-            param = 0.5;
-          }
-          if ((param < 0) || (param > 1)) {
-            throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
-          }
-          var thresh = p.floor(param * 255);
-          for (i = 0; i < imglen; i++) {
-            var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16,
-                             p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8,
-                             (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
-            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) |
-              ((max < thresh) ? 0x000000 : 0xffffff)));
-          }
-          break;
-        case PConstants.ERODE:
-          dilate(true, img);
-          break;
-        case PConstants.DILATE:
-          dilate(false, img);
-          break;
+            if ((param < 0) || (param > 1)) {
+              throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
+            }
+            var thresh = p.floor(param * 255);
+            for (i = 0; i < imglen; i++) {
+              var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16, p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8, (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
+              img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) | ((max < thresh) ? 0x000000 : 0xffffff)));
+            }
+            break;
+
+          case PConstants.ERODE:
+            dilate(true, img);
+            break;
+
+          case PConstants.DILATE:
+            dilate(false, img);
+            break;
+        }
+        img.updatePixels();
       }
-      img.updatePixels();
     };
 
 
