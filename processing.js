@@ -1825,17 +1825,17 @@
             py     = 0,
             i      = 0,
             j      = 0, 
-            k      = 0,
             valOf  = 0;
         var str = "";
         var tmpArray =[];
         var flag = false;
         var lastInstruction;
+        var command;
         while (i< pathData.length) {
           valOf = pathData[i].valueOf();
           if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { // if its a letter
             // populate the tmpArray with coordinates
-            k = i;
+            j = i;
             i++;
             if (i < pathData.length) { // dont go over boundary of array
               tmpArray = []; 
@@ -1876,7 +1876,8 @@
               tmpArray.push(parseFloat(str));
               str = "";
             }
-            switch (pathData[k].valueOf()) {
+            command = pathData[j];
+            switch (command.valueOf()) {
               case 77:  // M - move to (absolute)         
                 if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { // need one+ pairs of co-ordinates
                   cx = tmpArray[0];
@@ -2120,7 +2121,7 @@
                 this.close = true;
                 break;           
             } 
-            lastInstruction = pathData[k].toString();
+            lastInstruction = command.toString();
           } else { i++;}  
         }  
       },
