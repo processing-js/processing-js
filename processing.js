@@ -6041,6 +6041,7 @@
           }
           curContext = curElement.getContext("experimental-webgl");
           p.use3DContext = true;
+          canTex = curContext.createTexture(); // texture
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -6144,8 +6145,6 @@
           p.perspective();
           forwardTransform = modelView;
           reverseTransform = modelViewInv;
-
-          canTex = curContext.createTexture(); // texture
           
           userMatrixStack = new PMatrixStack();
           // used by both curve and bezier, so just init here
@@ -6203,11 +6202,8 @@
           var c = document.createElement("canvas");
           var ctx = c.getContext("2d");          
           var obj = ctx.createImageData(this.width, this.height);
-          var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
-          if(!uBuff){
-            uBuff = new Uint8Array(this.width * this.height * 4);
-            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-          }
+          var uBuff = new Uint8Array(this.width * this.height * 4);
+          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
           for(var i =0; i < uBuff.length; i++){
             obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
           }
@@ -8002,7 +7998,7 @@
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
         try {
           curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage);
-        } catch(e) {
+        } catch(err) {
           curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
         }
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
@@ -8042,7 +8038,7 @@
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
         try {
           curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage.__cvs);
-        } catch(e) {
+        } catch(err) {
           curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
         }
         curContext.generateMipmap(curContext.TEXTURE_2D);
