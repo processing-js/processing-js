@@ -467,7 +467,7 @@
         horizontalTextAlignment = PConstants.LEFT,
         verticalTextAlignment = PConstants.BASELINE,
         baselineOffset = 0.2, // percent 
-        textMode = PConstants.MODEL,
+        tMode = PConstants.MODEL,
         // Pixels cache
         originalContext,
         proxyContext = null,
@@ -10064,6 +10064,7 @@
       if (name.indexOf(".svg") === -1) {
         return {
           name: "\"" + name + "\", sans-serif",
+          origName: name,
           width: function(str) {
             if ("measureText" in curContext) {
               return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
@@ -10521,23 +10522,36 @@
     }
 
     p.text = function text() {
-      if(textMode === p.SCREEN){ 
+      if(tMode === PConstants.SCREEN){
+        if(p.use3DContext){
+        } else {
+          saveContext();
+          curContext.setTransform(1,0,0,1,0,0);
+        }
+        var asc = 7;
+        var des = 3 
         var tWidth = p.textWidth(arguments[0]);
-        var tHeight = p.textAscent() + p.textDescent();
+        var tHeight = asc + des;
+        var font = p.loadFont(curTextFont.origName);
         var hud = p.createGraphics(tWidth, tHeight);
         hud.beginDraw();
         hud.opaque = false;
-        hud.background(0, 0, 0, 0);
-        hud.textFont(curTextFont);
-        hud.text(arguments[0], 0, tHeight - p.textDescent(), tWidth, tHeight)
+        hud.background(105);
+        //hud.background(0, 0, 0, 0);
+        hud.textFont(font);
+        hud.text(arguments[0], 0, asc, tWidth, tHeight);
         hud.endDraw();
         if(arguments.length === 5 || arguments.length === 6){
-          p.image(hud, arguments[1], arguments[2], arguments[3], arguments[4]);
+          p.image(hud, arguments[1], arguments[2]-asc, arguments[3], arguments[4]);
         } else {
-          p.image(hud, arguments[1], arguments[2]);
+          p.image(hud, arguments[1], arguments[2]-asc);
+        }
+        if(p.use3DContext){
+        } else {
+          restoreContext();
         }
       }
-      else if(textMode === p.SHAPE){
+      else if(tMode === PConstants.SHAPE){
         // TODO: requires beginRaw function
       } else {
         if (arguments.length === 3) { // for text( str, x, y)
@@ -10553,7 +10567,7 @@
     };
     
     p.textMode = function textMode(mode){
-      textMode = mode;
+      tMode = mode;
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
@@ -11176,16 +11190,16 @@
       "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random", 
       "Random", "randomSeed", "rect", "rectMode", "red", "redraw", 
       "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", 
-      "rotateZ", "round", "saturation", "save", "saveStrings", "scale", "screenX",
-      "screenY", "screenZ", "second", "set", "setup", "shape", "shapeMode", "shared", 
-      "shininess", "shorten", "sin", "size", "smooth", "sort", "specular", 
-      "sphere", "sphereDetail", "splice", "split", "splitTokens", "spotLight", 
-      "sq", "sqrt", "status", "str", "stroke", "strokeCap", "strokeJoin", 
-      "strokeWeight", "subset", "tan", "text", "textAlign", "textFont", 
-      "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
-      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
-      "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed", 
-      "__mousePressed"];
+      "rotateZ", "round", "saturation", "save", "saveStrings", "scale", 
+      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape", 
+      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth", 
+      "sort", "specular", "sphere", "sphereDetail", "splice", "split", 
+      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke", 
+      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text", 
+      "textAlign", "textFont", "textMode", "textSize", "texture", "textureMode", 
+      "textWidth", "tint", "translate", "triangle", "trim", "unbinary", "unhex", 
+      "updatePixels", "use3DContext", "vertex", "width", "XMLElement", "year", 
+      "__frameRate", "__keyPressed", "__mousePressed"];
 
     var members = {};
     var i, l;
