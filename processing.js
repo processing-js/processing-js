@@ -1825,6 +1825,7 @@
             py     = 0,
             i      = 0,
             j      = 0, 
+            k      = 0,
             valOf  = 0;
         var str = "";
         var tmpArray =[];
@@ -1834,7 +1835,7 @@
           valOf = pathData[i].valueOf();
           if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { // if its a letter
             // populate the tmpArray with coordinates
-            j = i;
+            k = i;
             i++;
             if (i < pathData.length) { // dont go over boundary of array
               tmpArray = []; 
@@ -1875,7 +1876,7 @@
               tmpArray.push(parseFloat(str));
               str = "";
             }
-            switch (pathData[j].valueOf()) {
+            switch (pathData[k].valueOf()) {
               case 77:  // M - move to (absolute)         
                 if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { // need one+ pairs of co-ordinates
                   cx = tmpArray[0];
@@ -2077,8 +2078,8 @@
                     } else {
                       // If there is no previous command or if the previous command was not a Q, q, T or t, 
                       // assume the control point is coincident with the current point.
-                      ctrlX1 = this.vertices[this.vertices.length-1][0];
-                      ctrlY1 = this.vertices[this.vertices.length-1][1];
+                      ctrlX = cx;
+                      ctrlY = cy;
                     }  
                     endX  = tmpArray[j];
                     endY  = tmpArray[j + 1];
@@ -2102,8 +2103,8 @@
                     } else {
                       // If there is no previous command or if the previous command was not a Q, q, T or t, 
                       // assume the control point is coincident with the current point.
-                      ctrlX1 = this.vertices[this.vertices.length-1][0];
-                      ctrlY1 = this.vertices[this.vertices.length-1][1];
+                      ctrlX = cx;
+                      ctrlY = cy;
                     }
                     endX  = cx + tmpArray[j];
                     endY  = cy + tmpArray[j + 1];
@@ -2119,7 +2120,7 @@
                 this.close = true;
                 break;           
             } 
-            lastInstruction = pathData[j].toString();
+            lastInstruction = pathData[k].toString();
           } else { i++;}  
         }  
       },
