@@ -8001,7 +8001,11 @@
     p.texture = function(pimage){
       if(pimage.localName === "canvas"){
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
-        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage, null);
+        try {
+          curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage);
+        } catch(e) {
+          curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
+        }
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
 	      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
 	      curContext.generateMipmap(curContext.TEXTURE_2D);
@@ -8037,7 +8041,11 @@
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
-        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage.__cvs);
+        try {
+          curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage.__cvs);
+        } catch(e) {
+          curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
+        }
         curContext.generateMipmap(curContext.TEXTURE_2D);
       }
       else{
