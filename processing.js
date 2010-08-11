@@ -1890,7 +1890,6 @@
                     }
                   }
                 }
-                lastInstruction = "M";
                 break;
               case 109:  // m - move to (relative)
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
@@ -1904,9 +1903,8 @@
                     }
                   }
                 }
-                lastInstruction = "m";
                 break;
-              case 76: // L
+              case 76: // L - lineto (absolute)
               if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
                 for (j = 0; j < tmpArray.length; j+=2) {
                   cx = tmpArray[j];
@@ -1914,10 +1912,9 @@
                   this.parsePathLineto(cx,cy);
                 }
               }
-              lastInstruction = "L";
               break;
 
-              case 108: // l
+              case 108: // l - lineto (relative)
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
                   for (j = 0; j < tmpArray.length; j+=2) {
                     cx += tmpArray[j];
@@ -1925,39 +1922,34 @@
                     this.parsePathLineto(cx,cy);
                   }
                 }
-                lastInstruction = "l";
                 break;
               
-              case 72: // horizontal lineto absolute
+              case 72: // H - horizontal lineto (absolute)
                 for (j = 0; j < tmpArray.length; j++) { // multiple x co-ordinates can be provided
                   cx = tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
-                lastInstruction ="h";
                 break;
               
-              case 104: // horizontal lineto relative
+              case 104: // h - horizontal lineto (relative)
                 for (j = 0; j < tmpArray.length; j++) { // multiple x co-ordinates can be provided
                   cx += tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
-                lastInstruction = "H";
                 break;
 
-              case 86:
+              case 86: // V - vertical lineto (absolute)
                 for (j = 0; j < tmpArray.length; j++) { // multiple y co-ordinates can be provided
                   cy = tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
-                lastInstruction = "V";
                 break;
 
-              case 118:
+              case 118: // v - vertical lineto (relative)
                 for (j = 0; j < tmpArray.length; j++) { // multiple y co-ordinates can be provided
                   cy += tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
-                lastInstruction = "v";
                 break;
                 
               case 67: // C - curve to (absolute)
@@ -1974,7 +1966,6 @@
                     cy = endY;
                   }
                 }
-                lastInstruction = "C";
                 break;
              
               case 99: // c - curve to (relative)
@@ -1991,7 +1982,6 @@
                     cy = endY;
                   }
                 }
-                lastInstruction = "c";
                 break;
               
               case 83: // S - curve to shorthand (absolute)
@@ -2018,7 +2008,6 @@
                     cy = endY;
                   }
                 }
-                lastInstruction = "S";
                 break;
                 
               case 115: // s - curve to shorthand (relative)
@@ -2045,7 +2034,6 @@
                     cy = endY;
                   }
                 }
-                lastInstruction = "s";
                 break;
                
               case 81: // Q - quadratic curve to (absolute)
@@ -2060,7 +2048,6 @@
                     cy = endY;
                   }
                 }
-                lastInstruction = "Q";
                 break;
                 
               case 113: // q - quadratic curve to (relative)
@@ -2075,16 +2062,9 @@
                     cy = endY;
                   }
                 }
-                lastInstruction = "q";
                 break;
 
-                // T - quadratic curve to shorthand (absolute)
-                // The control point is assumed to be the reflection of the
-                // control point on the previous command relative to the
-                // current point. (If there is no previous command or if the
-                // previous command was not a Q, q, T or t, assume the control
-                // point is coincident with the current point.)
-              case 84: 
+              case 84: // T - quadratic curve to shorthand (absolute)
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
                   for (j = 0; j < tmpArray.length; j+=2) {
                     if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
@@ -2097,8 +2077,8 @@
                     } else {
                       // If there is no previous command or if the previous command was not a Q, q, T or t, 
                       // assume the control point is coincident with the current point.
-                      ctrlX = cx;
-                      ctrlY = cy;
+                      ctrlX1 = this.vertices[this.vertices.length-1][0];
+                      ctrlY1 = this.vertices[this.vertices.length-1][1];
                     }  
                     endX  = tmpArray[j];
                     endY  = tmpArray[j + 1];
@@ -2107,7 +2087,6 @@
                     cy = endY;
                   }
                 }
-                lastInstruction = "T";
                 break;
                
               case 116:  // t - quadratic curve to shorthand (relative)
@@ -2123,8 +2102,8 @@
                     } else {
                       // If there is no previous command or if the previous command was not a Q, q, T or t, 
                       // assume the control point is coincident with the current point.
-                      ctrlX = cx;
-                      ctrlY = cy;
+                      ctrlX1 = this.vertices[this.vertices.length-1][0];
+                      ctrlY1 = this.vertices[this.vertices.length-1][1];
                     }
                     endX  = cx + tmpArray[j];
                     endY  = cy + tmpArray[j + 1];
@@ -2133,15 +2112,14 @@
                     cy = endY;
                   }
                 }
-                lastInstruction = "t";
                 break;
 
               case 90: //Z
               case 122: //z
                 this.close = true;
-                lastInstruction = "z";
                 break;           
             } 
+            lastInstruction = pathData[j].toString();
           } else { i++;}  
         }  
       },
