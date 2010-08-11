@@ -8003,7 +8003,7 @@
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
         try {
           curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage);
-        } catch(e) {
+        } catch(err) {
           curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
         }
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
@@ -8043,7 +8043,7 @@
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
         try {
           curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage.__cvs);
-        } catch(e) {
+        } catch(err) {
           curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
         }
         curContext.generateMipmap(curContext.TEXTURE_2D);
@@ -10544,10 +10544,11 @@
         var hud = p.createGraphics(tWidth, tHeight);
         hud.beginDraw();
         hud.opaque = false;
-        hud.background(105);
-        //hud.background(0, 0, 0, 0);
+        //hud.background(105);
+        hud.background(0, 0, 0, 0);
         hud.textFont(font);
-        hud.text(arguments[0], 0, asc, tWidth, tHeight);
+        hud.textSize(curTextSize);
+        hud.text(arguments[0], 0, asc);
         hud.endDraw();
         if(arguments.length === 5 || arguments.length === 6){
           p.image(hud, arguments[1], arguments[2]-asc, arguments[3], arguments[4]);
