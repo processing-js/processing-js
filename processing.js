@@ -30,150 +30,608 @@
     return xhr.responseText; 
   };
 
-  var PVector = function(x, y, z) {
-    this.x = x || 0;
-    this.y = y || 0;
-    this.z = z || 0;
-  },
-  createPVectorMethod = function(method) {
-    return function(v1, v2) {
-      var v = v1.get();
-      v[method](v2);
-      return v;
-    };
-  },
-  createSimplePVectorMethod = function(method) {
-    return function(v1, v2) {
-      return v1[method](v2);
-    };
-  },
-  simplePVMethods = "dist dot cross".split(" "),
-  method = simplePVMethods.length;
+  var ArrayList = function() {
+    function createArrayList(args) {
+      var arr = [];
+      for (var i = 0; i < args[0]; i++) {
+        arr[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
+      }
 
-  PVector.angleBetween = function(v1, v2) {
-    return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
+      arr.get = function(i) {
+        return this[i];
+      };
+      arr.contains = function(item) {
+        return this.indexOf(item) !== -1;
+      };
+      arr.add = function() {
+        if (arguments.length === 1) {
+          this.push(arguments[0]); // for add(Object)
+        } else if(arguments.length === 2) {
+          if (typeof arguments[0] === 'number') {
+            if (arguments[0] >= 0 && arguments[0] <= this.length) { 
+              this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
+            } else {
+              throw(arguments[0] + " is not a valid index");
+            }
+          } else {
+            throw(typeof arguments[0] + " is not a number");
+          }
+        } else {
+          throw("Please use the proper number of parameters.");
+        }
+      };
+      arr.set = function() {
+        if(arguments.length === 2) {
+          if (typeof arguments[0] === 'number') {
+            if (arguments[0] >= 0 && arguments[0] < this.length) {
+              this.splice(arguments[0], 1, arguments[1]);
+            } else {
+              throw(arguments[0] + " is not a valid index.");
+            }
+          } else {
+            throw(typeof arguments[0] + " is not a number");
+          }
+        } else {
+          throw("Please use the proper number of parameters.");
+        }
+      };
+      arr.size = function() {
+        return this.length;
+      };
+      arr.clear = function() {
+        this.length = 0;
+      };
+      arr.remove = function(i) {
+        return this.splice(i, 1)[0];
+      };
+      arr.isEmpty = function() {
+        return !!this.length;
+      };
+      arr.clone = function() {
+        return this.slice(0);
+      };
+      arr.toArray = function() {
+        return this.slice(0);
+      };
+
+      return arr;
+    }
+
+    return createArrayList(Array.prototype.slice.call(arguments));
   };
 
-  // Common vector operations for PVector
-  PVector.prototype = {
-    set: function(v, y, z) {
-      if (arguments.length === 1) {
-        this.set(v.x || v[0], v.y || v[1], v.z || v[2]);
+  ////////////////////////////////////////////////////////////////////////////
+  // HashMap
+  ////////////////////////////////////////////////////////////////////////////
+
+  var HashMap = (function() {
+    function virtHashCode(obj) {
+      if (obj.constructor === String) {
+        var hash = 0;
+        for (var i = 0; i < obj.length; ++i) {
+          hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
+        }
+        return hash;
+      } else if (typeof(obj) !== "object") {
+        return obj & 0xFFFFFFFF;
+      } else if ("hashCode" in obj) {
+        return obj.hashCode.call(obj);
       } else {
-        this.x = v;
-        this.y = y;
-        this.z = z;
+        if (obj.$id === undef) {
+          obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+        }
+        return obj.$id;
       }
-    },
-    get: function() {
-      return new PVector(this.x, this.y, this.z);
-    },
-    mag: function() {
-      return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-    },
-    add: function(v, y, z) {
-      if (arguments.length === 3) {
-        this.x += v;
-        this.y += y;
-        this.z += z;
-      } else if (arguments.length === 1) {
-        this.x += v.x;
-        this.y += v.y;
-        this.z += v.z;
-      }
-    },
-    sub: function(v, y, z) {
-      if (arguments.length === 3) {
-        this.x -= v;
-        this.y -= y;
-        this.z -= z;
-      } else if (arguments.length === 1) {
-        this.x -= v.x;
-        this.y -= v.y;
-        this.z -= v.z;
-      }
-    },
-    mult: function(v) {
-      if (typeof v === 'number') {
-        this.x *= v;
-        this.y *= v;
-        this.z *= v;
-      } else if (typeof v === 'object') {
-        this.x *= v.x;
-        this.y *= v.y;
-        this.z *= v.z;
-      }
-    },
-    div: function(v) {
-      if (typeof v === 'number') {
-        this.x /= v;
-        this.y /= v;
-        this.z /= v;
-      } else if (typeof v === 'object') {
-        this.x /= v.x;
-        this.y /= v.y;
-        this.z /= v.z;
-      }
-    },
-    dist: function(v) {
-      var dx = this.x - v.x,
-          dy = this.y - v.y,
-          dz = this.z - v.z;
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    },
-    dot: function(v, y, z) {
-      if (arguments.length === 3) {
-        return (this.x * v + this.y * y + this.z * z);
-      } else if (arguments.length === 1) {
-        return (this.x * v.x + this.y * v.y + this.z * v.z);
-      }
-    },
-    cross: function(v) {
-      return new PVector(this.y * v.z - v.y * this.z,
-                         this.z * v.x - v.z * this.x,
-                         this.x * v.y - v.x * this.y);
-    },
-    normalize: function() {
-      var m = this.mag();
-      if (m > 0) {
-        this.div(m);
-      }
-    },
-    limit: function(high) {
-      if (this.mag() > high) {
-        this.normalize();
-        this.mult(high);
-      }
-    },
-    heading2D: function() {
-      return (-Math.atan2(-this.y, this.x));
-    },
-    toString: function() {
-      return "[" + this.x + ", " + this.y + ", " + this.z + "]";
-    },
-    array: function() {
-      return [this.x, this.y, this.z];
     }
-  };
 
-  while (method--) {
-    PVector[simplePVMethods[method]] = createSimplePVectorMethod(simplePVMethods[method]);
-  }
-
-  for (method in PVector.prototype) {
-    if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
-      PVector[method] = createPVectorMethod(method);
+    function virtEquals(obj, other) {
+      if (obj === null || other === null) {
+        return (obj === null) && (other === null);
+      } else if (obj.constructor === String) {
+        return obj === other;
+      } else if (typeof(obj) !== "object") {
+        return obj === other;
+      } else if ("equals" in obj) {
+        return obj.equals.call(obj, other);
+      } else {
+        return obj === other;
+      }
     }
-  }
+
+    function HashMap() {
+      if (arguments.length === 1 && arguments[0].constructor === HashMap) {
+        return arguments[0].clone();
+      }
+
+      var initialCapacity = arguments.length > 0 ? arguments[0] : 16;
+      var loadFactor = arguments.length > 1 ? arguments[1] : 0.75;
+
+      var buckets = new Array(initialCapacity);
+      var count = 0;
+      var hashMap = this;
+
+      function ensureLoad() {
+        if (count <= loadFactor * buckets.length) {
+          return;
+        }
+        var allEntries = [];
+        for (var i = 0; i < buckets.length; ++i) {
+          if (buckets[i] !== undef) {
+            allEntries = allEntries.concat(buckets[i]);
+          }
+        }
+        buckets = new Array(buckets.length * 2);
+        for (var j = 0; j < allEntries.length; ++j) {
+          var index = virtHashCode(allEntries[j].key) % buckets.length;
+          var bucket = buckets[index];
+          if (bucket === undef) {
+            buckets[index] = bucket = [];
+          }
+          bucket.push(allEntries[j]);
+        }
+      }
+
+      function Iterator(conversion, removeItem) {
+        var bucketIndex = 0;
+        var itemIndex = -1;
+        var endOfBuckets = false;
+
+        function findNext() {
+          while (!endOfBuckets) {
+            ++itemIndex;
+            if (bucketIndex >= buckets.length) {
+              endOfBuckets = true;
+            } else if (buckets[bucketIndex] === undef || itemIndex >= buckets[bucketIndex].length) {
+              itemIndex = -1;
+              ++bucketIndex;
+            } else {
+              return;
+            }
+          }
+        }
+
+        this.hasNext = function() {
+          return !endOfBuckets;
+        };
+
+        this.next = function() {
+          var result = conversion(buckets[bucketIndex][itemIndex]);
+          findNext();
+          return result;
+        };
+        
+        this.remove = function() {
+          removeItem(this.next());
+          --itemIndex;
+        };
+
+        findNext();
+      }
+
+      function Set(conversion, isIn, removeItem) {
+        this.clear = function() {
+          hashMap.clear();
+        };
+        
+        this.contains = function(o) {
+          return isIn(o);
+        };
+        
+        this.containsAll = function(o) {
+          var it = o.iterator();
+          while (it.hasNext()) {
+            if (!this.contains(it.next())) {
+              return false;
+            }
+          }
+          return true;
+        };
+        
+        this.isEmpty = function() {
+          return hashMap.isEmpty();
+        };
+        
+        this.iterator = function() {
+          return new Iterator(conversion, removeItem);
+        };
+        
+        this.remove = function(o) {
+          if (this.contains(o)) {
+            removeItem(o);
+            return true;
+          }
+          return false;
+        };
+        
+        this.removeAll = function(c) {
+          var it = c.iterator();
+          var changed = false;
+          while (it.hasNext()) {
+            var item = it.next();
+            if (this.contains(item)) {
+              removeItem(item);
+              changed = true;
+            }
+          }
+          return true;
+        };
+        
+        this.retainAll = function(c) {
+          var it = this.iterator();
+          var toRemove = [];
+          while (it.hasNext()) {
+            var entry = it.next();
+            if (!c.contains(entry)) {
+              toRemove.push(entry);
+            }
+          }
+          for (var i = 0; i < toRemove.length; ++i) {
+            removeItem(toRemove[i]);
+          }
+          return toRemove.length > 0;
+        };
+        
+        this.size = function() {
+          return hashMap.size();
+        };
+        
+        this.toArray = function() {
+          var result = new ArrayList(0);
+          var it = this.iterator();
+          while (it.hasNext()) {
+            result.push(it.next());
+          }
+          return result;
+        };
+      }
+
+      function Entry(pair) {
+        this._isIn = function(map) {
+          return map === hashMap && (pair.removed === undef);
+        };
+        
+        this.equals = function(o) {
+          return virtEquals(pair.key, o.getKey());
+        };
+        
+        this.getKey = function() {
+          return pair.key;
+        };
+        
+        this.getValue = function() {
+          return pair.value;
+        };
+        
+        this.hashCode = function(o) {
+          return virtHashCode(pair.key);
+        };
+        
+        this.setValue = function(value) {
+          var old = pair.value;
+          pair.value = value;
+          return old;
+        };
+      }
+
+      this.clear = function() {
+        count = 0;
+        buckets = new Array(initialCapacity);
+      };
+      
+      this.clone = function() {
+        var map = new HashMap();
+        map.putAll(this);
+        return map;
+      };
+      
+      this.containsKey = function(key) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if (bucket === undef) {
+          return false;
+        }
+        for (var i = 0; i < bucket.length; ++i) {
+          if (virtEquals(bucket[i].key, key)) {
+            return true;
+          }
+        }
+        return false;
+      };
+      
+      this.containsValue = function(value) {
+        for (var i = 0; i < buckets.length; ++i) {
+          var bucket = buckets[i];
+          if (bucket === undef) {
+            continue;
+          }
+          for (var j = 0; j < bucket.length; ++j) {
+            if (virtEquals(bucket[j].value, value)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+      
+      this.entrySet = function() {
+        return new Set(
+
+        function(pair) {
+          return new Entry(pair);
+        },
+
+        function(pair) {
+          return pair.constructor === Entry && pair._isIn(hashMap);
+        },
+
+        function(pair) {
+          return hashMap.remove(pair.getKey());
+        });
+      };
+      
+      this.get = function(key) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if (bucket === undef) {
+          return null;
+        }
+        for (var i = 0; i < bucket.length; ++i) {
+          if (virtEquals(bucket[i].key, key)) {
+            return bucket[i].value;
+          }
+        }
+        return null;
+      };
+      
+      this.isEmpty = function() {
+        return count === 0;
+      };
+      
+      this.keySet = function() {
+        return new Set(
+
+        function(pair) {
+          return pair.key;
+        },
+
+        function(key) {
+          return hashMap.containsKey(key);
+        },
+
+        function(key) {
+          return hashMap.remove(key);
+        });
+      };
+      
+      this.put = function(key, value) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if (bucket === undef) {
+          ++count;
+          buckets[index] = [{
+            key: key,
+            value: value
+          }];
+          ensureLoad();
+          return null;
+        }
+        for (var i = 0; i < bucket.length; ++i) {
+          if (virtEquals(bucket[i].key, key)) {
+            var previous = bucket[i].value;
+            bucket[i].value = value;
+            return previous;
+          }
+        }
+        ++count;
+        bucket.push({
+          key: key,
+          value: value
+        });
+        ensureLoad();
+        return null;
+      };
+      
+      this.putAll = function(m) {
+        var it = m.entrySet().iterator();
+        while (it.hasNext()) {
+          var entry = it.next();
+          this.put(entry.getKey(), entry.getValue());
+        }
+      };
+      
+      this.remove = function(key) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if (bucket === undef) {
+          return null;
+        }
+        for (var i = 0; i < bucket.length; ++i) {
+          if (virtEquals(bucket[i].key, key)) {
+            --count;
+            var previous = bucket[i].value;
+            bucket[i].removed = true;
+            if (bucket.length > 1) {
+              bucket.splice(i, 1);
+            } else {
+              buckets[index] = undef;
+            }
+            return previous;
+          }
+        }
+        return null;
+      };
+      
+      this.size = function() {
+        return count;
+      };
+      
+      this.values = function() {
+        var result = new ArrayList(0);
+        var it = this.entrySet().iterator();
+        while (it.hasNext()) {
+          var entry = it.next();
+          result.push(entry.getValue());
+        }
+        return result;
+      };
+    }
+
+    return HashMap;
+  }());
+
+  var PVector = (function() {
+    function PVector(x, y, z) {
+      this.x = x || 0;
+      this.y = y || 0;
+      this.z = z || 0;
+    }
+
+    function createPVectorMethod(method) {
+      return function(v1, v2) {
+        var v = v1.get();
+        v[method](v2);
+        return v;
+      };
+    }
+
+    function createSimplePVectorMethod(method) {
+      return function(v1, v2) {
+        return v1[method](v2);
+      };
+    }
+
+    var simplePVMethods = "dist dot cross".split(" ");
+    var method = simplePVMethods.length;
+
+    PVector.angleBetween = function(v1, v2) {
+      return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
+    };
+
+    // Common vector operations for PVector
+    PVector.prototype = {
+      set: function(v, y, z) {
+        if (arguments.length === 1) {
+          this.set(v.x || v[0], v.y || v[1], v.z || v[2]);
+        } else {
+          this.x = v;
+          this.y = y;
+          this.z = z;
+        }
+      },
+      get: function() {
+        return new PVector(this.x, this.y, this.z);
+      },
+      mag: function() {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+      },
+      add: function(v, y, z) {
+        if (arguments.length === 3) {
+          this.x += v;
+          this.y += y;
+          this.z += z;
+        } else if (arguments.length === 1) {
+          this.x += v.x;
+          this.y += v.y;
+          this.z += v.z;
+        }
+      },
+      sub: function(v, y, z) {
+        if (arguments.length === 3) {
+          this.x -= v;
+          this.y -= y;
+          this.z -= z;
+        } else if (arguments.length === 1) {
+          this.x -= v.x;
+          this.y -= v.y;
+          this.z -= v.z;
+        }
+      },
+      mult: function(v) {
+        if (typeof v === 'number') {
+          this.x *= v;
+          this.y *= v;
+          this.z *= v;
+        } else if (typeof v === 'object') {
+          this.x *= v.x;
+          this.y *= v.y;
+          this.z *= v.z;
+        }
+      },
+      div: function(v) {
+        if (typeof v === 'number') {
+          this.x /= v;
+          this.y /= v;
+          this.z /= v;
+        } else if (typeof v === 'object') {
+          this.x /= v.x;
+          this.y /= v.y;
+          this.z /= v.z;
+        }
+      },
+      dist: function(v) {
+        var dx = this.x - v.x,
+            dy = this.y - v.y,
+            dz = this.z - v.z;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+      },
+      dot: function(v, y, z) {
+        if (arguments.length === 3) {
+          return (this.x * v + this.y * y + this.z * z);
+        } else if (arguments.length === 1) {
+          return (this.x * v.x + this.y * v.y + this.z * v.z);
+        }
+      },
+      cross: function(v) {
+        return new PVector(this.y * v.z - v.y * this.z,
+                           this.z * v.x - v.z * this.x,
+                           this.x * v.y - v.x * this.y);
+      },
+      normalize: function() {
+        var m = this.mag();
+        if (m > 0) {
+          this.div(m);
+        }
+      },
+      limit: function(high) {
+        if (this.mag() > high) {
+          this.normalize();
+          this.mult(high);
+        }
+      },
+      heading2D: function() {
+        return (-Math.atan2(-this.y, this.x));
+      },
+      toString: function() {
+        return "[" + this.x + ", " + this.y + ", " + this.z + "]";
+      },
+      array: function() {
+        return [this.x, this.y, this.z];
+      }
+    };
+
+    while (method--) {
+      PVector[simplePVMethods[method]] = createSimplePVectorMethod(simplePVMethods[method]);
+    }
+
+    for (method in PVector.prototype) {
+      if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
+        PVector[method] = createPVectorMethod(method);
+      }
+    }
+
+    return PVector;
+  }());
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
-
     var p = this;
 
     // Include Package Classes -- do this differently in the future.
-    p.PVector = PVector;
-    //p.PShapeSVG = PShapeSVG; 
-    //etc
+    p.ArrayList   = ArrayList;
+    p.HashMap     = HashMap;
+    p.PVector     = PVector;
+    //p.PImage    = PImage;     // TODO
+    //p.PShape    = PShape;     // TODO
+    //p.PShapeSVG = PShapeSVG;  // TODO
 
     p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext = false; // default '2d' canvas context
@@ -3540,425 +3998,10 @@
       }
     };
 
-    p.ArrayList = function() {
-      var createArrayList = function(args){
-        var array = [];
-        for (var i = 0; i < args[0]; i++){
-          array[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
-        }
-
-        array.get = function(i) {
-          return this[i];
-        };
-        array.contains = function(item) {
-          return this.indexOf(item) !== -1;
-        };
-        array.add = function() {
-          if(arguments.length === 1) {
-            this.push(arguments[0]); // for add(Object)
-          } else if(arguments.length === 2) {
-            if (typeof arguments[0] === 'number') {
-              if (arguments[0] >= 0 && arguments[0] <= this.length) { 
-                this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
-              } else {
-                throw(arguments[0] + " is not a valid index");
-              }
-            } else {
-              throw(typeof arguments[0] + " is not a number");
-            }
-          } else {
-            throw("Please use the proper number of parameters.");
-          }
-        };
-        array.set = function() {
-          if(arguments.length === 2) {
-            if (typeof arguments[0] === 'number') {
-              if (arguments[0] >= 0 && arguments[0] < this.length) {
-                this.splice(arguments[0], 1, arguments[1]);
-              } else {
-                throw(arguments[0] + " is not a valid index.");
-              }
-            } else {
-              throw(typeof arguments[0] + " is not a number");
-            }
-          } else {
-            throw("Please use the proper number of parameters.");
-          }
-        };
-        array.size = function() {
-          return this.length;
-        };
-        array.clear = function() {
-          this.length = 0;
-        };
-        array.remove = function(i) {
-          return this.splice(i, 1)[0];
-        };
-        array.isEmpty = function() {
-          return !!this.length;
-        };
-        array.clone = function() {
-          return this.slice(0);
-        };
-        array.toArray = function() {
-          return this.slice(0);
-        };
-
-        return array;
-      };
-      return createArrayList(Array.prototype.slice.call(arguments));
-    };
-
     p.reverse = function(array) {
       return array.reverse();
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    // HashMap
-    ////////////////////////////////////////////////////////////////////////////
-
-    var virtHashCode = function virtHashCode(obj) {
-      if (obj.constructor === String) {
-        var hash = 0;
-        for (var i = 0; i < obj.length; ++i) {
-          hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
-        }
-        return hash;
-      } else if (typeof(obj) !== "object") {
-        return obj & 0xFFFFFFFF;
-      } else if ("hashCode" in obj) {
-        return obj.hashCode.call(obj);
-      } else {
-        if (obj.$id === undef) {
-          obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
-        }
-        return obj.$id;
-      }
-    };
-
-    var virtEquals = function virtEquals(obj, other) {
-      if (obj === null || other === null) {
-        return (obj === null) && (other === null);
-      } else if (obj.constructor === String) {
-        return obj === other;
-      } else if (typeof(obj) !== "object") {
-        return obj === other;
-      } else if ("equals" in obj) {
-        return obj.equals.call(obj, other);
-      } else {
-        return obj === other;
-      }
-    };
-
-    p.HashMap = function HashMap() {
-      if (arguments.length === 1 && arguments[0].constructor === HashMap) {
-        return arguments[0].clone();
-      }
-
-      var initialCapacity = arguments.length > 0 ? arguments[0] : 16;
-      var loadFactor = arguments.length > 1 ? arguments[1] : 0.75;
-
-      var buckets = new Array(initialCapacity);
-      var count = 0;
-      var hashMap = this;
-
-      function ensureLoad() {
-        if (count <= loadFactor * buckets.length) {
-          return;
-        }
-        var allEntries = [];
-        for (var i = 0; i < buckets.length; ++i) {
-          if (buckets[i] !== undef) {
-            allEntries = allEntries.concat(buckets[i]);
-          }
-        }
-        buckets = new Array(buckets.length * 2);
-        for (var j = 0; j < allEntries.length; ++j) {
-          var index = virtHashCode(allEntries[j].key) % buckets.length;
-          var bucket = buckets[index];
-          if (bucket === undef) {
-            buckets[index] = bucket = [];
-          }
-          bucket.push(allEntries[j]);
-        }
-      }
-
-      function Iterator(conversion, removeItem) {
-        var bucketIndex = 0;
-        var itemIndex = -1;
-        var endOfBuckets = false;
-
-        function findNext() {
-          while (!endOfBuckets) {
-            ++itemIndex;
-            if (bucketIndex >= buckets.length) {
-              endOfBuckets = true;
-            } else if (buckets[bucketIndex] === undef || itemIndex >= buckets[bucketIndex].length) {
-              itemIndex = -1;
-              ++bucketIndex;
-            } else {
-              return;
-            }
-          }
-        }
-
-        this.hasNext = function() {
-          return !endOfBuckets;
-        };
-        this.next = function() {
-          var result = conversion(buckets[bucketIndex][itemIndex]);
-          findNext();
-          return result;
-        };
-        this.remove = function() {
-          removeItem(this.next());
-          --itemIndex;
-        };
-
-        findNext();
-      }
-
-      function Set(conversion, isIn, removeItem) {
-        this.clear = function() {
-          hashMap.clear();
-        };
-        this.contains = function(o) {
-          return isIn(o);
-        };
-        this.containsAll = function(o) {
-          var it = o.iterator();
-          while (it.hasNext()) {
-            if (!this.contains(it.next())) {
-              return false;
-            }
-          }
-          return true;
-        };
-        this.isEmpty = function() {
-          return hashMap.isEmpty();
-        };
-        this.iterator = function() {
-          return new Iterator(conversion, removeItem);
-        };
-        this.remove = function(o) {
-          if (this.contains(o)) {
-            removeItem(o);
-            return true;
-          }
-          return false;
-        };
-        this.removeAll = function(c) {
-          var it = c.iterator();
-          var changed = false;
-          while (it.hasNext()) {
-            var item = it.next();
-            if (this.contains(item)) {
-              removeItem(item);
-              changed = true;
-            }
-          }
-          return true;
-        };
-        this.retainAll = function(c) {
-          var it = this.iterator();
-          var toRemove = [];
-          while (it.hasNext()) {
-            var entry = it.next();
-            if (!c.contains(entry)) {
-              toRemove.push(entry);
-            }
-          }
-          for (var i = 0; i < toRemove.length; ++i) {
-            removeItem(toRemove[i]);
-          }
-          return toRemove.length > 0;
-        };
-        this.size = function() {
-          return hashMap.size();
-        };
-        this.toArray = function() {
-          var result = new p.ArrayList(0);
-          var it = this.iterator();
-          while (it.hasNext()) {
-            result.push(it.next());
-          }
-          return result;
-        };
-      }
-
-      function Entry(pair) {
-        this._isIn = function(map) {
-          return map === hashMap && (pair.removed === undef);
-        };
-        this.equals = function(o) {
-          return virtEquals(pair.key, o.getKey());
-        };
-        this.getKey = function() {
-          return pair.key;
-        };
-        this.getValue = function() {
-          return pair.value;
-        };
-        this.hashCode = function(o) {
-          return virtHashCode(pair.key);
-        };
-        this.setValue = function(value) {
-          var old = pair.value;
-          pair.value = value;
-          return old;
-        };
-      }
-
-      this.clear = function() {
-        count = 0;
-        buckets = new Array(initialCapacity);
-      };
-      this.clone = function() {
-        var map = new p.HashMap();
-        map.putAll(this);
-        return map;
-      };
-      this.containsKey = function(key) {
-        var index = virtHashCode(key) % buckets.length;
-        var bucket = buckets[index];
-        if (bucket === undef) {
-          return false;
-        }
-        for (var i = 0; i < bucket.length; ++i) {
-          if (virtEquals(bucket[i].key, key)) {
-            return true;
-          }
-        }
-        return false;
-      };
-      this.containsValue = function(value) {
-        for (var i = 0; i < buckets.length; ++i) {
-          var bucket = buckets[i];
-          if (bucket === undef) {
-            continue;
-          }
-          for (var j = 0; j < bucket.length; ++j) {
-            if (virtEquals(bucket[j].value, value)) {
-              return true;
-            }
-          }
-        }
-        return false;
-      };
-      this.entrySet = function() {
-        return new Set(
-
-        function(pair) {
-          return new Entry(pair);
-        },
-
-        function(pair) {
-          return pair.constructor === Entry && pair._isIn(hashMap);
-        },
-
-        function(pair) {
-          return hashMap.remove(pair.getKey());
-        });
-      };
-      this.get = function(key) {
-        var index = virtHashCode(key) % buckets.length;
-        var bucket = buckets[index];
-        if (bucket === undef) {
-          return null;
-        }
-        for (var i = 0; i < bucket.length; ++i) {
-          if (virtEquals(bucket[i].key, key)) {
-            return bucket[i].value;
-          }
-        }
-        return null;
-      };
-      this.isEmpty = function() {
-        return count === 0;
-      };
-      this.keySet = function() {
-        return new Set(
-
-        function(pair) {
-          return pair.key;
-        },
-
-        function(key) {
-          return hashMap.containsKey(key);
-        },
-
-        function(key) {
-          return hashMap.remove(key);
-        });
-      };
-      this.put = function(key, value) {
-        var index = virtHashCode(key) % buckets.length;
-        var bucket = buckets[index];
-        if (bucket === undef) {
-          ++count;
-          buckets[index] = [{
-            key: key,
-            value: value
-          }];
-          ensureLoad();
-          return null;
-        }
-        for (var i = 0; i < bucket.length; ++i) {
-          if (virtEquals(bucket[i].key, key)) {
-            var previous = bucket[i].value;
-            bucket[i].value = value;
-            return previous;
-          }
-        }
-        ++count;
-        bucket.push({
-          key: key,
-          value: value
-        });
-        ensureLoad();
-        return null;
-      };
-      this.putAll = function(m) {
-        var it = m.entrySet().iterator();
-        while (it.hasNext()) {
-          var entry = it.next();
-          this.put(entry.getKey(), entry.getValue());
-        }
-      };
-      this.remove = function(key) {
-        var index = virtHashCode(key) % buckets.length;
-        var bucket = buckets[index];
-        if (bucket === undef) {
-          return null;
-        }
-        for (var i = 0; i < bucket.length; ++i) {
-          if (virtEquals(bucket[i].key, key)) {
-            --count;
-            var previous = bucket[i].value;
-            bucket[i].removed = true;
-            if (bucket.length > 1) {
-              bucket.splice(i, 1);
-            } else {
-              buckets[index] = undef;
-            }
-            return previous;
-          }
-        }
-        return null;
-      };
-      this.size = function() {
-        return count;
-      };
-      this.values = function() {
-        var result = new p.ArrayList(0);
-        var it = this.entrySet().iterator();
-        while (it.hasNext()) {
-          var entry = it.next();
-          result.push(entry.getValue());
-        }
-        return result;
-      };
-    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Color functions
