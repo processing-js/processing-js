@@ -1829,6 +1829,7 @@
         var str = "";
         var tmpArray =[];
         var flag = false;
+        var lastInstruction;
         while (i< pathData.length) {
           valOf = pathData[i].valueOf();
           if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { // if its a letter
@@ -1889,6 +1890,7 @@
                     }
                   }
                 }
+                lastInstruction = "M";
                 break;
               case 109:  // m - move to (relative)
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
@@ -1902,6 +1904,7 @@
                     }
                   }
                 }
+                lastInstruction = "m";
                 break;
               case 76: // L
               if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
@@ -1911,6 +1914,7 @@
                   this.parsePathLineto(cx,cy);
                 }
               }
+              lastInstruction = "L";
               break;
 
               case 108: // l
@@ -1921,6 +1925,7 @@
                     this.parsePathLineto(cx,cy);
                   }
                 }
+                lastInstruction = "l";
                 break;
               
               case 72: // horizontal lineto absolute
@@ -1928,6 +1933,7 @@
                   cx = tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
+                lastInstruction ="h";
                 break;
               
               case 104: // horizontal lineto relative
@@ -1935,6 +1941,7 @@
                   cx += tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
+                lastInstruction = "H";
                 break;
 
               case 86:
@@ -1942,6 +1949,7 @@
                   cy = tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
+                lastInstruction = "V";
                 break;
 
               case 118:
@@ -1949,6 +1957,7 @@
                   cy += tmpArray[j];
                   this.parsePathLineto(cx, cy);
                 }
+                lastInstruction = "v";
                 break;
                 
               case 67: // C - curve to (absolute)
@@ -1965,6 +1974,7 @@
                     cy = endY;
                   }
                 }
+                lastInstruction = "C";
                 break;
              
               case 99: // c - curve to (relative)
@@ -1981,17 +1991,24 @@
                     cy = endY;
                   }
                 }
+                lastInstruction = "c";
                 break;
               
               case 83: // S - curve to shorthand (absolute)
                 if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
                   for (j = 0; j < tmpArray.length; j+=4) {
-                    ppx    = this.vertices[ this.vertices.length-2 ][0];
-                    ppy    = this.vertices[ this.vertices.length-2 ][1];
-                    px     = this.vertices[ this.vertices.length-1 ][0];
-                    py     = this.vertices[ this.vertices.length-1 ][1];
-                    ctrlX1 = px + (px - ppx);
-                    ctrlY1 = py + (py - ppy);
+                    if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
+                      ppx    = this.vertices[ this.vertices.length-2 ][0];
+                      ppy    = this.vertices[ this.vertices.length-2 ][1];
+                      px     = this.vertices[ this.vertices.length-1 ][0];
+                      py     = this.vertices[ this.vertices.length-1 ][1];
+                      ctrlX1 = px + (px - ppx);
+                      ctrlY1 = py + (py - ppy);
+                    } else {
+                      //If there is no previous curve, the current point will be used as the first control point.
+                      ctrlX1 = this.vertices[this.vertices.length-1][0];
+                      ctrlY1 = this.vertices[this.vertices.length-1][1]; 
+                    }
                     ctrlX2 = tmpArray[j];
                     ctrlY2 = tmpArray[j + 1];
                     endX   = tmpArray[j + 2];
@@ -2001,17 +2018,24 @@
                     cy = endY;
                   }
                 }
+                lastInstruction = "S";
                 break;
                 
               case 115: // s - curve to shorthand (relative)
                 if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
                   for (j = 0; j < tmpArray.length; j+=4) {
-                    ppx    = this.vertices[this.vertices.length-2][0];
-                    ppy    = this.vertices[this.vertices.length-2][1];
-                    px     = this.vertices[this.vertices.length-1][0];
-                    py     = this.vertices[this.vertices.length-1][1];
-                    ctrlX1 = px + (px - ppx);
-                    ctrlY1 = py + (py - ppy);
+                    if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
+                      ppx    = this.vertices[this.vertices.length-2][0];
+                      ppy    = this.vertices[this.vertices.length-2][1];
+                      px     = this.vertices[this.vertices.length-1][0];
+                      py     = this.vertices[this.vertices.length-1][1];
+                      ctrlX1 = px + (px - ppx);
+                      ctrlY1 = py + (py - ppy);
+                    } else {
+                      //If there is no previous curve, the current point will be used as the first control point.
+                      ctrlX1 = this.vertices[this.vertices.length-1][0];
+                      ctrlY1 = this.vertices[this.vertices.length-1][1]; 
+                    } 
                     ctrlX2 = cx + tmpArray[j];
                     ctrlY2 = cy + tmpArray[j + 1];
                     endX   = cx + tmpArray[j + 2];
@@ -2021,6 +2045,7 @@
                     cy = endY;
                   }
                 }
+                lastInstruction = "s";
                 break;
                
               case 81: // Q - quadratic curve to (absolute)
@@ -2035,6 +2060,7 @@
                     cy = endY;
                   }
                 }
+                lastInstruction = "Q";
                 break;
                 
               case 113: // q - quadratic curve to (relative)
@@ -2049,6 +2075,7 @@
                     cy = endY;
                   }
                 }
+                lastInstruction = "q";
                 break;
 
                 // T - quadratic curve to shorthand (absolute)
@@ -2060,12 +2087,19 @@
               case 84: 
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
                   for (j = 0; j < tmpArray.length; j+=2) {
-                    ppx   = this.vertices[this.vertices.length-2][0];
-                    ppy   = this.vertices[this.vertices.length-2][1];
-                    px    = this.vertices[this.vertices.length-1][0];
-                    py    = this.vertices[this.vertices.length-1][1];
-                    ctrlX = px + (px - ppx);
-                    ctrlY = py + (py - ppy);
+                    if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
+                      ppx   = this.vertices[this.vertices.length-2][0];
+                      ppy   = this.vertices[this.vertices.length-2][1];
+                      px    = this.vertices[this.vertices.length-1][0];
+                      py    = this.vertices[this.vertices.length-1][1];
+                      ctrlX = px + (px - ppx);
+                      ctrlY = py + (py - ppy);
+                    } else {
+                      // If there is no previous command or if the previous command was not a Q, q, T or t, 
+                      // assume the control point is coincident with the current point.
+                      ctrlX = cx;
+                      ctrlY = cy;
+                    }  
                     endX  = tmpArray[j];
                     endY  = tmpArray[j + 1];
                     this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
@@ -2073,17 +2107,25 @@
                     cy = endY;
                   }
                 }
+                lastInstruction = "T";
                 break;
                
               case 116:  // t - quadratic curve to shorthand (relative)
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
                   for (j = 0; j < tmpArray.length; j+=2) {
-                    ppx   = this.vertices[this.vertices.length-2][0];
-                    ppy   = this.vertices[this.vertices.length-2][1];
-                    px    = this.vertices[this.vertices.length-1][0];
-                    py    = this.vertices[this.vertices.length-1][1];
-                    ctrlX = px + (px - ppx);
-                    ctrlY = py + (py - ppy);
+                    if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
+                      ppx   = this.vertices[this.vertices.length-2][0];
+                      ppy   = this.vertices[this.vertices.length-2][1];
+                      px    = this.vertices[this.vertices.length-1][0];
+                      py    = this.vertices[this.vertices.length-1][1];
+                      ctrlX = px + (px - ppx);
+                      ctrlY = py + (py - ppy);
+                    } else {
+                      // If there is no previous command or if the previous command was not a Q, q, T or t, 
+                      // assume the control point is coincident with the current point.
+                      ctrlX = cx;
+                      ctrlY = cy;
+                    }
                     endX  = cx + tmpArray[j];
                     endY  = cy + tmpArray[j + 1];
                     this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
@@ -2091,11 +2133,13 @@
                     cy = endY;
                   }
                 }
+                lastInstruction = "t";
                 break;
 
               case 90: //Z
               case 122: //z
                 this.close = true;
+                lastInstruction = "z";
                 break;           
             } 
           } else { i++;}  
