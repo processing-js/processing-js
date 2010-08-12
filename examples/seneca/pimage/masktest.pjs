@@ -1,0 +1,96 @@
+﻿/* @pjs preload="screenana.png"; */
+Bubble myBubble;
+
+void setup() {
+	size(200, 200);
+	frameRate(20);
+	noStroke();
+	smooth();
+	myBubble = new Bubble();
+}
+
+void draw() {
+	background(0);
+	myBubble.display();
+}
+
+/**
+ * User Object
+ * -----------------------------------
+ */
+class Bubble {
+	float x;
+	float y;
+	int width = 75;
+	int height = 75;
+	int border = 15;
+	PImage avatar;
+
+	/**
+	 * Default constructor
+	 * -----------------------------------
+	 */
+	Bubble() {
+		this.x = 50;
+		this.y = 100;
+		
+		// --- Image URL for web testing
+		String imageUrl = "screenana.png";
+		// --- Image URL for Processing testing
+		//String imageUrl = "http://i.slavitica.net/images/screenana.png";
+
+		this.avatar = loadImage(imageUrl);
+		if (this.avatar != null) {
+			this.setupAvatar();
+		}
+	}
+
+	/**
+	 * Display the user bubble
+	 * -----------------------------------
+	 */
+	void display() {
+		
+		// Outer circle
+		fill(105, 35, 205, 150);
+		ellipse(this.x, this.y, this.width, this.height);
+		
+		// Inner circle
+		fill(105, 35, 205);
+		ellipse(this.x, this.y, this.width - this.border - 2, this.height - this.border - 2);
+
+		this.drawAvatar();
+	}
+	
+	/**
+	 * Initial setup of user Avatar
+	 * -----------------------------------
+	 */
+	void setupAvatar() {
+		// Resize Image
+		if (this.avatar.height < this.avatar.width) {
+			this.avatar.resize(0, this.height - this.border);
+		} else {
+			this.avatar.resize(this.width - this.border, 0);
+		}
+
+		PGraphics circMask = createGraphics(this.avatar.width, this.avatar.height);
+		circMask.beginDraw();
+			circMask.background(0);
+			circMask.fill(255);
+			circMask.ellipse(this.avatar.width / 2, this.avatar.height / 2, this.width - this.border, this.height - this.border);
+		circMask.endDraw();
+		this.avatar.mask(circMask.get());
+	}
+	
+	/**
+	 * Draw the user image
+	 * -----------------------------------
+	 */
+	void drawAvatar() {
+		if (this.avatar != null) {
+			imageMode(CENTER);
+			image(this.avatar, this.x, this.y);
+		}
+	}
+}
