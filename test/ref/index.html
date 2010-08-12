@@ -194,6 +194,12 @@
                   context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE, data);
                 }
               }
+              
+              if(context.getError()){
+                  data = new WebGLUnsignedByteArray(aCanvas.width * aCanvas.height * 4);
+                  context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE, data);                
+              }
+              
               return data;
             } else {
               return aCanvas.getContext('2d').getImageData(0, 0, aCanvas.width, aCanvas.height).data;
