@@ -10651,6 +10651,7 @@
         var font = p.loadFont(curTextFont.origName);
         var hud = p.createGraphics(tWidth, tHeight);
         hud.beginDraw();
+        hud.fill(currentFillColor);
         hud.opaque = false;
         hud.background(0, 0, 0, 0);
         hud.textFont(font);
