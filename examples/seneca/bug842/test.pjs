@@ -1,0 +1,16 @@
+float c = 0;
+
+void setup() {
+  size(200, 200, P3D);
+}
+
+void draw() {
+  fill(0, 0, c, 255);
+  pushMatrix();
+  translate(50, 50, 0);
+  rotateX(20);
+  box(20);
+  popMatrix();
+  
+  c += 1;
+};

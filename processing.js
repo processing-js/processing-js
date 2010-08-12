@@ -4794,6 +4794,9 @@
       inDraw = true;
 
       if (p.use3DContext) {
+        // even if the color buffer isn't cleared with background(),
+        // the depth buffer needs to be cleared regardless.
+        curContext.clear(curContext.DEPTH_BUFFER_BIT);
         // Delete all the lighting states and the materials the
         // user set in the last draw() call.
         p.noLights();
