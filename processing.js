@@ -4709,8 +4709,12 @@
     };
 
     p.resetMatrix = function resetMatrix() {
-      forwardTransform.reset();
-      reverseTransform.reset();
+      if (p.use3DContext) {
+        forwardTransform.reset();
+        reverseTransform.reset();
+      } else {
+        curContext.setTransform(1,0,0,1,0,0);
+      }
     };
 
     p.applyMatrix = function applyMatrix() {
@@ -10601,7 +10605,7 @@
       var aspect = textcanvas.width/textcanvas.height;
       curContext = oldContext;
 
-      curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas, false, true);
+      executeTexImage2D(textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
       curContext.generateMipmap(curContext.TEXTURE_2D);
@@ -10618,19 +10622,25 @@
       model.translate(x+xOffset-scalefactor/2, y-scalefactor, z);
       model.scale(-aspect*scalefactor, -scalefactor, scalefactor);
       model.translate(-1, -1, -1);
+      model.transpose();
 
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
       view.apply(modelView.array());
+      view.transpose();
+      
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
 
       curContext.useProgram(programObject2D);
       vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
       vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
       uniformi(programObject2D, "uSampler", [0]);
       uniformi(programObject2D, "picktype", 1);
-      uniformMatrix( programObject2D, "model", true,  model.array() );
-      uniformMatrix( programObject2D, "view", true, view.array() );
-      uniformMatrix( programObject2D, "projection", true, projection.array() );
+      uniformMatrix( programObject2D, "model", false,  model.array() );
+      uniformMatrix( programObject2D, "view", false, view.array() );
+      uniformMatrix( programObject2D, "projection", false, proj.array() );
       uniformf(programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
@@ -10756,12 +10766,9 @@
     }
 
     p.text = function text() {
-      if(tMode === PConstants.SCREEN){
-        if(p.use3DContext){
-        } else {
-          saveContext();
-          curContext.setTransform(1,0,0,1,0,0);
-        }
+      if(tMode === PConstants.SCREEN){  // TODO: 3D Screen not working yet due to 3D not working in textAscent
+        p.pushMatrix();
+        p.resetMatrix();
         var asc = p.textAscent();
         var des = p.textDescent();
         var tWidth = p.textWidth(arguments[0]);
@@ -10781,10 +10788,7 @@
         } else {
           p.image(hud, arguments[1], arguments[2]-asc);
         }
-        if(p.use3DContext){
-        } else {
-          restoreContext();
-        }
+        p.popMatrix();
       }
       else if(tMode === PConstants.SHAPE){
         // TODO: requires beginRaw function

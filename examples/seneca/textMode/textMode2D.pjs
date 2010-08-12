@@ -1,6 +1,6 @@
-size(100, 100);
+size(100, 100, P2D);
 PFont metaBold;
-metaBold = loadFont("Serif.plain-12.vlw");
+metaBold = loadFont("Arial");
 textFont(metaBold);
 String lines = "screen";
 
@@ -16,6 +16,7 @@ text("8", 1, 80);
 text("9", 1, 90);
 text("10", 1, 100);
 
+fill(255);
 //rotateZ(0.1);
 translate(20,0);
 text(lines, 10, 20);
