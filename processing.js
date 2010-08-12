@@ -10605,7 +10605,8 @@
       var aspect = textcanvas.width/textcanvas.height;
       curContext = oldContext;
 
-      curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas, false, true);
+      //curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas, false, true);
+      executeTexImage2D(textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
       curContext.generateMipmap(curContext.TEXTURE_2D);
