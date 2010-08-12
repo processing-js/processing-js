@@ -1,0 +1,134 @@
+void setup() {
+  size(220, 800);
+  strokeWeight(2);
+  beginShape(TRIANGLE_STRIP);
+    fill(255, 0, 0);
+    vertex(0, 0);
+
+    vertex(50, 50);
+    vertex(100, 0);
+    
+    stroke(255, 0, 255);
+    fill(0, 255, 0);
+    vertex(150, 50);
+    
+    stroke(0, 255, 255);
+    fill(0, 0, 255);
+    vertex(200, 0);
+  endShape();
+
+  beginShape(QUAD_STRIP);
+    stroke(0);
+    fill(255, 0, 0);
+    vertex(0, 100);
+    vertex(0, 150);
+    vertex(50, 100);
+    vertex(50, 150);
+    
+    stroke(255, 0, 255);
+    fill(0, 255, 0);
+    vertex(150, 100);
+    vertex(150, 150);
+    
+    stroke(0, 255, 255);
+    fill(0, 0, 255);
+    vertex(200, 100);
+    vertex(200, 150);
+  endShape();
+
+  beginShape(TRIANGLES);
+    stroke(0);
+    fill(255, 0, 0);
+    vertex(0, 200);
+    vertex(0, 250);
+    vertex(50, 250);
+
+    stroke(255,0, 255);
+    fill(0, 255, 0);
+    vertex(50, 200);
+    vertex(50, 250);
+    vertex(150, 250);
+
+    stroke(0,255, 255);
+    fill(0, 0, 255);
+    vertex(150, 200);
+    vertex(150, 250);
+    vertex(200, 250);
+  endShape();
+
+  beginShape(QUADS);
+    stroke(0);
+    fill(255, 0, 0);
+    vertex(0, 300);
+    vertex(0, 350);
+    vertex(50, 350);
+    vertex(50, 300);
+
+    stroke(255,0, 255);
+    fill(0, 255, 0);
+    vertex(50, 300);
+    vertex(50, 350);
+    vertex(150, 350);
+    vertex(150, 300);
+
+    stroke(0,255, 255);
+    fill(0, 0, 255);
+    vertex(150, 300);
+    vertex(150, 350);
+    vertex(200, 350);
+    vertex(200, 300);
+  endShape();
+
+  beginShape(TRIANGLE_FAN);
+    stroke(0);
+    fill(255, 0, 0);
+    
+    vertex(100, 400); // center point
+    
+    vertex(100, 450); // south
+    vertex(50, 400); // west
+
+    stroke(255, 0, 255);
+    fill(0, 255, 0);
+    vertex(100, 350); // north
+
+    stroke(0, 255, 255);
+    fill(0, 0, 255);
+    vertex(150, 400); // east
+
+    stroke(255, 255, 0);
+    fill(255, 0, 255);
+    vertex(100, 450); // south
+  endShape(); 
+
+  strokeWeight(3);
+  beginShape(LINES);
+    stroke(0);
+    vertex(150, 500);
+
+    stroke(255, 0, 0);
+    vertex(200, 500);
+
+    stroke(255, 0, 255);
+    vertex(200, 550);
+
+    stroke(0, 255, 255);
+    vertex(150, 550);
+  endShape();
+  strokeWeight(3);
+  beginShape(POINTS);
+    stroke(0);
+    vertex(30, 500);
+
+    stroke(255, 0, 0);
+    vertex(85, 500);
+
+    stroke(255, 0, 255);
+    vertex(85, 550);
+
+    stroke(0, 255, 255);
+    vertex(30, 550);
+  endShape();
+}
+
+

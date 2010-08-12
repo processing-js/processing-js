@@ -328,8 +328,612 @@
   setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
   setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
 
+  var ArrayList = function() {
+    function createArrayList(args) {
+      var arr = [];
+      for (var i = 0; i < args[0]; i++) {
+        arr[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
+      }
+
+      arr.get = function(i) {
+        return this[i];
+      };
+
+      arr.contains = function(item) {
+        return this.indexOf(item) !== -1;
+      };
+
+      arr.add = function() {
+        if (arguments.length === 1) {
+          this.push(arguments[0]); // for add(Object)
+        } else if (arguments.length === 2) {
+          if (typeof arguments[0] === 'number') {
+            if (arguments[0] >= 0 && arguments[0] <= this.length) { 
+              this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
+            } else {
+              throw(arguments[0] + " is not a valid index");
+            }
+          } else {
+            throw(typeof arguments[0] + " is not a number");
+          }
+        } else {
+          throw("Please use the proper number of parameters.");
+        }
+      };
+
+      arr.set = function() {
+        if (arguments.length === 2) {
+          if (typeof arguments[0] === 'number') {
+            if (arguments[0] >= 0 && arguments[0] < this.length) {
+              this.splice(arguments[0], 1, arguments[1]);
+            } else {
+              throw(arguments[0] + " is not a valid index.");
+            }
+          } else {
+            throw(typeof arguments[0] + " is not a number");
+          }
+        } else {
+          throw("Please use the proper number of parameters.");
+        }
+      };
+
+      arr.size = function() {
+        return this.length;
+      };
+
+      arr.clear = function() {
+        this.length = 0;
+      };
+
+      arr.remove = function(i) {
+        return this.splice(i, 1)[0];
+      };
+
+      arr.isEmpty = function() {
+        return !this.length;
+      };
+
+      arr.clone = function() {
+        return this.slice(0);
+      };
+
+      arr.toArray = function() {
+        return this.slice(0);
+      };
+
+      return arr;
+    }
+
+    return createArrayList(Array.prototype.slice.call(arguments));
+  };
+
+  var HashMap = (function() {
+    function virtHashCode(obj) {
+      if (obj.constructor === String) {
+        var hash = 0;
+        for (var i = 0; i < obj.length; ++i) {
+          hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
+        }
+        return hash;
+      } else if (typeof(obj) !== "object") {
+        return obj & 0xFFFFFFFF;
+      } else if ("hashCode" in obj) {
+        return obj.hashCode.call(obj);
+      } else {
+        if (obj.$id === undef) {
+          obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+        }
+        return obj.$id;
+      }
+    }
+
+    function virtEquals(obj, other) {
+      if (obj === null || other === null) {
+        return (obj === null) && (other === null);
+      } else if (obj.constructor === String) {
+        return obj === other;
+      } else if (typeof(obj) !== "object") {
+        return obj === other;
+      } else if ("equals" in obj) {
+        return obj.equals.call(obj, other);
+      } else {
+        return obj === other;
+      }
+    }
+
+    function HashMap() {
+      if (arguments.length === 1 && arguments[0].constructor === HashMap) {
+        return arguments[0].clone();
+      }
+
+      var initialCapacity = arguments.length > 0 ? arguments[0] : 16;
+      var loadFactor = arguments.length > 1 ? arguments[1] : 0.75;
+      var buckets = new Array(initialCapacity);
+      var count = 0;
+      var hashMap = this;
+
+      function ensureLoad() {
+        if (count <= loadFactor * buckets.length) {
+          return;
+        }
+        var allEntries = [];
+        for (var i = 0; i < buckets.length; ++i) {
+          if (buckets[i] !== undef) {
+            allEntries = allEntries.concat(buckets[i]);
+          }
+        }
+        buckets = new Array(buckets.length * 2);
+        for (var j = 0; j < allEntries.length; ++j) {
+          var index = virtHashCode(allEntries[j].key) % buckets.length;
+          var bucket = buckets[index];
+          if (bucket === undef) {
+            buckets[index] = bucket = [];
+          }
+          bucket.push(allEntries[j]);
+        }
+      }
+
+      function Iterator(conversion, removeItem) {
+        var bucketIndex = 0;
+        var itemIndex = -1;
+        var endOfBuckets = false;
+
+        function findNext() {
+          while (!endOfBuckets) {
+            ++itemIndex;
+            if (bucketIndex >= buckets.length) {
+              endOfBuckets = true;
+            } else if (buckets[bucketIndex] === undef || itemIndex >= buckets[bucketIndex].length) {
+              itemIndex = -1;
+              ++bucketIndex;
+            } else {
+              return;
+            }
+          }
+        }
+
+        this.hasNext = function() {
+          return !endOfBuckets;
+        };
+
+        this.next = function() {
+          var result = conversion(buckets[bucketIndex][itemIndex]);
+          findNext();
+          return result;
+        };
+        
+        this.remove = function() {
+          removeItem(this.next());
+          --itemIndex;
+        };
+
+        findNext();
+      }
+
+      function Set(conversion, isIn, removeItem) {
+        this.clear = function() {
+          hashMap.clear();
+        };
+        
+        this.contains = function(o) {
+          return isIn(o);
+        };
+        
+        this.containsAll = function(o) {
+          var it = o.iterator();
+          while (it.hasNext()) {
+            if (!this.contains(it.next())) {
+              return false;
+            }
+          }
+          return true;
+        };
+        
+        this.isEmpty = function() {
+          return hashMap.isEmpty();
+        };
+        
+        this.iterator = function() {
+          return new Iterator(conversion, removeItem);
+        };
+        
+        this.remove = function(o) {
+          if (this.contains(o)) {
+            removeItem(o);
+            return true;
+          }
+          return false;
+        };
+        
+        this.removeAll = function(c) {
+          var it = c.iterator();
+          var changed = false;
+          while (it.hasNext()) {
+            var item = it.next();
+            if (this.contains(item)) {
+              removeItem(item);
+              changed = true;
+            }
+          }
+          return true;
+        };
+        
+        this.retainAll = function(c) {
+          var it = this.iterator();
+          var toRemove = [];
+          while (it.hasNext()) {
+            var entry = it.next();
+            if (!c.contains(entry)) {
+              toRemove.push(entry);
+            }
+          }
+          for (var i = 0; i < toRemove.length; ++i) {
+            removeItem(toRemove[i]);
+          }
+          return toRemove.length > 0;
+        };
+        
+        this.size = function() {
+          return hashMap.size();
+        };
+        
+        this.toArray = function() {
+          var result = new ArrayList(0);
+          var it = this.iterator();
+          while (it.hasNext()) {
+            result.push(it.next());
+          }
+          return result;
+        };
+      }
+
+      function Entry(pair) {
+        this._isIn = function(map) {
+          return map === hashMap && (pair.removed === undef);
+        };
+        
+        this.equals = function(o) {
+          return virtEquals(pair.key, o.getKey());
+        };
+        
+        this.getKey = function() {
+          return pair.key;
+        };
+        
+        this.getValue = function() {
+          return pair.value;
+        };
+        
+        this.hashCode = function(o) {
+          return virtHashCode(pair.key);
+        };
+        
+        this.setValue = function(value) {
+          var old = pair.value;
+          pair.value = value;
+          return old;
+        };
+      }
+
+      this.clear = function() {
+        count = 0;
+        buckets = new Array(initialCapacity);
+      };
+      
+      this.clone = function() {
+        var map = new HashMap();
+        map.putAll(this);
+        return map;
+      };
+      
+      this.containsKey = function(key) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if (bucket === undef) {
+          return false;
+        }
+        for (var i = 0; i < bucket.length; ++i) {
+          if (virtEquals(bucket[i].key, key)) {
+            return true;
+          }
+        }
+        return false;
+      };
+      
+      this.containsValue = function(value) {
+        for (var i = 0; i < buckets.length; ++i) {
+          var bucket = buckets[i];
+          if (bucket === undef) {
+            continue;
+          }
+          for (var j = 0; j < bucket.length; ++j) {
+            if (virtEquals(bucket[j].value, value)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+      
+      this.entrySet = function() {
+        return new Set(
+
+        function(pair) {
+          return new Entry(pair);
+        },
+
+        function(pair) {
+          return pair.constructor === Entry && pair._isIn(hashMap);
+        },
+
+        function(pair) {
+          return hashMap.remove(pair.getKey());
+        });
+      };
+      
+      this.get = function(key) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if (bucket === undef) {
+          return null;
+        }
+        for (var i = 0; i < bucket.length; ++i) {
+          if (virtEquals(bucket[i].key, key)) {
+            return bucket[i].value;
+          }
+        }
+        return null;
+      };
+      
+      this.isEmpty = function() {
+        return count === 0;
+      };
+      
+      this.keySet = function() {
+        return new Set(
+
+        function(pair) {
+          return pair.key;
+        },
+
+        function(key) {
+          return hashMap.containsKey(key);
+        },
+
+        function(key) {
+          return hashMap.remove(key);
+        });
+      };
+      
+      this.put = function(key, value) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if (bucket === undef) {
+          ++count;
+          buckets[index] = [{
+            key: key,
+            value: value
+          }];
+          ensureLoad();
+          return null;
+        }
+        for (var i = 0; i < bucket.length; ++i) {
+          if (virtEquals(bucket[i].key, key)) {
+            var previous = bucket[i].value;
+            bucket[i].value = value;
+            return previous;
+          }
+        }
+        ++count;
+        bucket.push({
+          key: key,
+          value: value
+        });
+        ensureLoad();
+        return null;
+      };
+      
+      this.putAll = function(m) {
+        var it = m.entrySet().iterator();
+        while (it.hasNext()) {
+          var entry = it.next();
+          this.put(entry.getKey(), entry.getValue());
+        }
+      };
+      
+      this.remove = function(key) {
+        var index = virtHashCode(key) % buckets.length;
+        var bucket = buckets[index];
+        if (bucket === undef) {
+          return null;
+        }
+        for (var i = 0; i < bucket.length; ++i) {
+          if (virtEquals(bucket[i].key, key)) {
+            --count;
+            var previous = bucket[i].value;
+            bucket[i].removed = true;
+            if (bucket.length > 1) {
+              bucket.splice(i, 1);
+            } else {
+              buckets[index] = undef;
+            }
+            return previous;
+          }
+        }
+        return null;
+      };
+      
+      this.size = function() {
+        return count;
+      };
+      
+      this.values = function() {
+        var result = new ArrayList(0);
+        var it = this.entrySet().iterator();
+        while (it.hasNext()) {
+          var entry = it.next();
+          result.push(entry.getValue());
+        }
+        return result;
+      };
+    }
+
+    return HashMap;
+  }());
+
+  var PVector = (function() {
+    function PVector(x, y, z) {
+      this.x = x || 0;
+      this.y = y || 0;
+      this.z = z || 0;
+    }
+
+    function createPVectorMethod(method) {
+      return function(v1, v2) {
+        var v = v1.get();
+        v[method](v2);
+        return v;
+      };
+    }
+
+    function createSimplePVectorMethod(method) {
+      return function(v1, v2) {
+        return v1[method](v2);
+      };
+    }
+
+    var simplePVMethods = "dist dot cross".split(" ");
+    var method = simplePVMethods.length;
+
+    PVector.angleBetween = function(v1, v2) {
+      return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
+    };
+
+    // Common vector operations for PVector
+    PVector.prototype = {
+      set: function(v, y, z) {
+        if (arguments.length === 1) {
+          this.set(v.x || v[0], v.y || v[1], v.z || v[2]);
+        } else {
+          this.x = v;
+          this.y = y;
+          this.z = z;
+        }
+      },
+      get: function() {
+        return new PVector(this.x, this.y, this.z);
+      },
+      mag: function() {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+      },
+      add: function(v, y, z) {
+        if (arguments.length === 3) {
+          this.x += v;
+          this.y += y;
+          this.z += z;
+        } else if (arguments.length === 1) {
+          this.x += v.x;
+          this.y += v.y;
+          this.z += v.z;
+        }
+      },
+      sub: function(v, y, z) {
+        if (arguments.length === 3) {
+          this.x -= v;
+          this.y -= y;
+          this.z -= z;
+        } else if (arguments.length === 1) {
+          this.x -= v.x;
+          this.y -= v.y;
+          this.z -= v.z;
+        }
+      },
+      mult: function(v) {
+        if (typeof v === 'number') {
+          this.x *= v;
+          this.y *= v;
+          this.z *= v;
+        } else if (typeof v === 'object') {
+          this.x *= v.x;
+          this.y *= v.y;
+          this.z *= v.z;
+        }
+      },
+      div: function(v) {
+        if (typeof v === 'number') {
+          this.x /= v;
+          this.y /= v;
+          this.z /= v;
+        } else if (typeof v === 'object') {
+          this.x /= v.x;
+          this.y /= v.y;
+          this.z /= v.z;
+        }
+      },
+      dist: function(v) {
+        var dx = this.x - v.x,
+            dy = this.y - v.y,
+            dz = this.z - v.z;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+      },
+      dot: function(v, y, z) {
+        if (arguments.length === 3) {
+          return (this.x * v + this.y * y + this.z * z);
+        } else if (arguments.length === 1) {
+          return (this.x * v.x + this.y * v.y + this.z * v.z);
+        }
+      },
+      cross: function(v) {
+        return new PVector(this.y * v.z - v.y * this.z,
+                           this.z * v.x - v.z * this.x,
+                           this.x * v.y - v.x * this.y);
+      },
+      normalize: function() {
+        var m = this.mag();
+        if (m > 0) {
+          this.div(m);
+        }
+      },
+      limit: function(high) {
+        if (this.mag() > high) {
+          this.normalize();
+          this.mult(high);
+        }
+      },
+      heading2D: function() {
+        return (-Math.atan2(-this.y, this.x));
+      },
+      toString: function() {
+        return "[" + this.x + ", " + this.y + ", " + this.z + "]";
+      },
+      array: function() {
+        return [this.x, this.y, this.z];
+      }
+    };
+
+    while (method--) {
+      PVector[simplePVMethods[method]] = createSimplePVectorMethod(simplePVMethods[method]);
+    }
+
+    for (method in PVector.prototype) {
+      if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
+        PVector[method] = createPVectorMethod(method);
+      }
+    }
+
+    return PVector;
+  }());
+
   var Processing = this.Processing = function Processing(curElement, aCode) {
     var p = this;
+
+    // Include Package Classes -- do this differently in the future.
+    p.ArrayList   = ArrayList;
+    p.HashMap     = HashMap;
+    p.PVector     = PVector;
+    //p.PImage    = PImage;     // TODO
+    //p.PShape    = PShape;     // TODO
+    //p.PShapeSVG = PShapeSVG;  // TODO
 
     // PJS specific (non-p5) methods and properties to externalize
     p.externals = {
@@ -340,11 +944,14 @@
       onfocus: function() {}
     };
 
-    p.name = 'Processing.js Instance'; // Set Processing defaults / environment variables
-    p.use3DContext = false; // default '2d' canvas context
+    p.name            = 'Processing.js Instance'; // Set Processing defaults / environment variables
+    p.use3DContext    = false; // default '2d' canvas context
+
+    p.focused         = true;
+    p.breakShape      = false;
 
     // Glyph path storage for textFonts
-    p.glyphTable = {};
+    p.glyphTable      = {};
 
     // Global vars for tracking mouse position
     p.pmouseX         = 0;
@@ -377,13 +984,9 @@
     // The current animation frame
     p.frameCount      = 0;
 
-    p.focused         = true;
-
-    p.breakShape      = false;
-
     // The height/width of the canvas
-    p.width = curElement.width - 0;
-    p.height = curElement.height - 0;
+    p.width           = curElement.width  - 0;
+    p.height          = curElement.height - 0;
 
     // "Private" variables used to maintain state
     var curContext,
@@ -2705,146 +3308,6 @@
       }
     };
    
-    ////////////////////////////////////////////////////////////////////////////
-    // PVector
-    ////////////////////////////////////////////////////////////////////////////
-    var PVector = p.PVector = function(x, y, z) {
-      this.x = x || 0;
-      this.y = y || 0;
-      this.z = z || 0;
-    },
-    createPVectorMethod = function(method) {
-      return function(v1, v2) {
-        var v = v1.get();
-        v[method](v2);
-        return v;
-      };
-    },
-    createSimplePVectorMethod = function(method) {
-      return function(v1, v2) {
-        return v1[method](v2);
-      };
-    },
-    simplePVMethods = "dist dot cross".split(" "),
-    method = simplePVMethods.length;
-
-    PVector.angleBetween = function(v1, v2) {
-      return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
-    };
-
-    // Common vector operations for PVector
-    PVector.prototype = {
-      set: function(v, y, z) {
-        if (arguments.length === 1) {
-          this.set(v.x || v[0], v.y || v[1], v.z || v[2]);
-        } else {
-          this.x = v;
-          this.y = y;
-          this.z = z;
-        }
-      },
-      get: function() {
-        return new PVector(this.x, this.y, this.z);
-      },
-      mag: function() {
-        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-      },
-      add: function(v, y, z) {
-        if (arguments.length === 3) {
-          this.x += v;
-          this.y += y;
-          this.z += z;
-        } else if (arguments.length === 1) {
-          this.x += v.x;
-          this.y += v.y;
-          this.z += v.z;
-        }
-      },
-      sub: function(v, y, z) {
-        if (arguments.length === 3) {
-          this.x -= v;
-          this.y -= y;
-          this.z -= z;
-        } else if (arguments.length === 1) {
-          this.x -= v.x;
-          this.y -= v.y;
-          this.z -= v.z;
-        }
-      },
-      mult: function(v) {
-        if (typeof v === 'number') {
-          this.x *= v;
-          this.y *= v;
-          this.z *= v;
-        } else if (typeof v === 'object') {
-          this.x *= v.x;
-          this.y *= v.y;
-          this.z *= v.z;
-        }
-      },
-      div: function(v) {
-        if (typeof v === 'number') {
-          this.x /= v;
-          this.y /= v;
-          this.z /= v;
-        } else if (typeof v === 'object') {
-          this.x /= v.x;
-          this.y /= v.y;
-          this.z /= v.z;
-        }
-      },
-      dist: function(v) {
-        var dx = this.x - v.x,
-            dy = this.y - v.y,
-            dz = this.z - v.z;
-        return Math.sqrt(dx * dx + dy * dy + dz * dz);
-      },
-      dot: function(v, y, z) {
-        if (arguments.length === 3) {
-          return (this.x * v + this.y * y + this.z * z);
-        } else if (arguments.length === 1) {
-          return (this.x * v.x + this.y * v.y + this.z * v.z);
-        }
-      },
-      cross: function(v) {
-        return new PVector(this.y * v.z - v.y * this.z,
-                           this.z * v.x - v.z * this.x,
-                           this.x * v.y - v.x * this.y);
-      },
-      normalize: function() {
-        var m = this.mag();
-        if (m > 0) {
-          this.div(m);
-        }
-      },
-      limit: function(high) {
-        if (this.mag() > high) {
-          this.normalize();
-          this.mult(high);
-        }
-      },
-      heading2D: function() {
-        return (-Math.atan2(-this.y, this.x));
-      },
-      toString: function() {
-        return "[" + this.x + ", " + this.y + ", " + this.z + "]";
-      },
-      array: function() {
-        return [this.x, this.y, this.z];
-      }
-    };
-
-    while (method--) {
-      PVector[simplePVMethods[method]] = createSimplePVectorMethod(simplePVMethods[method]);
-    }
-
-    for (method in PVector.prototype) {
-      if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
-        PVector[method] = createPVectorMethod(method);
-      }
-    }
-
-    p.PVector = PVector;
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
@@ -3656,425 +4119,10 @@
       }
     };
 
-    p.ArrayList = function() {
-      var createArrayList = function(args){
-        var array = [];
-        for (var i = 0; i < args[0]; i++){
-          array[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
-        }
-
-        array.get = function(i) {
-          return this[i];
-        };
-        array.contains = function(item) {
-          return this.indexOf(item) !== -1;
-        };
-        array.add = function() {
-          if(arguments.length === 1) {
-            this.push(arguments[0]); // for add(Object)
-          } else if(arguments.length === 2) {
-            if (typeof arguments[0] === 'number') {
-              if (arguments[0] >= 0 && arguments[0] <= this.length) { 
-                this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
-              } else {
-                throw(arguments[0] + " is not a valid index");
-              }
-            } else {
-              throw(typeof arguments[0] + " is not a number");
-            }
-          } else {
-            throw("Please use the proper number of parameters.");
-          }
-        };
-        array.set = function() {
-          if(arguments.length === 2) {
-            if (typeof arguments[0] === 'number') {
-              if (arguments[0] >= 0 && arguments[0] < this.length) {
-                this.splice(arguments[0], 1, arguments[1]);
-              } else {
-                throw(arguments[0] + " is not a valid index.");
-              }
-            } else {
-              throw(typeof arguments[0] + " is not a number");
-            }
-          } else {
-            throw("Please use the proper number of parameters.");
-          }
-        };
-        array.size = function() {
-          return this.length;
-        };
-        array.clear = function() {
-          this.length = 0;
-        };
-        array.remove = function(i) {
-          return this.splice(i, 1)[0];
-        };
-        array.isEmpty = function() {
-          return !this.length;
-        };
-        array.clone = function() {
-          return this.slice(0);
-        };
-        array.toArray = function() {
-          return this.slice(0);
-        };
-
-        return array;
-      };
-      return createArrayList(Array.prototype.slice.call(arguments));
-    };
-
     p.reverse = function(array) {
       return array.reverse();
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    // HashMap
-    ////////////////////////////////////////////////////////////////////////////
-
-    var virtHashCode = function virtHashCode(obj) {
-      if (obj.constructor === String) {
-        var hash = 0;
-        for (var i = 0; i < obj.length; ++i) {
-          hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
-        }
-        return hash;
-      } else if (typeof(obj) !== "object") {
-        return obj & 0xFFFFFFFF;
-      } else if ("hashCode" in obj) {
-        return obj.hashCode.call(obj);
-      } else {
-        if (obj.$id === undef) {
-          obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
-        }
-        return obj.$id;
-      }
-    };
-
-    var virtEquals = function virtEquals(obj, other) {
-      if (obj === null || other === null) {
-        return (obj === null) && (other === null);
-      } else if (obj.constructor === String) {
-        return obj === other;
-      } else if (typeof(obj) !== "object") {
-        return obj === other;
-      } else if ("equals" in obj) {
-        return obj.equals.call(obj, other);
-      } else {
-        return obj === other;
-      }
-    };
-
-    p.HashMap = function HashMap() {
-      if (arguments.length === 1 && arguments[0].constructor === HashMap) {
-        return arguments[0].clone();
-      }
-
-      var initialCapacity = arguments.length > 0 ? arguments[0] : 16;
-      var loadFactor = arguments.length > 1 ? arguments[1] : 0.75;
-
-      var buckets = new Array(initialCapacity);
-      var count = 0;
-      var hashMap = this;
-
-      function ensureLoad() {
-        if (count <= loadFactor * buckets.length) {
-          return;
-        }
-        var allEntries = [];
-        for (var i = 0; i < buckets.length; ++i) {
-          if (buckets[i] !== undef) {
-            allEntries = allEntries.concat(buckets[i]);
-          }
-        }
-        buckets = new Array(buckets.length * 2);
-        for (var j = 0; j < allEntries.length; ++j) {
-          var index = virtHashCode(allEntries[j].key) % buckets.length;
-          var bucket = buckets[index];
-          if (bucket === undef) {
-            buckets[index] = bucket = [];
-          }
-          bucket.push(allEntries[j]);
-        }
-      }
-
-      function Iterator(conversion, removeItem) {
-        var bucketIndex = 0;
-        var itemIndex = -1;
-        var endOfBuckets = false;
-
-        function findNext() {
-          while (!endOfBuckets) {
-            ++itemIndex;
-            if (bucketIndex >= buckets.length) {
-              endOfBuckets = true;
-            } else if (buckets[bucketIndex] === undef || itemIndex >= buckets[bucketIndex].length) {
-              itemIndex = -1;
-              ++bucketIndex;
-            } else {
-              return;
-            }
-          }
-        }
-
-        this.hasNext = function() {
-          return !endOfBuckets;
-        };
-        this.next = function() {
-          var result = conversion(buckets[bucketIndex][itemIndex]);
-          findNext();
-          return result;
-        };
-        this.remove = function() {
-          removeItem(this.next());
-          --itemIndex;
-        };
-
-        findNext();
-      }
-
-      function Set(conversion, isIn, removeItem) {
-        this.clear = function() {
-          hashMap.clear();
-        };
-        this.contains = function(o) {
-          return isIn(o);
-        };
-        this.containsAll = function(o) {
-          var it = o.iterator();
-          while (it.hasNext()) {
-            if (!this.contains(it.next())) {
-              return false;
-            }
-          }
-          return true;
-        };
-        this.isEmpty = function() {
-          return hashMap.isEmpty();
-        };
-        this.iterator = function() {
-          return new Iterator(conversion, removeItem);
-        };
-        this.remove = function(o) {
-          if (this.contains(o)) {
-            removeItem(o);
-            return true;
-          }
-          return false;
-        };
-        this.removeAll = function(c) {
-          var it = c.iterator();
-          var changed = false;
-          while (it.hasNext()) {
-            var item = it.next();
-            if (this.contains(item)) {
-              removeItem(item);
-              changed = true;
-            }
-          }
-          return true;
-        };
-        this.retainAll = function(c) {
-          var it = this.iterator();
-          var toRemove = [];
-          while (it.hasNext()) {
-            var entry = it.next();
-            if (!c.contains(entry)) {
-              toRemove.push(entry);
-            }
-          }
-          for (var i = 0; i < toRemove.length; ++i) {
-            removeItem(toRemove[i]);
-          }
-          return toRemove.length > 0;
-        };
-        this.size = function() {
-          return hashMap.size();
-        };
-        this.toArray = function() {
-          var result = new p.ArrayList(0);
-          var it = this.iterator();
-          while (it.hasNext()) {
-            result.push(it.next());
-          }
-          return result;
-        };
-      }
-
-      function Entry(pair) {
-        this._isIn = function(map) {
-          return map === hashMap && (pair.removed === undef);
-        };
-        this.equals = function(o) {
-          return virtEquals(pair.key, o.getKey());
-        };
-        this.getKey = function() {
-          return pair.key;
-        };
-        this.getValue = function() {
-          return pair.value;
-        };
-        this.hashCode = function(o) {
-          return virtHashCode(pair.key);
-        };
-        this.setValue = function(value) {
-          var old = pair.value;
-          pair.value = value;
-          return old;
-        };
-      }
-
-      this.clear = function() {
-        count = 0;
-        buckets = new Array(initialCapacity);
-      };
-      this.clone = function() {
-        var map = new p.HashMap();
-        map.putAll(this);
-        return map;
-      };
-      this.containsKey = function(key) {
-        var index = virtHashCode(key) % buckets.length;
-        var bucket = buckets[index];
-        if (bucket === undef) {
-          return false;
-        }
-        for (var i = 0; i < bucket.length; ++i) {
-          if (virtEquals(bucket[i].key, key)) {
-            return true;
-          }
-        }
-        return false;
-      };
-      this.containsValue = function(value) {
-        for (var i = 0; i < buckets.length; ++i) {
-          var bucket = buckets[i];
-          if (bucket === undef) {
-            continue;
-          }
-          for (var j = 0; j < bucket.length; ++j) {
-            if (virtEquals(bucket[j].value, value)) {
-              return true;
-            }
-          }
-        }
-        return false;
-      };
-      this.entrySet = function() {
-        return new Set(
-
-        function(pair) {
-          return new Entry(pair);
-        },
-
-        function(pair) {
-          return pair.constructor === Entry && pair._isIn(hashMap);
-        },
-
-        function(pair) {
-          return hashMap.remove(pair.getKey());
-        });
-      };
-      this.get = function(key) {
-        var index = virtHashCode(key) % buckets.length;
-        var bucket = buckets[index];
-        if (bucket === undef) {
-          return null;
-        }
-        for (var i = 0; i < bucket.length; ++i) {
-          if (virtEquals(bucket[i].key, key)) {
-            return bucket[i].value;
-          }
-        }
-        return null;
-      };
-      this.isEmpty = function() {
-        return count === 0;
-      };
-      this.keySet = function() {
-        return new Set(
-
-        function(pair) {
-          return pair.key;
-        },
-
-        function(key) {
-          return hashMap.containsKey(key);
-        },
-
-        function(key) {
-          return hashMap.remove(key);
-        });
-      };
-      this.put = function(key, value) {
-        var index = virtHashCode(key) % buckets.length;
-        var bucket = buckets[index];
-        if (bucket === undef) {
-          ++count;
-          buckets[index] = [{
-            key: key,
-            value: value
-          }];
-          ensureLoad();
-          return null;
-        }
-        for (var i = 0; i < bucket.length; ++i) {
-          if (virtEquals(bucket[i].key, key)) {
-            var previous = bucket[i].value;
-            bucket[i].value = value;
-            return previous;
-          }
-        }
-        ++count;
-        bucket.push({
-          key: key,
-          value: value
-        });
-        ensureLoad();
-        return null;
-      };
-      this.putAll = function(m) {
-        var it = m.entrySet().iterator();
-        while (it.hasNext()) {
-          var entry = it.next();
-          this.put(entry.getKey(), entry.getValue());
-        }
-      };
-      this.remove = function(key) {
-        var index = virtHashCode(key) % buckets.length;
-        var bucket = buckets[index];
-        if (bucket === undef) {
-          return null;
-        }
-        for (var i = 0; i < bucket.length; ++i) {
-          if (virtEquals(bucket[i].key, key)) {
-            --count;
-            var previous = bucket[i].value;
-            bucket[i].removed = true;
-            if (bucket.length > 1) {
-              bucket.splice(i, 1);
-            } else {
-              buckets[index] = undef;
-            }
-            return previous;
-          }
-        }
-        return null;
-      };
-      this.size = function() {
-        return count;
-      };
-      this.values = function() {
-        var result = new p.ArrayList(0);
-        var it = this.entrySet().iterator();
-        while (it.hasNext()) {
-          var entry = it.next();
-          result.push(entry.getValue());
-        }
-        return result;
-      };
-    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Color functions
@@ -6027,7 +6075,6 @@
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
-
       if (aMode && (aMode === PConstants.WEBGL)) {
         // get the 3D rendering context
         try {
@@ -7162,40 +7209,48 @@
     };
 
     p.vertex = function vertex() {
-      if(firstVert){ firstVert = false; }
       var vert = [];
-      if(arguments.length === 4){ //x, y, u, v
+
+      if (firstVert) { firstVert = false; }
+
+      if (arguments.length === 4) { //x, y, u, v
         vert[0] = arguments[0];
         vert[1] = arguments[1];
         vert[2] = 0;
         vert[3] = arguments[2];
         vert[4] = arguments[3];
-      }
-      else{ // x, y, z, u, v
+      } else { // x, y, z, u, v
         vert[0] = arguments[0];
         vert[1] = arguments[1];
         vert[2] = arguments[2] || 0;
         vert[3] = arguments[3] || 0;
         vert[4] = arguments[4] || 0;
       }
-      // fill rgba
-      vert[5] = fillStyle[0];
-      vert[6] = fillStyle[1];
-      vert[7] = fillStyle[2];
-      vert[8] = fillStyle[3];
-      // stroke rgba
-      vert[9] = strokeStyle[0];
-      vert[10] = strokeStyle[1];
-      vert[11] = strokeStyle[2];
-      vert[12] = strokeStyle[3];
-      //normals
-      vert[13] = normalX;
-      vert[14] = normalY;
-      vert[15] = normalZ;
-      
+
       vert["isVert"] =  true;
+
+      if (p.use3DContext) {
+        // fill rgba
+        vert[5] = fillStyle[0];
+        vert[6] = fillStyle[1];
+        vert[7] = fillStyle[2];
+        vert[8] = fillStyle[3];
+        // stroke rgba
+        vert[9] = strokeStyle[0];
+        vert[10] = strokeStyle[1];
+        vert[11] = strokeStyle[2];
+        vert[12] = strokeStyle[3];
+        //normals
+        vert[13] = normalX;
+        vert[14] = normalY;
+        vert[15] = normalZ;
+      } else {
+        // fill and stroke color
+        vert[5] = currentFillColor;
+        vert[6] = currentStrokeColor;
+      }
+
       vertArray.push(vert);
-      
     };
 
     /*
@@ -7335,7 +7390,8 @@
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
-    p.endShape = function endShape(close){
+    p.endShape = function endShape(mode){
+      var closeShape = mode === p.CLOSE;
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
@@ -7346,43 +7402,43 @@
       var i, j, k;
       var last = vertArray.length - 1;
 
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 0; j < 3; j++){
+      for (i = 0; i < vertArray.length; i++) {
+        for (j = 0; j < 3; j++) {
           fillVertArray.push(vertArray[i][j]);
         }
       }
 
       // 5,6,7,8
       // R,G,B,A
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 5; j < 9; j++){
+      for (i = 0; i < vertArray.length; i++) {
+        for (j = 5; j < 9; j++) {
           colorVertArray.push(vertArray[i][j]);
         }
       }
 
       // 9,10,11,12
       // R, G, B, A
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 9; j < 13; j++){
+      for (i = 0; i < vertArray.length; i++) {
+        for (j = 9; j < 13; j++) {
           strokeVertArray.push(vertArray[i][j]);
         }
       }
 
-      for(i = 0; i < vertArray.length; i++){
+      for (i = 0; i < vertArray.length; i++) {
         texVertArray.push(vertArray[i][3]);
         texVertArray.push(vertArray[i][4]);
       }
 
-      if(close){
+      if (closeShape) {
         fillVertArray.push(vertArray[0][0]);
         fillVertArray.push(vertArray[0][1]);
         fillVertArray.push(vertArray[0][2]);
 
-        for(i = 5; i < 9; i++){
+        for (i = 5; i < 9; i++) {
           colorVertArray.push(vertArray[0][i]);
         }
 
-        for(i = 9; i < 13; i++){
+       for (i = 9; i < 13; i++) {
           strokeVertArray.push(vertArray[0][i]);
         }
 
@@ -7390,19 +7446,17 @@
         texVertArray.push(vertArray[0][4]);
       }
 
-      if(isCurve && curShape === PConstants.POLYGON || isCurve && curShape === undef){
-
-        if(p.use3DContext){
+      if (isCurve && curShape === PConstants.POLYGON || isCurve && curShape === undef) {
+        if (p.use3DContext) {
           lineVertArray = fillVertArray;
-          if(doStroke){
+          if (doStroke) {
             line3D(lineVertArray, null, strokeVertArray);
           }
-          if(doFill){
+          if (doFill) {
             fill3D(fillVertArray, null, colorVertArray); // fill isn't working in 3d curveVertex
           }
-        }
-        else{
-          if(vertArray.length > 3){
+        } else {
+          if (vertArray.length > 3) {
             var b = [],
                 s = 1 - curTightness;
             curContext.beginPath();
@@ -7415,7 +7469,7 @@
               * |0         (1-t)/6    1         (t-1)/6 |
               * |0         0          0         0       |
               */
-            for(i = 1; (i+2) < vertArray.length; i++){
+            for (i = 1; (i+2) < vertArray.length; i++) {
               b[0] = [vertArray[i][0], vertArray[i][1]];
               b[1] = [vertArray[i][0] + (s * vertArray[i+1][0] - s * vertArray[i-1][0]) / 6,
                      vertArray[i][1] + (s * vertArray[i+1][1] - s * vertArray[i-1][1]) / 6];
@@ -7429,16 +7483,15 @@
             curContext.closePath();
           }
         }
-      }
-      else if(isBezier && curShape === PConstants.POLYGON || isBezier && curShape === undef){
-        if(p.use3DContext){
+      } else if (isBezier && curShape === PConstants.POLYGON || isBezier && curShape === undef) {
+        if (p.use3DContext) {
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
           strokeVertArray.splice(strokeVertArray.length - 4);
-          if(doStroke){
+          if (doStroke) {
             line3D(lineVertArray, null, strokeVertArray);
           }
-          if(doFill){
+          if (doFill) {
             fill3D(fillVertArray, "TRIANGLES", colorVertArray);
           }
 
@@ -7475,12 +7528,11 @@
             strokeVertArray.push(255);
           }
           point3D(tempArray, strokeVertArray);*/
-        }
-        else{
+        } else {
           curContext.beginPath();
-          for(i = 0; i < vertArray.length; i++){
-            if( vertArray[i]["isVert"] === true ){ //if it is a vertex move to the position
-              if ( vertArray[i]["moveTo"] === true) {
+          for (i = 0; i < vertArray.length; i++) {
+            if (vertArray[i]["isVert"] === true) { //if it is a vertex move to the position
+              if (vertArray[i]["moveTo"] === true) {
                 curContext.moveTo(vertArray[i][0], vertArray[i][1]);
               } else if (vertArray[i]["moveTo"] === false){
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
@@ -7495,116 +7547,111 @@
           executeContextStroke();
           curContext.closePath();
         }
-      }
-      else{
-        if(p.use3DContext){ // 3D context
-          if (curShape === PConstants.POINTS){
-            for(i = 0; i < vertArray.length; i++){
-              for(j = 0; j < 3; j++){
+      } else {
+        if (p.use3DContext) { // 3D context
+          if (curShape === PConstants.POINTS) {
+            for (i = 0; i < vertArray.length; i++) {
+              for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[i][j]);
               }
             }
             point3D(lineVertArray, strokeVertArray);
-          }
-          else if(curShape === PConstants.LINES){
-            for(i = 0; i < vertArray.length; i++){
-              for(j = 0; j < 3; j++){
+          } else if (curShape === PConstants.LINES) {
+            for (i = 0; i < vertArray.length; i++) {
+              for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[i][j]);
               }
             }
-            for(i = 0; i < vertArray.length; i++){
-              for(j = 5; j < 9; j++){
+            for (i = 0; i < vertArray.length; i++) {
+              for (j = 5; j < 9; j++) {
                 colorVertArray.push(vertArray[i][j]);
               }
             }
             line3D(lineVertArray, "LINES", strokeVertArray);
-          }
-          else if(curShape === PConstants.TRIANGLES){
-            if(vertArray.length > 2){
-              for(i = 0; (i+2) < vertArray.length; i+=3){
+          } else if (curShape === PConstants.TRIANGLES) {
+            if (vertArray.length > 2) {
+              for (i = 0; (i+2) < vertArray.length; i+=3) {
                 fillVertArray = [];
                 texVertArray = [];
                 lineVertArray = [];
                 colorVertArray = [];
                 strokeVertArray = [];
-                for(j = 0; j < 3; j++){
-                  for(k = 0; k < 3; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 0; k < 3; k++) {
                     lineVertArray.push(vertArray[i+j][k]);
                     fillVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 3; j++){
-                  for(k = 3; k < 5; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 3; k < 5; k++) {
                     texVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 3; j++){
-                  for(k = 5; k < 9; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 5; k < 9; k++) {
                     colorVertArray.push(vertArray[i+j][k]);
                     strokeVertArray.push(vertArray[i+j][k+4]);
                   }
                 }
-                if(doStroke){
+                if (doStroke) {
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray );
                 }
-                if(doFill || usingTexture){
+                if (doFill || usingTexture) {
                   fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);
                 }
               }
             }
-          }
-          else if(curShape === PConstants.TRIANGLE_STRIP){
-            if(vertArray.length > 2){
-              for(i = 0; (i+2) < vertArray.length; i++){
+          } else if (curShape === PConstants.TRIANGLE_STRIP) {
+            if (vertArray.length > 2) {
+              for (i = 0; (i+2) < vertArray.length; i++) {
                 lineVertArray = [];
                 fillVertArray = [];
                 strokeVertArray = [];
                 colorVertArray = [];
                 texVertArray = [];
-                for(j = 0; j < 3; j++){
-                  for(k = 0; k < 3; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 0; k < 3; k++) {
                     lineVertArray.push(vertArray[i+j][k]);
                     fillVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 3; j++){
-                  for(k = 3; k < 5; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 3; k < 5; k++) {
                     texVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 3; j++){
-                  for(k = 5; k < 9; k++){
+                for (j = 0; j < 3; j++) {
+                  for (k = 5; k < 9; k++) {
                     strokeVertArray.push(vertArray[i+j][k+4]);
                     colorVertArray.push(vertArray[i+j][k]);
                   }
                 }
 
-                if(doFill || usingTexture){
+                if (doFill || usingTexture) {
                   fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
                 }
-                if(doStroke){
+                if (doStroke) {
                   line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
                 }
               }
             }
-          }
-          else if(curShape === PConstants.TRIANGLE_FAN){
-            if(vertArray.length > 2){
-              for(i = 0; i < 3; i++){
-                for(j = 0; j < 3; j++){
+          } else if (curShape === PConstants.TRIANGLE_FAN) {
+            if (vertArray.length > 2) {
+              for (i = 0; i < 3; i++) {
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i][j]);
                 }
               }
-              for(i = 0; i < 3; i++){
-                for(j = 9; j < 13; j++){
+              for (i = 0; i < 3; i++) {
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i][j]);
                 }
               }
-              if(doStroke){
+              if (doStroke) {
                 line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
               }
 
-              for(i = 2; (i+1) < vertArray.length; i++){
+              for (i = 2; (i+1) < vertArray.length; i++) {
                 lineVertArray = [];
                 strokeVertArray = [];
                 lineVertArray.push(vertArray[0][0]);
@@ -7616,70 +7663,69 @@
                 strokeVertArray.push(vertArray[0][11]);
                 strokeVertArray.push(vertArray[0][12]);
 
-                for(j = 0; j < 2; j++){
-                  for(k = 0; k < 3; k++){
+                for (j = 0; j < 2; j++) {
+                  for (k = 0; k < 3; k++) {
                     lineVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                for(j = 0; j < 2; j++){
-                  for(k = 9; k < 13; k++){
+                for (j = 0; j < 2; j++) {
+                  for (k = 9; k < 13; k++) {
                     strokeVertArray.push(vertArray[i+j][k]);
                   }
                 }
-                if(doStroke){
+                if (doStroke) {
                   line3D(lineVertArray, "LINE_STRIP",strokeVertArray);
                 }
               }
-              if(doFill || usingTexture){
+              if (doFill || usingTexture) {
                 fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
-          }
-          else if(curShape === PConstants.QUADS){
-            for(i = 0; (i + 3) < vertArray.length; i+=4){
+          } else if (curShape === PConstants.QUADS) {
+            for (i = 0; (i + 3) < vertArray.length; i+=4) {
               lineVertArray = [];
-              for(j = 0; j < 4; j++){
-                for(k = 0; k < 3; k++){
+              for (j = 0; j < 4; j++) {
+                for (k = 0; k < 3; k++) {
                   lineVertArray.push(vertArray[i+j][k]);
                 }
               }
-              if(doStroke){
+              if (doStroke) {
                 line3D(lineVertArray, "LINE_LOOP",strokeVertArray);
               }
 
-              if(doFill){
+              if (doFill) {
                 fillVertArray = [];
                 colorVertArray = [];
                 texVertArray = [];
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   fillVertArray.push(vertArray[i][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   colorVertArray.push(vertArray[i][j]);
                 }
 
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   fillVertArray.push(vertArray[i+1][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   colorVertArray.push(vertArray[i+1][j]);
                 }
 
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   fillVertArray.push(vertArray[i+3][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   colorVertArray.push(vertArray[i+3][j]);
                 }
 
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   fillVertArray.push(vertArray[i+2][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   colorVertArray.push(vertArray[i+2][j]);
                 }
 
-                if(usingTexture){
+                if (usingTexture) {
                   texVertArray.push(vertArray[i+0][3]);
                   texVertArray.push(vertArray[i+0][4]);
                   texVertArray.push(vertArray[i+1][3]);
@@ -7693,94 +7739,91 @@
                 fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
               }
             }
-          }
-          else if(curShape === PConstants.QUAD_STRIP){
+          } else if (curShape === PConstants.QUAD_STRIP) {
             var tempArray = [];
-            if(vertArray.length > 3){
-              for(i = 0; i < 2; i++){
-                for(j = 0; j < 3; j++){
+            if (vertArray.length > 3) {
+              for (i = 0; i < 2; i++) {
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i][j]);
                 }
               }
 
-              for(i = 0; i < 2; i++){
-                for(j = 9; j < 13; j++){
+              for (i = 0; i < 2; i++) {
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i][j]);
                 }
               }
 
               line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
-              if(vertArray.length > 4 && vertArray.length % 2 > 0){
+              if (vertArray.length > 4 && vertArray.length % 2 > 0) {
                 tempArray = fillVertArray.splice(fillVertArray.length - 3);
                 vertArray.pop();
               }
-              for(i = 0; (i+3) < vertArray.length; i+=2){
+              for (i = 0; (i+3) < vertArray.length; i+=2) {
                 lineVertArray = [];
                 strokeVertArray = [];
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i+1][j]);
                 }
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i+3][j]);
                 }
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i+2][j]);
                 }
-                for(j = 0; j < 3; j++){
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i+0][j]);
                 }
-                for(j = 9; j < 13; j++){
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+1][j]);
                 }
-                for(j = 9; j < 13; j++){
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+3][j]);
                 }
-                for(j = 9; j < 13; j++){
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+2][j]);
-                }
-                for(j = 9; j < 13; j++){
+                } 
+                for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+0][j]);
                 }
-                if(doStroke){
+                if (doStroke) {
                   line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
                 }
               }
 
-              if(doFill || usingTexture){
+              if (doFill || usingTexture) {
                 fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
               }
             }
           }
           // If the user didn't specify a type (LINES, TRIANGLES, etc)
-          else{
+          else {
             // If only one vertex was specified, it must be a point
-            if(vertArray.length === 1){
-              for(j = 0; j < 3; j++){
+            if (vertArray.length === 1) {
+              for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[0][j]);
               }
-              for(j = 9; j < 13; j++){
+              for (j = 9; j < 13; j++) {
                 strokeVertArray.push(vertArray[0][j]);
               }
               point3D(lineVertArray,strokeVertArray);
-            }
-            else{
-              for(i = 0; i < vertArray.length; i++){
-                for(j = 0; j < 3; j++){
+            } else {
+              for (i = 0; i < vertArray.length; i++) {
+                for (j = 0; j < 3; j++) {
                   lineVertArray.push(vertArray[i][j]);
                 }
-                for(j = 5; j < 9; j++){
+                for (j = 5; j < 9; j++) {
                   strokeVertArray.push(vertArray[i][j]);
                 }
               }
-              if(close){
+              if (closeShape) {
                 line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
-              }
-              else{
+              } else {
                 line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
               }
 
               // fill is ignored if textures are used
-              if(doFill || usingTexture){
+              if (doFill || usingTexture) {
                 fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
               }
             }
@@ -7793,101 +7836,113 @@
           curContext.useProgram(programObject3D);
           uniformi(programObject3D, "usingTexture", usingTexture);
         }
+
         // 2D context
-        else{
-          if (curShape === PConstants.POINTS){
-            for(i = 0; i < vertArray.length; i++){
+        else {
+          if (curShape === PConstants.POINTS) {
+            for (i = 0; i < vertArray.length; i++) {
+              p.stroke(vertArray[i][6]);
               p.point(vertArray[i][0], vertArray[i][1]);
             }
-          }
-          else if(curShape === PConstants.LINES){
-            for(i = 0; (i + 1) < vertArray.length; i+=2){
+          } else if (curShape === PConstants.LINES) {
+            for (i = 0; (i + 1) < vertArray.length; i+=2) {
+              p.stroke(vertArray[i+1][6]);
               p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
             }
-          }
-          else if(curShape === PConstants.TRIANGLES){
-            for(i = 0; (i + 2) < vertArray.length; i+=3){
+          } else if (curShape === PConstants.TRIANGLES) {
+            for (i = 0; (i + 2) < vertArray.length; i+=3) {
               curContext.beginPath();
               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
               curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              p.stroke(vertArray[i+2][6]);
+              p.fill(vertArray[i+2][5]);
               executeContextFill();
               executeContextStroke();
               curContext.closePath();
             }
-          }
-          else if(curShape === PConstants.TRIANGLE_STRIP){
-            if(vertArray.length > 2){
+          } else if (curShape === PConstants.TRIANGLE_STRIP) {
+            for (i = 0; (i+1) < vertArray.length; i++) {
               curContext.beginPath();
-              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-              curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-              for(i = 2; i < vertArray.length; i++){
-                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                curContext.lineTo(vertArray[i-2][0], vertArray[i-2][1]);
-                executeContextFill();
-                executeContextStroke();
-                curContext.moveTo(vertArray[i][0],vertArray[i][1]);
+              curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
+              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              p.stroke(vertArray[i+1][6]);
+              p.fill(vertArray[i+1][5]);
+
+              if (i + 2 < vertArray.length) {
+                curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
+                p.stroke(vertArray[i+2][6]);
+                p.fill(vertArray[i+2][5]);
               }
+              executeContextFill();
+              executeContextStroke();
               curContext.closePath();
             }
-          }
-          else if(curShape === PConstants.TRIANGLE_FAN){
-            if(vertArray.length > 2){
+          } else if (curShape === PConstants.TRIANGLE_FAN) {
+            if (vertArray.length > 2) {
               curContext.beginPath();
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[1][0], vertArray[1][1]);
               curContext.lineTo(vertArray[2][0], vertArray[2][1]);
+              p.stroke(vertArray[2][6]);
+              p.fill(vertArray[2][5]);
               executeContextFill();
               executeContextStroke();
-              for(i = 3; i < vertArray.length; i++){
+              curContext.closePath();
+              for (i = 3; i < vertArray.length; i++) {
+                curContext.beginPath();
                 curContext.moveTo(vertArray[0][0], vertArray[0][1]);
                 curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+                p.stroke(vertArray[i][6]);
+                p.fill(vertArray[i][5]);
                 executeContextFill();
                 executeContextStroke();
+                curContext.closePath();
               }
-              curContext.closePath();
             }
-          }
-          else if(curShape === PConstants.QUADS){
-            for(i = 0; (i + 3) < vertArray.length; i+=4){
+          } else if (curShape === PConstants.QUADS) {
+            for (i = 0; (i + 3) < vertArray.length; i+=4) {
               curContext.beginPath();
               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-              for(j = 1; j < 4; j++){
+              for (j = 1; j < 4; j++) {
                 curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
               }
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              p.stroke(vertArray[i+3][6]);
+              p.fill(vertArray[i+3][5]);
               executeContextFill();
               executeContextStroke();
               curContext.closePath();
             }
-          }
-          else if(curShape === PConstants.QUAD_STRIP){
-            if(vertArray.length > 3){
-              curContext.beginPath();
-              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-              curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-              for(i = 2; (i+1) < vertArray.length; i++){
-                if((i % 2) === 0){
-                  curContext.moveTo(vertArray[i-2][0], vertArray[i-2][1]);
+          } else if (curShape === PConstants.QUAD_STRIP) {
+            if (vertArray.length > 3) {
+              for (i = 0; (i+1) < vertArray.length; i+=2) {
+                curContext.beginPath();
+                if (i+3 < vertArray.length) {
+                  curContext.moveTo(vertArray[i+2][0], vertArray[i+2][1]);
                   curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                   curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-                  curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-                  executeContextFill();
-                  executeContextStroke();
+                  curContext.lineTo(vertArray[i+3][0], vertArray[i+3][1]);
+                  p.stroke(vertArray[i+3][6]);
+                  p.fill(vertArray[i+3][5]);
+                } else {
+                  curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+                  curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
                 }
+                executeContextFill();
+                executeContextStroke();
+                curContext.closePath();
               }
-              curContext.closePath();
             }
-          }
-          else{
+          } else {
             curContext.beginPath();
             curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            for(i = 1; i < vertArray.length; i++){
+            for (i = 1; i < vertArray.length; i++) {
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
             }
-            if(close){
+            if (closeShape) {
               curContext.lineTo(vertArray[0][0], vertArray[0][1]);
             }
             executeContextFill();
@@ -7994,17 +8049,32 @@
       }
     };
 
+    // texImage2D function changed http://www.khronos.org/webgl/public-mailing-list/archives/1007/msg00034.html
+    // This method tries the new argument pattern first and falls back to the old version
+    var executeTexImage2D = function () {
+      var canvas2d = document.createElement('canvas');
+
+      try { // new way.
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, canvas2d);
+        executeTexImage2D = function(texture) {
+          curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, texture);
+        };
+      } catch (e) {
+        executeTexImage2D = function(texture) {
+          curContext.texImage2D(curContext.TEXTURE_2D, 0, texture, false);
+        };
+      }
+
+      executeTexImage2D.apply(this, arguments);
+    };
+    
     p.texture = function(pimage){
       if(pimage.localName === "canvas"){
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
-        try {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage);
-        } catch(err) {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage, false);
-        }
+        executeTexImage2D(pimage);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
-	      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
-	      curContext.generateMipmap(curContext.TEXTURE_2D);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+        curContext.generateMipmap(curContext.TEXTURE_2D);
       }
       else if(!pimage.__texture)
       {
@@ -8031,20 +8101,15 @@
         
         ctx.putImageData(textureImage, 0, 0);
         pimage.__cvs = cvs;
-
+        
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
-        try {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage.__cvs);
-        } catch(err) {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
-        }
+        executeTexImage2D(pimage.__cvs);
         curContext.generateMipmap(curContext.TEXTURE_2D);
-      }
-      else{
+      } else {
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
       }
 
@@ -8587,22 +8652,30 @@
       }
     };
 
+    var generic2dContext = document.createElement("canvas").getContext("2d");
+
     var canvasDataCache = [undef, undef, undef]; // we need three for now
+
     function getCanvasData(obj, w, h) {
       var canvasData = canvasDataCache.shift();
 
-      if(canvasData === undef) {
+      if (canvasData === undef) {
         canvasData = {};
         canvasData.canvas = document.createElement("canvas");
         canvasData.context = canvasData.canvas.getContext('2d');
       }
+      
       canvasDataCache.push(canvasData);
+      
       var canvas = canvasData.canvas, context = canvasData.context,
-        width = w || obj.width, height = h || obj.height;
-      canvas.width = width; canvas.height = height;
-      if(!obj) {
+          width = w || obj.width, height = h || obj.height;
+      
+      canvas.width = width; 
+      canvas.height = height;
+      
+      if (!obj) {
         context.clearRect(0, 0, width, height);
-      } else if("data" in obj) { // ImageData
+      } else if ("data" in obj) { // ImageData
         context.putImageData(obj, 0, 0);
       } else {
         context.clearRect(0, 0, width, height);
@@ -8656,19 +8729,23 @@
       };
 
       this.resize = function(w, h) {
-        if (this.width !== 0 || this.height !== 0) {
-          // make aspect ratio if w or h is 0
-          if (w === 0 && h !== 0) {
-            w = this.width / this.height * h;
-          } else if (h === 0 && w !== 0) {
-            h = w / (this.width / this.height);
+        if (this.isRemote) { // Remote images cannot access imageData
+          throw "Image is loaded remotely. Cannot resize.";
+        } else {
+          if (this.width !== 0 || this.height !== 0) {
+            // make aspect ratio if w or h is 0
+            if (w === 0 && h !== 0) {
+              w = this.width / this.height * h;
+            } else if (h === 0 && w !== 0) {
+              h = w / (this.width / this.height);
+            }
+            // put 'this.imageData' into a new canvas
+            var canvas = getCanvasData(this.imageData).canvas;
+            // pull imageData object out of canvas into ImageData object
+            var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
+            // set this as new pimage
+            this.fromImageData(imageData);
           }
-          // put 'this.imageData' into a new canvas
-          var canvas = getCanvasData(this.imageData).canvas;
-          // pull imageData object out of canvas into ImageData object
-          var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
-          // set this as new pimage
-          this.fromImageData(imageData);
         }
       };
 
@@ -8698,29 +8775,45 @@
       // or setPixels(), .length becomes getLength()
       this.pixels = {
         getLength: (function(aImg) {
-          return function() {
-            return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
-          };
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot get length.";
+          } else {
+            return function() {
+              return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
+            };            
+          }
         }(this)),
         getPixel: (function(aImg) {
-          return function(i) {
-            var offset = i*4;
-            return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
-                                 aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
-          };
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot get pixels.";
+          } else {          
+            return function(i) {
+              var offset = i*4;
+              return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
+                                   aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
+            };
+          }
         }(this)),
         setPixel: (function(aImg) {
-          return function(i,c) {
-            var offset = i*4;
-            aImg.imageData.data[offset] = (c & PConstants.RED_MASK) >>> 16;
-            aImg.imageData.data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
-            aImg.imageData.data[offset+2] = (c & PConstants.BLUE_MASK);
-            aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
-          };
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot set pixel.";
+          } else {
+            return function(i,c) {
+              var offset = i*4;
+              aImg.imageData.data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
+              aImg.imageData.data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
+              aImg.imageData.data[offset+2] = (c & PConstants.BLUE_MASK);
+              aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
+            };
+          }
         }(this)),
         set: function(arr) {
-          for (var i = 0, aL = arr.length; i < aL; i++) {
-            this.setPixel(i, arr[i]);
+          if (this.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot set pixels.";
+          } else {
+            for (var i = 0, aL = arr.length; i < aL; i++) {
+              this.setPixel(i, arr[i]);
+            }
           }
         }
       };
@@ -8740,8 +8833,12 @@
       };
 
       this.toDataURL = function() {
-        var canvasData = getCanvasData(this.imageData);
-        return canvasData.canvas.toDataURL();
+        if (this.isRemote) { // Remote images cannot access imageData
+          throw "Image is loaded remotely. Cannot create dataURI.";
+        } else {
+          var canvasData = getCanvasData(this.imageData);
+          return canvasData.canvas.toDataURL();
+        }
       };
 
       this.fromImageData = function(canvasImg) {
@@ -8774,13 +8871,12 @@
       } else if (arguments.length === 2 || arguments.length === 3) {
         this.width = aWidth || 1;
         this.height = aHeight || 1;
-        // changed for 0.9
-        this.imageData = curContext.createImageData(this.width, this.height);
+        this.imageData = generic2dContext.createImageData(this.width, this.height);
         this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
       } else {
         this.width = 0;
         this.height = 0;
-        this.imageData = curContext.createImageData(1, 1);
+        this.imageData = generic2dContext.createImageData(1, 1);
         this.format = PConstants.ARGB;
       }
     };
@@ -8867,13 +8963,17 @@
       }
     }
     function get$3(x,y,img) {
-      // PImage.get(x,y) was called, return the color (int) at x,y of img
-      // changed in 0.9
-      var offset = y * img.width * 4 + (x * 4);
-      return p.color.toInt(img.imageData.data[offset],
-                         img.imageData.data[offset + 1],
-                         img.imageData.data[offset + 2],
-                         img.imageData.data[offset + 3]);
+      if (img.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot get x,y.";
+      } else {
+        // PImage.get(x,y) was called, return the color (int) at x,y of img
+        // changed in 0.9
+        var offset = y * img.width * 4 + (x * 4);
+        return p.color.toInt(img.imageData.data[offset],
+                           img.imageData.data[offset + 1],
+                           img.imageData.data[offset + 2],
+                           img.imageData.data[offset + 3]);
+      }
     }
     function get$4(x, y, w, h) {
       // return a PImage of w and h from cood x,y of curContext
@@ -8882,20 +8982,24 @@
       return c;
     }
     function get$5(x, y, w, h, img) {
-      // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
-      // changed for 0.9, offset start point needs to be *4
-      var start = y * img.width * 4 + (x*4);
-      var end = (y + h) * img.width * 4 + ((x + w) * 4);
-      var c = new PImage(w, h, PConstants.RGB);
-      for (var i = start, j = 0; i < end; i++, j++) {
-        // changed in 0.9
-        c.imageData.data[j] = img.imageData.data[i];
-        if ((j+1) % (w*4) === 0) {
-          //completed one line, increment i by offset
-          i += (img.width - w) * 4;
+      if (img.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot get x,y,w,h.";
+      } else {
+        // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+        // changed for 0.9, offset start point needs to be *4
+        var start = y * img.width * 4 + (x*4);
+        var end = (y + h) * img.width * 4 + ((x + w) * 4);
+        var c = new PImage(w, h, PConstants.RGB);
+        for (var i = start, j = 0; i < end; i++, j++) {
+          // changed in 0.9
+          c.imageData.data[j] = img.imageData.data[i];
+          if ((j+1) % (w*4) === 0) {
+            //completed one line, increment i by offset
+            i += (img.width - w) * 4;
+          }
         }
+        return c;
       }
-      return c;
     }
 
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
@@ -8988,13 +9092,17 @@
       }
     }
     function set$4(x, y, obj, img) {
-      var c = p.color.toArray(obj);
-      var offset = y * img.width * 4 + (x*4);
-      var data = img.imageData.data;
-      data[offset] = c[0];
-      data[offset+1] = c[1];
-      data[offset+2] = c[2];
-      data[offset+3] = c[3];
+      if (img.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot set x,y.";
+      } else {
+        var c = p.color.toArray(obj);
+        var offset = y * img.width * 4 + (x*4);
+        var data = img.imageData.data;
+        data[offset] = c[0];
+        data[offset+1] = c[1];
+        data[offset+2] = c[2];
+        data[offset+3] = c[3];
+      }
     }
     // Paints a pixel array into the canvas
     p.set = function set(x, y, obj, img) {
@@ -9227,27 +9335,31 @@
       var dx2 = dx + dw;
       var dy2 = dy + dh;
       var dest;
-      // check if pimgdest is there and pixels, if so this was a call from pimg.blend
-      if (arguments.length === 10 || arguments.length === 9) {
-        p.loadPixels();
-        dest = p;
-      } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
-        dest = pimgdest;
-      }
-      if (src === p) {
-        if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
-          p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
-                        dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+      if (src.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot blend image.";
+      } else {
+        // check if pimgdest is there and pixels, if so this was a call from pimg.blend
+        if (arguments.length === 10 || arguments.length === 9) {
+          p.loadPixels();
+          dest = p;
+        } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
+          dest = pimgdest;
+        }
+        if (src === p) {
+          if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
+            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
+                          dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+          } else {
+            // same as below, except skip the loadPixels() because it'd be redundant
+            p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+          }
         } else {
-          // same as below, except skip the loadPixels() because it'd be redundant
+          src.loadPixels();
           p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
         }
-      } else {
-        src.loadPixels();
-        p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-      }
-      if (arguments.length === 10) {
-        p.updatePixels();
+        if (arguments.length === 10) {
+          p.updatePixels();
+        }
       }
     };
 
@@ -9495,84 +9607,91 @@
       if (param === undef) {
         param = null;
       }
+      if (img.isRemote) { // Remote images cannot access imageData
+        throw "Image is loaded remotely. Cannot filter image.";
+      } else {
+        // begin filter process
+        var imglen = img.pixels.getLength();
+        switch (kind) {
+          case PConstants.BLUR:
+            var radius = param || 1; // if no param specified, use 1 (default for p5)
+            blurARGB(radius, img);
+            break;
+          
+          case PConstants.GRAY:
+            if (img.format === PConstants.ALPHA) { //trouble
+              // for an alpha image, convert it to an opaque grayscale
+              for (i = 0; i < imglen; i++) {
+                col = 255 - img.pixels.getPixel(i);
+                img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
+              }
+              img.format = PConstants.RGB; //trouble
+            } else {
+              for (i = 0; i < imglen; i++) {
+                col = img.pixels.getPixel(i);
+                lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
+                img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
+              }
+            }
+            break;
 
-      var imglen = img.pixels.getLength();
-      switch (kind) {
-        case PConstants.BLUR:
-          var radius = param || 1; // if no param specified, use 1 (default for p5)
-          blurARGB(radius, img);
-        break;
-        case PConstants.GRAY:
-          if (img.format === PConstants.ALPHA) { //trouble
-            // for an alpha image, convert it to an opaque grayscale
+          case PConstants.INVERT:
             for (i = 0; i < imglen; i++) {
-              col = 255 - img.pixels.getPixel(i);
-              img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
+              img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
+            }
+            break;
+
+          case PConstants.POSTERIZE:
+            if (param === null) {
+              throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
+            }
+            var levels = p.floor(param);
+            if ((levels < 2) || (levels > 255)) {
+              throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
+            }
+            var levels1 = levels - 1;
+            for (i = 0; i < imglen; i++) {
+              var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
+              var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
+              var blevel = img.pixels.getPixel(i) & 0xff;
+              rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
+              glevel = (((glevel * levels) >> 8) * 255) / levels1;
+              blevel = (((blevel * levels) >> 8) * 255) / levels1;
+              img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
+            }
+            break;
+
+          case PConstants.OPAQUE:
+            for (i = 0; i < imglen; i++) {
+              img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
             }
             img.format = PConstants.RGB; //trouble
+            break;
 
-          } else {
-            for (i = 0; i < imglen; i++) {
-              col = img.pixels.getPixel(i);
-              lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
-              img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
+          case PConstants.THRESHOLD:
+            if (param === null) {
+              param = 0.5;
             }
-          }
-          break;
-        case PConstants.INVERT:
-          for (i = 0; i < imglen; i++) {
-            img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
-          }
-          break;
-        case PConstants.POSTERIZE:
-          if(param === null) {
-            throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
-          }
-          var levels = p.floor(param);
-          if ((levels < 2) || (levels > 255)) {
-            throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
-          }
-          var levels1 = levels - 1;
-          for (i = 0; i < imglen; i++) {
-            var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
-            var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
-            var blevel = img.pixels.getPixel(i) & 0xff;
-            rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
-            glevel = (((glevel * levels) >> 8) * 255) / levels1;
-            blevel = (((blevel * levels) >> 8) * 255) / levels1;
-            img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
-          }
-          break;
-        case PConstants.OPAQUE:
-          for (i = 0; i < imglen; i++) {
-            img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
-          }
-          img.format = PConstants.RGB; //trouble
-          break;
-        case PConstants.THRESHOLD:
-          if (param === null) {
-            param = 0.5;
-          }
-          if ((param < 0) || (param > 1)) {
-            throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
-          }
-          var thresh = p.floor(param * 255);
-          for (i = 0; i < imglen; i++) {
-            var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16,
-                             p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8,
-                             (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
-            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) |
-              ((max < thresh) ? 0x000000 : 0xffffff)));
-          }
-          break;
-        case PConstants.ERODE:
-          dilate(true, img);
-          break;
-        case PConstants.DILATE:
-          dilate(false, img);
-          break;
+            if ((param < 0) || (param > 1)) {
+              throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
+            }
+            var thresh = p.floor(param * 255);
+            for (i = 0; i < imglen; i++) {
+              var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16, p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8, (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
+              img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) | ((max < thresh) ? 0x000000 : 0xffffff)));
+            }
+            break;
+
+          case PConstants.ERODE:
+            dilate(true, img);
+            break;
+
+          case PConstants.DILATE:
+            dilate(false, img);
+            break;
+        }
+        img.updatePixels();
       }
-      img.updatePixels();
     };
 
 
@@ -10132,8 +10251,8 @@
     };
 
     p.textWidth = function textWidth(str) {
-      if(p.use3DContext){
-        if(textcanvas === undef){
+      if (p.use3DContext) {
+        if (textcanvas === undef) {
           textcanvas = document.createElement("canvas");
         }
         var oldContext = curContext;
@@ -10146,8 +10265,7 @@
         }
         curContext = oldContext;
         return textcanvas.width;
-      }
-      else{
+      } else {
         curContext.font = curTextSize + "px " + curTextFont.name;
         if ("fillText" in curContext) {
           return curContext.measureText(str).width;
@@ -11223,7 +11341,7 @@
 
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
-        if (Processing.lib) {
+        if (Processing.lib.hasOwnProperty(i)) {
           // Init the libraries in the context of this p_instance
           Processing.lib[i].call(this);
         }
@@ -11313,22 +11431,25 @@
       "sort", "specular", "sphere", "sphereDetail", "splice", "split", 
       "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke", 
       "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text", 
-      "textAlign", "textFont", "textMode", "textSize", "texture", "textureMode", 
-      "textWidth", "tint", "translate", "triangle", "trim", "unbinary", "unhex", 
-      "updatePixels", "use3DContext", "vertex", "width", "XMLElement", "year", 
-      "__frameRate", "__keyPressed", "__mousePressed"];
+      "textAlign", "textAscent", "textDescent", "textFont", "textMode", 
+      "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
+      "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed", 
+      "__mousePressed"];
 
     var members = {};
     var i, l;
-    for(i=0,l=names.length;i<l;++i) {
+    for (i = 0, l = names.length; i < l ; ++i) {
       members[names[i]] = null;
     }
-    for(var lib in Processing.lib) {
-      if(Processing.lib[lib] && Processing.lib[lib].exports) {
-       var exportedNames = Processing.lib[lib].exports;
-       for(i=0,l=exportedNames.length;i<l;++i) {
-         members[exportedNames[i]] = null;
-       }
+    for (var lib in Processing.lib) {
+      if (Processing.lib.hasOwnProperty(lib)) {
+        if (Processing.lib[lib].exports) {
+          var exportedNames = Processing.lib[lib].exports;
+          for (i = 0, l = exportedNames.length; i < l; ++i) {
+           members[exportedNames[i]] = null;
+          }
+        }
       }
     }
     return members;
@@ -11640,7 +11761,7 @@
       // saving "this." and parameters
       var names = appendToLookupTable({"this":null}, this.params.getNames());
       replaceContext = function(name) {
-        return name in names ? name : oldContext(name);
+        return names.hasOwnProperty(name) ? name : oldContext(name);
       };
       var result = "function";
       if(this.name) {
@@ -11900,7 +12021,7 @@
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return name in paramNames ? name : oldContext(name);
+        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
       };
       var result = "processing.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
         this.body +");";
@@ -11966,7 +12087,7 @@
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return name in paramNames ? name : oldContext(name);
+        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
       };
       var prefix = "function $constr_" + this.params.params.length + this.params.toString();
       var body = this.body.toString();
@@ -12043,9 +12164,9 @@
       replaceContext = function(name) {
         if(name === "this") {
           return selfId;
-        } else if(name in thisClassFields || name in thisClassInners) {
+        } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
-        } else if(name in thisClassMethods) {
+        } else if(thisClassMethods.hasOwnProperty(name)) {
           return "this." + name;
         }
         return oldContext(name);
@@ -12182,7 +12303,7 @@
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function(name) {
-        return name in paramNames ? name : oldContext(name);
+        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
       };
       var result = "function " + this.name + this.params + " " + this.body + "\n" +
         "processing." + this.name + " = " + this.name + ";";
@@ -12322,7 +12443,7 @@
       // replacing context only when necessary
       if(!isLookupTableEmpty(localNames)) {
         replaceContext = function(name) {
-          return name in localNames ? name : oldContext(name);
+          return localNames.hasOwnProperty(name) ? name : oldContext(name);
         };
       }
 
@@ -12389,7 +12510,7 @@
         var parts = name.split('.');
         var currentScope = class_.scope, found;
         while(currentScope) {
-          if(parts[0] in currentScope) {
+          if(currentScope.hasOwnProperty(parts[0])) {
             found = currentScope[parts[0]]; break;
           }
           currentScope = currentScope.scope;
