@@ -1315,6 +1315,8 @@
 
     // Vertex shader for points and lines
     var vShaderSrcUnlitShape =
+      "varying vec4 frontColor;" +
+      
       "attribute vec3 aVertex;" +
       "attribute vec4 aColor;" +
 
@@ -1322,17 +1324,25 @@
       "uniform mat4 uProjection;" +
 
       "void main(void) {" +
-      "  gl_FrontColor = aColor;" +
+      "  frontColor = aColor;" +
       "  gl_Position = uProjection * uView * vec4(aVertex, 1.0);" +
       "}";
 
     var fShaderSrcUnlitShape =
+      "#ifdef GL_ES\n" +
+      "precision highp float;\n" +
+      "#endif\n" +
+
+      "varying vec4 frontColor;" +
+
       "void main(void){" +
-      "  gl_FragColor = gl_Color;" +
+      "  gl_FragColor = frontColor;" +
       "}";
 
     // Vertex shader for points and lines
     var vertexShaderSource2D =
+      "varying vec4 frontColor;" +
+      
       "attribute vec3 Vertex;" +
       "attribute vec2 aTextureCoord;" +
       "uniform vec4 color;" +
@@ -1345,28 +1355,36 @@
 
       "void main(void) {" +
       "  gl_PointSize = pointSize;" +
-      "  gl_FrontColor = color;" +
+      "  frontColor = color;" +
       "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
       "  vTextureCoord = aTextureCoord;" +
       "}";
 
     var fragmentShaderSource2D =
+      "#ifdef GL_ES\n" +
+      "precision highp float;\n" +
+      "#endif\n" +
+
+      "varying vec4 frontColor;" +            
       "varying vec2 vTextureCoord;"+
-      "uniform vec4 color;"+
+
       "uniform sampler2D uSampler;"+
       "uniform int picktype;"+
 
       "void main(void){" +
-      "  if(picktype==0){"+
-      "    gl_FragColor = color;" +
-      "  }else if(picktype==1){"+
-      "    float alpha = texture2D(uSampler,vTextureCoord).a;"+
-      "    gl_FragColor = vec4(color.rgb*alpha,alpha);\n"+
+      "  if(picktype == 0){"+
+      "    gl_FragColor = frontColor;" +
+      "  }" +
+      "  else if(picktype == 1){"+
+      "    float alpha = texture2D(uSampler, vTextureCoord).a;"+
+      "    gl_FragColor = vec4(frontColor.rgb*alpha, alpha);\n"+
       "  }"+
       "}";
 
     // Vertex shader for boxes and spheres
     var vertexShaderSource3D =
+      "varying vec4 frontColor;" +
+      
       "attribute vec3 Vertex;" +
       "attribute vec3 Normal;" +
       "attribute vec4 aColor;" +
@@ -1513,7 +1531,7 @@
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
       "  if( lightCount == 0 ) {" +
-      "    gl_FrontColor = col + vec4(mat_specular,1.0);" +
+      "    frontColor = col + vec4(mat_specular,1.0);" +
       "  }" +
       "  else {" +
       "    for( int i = 0; i < lightCount; i++ ) {" +
@@ -1532,14 +1550,14 @@
       "    }" +
 
       "   if( usingMat == false ) {" +
-      "    gl_FrontColor = vec4(  " +
+      "    frontColor = vec4(  " +
       "      vec3(col) * finalAmbient +" +
       "      vec3(col) * finalDiffuse +" +
       "      vec3(col) * finalSpecular," +
       "      col[3] );" +
       "   }" +
       "   else{" +
-      "     gl_FrontColor = vec4( " +
+      "     frontColor = vec4( " +
       "       mat_emissive + " +
       "       (vec3(col) * mat_ambient * finalAmbient) + " +
       "       (vec3(col) * finalDiffuse) + " +
@@ -1552,6 +1570,12 @@
       "}";
 
     var fragmentShaderSource3D =
+      "#ifdef GL_ES\n" +
+      "precision highp float;\n" +
+      "#endif\n" +
+      
+      "varying vec4 frontColor;" +
+      
       "uniform sampler2D sampler;" +
       "uniform bool usingTexture;" +
       "varying vec2 vTexture;" +
@@ -1562,7 +1586,7 @@
       "    gl_FragColor =  vec4(texture2D(sampler, vTexture.xy));" +
       "  }"+
       "  else{" +
-      "    gl_FragColor = vec4(gl_Color);" +
+      "    gl_FragColor = frontColor;" +
       "  }" +
       "}";
 
@@ -4848,6 +4872,9 @@
       inDraw = true;
 
       if (p.use3DContext) {
+        // even if the color buffer isn't cleared with background(),
+        // the depth buffer needs to be cleared regardless.
+        curContext.clear(curContext.DEPTH_BUFFER_BIT);
         // Delete all the lighting states and the materials the
         // user set in the last draw() call.
         p.noLights();
