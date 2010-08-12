@@ -1,0 +1,22 @@
+﻿import processing.opengl.*;
+PImage img;
+
+/* @pjs preload="berlin-1.jpg" */
+
+void setup() {
+  size(640, 360, OPENGL);
+  img = loadImage("berlin-1.jpg");
+  noStroke();
+  img.get(0,0,10,10);
+}
+
+void draw() {
+  translate(width / 2, height / 2);
+  beginShape();
+  texture(img);
+  vertex(-100, -100, 0, 0, 0);
+  vertex(100, -100, 0, 400, 0);
+  vertex(100, 100, 0, 400, 400);
+  vertex(-100, 100, 0, 0, 400);
+  endShape();
+}
