@@ -6025,7 +6025,6 @@
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
-
       if (aMode && (aMode === PConstants.WEBGL)) {
         // get the 3D rendering context
         try {
@@ -8002,9 +8001,27 @@
       }
     };
 
+    // texImage2D function changed http://www.khronos.org/webgl/public-mailing-list/archives/1007/msg00034.html
+    // This method tries the new argument pattern first and falls back to the old version
+    var executeTexImage2D = function () {
+      var canvas2d = document.createElement('canvas');
+
+      try { // new way.
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, canvas2d);
+        executeTexImage2D = function(texture) {
+          curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, texture);
+        };
+      } catch (e) {
+        executeTexImage2D = function(texture) {
+          curContext.texImage2D(curContext.TEXTURE_2D, 0, texture, false);
+        };
+      }
+
+      executeTexImage2D.apply(this, arguments);
+    };
+    
     p.texture = function(pimage){
-      if(!pimage.__texture)
-      {
+      if (!pimage.__texture) {
         var texture = curContext.createTexture();
         pimage.__texture = texture;
 
@@ -8033,10 +8050,9 @@
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
-        curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, false);
+        executeTexImage2D(pimage.__cvs);
         curContext.generateMipmap(curContext.TEXTURE_2D);
-      }
-      else{
+      } else {
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
       }
 
@@ -8579,22 +8595,30 @@
       }
     };
 
+    var generic2dContext = document.createElement("canvas").getContext("2d");
+
     var canvasDataCache = [undef, undef, undef]; // we need three for now
+
     function getCanvasData(obj, w, h) {
       var canvasData = canvasDataCache.shift();
 
-      if(canvasData === undef) {
+      if (canvasData === undef) {
         canvasData = {};
         canvasData.canvas = document.createElement("canvas");
         canvasData.context = canvasData.canvas.getContext('2d');
       }
+      
       canvasDataCache.push(canvasData);
+      
       var canvas = canvasData.canvas, context = canvasData.context,
-        width = w || obj.width, height = h || obj.height;
-      canvas.width = width; canvas.height = height;
-      if(!obj) {
+          width = w || obj.width, height = h || obj.height;
+      
+      canvas.width = width; 
+      canvas.height = height;
+      
+      if (!obj) {
         context.clearRect(0, 0, width, height);
-      } else if("data" in obj) { // ImageData
+      } else if ("data" in obj) { // ImageData
         context.putImageData(obj, 0, 0);
       } else {
         context.clearRect(0, 0, width, height);
@@ -8790,13 +8814,12 @@
       } else if (arguments.length === 2 || arguments.length === 3) {
         this.width = aWidth || 1;
         this.height = aHeight || 1;
-        // changed for 0.9
-        this.imageData = curContext.createImageData(this.width, this.height);
+        this.imageData = generic2dContext.createImageData(this.width, this.height);
         this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
       } else {
         this.width = 0;
         this.height = 0;
-        this.imageData = curContext.createImageData(1, 1);
+        this.imageData = generic2dContext.createImageData(1, 1);
         this.format = PConstants.ARGB;
       }
     };
@@ -10157,8 +10180,8 @@
     };
 
     p.textWidth = function textWidth(str) {
-      if(p.use3DContext){
-        if(textcanvas === undef){
+      if (p.use3DContext) {
+        if (textcanvas === undef) {
           textcanvas = document.createElement("canvas");
         }
         var oldContext = curContext;
@@ -10171,8 +10194,7 @@
         }
         curContext = oldContext;
         return textcanvas.width;
-      }
-      else{
+      } else {
         curContext.font = curTextSize + "px " + curTextFont.name;
         if ("fillText" in curContext) {
           return curContext.measureText(str).width;
