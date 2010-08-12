@@ -10533,7 +10533,7 @@
           curContext.setTransform(1,0,0,1,0,0);
         }
         var asc = 7;
-        var des = 3 
+        var des = 3;
         var tWidth = p.textWidth(arguments[0]);
         var tHeight = asc + des;
         var font = p.loadFont(curTextFont.origName);
