@@ -10206,6 +10206,118 @@
       }
     };
 
+    p.textAscent = (function() {
+      var oldTextSize = undef,
+          oldTextFont = undef,
+          ascent      = undef,
+          graphics    = undef;
+      return function textAscent() {
+        // if text size or font has changed, recalculate ascent value
+        if (oldTextFont !== curTextFont || oldTextSize !== curTextSize) {
+          // store current size and font
+          oldTextFont = curTextFont;
+          oldTextSize = curTextSize;
+          
+          var found       = false,
+              character   = "k",
+              colour      = p.color(0),
+              top         = 0,
+              bottom      = curTextSize,
+              yLoc        = curTextSize/2;
+
+          // setup off screen image to write and measure text from
+          if (graphics !== undef) {
+            graphics.size(curTextSize, curTextSize);
+          } else {
+            graphics = p.createGraphics(curTextSize, curTextSize);
+          }
+          graphics.background(0);
+          graphics.fill(255);
+          graphics.textFont(curTextFont, curTextSize);
+          graphics.text(character, 0, curTextSize);
+
+          // binary search for highest pixel
+          while(yLoc !== bottom) {
+            for (var xLoc = 0; xLoc < curTextSize; xLoc++) {
+              if (graphics.get(xLoc, yLoc) !== colour) {
+                found = true;
+                xLoc = curTextSize;
+              }
+            }
+            if (found) {
+              // y--
+              bottom = yLoc;
+              found = false;
+            } else {
+              // y++
+              top = yLoc;
+            }
+            yLoc = Math.ceil((bottom + top)/2);
+          }
+          ascent = ((curTextSize-1) - yLoc) + 1;
+          return ascent;
+        } else { // text size and font have not changed since last time
+          return ascent;
+        }
+      };
+    }());
+
+    p.textDescent = (function() {
+      var oldTextSize = undef,
+          oldTextFont = undef,
+          descent     = undef,
+          graphics    = undef;
+      return function textDescent() {
+        // if text size or font has changed, recalculate descent value
+        if (oldTextFont !== curTextFont || oldTextSize !== curTextSize) {
+          // store current size and font
+          oldTextFont = curTextFont;
+          oldTextSize = curTextSize;
+          
+          var found       = false,
+              character   = "p",
+              colour      = p.color(0),
+              top         = 0,
+              bottom      = curTextSize,
+              yLoc        = curTextSize/2;
+
+          // setup off screen image to write and measure text from
+          if (graphics !== undef) {
+            graphics.size(curTextSize, curTextSize);
+          } else {
+            graphics = p.createGraphics(curTextSize, curTextSize);
+          }
+          graphics.background(0);
+          graphics.fill(255);
+          graphics.textFont(curTextFont, curTextSize);
+          graphics.text(character, 0, 0);
+
+          // binary search for lowest pixel
+          while(yLoc !== bottom) {
+            for (var xLoc = 0; xLoc < curTextSize; xLoc++) {
+              if (graphics.get(xLoc, yLoc) !== colour) {
+                found = true;
+                xLoc = curTextSize;
+              }
+            }
+            if (found) {
+              // y++
+              top = yLoc;
+              found = false;
+            } else {
+              // y--
+              bottom = yLoc;
+            }
+            yLoc = Math.ceil((bottom + top)/2);
+          }
+          descent = yLoc + 1;
+          return descent;
+        } else { // text size and font have not changed since last time
+          return descent;
+        }
+      };
+    }());
+
     // A lookup table for characters that can not be referenced by Object
     p.glyphLook = function glyphLook(font, chr) {
       try {
@@ -11211,8 +11323,8 @@
       "shininess", "shorten", "sin", "size", "smooth", "sort", "specular", 
       "sphere", "sphereDetail", "splice", "split", "splitTokens", "spotLight", 
       "sq", "sqrt", "status", "str", "stroke", "strokeCap", "strokeJoin", 
-      "strokeWeight", "subset", "tan", "text", "textAlign", "textFont", 
-      "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
+      "strokeWeight", "subset", "tan", "text", "textAlign", "textAscent", "textDescent",
+      "textFont", "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
       "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed", 
       "__mousePressed"];
