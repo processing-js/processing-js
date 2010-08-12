@@ -10532,15 +10532,14 @@
           saveContext();
           curContext.setTransform(1,0,0,1,0,0);
         }
-        var asc = 7;
-        var des = 3;
+        var asc = p.textAscent();
+        var des = p.textDescent();
         var tWidth = p.textWidth(arguments[0]);
         var tHeight = asc + des;
         var font = p.loadFont(curTextFont.origName);
         var hud = p.createGraphics(tWidth, tHeight);
         hud.beginDraw();
         hud.opaque = false;
-        //hud.background(105);
         hud.background(0, 0, 0, 0);
         hud.textFont(font);
         hud.textSize(curTextSize);
