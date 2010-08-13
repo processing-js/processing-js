@@ -1712,7 +1712,7 @@
           } else if (pieces[i].indexOf("rotate") !== -1) {
             var angle = m[0];
             if (m.length === 1) {
-              this.matrix.rotate(angle);
+              this.matrix.rotate(p.radians(angle));
             } else if (m.length === 3) {
               this.matrix.set(0, 1, m[1],  1, 0, m[2]);
               this.matrix.rotate(m[0]);
@@ -1884,7 +1884,7 @@
                   cy = tmpArray[1];
                   this.parsePathMoveto(cx, cy);
                   if (tmpArray.length > 2) {
-                    for (j = 2; j < tmpArray.length - 2; j+=2) {
+                    for (j = 2; j < tmpArray.length; j+=2) {
                       // absolute line to 
                       cx = tmpArray[j];
                       cy = tmpArray[j+1];
@@ -1897,7 +1897,7 @@
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
                   this.parsePathMoveto(cx,cy);
                   if (tmpArray.length > 2) {
-                    for (j = 2; j < tmpArray.length - 2; j+=2) {
+                    for (j = 2; j < tmpArray.length; j+=2) {
                       // relative line to 
                       cx += tmpArray[j];
                       cy += tmpArray[j + 1];
