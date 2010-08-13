@@ -1059,6 +1059,7 @@
         strokeColorBuffer,
         pointBuffer,
         shapeTexVBO,
+        canTex,   // texture for createGraphics
         curTexture = {width:0,height:0},
         curTextureMode = PConstants.IMAGE,
         usingTexture = false,
@@ -6114,6 +6115,7 @@
           }
           curContext = curElement.getContext("experimental-webgl");
           p.use3DContext = true;
+          canTex = curContext.createTexture(); // texture
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -6217,7 +6219,7 @@
           p.perspective();
           forwardTransform = modelView;
           reverseTransform = modelViewInv;
-
+          
           userMatrixStack = new PMatrixStack();
           // used by both curve and bezier, so just init here
           curveBasisMatrix = new PMatrix3D();
@@ -6274,11 +6276,8 @@
           var c = document.createElement("canvas");
           var ctx = c.getContext("2d");          
           var obj = ctx.createImageData(this.width, this.height);
-          var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
-          if(!uBuff){
-            uBuff = new Uint8Array(this.width * this.height * 4);
-            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-          }
+          var uBuff = new Uint8Array(this.width * this.height * 4);
+          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
           for(var i =0; i < uBuff.length; i++){
             obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
           }
@@ -8095,8 +8094,14 @@
       executeTexImage2D.apply(this, arguments);
     };
     
-    p.texture = function(pimage){
-      if (!pimage.__texture) {
+    p.texture = function(pimage) {
+      if (pimage.localName === "canvas") {
+        curContext.bindTexture(curContext.TEXTURE_2D, canTex);
+        executeTexImage2D(pimage);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+        curContext.generateMipmap(curContext.TEXTURE_2D);
+      } else if (!pimage.__texture) {
         var texture = curContext.createTexture();
         pimage.__texture = texture;
 
@@ -8107,19 +8112,20 @@
         var textureImage = ctx.createImageData(cvs.width, cvs.height);
 
         var imgData = pimage.toImageData();
-
+        
         for (var i = 0; i < cvs.width; i += 1) {
           for (var j = 0; j < cvs.height; j += 1) {
-            var index = (j * cvs.width + i) * 4;
+          var index = (j * cvs.width + i) * 4;
             textureImage.data[index + 0] = imgData.data[index + 0];
             textureImage.data[index + 1] = imgData.data[index + 1];
             textureImage.data[index + 2] = imgData.data[index + 2];
             textureImage.data[index + 3] = 255;
           }
         }
+        
         ctx.putImageData(textureImage, 0, 0);
         pimage.__cvs = cvs;
-
+        
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
@@ -8768,11 +8774,11 @@
       };
 
       this.mask = function(mask) {
-        this._mask = undef;
+        this.__mask = undef;
 
         if (mask instanceof PImage) {
           if (mask.width === this.width && mask.height === this.height) {
-            this._mask = mask;
+            this.__mask = mask;
           } else {
             throw "mask must have the same dimensions as PImage.";
           }
@@ -8781,7 +8787,7 @@
           // how do we update this for 0.9 this.imageData holding pixels ^^
           // mask.constructor ? and this.pixels.length = this.imageData.data.length instead ?
           if (this.pixels.length === mask.length) {
-            this._mask = mask;
+            this.__mask = mask;
           } else {
             throw "mask array must be the same length as PImage pixels array.";
           }
@@ -9245,30 +9251,41 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
-        var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-        var obj = img.toImageData();
+        var wid = w || img.width;
+        var hgt = h || img.height;
+        if (p.use3DContext) {
+          p.beginShape(p.QUADS);
+          p.texture(img.externals.canvas);
+          p.vertex(x, y, 0, 0, 0);
+          p.vertex(x, y+hgt, 0, 0, hgt);
+          p.vertex(x+wid, y+hgt, 0, wid, hgt);
+          p.vertex(x+wid, y, 0, wid, 0);
+          p.endShape();
+        } else {
+          var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
+          var obj = img.toImageData();
 
-        if (img._mask) {
-          var j, size;
-          if (img._mask instanceof PImage) {
-            var objMask = img._mask.toImageData();
-            for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
-              // using it as an alpha channel
-              obj.data[j + 1] = objMask.data[j];
-              // but only the blue color channel
-            }
-          } else {
-            for (j = 0, size = img._mask.length; j < size; ++j) {
-              obj.data[(j << 2) + 3] = img._mask[j];
+          if (img.__mask) {
+            var j, size;
+            if (img.__mask instanceof PImage) {
+              var objMask = img.__mask.toImageData();
+              for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+                // using it as an alpha channel
+                obj.data[j + 1] = objMask.data[j];
+                // but only the blue color channel
+              }
+            } else {
+              for (j = 0, size = img.__mask.length; j < size; ++j) {
+                obj.data[(j << 2) + 3] = img.__mask[j];
+              }
             }
           }
+
+          // draw the image
+          curTint(obj);
+        
+          curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
         }
-
-        // draw the image
-        curTint(obj);
-
-        curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height,
-          bounds.x, bounds.y, bounds.w, bounds.h);
       }
     };
 
