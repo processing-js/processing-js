@@ -1070,6 +1070,7 @@
         horizontalTextAlignment = PConstants.LEFT,
         verticalTextAlignment = PConstants.BASELINE,
         baselineOffset = 0.2, // percent 
+        tMode = PConstants.MODEL,
         // Pixels cache
         originalContext,
         proxyContext = null,
@@ -4732,8 +4733,12 @@
     };
 
     p.resetMatrix = function resetMatrix() {
-      forwardTransform.reset();
-      reverseTransform.reset();
+      if (p.use3DContext) {
+        forwardTransform.reset();
+        reverseTransform.reset();
+      } else {
+        curContext.setTransform(1,0,0,1,0,0);
+      }
     };
 
     p.applyMatrix = function applyMatrix() {
@@ -10211,6 +10216,7 @@
       if (name.indexOf(".svg") === -1) {
         return {
           name: "\"" + name + "\", sans-serif",
+          origName: name,
           width: function(str) {
             if ("measureText" in curContext) {
               return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
@@ -10639,7 +10645,6 @@
       var aspect = textcanvas.width/textcanvas.height;
       curContext = oldContext;
 
-      //curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas, false, true);
       executeTexImage2D(textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
@@ -10657,19 +10662,25 @@
       model.translate(x+xOffset-scalefactor/2, y-scalefactor, z);
       model.scale(-aspect*scalefactor, -scalefactor, scalefactor);
       model.translate(-1, -1, -1);
+      model.transpose();
 
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
       view.apply(modelView.array());
+      view.transpose();
+      
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
 
       curContext.useProgram(programObject2D);
       vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
       vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
       uniformi(programObject2D, "uSampler", [0]);
       uniformi(programObject2D, "picktype", 1);
-      uniformMatrix( programObject2D, "model", true,  model.array() );
-      uniformMatrix( programObject2D, "view", true, view.array() );
-      uniformMatrix( programObject2D, "projection", true, projection.array() );
+      uniformMatrix( programObject2D, "model", false,  model.array() );
+      uniformMatrix( programObject2D, "view", false, view.array() );
+      uniformMatrix( programObject2D, "projection", false, proj.array() );
       uniformf(programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
@@ -10795,15 +10806,47 @@
     }
 
     p.text = function text() {
-      if (arguments.length === 3) { // for text( str, x, y)
-        text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
-      } else if (arguments.length === 4) { // for text( str, x, y, z)
-        text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
-      } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
-      } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
-        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+      if(tMode === PConstants.SCREEN){  // TODO: 3D Screen not working yet due to 3D not working in textAscent
+        p.pushMatrix();
+        p.resetMatrix();
+        var asc = p.textAscent();
+        var des = p.textDescent();
+        var tWidth = p.textWidth(arguments[0]);
+        var tHeight = asc + des;
+        var font = p.loadFont(curTextFont.origName);
+        var hud = p.createGraphics(tWidth, tHeight);
+        hud.beginDraw();
+        hud.fill(currentFillColor);
+        hud.opaque = false;
+        hud.background(0, 0, 0, 0);
+        hud.textFont(font);
+        hud.textSize(curTextSize);
+        hud.text(arguments[0], 0, asc);
+        hud.endDraw();
+        if(arguments.length === 5 || arguments.length === 6){
+          p.image(hud, arguments[1], arguments[2]-asc, arguments[3], arguments[4]);
+        } else {
+          p.image(hud, arguments[1], arguments[2]-asc);
+        }
+        p.popMatrix();
       }
+      else if(tMode === PConstants.SHAPE){
+        // TODO: requires beginRaw function
+      } else {
+        if (arguments.length === 3) { // for text( str, x, y)
+          text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
+        } else if (arguments.length === 4) { // for text( str, x, y, z)
+          text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
+        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
+          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
+        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+        }
+      }
+    };
+    
+    p.textMode = function textMode(mode){
+      tMode = mode;
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
@@ -11426,13 +11469,14 @@
       "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random", 
       "Random", "randomSeed", "rect", "rectMode", "red", "redraw", 
       "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", 
-      "rotateZ", "round", "saturation", "save", "saveStrings", "scale", "screenX",
-      "screenY", "screenZ", "second", "set", "setup", "shape", "shapeMode", "shared", 
-      "shininess", "shorten", "sin", "size", "smooth", "sort", "specular", 
-      "sphere", "sphereDetail", "splice", "split", "splitTokens", "spotLight", 
-      "sq", "sqrt", "status", "str", "stroke", "strokeCap", "strokeJoin", 
-      "strokeWeight", "subset", "tan", "text", "textAlign", "textAscent", "textDescent",
-      "textFont", "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
+      "rotateZ", "round", "saturation", "save", "saveStrings", "scale", 
+      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape", 
+      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth", 
+      "sort", "specular", "sphere", "sphereDetail", "splice", "split", 
+      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke", 
+      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text", 
+      "textAlign", "textAscent", "textDescent", "textFont", "textMode", 
+      "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
       "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed", 
       "__mousePressed"];
