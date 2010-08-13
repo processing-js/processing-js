@@ -10652,7 +10652,7 @@
 
       // horizontal offset/alignment
       var xOffset = 0;
-      if(align === PConstants.RIGHT) {
+      if (align === PConstants.RIGHT) {
         xOffset = -textWidth;
       } else if(align === PConstants.CENTER) {
         xOffset = -textWidth/2;
@@ -10678,9 +10678,9 @@
       vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
       uniformi(programObject2D, "uSampler", [0]);
       uniformi(programObject2D, "picktype", 1);
-      uniformMatrix( programObject2D, "model", false,  model.array() );
-      uniformMatrix( programObject2D, "view", false, view.array() );
-      uniformMatrix( programObject2D, "projection", false, proj.array() );
+      uniformMatrix(programObject2D, "model", false,  model.array());
+      uniformMatrix(programObject2D, "view", false, view.array());
+      uniformMatrix(programObject2D, "projection", false, proj.array());
       uniformf(programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
@@ -10778,35 +10778,34 @@
       // actual draw
       var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       var xOffset = 0;
-      if(horizontalTextAlignment === PConstants.CENTER) {
+      if (horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width / 2;
-      } else if(horizontalTextAlignment === PConstants.RIGHT) {
+      } else if (horizontalTextAlignment === PConstants.RIGHT) {
         xOffset = width;
       }
 
       // offsets for alignment
       var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
-      if(verticalTextAlignment === PConstants.BOTTOM) {
+      if (verticalTextAlignment === PConstants.BOTTOM) {
         boxYOffset2 = height-yOffset;
-      } else if(verticalTextAlignment === PConstants.CENTER) {
+      } else if (verticalTextAlignment === PConstants.CENTER) {
         boxYOffset2 = (height-yOffset) / 2;
       }
 
-      for(var il=0,ll=drawCommands.length; il<ll; ++il) {
+      for (var il=0,ll=drawCommands.length; il<ll; ++il) {
         var command = drawCommands[il];
-        if(command.offset + boxYOffset2 < 0) {
+        if (command.offset + boxYOffset2 < 0) {
           continue; // skip if not inside box yet
         }
-        if(command.offset + boxYOffset2 + curTextSize > height) {
+        if (command.offset + boxYOffset2 + curTextSize > height) {
           break; // stop if no enough space for one more line draw
         }
-        lineFunction(command.text, x + xOffset, y + command.offset + boxYOffset1 + boxYOffset2, 
-                     z, horizontalTextAlignment);
+        lineFunction(command.text, x + xOffset, y + command.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
       }
     }
 
     p.text = function text() {
-      if(tMode === PConstants.SCREEN){  // TODO: 3D Screen not working yet due to 3D not working in textAscent
+      if (tMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
         p.pushMatrix();
         p.resetMatrix();
         var asc = p.textAscent();
@@ -10823,14 +10822,14 @@
         hud.textSize(curTextSize);
         hud.text(arguments[0], 0, asc);
         hud.endDraw();
-        if(arguments.length === 5 || arguments.length === 6){
+        if (arguments.length === 5 || arguments.length === 6) {
           p.image(hud, arguments[1], arguments[2]-asc, arguments[3], arguments[4]);
         } else {
           p.image(hud, arguments[1], arguments[2]-asc);
         }
         p.popMatrix();
       }
-      else if(tMode === PConstants.SHAPE){
+      else if (tMode === PConstants.SHAPE) {
         // TODO: requires beginRaw function
       } else {
         if (arguments.length === 3) { // for text( str, x, y)
