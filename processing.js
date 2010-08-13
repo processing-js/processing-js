@@ -7418,7 +7418,7 @@
     };
 
     p.endShape = function endShape(mode){
-      var closeShape = mode === p.CLOSE;
+      var closeShape = mode === PConstants.CLOSE;
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
