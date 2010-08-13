@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+	<title>Processing.js SVG LoadImage() rotate.svg with Transformations</title>
+	<script type="text/javascript" src="../../../processing.js"></script> 
+	<script type="text/javascript" src="../../init.js"></script> 
+
+</head>
+<body>
+
+
+	<script id="script" type="application/processing">
+  PShape s;
+
+  void setup() {
+    background(125);
+    size(400,400);
+    s = loadShape("rotate.svg");
+    smooth();
+    noLoop();
+  }
+
+  void draw() {
+    shape(s);
+  }
+	</script><canvas id="display" ></canvas>
+  <div> The actual shape: <img src="rotate.jpg"></div>
+</body>
+</html>
+
