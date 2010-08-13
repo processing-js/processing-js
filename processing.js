@@ -1714,8 +1714,8 @@
             if (m.length === 1) {
               this.matrix.rotate(p.radians(angle));
             } else if (m.length === 3) {
-              this.matrix.set(0, 1, m[1],  1, 0, m[2]);
-              this.matrix.rotate(m[0]);
+              this.matrix.translate(m[1], m[2]);
+              this.matrix.rotate(p.radians(m[0]));
               this.matrix.translate(-m[1], -m[2]);     
             }
           } else if (pieces[i].indexOf("skewX") !== -1) {
