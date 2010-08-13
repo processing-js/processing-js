@@ -1,9 +1,6 @@
 August 13, 2010 - Release 0.9.7
 
   * Added saveStrings() 
-  * Fixed Paser fails silently when keywords aren't in global member array 
-  * Fixed Parser test speed on new parser's generated constructors
-  * Fixed Parser bug: in-class default scope is not "this" but the DOM window
   * Added textMode()
   * Added 3D implementation to image()
   * Added 3D implementation to PImage 
@@ -33,6 +30,9 @@ August 13, 2010 - Release 0.9.7
   * Fixed tickle example is crashing using opera 10.53 on windows 7 
   * Fixed shaders so they pass shader validation 
   * Fixed frameRate() not changable outside of setup() 
+  * Fixed Paser fails silently when keywords aren't in global member array 
+  * Fixed Parser test speed on new parser's generated constructors
+  * Fixed Parser bug: in-class default scope is not "this" but the DOM window
   * Change name of opaque pjs directive to "transparent" transparency "transparent background" 
   * Removed newWebGLArray wrapper 
   * Removed unsupported symbols
