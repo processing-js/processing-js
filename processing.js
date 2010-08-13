@@ -10257,7 +10257,22 @@
       }
     };
 
-    p.createFont = function(name, size) {};
+    p.createFont = function(name, size, smooth, charset) {
+      if (arguments.length === 2) {
+        p.textSize(size);
+        return p.loadFont(name);
+      } else if (arguments.length === 3) {
+        // smooth: true for an antialiased font, false for aliased
+        p.textSize(size);
+        return p.loadFont(name);
+      } else if (arguments.length === 4) {
+        // charset: char array containing characters to be generated
+        p.textSize(size);
+        return p.loadFont(name);
+      } else {
+        throw("incorrent number of parameters for createFont");
+      }
+    };
 
     // Sets a 'current font' for use
     p.textFont = function textFont(name, size) {
@@ -11379,8 +11394,8 @@
       }
 
       var executeSketch = function(processing) {
-        // Don't start until all specified images in the cache are preloaded
-        if (!curSketch.imageCache.pending) {
+        // Don't start until all specified images and fonts in the cache are preloaded
+        if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           curSketch.attach(processing, PConstants);
 
           // Run void setup()
@@ -12580,28 +12595,47 @@
     // Parse out @pjs directive, if any.
     var dm = new RegExp(/\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g).exec(aCode);
     if (dm && dm.length === 2) {
-      var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
+      // masks contents of a JSON to be replaced later
+      // to protect the contents from further parsing
+      var jsonItems = [],
+          directives = dm.splice(1, 2)[0].replace(/\{([\s\S]*?)\}/g, (function() {
+            return function(all, item) {
+              jsonItems.push(item);
+              return "{" + (jsonItems.length-1) + "}";
+            };
+          }())).replace('\n', '').replace('\r', '').split(";");
 
       // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
       var clean = function(s) {
-        return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, '');
+        return s.replace(/^\s*["']?/, '').replace(/["']?\s*$/, '');
       };
 
       for (var i = 0, dl = directives.length; i < dl; i++) {
         var pair = directives[i].split('=');
         if (pair && pair.length === 2) {
-          var key = clean(pair[0]);
-          var value = clean(pair[1]);
+          var key = clean(pair[0]),
+              value = clean(pair[1]),
+              list = [];
           // A few directives require work beyond storying key/value pairings
           if (key === "preload") {
-            var list = value.split(',');
+            list = value.split(',');
             // All pre-loaded images will get put in imageCache, keyed on filename
-            for (var j = 0, ll = list.length; j < ll; j++) {
+            for (var j = 0, jl = list.length; j < jl; j++) {
               var imageName = clean(list[j]);
               sketch.imageCache.add(imageName);
             }
           } else if (key === "transparent") {
             sketch.options.isTransparent = value === "true";
+          // fonts can be declared as a string containing a url,
+          // or a JSON object, containing a font name, and a url
+          } else if (key === "font") {
+            list = value.split(",");
+            for (var x = 0, xl = list.length; x < xl; x++) {
+              var fontName = clean(list[x]),
+                  index = /^\{(\d*?)\}$/.exec(fontName);
+              // if index is not null, send JSON, otherwise, send string
+              sketch.fonts.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
+            }
           } else if (key === "crisp") {
             sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
@@ -12681,6 +12715,81 @@
         this.pending++;
         this.images[href] = img;
         img.src = href;
+      }
+    };
+    this.fonts = {
+      // template element used to compare font sizes
+      template: (function() {
+        var element = document.createElement('p');
+        element.style.fontFamily = "serif";
+        element.style.fontSize = "72px";
+        element.style.visibility = "hidden";
+        element.innerHTML = "abcmmmmmmmmmmlll";
+        document.getElementsByTagName("body")[0].appendChild(element);
+        return element;
+      }()),
+      // number of attempts to load a font
+      attempt: 0,
+      // returns true is fonts are all loaded,
+      // true if number of attempts hits the limit,
+      // false otherwise
+      pending: function() {
+        var r = true;
+        for (var i = 0; i < this.fontList.length; i++) {
+          // compares size of text in pixels, if equal, custom font is not yet loaded
+          if (this.fontList[i].offsetWidth === this.template.offsetWidth && this.fontList[i].offsetHeight === this.template.offsetHeight) {
+            r = false;
+            this.attempt++;
+          } else {
+            // removes loaded font from the array and dom, so we don't compare it again
+            document.getElementsByTagName("body")[0].removeChild(this.fontList[i]);
+            this.fontList.splice(i--, 1);
+            this.attempt = 0;
+          }
+        }
+        // give up loading after max attempts have been reached
+        if (this.attempt >= 30) {
+          r = true;
+          // remove remaining elements from the dom and array
+          for (var j = 0; j < this.fontList.length; j++) {
+            document.getElementsByTagName("body")[0].removeChild(this.fontList[j]);
+            this.fontList.splice(j--, 1);
+          }
+        }
+        // Remove the template element from the dom once done comparing
+        if (r) {
+          document.getElementsByTagName("body")[0].removeChild(this.template);
+        }
+        return r;
+      },
+      // fontList contains elements to compare font sizes against a template
+      fontList: [],
+      // string containing a css @font-face list of custom fonts
+      fontFamily: "",
+      // style element to hold the @font-face string
+      style: document.createElement('style'),
+      // adds a font to the font cache
+      // creates an element using the font, to start loading the font,
+      // and compare against a default font to see if the custom font is loaded
+      add: function(fontSrc) {
+        // fontSrc can be a string or a JSON object
+        // string contains a url to a font
+        // JSON object would contain a name and a url
+        // acceptable fonts are .ttf, .otf, and a data uri
+        var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
+            fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
+        // creating the @font-face style
+        this.fontFamily += "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
+        this.style.innerHTML = this.fontFamily;
+        document.getElementsByTagName("head")[0].appendChild(this.style);
+        // creating the element to load, and compare the new font
+        var preLoader = document.createElement('p');
+        preLoader.style.fontFamily = "'" + fontName + "', serif";
+        preLoader.style.fontSize = "72px";
+        preLoader.style.visibility = "hidden";
+        preLoader.innerHTML = "abcmmmmmmmmmmlll";
+        document.getElementsByTagName("body")[0].appendChild(preLoader);
+        this.fontList.push(preLoader);
       }
     };
     this.sourceCode = undefined;
