@@ -6579,7 +6579,6 @@
         // Modeling transformation
         var model = new PMatrix3D();
         model.scale(w, h, d);
-        model.transpose();
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
@@ -6621,6 +6620,7 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
+          normalMatrix.transpose();
 
           uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
 
@@ -6819,6 +6819,7 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
+          normalMatrix.transpose();
 
           curContext.useProgram(programObject3D);
           disableVertexAttribPointer(programObject3D, "aTexture");
@@ -8485,6 +8486,7 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
+          normalMatrix.transpose();
 
           uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
 
