@@ -6506,7 +6506,6 @@
         // Modeling transformation
         var model = new PMatrix3D();
         model.scale(w, h, d);
-        //model.transpose();
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
