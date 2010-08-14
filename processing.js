@@ -30,6 +30,41 @@
     return xhr.responseText;
   };
 
+  /* Browsers fixes start */
+  function fixReplaceByRegExp() {
+    var re = /t/g;
+    if ("t".replace(re,"") !== null && re.exec("t")) {
+      return; // it is not necessary
+    }
+    var _ie_replace = String.prototype.replace;
+    String.prototype.replace = function(searchValue, repaceValue) {
+      var result = _ie_replace.apply(this, arguments);
+      if (searchValue instanceof RegExp && searchValue.global) {
+        searchValue.lastIndex = 0;
+      }
+      return result;
+    };
+  }
+
+  function fixMatchByRegExp() {
+    var re = /t/g;
+    if ("t".match(re) !== null && re.exec("t")) {
+      return; // it is not necessary
+    }
+    var _ie_match = String.prototype.match;
+    String.prototype.match = function(searchValue) {
+      var result = _ie_match.apply(this, arguments);
+      if(searchValue instanceof RegExp && searchValue.global) {
+        searchValue.lastIndex = 0;
+      }
+      return result;
+    };
+  }
+  fixReplaceByRegExp();
+  fixMatchByRegExp();
+  /* Browsers fixes end */
+
+
   var PConstants = {
     X: 0,
     Y: 1,
@@ -987,6 +1022,19 @@
     // The height/width of the canvas
     p.width           = curElement.width  - 0;
     p.height          = curElement.height - 0;
+
+    p.defineProperty = function(obj, name, desc) {
+      if("defineProperty" in Object) {
+        Object.defineProperty(obj, name, desc);
+      } else {
+        if (desc.hasOwnProperty("get")) {
+          obj.__defineGetter__(name, desc.get);
+        }
+        if (desc.hasOwnProperty("set")) {
+          obj.__defineSetter__(name, desc.set);
+        }
+      }
+    };
 
     // "Private" variables used to maintain state
     var curContext,
@@ -9274,8 +9322,7 @@
           resetContext();
           curContext[name] = value;
         }
-        newContext.__defineGetter__(name, getter);
-        newContext.__defineSetter__(name, setter);
+        p.defineProperty(newContext, name, { get: getter, set: setter });
       }
       for(var n in curContext) {
         if(typeof curContext[n] === 'function') {
@@ -11234,11 +11281,13 @@
 
     p.extendClass = function extendClass(subClass, baseClass) {
       function extendGetterSetter(propertyName) {
-        subClass.__defineGetter__(propertyName, function() {
-          return baseClass[propertyName];
-        });
-        subClass.__defineSetter__(propertyName, function(v) {
-          baseClass[propertyName]=v;
+        p.defineProperty(subClass, propertyName, {
+          get: function() {
+            return baseClass[propertyName];
+          },
+          set: function(v) {
+            baseClass[propertyName]=v;
+          }
         });
       }
 
@@ -11597,7 +11646,7 @@
             }
           }
         } else {
-          window.setTimeout(executeSketch, 10, processing);
+          window.setTimeout(function() { executeSketch(processing); }, 10);
         }
       };
 
@@ -12282,8 +12331,9 @@
           var name = definition.name, staticName = className + "." + name;
           var declaration = "if(" + staticName + " === void(0)) {\n" +
             " " + staticName + " = " + definition.value + "; }\n" +
-            thisPrefix + "__defineGetter__('" + name + "',function(){return " + staticName + ";});\n" +
-            thisPrefix + "__defineSetter__('" + name + "',function(val){" + staticName + " = val;});\n";
+            "processing.defineProperty(" + replaceContext("this") + ", " +
+            "'" + name + "', { get: function(){return " + staticName + ";}, " +
+            "set: function(val){" + staticName + " = val;} });\n";
           staticDeclarations.push(declaration);
         }
         return staticDeclarations.join("");
