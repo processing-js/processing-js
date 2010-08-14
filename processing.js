@@ -62,8 +62,16 @@
   }
   fixReplaceByRegExp();
   fixMatchByRegExp();
-  /* Browsers fixes end */
 
+  // Opera createImageData fix
+  try {
+    if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
+      CanvasRenderingContext2D.prototype.createImageData = function (sw, sh) {
+        return new ImageData(sw, sh);
+      };
+    }
+  } catch(e) {}
+  /* Browsers fixes end */
 
   var PConstants = {
     X: 0,
@@ -8917,7 +8925,7 @@
       }
     };
 
-    var generic2dContext = document.createElement("canvas").getContext("2d");
+    var utilityContext2d = document.createElement("canvas").getContext("2d");
 
     var canvasDataCache = [undef, undef, undef]; // we need three for now
 
@@ -9136,29 +9144,20 @@
       } else if (arguments.length === 2 || arguments.length === 3) {
         this.width = aWidth || 1;
         this.height = aHeight || 1;
-        this.imageData = generic2dContext.createImageData(this.width, this.height);
+        this.imageData = utilityContext2d.createImageData(this.width, this.height);
+        //this.imageData = curContext.createImageData(this.width, this.height);
         this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
       } else {
         this.width = 0;
         this.height = 0;
-        this.imageData = generic2dContext.createImageData(1, 1);
+        this.imageData = utilityContext2d.createImageData(1, 1);
         this.format = PConstants.ARGB;
       }
     };
 
     p.PImage = PImage;
 
-    try {
-      // Opera createImageData fix
-      if (! ("createImageData" in CanvasRenderingContext2D.prototype)) {
-        CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {
-          return this.getImageData(0, 0, sw, sh);
-        };
-      }
-    } catch(e) {}
-
     p.createImage = function createImage(w, h, mode) {
-      // changed for 0.9
       return new PImage(w,h,mode);
     };
 
