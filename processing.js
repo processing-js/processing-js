@@ -5091,9 +5091,9 @@
 
       looping = window.setInterval(function() {
         try {
-          try {
+          if (document.hasFocus instanceof Function) {
             p.focused = document.hasFocus();
-          } catch(e) {}
+          }
           p.redraw();
         } catch(e_loop) {
           window.clearInterval(looping);
