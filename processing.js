@@ -8009,12 +8009,16 @@
         else {
           if (curShape === PConstants.POINTS) {
             for (i = 0; i < vertArray.length; i++) {
-              p.stroke(vertArray[i][6]);
+              if (doStroke) {
+                p.stroke(vertArray[i][6]);
+              }
               p.point(vertArray[i][0], vertArray[i][1]);
             }
           } else if (curShape === PConstants.LINES) {
             for (i = 0; (i + 1) < vertArray.length; i+=2) {
-              p.stroke(vertArray[i+1][6]);
+              if (doStroke) {
+                p.stroke(vertArray[i+1][6]);
+              }
               p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
             }
           } else if (curShape === PConstants.TRIANGLES) {
@@ -8024,10 +8028,16 @@
               curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              p.stroke(vertArray[i+2][6]);
-              p.fill(vertArray[i+2][5]);
-              executeContextFill();
-              executeContextStroke();
+
+              if (doFill) {
+                p.fill(vertArray[i+2][5]);
+                executeContextFill();
+              }
+              if (doStroke) {
+                p.stroke(vertArray[i+2][6]);
+                executeContextStroke();
+              }
+
               curContext.closePath();
             }
           } else if (curShape === PConstants.TRIANGLE_STRIP) {
@@ -8035,13 +8045,22 @@
               curContext.beginPath();
               curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              p.stroke(vertArray[i+1][6]);
-              p.fill(vertArray[i+1][5]);
+
+              if (doStroke) {
+                p.stroke(vertArray[i+1][6]);
+              }
+              if (doFill) {
+                p.fill(vertArray[i+1][5]);
+              }
 
               if (i + 2 < vertArray.length) {
                 curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-                p.stroke(vertArray[i+2][6]);
-                p.fill(vertArray[i+2][5]);
+                if (doStroke) {
+                  p.stroke(vertArray[i+2][6]);
+                }
+                if (doFill) {
+                  p.fill(vertArray[i+2][5]);
+                }
               }
               executeContextFill();
               executeContextStroke();
@@ -8053,20 +8072,32 @@
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[1][0], vertArray[1][1]);
               curContext.lineTo(vertArray[2][0], vertArray[2][1]);
-              p.stroke(vertArray[2][6]);
-              p.fill(vertArray[2][5]);
-              executeContextFill();
-              executeContextStroke();
+
+              if (doFill) {
+                p.fill(vertArray[2][5]);
+                executeContextFill();
+              }
+              if (doStroke) {
+                p.stroke(vertArray[2][6]);
+                executeContextStroke();
+              }
+
               curContext.closePath();
               for (i = 3; i < vertArray.length; i++) {
                 curContext.beginPath();
                 curContext.moveTo(vertArray[0][0], vertArray[0][1]);
                 curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                p.stroke(vertArray[i][6]);
-                p.fill(vertArray[i][5]);
-                executeContextFill();
-                executeContextStroke();
+
+                if (doFill) {
+                  p.fill(vertArray[i][5]);
+                  executeContextFill();
+                }
+                if (doStroke) {
+                  p.stroke(vertArray[i][6]);
+                  executeContextStroke();
+                }
+
                 curContext.closePath();
               }
             }
@@ -8078,10 +8109,16 @@
                 curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
               }
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              p.stroke(vertArray[i+3][6]);
-              p.fill(vertArray[i+3][5]);
-              executeContextFill();
-              executeContextStroke();
+
+              if (doFill) {
+                p.fill(vertArray[i+3][5]);
+                executeContextFill();
+              }
+              if (doStroke) {
+                p.stroke(vertArray[i+3][6]);
+                executeContextStroke();
+              }
+
               curContext.closePath();
             }
           } else if (curShape === PConstants.QUAD_STRIP) {
@@ -8093,8 +8130,13 @@
                   curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                   curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
                   curContext.lineTo(vertArray[i+3][0], vertArray[i+3][1]);
-                  p.stroke(vertArray[i+3][6]);
-                  p.fill(vertArray[i+3][5]);
+
+                  if (doFill) {
+                    p.fill(vertArray[i+3][5]);
+                  }
+                  if (doStroke) {
+                    p.stroke(vertArray[i+3][6]);
+                  }
                 } else {
                   curContext.moveTo(vertArray[i][0], vertArray[i][1]);
                   curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
@@ -11570,11 +11612,6 @@
     }
 
   };
-
-  Processing.version = "@VERSION@";
-
-  // Share lib space
-  Processing.lib = {};
 
   // Processing global methods and constants for the parser
   function getGlobalMembers() {
