@@ -1,4 +1,4 @@
-/*
+m/*
 
     P R O C E S S I N G . J S - @VERSION@
     a port of the Processing visualization language
@@ -63,14 +63,15 @@
   fixReplaceByRegExp();
   fixMatchByRegExp();
 
-  // Opera createImageData fix
-  try {
-    if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
-      CanvasRenderingContext2D.prototype.createImageData = function (sw, sh) {
-        return new ImageData(sw, sh);
-      };
-    }
-  } catch(e) {}
+  (function fixOperaCreateImageData() {
+    try {
+      if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
+        CanvasRenderingContext2D.prototype.createImageData = function (sw, sh) {
+          return new ImageData(sw, sh);
+        };
+      }
+    } catch(e) {}
+  }());
   /* Browsers fixes end */
 
   var PConstants = {
@@ -9145,7 +9146,6 @@
         this.width = aWidth || 1;
         this.height = aHeight || 1;
         this.imageData = utilityContext2d.createImageData(this.width, this.height);
-        //this.imageData = curContext.createImageData(this.width, this.height);
         this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
       } else {
         this.width = 0;
