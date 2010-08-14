@@ -1,4 +1,4 @@
-m/*
+/*
 
     P R O C E S S I N G . J S - @VERSION@
     a port of the Processing visualization language
