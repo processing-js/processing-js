@@ -5,6 +5,7 @@
 var ignoreGlobalsWarnings = {
   extendClass: "Class extend helper",
   addMethod: "Class add method helper",
+  defineProperty: "Utility to define object properties (ECMAScript v5)",
   imageData: "Canvas imageData object"
 };
 
