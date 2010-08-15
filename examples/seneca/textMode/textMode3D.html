@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="processing.js"></script>
+  </head>
+  <body>
+    <h1>textMode() test - 2D</h1>
+
+    <p>
+    <canvas datasrc="textMode2D.pjs" height="100" width="100"></canvas>
+    </p>
+
+    <pre>
+    
+size(100, 100, P2D);
+PFont metaBold;
+metaBold = loadFont("Serif.plain-12.vlw");
+textFont(metaBold);
+String lines = "screen";
+
+//rotateZ(0.1);
+translate(20,0);
+text(lines, 3, 20);
+textMode(SCREEN);
+text(lines, 3, 45);
+textMode(MODEL);
+translate(-10,0);
+text(lines, 3, 70);
+    </pre>
+  </body>
+</html>

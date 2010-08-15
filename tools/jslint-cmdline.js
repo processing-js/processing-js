@@ -70,9 +70,10 @@ var JSLINT = (function () {
         blur: false,
         clearInterval: false,
         clearTimeout: false,
-        WebGLFloatArray: true,
-        WebGLUnsignedShortArray: true,
-        CanvasFloatArray: true,
+        ImageData:  true,
+        Float32Array: true,
+        Uint8Array: true,
+        Uint16Array: true,
         CanvasRenderingContext2D: true,
         DOMParser: true,
         close: false,
@@ -117,7 +118,8 @@ var JSLINT = (function () {
         setTimeout: false,
         status: false,
         top: false,
-        XMLHttpRequest: false
+        XMLHttpRequest: false,
+        localStorage: true
     },
         cssAttributeData, cssAny, cssColorData = {
         "aliceblue": true,

@@ -15,7 +15,7 @@ VERSION ?= $(error Specify a version for your release (e.g., VERSION=0.5))
 
 release: release-files zipped
 
-release-files: pjs yui example release-docs
+release-files: pjs yui closure example release-docs
 
 zipped: release-files
 	gzip -c ./release/processing-${VERSION}.min.js > ./release/processing-${VERSION}.min.js.gz
@@ -61,7 +61,7 @@ yui: create-release
 # check for any parsing errors in compiled version of processing.js
 	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.min.js
 
-check:
+check: check-globals
 	${TOOLSDIR}/runtests.py ${JSSHELL}
 
 check-release: yui
@@ -79,18 +79,22 @@ check-parser:
 check-unit:
 	${TOOLSDIR}/runtests.py -u ${JSSHELL}
 
-CLOSUREJAR ?= $(error Specify a valid path to a closure jar in ~/.profile: export CLOSUREJAR=~/compiler.jar)
+CLOSUREJAR ?= $(error Specify a valid path to a Google closure jar file in ~/.profile: export CLOSUREJAR=~/compiler.jar)
 
 SKETCHRUN ?= runSketch
 SKETCHINPUT ?= $(error Specify an input filename in SKETCHINPUT when using package-sketch)
 SKETCHOUTPUT ?= ${SKETCHINPUT}.js
 
-check-closure: create-release
+closure: create-release
+	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-${VERSION}.closure.js
+
+check-closure: closure
 	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-closure.js
 	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-closure.js
 
 compile-sketch:
 	${JSSHELL} -f processing.js -f ${TOOLSDIR}/jscompile.js < ${SKETCHINPUT} > ${SKETCHOUTPUT}
+	echo "Created ${SKETCHOUTPUT}"
 
 package-sketch:
 	echo "function ${SKETCHRUN}(canvas) {" > ${SKETCHOUTPUT}.src
@@ -100,6 +104,7 @@ package-sketch:
 	echo "); } window['${SKETCHRUN}']=${SKETCHRUN};" >> ${SKETCHOUTPUT}.src
 	java -jar ${CLOSUREJAR} --js=${SKETCHOUTPUT}.src --js_output_file=${SKETCHOUTPUT} --compilation_level ADVANCED_OPTIMIZATIONS
 	rm ${SKETCHOUTPUT}.src
+	echo "Created ${SKETCHOUTPUT}"
 
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
@@ -115,6 +120,12 @@ add-coverage: create-release
 
 check-coverage: add-coverage
 	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-cv.js -c ./release/codecoverage.txt
+
+check-globals:
+	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ${TOOLSDIR}/jsglobals.js -e "findDifference()" < processing.js
+
+print-globals:
+	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ${TOOLSDIR}/jsglobals.js -e "printNames()" < processing.js
 
 clean:
 	rm -fr ./release

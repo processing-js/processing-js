@@ -1,0 +1,15 @@
+String lines[] = loadStrings("strings.txt");
+
+println("there are " + lines.length + " lines");
+for (int i=0; i < lines.length; i++) {
+  println(": " + lines[i]);
+}
+
+saveStrings("strings.txt", concat(lines, ["line3"]));
+
+lines = loadStrings("strings.txt");
+
+println("there are " + lines.length + " lines");
+for (int i=0; i < lines.length; i++) {
+  println(": " + lines[i]);
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../processing.js"></script>
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <h1>createGraphics() test - 3D</h1>
+
+    <p>
+    <canvas datasrc="createGraphics3D-2D.pjs" height="200" width="200"></canvas>
+    <canvas datasrc="createGraphics2D-3D.pjs" height="200" width="200"></canvas>
+    <canvas datasrc="createGraphics3D-3D.pjs" height="200" width="200"></canvas>
+    </p>
+
+    <pre>
+    
+--- 3D PGraphics on 2D Environment ---    
+PGraphics pg;
+float r = 0;
+
+void setup() {
+  size(200, 200);
+  pg = createGraphics(80, 80, P3D);
+}
+
+void draw() {
+  fill(0, 12);
+  rect(0, 0, width, height);
+  fill(255);
+  noStroke();
+  ellipse(mouseX, mouseY, 60, 60);
+  
+  pg.beginDraw();
+  pg.background(255, 0, 0);
+  pg.noFill();
+  pg.stroke(255);
+  pg.pushMatrix();
+  pg.translate(40, 40, 0);
+  pg.rotateY(mouseY);
+  pg.rotateX(mouseX);
+  pg.box(20);
+  pg.popMatrix();
+  pg.endDraw();
+  
+  image(pg, 60, 60);
+}
+
+
+--- 2D PGraphics on 3D Environment ---
+PGraphics pg;
+float r = 0;
+float c = 0;
+
+void setup() {
+  size(200, 200, P3D);
+  pg = createGraphics(80, 80);
+}
+
+void draw() {
+  background(204);
+  fill(0, 0, c, 255);
+  noStroke();
+  pushMatrix();
+  translate(20, 20, 0);
+  rotateY(mouseX);
+  rotateX(mouseY);
+  box(20);
+  popMatrix();
+  
+  pg.beginDraw();
+  pg.background(0, 0, 0);
+  pg.stroke(255);
+  pg.fill(0, 0, c, 255);
+  pg.ellipse(mouseX-60, mouseY-60, 60, 60);
+  pg.endDraw();
+  
+  image(pg, 60, 60);
+  c += 1;
+}
+
+
+--- 3D PGraphics on 3D Environment ---
+PGraphics pg;
+float c = 0;
+
+void setup() {
+  size(200, 200, P3D);
+  pg = createGraphics(80, 80, P3D);
+}
+
+void draw() {
+  background(204);
+  fill(0, 0, c, 255);
+  noStroke();
+  pushMatrix();
+  translate(20, 20, 0);
+  rotateY(mouseX);
+  rotateX(mouseY);
+  box(20);
+  popMatrix();
+  
+  pg.beginDraw();
+  pg.background(0);
+  pg.noFill();
+  pg.stroke(255);
+  pg.pushMatrix();
+  pg.translate(40, 40, 0);
+  pg.rotateY(mouseY);
+  pg.rotateX(mouseX);
+  pg.box(20);
+  pg.popMatrix();
+  pg.endDraw();
+  
+  image(pg, 60, 60);
+  c++;
+}
+    </pre>
+  </body>
+</html>

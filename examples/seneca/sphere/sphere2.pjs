@@ -1,7 +1,7 @@
 void setup()
 {
   size(500,500,OPENGL);
-  setInterval(function() { println(FRAME_RATE.toFixed(2) + " fps"); }, 2000);
+  setInterval(function() { println(frameRate.toFixed(2) + " fps"); }, 2000);
   sphereDetail(25,25);
   noStroke();
 }
