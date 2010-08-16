@@ -89,8 +89,8 @@ var document = {
   appendChild: __elem_func__,
   removeChild: __empty_func__,
   getElementById: __empty_func__,
-  getElementByTagName: function() { return canvas; },
-  createElement: function () { return canvas },
+  getElementsByTagName: function() { return [canvas]; },
+  createElement: function () { return canvas; },
   addEventListener: __empty_func__,
   documentElement: {
     appendChild: __elem_func__,

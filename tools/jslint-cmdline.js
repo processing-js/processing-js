@@ -70,6 +70,7 @@ var JSLINT = (function () {
         blur: false,
         clearInterval: false,
         clearTimeout: false,
+        ImageData:  true,
         Float32Array: true,
         Uint8Array: true,
         Uint16Array: true,

@@ -1,0 +1,27 @@
+size(100, 100, P2D);
+PFont metaBold;
+metaBold = loadFont("Arial");
+textFont(metaBold);
+String lines = "screen";
+
+fill(0);
+text("1", 1, 10);
+text("2", 1, 20);
+text("3", 1, 30);
+text("4", 1, 40);
+text("5", 1, 50);
+text("6", 1, 60);
+text("7", 1, 70);
+text("8", 1, 80);
+text("9", 1, 90);
+text("10", 1, 100);
+
+fill(255);
+//rotateZ(0.1);
+translate(20,0);
+text(lines, 10, 20);
+textMode(SCREEN);
+text(lines, 10, 45);
+textMode(MODEL);
+translate(-10,0);
+text(lines, 10, 70);

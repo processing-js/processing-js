@@ -21,17 +21,61 @@
   var undef; // intentionally left undefined
 
   var ajax = function ajax(url) {
-    var xhr = new XMLHttpRequest(); 
+    var xhr = new XMLHttpRequest();
     xhr.open("GET", url, false);
     xhr.setRequestHeader("If-Modified-Since", "Fri, 1 Jan 1960 00:00:00 GMT");
     xhr.send(null);
     // failed request?
     if (xhr.status !== 200 && xhr.status !== 0) { throw ("XMLHttpRequest failed, status code " + xhr.status); }
-    return xhr.responseText; 
+    return xhr.responseText;
   };
 
+  /* Browsers fixes start */
+  function fixReplaceByRegExp() {
+    var re = /t/g;
+    if ("t".replace(re,"") !== null && re.exec("t")) {
+      return; // it is not necessary
+    }
+    var _ie_replace = String.prototype.replace;
+    String.prototype.replace = function(searchValue, repaceValue) {
+      var result = _ie_replace.apply(this, arguments);
+      if (searchValue instanceof RegExp && searchValue.global) {
+        searchValue.lastIndex = 0;
+      }
+      return result;
+    };
+  }
+
+  function fixMatchByRegExp() {
+    var re = /t/g;
+    if ("t".match(re) !== null && re.exec("t")) {
+      return; // it is not necessary
+    }
+    var _ie_match = String.prototype.match;
+    String.prototype.match = function(searchValue) {
+      var result = _ie_match.apply(this, arguments);
+      if(searchValue instanceof RegExp && searchValue.global) {
+        searchValue.lastIndex = 0;
+      }
+      return result;
+    };
+  }
+  fixReplaceByRegExp();
+  fixMatchByRegExp();
+
+  (function fixOperaCreateImageData() {
+    try {
+      if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
+        CanvasRenderingContext2D.prototype.createImageData = function (sw, sh) {
+          return new ImageData(sw, sh);
+        };
+      }
+    } catch(e) {}
+  }());
+  /* Browsers fixes end */
+
   var PConstants = {
-    X: 0, 
+    X: 0,
     Y: 1,
     Z: 2,
 
@@ -80,7 +124,7 @@
     SPR: 28,
     SPG: 29,
     SPB: 30,
-    
+
     SHINE: 31,
 
     ER: 32,
@@ -130,7 +174,7 @@
     HSB:   3,
     ALPHA: 4,
     CMYK:  5,
-    
+
     // Image file types
     TIFF:  0,
     TARGA: 1,
@@ -196,21 +240,21 @@
     BOX:            41,
 
     GROUP:          0,
-    PRIMITIVE:      1, 
+    PRIMITIVE:      1,
     //PATH:         21, // shared with Shape PATH
     GEOMETRY:       3,
-   
+
     // Shape Vertex
     VERTEX:        0,
     BEZIER_VERTEX: 1,
     CURVE_VERTEX:  2,
     BREAK:         3,
     CLOSESHAPE:    4,
-    
+
     // Shape closing modes
     OPEN:  1,
     CLOSE: 2,
-    
+
     // Shape drawing modes
     CORNER:          0, // Draw mode convention to use (x, y) to (width, height)
     CORNERS:         1, // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
@@ -321,7 +365,7 @@
           }
         };
       }
-    } 
+    }
   }
 
   setupTypedArray("Float32Array", "WebGLFloatArray");
@@ -348,7 +392,7 @@
           this.push(arguments[0]); // for add(Object)
         } else if (arguments.length === 2) {
           if (typeof arguments[0] === 'number') {
-            if (arguments[0] >= 0 && arguments[0] <= this.length) { 
+            if (arguments[0] >= 0 && arguments[0] <= this.length) {
               this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
             } else {
               throw(arguments[0] + " is not a valid index");
@@ -501,7 +545,7 @@
           findNext();
           return result;
         };
-        
+
         this.remove = function() {
           removeItem(this.next());
           --itemIndex;
@@ -514,11 +558,11 @@
         this.clear = function() {
           hashMap.clear();
         };
-        
+
         this.contains = function(o) {
           return isIn(o);
         };
-        
+
         this.containsAll = function(o) {
           var it = o.iterator();
           while (it.hasNext()) {
@@ -528,15 +572,15 @@
           }
           return true;
         };
-        
+
         this.isEmpty = function() {
           return hashMap.isEmpty();
         };
-        
+
         this.iterator = function() {
           return new Iterator(conversion, removeItem);
         };
-        
+
         this.remove = function(o) {
           if (this.contains(o)) {
             removeItem(o);
@@ -544,7 +588,7 @@
           }
           return false;
         };
-        
+
         this.removeAll = function(c) {
           var it = c.iterator();
           var changed = false;
@@ -557,7 +601,7 @@
           }
           return true;
         };
-        
+
         this.retainAll = function(c) {
           var it = this.iterator();
           var toRemove = [];
@@ -572,11 +616,11 @@
           }
           return toRemove.length > 0;
         };
-        
+
         this.size = function() {
           return hashMap.size();
         };
-        
+
         this.toArray = function() {
           var result = new ArrayList(0);
           var it = this.iterator();
@@ -591,23 +635,23 @@
         this._isIn = function(map) {
           return map === hashMap && (pair.removed === undef);
         };
-        
+
         this.equals = function(o) {
           return virtEquals(pair.key, o.getKey());
         };
-        
+
         this.getKey = function() {
           return pair.key;
         };
-        
+
         this.getValue = function() {
           return pair.value;
         };
-        
+
         this.hashCode = function(o) {
           return virtHashCode(pair.key);
         };
-        
+
         this.setValue = function(value) {
           var old = pair.value;
           pair.value = value;
@@ -619,13 +663,13 @@
         count = 0;
         buckets = new Array(initialCapacity);
       };
-      
+
       this.clone = function() {
         var map = new HashMap();
         map.putAll(this);
         return map;
       };
-      
+
       this.containsKey = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
@@ -639,7 +683,7 @@
         }
         return false;
       };
-      
+
       this.containsValue = function(value) {
         for (var i = 0; i < buckets.length; ++i) {
           var bucket = buckets[i];
@@ -654,7 +698,7 @@
         }
         return false;
       };
-      
+
       this.entrySet = function() {
         return new Set(
 
@@ -670,7 +714,7 @@
           return hashMap.remove(pair.getKey());
         });
       };
-      
+
       this.get = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
@@ -684,11 +728,11 @@
         }
         return null;
       };
-      
+
       this.isEmpty = function() {
         return count === 0;
       };
-      
+
       this.keySet = function() {
         return new Set(
 
@@ -704,7 +748,7 @@
           return hashMap.remove(key);
         });
       };
-      
+
       this.put = function(key, value) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
@@ -732,7 +776,7 @@
         ensureLoad();
         return null;
       };
-      
+
       this.putAll = function(m) {
         var it = m.entrySet().iterator();
         while (it.hasNext()) {
@@ -740,7 +784,7 @@
           this.put(entry.getKey(), entry.getValue());
         }
       };
-      
+
       this.remove = function(key) {
         var index = virtHashCode(key) % buckets.length;
         var bucket = buckets[index];
@@ -762,11 +806,11 @@
         }
         return null;
       };
-      
+
       this.size = function() {
         return count;
       };
-      
+
       this.values = function() {
         var result = new ArrayList(0);
         var it = this.entrySet().iterator();
@@ -988,6 +1032,19 @@
     p.width           = curElement.width  - 0;
     p.height          = curElement.height - 0;
 
+    p.defineProperty = function(obj, name, desc) {
+      if("defineProperty" in Object) {
+        Object.defineProperty(obj, name, desc);
+      } else {
+        if (desc.hasOwnProperty("get")) {
+          obj.__defineGetter__(name, desc.get);
+        }
+        if (desc.hasOwnProperty("set")) {
+          obj.__defineSetter__(name, desc.set);
+        }
+      }
+    };
+
     // "Private" variables used to maintain state
     var curContext,
         curSketch,
@@ -1059,6 +1116,7 @@
         strokeColorBuffer,
         pointBuffer,
         shapeTexVBO,
+        canTex,   // texture for createGraphics
         curTexture = {width:0,height:0},
         curTextureMode = PConstants.IMAGE,
         usingTexture = false,
@@ -1068,7 +1126,8 @@
         // Text alignment
         horizontalTextAlignment = PConstants.LEFT,
         verticalTextAlignment = PConstants.BASELINE,
-        baselineOffset = 0.2, // percent 
+        baselineOffset = 0.2, // percent
+        tMode = PConstants.MODEL,
         // Pixels cache
         originalContext,
         proxyContext = null,
@@ -1131,7 +1190,7 @@
     //PShape stuff
     var curShapeMode = PConstants.CORNER;
 
-    var colors = { 
+    var colors = {
       aliceblue:            "#f0f8ff",
       antiquewhite:         "#faebd7",
       aqua:                 "#00ffff",
@@ -1314,7 +1373,7 @@
     // Vertex shader for points and lines
     var vShaderSrcUnlitShape =
       "varying vec4 frontColor;" +
-      
+
       "attribute vec3 aVertex;" +
       "attribute vec4 aColor;" +
 
@@ -1340,7 +1399,7 @@
     // Vertex shader for points and lines
     var vertexShaderSource2D =
       "varying vec4 frontColor;" +
-      
+
       "attribute vec3 Vertex;" +
       "attribute vec2 aTextureCoord;" +
       "uniform vec4 color;" +
@@ -1363,7 +1422,7 @@
       "precision highp float;\n" +
       "#endif\n" +
 
-      "varying vec4 frontColor;" +            
+      "varying vec4 frontColor;" +
       "varying vec2 vTextureCoord;"+
 
       "uniform sampler2D uSampler;"+
@@ -1382,7 +1441,7 @@
     // Vertex shader for boxes and spheres
     var vertexShaderSource3D =
       "varying vec4 frontColor;" +
-      
+
       "attribute vec3 Vertex;" +
       "attribute vec3 Normal;" +
       "attribute vec4 aColor;" +
@@ -1571,9 +1630,9 @@
       "#ifdef GL_ES\n" +
       "precision highp float;\n" +
       "#endif\n" +
-      
+
       "varying vec4 frontColor;" +
-      
+
       "uniform sampler2D sampler;" +
       "uniform bool usingTexture;" +
       "varying vec2 vTexture;" +
@@ -1738,7 +1797,7 @@
     Char.prototype.valueOf = function() {
       return this.code;
     };
-    
+
     ////////////////////////////////////////////////////////////////////////////
     // PShape
     ////////////////////////////////////////////////////////////////////////////
@@ -1751,7 +1810,7 @@
       this.params    = [];
       this.name      = "";
       this.image     = null;  //type PImage
-      this.matrix    = null; 
+      this.matrix    = null;
       this.kind      = null;
       this.close     = null;
       this.width     = null;
@@ -1854,7 +1913,7 @@
                 break;
               case PConstants.BREAK:
                 p.breakShape = true;
-                break;                  
+                break;
               }
             }
           } else {  // drawing a 3D path
@@ -1913,11 +1972,11 @@
         }
       };
       this.drawPrimitive = function() {
-        switch (this.kind) {        
+        switch (this.kind) {
           case PConstants.POINT:
             p.point(this.params[0], this.params[1]);
             break;
-          case PConstants.LINE: 
+          case PConstants.LINE:
             if (this.params.length === 4) {  // 2D
               p.line(this.params[0], this.params[1],
                      this.params[2], this.params[3]);
@@ -1969,7 +2028,8 @@
       this.pre = function() {
         if (this.matrix) {
           p.pushMatrix();
-          //this.applyMatrix( this.matrix ); //applyMatrix missing
+          curContext.transform(this.matrix.elements[0], this.matrix.elements[3], this.matrix.elements[1], this.matrix.elements[4], this.matrix.elements[2], this.matrix.elements[5]);
+          //p.applyMatrix(this.matrix.elements[0],this.matrix.elements[0]);
         }
         if (this.style) {
           p.pushStyle();
@@ -1996,11 +2056,12 @@
 
         if (this.fill) {
           p.fill(this.fillColor);
+
         } else {
           p.noFill();
         }
       };
-      
+
       // return the PShape at the specific index from the children array or
       // return the Phape from a parent shape specified by its name
       this.getChild = function(child) {
@@ -2029,7 +2090,7 @@
             }
           }
           return null;
-        }              
+        }
       };
       this.getChildCount = function () {
         return this.children.length;
@@ -2048,7 +2109,6 @@
           this.nameTable.push( [name, shape] );
         }
       };
-      // findChild not in yet
       this.translate = function() {
         if(arguments.length === 2)
         {
@@ -2104,17 +2164,39 @@
         this.checkMatrix(2);
         this.matrix.reset();
       };
-      // applyMatrix missing
+      this.applyMatrix = function(matrix) {
+        if (arguments.length === 1) {
+          this.applyMatrix(matrix.elements[0], matrix.elements[1], 0, matrix.elements[2],
+                          matrix.elements[3], matrix.elements[4], 0, matrix.elements[5],
+                          0, 0, 1, 0,
+                          0, 0, 0, 1);
+        } else if (arguments.length === 6) {
+          this.checkMatrix(2);
+          this.matrix.apply(arguments[0], arguments[1], arguments[2], 0,
+                            arguments[3], arguments[4], arguments[5], 0,
+                            0,   0,   1,   0,
+                            0,   0,   0,   1);
+
+        } else if (arguments.length === 16) {
+          this.checkMatrix(3);
+          this.matrix.apply(arguments[0], arguments[1], arguments[2], arguments[3],
+                            arguments[4], arguments[5], arguments[6], arguments[7],
+                            arguments[8], arguments[9], arguments[10], arguments[11],
+                            arguments[12], arguments[13], arguments[14], arguments[15]);
+        }
+      };
+      // findChild not in yet
       // apply missing
       // contains missing
       // find child missing
       // getPrimitive missing
+      // getParams missing
       // getVertex , getVertexCount missing
       // getVertexCode , getVertexCodes , getVertexCodeCount missing
       // getVertexX, getVertexY, getVertexZ missing
-      
+
     };
-    
+
     var PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
       if (arguments.length === 1) {
@@ -2123,7 +2205,7 @@
         this.vertexCodes         = [];
         this.vertices            = [];
         this.opacity             = 1;
-        
+
         this.stroke              = false;
         this.strokeColor         = PConstants.ALPHA_MASK;
         this.strokeWeight        = 1;
@@ -2153,7 +2235,7 @@
             this.vertexCodes         = [];
             this.vertices            = [];
             this.opacity             = 1;
-             
+
             this.stroke              = false;
             this.strokeColor         = PConstants.ALPHA_MASK;
             this.strokeWeight        = 1;
@@ -2163,20 +2245,20 @@
             this.strokeGradientPaint = "";
             this.strokeName          = "";
             this.strokeOpacity       = 1;
-            
+
             this.fill                = true;
-            this.fillColor           = PConstants.ALPHA_MASK;        
+            this.fillColor           = PConstants.ALPHA_MASK;
             this.fillGradient        = null;
             this.fillGradientPaint   = null;
             this.fillOpacity         = 1;
-           
+
           }
         } else { // XMLElement
-          if (arguments[0]) { // PShapeSVG 
+          if (arguments[0]) { // PShapeSVG
             this.element             = arguments[1];
             this.vertexCodes         = arguments[0].vertexCodes.slice();
             this.vertices            = arguments[0].vertices.slice();
-            
+
             this.stroke              = arguments[0].stroke;
             this.strokeColor         = arguments[0].strokeColor;
             this.strokeWeight        = arguments[0].strokeWeight;
@@ -2194,10 +2276,10 @@
             this.strokeOpacity       = arguments[0].strokeOpacity;
             this.fillOpacity         = arguments[0].fillOpacity;
             this.opacity             = arguments[0].opacity;
-          }       
-        }     
+          }
+        }
       }
-      
+
       this.name      = this.element.getStringAttribute("id");
       var displayStr = this.element.getStringAttribute("display", "inline");
       this.visible   = displayStr !== "none";
@@ -2229,22 +2311,69 @@
           // font or something for which the w/h doesn't matter.
           this.width  = 1;
           this.height = 1;
-          
+
           //show warning
           throw("The width and/or height is not " +
                                 "readable in the <svg> tag of this file.");
         }
       }
-      this.parseColors(this.element); 
+      this.parseColors(this.element);
       this.parseChildren(this.element);
 
     };
-        
+
     PShapeSVG.prototype = {
-      // parseMatrix missing
       // getChild missing
       // print missing
-      parseMatrix: function(str) { },
+      // parse style attributes
+      // styles missing but deals with strokeGradient and fillGradient
+      parseMatrix: function(str) {
+        this.checkMatrix(2);
+        var pieces = [];
+        str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
+          // get a list of transform definitions
+          pieces.push(p.trim(all));
+        });
+        if (pieces.length === 0) {
+          p.println("Transformation:" + str + " is empty");
+          return null;
+        }
+        for (var i =0; i< pieces.length; i++) {
+          var m = [];
+          pieces[i].replace(/\((.*?)\)/, (function() {
+            return function(all, params) {
+              // get the coordinates that can be separated by spaces or a comma
+              m = params.replace(/,+/g, " ").split(/\s+/);
+            };
+          }()));
+
+          if (pieces[i].indexOf("matrix") !== -1) {
+            this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
+          } else if (pieces[i].indexOf("translate") !== -1) {
+            var tx = m[0];
+            var ty = (m.length === 2) ? m[1] : 0;
+            this.matrix.translate(tx,ty);
+          } else if (pieces[i].indexOf("scale") !== -1) {
+            var sx = m[0];
+            var sy = (m.length === 2) ? m[1] : m[0];
+            this.matrix.scale(sx,sy);
+          } else if (pieces[i].indexOf("rotate") !== -1) {
+            var angle = m[0];
+            if (m.length === 1) {
+              this.matrix.rotate(p.radians(angle));
+            } else if (m.length === 3) {
+              this.matrix.translate(m[1], m[2]);
+              this.matrix.rotate(p.radians(m[0]));
+              this.matrix.translate(-m[1], -m[2]);
+            }
+          } else if (pieces[i].indexOf("skewX") !== -1) {
+            this.matrix.skewX(parseFloat(m[0]));
+          } else if (pieces[i].indexOf("skewY") !== -1) {
+            this.matrix.skewY(m[0]);
+          }
+        }
+        return this.matrix;
+      },
       parseChildren:function(element) {
         var newelement = element.getChildren();
         var children   = new p.PShape();
@@ -2320,63 +2449,14 @@
         }
         return shape;
       },
-      parsePath: function(){
+      parsePath: function() {
         this.family = PConstants.PATH;
         this.kind = 0;
-         
+        var pathDataChars = [];
         var c;
-        var pathData = p.trim(this.element.getStringAttribute("d").replace(/\s+/g,' '));
+        var pathData = p.trim(this.element.getStringAttribute("d").replace(/[\s,]+/g,' ')); //change multiple spaces and commas to single space
         if (pathData === null) { return; }
-        var pathDataChars = pathData.toCharArray();
-
-        var pathBuffer = "";
-        var lastSeparate = false;
-
-        for (var i = 0; i < pathDataChars.length; i++) {
-          c = pathDataChars[i].toString();
-          var separate = false;
-
-          if (c === "M" || c === 'm' ||
-              c === 'L' || c === 'l' ||
-              c === 'H' || c === 'h' ||
-              c === 'V' || c === 'v' ||
-              c === 'C' || c === 'c' ||  // beziers
-              c === 'S' || c === 's' ||
-              c === 'Q' || c === 'q' ||  // quadratic beziers
-              c === 'T' || c === 't' ||
-              c === 'Z' || c === 'z' ||  // closepath
-              c === ',') {
-            separate = true;
-            if (i !== 0 ) {
-              pathBuffer +="|";
-            }
-          }
-          if (c === 'Z' || c === 'z') {
-            separate = false;
-          }
-          if (c === '-' && !lastSeparate) {
-            // allow for 'e' notation in numbers, e.g. 2.10e-9 
-            // http://dev.processing.org/bugs/show_bug.cgi?id=1408
-            if (i === 0 || pathDataChars[i-1] !== 'e') {
-              pathBuffer +="|";
-            }
-          }
-          if (c !== ',') {
-            pathBuffer += c; //"" + pathDataBuffer.charAt(i));
-          }
-          if (separate && c !== ',' && c !== '-') {
-            pathBuffer +="|";
-          }
-          lastSeparate = separate;
-        }
-        // split into array
-        var pathDataKeys = pathBuffer.toString().split(/[|\s+]/g);
-        // loop through the array and remove spaces
-        for(i =0; i < pathDataKeys.length; i++){
-          if (pathDataKeys[i] === ""){
-            pathDataKeys.splice(i, 1);
-          }
-        }  
+        pathData = pathData.toCharArray();
         var cx     = 0,
             cy     = 0,
             ctrlX  = 0,
@@ -2390,234 +2470,339 @@
             ppx    = 0,
             ppy    = 0,
             px     = 0,
-            py     = 0;  
-
-        i = 0;
-        while (i < pathDataKeys.length) {
-          c = p.trim(pathDataKeys[i].charAt(0 ));
-          switch (c) {
-
-            case 'M':  // M - move to (absolute)
-              cx = parseFloat(pathDataKeys[i + 1]);
-              cy = parseFloat(pathDataKeys[i + 2]);
-              this.parsePathMoveto(cx, cy);
-              i += 3;
-              break;
-
-            case 'm':  // m - move to (relative)
-              cx = parseFloat(cx)+ parseFloat(pathDataKeys[i + 1]);
-              cy = parseFloat(cy)+ parseFloat(pathDataKeys[i + 2]);
-              this.parsePathMoveto(cx, cy);
-              i += 3;
-              break;
-
-            case 'L':
-              cx = parseFloat(pathDataKeys[i + 1]);
-              cy = parseFloat(pathDataKeys[i + 2]);
-              this.parsePathLineto(cx, cy);
-              i += 3;
-              break;
-
-            case 'l':
-              cx = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
-              cy = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
-              this.parsePathLineto(cx, cy);
-              i += 3;
-              break;
-
-              // horizontal lineto absolute
-            case 'H':
-              cx = parseFloat(pathDataKeys[i + 1]);
-              this.parsePathLineto(cx, cy);
-              i += 2;
-              break;
-
-              // horizontal lineto relative
-            case 'h':
-              cx = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
-              this.parsePathLineto(cx, cy);
-              i += 2;
-              break;
-
-            case 'V':
-              cy = parseFloat(pathDataKeys[i + 1]);
-              this.parsePathLineto(cx, cy);
-              i += 2;
-              break;
-
-            case 'v':
-              cy = parseFloat(cy) + parseFloat(pathDataKeys[i + 1]);
-              this.parsePathLineto(cx, cy);
-              i += 2;
-              break;
-
-              // C - curve to (absolute)
-            case 'C': 
-              ctrlX1 = parseFloat(pathDataKeys[i + 1]);
-              ctrlY1 = parseFloat(pathDataKeys[i + 2]);
-              ctrlX2 = parseFloat(pathDataKeys[i + 3]);
-              ctrlY2 = parseFloat(pathDataKeys[i + 4]);
-              endX   = parseFloat(pathDataKeys[i + 5]);
-              endY   = parseFloat(pathDataKeys[i + 6]);
-              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-              cx = endX;
-              cy = endY;
-              i += 7;
-              break;
-
-            // c - curve to (relative)
-            case 'c': 
-              ctrlX1 = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
-              ctrlY1 = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
-              ctrlX2 = parseFloat(cx) + parseFloat(pathDataKeys[i + 3]);
-              ctrlY2 = parseFloat(cy) + parseFloat(pathDataKeys[i + 4]);
-              endX   = parseFloat(cx) + parseFloat(pathDataKeys[i + 5]);
-              endY   = parseFloat(cy) + parseFloat(pathDataKeys[i + 6]);
-              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-              cx = endX;
-              cy = endY;
-              i += 7;
-              break;
-
-              // S - curve to shorthand (absolute)
-            case 'S': 
-              ppx    = parseFloat(this.vertices[ this.vertices.length-2 ][0]);
-              ppy    = parseFloat(this.vertices[ this.vertices.length-2 ][1]);
-              px     = parseFloat(this.vertices[ this.vertices.length-1 ][0]);
-              py     = parseFloat(this.vertices[ this.vertices.length-1 ][1]);
-              ctrlX1 = px + (px - ppx);
-              ctrlY1 = py + (py - ppy);
-              ctrlX2 = parseFloat(pathDataKeys[i + 1]);
-              ctrlY2 = parseFloat(pathDataKeys[i + 2]);
-              endX   = parseFloat(pathDataKeys[i + 3]);
-              endY   = parseFloat(pathDataKeys[i + 4]);
-              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-              cx = endX;
-              cy = endY;
-              i += 5;
-              break;
-
-              // s - curve to shorthand (relative)
-            case 's': 
-              ppx    = parseFloat(this.vertices[this.vertices.length-2][0]);
-              ppy    = parseFloat(this.vertices[this.vertices.length-2][1]);
-              px     = parseFloat(this.vertices[this.vertices.length-1][0]);
-              py     = parseFloat(this.vertices[this.vertices.length-1][1]);
-              ctrlX1 = px + (px - ppx);
-              ctrlY1 = py + (py - ppy);
-              ctrlX2 = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
-              ctrlY2 = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
-              endX   = parseFloat(cx) + parseFloat(pathDataKeys[i + 3]);
-              endY   = parseFloat(cy) + parseFloat(pathDataKeys[i + 4]);
-              this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-              cx = endX;
-              cy = endY;
-              i += 5;
-              break;
-
-              // Q - quadratic curve to (absolute)
-            case 'Q': 
-              ctrlX = parseFloat(pathDataKeys[i + 1]);
-              ctrlY = parseFloat(pathDataKeys[i + 2]);
-              endX  = parseFloat(pathDataKeys[i + 3]);
-              endY  = parseFloat(pathDataKeys[i + 4]);
-              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-              cx = endX;
-              cy = endY;
-              i += 5;
-              break;
-
-              // q - quadratic curve to (relative)
-            case 'q': 
-              ctrlX = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
-              ctrlY = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
-              endX  = parseFloat(cx) + parseFloat(pathDataKeys[i + 3]);
-              endY  = parseFloat(cy) + parseFloat(pathDataKeys[i + 4]);
-              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-              cx = endX;
-              cy = endY;
-              i += 5;
-              break;
-
-              // T - quadratic curve to shorthand (absolute)
-              // The control point is assumed to be the reflection of the
-              // control point on the previous command relative to the
-              // current point. (If there is no previous command or if the
-              // previous command was not a Q, q, T or t, assume the control
-              // point is coincident with the current point.)
-            case 'T': 
-              ppx   = this.vertices[this.vertices.length-2][0];
-              ppy   = this.vertices[this.vertices.length-2][1];
-              px    = this.vertices[this.vertices.length-1][0];
-              py    = this.vertices[this.vertices.length-1][1];
-              ctrlX = px + (px - ppx);
-              ctrlY = py + (py - ppy);
-              endX  = parseFloat(pathDataKeys[i + 1]);
-              endY  = parseFloat(pathDataKeys[i + 2]);
-              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-              cx = endX;
-              cy = endY;
-              i += 3;
-              break;
-
-              // t - quadratic curve to shorthand (relative)
-            case 't': 
-              ppx   = this.vertices[this.vertices.length-2][0];
-              ppy   = this.vertices[this.vertices.length-2][1];
-              px    = this.vertices[this.vertices.length-1][0];
-              py    = this.vertices[this.vertices.length-1][1];
-              ctrlX = px + (px - ppx);
-              ctrlY = py + (py - ppy);
-              endX  = parseFloat(cx) + parseFloat(pathDataKeys[i + 1]);
-              endY  = parseFloat(cy) + parseFloat(pathDataKeys[i + 2]);
-              this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-              cx = endX;
-              cy = endY;
-              i += 3;
-              break;
-
-            case 'Z':
-            case 'z':
-              this.close = true;
-              i++;
-              break;
-
-            default:
-              i++;
-              /*String parsed =
-                PApplet.join(PApplet.subset(pathDataKeys, 0, i), ",");
-              String unparsed =
-                PApplet.join(PApplet.subset(pathDataKeys, i), ",");
-              System.err.println("parsed: " + parsed);
-              System.err.println("unparsed: " + unparsed);
-              if (pathDataKeys[i].equals("a") || pathDataKeys[i].equals("A")) {
-                String msg = "Sorry, elliptical arc support for SVG files " +
-                  "is not yet implemented (See bug #996 for details)";
-                throw new RuntimeException(msg);
+            py     = 0,
+            i      = 0,
+            j      = 0,
+            valOf  = 0;
+        var str = "";
+        var tmpArray =[];
+        var flag = false;
+        var lastInstruction;
+        var command;
+        while (i< pathData.length) {
+          valOf = pathData[i].valueOf();
+          if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { // if its a letter
+            // populate the tmpArray with coordinates
+            j = i;
+            i++;
+            if (i < pathData.length) { // dont go over boundary of array
+              tmpArray = [];
+              valOf = pathData[i].valueOf();
+              while (!((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 100) || (valOf >= 102 && valOf <= 122)) && flag === false) { // if its NOT a letter
+                if (valOf === 32) { //if its a space and the str isn't empty
+                  // somethimes you get a space after the letter
+                  if (str !== "") {
+                    tmpArray.push(parseFloat(str));
+                    str = "";
+                  }
+                  i++;
+                } else if (valOf === 45) { //if its a -
+                  // allow for 'e' notation in numbers, e.g. 2.10e-9
+                  if (pathData[i-1].valueOf() === 101) {
+                    str += pathData[i].toString();
+                    i++;
+                  } else {
+                    // sometimes no space separator after (ex: 104.535-16.322)
+                    if (str !== "") {
+                      tmpArray.push(parseFloat(str));
+                    }
+                    str = pathData[i].toString();
+                    i++;
+                  }
+                } else {
+                  str += pathData[i].toString();
+                  i++;
+                }
+                if (i === pathData.length) { // dont go over boundary of array
+                  flag = true;
+                } else {
+                  valOf = pathData[i].valueOf();
+                }
               }
-              throw new RuntimeException("shape command not handled: " + pathDataKeys[i]);
-            }*/
-          }
+            }
+            if (str !== "") {
+              tmpArray.push(parseFloat(str));
+              str = "";
+            }
+            command = pathData[j];
+            switch (command.valueOf()) {
+              case 77:  // M - move to (absolute)
+                if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { // need one+ pairs of co-ordinates
+                  cx = tmpArray[0];
+                  cy = tmpArray[1];
+                  this.parsePathMoveto(cx, cy);
+                  if (tmpArray.length > 2) {
+                    for (j = 2; j < tmpArray.length; j+=2) {
+                      // absolute line to
+                      cx = tmpArray[j];
+                      cy = tmpArray[j+1];
+                      this.parsePathLineto(cx,cy);
+                    }
+                  }
+                }
+                break;
+              case 109:  // m - move to (relative)
+                if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+                  this.parsePathMoveto(cx,cy);
+                  if (tmpArray.length > 2) {
+                    for (j = 2; j < tmpArray.length; j+=2) {
+                      // relative line to
+                      cx += tmpArray[j];
+                      cy += tmpArray[j + 1];
+                      this.parsePathLineto(cx,cy);
+                    }
+                  }
+                }
+                break;
+              case 76: // L - lineto (absolute)
+              if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+                for (j = 0; j < tmpArray.length; j+=2) {
+                  cx = tmpArray[j];
+                  cy = tmpArray[j + 1];
+                  this.parsePathLineto(cx,cy);
+                }
+              }
+              break;
+
+              case 108: // l - lineto (relative)
+                if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+                  for (j = 0; j < tmpArray.length; j+=2) {
+                    cx += tmpArray[j];
+                    cy += tmpArray[j+1];
+                    this.parsePathLineto(cx,cy);
+                  }
+                }
+                break;
+
+              case 72: // H - horizontal lineto (absolute)
+                for (j = 0; j < tmpArray.length; j++) { // multiple x co-ordinates can be provided
+                  cx = tmpArray[j];
+                  this.parsePathLineto(cx, cy);
+                }
+                break;
+
+              case 104: // h - horizontal lineto (relative)
+                for (j = 0; j < tmpArray.length; j++) { // multiple x co-ordinates can be provided
+                  cx += tmpArray[j];
+                  this.parsePathLineto(cx, cy);
+                }
+                break;
+
+              case 86: // V - vertical lineto (absolute)
+                for (j = 0; j < tmpArray.length; j++) { // multiple y co-ordinates can be provided
+                  cy = tmpArray[j];
+                  this.parsePathLineto(cx, cy);
+                }
+                break;
+
+              case 118: // v - vertical lineto (relative)
+                for (j = 0; j < tmpArray.length; j++) { // multiple y co-ordinates can be provided
+                  cy += tmpArray[j];
+                  this.parsePathLineto(cx, cy);
+                }
+                break;
+
+              case 67: // C - curve to (absolute)
+                if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
+                  for (j = 0; j < tmpArray.length; j+=6) {
+                    ctrlX1 = tmpArray[j];
+                    ctrlY1 = tmpArray[j + 1];
+                    ctrlX2 = tmpArray[j + 2];
+                    ctrlY2 = tmpArray[j + 3];
+                    endX   = tmpArray[j + 4];
+                    endY   = tmpArray[j + 5];
+                    this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+                    cx = endX;
+                    cy = endY;
+                  }
+                }
+                break;
+
+              case 99: // c - curve to (relative)
+                if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
+                  for (j = 0; j < tmpArray.length; j+=6) {
+                    ctrlX1 = cx + tmpArray[j];
+                    ctrlY1 = cy + tmpArray[j + 1];
+                    ctrlX2 = cx + tmpArray[j + 2];
+                    ctrlY2 = cy + tmpArray[j + 3];
+                    endX   = cx + tmpArray[j + 4];
+                    endY   = cy + tmpArray[j + 5];
+                    this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+                    cx = endX;
+                    cy = endY;
+                  }
+                }
+                break;
+
+              case 83: // S - curve to shorthand (absolute)
+                if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+                  for (j = 0; j < tmpArray.length; j+=4) {
+                    if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
+                      ppx    = this.vertices[ this.vertices.length-2 ][0];
+                      ppy    = this.vertices[ this.vertices.length-2 ][1];
+                      px     = this.vertices[ this.vertices.length-1 ][0];
+                      py     = this.vertices[ this.vertices.length-1 ][1];
+                      ctrlX1 = px + (px - ppx);
+                      ctrlY1 = py + (py - ppy);
+                    } else {
+                      //If there is no previous curve, the current point will be used as the first control point.
+                      ctrlX1 = this.vertices[this.vertices.length-1][0];
+                      ctrlY1 = this.vertices[this.vertices.length-1][1];
+                    }
+                    ctrlX2 = tmpArray[j];
+                    ctrlY2 = tmpArray[j + 1];
+                    endX   = tmpArray[j + 2];
+                    endY   = tmpArray[j + 3];
+                    this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+                    cx = endX;
+                    cy = endY;
+                  }
+                }
+                break;
+
+              case 115: // s - curve to shorthand (relative)
+                if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+                  for (j = 0; j < tmpArray.length; j+=4) {
+                    if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
+                      ppx    = this.vertices[this.vertices.length-2][0];
+                      ppy    = this.vertices[this.vertices.length-2][1];
+                      px     = this.vertices[this.vertices.length-1][0];
+                      py     = this.vertices[this.vertices.length-1][1];
+                      ctrlX1 = px + (px - ppx);
+                      ctrlY1 = py + (py - ppy);
+                    } else {
+                      //If there is no previous curve, the current point will be used as the first control point.
+                      ctrlX1 = this.vertices[this.vertices.length-1][0];
+                      ctrlY1 = this.vertices[this.vertices.length-1][1];
+                    }
+                    ctrlX2 = cx + tmpArray[j];
+                    ctrlY2 = cy + tmpArray[j + 1];
+                    endX   = cx + tmpArray[j + 2];
+                    endY   = cy + tmpArray[j + 3];
+                    this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+                    cx = endX;
+                    cy = endY;
+                  }
+                }
+                break;
+
+              case 81: // Q - quadratic curve to (absolute)
+                if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+                  for (j = 0; j < tmpArray.length; j+=4) {
+                    ctrlX = tmpArray[j];
+                    ctrlY = tmpArray[j + 1];
+                    endX  = tmpArray[j + 2];
+                    endY  = tmpArray[j + 3];
+                    this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+                    cx = endX;
+                    cy = endY;
+                  }
+                }
+                break;
+
+              case 113: // q - quadratic curve to (relative)
+                if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+                  for (j = 0; j < tmpArray.length; j+=4) {
+                    ctrlX = cx + tmpArray[j];
+                    ctrlY = cy + tmpArray[j + 1];
+                    endX  = cx + tmpArray[j + 2];
+                    endY  = cy + tmpArray[j + 3];
+                    this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+                    cx = endX;
+                    cy = endY;
+                  }
+                }
+                break;
+
+              case 84: // T - quadratic curve to shorthand (absolute)
+                if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+                  for (j = 0; j < tmpArray.length; j+=2) {
+                    if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
+                      ppx   = this.vertices[this.vertices.length-2][0];
+                      ppy   = this.vertices[this.vertices.length-2][1];
+                      px    = this.vertices[this.vertices.length-1][0];
+                      py    = this.vertices[this.vertices.length-1][1];
+                      ctrlX = px + (px - ppx);
+                      ctrlY = py + (py - ppy);
+                    } else {
+                      // If there is no previous command or if the previous command was not a Q, q, T or t,
+                      // assume the control point is coincident with the current point.
+                      ctrlX = cx;
+                      ctrlY = cy;
+                    }
+                    endX  = tmpArray[j];
+                    endY  = tmpArray[j + 1];
+                    this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+                    cx = endX;
+                    cy = endY;
+                  }
+                }
+                break;
+
+              case 116:  // t - quadratic curve to shorthand (relative)
+                if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+                  for (j = 0; j < tmpArray.length; j+=2) {
+                    if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
+                      ppx   = this.vertices[this.vertices.length-2][0];
+                      ppy   = this.vertices[this.vertices.length-2][1];
+                      px    = this.vertices[this.vertices.length-1][0];
+                      py    = this.vertices[this.vertices.length-1][1];
+                      ctrlX = px + (px - ppx);
+                      ctrlY = py + (py - ppy);
+                    } else {
+                      // If there is no previous command or if the previous command was not a Q, q, T or t,
+                      // assume the control point is coincident with the current point.
+                      ctrlX = cx;
+                      ctrlY = cy;
+                    }
+                    endX  = cx + tmpArray[j];
+                    endY  = cy + tmpArray[j + 1];
+                    this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+                    cx = endX;
+                    cy = endY;
+                  }
+                }
+                break;
+
+              case 90: //Z
+              case 122: //z
+                this.close = true;
+                break;
+            }
+            lastInstruction = command.toString();
+          } else { i++;}
         }
       },
       parsePathQuadto: function(x1, y1, cx, cy, x2, y2) {
-        this.parsePathCode(PConstants.BEZIER_VERTEX);
-        // x1/y1 already covered by last moveto, lineto, or curveto
-        this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
-        this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
-        this.parsePathVertex(x2, y2);
+        if (this.vertices.length > 0) {
+          this.parsePathCode(PConstants.BEZIER_VERTEX);
+          // x1/y1 already covered by last moveto, lineto, or curveto
+          this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
+          this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
+          this.parsePathVertex(x2, y2);
+        } else {
+          throw ("Path must start with M/m");
+        }
       },
       parsePathCurveto : function(x1,  y1, x2, y2, x3, y3) {
-        this.parsePathCode(PConstants.BEZIER_VERTEX );
-        this.parsePathVertex(x1, y1);
-        this.parsePathVertex(x2, y2);
-        this.parsePathVertex(x3, y3);
+        if (this.vertices.length > 0) {
+          this.parsePathCode(PConstants.BEZIER_VERTEX );
+          this.parsePathVertex(x1, y1);
+          this.parsePathVertex(x2, y2);
+          this.parsePathVertex(x3, y3);
+        } else {
+          throw ("Path must start with M/m");
+        }
       },
       parsePathLineto: function(px, py) {
-        this.parsePathCode(PConstants.VERTEX);
-        this.parsePathVertex(px, py);
-        // add property to distinguish between curContext.moveTo or curContext.lineTo
-        this.vertices[this.vertices.length-1]["moveTo"] = false;
+        if (this.vertices.length > 0) {
+          this.parsePathCode(PConstants.VERTEX);
+          this.parsePathVertex(px, py);
+          // add property to distinguish between curContext.moveTo or curContext.lineTo
+          this.vertices[this.vertices.length-1]["moveTo"] = false;
+        } else {
+          throw ("Path must start with M/m");
+        }
       },
       parsePathMoveto: function(px, py) {
         if (this.vertices.length > 0) {
@@ -2650,8 +2835,8 @@
               verts[0]  = pointsBuffer[i];
               verts[1]  = pointsBuffer[++i];
               this.vertices.push(verts);
-            } 
-          } else {    
+            }
+          } else {
             p.println("Error parsing polygon points: odd number of coordinates provided");
           }
         }
@@ -2664,7 +2849,7 @@
         this.params[1] = this.element.getFloatAttribute("y");
         this.params[2] = this.element.getFloatAttribute("width");
         this.params[3] = this.element.getFloatAttribute("height");
-    
+
       },
       parseEllipse: function(val) {
         this.kind   = PConstants.ELLIPSE;
@@ -2729,7 +2914,9 @@
                 this.setFill(tokens[1]);
                 break;
               case "fill-opacity":
+
                 this.setFillOpacity(tokens[1]);
+
                 break;
               case "stroke":
                 this.setStroke(tokens[1]);
@@ -2750,13 +2937,13 @@
                 this.setOpacity(tokens[1]);
                 break;
               // Other attributes are not yet implemented
-            }     
+            }
           }
         }
       },
       setFillOpacity: function(opacityText) {
         this.fillOpacity = parseFloat(opacityText);
-        this.fillColor   = (parseInt(this.fillOpacity * 255, 16))  << 24 | this.fillColor & 0xFFFFFF;
+        this.fillColor   = this.fillOpacity * 255  << 24 | this.fillColor & 0xFFFFFF;
       },
       setFill: function (fillText) {
         var opacityMask = this.fillColor & 0xFF000000;
@@ -2785,9 +2972,9 @@
           }
         }
       },
-      setOpacity: function(opacity) { 
-        this.strokeColor = (parseInt(opacity * 255, 16)) << 24 | this.strokeColor & 0xFFFFFF;
-        this.fillColor   = (parseInt(opacity * 255, 16)) << 24 | this.fillColor & 0xFFFFFF;
+      setOpacity: function(opacity) {
+        this.strokeColor = parseFloat(opacity) * 255 << 24 | this.strokeColor & 0xFFFFFF;
+        this.fillColor   = parseFloat(opacity) * 255 << 24 | this.fillColor & 0xFFFFFF;
       },
       setStroke: function(strokeText) {
         var opacityMask = this.strokeColor & 0xFF000000;
@@ -2842,7 +3029,7 @@
       },
       setStrokeOpacity: function (opacityText) {
         this.strokeOpacity = parseFloat(opacityText);
-        this.strokeColor   = (parseInt(this.strokeOpacity * 255, 16)) << 24 | this.strokeColor & 0xFFFFFF;
+        this.strokeColor   = this.strokeOpacity * 255 << 24 | this.strokeColor & 0xFFFFFF;
       },
       parseRGB: function(color) {
         var sub    = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
@@ -2867,7 +3054,7 @@
         } else {
           return parseFloat(text);
         }
-      }      
+      }
     };
 
     p.shape = function(shape, x, y, width, height) {
@@ -2906,7 +3093,7 @@
           }
         }
       }
-    }; 
+    };
 
     p.shapeMode = function (mode) {
       curShapeMode = mode;
@@ -2920,8 +3107,8 @@
       }
       return null;
     };
-    
- 
+
+
     ////////////////////////////////////////////////////////////////////////////
     // XMLAttribute
     ////////////////////////////////////////////////////////////////////////////
@@ -3011,7 +3198,7 @@
         this.systemID   = "";
         this.lineNr     = "";
         this.parent     = null;
-        
+
       }
       return this;
     };
@@ -3025,7 +3212,7 @@
         try {
           if (filename.indexOf(".xml") > -1 || filename.indexOf(".svg") > -1) {
             filename = ajax(filename);
-          } 
+          }
           xmlDoc = new DOMParser().parseFromString(filename, "text/xml");
           var elements = xmlDoc.documentElement;
           if (elements) {
@@ -3108,7 +3295,7 @@
       },
       getFloatAttribute: function() {
         if (arguments.length === 1 ) {
-          return this.getAttribute(arguments[0], 0);
+          return parseFloat(this.getAttribute(arguments[0], 0));
         } else if (arguments.length === 2 ){
           return this.getAttribute(arguments[0], arguments[1]);
         } else {
@@ -3236,7 +3423,7 @@
           xmlattribute = new XMLAttribute(tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType);
           xmlelement.attributes.push(xmlattribute);
         }
-        
+
         for (var node in elementpath.childNodes){
           if(elementpath.childNodes[node].nodeType === 1) { //ELEMENT_NODE type
             xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
@@ -3329,7 +3516,7 @@
         return this.fullName;
       }
     };
-   
+
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
@@ -3436,7 +3623,7 @@
         this.apply(1, 0, 1, angle, 0, 0);
       },
       skewY: function(angle) {
-        this.apply(1, 0, 1, 0, angle, 0);
+        this.apply(1, 0, 1,  0, angle, 0);
       },
       determinant: function() {
         return (this.elements[0] * this.elements[4] - this.elements[1] * this.elements[3]);
@@ -4045,18 +4232,18 @@
     };
 
     /**
-      splice inserts "value" which can be either a scalar or an array 
-      into "array" at position "index". 
+      splice inserts "value" which can be either a scalar or an array
+      into "array" at position "index".
     */
     p.splice = function(array, value, index) {
 
-      // Trying to splice an empty array into "array" in P5 won't do 
+      // Trying to splice an empty array into "array" in P5 won't do
       // anything, just return the original.
       if(value.length === 0)
       {
         return array;
       }
- 
+
       // If the second argument was an array, we'll need to iterate over all
       // the "value" elements and add one by one because
       // array.splice(index, 0, value);
@@ -4731,8 +4918,12 @@
     };
 
     p.resetMatrix = function resetMatrix() {
-      forwardTransform.reset();
-      reverseTransform.reset();
+      if (p.use3DContext) {
+        forwardTransform.reset();
+        reverseTransform.reset();
+      } else {
+        curContext.setTransform(1,0,0,1,0,0);
+      }
     };
 
     p.applyMatrix = function applyMatrix() {
@@ -4900,9 +5091,9 @@
 
       looping = window.setInterval(function() {
         try {
-          try {
+          if (document.hasFocus instanceof Function) {
             p.focused = document.hasFocus();
-          } catch(e) {}
+          }
           p.redraw();
         } catch(e_loop) {
           window.clearInterval(looping);
@@ -5611,7 +5802,7 @@
               } else {
                 messages++;
               }
-              
+
               var entry = append(output, createElement($div)),
                 entryText = append(entry, createElement($div));
 
@@ -6114,6 +6305,7 @@
           }
           curContext = curElement.getContext("experimental-webgl");
           p.use3DContext = true;
+          canTex = curContext.createTexture(); // texture
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -6272,13 +6464,10 @@
           return curContext.getImageData(0, 0, this.width, this.height);
         } else {
           var c = document.createElement("canvas");
-          var ctx = c.getContext("2d");          
+          var ctx = c.getContext("2d");
           var obj = ctx.createImageData(this.width, this.height);
-          var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
-          if(!uBuff){
-            uBuff = new Uint8Array(this.width * this.height * 4);
-            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-          }
+          var uBuff = new Uint8Array(this.width * this.height * 4);
+          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
           for(var i =0; i < uBuff.length; i++){
             obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
           }
@@ -6580,7 +6769,6 @@
         // Modeling transformation
         var model = new PMatrix3D();
         model.scale(w, h, d);
-        model.transpose();
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
@@ -6622,6 +6810,7 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
+          normalMatrix.transpose();
 
           uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
 
@@ -6644,10 +6833,10 @@
 
           uniformf(programObject2D, "color", strokeStyle);
           uniformi(programObject2D, "picktype", 0);
-          
+
           vertexAttribPointer(programObject2D, "Vertex", 3, boxOutlineBuffer);
           disableVertexAttribPointer(programObject2D, "aTextureCoord");
-          
+
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
         }
@@ -6820,6 +7009,7 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
+          normalMatrix.transpose();
 
           curContext.useProgram(programObject3D);
           disableVertexAttribPointer(programObject3D, "aTexture");
@@ -6854,10 +7044,10 @@
           uniformMatrix(programObject2D, "model", false, model.array());
           uniformMatrix(programObject2D, "view", false, view.array());
           uniformMatrix(programObject2D, "projection", false, proj.array());
-          
+
           vertexAttribPointer(programObject2D, "Vertex", 3, sphereBuffer);
           disableVertexAttribPointer(programObject2D, "aTextureCoord");
-          
+
           uniformf(programObject2D, "color", strokeStyle);
           uniformi(programObject2D, "picktype", 0);
 
@@ -7191,16 +7381,16 @@
           // this will be replaced with the new bit shifting color code
           uniformf(programObject2D, "color", strokeStyle);
           uniformi(programObject2D, "picktype", 0);
-          
+
           vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
           disableVertexAttribPointer(programObject2D, "aTextureCoord");
-          
+
           curContext.drawArrays(curContext.POINTS, 0, 1);
         }
       } else {
         if (doStroke) {
           // TODO if strokeWeight > 1, do circle
-          
+
           if (curSketch.options.crispLines) {
             var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
             var c = p.get(x, y);
@@ -7418,7 +7608,7 @@
     };
 
     p.endShape = function endShape(mode){
-      var closeShape = mode === p.CLOSE;
+      var closeShape = mode === PConstants.CLOSE;
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
@@ -7505,6 +7695,10 @@
               b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
               curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
             }
+            // close the shape
+            if (closeShape) {
+              curContext.lineTo(vertArray[0][0], vertArray[0][1]);
+            }
             executeContextFill();
             executeContextStroke();
             curContext.closePath();
@@ -7565,10 +7759,14 @@
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
               } else {
                 curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-              } 
+              }
             } else { //otherwise continue drawing bezier
               curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
             }
+          }
+          // close the shape
+          if (closeShape) {
+            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
           }
           executeContextFill();
           executeContextStroke();
@@ -7809,7 +8007,7 @@
                 }
                 for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+2][j]);
-                } 
+                }
                 for (j = 9; j < 13; j++) {
                   strokeVertArray.push(vertArray[i+0][j]);
                 }
@@ -7868,12 +8066,16 @@
         else {
           if (curShape === PConstants.POINTS) {
             for (i = 0; i < vertArray.length; i++) {
-              p.stroke(vertArray[i][6]);
+              if (doStroke) {
+                p.stroke(vertArray[i][6]);
+              }
               p.point(vertArray[i][0], vertArray[i][1]);
             }
           } else if (curShape === PConstants.LINES) {
             for (i = 0; (i + 1) < vertArray.length; i+=2) {
-              p.stroke(vertArray[i+1][6]);
+              if (doStroke) {
+                p.stroke(vertArray[i+1][6]);
+              }
               p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
             }
           } else if (curShape === PConstants.TRIANGLES) {
@@ -7883,10 +8085,16 @@
               curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              p.stroke(vertArray[i+2][6]);
-              p.fill(vertArray[i+2][5]);
-              executeContextFill();
-              executeContextStroke();
+
+              if (doFill) {
+                p.fill(vertArray[i+2][5]);
+                executeContextFill();
+              }
+              if (doStroke) {
+                p.stroke(vertArray[i+2][6]);
+                executeContextStroke();
+              }
+
               curContext.closePath();
             }
           } else if (curShape === PConstants.TRIANGLE_STRIP) {
@@ -7894,13 +8102,22 @@
               curContext.beginPath();
               curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              p.stroke(vertArray[i+1][6]);
-              p.fill(vertArray[i+1][5]);
+
+              if (doStroke) {
+                p.stroke(vertArray[i+1][6]);
+              }
+              if (doFill) {
+                p.fill(vertArray[i+1][5]);
+              }
 
               if (i + 2 < vertArray.length) {
                 curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-                p.stroke(vertArray[i+2][6]);
-                p.fill(vertArray[i+2][5]);
+                if (doStroke) {
+                  p.stroke(vertArray[i+2][6]);
+                }
+                if (doFill) {
+                  p.fill(vertArray[i+2][5]);
+                }
               }
               executeContextFill();
               executeContextStroke();
@@ -7912,20 +8129,32 @@
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[1][0], vertArray[1][1]);
               curContext.lineTo(vertArray[2][0], vertArray[2][1]);
-              p.stroke(vertArray[2][6]);
-              p.fill(vertArray[2][5]);
-              executeContextFill();
-              executeContextStroke();
+
+              if (doFill) {
+                p.fill(vertArray[2][5]);
+                executeContextFill();
+              }
+              if (doStroke) {
+                p.stroke(vertArray[2][6]);
+                executeContextStroke();
+              }
+
               curContext.closePath();
               for (i = 3; i < vertArray.length; i++) {
                 curContext.beginPath();
                 curContext.moveTo(vertArray[0][0], vertArray[0][1]);
                 curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                p.stroke(vertArray[i][6]);
-                p.fill(vertArray[i][5]);
-                executeContextFill();
-                executeContextStroke();
+
+                if (doFill) {
+                  p.fill(vertArray[i][5]);
+                  executeContextFill();
+                }
+                if (doStroke) {
+                  p.stroke(vertArray[i][6]);
+                  executeContextStroke();
+                }
+
                 curContext.closePath();
               }
             }
@@ -7937,10 +8166,16 @@
                 curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
               }
               curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              p.stroke(vertArray[i+3][6]);
-              p.fill(vertArray[i+3][5]);
-              executeContextFill();
-              executeContextStroke();
+
+              if (doFill) {
+                p.fill(vertArray[i+3][5]);
+                executeContextFill();
+              }
+              if (doStroke) {
+                p.stroke(vertArray[i+3][6]);
+                executeContextStroke();
+              }
+
               curContext.closePath();
             }
           } else if (curShape === PConstants.QUAD_STRIP) {
@@ -7952,8 +8187,13 @@
                   curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                   curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
                   curContext.lineTo(vertArray[i+3][0], vertArray[i+3][1]);
-                  p.stroke(vertArray[i+3][6]);
-                  p.fill(vertArray[i+3][5]);
+
+                  if (doFill) {
+                    p.fill(vertArray[i+3][5]);
+                  }
+                  if (doStroke) {
+                    p.stroke(vertArray[i+3][6]);
+                  }
                 } else {
                   curContext.moveTo(vertArray[i][0], vertArray[i][1]);
                   curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
@@ -7967,7 +8207,15 @@
             curContext.beginPath();
             curContext.moveTo(vertArray[0][0], vertArray[0][1]);
             for (i = 1; i < vertArray.length; i++) {
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              if (vertArray[i]["isVert"] === true ) { //if it is a vertex move to the position
+                if (vertArray[i]["moveTo"] === true) {
+                  curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+                } else if (vertArray[i]["moveTo"] === false){
+                  curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+                } else {
+                  curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+                }
+              }
             }
             if (closeShape) {
               curContext.lineTo(vertArray[0][0], vertArray[0][1]);
@@ -8094,9 +8342,15 @@
 
       executeTexImage2D.apply(this, arguments);
     };
-    
-    p.texture = function(pimage){
-      if (!pimage.__texture) {
+
+    p.texture = function(pimage) {
+      if (pimage.localName === "canvas") {
+        curContext.bindTexture(curContext.TEXTURE_2D, canTex);
+        executeTexImage2D(pimage);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+        curContext.generateMipmap(curContext.TEXTURE_2D);
+      } else if (!pimage.__texture) {
         var texture = curContext.createTexture();
         pimage.__texture = texture;
 
@@ -8110,13 +8364,14 @@
 
         for (var i = 0; i < cvs.width; i += 1) {
           for (var j = 0; j < cvs.height; j += 1) {
-            var index = (j * cvs.width + i) * 4;
+          var index = (j * cvs.width + i) * 4;
             textureImage.data[index + 0] = imgData.data[index + 0];
             textureImage.data[index + 1] = imgData.data[index + 1];
             textureImage.data[index + 2] = imgData.data[index + 2];
             textureImage.data[index + 3] = 255;
           }
         }
+
         ctx.putImageData(textureImage, 0, 0);
         pimage.__cvs = cvs;
 
@@ -8315,15 +8570,15 @@
           uniformMatrix(programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
           uniformMatrix(programObject2D, "view", false, view.array());
           uniformMatrix(programObject2D, "projection", false, proj.array());
-          
+
           uniformf(programObject2D, "color", strokeStyle);
           uniformi(programObject2D, "picktype", 0);
-          
+
           curContext.lineWidth(lineWidth);
-          
+
           vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
           disableVertexAttribPointer(programObject2D, "aTextureCoord");
-          
+
           curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
           curContext.drawArrays(curContext.LINES, 0, 2);
         }
@@ -8432,7 +8687,7 @@
         view.scale(1, -1, 1);
         view.apply(modelView.array());
         view.transpose();
-        
+
         var proj = new PMatrix3D();
         proj.set(projection);
         proj.transpose();
@@ -8442,13 +8697,13 @@
           uniformMatrix(programObject2D, "model", false, model.array());
           uniformMatrix(programObject2D, "view", false, view.array());
           uniformMatrix(programObject2D, "projection", false, proj.array());
-          
+
           uniformf(programObject2D, "color", strokeStyle);
           uniformi(programObject2D, "picktype", 0);
-          
+
           vertexAttribPointer(programObject2D, "Vertex", 3, rectBuffer);
           disableVertexAttribPointer(programObject2D, "aTextureCoord");
-          
+
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
         }
@@ -8479,6 +8734,7 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
+          normalMatrix.transpose();
 
           uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
 
@@ -8670,7 +8926,7 @@
       }
     };
 
-    var generic2dContext = document.createElement("canvas").getContext("2d");
+    var utilityContext2d = document.createElement("canvas").getContext("2d");
 
     var canvasDataCache = [undef, undef, undef]; // we need three for now
 
@@ -8682,15 +8938,15 @@
         canvasData.canvas = document.createElement("canvas");
         canvasData.context = canvasData.canvas.getContext('2d');
       }
-      
+
       canvasDataCache.push(canvasData);
-      
+
       var canvas = canvasData.canvas, context = canvasData.context,
           width = w || obj.width, height = h || obj.height;
-      
-      canvas.width = width; 
+
+      canvas.width = width;
       canvas.height = height;
-      
+
       if (!obj) {
         context.clearRect(0, 0, width, height);
       } else if ("data" in obj) { // ImageData
@@ -8768,11 +9024,11 @@
       };
 
       this.mask = function(mask) {
-        this._mask = undef;
+        this.__mask = undef;
 
         if (mask instanceof PImage) {
           if (mask.width === this.width && mask.height === this.height) {
-            this._mask = mask;
+            this.__mask = mask;
           } else {
             throw "mask must have the same dimensions as PImage.";
           }
@@ -8781,7 +9037,7 @@
           // how do we update this for 0.9 this.imageData holding pixels ^^
           // mask.constructor ? and this.pixels.length = this.imageData.data.length instead ?
           if (this.pixels.length === mask.length) {
-            this._mask = mask;
+            this.__mask = mask;
           } else {
             throw "mask array must be the same length as PImage pixels array.";
           }
@@ -8798,13 +9054,13 @@
           } else {
             return function() {
               return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
-            };            
+            };
           }
         }(this)),
         getPixel: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot get pixels.";
-          } else {          
+          } else {
             return function(i) {
               var offset = i*4;
               return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
@@ -8889,29 +9145,19 @@
       } else if (arguments.length === 2 || arguments.length === 3) {
         this.width = aWidth || 1;
         this.height = aHeight || 1;
-        this.imageData = generic2dContext.createImageData(this.width, this.height);
+        this.imageData = utilityContext2d.createImageData(this.width, this.height);
         this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
       } else {
         this.width = 0;
         this.height = 0;
-        this.imageData = generic2dContext.createImageData(1, 1);
+        this.imageData = utilityContext2d.createImageData(1, 1);
         this.format = PConstants.ARGB;
       }
     };
 
     p.PImage = PImage;
 
-    try {
-      // Opera createImageData fix
-      if (! ("createImageData" in CanvasRenderingContext2D.prototype)) {
-        CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {
-          return this.getImageData(0, 0, sw, sh);
-        };
-      }
-    } catch(e) {}
-
     p.createImage = function createImage(w, h, mode) {
-      // changed for 0.9
       return new PImage(w,h,mode);
     };
 
@@ -9075,8 +9321,7 @@
           resetContext();
           curContext[name] = value;
         }
-        newContext.__defineGetter__(name, getter);
-        newContext.__defineSetter__(name, setter);
+        p.defineProperty(newContext, name, { get: getter, set: setter });
       }
       for(var n in curContext) {
         if(typeof curContext[n] === 'function') {
@@ -9178,7 +9423,7 @@
         curContext.putImageData(p.imageData, 0, 0);
       }
     };
-  
+
     p.hint = function hint(which) {
       if (which === PConstants.DISABLE_DEPTH_TEST) {
          curContext.disable(curContext.DEPTH_TEST);
@@ -9245,30 +9490,41 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
-        var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-        var obj = img.toImageData();
+        var wid = w || img.width;
+        var hgt = h || img.height;
+        if (p.use3DContext) {
+          p.beginShape(p.QUADS);
+          p.texture(img.externals.canvas);
+          p.vertex(x, y, 0, 0, 0);
+          p.vertex(x, y+hgt, 0, 0, hgt);
+          p.vertex(x+wid, y+hgt, 0, wid, hgt);
+          p.vertex(x+wid, y, 0, wid, 0);
+          p.endShape();
+        } else {
+          var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
+          var obj = img.toImageData();
 
-        if (img._mask) {
-          var j, size;
-          if (img._mask instanceof PImage) {
-            var objMask = img._mask.toImageData();
-            for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
-              // using it as an alpha channel
-              obj.data[j + 1] = objMask.data[j];
-              // but only the blue color channel
-            }
-          } else {
-            for (j = 0, size = img._mask.length; j < size; ++j) {
-              obj.data[(j << 2) + 3] = img._mask[j];
+          if (img.__mask) {
+            var j, size;
+            if (img.__mask instanceof PImage) {
+              var objMask = img.__mask.toImageData();
+              for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+                // using it as an alpha channel
+                obj.data[j + 1] = objMask.data[j];
+                // but only the blue color channel
+              }
+            } else {
+              for (j = 0, size = img.__mask.length; j < size; ++j) {
+                obj.data[(j << 2) + 3] = img.__mask[j];
+              }
             }
           }
+
+          // draw the image
+          curTint(obj);
+
+          curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
         }
-
-        // draw the image
-        curTint(obj);
-
-        curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height,
-          bounds.x, bounds.y, bounds.w, bounds.h);
       }
     };
 
@@ -9622,7 +9878,7 @@
             var radius = param || 1; // if no param specified, use 1 (default for p5)
             blurARGB(radius, img);
             break;
-          
+
           case PConstants.GRAY:
             if (img.format === PConstants.ALPHA) { //trouble
               // for an alpha image, convert it to an opaque grayscale
@@ -10192,6 +10448,7 @@
       if (name.indexOf(".svg") === -1) {
         return {
           name: "\"" + name + "\", sans-serif",
+          origName: name,
           width: function(str) {
             if ("measureText" in curContext) {
               return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
@@ -10230,7 +10487,22 @@
       }
     };
 
-    p.createFont = function(name, size) {};
+    p.createFont = function(name, size, smooth, charset) {
+      if (arguments.length === 2) {
+        p.textSize(size);
+        return p.loadFont(name);
+      } else if (arguments.length === 3) {
+        // smooth: true for an antialiased font, false for aliased
+        p.textSize(size);
+        return p.loadFont(name);
+      } else if (arguments.length === 4) {
+        // charset: char array containing characters to be generated
+        p.textSize(size);
+        return p.loadFont(name);
+      } else {
+        throw("incorrent number of parameters for createFont");
+      }
+    };
 
     // Sets a 'current font' for use
     p.textFont = function textFont(name, size) {
@@ -10290,7 +10562,7 @@
           // store current size and font
           oldTextFont = curTextFont;
           oldTextSize = curTextSize;
-          
+
           var found       = false,
               character   = "k",
               colour      = p.color(0),
@@ -10346,7 +10618,7 @@
           // store current size and font
           oldTextFont = curTextFont;
           oldTextSize = curTextSize;
-          
+
           var found       = false,
               character   = "p",
               colour      = p.color(0),
@@ -10527,7 +10799,7 @@
             } else if ("mozDrawText" in curContext) {
               textWidth = curContext.mozMeasureText(str);
             }
-            
+
             if(align === PConstants.RIGHT) {
               xOffset = -textWidth;
             } else { // if(align === PConstants.CENTER)
@@ -10553,7 +10825,7 @@
         // horizontal offset/alignment
         if(align === PConstants.RIGHT || align === PConstants.CENTER) {
           textWidth = font.width(str);
-          
+
           if(align === PConstants.RIGHT) {
             xOffset = -textWidth;
           } else { // if(align === PConstants.CENTER)
@@ -10605,7 +10877,6 @@
       var aspect = textcanvas.width/textcanvas.height;
       curContext = oldContext;
 
-      //curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas, false, true);
       executeTexImage2D(textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
@@ -10613,7 +10884,7 @@
 
       // horizontal offset/alignment
       var xOffset = 0;
-      if(align === PConstants.RIGHT) {
+      if (align === PConstants.RIGHT) {
         xOffset = -textWidth;
       } else if(align === PConstants.CENTER) {
         xOffset = -textWidth/2;
@@ -10623,19 +10894,25 @@
       model.translate(x+xOffset-scalefactor/2, y-scalefactor, z);
       model.scale(-aspect*scalefactor, -scalefactor, scalefactor);
       model.translate(-1, -1, -1);
+      model.transpose();
 
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
       view.apply(modelView.array());
+      view.transpose();
+
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
 
       curContext.useProgram(programObject2D);
       vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
       vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
       uniformi(programObject2D, "uSampler", [0]);
       uniformi(programObject2D, "picktype", 1);
-      uniformMatrix( programObject2D, "model", true,  model.array() );
-      uniformMatrix( programObject2D, "view", true, view.array() );
-      uniformMatrix( programObject2D, "projection", true, projection.array() );
+      uniformMatrix(programObject2D, "model", false,  model.array());
+      uniformMatrix(programObject2D, "view", false, view.array());
+      uniformMatrix(programObject2D, "projection", false, proj.array());
       uniformf(programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
@@ -10652,7 +10929,7 @@
         linesCount = lines.length;
       }
       // handle text line-by-line
-      
+
       var yOffset;
       if(verticalTextAlignment === PConstants.TOP) {
         yOffset = (1-baselineOffset) * curTextSize;
@@ -10664,7 +10941,7 @@
         yOffset = (1 - linesCount) * curTextSize;
       }
       for(var i=0;i<linesCount;++i) {
-        var line = lines[i];        
+        var line = lines[i];
         lineFunction(line, x, y + yOffset, z, horizontalTextAlignment);
         yOffset += curTextSize;
       }
@@ -10733,43 +11010,74 @@
       // actual draw
       var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       var xOffset = 0;
-      if(horizontalTextAlignment === PConstants.CENTER) {
+      if (horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width / 2;
-      } else if(horizontalTextAlignment === PConstants.RIGHT) {
+      } else if (horizontalTextAlignment === PConstants.RIGHT) {
         xOffset = width;
       }
 
       // offsets for alignment
       var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
-      if(verticalTextAlignment === PConstants.BOTTOM) {
+      if (verticalTextAlignment === PConstants.BOTTOM) {
         boxYOffset2 = height-yOffset;
-      } else if(verticalTextAlignment === PConstants.CENTER) {
+      } else if (verticalTextAlignment === PConstants.CENTER) {
         boxYOffset2 = (height-yOffset) / 2;
       }
 
-      for(var il=0,ll=drawCommands.length; il<ll; ++il) {
+      for (var il=0,ll=drawCommands.length; il<ll; ++il) {
         var command = drawCommands[il];
-        if(command.offset + boxYOffset2 < 0) {
+        if (command.offset + boxYOffset2 < 0) {
           continue; // skip if not inside box yet
         }
-        if(command.offset + boxYOffset2 + curTextSize > height) {
+        if (command.offset + boxYOffset2 + curTextSize > height) {
           break; // stop if no enough space for one more line draw
         }
-        lineFunction(command.text, x + xOffset, y + command.offset + boxYOffset1 + boxYOffset2, 
-                     z, horizontalTextAlignment);
+        lineFunction(command.text, x + xOffset, y + command.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
       }
     }
 
     p.text = function text() {
-      if (arguments.length === 3) { // for text( str, x, y)
-        text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
-      } else if (arguments.length === 4) { // for text( str, x, y, z)
-        text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
-      } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
-      } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
-        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+      if (tMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
+        p.pushMatrix();
+        p.resetMatrix();
+        var asc = p.textAscent();
+        var des = p.textDescent();
+        var tWidth = p.textWidth(arguments[0]);
+        var tHeight = asc + des;
+        var font = p.loadFont(curTextFont.origName);
+        var hud = p.createGraphics(tWidth, tHeight);
+        hud.beginDraw();
+        hud.fill(currentFillColor);
+        hud.opaque = false;
+        hud.background(0, 0, 0, 0);
+        hud.textFont(font);
+        hud.textSize(curTextSize);
+        hud.text(arguments[0], 0, asc);
+        hud.endDraw();
+        if (arguments.length === 5 || arguments.length === 6) {
+          p.image(hud, arguments[1], arguments[2]-asc, arguments[3], arguments[4]);
+        } else {
+          p.image(hud, arguments[1], arguments[2]-asc);
+        }
+        p.popMatrix();
       }
+      else if (tMode === PConstants.SHAPE) {
+        // TODO: requires beginRaw function
+      } else {
+        if (arguments.length === 3) { // for text( str, x, y)
+          text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
+        } else if (arguments.length === 4) { // for text( str, x, y, z)
+          text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
+        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
+          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
+        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
+        }
+      }
+    };
+
+    p.textMode = function textMode(mode){
+      tMode = mode;
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
@@ -10972,11 +11280,13 @@
 
     p.extendClass = function extendClass(subClass, baseClass) {
       function extendGetterSetter(propertyName) {
-        subClass.__defineGetter__(propertyName, function() {
-          return baseClass[propertyName];
-        });
-        subClass.__defineSetter__(propertyName, function(v) {
-          baseClass[propertyName]=v;
+        p.defineProperty(subClass, propertyName, {
+          get: function() {
+            return baseClass[propertyName];
+          },
+          set: function(v) {
+            baseClass[propertyName]=v;
+          }
         });
       }
 
@@ -11315,8 +11625,8 @@
       }
 
       var executeSketch = function(processing) {
-        // Don't start until all specified images in the cache are preloaded
-        if (!curSketch.imageCache.pending) {
+        // Don't start until all specified images and fonts in the cache are preloaded
+        if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           curSketch.attach(processing, PConstants);
 
           // Run void setup()
@@ -11335,7 +11645,7 @@
             }
           }
         } else {
-          window.setTimeout(executeSketch, 10, processing);
+          window.setTimeout(function() { executeSketch(processing); }, 10);
         }
       };
 
@@ -11351,56 +11661,52 @@
 
   };
 
-  Processing.version = "@VERSION@";
-
-  // Share lib space
-  Processing.lib = {};
-
   // Processing global methods and constants for the parser
   function getGlobalMembers() {
     var names = [ /* this code is generated by jsglobals.js */
-      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix", 
-      "arc", "arrayCopy", "ArrayList", "asin", "atan", "atan2", "background", 
-      "beginCamera", "beginDraw", "beginShape", "bezier", "bezierDetail", 
-      "bezierPoint", "bezierTangent", "bezierVertex", "binary", "blend", 
-      "blendColor", "blit_resize", "blue", "boolean", "box", "breakShape", 
-      "brightness", "byte", "camera", "ceil", "char", "Character", "clear", 
-      "color", "colorMode", "concat", "console", "constrain", "copy", "cos", 
-      "createFont", "createGraphics", "createImage", "cursor", "curve", 
-      "curveDetail", "curvePoint", "curveTangent", "curveTightness", 
-      "curveVertex", "day", "defaultColor", "degrees", "directionalLight", 
-      "disableContextMenu", "dist", "draw", "ellipse", "ellipseMode", "emissive", 
-      "enableContextMenu", "endCamera", "endDraw", "endShape", "exit", "exp", 
-      "expand", "externals", "fill", "filter", "filter_bilinear", 
-      "filter_new_scanline", "float", "floor", "focused", "frameCount", 
-      "frameRate", "frustum", "get", "glyphLook", "glyphTable", "green", 
-      "HashMap", "height", "hex", "hint", "hour", "hue", "image", "imageMode", 
-      "Import", "int", "intersect", "join", "key", "keyCode", "keyPressed", 
-      "keyReleased", "keyTyped", "lerp", "lerpColor", "lightFalloff", "lights", 
-      "lightSpecular", "line", "link", "loadBytes", "loadFont", "loadGlyphs", 
-      "loadImage", "loadPixels", "loadShape", "loadStrings", "log", "loop", 
-      "mag", "map", "match", "matchAll", "max", "millis", "min", "minute", "mix", 
-      "modelX", "modelY", "modelZ", "modes", "month", "mouseButton", 
-      "mouseClicked", "mouseDragged", "mouseMoved", "mousePressed", 
-      "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY", 
-      "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise", 
-      "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal", 
-      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage", 
-      "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", 
-      "point", "pointLight", "popMatrix", "popStyle", "pow", "print", 
-      "printCamera", "println", "printMatrix", "printProjection", "PShape", 
-      "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random", 
-      "Random", "randomSeed", "rect", "rectMode", "red", "redraw", 
-      "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", 
-      "rotateZ", "round", "saturation", "save", "saveStrings", "scale", "screenX",
-      "screenY", "screenZ", "second", "set", "setup", "shape", "shapeMode", "shared", 
-      "shininess", "shorten", "sin", "size", "smooth", "sort", "specular", 
-      "sphere", "sphereDetail", "splice", "split", "splitTokens", "spotLight", 
-      "sq", "sqrt", "status", "str", "stroke", "strokeCap", "strokeJoin", 
-      "strokeWeight", "subset", "tan", "text", "textAlign", "textAscent", "textDescent",
-      "textFont", "textSize", "texture", "textureMode", "textWidth", "tint", "translate", 
-      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
-      "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed", 
+      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix",
+      "arc", "arrayCopy", "ArrayList", "asin", "atan", "atan2", "background",
+      "beginCamera", "beginDraw", "beginShape", "bezier", "bezierDetail",
+      "bezierPoint", "bezierTangent", "bezierVertex", "binary", "blend",
+      "blendColor", "blit_resize", "blue", "boolean", "box", "breakShape",
+      "brightness", "byte", "camera", "ceil", "char", "Character", "clear",
+      "color", "colorMode", "concat", "console", "constrain", "copy", "cos",
+      "createFont", "createGraphics", "createImage", "cursor", "curve",
+      "curveDetail", "curvePoint", "curveTangent", "curveTightness",
+      "curveVertex", "day", "defaultColor", "degrees", "directionalLight",
+      "disableContextMenu", "dist", "draw", "ellipse", "ellipseMode", "emissive",
+      "enableContextMenu", "endCamera", "endDraw", "endShape", "exit", "exp",
+      "expand", "externals", "fill", "filter", "filter_bilinear",
+      "filter_new_scanline", "float", "floor", "focused", "frameCount",
+      "frameRate", "frustum", "get", "glyphLook", "glyphTable", "green",
+      "HashMap", "height", "hex", "hint", "hour", "hue", "image", "imageMode",
+      "Import", "int", "intersect", "join", "key", "keyCode", "keyPressed",
+      "keyReleased", "keyTyped", "lerp", "lerpColor", "lightFalloff", "lights",
+      "lightSpecular", "line", "link", "loadBytes", "loadFont", "loadGlyphs",
+      "loadImage", "loadPixels", "loadShape", "loadStrings", "log", "loop",
+      "mag", "map", "match", "matchAll", "max", "millis", "min", "minute", "mix",
+      "modelX", "modelY", "modelZ", "modes", "month", "mouseButton",
+      "mouseClicked", "mouseDragged", "mouseMoved", "mousePressed",
+      "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY",
+      "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise",
+      "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal",
+      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage",
+      "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
+      "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
+      "printCamera", "println", "printMatrix", "printProjection", "PShape",
+      "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random",
+      "Random", "randomSeed", "rect", "rectMode", "red", "redraw",
+      "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY",
+      "rotateZ", "round", "saturation", "save", "saveStrings", "scale",
+      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
+      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth",
+      "sort", "specular", "sphere", "sphereDetail", "splice", "split",
+      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
+      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
+      "textAlign", "textAscent", "textDescent", "textFont", "textMode",
+      "textSize", "texture", "textureMode", "textWidth", "tint", "translate",
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
+      "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed",
       "__mousePressed"];
 
     var members = {};
@@ -12024,8 +12330,9 @@
           var name = definition.name, staticName = className + "." + name;
           var declaration = "if(" + staticName + " === void(0)) {\n" +
             " " + staticName + " = " + definition.value + "; }\n" +
-            thisPrefix + "__defineGetter__('" + name + "',function(){return " + staticName + ";});\n" +
-            thisPrefix + "__defineSetter__('" + name + "',function(val){" + staticName + " = val;});\n";
+            "processing.defineProperty(" + replaceContext("this") + ", " +
+            "'" + name + "', { get: function(){return " + staticName + ";}, " +
+            "set: function(val){" + staticName + " = val;} });\n";
           staticDeclarations.push(declaration);
         }
         return staticDeclarations.join("");
@@ -12515,28 +12822,47 @@
     // Parse out @pjs directive, if any.
     var dm = new RegExp(/\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g).exec(aCode);
     if (dm && dm.length === 2) {
-      var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
+      // masks contents of a JSON to be replaced later
+      // to protect the contents from further parsing
+      var jsonItems = [],
+          directives = dm.splice(1, 2)[0].replace(/\{([\s\S]*?)\}/g, (function() {
+            return function(all, item) {
+              jsonItems.push(item);
+              return "{" + (jsonItems.length-1) + "}";
+            };
+          }())).replace('\n', '').replace('\r', '').split(";");
 
       // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
       var clean = function(s) {
-        return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, '');
+        return s.replace(/^\s*["']?/, '').replace(/["']?\s*$/, '');
       };
 
       for (var i = 0, dl = directives.length; i < dl; i++) {
         var pair = directives[i].split('=');
         if (pair && pair.length === 2) {
-          var key = clean(pair[0]);
-          var value = clean(pair[1]);
+          var key = clean(pair[0]),
+              value = clean(pair[1]),
+              list = [];
           // A few directives require work beyond storying key/value pairings
           if (key === "preload") {
-            var list = value.split(',');
+            list = value.split(',');
             // All pre-loaded images will get put in imageCache, keyed on filename
-            for (var j = 0, ll = list.length; j < ll; j++) {
+            for (var j = 0, jl = list.length; j < jl; j++) {
               var imageName = clean(list[j]);
               sketch.imageCache.add(imageName);
             }
           } else if (key === "transparent") {
             sketch.options.isTransparent = value === "true";
+          // fonts can be declared as a string containing a url,
+          // or a JSON object, containing a font name, and a url
+          } else if (key === "font") {
+            list = value.split(",");
+            for (var x = 0, xl = list.length; x < xl; x++) {
+              var fontName = clean(list[x]),
+                  index = /^\{(\d*?)\}$/.exec(fontName);
+              // if index is not null, send JSON, otherwise, send string
+              sketch.fonts.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
+            }
           } else if (key === "crisp") {
             sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
@@ -12618,6 +12944,81 @@
         img.src = href;
       }
     };
+    this.fonts = {
+      // template element used to compare font sizes
+      template: (function() {
+        var element = document.createElement('p');
+        element.style.fontFamily = "serif";
+        element.style.fontSize = "72px";
+        element.style.visibility = "hidden";
+        element.innerHTML = "abcmmmmmmmmmmlll";
+        document.getElementsByTagName("body")[0].appendChild(element);
+        return element;
+      }()),
+      // number of attempts to load a font
+      attempt: 0,
+      // returns true is fonts are all loaded,
+      // true if number of attempts hits the limit,
+      // false otherwise
+      pending: function() {
+        var r = true;
+        for (var i = 0; i < this.fontList.length; i++) {
+          // compares size of text in pixels, if equal, custom font is not yet loaded
+          if (this.fontList[i].offsetWidth === this.template.offsetWidth && this.fontList[i].offsetHeight === this.template.offsetHeight) {
+            r = false;
+            this.attempt++;
+          } else {
+            // removes loaded font from the array and dom, so we don't compare it again
+            document.getElementsByTagName("body")[0].removeChild(this.fontList[i]);
+            this.fontList.splice(i--, 1);
+            this.attempt = 0;
+          }
+        }
+        // give up loading after max attempts have been reached
+        if (this.attempt >= 30) {
+          r = true;
+          // remove remaining elements from the dom and array
+          for (var j = 0; j < this.fontList.length; j++) {
+            document.getElementsByTagName("body")[0].removeChild(this.fontList[j]);
+            this.fontList.splice(j--, 1);
+          }
+        }
+        // Remove the template element from the dom once done comparing
+        if (r) {
+          document.getElementsByTagName("body")[0].removeChild(this.template);
+        }
+        return r;
+      },
+      // fontList contains elements to compare font sizes against a template
+      fontList: [],
+      // string containing a css @font-face list of custom fonts
+      fontFamily: "",
+      // style element to hold the @font-face string
+      style: document.createElement('style'),
+      // adds a font to the font cache
+      // creates an element using the font, to start loading the font,
+      // and compare against a default font to see if the custom font is loaded
+      add: function(fontSrc) {
+        // fontSrc can be a string or a JSON object
+        // string contains a url to a font
+        // JSON object would contain a name and a url
+        // acceptable fonts are .ttf, .otf, and a data uri
+        var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
+            fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
+        // creating the @font-face style
+        this.fontFamily += "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
+        this.style.innerHTML = this.fontFamily;
+        document.getElementsByTagName("head")[0].appendChild(this.style);
+        // creating the element to load, and compare the new font
+        var preLoader = document.createElement('p');
+        preLoader.style.fontFamily = "'" + fontName + "', serif";
+        preLoader.style.fontSize = "72px";
+        preLoader.style.visibility = "hidden";
+        preLoader.innerHTML = "abcmmmmmmmmmmlll";
+        document.getElementsByTagName("body")[0].appendChild(preLoader);
+        this.fontList.push(preLoader);
+      }
+    };
     this.sourceCode = undefined;
     this.attach = function(processing, constants) {
       // either attachFunction or sourceCode must be present on attach
@@ -12665,7 +13066,7 @@
           if (filenames[j]) {
             var block = ajax(filenames[j]);
             if (block !== false) {
-              code += ";\n" + block; 
+              code += ";\n" + block;
             }
           }
         }
