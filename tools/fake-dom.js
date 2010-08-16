@@ -18,6 +18,7 @@ var canvas = {
                    translate: __empty_func__,
                    attachEvent: __empty_func__,
                    fillRect: __empty_func__,
+                   clearRect: __empty_func__,
                    beginPath: __empty_func__,
                    moveTo: __empty_func__,
                    lineTo: __empty_func__,
@@ -75,8 +76,6 @@ var canvas = {
   }
 };
  
-var WebGLFloatArray = __empty_func__;
-var WebGLUnsignedShortArray = __empty_func__;
 var HTMLImageElement = __empty_func__;
 
 var document = {
@@ -90,8 +89,8 @@ var document = {
   appendChild: __elem_func__,
   removeChild: __empty_func__,
   getElementById: __empty_func__,
-  getElementByTagName: function() { return canvas; },
-  createElement: function () { return canvas },
+  getElementsByTagName: function() { return [canvas]; },
+  createElement: function () { return canvas; },
   addEventListener: __empty_func__,
   documentElement: {
     appendChild: __elem_func__,
@@ -181,4 +180,6 @@ var SpinSpots = __empty_func__;
 
 var SearchClient = __empty_func__;
 var WebSearchRequest = __empty_func__;
+var localStorage = __empty_func__;
+
 

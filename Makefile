@@ -61,7 +61,7 @@ yui: create-release
 # check for any parsing errors in compiled version of processing.js
 	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.min.js
 
-check:
+check: check-globals
 	${TOOLSDIR}/runtests.py ${JSSHELL}
 
 check-release: yui
@@ -93,6 +93,12 @@ add-coverage: create-release
 
 check-coverage: add-coverage
 	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-cv.js -c ./release/codecoverage.txt
+
+check-globals:
+	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ${TOOLSDIR}/jsglobals.js -e "findDifference()" < processing.js
+
+print-globals:
+	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ${TOOLSDIR}/jsglobals.js -e "printNames()" < processing.js
 
 clean:
 	rm -fr ./release

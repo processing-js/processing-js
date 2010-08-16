@@ -45,7 +45,6 @@ test/parser/Processing-Book-001/Illustrations/page_250/page_250.pde
 test/parser/Processing-Book-001/Illustrations/page_326/page_326.pde
 test/parser/Processing-Book-001/Illustrations/page_346/page_346.pde
 test/parser/Processing-Book-001/Illustrations/page_xx/page_xx.pde
-test/parser/Processing-Book-001/Synthesis/_03_grids/_05_grids/_05_grids.pde
 test/parser/Processing-Book-001/Synthesis/_13_withoutTitle/_13_withoutTitle.pde
 test/parser/Processing-Book-001/Synthesis/_15_tree/_15_tree.pde
 test/parser/Processing-Book-001/Synthesis/_16_sodaprocessing/_16_sodaprocessing.pde

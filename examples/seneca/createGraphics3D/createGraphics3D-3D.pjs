@@ -1,0 +1,34 @@
+PGraphics pg;
+float c = 0;
+
+void setup() {
+  size(200, 200, P3D);
+  pg = createGraphics(80, 80, P3D);
+}
+
+void draw() {
+  background(204);
+  fill(0, 0, c, 255);
+  noStroke();
+  pushMatrix();
+  translate(20, 20, 0);
+  rotateY(mouseX);
+  rotateX(mouseY);
+  box(20);
+  popMatrix();
+  
+  pg.beginDraw();
+  pg.background(0);
+  pg.noFill();
+  pg.stroke(255);
+  pg.pushMatrix();
+  pg.translate(40, 40, 0);
+  pg.rotateY(mouseY);
+  pg.rotateX(mouseX);
+  pg.box(20);
+  pg.popMatrix();
+  pg.endDraw();
+  
+  image(pg, 60, 60);
+  c++;
+}

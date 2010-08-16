@@ -17,7 +17,8 @@ float yUnit = (height-gap*2)/numSquares;
 float squareWidth = xUnit;
 float squareHeight = yUnit;
 
-for (float y = 0; y < numSquares; y = Y + 1) {
+// was "for (float y = 0; y < numSquares; y = Y + 1) {", possible that capital "Y" is typo
+for (float y = 0; y < numSquares; y = y+1) {
   for (float x = 0; x < numSquares; x = x+1) {
     float ydiv = squareHeight/12;
     float xoff = xUnit/2+gap;

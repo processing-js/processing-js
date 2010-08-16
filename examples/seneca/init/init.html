@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../../../processing.js"></script>
+  <script src="../../init.js"></script>
+</head>
+<body>
+<h2>init.js test</h2>
+
+
+
+<p>
+
+<script type="application/processing">
+  PFont font;
+  void setup() {
+    background(0,191,255);
+    size(200,200);
+    font = loadFont("Times");
+    textFont(font, 24);
+  }
+  void draw() {
+    text("script 1: no target", 10,100);
+  }
+
+</script>
+<script type="application/processing" target="#canvas2">
+  PFont font;
+  void setup() {
+    background(106,90,205);
+    size(200,200);
+    font = loadFont("Times");
+    textFont(font, 24);
+  }
+  void draw() {
+    text("script 2: with target", 10,100);
+  }
+
+</script>
+<script type="application/processing">
+  PFont font;
+  void setup() {
+    background(50,205,50);
+    size(200,200);
+    font = loadFont("Times");
+    textFont(font, 24);
+  }
+  void draw() {
+    text("script 3: no target", 10,100);
+  }
+
+</script>
+
+<canvas> </canvas>
+
+&nbsp; &nbsp; <div style="align:left;border: 2px solid rgb(0, 0, 0);width:210px; padding-left:10px" ><canvas ></canvas></div>
+<table width=210px" align="center" border="1">
+  <tr>
+    <td> &nbsp;</td>
+    <td><canvas id="canvas2"> </canvas></td>
+    <td> &nbsp;</td>
+  </tr>
+</table>
+<canvas width="200" height="200"></canvas>
+
+</body>
+</html>

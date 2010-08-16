@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../processing.js"></script>
+    <link rel="stylesheet" href="../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2><a href="https://processing-js.lighthouseapp.com/projects/41284/tickets/842-no-call-to-background-in-draw-doesnt-redraw-3d#ticket-842">Bug 842</a></h2>
+    <p>Box should slowly change color from black to blue.</p>
+
+    <p>
+      <canvas datasrc="test.pjs" width="100" height="100"> </canvas>
+    </p>
+    
+    <pre>
+<b>// Test</b>
+float c = 0;
+
+void setup() {
+  size(200, 200, P3D);
+}
+
+void draw() {
+  fill(0, 0, c, 255);
+  pushMatrix();
+  translate(50, 50, 0);
+  rotateX(20);
+  box(20);
+  popMatrix();
+  
+  c += 1;
+};
+</pre>
+
+  </body>
+</html>
