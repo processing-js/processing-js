@@ -2197,10 +2197,10 @@
 
     };
 
-    var PShapeSVG = function() {
+    var PShapeSVG = p.PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
-      if (arguments.length === 1) {
-        this.element  = new p.XMLElement(null, arguments[0]);
+      if (arguments.length === 1) { //xml element coming in
+        this.element  = arguments[0] ;//new p.XMLElement(null, arguments[0]);
         // set values to their defaults according to the SVG spec
         this.vertexCodes         = [];
         this.vertices            = [];
@@ -11693,7 +11693,7 @@
       "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage",
       "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
       "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
-      "printCamera", "println", "printMatrix", "printProjection", "PShape",
+      "printCamera", "println", "printMatrix", "printProjection", "PShape","PShapeSVG",
       "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random",
       "Random", "randomSeed", "rect", "rectMode", "red", "redraw",
       "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY",

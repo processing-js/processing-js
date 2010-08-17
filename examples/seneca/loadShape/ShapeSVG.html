@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+	<title>Processing.js SVG LoadImage() bot.svg</title>
+	<script type="text/javascript" src="../../../processing.js"></script> 
+	<script type="text/javascript" src="../../init.js"></script> 
+
+</head>
+<body>
+
+
+	<script id="script" type="application/processing">
+    void setup() {
+    PShapeSVG s = new PShapeSVG(new XMLElement("<svg width='100%' height='100%' version='1.1' xmlns='http://www.w3.org/2000/svg'><rect width='300' height='100' style='fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,0)'/></svg>"));
+    println(s.isVisible());
+  }
+	</script><canvas id="display" ></canvas>
+  <pre>
+  void setup() {
+    PShapeSVG s = new PShapeSVG(new XMLElement("<svg width='100%' height='100%' version='1.1' xmlns='http://www.w3.org/2000/svg'><rect width='300' height='100' style='fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,0)'/></svg>"));
+    println(s.isVisible()); //prints true
+  }
+  
+  </pre>
+</body>
+</html>
+
