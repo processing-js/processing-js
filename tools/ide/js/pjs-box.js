@@ -45,7 +45,7 @@ function getJquery() {
 }
 function getProcessing($jq){
 	if (typeof Processing=='undefined') {
-		getScript('http://processingjs.org/content/download/processing-js-0.8/processing-0.8.min.js',function() {
+		getScript('http://processingjs.org/content/download/processing-js-0.9.7/processing-0.9.7.min.js',function() {
 			if (typeof Processing!='undefined') {
 				PJSBox($jq);
 			}
@@ -56,7 +56,7 @@ function getProcessing($jq){
 }
 
 function PJSBox($jq) {
-
+  var errorMessages;
 	function getSize(script) {
 		/*var size = script.match(/size\([\s]*([\d]+)[\s]*\,[\s]*([\d]+)[\s]*\)/);
 		if (size.length == 3) {
@@ -73,7 +73,6 @@ function PJSBox($jq) {
       return[dimensions[0],dimensions[1]];
     }
     else{
-      tinylogLite.log("Did not find a call to size(), defaulting to size(200,200)");
       return [200,200];
     }
 	}
@@ -86,6 +85,7 @@ function PJSBox($jq) {
 		var code = selected.toString();
 		var anchor = selected.anchorNode;
 		var focus = selected.focusNode;
+    
 		var codeObjText = source;//anchor.textContent;
 		/*if ( anchor != focus ) {
 			var fp = $jq(focus).parents();
@@ -105,7 +105,6 @@ function PJSBox($jq) {
 		
 		var size = getSize(source);
 		var cpos = {};
-		
 		$jq("body").append('\
 <div id="pjsbox-overlay" style="z-index:100000;position:fixed;left:0;top:0;height:100%;width:100%;background:#fff;opacity:0.5;display:none;"></div>\
 <div id="pjsbox" style="z-index:100001;position:fixed;left:50%;top:50%;overflow:hidden;width:0;height:0;padding:10px;border-radius:10px;-moz-border-radius:10px;-webkit-border-radius:10px;background:#fff;box-shadow:0 0 20px #353535;-webkit-box-shadow:0 0 20px #353535;-moz-box-shadow:0 0 20px #353535;">\
@@ -124,14 +123,13 @@ function PJSBox($jq) {
 				marginTop: -(size[1]/2)-10
 			},"slow",function(){
 				try {
-					p = Processing(canvas,codeObjText);
+					p = new Processing(canvas,codeObjText);
 					$jq("#pjsbox-canvas canvas").bind("mousemove.shim",function(e){
 						cpos = $jq("#pjsbox-canvas canvas").offset();
 					});
 				} catch(e) {
-          tinylogLite.log("ERROR Initializing p. "+ e);
-					$jq("#pjsbox-close").click();
-					//alert("Might be a bad selection...\n\n" + e.message);
+            throw(e);
+            $jq("#pjsbox-close").click();
 				}
 				$jq(this).css("overflow","visible").find("#pjsbox-close").fadeIn("slow");
 			});
