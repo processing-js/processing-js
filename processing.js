@@ -303,33 +303,33 @@
     CODED:     0xffff,
 
     // p.key will be CODED and p.keyCode will be this value
-    SHIFT:     16;
-    CONTROL:   17;
-    ALT:       18;
-    CAPSLK:    20;
-    PGUP:      33;
-    PGDN:      34;
-    END:       35;
-    HOME:      36;
-    LEFT:      37;
-    UP:        38;
-    RIGHT:     39;
-    DOWN:      40;
-    INS:       45;
-    DEL:       46;
-    F1:        112;
-    F2:        113;
-    F3:        114;
-    F4:        115;
-    F5:        116;
-    F6:        117;
-    F7:        118;
-    F8:        119;
-    F9:        120;
-    F10:       121;
-    F11:       122;
-    F12:       123;
-    NUMLK:     144;
+    SHIFT:     16,
+    CONTROL:   17,
+    ALT:       18,
+    CAPSLK:    20,
+    PGUP:      33,
+    PGDN:      34,
+    END:       35,
+    HOME:      36,
+    LEFT:      37,
+    UP:        38,
+    RIGHT:     39,
+    DOWN:      40,
+    INS:       45,
+    DEL:       46,
+    F1:        112,
+    F2:        113,
+    F3:        114,
+    F4:        115,
+    F5:        116,
+    F6:        117,
+    F7:        118,
+    F8:        119,
+    F9:        120,
+    F10:       121,
+    F11:       122,
+    F12:       123,
+    NUMLK:     144,
 
     // Cursor types
     ARROW:    'default',
@@ -1123,10 +1123,10 @@
         // Keys and Keystrokes
         keyPressCode,
         howManyKeys = 0,
-        firstMDown = true,    // first Mozilla key stroke
-        firstGDown = true,    // first Google key stroke
-        gRefire = false,      // Google refire
-        mRefire = false,      // Mozilla refire
+        firstCodedDown = true,  // first coded key stroke
+        //firstGKeyDown = true,   // first Google key stroke -- may be of use for flag later on chrome
+        firstMKeyDown = true,  // first Mozilla key stroke
+        gRefire = false,        // Google refire
         // Shaders
         programObject3D,
         programObject2D,
@@ -11462,7 +11462,7 @@
       if (codedKeys.indexOf(code) >= 0) { // listed around line 225
         p.keyCode = code;
         if(code === p.INS){p.keyCode = 155;}
-        return p.CODED;
+        return PConstants.CODED;
       }
       switch(code){
         case 13:
@@ -11555,76 +11555,108 @@
 
     var keyFunc = function (e, type){
       if(e.charCode !== 0){
-        p.key = charCodeMap(e.charCode, e.shiftKey);
+        if(e.keyCode === 0){
+          p.key = charCodeMap(e.charCode, e.shiftKey);
+        } else {
+          p.key = charCodeMap(e.keyCode, e.shiftKey);
+        }
+        if(type === "keypress") {
+          if(firstMKeyDown === true){
+            firstMKeyDown = false;
+            p.keyPressed();
+            var temp = p.keyCode;
+            p.keyCode = 0;
+            p.keyTyped();
+            p.keyCode = temp;
+          } else {
+            p.keyReleased();
+            p.keyPressed();
+            var temp = p.keyCode;
+            p.keyCode = 0;
+            p.keyTyped();
+            p.keyCode = temp;
+          }
+        } 
       } else {
         p.key = keyCodeMap(e.keyCode, e.shiftKey);
-      }
-      switch (p.keyCode) {
-        case 19:  // Pause-Break
-        case 33:  // Page Up
-        case 34:  // Page Down
-        case 35:  // End
-        case 36:  // Home
-        case 37:  // Left Arrow
-        case 38:  // Up Arrow
-        case 39:  // Right Arrow
-        case 40:  // Down Arrow
-        case 45:  // Insert
-        case 112: // F1
-        case 113: // F2
-        case 114: // F3
-        case 115: // F4
-        case 116: // F5
-        case 117: // F6
-        case 118: // F7
-        case 119: // F8
-        case 120: // F9
-        case 121: // F10
-        case 122: // F11
-        case 123: // F12
-        case 145: // Scroll Lock
-        case 155: // Insert
-        case 224: // NumPad Up
-        case 225: // NumPad Down
-        case 226: // NumPad Left
-        case 227: // NumPad Right
-          if(type === "keydown"){
-            if(gRefire){
-              p.keyReleased();
-              p.keyPressed();
-            } else {
-              p.keyPressed();
-              gRefire = true;
+        switch (p.keyCode) {
+          case 19:  // Pause-Break
+          case 33:  // Page Up
+          case 34:  // Page Down
+          case 35:  // End
+          case 36:  // Home
+          case 37:  // Left Arrow
+          case 38:  // Up Arrow
+          case 39:  // Right Arrow
+          case 40:  // Down Arrow
+          case 45:  // Insert
+          case 112: // F1
+          case 113: // F2
+          case 114: // F3
+          case 115: // F4
+          case 116: // F5
+          case 117: // F6
+          case 118: // F7
+          case 119: // F8
+          case 120: // F9
+          case 121: // F10
+          case 122: // F11
+          case 123: // F12
+          case 145: // Scroll Lock
+          case 155: // Insert
+          case 224: // NumPad Up
+          case 225: // NumPad Down
+          case 226: // NumPad Left
+          case 227: // NumPad Right
+            if(type === "keydown"){
+              if(gRefire){
+                p.keyReleased();
+                p.keyPressed();
+              } else {
+                p.keyPressed();
+                gRefire = true;
+              }
             }
-          }
-          else if(type === "keypress"){
-            if(firstMDown){
-              firstMDown = false;
-            } else {
+            else if(type === "keypress"){
+              if(firstCodedDown){
+                firstCodedDown = false;
+              } else {
+                p.keyReleased();
+                p.keyPressed();
+              }
+            }
+            else if(type === "keyup"){
               p.keyReleased();
+              if(firstCodedDown === false){ firstCodedDown = true; }
+              if(gRefire){ gRefire = false };
+            }
+            break;
+          case 16:  // Shift
+          case 17:  // Ctrl
+          case 18:  // Alt
+          case 20:  // Caps Lock
+          case 144: // Num Lock
+            if(type === "keydown"){
               p.keyPressed();
             }
-          }
-          else if(type === "keyup"){
-            p.keyReleased();
-            if(!firstMDown){ firstMDown = true; }
-          }
-          break;
-        case 16:  // Shift
-        case 17:  // Ctrl
-        case 18:  // Alt
-        case 20:  // Caps Lock
-        case 144: // Num Lock
-          if(type === "keydown"){
-            p.keyPressed();
-          }
-          else if (type === "keyup"){
-            p.keyReleased();
-          }
-          break;
-        default:
-          fKeys = true;
-          break;
+            else if (type === "keyup"){
+              p.keyReleased();
+            }
+            break;
+          default:
+            if(e.keyCode !== 0){
+              p.key = charCodeMap(e.keyCode, e.shiftKey);
+            } else {
+              p.key = charCodeMap(e.charCode, e.shiftKey);
+            }
+            if(type === "keyup"){
+              p.keyCode = e.keyCode;
+              p.keyReleased();
+              if(firstMKeyDown === false){ firstMKeyDown = true; }
+              // if(firstGKeyDown === false){ firstGKeyDown = true; } -- may be of use to fix problems with Google keys
+            }
+            break;
+        }   
       }
     }
 
