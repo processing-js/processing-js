@@ -66,8 +66,9 @@ function PJSBox($jq) {
 		} else {
 			return [200,200];
 		}*/
-    var r = "" + script.match(/size\s*\((?:.+),(?:.+)(?:,\s*(OPENGL|P3D))?\s*\)\s*;/);
-    var dimensions = r.match(/[0-9]+/g);
+    var codeWoStrings = script.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g, "");
+		var r = "" + codeWoStrings.match(/\bsize\((.+),(.+)(?:,(.+))?\);/);
+		var dimensions = r.match(/[0-9]+/g);
     if (dimensions) {
       return[dimensions[0],dimensions[1]];
     }
