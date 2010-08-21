@@ -1060,7 +1060,7 @@
         lineWidth = 1,
         loopStarted = false,
         doLoop = true,
-        looping = 0,
+        stopLooping = function() {},
         curRectMode = PConstants.CORNER,
         curEllipseMode = PConstants.CENTER,
         normalX = 0,
@@ -5081,25 +5081,66 @@
     p.noLoop = function noLoop() {
       doLoop = false;
       loopStarted = false;
-      clearInterval(looping);
+      stopLooping();
     };
+
+    var highPrecisionTimer = null;
+    if(window.postMessage instanceof Function) { // XXX also DOM check?
+      highPrecisionTimer = function(fn) {
+        var isTimerActive = true;
+        var nextTime = new Date().valueOf() + curMsPerFrame; 
+        var messageCookie = "$PJS:high-precision-timer";
+        function looping(event) {
+          if(event.data !== messageCookie || event.source !== window) {
+            return; // not our message
+          }
+          if(isTimerActive) {
+            var currentTime = new Date().valueOf();
+            if(nextTime <= currentTime) {
+              fn();
+              nextTime = currentTime + curMsPerFrame;
+            }
+            window.postMessage(messageCookie, "*");
+          } else {
+            window.removeEventListener("message", looping, false);  
+          }
+        }
+        window.addEventListener("message", looping, false);  
+        window.postMessage(messageCookie, "*");
+        return (function() { 
+          isTimerActive = false; 
+        });
+      };
+    }
 
     p.loop = function loop() {
       if (loopStarted) {
         return;
       }
 
-      looping = window.setInterval(function() {
+      function tick() {
         try {
           if (document.hasFocus instanceof Function) {
             p.focused = document.hasFocus();
           }
           p.redraw();
         } catch(e_loop) {
-          window.clearInterval(looping);
+          stopLooping();
           throw e_loop;
         }
-      }, curMsPerFrame);
+      }
+
+      var highPrecisionTimerPresent = window.postMessage instanceof Function; // XXX DOM check?
+      var MIN_MS_FOR_NORMAL_TIMER = 20;
+
+      if(highPrecisionTimer !== null && curMsPerFrame < MIN_MS_FOR_NORMAL_TIMER) {
+        stopLooping = highPrecisionTimer(tick);
+      } else {
+        var looping = window.setInterval(tick, curMsPerFrame);
+        stopLooping = function() {
+          window.clearInterval(looping);
+        }
+      }
 
       doLoop = true;
       loopStarted = true;
@@ -5119,7 +5160,7 @@
     var eventHandlers = [];
 
     p.exit = function exit() {
-      window.clearInterval(looping);
+      stopLooping();
 
       Processing.removeInstance(p.externals.canvas.id);
 
