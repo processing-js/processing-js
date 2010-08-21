@@ -88,7 +88,7 @@ SKETCHOUTPUT ?= ${SKETCHINPUT}.js
 closure: create-release
 	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-${VERSION}.closure.js
 
-check-closure: closure
+check-closure: create-release
 	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-closure.js
 	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-closure.js
 

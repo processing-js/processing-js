@@ -4620,30 +4620,29 @@
     }
 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
+
       // 4 arguments: (R, G, B, A) or (H, S, B, A)
       if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef && aValue4 !== undef) {
         return color$4(aValue1, aValue2, aValue3, aValue4);
       }
 
       // 3 arguments: (R, G, B) or (H, S, B)
-      else if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef) {
-        return color$4(aValue1, aValue2, aValue3, colorModeA);
+      if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef) {
+        return color$4(aValue1, aValue2, aValue3, colorModeA); 
       }
 
       // 2 arguments: (Color, A) or (Grayscale, A)
-      else if (aValue1 !== undef && aValue2 !== undef) {
+      if (aValue1 !== undef && aValue2 !== undef) {
         return color$2(aValue1, aValue2);
       }
 
       // 1 argument: (Grayscale) or (Color)
-      else if (typeof aValue1 === "number") {
+      if (typeof aValue1 === "number") {
         return color$1(aValue1);
       }
 
       // Default
-      else {
-        return color$4(colorModeX, colorModeY, colorModeZ, colorModeA);
-      }
+      return color$4(colorModeX, colorModeY, colorModeZ, colorModeA);
     };
 
     // Ease of use function to extract the colour bits into a string
