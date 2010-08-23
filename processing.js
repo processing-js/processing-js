@@ -6441,6 +6441,13 @@
         lineCap: curContext.lineCap,
         lineJoin: curContext.lineJoin
       };
+      // remove the style width and height properties to ensure that the canvas gets set to 
+      // aWidth and aHeight coming in
+      if (curElement.style.length > 0 ) {
+        curElement.style.removeProperty("width");
+        curElement.style.removeProperty("height");
+      }
+      
       curElement.width = p.width = aWidth || 100;
       curElement.height = p.height = aHeight || 100;
 
