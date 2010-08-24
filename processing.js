@@ -11664,10 +11664,10 @@
       keyPressed = true;
       howManyKeys++;
       p.keyCode = e.keyCode;
-      if (typeof p.keyPressed !== "function") {
-        p.keyPressed = true;
+      if (typeof p.keyPressed === "function") {
+        keyFunc(e, "keydown"); 
       } else {
-        keyFunc(e, "keydown");  
+        p.__keyPressed = true;
       }
     });
     
@@ -11679,11 +11679,13 @@
     });
 
     attach(document, "keyup", function(e) {
-      if (typeof p.keyPressed !== "function") {
-        p.keyPressed = false;
-      }
-      if (p.keyReleased) {
+      if (typeof p.keyPressed === "function") {
         keyFunc(e, "keyup");
+        /*if (p.keyReleased) {
+          keyFunc(e, "keyup");
+        }*/
+      } else {
+        p.__keyPressed = false;
       }
       if(--howManyKeys === 0){
         keyPressed = false;
