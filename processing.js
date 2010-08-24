@@ -10557,13 +10557,21 @@
       curTextLeading = leading;
     };
 
-    // this is for use inside textAscent and Descent only.
-    // Sets the size and font without setting leading
-    // because if leading is changed, ascent and descent will then
-    // be called, causing infinite recursion.
-    p.textLeadinglessFont = function(name, size) {
-      curTextFont = name;
-      curTextSize = size;
+    var thisStupidThing = function(fontFace, fontSize, baseLine, text) {
+      this.canvas = document.createElement('canvas');
+      this.canvas.setAttribute('width', fontSize + "px");
+      this.canvas.setAttribute('height', fontSize + "px");
+      this.ctx = this.canvas.getContext("2d");
+      this.ctx.font = fontSize + "pt " + fontFace;
+      this.ctx.fillStyle = "black";
+      this.ctx.fillRect (0, 0, fontSize, fontSize); 
+      this.ctx.fillStyle = "white";
+      this.ctx.fillText(text, 0, baseLine);
+      this.imageData = this.ctx.getImageData(0, 0, fontSize, fontSize);
+
+      this.get = function(x, y) {
+        return this.imageData.data[((y*(this.imageData.width*4)) + (x*4))];
+      };
     };
 
     p.textAscent = (function() {
@@ -10586,15 +10594,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          if (graphics !== undef) {
-            graphics.size(curTextSize, curTextSize);
-          } else {
-            graphics = p.createGraphics(curTextSize, curTextSize);
-          }
-          graphics.background(0);
-          graphics.fill(255);
-          graphics.textLeadinglessFont(curTextFont, curTextSize);
-          graphics.text(character, 0, curTextSize);
+          graphics = new thisStupidThing(curTextFont.name, curTextSize, curTextSize, character);
 
           // binary search for highest pixel
           while(yLoc !== bottom) {
@@ -10642,15 +10642,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          if (graphics !== undef) {
-            graphics.size(curTextSize, curTextSize);
-          } else {
-            graphics = p.createGraphics(curTextSize, curTextSize);
-          }
-          graphics.background(0);
-          graphics.fill(255);
-          graphics.textLeadinglessFont(curTextFont, curTextSize);
-          graphics.text(character, 0, 0);
+          graphics = new thisStupidThing(curTextFont.name, curTextSize, 0, character);
 
           // binary search for lowest pixel
           while(yLoc !== bottom) {
