@@ -5086,9 +5086,9 @@
 
     var highPrecisionTimer = null;
     if(window.postMessage instanceof Function) { // XXX also DOM check?
-      highPrecisionTimer = function(fn) {
+      highPrecisionTimer = function(fn, interval) {
         var isTimerActive = true;
-        var nextTime = new Date().valueOf() + curMsPerFrame; 
+        var nextTime = new Date().valueOf() + interval;
         var messageCookie = "$PJS:high-precision-timer";
         function looping(event) {
           if(event.data !== messageCookie || event.source !== window) {
@@ -5098,18 +5098,18 @@
             var currentTime = new Date().valueOf();
             if(nextTime <= currentTime) {
               fn();
-              nextTime = currentTime + curMsPerFrame;
+              nextTime = currentTime + interval;
             }
             window.postMessage(messageCookie, "*");
           } else {
-            window.removeEventListener("message", looping, false);  
+            window.removeEventListener("message", looping, false);
           }
         }
-        window.addEventListener("message", looping, false);  
+        window.addEventListener("message", looping, false);
         window.postMessage(messageCookie, "*");
-        return (function() { 
-          isTimerActive = false; 
-        });
+        return function() {
+          isTimerActive = false;
+        };
       };
     }
 
@@ -5134,12 +5134,12 @@
       var MIN_MS_FOR_NORMAL_TIMER = 20;
 
       if(highPrecisionTimer !== null && curMsPerFrame < MIN_MS_FOR_NORMAL_TIMER) {
-        stopLooping = highPrecisionTimer(tick);
+        stopLooping = highPrecisionTimer(tick, curMsPerFrame);
       } else {
         var looping = window.setInterval(tick, curMsPerFrame);
         stopLooping = function() {
           window.clearInterval(looping);
-        }
+        };
       }
 
       doLoop = true;
