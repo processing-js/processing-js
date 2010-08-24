@@ -10557,7 +10557,7 @@
       curTextLeading = leading;
     };
 
-    var thisStupidThing = function(fontFace, fontSize, baseLine, text) {
+    var measureTextCanvas = function(fontFace, fontSize, baseLine, text) {
       this.canvas = document.createElement('canvas');
       this.canvas.setAttribute('width', fontSize + "px");
       this.canvas.setAttribute('height', fontSize + "px");
@@ -10594,7 +10594,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          graphics = new thisStupidThing(curTextFont.name, curTextSize, curTextSize, character);
+          graphics = new measureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
 
           // binary search for highest pixel
           while(yLoc !== bottom) {
@@ -10642,7 +10642,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          graphics = new thisStupidThing(curTextFont.name, curTextSize, 0, character);
+          graphics = new measureTextCanvas(curTextFont.name, curTextSize, 0, character);
 
           // binary search for lowest pixel
           while(yLoc !== bottom) {
