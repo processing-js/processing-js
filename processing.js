@@ -10991,7 +10991,7 @@
         }
         lineWidth = letterWidth = 0;
       } // for (var j=
-      
+
       // actual draw
       var lineFunction = p.use3DContext ? text$line$3d : text$line;
       var xOffset = 0;
@@ -11009,7 +11009,7 @@
         boxYOffset2 = (height - (strings.length * curTextLeading)) / 2;
       }
 
-      for(var il=0,ll=strings.length; il<ll; ++il) {
+      for(var il=0,ll=strings.length; il<ll; ++il, yOffset += curTextLeading) {
         if(yOffset + boxYOffset2 < 0) {
           continue; // skip if not inside box yet
         }
@@ -11018,7 +11018,6 @@
         }
         lineFunction(strings[il], x + xOffset, y + yOffset + boxYOffset1 + boxYOffset2,
                      z, horizontalTextAlignment);
-        yOffset += curTextLeading;
       }
     }
 
