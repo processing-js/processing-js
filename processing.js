@@ -4734,14 +4734,44 @@
       return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
     };
 
+    /**
+    * Extracts the brightness value from a color.
+    * @param aColor any value of the color datatype
+    * @returns {float} The brightness color value.
+    * @see red
+    * @see green
+    * @see blue
+    * @see hue
+    * @see saturation
+    */  
     p.brightness = function(colInt){
       return  p.color.toHSB(colInt)[2];
     };
 
+    /**
+    * Extracts the saturation value from a color.
+    * @param aColor any value of the color datatype
+    * @returns {float} The saturation color value.
+    * @see red
+    * @see green
+    * @see blue
+    * @see hue
+    * @see brightness
+    */
     p.saturation = function(colInt){
       return  p.color.toHSB(colInt)[1];
     };
 
+    /**
+    * Extracts the hue value from a color.
+    * @param aColor any value of the color datatype
+    * @returns {float} The hue color value.
+    * @see red
+    * @see green
+    * @see blue
+    * @see saturation
+    * @see brightness
+    */
     p.hue = function(colInt){
       return  p.color.toHSB(colInt)[0];
     };
@@ -4753,23 +4783,86 @@
         return p.color(aColor);
       }
     };
-
+    
+    /**
+    * Extracts the red value from a color, scaled to match current colorMode().
+    * This value is always returned as a float so be careful not to assign it to an int value.
+    * @param aColor any value of the color datatype
+    * @returns {float} The red color value.
+    * @see green
+    * @see blue
+    * @see alpha
+    * @see >> right shift
+    * @see hue
+    * @see saturation
+    * @see brightness
+    */    
     p.red = function(aColor) {
       return ((aColor & PConstants.RED_MASK) >>> 16) / 255 * colorModeX;
     };
 
+    /**
+    * Extracts the green value from a color, scaled to match current colorMode().
+    * This value is always returned as a float so be careful not to assign it to an int value.
+    * @param aColor any value of the color datatype
+    * @returns {float} The green color value.
+    * @see red
+    * @see blue
+    * @see alpha
+    * @see >> right shift
+    * @see hue
+    * @see saturation
+    * @see brightness
+    */
     p.green = function(aColor) {
       return ((aColor & PConstants.GREEN_MASK) >>> 8) / 255 * colorModeY;
     };
 
+    /**
+    * Extracts the blue value from a color, scaled to match current colorMode().
+    * This value is always returned as a float so be careful not to assign it to an int value.
+    * @param aColor any value of the color datatype
+    * @returns {float} The blue color value.
+    * @see red
+    * @see green
+    * @see alpha
+    * @see >> right shift
+    * @see hue
+    * @see saturation
+    * @see brightness
+    */
     p.blue = function(aColor) {
       return (aColor & PConstants.BLUE_MASK) / 255 * colorModeZ;
     };
 
+    /**
+    * Extracts the alpha value from a color, scaled to match current colorMode().
+    * This value is always returned as a float so be careful not to assign it to an int value.
+    * @param aColor any value of the color datatype
+    * @returns {float} The alpha color value.
+    * @see red
+    * @see green
+    * @see blue
+    * @see >> right shift
+    * @see hue
+    * @see saturation
+    * @see brightness
+    */
     p.alpha = function(aColor) {
       return ((aColor & PConstants.ALPHA_MASK) >>> 24) / 255 * colorModeA;
     };
-
+    
+    /**
+    * Calculates a color or colors between two colors at a specific increment.
+    * The amt parameter is the amount to interpolate between the two values where 0.0
+    * equal to the first point, 0.1 is very near the first point, 0.5 is half-way in between, etc.
+    * @param c1 color: interpolate from this color
+    * @param c2 color: interpolate to this color
+    * @param amt float: between 0.0 and 1.0
+    * @returns {float} The blended color.
+    * @see blendColor
+    * @see color
+    */
     p.lerpColor = function lerpColor(c1, c2, amt) {
       // Get RGBA values for Color 1 to floats
       var colorBits1 = p.color(c1);
@@ -4803,6 +4896,23 @@
       return c;
     };
 
+    /**
+    * Changes the way Processing interprets color data. By default, fill(), stroke(), and background()
+    * colors are set by values between 0 and 255 using the RGB color model. It is possible to change the
+    * numerical range used for specifying colors and to switch color systems. For example, calling colorMode(RGB, 1.0)
+    * will specify that values are specified between 0 and 1. The limits for defining colors are altered by setting the 
+    * parameters range1, range2, range3, and range 4.
+    * @param mode Either RGB or HSB, corresponding to Red/Green/Blue and Hue/Saturation/Brightness
+    * @param range int or float: range for all color elements
+    * @param range1 int or float: range for the red or hue depending on the current color mode
+    * @param range2 int or float: range for the green or saturation depending on the current color mode
+    * @param range3 int or float: range for the blue or brightness depending on the current color mode
+    * @param range4 int or float: range for the alpha
+    * @returns none
+    * @see background
+    * @see fill
+    * @see stroke
+    */
     p.colorMode = function colorMode() { // mode, range1, range2, range3, range4
       curColorMode = arguments[0];
       if (arguments.length > 1) {
@@ -4813,6 +4923,16 @@
       }
     };
 
+    /**
+    * Blends two color values together based on the blending mode given as the MODE parameter.
+    * The possible modes are described in the reference for the blend() function.
+    * @param c1 color: the first color to blend
+    * @param c2 color: the second color to blend
+    * @param MODE Either BLEND, ADD, SUBTRACT, DARKEST, LIGHTEST, DIFFERENCE, EXCLUSION, MULTIPLY, SCREEN, OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, or BURN
+    * @returns {float} The blended color.
+    * @see blend
+    * @see color
+    */
     p.blendColor = function(c1, c2, mode) {
       var color = 0;
       switch (mode) {
@@ -4878,11 +4998,39 @@
       isStrokeDirty = true;
       isFillDirty = true;
     }
-
+   
+    /**
+    * Prints the current matrix to the text window.
+    * @returns none
+    * @see pushMatrix
+    * @see popMatrix
+    * @see resetMatrix
+    * @see applyMatrix
+    */
     p.printMatrix = function printMatrix() {
       modelView.print();
     };
 
+    /**
+    * Specifies an amount to displace objects within the display window. The x parameter specifies left/right translation,
+    * the y parameter specifies up/down translation, and the z parameter specifies translations toward/away from the screen. 
+    * Using this function with the z  parameter requires using the P3D or OPENGL parameter in combination with size as shown
+    * in the above example. Transformations apply to everything that happens after and subsequent calls to the function 
+    * accumulates the effect. For example, calling translate(50, 0) and then translate(20, 0) is the same as translate(70, 0). 
+    * If translate() is called within draw(), the transformation is reset when the loop begins again. 
+    * This function can be further controlled by the pushMatrix() and popMatrix().
+    * @param x int or float: left/right translation
+    * @param y int or float: up/down translation
+    * @param z int or float: forward/back translation
+    * @returns none
+    * @see pushMatrix
+    * @see popMatrix
+    * @see scale
+    * @see rotate
+    * @see rotateX
+    * @see rotateY
+    * @see rotateZ
+    */
     p.translate = function translate(x, y, z) {
       if (p.use3DContext) {
         forwardTransform.translate(x, y, z);
@@ -4892,6 +5040,27 @@
       }
     };
 
+    /**
+    * Increases or decreases the size of a shape by expanding and contracting vertices. Objects always scale from their
+    * relative origin to the coordinate system. Scale values are specified as decimal percentages. For example, the 
+    * function call scale(2.0) increases the dimension of a shape by 200%. Transformations apply to everything that 
+    * happens after and subsequent calls to the function multiply the effect. For example, calling scale(2.0) and 
+    * then scale(1.5) is the same as scale(3.0). If scale() is called within draw(), the transformation is reset when 
+    * the loop begins again. Using this fuction with the z  parameter requires passing P3D or OPENGL into the size() 
+    * parameter as shown in the example above. This function can be further controlled by pushMatrix() and popMatrix().
+    * @param size float: percentage to scale the object
+    * @param x float: percentage to scale the object in the x-axis
+    * @param y float: percentage to scale the object in the y-axis
+    * @param z float: percentage to scale the object in the z-axis
+    * @returns none
+    * @see pushMatrix
+    * @see popMatrix
+    * @see translate
+    * @see rotate
+    * @see rotateX
+    * @see rotateY
+    * @see rotateZ
+    */
     p.scale = function scale(x, y, z) {
       if (p.use3DContext) {
         forwardTransform.scale(x, y, z);
@@ -4901,6 +5070,19 @@
       }
     };
 
+    /**
+    * Pushes the current transformation matrix onto the matrix stack. Understanding pushMatrix() and popMatrix() 
+    * requires understanding the concept of a matrix stack. The pushMatrix() function saves the current coordinate 
+    * system to the stack and popMatrix() restores the prior coordinate system. pushMatrix() and popMatrix() are 
+    * used in conjuction with the other transformation methods and may be embedded to control the scope of the transformations.
+    * @returns none
+    * @see popMatrix
+    * @see translate
+    * @see rotate
+    * @see rotateX
+    * @see rotateY
+    * @see rotateZ
+    */
     p.pushMatrix = function pushMatrix() {
       if (p.use3DContext) {
         userMatrixStack.load(modelView);
@@ -4909,6 +5091,15 @@
       }
     };
 
+    /**
+    * Pops the current transformation matrix off the matrix stack. Understanding pushing and popping requires 
+    * understanding the concept of a matrix stack. The pushMatrix() function saves the current coordinate system to 
+    * the stack and popMatrix() restores the prior coordinate system. pushMatrix() and popMatrix() are used in 
+    * conjuction with the other transformation methods and may be embedded to control the scope of the transformations.
+    * @returns none
+    * @see popMatrix
+    * @see pushMatrix
+    */
     p.popMatrix = function popMatrix() {
       if (p.use3DContext) {
         modelView.set(userMatrixStack.pop());
@@ -4917,6 +5108,14 @@
       }
     };
 
+    /**
+    * Replaces the current matrix with the identity matrix. The equivalent function in OpenGL is glLoadIdentity().
+    * @returns none
+    * @see popMatrix
+    * @see pushMatrix
+    * @see applyMatrix
+    * @see printMatrix
+    */
     p.resetMatrix = function resetMatrix() {
       if (p.use3DContext) {
         forwardTransform.reset();
@@ -4926,6 +5125,17 @@
       }
     };
 
+    /**
+    * Multiplies the current matrix by the one specified through the parameters. This is very slow because it will 
+    * try to calculate the inverse of the transform, so avoid it whenever possible. The equivalent function 
+    * in OpenGL is glMultMatrix().
+    * @param n00-n15 float: numbers which define the 4x4 matrix to be multiplied
+    * @returns none
+    * @see popMatrix
+    * @see pushMatrix
+    * @see resetMatrix
+    * @see printMatrix
+    */
     p.applyMatrix = function applyMatrix() {
       var a = arguments;
       if (!p.use3DContext) {
@@ -4939,21 +5149,98 @@
       reverseTransform.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
     };
 
+    /**
+    * Rotates a shape around the x-axis the amount specified by the angle parameter. Angles should be 
+    * specified in radians (values from 0 to PI*2) or converted to radians with the radians()  function. 
+    * Objects are always rotated around their relative position to the origin and positive numbers 
+    * rotate objects in a counterclockwise direction. Transformations apply to everything that happens 
+    * after and subsequent calls to the function accumulates the effect. For example, calling rotateX(PI/2) 
+    * and then rotateX(PI/2) is the same as rotateX(PI). If rotateX() is called within the draw(), the 
+    * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
+    * into the size() parameter as shown in the example above.
+    * @param angle float: angle of rotation specified in radians
+    * @returns none
+    * @see rotateY
+    * @see rotateZ
+    * @see rotate
+    * @see translate
+    * @see scale
+    * @see popMatrix
+    * @see pushMatrix
+    */
     p.rotateX = function(angleInRadians) {
       forwardTransform.rotateX(angleInRadians);
       reverseTransform.invRotateX(angleInRadians);
     };
 
+    /**
+    * Rotates a shape around the z-axis the amount specified by the angle parameter. Angles should be 
+    * specified in radians (values from 0 to PI*2) or converted to radians with the radians()  function. 
+    * Objects are always rotated around their relative position to the origin and positive numbers 
+    * rotate objects in a counterclockwise direction. Transformations apply to everything that happens 
+    * after and subsequent calls to the function accumulates the effect. For example, calling rotateZ(PI/2) 
+    * and then rotateZ(PI/2) is the same as rotateZ(PI). If rotateZ() is called within the draw(), the 
+    * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
+    * into the size() parameter as shown in the example above.
+    * @param angle float: angle of rotation specified in radians
+    * @returns none
+    * @see rotateX
+    * @see rotateY
+    * @see rotate
+    * @see translate
+    * @see scale
+    * @see popMatrix
+    * @see pushMatrix
+    */
     p.rotateZ = function(angleInRadians) {
       forwardTransform.rotateZ(angleInRadians);
       reverseTransform.invRotateZ(angleInRadians);
     };
 
+    /**
+    * Rotates a shape around the y-axis the amount specified by the angle parameter. Angles should be 
+    * specified in radians (values from 0 to PI*2) or converted to radians with the radians()  function. 
+    * Objects are always rotated around their relative position to the origin and positive numbers 
+    * rotate objects in a counterclockwise direction. Transformations apply to everything that happens 
+    * after and subsequent calls to the function accumulates the effect. For example, calling rotateY(PI/2) 
+    * and then rotateY(PI/2) is the same as rotateY(PI). If rotateY() is called within the draw(), the 
+    * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
+    * into the size() parameter as shown in the example above.
+    * @param angle float: angle of rotation specified in radians
+    * @returns none
+    * @see rotateX
+    * @see rotateZ
+    * @see rotate
+    * @see translate
+    * @see scale
+    * @see popMatrix
+    * @see pushMatrix
+    */
     p.rotateY = function(angleInRadians) {
       forwardTransform.rotateY(angleInRadians);
       reverseTransform.invRotateY(angleInRadians);
     };
 
+    /**
+    * Rotates a shape the amount specified by the angle parameter. Angles should be specified in radians 
+    * (values from 0 to TWO_PI) or converted to radians with the radians() function. Objects are always 
+    * rotated around their relative position to the origin and positive numbers rotate objects in a 
+    * clockwise direction. Transformations apply to everything that happens after and subsequent calls 
+    * to the function accumulates the effect. For example, calling rotate(HALF_PI) and then rotate(HALF_PI) 
+    * is the same as rotate(PI). All tranformations are reset when draw() begins again. Technically, 
+    * rotate() multiplies the current transformation matrix by a rotation matrix. This function can be 
+    * further controlled by the pushMatrix() and popMatrix().
+    * @param angle float: angle of rotation specified in radians
+    * @returns none
+    * @see rotateX
+    * @see rotateY
+    * @see rotateZ
+    * @see rotate
+    * @see translate
+    * @see scale
+    * @see popMatrix
+    * @see pushMatrix
+    */
     p.rotate = function rotate(angleInRadians) {
       if (p.use3DContext) {
         forwardTransform.rotateZ(angleInRadians);
@@ -4963,6 +5250,18 @@
       }
     };
 
+    /**
+    * The pushStyle() function saves the current style settings and popStyle()  restores the prior settings. 
+    * Note that these functions are always used together. They allow you to change the style settings and later 
+    * return to what you had. When a new style is started with pushStyle(), it builds on the current style information. 
+    * The pushStyle() and popStyle() functions can be embedded to provide more control (see the second example 
+    * above for a demonstration.) 
+    * The style information controlled by the following functions are included in the style: fill(), stroke(), tint(), 
+    * strokeWeight(), strokeCap(), strokeJoin(), imageMode(), rectMode(), ellipseMode(), shapeMode(), colorMode(), 
+    * textAlign(), textFont(), textMode(), textSize(), textLeading(), emissive(), specular(), shininess(), ambient()
+    * @returns none
+    * @see popStyle
+    */
     p.pushStyle = function pushStyle() {
       // Save the canvas state.
       saveContext();
@@ -4988,6 +5287,14 @@
       styleArray.push(newState);
     };
 
+    /**
+    * The pushStyle() function saves the current style settings and popStyle()  restores the prior settings; these 
+    * functions are always used together. They allow you to change the style settings and later return to what you had. 
+    * When a new style is started with pushStyle(), it builds on the current style information. The pushStyle() and 
+    * popStyle() functions can be embedded to provide more control (see the second example above for a demonstration.)
+    * @returns none
+    * @see pushStyle
+    */
     p.popStyle = function popStyle() {
       var oldState = styleArray.pop();
 
@@ -5018,24 +5325,101 @@
     // Time based functions
     ////////////////////////////////////////////////////////////////////////////
 
+    /**
+    * Processing communicates with the clock on your computer.
+    * The year() function returns the current year as an integer (2003, 2004, 2005, etc).
+    * @returns {float} The current year.
+    * @see millis
+    * @see second
+    * @see minute
+    * @see hour
+    * @see day
+    * @see month
+    */
     p.year = function year() {
       return new Date().getFullYear();
     };
+    /**
+    * Processing communicates with the clock on your computer.
+    * The month() function returns the current month as a value from 1 - 12.
+    * @returns {float} The current month.
+    * @see millis
+    * @see second
+    * @see minute
+    * @see hour
+    * @see day
+    * @see year
+    */
     p.month = function month() {
       return new Date().getMonth() + 1;
     };
+    /**
+    * Processing communicates with the clock on your computer.
+    * The day() function returns the current day as a value from 1 - 31.
+    * @returns {float} The current day.
+    * @see millis
+    * @see second
+    * @see minute
+    * @see hour
+    * @see month
+    * @see year
+    */
     p.day = function day() {
       return new Date().getDate();
     };
+    /**
+    * Processing communicates with the clock on your computer.
+    * The hour() function returns the current hour as a value from 0 - 23.
+    * @returns {float} The current hour.
+    * @see millis
+    * @see second
+    * @see minute
+    * @see month
+    * @see day
+    * @see year
+    */
     p.hour = function hour() {
       return new Date().getHours();
     };
+    /**
+    * Processing communicates with the clock on your computer.
+    * The minute() function returns the current minute as a value from 0 - 59.
+    * @returns {float} The current minute.
+    * @see millis
+    * @see second
+    * @see month
+    * @see hour
+    * @see day
+    * @see year
+    */
     p.minute = function minute() {
       return new Date().getMinutes();
     };
+    /**
+    * Processing communicates with the clock on your computer.
+    * The second() function returns the current second as a value from 0 - 59.
+    * @returns {float} The current minute.
+    * @see millis
+    * @see month
+    * @see minute
+    * @see hour
+    * @see day
+    * @see year
+    */
     p.second = function second() {
       return new Date().getSeconds();
     };
+    /**
+    * Returns the number of milliseconds (thousandths of a second) since starting a sketch.
+    * This information is often used for timing animation sequences.
+    * @returns {long} The number of milliseconds since starting the sketch.
+    * @see month
+    * @see second
+    * @see minute
+    * @see hour
+    * @see day
+    * @see year
+    */
     p.millis = function millis() {
       return new Date().getTime() - start;
     };
