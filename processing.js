@@ -11286,7 +11286,8 @@
           },
           set: function(v) {
             baseClass[propertyName]=v;
-          }
+          },
+          enumerable: true
         });
       }
 
