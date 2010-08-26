@@ -11591,8 +11591,10 @@
     function keyFunc(e, type){
       var tempKeyCode;
       p.key = keyCodeMap(e.keyCode, e.shiftKey);
-      if (e.keyCode === e.charCode){  // Hack for Google Chrome that bypasses problem with keys being the same keyCode
-        p.keyCode = -1;               // for keydown and keypress - like s and F4 give the same keyCode of 115
+      if(type === "keypress"){
+        if (e.keyCode === e.charCode){  // Hack for Google Chrome that bypasses problem with keys being the same keyCode
+          p.keyCode = -1;               // for keydown and keypress - like s and F4 give the same keyCode of 115
+        }
       }
       switch (p.keyCode) {
         case 19:  // Pause-Break
