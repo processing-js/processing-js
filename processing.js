@@ -11308,7 +11308,7 @@
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
 
-    p.extendClass = function extendClass(subClass, baseClass) {
+    function extendClass(subClass, baseClass) {
       function extendGetterSetter(propertyName) {
         p.defineProperty(subClass, propertyName, {
           get: function() {
@@ -11316,18 +11316,31 @@
           },
           set: function(v) {
             baseClass[propertyName]=v;
-          }
+          },
+          enumerable: true
         });
       }
 
       for (var propertyName in baseClass) {
-        if (subClass[propertyName] === undef) {
+        if (!(propertyName in subClass)) {
           if (typeof baseClass[propertyName] === 'function') {
             subClass[propertyName] = baseClass[propertyName];
-          } else {
+          } else if(propertyName !== "$upcast") {
             extendGetterSetter(propertyName);
           }
         }
+      }
+    }
+
+    p.extendClassChain = function(base) {
+      var path = [base];
+      for (var self = base.$upcast; self; self = self.$upcast) {
+        extendClass(self, base);
+        path.push(self);
+        base = self;
+      }
+      while (path.length > 0) { 
+        path.pop().$self=base;
       }
     };
 
@@ -12617,25 +12630,24 @@
         thisClassMethods = appendToLookupTable({}, members.methods),
         thisClassInners = appendToLookupTable({}, members.innerClasses);
 
-      var oldContext = replaceContext;
+      var oldContext = replaceContext, inConstructors = false;
       replaceContext = function(name) {
         if(name === "this") {
           return selfId;
         } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
         } else if(thisClassMethods.hasOwnProperty(name)) {
-          return "this." + name;
+          // keeping |"this." + name| for speed
+          return inConstructors ? "this.$self." + name : "this." + name;
         }
         return oldContext(name);
       };
 
       if(this.baseClassName) {
-        result += "var $super = {};\n";
-        result += "function $superCstr(){\n" +
-                        this.baseClassName + ".prototype.constructor.apply($super, arguments);\n" +
-                        "processing.extendClass(" + selfId + ", $super); }\n";
+        result += "var $super = { $upcast: " + selfId + " };\n";
+        result += "function $superCstr(){" + this.baseClassName + ".apply($super,arguments)}\n";
       } else {
-        result += "function $superCstr() { }\n";
+        result += "function $superCstr(){processing.extendClassChain("+ selfId +")}\n";
       }
 
       result += this.functions.join('\n') + '\n';
@@ -12645,7 +12657,9 @@
       result += this.methods.join('\n') + '\n';
       result += this.misc.tail;
 
+      inConstructors = true;
       result += this.cstrs.join('\n') + '\n';
+      inConstructors = false;
 
       result += "function $constr() {\n";
       var cstrsIfs = [];
