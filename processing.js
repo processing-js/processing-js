@@ -12693,7 +12693,7 @@
         else { cstrs.push(index); }
         return "";
       });
-      var fields = declarations.split(';');
+      var fields = declarations.split(/;(?:\s*;)*/g);
       var baseClassName;
       var i;
 
