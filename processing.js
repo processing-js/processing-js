@@ -5296,16 +5296,6 @@
       var autoDetectDecimals = rightDigits === 0;
       var rightDigitsOfDefault = (rightDigits === undef || rightDigits < 0) ? 0 : rightDigits;
 
-
-      // Change the way the number is 'floored' based on whether it is odd or even.
-      if (rightDigits < 0 && Math.floor(value) % 2 === 1) {
-        // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
-        if ((value - Math.floor(value)) >= 0.5) {
-          value += 1;
-        }
-      }
-
-
       var absValue = Math.abs(value);
       if(autoDetectDecimals) {
         rightDigitsOfDefault = 1;
@@ -5318,7 +5308,17 @@
         absValue *= Math.pow(10, rightDigitsOfDefault);
       }
 
-      var number = Math.round(absValue);
+      // Using Java's default half/even rounding
+      var lowerNumber = Math.floor(absValue);
+      var higherNumber = Math.ceil(absValue);
+      var number;
+      if(lowerNumber + higherNumber === 2 * absValue) {
+        // if it's half way between lowest and highest int number, choose even number
+        number = Math.floor(lowerNumber / 2) * 2 === lowerNumber ? lowerNumber : higherNumber;
+      } else {
+        number = Math.round(absValue);
+      }
+
       var buffer = "";
       var totalDigits = leftDigits + rightDigitsOfDefault;
       while (totalDigits > 0 || number > 0) {
@@ -5353,104 +5353,7 @@
       }
     }
 
-    // TODO: drop this and use nfCore (see below) code when we've fixed the rounding bug in nfCore
-    p.nf = function() {
-      var str, num, pad, arr, left, right, isNegative, test, i;
-
-      if (arguments.length === 2 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && (arguments[0] + "").indexOf('.') === -1) {
-        num = arguments[0];
-        pad = arguments[1];
-
-        isNegative = num < 0;
-
-        if (isNegative) {
-          num = Math.abs(num);
-        }
-
-        str = "" + num;
-        for (i = pad - str.length; i > 0; i--) {
-          str = "0" + str;
-        }
-
-        if (isNegative) {
-          str = "-" + str;
-        }
-      } else if (arguments.length === 2 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number') {
-        arr = arguments[0];
-        pad = arguments[1];
-
-        str = new Array(arr.length);
-
-        for (i = 0; i < arr.length && str !== undef; i++) {
-          test = p.nf(arr[i], pad);
-          if (test === undef) {
-            str = undef;
-          } else {
-            str[i] = test;
-          }
-        }
-      } else if (arguments.length === 3 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' && (arguments[0] + "").indexOf('.') >= 0) {
-        num = arguments[0];
-        left = arguments[1];
-        right = arguments[2];
-
-        isNegative = num < 0;
-
-        if (isNegative) {
-          num = Math.abs(num);
-        }
-
-        // Change the way the number is 'floored' based on whether it is odd or even.
-        if (right < 0 && Math.floor(num) % 2 === 1) {
-          // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
-          if ((num) - Math.floor(num) >= 0.5) {
-            num = num + 1;
-          }
-        }
-
-        str = "" + num;
-
-        for (i = left - str.indexOf('.'); i > 0; i--) {
-          str = "0" + str;
-        }
-
-        var numDec = str.length - str.indexOf('.') - 1;
-        if (numDec <= right) {
-          for (i = right - (str.length - str.indexOf('.') - 1); i > 0; i--) {
-            str = str + "0";
-          }
-        } else if (right > 0) {
-          str = str.substring(0, str.length - (numDec - right));
-        } else if (right < 0) {
-
-          str = str.substring(0, str.indexOf('.'));
-        }
-
-        if (isNegative) {
-          str = "-" + str;
-        }
-      } else if (arguments.length === 3 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' && typeof arguments[2] === 'number') {
-        arr = arguments[0];
-        left = arguments[1];
-        right = arguments[2];
-
-        str = new Array(arr.length);
-
-        for (i = 0; i < arr.length && str !== undef; i++) {
-          test = p.nf(arr[i], left, right);
-          if (test === undef) {
-            str = undef;
-          } else {
-            str[i] = test;
-          }
-        }
-      }
-
-      return str;
-    };
-
-// TODO: need to switch nf over to using nfCore...
-//    p.nf  = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
+    p.nf  = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
     p.nfs = function(value, leftDigits, rightDigits) { return nfCore(value, " ", "-", leftDigits, rightDigits); };
     p.nfp = function(value, leftDigits, rightDigits) { return nfCore(value, "+", "-", leftDigits, rightDigits); };
     p.nfc = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits, ","); };
