@@ -5297,10 +5297,10 @@
       var rightDigitsOfDefault = (rightDigits === undef || rightDigits < 0) ? 0 : rightDigits;
 
       var absValue = Math.abs(value);
-      if(autoDetectDecimals) {
+      if (autoDetectDecimals) {
         rightDigitsOfDefault = 1;
         absValue *= 10;
-        while(Math.abs(Math.round(absValue) - absValue) > 1e-6 && rightDigitsOfDefault < 7) {
+        while (Math.abs(Math.round(absValue) - absValue) > 1e-6 && rightDigitsOfDefault < 7) {
           ++rightDigitsOfDefault;
           absValue *= 10;
         }
@@ -5308,13 +5308,15 @@
         absValue *= Math.pow(10, rightDigitsOfDefault);
       }
 
-      // Using Java's default half/even rounding
-      var lowerNumber = Math.floor(absValue);
-      var higherNumber = Math.ceil(absValue);
-      var number;
-      if(lowerNumber + higherNumber === 2 * absValue) {
-        // if it's half way between lowest and highest int number, choose even number
-        number = Math.floor(lowerNumber / 2) * 2 === lowerNumber ? lowerNumber : higherNumber;
+      // Using Java's default rounding policy HALF_EVEN. This policy is based 
+      // on the idea that 0.5 values round to the nearest even number, and 
+      // everything else is rounded normally.
+      var number, doubled = absValue * 2;
+      if (Math.floor(absValue) === absValue) {
+        number = absValue;
+      } else if (Math.floor(doubled) === doubled) {
+        var floored = Math.floor(absValue);
+        number = floored + (floored % 2);
       } else {
         number = Math.round(absValue);
       }
