@@ -4153,10 +4153,41 @@
     // Array handling
     ////////////////////////////////////////////////////////////////////////////
 
+    /**
+    * The split() function breaks a string into pieces using a character or string 
+    * as the divider. The delim  parameter specifies the character or characters that 
+    * mark the boundaries between each piece. A String[] array is returned that contains 
+    * each of the pieces.
+    * If the result is a set of numbers, you can convert the String[] array to to a float[] 
+    * or int[] array using the datatype conversion functions int() and float() (see example above).
+    * The splitTokens() function works in a similar fashion, except that it splits using a range 
+    * of characters instead of a specific character or sequence. 
+    * @param str the String to be split
+    * @param delim the character or String used to separate the data
+    * @returns {string[]} The new string array
+    * @see splitTokens
+    * @see join
+    * @see trim
+    */  
     p.split = function(str, delim) {
       return str.split(delim);
     };
 
+    /**
+    * The splitTokens() function splits a String at one or many character "tokens." The tokens 
+    * parameter specifies the character or characters to be used as a boundary.
+    * If no tokens character is specified, any whitespace character is used to split. 
+    * Whitespace characters include tab (\t), line feed (\n), carriage return (\r), form 
+    * feed (\f), and space. To convert a String to an array of integers or floats, use the 
+    * datatype conversion functions int() and float() to convert the array of Strings.
+    * @param str the String to be split
+    * @param tokens list of individual characters that will be used as separatorsdelim the 
+    * character or String used to separate the data
+    * @returns {string[]} The new string array
+    * @see split
+    * @see join
+    * @see trim
+    */  
     p.splitTokens = function(str, tokens) {
       if (arguments.length === 1) {
         tokens = "\n\t\r\f ";
@@ -4189,16 +4220,50 @@
 
       return ary;
     };
-
+   
+    /**
+    * Expands an array by one element and adds data to the new position. The datatype of 
+    * the element parameter must be the same as the datatype of the array.
+    * When using an array of objects, the data returned from the function must be cast to 
+    * the object array's data type. For example: SomeClass[] items = (SomeClass[]) 
+    * append(originalArray, element).
+    * @param array boolean[], byte[], char[], int[], float[], or String[], or an array of objects
+    * @param element new data for the array
+    * @returns Array (the same datatype as the input)
+    * @see shorten
+    * @see expand
+    */  
     p.append = function(array, element) {
       array[array.length] = element;
       return array;
     };
 
+    /**
+    * Concatenates two arrays. For example, concatenating the array { 1, 2, 3 } and the 
+    * array { 4, 5, 6 } yields { 1, 2, 3, 4, 5, 6 }. Both parameters must be arrays of the 
+    * same datatype.
+    * When using an array of objects, the data returned from the function must be cast to the 
+    * object array's data type. For example: SomeClass[] items = (SomeClass[]) concat(array1, array2).
+    * @param array1 boolean[], byte[], char[], int[], float[], String[], or an array of objects
+    * @param array2 boolean[], byte[], char[], int[], float[], String[], or an array of objects
+    * @returns Array (the same datatype as the input)
+    * @see splice
+    */  
     p.concat = function(array1, array2) {
       return array1.concat(array2);
     };
 
+    /**
+    * Sorts an array of numbers from smallest to largest and puts an array of words in alphabetical 
+    * order. The original array is not modified, a re-ordered array is returned. The count parameter 
+    * states the number of elements to sort. For example if there are 12 elements in an array and 
+    * if count is the value 5, only the first five elements on the array will be sorted. The 
+    * alphabetical ordering is case insensitive.
+    * @param array String[], int[], or float[]
+    * @param numElem int
+    * @returns Array (the same datatype as the input)
+    * @see reverse
+    */  
     p.sort = function(array, numElem) {
       var ret = [];
 
@@ -4232,9 +4297,19 @@
     };
 
     /**
-      splice inserts "value" which can be either a scalar or an array
-      into "array" at position "index".
-    */
+    * Inserts a value or array of values into an existing array. The first two parameters must 
+    * be of the same datatype. The array parameter defines the array which will be modified 
+    * and the second parameter defines the data which will be inserted. When using an array 
+    * of objects, the data returned from the function must be cast to the object array's data 
+    * type. For example: SomeClass[] items = (SomeClass[]) splice(array1, array2, index).
+    * @param array boolean[], byte[], char[], int[], float[], String[], or an array of objects
+    * @param value boolean, byte, char, int, float, String, boolean[], byte[], char[], int[], 
+    * float[], String[], or other Object: value or an array of objects to be spliced in
+    * @param index int: position in the array from which to insert data
+    * @returns Array (the same datatype as the input)
+    * @see contract
+    * @see subset
+    */  
     p.splice = function(array, value, index) {
 
       // Trying to splice an empty array into "array" in P5 won't do
@@ -4259,6 +4334,20 @@
       return array;
     };
 
+    /**
+    * Extracts an array of elements from an existing array. The array parameter defines the 
+    * array from which the elements will be copied and the offset and length parameters determine 
+    * which elements to extract. If no length is given, elements will be extracted from the offset 
+    * to the end of the array. When specifying the offset remember the first array element is 0. 
+    * This function does not change the source array.
+    * When using an array of objects, the data returned from the function must be cast to the 
+    * object array's data type.
+    * @param array boolean[], byte[], char[], int[], float[], String[], or an array of objects
+    * @param offset int: position to begin
+    * @param length int: number of values to extract
+    * @returns Array (the same datatype as the input)
+    * @see splice
+    */  
     p.subset = function(array, offset, length) {
       if (arguments.length === 2) {
         return array.slice(offset, array.length - offset);
@@ -4267,10 +4356,31 @@
       }
     };
 
+    /**
+    * Combines an array of Strings into one String, each separated by the character(s) used for 
+    * the separator parameter. To join arrays of ints or floats, it's necessary to first convert 
+    * them to strings using nf() or nfs().
+    * @param array array of Strings
+    * @param separator char or String: char or String to be placed between each item
+    * @returns String The combined string
+    * @see split
+    * @see trim
+    * @see nf
+    * @see nfs
+    */  
     p.join = function(array, seperator) {
       return array.join(seperator);
     };
 
+    /**
+    * Decreases an array by one element and returns the shortened array. When using an 
+    * array of objects, the data returned from the function must be cast to the object array's 
+    * data type. For example: SomeClass[] items = (SomeClass[]) shorten(originalArray).
+    * @param array boolean[], byte[], char[], int[], float[], or String[], or an array of objects
+    * @returns Array (the same datatype as the input)
+    * @see append
+    * @see expand
+    */  
     p.shorten = function(ary) {
       var newary = [];
 
@@ -4284,6 +4394,16 @@
       return newary;
     };
 
+    /**
+    * Increases the size of an array. By default, this function doubles the size of the array, 
+    * but the optional newSize parameter provides precise control over the increase in size.
+    * When using an array of objects, the data returned from the function must be cast to the 
+    * object array's data type. For example: SomeClass[] items = (SomeClass[]) expand(originalArray).
+    * @param ary boolean[], byte[], char[], int[], float[], String[], or an array of objects
+    * @param newSize positive int: new size for the array
+    * @returns Array (the same datatype as the input)
+    * @see contract
+    */  
     p.expand = function(ary, newSize) {
       var temp = ary.slice(0);
       if (arguments.length === 1) {
@@ -4297,6 +4417,20 @@
       }
     };
 
+    /**
+    * Copies an array (or part of an array) to another array. The src array is copied to the 
+    * dst array, beginning at the position specified by srcPos and into the position specified 
+    * by dstPos. The number of elements to copy is determined by length. The simplified version 
+    * with two arguments copies an entire array to another of the same size. It is equivalent 
+    * to "arrayCopy(src, 0, dst, 0, src.length)". This function is far more efficient for copying 
+    * array data than iterating through a for and copying each element.
+    * @param src an array of any data type: the source array
+    * @param dest an array of any data type (as long as it's the same as src): the destination array
+    * @param srcPos int: starting position in the source array
+    * @param destPos int: starting position in the destination array
+    * @param length int: number of array elements to be copied
+    * @returns none
+    */  
     p.arrayCopy = function() { // src, srcPos, dest, destPos, length) {
       var src, srcPos = 0, dest, destPos = 0, length;
 
@@ -4328,6 +4462,12 @@
       }
     };
 
+    /**
+    * Reverses the order of an array.
+    * @param array boolean[], byte[], char[], int[], float[], or String[]
+    * @returns Array (the same datatype as the input)
+    * @see sort
+    */  
     p.reverse = function(array) {
       return array.reverse();
     };
@@ -4611,6 +4751,20 @@
       }
     }
 
+    /**
+    * Creates colors for storing in variables of the color datatype. The parameters are 
+    * interpreted as RGB or HSB values depending on the current colorMode(). The default 
+    * mode is RGB values from 0 to 255 and therefore, the function call color(255, 204, 0) 
+    * will return a bright yellow color. More about how colors are stored can be found in 
+    * the reference for the color datatype.
+    * @param aValue1 int or float: red or hue or grey values relative to the current color range. 
+    * Also can be color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+    * @param aValue2 int or float: green or saturation values relative to the current color range
+    * @param aValue3 int or float: blue or brightness values relative to the current color range
+    * @param aValue4 int or float: relative to current color range. Represents alpha
+    * @returns color
+    * @see colorMode
+    */ 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
       // 4 arguments: (R, G, B, A) or (H, S, B, A)
       if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef && aValue4 !== undef) {
@@ -4736,7 +4890,7 @@
 
     /**
     * Extracts the brightness value from a color.
-    * @param aColor any value of the color datatype
+    * @param colInt any value of the color datatype
     * @returns {float} The brightness color value.
     * @see red
     * @see green
@@ -4750,7 +4904,7 @@
 
     /**
     * Extracts the saturation value from a color.
-    * @param aColor any value of the color datatype
+    * @param colInt any value of the color datatype
     * @returns {float} The saturation color value.
     * @see red
     * @see green
@@ -4764,7 +4918,7 @@
 
     /**
     * Extracts the hue value from a color.
-    * @param aColor any value of the color datatype
+    * @param colInt any value of the color datatype
     * @returns {float} The hue color value.
     * @see red
     * @see green
@@ -5158,7 +5312,7 @@
     * and then rotateX(PI/2) is the same as rotateX(PI). If rotateX() is called within the draw(), the 
     * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
     * into the size() parameter as shown in the example above.
-    * @param angle float: angle of rotation specified in radians
+    * @param angleInRadians float: angle of rotation specified in radians
     * @returns none
     * @see rotateY
     * @see rotateZ
@@ -5182,7 +5336,7 @@
     * and then rotateZ(PI/2) is the same as rotateZ(PI). If rotateZ() is called within the draw(), the 
     * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
     * into the size() parameter as shown in the example above.
-    * @param angle float: angle of rotation specified in radians
+    * @param angleInRadians float: angle of rotation specified in radians
     * @returns none
     * @see rotateX
     * @see rotateY
@@ -5206,7 +5360,7 @@
     * and then rotateY(PI/2) is the same as rotateY(PI). If rotateY() is called within the draw(), the 
     * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
     * into the size() parameter as shown in the example above.
-    * @param angle float: angle of rotation specified in radians
+    * @param angleInRadians float: angle of rotation specified in radians
     * @returns none
     * @see rotateX
     * @see rotateZ
@@ -5230,7 +5384,7 @@
     * is the same as rotate(PI). All tranformations are reset when draw() begins again. Technically, 
     * rotate() multiplies the current transformation matrix by a rotation matrix. This function can be 
     * further controlled by the pushMatrix() and popMatrix().
-    * @param angle float: angle of rotation specified in radians
+    * @param angleInRadians float: angle of rotation specified in radians
     * @returns none
     * @see rotateX
     * @see rotateY
@@ -5424,6 +5578,18 @@
       return new Date().getTime() - start;
     };
 
+    /**
+    * Executes the code within draw() one time. This functions allows the program to update 
+    * the display window only when necessary, for example when an event registered by 
+    * mousePressed() or keyPressed() occurs.
+    * In structuring a program, it only makes sense to call redraw() within events such as 
+    * mousePressed(). This is because redraw() does not run draw() immediately (it only sets 
+    * a flag that indicates an update is needed).
+    * Calling redraw() within draw() has no effect because draw() is continuously called anyway.
+    * @returns none
+    * @see noLoop
+    * @see loop
+    */
     p.redraw = function redraw() {
       var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
@@ -5462,12 +5628,35 @@
       inDraw = false;
     };
 
+    /**
+    * Stops Processing from continuously executing the code within draw(). If loop() is 
+    * called, the code in draw() begin to run continuously again. If using noLoop() in 
+    * setup(), it should be the last line inside the block.
+    * When noLoop() is used, it's not possible to manipulate or access the screen inside event 
+    * handling functions such as mousePressed() or keyPressed(). Instead, use those functions 
+    * to call redraw() or loop(), which will run draw(), which can update the screen properly. 
+    * This means that when noLoop() has been called, no drawing can happen, and functions like 
+    * saveFrame() or loadPixels() may not be used.
+    * Note that if the sketch is resized, redraw() will be called to update the sketch, even 
+    * after noLoop() has been specified. Otherwise, the sketch would enter an odd state until 
+    * loop() was called.
+    * @returns none
+    * @see redraw
+    * @see draw
+    * @see loop
+    */
     p.noLoop = function noLoop() {
       doLoop = false;
       loopStarted = false;
       clearInterval(looping);
     };
 
+    /**
+    * Causes Processing to continuously execute the code within draw(). If noLoop() is called, 
+    * the code in draw() stops executing.
+    * @returns none
+    * @see noLoop
+    */
     p.loop = function loop() {
       if (loopStarted) {
         return;
@@ -5489,6 +5678,15 @@
       loopStarted = true;
     };
 
+    /**
+    * Specifies the number of frames to be displayed every second. If the processor is not 
+    * fast enough to maintain the specified rate, it will not be achieved. For example, the 
+    * function call frameRate(30) will attempt to refresh 30 times a second. It is recommended 
+    * to set the frame rate within setup(). The default rate is 60 frames per second.
+    * @param aRate int: number of frames per second.
+    * @returns none
+    * @see delay
+    */
     p.frameRate = function frameRate(aRate) {
       curFrameRate = aRate;
       curMsPerFrame = 1000 / curFrameRate;
@@ -5502,6 +5700,14 @@
 
     var eventHandlers = [];
 
+    /**
+    * Quits/stops/exits the program. Programs without a draw() function exit automatically 
+    * after the last line has run, but programs with draw() run continuously until the 
+    * program is manually stopped or exit() is run.
+    * Rather than terminating immediately, exit() will cause the sketch to exit after draw() 
+    * has completed (or after setup() completes if called during the setup() method).
+    * @returns none
+    */
     p.exit = function exit() {
       window.clearInterval(looping);
 
@@ -5524,6 +5730,19 @@
     // MISC functions
     ////////////////////////////////////////////////////////////////////////////
 
+    /**
+    * Sets the cursor to a predefined symbol, an image, or turns it on if already hidden. 
+    * If you are trying to set an image as the cursor, it is recommended to make the size 
+    * 16x16 or 32x32 pixels. It is not possible to load an image as the cursor if you are 
+    * exporting your program for the Web. The values for parameters x and y must be less 
+    * than the dimensions of the image.
+    * @param MODE either ARROW, CROSS, HAND, MOVE, TEXT, WAIT
+    * @param image PImage: any variable of type PImage
+    * @param x int: the horizonal active spot of the cursor
+    * @param y int: the vertical active spot of the cursor
+    * @returns none
+    * @see noCursor
+    */
     p.cursor = function cursor() {
       if (arguments.length > 1 || (arguments.length === 1 && arguments[0] instanceof p.PImage)) {
         var image = arguments[0],
@@ -5551,10 +5770,22 @@
       }
     };
 
+    /**
+    * Hides the cursor from view.
+    * @returns none
+    * @see cursor
+    */
     p.noCursor = function noCursor() {
       curCursor = curElement.style.cursor = PConstants.NOCURSOR;
     };
 
+    /**
+    * Links to a webpage either in the same window or in a new window. The complete URL 
+    * must be specified.
+    * @param href String: complete url as a String in quotes
+    * @param target String: name of the window to load the URL as a string in quotes
+    * @returns none
+    */
     p.link = function(href, target) {
       if (target !== undef) {
         window.open(href, target);
