@@ -5565,281 +5565,21 @@
       return str.match(regexp);
     };
 
-    // tinylog lite JavaScript library
-    // http://purl.eligrey.com/tinylog/lite
-    /*global tinylog,print*/
-    var tinylogLite = (function() {
-      "use strict";
+    var logBuffer = [];
 
-      var tinylogLite = {},
-        undef = "undefined",
-        func = "function",
-        False = !1,
-        True = !0,
-        logLimit = 512,
-        log = "log";
-
-      if (typeof tinylog !== undef && typeof tinylog[log] === func) {
-        // pre-existing tinylog present
-        tinylogLite[log] = tinylog[log];
-      } else if (typeof document !== undef && !document.fake) {
-        (function() {
-          // DOM document
-          var doc = document,
-
-          $div = "div",
-          $style = "style",
-          $title = "title",
-
-          containerStyles = {
-            zIndex: 10000,
-            position: "fixed",
-            bottom: "0px",
-            width: "100%",
-            height: "15%",
-            fontFamily: "sans-serif",
-            color: "#ccc",
-            backgroundColor: "black"
-          },
-          outputStyles = {
-            position: "relative",
-            fontFamily: "monospace",
-            overflow: "auto",
-            height: "100%",
-            paddingTop: "5px"
-          },
-          resizerStyles = {
-            height: "5px",
-            marginTop: "-5px",
-            cursor: "n-resize",
-            backgroundColor: "darkgrey"
-          },
-          closeButtonStyles = {
-            position: "absolute",
-            top: "5px",
-            right: "20px",
-            color: "#111",
-            MozBorderRadius: "4px",
-            webkitBorderRadius: "4px",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontWeight: "normal",
-            textAlign: "center",
-            padding: "3px 5px",
-            backgroundColor: "#333",
-            fontSize: "12px"
-          },
-          entryStyles = {
-            //borderBottom: "1px solid #d3d3d3",
-            minHeight: "16px"
-          },
-          entryTextStyles = {
-            fontSize: "12px",
-            margin: "0 8px 0 8px",
-            maxWidth: "100%",
-            whiteSpace: "pre-wrap",
-            overflow: "auto"
-          },
-
-          view = doc.defaultView,
-            docElem = doc.documentElement,
-            docElemStyle = docElem[$style],
-
-          setStyles = function() {
-            var i = arguments.length,
-              elemStyle, styles, style;
-
-            while (i--) {
-              styles = arguments[i--];
-              elemStyle = arguments[i][$style];
-
-              for (style in styles) {
-                if (styles.hasOwnProperty(style)) {
-                  elemStyle[style] = styles[style];
-                }
-              }
-            }
-          },
-
-          observer = function(obj, event, handler) {
-            if (obj.addEventListener) {
-              obj.addEventListener(event, handler, False);
-            } else if (obj.attachEvent) {
-              obj.attachEvent("on" + event, handler);
-            }
-            return [obj, event, handler];
-          },
-          unobserve = function(obj, event, handler) {
-            if (obj.removeEventListener) {
-              obj.removeEventListener(event, handler, False);
-            } else if (obj.detachEvent) {
-              obj.detachEvent("on" + event, handler);
-            }
-          },
-          clearChildren = function(node) {
-            var children = node.childNodes,
-              child = children.length;
-
-            while (child--) {
-              node.removeChild(children.item(0));
-            }
-          },
-          append = function(to, elem) {
-            return to.appendChild(elem);
-          },
-          createElement = function(localName) {
-            return doc.createElement(localName);
-          },
-          createTextNode = function(text) {
-            return doc.createTextNode(text);
-          },
-
-          createLog = tinylogLite[log] = function(message) {
-            // don't show output log until called once
-            var uninit,
-              originalPadding = docElemStyle.paddingBottom,
-              container = createElement($div),
-              containerStyle = container[$style],
-              resizer = append(container, createElement($div)),
-              output = append(container, createElement($div)),
-              closeButton = append(container, createElement($div)),
-              resizingLog = False,
-              previousHeight = False,
-              previousScrollTop = False,
-              messages = 0,
-
-              updateSafetyMargin = function() {
-                // have a blank space large enough to fit the output box at the page bottom
-                docElemStyle.paddingBottom = container.clientHeight + "px";
-              },
-              setContainerHeight = function(height) {
-                var viewHeight = view.innerHeight,
-                  resizerHeight = resizer.clientHeight;
-
-                // constrain the container inside the viewport's dimensions
-                if (height < 0) {
-                  height = 0;
-                } else if (height + resizerHeight > viewHeight) {
-                  height = viewHeight - resizerHeight;
-                }
-
-                containerStyle.height = height / viewHeight * 100 + "%";
-
-                updateSafetyMargin();
-              },
-              observers = [
-                observer(doc, "mousemove", function(evt) {
-                  if (resizingLog) {
-                    setContainerHeight(view.innerHeight - evt.clientY);
-                    output.scrollTop = previousScrollTop;
-                  }
-                }),
-
-                observer(doc, "mouseup", function() {
-                  if (resizingLog) {
-                    resizingLog = previousScrollTop = False;
-                  }
-                }),
-
-                observer(resizer, "dblclick", function(evt) {
-                  evt.preventDefault();
-
-                  if (previousHeight) {
-                    setContainerHeight(previousHeight);
-                    previousHeight = False;
-                  } else {
-                    previousHeight = container.clientHeight;
-                    containerStyle.height = "0px";
-                  }
-                }),
-
-                observer(resizer, "mousedown", function(evt) {
-                  evt.preventDefault();
-                  resizingLog = True;
-                  previousScrollTop = output.scrollTop;
-                }),
-
-                observer(resizer, "contextmenu", function() {
-                  resizingLog = False;
-                }),
-
-                observer(closeButton, "click", function() {
-                  uninit();
-                })
-              ];
-
-            uninit = function() {
-              // remove observers
-              var i = observers.length;
-
-              while (i--) {
-                unobserve.apply(tinylogLite, observers[i]);
-              }
-
-              // remove tinylog lite from the DOM
-              docElem.removeChild(container);
-              docElemStyle.paddingBottom = originalPadding;
-
-              clearChildren(output);
-              clearChildren(container);
-
-              tinylogLite[log] = createLog;
-            };
-
-            setStyles(
-            container, containerStyles, output, outputStyles, resizer, resizerStyles, closeButton, closeButtonStyles);
-
-            closeButton[$title] = "Close Log";
-            append(closeButton, createTextNode("\u2716"));
-
-            resizer[$title] = "Double-click to toggle log minimization";
-
-            docElem.insertBefore(container, docElem.firstChild);
-
-            tinylogLite[log] = function(message) {
-              if (messages === logLimit) {
-                output.removeChild(output.firstChild);
-              } else {
-                messages++;
-              }
-
-              var entry = append(output, createElement($div)),
-                entryText = append(entry, createElement($div));
-
-              entry[$title] = (new Date()).toLocaleTimeString();
-
-              setStyles(
-              entry, entryStyles, entryText, entryTextStyles);
-
-              append(entryText, createTextNode(message));
-              output.scrollTop = output.scrollHeight;
-            };
-
-            tinylogLite[log](message);
-          };
-        }());
-      } else if (typeof print === func) { // JS shell
-        tinylogLite[log] = print;
-      }
-
-      return tinylogLite;
-    }()),
-
-    logBuffer = [];
-
-    p.console = window.console || tinylogLite;
+    p.console = window.console || Processing.logger;
 
     p.println = function println(message) {
       var bufferLen = logBuffer.length;
       if (bufferLen) {
-        tinylogLite.log(logBuffer.join(""));
+        Processing.logger.log(logBuffer.join(""));
         logBuffer.length = 0; // clear log buffer
       }
 
       if (arguments.length === 0 && bufferLen === 0) {
-        tinylogLite.log("");
+        Processing.logger.log("");
       } else if (arguments.length !== 0) {
-        tinylogLite.log(message);
+        Processing.logger.log(message);
       }
     };
 
@@ -11278,7 +11018,7 @@
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
 
-    p.extendClass = function extendClass(subClass, baseClass) {
+    function extendClass(subClass, baseClass) {
       function extendGetterSetter(propertyName) {
         p.defineProperty(subClass, propertyName, {
           get: function() {
@@ -11286,18 +11026,31 @@
           },
           set: function(v) {
             baseClass[propertyName]=v;
-          }
+          },
+          enumerable: true
         });
       }
 
       for (var propertyName in baseClass) {
-        if (subClass[propertyName] === undef) {
+        if (!(propertyName in subClass)) {
           if (typeof baseClass[propertyName] === 'function') {
             subClass[propertyName] = baseClass[propertyName];
-          } else {
+          } else if(propertyName !== "$upcast") {
             extendGetterSetter(propertyName);
           }
         }
+      }
+    }
+
+    p.extendClassChain = function(base) {
+      var path = [base];
+      for (var self = base.$upcast; self; self = self.$upcast) {
+        extendClass(self, base);
+        path.push(self);
+        base = self;
+      }
+      while (path.length > 0) { 
+        path.pop().$self=base;
       }
     };
 
@@ -12433,25 +12186,24 @@
         thisClassMethods = appendToLookupTable({}, members.methods),
         thisClassInners = appendToLookupTable({}, members.innerClasses);
 
-      var oldContext = replaceContext;
+      var oldContext = replaceContext, inConstructors = false;
       replaceContext = function(name) {
         if(name === "this") {
           return selfId;
         } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
         } else if(thisClassMethods.hasOwnProperty(name)) {
-          return "this." + name;
+          // keeping |"this." + name| for speed
+          return inConstructors ? "this.$self." + name : "this." + name;
         }
         return oldContext(name);
       };
 
       if(this.baseClassName) {
-        result += "var $super = {};\n";
-        result += "function $superCstr(){\n" +
-                        this.baseClassName + ".prototype.constructor.apply($super, arguments);\n" +
-                        "processing.extendClass(" + selfId + ", $super); }\n";
+        result += "var $super = { $upcast: " + selfId + " };\n";
+        result += "function $superCstr(){" + this.baseClassName + ".apply($super,arguments)}\n";
       } else {
-        result += "function $superCstr() { }\n";
+        result += "function $superCstr(){processing.extendClassChain("+ selfId +")}\n";
       }
 
       result += this.functions.join('\n') + '\n';
@@ -12461,7 +12213,9 @@
       result += this.methods.join('\n') + '\n';
       result += this.misc.tail;
 
+      inConstructors = true;
       result += this.cstrs.join('\n') + '\n';
+      inConstructors = false;
 
       result += "function $constr() {\n";
       var cstrsIfs = [];
@@ -12493,7 +12247,7 @@
         else { cstrs.push(index); }
         return "";
       });
-      var fields = declarations.split(';');
+      var fields = declarations.split(/;(?:\s*;)*/g);
       var baseClassName;
       var i;
 
@@ -12894,6 +12648,269 @@
   Error.prototype.printStackTrace = function() {
      return this.toString();
   };
+
+  // tinylog lite JavaScript library
+  // http://purl.eligrey.com/tinylog/lite
+  /*global tinylog,print*/
+  var tinylogLite = (function() {
+    "use strict";
+
+    var tinylogLite = {},
+      undef = "undefined",
+      func = "function",
+      False = !1,
+      True = !0,
+      logLimit = 512,
+      log = "log";
+
+    if (typeof tinylog !== undef && typeof tinylog[log] === func) {
+      // pre-existing tinylog present
+      tinylogLite[log] = tinylog[log];
+    } else if (typeof document !== undef && !document.fake) {
+      (function() {
+        // DOM document
+        var doc = document,
+
+        $div = "div",
+        $style = "style",
+        $title = "title",
+
+        containerStyles = {
+          zIndex: 10000,
+          position: "fixed",
+          bottom: "0px",
+          width: "100%",
+          height: "15%",
+          fontFamily: "sans-serif",
+          color: "#ccc",
+          backgroundColor: "black"
+        },
+        outputStyles = {
+          position: "relative",
+          fontFamily: "monospace",
+          overflow: "auto",
+          height: "100%",
+          paddingTop: "5px"
+        },
+        resizerStyles = {
+          height: "5px",
+          marginTop: "-5px",
+          cursor: "n-resize",
+          backgroundColor: "darkgrey"
+        },
+        closeButtonStyles = {
+          position: "absolute",
+          top: "5px",
+          right: "20px",
+          color: "#111",
+          MozBorderRadius: "4px",
+          webkitBorderRadius: "4px",
+          borderRadius: "4px",
+          cursor: "pointer",
+          fontWeight: "normal",
+          textAlign: "center",
+          padding: "3px 5px",
+          backgroundColor: "#333",
+          fontSize: "12px"
+        },
+        entryStyles = {
+          //borderBottom: "1px solid #d3d3d3",
+          minHeight: "16px"
+        },
+        entryTextStyles = {
+          fontSize: "12px",
+          margin: "0 8px 0 8px",
+          maxWidth: "100%",
+          whiteSpace: "pre-wrap",
+          overflow: "auto"
+        },
+
+        view = doc.defaultView,
+          docElem = doc.documentElement,
+          docElemStyle = docElem[$style],
+
+        setStyles = function() {
+          var i = arguments.length,
+            elemStyle, styles, style;
+
+          while (i--) {
+            styles = arguments[i--];
+            elemStyle = arguments[i][$style];
+
+            for (style in styles) {
+              if (styles.hasOwnProperty(style)) {
+                elemStyle[style] = styles[style];
+              }
+            }
+          }
+        },
+
+        observer = function(obj, event, handler) {
+          if (obj.addEventListener) {
+            obj.addEventListener(event, handler, False);
+          } else if (obj.attachEvent) {
+            obj.attachEvent("on" + event, handler);
+          }
+          return [obj, event, handler];
+        },
+        unobserve = function(obj, event, handler) {
+          if (obj.removeEventListener) {
+            obj.removeEventListener(event, handler, False);
+          } else if (obj.detachEvent) {
+            obj.detachEvent("on" + event, handler);
+          }
+        },
+        clearChildren = function(node) {
+          var children = node.childNodes,
+            child = children.length;
+
+          while (child--) {
+            node.removeChild(children.item(0));
+          }
+        },
+        append = function(to, elem) {
+          return to.appendChild(elem);
+        },
+        createElement = function(localName) {
+          return doc.createElement(localName);
+        },
+        createTextNode = function(text) {
+          return doc.createTextNode(text);
+        },
+
+        createLog = tinylogLite[log] = function(message) {
+          // don't show output log until called once
+          var uninit,
+            originalPadding = docElemStyle.paddingBottom,
+            container = createElement($div),
+            containerStyle = container[$style],
+            resizer = append(container, createElement($div)),
+            output = append(container, createElement($div)),
+            closeButton = append(container, createElement($div)),
+            resizingLog = False,
+            previousHeight = False,
+            previousScrollTop = False,
+            messages = 0,
+
+            updateSafetyMargin = function() {
+              // have a blank space large enough to fit the output box at the page bottom
+              docElemStyle.paddingBottom = container.clientHeight + "px";
+            },
+            setContainerHeight = function(height) {
+              var viewHeight = view.innerHeight,
+                resizerHeight = resizer.clientHeight;
+
+              // constrain the container inside the viewport's dimensions
+              if (height < 0) {
+                height = 0;
+              } else if (height + resizerHeight > viewHeight) {
+                height = viewHeight - resizerHeight;
+              }
+
+              containerStyle.height = height / viewHeight * 100 + "%";
+
+              updateSafetyMargin();
+            },
+            observers = [
+              observer(doc, "mousemove", function(evt) {
+                if (resizingLog) {
+                  setContainerHeight(view.innerHeight - evt.clientY);
+                  output.scrollTop = previousScrollTop;
+                }
+              }),
+
+              observer(doc, "mouseup", function() {
+                if (resizingLog) {
+                  resizingLog = previousScrollTop = False;
+                }
+              }),
+
+              observer(resizer, "dblclick", function(evt) {
+                evt.preventDefault();
+
+                if (previousHeight) {
+                  setContainerHeight(previousHeight);
+                  previousHeight = False;
+                } else {
+                  previousHeight = container.clientHeight;
+                  containerStyle.height = "0px";
+                }
+              }),
+
+              observer(resizer, "mousedown", function(evt) {
+                evt.preventDefault();
+                resizingLog = True;
+                previousScrollTop = output.scrollTop;
+              }),
+
+              observer(resizer, "contextmenu", function() {
+                resizingLog = False;
+              }),
+
+              observer(closeButton, "click", function() {
+                uninit();
+              })
+            ];
+
+          uninit = function() {
+            // remove observers
+            var i = observers.length;
+
+            while (i--) {
+              unobserve.apply(tinylogLite, observers[i]);
+            }
+
+            // remove tinylog lite from the DOM
+            docElem.removeChild(container);
+            docElemStyle.paddingBottom = originalPadding;
+
+            clearChildren(output);
+            clearChildren(container);
+
+            tinylogLite[log] = createLog;
+          };
+
+          setStyles(
+          container, containerStyles, output, outputStyles, resizer, resizerStyles, closeButton, closeButtonStyles);
+
+          closeButton[$title] = "Close Log";
+          append(closeButton, createTextNode("\u2716"));
+
+          resizer[$title] = "Double-click to toggle log minimization";
+
+          docElem.insertBefore(container, docElem.firstChild);
+
+          tinylogLite[log] = function(message) {
+            if (messages === logLimit) {
+              output.removeChild(output.firstChild);
+            } else {
+              messages++;
+            }
+
+            var entry = append(output, createElement($div)),
+              entryText = append(entry, createElement($div));
+
+            entry[$title] = (new Date()).toLocaleTimeString();
+
+            setStyles(
+            entry, entryStyles, entryText, entryTextStyles);
+
+            append(entryText, createTextNode(message));
+            output.scrollTop = output.scrollHeight;
+          };
+
+          tinylogLite[log](message);
+        };
+      }());
+    } else if (typeof print === func) { // JS shell
+      tinylogLite[log] = print;
+    }
+
+    return tinylogLite;
+  }());
+  // end of tinylog lite JavaScript library
+
+  Processing.logger = tinylogLite;
 
   Processing.version = "@VERSION@";
 
