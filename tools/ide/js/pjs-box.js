@@ -125,10 +125,7 @@ function PJSBox($jq) {
 			},"slow",function(){
 				try {
 					p = new Processing(canvas,codeObjText);
-          for( var msg = 0; msg < log.length; msg++){
-            p.println(log[msg]);
-          }
-					$jq("#pjsbox-canvas canvas").bind("mousemove.shim",function(e){
+          $jq("#pjsbox-canvas canvas").bind("mousemove.shim",function(e){
 						cpos = $jq("#pjsbox-canvas canvas").offset();
 					});
 				} catch(e) {
