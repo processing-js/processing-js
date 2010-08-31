@@ -8,6 +8,7 @@
 (function() {
 
 var p;
+var log = [];
 
 // more or less stolen form jquery core and adapted by paul irish
 function getScript(url,success){
@@ -73,6 +74,8 @@ function PJSBox($jq) {
       return[dimensions[0],dimensions[1]];
     }
     else{
+      log.push("No size() call found defaulting to size(200,200)");
+      log.push("cool");
       return [200,200];
     }
 	}
@@ -124,11 +127,15 @@ function PJSBox($jq) {
 			},"slow",function(){
 				try {
 					p = new Processing(canvas,codeObjText);
+          for( var msg = 0; msg < log.length; msg++){
+            p.println(log[msg]);
+          }
 					$jq("#pjsbox-canvas canvas").bind("mousemove.shim",function(e){
 						cpos = $jq("#pjsbox-canvas canvas").offset();
 					});
 				} catch(e) {
-            throw(e);
+            p = new Processing(canvas);
+            p.println(e);
             $jq("#pjsbox-close").click();
 				}
 				$jq(this).css("overflow","visible").find("#pjsbox-close").fadeIn("slow");

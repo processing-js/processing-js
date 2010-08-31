@@ -17,6 +17,5 @@ $(document).ready(function(){
 
   $('#Run').click(function(){runSketch();});
 
-  window.addEventListener('resize',function(){resized();},false);
 
 });
