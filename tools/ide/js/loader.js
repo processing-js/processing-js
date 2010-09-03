@@ -9,7 +9,7 @@ $(document).ready(function(){
      //use sancho's PJSBox Bookmarklet
      var e=document.createElement('script');
      e.setAttribute('type','text/javascript');
-     e.setAttribute('src','js/pjs-box.js?'+ new Date());
+     e.setAttribute('src','js/pjs-box.min.js?'+ new Date());
      document.body.appendChild(e);
   };
 

@@ -1,10 +1,9 @@
-﻿/*
-	PJSBox Bookmarklet
-	idea: @humphd
-	author: @sanchothefat
-	original url: http://sanchothefat.com/dev/processing/pjs-box/pjs-box.js
-	using Processing.js v0.8.0
-*/
+//	PJSBox Bookmarklet
+//	idea: @humphd
+//	author: @sanchothefat
+//	original url: http://sanchothefat.com/dev/processing/pjs-box/pjs-box.js
+//	using Processing.js v0.8.0
+//
 (function() {
 
 var p;
@@ -17,9 +16,9 @@ function getScript(url,success){
 	done=false;
 	// Attach handlers for all browsers
 	script.onload=script.onreadystatechange = function(){
-	if ( !done && (!this.readyState
-		|| this.readyState == 'loaded'
-		|| this.readyState == 'complete') ) {
+	if ( !done && (!this.readyState || 
+        this.readyState === 'loaded' || 
+        this.readyState === 'complete')) {
 		done=true;
 		success();
 	}
@@ -29,7 +28,7 @@ function getScript(url,success){
 
 // load jQuery + PJS
 function init(){
-	if(typeof jQuery!='undefined') {
+	if(typeof jQuery!=='undefined') {
 		getProcessing(jQuery);
 	} else {
 		getJquery();
@@ -37,16 +36,16 @@ function init(){
 }
 function getJquery() {
 	getScript('js/processing.js',function() {
-		if (typeof jQuery!='undefined') {			
+		if (typeof jQuery!=='undefined') {			
 			var $jq = jQuery.noConflict();
 			getProcessing($jq);
 		}
 	});
 }
 function getProcessing($jq){
-	if (typeof Processing=='undefined') {
+	if (typeof Processing==='undefined') {
 		getScript('http://processingjs.org/content/download/processing-js-0.9.7/processing-0.9.7.min.js',function() {
-			if (typeof Processing!='undefined') {
+			if (typeof Processing!=='undefined') {
 				PJSBox($jq);
 			}
 		});
@@ -82,7 +81,7 @@ function PJSBox($jq) {
 	source = window.bespin.value; 
 	
 	var selected = source;   
-  if (source != "") {
+  if (source !== "") {
 		var code = selected.toString();
 		var anchor = selected.anchorNode;
 		var focus = selected.focusNode;
@@ -106,12 +105,7 @@ function PJSBox($jq) {
 		
 		var size = getSize(source);
 		var cpos = {};
-		$jq("body").append('\
-<div id="pjsbox-overlay" style="z-index:100000;position:fixed;left:0;top:0;height:100%;width:100%;background:#fff;opacity:0.5;display:none;"></div>\
-<div id="pjsbox" style="z-index:100001;position:fixed;left:50%;top:50%;overflow:hidden;width:0;height:0;padding:10px;border-radius:10px;-moz-border-radius:10px;-webkit-border-radius:10px;background:#fff;box-shadow:0 0 20px #353535;-webkit-box-shadow:0 0 20px #353535;-moz-box-shadow:0 0 20px #353535;">\
-<div id="pjsbox-canvas" style="position:relative;"></div>\
-<a id="pjsbox-close" style="display:block;display:none;position:absolute;text-decoration:none;font-weight:bold;font-family:Helvetica,sans-serif;font-size:14px;top:-12px;right:-12px;width:20px;height:20px;line-height:20px;text-align:center;background:#353535;color:#fff;-moz-border-radius:10px;-moz-box-shadow:0 0 10px #353535;-webkit-border-radius:10px;-webkit-box-shadow:0 0 10px #353535;border-radius:10px;box-shadow:0 0 10px #353535;" href="#pjsbox-closer" title="Close">&#10006;</a>\
-</div>');
+		$jq("body").append('<div id="pjsbox-overlay" style="z-index:100000;position:fixed;left:0;top:0;height:100%;width:100%;background:#fff;opacity:0.5;display:none;"></div><div id="pjsbox" style="z-index:100001;position:fixed;left:50%;top:50%;overflow:hidden;width:0;height:0;padding:10px;border-radius:10px;-moz-border-radius:10px;-webkit-border-radius:10px;background:#fff;box-shadow:0 0 20px #353535;-webkit-box-shadow:0 0 20px #353535;-moz-box-shadow:0 0 20px #353535;"><div id="pjsbox-canvas" style="position:relative;"></div><a id="pjsbox-close" style="display:block;display:none;position:absolute;text-decoration:none;font-weight:bold;font-family:Helvetica,sans-serif;font-size:14px;top:-12px;right:-12px;width:20px;height:20px;line-height:20px;text-align:center;background:#353535;color:#fff;-moz-border-radius:10px;-moz-box-shadow:0 0 10px #353535;-webkit-border-radius:10px;-webkit-box-shadow:0 0 10px #353535;border-radius:10px;box-shadow:0 0 10px #353535;" href="#pjsbox-closer" title="Close">&#10006;</a></div>');
 
 		$jq("#pjsbox-canvas").append('<canvas width="'+ size[0] +'" height="'+ size[1] +'"></canvas>');
 		var canvas = $jq("#pjsbox-canvas canvas")[0];
