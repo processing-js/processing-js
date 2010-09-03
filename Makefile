@@ -52,7 +52,7 @@ packed: create-release
 	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.packed.js
 
 minified: create-release
-	${TOOLSDIR}/minifier.py ${JSSHELL} /tools/ide/js/loader.js  > ./tools/ide/js/loader.min.js 
+	${TOOLSDIR}/minifier.py ${JSSHELL} processing.js > ./release/processing-${VERSION}.jsmin.js
 # check for any parsing errors in minified version of processing.js
 	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.jsmin.js
 
@@ -83,6 +83,7 @@ bespin: create-release
 	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/loader.js -o ./tools/ide/js/loader.min.js
 	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/bespin.js -o ./tools/ide/js/bespin.min.js
 	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/pjs-box.js -o ./tools/ide/js/pjs-box.min.js
+  
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 
