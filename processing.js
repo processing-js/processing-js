@@ -12615,7 +12615,7 @@
     var redendered = transformed.toString();
 
     redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
-alert(injectStrings(redendered, strings));
+
     return injectStrings(redendered, strings);
   }// Parser ends
 
