@@ -13,11 +13,18 @@ Processing.registerLibrary("browser", {
       p.clientWidth = document.body.clientWidth;
       p.clientHeight = document.body.clientHeight;
     }
-    window.addEventListener("resize", function() { 
+
+    p.externals.onresize = function() { 
       updateSize(); 
       p.windowResized(); 
-    }, false);
+    };
+ 
+    window.addEventListener("resize", p.externals.onresize, false);
     updateSize();
+  },
+  detach: function(p) {
+    window.removeEventListener("resize", p.externals.onresize, false);
+    delete p.externals.onresize;
   },
   exports : [ "clientWidth", "clientHeight", "windowResized" ]
 });

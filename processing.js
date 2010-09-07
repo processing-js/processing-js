@@ -5128,6 +5128,15 @@
 
       Processing.removeInstance(p.externals.canvas.id);
 
+      // Step through the libraries to detach them
+      for (var lib in Processing.lib) {
+        if (Processing.lib.hasOwnProperty(lib)) {
+          if (Processing.lib[lib].hasOwnProperty("detach")) {
+            Processing.lib[lib].detach(p);
+          }
+        }
+      }
+
       for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
         var elem = eventHandlers[i][0],
             type = eventHandlers[i][1],
