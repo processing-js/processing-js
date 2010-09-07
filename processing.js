@@ -3109,9 +3109,16 @@
     };
 
 
-    ////////////////////////////////////////////////////////////////////////////
-    // XMLAttribute
-    ////////////////////////////////////////////////////////////////////////////
+    /**
+    * XMLAttribute in attribute in an XML element. This is an internal class
+    * @see XMLElement
+    *
+    * @param {String} fname     the full name of the attribute
+    * @param {String} n         the short name of the attribute
+    * @param {String} namespace the namespace URI of the attribute
+    * @param {String} v         the value of the attribute
+    * @param {String }t         the type of the attribute
+    */  
     var XMLAttribute = function(fname, n, nameSpace, v, t){
       this.fullName = fname || "";
       this.name = n || "";
@@ -3119,30 +3126,77 @@
       this.value = v;
       this.type = t;
     };
+    /**
+    * XMLAttribute methods
+    */ 
     XMLAttribute.prototype = {
+      /**
+      * @member XMLAttribute
+      * The getName() function returns the short name of the attribute
+      *
+      * @return {String} the short name of the attribute
+      */ 
       getName: function() {
         return this.name;
       },
+      /**
+      * @member XMLAttribute
+      * The getFullName() function returns the full name of the attribute
+      *
+      * @return {String} the full name of the attribute
+      */ 
       getFullName: function() {
         return this.fullName;
       },
+      /**
+      * @member XMLAttribute
+      * The getNamespace() function returns the namespace of the attribute
+      *
+      * @return {String} the namespace of the attribute
+      */ 
       getNamespace: function() {
         return this.namespace;
       },
+      /**
+      * @member XMLAttribute
+      * The getValue() function returns the value of the attribute
+      *
+      * @return {String} the value of the attribute
+      */ 
       getValue: function() {
         return this.value;
       },
+      /**
+      * @member XMLAttribute
+      * The getValue() function returns the type of the attribute
+      *
+      * @return {String} the type of the attribute
+      */ 
       getType: function() {
         return this.type;
       },
+      /**
+      * @member XMLAttribute
+      * The setValue() function sets the value of the attribute
+      *
+      * @param {String} newval the new value
+      */ 
       setValue: function(newval) {
         this.value = newval;
       }
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    // XMLElement
-    ////////////////////////////////////////////////////////////////////////////
+    /**
+    * XMLElement is a representation of an XML object. The object is able to parse XML code
+    *
+    * @param {PApplet} parent   typically use "this"
+    * @param {String} filename  name of the XML/SVG file to load
+    * @param {String} xml       the xml/svg string 
+    * @param {String} fullname  the full name of the element
+    * @param {String} namespace the namespace  of the URI
+    * @param {String} systemID  the system ID of the XML data where the element starts
+    * @param {Integer }lineNr   the line in the XML data where the element starts
+    */  
     var XMLElement = p.XMLElement = function() {
       if (arguments.length === 4) {
         this.attributes = [];
@@ -3202,11 +3256,23 @@
       }
       return this;
     };
-    /*XMLElement methods
-      missing: enumerateAttributeNames(), enumerateChildren(),
-      NOTE: parse does not work when a url is passed in
+    /**
+    * XMLElement methods
+    * missing: enumerateAttributeNames(), enumerateChildren(),
+    * NOTE: parse does not work when a url is passed in
     */
     XMLElement.prototype = {
+      /**
+      * @member XMLElement
+      * The parse() function retrieves the file via ajax() and uses DOMParser() parseFromString method to make an XML document
+      * @addon
+      *
+      * @param {String} filename name of the XML/SVG file to load
+      *
+      * @throws ExceptionType Error loading document
+      *
+      * @see XMLElement#parseChildrenRecursive
+      */
       parse: function(filename) {
         var xmlDoc;
         try {
@@ -3225,6 +3291,15 @@
           throw(e);
         }
       },
+      /**
+      * @member XMLElement
+      * The createElement() function Creates an empty element
+      * 
+      * @param {String} fullName   the full name of the element
+      * @param {String} namespace  the namespace URI
+      * @param {String} systemID   the system ID of the XML data where the element starts
+      * @param {Integer} lineNr    the line in the XML data where the element starts
+      */
       createElement: function () {
         if (arguments.length === 2) {
           return new XMLElement(arguments[0], arguments[1], null, null);
@@ -3232,18 +3307,49 @@
           return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
       },
+      /**
+      * @member XMLElement
+      * The hasAttribute() function returns whether an attribute exists
+      *
+      * @param {String} name      name of the attribute
+      * @param {String} namespace the namespace URI of the attribute
+      *
+      * @return {boolean} true if the attribute exists
+      */
       hasAttribute: function (name) {
         return this.getAttribute(name) !== null;
         //2 parameter call missing
       },
+      /**
+      * @member XMLElement
+      * The createPCDataElement() function creates an element to be used for #PCDATA content
+      *
+      * @return {XMLElement} new XMLElement element
+      */
       createPCDataElement: function () {
         return new XMLElement();
       },
+      /**
+      * @member XMLElement
+      * The equals() function checks to see if the element being passed in equals another element
+      *
+      * @param {Object} rawElement the element to compare to
+      *
+      * @return {boolean} true if the element equals another element
+      */
       equals: function(object){
         if (typeof object === "Object") {
           return this.equalsXMLElement(object);
         }
       },
+      /**
+      * @member XMLElement
+      * The equalsXMLElement() function checks to see if the XMLElement being passed in equals another XMLElement
+      *
+      * @param {XMLElement} rawElement the element to compare to
+      *
+      * @return {boolean} true if the element equals another element
+      */
       equalsXMLElement: function (object) {
         if (object instanceof XMLElement) {
           if (this.name !== object.getLocalName) { return false; }
@@ -3263,9 +3369,25 @@
           return true;
         }
       },
+      /**
+      * @member XMLElement
+      * The getContent() function returns the content of an element. If there is no such content, null is returned
+      *
+      * @return {String} the (possibly null) content
+      */
       getContent: function(){
          return this.content;
       },
+      /**
+      * @member XMLElement
+      * The getAttribute() function returns the value of an attribute
+      *
+      * @param {String} name         the non-null full name of the attribute
+      * @param {String} namespace    the namespace URI, which may be null
+      * @param {String} defaultValue the default value of the attribute
+      *
+      * @return {String} the value, or defaultValue if the attribute does not exist
+      */
       getAttribute: function (){
         var attribute;
         if( arguments.length === 2 ){
@@ -3284,6 +3406,17 @@
           }
         }
       },
+      /**
+      * @member XMLElement
+      * The getStringAttribute() function returns the string attribute of the element
+      * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+      * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+      *
+      * @param name         the name of the attribute
+      * @param defaultValue value returned if the attribute is not found
+      *
+      * @return {String} the value, or defaultValue if the attribute does not exist
+      */
       getStringAttribute: function() {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]);
@@ -3293,6 +3426,17 @@
           return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
+      /**
+      * @member XMLElement
+      * The getFloatAttribute() function returns the float attribute of the element.
+      * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+      * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+      *
+      * @param name         the name of the attribute
+      * @param defaultValue value returned if the attribute is not found
+      *
+      * @return {Float} the value, or defaultValue if the attribute does not exist
+      */
       getFloatAttribute: function() {
         if (arguments.length === 1 ) {
           return parseFloat(this.getAttribute(arguments[0], 0));
@@ -3302,6 +3446,17 @@
           return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
+      /**
+      * @member XMLElement
+      * The getIntAttribute() function returns the integer attribute of the element.
+      * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+      * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+      *
+      * @param name         the name of the attribute
+      * @param defaultValue value returned if the attribute is not found
+      *
+      * @return {Integer} the value, or defaultValue if the attribute does not exist
+      */
       getIntAttribute: function () {
         if (arguments.length === 1) {
           return this.getAttribute( arguments[0], 0 );
@@ -3311,9 +3466,21 @@
           return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
+      /**
+      * @member XMLElement
+      * The hasChildren() function returns whether the element has children.
+      *
+      * @return {Boolean} true if the element has children.
+      */
       hasChildren: function () {
         return this.children.length > 0 ;
       },
+       /**
+       * @member XMLElement
+       * The addChild() function adds a child element
+       *
+       * @param {XMLElement} child the non-null child to add.
+       */
       addChild: function (child) {
         if (child !== null) {
           child.parent = this;
@@ -3630,7 +3797,7 @@
       },
       invert: function() {
         var d = this.determinant();
-        if ( Math.abs( d ) > PConstants.FLOAT_MIN ) {
+        if ( Math.abs( d ) > PConstants.MIN_INT ) {
           var old00 = this.elements[0];
           var old01 = this.elements[1];
           var old02 = this.elements[2];
@@ -3640,7 +3807,7 @@
           this.elements[0] =  old11 / d;
           this.elements[3] = -old10 / d;
           this.elements[1] = -old01 / d;
-          this.elements[1] =  old00 / d;
+          this.elements[4] =  old00 / d;
           this.elements[2] = (old01 * old12 - old11 * old02) / d;
           this.elements[5] = (old10 * old02 - old00 * old12) / d;
           return true;
