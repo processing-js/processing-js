@@ -124,7 +124,8 @@ var window = {
   print: print,
   document: document,
   createElement: function() { return elem; },
-  setTimeout: __empty_func__
+  setTimeout: __empty_func__,
+  clearInterval: __empty_func__
 };
 
 window.XMLHttpRequest.prototype.open = __empty_func__;
