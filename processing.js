@@ -12614,6 +12614,7 @@
 
     var redendered = transformed.toString();
 
+    // remove empty extra lines with space
     redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
 
     return injectStrings(redendered, strings);
