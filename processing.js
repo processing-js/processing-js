@@ -11501,7 +11501,7 @@
     Any processing calls need "processing." prepended to them.
 
     Similarly, calls from inside classes need "$this_1.", prepended to them,
-    with 1 being the index for inner classes.
+    with 1 being the depth level for inner classes.
     This includes members passed down from inheritance.
 
     The resulting code is then eval'd and run.
@@ -11590,6 +11590,7 @@
     var codeWoExtraCr = code.replace(/\r\n?|\n\r/g, "\n");
 
     // masks strings and regexs with "'5'", where 5 is the index in an array containing all strings and regexs
+    // also removes all comments
     var strings = [];
     var codeWoStrings = codeWoExtraCr.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g,
     function(all, quoted, aposed, regexCtx, prefix, regex, singleComment, comment) {
