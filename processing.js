@@ -372,6 +372,13 @@
   setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
   setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
 
+  /**
+   * An ArrayList stores a variable number of objects.
+   *
+   * @param {int} initialCapacity optional defines the initial capacity of the list, it's empty by default
+   *
+   * @returns {ArrayList} new ArrayList object
+   */
   var ArrayList = function() {
     function createArrayList(args) {
       var arr = [];
@@ -379,21 +386,44 @@
         arr[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
       }
 
+      /**
+       * @member ArrayList
+       * ArrayList.get() Returns the element at the specified position in this list.
+       *
+       * @param {int} i index of element to return
+       *
+       * @returns {Object} the element at the specified position in this list.
+       */
       arr.get = function(i) {
         return this[i];
       };
 
+      /**
+       * @member ArrayList
+       * ArrayList.contains() Returns true if this list contains the specified element.
+       *
+       * @param {Object} item element whose presence in this List is to be tested.
+       *
+       * @returns {boolean} true if the specified element is present; false otherwise.
+       */
       arr.contains = function(item) {
         return this.indexOf(item) !== -1;
       };
 
+      /**
+       * @member ArrayList
+       * ArrayList.add() Adds the specified element to this list. 
+       *
+       * @param {int}    index  optional index at which the specified element is to be inserted
+       * @param {Object} object element to be added to the list 
+       */
       arr.add = function() {
         if (arguments.length === 1) {
-          this.push(arguments[0]); // for add(Object)
+          this.push(arguments[0]); // for add(object)
         } else if (arguments.length === 2) {
           if (typeof arguments[0] === 'number') {
             if (arguments[0] >= 0 && arguments[0] <= this.length) {
-              this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
+              this.splice(arguments[0], 0, arguments[1]); // for add(index, object)
             } else {
               throw(arguments[0] + " is not a valid index");
             }
@@ -405,6 +435,13 @@
         }
       };
 
+      /**
+       * @member ArrayList
+       * ArrayList.set() Replaces the element at the specified position in this list with the specified element.
+       *
+       * @param {int}    index  index of element to replace
+       * @param {Object} object element to be stored at the specified position
+       */
       arr.set = function() {
         if (arguments.length === 2) {
           if (typeof arguments[0] === 'number') {
@@ -421,26 +458,63 @@
         }
       };
 
+      /**
+       * @member ArrayList
+       * ArrayList.size() Returns the number of elements in this list.
+       *
+       * @returns {int} the number of elements in this list
+       */
       arr.size = function() {
         return this.length;
       };
 
+      /**
+       * @member ArrayList
+       * ArrayList.clear() Removes all of the elements from this list. The list will be empty after this call returns.
+       */
       arr.clear = function() {
         this.length = 0;
       };
 
+      /**
+       * @member ArrayList
+       * ArrayList.remove() Removes the element at the specified position in this list.
+       * Shifts any subsequent elements to the left (subtracts one from their indices).
+       *
+       * @param {int} index the index of the element to removed.
+       *
+       * @returns {Object} the element that was removed from the list
+       */
       arr.remove = function(i) {
         return this.splice(i, 1)[0];
       };
 
+      /**
+       * @member ArrayList
+       * ArrayList.isEmpty() Tests if this list has no elements.
+       *
+       * @returns {boolean} true if this list has no elements; false otherwise
+       */
       arr.isEmpty = function() {
         return !this.length;
       };
 
+      /**
+       * @member ArrayList
+       * ArrayList.clone() Returns a shallow copy of this ArrayList instance. (The elements themselves are not copied.)
+       *
+       * @returns {ArrayList} a clone of this ArrayList instance
+       */
       arr.clone = function() {
         return this.slice(0);
       };
 
+      /**
+       * @member ArrayList
+       * ArrayList.toArray() Returns an array containing all of the elements in this list in the correct order.
+       *
+       * @returns {Object[]} Returns an array containing all of the elements in this list in the correct order
+       */
       arr.toArray = function() {
         return this.slice(0);
       };
@@ -10183,7 +10257,18 @@
     // Font handling
     ////////////////////////////////////////////////////////////////////////////
 
-    // Loads a font from an SVG or Canvas API
+    /**
+     * loadFont() Loads a font into a variable of type PFont.
+     *
+     * @param {String} name filename of the font to load
+     *
+     * @returns {PFont} new PFont object
+     *
+     * @see #PFont
+     * @see #textFont
+     * @see #text
+     * @see #createFont
+     */
     p.loadFont = function loadFont(name) {
       if (name.indexOf(".svg") === -1) {
         return {
@@ -10227,6 +10312,21 @@
       }
     };
 
+    /**
+     * createFont() Loads a font into a variable of type PFont.
+     *
+     * @param {String}    name    filename of the font to load
+     * @param {int|float} size    font size in pixels
+     * @param {boolean}   smooth  optional true for an antialiased font, false for aliased
+     * @param {char[]}    charset optional array containing characters to be generated
+     *
+     * @returns {PFont} new PFont object
+     *
+     * @see #PFont
+     * @see #textFont
+     * @see #text
+     * @see #loadFont
+     */
     p.createFont = function(name, size, smooth, charset) {
       if (arguments.length === 2) {
         p.textSize(size);
@@ -10244,19 +10344,48 @@
       }
     };
 
-    // Sets a 'current font' for use
+    /**
+     * textFont() Sets the current font.
+     *
+     * @param {PFont}     name filename of the font to load
+     * @param {int|float} size optional font size in pixels
+     *
+     * @see #createFont
+     * @see #loadFont
+     * @see #PFont
+     * @see #text
+     */
     p.textFont = function textFont(name, size) {
       curTextFont = name;
       p.textSize(size);
     };
 
-    // Sets the font size
+    /**
+     * textSize() Sets the current font size in pixels.
+     *
+     * @param {int|float} size font size in pixels
+     *
+     * @see #textFont
+     * @see #loadFont
+     * @see #PFont
+     * @see #text
+     */
     p.textSize = function textSize(size) {
       if (size) {
         curTextSize = size;
       }
     };
 
+    /**
+     * textAlign() Sets the current alignment for drawing text.
+     *
+     * @param {int} ALIGN  Horizontal alignment, either LEFT, CENTER, or RIGHT
+     * @param {int} YALIGN optional vertical alignment, either TOP, BOTTOM, CENTER, or BASELINE
+     *
+     * @see #loadFont
+     * @see #PFont
+     * @see #text
+     */
     p.textAlign = function textAlign() {
       if(arguments.length === 1) {
         horizontalTextAlignment = arguments[0];
@@ -10266,6 +10395,18 @@
       }
     };
 
+    /**
+     * textWidth() Calculates and returns the width of any character or text string in pixels.
+     *
+     * @param {char|String} str char or String to be measured
+     *
+     * @return {float} width of char or String in pixels
+     *
+     * @see #loadFont
+     * @see #PFont
+     * @see #text
+     * @see #textFont
+     */
     p.textWidth = function textWidth(str) {
       if (p.use3DContext) {
         if (textcanvas === undef) {
@@ -10291,6 +10432,13 @@
       }
     };
 
+    /**
+     * textAscent() height of the font above the baseline of the current font at its current size, in pixels.
+     *
+     * @returns {float} height of the font above the baseline of the current font at its current size, in pixels
+     *
+     * @see #textDescent
+     */
     p.textAscent = (function() {
       var oldTextSize = undef,
           oldTextFont = undef,
@@ -10347,6 +10495,13 @@
       };
     }());
 
+    /**
+     * textDescent() height of the font below the baseline of the current font at its current size, in pixels.
+     *
+     * @returns {float} height of the font below the baseline of the current font at its current size, in pixels
+     *
+     * @see #textAscent
+     */
     p.textDescent = (function() {
       var oldTextSize = undef,
           oldTextFont = undef,
@@ -10776,6 +10931,23 @@
       }
     }
 
+    /**
+     * text() Draws text to the screen.
+     *
+     * @param {String|char|int|float} data       the alphanumeric symbols to be displayed
+     * @param {int|float}             x          x-coordinate of text
+     * @param {int|float}             y          y-coordinate of text
+     * @param {int|float}             z          optional z-coordinate of text
+     * @param {String}                stringdata optional letters to be displayed
+     * @param {int|float}             width      optional width of text box
+     * @param {int|float}             height     optional height of text box
+     *
+     * @see #textAlign
+     * @see #textMode
+     * @see #loadFont
+     * @see #PFont
+     * @see #textFont
+     */
     p.text = function text() {
       if (tMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
         p.pushMatrix();
