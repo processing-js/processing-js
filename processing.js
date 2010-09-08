@@ -4161,10 +4161,13 @@
     * If the result is a set of numbers, you can convert the String[] array to to a float[] 
     * or int[] array using the datatype conversion functions int() and float() (see example above).
     * The splitTokens() function works in a similar fashion, except that it splits using a range 
-    * of characters instead of a specific character or sequence. 
-    * @param str the String to be split
-    * @param delim the character or String used to separate the data
+    * of characters instead of a specific character or sequence.
+    * 
+    * @param {String} str       the String to be split
+    * @param {String} delim     the character or String used to separate the data
+    * 
     * @returns {string[]} The new string array
+    * 
     * @see splitTokens
     * @see join
     * @see trim
@@ -4180,10 +4183,12 @@
     * Whitespace characters include tab (\t), line feed (\n), carriage return (\r), form 
     * feed (\f), and space. To convert a String to an array of integers or floats, use the 
     * datatype conversion functions int() and float() to convert the array of Strings.
-    * @param str the String to be split
-    * @param tokens list of individual characters that will be used as separatorsdelim the 
-    * character or String used to separate the data
+    * 
+    * @param {String} str       the String to be split
+    * @param {Char[]} tokens    list of individual characters that will be used as separators
+    * 
     * @returns {string[]} The new string array
+    * 
     * @see split
     * @see join
     * @see trim
@@ -4227,9 +4232,12 @@
     * When using an array of objects, the data returned from the function must be cast to 
     * the object array's data type. For example: SomeClass[] items = (SomeClass[]) 
     * append(originalArray, element).
+    * 
     * @param array boolean[], byte[], char[], int[], float[], or String[], or an array of objects
     * @param element new data for the array
+    * 
     * @returns Array (the same datatype as the input)
+    * 
     * @see shorten
     * @see expand
     */  
@@ -4244,9 +4252,12 @@
     * same datatype.
     * When using an array of objects, the data returned from the function must be cast to the 
     * object array's data type. For example: SomeClass[] items = (SomeClass[]) concat(array1, array2).
+    * 
     * @param array1 boolean[], byte[], char[], int[], float[], String[], or an array of objects
     * @param array2 boolean[], byte[], char[], int[], float[], String[], or an array of objects
+    * 
     * @returns Array (the same datatype as the input)
+    * 
     * @see splice
     */  
     p.concat = function(array1, array2) {
@@ -4259,9 +4270,12 @@
     * states the number of elements to sort. For example if there are 12 elements in an array and 
     * if count is the value 5, only the first five elements on the array will be sorted. The 
     * alphabetical ordering is case insensitive.
+    * 
     * @param array String[], int[], or float[]
     * @param numElem int
+    * 
     * @returns Array (the same datatype as the input)
+    * 
     * @see reverse
     */  
     p.sort = function(array, numElem) {
@@ -4302,11 +4316,14 @@
     * and the second parameter defines the data which will be inserted. When using an array 
     * of objects, the data returned from the function must be cast to the object array's data 
     * type. For example: SomeClass[] items = (SomeClass[]) splice(array1, array2, index).
+    * 
     * @param array boolean[], byte[], char[], int[], float[], String[], or an array of objects
     * @param value boolean, byte, char, int, float, String, boolean[], byte[], char[], int[], 
     * float[], String[], or other Object: value or an array of objects to be spliced in
     * @param index int: position in the array from which to insert data
+    * 
     * @returns Array (the same datatype as the input)
+    * 
     * @see contract
     * @see subset
     */  
@@ -4342,10 +4359,13 @@
     * This function does not change the source array.
     * When using an array of objects, the data returned from the function must be cast to the 
     * object array's data type.
+    * 
     * @param array boolean[], byte[], char[], int[], float[], String[], or an array of objects
     * @param offset int: position to begin
     * @param length int: number of values to extract
+    * 
     * @returns Array (the same datatype as the input)
+    * 
     * @see splice
     */  
     p.subset = function(array, offset, length) {
@@ -4360,9 +4380,12 @@
     * Combines an array of Strings into one String, each separated by the character(s) used for 
     * the separator parameter. To join arrays of ints or floats, it's necessary to first convert 
     * them to strings using nf() or nfs().
+    * 
     * @param array array of Strings
     * @param separator char or String: char or String to be placed between each item
+    * 
     * @returns String The combined string
+    * 
     * @see split
     * @see trim
     * @see nf
@@ -4376,8 +4399,11 @@
     * Decreases an array by one element and returns the shortened array. When using an 
     * array of objects, the data returned from the function must be cast to the object array's 
     * data type. For example: SomeClass[] items = (SomeClass[]) shorten(originalArray).
+    * 
     * @param array boolean[], byte[], char[], int[], float[], or String[], or an array of objects
+    * 
     * @returns Array (the same datatype as the input)
+    * 
     * @see append
     * @see expand
     */  
@@ -4399,9 +4425,12 @@
     * but the optional newSize parameter provides precise control over the increase in size.
     * When using an array of objects, the data returned from the function must be cast to the 
     * object array's data type. For example: SomeClass[] items = (SomeClass[]) expand(originalArray).
+    * 
     * @param ary boolean[], byte[], char[], int[], float[], String[], or an array of objects
     * @param newSize positive int: new size for the array
+    * 
     * @returns Array (the same datatype as the input)
+    * 
     * @see contract
     */  
     p.expand = function(ary, newSize) {
@@ -4424,11 +4453,13 @@
     * with two arguments copies an entire array to another of the same size. It is equivalent 
     * to "arrayCopy(src, 0, dst, 0, src.length)". This function is far more efficient for copying 
     * array data than iterating through a for and copying each element.
+    * 
     * @param src an array of any data type: the source array
     * @param dest an array of any data type (as long as it's the same as src): the destination array
     * @param srcPos int: starting position in the source array
     * @param destPos int: starting position in the destination array
     * @param length int: number of array elements to be copied
+    * 
     * @returns none
     */  
     p.arrayCopy = function() { // src, srcPos, dest, destPos, length) {
@@ -4464,8 +4495,11 @@
 
     /**
     * Reverses the order of an array.
+    * 
     * @param array boolean[], byte[], char[], int[], float[], or String[]
+    * 
     * @returns Array (the same datatype as the input)
+    * 
     * @see sort
     */  
     p.reverse = function(array) {
@@ -4757,12 +4791,15 @@
     * mode is RGB values from 0 to 255 and therefore, the function call color(255, 204, 0) 
     * will return a bright yellow color. More about how colors are stored can be found in 
     * the reference for the color datatype.
+    * 
     * @param aValue1 int or float: red or hue or grey values relative to the current color range. 
     * Also can be color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
     * @param aValue2 int or float: green or saturation values relative to the current color range
     * @param aValue3 int or float: blue or brightness values relative to the current color range
     * @param aValue4 int or float: relative to current color range. Represents alpha
+    * 
     * @returns color
+    * 
     * @see colorMode
     */ 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
@@ -4890,8 +4927,11 @@
 
     /**
     * Extracts the brightness value from a color.
+    * 
     * @param colInt any value of the color datatype
+    * 
     * @returns {float} The brightness color value.
+    * 
     * @see red
     * @see green
     * @see blue
@@ -4904,8 +4944,11 @@
 
     /**
     * Extracts the saturation value from a color.
+    * 
     * @param colInt any value of the color datatype
+    * 
     * @returns {float} The saturation color value.
+    * 
     * @see red
     * @see green
     * @see blue
@@ -4918,8 +4961,11 @@
 
     /**
     * Extracts the hue value from a color.
+    * 
     * @param colInt any value of the color datatype
+    * 
     * @returns {float} The hue color value.
+    * 
     * @see red
     * @see green
     * @see blue
@@ -4941,8 +4987,11 @@
     /**
     * Extracts the red value from a color, scaled to match current colorMode().
     * This value is always returned as a float so be careful not to assign it to an int value.
+    * 
     * @param aColor any value of the color datatype
+    * 
     * @returns {float} The red color value.
+    * 
     * @see green
     * @see blue
     * @see alpha
@@ -4958,8 +5007,11 @@
     /**
     * Extracts the green value from a color, scaled to match current colorMode().
     * This value is always returned as a float so be careful not to assign it to an int value.
+    * 
     * @param aColor any value of the color datatype
+    * 
     * @returns {float} The green color value.
+    * 
     * @see red
     * @see blue
     * @see alpha
@@ -4975,8 +5027,11 @@
     /**
     * Extracts the blue value from a color, scaled to match current colorMode().
     * This value is always returned as a float so be careful not to assign it to an int value.
+    * 
     * @param aColor any value of the color datatype
+    * 
     * @returns {float} The blue color value.
+    * 
     * @see red
     * @see green
     * @see alpha
@@ -4992,8 +5047,11 @@
     /**
     * Extracts the alpha value from a color, scaled to match current colorMode().
     * This value is always returned as a float so be careful not to assign it to an int value.
+    * 
     * @param aColor any value of the color datatype
+    * 
     * @returns {float} The alpha color value.
+    * 
     * @see red
     * @see green
     * @see blue
@@ -5010,10 +5068,13 @@
     * Calculates a color or colors between two colors at a specific increment.
     * The amt parameter is the amount to interpolate between the two values where 0.0
     * equal to the first point, 0.1 is very near the first point, 0.5 is half-way in between, etc.
+    * 
     * @param c1 color: interpolate from this color
     * @param c2 color: interpolate to this color
     * @param amt float: between 0.0 and 1.0
+    * 
     * @returns {float} The blended color.
+    * 
     * @see blendColor
     * @see color
     */
@@ -5056,13 +5117,16 @@
     * numerical range used for specifying colors and to switch color systems. For example, calling colorMode(RGB, 1.0)
     * will specify that values are specified between 0 and 1. The limits for defining colors are altered by setting the 
     * parameters range1, range2, range3, and range 4.
+    * 
     * @param mode Either RGB or HSB, corresponding to Red/Green/Blue and Hue/Saturation/Brightness
     * @param range int or float: range for all color elements
     * @param range1 int or float: range for the red or hue depending on the current color mode
     * @param range2 int or float: range for the green or saturation depending on the current color mode
     * @param range3 int or float: range for the blue or brightness depending on the current color mode
     * @param range4 int or float: range for the alpha
+    * 
     * @returns none
+    * 
     * @see background
     * @see fill
     * @see stroke
@@ -5080,10 +5144,14 @@
     /**
     * Blends two color values together based on the blending mode given as the MODE parameter.
     * The possible modes are described in the reference for the blend() function.
+    * 
     * @param c1 color: the first color to blend
     * @param c2 color: the second color to blend
-    * @param MODE Either BLEND, ADD, SUBTRACT, DARKEST, LIGHTEST, DIFFERENCE, EXCLUSION, MULTIPLY, SCREEN, OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, or BURN
+    * @param MODE Either BLEND, ADD, SUBTRACT, DARKEST, LIGHTEST, DIFFERENCE, EXCLUSION, MULTIPLY, 
+    * SCREEN, OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, or BURN
+    * 
     * @returns {float} The blended color.
+    * 
     * @see blend
     * @see color
     */
@@ -5155,7 +5223,9 @@
    
     /**
     * Prints the current matrix to the text window.
+    * 
     * @returns none
+    * 
     * @see pushMatrix
     * @see popMatrix
     * @see resetMatrix
@@ -5173,10 +5243,13 @@
     * accumulates the effect. For example, calling translate(50, 0) and then translate(20, 0) is the same as translate(70, 0). 
     * If translate() is called within draw(), the transformation is reset when the loop begins again. 
     * This function can be further controlled by the pushMatrix() and popMatrix().
+    * 
     * @param x int or float: left/right translation
     * @param y int or float: up/down translation
     * @param z int or float: forward/back translation
+    * 
     * @returns none
+    * 
     * @see pushMatrix
     * @see popMatrix
     * @see scale
@@ -5202,11 +5275,14 @@
     * then scale(1.5) is the same as scale(3.0). If scale() is called within draw(), the transformation is reset when 
     * the loop begins again. Using this fuction with the z  parameter requires passing P3D or OPENGL into the size() 
     * parameter as shown in the example above. This function can be further controlled by pushMatrix() and popMatrix().
+    * 
     * @param size float: percentage to scale the object
     * @param x float: percentage to scale the object in the x-axis
     * @param y float: percentage to scale the object in the y-axis
     * @param z float: percentage to scale the object in the z-axis
+    * 
     * @returns none
+    * 
     * @see pushMatrix
     * @see popMatrix
     * @see translate
@@ -5228,8 +5304,11 @@
     * Pushes the current transformation matrix onto the matrix stack. Understanding pushMatrix() and popMatrix() 
     * requires understanding the concept of a matrix stack. The pushMatrix() function saves the current coordinate 
     * system to the stack and popMatrix() restores the prior coordinate system. pushMatrix() and popMatrix() are 
-    * used in conjuction with the other transformation methods and may be embedded to control the scope of the transformations.
+    * used in conjuction with the other transformation methods and may be embedded to control the scope of 
+    * the transformations.
+    * 
     * @returns none
+    * 
     * @see popMatrix
     * @see translate
     * @see rotate
@@ -5250,7 +5329,9 @@
     * understanding the concept of a matrix stack. The pushMatrix() function saves the current coordinate system to 
     * the stack and popMatrix() restores the prior coordinate system. pushMatrix() and popMatrix() are used in 
     * conjuction with the other transformation methods and may be embedded to control the scope of the transformations.
+    * 
     * @returns none
+    * 
     * @see popMatrix
     * @see pushMatrix
     */
@@ -5264,7 +5345,9 @@
 
     /**
     * Replaces the current matrix with the identity matrix. The equivalent function in OpenGL is glLoadIdentity().
+    * 
     * @returns none
+    * 
     * @see popMatrix
     * @see pushMatrix
     * @see applyMatrix
@@ -5283,8 +5366,11 @@
     * Multiplies the current matrix by the one specified through the parameters. This is very slow because it will 
     * try to calculate the inverse of the transform, so avoid it whenever possible. The equivalent function 
     * in OpenGL is glMultMatrix().
+    * 
     * @param n00-n15 float: numbers which define the 4x4 matrix to be multiplied
+    * 
     * @returns none
+    * 
     * @see popMatrix
     * @see pushMatrix
     * @see resetMatrix
@@ -5312,8 +5398,11 @@
     * and then rotateX(PI/2) is the same as rotateX(PI). If rotateX() is called within the draw(), the 
     * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
     * into the size() parameter as shown in the example above.
+    * 
     * @param angleInRadians float: angle of rotation specified in radians
+    * 
     * @returns none
+    * 
     * @see rotateY
     * @see rotateZ
     * @see rotate
@@ -5336,8 +5425,11 @@
     * and then rotateZ(PI/2) is the same as rotateZ(PI). If rotateZ() is called within the draw(), the 
     * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
     * into the size() parameter as shown in the example above.
+    * 
     * @param angleInRadians float: angle of rotation specified in radians
+    * 
     * @returns none
+    * 
     * @see rotateX
     * @see rotateY
     * @see rotate
@@ -5360,8 +5452,11 @@
     * and then rotateY(PI/2) is the same as rotateY(PI). If rotateY() is called within the draw(), the 
     * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
     * into the size() parameter as shown in the example above.
+    * 
     * @param angleInRadians float: angle of rotation specified in radians
+    * 
     * @returns none
+    * 
     * @see rotateX
     * @see rotateZ
     * @see rotate
@@ -5384,8 +5479,11 @@
     * is the same as rotate(PI). All tranformations are reset when draw() begins again. Technically, 
     * rotate() multiplies the current transformation matrix by a rotation matrix. This function can be 
     * further controlled by the pushMatrix() and popMatrix().
+    * 
     * @param angleInRadians float: angle of rotation specified in radians
+    * 
     * @returns none
+    * 
     * @see rotateX
     * @see rotateY
     * @see rotateZ
@@ -5413,7 +5511,9 @@
     * The style information controlled by the following functions are included in the style: fill(), stroke(), tint(), 
     * strokeWeight(), strokeCap(), strokeJoin(), imageMode(), rectMode(), ellipseMode(), shapeMode(), colorMode(), 
     * textAlign(), textFont(), textMode(), textSize(), textLeading(), emissive(), specular(), shininess(), ambient()
+    * 
     * @returns none
+    * 
     * @see popStyle
     */
     p.pushStyle = function pushStyle() {
@@ -5446,7 +5546,9 @@
     * functions are always used together. They allow you to change the style settings and later return to what you had. 
     * When a new style is started with pushStyle(), it builds on the current style information. The pushStyle() and 
     * popStyle() functions can be embedded to provide more control (see the second example above for a demonstration.)
+    * 
     * @returns none
+    * 
     * @see pushStyle
     */
     p.popStyle = function popStyle() {
@@ -5482,7 +5584,9 @@
     /**
     * Processing communicates with the clock on your computer.
     * The year() function returns the current year as an integer (2003, 2004, 2005, etc).
+    * 
     * @returns {float} The current year.
+    * 
     * @see millis
     * @see second
     * @see minute
@@ -5496,7 +5600,9 @@
     /**
     * Processing communicates with the clock on your computer.
     * The month() function returns the current month as a value from 1 - 12.
+    * 
     * @returns {float} The current month.
+    * 
     * @see millis
     * @see second
     * @see minute
@@ -5510,7 +5616,9 @@
     /**
     * Processing communicates with the clock on your computer.
     * The day() function returns the current day as a value from 1 - 31.
+    * 
     * @returns {float} The current day.
+    * 
     * @see millis
     * @see second
     * @see minute
@@ -5524,7 +5632,9 @@
     /**
     * Processing communicates with the clock on your computer.
     * The hour() function returns the current hour as a value from 0 - 23.
+    * 
     * @returns {float} The current hour.
+    * 
     * @see millis
     * @see second
     * @see minute
@@ -5538,7 +5648,9 @@
     /**
     * Processing communicates with the clock on your computer.
     * The minute() function returns the current minute as a value from 0 - 59.
+    * 
     * @returns {float} The current minute.
+    * 
     * @see millis
     * @see second
     * @see month
@@ -5552,7 +5664,9 @@
     /**
     * Processing communicates with the clock on your computer.
     * The second() function returns the current second as a value from 0 - 59.
+    * 
     * @returns {float} The current minute.
+    * 
     * @see millis
     * @see month
     * @see minute
@@ -5566,7 +5680,9 @@
     /**
     * Returns the number of milliseconds (thousandths of a second) since starting a sketch.
     * This information is often used for timing animation sequences.
+    * 
     * @returns {long} The number of milliseconds since starting the sketch.
+    * 
     * @see month
     * @see second
     * @see minute
@@ -5586,7 +5702,9 @@
     * mousePressed(). This is because redraw() does not run draw() immediately (it only sets 
     * a flag that indicates an update is needed).
     * Calling redraw() within draw() has no effect because draw() is continuously called anyway.
+    * 
     * @returns none
+    * 
     * @see noLoop
     * @see loop
     */
@@ -5640,7 +5758,9 @@
     * Note that if the sketch is resized, redraw() will be called to update the sketch, even 
     * after noLoop() has been specified. Otherwise, the sketch would enter an odd state until 
     * loop() was called.
+    * 
     * @returns none
+    * 
     * @see redraw
     * @see draw
     * @see loop
@@ -5654,7 +5774,9 @@
     /**
     * Causes Processing to continuously execute the code within draw(). If noLoop() is called, 
     * the code in draw() stops executing.
+    * 
     * @returns none
+    * 
     * @see noLoop
     */
     p.loop = function loop() {
@@ -5683,8 +5805,11 @@
     * fast enough to maintain the specified rate, it will not be achieved. For example, the 
     * function call frameRate(30) will attempt to refresh 30 times a second. It is recommended 
     * to set the frame rate within setup(). The default rate is 60 frames per second.
+    * 
     * @param aRate int: number of frames per second.
+    * 
     * @returns none
+    * 
     * @see delay
     */
     p.frameRate = function frameRate(aRate) {
@@ -5706,6 +5831,7 @@
     * program is manually stopped or exit() is run.
     * Rather than terminating immediately, exit() will cause the sketch to exit after draw() 
     * has completed (or after setup() completes if called during the setup() method).
+    * 
     * @returns none
     */
     p.exit = function exit() {
@@ -5736,11 +5862,14 @@
     * 16x16 or 32x32 pixels. It is not possible to load an image as the cursor if you are 
     * exporting your program for the Web. The values for parameters x and y must be less 
     * than the dimensions of the image.
+    * 
     * @param MODE either ARROW, CROSS, HAND, MOVE, TEXT, WAIT
     * @param image PImage: any variable of type PImage
     * @param x int: the horizonal active spot of the cursor
     * @param y int: the vertical active spot of the cursor
+    * 
     * @returns none
+    * 
     * @see noCursor
     */
     p.cursor = function cursor() {
@@ -5772,7 +5901,9 @@
 
     /**
     * Hides the cursor from view.
+    * 
     * @returns none
+    * 
     * @see cursor
     */
     p.noCursor = function noCursor() {
@@ -5782,8 +5913,10 @@
     /**
     * Links to a webpage either in the same window or in a new window. The complete URL 
     * must be specified.
+    * 
     * @param href String: complete url as a String in quotes
     * @param target String: name of the window to load the URL as a string in quotes
+    * 
     * @returns none
     */
     p.link = function(href, target) {
@@ -5820,6 +5953,15 @@
       curElement.removeEventListener('contextmenu', contextMenu, false);
     };
 
+    /**
+    * Displays message in the browser's status area. This is the text area in the lower 
+    * left corner of the browser. The status() function will only work when the 
+    * Processing program is running in a web browser.
+    * 
+    * @param text String: any valid String
+    * 
+    * @returns none
+    */
     p.status = function(text) {
       window.status = text;
     };
@@ -5844,6 +5986,21 @@
       This function does not always work when trying to convert
       colors and bytes to binary values because the types passed in
       cannot be determined.
+    */
+    /**
+    * Converts a byte, char, int, or color to a String containing the equivalent binary 
+    * notation. For example color(0, 102, 153, 255) will convert to the String 
+    * "11111111000000000110011010011001". This function can help make your geeky debugging 
+    * sessions much happier.
+    * 
+    * @param num byte, char, int, color: value to convert
+    * @param numBits int: number of digits to return
+    * 
+    * @returns {String}
+    * 
+    * @see unhex
+    * @see hex
+    * @see unbinary
     */
     p.binary = function(num, numBits) {
       var numBitsInValue = 32;
@@ -5875,6 +6032,18 @@
       return str;
     };
 
+    /**
+    * Converts a String representation of a binary number to its equivalent integer value. 
+    * For example, unbinary("00001000") will return 8.
+    * 
+    * @param binaryString String
+    * 
+    * @returns {Int}
+    * 
+    * @see hex
+    * @see binary
+    * @see unbinary
+    */
     p.unbinary = function unbinary(binaryString) {
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
@@ -5969,6 +6138,26 @@
     }
 
     // TODO: drop this and use nfCore (see below) code when we've fixed the rounding bug in nfCore
+    /**
+    * Utility function for formatting numbers into strings. There are two versions, one for 
+    * formatting floats and one for formatting ints. The values for the digits, left, and 
+    * right parameters should always be positive integers.
+    * As shown in the above example, nf() is used to add zeros to the left and/or right 
+    * of a number. This is typically for aligning a list of numbers. To remove digits from 
+    * a floating-point number, use the int(), ceil(), floor(), or round() functions.
+    * 
+    * @param intValue int or int[]: the number(s) to format
+    * @param digits int: number of digits to pad with zeroes
+    * @param floatValue float or float[]: the number(s) to format
+    * @param left int: number of digits to the left of the decimal point
+    * @param right int: number of digits to the right of the decimal point
+    * 
+    * @returns {String or String[]}
+    * 
+    * @see nfs
+    * @see nfp
+    * @see nfc
+    */
     p.nf = function() {
       var str, num, pad, arr, left, right, isNegative, test, i;
 
@@ -6064,10 +6253,63 @@
       return str;
     };
 
-// TODO: need to switch nf over to using nfCore...
-//    p.nf  = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
+    // TODO: need to switch nf over to using nfCore...
+    //    p.nf  = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
+    /**
+    * Utility function for formatting numbers into strings. Similar to nf()  but leaves a blank space in front 
+    * of positive numbers so they align with negative numbers in spite of the minus symbol. There are two 
+    * versions, one for formatting floats and one for formatting ints. The values for the digits, left, 
+    * and right parameters should always be positive integers.
+    * 
+    * @param value int or int[]: the number(s) to format
+    * @param leftDigits int: number of digits to pad with zeroes
+    * @param value float or float[]: the number(s) to format
+    * @param leftDigits int: number of digits to the left of the decimal point
+    * @param rightDigits int: number of digits to the right of the decimal point
+    * 
+    * @returns {String or String[]}
+    * 
+    * @see nf
+    * @see nfp
+    * @see nfc
+    */
     p.nfs = function(value, leftDigits, rightDigits) { return nfCore(value, " ", "-", leftDigits, rightDigits); };
+    
+    /**
+    * Utility function for formatting numbers into strings. Similar to nf()  but puts a "+" in front of 
+    * positive numbers and a "-" in front of negative numbers. There are two versions, one for formatting 
+    * floats and one for formatting ints. The values for the digits, left, and right parameters should 
+    * always be positive integers.
+    * 
+    * @param value int or int[]: the number(s) to format
+    * @param leftDigits int: number of digits to pad with zeroes
+    * @param value float or float[]: the number(s) to format
+    * @param leftDigits int: number of digits to the left of the decimal point
+    * @param rightDigits int: number of digits to the right of the decimal point
+    * 
+    * @returns {String or String[]}
+    * 
+    * @see nfs
+    * @see nf
+    * @see nfc
+    */
     p.nfp = function(value, leftDigits, rightDigits) { return nfCore(value, "+", "-", leftDigits, rightDigits); };
+    
+    /**
+    * Utility function for formatting numbers into strings and placing appropriate commas to mark 
+    * units of 1000. There are two versions, one for formatting ints and one for formatting an array 
+    * of ints. The value for the digits parameter should always be a positive integer.
+    * 
+    * @param value int or int[]: the number(s) to format
+    * @param value float or float[]: the number(s) to format
+    * @param rightDigits int: number of digits to the right of the decimal point
+    * 
+    * @returns {String or String[]}
+    * 
+    * @see nf
+    * @see nfs
+    * @see nfp
+    */
     p.nfc = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits, ","); };
 
     var decimalToHex = function decimalToHex(d, padding) {
