@@ -3589,7 +3589,7 @@
     };
 
     /**
-     * XMLAttribute in attribute in an XML element. This is an internal class
+     * XMLAttribute is an attribute of a XML element. This is an internal class
      *
      * @param {String} fname     the full name of the attribute
      * @param {String} n         the short name of the attribute
@@ -4307,12 +4307,11 @@
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
     ////////////////////////////////////////////////////////////////////////////
-
-    /*
-      Helper function for printMatrix(). Finds the largest scalar
-      in the matrix, then number of digits left of the decimal.
-      Call from PMatrix2D and PMatrix3D's print() function.
-    */
+    /**
+     * Helper function for printMatrix(). Finds the largest scalar
+     * in the matrix, then number of digits left of the decimal.
+     * Call from PMatrix2D and PMatrix3D's print() function.
+     */
     var printMatrixHelper = function printMatrixHelper(elements) {
       var big = 0;
       for (var i = 0; i < elements.length; i++) {
@@ -6696,7 +6695,17 @@
     ////////////////////////////////////////////////////////////////////////////
     // String Functions
     ////////////////////////////////////////////////////////////////////////////
-
+    /**
+     * The matchAll() function is identical to match(), except that it returns an array of all matches in
+     * the specified String, rather than just the first.
+     * 
+     * @param {String} aString  the String to search inside
+     * @param {String} aRegExp  the regexp to be used for matching
+     *
+     * @return {String[]} returns an array of matches
+     *
+     * @see #match
+     */
     p.matchAll = function matchAll(aString, aRegExp) {
       var results = [],
           latest;
@@ -6709,15 +6718,36 @@
       }
       return results.length > 0 ? results : null;
     };
-
+    /**
+     * The replaceAll() function searches all matches between a substring (or regular expression) and a string, and replaces the matched substring with a new substring
+     * 
+     * @param {String} re         a substring or a regular expression
+     * @param {String} replace    the string to replace the found value
+     *
+     * @return {String[]} returns an array of matches
+     *
+     * @see #match
+     */
     String.prototype.replaceAll = function(re, replace) {
       return this.replace(new RegExp(re, "g"), replace);
     };
-
+    /**
+     * The equals() function compares two strings to see if they are the same. 
+     * This method is necessary because it's not possible to compare strings using the equality operator (==). 
+     * Returns true if the strings are the same and false if they are not.
+     *
+     * @param {String} str  a string used for comparison
+     *
+     * @return {boolean} true is the strings are the same false otherwise
+     */
     String.prototype.equals = function equals(str) {
       return this.valueOf() === str.valueOf();
     };
-
+    /**
+     * The toCharArray() function splits the string into a char array. 
+     *
+     * @return {Char[]} a char array
+     */
     String.prototype.toCharArray = function() {
       var chars = this.split("");
       for (var i = chars.length - 1; i >= 0; i--) {
@@ -6725,7 +6755,16 @@
       }
       return chars;
     };
-
+    /**
+     * The match() function matches a string with a regular expression, and returns the match as an
+     * array. The first index is the matching expression, and array elements
+     * [1] and higher represent each of the groups (sequences found in parens).
+     *
+     * @param {String} str      the String to be searched
+     * @param {String} regexp   the regexp to be used for matching
+     *
+     * @return {String[]} an array of matching strings
+     */
     p.match = function(str, regexp) {
       return str.match(regexp);
     };
@@ -6733,7 +6772,15 @@
     var logBuffer = [];
 
     p.console = window.console || Processing.logger;
-
+    /**
+     * The println() function writes to the console area of the Processing environment. 
+     * Each call to this function creates a new line of output. Individual elements can be separated with quotes ("") and joined with the string concatenation operator (+).
+     *
+     * @param {String} message the string to write to the console
+     *
+     * @see #join
+     * @see #print
+     */
     p.println = function println(message) {
       var bufferLen = logBuffer.length;
       if (bufferLen) {
@@ -6747,7 +6794,13 @@
         Processing.logger.log(message);
       }
     };
-
+    /**
+     * The print() function writes to the console area of the Processing environment.
+     *
+     * @param {String} message the string to write to the console
+     *
+     * @see #join
+     */
     p.print = function print(message) {
       logBuffer.push(message);
     };
@@ -6765,7 +6818,16 @@
         return (val + "");
       }
     };
-
+    /**
+     * Remove whitespace characters from the beginning and ending
+     * of a String or a String array. Works like String.trim() but includes the
+     * unicode nbsp character as well. If an array is passed in the function will return a new array not effecting the array passed in. 
+     *
+     * @param {String} str    the string to trim
+     * @param {String[]} str  the string array to trim
+     *
+     * @return {String|String[]} retrurns a string or an array will removed whitespaces
+     */
     p.trim = function(str) {
       if (str instanceof Array) {
         var arr = [];
