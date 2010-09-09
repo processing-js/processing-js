@@ -4233,8 +4233,9 @@
     * the object array's data type. For example: SomeClass[] items = (SomeClass[]) 
     * append(originalArray, element).
     * 
-    * @param array boolean[], byte[], char[], int[], float[], or String[], or an array of objects
-    * @param element new data for the array
+    * @param {boolean[]|byte[]|char[]|int[]|float[]|String[]|array of objects} array boolean[],
+    * byte[], char[], int[], float[], or String[], or an array of objects
+    * @param {boolean[]|byte[]|char[]|int[]|float[]|String[]|array of objects} element new data for the array
     * 
     * @returns Array (the same datatype as the input)
     * 
@@ -4253,8 +4254,10 @@
     * When using an array of objects, the data returned from the function must be cast to the 
     * object array's data type. For example: SomeClass[] items = (SomeClass[]) concat(array1, array2).
     * 
-    * @param array1 boolean[], byte[], char[], int[], float[], String[], or an array of objects
-    * @param array2 boolean[], byte[], char[], int[], float[], String[], or an array of objects
+    * @param {boolean[]|byte[]|char[]|int[]|float[]|String[]|array of objects} array1 boolean[],
+    * byte[], char[], int[], float[], String[], or an array of objects
+    * @param {boolean[]|byte[]|char[]|int[]|float[]|String[]|array of objects} array2 boolean[], 
+    * byte[], char[], int[], float[], String[], or an array of objects
     * 
     * @returns Array (the same datatype as the input)
     * 
@@ -4271,8 +4274,8 @@
     * if count is the value 5, only the first five elements on the array will be sorted. The 
     * alphabetical ordering is case insensitive.
     * 
-    * @param array String[], int[], or float[]
-    * @param numElem int
+    * @param {int[]|float[]|String[]}   array String[], int[], or float[]
+    * @param {int}                      numElem int
     * 
     * @returns Array (the same datatype as the input)
     * 
@@ -4317,10 +4320,12 @@
     * of objects, the data returned from the function must be cast to the object array's data 
     * type. For example: SomeClass[] items = (SomeClass[]) splice(array1, array2, index).
     * 
-    * @param array boolean[], byte[], char[], int[], float[], String[], or an array of objects
-    * @param value boolean, byte, char, int, float, String, boolean[], byte[], char[], int[], 
+    * @param {boolean[]|byte[]|char[]|int[]|float[]|String[]|array of objects} array boolean[],
+    * byte[], char[], int[], float[], String[], or an array of objects
+    * @param {boolean|byte|char|int|float|String|boolean[]|byte[]|char[]|int[]|float[]|String[]|array of objects}
+    * value boolean, byte, char, int, float, String, boolean[], byte[], char[], int[], 
     * float[], String[], or other Object: value or an array of objects to be spliced in
-    * @param index int: position in the array from which to insert data
+    * @param {int} index                position in the array from which to insert data
     * 
     * @returns Array (the same datatype as the input)
     * 
@@ -4360,9 +4365,10 @@
     * When using an array of objects, the data returned from the function must be cast to the 
     * object array's data type.
     * 
-    * @param array boolean[], byte[], char[], int[], float[], String[], or an array of objects
-    * @param offset int: position to begin
-    * @param length int: number of values to extract
+    * @param {boolean[]|byte[]|char[]|int[]|float[]|String[]|array of objects} array boolean[], 
+    * byte[], char[], int[], float[], String[], or an array of objects
+    * @param {int} offset         position to begin
+    * @param {int} length         number of values to extract
     * 
     * @returns Array (the same datatype as the input)
     * 
@@ -4381,10 +4387,10 @@
     * the separator parameter. To join arrays of ints or floats, it's necessary to first convert 
     * them to strings using nf() or nfs().
     * 
-    * @param array array of Strings
-    * @param separator char or String: char or String to be placed between each item
+    * @param {Array} array              array of Strings
+    * @param {char|String} separator    char or String to be placed between each item
     * 
-    * @returns String The combined string
+    * @returns {String} The combined string
     * 
     * @see split
     * @see trim
@@ -4400,7 +4406,8 @@
     * array of objects, the data returned from the function must be cast to the object array's 
     * data type. For example: SomeClass[] items = (SomeClass[]) shorten(originalArray).
     * 
-    * @param array boolean[], byte[], char[], int[], float[], or String[], or an array of objects
+    * @param {boolean[]|byte[]|char[]|int[]|float[]|String[]|array of objects} array 
+    * boolean[], byte[], char[], int[], float[], or String[], or an array of objects
     * 
     * @returns Array (the same datatype as the input)
     * 
@@ -4426,8 +4433,9 @@
     * When using an array of objects, the data returned from the function must be cast to the 
     * object array's data type. For example: SomeClass[] items = (SomeClass[]) expand(originalArray).
     * 
-    * @param ary boolean[], byte[], char[], int[], float[], String[], or an array of objects
-    * @param newSize positive int: new size for the array
+    * @param {boolean[]|byte[]|char[]|int[]|float[]|String[]|array of objects} ary 
+    * boolean[], byte[], char[], int[], float[], String[], or an array of objects
+    * @param {int} newSize              positive int: new size for the array
     * 
     * @returns Array (the same datatype as the input)
     * 
@@ -4454,11 +4462,11 @@
     * to "arrayCopy(src, 0, dst, 0, src.length)". This function is far more efficient for copying 
     * array data than iterating through a for and copying each element.
     * 
-    * @param src an array of any data type: the source array
-    * @param dest an array of any data type (as long as it's the same as src): the destination array
-    * @param srcPos int: starting position in the source array
-    * @param destPos int: starting position in the destination array
-    * @param length int: number of array elements to be copied
+    * @param {Array} src an array of any data type: the source array
+    * @param {Array} dest an array of any data type (as long as it's the same as src): the destination array
+    * @param {int} srcPos     starting position in the source array
+    * @param {int} destPos    starting position in the destination array
+    * @param {int} length     number of array elements to be copied
     * 
     * @returns none
     */  
@@ -4496,7 +4504,8 @@
     /**
     * Reverses the order of an array.
     * 
-    * @param array boolean[], byte[], char[], int[], float[], or String[]
+    * @param {boolean[]|byte[]|char[]|int[]|float[]|String[]} array 
+    * boolean[], byte[], char[], int[], float[], or String[]
     * 
     * @returns Array (the same datatype as the input)
     * 
@@ -4792,13 +4801,13 @@
     * will return a bright yellow color. More about how colors are stored can be found in 
     * the reference for the color datatype.
     * 
-    * @param aValue1 int or float: red or hue or grey values relative to the current color range. 
+    * @param {int|float} aValue1        red or hue or grey values relative to the current color range. 
     * Also can be color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
-    * @param aValue2 int or float: green or saturation values relative to the current color range
-    * @param aValue3 int or float: blue or brightness values relative to the current color range
-    * @param aValue4 int or float: relative to current color range. Represents alpha
+    * @param {int|float} aValue2        green or saturation values relative to the current color range
+    * @param {int|float} aValue3        blue or brightness values relative to the current color range
+    * @param {int|float} aValue4        relative to current color range. Represents alpha
     * 
-    * @returns color
+    * @returns {color} the color
     * 
     * @see colorMode
     */ 
@@ -4928,7 +4937,7 @@
     /**
     * Extracts the brightness value from a color.
     * 
-    * @param colInt any value of the color datatype
+    * @param {color} colInt any value of the color datatype
     * 
     * @returns {float} The brightness color value.
     * 
@@ -4945,7 +4954,7 @@
     /**
     * Extracts the saturation value from a color.
     * 
-    * @param colInt any value of the color datatype
+    * @param {color} colInt any value of the color datatype
     * 
     * @returns {float} The saturation color value.
     * 
@@ -4962,7 +4971,7 @@
     /**
     * Extracts the hue value from a color.
     * 
-    * @param colInt any value of the color datatype
+    * @param {color} colInt any value of the color datatype
     * 
     * @returns {float} The hue color value.
     * 
@@ -4988,7 +4997,7 @@
     * Extracts the red value from a color, scaled to match current colorMode().
     * This value is always returned as a float so be careful not to assign it to an int value.
     * 
-    * @param aColor any value of the color datatype
+    * @param {color} aColor any value of the color datatype
     * 
     * @returns {float} The red color value.
     * 
@@ -5008,7 +5017,7 @@
     * Extracts the green value from a color, scaled to match current colorMode().
     * This value is always returned as a float so be careful not to assign it to an int value.
     * 
-    * @param aColor any value of the color datatype
+    * @param {color} aColor any value of the color datatype
     * 
     * @returns {float} The green color value.
     * 
@@ -5028,7 +5037,7 @@
     * Extracts the blue value from a color, scaled to match current colorMode().
     * This value is always returned as a float so be careful not to assign it to an int value.
     * 
-    * @param aColor any value of the color datatype
+    * @param {color} aColor any value of the color datatype
     * 
     * @returns {float} The blue color value.
     * 
@@ -5048,7 +5057,7 @@
     * Extracts the alpha value from a color, scaled to match current colorMode().
     * This value is always returned as a float so be careful not to assign it to an int value.
     * 
-    * @param aColor any value of the color datatype
+    * @param {color} aColor any value of the color datatype
     * 
     * @returns {float} The alpha color value.
     * 
@@ -5069,9 +5078,9 @@
     * The amt parameter is the amount to interpolate between the two values where 0.0
     * equal to the first point, 0.1 is very near the first point, 0.5 is half-way in between, etc.
     * 
-    * @param c1 color: interpolate from this color
-    * @param c2 color: interpolate to this color
-    * @param amt float: between 0.0 and 1.0
+    * @param {color} c1     interpolate from this color
+    * @param {color} c2     interpolate to this color
+    * @param {float} amt    between 0.0 and 1.0
     * 
     * @returns {float} The blended color.
     * 
@@ -5118,12 +5127,12 @@
     * will specify that values are specified between 0 and 1. The limits for defining colors are altered by setting the 
     * parameters range1, range2, range3, and range 4.
     * 
-    * @param mode Either RGB or HSB, corresponding to Red/Green/Blue and Hue/Saturation/Brightness
-    * @param range int or float: range for all color elements
-    * @param range1 int or float: range for the red or hue depending on the current color mode
-    * @param range2 int or float: range for the green or saturation depending on the current color mode
-    * @param range3 int or float: range for the blue or brightness depending on the current color mode
-    * @param range4 int or float: range for the alpha
+    * @param {MODE} mode Either RGB or HSB, corresponding to Red/Green/Blue and Hue/Saturation/Brightness
+    * @param {int|float} range              range for all color elements
+    * @param {int|float} range1             range for the red or hue depending on the current color mode
+    * @param {int|float} range2             range for the green or saturation depending on the current color mode
+    * @param {int|float} range3             range for the blue or brightness depending on the current color mode
+    * @param {int|float} range4             range for the alpha
     * 
     * @returns none
     * 
@@ -5145,9 +5154,9 @@
     * Blends two color values together based on the blending mode given as the MODE parameter.
     * The possible modes are described in the reference for the blend() function.
     * 
-    * @param c1 color: the first color to blend
-    * @param c2 color: the second color to blend
-    * @param MODE Either BLEND, ADD, SUBTRACT, DARKEST, LIGHTEST, DIFFERENCE, EXCLUSION, MULTIPLY, 
+    * @param {color} c1 color: the first color to blend
+    * @param {color} c2 color: the second color to blend
+    * @param {MODE} MODE Either BLEND, ADD, SUBTRACT, DARKEST, LIGHTEST, DIFFERENCE, EXCLUSION, MULTIPLY, 
     * SCREEN, OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, or BURN
     * 
     * @returns {float} The blended color.
@@ -5244,9 +5253,9 @@
     * If translate() is called within draw(), the transformation is reset when the loop begins again. 
     * This function can be further controlled by the pushMatrix() and popMatrix().
     * 
-    * @param x int or float: left/right translation
-    * @param y int or float: up/down translation
-    * @param z int or float: forward/back translation
+    * @param {int|float} x        left/right translation
+    * @param {int|float} y        up/down translation
+    * @param {int|float} z        forward/back translation
     * 
     * @returns none
     * 
@@ -5276,10 +5285,10 @@
     * the loop begins again. Using this fuction with the z  parameter requires passing P3D or OPENGL into the size() 
     * parameter as shown in the example above. This function can be further controlled by pushMatrix() and popMatrix().
     * 
-    * @param size float: percentage to scale the object
-    * @param x float: percentage to scale the object in the x-axis
-    * @param y float: percentage to scale the object in the y-axis
-    * @param z float: percentage to scale the object in the z-axis
+    * @param {int|float} size     percentage to scale the object
+    * @param {int|float} x        percentage to scale the object in the x-axis
+    * @param {int|float} y        percentage to scale the object in the y-axis
+    * @param {int|float} z        percentage to scale the object in the z-axis
     * 
     * @returns none
     * 
@@ -5367,7 +5376,7 @@
     * try to calculate the inverse of the transform, so avoid it whenever possible. The equivalent function 
     * in OpenGL is glMultMatrix().
     * 
-    * @param n00-n15 float: numbers which define the 4x4 matrix to be multiplied
+    * @param {int|float} n00-n15      numbers which define the 4x4 matrix to be multiplied
     * 
     * @returns none
     * 
@@ -5399,7 +5408,7 @@
     * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
     * into the size() parameter as shown in the example above.
     * 
-    * @param angleInRadians float: angle of rotation specified in radians
+    * @param {int|float} angleInRadians     angle of rotation specified in radians
     * 
     * @returns none
     * 
@@ -5426,7 +5435,7 @@
     * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
     * into the size() parameter as shown in the example above.
     * 
-    * @param angleInRadians float: angle of rotation specified in radians
+    * @param {int|float} angleInRadians     angle of rotation specified in radians
     * 
     * @returns none
     * 
@@ -5453,7 +5462,7 @@
     * transformation is reset when the loop begins again. This function requires passing P3D or OPENGL 
     * into the size() parameter as shown in the example above.
     * 
-    * @param angleInRadians float: angle of rotation specified in radians
+    * @param {int|float} angleInRadians     angle of rotation specified in radians
     * 
     * @returns none
     * 
@@ -5480,7 +5489,7 @@
     * rotate() multiplies the current transformation matrix by a rotation matrix. This function can be 
     * further controlled by the pushMatrix() and popMatrix().
     * 
-    * @param angleInRadians float: angle of rotation specified in radians
+    * @param {int|float} angleInRadians     angle of rotation specified in radians
     * 
     * @returns none
     * 
@@ -5806,7 +5815,7 @@
     * function call frameRate(30) will attempt to refresh 30 times a second. It is recommended 
     * to set the frame rate within setup(). The default rate is 60 frames per second.
     * 
-    * @param aRate int: number of frames per second.
+    * @param {int} aRate        number of frames per second.
     * 
     * @returns none
     * 
@@ -5863,10 +5872,10 @@
     * exporting your program for the Web. The values for parameters x and y must be less 
     * than the dimensions of the image.
     * 
-    * @param MODE either ARROW, CROSS, HAND, MOVE, TEXT, WAIT
-    * @param image PImage: any variable of type PImage
-    * @param x int: the horizonal active spot of the cursor
-    * @param y int: the vertical active spot of the cursor
+    * @param {MODE} MODE either ARROW, CROSS, HAND, MOVE, TEXT, WAIT
+    * @param {PImage} image       any variable of type PImage
+    * @param {int}    x           the horizonal active spot of the cursor
+    * @param {int}    y           the vertical active spot of the cursor
     * 
     * @returns none
     * 
@@ -5914,8 +5923,8 @@
     * Links to a webpage either in the same window or in a new window. The complete URL 
     * must be specified.
     * 
-    * @param href String: complete url as a String in quotes
-    * @param target String: name of the window to load the URL as a string in quotes
+    * @param {String} href      complete url as a String in quotes
+    * @param {String} target    name of the window to load the URL as a string in quotes
     * 
     * @returns none
     */
@@ -5958,7 +5967,7 @@
     * left corner of the browser. The status() function will only work when the 
     * Processing program is running in a web browser.
     * 
-    * @param text String: any valid String
+    * @param {String} text      any valid String
     * 
     * @returns none
     */
@@ -5993,8 +6002,8 @@
     * "11111111000000000110011010011001". This function can help make your geeky debugging 
     * sessions much happier.
     * 
-    * @param num byte, char, int, color: value to convert
-    * @param numBits int: number of digits to return
+    * @param {byte|char|int|color} num          byte, char, int, color: value to convert
+    * @param {int} numBits                      number of digits to return
     * 
     * @returns {String}
     * 
@@ -6036,7 +6045,7 @@
     * Converts a String representation of a binary number to its equivalent integer value. 
     * For example, unbinary("00001000") will return 8.
     * 
-    * @param binaryString String
+    * @param {String} binaryString String
     * 
     * @returns {Int}
     * 
@@ -6146,11 +6155,9 @@
     * of a number. This is typically for aligning a list of numbers. To remove digits from 
     * a floating-point number, use the int(), ceil(), floor(), or round() functions.
     * 
-    * @param intValue int or int[]: the number(s) to format
-    * @param digits int: number of digits to pad with zeroes
-    * @param floatValue float or float[]: the number(s) to format
-    * @param left int: number of digits to the left of the decimal point
-    * @param right int: number of digits to the right of the decimal point
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
     * 
     * @returns {String or String[]}
     * 
@@ -6261,11 +6268,9 @@
     * versions, one for formatting floats and one for formatting ints. The values for the digits, left, 
     * and right parameters should always be positive integers.
     * 
-    * @param value int or int[]: the number(s) to format
-    * @param leftDigits int: number of digits to pad with zeroes
-    * @param value float or float[]: the number(s) to format
-    * @param leftDigits int: number of digits to the left of the decimal point
-    * @param rightDigits int: number of digits to the right of the decimal point
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
     * 
     * @returns {String or String[]}
     * 
@@ -6281,11 +6286,9 @@
     * floats and one for formatting ints. The values for the digits, left, and right parameters should 
     * always be positive integers.
     * 
-    * @param value int or int[]: the number(s) to format
-    * @param leftDigits int: number of digits to pad with zeroes
-    * @param value float or float[]: the number(s) to format
-    * @param leftDigits int: number of digits to the left of the decimal point
-    * @param rightDigits int: number of digits to the right of the decimal point
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
     * 
     * @returns {String or String[]}
     * 
@@ -6300,9 +6303,9 @@
     * units of 1000. There are two versions, one for formatting ints and one for formatting an array 
     * of ints. The value for the digits parameter should always be a positive integer.
     * 
-    * @param value int or int[]: the number(s) to format
-    * @param value float or float[]: the number(s) to format
-    * @param rightDigits int: number of digits to the right of the decimal point
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
     * 
     * @returns {String or String[]}
     * 
