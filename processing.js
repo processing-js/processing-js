@@ -10528,8 +10528,6 @@
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
         if (str && ("fillText" in curContext || "mozDrawText" in curContext)) {
-          //curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-
           if (isFillDirty) {
             curContext.fillStyle = p.color.toString(currentFillColor);
             isFillDirty = false;
