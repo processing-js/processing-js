@@ -7712,11 +7712,15 @@
 
       frustumMode = false;
     };
-
+    /**
+     * The printProjection() prints the current projection matrix to the text window. 
+     */
     p.printProjection = function() {
       projection.print();
     };
-
+    /**
+     * The printCamera() function prints the current camera matrix.
+     */
     p.printCamera = function() {
       cam.print();
     };
@@ -7724,7 +7728,14 @@
     ////////////////////////////////////////////////////////////////////////////
     // Shapes
     ////////////////////////////////////////////////////////////////////////////
-
+    /**
+     * The box() function renders a box. A box is an extruded rectangle. A box with equal dimension on all sides is a cube.
+     * Calling this function with only one parameter will create a cube.
+     *
+     * @param {int|float} w  dimension of the box in the x-dimension
+     * @param {int|float} h  dimension of the box in the y-dimension
+     * @param {int|float} d  dimension of the box in the z-dimension
+     */
     p.box = function(w, h, d) {
       if (p.use3DContext) {
         // user can uniformly scale the box by
@@ -7809,7 +7820,12 @@
         }
       }
     };
-
+    /**
+     * The initSphere() function is a helper function used by <b>sphereDetail()</b>
+     * This function creates and stores sphere vertices every time the user changes sphere detail. 
+     *
+     * @see #sphereDetail
+     */
     var initSphere = function() {
       var i;
       sphereVerts = [];
@@ -7881,7 +7897,27 @@
       curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(sphereVerts), curContext.STATIC_DRAW);
     };
-
+    /**
+     * The sphereDetail() function controls the detail used to render a sphere by adjusting the number of
+     * vertices of the sphere mesh. The default resolution is 30, which creates
+     * a fairly detailed sphere definition with vertices every 360/30 = 12
+     * degrees. If you're going to render a great number of spheres per frame,
+     * it is advised to reduce the level of detail using this function.
+     * The setting stays active until <b>sphereDetail()</b> is called again with
+     * a new parameter and so should <i>not</i> be called prior to every
+     * <b>sphere()</b> statement, unless you wish to render spheres with
+     * different settings, e.g. using less detail for smaller spheres or ones
+     * further away from the camera. To control the detail of the horizontal
+     * and vertical resolution independently, use the version of the functions
+     * with two parameters. Calling this function with one parameter sets the number of segments 
+     *(minimum of 3) used per full circle revolution. This is equivalent to calling the function with 
+     * two identical values. 
+     *
+     * @param {int} ures    number of segments used horizontally (longitudinally) per full circle revolution
+     * @param {int} vres    number of segments used vertically (latitudinally) from top to bottom
+     *
+     * @see #sphere()
+     */
     p.sphereDetail = function sphereDetail(ures, vres) {
       var i;
 
@@ -7939,7 +7975,12 @@
       // make the sphere verts and norms
       initSphere();
     };
-
+    /**
+     * The sphere() function draws a sphere with radius r centered at coordinate 0, 0, 0.
+     * A sphere is a hollow ball made from tessellated triangles.
+     * 
+     * @param {int|float} r the radius of the sphere
+     */
     p.sphere = function() {
       if (p.use3DContext) {
         var sRad = arguments[0], c;
@@ -8218,7 +8259,30 @@
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
-
+    /**
+     * The fill() function sets the color used to fill shapes. For example, if you run <b>fill(204, 102, 0)</b>, all subsequent shapes will be filled with orange. 
+     * This color is either specified in terms of the RGB or HSB color depending on the current <b>colorMode()</b> 
+     *(the default color space is RGB, with each value in the range from 0 to 255).
+     * <br><br>When using hexadecimal notation to specify a color, use "#" or "0x" before the values (e.g. #CCFFAA, 0xFFCCFFAA). 
+     * The # syntax uses six digits to specify a color (the way colors are specified in HTML and CSS). When using the hexadecimal notation starting with "0x", 
+     * the hexadecimal value must be specified with eight characters; the first two characters define the alpha component and the remainder the red, green, and blue components.
+     * <br><br>The value for the parameter "gray" must be less than or equal to the current maximum value as specified by <b>colorMode()</b>. The default maximum value is 255.
+     * <br><br>To change the color of an image (or a texture), use tint().
+     *
+     * @param {int|float} gray    number specifying value between white and black
+     * @param {int|float} value1  red or hue value
+     * @param {int|float} value2  green or saturation value
+     * @param {int|float} value3  blue or brightness value
+     * @param {int|float} alpha   opacity of the fill
+     * @param {Color} color       any value of the color datatype
+     * @param {int} hex           color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     *
+     * @see #noFill()
+     * @see #stroke()
+     * @see #tint()
+     * @see #background()
+     * @see #colorMode()
+     */
     p.fill = function fill() {
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       if(color === currentFillColor && doFill) {
@@ -8243,11 +8307,46 @@
         curContext.fill();
       }
     }
-
+    /**
+     * The noFill() function disables filling geometry. If both <b>noStroke()</b> and <b>noFill()</b>
+     * are called, no shapes will be drawn to the screen.
+     *
+     * @see #fill()
+     *
+     */
     p.noFill = function noFill() {
       doFill = false;
     };
-
+    /**
+     * The stroke() function sets the color used to draw lines and borders around shapes. This color
+     * is either specified in terms of the RGB or HSB color depending on the
+     * current <b>colorMode()</b> (the default color space is RGB, with each
+     * value in the range from 0 to 255).
+     * <br><br>When using hexadecimal notation to specify a color, use "#" or
+     * "0x" before the values (e.g. #CCFFAA, 0xFFCCFFAA). The # syntax uses six
+     * digits to specify a color (the way colors are specified in HTML and CSS).
+     * When using the hexadecimal notation starting with "0x", the hexadecimal
+     * value must be specified with eight characters; the first two characters
+     * define the alpha component and the remainder the red, green, and blue
+     * components.
+     * <br><br>The value for the parameter "gray" must be less than or equal
+     * to the current maximum value as specified by <b>colorMode()</b>.
+     * The default maximum value is 255.
+     *
+     * @param {int|float} gray    number specifying value between white and black
+     * @param {int|float} value1  red or hue value
+     * @param {int|float} value2  green or saturation value
+     * @param {int|float} value3  blue or brightness value
+     * @param {int|float} alpha   opacity of the stroke
+     * @param {Color} color       any value of the color datatype
+     * @param {int} hex           color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     *
+     * @see #fill()
+     * @see #noStroke()
+     * @see #tint()
+     * @see #background()
+     * @see #colorMode()
+     */
     p.stroke = function stroke() {
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       if(color === currentStrokeColor && doStroke) {
@@ -8272,11 +8371,21 @@
         curContext.stroke();
       }
     }
-
+    /**
+     * The noStroke() function disables drawing the stroke (outline). If both <b>noStroke()</b> and
+     * <b>noFill()</b> are called, no shapes will be drawn to the screen.
+     *
+     * @see #stroke()
+     */
     p.noStroke = function noStroke() {
       doStroke = false;
     };
-
+    /**
+     * The strokeWeight() function sets the width of the stroke used for lines, points, and the border around shapes. 
+     * All widths are set in units of pixels. 
+     *
+     * @param {int|float} w the weight (in pixels) of the stroke
+     */
     p.strokeWeight = function strokeWeight(w) {
       lineWidth = w;
 
@@ -8287,22 +8396,46 @@
         curContext.lineWidth = w;
       }
     };
-
+    /**
+     * The strokeCap() function sets the style for rendering line endings. These ends are either squared, extended, or rounded and 
+     * specified with the corresponding parameters SQUARE, PROJECT, and ROUND. The default cap is ROUND. 
+     * This function is not available with the P2D, P3D, or OPENGL renderers
+     *
+     * @param {int} value Either SQUARE, PROJECT, or ROUND
+     */
     p.strokeCap = function strokeCap(value) {
       curContext.lineCap = value;
     };
-
+    /**
+     * The strokeJoin() function sets the style of the joints which connect line segments. 
+     * These joints are either mitered, beveled, or rounded and specified with the corresponding parameters MITER, BEVEL, and ROUND. The default joint is MITER. 
+     * This function is not available with the P2D, P3D, or OPENGL renderers
+     *
+     * @param {int} value Either SQUARE, PROJECT, or ROUND
+     */
     p.strokeJoin = function strokeJoin(value) {
       curContext.lineJoin = value;
     };
-
+    /**
+     * The smooth() function draws all geometry with smooth (anti-aliased) edges. This will slow down the frame rate of the application, 
+     * but will enhance the visual refinement. <br/><br/>
+     * Note that smooth() will also improve image quality of resized images, and noSmooth() will disable image (and font) smoothing altogether. 
+     *
+     * @see #noSmooth()
+     * @see #hint()
+     * @see #size()
+     */
     p.smooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
       if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
         curContext.mozImageSmoothingEnabled = true;
       }
     };
-
+    /**
+     * The noSmooth() function draws all geometry with jagged (aliased) edges.
+     * 
+     * @see #smooth()
+     */
     p.noSmooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
       if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
@@ -8321,7 +8454,20 @@
                 p.mix(c1 & PConstants.GREEN_MASK, c2 & PConstants.GREEN_MASK, f) & PConstants.GREEN_MASK |
                 p.mix(c1 & PConstants.BLUE_MASK, c2 & PConstants.BLUE_MASK, f));
     }
-
+    /**
+     * The point() function draws a point, a coordinate in space at the dimension of one pixel.
+     * The first parameter is the horizontal value for the point, the second
+     * value is the vertical value for the point, and the optional third value
+     * is the depth value. Drawing this shape in 3D using the <b>z</b>
+     * parameter requires the P3D or OPENGL parameter in combination with
+     * size as shown in the above example.
+     *
+     * @param {int|float} x x-coordinate of the point
+     * @param {int|float} y y-coordinate of the point
+     * @param {int|float} z z-coordinate of the point
+     *
+     * @see #beginShape()
+     */
     p.point = function point(x, y, z) {
       if (p.use3DContext) {
         var model = new PMatrix3D();
@@ -9198,8 +9344,16 @@
       curveVertArray = [];
       curveVertCount = 0;
     };
-
-    //used by both curveDetail and bezierDetail
+    /**
+     * The function splineForward() setup forward-differencing matrix to be used for speedy
+     * curve rendering. It's based on using a specific number
+     * of curve segments and just doing incremental adds for each
+     * vertex of the segment, rather than running the mathematically
+     * expensive cubic equation. This function is used by both curveDetail and bezierDetail.
+     *
+     * @param {int} segments      number of curve segments to use when drawing
+     * @param {PMatrix3D} matrix  target object for the new matrix
+     */
     var splineForward = function(segments, matrix) {
       var f = 1.0 / segments;
       var ff = f * f;
@@ -9729,11 +9883,41 @@
     p.bezierTangent = function bezierTangent(a, b, c, d, t) {
       return (3 * t * t * (-a + 3 * b - 3 * c + d) + 6 * t * (a - 2 * b + c) + 3 * (-a + b));
     };
-
+    /**
+     * The curvePoint() function evalutes the Catmull-Rom curve at point t for points a, b, c, d. The
+     * parameter t varies between 0 and 1, a and d are points on the curve,
+     * and b and c are the control points. This can be done once with the x
+     * coordinates and a second time with the y coordinates to get the
+     * location of a curve at t.
+     *
+     * @param {int|float} a   coordinate of first point on the curve
+     * @param {int|float} b   coordinate of second point on the curve
+     * @param {int|float} c   coordinate of third point on the curve
+     * @param {int|float} d   coordinate of fourth point on the curve
+     * @param {float} t       value between 0 and 1
+     *
+     * @see #curve()
+     * @see #curveVertex()
+     * @see #bezierPoint()
+     */
     p.curvePoint = function curvePoint(a, b, c, d, t) {
       return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
     };
-
+    /**
+     * The curveTangent() function calculates the tangent of a point on a Catmull-Rom curve. 
+     * There is a good definition of "tangent" at Wikipedia: <a href="http://en.wikipedia.org/wiki/Tangent" target="new">http://en.wikipedia.org/wiki/Tangent</a>.
+     *
+     * @param {int|float} a   coordinate of first point on the curve
+     * @param {int|float} b   coordinate of first control point
+     * @param {int|float} c   coordinate of second control point
+     * @param {int|float} d   coordinate of second point on the curve
+     * @param {float} t       value between 0 and 1
+     *
+     * @see #curve()
+     * @see #curveVertex()
+     * @see #curvePoint()
+     * @see #bezierTangent()
+     */
     p.curveTangent = function curveTangent(a, b, c, d, t) {
       return 0.5 * ((-a + c) + 2 * (2 * a - 5 * b + 4 * c - d) * t + 3 * (-a + 3 * b - 3 * c + d) * t * t);
     };
@@ -10517,7 +10701,35 @@
          curContext.depthMask(true);
       }
     };
-
+    /**
+     * The background() function sets the color used for the background of the Processing window. 
+     * The default background is light gray. In the <b>draw()</b> function, the background color is used to clear the display window at the beginning of each frame. 
+     * An image can also be used as the background for a sketch, however its width and height must be the same size as the sketch window. 
+     * To resize an image 'b' to the size of the sketch window, use b.resize(width, height). 
+     * Images used as background will ignore the current <b>tint()</b> setting. 
+     * For the main drawing surface, the alpha value will be ignored. However,
+     * alpha can be used on PGraphics objects from <b>createGraphics()</b>. This is
+     * the only way to set all the pixels partially transparent, for instance.
+     * If the 'gray' parameter is passed in the function sets the background to a grayscale value, based on the
+     * current colorMode.
+     * <p>
+     * Note that background() should be called before any transformations occur,
+     * because some implementations may require the current transformation matrix
+     * to be identity before drawing.
+     *
+     * @param {int|float} gray    specifies a value between white and black
+     * @param {int|float} value1  red or hue value (depending on the current color mode)
+     * @param {int|float} value2  green or saturation value (depending on the current color mode)
+     * @param {int|float} value3  blue or brightness value (depending on the current color mode)
+     * @param {int|float} alpha   opacity of the background
+     * @param {Color} color       any value of the color datatype
+     * @param {int} hex           color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     *
+     * @see #stroke()
+     * @see #fill()
+     * @see #tint()
+     * @see #colorMode()
+     */
     // Draw an image or a color to the background
     p.background = function background() {
       var color, a, img;
@@ -10618,7 +10830,38 @@
         curContext.clearRect(x, y, width, height);
       }
     };
-
+    /**
+     * The tint() function sets the fill value for displaying images. Images can be tinted to
+     * specified colors or made transparent by setting the alpha.
+     * <br><br>To make an image transparent, but not change it's color,
+     * use white as the tint color and specify an alpha value. For instance,
+     * tint(255, 128) will make an image 50% transparent (unless
+     * <b>colorMode()</b> has been used).
+     *
+     * <br><br>When using hexadecimal notation to specify a color, use "#" or
+     * "0x" before the values (e.g. #CCFFAA, 0xFFCCFFAA). The # syntax uses six
+     * digits to specify a color (the way colors are specified in HTML and CSS).
+     * When using the hexadecimal notation starting with "0x", the hexadecimal
+     * value must be specified with eight characters; the first two characters
+     * define the alpha component and the remainder the red, green, and blue
+     * components.
+     * <br><br>The value for the parameter "gray" must be less than or equal
+     * to the current maximum value as specified by <b>colorMode()</b>.
+     * The default maximum value is 255.
+     * <br><br>The tint() method is also used to control the coloring of
+     * textures in 3D.
+     *
+     * @param {int|float} gray    any valid number
+     * @param {int|float} alpha	  opacity of the image
+     * @param {int|float} value1	red or hue value
+     * @param {int|float} value2	green or saturation value
+     * @param {int|float} value3	blue or brightness value
+     * @param {int|float} color	  any value of the color datatype
+     * @param {int} hex	          color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     *
+     * @see #noTint()
+     * @see #image()
+     */
     p.tint = function tint() {
       var tintColor = p.color.apply(this, arguments);
       var r = p.red(tintColor) / colorModeX;
@@ -10637,7 +10880,12 @@
         }
       };
     };
-
+    /**
+     * The noTint() function removes the current fill value for displaying images and reverts to displaying images with their original hues.
+     *
+     * @see #tint()
+     * @see #image()
+     */
     p.noTint = function noTint() {
       curTint = function() {};
     };
