@@ -7362,14 +7362,17 @@
       vertArray.push(vert);
     };
 
-    /*
-      Draw 3D points created from calls to vertex:
-
-      beginShape(POINT);
-      vertex(x, y, 0);
-      ...
-      endShape();
-    */
+    /**
+     * @private
+     * Renders 3D points created from calls to vertex and beginShape/endShape
+     * 
+     * @param {Array} vArray an array of vertex coordinate
+     * @param {Array} cArray an array of colours used for the vertices
+     *
+     * @see beginShape
+     * @see endShape
+     * @see vertex
+     */
     var point3D = function point3D(vArray, cArray){
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
@@ -7393,10 +7396,18 @@
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
 
-    /*
-      Draw 3D lines created from calls to beginShape/vertex/endShape
-      LINES, LINE_LOOP, etc.
-    */
+    /**
+     * @private
+     * Renders 3D lines created from calls to beginShape/vertex/endShape - based on the mode specified LINES, LINE_LOOP, etc.
+     * 
+     * @param {Array} vArray an array of vertex coordinate
+     * @param {String} mode  either LINES, LINE_LOOP, or LINE_STRIP
+     * @param {Array} cArray an array of colours used for the vertices
+     *
+     * @see beginShape
+     * @see endShape
+     * @see vertex
+     */
     var line3D = function line3D(vArray, mode, cArray){
       var ctxMode;
       if (mode === "LINES"){
@@ -7433,10 +7444,19 @@
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
-    /*
-      Fill shapes created from calls to beginShape/vertex/endShape
-      LINES, LINE_LOOP, etc.
-    */
+    /**
+     * @private
+     * Render filled shapes created from calls to beginShape/vertex/endShape - based on the mode specified TRIANGLES, etc.
+     * 
+     * @param {Array} vArray an array of vertex coordinate
+     * @param {String} mode  either LINES, LINE_LOOP, or LINE_STRIP
+     * @param {Array} cArray an array of colours used for the vertices
+     * @param {Array} tArray an array of u,v coordinates for textures
+     *
+     * @see beginShape
+     * @see endShape
+     * @see vertex
+     */
     var fill3D = function fill3D(vArray, mode, cArray, tArray){
       var ctxMode;
       if(mode === "TRIANGLES"){
