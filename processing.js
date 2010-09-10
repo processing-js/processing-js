@@ -10505,16 +10505,19 @@
     };
 
     // Sets a 'current font' for use
-    p.textFont = function textFont(name, size) {
-      curTextFont = name;
-      p.textSize(size);
+    p.textFont = function textFont(font, size) {
+      curTextFont = font;
+      if (size) {
+        p.textSize(size);
+      } else {
+        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      }
     };
 
     // Sets the font size
     p.textSize = function textSize(size) {
-      if (size) {
-        curTextSize = size;
-      }
+      curTextSize = size;
+      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
     };
 
     p.textAlign = function textAlign() {
@@ -10785,7 +10788,7 @@
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
         if (str && ("fillText" in curContext || "mozDrawText" in curContext)) {
-          curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+          //curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
 
           if (isFillDirty) {
             curContext.fillStyle = p.color.toString(currentFillColor);
