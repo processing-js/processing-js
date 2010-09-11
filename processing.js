@@ -1060,7 +1060,7 @@
         lineWidth = 1,
         loopStarted = false,
         doLoop = true,
-        looping = 0,
+        stopLooping = function() {},
         curRectMode = PConstants.CORNER,
         curEllipseMode = PConstants.CENTER,
         normalX = 0,
@@ -1798,9 +1798,19 @@
       return this.code;
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    // PShape
-    ////////////////////////////////////////////////////////////////////////////
+    /**
+     * Datatype for storing shapes. Processing can currently load and display SVG (Scalable Vector Graphics) shapes.
+     * Before a shape is used, it must be loaded with the <b>loadShape()</b> function. The <b>shape()</b> function is used to draw the shape to the display window.
+     * The <b>PShape</b> object contain a group of methods, linked below, that can operate on the shape data. 
+     * <br><br>The <b>loadShape()</b> method supports SVG files created with Inkscape and Adobe Illustrator.
+     * It is not a full SVG implementation, but offers some straightforward support for handling vector data.
+     * 
+     * @param {int} family the shape type, one of GROUP, PRIMITIVE, PATH, or GEOMETRY
+     *
+     * @see #shape()
+     * @see #loadShape()
+     * @see #shapeMode()
+     */
     var PShape = p.PShape = function(family) {
       this.family    = family || PConstants.GROUP;
       this.visible   = true;
@@ -1816,13 +1826,40 @@
       this.width     = null;
       this.height    = null;
       this.parent    = null;
-      /* methods */
+      
+      /**
+       * PShape methods
+       * missing: findChild(), apply(), contains(), findChild(), getPrimitive(), getParams(), getVertex() , getVertexCount(), 
+       * getVertexCode() , getVertexCodes() , getVertexCodeCount(), getVertexX(), getVertexY(), getVertexZ()
+       */
+      
+      /**
+       * @member PShape
+       * The isVisible() function returns a boolean value "true" if the image is set to be visible, "false" if not. This is modified with the <b>setVisible()</b> parameter.
+       * <br><br>The visibility of a shape is usually controlled by whatever program created the SVG file.
+       * For instance, this parameter is controlled by showing or hiding the shape in the layers palette in Adobe Illustrator.
+       * 
+       * @return {boolean}  returns "true" if the image is set to be visible, "false" if not
+       */
       this.isVisible = function(){
         return this.visible;
       };
+      /**
+       * @member PShape
+       * The setVisible() function sets the shape to be visible or invisible. This is determined by the value of the <b>visible</b> parameter.
+       * <br><br>The visibility of a shape is usually controlled by whatever program created the SVG file.
+       * For instance, this parameter is controlled by showing or hiding the shape in the layers palette in Adobe Illustrator.
+       *
+       * @param {boolean} visible "false" makes the shape invisible and "true" makes it visible
+       */
       this.setVisible = function (visible){
         this.visible = visible;
       };
+      /**
+       * @member PShape
+       * The disableStyle() function disables the shape's style data and uses Processing's current styles. Styles include attributes such as colors, stroke weight, and stroke joints.
+       * Overrides this shape's style information and uses PGraphics styles and colors. Identical to ignoreStyles(true). Also disables styles for all child shapes.
+       */
       this.disableStyle = function(){
         this.style = false;
         for(var i = 0; i < this.children.length; i++)
@@ -1830,6 +1867,10 @@
           this.children[i].disableStyle();
         }
       };
+      /**
+       * @member PShape
+       * The enableStyle() function enables the shape's style data and ignores Processing's current styles. Styles include attributes such as colors, stroke weight, and stroke joints.
+       */
       this.enableStyle = function(){
         this.style = true;
         for(var i = 0; i < this.children.length; i++)
@@ -1837,21 +1878,53 @@
           this.children[i].enableStyle();
         }
       };
+      /**
+       * @member PShape
+       * The getFamily function returns the shape type
+       * 
+       * @return {int} the shape type, one of GROUP, PRIMITIVE, PATH, or GEOMETRY
+       */
       this.getFamily = function(){
         return this.family;
       };
+      /**
+       * @member PShape
+       * The getWidth() function gets the width of the drawing area (not necessarily the shape boundary). 
+       */
       this.getWidth = function(){
         return this.width;
       };
+      /**
+       * @member PShape
+       * The getHeight() function gets the height of the drawing area (not necessarily the shape boundary). 
+       */
       this.getHeight = function(){
         return this.height;
       };
+      /**
+       * @member PShape
+       * The setName() function sets the name of the shape
+       *
+       * @param {String} name the name of the shape
+       */
       this.setName = function(name){
         this.name = name;
       };
+      /**
+       * @member PShape
+       * The getName() function returns the name of the shape
+       *
+       * @return {String} the name of the shape
+       */
       this.getName = function(){
         return this.name;
       };
+      /**
+       * @member PShape
+       * Called by the following (the shape() command adds the g)
+       * PShape s = loadShapes("blah.svg");
+       * shape(s);
+       */
       this.draw = function(){
         if (this.visible) {
           this.pre();
@@ -1859,6 +1932,10 @@
           this.post();
         }
       };
+      /**
+       * @member PShape
+       * the drawImpl() function draws the SVG document.
+       */
       this.drawImpl = function(){
         if (this.family === PConstants.GROUP) {
           this.drawGroup();
@@ -1870,6 +1947,10 @@
           this.drawPath();
         }
       };
+      /**
+       * @member PShape
+       * The drawPath() function draws the <path> part of the SVG document.
+       */
       this.drawPath = function(){
         if (this.vertices.length === 0) { return; }
 
@@ -1947,6 +2028,10 @@
         }
         p.endShape(this.close ? PConstants.CLOSE : PConstants.OPEN);
       };
+      /**
+       * @member PShape
+       * The drawGeometry() function draws the geometry part of the SVG document.
+       */
       this.drawGeometry = function() {
         p.beginShape(this.kind);
         var i;
@@ -1966,11 +2051,19 @@
         }
         p.endShape();
       };
+      /**
+       * @member PShape
+       * The drawGroup() function draws the <g> part of the SVG document.
+       */
       this.drawGroup = function() {
         for (var i = 0; i < this.children.length; i++) {
           this.children[i].draw();
         }
       };
+      /**
+       * @member PShape
+       * The drawPrimitive() function draws SVG document shape elements. These can be point, line, triangle, quad, rect, ellipse, arc, box, or sphere.
+       */
       this.drawPrimitive = function() {
         switch (this.kind) {
           case PConstants.POINT:
@@ -2025,6 +2118,10 @@
             break;
         }
       };
+      /**
+       * @member PShape
+       * The pre() function performs the preparations before the SVG is drawn. This includes doing transformations and storing previous styles.
+       */
       this.pre = function() {
         if (this.matrix) {
           p.pushMatrix();
@@ -2036,6 +2133,10 @@
           this.styles();
         }
       };
+      /**
+       * @member PShape
+       * The post() function performs the necessary actions after the SVG is drawn. This includes removing transformations and removing added styles.
+       */
       this.post = function() {
         if (this.matrix) {
           p.popMatrix();
@@ -2044,6 +2145,10 @@
           p.popStyle();
         }
       };
+      /**
+       * @member PShape
+       * The styles() function changes the Processing's current styles
+       */
       this.styles = function() {
         if (this.stroke) {
           p.stroke(this.strokeColor);
@@ -2061,23 +2166,31 @@
           p.noFill();
         }
       };
-
-      // return the PShape at the specific index from the children array or
-      // return the Phape from a parent shape specified by its name
-      this.getChild = function(child) {
-        if (typeof child === 'number') {
-          return this.children[child];
+      /**
+       * @member PShape
+       * The getChild() function extracts a child shape from a parent shape. Specify the name of the shape with the <b>target</b> parameter or the 
+       * layer position of the shape to get with the <b>index</b> parameter.
+       * The shape is returned as a <b>PShape</b> object, or <b>null</b> is returned if there is an error.
+       *
+       * @param {String} target   the name of the shape to get
+       * @param {int} index   the layer position of the shape to get
+       * 
+       * @return {PShape} returns a child element of a shape as a PShape object or null if there is an error
+       */
+      this.getChild = function() {
+        if (typeof arguments[0] === 'number') {
+          return this.children[arguments[0]];
         } else {
           var found,
               i;
-          if(child === "" || this.name === child){
+          if(arguments[0] === "" || this.name === arguments[0]){
             return this;
           } else {
             if(this.nameTable.length > 0)
             {
               for(i = 0; i < this.nameTable.length || found; i++)
               {
-                if(this.nameTable[i].getName === child) {
+                if(this.nameTable[i].getName === arguments[0]) {
                   found = this.nameTable[i];
                 }
               }
@@ -2085,16 +2198,28 @@
             }
             for(i = 0; i < this.children.lenth; i++)
             {
-              found = this.children[i].getChild(child);
+              found = this.children[i].getChild(arguments[0]);
               if(found) { return found; }
             }
           }
           return null;
         }
       };
+      /**
+       * @member PShape
+       * The getChildCount() returns the number of children
+       * 
+       * @return {int} returns a count of children
+       */
       this.getChildCount = function () {
         return this.children.length;
       };
+      /**
+       * @member PShape
+       * The addChild() adds a child to the PShape.
+       * 
+       * @param {PShape} child the child to add
+       */
       this.addChild = function( child ) {
         this.children.push(child);
         child.parent = this;
@@ -2102,6 +2227,13 @@
           this.addName(child.getName(), child);
         }
       };
+      /**
+       * @member PShape
+       * The addName() functions adds a shape to the name lookup table.
+       *
+       * @param {String} name   the name to be added
+       * @param {PShape} shape  the shape 
+       */
       this.addName = function(name,  shape) {
         if (this.parent !== null) {
           this.parent.addName( name, shape );
@@ -2109,6 +2241,20 @@
           this.nameTable.push( [name, shape] );
         }
       };
+      /**
+       * @member PShape
+       * The translate() function specifies an amount to displace the shape. The <b>x</b> parameter specifies left/right translation, the <b>y</b> parameter specifies up/down translation, and the <b>z</b> parameter specifies translations toward/away from the screen. 
+       * Subsequent calls to the method accumulates the effect. For example, calling <b>translate(50, 0)</b> and then <b>translate(20, 0)</b> is the same as <b>translate(70, 0)</b>. 
+       * This transformation is applied directly to the shape, it's not refreshed each time <b>draw()</b> is run. 
+       * <br><br>Using this method with the <b>z</b> parameter requires using the P3D or OPENGL parameter in combination with size.
+       *
+       * @param {int|float} x left/right translation
+       * @param {int|float} y up/down translation
+       * @param {int|float} z forward/back translation
+       *
+       * @see PMatrix2D#translate
+       * @see PMatrix3D#translate
+       */
       this.translate = function() {
         if(arguments.length === 2)
         {
@@ -2119,6 +2265,13 @@
           this.matrix.translate(arguments[0], arguments[1], 0);
         }
       };
+      /**
+       * @member PShape
+       * The checkMatrix() function makes sure that the shape's matrix is 1) not null, and 2) has a matrix
+       * that can handle <em>at least</em> the specified number of dimensions.
+       *
+       * @param {int} dimensions the specified number of dimensions
+       */
       this.checkMatrix = function(dimensions) {
         if(this.matrix === null) {
           if(dimensions === 2) {
@@ -2130,15 +2283,67 @@
           this.matrix = new p.PMatrix3D();
         }
       };
+      /**
+       * @member PShape
+       * The rotateX() function rotates a shape around the x-axis the amount specified by the <b>angle</b> parameter. Angles should be specified in radians (values from 0 to TWO_PI) or converted to radians with the <b>radians()</b> method.
+       * <br><br>Shapes are always rotated around the upper-left corner of their bounding box. Positive numbers rotate objects in a clockwise direction.
+       * Subsequent calls to the method accumulates the effect. For example, calling <b>rotateX(HALF_PI)</b> and then <b>rotateX(HALF_PI)</b> is the same as <b>rotateX(PI)</b>.
+       * This transformation is applied directly to the shape, it's not refreshed each time <b>draw()</b> is run.  
+       * <br><br>This method requires a 3D renderer. You need to pass P3D or OPENGL as a third parameter into the <b>size()</b> method as shown in the example above.
+       *
+       * @param {float}angle angle of rotation specified in radians
+       *
+       * @see PMatrix3D#rotateX
+       */
       this.rotateX = function(angle) {
         this.rotate(angle, 1, 0, 0);
       };
+      /**
+       * @member PShape
+       * The rotateY() function rotates a shape around the y-axis the amount specified by the <b>angle</b> parameter. Angles should be specified in radians (values from 0 to TWO_PI) or converted to radians with the <b>radians()</b> method.
+       * <br><br>Shapes are always rotated around the upper-left corner of their bounding box. Positive numbers rotate objects in a clockwise direction.
+       * Subsequent calls to the method accumulates the effect. For example, calling <b>rotateY(HALF_PI)</b> and then <b>rotateY(HALF_PI)</b> is the same as <b>rotateY(PI)</b>.
+       * This transformation is applied directly to the shape, it's not refreshed each time <b>draw()</b> is run. 
+       * <br><br>This method requires a 3D renderer. You need to pass P3D or OPENGL as a third parameter into the <b>size()</b> method as shown in the example above.
+       *
+       * @param {float}angle angle of rotation specified in radians
+       *
+       * @see PMatrix3D#rotateY
+       */
       this.rotateY = function(angle) {
         this.rotate(angle, 0, 1, 0);
       };
+      /**
+       * @member PShape
+       * The rotateZ() function rotates a shape around the z-axis the amount specified by the <b>angle</b> parameter. Angles should be specified in radians (values from 0 to TWO_PI) or converted to radians with the <b>radians()</b> method.
+       * <br><br>Shapes are always rotated around the upper-left corner of their bounding box. Positive numbers rotate objects in a clockwise direction.
+       * Subsequent calls to the method accumulates the effect. For example, calling <b>rotateZ(HALF_PI)</b> and then <b>rotateZ(HALF_PI)</b> is the same as <b>rotateZ(PI)</b>.
+       * This transformation is applied directly to the shape, it's not refreshed each time <b>draw()</b> is run. 
+       * <br><br>This method requires a 3D renderer. You need to pass P3D or OPENGL as a third parameter into the <b>size()</b> method as shown in the example above.
+       *
+       * @param {float}angle angle of rotation specified in radians
+       *
+       * @see PMatrix3D#rotateZ
+       */
       this.rotateZ = function(angle) {
         this.rotate(angle, 0, 0, 1);
       };
+      /**
+       * @member PShape
+       * The rotate() function rotates a shape the amount specified by the <b>angle</b> parameter. Angles should be specified in radians (values from 0 to TWO_PI) or converted to radians with the <b>radians()</b> method.
+       * <br><br>Shapes are always rotated around the upper-left corner of their bounding box. Positive numbers rotate objects in a clockwise direction.
+       * Transformations apply to everything that happens after and subsequent calls to the method accumulates the effect.
+       * For example, calling <b>rotate(HALF_PI)</b> and then <b>rotate(HALF_PI)</b> is the same as <b>rotate(PI)</b>.
+       * This transformation is applied directly to the shape, it's not refreshed each time <b>draw()</b> is run.
+       * If optional parameters x,y,z are supplied, the rotate is about the point (x, y, z).
+       *
+       * @param {float}angle  angle of rotation specified in radians
+       * @param {float}x      x-coordinate of the point
+       * @param {float}y      y-coordinate of the point
+       * @param {float}z      z-coordinate of the point
+       * @see PMatrix2D#rotate
+       * @see PMatrix3D#rotate
+       */
       this.rotate = function() {
         if(arguments.length === 1){
           this.checkMatrix(2);
@@ -2148,6 +2353,22 @@
           this.matrix.rotate(arguments[0], arguments[1], arguments[2] ,arguments[3]);
         }
       };
+      /**
+       * @member PShape
+       * The scale() function increases or decreases the size of a shape by expanding and contracting vertices. Shapes always scale from the relative origin of their bounding box.
+       * Scale values are specified as decimal percentages. For example, the method call <b>scale(2.0)</b> increases the dimension of a shape by 200%.
+       * Subsequent calls to the method multiply the effect. For example, calling <b>scale(2.0)</b> and then <b>scale(1.5)</b> is the same as <b>scale(3.0)</b>.
+       * This transformation is applied directly to the shape, it's not refreshed each time <b>draw()</b> is run. 
+       * <br><br>Using this fuction with the <b>z</b> parameter requires passing P3D or OPENGL into the size() parameter.
+       *
+       * @param {float}s      percentage to scale the object
+       * @param {float}x      percentage to scale the object in the x-axis
+       * @param {float}y      percentage to scale the object in the y-axis
+       * @param {float}z      percentage to scale the object in the z-axis
+       *
+       * @see PMatrix2D#scale
+       * @see PMatrix3D#scale
+       */
       this.scale = function() {
         if(arguments.length === 2) {
           this.checkMatrix(2);
@@ -2160,10 +2381,27 @@
           this.matrix.scale(arguments[0]);
         }
       };
+      /**
+       * @member PShape
+       * The resetMatrix() function resets the matrix
+       *
+       * @see PMatrix2D#reset
+       * @see PMatrix3D#reset
+       */
       this.resetMatrix = function() {
         this.checkMatrix(2);
         this.matrix.reset();
       };
+      /**
+       * @member PShape
+       * The applyMatrix() function multiplies this matrix by another matrix of type PMatrix3D or PMatrix2D.
+       * Individual elements can also be provided
+       *
+       * @param {PMatrix3D|PMatrix2D} matrix   the matrix to multiply by
+       *
+       * @see PMatrix2D#apply
+       * @see PMatrix3D#apply
+       */
       this.applyMatrix = function(matrix) {
         if (arguments.length === 1) {
           this.applyMatrix(matrix.elements[0], matrix.elements[1], 0, matrix.elements[2],
@@ -2185,18 +2423,21 @@
                             arguments[12], arguments[13], arguments[14], arguments[15]);
         }
       };
-      // findChild not in yet
-      // apply missing
-      // contains missing
-      // find child missing
-      // getPrimitive missing
-      // getParams missing
-      // getVertex , getVertexCount missing
-      // getVertexCode , getVertexCodes , getVertexCodeCount missing
-      // getVertexX, getVertexY, getVertexZ missing
-
     };
-
+    
+    /**
+     * SVG stands for Scalable Vector Graphics, a portable graphics format. It is
+     * a vector format so it allows for infinite resolution and relatively small
+     * file sizes. Most modern media software can view SVG files, including Adobe
+     * products, Firefox, etc. Illustrator and Inkscape can edit SVG files.
+     *
+     * @param {PApplet} parent     typically use "this"
+     * @param {String} filename    name of the SVG file to load
+     * @param {XMLElement} xml     an XMLElement element
+     * @param {PShapeSVG} parent   the parent PShapeSVG
+     *
+     * @see PShape
+     */  
     var PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
       if (arguments.length === 1) {
@@ -2321,12 +2562,23 @@
       this.parseChildren(this.element);
 
     };
-
+    /**
+     * PShapeSVG methods
+     * missing: getChild(), print(), parseStyleAttributes(), styles() - deals with strokeGradient and fillGradient
+     */
     PShapeSVG.prototype = {
-      // getChild missing
-      // print missing
-      // parse style attributes
-      // styles missing but deals with strokeGradient and fillGradient
+      /**
+       * @member PShapeSVG
+       * The parseMatrix() function parses the specified SVG matrix into a PMatrix2D. Note that PMatrix2D
+       * is rotated relative to the SVG definition, so parameters are rearranged
+       * here. More about the transformation matrices in
+       * <a href="http://www.w3.org/TR/SVG/coords.html#TransformAttribute">this section</a>
+       * of the SVG documentation.
+       *
+       * @param {String} str text of the matrix param.
+       *
+       * @return {PMatrix2D} a PMatrix2D
+       */
       parseMatrix: function(str) {
         this.checkMatrix(2);
         var pieces = [];
@@ -2374,6 +2626,12 @@
         }
         return this.matrix;
       },
+      /**
+       * @member PShapeSVG
+       * The parseChildren() function parses the specified XMLElement
+       *
+       * @param {XMLElement}element the XMLElement to parse
+       */
       parseChildren:function(element) {
         var newelement = element.getChildren();
         var children   = new p.PShape();
@@ -2385,9 +2643,23 @@
         }
         this.children.push(children);
       },
+      /**
+       * @member PShapeSVG
+       * The getName() function returns the name 
+       *
+       * @return {String} the name
+       */
       getName: function() {
         return this.name;
       },
+      /**
+       * @member PShapeSVG
+       * The parseChild() function parses a child XML element.
+       * 
+       * @param {XMLElement} elem the element to parse
+       *
+       * @return {PShape} the newly created PShape
+       */
       parseChild: function( elem ) {
         var name = elem.getName();
         var shape;
@@ -2449,6 +2721,12 @@
         }
         return shape;
       },
+      /**
+       * @member PShapeSVG
+       * The parsePath() function parses the <path> element of the svg file
+       * A path is defined by including a ‘path’ element which contains a d="(path data)" attribute, where the ‘d’ attribute contains 
+       * the moveto, line, curve (both cubic and quadratic Béziers), arc and closepath instructions.
+       **/
       parsePath: function() {
         this.family = PConstants.PATH;
         this.kind = 0;
@@ -2773,6 +3051,12 @@
           } else { i++;}
         }
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parsePath() helper function
+       * 
+       * @see PShapeSVG#parsePath
+       */
       parsePathQuadto: function(x1, y1, cx, cy, x2, y2) {
         if (this.vertices.length > 0) {
           this.parsePathCode(PConstants.BEZIER_VERTEX);
@@ -2784,6 +3068,12 @@
           throw ("Path must start with M/m");
         }
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parsePath() helper function
+       * 
+       * @see PShapeSVG#parsePath
+       */
       parsePathCurveto : function(x1,  y1, x2, y2, x3, y3) {
         if (this.vertices.length > 0) {
           this.parsePathCode(PConstants.BEZIER_VERTEX );
@@ -2794,6 +3084,12 @@
           throw ("Path must start with M/m");
         }
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parsePath() helper function
+       * 
+       * @see PShapeSVG#parsePath
+       */
       parsePathLineto: function(px, py) {
         if (this.vertices.length > 0) {
           this.parsePathCode(PConstants.VERTEX);
@@ -2804,6 +3100,12 @@
           throw ("Path must start with M/m");
         }
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parsePath() helper function
+       * 
+       * @see PShapeSVG#parsePath
+       */
       parsePathMoveto: function(px, py) {
         if (this.vertices.length > 0) {
           this.parsePathCode(PConstants.BREAK);
@@ -2813,15 +3115,33 @@
         // add property to distinguish between curContext.moveTo or curContext.lineTo
         this.vertices[this.vertices.length-1]["moveTo"] = true;
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parsePath() helper function
+       * 
+       * @see PShapeSVG#parsePath
+       */
       parsePathVertex: function(x,  y) {
         var verts = [];
         verts[0]  = x;
         verts[1]  = y;
         this.vertices.push(verts);
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parsePath() helper function
+       * 
+       * @see PShapeSVG#parsePath
+       */
       parsePathCode: function(what) {
         this.vertexCodes.push(what);
       },
+      /**
+       * @member PShapeSVG
+       * The parsePoly() function parses a polyline or polygon from an SVG file.
+       *
+       * @param {boolean}val true if shape is closed (polygon), false if not (polyline)
+       */
       parsePoly: function(val) {
         this.family    = PConstants.PATH;
         this.close     = val;
@@ -2841,6 +3161,10 @@
           }
         }
       },
+      /**
+       * @member PShapeSVG
+       * The parseRect() function parses a rect from an SVG file.
+       */
       parseRect: function() {
         this.kind      = PConstants.RECT;
         this.family    = PConstants.PRIMITIVE;
@@ -2851,6 +3175,12 @@
         this.params[3] = this.element.getFloatAttribute("height");
 
       },
+      /**
+       * @member PShapeSVG
+       * The parseEllipse() function handles parsing ellipse and circle tags.
+       *
+       * @param {boolean}val true if this is a circle and not an ellipse
+       */
       parseEllipse: function(val) {
         this.kind   = PConstants.ELLIPSE;
         this.family = PConstants.PRIMITIVE;
@@ -2872,6 +3202,12 @@
         this.params[2] = rx*2;
         this.params[3] = ry*2;
       },
+      /**
+       * @member PShapeSVG
+       * The parseLine() function handles parsing line tags.
+       *
+       * @param {boolean}val true if this is a circle and not an ellipse
+       */
       parseLine: function() {
         this.kind = PConstants.LINE;
         this.family = PConstants.PRIMITIVE;
@@ -2881,6 +3217,12 @@
         this.params[2] = this.element.getFloatAttribute("x2");
         this.params[3] = this.element.getFloatAttribute("y2");
       },
+      /**
+       * @member PShapeSVG
+       * The parseColors() function handles parsing the opacity, strijem stroke-width, stroke-linejoin,stroke-linecap, fill, and style attributes 
+       *
+       * @param {XMLElement}element the element of which attributes to parse
+       */
       parseColors: function(element) {
         if (element.hasAttribute("opacity")) {
           this.setOpacity(element.getAttribute("opacity"));
@@ -2914,9 +3256,7 @@
                 this.setFill(tokens[1]);
                 break;
               case "fill-opacity":
-
                 this.setFillOpacity(tokens[1]);
-
                 break;
               case "stroke":
                 this.setStroke(tokens[1]);
@@ -2941,10 +3281,26 @@
           }
         }
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parseColors() helper function
+       * 
+       * @param {String} opacityText the value of fillOpacity 
+       *   
+       * @see PShapeSVG#parseColors
+       */
       setFillOpacity: function(opacityText) {
         this.fillOpacity = parseFloat(opacityText);
         this.fillColor   = this.fillOpacity * 255  << 24 | this.fillColor & 0xFFFFFF;
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parseColors() helper function
+       * 
+       * @param {String} fillText the value of fill 
+       *  
+       * @see PShapeSVG#parseColors
+       */
       setFill: function (fillText) {
         var opacityMask = this.fillColor & 0xFF000000;
         if (fillText === "none") {
@@ -2972,10 +3328,26 @@
           }
         }
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parseColors() helper function
+       * 
+       * @param {String} opacity the value of opacity 
+       *   
+       * @see PShapeSVG#parseColors
+       */
       setOpacity: function(opacity) {
         this.strokeColor = parseFloat(opacity) * 255 << 24 | this.strokeColor & 0xFFFFFF;
         this.fillColor   = parseFloat(opacity) * 255 << 24 | this.fillColor & 0xFFFFFF;
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parseColors() helper function
+       * 
+       * @param {String} strokeText the value to set stroke to 
+       *  
+       * @see PShapeSVG#parseColors
+       */
       setStroke: function(strokeText) {
         var opacityMask = this.strokeColor & 0xFF000000;
         if (strokeText === "none") {
@@ -3002,9 +3374,25 @@
           }
         }
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parseColors() helper function
+       * 
+       * @param {String} weight the value to set strokeWeight to 
+       *  
+       * @see PShapeSVG#parseColors
+       */
       setStrokeWeight: function(weight) {
         this.strokeWeight = this.parseUnitSize(weight);
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parseColors() helper function
+       * 
+       * @param {String} linejoin the value to set strokeJoin to 
+       * 
+       * @see PShapeSVG#parseColors
+       */
       setStrokeJoin: function(linejoin) {
         if (linejoin === "miter") {
           this.strokeJoin = PConstants.MITER;
@@ -3016,6 +3404,14 @@
           this.strokeJoin = PConstants.BEVEL;
         }
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parseColors() helper function
+       * 
+       * @param {String} linecap the value to set strokeCap to 
+       *
+       * @see PShapeSVG#parseColors
+       */
       setStrokeCap: function (linecap) {
         if (linecap === "butt") {
           this.strokeCap = PConstants.SQUARE;
@@ -3027,15 +3423,44 @@
           this.strokeCap = PConstants.PROJECT;
         }
       },
+      /**
+       * @member PShapeSVG
+       * PShapeSVG.parseColors() helper function
+       * 
+       * @param {String} opacityText the value to set stroke opacity to 
+       *
+       * @see PShapeSVG#parseColors
+       */
       setStrokeOpacity: function (opacityText) {
         this.strokeOpacity = parseFloat(opacityText);
         this.strokeColor   = this.strokeOpacity * 255 << 24 | this.strokeColor & 0xFFFFFF;
       },
+      /**
+       * @member PShapeSVG
+       * The parseRGB() function parses an rbg() color string and returns a color int
+       *
+       * @param {String} color the color to parse in rbg() format
+       *
+       * @return {int} the equivalent color int
+       */
       parseRGB: function(color) {
         var sub    = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
         var values = sub.split(", ");
         return (values[0] << 16) | (values[1] << 8) | (values[2]);
       },
+      /**
+       * @member PShapeSVG
+       * The parseUnitSize() function parse a size that may have a suffix for its units.
+       * Ignoring cases where this could also be a percentage.
+       * The <A HREF="http://www.w3.org/TR/SVG/coords.html#Units">units</A> spec:
+       * <UL>
+       * <LI>"1pt" equals "1.25px" (and therefore 1.25 user units)
+       * <LI>"1pc" equals "15px" (and therefore 15 user units)
+       * <LI>"1mm" would be "3.543307px" (3.543307 user units)
+       * <LI>"1cm" equals "35.43307px" (and therefore 35.43307 user units)
+       * <LI>"1in" equals "90px" (and therefore 90 user units)
+       * </UL>
+       */
       parseUnitSize: function (text) {
         var len = text.length - 2;
         if (len < 0) { return text; }
@@ -3056,7 +3481,32 @@
         }
       }
     };
-
+    /**
+     * The shape() function displays shapes to the screen. 
+     * Processing currently works with SVG shapes only.
+     * The <b>shape</b> parameter specifies the shape to display and the <b>x</b>
+     * and <b>y</b> parameters define the location of the shape from its
+     * upper-left corner.
+     * The shape is displayed at its original size unless the <b>width</b>
+     * and <b>height</b> parameters specify a different size.
+     * The <b>shapeMode()</b> function changes the way the parameters work.
+     * A call to <b>shapeMode(CORNERS)</b>, for example, will change the width
+     * and height parameters to define the x and y values of the opposite corner
+     * of the shape.
+     * <br><br>
+     * Note complex shapes may draw awkwardly with P2D, P3D, and OPENGL. Those
+     * renderers do not yet support shapes that have holes or complicated breaks.
+     *
+     * @param {PShape} shape       the shape to display
+     * @param {int|float} x        x-coordinate of the shape
+     * @param {int|float} y        y-coordinate of the shape
+     * @param {int|float} width    width to display the shape
+     * @param {int|float} height   height to display the shape
+     *
+     * @see PShape
+     * @see loadShape()
+     * @see shapeMode()
+     */
     p.shape = function(shape, x, y, width, height) {
       if (arguments.length >= 1 && arguments[0] !== null) {
         if (shape.isVisible()) {
@@ -3094,11 +3544,41 @@
         }
       }
     };
-
+    
+    /**
+     * The shapeMode() function modifies the location from which shapes draw.
+     * The default mode is <b>shapeMode(CORNER)</b>, which specifies the
+     * location to be the upper left corner of the shape and uses the third
+     * and fourth parameters of <b>shape()</b> to specify the width and height.
+     * The syntax <b>shapeMode(CORNERS)</b> uses the first and second parameters
+     * of <b>shape()</b> to set the location of one corner and uses the third
+     * and fourth parameters to set the opposite corner.
+     * The syntax <b>shapeMode(CENTER)</b> draws the shape from its center point
+     * and uses the third and forth parameters of <b>shape()</b> to specify the
+     * width and height.
+     * The parameter must be written in "ALL CAPS" because Processing syntax
+     * is case sensitive.
+     *
+     * @param {int} mode One of CORNER, CORNERS, CENTER
+     *
+     * @see shape()
+     * @see rectMode()
+     */
     p.shapeMode = function (mode) {
       curShapeMode = mode;
     };
-
+    
+    /**
+     * The loadShape() function loads vector shapes into a variable of type PShape. Currently, only SVG files may be loaded. 
+     * In most cases, <b>loadShape()</b> should be used inside <b>setup()</b> because loading shapes inside <b>draw()</b> will reduce the speed of a sketch. 
+     *
+     * @param {String} filename     an SVG file
+     *
+     * @return {PShape} a object of type PShape or null 
+     * @see PShape
+     * @see PApplet#shape()
+     * @see PApplet#shapeMode()
+     */  
     p.loadShape = function (filename) {
       if (arguments.length === 1) {
         if (filename.indexOf(".svg") > -1) {
@@ -3108,10 +3588,17 @@
       return null;
     };
 
-
-    ////////////////////////////////////////////////////////////////////////////
-    // XMLAttribute
-    ////////////////////////////////////////////////////////////////////////////
+    /**
+     * XMLAttribute is an attribute of a XML element. This is an internal class
+     *
+     * @param {String} fname     the full name of the attribute
+     * @param {String} n         the short name of the attribute
+     * @param {String} namespace the namespace URI of the attribute
+     * @param {String} v         the value of the attribute
+     * @param {String }t         the type of the attribute
+     *
+     * @see XMLElement
+     */  
     var XMLAttribute = function(fname, n, nameSpace, v, t){
       this.fullName = fname || "";
       this.name = n || "";
@@ -3119,30 +3606,77 @@
       this.value = v;
       this.type = t;
     };
+    /**
+     * XMLAttribute methods
+     */ 
     XMLAttribute.prototype = {
+      /**
+       * @member XMLAttribute
+       * The getName() function returns the short name of the attribute
+       *
+       * @return {String} the short name of the attribute
+       */ 
       getName: function() {
         return this.name;
       },
+      /**
+       * @member XMLAttribute
+       * The getFullName() function returns the full name of the attribute
+       *
+       * @return {String} the full name of the attribute
+       */ 
       getFullName: function() {
         return this.fullName;
       },
+      /**
+       * @member XMLAttribute
+       * The getNamespace() function returns the namespace of the attribute
+       *
+       * @return {String} the namespace of the attribute
+       */ 
       getNamespace: function() {
         return this.namespace;
       },
+      /**
+       * @member XMLAttribute
+       * The getValue() function returns the value of the attribute
+       *
+       * @return {String} the value of the attribute
+       */ 
       getValue: function() {
         return this.value;
       },
+      /**
+       * @member XMLAttribute
+       * The getValue() function returns the type of the attribute
+       *
+       * @return {String} the type of the attribute
+       */ 
       getType: function() {
         return this.type;
       },
+      /**
+       * @member XMLAttribute
+       * The setValue() function sets the value of the attribute
+       *
+       * @param {String} newval the new value
+       */ 
       setValue: function(newval) {
         this.value = newval;
       }
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    // XMLElement
-    ////////////////////////////////////////////////////////////////////////////
+    /**
+     * XMLElement is a representation of an XML object. The object is able to parse XML code
+     *
+     * @param {PApplet} parent   typically use "this"
+     * @param {String} filename  name of the XML/SVG file to load
+     * @param {String} xml       the xml/svg string 
+     * @param {String} fullname  the full name of the element
+     * @param {String} namespace the namespace  of the URI
+     * @param {String} systemID  the system ID of the XML data where the element starts
+     * @param {Integer }lineNr   the line in the XML data where the element starts
+     */  
     var XMLElement = p.XMLElement = function() {
       if (arguments.length === 4) {
         this.attributes = [];
@@ -3202,11 +3736,23 @@
       }
       return this;
     };
-    /*XMLElement methods
-      missing: enumerateAttributeNames(), enumerateChildren(),
-      NOTE: parse does not work when a url is passed in
-    */
+    /**
+     * XMLElement methods
+     * missing: enumerateAttributeNames(), enumerateChildren(),
+     * NOTE: parse does not work when a url is passed in
+     */
     XMLElement.prototype = {
+      /**
+       * @member XMLElement
+       * The parse() function retrieves the file via ajax() and uses DOMParser() parseFromString method to make an XML document
+       * @addon
+       *
+       * @param {String} filename name of the XML/SVG file to load
+       *
+       * @throws ExceptionType Error loading document
+       *
+       * @see XMLElement#parseChildrenRecursive
+       */
       parse: function(filename) {
         var xmlDoc;
         try {
@@ -3225,6 +3771,15 @@
           throw(e);
         }
       },
+      /**
+       * @member XMLElement
+       * The createElement() function Creates an empty element
+       * 
+       * @param {String} fullName   the full name of the element
+       * @param {String} namespace  the namespace URI
+       * @param {String} systemID   the system ID of the XML data where the element starts
+       * @param {int} lineNr    the line in the XML data where the element starts
+       */
       createElement: function () {
         if (arguments.length === 2) {
           return new XMLElement(arguments[0], arguments[1], null, null);
@@ -3232,18 +3787,49 @@
           return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
       },
+      /**
+       * @member XMLElement
+       * The hasAttribute() function returns whether an attribute exists
+       *
+       * @param {String} name      name of the attribute
+       * @param {String} namespace the namespace URI of the attribute
+       *
+       * @return {boolean} true if the attribute exists
+       */
       hasAttribute: function (name) {
         return this.getAttribute(name) !== null;
         //2 parameter call missing
       },
+      /**
+       * @member XMLElement
+       * The createPCDataElement() function creates an element to be used for #PCDATA content
+       *
+       * @return {XMLElement} new XMLElement element
+       */
       createPCDataElement: function () {
         return new XMLElement();
       },
+      /**
+       * @member XMLElement
+       * The equals() function checks to see if the element being passed in equals another element
+       *
+       * @param {Object} rawElement the element to compare to
+       *
+       * @return {boolean} true if the element equals another element
+       */
       equals: function(object){
         if (typeof object === "Object") {
           return this.equalsXMLElement(object);
         }
       },
+      /**
+       * @member XMLElement
+       * The equalsXMLElement() function checks to see if the XMLElement being passed in equals another XMLElement
+       *
+       * @param {XMLElement} rawElement the element to compare to
+       *
+       * @return {boolean} true if the element equals another element
+       */
       equalsXMLElement: function (object) {
         if (object instanceof XMLElement) {
           if (this.name !== object.getLocalName) { return false; }
@@ -3263,9 +3849,25 @@
           return true;
         }
       },
+      /**
+       * @member XMLElement
+       * The getContent() function returns the content of an element. If there is no such content, null is returned
+       *
+       * @return {String} the (possibly null) content
+       */
       getContent: function(){
          return this.content;
       },
+      /**
+       * @member XMLElement
+       * The getAttribute() function returns the value of an attribute
+       *
+       * @param {String} name         the non-null full name of the attribute
+       * @param {String} namespace    the namespace URI, which may be null
+       * @param {String} defaultValue the default value of the attribute
+       *
+       * @return {String} the value, or defaultValue if the attribute does not exist
+       */
       getAttribute: function (){
         var attribute;
         if( arguments.length === 2 ){
@@ -3284,6 +3886,17 @@
           }
         }
       },
+      /**
+       * @member XMLElement
+       * The getStringAttribute() function returns the string attribute of the element
+       * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+       * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+       *
+       * @param name         the name of the attribute
+       * @param defaultValue value returned if the attribute is not found
+       *
+       * @return {String} the value, or defaultValue if the attribute does not exist
+       */
       getStringAttribute: function() {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]);
@@ -3293,6 +3906,17 @@
           return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
+      /**
+       * @member XMLElement
+       * The getFloatAttribute() function returns the float attribute of the element.
+       * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+       * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+       *
+       * @param name         the name of the attribute
+       * @param defaultValue value returned if the attribute is not found
+       *
+       * @return {float} the value, or defaultValue if the attribute does not exist
+       */
       getFloatAttribute: function() {
         if (arguments.length === 1 ) {
           return parseFloat(this.getAttribute(arguments[0], 0));
@@ -3302,6 +3926,17 @@
           return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
+      /**
+       * @member XMLElement
+       * The getIntAttribute() function returns the integer attribute of the element.
+       * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+       * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+       *
+       * @param name         the name of the attribute
+       * @param defaultValue value returned if the attribute is not found
+       *
+       * @return {int} the value, or defaultValue if the attribute does not exist
+       */
       getIntAttribute: function () {
         if (arguments.length === 1) {
           return this.getAttribute( arguments[0], 0 );
@@ -3311,15 +3946,34 @@
           return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
       },
+      /**
+       * @member XMLElement
+       * The hasChildren() function returns whether the element has children.
+       *
+       * @return {boolean} true if the element has children.
+       */
       hasChildren: function () {
         return this.children.length > 0 ;
       },
+      /**
+       * @member XMLElement
+       * The addChild() function adds a child element
+       *
+       * @param {XMLElement} child the non-null child to add.
+       */
       addChild: function (child) {
         if (child !== null) {
           child.parent = this;
           this.children.push(child);
         }
       },
+      /**
+       * @member XMLElement
+       * The insertChild() function inserts a child element at the index provided
+       *
+       * @param {XMLElement} child  the non-null child to add.
+       * @param {int} index     where to put the child.
+       */
       insertChild: function (child, index) {
         if (child) {
           if ((child.getLocalName() === null) && (! this.hasChildren())) {
@@ -3333,24 +3987,48 @@
           this.children.splice(index,0,child);
         }
       },
-      getChild: function (index){
-        if (typeof index  === "number") {
-          return this.children[index];
+      /**
+       * @member XMLElement
+       * The getChild() returns the child XMLElement as specified by the <b>index</b> parameter. 
+       * The value of the <b>index</b> parameter must be less than the total number of children to avoid going out of the array storing the child elements.
+       * When the <b>path</b> parameter is specified, then it will return all children that match that path. The path is a series of elements and sub-elements, separated by slashes.
+       *
+       * @param {int} index     where to put the child.
+       * @param {String} path       path to a particular element
+       *
+       * @return {XMLElement} the element
+       */
+      getChild: function (){
+        if (typeof arguments[0]  === "number") {
+          return this.children[arguments[0]];
         }
-        else if (index.indexOf('/') !== -1) { // path was given
-          this.getChildRecursive(index.split("/"), 0);
+        else if (arguments[0].indexOf('/') !== -1) { // path was given
+          this.getChildRecursive(arguments[0].split("/"), 0);
         } else {
           var kid, kidName;
           for (var i = 0; i < this.getChildCount(); i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
-            if (kidName !== null && kidName === index) {
+            if (kidName !== null && kidName === arguments[0]) {
                 return kid;
             }
           }
           return null;
         }
       },
+      /**
+       * @member XMLElement
+       * The getChildren() returns all of the children as an XMLElement array.
+       * When the <b>path</b> parameter is specified, then it will return all children that match that path.
+       * The path is a series of elements and sub-elements, separated by slashes.
+       *
+       * @param {String} path       element name or path/to/element
+       *
+       * @return {XMLElement} array of child elements that match
+       *
+       * @see XMLElement#getChildCount()
+       * @see XMLElement#getChild()
+       */
       getChildren: function(){
         if (arguments.length === 1) {
           if (typeof arguments[0]  === "number") {
@@ -3373,9 +4051,27 @@
           return this.children;
         }
       },
+      /**
+       * @member XMLElement
+       * The getChildCount() returns the number of children for the element.
+       *
+       * @return {int} the count
+       *
+       * @see XMLElement#getChild()
+       * @see XMLElement#getChildren()
+       */
       getChildCount: function(){
         return this.children.length;
       },
+      /**
+       * @member XMLElement
+       * Internal helper function for getChild().
+       *
+       * @param {String[]} items   result of splitting the query on slashes
+       * @param {int} offset   where in the items[] array we're currently looking
+       *
+       * @return {XMLElement} matching element or null if no match
+       */
       getChildRecursive: function (items, offset) {
         var kid, kidName;
         for(var i = 0; i < this.getChildCount(); i++) {
@@ -3392,6 +4088,15 @@
         }
         return null;
       },
+      /**
+       * @member XMLElement
+       * Internal helper function for getChildren().
+       *
+       * @param {String[]} items   result of splitting the query on slashes
+       * @param {int} offset   where in the items[] array we're currently looking
+       *
+       * @return {XMLElement[]} matching elements or empty array if no match
+       */
       getChildrenRecursive: function (items, offset) {
         if (offset === items.length-1) {
           return this.getChildren(items[offset]);
@@ -3403,6 +4108,17 @@
         }
         return kidMatches;
       },
+      /**
+       * @member XMLElement
+       * Internal helper function for parse().
+       * Loops through the 
+       * @addon
+       * 
+       * @param {XMLElement} parent                      the parent node
+       * @param {XML document childNodes} elementpath    the remaining nodes that need parsing
+       *
+       * @return {XMLElement} the new element and its children elements
+       */
       parseChildrenRecursive: function (parent , elementpath){
         var xmlelement,
           xmlattribute,
@@ -3431,9 +4147,22 @@
         }
         return xmlelement;
       },
+      /**
+       * @member XMLElement
+       * The isLeaf() function returns whether the element is a leaf element.
+       *
+       * @return {boolean} true if the element has no children.
+       */
       isLeaf: function(){
-        return this.hasChildren();
+        return !this.hasChildren();
       },
+      /**
+       * @member XMLElement
+       * The listChildren() function put the names of all children into an array. Same as looping through 
+       * each child and calling getName() on each XMLElement.
+       *
+       * @return {String[]} a list of element names.
+       */
       listChildren: function() {
         var arr = [];
         for (var i = 0; i < this.children.length; i++) {
@@ -3441,6 +4170,13 @@
         }
         return arr;
       },
+      /**
+       * @member XMLElement
+       * The removeAttribute() function removes an attribute
+       *
+       * @param {String} name        the non-null name of the attribute.
+       * @param {String} namespace   the namespace URI of the attribute, which may be null.
+       */
       removeAttribute: function (name , namespace) {
         this.namespace = namespace || "";
         for (var i = 0; i < this.attributes.length; i++){
@@ -3449,6 +4185,12 @@
           }
         }
       },
+      /**
+       * @member XMLElement
+       * The removeChild() removes a child element.
+       *
+       * @param {XMLElement} child      the the non-null child to be renoved
+       */
       removeChild: function(child) {
         if (child) {
           for (var i = 0; i < this.children.length; i++) {
@@ -3458,11 +4200,26 @@
           }
         }
       },
+      /**
+       * @member XMLElement
+       * The removeChildAtIndex() removes the child located at a certain index
+       *
+       * @param {int} index      the index of the child, where the first child has index 0
+       */
       removeChildAtIndex: function(index) {
         if (this.children.length > index) { //make sure its not outofbounds
           this.children.splice(index, 0);
         }
       },
+      /**
+       * @member XMLElement
+       * The findAttribute() function searches an attribute
+       *
+       * @param {String} name        fullName the non-null full name of the attribute
+       * @param {String} namespace   the name space, which may be null
+       *
+       * @return {XMLAttribute} the attribute, or null if the attribute does not exist.
+       */
       findAttribute: function (name, namespace) {
         this.namespace = namespace || "";
         for (var i = 0; i < this.attributes.length; i++ ) {
@@ -3471,6 +4228,13 @@
           }
         }
       },
+      /**
+       * @member XMLElement
+       * The setAttribute() function sets an attribute.
+       *
+       * @param {String} name        the non-null full name of the attribute
+       * @param {String} namespace   the non-null value of the attribute
+       */
       setAttribute: function() {
         var attr;
         if (arguments.length === 3) {
@@ -3493,14 +4257,29 @@
           }
         }
       },
+      /**
+       * @member XMLElement
+       * The setContent() function sets the #PCDATA content. It is an error to call this method with a
+       * non-null value if there are child objects.
+       *
+       * @param {String} content     the (possibly null) content
+       */
       setContent: function(content) {
         this.content = content;
       },
+      /**
+       * @member XMLElement
+       * The setName() function sets the full name. This method also sets the short name and clears the
+       * namespace URI.
+       *
+       * @param {String} name        the non-null name
+       * @param {String} namespace   the namespace URI, which may be null.
+       */
       setName: function() {
         if (arguments.length === 1) {
           this.name      = arguments[0];
           this.fullName  = arguments[0];
-          this.namespace = arguments[0];
+          this.namespace = null;
         } else {
           var index = arguments[0].indexOf(':');
           if ((arguments[1] === null) || (index < 0)) {
@@ -3512,6 +4291,13 @@
           this.namespace = arguments[1];
         }
       },
+      /**
+       * @member XMLElement
+       * The getName() function returns the full name (i.e. the name including an eventual namespace
+       * prefix) of the element.
+       *
+       * @return {String} the name, or null if the element only contains #PCDATA.
+       */
       getName: function() {
         return this.fullName;
       }
@@ -3521,12 +4307,11 @@
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
     ////////////////////////////////////////////////////////////////////////////
-
-    /*
-      Helper function for printMatrix(). Finds the largest scalar
-      in the matrix, then number of digits left of the decimal.
-      Call from PMatrix2D and PMatrix3D's print() function.
-    */
+    /**
+     * Helper function for printMatrix(). Finds the largest scalar
+     * in the matrix, then number of digits left of the decimal.
+     * Call from PMatrix2D and PMatrix3D's print() function.
+     */
     var printMatrixHelper = function printMatrixHelper(elements) {
       var big = 0;
       for (var i = 0; i < elements.length; i++) {
@@ -3546,7 +4331,18 @@
 
       return digits;
     };
-
+    /**
+     * PMatrix2D is a 3x2 affine matrix implementation. The constructor accepts another PMatrix2D or a list of six float elements. 
+     * If no parameters are provided the matrix is set to the identity matrix.
+     *
+     * @param {PMatrix2D} matrix  the initial matrix to set to
+     * @param {float} m00         the first element of the matrix
+     * @param {float} m01         the second element of the matrix
+     * @param {float} m02         the third element of the matrix
+     * @param {float} m10         the fourth element of the matrix
+     * @param {float} m11         the fifth element of the matrix
+     * @param {float} m12         the sixth element of the matrix
+     */
     var PMatrix2D = p.PMatrix2D = function() {
       if (arguments.length === 0) {
         this.reset();
@@ -3556,8 +4352,22 @@
         this.set(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
       }
     };
-
+    /**
+     * PMatrix2D methods
+     */
     PMatrix2D.prototype = {
+      /**
+       * @member PMatrix2D
+       * The set() function sets the matrix elements. The function accepts either another PMatrix2D, an array of elements, or a list of six floats. 
+       *
+       * @param {PMatrix2D} matrix    the matrix to set this matrix to 
+       * @param {float[]} elements    an array of elements to set this matrix to 
+       * @param {float} m00           the first element of the matrix
+       * @param {float} m01           the third element of the matrix
+       * @param {float} m10           the fourth element of the matrix
+       * @param {float} m11           the fith element of the matrix
+       * @param {float} m12           the sixth element of the matrix
+       */
       set: function() {
         if (arguments.length === 6) {
           var a = arguments;
@@ -3569,25 +4379,65 @@
           this.elements = arguments[0].slice();
         }
       },
+      /**
+       * @member PMatrix2D
+       * The get() function returns a copy of this PMatrix2D. 
+       *
+       * @return {PMatrix2D} a copy of this PMatrix2D 
+       */
       get: function() {
         var outgoing = new PMatrix2D();
         outgoing.set(this.elements);
         return outgoing;
       },
+      /**
+       * @member PMatrix2D
+       * The reset() function sets this PMatrix2D to the identity matrix. 
+       */
       reset: function() {
         this.set([1, 0, 0, 0, 1, 0]);
       },
-      // Returns a copy of the element values.
+      /**
+       * @member PMatrix2D
+       * The array() function returns a copy of the element values. 
+       * @addon
+       *
+       * @return {float[]} returns a copy of the element values
+       */
       array: function array() {
         return this.elements.slice();
       },
+      /**
+       * @member PMatrix2D
+       * The translate() function translates this matrix by moving the current coordinates to the location specified by tx and ty.
+       *
+       * @param {float} tx  the x-axis coordinate to move to 
+       * @param {float} ty  the y-axis coordinate to move to 
+       */
       translate: function(tx, ty) {
         this.elements[2] = tx * this.elements[0] + ty * this.elements[1] + this.elements[2];
         this.elements[5] = tx * this.elements[3] + ty * this.elements[4] + this.elements[5];
       },
+       /**
+       * @member PMatrix2D
+       * The transpose() function is not used in processingjs.
+       */
       transpose: function() {
         // Does nothing in Processing.
       },
+      /**
+       * @member PMatrix2D
+       * The mult() function multiplied this matrix. 
+       * If two array elements are passed in the function will multiply a two element vector against this matrix.
+       * If target is null or not length four, a new float array will be returned.
+       * The values for vec and target can be the same (though that's less efficient).
+       * If two PVectors are passed in the function multiply the x and y coordinates of a PVector against this matrix.
+       *
+       * @param {PVector} source, target  the PVectors used to multiply this matrix
+       * @param {float[]} source, target  the arrays used to multiply this matrix
+       *
+       * @return {PVector|float[]} returns a PVector or an array representing the new matrix
+       */
       mult: function(source, target) {
         var x, y;
         if (source instanceof PVector) {
@@ -3613,21 +4463,65 @@
         }
         return target;
       },
+      /**
+       * @member PMatrix2D
+       * The multX() function calculates the x component of a vector from a transformation. 
+       *
+       * @param {float} x the x component of the vector being transformed
+       * @param {float} y the y component of the vector being transformed
+       *
+       * @return {float} returnes the result of the calculation
+       */
       multX: function(x, y) {
         return (x * this.elements[0] + y * this.elements[1] + this.elements[2]);
       },
+      /**
+       * @member PMatrix2D
+       * The multY() function calculates the y component of a vector from a transformation. 
+       *
+       * @param {float} x the x component of the vector being transformed
+       * @param {float} y the y component of the vector being transformed
+       *
+       * @return {float} returnes the result of the calculation
+       */
       multY: function(x, y) {
         return (x * this.elements[3] + y * this.elements[4] + this.elements[5]);
-      },
+      }, 
+      /**
+       * @member PMatrix2D
+       * The skewX() function skews the matrix along the x-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
       skewX: function(angle) {
         this.apply(1, 0, 1, angle, 0, 0);
       },
+      /**
+       * @member PMatrix2D
+       * The skewY() function skews the matrix along the y-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
       skewY: function(angle) {
         this.apply(1, 0, 1,  0, angle, 0);
       },
+      /**
+       * @member PMatrix2D
+       * The determinant() function calvculates the determinant of this matrix.
+       *
+       * @return {float} the determinant of the matrix
+       */
       determinant: function() {
         return (this.elements[0] * this.elements[4] - this.elements[1] * this.elements[3]);
       },
+      /**
+       * @member PMatrix2D
+       * The invert() function inverts this matrix
+       *
+       * @return {boolean} true if successful
+       */
       invert: function() {
         var d = this.determinant();
         if ( Math.abs( d ) > PConstants.FLOAT_MIN ) {
@@ -3647,6 +4541,14 @@
         }
         return false;
       },
+      /**
+       * @member PMatrix2D
+       * The scale() function increases or decreases the size of a shape by expanding and contracting vertices. When only one parameter is specified scale will occur in all dimensions.
+       * This is equivalent to a two parameter call.
+       *
+       * @param {float} sx  the amount to scale on the x-axis
+       * @param {float} sy  the amount to scale on the y-axis
+       */
       scale: function(sx, sy) {
         if (sx && !sy) {
           sy = sx;
@@ -3658,6 +4560,17 @@
           this.elements[4] *= sy;
         }
       },
+      /**
+       * @member PMatrix2D
+       * The apply() function multiplies the current matrix by the one specified through the parameters. Note that either a PMatrix2D or a list of floats can be passed in. 
+       *
+       * @param {PMatrix2D} matrix    the matrix to apply this matrix to 
+       * @param {float} m00           the first element of the matrix
+       * @param {float} m01           the third element of the matrix
+       * @param {float} m10           the fourth element of the matrix
+       * @param {float} m11           the fith element of the matrix
+       * @param {float} m12           the sixth element of the matrix
+       */
       apply: function() {
         var source;
         if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
@@ -3679,6 +4592,17 @@
         }
         this.elements = result.slice();
       },
+      /**
+       * @member PMatrix2D
+       * The preApply() function applies another matrix to the left of this one. Note that either a PMatrix2D or elements of a matrix can be passed in. 
+       *
+       * @param {PMatrix2D} matrix    the matrix to apply this matrix to 
+       * @param {float} m00           the first element of the matrix
+       * @param {float} m01           the third element of the matrix
+       * @param {float} m10           the fourth element of the matrix
+       * @param {float} m11           the fith element of the matrix
+       * @param {float} m12           the sixth element of the matrix
+       */
       preApply: function() {
         var source;
         if (arguments.length === 1 && arguments[0] instanceof PMatrix2D) {
@@ -3698,6 +4622,12 @@
         result[4] = this.elements[1] * source[3] + this.elements[4] * source[4];
         this.elements = result.slice();
       },
+      /**
+       * @member PMatrix2D
+       * The rotate() function rotates the matrix. 
+       *
+       * @param {float} angle         the angle of rotation in radiants
+       */
       rotate: function(angle) {
         var c = Math.cos(angle);
         var s = Math.sin(angle);
@@ -3710,9 +4640,19 @@
         this.elements[3] =  c * temp1 + s * temp2;
         this.elements[4] = -s * temp1 + c * temp2;
       },
+      /**
+       * @member PMatrix2D
+       * The rotateZ() function rotates the matrix. 
+       *
+       * @param {float} angle         the angle of rotation in radiants
+       */
       rotateZ: function(angle) {
         this.rotate(angle);
       },
+      /**
+       * @member PMatrix2D
+       * The print() function prints out the elements of this matrix
+       */
       print: function() {
         var digits = printMatrixHelper(this.elements);
         var output = "" + p.nfs(this.elements[0], digits, 4) + " " +
@@ -3725,16 +4665,41 @@
       }
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    // PMatrix3D
-    ////////////////////////////////////////////////////////////////////////////
-
+    /**
+     * PMatrix3D is a 4x4  matrix implementation. The constructor accepts another PMatrix3D or a list of six or sixteen float elements. 
+     * If no parameters are provided the matrix is set to the identity matrix.
+     */
     var PMatrix3D = p.PMatrix3D = function PMatrix3D() {
       // When a matrix is created, it is set to an identity matrix
       this.reset();
     };
-
+    /**
+     * PMatrix3D methods
+     */
     PMatrix3D.prototype = {
+      /**
+       * @member PMatrix2D
+       * The set() function sets the matrix elements. The function accepts either another PMatrix3D, an array of elements, or a list of six or sixteen floats. 
+       *
+       * @param {PMatrix3D} matrix    the initial matrix to set to       
+       * @param {float[]} elements    an array of elements to set this matrix to 
+       * @param {float} m00           the first element of the matrix
+       * @param {float} m01           the second element of the matrix
+       * @param {float} m02           the third element of the matrix
+       * @param {float} m03           the fourth element of the matrix
+       * @param {float} m10           the fifth element of the matrix
+       * @param {float} m11           the sixth element of the matrix
+       * @param {float} m12           the seventh element of the matrix
+       * @param {float} m13           the eight element of the matrix
+       * @param {float} m20           the nineth element of the matrix
+       * @param {float} m21           the tenth element of the matrix
+       * @param {float} m22           the eleventh element of the matrix
+       * @param {float} m23           the twelveth element of the matrix
+       * @param {float} m30           the thirteenth element of the matrix
+       * @param {float} m31           the fourtheenth element of the matrix
+       * @param {float} m32           the fivetheenth element of the matrix
+       * @param {float} m33           the sixteenth element of the matrix
+       */
       set: function() {
         if (arguments.length === 16) {
           this.elements = Array.prototype.slice.call(arguments);
@@ -3744,18 +4709,42 @@
           this.elements = arguments[0].slice();
         }
       },
+      /**
+       * @member PMatrix3D
+       * The get() function returns a copy of this PMatrix3D. 
+       *
+       * @return {PMatrix3D} a copy of this PMatrix3D 
+       */
       get: function() {
         var outgoing = new PMatrix3D();
         outgoing.set(this.elements);
         return outgoing;
       },
+      /**
+       * @member PMatrix3D
+       * The reset() function sets this PMatrix3D to the identity matrix. 
+       */
       reset: function() {
         this.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
       },
-      // Returns a copy of the element values.
+      /**
+       * @member PMatrix3D
+       * The array() function returns a copy of the element values. 
+       * @addon
+       *
+       * @return {float[]} returns a copy of the element values
+       */
       array: function array() {
         return this.elements.slice();
       },
+      /**
+       * @member PMatrix3D
+       * The translate() function translates this matrix by moving the current coordinates to the location specified by tx, ty, and tz.
+       *
+       * @param {float} tx  the x-axis coordinate to move to 
+       * @param {float} ty  the y-axis coordinate to move to 
+       * @param {float} tz  the z-axis coordinate to move to 
+       */
       translate: function(tx, ty, tz) {
         if (tz === undef) {
           tz = 0;
@@ -3766,6 +4755,10 @@
         this.elements[11] += tx * this.elements[8]  + ty * this.elements[9]  + tz * this.elements[10];
         this.elements[15] += tx * this.elements[12] + ty * this.elements[13] + tz * this.elements[14];
       },
+      /**
+       * @member PMatrix2D
+       * The transpose() function transpose this matrix.
+       */
       transpose: function() {
         var temp = this.elements.slice();
         this.elements[0]  = temp[0];
@@ -3785,11 +4778,19 @@
         this.elements[14] = temp[11];
         this.elements[15] = temp[15];
       },
-      /*
-        You must either pass in two PVectors or two arrays,
-        don't mix between types. You may also omit a second
-        argument and simply read the result from the return.
-      */
+      /**
+       * @member PMatrix3D
+       * The mult() function multiplied this matrix. 
+       * If two array elements are passed in the function will multiply a two element vector against this matrix.
+       * If target is null or not length four, a new float array will be returned.
+       * The values for vec and target can be the same (though that's less efficient).
+       * If two PVectors are passed in the function multiply the x and y coordinates of a PVector against this matrix.
+       *
+       * @param {PVector} source, target  the PVectors used to multiply this matrix
+       * @param {float[]} source, target  the arrays used to multiply this matrix
+       *
+       * @return {PVector|float[]} returns a PVector or an array representing the new matrix
+       */
       mult: function(source, target) {
         var x, y, z, w;
         if (source instanceof PVector) {
@@ -3830,6 +4831,28 @@
         }
         return target;
       },
+      /**
+       * @member PMatrix3D
+       * The preApply() function applies another matrix to the left of this one. Note that either a PMatrix3D or elements of a matrix can be passed in. 
+       *
+       * @param {PMatrix3D} matrix    the matrix to apply this matrix to 
+       * @param {float} m00           the first element of the matrix
+       * @param {float} m01           the second element of the matrix
+       * @param {float} m02           the third element of the matrix
+       * @param {float} m03           the fourth element of the matrix
+       * @param {float} m10           the fifth element of the matrix
+       * @param {float} m11           the sixth element of the matrix
+       * @param {float} m12           the seventh element of the matrix
+       * @param {float} m13           the eight element of the matrix
+       * @param {float} m20           the nineth element of the matrix
+       * @param {float} m21           the tenth element of the matrix
+       * @param {float} m22           the eleventh element of the matrix
+       * @param {float} m23           the twelveth element of the matrix
+       * @param {float} m30           the thirteenth element of the matrix
+       * @param {float} m31           the fourtheenth element of the matrix
+       * @param {float} m32           the fivetheenth element of the matrix
+       * @param {float} m33           the sixteenth element of the matrix
+       */
       preApply: function() {
         var source;
         if (arguments.length === 1 && arguments[0] instanceof PMatrix3D) {
@@ -3854,6 +4877,28 @@
         }
         this.elements = result.slice();
       },
+      /**
+       * @member PMatrix3D
+       * The apply() function multiplies the current matrix by the one specified through the parameters. Note that either a PMatrix3D or a list of floats can be passed in. 
+       *
+       * @param {PMatrix3D} matrix    the matrix to apply this matrix to 
+       * @param {float} m00           the first element of the matrix
+       * @param {float} m01           the second element of the matrix
+       * @param {float} m02           the third element of the matrix
+       * @param {float} m03           the fourth element of the matrix
+       * @param {float} m10           the fifth element of the matrix
+       * @param {float} m11           the sixth element of the matrix
+       * @param {float} m12           the seventh element of the matrix
+       * @param {float} m13           the eight element of the matrix
+       * @param {float} m20           the nineth element of the matrix
+       * @param {float} m21           the tenth element of the matrix
+       * @param {float} m22           the eleventh element of the matrix
+       * @param {float} m23           the twelveth element of the matrix
+       * @param {float} m30           the thirteenth element of the matrix
+       * @param {float} m31           the fourtheenth element of the matrix
+       * @param {float} m32           the fivetheenth element of the matrix
+       * @param {float} m33           the sixteenth element of the matrix
+       */
       apply: function() {
         var source;
         if (arguments.length === 1 && arguments[0] instanceof PMatrix3D) {
@@ -3878,6 +4923,12 @@
         }
         this.elements = result.slice();
       },
+      /**
+       * @member PMatrix3D
+       * The rotate() function rotates the matrix. 
+       *
+       * @param {float} angle         the angle of rotation in radiants
+       */
       rotate: function(angle, v0, v1, v2) {
         if (!v1) {
           this.rotateZ(angle);
@@ -3901,6 +4952,29 @@
                      0, 0, 0, 0, 1);
         }
       },
+      /**
+       * @member PMatrix2D
+       * The invApply() function applies the inverted matrix to this matrix.
+       *
+       * @param {float} m00           the first element of the matrix
+       * @param {float} m01           the second element of the matrix
+       * @param {float} m02           the third element of the matrix
+       * @param {float} m03           the fourth element of the matrix
+       * @param {float} m10           the fifth element of the matrix
+       * @param {float} m11           the sixth element of the matrix
+       * @param {float} m12           the seventh element of the matrix
+       * @param {float} m13           the eight element of the matrix
+       * @param {float} m20           the nineth element of the matrix
+       * @param {float} m21           the tenth element of the matrix
+       * @param {float} m22           the eleventh element of the matrix
+       * @param {float} m23           the twelveth element of the matrix
+       * @param {float} m30           the thirteenth element of the matrix
+       * @param {float} m31           the fourtheenth element of the matrix
+       * @param {float} m32           the fivetheenth element of the matrix
+       * @param {float} m33           the sixteenth element of the matrix
+       *
+       * @return {boolean} returns true if the operation was successful. 
+       */
       invApply: function() {
         if (inverseCopy === undef) {
           inverseCopy = new PMatrix3D();
@@ -3915,23 +4989,48 @@
         this.preApply(inverseCopy);
         return true;
       },
+      /**
+       * @member PMatrix3D
+       * The rotateZ() function rotates the matrix. 
+       *
+       * @param {float} angle         the angle of rotation in radiants
+       */
       rotateX: function(angle) {
         var c = p.cos(angle);
         var s = p.sin(angle);
         this.apply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
       },
-
+      /**
+       * @member PMatrix3D
+       * The rotateY() function rotates the matrix. 
+       *
+       * @param {float} angle         the angle of rotation in radiants
+       */
       rotateY: function(angle) {
         var c = p.cos(angle);
         var s = p.sin(angle);
         this.apply([c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1]);
       },
+      /**
+       * @member PMatrix3D
+       * The rotateZ() function rotates the matrix. 
+       *
+       * @param {float} angle         the angle of rotation in radiants
+       */
       rotateZ: function(angle) {
         var c = Math.cos(angle);
         var s = Math.sin(angle);
         this.apply([c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
       },
-      // Uniform scaling if only one value passed in
+      /**
+       * @member PMatrix3D
+       * The scale() function increases or decreases the size of a matrix by expanding and contracting vertices. When only one parameter is specified scale will occur in all dimensions.
+       * This is equivalent to a three parameter call.
+       *
+       * @param {float} sx  the amount to scale on the x-axis
+       * @param {float} sy  the amount to scale on the y-axis
+       * @param {float} sz  the amount to scale on the z-axis
+       */
       scale: function(sx, sy, sz) {
         if (sx && !sy && !sz) {
           sy = sz = sx;
@@ -3954,10 +5053,24 @@
           this.elements[14] *= sz;
         }
       },
+      /**
+       * @member PMatrix3D
+       * The skewX() function skews the matrix along the x-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
       skewX: function(angle) {
         var t = Math.tan(angle);
         this.apply(1, t, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
       },
+      /**
+       * @member PMatrix3D
+       * The skewY() function skews the matrix along the y-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
       skewY: function(angle) {
         var t = Math.tan(angle);
         this.apply(1, 0, 0, 0, t, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
@@ -3994,6 +5107,12 @@
           return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
         }
       },
+      /**
+       * @member PMatrix3D
+       * The invert() function inverts this matrix
+       *
+       * @return {boolean} true if successful
+       */
       invert: function() {
         var fA0 = this.elements[0] * this.elements[5] - this.elements[1] * this.elements[4];
         var fA1 = this.elements[0] * this.elements[6] - this.elements[2] * this.elements[4];
@@ -4065,6 +5184,10 @@
         str += this.elements[15];
         return str;
       },
+      /**
+       * @member PMatrix3D
+       * The print() function prints out the elements of this matrix
+       */
       print: function() {
         var digits = printMatrixHelper(this.elements);
 
@@ -5777,8 +6900,37 @@
     p.noLoop = function noLoop() {
       doLoop = false;
       loopStarted = false;
-      clearInterval(looping);
+      stopLooping();
     };
+
+    var highPrecisionTimer = null;
+    if(window.postMessage instanceof Function) { // XXX also DOM check?
+      highPrecisionTimer = function(fn, interval) {
+        var isTimerActive = true;
+        var nextTime = new Date().valueOf() + interval;
+        var messageCookie = "$PJS:high-precision-timer";
+        function looping(event) {
+          if(event.data !== messageCookie || event.source !== window) {
+            return; // not our message
+          }
+          if(isTimerActive) {
+            var currentTime = new Date().valueOf();
+            if(nextTime <= currentTime) {
+              fn();
+              nextTime = currentTime + interval;
+            }
+            window.postMessage(messageCookie, "*");
+          } else {
+            window.removeEventListener("message", looping, false);
+          }
+        }
+        window.addEventListener("message", looping, false);
+        window.postMessage(messageCookie, "*");
+        return function() {
+          isTimerActive = false;
+        };
+      };
+    }
 
     /**
     * Causes Processing to continuously execute the code within draw(). If noLoop() is called, 
@@ -5793,17 +6945,29 @@
         return;
       }
 
-      looping = window.setInterval(function() {
+      function tick() {
         try {
           if (document.hasFocus instanceof Function) {
             p.focused = document.hasFocus();
           }
           p.redraw();
         } catch(e_loop) {
-          window.clearInterval(looping);
+          stopLooping();
           throw e_loop;
         }
-      }, curMsPerFrame);
+      }
+
+      var highPrecisionTimerPresent = window.postMessage instanceof Function; // XXX DOM check?
+      var MIN_MS_FOR_NORMAL_TIMER = 20;
+
+      if(highPrecisionTimer !== null && curMsPerFrame < MIN_MS_FOR_NORMAL_TIMER) {
+        stopLooping = highPrecisionTimer(tick, curMsPerFrame);
+      } else {
+        var looping = window.setInterval(tick, curMsPerFrame);
+        stopLooping = function() {
+          window.clearInterval(looping);
+        };
+      }
 
       doLoop = true;
       loopStarted = true;
@@ -5844,7 +7008,7 @@
     * @returns none
     */
     p.exit = function exit() {
-      window.clearInterval(looping);
+      stopLooping();
 
       Processing.removeInstance(p.externals.canvas.id);
 
@@ -6452,7 +7616,17 @@
     ////////////////////////////////////////////////////////////////////////////
     // String Functions
     ////////////////////////////////////////////////////////////////////////////
-
+    /**
+     * The matchAll() function is identical to match(), except that it returns an array of all matches in
+     * the specified String, rather than just the first.
+     * 
+     * @param {String} aString  the String to search inside
+     * @param {String} aRegExp  the regexp to be used for matching
+     *
+     * @return {String[]} returns an array of matches
+     *
+     * @see #match
+     */
     p.matchAll = function matchAll(aString, aRegExp) {
       var results = [],
           latest;
@@ -6465,15 +7639,36 @@
       }
       return results.length > 0 ? results : null;
     };
-
+    /**
+     * The replaceAll() function searches all matches between a substring (or regular expression) and a string, and replaces the matched substring with a new substring
+     * 
+     * @param {String} re         a substring or a regular expression
+     * @param {String} replace    the string to replace the found value
+     *
+     * @return {String[]} returns an array of matches
+     *
+     * @see #match
+     */
     String.prototype.replaceAll = function(re, replace) {
       return this.replace(new RegExp(re, "g"), replace);
     };
-
+    /**
+     * The equals() function compares two strings to see if they are the same. 
+     * This method is necessary because it's not possible to compare strings using the equality operator (==). 
+     * Returns true if the strings are the same and false if they are not.
+     *
+     * @param {String} str  a string used for comparison
+     *
+     * @return {boolean} true is the strings are the same false otherwise
+     */
     String.prototype.equals = function equals(str) {
       return this.valueOf() === str.valueOf();
     };
-
+    /**
+     * The toCharArray() function splits the string into a char array. 
+     *
+     * @return {Char[]} a char array
+     */
     String.prototype.toCharArray = function() {
       var chars = this.split("");
       for (var i = chars.length - 1; i >= 0; i--) {
@@ -6481,289 +7676,52 @@
       }
       return chars;
     };
-
+    /**
+     * The match() function matches a string with a regular expression, and returns the match as an
+     * array. The first index is the matching expression, and array elements
+     * [1] and higher represent each of the groups (sequences found in parens).
+     *
+     * @param {String} str      the String to be searched
+     * @param {String} regexp   the regexp to be used for matching
+     *
+     * @return {String[]} an array of matching strings
+     */
     p.match = function(str, regexp) {
       return str.match(regexp);
     };
 
-    // tinylog lite JavaScript library
-    // http://purl.eligrey.com/tinylog/lite
-    /*global tinylog,print*/
-    var tinylogLite = (function() {
-      "use strict";
+    var logBuffer = [];
 
-      var tinylogLite = {},
-        undef = "undefined",
-        func = "function",
-        False = !1,
-        True = !0,
-        logLimit = 512,
-        log = "log";
-
-      if (typeof tinylog !== undef && typeof tinylog[log] === func) {
-        // pre-existing tinylog present
-        tinylogLite[log] = tinylog[log];
-      } else if (typeof document !== undef && !document.fake) {
-        (function() {
-          // DOM document
-          var doc = document,
-
-          $div = "div",
-          $style = "style",
-          $title = "title",
-
-          containerStyles = {
-            zIndex: 10000,
-            position: "fixed",
-            bottom: "0px",
-            width: "100%",
-            height: "15%",
-            fontFamily: "sans-serif",
-            color: "#ccc",
-            backgroundColor: "black"
-          },
-          outputStyles = {
-            position: "relative",
-            fontFamily: "monospace",
-            overflow: "auto",
-            height: "100%",
-            paddingTop: "5px"
-          },
-          resizerStyles = {
-            height: "5px",
-            marginTop: "-5px",
-            cursor: "n-resize",
-            backgroundColor: "darkgrey"
-          },
-          closeButtonStyles = {
-            position: "absolute",
-            top: "5px",
-            right: "20px",
-            color: "#111",
-            MozBorderRadius: "4px",
-            webkitBorderRadius: "4px",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontWeight: "normal",
-            textAlign: "center",
-            padding: "3px 5px",
-            backgroundColor: "#333",
-            fontSize: "12px"
-          },
-          entryStyles = {
-            //borderBottom: "1px solid #d3d3d3",
-            minHeight: "16px"
-          },
-          entryTextStyles = {
-            fontSize: "12px",
-            margin: "0 8px 0 8px",
-            maxWidth: "100%",
-            whiteSpace: "pre-wrap",
-            overflow: "auto"
-          },
-
-          view = doc.defaultView,
-            docElem = doc.documentElement,
-            docElemStyle = docElem[$style],
-
-          setStyles = function() {
-            var i = arguments.length,
-              elemStyle, styles, style;
-
-            while (i--) {
-              styles = arguments[i--];
-              elemStyle = arguments[i][$style];
-
-              for (style in styles) {
-                if (styles.hasOwnProperty(style)) {
-                  elemStyle[style] = styles[style];
-                }
-              }
-            }
-          },
-
-          observer = function(obj, event, handler) {
-            if (obj.addEventListener) {
-              obj.addEventListener(event, handler, False);
-            } else if (obj.attachEvent) {
-              obj.attachEvent("on" + event, handler);
-            }
-            return [obj, event, handler];
-          },
-          unobserve = function(obj, event, handler) {
-            if (obj.removeEventListener) {
-              obj.removeEventListener(event, handler, False);
-            } else if (obj.detachEvent) {
-              obj.detachEvent("on" + event, handler);
-            }
-          },
-          clearChildren = function(node) {
-            var children = node.childNodes,
-              child = children.length;
-
-            while (child--) {
-              node.removeChild(children.item(0));
-            }
-          },
-          append = function(to, elem) {
-            return to.appendChild(elem);
-          },
-          createElement = function(localName) {
-            return doc.createElement(localName);
-          },
-          createTextNode = function(text) {
-            return doc.createTextNode(text);
-          },
-
-          createLog = tinylogLite[log] = function(message) {
-            // don't show output log until called once
-            var uninit,
-              originalPadding = docElemStyle.paddingBottom,
-              container = createElement($div),
-              containerStyle = container[$style],
-              resizer = append(container, createElement($div)),
-              output = append(container, createElement($div)),
-              closeButton = append(container, createElement($div)),
-              resizingLog = False,
-              previousHeight = False,
-              previousScrollTop = False,
-              messages = 0,
-
-              updateSafetyMargin = function() {
-                // have a blank space large enough to fit the output box at the page bottom
-                docElemStyle.paddingBottom = container.clientHeight + "px";
-              },
-              setContainerHeight = function(height) {
-                var viewHeight = view.innerHeight,
-                  resizerHeight = resizer.clientHeight;
-
-                // constrain the container inside the viewport's dimensions
-                if (height < 0) {
-                  height = 0;
-                } else if (height + resizerHeight > viewHeight) {
-                  height = viewHeight - resizerHeight;
-                }
-
-                containerStyle.height = height / viewHeight * 100 + "%";
-
-                updateSafetyMargin();
-              },
-              observers = [
-                observer(doc, "mousemove", function(evt) {
-                  if (resizingLog) {
-                    setContainerHeight(view.innerHeight - evt.clientY);
-                    output.scrollTop = previousScrollTop;
-                  }
-                }),
-
-                observer(doc, "mouseup", function() {
-                  if (resizingLog) {
-                    resizingLog = previousScrollTop = False;
-                  }
-                }),
-
-                observer(resizer, "dblclick", function(evt) {
-                  evt.preventDefault();
-
-                  if (previousHeight) {
-                    setContainerHeight(previousHeight);
-                    previousHeight = False;
-                  } else {
-                    previousHeight = container.clientHeight;
-                    containerStyle.height = "0px";
-                  }
-                }),
-
-                observer(resizer, "mousedown", function(evt) {
-                  evt.preventDefault();
-                  resizingLog = True;
-                  previousScrollTop = output.scrollTop;
-                }),
-
-                observer(resizer, "contextmenu", function() {
-                  resizingLog = False;
-                }),
-
-                observer(closeButton, "click", function() {
-                  uninit();
-                })
-              ];
-
-            uninit = function() {
-              // remove observers
-              var i = observers.length;
-
-              while (i--) {
-                unobserve.apply(tinylogLite, observers[i]);
-              }
-
-              // remove tinylog lite from the DOM
-              docElem.removeChild(container);
-              docElemStyle.paddingBottom = originalPadding;
-
-              clearChildren(output);
-              clearChildren(container);
-
-              tinylogLite[log] = createLog;
-            };
-
-            setStyles(
-            container, containerStyles, output, outputStyles, resizer, resizerStyles, closeButton, closeButtonStyles);
-
-            closeButton[$title] = "Close Log";
-            append(closeButton, createTextNode("\u2716"));
-
-            resizer[$title] = "Double-click to toggle log minimization";
-
-            docElem.insertBefore(container, docElem.firstChild);
-
-            tinylogLite[log] = function(message) {
-              if (messages === logLimit) {
-                output.removeChild(output.firstChild);
-              } else {
-                messages++;
-              }
-
-              var entry = append(output, createElement($div)),
-                entryText = append(entry, createElement($div));
-
-              entry[$title] = (new Date()).toLocaleTimeString();
-
-              setStyles(
-              entry, entryStyles, entryText, entryTextStyles);
-
-              append(entryText, createTextNode(message));
-              output.scrollTop = output.scrollHeight;
-            };
-
-            tinylogLite[log](message);
-          };
-        }());
-      } else if (typeof print === func) { // JS shell
-        tinylogLite[log] = print;
-      }
-
-      return tinylogLite;
-    }()),
-
-    logBuffer = [];
-
-    p.console = window.console || tinylogLite;
-
+    p.console = window.console || Processing.logger;
+    /**
+     * The println() function writes to the console area of the Processing environment. 
+     * Each call to this function creates a new line of output. Individual elements can be separated with quotes ("") and joined with the string concatenation operator (+).
+     *
+     * @param {String} message the string to write to the console
+     *
+     * @see #join
+     * @see #print
+     */
     p.println = function println(message) {
       var bufferLen = logBuffer.length;
       if (bufferLen) {
-        tinylogLite.log(logBuffer.join(""));
+        Processing.logger.log(logBuffer.join(""));
         logBuffer.length = 0; // clear log buffer
       }
 
       if (arguments.length === 0 && bufferLen === 0) {
-        tinylogLite.log("");
+        Processing.logger.log("");
       } else if (arguments.length !== 0) {
-        tinylogLite.log(message);
+        Processing.logger.log(message);
       }
     };
-
+    /**
+     * The print() function writes to the console area of the Processing environment.
+     *
+     * @param {String} message the string to write to the console
+     *
+     * @see #join
+     */
     p.print = function print(message) {
       logBuffer.push(message);
     };
@@ -6781,7 +7739,16 @@
         return (val + "");
       }
     };
-
+    /**
+     * Remove whitespace characters from the beginning and ending
+     * of a String or a String array. Works like String.trim() but includes the
+     * unicode nbsp character as well. If an array is passed in the function will return a new array not effecting the array passed in. 
+     *
+     * @param {String} str    the string to trim
+     * @param {String[]} str  the string array to trim
+     *
+     * @return {String|String[]} retrurns a string or an array will removed whitespaces
+     */
     p.trim = function(str) {
       if (str instanceof Array) {
         var arr = [];
@@ -8057,11 +9024,15 @@
 
       frustumMode = false;
     };
-
+    /**
+     * The printProjection() prints the current projection matrix to the text window. 
+     */
     p.printProjection = function() {
       projection.print();
     };
-
+    /**
+     * The printCamera() function prints the current camera matrix.
+     */
     p.printCamera = function() {
       cam.print();
     };
@@ -8069,7 +9040,14 @@
     ////////////////////////////////////////////////////////////////////////////
     // Shapes
     ////////////////////////////////////////////////////////////////////////////
-
+    /**
+     * The box() function renders a box. A box is an extruded rectangle. A box with equal dimension on all sides is a cube.
+     * Calling this function with only one parameter will create a cube.
+     *
+     * @param {int|float} w  dimension of the box in the x-dimension
+     * @param {int|float} h  dimension of the box in the y-dimension
+     * @param {int|float} d  dimension of the box in the z-dimension
+     */
     p.box = function(w, h, d) {
       if (p.use3DContext) {
         // user can uniformly scale the box by
@@ -8154,7 +9132,12 @@
         }
       }
     };
-
+    /**
+     * The initSphere() function is a helper function used by <b>sphereDetail()</b>
+     * This function creates and stores sphere vertices every time the user changes sphere detail. 
+     *
+     * @see #sphereDetail
+     */
     var initSphere = function() {
       var i;
       sphereVerts = [];
@@ -8226,7 +9209,27 @@
       curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(sphereVerts), curContext.STATIC_DRAW);
     };
-
+    /**
+     * The sphereDetail() function controls the detail used to render a sphere by adjusting the number of
+     * vertices of the sphere mesh. The default resolution is 30, which creates
+     * a fairly detailed sphere definition with vertices every 360/30 = 12
+     * degrees. If you're going to render a great number of spheres per frame,
+     * it is advised to reduce the level of detail using this function.
+     * The setting stays active until <b>sphereDetail()</b> is called again with
+     * a new parameter and so should <i>not</i> be called prior to every
+     * <b>sphere()</b> statement, unless you wish to render spheres with
+     * different settings, e.g. using less detail for smaller spheres or ones
+     * further away from the camera. To control the detail of the horizontal
+     * and vertical resolution independently, use the version of the functions
+     * with two parameters. Calling this function with one parameter sets the number of segments 
+     *(minimum of 3) used per full circle revolution. This is equivalent to calling the function with 
+     * two identical values. 
+     *
+     * @param {int} ures    number of segments used horizontally (longitudinally) per full circle revolution
+     * @param {int} vres    number of segments used vertically (latitudinally) from top to bottom
+     *
+     * @see #sphere()
+     */
     p.sphereDetail = function sphereDetail(ures, vres) {
       var i;
 
@@ -8284,7 +9287,12 @@
       // make the sphere verts and norms
       initSphere();
     };
-
+    /**
+     * The sphere() function draws a sphere with radius r centered at coordinate 0, 0, 0.
+     * A sphere is a hollow ball made from tessellated triangles.
+     * 
+     * @param {int|float} r the radius of the sphere
+     */
     p.sphere = function() {
       if (p.use3DContext) {
         var sRad = arguments[0], c;
@@ -8563,7 +9571,30 @@
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
-
+    /**
+     * The fill() function sets the color used to fill shapes. For example, if you run <b>fill(204, 102, 0)</b>, all subsequent shapes will be filled with orange. 
+     * This color is either specified in terms of the RGB or HSB color depending on the current <b>colorMode()</b> 
+     *(the default color space is RGB, with each value in the range from 0 to 255).
+     * <br><br>When using hexadecimal notation to specify a color, use "#" or "0x" before the values (e.g. #CCFFAA, 0xFFCCFFAA). 
+     * The # syntax uses six digits to specify a color (the way colors are specified in HTML and CSS). When using the hexadecimal notation starting with "0x", 
+     * the hexadecimal value must be specified with eight characters; the first two characters define the alpha component and the remainder the red, green, and blue components.
+     * <br><br>The value for the parameter "gray" must be less than or equal to the current maximum value as specified by <b>colorMode()</b>. The default maximum value is 255.
+     * <br><br>To change the color of an image (or a texture), use tint().
+     *
+     * @param {int|float} gray    number specifying value between white and black
+     * @param {int|float} value1  red or hue value
+     * @param {int|float} value2  green or saturation value
+     * @param {int|float} value3  blue or brightness value
+     * @param {int|float} alpha   opacity of the fill
+     * @param {Color} color       any value of the color datatype
+     * @param {int} hex           color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     *
+     * @see #noFill()
+     * @see #stroke()
+     * @see #tint()
+     * @see #background()
+     * @see #colorMode()
+     */
     p.fill = function fill() {
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       if(color === currentFillColor && doFill) {
@@ -8588,11 +9619,46 @@
         curContext.fill();
       }
     }
-
+    /**
+     * The noFill() function disables filling geometry. If both <b>noStroke()</b> and <b>noFill()</b>
+     * are called, no shapes will be drawn to the screen.
+     *
+     * @see #fill()
+     *
+     */
     p.noFill = function noFill() {
       doFill = false;
     };
-
+    /**
+     * The stroke() function sets the color used to draw lines and borders around shapes. This color
+     * is either specified in terms of the RGB or HSB color depending on the
+     * current <b>colorMode()</b> (the default color space is RGB, with each
+     * value in the range from 0 to 255).
+     * <br><br>When using hexadecimal notation to specify a color, use "#" or
+     * "0x" before the values (e.g. #CCFFAA, 0xFFCCFFAA). The # syntax uses six
+     * digits to specify a color (the way colors are specified in HTML and CSS).
+     * When using the hexadecimal notation starting with "0x", the hexadecimal
+     * value must be specified with eight characters; the first two characters
+     * define the alpha component and the remainder the red, green, and blue
+     * components.
+     * <br><br>The value for the parameter "gray" must be less than or equal
+     * to the current maximum value as specified by <b>colorMode()</b>.
+     * The default maximum value is 255.
+     *
+     * @param {int|float} gray    number specifying value between white and black
+     * @param {int|float} value1  red or hue value
+     * @param {int|float} value2  green or saturation value
+     * @param {int|float} value3  blue or brightness value
+     * @param {int|float} alpha   opacity of the stroke
+     * @param {Color} color       any value of the color datatype
+     * @param {int} hex           color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     *
+     * @see #fill()
+     * @see #noStroke()
+     * @see #tint()
+     * @see #background()
+     * @see #colorMode()
+     */
     p.stroke = function stroke() {
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       if(color === currentStrokeColor && doStroke) {
@@ -8617,11 +9683,21 @@
         curContext.stroke();
       }
     }
-
+    /**
+     * The noStroke() function disables drawing the stroke (outline). If both <b>noStroke()</b> and
+     * <b>noFill()</b> are called, no shapes will be drawn to the screen.
+     *
+     * @see #stroke()
+     */
     p.noStroke = function noStroke() {
       doStroke = false;
     };
-
+    /**
+     * The strokeWeight() function sets the width of the stroke used for lines, points, and the border around shapes. 
+     * All widths are set in units of pixels. 
+     *
+     * @param {int|float} w the weight (in pixels) of the stroke
+     */
     p.strokeWeight = function strokeWeight(w) {
       lineWidth = w;
 
@@ -8632,22 +9708,46 @@
         curContext.lineWidth = w;
       }
     };
-
+    /**
+     * The strokeCap() function sets the style for rendering line endings. These ends are either squared, extended, or rounded and 
+     * specified with the corresponding parameters SQUARE, PROJECT, and ROUND. The default cap is ROUND. 
+     * This function is not available with the P2D, P3D, or OPENGL renderers
+     *
+     * @param {int} value Either SQUARE, PROJECT, or ROUND
+     */
     p.strokeCap = function strokeCap(value) {
       curContext.lineCap = value;
     };
-
+    /**
+     * The strokeJoin() function sets the style of the joints which connect line segments. 
+     * These joints are either mitered, beveled, or rounded and specified with the corresponding parameters MITER, BEVEL, and ROUND. The default joint is MITER. 
+     * This function is not available with the P2D, P3D, or OPENGL renderers
+     *
+     * @param {int} value Either SQUARE, PROJECT, or ROUND
+     */
     p.strokeJoin = function strokeJoin(value) {
       curContext.lineJoin = value;
     };
-
+    /**
+     * The smooth() function draws all geometry with smooth (anti-aliased) edges. This will slow down the frame rate of the application, 
+     * but will enhance the visual refinement. <br/><br/>
+     * Note that smooth() will also improve image quality of resized images, and noSmooth() will disable image (and font) smoothing altogether. 
+     *
+     * @see #noSmooth()
+     * @see #hint()
+     * @see #size()
+     */
     p.smooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
       if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
         curContext.mozImageSmoothingEnabled = true;
       }
     };
-
+    /**
+     * The noSmooth() function draws all geometry with jagged (aliased) edges.
+     * 
+     * @see #smooth()
+     */
     p.noSmooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
       if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
@@ -8666,7 +9766,20 @@
                 p.mix(c1 & PConstants.GREEN_MASK, c2 & PConstants.GREEN_MASK, f) & PConstants.GREEN_MASK |
                 p.mix(c1 & PConstants.BLUE_MASK, c2 & PConstants.BLUE_MASK, f));
     }
-
+    /**
+     * The point() function draws a point, a coordinate in space at the dimension of one pixel.
+     * The first parameter is the horizontal value for the point, the second
+     * value is the vertical value for the point, and the optional third value
+     * is the depth value. Drawing this shape in 3D using the <b>z</b>
+     * parameter requires the P3D or OPENGL parameter in combination with
+     * size as shown in the above example.
+     *
+     * @param {int|float} x x-coordinate of the point
+     * @param {int|float} y y-coordinate of the point
+     * @param {int|float} z z-coordinate of the point
+     *
+     * @see #beginShape()
+     */
     p.point = function point(x, y, z) {
       if (p.use3DContext) {
         var model = new PMatrix3D();
@@ -9543,8 +10656,16 @@
       curveVertArray = [];
       curveVertCount = 0;
     };
-
-    //used by both curveDetail and bezierDetail
+    /**
+     * The function splineForward() setup forward-differencing matrix to be used for speedy
+     * curve rendering. It's based on using a specific number
+     * of curve segments and just doing incremental adds for each
+     * vertex of the segment, rather than running the mathematically
+     * expensive cubic equation. This function is used by both curveDetail and bezierDetail.
+     *
+     * @param {int} segments      number of curve segments to use when drawing
+     * @param {PMatrix3D} matrix  target object for the new matrix
+     */
     var splineForward = function(segments, matrix) {
       var f = 1.0 / segments;
       var ff = f * f;
@@ -9552,9 +10673,13 @@
 
       matrix.set(0, 0, 0, 1, fff, ff, f, 0, 6 * fff, 2 * ff, 0, 0, 6 * fff, 0, 0, 0);
     };
-
-    //internal curveInit
-    //used by curveDetail, curveTightness
+    /**
+     * The curveInit() function set the number of segments to use when drawing a Catmull-Rom
+     * curve, and setting the s parameter, which defines how tightly
+     * the curve fits to each vertex. Catmull-Rom curves are actually
+     * a subset of this curve type where the s is set to zero.
+     * This in an internal function used by curveDetail() and curveTightness().
+     */
     var curveInit = function() {
       // allocate only if/when used to save startup time
       if (!curveDrawMatrix) {
@@ -9708,7 +10833,9 @@
     p.textureMode = function(mode){
       curTextureMode = mode;
     };
-
+    /**
+     * The curveVertexSegment() function handle emitting a specific segment of Catmull-Rom curve. Internal helper function used by <b>curveVertex()</b>.
+     */
     var curveVertexSegment = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
       var x0 = x2;
       var y0 = y2;
@@ -9736,7 +10863,17 @@
         p.vertex(x0, y0, z0);
       }
     };
-
+    /**
+     * The curveVertex() function specifies vertex coordinates for curves. This function may only be used between <b>beginShape()</b> and <b>endShape()</b>
+     * and only when there is no MODE parameter specified to <b>beginShape()</b>. The first and last points in a series of <b>curveVertex()</b>
+     * lines will be used to guide the beginning and end of a the curve. A minimum of four points is required to draw a tiny curve between the second and third points. 
+     * Adding a fifth point with <b>curveVertex()</b> will draw the curve between the second, third, and fourth points. 
+     * The <b>curveVertex()</b> function is an implementation of Catmull-Rom splines. Using the 3D version of requires rendering with P3D or OPENGL.
+     *
+     * @param {int|float} x  the x-coordinate of the vertex
+     * @param {int|float} y  the y-coordinate of the vertex
+     * @param {int|float} z  the z-coordinate of the vertex
+     */
     p.curveVertex = function(x, y, z) {
       isCurve = true;
       if(p.use3DContext){
@@ -9769,7 +10906,35 @@
         p.vertex(x, y, z);
       }
     };
-
+    /**
+     * The curve() function draws a curved line on the screen. The first and second parameters
+     * specify the beginning control point and the last two parameters specify
+     * the ending control point. The middle parameters specify the start and
+     * stop of the curve. Longer curves can be created by putting a series of
+     * <b>curve()</b> functions together or using <b>curveVertex()</b>.
+     * An additional function called <b>curveTightness()</b> provides control
+     * for the visual quality of the curve. The <b>curve()</b> function is an
+     * implementation of Catmull-Rom splines. Using the 3D version of requires
+     * rendering with P3D or OPENGL (see the Environment reference for more
+     * information).
+     *
+     * @param {int|float} x1 coordinates for the beginning control point
+     * @param {int|float} y1 coordinates for the beginning control point
+     * @param {int|float} z1 coordinates for the beginning control point
+     * @param {int|float} x2 coordinates for the first point
+     * @param {int|float} y2 coordinates for the first point
+     * @param {int|float} z2 coordinates for the first point
+     * @param {int|float} x3 coordinates for the second point
+     * @param {int|float} y3 coordinates for the second point
+     * @param {int|float} z3 coordinates for the second point
+     * @param {int|float} x4 coordinates for the ending control point
+     * @param {int|float} y4 coordinates for the ending control point
+     * @param {int|float} z4 coordinates for the ending control point
+     *
+     * @see #curveVertex()
+     * @see #curveTightness()
+     * @see #bezier()
+     */
     p.curve = function curve() {
       if (arguments.length === 8) // curve(x1, y1, x2, y2, x3, y3, x4, y4)
       {
@@ -9790,12 +10955,36 @@
         }
       }
     };
-
+    /**
+     * The curveTightness() function modifies the quality of forms created with <b>curve()</b> and
+     * <b>curveVertex()</b>. The parameter <b>squishy</b> determines how the
+     * curve fits to the vertex points. The value 0.0 is the default value for
+     * <b>squishy</b> (this value defines the curves to be Catmull-Rom splines)
+     * and the value 1.0 connects all the points with straight lines.
+     * Values within the range -5.0 and 5.0 will deform the curves but
+     * will leave them recognizable and as values increase in magnitude,
+     * they will continue to deform.
+     *
+     * @param {float} tightness amount of deformation from the original vertices
+     *
+     * @see #curve()
+     * @see #curveVertex()
+     *
+     */
     p.curveTightness = function(tightness) {
       curTightness = tightness;
     };
-
-    p.curveDetail = function curveDetail( detail ) {
+    /**
+     * The curveDetail() function sets the resolution at which curves display. The default value is 20.
+     * This function is only useful when using the P3D or OPENGL renderer.
+     *
+     * @param {int} detail resolution of the curves
+     *
+     * @see curve()
+     * @see curveVertex()
+     * @see curveTightness()
+     */
+    p.curveDetail = function curveDetail(detail) {
       curveDet = detail;
       curveInit();
     };
@@ -9823,7 +11012,25 @@
     p.ellipseMode = function ellipseMode(aEllipseMode) {
       curEllipseMode = aEllipseMode;
     };
-
+    /**
+     * The arc() function draws an arc in the display window.
+     * Arcs are drawn along the outer edge of an ellipse defined by the
+     * <b>x</b>, <b>y</b>, <b>width</b> and <b>height</b> parameters.
+     * The origin or the arc's ellipse may be changed with the
+     * <b>ellipseMode()</b> function.
+     * The <b>start</b> and <b>stop</b> parameters specify the angles
+     * at which to draw the arc.
+     *
+     * @param {float} a       x-coordinate of the arc's ellipse
+     * @param {float} b       y-coordinate of the arc's ellipse
+     * @param {float} c       width of the arc's ellipse
+     * @param {float} d       height of the arc's ellipse
+     * @param {float} start   angle to start the arc, specified in radians
+     * @param {float} stop    angle to stop the arc, specified in radians
+     *
+     * @see #ellipseMode()
+     * @see #ellipse()
+     */
     p.arc = function arc(x, y, width, height, start, stop) {
       if (width <= 0) {
         return;
@@ -9951,19 +11158,78 @@
     p.bezierDetail = function bezierDetail( detail ){
       bezDetail = detail;
     };
-
+    /**
+     * The bezierPoint() function evalutes quadratic bezier at point t for points a, b, c, d.
+     * The parameter t varies between 0 and 1. The a and d parameters are the
+     * on-curve points, b and c are the control points. To make a two-dimensional
+     * curve, call this function once with the x coordinates and a second time
+     * with the y coordinates to get the location of a bezier curve at t.
+     *
+     * @param {float} a   coordinate of first point on the curve
+     * @param {float} b   coordinate of first control point
+     * @param {float} c   coordinate of second control point
+     * @param {float} d   coordinate of second point on the curve
+     * @param {float} t   value between 0 and 1
+     *
+     * @see #bezier()
+     * @see #bezierVertex()
+     * @see #curvePoint()
+     */
     p.bezierPoint = function bezierPoint(a, b, c, d, t) {
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
-
+    /**
+     * The bezierTangent() function calculates the tangent of a point on a Bezier curve. There is a good
+     * definition of "tangent" at Wikipedia: <a href="http://en.wikipedia.org/wiki/Tangent" target="new">http://en.wikipedia.org/wiki/Tangent</a>
+     *
+     * @param {float} a   coordinate of first point on the curve
+     * @param {float} b   coordinate of first control point
+     * @param {float} c   coordinate of second control point
+     * @param {float} d   coordinate of second point on the curve
+     * @param {float} t   value between 0 and 1
+     *
+     * @see #bezier()
+     * @see #bezierVertex()
+     * @see #curvePoint()
+     */
     p.bezierTangent = function bezierTangent(a, b, c, d, t) {
       return (3 * t * t * (-a + 3 * b - 3 * c + d) + 6 * t * (a - 2 * b + c) + 3 * (-a + b));
     };
-
+    /**
+     * The curvePoint() function evalutes the Catmull-Rom curve at point t for points a, b, c, d. The
+     * parameter t varies between 0 and 1, a and d are points on the curve,
+     * and b and c are the control points. This can be done once with the x
+     * coordinates and a second time with the y coordinates to get the
+     * location of a curve at t.
+     *
+     * @param {int|float} a   coordinate of first point on the curve
+     * @param {int|float} b   coordinate of second point on the curve
+     * @param {int|float} c   coordinate of third point on the curve
+     * @param {int|float} d   coordinate of fourth point on the curve
+     * @param {float} t       value between 0 and 1
+     *
+     * @see #curve()
+     * @see #curveVertex()
+     * @see #bezierPoint()
+     */
     p.curvePoint = function curvePoint(a, b, c, d, t) {
       return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
     };
-
+    /**
+     * The curveTangent() function calculates the tangent of a point on a Catmull-Rom curve. 
+     * There is a good definition of "tangent" at Wikipedia: <a href="http://en.wikipedia.org/wiki/Tangent" target="new">http://en.wikipedia.org/wiki/Tangent</a>.
+     *
+     * @param {int|float} a   coordinate of first point on the curve
+     * @param {int|float} b   coordinate of first control point
+     * @param {int|float} c   coordinate of second control point
+     * @param {int|float} d   coordinate of second point on the curve
+     * @param {float} t       value between 0 and 1
+     *
+     * @see #curve()
+     * @see #curveVertex()
+     * @see #curvePoint()
+     * @see #bezierTangent()
+     */
     p.curveTangent = function curveTangent(a, b, c, d, t) {
       return 0.5 * ((-a + c) + 2 * (2 * a - 5 * b + 4 * c - d) * t + 3 * (-a + 3 * b - 3 * c + d) * t * t);
     };
@@ -10747,7 +12013,35 @@
          curContext.depthMask(true);
       }
     };
-
+    /**
+     * The background() function sets the color used for the background of the Processing window. 
+     * The default background is light gray. In the <b>draw()</b> function, the background color is used to clear the display window at the beginning of each frame. 
+     * An image can also be used as the background for a sketch, however its width and height must be the same size as the sketch window. 
+     * To resize an image 'b' to the size of the sketch window, use b.resize(width, height). 
+     * Images used as background will ignore the current <b>tint()</b> setting. 
+     * For the main drawing surface, the alpha value will be ignored. However,
+     * alpha can be used on PGraphics objects from <b>createGraphics()</b>. This is
+     * the only way to set all the pixels partially transparent, for instance.
+     * If the 'gray' parameter is passed in the function sets the background to a grayscale value, based on the
+     * current colorMode.
+     * <p>
+     * Note that background() should be called before any transformations occur,
+     * because some implementations may require the current transformation matrix
+     * to be identity before drawing.
+     *
+     * @param {int|float} gray    specifies a value between white and black
+     * @param {int|float} value1  red or hue value (depending on the current color mode)
+     * @param {int|float} value2  green or saturation value (depending on the current color mode)
+     * @param {int|float} value3  blue or brightness value (depending on the current color mode)
+     * @param {int|float} alpha   opacity of the background
+     * @param {Color} color       any value of the color datatype
+     * @param {int} hex           color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     *
+     * @see #stroke()
+     * @see #fill()
+     * @see #tint()
+     * @see #colorMode()
+     */
     // Draw an image or a color to the background
     p.background = function background() {
       var color, a, img;
@@ -10848,7 +12142,38 @@
         curContext.clearRect(x, y, width, height);
       }
     };
-
+    /**
+     * The tint() function sets the fill value for displaying images. Images can be tinted to
+     * specified colors or made transparent by setting the alpha.
+     * <br><br>To make an image transparent, but not change it's color,
+     * use white as the tint color and specify an alpha value. For instance,
+     * tint(255, 128) will make an image 50% transparent (unless
+     * <b>colorMode()</b> has been used).
+     *
+     * <br><br>When using hexadecimal notation to specify a color, use "#" or
+     * "0x" before the values (e.g. #CCFFAA, 0xFFCCFFAA). The # syntax uses six
+     * digits to specify a color (the way colors are specified in HTML and CSS).
+     * When using the hexadecimal notation starting with "0x", the hexadecimal
+     * value must be specified with eight characters; the first two characters
+     * define the alpha component and the remainder the red, green, and blue
+     * components.
+     * <br><br>The value for the parameter "gray" must be less than or equal
+     * to the current maximum value as specified by <b>colorMode()</b>.
+     * The default maximum value is 255.
+     * <br><br>The tint() method is also used to control the coloring of
+     * textures in 3D.
+     *
+     * @param {int|float} gray    any valid number
+     * @param {int|float} alpha	  opacity of the image
+     * @param {int|float} value1	red or hue value
+     * @param {int|float} value2	green or saturation value
+     * @param {int|float} value3	blue or brightness value
+     * @param {int|float} color	  any value of the color datatype
+     * @param {int} hex	          color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     *
+     * @see #noTint()
+     * @see #image()
+     */
     p.tint = function tint() {
       var tintColor = p.color.apply(this, arguments);
       var r = p.red(tintColor) / colorModeX;
@@ -10867,7 +12192,12 @@
         }
       };
     };
-
+    /**
+     * The noTint() function removes the current fill value for displaying images and reverts to displaying images with their original hues.
+     *
+     * @see #tint()
+     * @see #image()
+     */
     p.noTint = function noTint() {
       curTint = function() {};
     };
@@ -12590,7 +13920,7 @@
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
 
-    p.extendClass = function extendClass(subClass, baseClass) {
+    function extendClass(subClass, baseClass) {
       function extendGetterSetter(propertyName) {
         p.defineProperty(subClass, propertyName, {
           get: function() {
@@ -12598,18 +13928,31 @@
           },
           set: function(v) {
             baseClass[propertyName]=v;
-          }
+          },
+          enumerable: true
         });
       }
 
       for (var propertyName in baseClass) {
-        if (subClass[propertyName] === undef) {
+        if (!(propertyName in subClass)) {
           if (typeof baseClass[propertyName] === 'function') {
             subClass[propertyName] = baseClass[propertyName];
-          } else {
+          } else if(propertyName !== "$upcast") {
             extendGetterSetter(propertyName);
           }
         }
+      }
+    }
+
+    p.extendClassChain = function(base) {
+      var path = [base];
+      for (var self = base.$upcast; self; self = self.$upcast) {
+        extendClass(self, base);
+        path.push(self);
+        base = self;
+      }
+      while (path.length > 0) { 
+        path.pop().$self=base;
       }
     };
 
@@ -13745,25 +15088,24 @@
         thisClassMethods = appendToLookupTable({}, members.methods),
         thisClassInners = appendToLookupTable({}, members.innerClasses);
 
-      var oldContext = replaceContext;
+      var oldContext = replaceContext, inConstructors = false;
       replaceContext = function(name) {
         if(name === "this") {
           return selfId;
         } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
         } else if(thisClassMethods.hasOwnProperty(name)) {
-          return "this." + name;
+          // keeping |"this." + name| for speed
+          return inConstructors ? "this.$self." + name : "this." + name;
         }
         return oldContext(name);
       };
 
       if(this.baseClassName) {
-        result += "var $super = {};\n";
-        result += "function $superCstr(){\n" +
-                        this.baseClassName + ".prototype.constructor.apply($super, arguments);\n" +
-                        "processing.extendClass(" + selfId + ", $super); }\n";
+        result += "var $super = { $upcast: " + selfId + " };\n";
+        result += "function $superCstr(){" + this.baseClassName + ".apply($super,arguments)}\n";
       } else {
-        result += "function $superCstr() { }\n";
+        result += "function $superCstr(){processing.extendClassChain("+ selfId +")}\n";
       }
 
       result += this.functions.join('\n') + '\n';
@@ -13773,7 +15115,9 @@
       result += this.methods.join('\n') + '\n';
       result += this.misc.tail;
 
+      inConstructors = true;
       result += this.cstrs.join('\n') + '\n';
+      inConstructors = false;
 
       result += "function $constr() {\n";
       var cstrsIfs = [];
@@ -13805,7 +15149,7 @@
         else { cstrs.push(index); }
         return "";
       });
-      var fields = declarations.split(';');
+      var fields = declarations.split(/;(?:\s*;)*/g);
       var baseClassName;
       var i;
 
@@ -14206,6 +15550,269 @@
   Error.prototype.printStackTrace = function() {
      return this.toString();
   };
+
+  // tinylog lite JavaScript library
+  // http://purl.eligrey.com/tinylog/lite
+  /*global tinylog,print*/
+  var tinylogLite = (function() {
+    "use strict";
+
+    var tinylogLite = {},
+      undef = "undefined",
+      func = "function",
+      False = !1,
+      True = !0,
+      logLimit = 512,
+      log = "log";
+
+    if (typeof tinylog !== undef && typeof tinylog[log] === func) {
+      // pre-existing tinylog present
+      tinylogLite[log] = tinylog[log];
+    } else if (typeof document !== undef && !document.fake) {
+      (function() {
+        // DOM document
+        var doc = document,
+
+        $div = "div",
+        $style = "style",
+        $title = "title",
+
+        containerStyles = {
+          zIndex: 10000,
+          position: "fixed",
+          bottom: "0px",
+          width: "100%",
+          height: "15%",
+          fontFamily: "sans-serif",
+          color: "#ccc",
+          backgroundColor: "black"
+        },
+        outputStyles = {
+          position: "relative",
+          fontFamily: "monospace",
+          overflow: "auto",
+          height: "100%",
+          paddingTop: "5px"
+        },
+        resizerStyles = {
+          height: "5px",
+          marginTop: "-5px",
+          cursor: "n-resize",
+          backgroundColor: "darkgrey"
+        },
+        closeButtonStyles = {
+          position: "absolute",
+          top: "5px",
+          right: "20px",
+          color: "#111",
+          MozBorderRadius: "4px",
+          webkitBorderRadius: "4px",
+          borderRadius: "4px",
+          cursor: "pointer",
+          fontWeight: "normal",
+          textAlign: "center",
+          padding: "3px 5px",
+          backgroundColor: "#333",
+          fontSize: "12px"
+        },
+        entryStyles = {
+          //borderBottom: "1px solid #d3d3d3",
+          minHeight: "16px"
+        },
+        entryTextStyles = {
+          fontSize: "12px",
+          margin: "0 8px 0 8px",
+          maxWidth: "100%",
+          whiteSpace: "pre-wrap",
+          overflow: "auto"
+        },
+
+        view = doc.defaultView,
+          docElem = doc.documentElement,
+          docElemStyle = docElem[$style],
+
+        setStyles = function() {
+          var i = arguments.length,
+            elemStyle, styles, style;
+
+          while (i--) {
+            styles = arguments[i--];
+            elemStyle = arguments[i][$style];
+
+            for (style in styles) {
+              if (styles.hasOwnProperty(style)) {
+                elemStyle[style] = styles[style];
+              }
+            }
+          }
+        },
+
+        observer = function(obj, event, handler) {
+          if (obj.addEventListener) {
+            obj.addEventListener(event, handler, False);
+          } else if (obj.attachEvent) {
+            obj.attachEvent("on" + event, handler);
+          }
+          return [obj, event, handler];
+        },
+        unobserve = function(obj, event, handler) {
+          if (obj.removeEventListener) {
+            obj.removeEventListener(event, handler, False);
+          } else if (obj.detachEvent) {
+            obj.detachEvent("on" + event, handler);
+          }
+        },
+        clearChildren = function(node) {
+          var children = node.childNodes,
+            child = children.length;
+
+          while (child--) {
+            node.removeChild(children.item(0));
+          }
+        },
+        append = function(to, elem) {
+          return to.appendChild(elem);
+        },
+        createElement = function(localName) {
+          return doc.createElement(localName);
+        },
+        createTextNode = function(text) {
+          return doc.createTextNode(text);
+        },
+
+        createLog = tinylogLite[log] = function(message) {
+          // don't show output log until called once
+          var uninit,
+            originalPadding = docElemStyle.paddingBottom,
+            container = createElement($div),
+            containerStyle = container[$style],
+            resizer = append(container, createElement($div)),
+            output = append(container, createElement($div)),
+            closeButton = append(container, createElement($div)),
+            resizingLog = False,
+            previousHeight = False,
+            previousScrollTop = False,
+            messages = 0,
+
+            updateSafetyMargin = function() {
+              // have a blank space large enough to fit the output box at the page bottom
+              docElemStyle.paddingBottom = container.clientHeight + "px";
+            },
+            setContainerHeight = function(height) {
+              var viewHeight = view.innerHeight,
+                resizerHeight = resizer.clientHeight;
+
+              // constrain the container inside the viewport's dimensions
+              if (height < 0) {
+                height = 0;
+              } else if (height + resizerHeight > viewHeight) {
+                height = viewHeight - resizerHeight;
+              }
+
+              containerStyle.height = height / viewHeight * 100 + "%";
+
+              updateSafetyMargin();
+            },
+            observers = [
+              observer(doc, "mousemove", function(evt) {
+                if (resizingLog) {
+                  setContainerHeight(view.innerHeight - evt.clientY);
+                  output.scrollTop = previousScrollTop;
+                }
+              }),
+
+              observer(doc, "mouseup", function() {
+                if (resizingLog) {
+                  resizingLog = previousScrollTop = False;
+                }
+              }),
+
+              observer(resizer, "dblclick", function(evt) {
+                evt.preventDefault();
+
+                if (previousHeight) {
+                  setContainerHeight(previousHeight);
+                  previousHeight = False;
+                } else {
+                  previousHeight = container.clientHeight;
+                  containerStyle.height = "0px";
+                }
+              }),
+
+              observer(resizer, "mousedown", function(evt) {
+                evt.preventDefault();
+                resizingLog = True;
+                previousScrollTop = output.scrollTop;
+              }),
+
+              observer(resizer, "contextmenu", function() {
+                resizingLog = False;
+              }),
+
+              observer(closeButton, "click", function() {
+                uninit();
+              })
+            ];
+
+          uninit = function() {
+            // remove observers
+            var i = observers.length;
+
+            while (i--) {
+              unobserve.apply(tinylogLite, observers[i]);
+            }
+
+            // remove tinylog lite from the DOM
+            docElem.removeChild(container);
+            docElemStyle.paddingBottom = originalPadding;
+
+            clearChildren(output);
+            clearChildren(container);
+
+            tinylogLite[log] = createLog;
+          };
+
+          setStyles(
+          container, containerStyles, output, outputStyles, resizer, resizerStyles, closeButton, closeButtonStyles);
+
+          closeButton[$title] = "Close Log";
+          append(closeButton, createTextNode("\u2716"));
+
+          resizer[$title] = "Double-click to toggle log minimization";
+
+          docElem.insertBefore(container, docElem.firstChild);
+
+          tinylogLite[log] = function(message) {
+            if (messages === logLimit) {
+              output.removeChild(output.firstChild);
+            } else {
+              messages++;
+            }
+
+            var entry = append(output, createElement($div)),
+              entryText = append(entry, createElement($div));
+
+            entry[$title] = (new Date()).toLocaleTimeString();
+
+            setStyles(
+            entry, entryStyles, entryText, entryTextStyles);
+
+            append(entryText, createTextNode(message));
+            output.scrollTop = output.scrollHeight;
+          };
+
+          tinylogLite[log](message);
+        };
+      }());
+    } else if (typeof print === func) { // JS shell
+      tinylogLite[log] = print;
+    }
+
+    return tinylogLite;
+  }());
+  // end of tinylog lite JavaScript library
+
+  Processing.logger = tinylogLite;
 
   Processing.version = "@VERSION@";
 
