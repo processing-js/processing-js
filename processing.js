@@ -6335,7 +6335,7 @@
     // if no 2nd argument is passed.  closest compromise we can use to match java implementation Feb 5 2010
     // also the char parser has issues with chars that are not digits or letters IE: !@#$%^&*
     /**
-    *	Converts a byte, char, int, or color to a String containing the equivalent hexadecimal notation.
+    * Converts a byte, char, int, or color to a String containing the equivalent hexadecimal notation.
     * For example color(0, 102, 153, 255) will convert to the String "FF006699". This function can help 
     * make your geeky debugging sessions much happier.
     * 
