@@ -5298,14 +5298,20 @@
       }
     };
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Matrix Stack
-    ////////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @private
+     * The matrix stack stores the transformations and translations that occur within the space.
+     */
     var PMatrixStack = p.PMatrixStack = function PMatrixStack() {
       this.matrixStack = [];
     };
 
+    /**
+     * @member PMatrixStack
+     * load pushes the matrix given in the function into the stack
+     *
+     * @param {Object | Array} matrix the matrix to be pushed into the stack
+     */
     PMatrixStack.prototype.load = function load() {
       var tmpMatrix;
       if (p.use3DContext) {
@@ -5322,14 +5328,30 @@
       this.matrixStack.push(tmpMatrix);
     };
 
+    /**
+     * @member PMatrixStack
+     * push adds a duplicate of the top of the stack onto the stack - uses the peek function
+     */
     PMatrixStack.prototype.push = function push() {
       this.matrixStack.push(this.peek());
     };
 
+    /**
+     * @member PMatrixStack
+     * pop removes returns the matrix at the top of the stack
+     *
+     * @returns {Object} the matrix at the top of the stack
+     */
     PMatrixStack.prototype.pop = function pop() {
       return this.matrixStack.pop();
     };
 
+    /**
+     * @member PMatrixStack
+     * peek returns but doesn't remove the matrix at the top of the stack
+     *
+     * @returns {Object} the matrix at the top of the stack
+     */
     PMatrixStack.prototype.peek = function peek() {
       var tmpMatrix;
       if (p.use3DContext) {
@@ -5342,6 +5364,12 @@
       return tmpMatrix;
     };
 
+    /**
+     * @member PMatrixStack
+     * this function multiplies the matrix at the top of the stack with the matrix given as a parameter
+     *
+     * @param {Object | Array} matrix the matrix to be multiplied into the stack
+     */
     PMatrixStack.prototype.mult = function mult(matrix) {
       this.matrixStack[this.matrixStack.length - 1].apply(matrix);
     };
@@ -8983,6 +9011,26 @@
     // Camera functions
     ////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * The <b>beginCamera()</b> and <b>endCamera()</b> functions enable advanced customization of the camera space.
+     * The functions are useful if you want to more control over camera movement, however for most users, the <b>camera()</b>
+     * function will be sufficient.<br /><br />The camera functions will replace any transformations (such as <b>rotate()</b>
+     * or <b>translate()</b>) that occur before them in <b>draw()</b>, but they will not automatically replace the camera
+     * transform itself. For this reason, camera functions should be placed at the beginning of <b>draw()</b> (so that
+     * transformations happen afterwards), and the <b>camera()</b> function can be used after <b>beginCamera()</b> if
+     * you want to reset the camera before applying transformations.<br /><br />This function sets the matrix mode to the
+     * camera matrix so calls such as <b>translate()</b>, <b>rotate()</b>, applyMatrix() and resetMatrix() affect the camera.
+     * <b>beginCamera()</b> should always be used with a following <b>endCamera()</b> and pairs of <b>beginCamera()</b> and
+     * <b>endCamera()</b> cannot be nested.
+     *
+     * @see camera
+     * @see endCamera
+     * @see applyMatrix
+     * @see resetMatrix
+     * @see translate
+     * @see rotate
+     * @see scale
+     */
     p.beginCamera = function beginCamera() {
       if (manipulatingCamera) {
         throw ("You cannot call beginCamera() again before calling endCamera()");
@@ -8993,6 +9041,12 @@
       }
     };
 
+    /**
+     * The <b>beginCamera()</b> and <b>endCamera()</b> functions enable advanced customization of the camera space.
+     * Please see the reference for <b>beginCamera()</b> for a description of how the functions are used.
+     *
+     * @see beginCamera
+     */
     p.endCamera = function endCamera() {
       if (!manipulatingCamera) {
         throw ("You cannot call endCamera() before calling beginCamera()");
@@ -9005,6 +9059,28 @@
       }
     };
 
+    /**
+     * Sets the position of the camera through setting the eye position, the center of the scene, and which axis is facing
+     * upward. Moving the eye position and the direction it is pointing (the center of the scene) allows the images to be
+     * seen from different angles. The version without any parameters sets the camera to the default position, pointing to
+     * the center of the display window with the Y axis as up. The default values are camera(width/2.0, height/2.0,
+     * (height/2.0) / tan(PI*60.0 / 360.0), width/2.0, height/2.0, 0, 0, 1, 0). This function is similar to gluLookAt()
+     * in OpenGL, but it first clears the current camera settings.
+     *
+     * @param {float} eyeX    x-coordinate for the eye
+     * @param {float} eyeY    y-coordinate for the eye
+     * @param {float} eyeZ    z-coordinate for the eye
+     * @param {float} centerX x-coordinate for the center of the scene
+     * @param {float} centerY y-coordinate for the center of the scene
+     * @param {float} centerZ z-coordinate for the center of the scene
+     * @param {float} upX     usually 0.0, 1.0, -1.0
+     * @param {float} upY     usually 0.0, 1.0, -1.0
+     * @param {float} upZ     usually 0.0, 1.0, -1.0
+     *
+     * @see beginCamera
+     * @see endCamera
+     * @see frustum
+     */
     p.camera = function camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
       if (arguments.length === 0) {
         //in case canvas is resized
@@ -9044,6 +9120,19 @@
       modelViewInv.set(cameraInv);
     };
 
+    /**
+     * Sets a perspective projection applying foreshortening, making distant objects appear smaller than closer ones. The
+     * parameters define a viewing volume with the shape of truncated pyramid. Objects near to the front of the volume appear
+     * their actual size, while farther objects appear smaller. This projection simulates the perspective of the world more
+     * accurately than orthographic projection. The version of perspective without parameters sets the default perspective and
+     * the version with four parameters allows the programmer to set the area precisely. The default values are:
+     * perspective(PI/3.0, width/height, cameraZ/10.0, cameraZ*10.0) where cameraZ is ((height/2.0) / tan(PI*60.0/360.0));
+     *
+     * @param {float} fov     field-of-view angle (in radians) for vertical direction
+     * @param {float} aspect  ratio of width to height
+     * @param {float} zNear   z-position of nearest clipping plane
+     * @param {float} zFar    z-positions of farthest clipping plane
+     */
     p.perspective = function perspective(fov, aspect, near, far) {
       if (arguments.length === 0) {
         //in case canvas is resized
@@ -9066,6 +9155,22 @@
       p.frustum(xMin, xMax, yMin, yMax, near, far);
     };
 
+    /**
+     * Sets a perspective matrix defined through the parameters. Works like glFrustum, except it wipes out the current
+     * perspective matrix rather than muliplying itself with it.
+     *
+     * @param {float} left   left coordinate of the clipping plane
+     * @param {float} right  right coordinate of the clipping plane
+     * @param {float} bottom bottom coordinate of the clipping plane
+     * @param {float} top    top coordinate of the clipping plane
+     * @param {float} near   near coordinate of the clipping plane
+     * @param {float} far    far coordinate of the clipping plane
+     *
+     * @see beginCamera
+     * @see camera
+     * @see endCamera
+     * @see perspective
+     */
     p.frustum = function frustum(left, right, bottom, top, near, far) {
       frustumMode = true;
       projection = new PMatrix3D();
@@ -9075,6 +9180,20 @@
                      0, 0, -1, 0);
     };
 
+    /**
+     * Sets an orthographic projection and defines a parallel clipping volume. All objects with the same dimension appear
+     * the same size, regardless of whether they are near or far from the camera. The parameters to this function specify
+     * the clipping volume where left and right are the minimum and maximum x values, top and bottom are the minimum and
+     * maximum y values, and near and far are the minimum and maximum z values. If no parameters are given, the default
+     * is used: ortho(0, width, 0, height, -10, 10).
+     *
+     * @param {float} left   left plane of the clipping volume
+     * @param {float} right  right plane of the clipping volume
+     * @param {float} bottom bottom plane of the clipping volume
+     * @param {float} top    top plane of the clipping volume
+     * @param {float} near   maximum distance from the origin to the viewer
+     * @param {float} far    maximum distance from the origin away from the viewer
+     */
     p.ortho = function ortho(left, right, bottom, top, near, far) {
       if (arguments.length === 0) {
         left = 0;
@@ -9912,18 +10031,51 @@
       }
     };
 
+    /**
+     * Using the <b>beginShape()</b> and <b>endShape()</b> functions allow creating more complex forms. 
+     * <b>beginShape()</b> begins recording vertices for a shape and <b>endShape()</b> stops recording.
+     * The value of the <b>MODE</b> parameter tells it which types of shapes to create from the provided vertices.
+     * With no mode specified, the shape can be any irregular polygon. After calling the <b>beginShape()</b> function,
+     * a series of <b>vertex()</b> commands must follow. To stop drawing the shape, call <b>endShape()</b>.
+     * The <b>vertex()</b> function with two parameters specifies a position in 2D and the <b>vertex()</b>
+     * function with three parameters specifies a position in 3D. Each shape will be outlined with the current
+     * stroke color and filled with the fill color. 
+     *
+     * @param {int} MODE either POINTS, LINES, TRIANGLES, TRIANGLE_FAN, TRIANGLE_STRIP, QUADS, and QUAD_STRIP.
+     *
+     * @see endShape
+     * @see vertex
+     * @see curveVertex
+     * @see bezierVertex
+     */
     p.beginShape = function beginShape(type) {
       curShape = type;
-      curShapeCount = 0;
       curvePoints = [];
-      //textureImage = null;
       vertArray = [];
-      if(p.use3DContext)
-      {
-        //normalMode = NORMAL_MODE_AUTO;
-      }
     };
 
+    /**
+     * All shapes are constructed by connecting a series of vertices. <b>vertex()</b> is used to specify the vertex
+     * coordinates for points, lines, triangles, quads, and polygons and is used exclusively within the <b>beginShape()</b>
+     * and <b>endShape()</b> function. <br /><br />Drawing a vertex in 3D using the <b>z</b> parameter requires the P3D or
+     * OPENGL parameter in combination with size as shown in the above example.<br /><br />This function is also used to map a
+     * texture onto the geometry. The <b>texture()</b> function declares the texture to apply to the geometry and the <b>u</b>
+     * and <b>v</b> coordinates set define the mapping of this texture to the form. By default, the coordinates used for
+     * <b>u</b> and <b>v</b> are specified in relation to the image's size in pixels, but this relation can be changed with
+     * <b>textureMode()</b>.
+     *
+     * @param {int | float} x x-coordinate of the vertex
+     * @param {int | float} y y-coordinate of the vertex
+     * @param {int | float} z z-coordinate of the vertex
+     * @param {int | float} u horizontal coordinate for the texture mapping
+     * @param {int | float} v vertical coordinate for the texture mapping
+     *
+     * @see beginShape
+     * @see endShape
+     * @see bezierVertex
+     * @see curveVertex
+     * @see texture
+     */
     p.vertex = function vertex() {
       var vert = [];
 
@@ -9969,14 +10121,17 @@
       vertArray.push(vert);
     };
 
-    /*
-      Draw 3D points created from calls to vertex:
-
-      beginShape(POINT);
-      vertex(x, y, 0);
-      ...
-      endShape();
-    */
+    /**
+     * @private
+     * Renders 3D points created from calls to vertex and beginShape/endShape
+     * 
+     * @param {Array} vArray an array of vertex coordinate
+     * @param {Array} cArray an array of colours used for the vertices
+     *
+     * @see beginShape
+     * @see endShape
+     * @see vertex
+     */
     var point3D = function point3D(vArray, cArray){
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
@@ -10000,10 +10155,18 @@
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
 
-    /*
-      Draw 3D lines created from calls to beginShape/vertex/endShape
-      LINES, LINE_LOOP, etc.
-    */
+    /**
+     * @private
+     * Renders 3D lines created from calls to beginShape/vertex/endShape - based on the mode specified LINES, LINE_LOOP, etc.
+     * 
+     * @param {Array} vArray an array of vertex coordinate
+     * @param {String} mode  either LINES, LINE_LOOP, or LINE_STRIP
+     * @param {Array} cArray an array of colours used for the vertices
+     *
+     * @see beginShape
+     * @see endShape
+     * @see vertex
+     */
     var line3D = function line3D(vArray, mode, cArray){
       var ctxMode;
       if (mode === "LINES"){
@@ -10040,6 +10203,19 @@
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
+    /**
+     * @private
+     * Render filled shapes created from calls to beginShape/vertex/endShape - based on the mode specified TRIANGLES, etc.
+     * 
+     * @param {Array} vArray an array of vertex coordinate
+     * @param {String} mode  either LINES, LINE_LOOP, or LINE_STRIP
+     * @param {Array} cArray an array of colours used for the vertices
+     * @param {Array} tArray an array of u,v coordinates for textures
+     *
+     * @see beginShape
+     * @see endShape
+     * @see vertex
+     */
     var fill3D = function fill3D(vArray, mode, cArray, tArray){
       var ctxMode;
       if(mode === "TRIANGLES"){
@@ -10106,6 +10282,15 @@
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
+    /**
+     * The endShape() function is the companion to beginShape() and may only be called after beginShape().
+     * When endshape() is called, all of image data defined since the previous call to beginShape() is written
+     * into the image buffer. 
+     *
+     * @param {int} MODE Use CLOSE to close the shape
+     *
+     * @see beginShape
+     */
     p.endShape = function endShape(mode){
       var closeShape = mode === PConstants.CLOSE;
       var lineVertArray = [];
@@ -10125,7 +10310,7 @@
       }
 
       // 5,6,7,8
-      // R,G,B,A
+      // R,G,B,A - fill colour
       for (i = 0; i < vertArray.length; i++) {
         for (j = 5; j < 9; j++) {
           colorVertArray.push(vertArray[i][j]);
@@ -10133,18 +10318,20 @@
       }
 
       // 9,10,11,12
-      // R, G, B, A
+      // R, G, B, A - stroke colour
       for (i = 0; i < vertArray.length; i++) {
         for (j = 9; j < 13; j++) {
           strokeVertArray.push(vertArray[i][j]);
         }
       }
 
+      // texture u,v
       for (i = 0; i < vertArray.length; i++) {
         texVertArray.push(vertArray[i][3]);
         texVertArray.push(vertArray[i][4]);
       }
 
+      // if shape is closed, push the first point into the last point (including colours)
       if (closeShape) {
         fillVertArray.push(vertArray[0][0]);
         fillVertArray.push(vertArray[0][1]);
@@ -10162,6 +10349,7 @@
         texVertArray.push(vertArray[0][4]);
       }
 
+      // curveVertex
       if (isCurve && curShape === PConstants.POLYGON || isCurve && curShape === undef) {
         if (p.use3DContext) {
           lineVertArray = fillVertArray;
@@ -10203,7 +10391,9 @@
             curContext.closePath();
           }
         }
-      } else if (isBezier && curShape === PConstants.POLYGON || isBezier && curShape === undef) {
+      }
+      // bezierVertex 
+      else if (isBezier && curShape === PConstants.POLYGON || isBezier && curShape === undef) {
         if (p.use3DContext) {
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
@@ -10271,61 +10461,61 @@
           executeContextStroke();
           curContext.closePath();
         }
-      } else {
-        if (p.use3DContext) { // 3D context
-          if (curShape === PConstants.POINTS) {
-            for (i = 0; i < vertArray.length; i++) {
+      } else {  // render the vertices provided
+        if (p.use3DContext) { // in 3D context
+          if (curShape === PConstants.POINTS) {       // if POINTS was the specified parameter in beginShape
+            for (i = 0; i < vertArray.length; i++) {  // loop through and push the point location information to the array
               for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[i][j]);
               }
             }
-            point3D(lineVertArray, strokeVertArray);
-          } else if (curShape === PConstants.LINES) {
-            for (i = 0; i < vertArray.length; i++) {
+            point3D(lineVertArray, strokeVertArray);  // render function for points
+          } else if (curShape === PConstants.LINES) { // if LINES was the specified parameter in beginShape
+            for (i = 0; i < vertArray.length; i++) {  // loop through and push the point location information to the array
               for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[i][j]);
               }
             }
-            for (i = 0; i < vertArray.length; i++) {
+            for (i = 0; i < vertArray.length; i++) {  // loop through and push the color information to the array
               for (j = 5; j < 9; j++) {
                 colorVertArray.push(vertArray[i][j]);
               }
             }
-            line3D(lineVertArray, "LINES", strokeVertArray);
-          } else if (curShape === PConstants.TRIANGLES) {
+            line3D(lineVertArray, "LINES", strokeVertArray);  // render function for lines
+          } else if (curShape === PConstants.TRIANGLES) {     // if TRIANGLES was the specified parameter in beginShape
             if (vertArray.length > 2) {
-              for (i = 0; (i+2) < vertArray.length; i+=3) {
+              for (i = 0; (i+2) < vertArray.length; i+=3) {   // loop through the array per triangle
                 fillVertArray = [];
                 texVertArray = [];
                 lineVertArray = [];
                 colorVertArray = [];
                 strokeVertArray = [];
                 for (j = 0; j < 3; j++) {
-                  for (k = 0; k < 3; k++) {
-                    lineVertArray.push(vertArray[i+j][k]);
-                    fillVertArray.push(vertArray[i+j][k]);
+                  for (k = 0; k < 3; k++) {                   // loop through and push
+                    lineVertArray.push(vertArray[i+j][k]);    // the line point location information
+                    fillVertArray.push(vertArray[i+j][k]);    // and fill point location information
                   }
                 }
-                for (j = 0; j < 3; j++) {
+                for (j = 0; j < 3; j++) {                     // loop through and push the texture information
                   for (k = 3; k < 5; k++) {
                     texVertArray.push(vertArray[i+j][k]);
                   }
                 }
                 for (j = 0; j < 3; j++) {
-                  for (k = 5; k < 9; k++) {
-                    colorVertArray.push(vertArray[i+j][k]);
-                    strokeVertArray.push(vertArray[i+j][k+4]);
+                  for (k = 5; k < 9; k++) {                   // loop through and push
+                    colorVertArray.push(vertArray[i+j][k]);   // the colour information
+                    strokeVertArray.push(vertArray[i+j][k+4]);// and the stroke information
                   }
                 }
                 if (doStroke) {
-                  line3D(lineVertArray, "LINE_LOOP", strokeVertArray );
+                  line3D(lineVertArray, "LINE_LOOP", strokeVertArray );               // line render function
                 }
                 if (doFill || usingTexture) {
-                  fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);
+                  fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);   // fill shape render function
                 }
               }
             }
-          } else if (curShape === PConstants.TRIANGLE_STRIP) {
+          } else if (curShape === PConstants.TRIANGLE_STRIP) {    // if TRIANGLE_STRIP was the specified parameter in beginShape
             if (vertArray.length > 2) {
               for (i = 0; (i+2) < vertArray.length; i++) {
                 lineVertArray = [];
@@ -10559,10 +10749,8 @@
           usingTexture = false;
           curContext.useProgram(programObject3D);
           uniformi(programObject3D, "usingTexture", usingTexture);
-        }
-
-        // 2D context
-        else {
+          
+        } else { // in 2D context
           if (curShape === PConstants.POINTS) {
             for (i = 0; i < vertArray.length; i++) {
               if (doStroke) {
@@ -10787,6 +10975,28 @@
       curveDrawMatrix.apply(curveBasisMatrix);
     };
 
+    /**
+     * Specifies vertex coordinates for Bezier curves. Each call to <b>bezierVertex()</b> defines the position of two control
+     * points and one anchor point of a Bezier curve, adding a new segment to a line or shape. The first time
+     * <b>bezierVertex()</b> is used within a <b>beginShape()</b> call, it must be prefaced with a call to <b>vertex()</b>
+     * to set the first anchor point. This function must be used between <b>beginShape()</b> and <b>endShape()</b> and only
+     * when there is no MODE parameter specified to <b>beginShape()</b>. Using the 3D version of requires rendering with P3D
+     * or OPENGL (see the Environment reference for more information). <br /> <br /> <b>NOTE: </b> Fill does not work properly yet.
+     *
+     * @param {float | int} cx1 The x-coordinate of 1st control point
+     * @param {float | int} cy1 The y-coordinate of 1st control point
+     * @param {float | int} cz1 The z-coordinate of 1st control point
+     * @param {float | int} cx2 The x-coordinate of 2nd control point
+     * @param {float | int} cy2 The y-coordinate of 2nd control point
+     * @param {float | int} cz2 The z-coordinate of 2nd control point
+     * @param {float | int} x   The x-coordinate of the anchor point
+     * @param {float | int} y   The y-coordinate of the anchor point
+     * @param {float | int} z   The z-coordinate of the anchor point
+     *
+     * @see curveVertex
+     * @see vertex
+     * @see bezier
+     */
     p.bezierVertex = function bezierVertex() {
       isBezier = true;
       var vert = [];
@@ -10937,16 +11147,25 @@
         p.vertex(x0, y0, z0);
       }
     };
+
     /**
-     * The curveVertex() function specifies vertex coordinates for curves. This function may only be used between <b>beginShape()</b> and <b>endShape()</b>
-     * and only when there is no MODE parameter specified to <b>beginShape()</b>. The first and last points in a series of <b>curveVertex()</b>
-     * lines will be used to guide the beginning and end of a the curve. A minimum of four points is required to draw a tiny curve between the second and third points. 
-     * Adding a fifth point with <b>curveVertex()</b> will draw the curve between the second, third, and fourth points. 
-     * The <b>curveVertex()</b> function is an implementation of Catmull-Rom splines. Using the 3D version of requires rendering with P3D or OPENGL.
+     * Specifies vertex coordinates for curves. This function may only be used between <b>beginShape()</b> and
+     * <b>endShape()</b> and only when there is no MODE parameter specified to <b>beginShape()</b>. The first and last points
+     * in a series of <b>curveVertex()</b> lines will be used to guide the beginning and end of a the curve. A minimum of four
+     * points is required to draw a tiny curve between the second and third points. Adding a fifth point with
+     * <b>curveVertex()</b> will draw the curve between the second, third, and fourth points. The <b>curveVertex()</b> function
+     * is an implementation of Catmull-Rom splines. Using the 3D version of requires rendering with P3D or OPENGL (see the
+     * Environment reference for more information). <br /> <br /><b>NOTE: </b> Fill does not work properly yet.
      *
-     * @param {int|float} x  the x-coordinate of the vertex
-     * @param {int|float} y  the y-coordinate of the vertex
-     * @param {int|float} z  the z-coordinate of the vertex
+     * @param {float | int} x The x-coordinate of the vertex
+     * @param {float | int} y The y-coordinate of the vertex
+     * @param {float | int} z The z-coordinate of the vertex
+     * 
+     * @see curve
+     * @see beginShape
+     * @see endShape
+     * @see vertex
+     * @see bezierVertex
      */
     p.curveVertex = function(x, y, z) {
       isCurve = true;
@@ -11208,6 +11427,21 @@
       }
     };
 
+    /**
+     * Draws a Bezier curve on the screen. These curves are defined by a series of anchor and control points. The first
+     * two parameters specify the first anchor point and the last two parameters specify the other anchor point. The
+     * middle parameters specify the control points which define the shape of the curve. Bezier curves were developed
+     * by French engineer Pierre Bezier. Using the 3D version of requires rendering with P3D or OPENGL (see the
+     * Environment reference for more information).
+     *
+     * @param {int | float} x1,y1,z1    coordinates for the first anchor point
+     * @param {int | float} cx1,cy1,cz1 coordinates for the first control point
+     * @param {int | float} cx2,cy2,cz2 coordinates for the second control point
+     * @param {int | float} x2,y2,z2    coordinates for the second anchor point
+     *
+     * @see bezierVertex
+     * @see curve
+     */
     p.bezier = function bezier() {
       if( arguments.length === 8 && !p.use3DContext ){
           p.beginShape();
@@ -11229,6 +11463,17 @@
         throw("Please use the proper parameters!");
       }
     };
+
+    /**
+     * Sets the resolution at which Beziers display. The default value is 20. This function is only useful when using the P3D
+     * or OPENGL renderer as the default (JAVA2D) renderer does not use this information.
+     *
+     * @param {int} detail resolution of the curves
+     *
+     * @see curve
+     * @see curveVertex
+     * @see curveTightness
+     */
     p.bezierDetail = function bezierDetail( detail ){
       bezDetail = detail;
     };
@@ -11308,6 +11553,17 @@
       return 0.5 * ((-a + c) + 2 * (2 * a - 5 * b + 4 * c - d) * t + 3 * (-a + 3 * b - 3 * c + d) * t * t);
     };
 
+    /**
+     * A triangle is a plane created by connecting three points. The first two arguments specify the first point,
+     * the middle two arguments specify the second point, and the last two arguments specify the third point.
+     *
+     * @param {int | float} x1 x-coordinate of the first point
+     * @param {int | float} y1 y-coordinate of the first point
+     * @param {int | float} x2 x-coordinate of the second point
+     * @param {int | float} y2 y-coordinate of the second point
+     * @param {int | float} x3 x-coordinate of the third point
+     * @param {int | float} y3 y-coordinate of the third point
+     */
     p.triangle = function triangle(x1, y1, x2, y2, x3, y3) {
       p.beginShape(PConstants.TRIANGLES);
       p.vertex(x1, y1, 0);
@@ -11316,6 +11572,20 @@
       p.endShape();
     };
 
+    /**
+     * A quad is a quadrilateral, a four sided polygon. It is similar to a rectangle, but the angles between its
+     * edges are not constrained to ninety degrees. The first pair of parameters (x1,y1) sets the first vertex
+     * and the subsequent pairs should proceed clockwise or counter-clockwise around the defined shape.
+     *
+     * @param {float | int} x1 x-coordinate of the first corner
+     * @param {float | int} y1 y-coordinate of the first corner
+     * @param {float | int} x2 x-coordinate of the second corner
+     * @param {float | int} y2 y-coordinate of the second corner
+     * @param {float | int} x3 x-coordinate of the third corner
+     * @param {float | int} y3 y-coordinate of the third corner
+     * @param {float | int} x4 x-coordinate of the fourth corner
+     * @param {float | int} y4 y-coordinate of the fourth corner
+     */
     p.quad = function quad(x1, y1, x2, y2, x3, y3, x4, y4) {
       p.beginShape(PConstants.QUADS);
       p.vertex(x1, y1, 0);
@@ -11446,6 +11716,18 @@
       }
     };
 
+    /**
+     * Draws an ellipse (oval) in the display window. An ellipse with an equal <b>width</b> and <b>height</b> is a circle.
+     * The first two parameters set the location, the third sets the width, and the fourth sets the height. The origin may be
+     * changed with the <b>ellipseMode()</b> function.
+     *
+     * @param {float|int} x      x-coordinate of the ellipse
+     * @param {float|int} y      y-coordinate of the ellipse
+     * @param {float|int} width  width of the ellipse
+     * @param {float|int} height height of the ellipse
+     *
+     * @see ellipseMode
+     */
     p.ellipse = function ellipse(x, y, width, height) {
       x = x || 0;
       y = y || 0;
@@ -11937,7 +12219,20 @@
       }
     };
 
-    // Creates a new Processing instance and passes it back for... processing
+    /**
+     * Creates and returns a new <b>PGraphics</b> object of the types P2D, P3D, and JAVA2D. Use this class if you need to draw
+     * into an off-screen graphics buffer. It's not possible to use <b>createGraphics()</b> with OPENGL, because it doesn't
+     * allow offscreen use. The DXF and PDF renderers require the filename parameter. <br /><br /> It's important to call
+     * any drawing commands between beginDraw() and endDraw() statements. This is also true for any commands that affect
+     * drawing, such as smooth() or colorMode().<br /><br /> Unlike the main drawing surface which is completely opaque,
+     * surfaces created with createGraphics() can have transparency. This makes it possible to draw into a graphics and
+     * maintain the alpha channel.
+     *
+     * @param {int} width       width in pixels
+     * @param {int} height      height in pixels
+     * @param {int} renderer    Either P2D, P3D, JAVA2D, PDF, DXF
+     * @param {String} filename the name of the file (not supported yet)
+     */
     p.createGraphics = function createGraphics(w, h, render) {
       var canvas = document.createElement("canvas");
       var pg = new Processing(canvas);
@@ -13890,6 +14185,24 @@
       }
     };
 
+    /**
+     * Sets the way text draws to the screen. In the default configuration (the MODEL mode), it's possible to rotate,
+     * scale, and place letters in two and three dimensional space. <br /><br /> Changing to SCREEN mode draws letters
+     * directly to the front of the window and greatly increases rendering quality and speed when used with the P2D and
+     * P3D renderers. textMode(SCREEN) with OPENGL and JAVA2D (the default) renderers will generally be slower, though
+     * pixel accurate with P2D and P3D. With textMode(SCREEN), the letters draw at the actual size of the font (in pixels)
+     * and therefore calls to <b>textSize()</b> will not affect the size of the letters. To create a font at the size you
+     * desire, use the "Create font..." option in the Tools menu, or use the createFont() function. When using textMode(SCREEN),
+     * any z-coordinate passed to a text() command will be ignored, because your computer screen is...flat!
+     *
+     * @param {int} MODE Either MODEL, SCREEN or SHAPE (not yet supported)
+     *
+     * @see loadFont
+     * @see PFont
+     * @see text
+     * @see textFont
+     * @see createFont
+     */
     p.textMode = function textMode(mode){
       tMode = mode;
     };
