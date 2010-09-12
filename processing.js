@@ -1,4 +1,3 @@
-//*******************************************************************************
 /*
 
     P R O C E S S I N G . J S - @VERSION@
@@ -993,8 +992,11 @@
     p.use3DContext    = false; // default '2d' canvas context
 
     /**
-     * XXX
-     *
+     * Confirms if a Processing program is "focused", meaning that it is 
+     * active and will accept input from mouse or keyboard. This variable 
+     * is "true" if it is focused and "false" if not. This variable is 
+     * often used when you want to warn people they need to click on the 
+     * browser before it will work.
     */
     p.focused         = true;
     p.breakShape      = false;
@@ -1657,12 +1659,23 @@
     ////////////////////////////////////////////////////////////////////////////
 
     /*
-      Sets the uniform variable 'varName' to the value specified by 'value'.
-      Before calling this function, make sure the correct program object
-      has been installed as part of the current rendering state.
-
-      On some systems, if the variable exists in the shader but isn't used,
-      the compiler will optimize it out and this function will fail.
+     * Sets a uniform variable in a program object to a particular
+     * value. Before calling this function, ensure the correct 
+     * program object has been installed as part of the current 
+     * rendering state by calling useProgram.
+     *
+     * On some systems, if the variable exists in the shader but isn't used,
+     * the compiler will optimize it out and this function will fail.
+     *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {float | Array} varValue either a scalar value or an Array
+     *
+     * @returns none
+     * 
+     * @see uniformi
+     * @see uniformMatrix
     */
     function uniformf(programObj, varName, varValue) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
@@ -1681,8 +1694,23 @@
     }
 
     /**
-     * XXX 
+     * Sets a uniform int or int array in a program object to a particular
+     * value. Before calling this function, ensure the correct 
+     * program object has been installed as part of the current 
+     * rendering state.
      *
+     * On some systems, if the variable exists in the shader but isn't used,
+     * the compiler will optimize it out and this function will fail.
+     *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {int | Array} varValue either a scalar value or an Array
+     *
+     * @returns none
+     * 
+     * @see uniformf
+     * @see uniformMatrix
     */
     function uniformi(programObj, varName, varValue) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
@@ -1701,8 +1729,22 @@
     }
 
     /**
-     * XXX 
+     * Binds the VBO, sets the vertex attribute data for the program 
+     * object and enables the attribute.
+     * 
+     * On some systems, if the attribute exists in the shader but 
+     * isn't used, the compiler will optimize it out and this 
+     * function will fail.
      *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {int} size the number of components per vertex attribute
+     * @param {WebGLBuffer} VBO Vertex Buffer Object
+     *
+     * @returns none
+     *
+     * @see disableVertexAttribPointer
     */
     function vertexAttribPointer(programObj, varName, size, VBO) {
       var varLocation = curContext.getAttribLocation(programObj, varName);
@@ -1714,8 +1756,15 @@
     }
 
     /**
-     * XXX 
+     * Disables a program object attribute from being sent to WebGL.
      *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName name of the attribute
+     *
+     * @returns none
+     *
+     * @see vertexAttribPointer
     */
     function disableVertexAttribPointer(programObj, varName){
       var varLocation = curContext.getAttribLocation(programObj, varName);
@@ -1725,8 +1774,25 @@
     }
 
     /**
-     * XXX 
+     * Sets the value of a uniform matrix variable in a program 
+     * object. Before calling this function, ensure the correct 
+     * program object has been installed as part of the current 
+     * rendering state.
      *
+     * On some systems, if the variable exists in the shader but 
+     * isn't used, the compiler will optimize it out and this 
+     * function will fail.
+     *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {boolean} transpose must be false
+     * @param {Array} matrix an array of 4, 9 or 16 values
+     *
+     * @returns none
+     * 
+     * @see uniformi
+     * @see uniformf
     */
     function uniformMatrix(programObj, varName, transpose, matrix) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
@@ -1771,8 +1837,12 @@
     };
 
     /**
-     * XXX 
+     * Creates a WebGL program object.
      *
+     * @param {String} vetexShaderSource
+     * @param {String} fragmentShaderSource
+     * 
+     * @returns {WebGLProgram} A program object
     */
     var createProgramObject = function(curContext, vetexShaderSource, fragmentShaderSource) {
       var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
@@ -3754,10 +3824,6 @@
     // PMatrix3D
     ////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * XXX
-     *
-    */
     var PMatrix3D = p.PMatrix3D = function PMatrix3D() {
       // When a matrix is created, it is set to an identity matrix
       this.reset();
@@ -4229,8 +4295,19 @@
     };
 
     /**
-     * XXX
+     * Sorts an array of numbers from smallest to largest and puts an array of 
+     * words in alphabetical order. The original array is not modified, a 
+     * re-ordered array is returned. The count parameter states the number of 
+     * elements to sort. For example if there are 12 elements in an array and 
+     * if count is the value 5, only the first five elements on the array will 
+     * be sorted. Alphabetical ordering is case insensitive.
+     * 
+     * @param {String[] | int[] | float[]}  array Array of elements to sort
+     * @param {int}                         numElem Number of elements to sort
      *
+     * @returns {String[] | int[] | float[]} Array (same datatype as the input)
+     *
+     * @see reverse
     */
     p.sort = function(array, numElem) {
       var ret = [];
@@ -5793,9 +5870,6 @@
 
     p.log = Math.log;
 
-    /**
-     * XXX
-    */
     p.mag = function(a, b, c) {
       if (arguments.length === 2) {
         return Math.sqrt(a * a + b * b);
@@ -6276,10 +6350,10 @@
      *
      * @returns none
      *
-     * @see #lights
-     * @see #directionalLight
-     * @see #pointLight
-     * @see #spotLight
+     * @see lights
+     * @see directionalLight
+     * @see pointLight
+     * @see spotLight
     */
     p.ambientLight = function(r, g, b, x, y, z) {
       if (p.use3DContext) {
@@ -6324,10 +6398,10 @@
      *
      * @returns none
      *
-     * @see #lights
-     * @see #ambientLight
-     * @see #pointLight
-     * @see #spotLight
+     * @see lights
+     * @see ambientLight
+     * @see pointLight
+     * @see spotLight
     */
     p.directionalLight = function(r, g, b, nx, ny, nz) {
       if (p.use3DContext) {
@@ -6374,11 +6448,11 @@
      *
      * @returns none
      *
-     * @see #lights
-     * @see #ambientLight
-     * @see #pointLight
-     * @see #spotLight
-     * @see #lightSpecular
+     * @see lights
+     * @see ambientLight
+     * @see pointLight
+     * @see spotLight
+     * @see lightSpecular
     */
     p.lightFalloff = function lightFalloff(constant, linear, quadratic) {
       if (p.use3DContext) {
@@ -6401,10 +6475,10 @@
      *
      * @returns none
      *
-     * @see #lights
-     * @see #ambientLight
-     * @see #pointLight
-     * @see #spotLight
+     * @see lights
+     * @see ambientLight
+     * @see pointLight
+     * @see spotLight
     */
     p.lightSpecular = function lightSpecular(r, g, b) {
       if (p.use3DContext) {
@@ -6455,10 +6529,10 @@
      *
      * @returns none
      *
-     * @see #lights
-     * @see #directionalLight
-     * @see #ambientLight
-     * @see #spotLight
+     * @see lights
+     * @see directionalLight
+     * @see ambientLight
+     * @see spotLight
     */
     p.pointLight = function(r, g, b, x, y, z) {
       if (p.use3DContext) {
@@ -6524,10 +6598,10 @@
      *
      * @returns none
      *
-     * @see #lights
-     * @see #directionalLight
-     * @see #ambientLight
-     * @see #pointLight
+     * @see lights
+     * @see directionalLight
+     * @see ambientLight
+     * @see pointLight
     */
     p.spotLight = function spotLight(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
       if (p.use3DContext) {
@@ -7012,8 +7086,8 @@
      *
      * @returns {float}
      *
-     * @see #modelY
-     * @see #modelZ
+     * @see modelY
+     * @see modelZ
     */
     p.modelX = function modelX(x, y, z) {
       var mv = modelView.array();
@@ -7044,8 +7118,8 @@
      *
      * @returns {float}
      * 
-     * @see #modelX
-     * @see #modelZ
+     * @see modelX
+     * @see modelZ
     */
     p.modelY = function modelY(x, y, z) {
       var mv = modelView.array();
@@ -7075,8 +7149,8 @@
      *
      * @returns {float}
      *
-     * @see #modelX
-     * @see #modelY
+     * @see modelX
+     * @see modelY
     */
     p.modelZ = function modelZ(x, y, z) {
       var mv = modelView.array();
@@ -7110,9 +7184,9 @@
      *
      * @returns none
      *
-     * @see #emissive
-     * @see #specular
-     * @see #shininess
+     * @see emissive
+     * @see specular
+     * @see shininess
     */
     p.ambient = function ambient() {
       // create an alias to shorten code
@@ -7142,8 +7216,28 @@
     };
 
     /**
-     * XXX
+     * Sets the emissive color of the material used for drawing shapes 
+     * drawn to the screen. Used in combination with ambient(), specular(), 
+     * and shininess() in setting the material properties of shapes.
      *
+     * Can be called in the following ways:
+     *
+     * emissive(gray)
+     * @param {int | float} gray number specifying value between white and black 
+     *
+     * emissive(color)
+     * @param {color} color any value of the color datatype
+     *
+     * emissive(v1, v2, v3)
+     * @param {int | float} v1 red or hue value
+     * @param {int | float} v2 green or saturation value
+     * @param {int | float} v3 blue or brightness value
+     *     
+     * @returns none
+     *
+     * @see ambient
+     * @see specular
+     * @see shininess
     */
     p.emissive = function emissive() {
       // create an alias to shorten code
@@ -7191,7 +7285,40 @@
     };
 
     /**
-     * XXX
+     * Sets the specular color of the materials used for shapes drawn to the screen, 
+     * which sets the color of hightlights. Specular refers to light which bounces 
+     * off a surface in a perferred direction (rather than bouncing in all directions 
+     * like a diffuse light). Used in combination with emissive(), ambient(), and 
+     * shininess() in setting the material properties of shapes.
+     *
+     * Can be called in the following ways:
+     * 
+     * specular(gray)
+     * @param {int | float} gray number specifying value between white and black
+     *
+     * specular(gray, alpha)
+     * @param {int | float} gray number specifying value between white and black
+     * @param {int | float} alpha opacity
+     *
+     * specular(color)
+     * @param {color} color any value of the color datatype
+     *
+     * specular(v1, v2, v3)
+     * @param {int | float} v1 red or hue value
+     * @param {int | float} v2 green or saturation value
+     * @param {int | float} v3 blue or brightness value
+     *
+     * specular(v1, v2, v3, alpha)
+     * @param {int | float} v1 red or hue value
+     * @param {int | float} v2 green or saturation value
+     * @param {int | float} v3 blue or brightness value
+     * @param {int | float} alpha opacity
+     *
+     * @returns none
+     *
+     * @see ambient
+     * @see emissive
+     * @see shininess
     */
     p.specular = function specular() {
       var c = p.color.apply(this, arguments);
@@ -7217,8 +7344,8 @@
      *
      * @returns {float}
      *
-     * @see #screenY
-     * @see #screenZ
+     * @see screenY
+     * @see screenZ
     */
     p.screenX = function screenX( x, y, z ) {
       var mv = modelView.array();
@@ -7248,8 +7375,8 @@
      *
      * @returns {float}
      *
-     * @see #screenX
-     * @see #screenZ
+     * @see screenX
+     * @see screenZ
     */
     p.screenY = function screenY( x, y, z ) {
       var mv = modelView.array();
@@ -7279,8 +7406,8 @@
      *
      * @returns {float}
      *
-     * @see #screenX
-     * @see #screenY
+     * @see screenX
+     * @see screenY
     */
     p.screenZ = function screenZ( x, y, z ) {
       var mv = modelView.array();
@@ -8407,10 +8534,10 @@
      *
      * @returns none
      *
-     * @see #textureMode
-     * @see #beginShape
-     * @see #endShape
-     * @see #vertex
+     * @see textureMode
+     * @see beginShape
+     * @see endShape
+     * @see vertex
     */
     p.texture = function(pimage) {
       if (pimage.localName === "canvas") {
@@ -8474,7 +8601,7 @@
      *
      * @returns none
      *
-     * @see #texture
+     * @see texture
     */
     p.textureMode = function(mode){
       curTextureMode = mode;
