@@ -8671,6 +8671,19 @@
     };
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
+    /**
+    * Defines the dimension of the display window in units of pixels. The size() function must 
+    * be the first line in setup(). If size() is not called, the default size of the window is 
+    * 100x100 pixels. The system variables width and height are set by the parameters passed to 
+    * the size() function. 
+    *
+    * @param {int} aWidth     width of the display window in units of pixels
+    * @param {int} aHeight    height of the display window in units of pixels
+    * @param {MODE} aMode     Either P2D, P3D, JAVA2D, or OPENGL
+    * 
+    * @see createGraphics
+    * @see screen
+    */
     p.size = function size(aWidth, aHeight, aMode) {
       if (aMode && (aMode === PConstants.WEBGL)) {
         // get the 3D rendering context
@@ -11282,10 +11295,41 @@
       curveInit();
     };
 
+    /**
+    * Modifies the location from which rectangles draw. The default mode is rectMode(CORNER), which 
+    * specifies the location to be the upper left corner of the shape and uses the third and fourth 
+    * parameters of rect() to specify the width and height. The syntax rectMode(CORNERS) uses the 
+    * first and second parameters of rect() to set the location of one corner and uses the third and 
+    * fourth parameters to set the opposite corner. The syntax rectMode(CENTER) draws the image from 
+    * its center point and uses the third and forth parameters of rect() to specify the image's width 
+    * and height. The syntax rectMode(RADIUS) draws the image from its center point and uses the third 
+    * and forth parameters of rect()  to specify half of the image's width and height. The parameter must 
+    * be written in ALL CAPS because Processing is a case sensitive language. Note: In version 125, the 
+    * mode named CENTER_RADIUS was shortened to RADIUS.
+    *
+    * @param {MODE} MODE      Either CORNER, CORNERS, CENTER, or RADIUS
+    *
+    * @see rect
+    */
     p.rectMode = function rectMode(aRectMode) {
       curRectMode = aRectMode;
     };
 
+    /**
+    * Modifies the location from which images draw. The default mode is imageMode(CORNER), which specifies 
+    * the location to be the upper left corner and uses the fourth and fifth parameters of image() to set 
+    * the image's width and height. The syntax imageMode(CORNERS) uses the second and third parameters of 
+    * image() to set the location of one corner of the image and uses the fourth and fifth parameters to 
+    * set the opposite corner. Use imageMode(CENTER) to draw images centered at the given x and y position.
+    * The parameter to imageMode() must be written in ALL CAPS because Processing is a case sensitive language.
+    *
+    * @param {MODE} MODE      Either CORNER, CORNERS, or CENTER
+    * 
+    * @see loadImage
+    * @see PImage
+    * @see image
+    * @see background
+    */
     p.imageMode = function(mode) {
       switch (mode) {
       case PConstants.CORNER:
@@ -11302,9 +11346,22 @@
       }
     };
 
+    /**
+    * The origin of the ellipse is modified by the ellipseMode() function. The default configuration is 
+    * ellipseMode(CENTER), which specifies the location of the ellipse as the center of the shape. The RADIUS 
+    * mode is the same, but the width and height parameters to ellipse()  specify the radius of the ellipse, 
+    * rather than the diameter. The CORNER mode draws the shape from the upper-left corner of its bounding box. 
+    * The CORNERS mode uses the four parameters to ellipse() to set two opposing corners of the ellipse's bounding 
+    * box. The parameter must be written in "ALL CAPS" because Processing is a case sensitive language.
+    *
+    * @param {MODE} MODE      Either CENTER, RADIUS, CORNER, or CORNERS.
+    * 
+    * @see ellipse
+    */
     p.ellipseMode = function ellipseMode(aEllipseMode) {
       curEllipseMode = aEllipseMode;
     };
+
     /**
      * The arc() function draws an arc in the display window.
      * Arcs are drawn along the outer edge of an ellipse defined by the
@@ -11345,6 +11402,26 @@
       curContext.closePath();
     };
 
+    /**
+    * Draws a line (a direct path between two points) to the screen. The version of line() with four parameters 
+    * draws the line in 2D. To color a line, use the stroke() function. A line cannot be filled, therefore the 
+    * fill()  method will not affect the color of a line. 2D lines are drawn with a width of one pixel by default, 
+    * but this can be changed with the strokeWeight()  function. The version with six parameters allows the line
+    * to be placed anywhere within XYZ space. Drawing this shape in 3D using the z parameter requires the P3D or 
+    * OPENGL parameter in combination with size.
+    * 
+    * @param {int|float} x1       x-coordinate of the first point
+    * @param {int|float} y1       y-coordinate of the first point
+    * @param {int|float} z1       z-coordinate of the first point
+    * @param {int|float} x2       x-coordinate of the second point
+    * @param {int|float} y2       y-coordinate of the second point
+    * @param {int|float} z2       z-coordinate of the second point
+    * 
+    * @see strokeWeight
+    * @see strokeJoin
+    * @see strokeCap
+    * @see beginShape
+    */
     p.line = function line() {
       var x1, y1, z1, x2, y2, z2;
 
@@ -11595,6 +11672,19 @@
       p.endShape();
     };
 
+    /**
+    * Draws a rectangle to the screen. A rectangle is a four-sided shape with every angle at ninety 
+    * degrees. The first two parameters set the location, the third sets the width, and the fourth 
+    * sets the height. The origin is changed with the rectMode() function.
+    * 
+    * @param {int|float} x        x-coordinate of the rectangle
+    * @param {int|float} y        y-coordinate of the rectangle
+    * @param {int|float} width    width of the rectangle
+    * @param {int|float} height   height of the rectangle
+    * 
+    * @see rectMode
+    * @see quad
+    */
     p.rect = function rect(x, y, width, height) {
       if (p.use3DContext) {
         // Modeling transformation
@@ -11828,6 +11918,20 @@
       }
     };
 
+    /**
+    * Sets the current normal vector. This is for drawing three dimensional shapes and surfaces and 
+    * specifies a vector perpendicular to the surface of the shape which determines how lighting affects 
+    * it. Processing attempts to automatically assign normals to shapes, but since that's imperfect, 
+    * this is a better option when you want more control. This function is identical to glNormal3f() in OpenGL.
+    * 
+    * @param {float} nx       x direction
+    * @param {float} ny       y direction
+    * @param {float} nz       z direction
+    * 
+    * @see beginShape
+    * @see endShape
+    * @see lights
+    */
     p.normal = function normal(nx, ny, nz) {
       if (arguments.length !== 3 || !(typeof nx === "number" && typeof ny === "number" && typeof nz === "number")) {
         throw "normal() requires three numeric arguments.";
@@ -11850,6 +11954,20 @@
     // Raster drawing functions
     ////////////////////////////////////////////////////////////////////////////
 
+    /**
+    * Saves an image from the display window. Images are saved in TIFF, TARGA, JPEG, and PNG format 
+    * depending on the extension within the filename  parameter. For example, "image.tif" will have 
+    * a TIFF image and "image.png" will save a PNG image. If no extension is included in the filename, 
+    * the image will save in TIFF format and .tif will be added to the name. These files are saved to 
+    * the sketch's folder, which may be opened by selecting "Show sketch folder" from the "Sketch" menu. 
+    * It is not possible to use save() while running the program in a web browser.  All images saved 
+    * from the main drawing window will be opaque. To save images without a background, use createGraphics().
+    * 
+    * @param {String} filename      any sequence of letters and numbers
+    * 
+    * @see saveFrame
+    * @see createGraphics
+    */
     p.save = function save(file, img) {
       // file is unused at the moment
       // may implement this differently in later release
@@ -11892,6 +12010,25 @@
       return canvasData;
     }
 
+    /**
+    * Datatype for storing images. Processing can display .gif, .jpg, .tga, and .png images. Images may be 
+    * displayed in 2D and 3D space. Before an image is used, it must be loaded with the loadImage() function. 
+    * The PImage object contains fields for the width and height of the image, as well as an array called 
+    * pixels[]  which contains the values for every pixel in the image. A group of methods, described below, 
+    * allow easy access to the image's pixels and alpha channel and simplify the process of compositing.
+    * Before using the pixels[] array, be sure to use the loadPixels() method on the image to make sure that the 
+    * pixel data is properly loaded. To create a new image, use the createImage() function (do not use new PImage()).
+    * 
+    * @param {int} width                image width
+    * @param {int} height 	            image height
+    * @param {MODE} format              Either RGB, ARGB, ALPHA (grayscale alpha channel)
+    * 
+    * @returns {PImage}
+    * 
+    * @see loadImage
+    * @see imageMode
+    * @see createImage
+    */
     var PImage = function PImage(aWidth, aHeight, aFormat) {
       this.get = function(x, y, w, h) {
         if (!arguments.length) {
@@ -11903,10 +12040,66 @@
         }
       };
 
+      /**
+      * @member PImage
+      * Changes the color of any pixel or writes an image directly into the image. The x and y parameter 
+      * specify the pixel or the upper-left corner of the image. The color parameter specifies the color value.
+      * Setting the color of a single pixel with set(x, y) is easy, but not as fast as putting the data 
+      * directly into pixels[]. The equivalent statement to "set(x, y, #000000)" using pixels[] is 
+      * "pixels[y*width+x] = #000000". Processing requires calling loadPixels() to load the display window 
+      * data into the pixels[] array before getting the values and calling updatePixels() to update the window. 
+      * 
+      * @param {int} x        x-coordinate of the pixel or upper-left corner of the image
+      * @param {int} y        y-coordinate of the pixel or upper-left corner of the image
+      * @param {color} color  any value of the color datatype
+      *
+      * @see get
+      * @see pixels[]
+      * @see copy
+      */
       this.set = function(x, y, c) {
         p.set(x, y, c, this);
       };
 
+      /**
+      * @member PImage
+      * Blends a region of pixels into the image specified by the img parameter. These copies utilize full 
+      * alpha channel support and a choice of the following modes to blend the colors of source pixels (A) 
+      * with the ones of pixels in the destination image (B):
+      * BLEND - linear interpolation of colours: C = A*factor + B      
+      * ADD - additive blending with white clip: C = min(A*factor + B, 255)
+      * SUBTRACT - subtractive blending with black clip: C = max(B - A*factor, 0)
+      * DARKEST - only the darkest colour succeeds: C = min(A*factor, B)
+      * LIGHTEST - only the lightest colour succeeds: C = max(A*factor, B)
+      * DIFFERENCE - subtract colors from underlying image.
+      * EXCLUSION - similar to DIFFERENCE, but less extreme.
+      * MULTIPLY - Multiply the colors, result will always be darker.
+      * SCREEN - Opposite multiply, uses inverse values of the colors.
+      * OVERLAY - A mix of MULTIPLY and SCREEN. Multiplies dark values, and screens light values.
+      * HARD_LIGHT - SCREEN when greater than 50% gray, MULTIPLY when lower.
+      * SOFT_LIGHT - Mix of DARKEST and LIGHTEST. Works like OVERLAY, but not as harsh.
+      * DODGE - Lightens light tones and increases contrast, ignores darks. Called "Color Dodge" in Illustrator and Photoshop.
+      * BURN - Darker areas are applied, increasing contrast, ignores lights. Called "Color Burn" in Illustrator and Photoshop.
+      * All modes use the alpha information (highest byte) of source image pixels as the blending factor. 
+      * If the source and destination regions are different sizes, the image will be automatically resized to 
+      * match the destination size. If the srcImg parameter is not used, the display window is used as the source image.
+      * This function ignores imageMode().
+      * 
+      * @param {int} x              X coordinate of the source's upper left corner
+      * @param {int} y              Y coordinate of the source's upper left corner
+      * @param {int} width          source image width
+      * @param {int} height         source image height
+      * @param {int} dx             X coordinate of the destinations's upper left corner
+      * @param {int} dy             Y coordinate of the destinations's upper left corner
+      * @param {int} dwidth         destination image width
+      * @param {int} dheight        destination image height
+      * @param {PImage} srcImg      an image variable referring to the source image
+      * @param {MODE} MODE          Either BLEND, ADD, SUBTRACT, LIGHTEST, DARKEST, DIFFERENCE, EXCLUSION, 
+      * MULTIPLY, SCREEN, OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, BURN
+      *
+      * @see alpha
+      * @see copy
+      */
       this.blend = function(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE) {
         if (arguments.length === 9) {
           p.blend(this, srcImg, x, y, width, height, dx, dy, dwidth, dheight, this);
@@ -11915,6 +12108,26 @@
         }
       };
 
+      /**
+      * @member PImage
+      * Copies a region of pixels from one image into another. If the source and destination regions
+      * aren't the same size, it will automatically resize source pixels to fit the specified target region. 
+      * No alpha information is used in the process, however if the source image has an alpha channel set, 
+      * it will be copied as well. This function ignores imageMode().
+      * 
+      * @param {int} sx             X coordinate of the source's upper left corner
+      * @param {int} sy             Y coordinate of the source's upper left corner
+      * @param {int} swidth         source image width
+      * @param {int} sheight        source image height
+      * @param {int} dx             X coordinate of the destinations's upper left corner
+      * @param {int} dy             Y coordinate of the destinations's upper left corner
+      * @param {int} dwidth         destination image width
+      * @param {int} dheight        destination image height
+      * @param {PImage} srcImg      an image variable referring to the source image
+      *
+      * @see alpha
+      * @see blend
+      */
       this.copy = function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
         if (arguments.length === 8) {
           p.blend(this, srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, PConstants.REPLACE, this);
@@ -11923,6 +12136,24 @@
         }
       };
 
+      /**
+      * @member PImage
+      * Filters an image as defined by one of the following modes:
+      * THRESHOLD - converts the image to black and white pixels depending if they are above or below 
+      * the threshold defined by the level parameter. The level must be between 0.0 (black) and 1.0(white). 
+      * If no level is specified, 0.5 is used.
+      * GRAY - converts any colors in the image to grayscale equivalents
+      * INVERT - sets each pixel to its inverse value
+      * POSTERIZE - limits each channel of the image to the number of colors specified as the level parameter
+      * BLUR - executes a Guassian blur with the level parameter specifying the extent of the blurring. 
+      * If no level parameter is used, the blur is equivalent to Guassian blur of radius 1.
+      * OPAQUE - sets the alpha channel to entirely opaque.
+      * ERODE - reduces the light areas with the amount defined by the level parameter.
+      * DILATE - increases the light areas with the amount defined by the level parameter
+      * 
+      * @param {MODE} MODE        Either THRESHOLD, GRAY, INVERT, POSTERIZE, BLUR, OPAQUE, ERODE, or DILATE
+      * @param {int|float} param  in the range from 0 to 1
+      */
       this.filter = function(mode, param) {
         if (arguments.length === 2) {
           p.filter(mode, param, this);
@@ -11932,10 +12163,34 @@
         }
       };
 
+      /**
+      * @member PImage
+      * Saves the image into a file. Images are saved in TIFF, TARGA, JPEG, and PNG format depending on 
+      * the extension within the filename  parameter. For example, "image.tif" will have a TIFF image and 
+      * "image.png" will save a PNG image. If no extension is included in the filename, the image will save 
+      * in TIFF format and .tif will be added to the name. These files are saved to the sketch's folder, 
+      * which may be opened by selecting "Show sketch folder" from the "Sketch" menu. It is not possible to 
+      * use save() while running the program in a web browser.
+      * To save an image created within the code, rather than through loading, it's necessary to make the 
+      * image with the createImage() function so it is aware of the location of the program and can therefore 
+      * save the file to the right place. See the createImage() reference for more information.
+      * 
+      * @param {String} filename        a sequence of letters and numbers
+      */
       this.save = function(file){
         p.save(file,this);
       };
 
+      /**
+      * @member PImage
+      * Resize the image to a new width and height. To make the image scale proportionally, use 0 as the 
+      * value for the wide or high parameter.
+      * 
+      * @param {int} wide         the resized image width
+      * @param {int} high         the resized image height
+      *
+      * @see get
+      */
       this.resize = function(w, h) {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot resize.";
@@ -11957,6 +12212,21 @@
         }
       };
 
+      /**
+      * @member PImage
+      * Masks part of an image from displaying by loading another image and using it as an alpha channel. 
+      * This mask image should only contain grayscale data, but only the blue color channel is used. The 
+      * mask image needs to be the same size as the image to which it is applied.
+      * In addition to using a mask image, an integer array containing the alpha channel data can be 
+      * specified directly. This method is useful for creating dynamically generated alpha masks. This 
+      * array must be of the same length as the target image's pixels array and should contain only grayscale 
+      * data of values between 0-255.
+      * 
+      * @param {PImage} maskImg         any PImage object used as the alpha channel for "img", needs to be same 
+      *                                 size as "img"
+      * @param {int[]} maskArray        any array of Integer numbers used as the alpha channel, needs to be same 
+      *                                 length as the image's pixel array
+      */
       this.mask = function(mask) {
         this.__mask = undef;
 
@@ -12027,8 +12297,27 @@
       };
 
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
+      /**
+      * @member PImage
+      * Loads the pixel data for the image into its pixels[] array. This function must always be called 
+      * before reading from or writing to pixels[].
+      * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the 
+      * rule is that any time you want to manipulate the pixels[] array, you must first call loadPixels(), 
+      * and after changes have been made, call updatePixels(). Even if the renderer may not seem to use 
+      * this function in the current Processing release, this will always be subject to change.
+      */
       this.loadPixels = function() {};
 
+      /**
+      * @member PImage
+      * Updates the image with the data in its pixels[] array. Use in conjunction with loadPixels(). If 
+      * you're only reading pixels from the array, there's no need to call updatePixels().
+      * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the rule 
+      * is that any time you want to manipulate the pixels[] array, you must first call loadPixels(), and 
+      * after changes have been made, call updatePixels(). Even if the renderer may not seem to use this 
+      * function in the current Processing release, this will always be subject to change.
+      * Currently, none of the renderers use the additional parameters to updatePixels().
+      */
       this.updatePixels = function() {};
 
       this.toImageData = function() {
@@ -12091,11 +12380,58 @@
 
     p.PImage = PImage;
 
+    /**
+    * Creates a new PImage (the datatype for storing images). This provides a fresh buffer of pixels to play 
+    * with. Set the size of the buffer with the width and height parameters. The format parameter defines how 
+    * the pixels are stored. See the PImage reference for more information.
+    * Be sure to include all three parameters, specifying only the width and height (but no format) will 
+    * produce a strange error.
+    * Advanced users please note that createImage() should be used instead of the syntax new PImage().
+    * 
+    * @param {int} width                image width
+    * @param {int} height 	            image height
+    * @param {MODE} format              Either RGB, ARGB, ALPHA (grayscale alpha channel)
+    * 
+    * @returns {PImage}
+    * 
+    * @see PImage
+    * @see PGraphics
+    */
     p.createImage = function createImage(w, h, mode) {
       return new PImage(w,h,mode);
     };
 
     // Loads an image for display. Type is an extension. Callback is fired on load.
+    /**
+    * Loads an image into a variable of type PImage. Four types of images ( .gif, .jpg, .tga, .png) images may 
+    * be loaded. To load correctly, images must be located in the data directory of the current sketch. In most 
+    * cases, load all images in setup() to preload them at the start of the program. Loading images inside draw() 
+    * will reduce the speed of a program.
+    * The filename parameter can also be a URL to a file found online. For security reasons, a Processing sketch 
+    * found online can only download files from the same server from which it came. Getting around this restriction 
+    * requires a signed applet.
+    * The extension parameter is used to determine the image type in cases where the image filename does not end 
+    * with a proper extension. Specify the extension as the second parameter to loadImage(), as shown in the 
+    * third example on this page.
+    * If an image is not loaded successfully, the null value is returned and an error message will be printed to 
+    * the console. The error message does not halt the program, however the null value may cause a NullPointerException 
+    * if your code does not check whether the value returned from loadImage() is null.
+    * Depending on the type of error, a PImage object may still be returned, but the width and height of the image 
+    * will be set to -1. This happens if bad image data is returned or cannot be decoded properly. Sometimes this happens 
+    * with image URLs that produce a 403 error or that redirect to a password prompt, because loadImage() will attempt 
+    * to interpret the HTML as image data.
+    * 
+    * @param {String} filename        name of file to load, can be .gif, .jpg, .tga, or a handful of other image 
+    *                                 types depending on your platform.
+    * @param {String} extension       the type of image to load, for example "png", "gif", "jpg"
+    * 
+    * @returns {PImage}
+    * 
+    * @see PImage
+    * @see image
+    * @see imageMode
+    * @see background
+    */
     p.loadImage = function loadImage(file, type, callback) {
       // if type is specified add it with a . to file to make the filename
       if (type) {
@@ -12132,6 +12468,24 @@
     };
 
     // async loading of large images, same functionality as loadImage above
+    /**
+    * This function load images on a separate thread so that your sketch does not freeze while images load during 
+    * setup(). While the image is loading, its width and height will be 0. If an error occurs while loading the image, 
+    * its width and height will be set to -1. You'll know when the image has loaded properly because its width and 
+    * height will be greater than 0. Asynchronous image loading (particularly when downloading from a server) can 
+    * dramatically improve performance.
+    * The extension parameter is used to determine the image type in cases where the image filename does not end 
+    * with a proper extension. Specify the extension as the second parameter to requestImage().
+    * 
+    * @param {String} filename        name of file to load, can be .gif, .jpg, .tga, or a handful of other image 
+    *                                 types depending on your platform.
+    * @param {String} extension       the type of image to load, for example "png", "gif", "jpg"
+    * 
+    * @returns {PImage}
+    * 
+    * @see PImage
+    * @see loadImage
+    */
     p.requestImage = p.loadImage;
 
     function get$0() {
@@ -12201,6 +12555,29 @@
     }
 
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
+    /**
+    * Reads the color of any pixel or grabs a section of an image. If no parameters are specified, the entire 
+    * image is returned. Get the value of one pixel by specifying an x,y coordinate. Get a section of the display 
+    * window by specifying an additional width and height parameter. If the pixel requested is outside of the image
+    * window, black is returned. The numbers returned are scaled according to the current color ranges, but only RGB 
+    * values are returned by this function. For example, even though you may have drawn a shape with colorMode(HSB), 
+    * the numbers returned will be in RGB.
+    * Getting the color of a single pixel with get(x, y) is easy, but not as fast as grabbing the data directly 
+    * from pixels[]. The equivalent statement to "get(x, y)" using pixels[] is "pixels[y*width+x]". Processing 
+    * requires calling loadPixels() to load the display window data into the pixels[] array before getting the values.
+    * This function ignores imageMode().
+    * 
+    * @param {int} x            x-coordinate of the pixel
+    * @param {int} y            y-coordinate of the pixel
+    * @param {int} width        width of pixel rectangle to get
+    * @param {int} height       height of pixel rectangle to get
+    *
+    * @returns {Color|PImage}
+    * 
+    * @see set
+    * @see pixels[]
+    * @see imageMode
+    */
     p.get = function get(x, y, w, h, img) {
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
       if (arguments.length === 2) {
@@ -12315,6 +12692,25 @@
       }
     }
     // Paints a pixel array into the canvas
+    /**
+    * Changes the color of any pixel or writes an image directly into the display window. The x and y parameters 
+    * specify the pixel to change and the color  parameter specifies the color value. The color parameter is affected 
+    * by the current color mode (the default is RGB values from 0 to 255). When setting an image, the x and y 
+    * parameters define the coordinates for the upper-left corner of the image.
+    * Setting the color of a single pixel with set(x, y) is easy, but not as fast as putting the data directly 
+    * into pixels[]. The equivalent statement to "set(x, y, #000000)" using pixels[] is "pixels[y*width+x] = #000000". 
+    * You must call loadPixels() to load the display window data into the pixels[] array before setting the values 
+    * and calling updatePixels() to update the window with any changes. This function ignores imageMode(). 
+    * 
+    * @param {int} x            x-coordinate of the pixel
+    * @param {int} y            y-coordinate of the pixel
+    * @param {Color} obj        any value of the color datatype
+    * @param {PImage} img       any valid variable of type PImage
+    * 
+    * @see get
+    * @see pixels[]
+    * @see imageMode
+    */
     p.set = function set(x, y, obj, img) {
       var color, oldFill;
       if (arguments.length === 3) {
@@ -12332,8 +12728,25 @@
     p.imageData = {};
 
     // handle the sketch code for pixels[]
-    // parser code converts pixels[] to getPixels()
-    // or setPixels(), .length becomes getLength()
+    // parser code converts pixels[] to getPixels() or setPixels(),
+    // .length becomes getLength()
+    /**
+    * Array containing the values for all the pixels in the display window. These values are of the color datatype. 
+    * This array is the size of the display window. For example, if the image is 100x100 pixels, there will be 10000 
+    * values and if the window is 200x300 pixels, there will be 60000 values. The index value defines the position 
+    * of a value within the array. For example, the statment color b = pixels[230] will set the variable b to be 
+    * equal to the value at that location in the array.
+    * Before accessing this array, the data must loaded with the loadPixels() function. After the array data has 
+    * been modified, the updatePixels() function must be run to update the changes.
+    * 
+    * @param {int} index      must not exceed the size of the array
+    * 
+    * @see loadPixels
+    * @see updatePixels
+    * @see get
+    * @see set
+    * @see PImage
+    */
     p.pixels = {
       getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
       getPixel: function(i) {
@@ -12358,19 +12771,78 @@
     };
 
     // Gets a 1-Dimensional pixel array from Canvas
+    /**
+    * Loads the pixel data for the display window into the pixels[] array. This function must always be called 
+    * before reading from or writing to pixels[].
+    * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the rule is that 
+    * any time you want to manipulate the pixels[] array, you must first call loadPixels(), and after changes 
+    * have been made, call updatePixels(). Even if the renderer may not seem to use this function in the current 
+    * Processing release, this will always be subject to change.
+    * 
+    * @see pixels[]
+    * @see updatePixels
+    */
     p.loadPixels = function() {
-      // changed in 0.9
       p.imageData = curContext.getImageData(0, 0, p.width, p.height);
     };
 
     // Draws a 1-Dimensional pixel array to Canvas
+    /**
+    * Updates the display window with the data in the pixels[] array. Use in conjunction with loadPixels(). If 
+    * you're only reading pixels from the array, there's no need to call updatePixels() unless there are changes.
+    * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the rule is that 
+    * any time you want to manipulate the pixels[] array, you must first call loadPixels(), and after changes 
+    * have been made, call updatePixels(). Even if the renderer may not seem to use this function in the current 
+    * Processing release, this will always be subject to change.
+    * Currently, none of the renderers use the additional parameters to updatePixels(), however this may be 
+    * implemented in the future.
+    *
+    * @see loadPixels
+    * @see pixels[]
+    */
     p.updatePixels = function() {
-      // changed in 0.9
       if (p.imageData) {
         curContext.putImageData(p.imageData, 0, 0);
       }
     };
 
+    /**
+    * Set various hints and hacks for the renderer. This is used to handle obscure rendering features that cannot be 
+    * implemented in a consistent manner across renderers. Many options will often graduate to standard features 
+    * instead of hints over time.
+    * hint(ENABLE_OPENGL_4X_SMOOTH) - Enable 4x anti-aliasing for OpenGL. This can help force anti-aliasing if 
+    * it has not been enabled by the user. On some graphics cards, this can also be set by the graphics driver's 
+    * control panel, however not all cards make this available. This hint must be called immediately after the 
+    * size() command because it resets the renderer, obliterating any settings and anything drawn (and like size(), 
+    * re-running the code that came before it again).
+    * hint(DISABLE_OPENGL_2X_SMOOTH) - In Processing 1.0, Processing always enables 2x smoothing when the OpenGL 
+    * renderer is used. This hint disables the default 2x smoothing and returns the smoothing behavior found in 
+    * earlier releases, where smooth() and noSmooth() could be used to enable and disable smoothing, though the 
+    * quality was inferior.
+    * hint(ENABLE_NATIVE_FONTS) - Use the native version fonts when they are installed, rather than the bitmapped 
+    * version from a .vlw file. This is useful with the JAVA2D renderer setting, as it will improve font rendering 
+    * speed. This is not enabled by default, because it can be misleading while testing because the type will look 
+    * great on your machine (because you have the font installed) but lousy on others' machines if the identical 
+    * font is unavailable. This option can only be set per-sketch, and must be called before any use of textFont().
+    * hint(DISABLE_DEPTH_TEST) - Disable the zbuffer, allowing you to draw on top of everything at will. When depth 
+    * testing is disabled, items will be drawn to the screen sequentially, like a painting. This hint is most often
+    * used to draw in 3D, then draw in 2D on top of it (for instance, to draw GUI controls in 2D on top of a 3D 
+    * interface). Starting in release 0149, this will also clear the depth buffer. Restore the default with 
+    * hint(ENABLE_DEPTH_TEST), but note that with the depth buffer cleared, any 3D drawing that happens later in 
+    * draw() will ignore existing shapes on the screen.
+    * hint(ENABLE_DEPTH_SORT) - Enable primitive z-sorting of triangles and lines in P3D and OPENGL. This can slow 
+    * performance considerably, and the algorithm is not yet perfect. Restore the default with hint(DISABLE_DEPTH_SORT).
+    * hint(DISABLE_OPENGL_ERROR_REPORT) - Speeds up the OPENGL renderer setting by not checking for errors while 
+    * running. Undo with hint(ENABLE_OPENGL_ERROR_REPORT).
+    * As of release 0149, unhint() has been removed in favor of adding additional ENABLE/DISABLE constants to reset 
+    * the default behavior. This prevents the double negatives, and also reinforces which hints can be enabled or disabled.
+    * 
+    * @param {MODE} item          constant: name of the hint to be enabled or disabled
+    * 
+    * @see PGraphics
+    * @see createGraphics
+    * @see size
+    */
     p.hint = function hint(which) {
       if (which === PConstants.DISABLE_DEPTH_TEST) {
          curContext.disable(curContext.DEPTH_TEST);
@@ -12382,6 +12854,7 @@
          curContext.depthMask(true);
       }
     };
+
     /**
      * The background() function sets the color used for the background of the Processing window. 
      * The default background is light gray. In the <b>draw()</b> function, the background color is used to clear the display window at the beginning of each frame. 
@@ -12463,6 +12936,29 @@
     };
 
     // Draws an image to the Canvas
+    /**
+    * Displays images to the screen. The images must be in the sketch's "data" directory to load correctly. Select "Add 
+    * file..." from the "Sketch" menu to add the image. Processing currently works with GIF, JPEG, and Targa images. The 
+    * color of an image may be modified with the tint() function and if a GIF has transparency, it will maintain its 
+    * transparency. The img parameter specifies the image to display and the x and y parameters define the location of 
+    * the image from its upper-left corner. The image is displayed at its original size unless the width and height 
+    * parameters specify a different size. The imageMode() function changes the way the parameters work. A call to 
+    * imageMode(CORNERS) will change the width and height parameters to define the x and y values of the opposite 
+    * corner of the image. 
+    * 
+    * @param {PImage} img            the image to display
+    * @param {int|float} x           x-coordinate of the image
+    * @param {int|float} y           y-coordinate of the image
+    * @param {int|float} width       width to display the image
+    * @param {int|float} height      height to display the image
+    * 
+    * @see loadImage
+    * @see PImage
+    * @see imageMode
+    * @see tint
+    * @see background
+    * @see alpha
+    */
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
         var wid = w || img.width;
@@ -12511,6 +13007,7 @@
         curContext.clearRect(x, y, width, height);
       }
     };
+
     /**
      * The tint() function sets the fill value for displaying images. Images can be tinted to
      * specified colors or made transparent by setting the alpha.
@@ -12561,6 +13058,7 @@
         }
       };
     };
+
     /**
      * The noTint() function removes the current fill value for displaying images and reverts to displaying images with their original hues.
      *
@@ -12571,6 +13069,25 @@
       curTint = function() {};
     };
 
+    /**
+    * Copies a region of pixels from the display window to another area of the display window and copies a region of pixels from an 
+    * image used as the srcImg  parameter into the display window. If the source and destination regions aren't the same size, it will 
+    * automatically resize the source pixels to fit the specified target region. No alpha information is used in the process, however 
+    * if the source image has an alpha channel set, it will be copied as well. This function ignores imageMode().
+    * 
+    * @param {int} x            X coordinate of the source's upper left corner
+    * @param {int} y            Y coordinate of the source's upper left corner
+    * @param {int} width        source image width
+    * @param {int} height       source image height
+    * @param {int} dx           X coordinate of the destination's upper left corner
+    * @param {int} dy           Y coordinate of the destination's upper left corner
+    * @param {int} dwidth       destination image width
+    * @param {int} dheight      destination image height
+    * @param {PImage} srcImg    image variable referring to the source image
+    * 
+    * @see blend
+    * @see get
+    */
     p.copy = function copy(src, sx, sy, sw, sh, dx, dy, dw, dh) {
       if (arguments.length === 8) {
         // shift everything, and introduce p
@@ -12587,6 +13104,40 @@
       p.blend(src, sx, sy, sw, sh, dx, dy, dw, dh, PConstants.REPLACE);
     };
 
+    /**
+    * Blends a region of pixels from one image into another (or in itself again) with full alpha channel support. There 
+    * is a choice of the following modes to blend the source pixels (A) with the ones of pixels in the destination image (B):
+    * BLEND - linear interpolation of colours: C = A*factor + B
+    * ADD - additive blending with white clip: C = min(A*factor + B, 255)
+    * SUBTRACT - subtractive blending with black clip: C = max(B - A*factor, 0)
+    * DARKEST - only the darkest colour succeeds: C = min(A*factor, B)
+    * LIGHTEST - only the lightest colour succeeds: C = max(A*factor, B)
+    * DIFFERENCE - subtract colors from underlying image.
+    * EXCLUSION - similar to DIFFERENCE, but less extreme.
+    * MULTIPLY - Multiply the colors, result will always be darker.
+    * SCREEN - Opposite multiply, uses inverse values of the colors.
+    * OVERLAY - A mix of MULTIPLY and SCREEN. Multiplies dark values, and screens light values.
+    * HARD_LIGHT - SCREEN when greater than 50% gray, MULTIPLY when lower.
+    * SOFT_LIGHT - Mix of DARKEST and LIGHTEST. Works like OVERLAY, but not as harsh.
+    * DODGE - Lightens light tones and increases contrast, ignores darks. Called "Color Dodge" in Illustrator and Photoshop.
+    * BURN - Darker areas are applied, increasing contrast, ignores lights. Called "Color Burn" in Illustrator and Photoshop.
+    * All modes use the alpha information (highest byte) of source image pixels as the blending factor. If the source and 
+    * destination regions are different sizes, the image will be automatically resized to match the destination size. If the 
+    * srcImg parameter is not used, the display window is used as the source image.  This function ignores imageMode().
+    * 
+    * @param {int} x            X coordinate of the source's upper left corner
+    * @param {int} y            Y coordinate of the source's upper left corner
+    * @param {int} width        source image width
+    * @param {int} height       source image height
+    * @param {int} dx           X coordinate of the destination's upper left corner
+    * @param {int} dy           Y coordinate of the destination's upper left corner
+    * @param {int} dwidth       destination image width
+    * @param {int} dheight      destination image height
+    * @param {PImage} srcImg    image variable referring to the source image
+    * @param {PImage} MODE      Either BLEND, ADD, SUBTRACT, LIGHTEST, DARKEST, DIFFERENCE, EXCLUSION, MULTIPLY, SCREEN, 
+    *                           OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, BURN
+    * @see filter
+    */
     p.blend = function blend(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
       if (arguments.length === 9) {
         // shift everything, and introduce p
@@ -12865,6 +13416,24 @@
       //p.arraycopy(out,0,pixels,0,maxIdx);
     };
 
+    /**
+    * Filters the display window as defined by one of the following modes:
+    * THRESHOLD - converts the image to black and white pixels depending if they are above or below the threshold 
+    * defined by the level parameter. The level must be between 0.0 (black) and 1.0(white). If no level is specified, 0.5 is used.
+    * GRAY - converts any colors in the image to grayscale equivalents
+    * INVERT - sets each pixel to its inverse value
+    * POSTERIZE - limits each channel of the image to the number of colors specified as the level parameter
+    * BLUR - executes a Guassian blur with the level parameter specifying the extent of the blurring. If no level parameter is 
+    * used, the blur is equivalent to Guassian blur of radius 1.
+    * OPAQUE - sets the alpha channel to entirely opaque.
+    * ERODE - reduces the light areas with the amount defined by the level parameter.
+    * DILATE - increases the light areas with the amount defined by the level parameter.
+    * 
+    * @param {MODE} MODE          Either THRESHOLD, GRAY, INVERT, POSTERIZE, BLUR, OPAQUE, ERODE, or DILATE
+    * @param {int|float} level    defines the quality of the filter
+    *
+    * @see blend
+    */
     p.filter = function filter(kind, param, aImg){
       var img, col, lum, i;
 
