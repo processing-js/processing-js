@@ -12728,8 +12728,25 @@
     p.imageData = {};
 
     // handle the sketch code for pixels[]
-    // parser code converts pixels[] to getPixels()
-    // or setPixels(), .length becomes getLength()
+    // parser code converts pixels[] to getPixels() or setPixels(),
+    // .length becomes getLength()
+    /**
+    * Array containing the values for all the pixels in the display window. These values are of the color datatype. 
+    * This array is the size of the display window. For example, if the image is 100x100 pixels, there will be 10000 
+    * values and if the window is 200x300 pixels, there will be 60000 values. The index value defines the position 
+    * of a value within the array. For example, the statment color b = pixels[230] will set the variable b to be 
+    * equal to the value at that location in the array.
+    * Before accessing this array, the data must loaded with the loadPixels() function. After the array data has 
+    * been modified, the updatePixels() function must be run to update the changes.
+    * 
+    * @param {int} index      must not exceed the size of the array
+    * 
+    * @see loadPixels
+    * @see updatePixels
+    * @see get
+    * @see set
+    * @see PImage
+    */
     p.pixels = {
       getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
       getPixel: function(i) {
@@ -12754,19 +12771,78 @@
     };
 
     // Gets a 1-Dimensional pixel array from Canvas
+    /**
+    * Loads the pixel data for the display window into the pixels[] array. This function must always be called 
+    * before reading from or writing to pixels[].
+    * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the rule is that 
+    * any time you want to manipulate the pixels[] array, you must first call loadPixels(), and after changes 
+    * have been made, call updatePixels(). Even if the renderer may not seem to use this function in the current 
+    * Processing release, this will always be subject to change.
+    * 
+    * @see pixels[]
+    * @see updatePixels
+    */
     p.loadPixels = function() {
-      // changed in 0.9
       p.imageData = curContext.getImageData(0, 0, p.width, p.height);
     };
 
     // Draws a 1-Dimensional pixel array to Canvas
+    /**
+    * Updates the display window with the data in the pixels[] array. Use in conjunction with loadPixels(). If 
+    * you're only reading pixels from the array, there's no need to call updatePixels() unless there are changes.
+    * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the rule is that 
+    * any time you want to manipulate the pixels[] array, you must first call loadPixels(), and after changes 
+    * have been made, call updatePixels(). Even if the renderer may not seem to use this function in the current 
+    * Processing release, this will always be subject to change.
+    * Currently, none of the renderers use the additional parameters to updatePixels(), however this may be 
+    * implemented in the future.
+    *
+    * @see loadPixels
+    * @see pixels[]
+    */
     p.updatePixels = function() {
-      // changed in 0.9
       if (p.imageData) {
         curContext.putImageData(p.imageData, 0, 0);
       }
     };
 
+    /**
+    * Set various hints and hacks for the renderer. This is used to handle obscure rendering features that cannot be 
+    * implemented in a consistent manner across renderers. Many options will often graduate to standard features 
+    * instead of hints over time.
+    * hint(ENABLE_OPENGL_4X_SMOOTH) - Enable 4x anti-aliasing for OpenGL. This can help force anti-aliasing if 
+    * it has not been enabled by the user. On some graphics cards, this can also be set by the graphics driver's 
+    * control panel, however not all cards make this available. This hint must be called immediately after the 
+    * size() command because it resets the renderer, obliterating any settings and anything drawn (and like size(), 
+    * re-running the code that came before it again).
+    * hint(DISABLE_OPENGL_2X_SMOOTH) - In Processing 1.0, Processing always enables 2x smoothing when the OpenGL 
+    * renderer is used. This hint disables the default 2x smoothing and returns the smoothing behavior found in 
+    * earlier releases, where smooth() and noSmooth() could be used to enable and disable smoothing, though the 
+    * quality was inferior.
+    * hint(ENABLE_NATIVE_FONTS) - Use the native version fonts when they are installed, rather than the bitmapped 
+    * version from a .vlw file. This is useful with the JAVA2D renderer setting, as it will improve font rendering 
+    * speed. This is not enabled by default, because it can be misleading while testing because the type will look 
+    * great on your machine (because you have the font installed) but lousy on others' machines if the identical 
+    * font is unavailable. This option can only be set per-sketch, and must be called before any use of textFont().
+    * hint(DISABLE_DEPTH_TEST) - Disable the zbuffer, allowing you to draw on top of everything at will. When depth 
+    * testing is disabled, items will be drawn to the screen sequentially, like a painting. This hint is most often
+    * used to draw in 3D, then draw in 2D on top of it (for instance, to draw GUI controls in 2D on top of a 3D 
+    * interface). Starting in release 0149, this will also clear the depth buffer. Restore the default with 
+    * hint(ENABLE_DEPTH_TEST), but note that with the depth buffer cleared, any 3D drawing that happens later in 
+    * draw() will ignore existing shapes on the screen.
+    * hint(ENABLE_DEPTH_SORT) - Enable primitive z-sorting of triangles and lines in P3D and OPENGL. This can slow 
+    * performance considerably, and the algorithm is not yet perfect. Restore the default with hint(DISABLE_DEPTH_SORT).
+    * hint(DISABLE_OPENGL_ERROR_REPORT) - Speeds up the OPENGL renderer setting by not checking for errors while 
+    * running. Undo with hint(ENABLE_OPENGL_ERROR_REPORT).
+    * As of release 0149, unhint() has been removed in favor of adding additional ENABLE/DISABLE constants to reset 
+    * the default behavior. This prevents the double negatives, and also reinforces which hints can be enabled or disabled.
+    * 
+    * @param {MODE} item          constant: name of the hint to be enabled or disabled
+    * 
+    * @see PGraphics
+    * @see createGraphics
+    * @see size
+    */
     p.hint = function hint(which) {
       if (which === PConstants.DISABLE_DEPTH_TEST) {
          curContext.disable(curContext.DEPTH_TEST);
@@ -12860,6 +12936,29 @@
     };
 
     // Draws an image to the Canvas
+    /**
+    * Displays images to the screen. The images must be in the sketch's "data" directory to load correctly. Select "Add 
+    * file..." from the "Sketch" menu to add the image. Processing currently works with GIF, JPEG, and Targa images. The 
+    * color of an image may be modified with the tint() function and if a GIF has transparency, it will maintain its 
+    * transparency. The img parameter specifies the image to display and the x and y parameters define the location of 
+    * the image from its upper-left corner. The image is displayed at its original size unless the width and height 
+    * parameters specify a different size. The imageMode() function changes the way the parameters work. A call to 
+    * imageMode(CORNERS) will change the width and height parameters to define the x and y values of the opposite 
+    * corner of the image. 
+    * 
+    * @param {PImage} img            the image to display
+    * @param {int|float} x           x-coordinate of the image
+    * @param {int|float} y           y-coordinate of the image
+    * @param {int|float} width       width to display the image
+    * @param {int|float} height      height to display the image
+    * 
+    * @see loadImage
+    * @see PImage
+    * @see imageMode
+    * @see tint
+    * @see background
+    * @see alpha
+    */
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
         var wid = w || img.width;
@@ -12970,6 +13069,25 @@
       curTint = function() {};
     };
 
+    /**
+    * Copies a region of pixels from the display window to another area of the display window and copies a region of pixels from an 
+    * image used as the srcImg  parameter into the display window. If the source and destination regions aren't the same size, it will 
+    * automatically resize the source pixels to fit the specified target region. No alpha information is used in the process, however 
+    * if the source image has an alpha channel set, it will be copied as well. This function ignores imageMode().
+    * 
+    * @param {int} x            X coordinate of the source's upper left corner
+    * @param {int} y            Y coordinate of the source's upper left corner
+    * @param {int} width        source image width
+    * @param {int} height       source image height
+    * @param {int} dx           X coordinate of the destination's upper left corner
+    * @param {int} dy           Y coordinate of the destination's upper left corner
+    * @param {int} dwidth       destination image width
+    * @param {int} dheight      destination image height
+    * @param {PImage} srcImg    image variable referring to the source image
+    * 
+    * @see blend
+    * @see get
+    */
     p.copy = function copy(src, sx, sy, sw, sh, dx, dy, dw, dh) {
       if (arguments.length === 8) {
         // shift everything, and introduce p
@@ -12986,6 +13104,40 @@
       p.blend(src, sx, sy, sw, sh, dx, dy, dw, dh, PConstants.REPLACE);
     };
 
+    /**
+    * Blends a region of pixels from one image into another (or in itself again) with full alpha channel support. There 
+    * is a choice of the following modes to blend the source pixels (A) with the ones of pixels in the destination image (B):
+    * BLEND - linear interpolation of colours: C = A*factor + B
+    * ADD - additive blending with white clip: C = min(A*factor + B, 255)
+    * SUBTRACT - subtractive blending with black clip: C = max(B - A*factor, 0)
+    * DARKEST - only the darkest colour succeeds: C = min(A*factor, B)
+    * LIGHTEST - only the lightest colour succeeds: C = max(A*factor, B)
+    * DIFFERENCE - subtract colors from underlying image.
+    * EXCLUSION - similar to DIFFERENCE, but less extreme.
+    * MULTIPLY - Multiply the colors, result will always be darker.
+    * SCREEN - Opposite multiply, uses inverse values of the colors.
+    * OVERLAY - A mix of MULTIPLY and SCREEN. Multiplies dark values, and screens light values.
+    * HARD_LIGHT - SCREEN when greater than 50% gray, MULTIPLY when lower.
+    * SOFT_LIGHT - Mix of DARKEST and LIGHTEST. Works like OVERLAY, but not as harsh.
+    * DODGE - Lightens light tones and increases contrast, ignores darks. Called "Color Dodge" in Illustrator and Photoshop.
+    * BURN - Darker areas are applied, increasing contrast, ignores lights. Called "Color Burn" in Illustrator and Photoshop.
+    * All modes use the alpha information (highest byte) of source image pixels as the blending factor. If the source and 
+    * destination regions are different sizes, the image will be automatically resized to match the destination size. If the 
+    * srcImg parameter is not used, the display window is used as the source image.  This function ignores imageMode().
+    * 
+    * @param {int} x            X coordinate of the source's upper left corner
+    * @param {int} y            Y coordinate of the source's upper left corner
+    * @param {int} width        source image width
+    * @param {int} height       source image height
+    * @param {int} dx           X coordinate of the destination's upper left corner
+    * @param {int} dy           Y coordinate of the destination's upper left corner
+    * @param {int} dwidth       destination image width
+    * @param {int} dheight      destination image height
+    * @param {PImage} srcImg    image variable referring to the source image
+    * @param {PImage} MODE      Either BLEND, ADD, SUBTRACT, LIGHTEST, DARKEST, DIFFERENCE, EXCLUSION, MULTIPLY, SCREEN, 
+    *                           OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, BURN
+    * @see filter
+    */
     p.blend = function blend(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
       if (arguments.length === 9) {
         // shift everything, and introduce p
@@ -13264,6 +13416,24 @@
       //p.arraycopy(out,0,pixels,0,maxIdx);
     };
 
+    /**
+    * Filters the display window as defined by one of the following modes:
+    * THRESHOLD - converts the image to black and white pixels depending if they are above or below the threshold 
+    * defined by the level parameter. The level must be between 0.0 (black) and 1.0(white). If no level is specified, 0.5 is used.
+    * GRAY - converts any colors in the image to grayscale equivalents
+    * INVERT - sets each pixel to its inverse value
+    * POSTERIZE - limits each channel of the image to the number of colors specified as the level parameter
+    * BLUR - executes a Guassian blur with the level parameter specifying the extent of the blurring. If no level parameter is 
+    * used, the blur is equivalent to Guassian blur of radius 1.
+    * OPAQUE - sets the alpha channel to entirely opaque.
+    * ERODE - reduces the light areas with the amount defined by the level parameter.
+    * DILATE - increases the light areas with the amount defined by the level parameter.
+    * 
+    * @param {MODE} MODE          Either THRESHOLD, GRAY, INVERT, POSTERIZE, BLUR, OPAQUE, ERODE, or DILATE
+    * @param {int|float} level    defines the quality of the filter
+    *
+    * @see blend
+    */
     p.filter = function filter(kind, param, aImg){
       var img, col, lum, i;
 
