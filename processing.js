@@ -1065,6 +1065,13 @@
     p.name            = 'Processing.js Instance'; // Set Processing defaults / environment variables
     p.use3DContext    = false; // default '2d' canvas context
 
+    /**
+     * Confirms if a Processing program is "focused", meaning that it is 
+     * active and will accept input from mouse or keyboard. This variable 
+     * is "true" if it is focused and "false" if not. This variable is 
+     * often used when you want to warn people they need to click on the 
+     * browser before it will work.
+    */
     p.focused         = true;
     p.breakShape      = false;
 
@@ -1726,12 +1733,23 @@
     ////////////////////////////////////////////////////////////////////////////
 
     /*
-      Sets the uniform variable 'varName' to the value specified by 'value'.
-      Before calling this function, make sure the correct program object
-      has been installed as part of the current rendering state.
-
-      On some systems, if the variable exists in the shader but isn't used,
-      the compiler will optimize it out and this function will fail.
+     * Sets a uniform variable in a program object to a particular
+     * value. Before calling this function, ensure the correct 
+     * program object has been installed as part of the current 
+     * rendering state by calling useProgram.
+     *
+     * On some systems, if the variable exists in the shader but isn't used,
+     * the compiler will optimize it out and this function will fail.
+     *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {float | Array} varValue either a scalar value or an Array
+     *
+     * @returns none
+     * 
+     * @see uniformi
+     * @see uniformMatrix
     */
     function uniformf(programObj, varName, varValue) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
@@ -1749,6 +1767,25 @@
       }
     }
 
+    /**
+     * Sets a uniform int or int array in a program object to a particular
+     * value. Before calling this function, ensure the correct 
+     * program object has been installed as part of the current 
+     * rendering state.
+     *
+     * On some systems, if the variable exists in the shader but isn't used,
+     * the compiler will optimize it out and this function will fail.
+     *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {int | Array} varValue either a scalar value or an Array
+     *
+     * @returns none
+     * 
+     * @see uniformf
+     * @see uniformMatrix
+    */
     function uniformi(programObj, varName, varValue) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
       // the variable won't be found if it was optimized out.
@@ -1765,6 +1802,24 @@
       }
     }
 
+    /**
+     * Binds the VBO, sets the vertex attribute data for the program 
+     * object and enables the attribute.
+     * 
+     * On some systems, if the attribute exists in the shader but 
+     * isn't used, the compiler will optimize it out and this 
+     * function will fail.
+     *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {int} size the number of components per vertex attribute
+     * @param {WebGLBuffer} VBO Vertex Buffer Object
+     *
+     * @returns none
+     *
+     * @see disableVertexAttribPointer
+    */
     function vertexAttribPointer(programObj, varName, size, VBO) {
       var varLocation = curContext.getAttribLocation(programObj, varName);
       if (varLocation !== -1) {
@@ -1774,6 +1829,17 @@
       }
     }
 
+    /**
+     * Disables a program object attribute from being sent to WebGL.
+     *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName name of the attribute
+     *
+     * @returns none
+     *
+     * @see vertexAttribPointer
+    */
     function disableVertexAttribPointer(programObj, varName){
       var varLocation = curContext.getAttribLocation(programObj, varName);
       if (varLocation !== -1) {
@@ -1781,6 +1847,27 @@
       }
     }
 
+    /**
+     * Sets the value of a uniform matrix variable in a program 
+     * object. Before calling this function, ensure the correct 
+     * program object has been installed as part of the current 
+     * rendering state.
+     *
+     * On some systems, if the variable exists in the shader but 
+     * isn't used, the compiler will optimize it out and this 
+     * function will fail.
+     *
+     * @param {WebGLProgram} programObj program object returned from 
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {boolean} transpose must be false
+     * @param {Array} matrix an array of 4, 9 or 16 values
+     *
+     * @returns none
+     * 
+     * @see uniformi
+     * @see uniformf
+    */
     function uniformMatrix(programObj, varName, transpose, matrix) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
       // the variable won't be found if it was optimized out.
@@ -1823,6 +1910,14 @@
       };
     };
 
+    /**
+     * Creates a WebGL program object.
+     *
+     * @param {String} vetexShaderSource
+     * @param {String} fragmentShaderSource
+     * 
+     * @returns {WebGLProgram} A program object
+    */
     var createProgramObject = function(curContext, vetexShaderSource, fragmentShaderSource) {
       var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
       curContext.shaderSource(vertexShaderObject, vetexShaderSource);
@@ -5493,19 +5588,20 @@
     };
 
     /**
-    * Sorts an array of numbers from smallest to largest and puts an array of words in alphabetical 
-    * order. The original array is not modified, a re-ordered array is returned. The count parameter 
-    * states the number of elements to sort. For example if there are 12 elements in an array and 
-    * if count is the value 5, only the first five elements on the array will be sorted. The 
-    * alphabetical ordering is case insensitive.
-    * 
-    * @param {int[]|float[]|String[]}   array String[], int[], or float[]
-    * @param {int}                      numElem int
-    * 
-    * @returns Array (the same datatype as the input)
-    * 
-    * @see reverse
-    */  
+     * Sorts an array of numbers from smallest to largest and puts an array of 
+     * words in alphabetical order. The original array is not modified, a 
+     * re-ordered array is returned. The count parameter states the number of 
+     * elements to sort. For example if there are 12 elements in an array and 
+     * if count is the value 5, only the first five elements on the array will 
+     * be sorted. Alphabetical ordering is case insensitive.
+     * 
+     * @param {String[] | int[] | float[]}  array Array of elements to sort
+     * @param {int}                         numElem Number of elements to sort
+     *
+     * @returns {String[] | int[] | float[]} Array (same datatype as the input)
+     *
+     * @see reverse
+    */
     p.sort = function(array, numElem) {
       var ret = [];
 
@@ -8875,6 +8971,30 @@
     // Lights
     ////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Adds an ambient light. Ambient light doesn't come from a specific direction, 
+     * the rays have light have bounced around so much that objects are evenly lit 
+     * from all sides. Ambient lights are almost always used in combination with 
+     * other types of lights. Lights need to be included in the <b>draw()</b> to 
+     * remain persistent in a looping program. Placing them in the <b>setup()</b> 
+     * of a looping program will cause them to only have an effect the first time 
+     * through the loop. The effect of the parameters is determined by the current 
+     * color mode.
+     *
+     * @param {int | float} r red or hue value
+     * @param {int | float} g green or hue value
+     * @param {int | float} b blue or hue value
+     * @param {int | float} x ignored
+     * @param {int | float} y ignored
+     * @param {int | float} z ignored
+     *
+     * @returns none
+     *
+     * @see lights
+     * @see directionalLight
+     * @see pointLight
+     * @see spotLight
+    */
     p.ambientLight = function(r, g, b, x, y, z) {
       if (p.use3DContext) {
         if (lightCount === PConstants.MAX_LIGHTS) {
@@ -8895,6 +9015,34 @@
       }
     };
 
+    /**
+     * Adds a directional light. Directional light comes from one direction and 
+     * is stronger when hitting a surface squarely and weaker if it hits at a 
+     * gentle angle. After hitting a surface, a directional lights scatters in 
+     * all directions. Lights need to be included in the <b>draw()</b> to remain 
+     * persistent in a looping program. Placing them in the <b>setup()</b> of a 
+     * looping program will cause them to only have an effect the first time 
+     * through the loop. The affect of the <br>r</b>, <br>g</b>, and <br>b</b> 
+     * parameters is determined by the current color mode. The <b>nx</b>, 
+     * <b>ny</b>, and <b>nz</b> parameters specify the direction the light is 
+     * facing. For example, setting <b>ny</b> to -1 will cause the geometry to be 
+     * lit from below (the light is facing directly upward).
+     *
+     * @param {int | float} r red or hue value
+     * @param {int | float} g green or hue value
+     * @param {int | float} b blue or hue value
+     * 
+     * @param {int | float} nx direction along the x axis
+     * @param {int | float} ny direction along the y axis
+     * @param {int | float} nz direction along the z axis
+     *
+     * @returns none
+     *
+     * @see lights
+     * @see ambientLight
+     * @see pointLight
+     * @see spotLight
+    */
     p.directionalLight = function(r, g, b, nx, ny, nz) {
       if (p.use3DContext) {
         if (lightCount === PConstants.MAX_LIGHTS) {
@@ -8919,6 +9067,33 @@
       }
     };
 
+    /**
+     * Sets the falloff rates for point lights, spot lights, and ambient lights. 
+     * The parameters are used to determine the falloff with the following equation:
+     * 
+     * d = distance from light position to vertex position
+     * falloff = 1 / (CONSTANT + d * LINEAR + (d*d) * QUADRATIC)
+     *
+     * Like <b>fill()</b>, it affects only the elements which are created after it in the 
+     * code. The default value if <b>LightFalloff(1.0, 0.0, 0.0)</b>. Thinking about an 
+     * ambient light with a falloff can be tricky. It is used, for example, if you 
+     * wanted a region of your scene to be lit ambiently one color and another region 
+     * to be lit ambiently by another color, you would use an ambient light with location 
+     * and falloff. You can think of it as a point light that doesn't care which direction 
+     * a surface is facing.
+     *
+     * @param {int | float} constant constant value for determining falloff
+     * @param {int | float} linear linear value for determining falloff
+     * @param {int | float} quadratic quadratic value for determining falloff
+     *
+     * @returns none
+     *
+     * @see lights
+     * @see ambientLight
+     * @see pointLight
+     * @see spotLight
+     * @see lightSpecular
+    */
     p.lightFalloff = function lightFalloff(constant, linear, quadratic) {
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
@@ -8926,6 +9101,25 @@
       }
     };
 
+    /**
+     * Sets the specular color for lights. Like <b>fill()</b>, it affects only the 
+     * elements which are created after it in the code. Specular refers to light 
+     * which bounces off a surface in a perferred direction (rather than bouncing 
+     * in all directions like a diffuse light) and is used for creating highlights. 
+     * The specular quality of a light interacts with the specular material qualities 
+     * set through the <b>specular()</b> and <b>shininess()</b> functions.
+     *
+     * @param {int | float} r red or hue value
+     * @param {int | float} g green or hue value
+     * @param {int | float} b blue or hue value
+     *
+     * @returns none
+     *
+     * @see lights
+     * @see ambientLight
+     * @see pointLight
+     * @see spotLight
+    */
     p.lightSpecular = function lightSpecular(r, g, b) {
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
@@ -8933,10 +9127,23 @@
       }
     };
 
-    /*
-      Sets the default ambient light, directional light,
-      falloff, and specular values. P5 Documentation says specular()
-      is set, but the code calls lightSpecular().
+    /**
+     * Sets the default ambient light, directional light, falloff, and specular 
+     * values. The defaults are ambientLight(128, 128, 128) and 
+     * directionalLight(128, 128, 128, 0, 0, -1), lightFalloff(1, 0, 0), and 
+     * lightSpecular(0, 0, 0). Lights need to be included in the draw() to remain 
+     * persistent in a looping program. Placing them in the setup() of a looping 
+     * program will cause them to only have an effect the first time through the 
+     * loop.
+     *
+     * @returns none
+     *
+     * @see ambientLight
+     * @see directionalLight
+     * @see pointLight
+     * @see spotLight
+     * @see noLights
+     *
     */
     p.lights = function lights() {
       p.ambientLight(128, 128, 128);
@@ -8945,6 +9152,28 @@
       p.lightSpecular(0, 0, 0);
     };
 
+    /**
+     * Adds a point light. Lights need to be included in the <b>draw()</b> to remain 
+     * persistent in a looping program. Placing them in the <b>setup()</b> of a 
+     * looping program will cause them to only have an effect the first time through 
+     * the loop. The affect of the <b>r</b>, <b>g</b>, and <b>b</b> parameters 
+     * is determined by the current color mode. The <b>x</b>, <b>y</b>, and <b>z</b> 
+     * parameters set the position of the light.
+     * 
+     * @param {int | float} r red or hue value
+     * @param {int | float} g green or hue value
+     * @param {int | float} b blue or hue value
+     * @param {int | float} x x coordinate of the light
+     * @param {int | float} y y coordinate of the light
+     * @param {int | float} z z coordinate of the light
+     *
+     * @returns none
+     *
+     * @see lights
+     * @see directionalLight
+     * @see ambientLight
+     * @see spotLight
+    */
     p.pointLight = function(r, g, b, x, y, z) {
       if (p.use3DContext) {
         if (lightCount === PConstants.MAX_LIGHTS) {
@@ -8967,9 +9196,15 @@
       }
     };
 
-    /*
-      Disables lighting so the all shapes drawn after this
-      will not be lit.
+    /**
+     * Disable all lighting. Lighting is turned off by default and enabled with
+     * the lights() method. This function can be used to disable lighting so 
+     * that 2D geometry (which does not require lighting) can be drawn after a 
+     * set of lighted 3D geometry.
+     *
+     * @returns none
+     *
+     * @see lights
     */
     p.noLights = function noLights() {
       if (p.use3DContext) {
@@ -8979,12 +9214,34 @@
       }
     };
 
-    /*
-      r,g,b - Color of the light
-      x,y,z - position of the light in modeling space
-      nx,ny,nz - direction of the spotlight
-      angle - in radians
-      concentration -
+    /**
+     * Adds a spot light. Lights need to be included in the <b>draw()</b> to 
+     * remain persistent in a looping program. Placing them in the <b>setup()</b> 
+     * of a looping program will cause them to only have an effect the first time 
+     * through the loop. The affect of the <b>r</b>, <b>g</b>, and <b>b</b> parameters 
+     * is determined by the current color mode. The <b>x</b>, <b>y</b>, and <b>z</b> 
+     * parameters specify the position of the light and <b>nx</b>, <b>ny</b>, <b>nz</b> 
+     * specify the direction or light. The angle parameter affects <b>angle</b> of the 
+     * spotlight cone.
+     *
+     * @param {int | float} r red or hue value
+     * @param {int | float} g green or hue value
+     * @param {int | float} b blue or hue value
+     * @param {int | float} x coordinate of the light
+     * @param {int | float} y coordinate of the light
+     * @param {int | float} z coordinate of the light
+     * @param {int | float} nx direction along the x axis
+     * @param {int | float} ny direction along the y axis
+     * @param {int | float} nz direction along the z axis
+     * @param {float} angle angle of the spotlight cone
+     * @param {float} concentration exponent determining the center bias of the cone
+     *
+     * @returns none
+     *
+     * @see lights
+     * @see directionalLight
+     * @see ambientLight
+     * @see pointLight
     */
     p.spotLight = function spotLight(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
       if (p.use3DContext) {
@@ -9587,6 +9844,23 @@
     // Coordinates
     ////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Returns the three-dimensional X, Y, Z position in model space. This returns 
+     * the X value for a given coordinate based on the current set of transformations 
+     * (scale, rotate, translate, etc.) The X value can be used to place an object 
+     * in space relative to the location of the original point once the transformations 
+     * are no longer in use.<br />
+     * <br />
+     *
+     * @param {int | float} x 3D x coordinate to be mapped
+     * @param {int | float} y 3D y coordinate to be mapped
+     * @param {int | float} z 3D z coordinate to be mapped
+     *
+     * @returns {float}
+     *
+     * @see modelY
+     * @see modelZ
+    */
     p.modelX = function modelX(x, y, z) {
       var mv = modelView.array();
       var ci = cameraInv.array();
@@ -9602,6 +9876,23 @@
       return (ow !== 0) ? ox / ow : ox;
     };
 
+    /**
+     * Returns the three-dimensional X, Y, Z position in model space. This returns 
+     * the Y value for a given coordinate based on the current set of transformations 
+     * (scale, rotate, translate, etc.) The Y value can be used to place an object in 
+     * space relative to the location of the original point once the transformations 
+     * are no longer in use.<br />
+     * <br />
+     *
+     * @param {int | float} x 3D x coordinate to be mapped
+     * @param {int | float} y 3D y coordinate to be mapped
+     * @param {int | float} z 3D z coordinate to be mapped
+     *
+     * @returns {float}
+     * 
+     * @see modelX
+     * @see modelZ
+    */
     p.modelY = function modelY(x, y, z) {
       var mv = modelView.array();
       var ci = cameraInv.array();
@@ -9617,6 +9908,22 @@
       return (ow !== 0) ? oy / ow : oy;
     };
 
+    /**
+     * Returns the three-dimensional X, Y, Z position in model space. This returns 
+     * the Z value for a given coordinate based on the current set of transformations 
+     * (scale, rotate, translate, etc.) The Z value can be used to place an object in 
+     * space relative to the location of the original point once the transformations 
+     * are no longer in use.
+     *
+     * @param {int | float} x 3D x coordinate to be mapped
+     * @param {int | float} y 3D y coordinate to be mapped
+     * @param {int | float} z 3D z coordinate to be mapped
+     *
+     * @returns {float}
+     *
+     * @see modelX
+     * @see modelY
+    */
     p.modelZ = function modelZ(x, y, z) {
       var mv = modelView.array();
       var ci = cameraInv.array();
@@ -9636,6 +9943,23 @@
     // Material Properties
     ////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Sets the ambient reflectance for shapes drawn to the screen. This is 
+     * combined with the ambient light component of environment. The color 
+     * components set through the parameters define the reflectance. For example in 
+     * the default color mode, setting v1=255, v2=126, v3=0, would cause all the 
+     * red light to reflect and half of the green light to reflect. Used in combination 
+     * with <b>emissive()</b>, <b>specular()</b>, and <b>shininess()</b> in setting 
+     * the materal properties of shapes.
+     *
+     * @param {int | float} gray
+     *
+     * @returns none
+     *
+     * @see emissive
+     * @see specular
+     * @see shininess
+    */
     p.ambient = function ambient() {
       // create an alias to shorten code
       var a = arguments;
@@ -9663,6 +9987,30 @@
       }
     };
 
+    /**
+     * Sets the emissive color of the material used for drawing shapes 
+     * drawn to the screen. Used in combination with ambient(), specular(), 
+     * and shininess() in setting the material properties of shapes.
+     *
+     * Can be called in the following ways:
+     *
+     * emissive(gray)
+     * @param {int | float} gray number specifying value between white and black 
+     *
+     * emissive(color)
+     * @param {color} color any value of the color datatype
+     *
+     * emissive(v1, v2, v3)
+     * @param {int | float} v1 red or hue value
+     * @param {int | float} v2 green or saturation value
+     * @param {int | float} v3 blue or brightness value
+     *     
+     * @returns none
+     *
+     * @see ambient
+     * @see specular
+     * @see shininess
+    */
     p.emissive = function emissive() {
       // create an alias to shorten code
       var a = arguments;
@@ -9691,6 +10039,15 @@
       }
     };
 
+    /**
+     * Sets the amount of gloss in the surface of shapes. Used in combination with 
+     * <b>ambient()</b>, <b>specular()</b>, and <b>emissive()</b> in setting the 
+     * material properties of shapes.
+     *
+     * @param {float} shine degree of shininess
+     *
+     * @returns none
+    */
     p.shininess = function shininess(shine) {
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
@@ -9699,13 +10056,41 @@
       }
     };
 
-    /*
-      Documentation says the following calls are valid, but the
-      Processing throws exceptions:
-      specular(gray, alpha)
-      specular(v1, v2, v3, alpha)
-      So we don't support them either
-      <corban> I dont think this matters so much, let us let color handle it. alpha values are not sent anyways.
+    /**
+     * Sets the specular color of the materials used for shapes drawn to the screen, 
+     * which sets the color of hightlights. Specular refers to light which bounces 
+     * off a surface in a perferred direction (rather than bouncing in all directions 
+     * like a diffuse light). Used in combination with emissive(), ambient(), and 
+     * shininess() in setting the material properties of shapes.
+     *
+     * Can be called in the following ways:
+     * 
+     * specular(gray)
+     * @param {int | float} gray number specifying value between white and black
+     *
+     * specular(gray, alpha)
+     * @param {int | float} gray number specifying value between white and black
+     * @param {int | float} alpha opacity
+     *
+     * specular(color)
+     * @param {color} color any value of the color datatype
+     *
+     * specular(v1, v2, v3)
+     * @param {int | float} v1 red or hue value
+     * @param {int | float} v2 green or saturation value
+     * @param {int | float} v3 blue or brightness value
+     *
+     * specular(v1, v2, v3, alpha)
+     * @param {int | float} v1 red or hue value
+     * @param {int | float} v2 green or saturation value
+     * @param {int | float} v3 blue or brightness value
+     * @param {int | float} alpha opacity
+     *
+     * @returns none
+     *
+     * @see ambient
+     * @see emissive
+     * @see shininess
     */
     p.specular = function specular() {
       var c = p.color.apply(this, arguments);
@@ -9720,6 +10105,20 @@
     ////////////////////////////////////////////////////////////////////////////
     // Coordinates
     ////////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * Takes a three-dimensional X, Y, Z position and returns the X value for 
+     * where it will appear on a (two-dimensional) screen.
+     *
+     * @param {int | float} x 3D x coordinate to be mapped
+     * @param {int | float} y 3D y coordinate to be mapped
+     * @param {int | float} z 3D z coordinate to be mapped
+     *
+     * @returns {float}
+     *
+     * @see screenY
+     * @see screenZ
+    */
     p.screenX = function screenX( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
@@ -9738,6 +10137,19 @@
       return p.width * ( 1 + ox ) / 2.0;
     };
 
+    /**
+     * Takes a three-dimensional X, Y, Z position and returns the Y value for 
+     * where it will appear on a (two-dimensional) screen.
+     *
+     * @param {int | float} x 3D x coordinate to be mapped
+     * @param {int | float} y 3D y coordinate to be mapped
+     * @param {int | float} z 3D z coordinate to be mapped
+     *
+     * @returns {float}
+     *
+     * @see screenX
+     * @see screenZ
+    */
     p.screenY = function screenY( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
@@ -9756,6 +10168,19 @@
       return p.height * ( 1 + oy ) / 2.0;
     };
 
+    /**
+     * Takes a three-dimensional X, Y, Z position and returns the Z value for 
+     * where it will appear on a (two-dimensional) screen.
+     *
+     * @param {int | float} x 3D x coordinate to be mapped
+     * @param {int | float} y 3D y coordinate to be mapped
+     * @param {int | float} z 3D z coordinate to be mapped
+     *
+     * @returns {float}
+     *
+     * @see screenX
+     * @see screenY
+    */
     p.screenZ = function screenZ( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
@@ -11077,6 +11502,23 @@
       executeTexImage2D.apply(this, arguments);
     };
 
+    /**
+     * Sets a texture to be applied to vertex points. The <b>texture()</b> function 
+     * must be called between <b>beginShape()</b> and <b>endShape()</b> and before 
+     * any calls to vertex().
+     *
+     * When textures are in use, the fill color is ignored. Instead, use tint() to 
+     * specify the color of the texture as it is applied to the shape.
+     *
+     * @param {PImage} pimage the texture to apply
+     *
+     * @returns none
+     *
+     * @see textureMode
+     * @see beginShape
+     * @see endShape
+     * @see vertex
+    */
     p.texture = function(pimage) {
       if (pimage.localName === "canvas") {
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
@@ -11127,6 +11569,20 @@
       uniformi(programObject3D, "usingTexture", usingTexture);
     };
 
+    /**
+     * Sets the coordinate space for texture mapping. There are two options, IMAGE, 
+     * which refers to the actual coordinates of the image, and NORMALIZED, which 
+     * refers to a normalized space of values ranging from 0 to 1. The default mode 
+     * is IMAGE. In IMAGE, if an image is 100 x 200 pixels, mapping the image onto 
+     * the entire size of a quad would require the points (0,0) (0,100) (100,200) (0,200). 
+     * The same mapping in NORMAL_SPACE is (0,0) (0,1) (1,1) (0,1).
+     *
+     * @param MODE either IMAGE or NORMALIZED
+     *
+     * @returns none
+     *
+     * @see texture
+    */
     p.textureMode = function(mode){
       curTextureMode = mode;
     };
