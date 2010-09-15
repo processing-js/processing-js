@@ -1,10 +1,9 @@
-﻿/*
-	PJSBox Bookmarklet
-	idea: @humphd
-	author: @sanchothefat
-	original url: http://sanchothefat.com/dev/processing/pjs-box/pjs-box.js
-	using Processing.js v0.8.0
-*/
+//	PJSBox Bookmarklet
+//	idea: @humphd
+//	author: @sanchothefat
+//	original url: http://sanchothefat.com/dev/processing/pjs-box/pjs-box.js
+//	using Processing.js v0.8.0
+//
 (function() {
 
 var p;
@@ -17,9 +16,9 @@ function getScript(url,success){
 	done=false;
 	// Attach handlers for all browsers
 	script.onload=script.onreadystatechange = function(){
-	if ( !done && (!this.readyState
-		|| this.readyState == 'loaded'
-		|| this.readyState == 'complete') ) {
+	if ( !done && (!this.readyState || 
+        this.readyState === 'loaded' || 
+        this.readyState === 'complete')) {
 		done=true;
 		success();
 	}
@@ -29,7 +28,7 @@ function getScript(url,success){
 
 // load jQuery + PJS
 function init(){
-	if(typeof jQuery!='undefined') {
+	if(typeof jQuery!=='undefined') {
 		getProcessing(jQuery);
 	} else {
 		getJquery();
@@ -37,16 +36,16 @@ function init(){
 }
 function getJquery() {
 	getScript('js/processing.js',function() {
-		if (typeof jQuery!='undefined') {			
+		if (typeof jQuery!=='undefined') {			
 			var $jq = jQuery.noConflict();
 			getProcessing($jq);
 		}
 	});
 }
 function getProcessing($jq){
-	if (typeof Processing=='undefined') {
-		getScript('http://processingjs.org/content/download/processing-js-0.8/processing-0.8.min.js',function() {
-			if (typeof Processing!='undefined') {
+	if (typeof Processing==='undefined') {
+		getScript('http://processingjs.org/content/download/processing-js-0.9.7/processing-0.9.7.min.js',function() {
+			if (typeof Processing!=='undefined') {
 				PJSBox($jq);
 			}
 		});
@@ -56,7 +55,7 @@ function getProcessing($jq){
 }
 
 function PJSBox($jq) {
-
+  var errorMessages;
 	function getSize(script) {
 		/*var size = script.match(/size\([\s]*([\d]+)[\s]*\,[\s]*([\d]+)[\s]*\)/);
 		if (size.length == 3) {
@@ -66,13 +65,14 @@ function PJSBox($jq) {
 		} else {
 			return [200,200];
 		}*/
-    var r = "" + script.match(/size\s*\((?:.+),(?:.+)(?:,\s*(OPENGL|P3D))?\s*\)\s*;/);
-    var dimensions = r.match(/[0-9]+/g);
+    var codeWoStrings = script.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g, "");
+		var r = "" + codeWoStrings.match(/\bsize\((.+),(.+)(?:,(.+))?\);/);
+		var dimensions = r.match(/[0-9]+/g);
     if (dimensions) {
       return[dimensions[0],dimensions[1]];
     }
     else{
-      tinylogLite.log("Did not find a call to size(), defaulting to size(200,200)");
+      Processing.logger.log("No size() call found defaulting to size(200,200)");
       return [200,200];
     }
 	}
@@ -81,10 +81,11 @@ function PJSBox($jq) {
 	source = window.bespin.value; 
 	
 	var selected = source;   
-  if (source != "") {
+  if (source !== "") {
 		var code = selected.toString();
 		var anchor = selected.anchorNode;
 		var focus = selected.focusNode;
+    
 		var codeObjText = source;//anchor.textContent;
 		/*if ( anchor != focus ) {
 			var fp = $jq(focus).parents();
@@ -104,13 +105,7 @@ function PJSBox($jq) {
 		
 		var size = getSize(source);
 		var cpos = {};
-		
-		$jq("body").append('\
-<div id="pjsbox-overlay" style="z-index:100000;position:fixed;left:0;top:0;height:100%;width:100%;background:#fff;opacity:0.5;display:none;"></div>\
-<div id="pjsbox" style="z-index:100001;position:fixed;left:50%;top:50%;overflow:hidden;width:0;height:0;padding:10px;border-radius:10px;-moz-border-radius:10px;-webkit-border-radius:10px;background:#fff;box-shadow:0 0 20px #353535;-webkit-box-shadow:0 0 20px #353535;-moz-box-shadow:0 0 20px #353535;">\
-<div id="pjsbox-canvas" style="position:relative;"></div>\
-<a id="pjsbox-close" style="display:block;display:none;position:absolute;text-decoration:none;font-weight:bold;font-family:Helvetica,sans-serif;font-size:14px;top:-12px;right:-12px;width:20px;height:20px;line-height:20px;text-align:center;background:#353535;color:#fff;-moz-border-radius:10px;-moz-box-shadow:0 0 10px #353535;-webkit-border-radius:10px;-webkit-box-shadow:0 0 10px #353535;border-radius:10px;box-shadow:0 0 10px #353535;" href="#pjsbox-closer" title="Close">&#10006;</a>\
-</div>');
+		$jq("body").append('<div id="pjsbox-overlay" style="z-index:100000;position:fixed;left:0;top:0;height:100%;width:100%;background:#fff;opacity:0.5;display:none;"></div><div id="pjsbox" style="z-index:100001;position:fixed;left:50%;top:50%;overflow:hidden;width:0;height:0;padding:10px;border-radius:10px;-moz-border-radius:10px;-webkit-border-radius:10px;background:#fff;box-shadow:0 0 20px #353535;-webkit-box-shadow:0 0 20px #353535;-moz-box-shadow:0 0 20px #353535;"><div id="pjsbox-canvas" style="position:relative;"></div><a id="pjsbox-close" style="display:block;display:none;position:absolute;text-decoration:none;font-weight:bold;font-family:Helvetica,sans-serif;font-size:14px;top:-12px;right:-12px;width:20px;height:20px;line-height:20px;text-align:center;background:#353535;color:#fff;-moz-border-radius:10px;-moz-box-shadow:0 0 10px #353535;-webkit-border-radius:10px;-webkit-box-shadow:0 0 10px #353535;border-radius:10px;box-shadow:0 0 10px #353535;" href="#pjsbox-closer" title="Close">&#10006;</a></div>');
 
 		$jq("#pjsbox-canvas").append('<canvas width="'+ size[0] +'" height="'+ size[1] +'"></canvas>');
 		var canvas = $jq("#pjsbox-canvas canvas")[0];
@@ -123,14 +118,13 @@ function PJSBox($jq) {
 				marginTop: -(size[1]/2)-10
 			},"slow",function(){
 				try {
-					p = Processing(canvas,codeObjText);
-					$jq("#pjsbox-canvas canvas").bind("mousemove.shim",function(e){
+					p = new Processing(canvas,codeObjText);
+          $jq("#pjsbox-canvas canvas").bind("mousemove.shim",function(e){
 						cpos = $jq("#pjsbox-canvas canvas").offset();
 					});
 				} catch(e) {
-          tinylogLite.log("ERROR Initializing p. "+ e);
-					$jq("#pjsbox-close").click();
-					//alert("Might be a bad selection...\n\n" + e.message);
+            Processing.logger.log(e);
+            $jq("#pjsbox-close").click();
 				}
 				$jq(this).css("overflow","visible").find("#pjsbox-close").fadeIn("slow");
 			});
