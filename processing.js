@@ -1109,6 +1109,7 @@
         curTint = function() {},
         curTextSize = 12,
         curTextFont = "Arial",
+        curTextLeading = 14,
         getLoaded = false,
         start = new Date().getTime(),
         timeSinceLastFPS = start,
@@ -10212,6 +10213,7 @@
     p.textSize = function textSize(size) {
       if (size) {
         curTextSize = size;
+        curTextLeading = (p.textAscent() + p.textDescent()) * 1.275;
       }
     };
 
@@ -10249,6 +10251,27 @@
       }
     };
 
+    p.textLeading = function textLeading(leading) {
+      curTextLeading = leading;
+    };
+
+    var measureTextCanvas = function(fontFace, fontSize, baseLine, text) {
+      this.canvas = document.createElement('canvas');
+      this.canvas.setAttribute('width', fontSize + "px");
+      this.canvas.setAttribute('height', fontSize + "px");
+      this.ctx = this.canvas.getContext("2d");
+      this.ctx.font = fontSize + "pt " + fontFace;
+      this.ctx.fillStyle = "black";
+      this.ctx.fillRect (0, 0, fontSize, fontSize); 
+      this.ctx.fillStyle = "white";
+      this.ctx.fillText(text, 0, baseLine);
+      this.imageData = this.ctx.getImageData(0, 0, fontSize, fontSize);
+
+      this.get = function(x, y) {
+        return this.imageData.data[((y*(this.imageData.width*4)) + (x*4))];
+      };
+    };
+
     p.textAscent = (function() {
       var oldTextSize = undef,
           oldTextFont = undef,
@@ -10269,15 +10292,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          if (graphics !== undef) {
-            graphics.size(curTextSize, curTextSize);
-          } else {
-            graphics = p.createGraphics(curTextSize, curTextSize);
-          }
-          graphics.background(0);
-          graphics.fill(255);
-          graphics.textFont(curTextFont, curTextSize);
-          graphics.text(character, 0, curTextSize);
+          graphics = new measureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
 
           // binary search for highest pixel
           while(yLoc !== bottom) {
@@ -10325,15 +10340,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          if (graphics !== undef) {
-            graphics.size(curTextSize, curTextSize);
-          } else {
-            graphics = p.createGraphics(curTextSize, curTextSize);
-          }
-          graphics.background(0);
-          graphics.fill(255);
-          graphics.textFont(curTextFont, curTextSize);
-          graphics.text(character, 0, 0);
+          graphics = new measureTextCanvas(curTextFont.name, curTextSize, 0, character);
 
           // binary search for lowest pixel
           while(yLoc !== bottom) {
@@ -10630,18 +10637,18 @@
 
       var yOffset;
       if(verticalTextAlignment === PConstants.TOP) {
-        yOffset = (1-baselineOffset) * curTextSize;
+        yOffset = (1-baselineOffset) * curTextLeading;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        yOffset = (1-baselineOffset - linesCount/2) * curTextSize;
+        yOffset = (1-baselineOffset - linesCount/2) * curTextLeading;
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
-        yOffset = (1-baselineOffset - linesCount) * curTextSize;
+        yOffset = (1-baselineOffset - linesCount) * curTextLeading;
       } else { //  if(verticalTextAlignment === PConstants.BASELINE) {
-        yOffset = (1 - linesCount) * curTextSize;
+        yOffset = 0;
       }
       for(var i=0;i<linesCount;++i) {
         var line = lines[i];
         lineFunction(line, x, y + yOffset, z, horizontalTextAlignment);
-        yOffset += curTextSize;
+        yOffset += curTextLeading;
       }
     }
 
@@ -10653,84 +10660,62 @@
         return;
       }
 
-      var spaceMark = -1;
-      var start = 0;
-      var lineWidth = 0;
-      var textboxWidth = width;
-
-      var yOffset = 0;
-
       curContext.font = curTextSize + "px " + curTextFont.name;
 
-      var drawCommands = [];
-      var hadSpaceBefore = false;
-      for (var j=0, len=str.length; j < len; j++) {
-        var currentChar = str[j];
-        var letterWidth;
+      var spaceLoc = null,
+          yOffset = 0,
+          lineWidth = 0,
+          letterWidth = 0,
+          strings = str.split("\n");
 
-        if ("fillText" in curContext) {
-          letterWidth = curContext.measureText(currentChar).width;
-        } else if ("mozDrawText" in curContext) {
-          letterWidth = curContext.mozMeasureText(currentChar);
-        }
-
-        if (currentChar !== "\n" && (currentChar === " " || (hadSpaceBefore && str[j + 1] === " ") ||
-            lineWidth + 2 * letterWidth < textboxWidth)) { // check a line of text
-          if (currentChar === " ") {
-            spaceMark = j;
+      for (var j = 0; j < strings.length; j++) {
+        for (var jj = 0; jj < strings[j].length; jj++) {
+          if ("fillText" in curContext) {
+            letterWidth = curContext.measureText(strings[j][jj]).width;
+          } else if ("mozDrawText" in curContext) {
+            letterWidth = curContext.mozMeasureText(strings[j][jj]);
           }
           lineWidth += letterWidth;
-        } else { // draw a line of text
-          if (start === spaceMark + 1) { // in case a whole line without a space
-            spaceMark = j;
+          if (strings[j][jj] === " ") {
+            spaceLoc = jj;
           }
-
-          if (str[j] === "\n") {
-            drawCommands.push({text:str.substring(start, j), width: lineWidth, offset: yOffset});
-            start = j + 1;
-          } else {
-            drawCommands.push({text:str.substring(start, spaceMark + 1), width: lineWidth, offset: yOffset});
-            start = spaceMark + 1;
+          if (lineWidth >= width && strings[j][jj] !== " ") {
+            if (spaceLoc === null) {
+              spaceLoc = jj;
+            }
+            strings.splice(j, 1, strings[j].substring(0, spaceLoc+1), strings[j].substring(spaceLoc+1));
+            spaceLoc = null;
           }
-          yOffset += curTextSize;
-
-          lineWidth = 0;
-          j = start - 1;
         }
-        hadSpaceBefore = currentChar === " ";
+        lineWidth = letterWidth = 0;
       } // for (var j=
 
-      if (start < len) { // draw the last line
-        drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
-        yOffset += curTextSize;
-      }
-
       // actual draw
-      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
+      var lineFunction = p.use3DContext ? text$line$3d : text$line;
       var xOffset = 0;
-      if (horizontalTextAlignment === PConstants.CENTER) {
+      if(horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width / 2;
-      } else if (horizontalTextAlignment === PConstants.RIGHT) {
+      } else if(horizontalTextAlignment === PConstants.RIGHT) {
         xOffset = width;
       }
 
       // offsets for alignment
       var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
-      if (verticalTextAlignment === PConstants.BOTTOM) {
-        boxYOffset2 = height-yOffset;
-      } else if (verticalTextAlignment === PConstants.CENTER) {
-        boxYOffset2 = (height-yOffset) / 2;
+      if(verticalTextAlignment === PConstants.BOTTOM) {
+        boxYOffset2 = height - (strings.length * curTextLeading);
+      } else if(verticalTextAlignment === PConstants.CENTER) {
+        boxYOffset2 = (height - (strings.length * curTextLeading)) / 2;
       }
 
-      for (var il=0,ll=drawCommands.length; il<ll; ++il) {
-        var command = drawCommands[il];
-        if (command.offset + boxYOffset2 < 0) {
+      for(var il=0,ll=strings.length; il<ll; ++il, yOffset += curTextLeading) {
+        if(yOffset + boxYOffset2 < 0) {
           continue; // skip if not inside box yet
         }
-        if (command.offset + boxYOffset2 + curTextSize > height) {
+        if(yOffset + boxYOffset2 + curTextLeading > height) {
           break; // stop if no enough space for one more line draw
         }
-        lineFunction(command.text, x + xOffset, y + command.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
+        lineFunction(strings[il], x + xOffset, y + yOffset + boxYOffset1 + boxYOffset2,
+                     z, horizontalTextAlignment);
       }
     }
 
@@ -11565,11 +11550,11 @@
       "sort", "specular", "sphere", "sphereDetail", "splice", "split",
       "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
       "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
-      "textAlign", "textAscent", "textDescent", "textFont", "textMode",
-      "textSize", "texture", "textureMode", "textWidth", "tint", "translate",
-      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
-      "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed",
-      "__mousePressed"];
+      "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
+      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
+      "translate", "triangle", "trim", "unbinary", "unhex", "updatePixels",
+      "use3DContext", "vertex", "width", "XMLElement", "year", "__frameRate",
+       "__keyPressed", "__mousePressed"];
 
     var members = {};
     var i, l;
