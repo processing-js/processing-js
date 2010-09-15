@@ -7951,10 +7951,9 @@
       }
 
       var s = curTightness;
-      curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2),
-                           ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2),
-                           (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2),
-                           ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
+      curveBasisMatrix.set((s - 1) / 2, (s + 3) / 2, (-3 - s) / 2, (1 - s) / 2,
+                           (1 - s), (-5 - s) / 2, (s + 2), (s - 1) / 2,
+                           (s - 1) / 2, 0, (1 - s) / 2, 0, 0, 1, 0, 0);
 
       splineForward(curveDet, curveDrawMatrix);
 
