@@ -2197,10 +2197,10 @@
 
     };
 
-    var PShapeSVG = function() {
+    var PShapeSVG = p.PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
-      if (arguments.length === 1) {
-        this.element  = new p.XMLElement(null, arguments[0]);
+      if (arguments.length === 1) { //xml element coming in
+        this.element  = arguments[0] ;//new p.XMLElement(null, arguments[0]);
         // set values to their defaults according to the SVG spec
         this.vertexCodes         = [];
         this.vertices            = [];
@@ -2951,7 +2951,11 @@
           this.fill = false;
         } else if (fillText.indexOf("#") === 0) {
           this.fill      = true;
-          this.fillColor = opacityMask | (parseInt(fillText.substring(1), 16 )) & 0xFFFFFF;
+          if (fillText.length === 4) {
+            // convert #00F to #0000FF
+            fillText = fillText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
+          }
+          this.fillColor = opacityMask | (parseInt(fillText.substring(1), 16)) & 0xFFFFFF;
         } else if (fillText.indexOf("rgb") === 0) {
           this.fill      = true;
           this.fillColor = opacityMask | this.parseRGB(fillText);
@@ -2982,8 +2986,12 @@
           this.stroke = false;
         } else if (strokeText.charAt( 0 ) === "#") {
           this.stroke      = true;
-          this.strokeColor = opacityMask | (parseInt( strokeText.substring( 1 ), 16 )) & 0xFFFFFF;
-        } else if (strokeText.indexOf( "rgb" ) === 0 ) {
+          if (strokeText.length === 4) {
+            // convert #00F to #0000FF
+            strokeText = strokeText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
+          }
+          this.strokeColor = opacityMask | (parseInt( strokeText.substring(1), 16)) & 0xFFFFFF;
+         } else if (strokeText.indexOf( "rgb" ) === 0 ) {
           this.stroke = true;
           this.strokeColor = opacityMask | this.parseRGB(strokeText);
         } else if (strokeText.indexOf( "url(#" ) === 0) {
@@ -11462,7 +11470,7 @@
       "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage",
       "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
       "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
-      "printCamera", "println", "printMatrix", "printProjection", "PShape",
+      "printCamera", "println", "printMatrix", "printProjection", "PShape","PShapeSVG",
       "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random",
       "Random", "randomSeed", "rect", "rectMode", "red", "redraw",
       "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY",
