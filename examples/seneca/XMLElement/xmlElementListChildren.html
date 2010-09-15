@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
-	<title>Processing.js test of xmlElement</title>
+	<title>Processing.js test of xmlElement listChildren()</title>
 	<script type="text/javascript" src="../../../processing.js"></script> 
 	<script type="text/javascript" src="../../init.js"></script> 
 
@@ -11,19 +11,17 @@
 
 	<script id="script" type="application/processing">
 XMLElement xml;
-
+var array[];
 void setup() {
   size(200, 200);
   xml = new XMLElement(this, "sites2.xml");
-  XMLElement site = xml.getChild(0);
-  XMLElement[] siteData = site.getChildren();
-  String s1 = siteData[0].getName();
-  String s2 = siteData[1].getName();
-  println(s1 + " : " + s2);  // Prints "name : url"
+  array = xml.listChildren();
+  
+  println(array);  // Prints "site"
 }
 
 	</script>
-<h1>XMLElement Test8 getName() </h1>
+<h1>XMLElement Test8: listChildren() </h1>
 <h3>Source</h3><pre>
 // The following short XML file called "sites.xml" is parsed 
 // in the code below. It must be in the project's "data" directory
@@ -36,15 +34,13 @@ void setup() {
 // &lt;/websites&gt; 
 
 XMLElement xml;
-
+var array[];
 void setup() {
   size(200, 200);
   xml = new XMLElement(this, "sites2.xml");
-  XMLElement site = xml.getChild(0);
-  XMLElement[] siteData = site.getChildren();
-  String s1 = siteData[0].getName();
-  String s2 = siteData[1].getName();
-  println(s1 + " : " + s2);  // Prints "name : url"
+  array = xml.listChildren();
+  
+  println(array);  // Prints "site"
 }
 </pre>
 <canvas id="display" style="width:10;height:10;"></canvas>

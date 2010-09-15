@@ -3232,9 +3232,12 @@
           return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
       },
-      hasAttribute: function (name) {
-        return this.getAttribute(name) !== null;
-        //2 parameter call missing
+      hasAttribute: function () {
+        if (arguments.length === 1) {
+          return this.getAttribute(arguments[0]) !== null;
+        } else if (arguments.length === 2) {
+          return this.getAttribute(arguments[0],arguments[1]) !== null;
+        }
       },
       createPCDataElement: function () {
         return new XMLElement();
@@ -3246,7 +3249,7 @@
       },
       equalsXMLElement: function (object) {
         if (object instanceof XMLElement) {
-          if (this.name !== object.getLocalName) { return false; }
+          if (this.name !== object.getLocalName()) { return false; }
           if (this.attributes.length !== object.getAttributeCount()) { return false; }
           for (var i = 0; i < this.attributes.length; i++){
             if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
@@ -3281,6 +3284,13 @@
             return attribute.getValue();
           } else {
             return null;
+          }
+        } else if (arguments.length === 3) {
+          attribute = this.findAttribute(arguments[0],arguments[1]);
+          if (attribute) {
+            return attribute.getValue();
+          } else {
+            return arguments[2];
           }
         }
       },
@@ -3445,7 +3455,7 @@
         this.namespace = namespace || "";
         for (var i = 0; i < this.attributes.length; i++){
           if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
-            this.attributes.splice(i, 0);
+            this.attributes.splice(i, 1);
           }
         }
       },
@@ -3453,14 +3463,14 @@
         if (child) {
           for (var i = 0; i < this.children.length; i++) {
             if (this.children[i].equalsXMLElement(child)) {
-              this.children.splice(i, 0);
+              this.children.splice(i, 1);
             }
           }
         }
       },
       removeChildAtIndex: function(index) {
         if (this.children.length > index) { //make sure its not outofbounds
-          this.children.splice(index, 0);
+          this.children.splice(index, 1);
         }
       },
       findAttribute: function (name, namespace) {
@@ -3514,6 +3524,12 @@
       },
       getName: function() {
         return this.fullName;
+      },
+      getLocalName: function() {
+        return this.name;
+      },
+      getAttributeCount: function() {
+        return this.attributes.length;
       }
     };
 
