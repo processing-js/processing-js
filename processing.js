@@ -306,10 +306,30 @@
     SHIFT:     16,
     CONTROL:   17,
     ALT:       18,
+    CAPSLK:    20,
+    PGUP:      33,
+    PGDN:      34,
+    END:       35,
+    HOME:      36,
+    LEFT:      37,
     UP:        38,
     RIGHT:     39,
     DOWN:      40,
-    LEFT:      37,
+    INS:       45,
+    DEL:       46,
+    F1:        112,
+    F2:        113,
+    F3:        114,
+    F4:        115,
+    F5:        116,
+    F6:        117,
+    F7:        118,
+    F8:        119,
+    F9:        120,
+    F10:       121,
+    F11:       122,
+    F12:       123,
+    NUMLK:     144,
 
     // Cursor types
     ARROW:    'default',
@@ -1014,9 +1034,9 @@
     p.mouseScrolled   = undef;
     p.key             = undef;
     p.keyCode         = undef;
-    p.keyPressed      = undef;
-    p.keyReleased     = undef;
-    p.keyTyped        = undef;
+    p.keyPressed      = function(){};  // needed to remove function checks
+    p.keyReleased     = function(){};
+    p.keyTyped        = function(){};
     p.draw            = undef;
     p.setup           = undef;
 
@@ -1100,6 +1120,13 @@
         bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
+        // Keys and Keystrokes
+        firstCodedDown = true,    // first coded key stroke
+        firstEDGKeyDown = true,   // first Enter - Delete Google key stroke
+        firstEDMKeyDown = true,   // first Enter - Delete Mozilla key stroke
+        firstMKeyDown = true,     // first Mozilla key stroke
+        firstGKeyDown = true,     // first Google key stroke
+        gRefire = false,          // Google refire
         // Shaders
         programObject3D,
         programObject2D,
@@ -1134,7 +1161,10 @@
         isContextReplaced = false,
         setPixelsCached,
         maxPixelsCached = 1000,
-        codedKeys = [PConstants.SHIFT, PConstants.CONTROL, PConstants.ALT, PConstants.UP, PConstants.RIGHT, PConstants.DOWN, PConstants.LEFT];
+        codedKeys = [ PConstants.SHIFT, PConstants.CONTROL, PConstants.ALT, PConstants.CAPSLK, PConstants.PGUP, PConstants.PGDN, 
+                      PConstants.END, PConstants.HOME, PConstants.LEFT, PConstants.UP, PConstants.RIGHT, PConstants.DOWN, PConstants.NUMLK,
+                      PConstants.INS, PConstants.F1, PConstants.F2, PConstants.F3, PConstants.F4, PConstants.F5, PConstants.F6, PConstants.F7,
+                      PConstants.F8, PConstants.F9, PConstants.F10, PConstants.F11, PConstants.F12 ];
 
     // Get padding and border style widths for mouse offsets
     var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
@@ -11108,8 +11138,26 @@
     //////////////////////////////////////////////////////////////////////////
     // Keyboard Events
     //////////////////////////////////////////////////////////////////////////
+    
+    function keyCodeMap(code){
+      // Coded keys
+      if (codedKeys.indexOf(code) >= 0) {
+        p.keyCode = code;
+        if (code === p.INS) {
+          p.keyCode = 155; 
+        }
+        return PConstants.CODED;
+      }
+      switch(code){
+        case 13:
+          return 10;  // Enter
+        case 46:
+          return 127; // Delete
+      }
+      return code;
+    }
 
-    function keyCodeMap(code, shift) {
+    function charCodeMap(code, shift) {
       // Letters
       if (code >= 65 && code <= 90) { // A-Z
         // Keys return ASCII for upcased letters.
@@ -11148,12 +11196,6 @@
             return 41; // )
           }
         }
-      }
-
-      // Coded keys
-      else if (codedKeys.indexOf(code) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
-        p.keyCode = code;
-        return PConstants.CODED;
       }
 
       // Symbols and their shift-symbols
@@ -11195,39 +11237,178 @@
       return code;
     }
 
-    attach(document, "keydown", function(e) {
-      p.__keyPressed = true;
-      p.keyCode = null;
-      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+    // used to reproduce P5 key strokes (normally the first stroke)
+    function normalKeyDown(){
+      var tempKeyCode;
+      p.keyPressed();
+      tempKeyCode = p.keyCode;
+      p.keyCode = 0;
+      p.keyTyped();
+      p.keyCode = tempKeyCode;
+    }
 
-      if (typeof p.keyPressed === "function") {
-        p.keyPressed();
+    // used to reproduce P5 key strokes (generally the refiring of keys)
+    function refireKeyDown(){
+      var tempKeyCode;
+      p.keyReleased();
+      p.keyPressed();
+      tempKeyCode = p.keyCode;
+      p.keyCode = 0;
+      p.keyTyped();
+      p.keyCode = tempKeyCode;
+    }
+
+    // event listeners call this function in order to deal with the keys being pressed
+    function keyFunc(e, type) {
+      var tempKeyCode;
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+      if (type === "keypress") {
+        if (e.keyCode === e.charCode) {  // Hack for Google Chrome that bypasses problem with keys being the same keyCode
+          p.keyCode = -1;               // for keydown and keypress - like s and F4 give the same keyCode of 115
+        }
       }
+      switch (p.keyCode) {
+        case 19:  // Pause-Break
+        case 33:  // Page Up
+        case 34:  // Page Down
+        case 35:  // End
+        case 36:  // Home
+        case 37:  // Left Arrow
+        case 38:  // Up Arrow
+        case 39:  // Right Arrow
+        case 40:  // Down Arrow
+        case 45:  // Insert
+        case 112: // F1
+        case 113: // F2
+        case 114: // F3
+        case 115: // F4
+        case 116: // F5
+        case 117: // F6
+        case 118: // F7
+        case 119: // F8
+        case 120: // F9
+        case 121: // F10
+        case 122: // F11
+        case 123: // F12
+        case 145: // Scroll Lock
+        case 155: // Insert
+        case 224: // NumPad Up
+        case 225: // NumPad Down
+        case 226: // NumPad Left
+        case 227: // NumPad Right
+          if (type === "keydown") {
+            if (gRefire) {
+              p.keyReleased();
+              p.keyPressed();
+            } else {
+              p.keyPressed();
+              gRefire = true;
+            }
+          } else if (type === "keypress") {
+            if (firstCodedDown) {
+              firstCodedDown = false;
+            } else {
+              p.keyReleased();
+              p.keyPressed();
+            }
+          } else if (type === "keyup") {
+            p.keyReleased();
+            if (firstCodedDown === false) { firstCodedDown = true; }
+            if (gRefire){ gRefire = false; }
+          }
+          break;
+        case 16:  // Shift
+        case 17:  // Ctrl
+        case 18:  // Alt
+        case 20:  // Caps Lock
+        case 144: // Num Lock
+          if (type === "keydown") {
+            p.keyPressed();
+          } else if (type === "keyup") {
+            p.keyReleased();
+          }
+          break;
+        case 46:  // Delete
+        case 13: // Enter
+          if (type === "keydown") {
+            if (firstEDGKeyDown === true) {
+              firstEDGKeyDown = false;
+              normalKeyDown();
+            } else {
+              refireKeyDown();
+            }
+          } else if (type === "keypress") {
+            if (firstEDMKeyDown === true) {
+              firstEDMKeyDown = false;
+            } else {
+              refireKeyDown();
+            }
+          } else if (type === "keyup") {
+            p.keyCode = e.keyCode;
+            p.keyReleased();
+            if (firstEDGKeyDown === false) { firstEDGKeyDown = true; }
+            if (firstEDMKeyDown === false) { firstEDMKeyDown = true; }
+          }
+          break;
+        default:
+          if (p.keyCode === -1) {
+            p.keyCode = e.keyCode;
+          }
+          if (e.keyCode === 0) {
+            p.key = charCodeMap(e.charCode, e.shiftKey);  // dealing with Mozilla key strokes
+            if (type === "keypress") {
+              if (firstMKeyDown === true) {
+                firstMKeyDown = false;
+              } else {
+                refireKeyDown();
+              }
+            } else if (type === "keyup") {
+              p.keyCode = e.keyCode;
+              p.keyReleased();
+              if (firstMKeyDown === false) { firstMKeyDown = true; }
+            }
+          } else {
+            p.key = charCodeMap(e.keyCode, e.shiftKey);  // dealing with Google key strokes
+            if (type === "keydown") {
+              if (firstGKeyDown === true) {
+                firstGKeyDown = false;
+                normalKeyDown();
+              } else {
+                refireKeyDown();
+              }
+            } else if (type === "keyup") {
+              p.keyCode = e.keyCode;
+              p.keyReleased();
+              if (firstMKeyDown === false) { firstMKeyDown = true; }
+              if (firstGKeyDown === false) { firstGKeyDown = true; }
+            }
+          }
+          break;
+      }   
+    }
+
+    attach(document, "keydown", function(e) {
+      p.keyCode = e.keyCode;
+      p.__keyPressed = true;
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+      if (p.key !== PConstants.CODED) {
+        p.key = charCodeMap(e.keyCode, e.shiftKey);
+      }
+      keyFunc(e, "keydown");
+    });
+    
+    attach(document, "keypress", function (e) {
+      keyFunc(e, "keypress");
     });
 
     attach(document, "keyup", function(e) {
-      p.keyCode = null;
-      p.key = keyCodeMap(e.keyCode, e.shiftKey);
-
-      //TODO: This needs to only be made false if all keys have been released.
+      p.keyCode = e.keyCode;
       p.__keyPressed = false;
-
-      if (typeof p.keyReleased === "function") {
-        p.keyReleased();
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+      if (p.key !== PConstants.CODED) {
+        p.key = charCodeMap(e.keyCode, e.shiftKey);
       }
-    });
-
-    attach(document, "keypress", function (e) {
-      // In Firefox, e.keyCode is not currently set with keypress.
-      //
-      // keypress will always happen after a keydown, so p.keyCode and p.key
-      // should remain correct. Some browsers (chrome) refire keydown when
-      // key repeats happen, others (firefox) don't. Either way keyCode and
-      // key should remain correct.
-
-      if (p.keyTyped) {
-        p.keyTyped();
-      }
+      keyFunc(e, "keyup");
     });
 
     // Place-holder for debugging function
@@ -11240,10 +11421,10 @@
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
-      if(aCode instanceof Processing.Sketch) {
+      if (aCode instanceof Processing.Sketch) {
         // Use sketch as is
         curSketch = aCode;
-      } else if(typeof aCode === "function") {
+      } else if (typeof aCode === "function") {
         // Wrap function with default sketch parameters
         curSketch = new Processing.Sketch(aCode);
       } else {
