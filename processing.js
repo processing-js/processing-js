@@ -11963,7 +11963,7 @@
             return all;
           } else {
             var subject = { name: identifier, member: subMember, callSign: !!callSign };
-            return replaceContext(subject) + suffix;
+            return replaceContext(subject) + (suffix === undef ? "" : suffix);
           }
         });
     }
