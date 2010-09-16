@@ -18,6 +18,8 @@ var canvas = {
                    translate: __empty_func__,
                    attachEvent: __empty_func__,
                    fillRect: __empty_func__,
+                   fillText: __empty_func__,
+                   measureText: function() { return 1; },
                    clearRect: __empty_func__,
                    beginPath: __empty_func__,
                    moveTo: __empty_func__,
@@ -124,7 +126,8 @@ var window = {
   print: print,
   document: document,
   createElement: function() { return elem; },
-  setTimeout: __empty_func__
+  setTimeout: __empty_func__,
+  clearInterval: __empty_func__
 };
 
 window.XMLHttpRequest.prototype.open = __empty_func__;
