@@ -8219,24 +8219,75 @@
     };
 
     p.arc = function arc(x, y, width, height, start, stop) {
-      if (width <= 0) {
-        return;
-      }
+      if (width <= 0 || stop < start) { return; }
 
       if (curEllipseMode === PConstants.CORNER) {
         x += width / 2;
         y += height / 2;
+      } else if (curEllipseMode === PConstants.CORNERS) {
+        width = width - x;
+        height = height - y;
+      } else if (curEllipseMode === PConstants.RADIUS) {
+        x = x - width;
+        y = y - height;
+        width = width * 2;
+        height = height * 2;
+      } else if (curEllipseMode === PConstants.CENTER) {
+        x = x - width/2;
+        y = y - height/2;
+      }
+      // make sure that we're starting at a useful point
+      while (start < 0) {
+        start += PConstants.TWO_PI;
+        stop += PConstants.TWO_PI;
+      }
+      if (stop - start > PConstants.TWO_PI) {
+        start = 0;
+        stop = PConstants.TWO_PI;
+      }
+      var hr = width / 2;
+      var vr = height / 2;
+
+      var centerX = x + hr;
+      var centerY = y + vr;
+      
+      var i, ii, startLUT, stopLUT;
+      if (doFill) {
+        // shut off stroke for a minute
+        var savedStroke = doStroke;
+        doStroke = false;
+
+        startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
+        stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
+
+        p.beginShape();
+        p.vertex(centerX, centerY);
+        for (i = startLUT; i < stopLUT; i++) {
+          ii = i % PConstants.SINCOS_LENGTH;
+          if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
+          p.vertex(centerX + parseFloat(Math.cos(ii * PConstants.DEG_TO_RAD * 0.5)) * hr,centerY + parseFloat(Math.sin(ii * PConstants.DEG_TO_RAD * 0.5)) * vr);
+        }
+        p.endShape(PConstants.CLOSE);
+        doStroke = savedStroke;
       }
 
-      curContext.moveTo(x, y);
-      curContext.beginPath();
-      curContext.arc(x, y, curEllipseMode === PConstants.CENTER_RADIUS ? width : width / 2, start, stop, false);
+      if (doStroke) {
+        // and doesn't include the first (center) vertex.
+        var savedFill = doFill;
+        doFill = false;
 
-      executeContextStroke();
-      curContext.lineTo(x, y);
+        startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
+        stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
 
-      executeContextFill();
-      curContext.closePath();
+        p.beginShape(); 
+        for (i = startLUT; i < stopLUT; i ++) {
+          ii = i % PConstants.SINCOS_LENGTH;
+          if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
+          p.vertex(centerX + parseFloat(Math.cos(ii * PConstants.DEG_TO_RAD * 0.5)) * hr, centerY + parseFloat(Math.sin(ii * PConstants.DEG_TO_RAD * 0.5)) * vr);
+        }
+        p.endShape();
+        doFill = savedFill;
+      }
     };
 
     p.line = function line() {
