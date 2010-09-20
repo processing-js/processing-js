@@ -525,6 +525,15 @@
     return createArrayList(Array.prototype.slice.call(arguments));
   };
 
+  /**
+  * A HashMap stores a collection of objects, each referenced by a key. This is similar to an Array, only 
+  * instead of accessing elements with a numeric index, a String  is used. (If you are familiar with 
+  * associative arrays from other languages, this is the same idea.) 
+  *
+  * @param {int} initialCapacity          defines the initial capacity of the map, it's 16 by default
+  * @param {float} loadFactor             the load factor for the map, the default is 0.75
+  * @param {Map} m                        gives the new HashMap the same mappings as this Map
+  */
   var HashMap = (function() {
     function virtHashCode(obj) {
       if (obj.constructor === String) {
@@ -559,6 +568,16 @@
       }
     }
 
+    /**
+    * @member HashMap
+    * A HashMap stores a collection of objects, each referenced by a key. This is similar to an Array, only 
+    * instead of accessing elements with a numeric index, a String  is used. (If you are familiar with 
+    * associative arrays from other languages, this is the same idea.) 
+    *
+    * @param {int} initialCapacity          defines the initial capacity of the map, it's 16 by default
+    * @param {float} loadFactor             the load factor for the map, the default is 0.75
+    * @param {Map} m                        gives the new HashMap the same mappings as this Map
+    */
     function HashMap() {
       if (arguments.length === 1 && arguments[0].constructor === HashMap) {
         return arguments[0].clone();
@@ -610,16 +629,28 @@
           }
         }
 
+        /*
+        * @member Iterator
+        * Checks if the Iterator has more items
+        */
         this.hasNext = function() {
           return !endOfBuckets;
         };
 
+        /*
+        * @member Iterator
+        * Return the next Item
+        */
         this.next = function() {
           var result = conversion(buckets[bucketIndex][itemIndex]);
           findNext();
           return result;
         };
 
+        /*
+        * @member Iterator
+        * Remove the current item
+        */
         this.remove = function() {
           removeItem(this.next());
           --itemIndex;
@@ -5851,6 +5882,17 @@
     };
 
     // blending modes
+    /**
+    * These are internal blending modes used for BlendColor()
+    *
+    * @param {Color} c1       First Color to blend
+    * @param {Color} c2       Second Color to blend
+    *
+    * @returns {Color}        The blended Color
+    * 
+    * @see BlendColor 
+    * @see Blend
+    */
     p.modes = {
       replace: function(c1, c2) {
         return c2;
@@ -6433,6 +6475,17 @@
     };
 
     // Forced default color mode for #aaaaaa style
+    /**
+    * Convert 3 int values to a color in the default color mode RGB even if curColorMode is not set to RGB
+    *
+    * @param {int} aValue1              range for the red color
+    * @param {int} aValue2              range for the green color
+    * @param {int} aValue3              range for the blue color
+    * 
+    * @returns {Color}
+    * 
+    * @see color
+    */
     p.defaultColor = function(aValue1, aValue2, aValue3) {
       var tmpColorMode = curColorMode;
       curColorMode = PConstants.RGB;
@@ -8949,6 +9002,13 @@
       // Externalize the context
       p.externals.context = curContext;
 
+      /**
+      * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
+      *
+      * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
+      *
+      * @see PImage
+      */
       p.toImageData = function() {
         if(!p.use3DContext){
           return curContext.getImageData(0, 0, this.width, this.height);
@@ -9672,6 +9732,7 @@
       curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(sphereVerts), curContext.STATIC_DRAW);
     };
+
     /**
      * The sphereDetail() function controls the detail used to render a sphere by adjusting the number of
      * vertices of the sphere mesh. The default resolution is 30, which creates
@@ -9750,6 +9811,7 @@
       // make the sphere verts and norms
       initSphere();
     };
+
     /**
      * The sphere() function draws a sphere with radius r centered at coordinate 0, 0, 0.
      * A sphere is a hollow ball made from tessellated triangles.
@@ -10250,6 +10312,7 @@
         curContext.fill();
       }
     }
+
     /**
      * The noFill() function disables filling geometry. If both <b>noStroke()</b> and <b>noFill()</b>
      * are called, no shapes will be drawn to the screen.
@@ -10260,6 +10323,7 @@
     p.noFill = function noFill() {
       doFill = false;
     };
+
     /**
      * The stroke() function sets the color used to draw lines and borders around shapes. This color
      * is either specified in terms of the RGB or HSB color depending on the
@@ -10314,6 +10378,7 @@
         curContext.stroke();
       }
     }
+
     /**
      * The noStroke() function disables drawing the stroke (outline). If both <b>noStroke()</b> and
      * <b>noFill()</b> are called, no shapes will be drawn to the screen.
@@ -10323,6 +10388,7 @@
     p.noStroke = function noStroke() {
       doStroke = false;
     };
+
     /**
      * The strokeWeight() function sets the width of the stroke used for lines, points, and the border around shapes. 
      * All widths are set in units of pixels. 
@@ -10339,6 +10405,7 @@
         curContext.lineWidth = w;
       }
     };
+
     /**
      * The strokeCap() function sets the style for rendering line endings. These ends are either squared, extended, or rounded and 
      * specified with the corresponding parameters SQUARE, PROJECT, and ROUND. The default cap is ROUND. 
@@ -10349,6 +10416,7 @@
     p.strokeCap = function strokeCap(value) {
       curContext.lineCap = value;
     };
+
     /**
      * The strokeJoin() function sets the style of the joints which connect line segments. 
      * These joints are either mitered, beveled, or rounded and specified with the corresponding parameters MITER, BEVEL, and ROUND. The default joint is MITER. 
@@ -10359,6 +10427,7 @@
     p.strokeJoin = function strokeJoin(value) {
       curContext.lineJoin = value;
     };
+
     /**
      * The smooth() function draws all geometry with smooth (anti-aliased) edges. This will slow down the frame rate of the application, 
      * but will enhance the visual refinement. <br/><br/>
@@ -10374,6 +10443,7 @@
         curContext.mozImageSmoothingEnabled = true;
       }
     };
+
     /**
      * The noSmooth() function draws all geometry with jagged (aliased) edges.
      * 
@@ -10397,6 +10467,7 @@
                 p.mix(c1 & PConstants.GREEN_MASK, c2 & PConstants.GREEN_MASK, f) & PConstants.GREEN_MASK |
                 p.mix(c1 & PConstants.BLUE_MASK, c2 & PConstants.BLUE_MASK, f));
     }
+
     /**
      * The point() function draws a point, a coordinate in space at the dimension of one pixel.
      * The first parameter is the horizontal value for the point, the second
@@ -11356,6 +11427,7 @@
       curveVertArray = [];
       curveVertCount = 0;
     };
+
     /**
      * The function splineForward() setup forward-differencing matrix to be used for speedy
      * curve rendering. It's based on using a specific number
@@ -11373,6 +11445,7 @@
 
       matrix.set(0, 0, 0, 1, fff, ff, f, 0, 6 * fff, 2 * ff, 0, 0, 6 * fff, 0, 0, 0);
     };
+
     /**
      * The curveInit() function set the number of segments to use when drawing a Catmull-Rom
      * curve, and setting the s parameter, which defines how tightly
@@ -11668,6 +11741,7 @@
         p.vertex(x, y, z);
       }
     };
+
     /**
      * The curve() function draws a curved line on the screen. The first and second parameters
      * specify the beginning control point and the last two parameters specify
@@ -11717,6 +11791,7 @@
         }
       }
     };
+
     /**
      * The curveTightness() function modifies the quality of forms created with <b>curve()</b> and
      * <b>curveVertex()</b>. The parameter <b>squishy</b> determines how the
@@ -11736,6 +11811,7 @@
     p.curveTightness = function(tightness) {
       curTightness = tightness;
     };
+
     /**
      * The curveDetail() function sets the resolution at which curves display. The default value is 20.
      * This function is only useful when using the P3D or OPENGL renderer.
@@ -12010,6 +12086,7 @@
     p.bezierDetail = function bezierDetail( detail ){
       bezDetail = detail;
     };
+
     /**
      * The bezierPoint() function evalutes quadratic bezier at point t for points a, b, c, d.
      * The parameter t varies between 0 and 1. The a and d parameters are the
@@ -12030,6 +12107,7 @@
     p.bezierPoint = function bezierPoint(a, b, c, d, t) {
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
+
     /**
      * The bezierTangent() function calculates the tangent of a point on a Bezier curve. There is a good
      * definition of "tangent" at Wikipedia: <a href="http://en.wikipedia.org/wiki/Tangent" target="new">http://en.wikipedia.org/wiki/Tangent</a>
@@ -12047,6 +12125,7 @@
     p.bezierTangent = function bezierTangent(a, b, c, d, t) {
       return (3 * t * t * (-a + 3 * b - 3 * c + d) + 6 * t * (a - 2 * b + c) + 3 * (-a + b));
     };
+
     /**
      * The curvePoint() function evalutes the Catmull-Rom curve at point t for points a, b, c, d. The
      * parameter t varies between 0 and 1, a and d are points on the curve,
@@ -12067,6 +12146,7 @@
     p.curvePoint = function curvePoint(a, b, c, d, t) {
       return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
     };
+
     /**
      * The curveTangent() function calculates the tangent of a point on a Catmull-Rom curve. 
      * There is a good definition of "tangent" at Wikipedia: <a href="http://en.wikipedia.org/wiki/Tangent" target="new">http://en.wikipedia.org/wiki/Tangent</a>.
@@ -13147,6 +13227,7 @@
         data[offset+3] = c[3];
       }
     }
+
     // Paints a pixel array into the canvas
     /**
     * Changes the color of any pixel or writes an image directly into the display window. The x and y parameters 
