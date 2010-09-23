@@ -5685,6 +5685,10 @@
       }
     };
 
+    p.__int_cast = function(val) {
+      return 0|val;
+    };
+
     ////////////////////////////////////////////////////////////////////////////
     // Math functions
     ////////////////////////////////////////////////////////////////////////////
@@ -11616,7 +11620,7 @@
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "translate", "triangle", "trim", "unbinary", "unhex", "updatePixels",
       "use3DContext", "vertex", "width", "XMLElement", "year", "__frameRate",
-       "__keyPressed", "__mousePressed"];
+       "__keyPressed", "__mousePressed", "__int_cast"];
 
     var members = {};
     var i, l;
@@ -11887,13 +11891,13 @@
       s = s.replace(/#([0-9A-Fa-f]{6})\b/g, function(all, digits) {
         return "0xFF" + digits;
       });
-      // delete (type)???, (int)??? -> 0|???
+      // delete (type)???, except (int)???
       s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
         var atom = atoms[index];
         if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
           return all;
         } else if(/^\(\s*int\s*\)$/.test(atom)) {
-          return "0|" + next;
+          return "(int)" + next;
         } else {
           var indexParts = atom.split(/"C(\d+)"/g);
           if(indexParts.length > 1) {
@@ -11904,6 +11908,11 @@
           }
           return "" + next;
         }
+      });
+      // (int)??? -> __int_cast(???)
+      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~]+)/g, function(all, arg) {
+        var trimmed = trimSpaces(arg);
+        return trimmed.untrim("__int_cast(" + trimmed.middle + ")");
       });
       // super() -> $superCstr(), super. -> $super.;
       s = s.replace(/\bsuper(\s*"B\d+")/g, "$$superCstr$1").replace(/\bsuper(\s*\.)/g, "$$super$1");
