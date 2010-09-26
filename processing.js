@@ -8785,7 +8785,7 @@
       this.mask = function(mask) {
         this.__mask = undef;
 
-        if (mask instanceof PImage) {
+        if (mask.constructor.name === "PImage") {
           if (mask.width === this.width && mask.height === this.height) {
             this.__mask = mask;
           } else {
@@ -9265,7 +9265,7 @@
 
           if (img.__mask) {
             var j, size;
-            if (img.__mask instanceof PImage) {
+            if (img.__mask.constructor.name === "PImage") {
               var objMask = img.__mask.toImageData();
               for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
                 // using it as an alpha channel
