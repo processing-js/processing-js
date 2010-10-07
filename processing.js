@@ -389,31 +389,46 @@
   }
 
   setupTypedArray("Float32Array", "WebGLFloatArray");
+  setupTypedArray("Int32Array",   "WebGLIntArray");
   setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
   setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
 
-  var ArrayList = function() {
-    function createArrayList(args) {
-      var arr = [];
-      for (var i = 0; i < args[0]; i++) {
-        arr[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
-      }
-
-      arr.get = function(i) {
-        return this[i];
+  var ArrayList = (function() {
+    function Iterator(array) {
+      var index = 0;
+      this.hasNext = function() {
+        return index < array.length;
       };
 
-      arr.contains = function(item) {
-        return this.indexOf(item) !== -1;
+      this.next = function() {
+        return array[index++];
       };
 
-      arr.add = function() {
+      this.remove = function() {
+        array.splice(index, 1);
+      };
+    }
+
+    function ArrayList() {
+      var array = arguments.length === 0 ? [] : 
+        typeof arguments[0] === 'number' ? new Array(0 | arguments[0]) :
+        arguments[0];
+
+      this.get = function(i) {
+        return array[i];
+      };
+
+      this.contains = function(item) {
+        return array.indexOf(item) !== -1;
+      };
+
+      this.add = function() {
         if (arguments.length === 1) {
-          this.push(arguments[0]); // for add(Object)
+          array.push(arguments[0]); // for add(Object)
         } else if (arguments.length === 2) {
           if (typeof arguments[0] === 'number') {
-            if (arguments[0] >= 0 && arguments[0] <= this.length) {
-              this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
+            if (arguments[0] >= 0 && arguments[0] <= array.length) {
+              array.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
             } else {
               throw(arguments[0] + " is not a valid index");
             }
@@ -425,11 +440,11 @@
         }
       };
 
-      arr.set = function() {
+      this.set = function() {
         if (arguments.length === 2) {
           if (typeof arguments[0] === 'number') {
-            if (arguments[0] >= 0 && arguments[0] < this.length) {
-              this.splice(arguments[0], 1, arguments[1]);
+            if (arguments[0] >= 0 && arguments[0] < array.length) {
+              array.splice(arguments[0], 1, arguments[1]);
             } else {
               throw(arguments[0] + " is not a valid index.");
             }
@@ -441,35 +456,37 @@
         }
       };
 
-      arr.size = function() {
-        return this.length;
+      this.size = function() {
+        return array.length;
       };
 
-      arr.clear = function() {
-        this.length = 0;
+      this.clear = function() {
+        array.length = 0;
       };
 
-      arr.remove = function(i) {
-        return this.splice(i, 1)[0];
+      this.remove = function(i) {
+        return array.splice(i, 1)[0];
       };
 
-      arr.isEmpty = function() {
-        return !this.length;
+      this.isEmpty = function() {
+        return !array.length;
       };
 
-      arr.clone = function() {
-        return this.slice(0);
+      this.clone = function() {
+        return new ArrayList(array.slice(0));
       };
 
-      arr.toArray = function() {
-        return this.slice(0);
+      this.toArray = function() {
+        return array.slice(0);
       };
 
-      return arr;
+      this.iterator = function() {
+        return new Iterator(array);
+      }
     }
 
-    return createArrayList(Array.prototype.slice.call(arguments));
-  };
+    return ArrayList;
+  })();
 
   var HashMap = (function() {
     function virtHashCode(obj) {
@@ -11078,6 +11095,32 @@
       }
     };
 
+    p.createJavaArray = function createJavaArray(type, bounds) {
+      var result = null;
+      if (typeof bounds[0] === 'number') {
+        var itemsCount = 0 | bounds[0];
+        if (bounds.length <= 1) {
+          if (type === "int") {
+            result = new Int32Array(itemsCount);
+          } else if (type === "float") {
+            result = new Float32Array(itemsCount);
+          } else {
+            result = new Array(itemsCount);
+          }
+          for (var i = 0; i < itemsCount; ++i) {
+            result[i] = 0;
+          }
+        } else {
+          result = [];
+          var newBounds = bounds.slice(1);
+          for (var i = 0; i < itemsCount; ++i) {
+            result.push(createJavaArray(type, newBounds));
+          }
+        }
+      }
+      return result;
+    };
+
     //////////////////////////////////////////////////////////////////////////
     // Event handling
     //////////////////////////////////////////////////////////////////////////
@@ -11877,13 +11920,13 @@
       s = s.replace(functionsRegex, function(all) {
         return addAtom(all, 'H');
       });
-      // new type[?] --> new ArrayList(?)
+      // new type[?] --> createJavaArray('type', [?])
       s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*("C\d+"(?:\s*"C\d+")*)/g, function(all, type, index) {
         var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; }).
-          replace(/\[\s*\]/g, "[0]").replace(/\s*\]\s*\[\s*/g, ", ");
-
-        var arrayInitializer = "(" + args.substring(1, args.length - 1) + ")";
-        return 'new ArrayList' + addAtom(arrayInitializer, 'B');
+          replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
+        var arrayInitializer = "{" + args.substring(1, args.length - 1) + "}";
+        var createArrayArgs = "('" + type + "', " + addAtom(arrayInitializer, 'A') + ")";
+        return 'processing.createJavaArray' + addAtom(createArrayArgs, 'B');
       });
       // .length() --> .length
       s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");

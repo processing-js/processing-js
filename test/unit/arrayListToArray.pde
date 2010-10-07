@@ -6,7 +6,7 @@ list1.add("Jim");
 list1.add("John");
 list1.add("Blake");
 list1.add("Kevin");
-String[] list1Clone = (ArrayList)list1.toArray(String[0]);
+Object[] list1Clone = list1.toArray();
 
-_checkEqual(list1, list1Clone);
+_checkEqual(list1Clone, ["George", "Jim", "John", "Blake", "Kevin"]);
 
