@@ -11961,8 +11961,15 @@
       });
       // super() -> $superCstr(), super. -> $super.;
       s = s.replace(/\bsuper(\s*"B\d+")/g, "$$superCstr$1").replace(/\bsuper(\s*\.)/g, "$$super$1");
+      // 000.43->0.43 and 0010f->10, but not 0010
+      s = s.replace(/\b0+((\d*)(?:\.[\d*])?(?:[eE][\-\+]?\d+)?[fF]?)\b/, function(all, numberWo0, intPart) {
+        if( numberWo0 === intPart) {
+          return all;
+        }
+        return intPart === "" ? "0" + numberWo0 : numberWo0;
+      });
       // 3.0f -> 3.0
-      s = s.replace(/\b(\.?\d+)[fF]/g, "$1");
+      s = s.replace(/\b(\.?\d+\.?)[fF]\b/g, "$1");
       // Weird (?) parsing errors with %
       s = s.replace(/([^\s])%([^=\s])/g, "$1 % $2");
       // Since frameRate() and frameRate are different things,
