@@ -426,14 +426,15 @@
         if (arguments.length === 1) {
           array.push(arguments[0]); // for add(Object)
         } else if (arguments.length === 2) {
-          if (typeof arguments[0] === 'number') {
-            if (arguments[0] >= 0 && arguments[0] <= array.length) {
-              array.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
+          var arg0 = arguments[0];
+          if (typeof arg0 === 'number') {
+            if (arg0 >= 0 && arg0 <= array.length) {
+              array.splice(arg0, 0, arguments[1]); // for add(i, Object)
             } else {
-              throw(arguments[0] + " is not a valid index");
+              throw(arg0 + " is not a valid index");
             }
           } else {
-            throw(typeof arguments[0] + " is not a number");
+            throw(typeof arg0 + " is not a number");
           }
         } else {
           throw("Please use the proper number of parameters.");
@@ -442,14 +443,15 @@
 
       this.set = function() {
         if (arguments.length === 2) {
-          if (typeof arguments[0] === 'number') {
-            if (arguments[0] >= 0 && arguments[0] < array.length) {
-              array.splice(arguments[0], 1, arguments[1]);
+          var arg0 = arguments[0];
+          if (typeof arg0 === 'number') {
+            if (arg0 >= 0 && arg0 < array.length) {
+              array.splice(arg0, 1, arguments[1]);
             } else {
-              throw(arguments[0] + " is not a valid index.");
+              throw(arg0 + " is not a valid index.");
             }
           } else {
-            throw(typeof arguments[0] + " is not a number");
+            throw(typeof arg0 + " is not a number");
           }
         } else {
           throw("Please use the proper number of parameters.");
@@ -482,11 +484,11 @@
 
       this.iterator = function() {
         return new Iterator(array);
-      }
+      };
     }
 
     return ArrayList;
-  })();
+  }());
 
   var HashMap = (function() {
     function virtHashCode(obj) {
@@ -11113,7 +11115,7 @@
         } else {
           result = [];
           var newBounds = bounds.slice(1);
-          for (var i = 0; i < itemsCount; ++i) {
+          for (var j = 0; j < itemsCount; ++j) {
             result.push(createJavaArray(type, newBounds));
           }
         }
