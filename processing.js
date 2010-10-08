@@ -9286,8 +9286,10 @@
           var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
           var fastImage = ("sourceImg" in img) && curTint === null && !img.__mask;
           if (fastImage) {
-            curContext.drawImage(img.sourceImg, 0, 0, 
-              img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
+            var htmlElement = img.sourceImg;
+            // Using HTML element's width and height in case if the image was resized.
+            curContext.drawImage(htmlElement, 0, 0, 
+              htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
           } else {
             var obj = img.toImageData();
 
