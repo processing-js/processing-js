@@ -1127,7 +1127,7 @@
         pathOpen = false,
         mouseDragging = false,
         curColorMode = PConstants.RGB,
-        curTint = function() {},
+        curTint = null,
         curTextSize = 12,
         curTextFont = "Arial",
         curTextLeading = 14,
@@ -9284,28 +9284,37 @@
           p.endShape();
         } else {
           var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-          var obj = img.toImageData();
+          var fastImage = ("sourceImg" in img) && curTint === null && !img.__mask;
+          if (fastImage) {
+            curContext.drawImage(img.sourceImg, 0, 0, 
+              img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
+          } else {
+            var obj = img.toImageData();
 
-          if (img.__mask) {
-            var j, size;
-            if (img.__mask.constructor.name === "PImage") {
-              var objMask = img.__mask.toImageData();
-              for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
-                // using it as an alpha channel
-                obj.data[j + 1] = objMask.data[j];
-                // but only the blue color channel
-              }
-            } else {
-              for (j = 0, size = img.__mask.length; j < size; ++j) {
-                obj.data[(j << 2) + 3] = img.__mask[j];
+            if (img.__mask) {
+              var j, size;
+              if (img.__mask.constructor.name === "PImage") {
+                var objMask = img.__mask.toImageData();
+                for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+                  // using it as an alpha channel
+                  obj.data[j + 1] = objMask.data[j];
+                  // but only the blue color channel
+                }
+              } else {
+                for (j = 0, size = img.__mask.length; j < size; ++j) {
+                  obj.data[(j << 2) + 3] = img.__mask[j];
+                }
               }
             }
+
+            // Tint the image
+            if(curTint !== null) {
+              curTint(obj);
+            }
+
+            curContext.drawImage(getCanvasData(obj).canvas, 0, 0, 
+              img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
           }
-
-          // draw the image
-          curTint(obj);
-
-          curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
         }
       }
     };
@@ -9339,7 +9348,7 @@
     };
 
     p.noTint = function noTint() {
-      curTint = function() {};
+      curTint = null;
     };
 
     p.copy = function copy(src, sx, sy, sw, sh, dx, dy, dw, dh) {
