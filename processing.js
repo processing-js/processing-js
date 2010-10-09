@@ -8955,7 +8955,7 @@
       }
       // else aysnc load it
       else {
-        var pimg = new PImage(0, 0, PConstants.ARGB);
+        var pimg = new PImage();
         var img = document.createElement('img');
 
         pimg.sourceImg = img;
