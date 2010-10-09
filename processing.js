@@ -8780,6 +8780,7 @@
           // no param specified, send null to show its invalid
           p.filter(mode, null, this);
         }
+        delete this.sourceImg;
       };
 
       this.save = function(file){
