@@ -1,4 +1,4 @@
-﻿/* @pjs preload="ref_string.jpg" */
+﻿/* @PJS preload="ref_string.jpg" */
 void setup() {
   size(200,200);
   PFont font;
