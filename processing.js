@@ -9036,15 +9036,19 @@
       } else {
         // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
         // changed for 0.9, offset start point needs to be *4
-        var start = y * img.width * 4 + (x*4);
-        var end = (y + h) * img.width * 4 + ((x + w) * 4);
-        var c = new PImage(w, h, PConstants.RGB);
-        for (var i = start, j = 0; i < end; i++, j++) {
-          // changed in 0.9
-          c.imageData.data[j] = img.imageData.data[i];
-          if ((j+1) % (w*4) === 0) {
-            //completed one line, increment i by offset
-            i += (img.width - w) * 4;
+        var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data, 
+          imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
+        // Don't need to copy pixels from the image outside ranges.
+        var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
+          stopRow = Math.min(h, imgHeight - y), stopColumn = Math.min(w, imgWidth - x);
+        for (var i = startRow; i < stopRow; ++i) {
+          var sourceOffset = ((y + i) * imgWidth + (x + startColumn)) * 4;
+          var targetOffset = (i * w + startColumn) * 4;
+          for (var j = startColumn; j < stopColumn; ++j) {
+            cData[targetOffset++] = imgData[sourceOffset++];
+            cData[targetOffset++] = imgData[sourceOffset++];
+            cData[targetOffset++] = imgData[sourceOffset++];
+            cData[targetOffset++] = imgData[sourceOffset++];
           }
         }
         return c;
