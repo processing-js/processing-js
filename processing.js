@@ -8761,6 +8761,7 @@
         } else if (arguments.length === 10) {
           p.blend(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE, this);
         }
+        delete this.sourceImg;
       };
 
       this.copy = function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
@@ -8769,6 +8770,7 @@
         } else if (arguments.length === 9) {
           p.blend(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight, PConstants.REPLACE, this);
         }
+        delete this.sourceImg;
       };
 
       this.filter = function(mode, param) {
@@ -8791,9 +8793,9 @@
           if (this.width !== 0 || this.height !== 0) {
             // make aspect ratio if w or h is 0
             if (w === 0 && h !== 0) {
-              w = this.width / this.height * h;
+              w = Math.floor(this.width / this.height * h);
             } else if (h === 0 && w !== 0) {
-              h = w / (this.width / this.height);
+              h = Math.floor(this.height / this.width * w);
             }
             // put 'this.imageData' into a new canvas
             var canvas = getCanvasData(this.imageData).canvas;
@@ -8953,9 +8955,9 @@
       if (curSketch.imageCache.images[file]) {
         return new PImage(curSketch.imageCache.images[file]);
       }
-      // else aysnc load it
+      // else async load it
       else {
-        var pimg = new PImage(0, 0, PConstants.ARGB);
+        var pimg = new PImage();
         var img = document.createElement('img');
 
         pimg.sourceImg = img;
