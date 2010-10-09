@@ -8515,7 +8515,7 @@
         if (doFill) {
           curContext.useProgram(programObject3D);
           uniformMatrix("model3d", programObject3D, "model", false, model.array());
-          uniformMatrix("model3d", programObject3D, "view", false, view.array());
+          uniformMatrix("view3d", programObject3D, "view", false, view.array());
           uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
 
           // fix stitching problems. (lines get occluded by triangles
