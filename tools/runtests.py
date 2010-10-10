@@ -81,6 +81,7 @@ class ProcessingTests(object):
                              '-f', os.path.join(self.toolsdir, 'cleaner.js'),
                              '-f', tmpFile,
                              '-e', one_test,
+                             '-f', os.path.join(self.toolsdir, 'fake-extensions.js'),
                              '-f', os.path.join(self.toolsdir, 'test-harness.js')]
                   proc = Popen(testCmd, stdout=PIPE, stderr=PIPE)
                   stdout, stderr = proc.communicate()
