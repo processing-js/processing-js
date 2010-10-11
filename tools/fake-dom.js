@@ -13,6 +13,7 @@ var canvas = {
   appendChild: __elem_func__,
   removeChild: __empty_func__,
   toDataURL: __empty_func__,
+  localName: "canvas",
   getContext:  function() {
                  return {
                    translate: __empty_func__,
@@ -70,7 +71,19 @@ var canvas = {
                    getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
                    createImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
                    drawImage: __empty_func__,
-                   putImageData: __empty_func__
+                   putImageData: __empty_func__,
+                   lineWidth: __empty_func__,
+                   disable: __empty_func__,
+                   drawArrays: __empty_func__,
+                   polygonOffset: __empty_func__,
+                   createTexture: __empty_func__,
+                   texImage2D: __empty_func__,
+                   texParameteri: __empty_func__,
+                   generateMipmap: __empty_func__,
+                   uniformMatrix4fv: __empty_func__,
+                   uniform4fv: __empty_func__,
+                   disableVertexAttribArray: __empty_func__,
+                   bindTexture: __empty_func__
                  };
   },
   style: {

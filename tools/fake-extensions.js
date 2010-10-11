@@ -140,6 +140,31 @@ Processing.lib.MockExtensions = function() {
 
   this.SearchClient = __noop_func__;
   this.WebSearchRequest = __noop_func__;
+
+  this.Integrator = this.ColorIntegrator = this.BoundsIntegrator = function() {
+    this.target = __noop_func__;
+    this.update = __noop_func__;
+  };
+  this.Place  = function() {
+  };
+  this.Slurper  = function() {
+  };
+  this.RankedLongArray = function() {
+  };
+  this.FolderItem = function() {
+  };
+  this.FileItem = function() {
+  };
+  this.SwingUtilities = {};
+  this.SwingUtilities.invokeLater = __noop_func__;
+  this.File = function() {
+  };
+  this.Node = function() {
+    this.increment = __noop_func__;
+  };
+  this.Edge = function() {
+    this.increment = __noop_func__;
+  };
 };
 
 Processing.lib.MockExtensions.exports = [
@@ -152,7 +177,10 @@ Processing.lib.MockExtensions.exports = [
   "Capture",
   "Table", "FloatTable", "WordMap", "Treemap", 
   "FixedSpring", "Spring2D", "Particle", "ArrowParticle", "LimitedParticle", "GenParticle", "DragButton", "Button", "Check", "Radio", "Scrollbar", "SpinArm", "EggRing", "OverRect", "OverCircle", "SpinSpots", "ModuleA", "ModuleB", "Branch", "Segment", "Mass", "Spring", "Control", 
-  "SearchClient", "WebSearchRequest"
+  "SearchClient", "WebSearchRequest",
+  "Integrator", "ColorIntegrator", "Place", "Slurper",
+  "RankedLongArray", "BoundsIntegrator", "FolderItem", "FileItem", "SwingUtilities",
+  "File", "Node", "Edge"
 ];
 
 })();
