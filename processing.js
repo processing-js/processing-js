@@ -389,87 +389,106 @@
   }
 
   setupTypedArray("Float32Array", "WebGLFloatArray");
+  setupTypedArray("Int32Array",   "WebGLIntArray");
   setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
   setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
 
-  var ArrayList = function() {
-    function createArrayList(args) {
-      var arr = [];
-      for (var i = 0; i < args[0]; i++) {
-        arr[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
-      }
-
-      arr.get = function(i) {
-        return this[i];
+  var ArrayList = (function() {
+    function Iterator(array) {
+      var index = 0;
+      this.hasNext = function() {
+        return index < array.length;
       };
 
-      arr.contains = function(item) {
-        return this.indexOf(item) !== -1;
+      this.next = function() {
+        return array[index++];
       };
 
-      arr.add = function() {
-        if (arguments.length === 1) {
-          this.push(arguments[0]); // for add(Object)
-        } else if (arguments.length === 2) {
-          if (typeof arguments[0] === 'number') {
-            if (arguments[0] >= 0 && arguments[0] <= this.length) {
-              this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
-            } else {
-              throw(arguments[0] + " is not a valid index");
-            }
-          } else {
-            throw(typeof arguments[0] + " is not a number");
-          }
-        } else {
-          throw("Please use the proper number of parameters.");
-        }
+      this.remove = function() {
+        array.splice(index, 1);
       };
-
-      arr.set = function() {
-        if (arguments.length === 2) {
-          if (typeof arguments[0] === 'number') {
-            if (arguments[0] >= 0 && arguments[0] < this.length) {
-              this.splice(arguments[0], 1, arguments[1]);
-            } else {
-              throw(arguments[0] + " is not a valid index.");
-            }
-          } else {
-            throw(typeof arguments[0] + " is not a number");
-          }
-        } else {
-          throw("Please use the proper number of parameters.");
-        }
-      };
-
-      arr.size = function() {
-        return this.length;
-      };
-
-      arr.clear = function() {
-        this.length = 0;
-      };
-
-      arr.remove = function(i) {
-        return this.splice(i, 1)[0];
-      };
-
-      arr.isEmpty = function() {
-        return !this.length;
-      };
-
-      arr.clone = function() {
-        return this.slice(0);
-      };
-
-      arr.toArray = function() {
-        return this.slice(0);
-      };
-
-      return arr;
     }
 
-    return createArrayList(Array.prototype.slice.call(arguments));
-  };
+    function ArrayList() {
+      var array = arguments.length === 0 ? [] : 
+        typeof arguments[0] === 'number' ? new Array(0 | arguments[0]) :
+        arguments[0];
+
+      this.get = function(i) {
+        return array[i];
+      };
+
+      this.contains = function(item) {
+        return array.indexOf(item) !== -1;
+      };
+
+      this.add = function() {
+        if (arguments.length === 1) {
+          array.push(arguments[0]); // for add(Object)
+        } else if (arguments.length === 2) {
+          var arg0 = arguments[0];
+          if (typeof arg0 === 'number') {
+            if (arg0 >= 0 && arg0 <= array.length) {
+              array.splice(arg0, 0, arguments[1]); // for add(i, Object)
+            } else {
+              throw(arg0 + " is not a valid index");
+            }
+          } else {
+            throw(typeof arg0 + " is not a number");
+          }
+        } else {
+          throw("Please use the proper number of parameters.");
+        }
+      };
+
+      this.set = function() {
+        if (arguments.length === 2) {
+          var arg0 = arguments[0];
+          if (typeof arg0 === 'number') {
+            if (arg0 >= 0 && arg0 < array.length) {
+              array.splice(arg0, 1, arguments[1]);
+            } else {
+              throw(arg0 + " is not a valid index.");
+            }
+          } else {
+            throw(typeof arg0 + " is not a number");
+          }
+        } else {
+          throw("Please use the proper number of parameters.");
+        }
+      };
+
+      this.size = function() {
+        return array.length;
+      };
+
+      this.clear = function() {
+        array.length = 0;
+      };
+
+      this.remove = function(i) {
+        return array.splice(i, 1)[0];
+      };
+
+      this.isEmpty = function() {
+        return !array.length;
+      };
+
+      this.clone = function() {
+        return new ArrayList(array.slice(0));
+      };
+
+      this.toArray = function() {
+        return array.slice(0);
+      };
+
+      this.iterator = function() {
+        return new Iterator(array);
+      };
+    }
+
+    return ArrayList;
+  }());
 
   var HashMap = (function() {
     function virtHashCode(obj) {
@@ -5683,6 +5702,10 @@
       } else {
         return intScalar(val);
       }
+    };
+
+    p.__int_cast = function(val) {
+      return 0|val;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -11074,6 +11097,32 @@
       }
     };
 
+    p.createJavaArray = function createJavaArray(type, bounds) {
+      var result = null;
+      if (typeof bounds[0] === 'number') {
+        var itemsCount = 0 | bounds[0];
+        if (bounds.length <= 1) {
+          if (type === "int") {
+            result = new Int32Array(itemsCount);
+          } else if (type === "float") {
+            result = new Float32Array(itemsCount);
+          } else {
+            result = new Array(itemsCount);
+          }
+          for (var i = 0; i < itemsCount; ++i) {
+            result[i] = 0;
+          }
+        } else {
+          result = [];
+          var newBounds = bounds.slice(1);
+          for (var j = 0; j < itemsCount; ++j) {
+            result.push(createJavaArray(type, newBounds));
+          }
+        }
+      }
+      return result;
+    };
+
     //////////////////////////////////////////////////////////////////////////
     // Event handling
     //////////////////////////////////////////////////////////////////////////
@@ -11616,7 +11665,7 @@
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "translate", "triangle", "trim", "unbinary", "unhex", "updatePixels",
       "use3DContext", "vertex", "width", "XMLElement", "year", "__frameRate",
-       "__keyPressed", "__mousePressed"];
+       "__keyPressed", "__mousePressed", "__int_cast"];
 
     var members = {};
     var i, l;
@@ -11873,13 +11922,13 @@
       s = s.replace(functionsRegex, function(all) {
         return addAtom(all, 'H');
       });
-      // new type[?] --> new ArrayList(?)
+      // new type[?] --> createJavaArray('type', [?])
       s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*("C\d+"(?:\s*"C\d+")*)/g, function(all, type, index) {
         var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; }).
-          replace(/\[\s*\]/g, "[0]").replace(/\s*\]\s*\[\s*/g, ", ");
-
-        var arrayInitializer = "(" + args.substring(1, args.length - 1) + ")";
-        return 'new ArrayList' + addAtom(arrayInitializer, 'B');
+          replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
+        var arrayInitializer = "{" + args.substring(1, args.length - 1) + "}";
+        var createArrayArgs = "('" + type + "', " + addAtom(arrayInitializer, 'A') + ")";
+        return 'processing.createJavaArray' + addAtom(createArrayArgs, 'B');
       });
       // .length() --> .length
       s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");
@@ -11887,13 +11936,13 @@
       s = s.replace(/#([0-9A-Fa-f]{6})\b/g, function(all, digits) {
         return "0xFF" + digits;
       });
-      // delete (type)???, (int)??? -> 0|???
+      // delete (type)???, except (int)???
       s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
         var atom = atoms[index];
         if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
           return all;
         } else if(/^\(\s*int\s*\)$/.test(atom)) {
-          return "0|" + next;
+          return "(int)" + next;
         } else {
           var indexParts = atom.split(/"C(\d+)"/g);
           if(indexParts.length > 1) {
@@ -11904,6 +11953,11 @@
           }
           return "" + next;
         }
+      });
+      // (int)??? -> __int_cast(???)
+      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~]+)/g, function(all, arg) {
+        var trimmed = trimSpaces(arg);
+        return trimmed.untrim("__int_cast(" + trimmed.middle + ")");
       });
       // super() -> $superCstr(), super. -> $super.;
       s = s.replace(/\bsuper(\s*"B\d+")/g, "$$superCstr$1").replace(/\bsuper(\s*\.)/g, "$$super$1");
