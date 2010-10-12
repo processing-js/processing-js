@@ -35,7 +35,7 @@ void setup()
   for(int i = 0; i < 12; i++){
     String s = "PT_anim000" + i + ".gif";
     PImage pim = loadImage(s);
-    gifs.push(pim);
+    gifs.add(pim);
   }
 }
 
@@ -54,7 +54,7 @@ void drawBox(){
 
   beginShape(QUADS);
 
-  texture(gifs[nextGif]);
+  texture(gifs.get(nextGif));
 
   stroke(0);
 
