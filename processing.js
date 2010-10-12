@@ -12065,8 +12065,8 @@
       var oldContext = replaceContext;
       // saving "this." and parameters
       var names = appendToLookupTable({"this":null}, this.params.getNames());
-      replaceContext = function(name) {
-        return names.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return names.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "function";
       if(this.name) {
@@ -12088,8 +12088,8 @@
     }
     AstInlineObject.prototype.toString = function() {
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-          return name === "this"? name : oldContext(name); // saving "this."
+      replaceContext = function (subject) {
+          return subject.name === "this" ? "this" : oldContext(subject); // saving "this."
       };
       var result = "";
       for(var i=0,l=this.members.length;i<l;++i) {
@@ -12136,12 +12136,13 @@
     }
 
     function replaceContextInVars(expr) {
-      return expr.replace(/(\.\s*)?(\b[A-Za-z_$][\w$]*\b)/g,
-        function(all, memberAccessSign, identifier) {
+      return expr.replace(/(\.\s*)?(\b[A-Za-z_$][\w$]*\b)(\s*\.\s*(\b[A-Za-z_$][\w$]*\b)(\s*\()?)?/g,
+        function(all, memberAccessSign, identifier, suffix, subMember, callSign) {
           if(memberAccessSign) {
             return all;
           } else {
-            return replaceContext(identifier);
+            var subject = { name: identifier, member: subMember, callSign: !!callSign };
+            return replaceContext(subject) + (suffix === undef ? "" : suffix);
           }
         });
     }
@@ -12322,11 +12323,11 @@
       this.body = body;
     }
     AstClassMethod.prototype.toString = function(){
-      var thisReplacement = replaceContext("this");
+      var thisReplacement = replaceContext({ name: "this" });
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "processing.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
         this.body +");";
@@ -12355,7 +12356,7 @@
       return names;
     };
     AstClassField.prototype.toString = function() {
-      var thisPrefix = replaceContext("this") + ".";
+      var thisPrefix = replaceContext({ name: "this" });
       if(this.isStatic) {
         var className = this.owner.name;
         var staticDeclarations = [];
@@ -12364,14 +12365,14 @@
           var name = definition.name, staticName = className + "." + name;
           var declaration = "if(" + staticName + " === void(0)) {\n" +
             " " + staticName + " = " + definition.value + "; }\n" +
-            "processing.defineProperty(" + replaceContext("this") + ", " +
+            "processing.defineProperty(" + thisPrefix + ", " +
             "'" + name + "', { get: function(){return " + staticName + ";}, " +
             "set: function(val){" + staticName + " = val;} });\n";
           staticDeclarations.push(declaration);
         }
         return staticDeclarations.join("");
       } else {
-        return thisPrefix + this.definitions.join("; " + thisPrefix);
+        return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
       }
     };
 
@@ -12393,8 +12394,8 @@
     AstConstructor.prototype.toString = function() {
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var prefix = "function $constr_" + this.params.params.length + this.params.toString();
       var body = this.body.toString();
@@ -12467,17 +12468,17 @@
         thisClassMethods = appendToLookupTable({}, members.methods),
         thisClassInners = appendToLookupTable({}, members.innerClasses);
 
-      var oldContext = replaceContext, inConstructors = false;
-      replaceContext = function(name) {
+      var oldContext = replaceContext;
+      replaceContext = function (subject) {
+        var name = subject.name;
         if(name === "this") {
-          return selfId;
+          return subject.callSign ? selfId + ".$self" : selfId;
         } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
         } else if(thisClassMethods.hasOwnProperty(name)) {
-          // keeping |"this." + name| for speed
-          return inConstructors ? "this.$self." + name : "this." + name;
+          return selfId + ".$self." + name;
         }
-        return oldContext(name);
+        return oldContext(subject);
       };
 
       if(this.baseClassName) {
@@ -12494,9 +12495,8 @@
       result += this.methods.join('\n') + '\n';
       result += this.misc.tail;
 
-      inConstructors = true;
       result += this.cstrs.join('\n') + '\n';
-      inConstructors = false;
+
 
       result += "function $constr() {\n";
       var cstrsIfs = [];
@@ -12609,8 +12609,8 @@
     AstMethod.prototype.toString = function(){
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "function " + this.name + this.params + " " + this.body + "\n" +
         "processing." + this.name + " = " + this.name + ";";
@@ -12752,8 +12752,8 @@
 
       // replacing context only when necessary
       if(!isLookupTableEmpty(localNames)) {
-        replaceContext = function(name) {
-          return localNames.hasOwnProperty(name) ? name : oldContext(name);
+        replaceContext = function (subject) {
+          return localNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
         };
       }
 
@@ -12772,7 +12772,8 @@
     }
     AstRoot.prototype.toString = function() {
       var localNames = getLocalNames(this.statements);
-      replaceContext = function(name) {
+      replaceContext = function (subject) {
+        var name = subject.name;
         if(localNames.hasOwnProperty(name)) {
           return name;
         } else if(globalMembers.hasOwnProperty(name)) {
