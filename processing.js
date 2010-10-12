@@ -1167,6 +1167,7 @@
         pointBuffer,
         shapeTexVBO,
         canTex,   // texture for createGraphics
+        textTex,   // texture for 3d tex
         curTexture = {width:0,height:0},
         curTextureMode = PConstants.IMAGE,
         usingTexture = false,
@@ -6053,6 +6054,7 @@
           curContext = curElement.getContext("experimental-webgl");
           p.use3DContext = true;
           canTex = curContext.createTexture(); // texture
+          textTex = curContext.createTexture(); // texture
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -10687,10 +10689,14 @@
       var aspect = textcanvas.width/textcanvas.height;
       curContext = oldContext;
 
+      curContext.bindTexture(curContext.TEXTURE_2D, textTex);
       executeTexImage2D(textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
-      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
-      curContext.generateMipmap(curContext.TEXTURE_2D);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
+      // If we don't have a power of two texture, we can't mipmap it.
+      // curContext.generateMipmap(curContext.TEXTURE_2D);
 
       // horizontal offset/alignment
       var xOffset = 0;
