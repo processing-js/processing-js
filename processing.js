@@ -1149,6 +1149,7 @@
         firstMKeyDown = true,     // first Mozilla key stroke
         firstGKeyDown = true,     // first Google key stroke
         gRefire = false,          // Google refire
+        curContextCache = { attributes: {}, locations: {} },    
         // Shaders
         programObject3D,
         programObject2D,
@@ -1166,6 +1167,7 @@
         pointBuffer,
         shapeTexVBO,
         canTex,   // texture for createGraphics
+        textTex,   // texture for 3d tex
         curTexture = {width:0,height:0},
         curTextureMode = PConstants.IMAGE,
         usingTexture = false,
@@ -1711,8 +1713,12 @@
       On some systems, if the variable exists in the shader but isn't used,
       the compiler will optimize it out and this function will fail.
     */
-    function uniformf(programObj, varName, varValue) {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
+    function uniformf(cacheId, programObj, varName, varValue) {
+      var varLocation = curContextCache.locations[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getUniformLocation(programObj, varName);
+        curContextCache.locations[cacheId] = varLocation;
+      }
       // the variable won't be found if it was optimized out.
       if (varLocation !== -1) {
         if (varValue.length === 4) {
@@ -1727,8 +1733,12 @@
       }
     }
 
-    function uniformi(programObj, varName, varValue) {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
+    function uniformi(cacheId, programObj, varName, varValue) {
+      var varLocation = curContextCache.locations[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getUniformLocation(programObj, varName);
+        curContextCache.locations[cacheId] = varLocation;
+      }
       // the variable won't be found if it was optimized out.
       if (varLocation !== -1) {
         if (varValue.length === 4) {
@@ -1743,8 +1753,12 @@
       }
     }
 
-    function vertexAttribPointer(programObj, varName, size, VBO) {
-      var varLocation = curContext.getAttribLocation(programObj, varName);
+    function vertexAttribPointer(cacheId, programObj, varName, size, VBO) {
+      var varLocation = curContextCache.attributes[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getAttribLocation(programObj, varName);
+        curContextCache.attributes[cacheId] = varLocation;
+      }
       if (varLocation !== -1) {
         curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
         curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
@@ -1752,15 +1766,23 @@
       }
     }
 
-    function disableVertexAttribPointer(programObj, varName){
-      var varLocation = curContext.getAttribLocation(programObj, varName);
+    function disableVertexAttribPointer(cacheId, programObj, varName){
+      var varLocation = curContextCache.attributes[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getAttribLocation(programObj, varName);
+        curContextCache.attributes[cacheId] = varLocation;
+      }
       if (varLocation !== -1) {
         curContext.disableVertexAttribArray(varLocation);
       }
     }
 
-    function uniformMatrix(programObj, varName, transpose, matrix) {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
+    function uniformMatrix(cacheId, programObj, varName, transpose, matrix) {
+      var varLocation = curContextCache.locations[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getUniformLocation(programObj, varName);
+        curContextCache.locations[cacheId] = varLocation;
+      }
       // the variable won't be found if it was optimized out.
       if (varLocation !== -1) {
         if (matrix.length === 16) {
@@ -5136,6 +5158,7 @@
         // even if the color buffer isn't cleared with background(),
         // the depth buffer needs to be cleared regardless.
         curContext.clear(curContext.DEPTH_BUFFER_BIT);
+        curContextCache = { attributes: {}, locations: {} };
         // Delete all the lighting states and the materials the
         // user set in the last draw() call.
         p.noLights();
@@ -6031,6 +6054,7 @@
           curContext = curElement.getContext("experimental-webgl");
           p.use3DContext = true;
           canTex = curContext.createTexture(); // texture
+          textTex = curContext.createTexture(); // texture
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -6066,7 +6090,7 @@
           curContext.useProgram(programObject3D);
 
           // assume we aren't using textures by default
-          uniformi(programObject3D, "usingTexture", usingTexture);
+          uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
           p.lightFalloff(1, 0, 0);
           p.shininess(1);
           p.ambient(255, 255, 255);
@@ -6226,10 +6250,10 @@
         view.mult(pos, pos);
 
         curContext.useProgram(programObject3D);
-        uniformf(programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf(programObject3D, "lights[" + lightCount + "].position", pos.array());
-        uniformi(programObject3D, "lights[" + lightCount + "].type", 0);
-        uniformi(programObject3D, "lightCount", ++lightCount);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 0);
+        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
 
@@ -6250,24 +6274,24 @@
         view.apply(modelView.array());
         view.mult(dir, dir);
 
-        uniformf(programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf(programObject3D, "lights[" + lightCount + "].position", [-dir[0], -dir[1], -dir[2]]);
-        uniformi(programObject3D, "lights[" + lightCount + "].type", 1);
-        uniformi(programObject3D, "lightCount", ++lightCount);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", [-dir[0], -dir[1], -dir[2]]);
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 1);
+        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
 
     p.lightFalloff = function lightFalloff(constant, linear, quadratic) {
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformf(programObject3D, "falloff", [constant, linear, quadratic]);
+        uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
       }
     };
 
     p.lightSpecular = function lightSpecular(r, g, b) {
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformf(programObject3D, "specular", [r / 255, g / 255, b / 255]);
+        uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
       }
     };
 
@@ -6298,10 +6322,10 @@
         view.mult(pos, pos);
 
         curContext.useProgram(programObject3D);
-        uniformf(programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf(programObject3D, "lights[" + lightCount + "].position", pos.array());
-        uniformi(programObject3D, "lights[" + lightCount + "].type", 2);
-        uniformi(programObject3D, "lightCount", ++lightCount);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 2);
+        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
 
@@ -6313,7 +6337,7 @@
       if (p.use3DContext) {
         lightCount = 0;
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "lightCount", lightCount);
+        uniformi("lightCount3d", programObject3D, "lightCount", lightCount);
       }
     };
 
@@ -6348,13 +6372,13 @@
         view.apply(modelView.array());
         view.mult(dir, dir);
 
-        uniformf(programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf(programObject3D, "lights[" + lightCount + "].position", pos.array());
-        uniformf(programObject3D, "lights[" + lightCount + "].direction", [dir[0], dir[1], dir[2]]);
-        uniformf(programObject3D, "lights[" + lightCount + "].concentration", concentration);
-        uniformf(programObject3D, "lights[" + lightCount + "].angle", angle);
-        uniformi(programObject3D, "lights[" + lightCount + "].type", 3);
-        uniformi(programObject3D, "lightCount", ++lightCount);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
+        uniformf("lights.direction.3d." + lightCount, programObject3D, "lights[" + lightCount + "].direction", [dir[0], dir[1], dir[2]]);
+        uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights[" + lightCount + "].concentration", concentration);
+        uniformf("lights.angle.3d." + lightCount, programObject3D, "lights[" + lightCount + "].angle", angle);
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 3);
+        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
 
@@ -6516,11 +6540,11 @@
         if (doFill === true) {
           curContext.useProgram(programObject3D);
 
-          disableVertexAttribPointer(programObject3D, "aTexture");
+          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-          uniformMatrix(programObject3D, "model", false, model.array());
-          uniformMatrix(programObject3D, "view", false, view.array());
-          uniformMatrix(programObject3D, "projection", false, proj.array());
+          uniformMatrix("model3d", programObject3D, "model", false, model.array());
+          uniformMatrix("view3d", programObject3D, "view", false, view.array());
+          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -6528,7 +6552,7 @@
           // developers can start playing around with styles.
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
-          uniformf(programObject3D, "color", fillStyle);
+          uniformf("color3d", programObject3D, "color", fillStyle);
 
           // Create the normal transformation matrix
           var v = new PMatrix3D();
@@ -6544,14 +6568,14 @@
           normalMatrix.invert();
           normalMatrix.transpose();
 
-          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
-          vertexAttribPointer(programObject3D, "Vertex", 3, boxBuffer);
-          vertexAttribPointer(programObject3D, "Normal", 3, boxNormBuffer);
+          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
 
           // Ugly hack. Can't simply disable the vertex attribute
           // array. No idea why, so I'm passing in dummy data.
-          vertexAttribPointer(programObject3D, "aColor", 3, boxNormBuffer);
+          vertexAttribPointer("aColor3d", programObject3D, "aColor", 3, boxNormBuffer);
 
           curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -6559,15 +6583,15 @@
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", false, model.array());
-          uniformMatrix(programObject2D, "view", false, view.array());
-          uniformMatrix(programObject2D, "projection", false, proj.array());
+          uniformMatrix("model2d", programObject2D, "model", false, model.array());
+          uniformMatrix("view2d", programObject2D, "view", false, view.array());
+          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, boxOutlineBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
@@ -6744,19 +6768,19 @@
           normalMatrix.transpose();
 
           curContext.useProgram(programObject3D);
-          disableVertexAttribPointer(programObject3D, "aTexture");
+          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-          uniformMatrix(programObject3D, "model", false, model.array());
-          uniformMatrix(programObject3D, "view", false, view.array());
-          uniformMatrix(programObject3D, "projection", false, proj.array());
-          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+          uniformMatrix("model3d", programObject3D, "model", false, model.array());
+          uniformMatrix("view3d", programObject3D, "view", false, view.array());
+          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
-          vertexAttribPointer(programObject3D, "Vertex", 3, sphereBuffer);
-          vertexAttribPointer(programObject3D, "Normal", 3, sphereBuffer);
+          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
 
           // Ugly hack. Can't simply disable the vertex attribute
           // array. No idea why, so I'm passing in dummy data.
-          vertexAttribPointer(programObject3D, "aColor", 3, sphereBuffer);
+          vertexAttribPointer("aColor3d", programObject3D, "aColor", 3, sphereBuffer);
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -6765,7 +6789,7 @@
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
 
-          uniformf(programObject3D, "color", fillStyle);
+          uniformf("color3d", programObject3D, "color", fillStyle);
 
           curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -6773,15 +6797,15 @@
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", false, model.array());
-          uniformMatrix(programObject2D, "view", false, view.array());
-          uniformMatrix(programObject2D, "projection", false, proj.array());
+          uniformMatrix("model2d", programObject2D, "model", false, model.array());
+          uniformMatrix("view2d", programObject2D, "view", false, view.array());
+          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, sphereBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
@@ -6849,22 +6873,22 @@
       // either a shade of gray or a 'color' object.
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "usingMat", true);
+        uniformi("usingMat3d", programObject3D, "usingMat", true);
 
         if (a.length === 1) {
           // color object was passed in
           if (typeof a[0] === "string") {
             var c = a[0].slice(5, -1).split(",");
-            uniformf(programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
+            uniformf("mat_ambient3d", programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
           }
           // else a single number was passed in for gray shade
           else {
-            uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
+            uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
           }
         }
         // Otherwise three values were provided (r,g,b)
         else {
-          uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
+          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
         }
       }
     };
@@ -6875,7 +6899,7 @@
 
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "usingMat", true);
+        uniformi("usingMat3d", programObject3D, "usingMat", true);
 
         // If only one argument was provided, the user either gave us a
         // shade of gray or a 'color' object.
@@ -6883,16 +6907,16 @@
           // color object was passed in
           if (typeof a[0] === "string") {
             var c = a[0].slice(5, -1).split(",");
-            uniformf(programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
+            uniformf("mat_emissive3d", programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
           }
           // else a regular number was passed in for gray shade
           else {
-            uniformf(programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
+            uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
           }
         }
         // Otherwise three values were provided (r,g,b)
         else {
-          uniformf(programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
+          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
         }
       }
     };
@@ -6900,8 +6924,8 @@
     p.shininess = function shininess(shine) {
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "usingMat", true);
-        uniformf(programObject3D, "shininess", shine);
+        uniformi("usingMat3d", programObject3D, "usingMat", true);
+        uniformf("shininess3d", programObject3D, "shininess", shine);
       }
     };
 
@@ -6918,8 +6942,8 @@
 
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "usingMat", true);
-        uniformf(programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
+        uniformi("usingMat3d", programObject3D, "usingMat", true);
+        uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
       }
     };
 
@@ -7047,7 +7071,7 @@
 
       if (p.use3DContext) {
         curContext.useProgram(programObject2D);
-        uniformf(programObject2D, "pointSize", w);
+        uniformf("pointSize2d", programObject2D, "pointSize", w);
       } else {
         curContext.lineWidth = w;
       }
@@ -7105,17 +7129,17 @@
         proj.transpose();
 
         curContext.useProgram(programObject2D);
-        uniformMatrix(programObject2D, "model", false, model.array());
-        uniformMatrix(programObject2D, "view", false, view.array());
-        uniformMatrix(programObject2D, "projection", false, proj.array());
+        uniformMatrix("model2d", programObject2D, "model", false, model.array());
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
         if (lineWidth > 0 && doStroke) {
           // this will be replaced with the new bit shifting color code
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
           curContext.drawArrays(curContext.POINTS, 0, 1);
         }
@@ -7221,13 +7245,13 @@
       proj.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix(programObjectUnlitShape, "uView", false, view.array());
-      uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
+      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
+      uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
 
-      vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, pointBuffer);
+      vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObjectUnlitShape, "aColor", 4, fillColorBuffer);
+      vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
@@ -7259,13 +7283,13 @@
       proj.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix(programObjectUnlitShape, "uView", false, view.array());
-      uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
+      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
+      uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
 
-      vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, lineBuffer);
+      vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
+      vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       curContext.lineWidth(lineWidth);
@@ -7295,23 +7319,23 @@
       proj.transpose();
 
       curContext.useProgram( programObject3D );
-      uniformMatrix( programObject3D, "model", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
-      uniformMatrix( programObject3D, "view", false, view.array() );
-      uniformMatrix( programObject3D, "projection", false, proj.array() );
+      uniformMatrix("model3d", programObject3D, "model", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
+      uniformMatrix("view3d", programObject3D, "view", false, view.array() );
+      uniformMatrix("projection3d", programObject3D, "projection", false, proj.array() );
 
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
 
-      uniformf(programObject3D, "color", [-1,0,0,0]);
+      uniformf("color3d", programObject3D, "color", [-1,0,0,0]);
 
-      vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
+      vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObject3D, "aColor", 4, fillColorBuffer);
+      vertexAttribPointer("aColor3d", programObject3D, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       // No support for lights....yet
-      disableVertexAttribPointer(programObject3D, "Normal");
+      disableVertexAttribPointer("normal3d", programObject3D, "Normal");
 
       var i;
 
@@ -7330,8 +7354,8 @@
           if( tArray[i+1] > 1.0 ){ tArray[i+1] -= (tArray[i+1] - 1.0);}
         }
 
-        uniformi(programObject3D, "usingTexture", usingTexture);
-        vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
+        uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
+        vertexAttribPointer("aTexture3d", programObject3D, "aTexture", 2, shapeTexVBO);
         curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW);
       }
 
@@ -7791,7 +7815,7 @@
           // with a color.
           usingTexture = false;
           curContext.useProgram(programObject3D);
-          uniformi(programObject3D, "usingTexture", usingTexture);
+          uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
         }
 
         // 2D context
@@ -8121,7 +8145,7 @@
       curTexture.height = pimage.height;
       usingTexture = true;
       curContext.useProgram(programObject3D);
-      uniformi(programObject3D, "usingTexture", usingTexture);
+      uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
     };
 
     p.textureMode = function(mode){
@@ -8349,17 +8373,17 @@
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
 
-          uniformMatrix(programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
-          uniformMatrix(programObject2D, "view", false, view.array());
-          uniformMatrix(programObject2D, "projection", false, proj.array());
+          uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+          uniformMatrix("view2d", programObject2D, "view", false, view.array());
+          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
           curContext.lineWidth(lineWidth);
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, lineBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
           curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
           curContext.drawArrays(curContext.LINES, 0, 2);
@@ -8476,15 +8500,15 @@
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", false, model.array());
-          uniformMatrix(programObject2D, "view", false, view.array());
-          uniformMatrix(programObject2D, "projection", false, proj.array());
+          uniformMatrix("model2d", programObject2D, "model", false, model.array());
+          uniformMatrix("view2d", programObject2D, "view", false, view.array());
+          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, rectBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
@@ -8492,9 +8516,9 @@
 
         if (doFill) {
           curContext.useProgram(programObject3D);
-          uniformMatrix(programObject3D, "model", false, model.array());
-          uniformMatrix(programObject3D, "view", false, view.array());
-          uniformMatrix(programObject3D, "projection", false, proj.array());
+          uniformMatrix("model3d", programObject3D, "model", false, model.array());
+          uniformMatrix("view3d", programObject3D, "view", false, view.array());
+          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -8503,7 +8527,7 @@
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
 
-          uniformf(programObject3D, "color", fillStyle);
+          uniformf("color3d", programObject3D, "color", fillStyle);
 
           var v = new PMatrix3D();
           v.set(view);
@@ -8518,10 +8542,10 @@
           normalMatrix.invert();
           normalMatrix.transpose();
 
-          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
-          vertexAttribPointer(programObject3D, "Vertex", 3, rectBuffer);
-          vertexAttribPointer(programObject3D, "Normal", 3, rectNormBuffer);
+          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
 
           curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -10665,10 +10689,14 @@
       var aspect = textcanvas.width/textcanvas.height;
       curContext = oldContext;
 
+      curContext.bindTexture(curContext.TEXTURE_2D, textTex);
       executeTexImage2D(textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
-      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
-      curContext.generateMipmap(curContext.TEXTURE_2D);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
+      // If we don't have a power of two texture, we can't mipmap it.
+      // curContext.generateMipmap(curContext.TEXTURE_2D);
 
       // horizontal offset/alignment
       var xOffset = 0;
@@ -10694,14 +10722,14 @@
       proj.transpose();
 
       curContext.useProgram(programObject2D);
-      vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
-      vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
-      uniformi(programObject2D, "uSampler", [0]);
-      uniformi(programObject2D, "picktype", 1);
-      uniformMatrix(programObject2D, "model", false,  model.array());
-      uniformMatrix(programObject2D, "view", false, view.array());
-      uniformMatrix(programObject2D, "projection", false, proj.array());
-      uniformf(programObject2D, "color", fillStyle);
+      vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, textBuffer);
+      vertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord", 2, textureBuffer);
+      uniformi("uSampler2d", programObject2D, "uSampler", [0]);
+      uniformi("picktype2d", programObject2D, "picktype", 1);
+      uniformMatrix("model2d", programObject2D, "model", false,  model.array());
+      uniformMatrix("view2d", programObject2D, "view", false, view.array());
+      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+      uniformf("color2d", programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
     }
@@ -11961,8 +11989,15 @@
       });
       // super() -> $superCstr(), super. -> $super.;
       s = s.replace(/\bsuper(\s*"B\d+")/g, "$$superCstr$1").replace(/\bsuper(\s*\.)/g, "$$super$1");
+      // 000.43->0.43 and 0010f->10, but not 0010
+      s = s.replace(/\b0+((\d*)(?:\.[\d*])?(?:[eE][\-\+]?\d+)?[fF]?)\b/, function(all, numberWo0, intPart) {
+        if( numberWo0 === intPart) {
+          return all;
+        }
+        return intPart === "" ? "0" + numberWo0 : numberWo0;
+      });
       // 3.0f -> 3.0
-      s = s.replace(/\b(\.?\d+)[fF]/g, "$1");
+      s = s.replace(/\b(\.?\d+\.?)[fF]\b/g, "$1");
       // Weird (?) parsing errors with %
       s = s.replace(/([^\s])%([^=\s])/g, "$1 % $2");
       // Since frameRate() and frameRate are different things,
@@ -12036,8 +12071,8 @@
       var oldContext = replaceContext;
       // saving "this." and parameters
       var names = appendToLookupTable({"this":null}, this.params.getNames());
-      replaceContext = function(name) {
-        return names.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return names.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "function";
       if(this.name) {
@@ -12059,8 +12094,8 @@
     }
     AstInlineObject.prototype.toString = function() {
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-          return name === "this"? name : oldContext(name); // saving "this."
+      replaceContext = function (subject) {
+          return subject.name === "this" ? "this" : oldContext(subject); // saving "this."
       };
       var result = "";
       for(var i=0,l=this.members.length;i<l;++i) {
@@ -12107,12 +12142,13 @@
     }
 
     function replaceContextInVars(expr) {
-      return expr.replace(/(\.\s*)?(\b[A-Za-z_$][\w$]*\b)/g,
-        function(all, memberAccessSign, identifier) {
+      return expr.replace(/(\.\s*)?(\b[A-Za-z_$][\w$]*\b)(\s*\.\s*(\b[A-Za-z_$][\w$]*\b)(\s*\()?)?/g,
+        function(all, memberAccessSign, identifier, suffix, subMember, callSign) {
           if(memberAccessSign) {
             return all;
           } else {
-            return replaceContext(identifier);
+            var subject = { name: identifier, member: subMember, callSign: !!callSign };
+            return replaceContext(subject) + (suffix === undef ? "" : suffix);
           }
         });
     }
@@ -12293,11 +12329,11 @@
       this.body = body;
     }
     AstClassMethod.prototype.toString = function(){
-      var thisReplacement = replaceContext("this");
+      var thisReplacement = replaceContext({ name: "this" });
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "processing.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
         this.body +");";
@@ -12308,8 +12344,9 @@
     function transformClassMethod(method) {
       var m = methodsRegex.exec(method);
       methodsRegex.lastIndex = 0;
+      var body = m[6] !== ';' ? atoms[getAtomIndex(m[6])] : "{}";
       return new AstClassMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
-        transformStatementsBlock(atoms[getAtomIndex(m[6])]) );
+        transformStatementsBlock(body) );
     }
 
     function AstClassField(definitions, fieldType, isStatic) {
@@ -12325,7 +12362,7 @@
       return names;
     };
     AstClassField.prototype.toString = function() {
-      var thisPrefix = replaceContext("this") + ".";
+      var thisPrefix = replaceContext({ name: "this" });
       if(this.isStatic) {
         var className = this.owner.name;
         var staticDeclarations = [];
@@ -12334,14 +12371,14 @@
           var name = definition.name, staticName = className + "." + name;
           var declaration = "if(" + staticName + " === void(0)) {\n" +
             " " + staticName + " = " + definition.value + "; }\n" +
-            "processing.defineProperty(" + replaceContext("this") + ", " +
+            "processing.defineProperty(" + thisPrefix + ", " +
             "'" + name + "', { get: function(){return " + staticName + ";}, " +
             "set: function(val){" + staticName + " = val;} });\n";
           staticDeclarations.push(declaration);
         }
         return staticDeclarations.join("");
       } else {
-        return thisPrefix + this.definitions.join("; " + thisPrefix);
+        return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
       }
     };
 
@@ -12363,8 +12400,8 @@
     AstConstructor.prototype.toString = function() {
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var prefix = "function $constr_" + this.params.params.length + this.params.toString();
       var body = this.body.toString();
@@ -12437,17 +12474,17 @@
         thisClassMethods = appendToLookupTable({}, members.methods),
         thisClassInners = appendToLookupTable({}, members.innerClasses);
 
-      var oldContext = replaceContext, inConstructors = false;
-      replaceContext = function(name) {
+      var oldContext = replaceContext;
+      replaceContext = function (subject) {
+        var name = subject.name;
         if(name === "this") {
-          return selfId;
+          return subject.callSign ? selfId + ".$self" : selfId;
         } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
         } else if(thisClassMethods.hasOwnProperty(name)) {
-          // keeping |"this." + name| for speed
-          return inConstructors ? "this.$self." + name : "this." + name;
+          return selfId + ".$self." + name;
         }
-        return oldContext(name);
+        return oldContext(subject);
       };
 
       if(this.baseClassName) {
@@ -12464,9 +12501,8 @@
       result += this.methods.join('\n') + '\n';
       result += this.misc.tail;
 
-      inConstructors = true;
       result += this.cstrs.join('\n') + '\n';
-      inConstructors = false;
+
 
       result += "function $constr() {\n";
       var cstrsIfs = [];
@@ -12579,8 +12615,8 @@
     AstMethod.prototype.toString = function(){
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "function " + this.name + this.params + " " + this.body + "\n" +
         "processing." + this.name + " = " + this.name + ";";
@@ -12722,8 +12758,8 @@
 
       // replacing context only when necessary
       if(!isLookupTableEmpty(localNames)) {
-        replaceContext = function(name) {
-          return localNames.hasOwnProperty(name) ? name : oldContext(name);
+        replaceContext = function (subject) {
+          return localNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
         };
       }
 
@@ -12742,7 +12778,8 @@
     }
     AstRoot.prototype.toString = function() {
       var localNames = getLocalNames(this.statements);
-      replaceContext = function(name) {
+      replaceContext = function (subject) {
+        var name = subject.name;
         if(localNames.hasOwnProperty(name)) {
           return name;
         } else if(globalMembers.hasOwnProperty(name)) {
