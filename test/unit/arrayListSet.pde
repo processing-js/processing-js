@@ -9,6 +9,6 @@ l.add("2");
 
 l.set(0,"0");
 
-_checkEqual(l[0], 0);
-_checkEqual(l[1], 2);
+_checkEqual(l.get(0), 0);
+_checkEqual(l.get(1), 2);
 

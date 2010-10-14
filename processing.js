@@ -23,7 +23,7 @@
   var ajax = function ajax(url) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url, false);
-    xhr.setRequestHeader("If-Modified-Since", "Fri, 1 Jan 1960 00:00:00 GMT");
+    xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT");
     xhr.send(null);
     // failed request?
     if (xhr.status !== 200 && xhr.status !== 0) { throw ("XMLHttpRequest failed, status code " + xhr.status); }
@@ -306,10 +306,30 @@
     SHIFT:     16,
     CONTROL:   17,
     ALT:       18,
+    CAPSLK:    20,
+    PGUP:      33,
+    PGDN:      34,
+    END:       35,
+    HOME:      36,
+    LEFT:      37,
     UP:        38,
     RIGHT:     39,
     DOWN:      40,
-    LEFT:      37,
+    INS:       45,
+    DEL:       46,
+    F1:        112,
+    F2:        113,
+    F3:        114,
+    F4:        115,
+    F5:        116,
+    F6:        117,
+    F7:        118,
+    F8:        119,
+    F9:        120,
+    F10:       121,
+    F11:       122,
+    F12:       123,
+    NUMLK:     144,
 
     // Cursor types
     ARROW:    'default',
@@ -369,87 +389,106 @@
   }
 
   setupTypedArray("Float32Array", "WebGLFloatArray");
+  setupTypedArray("Int32Array",   "WebGLIntArray");
   setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
   setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
 
-  var ArrayList = function() {
-    function createArrayList(args) {
-      var arr = [];
-      for (var i = 0; i < args[0]; i++) {
-        arr[i] = (args.length > 1 ? createArrayList(args.slice(1)) : 0 );
-      }
-
-      arr.get = function(i) {
-        return this[i];
+  var ArrayList = (function() {
+    function Iterator(array) {
+      var index = 0;
+      this.hasNext = function() {
+        return index < array.length;
       };
 
-      arr.contains = function(item) {
-        return this.indexOf(item) !== -1;
+      this.next = function() {
+        return array[index++];
       };
 
-      arr.add = function() {
-        if (arguments.length === 1) {
-          this.push(arguments[0]); // for add(Object)
-        } else if (arguments.length === 2) {
-          if (typeof arguments[0] === 'number') {
-            if (arguments[0] >= 0 && arguments[0] <= this.length) {
-              this.splice(arguments[0], 0, arguments[1]); // for add(i, Object)
-            } else {
-              throw(arguments[0] + " is not a valid index");
-            }
-          } else {
-            throw(typeof arguments[0] + " is not a number");
-          }
-        } else {
-          throw("Please use the proper number of parameters.");
-        }
+      this.remove = function() {
+        array.splice(index, 1);
       };
-
-      arr.set = function() {
-        if (arguments.length === 2) {
-          if (typeof arguments[0] === 'number') {
-            if (arguments[0] >= 0 && arguments[0] < this.length) {
-              this.splice(arguments[0], 1, arguments[1]);
-            } else {
-              throw(arguments[0] + " is not a valid index.");
-            }
-          } else {
-            throw(typeof arguments[0] + " is not a number");
-          }
-        } else {
-          throw("Please use the proper number of parameters.");
-        }
-      };
-
-      arr.size = function() {
-        return this.length;
-      };
-
-      arr.clear = function() {
-        this.length = 0;
-      };
-
-      arr.remove = function(i) {
-        return this.splice(i, 1)[0];
-      };
-
-      arr.isEmpty = function() {
-        return !this.length;
-      };
-
-      arr.clone = function() {
-        return this.slice(0);
-      };
-
-      arr.toArray = function() {
-        return this.slice(0);
-      };
-
-      return arr;
     }
 
-    return createArrayList(Array.prototype.slice.call(arguments));
-  };
+    function ArrayList() {
+      var array = arguments.length === 0 ? [] : 
+        typeof arguments[0] === 'number' ? new Array(0 | arguments[0]) :
+        arguments[0];
+
+      this.get = function(i) {
+        return array[i];
+      };
+
+      this.contains = function(item) {
+        return array.indexOf(item) !== -1;
+      };
+
+      this.add = function() {
+        if (arguments.length === 1) {
+          array.push(arguments[0]); // for add(Object)
+        } else if (arguments.length === 2) {
+          var arg0 = arguments[0];
+          if (typeof arg0 === 'number') {
+            if (arg0 >= 0 && arg0 <= array.length) {
+              array.splice(arg0, 0, arguments[1]); // for add(i, Object)
+            } else {
+              throw(arg0 + " is not a valid index");
+            }
+          } else {
+            throw(typeof arg0 + " is not a number");
+          }
+        } else {
+          throw("Please use the proper number of parameters.");
+        }
+      };
+
+      this.set = function() {
+        if (arguments.length === 2) {
+          var arg0 = arguments[0];
+          if (typeof arg0 === 'number') {
+            if (arg0 >= 0 && arg0 < array.length) {
+              array.splice(arg0, 1, arguments[1]);
+            } else {
+              throw(arg0 + " is not a valid index.");
+            }
+          } else {
+            throw(typeof arg0 + " is not a number");
+          }
+        } else {
+          throw("Please use the proper number of parameters.");
+        }
+      };
+
+      this.size = function() {
+        return array.length;
+      };
+
+      this.clear = function() {
+        array.length = 0;
+      };
+
+      this.remove = function(i) {
+        return array.splice(i, 1)[0];
+      };
+
+      this.isEmpty = function() {
+        return !array.length;
+      };
+
+      this.clone = function() {
+        return new ArrayList(array.slice(0));
+      };
+
+      this.toArray = function() {
+        return array.slice(0);
+      };
+
+      this.iterator = function() {
+        return new Iterator(array);
+      };
+    }
+
+    return ArrayList;
+  }());
 
   var HashMap = (function() {
     function virtHashCode(obj) {
@@ -982,6 +1021,8 @@
   //defaultScope.PShapeSVG = PShapeSVG;  // TODO
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
+    // When something new is added to "p." it must also be added to the "names" array.
+    // The names array contains the names of everything that is inside "p."
     var p = this;
 
     // PJS specific (non-p5) methods and properties to externalize
@@ -1019,9 +1060,9 @@
     p.mouseScrolled   = undef;
     p.key             = undef;
     p.keyCode         = undef;
-    p.keyPressed      = undef;
-    p.keyReleased     = undef;
-    p.keyTyped        = undef;
+    p.keyPressed      = function(){};  // needed to remove function checks
+    p.keyReleased     = function(){};
+    p.keyTyped        = function(){};
     p.draw            = undef;
     p.setup           = undef;
 
@@ -1094,6 +1135,7 @@
         curTint = function() {},
         curTextSize = 12,
         curTextFont = "Arial",
+        curTextLeading = 14,
         getLoaded = false,
         start = new Date().getTime(),
         timeSinceLastFPS = start,
@@ -1105,6 +1147,14 @@
         bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
+        // Keys and Keystrokes
+        firstCodedDown = true,    // first coded key stroke
+        firstEDGKeyDown = true,   // first Enter - Delete Google key stroke
+        firstEDMKeyDown = true,   // first Enter - Delete Mozilla key stroke
+        firstMKeyDown = true,     // first Mozilla key stroke
+        firstGKeyDown = true,     // first Google key stroke
+        gRefire = false,          // Google refire
+        curContextCache = { attributes: {}, locations: {} },    
         // Shaders
         programObject3D,
         programObject2D,
@@ -1122,6 +1172,7 @@
         pointBuffer,
         shapeTexVBO,
         canTex,   // texture for createGraphics
+        textTex,   // texture for 3d tex
         curTexture = {width:0,height:0},
         curTextureMode = PConstants.IMAGE,
         usingTexture = false,
@@ -1139,7 +1190,10 @@
         isContextReplaced = false,
         setPixelsCached,
         maxPixelsCached = 1000,
-        codedKeys = [PConstants.SHIFT, PConstants.CONTROL, PConstants.ALT, PConstants.UP, PConstants.RIGHT, PConstants.DOWN, PConstants.LEFT];
+        codedKeys = [ PConstants.SHIFT, PConstants.CONTROL, PConstants.ALT, PConstants.CAPSLK, PConstants.PGUP, PConstants.PGDN, 
+                      PConstants.END, PConstants.HOME, PConstants.LEFT, PConstants.UP, PConstants.RIGHT, PConstants.DOWN, PConstants.NUMLK,
+                      PConstants.INS, PConstants.F1, PConstants.F2, PConstants.F3, PConstants.F4, PConstants.F5, PConstants.F6, PConstants.F7,
+                      PConstants.F8, PConstants.F9, PConstants.F10, PConstants.F11, PConstants.F12 ];
 
     // Get padding and border style widths for mouse offsets
     var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
@@ -1664,8 +1718,12 @@
       On some systems, if the variable exists in the shader but isn't used,
       the compiler will optimize it out and this function will fail.
     */
-    function uniformf(programObj, varName, varValue) {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
+    function uniformf(cacheId, programObj, varName, varValue) {
+      var varLocation = curContextCache.locations[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getUniformLocation(programObj, varName);
+        curContextCache.locations[cacheId] = varLocation;
+      }
       // the variable won't be found if it was optimized out.
       if (varLocation !== -1) {
         if (varValue.length === 4) {
@@ -1680,8 +1738,12 @@
       }
     }
 
-    function uniformi(programObj, varName, varValue) {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
+    function uniformi(cacheId, programObj, varName, varValue) {
+      var varLocation = curContextCache.locations[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getUniformLocation(programObj, varName);
+        curContextCache.locations[cacheId] = varLocation;
+      }
       // the variable won't be found if it was optimized out.
       if (varLocation !== -1) {
         if (varValue.length === 4) {
@@ -1696,8 +1758,12 @@
       }
     }
 
-    function vertexAttribPointer(programObj, varName, size, VBO) {
-      var varLocation = curContext.getAttribLocation(programObj, varName);
+    function vertexAttribPointer(cacheId, programObj, varName, size, VBO) {
+      var varLocation = curContextCache.attributes[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getAttribLocation(programObj, varName);
+        curContextCache.attributes[cacheId] = varLocation;
+      }
       if (varLocation !== -1) {
         curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
         curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
@@ -1705,15 +1771,23 @@
       }
     }
 
-    function disableVertexAttribPointer(programObj, varName){
-      var varLocation = curContext.getAttribLocation(programObj, varName);
+    function disableVertexAttribPointer(cacheId, programObj, varName){
+      var varLocation = curContextCache.attributes[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getAttribLocation(programObj, varName);
+        curContextCache.attributes[cacheId] = varLocation;
+      }
       if (varLocation !== -1) {
         curContext.disableVertexAttribArray(varLocation);
       }
     }
 
-    function uniformMatrix(programObj, varName, transpose, matrix) {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
+    function uniformMatrix(cacheId, programObj, varName, transpose, matrix) {
+      var varLocation = curContextCache.locations[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getUniformLocation(programObj, varName);
+        curContextCache.locations[cacheId] = varLocation;
+      }
       // the variable won't be found if it was optimized out.
       if (varLocation !== -1) {
         if (matrix.length === 16) {
@@ -2202,10 +2276,10 @@
 
     };
 
-    var PShapeSVG = function() {
+    var PShapeSVG = p.PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
-      if (arguments.length === 1) {
-        this.element  = new p.XMLElement(null, arguments[0]);
+      if (arguments.length === 1) { //xml element coming in
+        this.element  = arguments[0] ;//new p.XMLElement(null, arguments[0]);
         // set values to their defaults according to the SVG spec
         this.vertexCodes         = [];
         this.vertices            = [];
@@ -2956,7 +3030,11 @@
           this.fill = false;
         } else if (fillText.indexOf("#") === 0) {
           this.fill      = true;
-          this.fillColor = opacityMask | (parseInt(fillText.substring(1), 16 )) & 0xFFFFFF;
+          if (fillText.length === 4) {
+            // convert #00F to #0000FF
+            fillText = fillText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
+          }
+          this.fillColor = opacityMask | (parseInt(fillText.substring(1), 16)) & 0xFFFFFF;
         } else if (fillText.indexOf("rgb") === 0) {
           this.fill      = true;
           this.fillColor = opacityMask | this.parseRGB(fillText);
@@ -2987,8 +3065,12 @@
           this.stroke = false;
         } else if (strokeText.charAt( 0 ) === "#") {
           this.stroke      = true;
-          this.strokeColor = opacityMask | (parseInt( strokeText.substring( 1 ), 16 )) & 0xFFFFFF;
-        } else if (strokeText.indexOf( "rgb" ) === 0 ) {
+          if (strokeText.length === 4) {
+            // convert #00F to #0000FF
+            strokeText = strokeText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
+          }
+          this.strokeColor = opacityMask | (parseInt( strokeText.substring(1), 16)) & 0xFFFFFF;
+         } else if (strokeText.indexOf( "rgb" ) === 0 ) {
           this.stroke = true;
           this.strokeColor = opacityMask | this.parseRGB(strokeText);
         } else if (strokeText.indexOf( "url(#" ) === 0) {
@@ -3237,9 +3319,12 @@
           return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
       },
-      hasAttribute: function (name) {
-        return this.getAttribute(name) !== null;
-        //2 parameter call missing
+      hasAttribute: function () {
+        if (arguments.length === 1) {
+          return this.getAttribute(arguments[0]) !== null;
+        } else if (arguments.length === 2) {
+          return this.getAttribute(arguments[0],arguments[1]) !== null;
+        }
       },
       createPCDataElement: function () {
         return new XMLElement();
@@ -3251,7 +3336,7 @@
       },
       equalsXMLElement: function (object) {
         if (object instanceof XMLElement) {
-          if (this.name !== object.getLocalName) { return false; }
+          if (this.name !== object.getLocalName()) { return false; }
           if (this.attributes.length !== object.getAttributeCount()) { return false; }
           for (var i = 0; i < this.attributes.length; i++){
             if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
@@ -3286,6 +3371,13 @@
             return attribute.getValue();
           } else {
             return null;
+          }
+        } else if (arguments.length === 3) {
+          attribute = this.findAttribute(arguments[0],arguments[1]);
+          if (attribute) {
+            return attribute.getValue();
+          } else {
+            return arguments[2];
           }
         }
       },
@@ -3450,7 +3542,7 @@
         this.namespace = namespace || "";
         for (var i = 0; i < this.attributes.length; i++){
           if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
-            this.attributes.splice(i, 0);
+            this.attributes.splice(i, 1);
           }
         }
       },
@@ -3458,14 +3550,14 @@
         if (child) {
           for (var i = 0; i < this.children.length; i++) {
             if (this.children[i].equalsXMLElement(child)) {
-              this.children.splice(i, 0);
+              this.children.splice(i, 1);
             }
           }
         }
       },
       removeChildAtIndex: function(index) {
         if (this.children.length > index) { //make sure its not outofbounds
-          this.children.splice(index, 0);
+          this.children.splice(index, 1);
         }
       },
       findAttribute: function (name, namespace) {
@@ -3519,6 +3611,12 @@
       },
       getName: function() {
         return this.fullName;
+      },
+      getLocalName: function() {
+        return this.name;
+      },
+      getAttributeCount: function() {
+        return this.attributes.length;
       }
     };
 
@@ -3635,7 +3733,7 @@
       },
       invert: function() {
         var d = this.determinant();
-        if ( Math.abs( d ) > PConstants.FLOAT_MIN ) {
+        if (Math.abs( d ) > PConstants.MIN_INT) {
           var old00 = this.elements[0];
           var old01 = this.elements[1];
           var old02 = this.elements[2];
@@ -3645,7 +3743,7 @@
           this.elements[0] =  old11 / d;
           this.elements[3] = -old10 / d;
           this.elements[1] = -old01 / d;
-          this.elements[1] =  old00 / d;
+          this.elements[4] =  old00 / d;
           this.elements[2] = (old01 * old12 - old11 * old02) / d;
           this.elements[5] = (old10 * old02 - old00 * old12) / d;
           return true;
@@ -5065,6 +5163,7 @@
         // even if the color buffer isn't cleared with background(),
         // the depth buffer needs to be cleared regardless.
         curContext.clear(curContext.DEPTH_BUFFER_BIT);
+        curContextCache = { attributes: {}, locations: {} };
         // Delete all the lighting states and the materials the
         // user set in the last draw() call.
         p.noLights();
@@ -5310,21 +5409,11 @@
       var autoDetectDecimals = rightDigits === 0;
       var rightDigitsOfDefault = (rightDigits === undef || rightDigits < 0) ? 0 : rightDigits;
 
-
-      // Change the way the number is 'floored' based on whether it is odd or even.
-      if (rightDigits < 0 && Math.floor(value) % 2 === 1) {
-        // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
-        if ((value - Math.floor(value)) >= 0.5) {
-          value += 1;
-        }
-      }
-
-
       var absValue = Math.abs(value);
-      if(autoDetectDecimals) {
+      if (autoDetectDecimals) {
         rightDigitsOfDefault = 1;
         absValue *= 10;
-        while(Math.abs(Math.round(absValue) - absValue) > 1e-6 && rightDigitsOfDefault < 7) {
+        while (Math.abs(Math.round(absValue) - absValue) > 1e-6 && rightDigitsOfDefault < 7) {
           ++rightDigitsOfDefault;
           absValue *= 10;
         }
@@ -5332,7 +5421,19 @@
         absValue *= Math.pow(10, rightDigitsOfDefault);
       }
 
-      var number = Math.round(absValue);
+      // Using Java's default rounding policy HALF_EVEN. This policy is based 
+      // on the idea that 0.5 values round to the nearest even number, and 
+      // everything else is rounded normally.
+      var number, doubled = absValue * 2;
+      if (Math.floor(absValue) === absValue) {
+        number = absValue;
+      } else if (Math.floor(doubled) === doubled) {
+        var floored = Math.floor(absValue);
+        number = floored + (floored % 2);
+      } else {
+        number = Math.round(absValue);
+      }
+
       var buffer = "";
       var totalDigits = leftDigits + rightDigitsOfDefault;
       while (totalDigits > 0 || number > 0) {
@@ -5367,104 +5468,7 @@
       }
     }
 
-    // TODO: drop this and use nfCore (see below) code when we've fixed the rounding bug in nfCore
-    p.nf = function() {
-      var str, num, pad, arr, left, right, isNegative, test, i;
-
-      if (arguments.length === 2 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && (arguments[0] + "").indexOf('.') === -1) {
-        num = arguments[0];
-        pad = arguments[1];
-
-        isNegative = num < 0;
-
-        if (isNegative) {
-          num = Math.abs(num);
-        }
-
-        str = "" + num;
-        for (i = pad - str.length; i > 0; i--) {
-          str = "0" + str;
-        }
-
-        if (isNegative) {
-          str = "-" + str;
-        }
-      } else if (arguments.length === 2 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number') {
-        arr = arguments[0];
-        pad = arguments[1];
-
-        str = new Array(arr.length);
-
-        for (i = 0; i < arr.length && str !== undef; i++) {
-          test = p.nf(arr[i], pad);
-          if (test === undef) {
-            str = undef;
-          } else {
-            str[i] = test;
-          }
-        }
-      } else if (arguments.length === 3 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' && (arguments[0] + "").indexOf('.') >= 0) {
-        num = arguments[0];
-        left = arguments[1];
-        right = arguments[2];
-
-        isNegative = num < 0;
-
-        if (isNegative) {
-          num = Math.abs(num);
-        }
-
-        // Change the way the number is 'floored' based on whether it is odd or even.
-        if (right < 0 && Math.floor(num) % 2 === 1) {
-          // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
-          if ((num) - Math.floor(num) >= 0.5) {
-            num = num + 1;
-          }
-        }
-
-        str = "" + num;
-
-        for (i = left - str.indexOf('.'); i > 0; i--) {
-          str = "0" + str;
-        }
-
-        var numDec = str.length - str.indexOf('.') - 1;
-        if (numDec <= right) {
-          for (i = right - (str.length - str.indexOf('.') - 1); i > 0; i--) {
-            str = str + "0";
-          }
-        } else if (right > 0) {
-          str = str.substring(0, str.length - (numDec - right));
-        } else if (right < 0) {
-
-          str = str.substring(0, str.indexOf('.'));
-        }
-
-        if (isNegative) {
-          str = "-" + str;
-        }
-      } else if (arguments.length === 3 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' && typeof arguments[2] === 'number') {
-        arr = arguments[0];
-        left = arguments[1];
-        right = arguments[2];
-
-        str = new Array(arr.length);
-
-        for (i = 0; i < arr.length && str !== undef; i++) {
-          test = p.nf(arr[i], left, right);
-          if (test === undef) {
-            str = undef;
-          } else {
-            str[i] = test;
-          }
-        }
-      }
-
-      return str;
-    };
-
-// TODO: need to switch nf over to using nfCore...
-//    p.nf  = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
+    p.nf  = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
     p.nfs = function(value, leftDigits, rightDigits) { return nfCore(value, " ", "-", leftDigits, rightDigits); };
     p.nfp = function(value, leftDigits, rightDigits) { return nfCore(value, "+", "-", leftDigits, rightDigits); };
     p.nfc = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits, ","); };
@@ -5735,6 +5739,10 @@
       } else {
         return intScalar(val);
       }
+    };
+
+    p.__int_cast = function(val) {
+      return 0|val;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -6060,6 +6068,7 @@
           curContext = curElement.getContext("experimental-webgl");
           p.use3DContext = true;
           canTex = curContext.createTexture(); // texture
+          textTex = curContext.createTexture(); // texture
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -6095,7 +6104,7 @@
           curContext.useProgram(programObject3D);
 
           // assume we aren't using textures by default
-          uniformi(programObject3D, "usingTexture", usingTexture);
+          uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
           p.lightFalloff(1, 0, 0);
           p.shininess(1);
           p.ambient(255, 255, 255);
@@ -6195,6 +6204,13 @@
         lineCap: curContext.lineCap,
         lineJoin: curContext.lineJoin
       };
+      // remove the style width and height properties to ensure that the canvas gets set to 
+      // aWidth and aHeight coming in
+      if (curElement.style.length > 0 ) {
+        curElement.style.removeProperty("width");
+        curElement.style.removeProperty("height");
+      }
+      
       curElement.width = p.width = aWidth || 100;
       curElement.height = p.height = aHeight || 100;
 
@@ -6248,10 +6264,10 @@
         view.mult(pos, pos);
 
         curContext.useProgram(programObject3D);
-        uniformf(programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf(programObject3D, "lights[" + lightCount + "].position", pos.array());
-        uniformi(programObject3D, "lights[" + lightCount + "].type", 0);
-        uniformi(programObject3D, "lightCount", ++lightCount);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 0);
+        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
 
@@ -6272,24 +6288,24 @@
         view.apply(modelView.array());
         view.mult(dir, dir);
 
-        uniformf(programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf(programObject3D, "lights[" + lightCount + "].position", [-dir[0], -dir[1], -dir[2]]);
-        uniformi(programObject3D, "lights[" + lightCount + "].type", 1);
-        uniformi(programObject3D, "lightCount", ++lightCount);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", [-dir[0], -dir[1], -dir[2]]);
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 1);
+        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
 
     p.lightFalloff = function lightFalloff(constant, linear, quadratic) {
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformf(programObject3D, "falloff", [constant, linear, quadratic]);
+        uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
       }
     };
 
     p.lightSpecular = function lightSpecular(r, g, b) {
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformf(programObject3D, "specular", [r / 255, g / 255, b / 255]);
+        uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
       }
     };
 
@@ -6320,10 +6336,10 @@
         view.mult(pos, pos);
 
         curContext.useProgram(programObject3D);
-        uniformf(programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf(programObject3D, "lights[" + lightCount + "].position", pos.array());
-        uniformi(programObject3D, "lights[" + lightCount + "].type", 2);
-        uniformi(programObject3D, "lightCount", ++lightCount);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 2);
+        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
 
@@ -6335,7 +6351,7 @@
       if (p.use3DContext) {
         lightCount = 0;
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "lightCount", lightCount);
+        uniformi("lightCount3d", programObject3D, "lightCount", lightCount);
       }
     };
 
@@ -6370,13 +6386,13 @@
         view.apply(modelView.array());
         view.mult(dir, dir);
 
-        uniformf(programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf(programObject3D, "lights[" + lightCount + "].position", pos.array());
-        uniformf(programObject3D, "lights[" + lightCount + "].direction", [dir[0], dir[1], dir[2]]);
-        uniformf(programObject3D, "lights[" + lightCount + "].concentration", concentration);
-        uniformf(programObject3D, "lights[" + lightCount + "].angle", angle);
-        uniformi(programObject3D, "lights[" + lightCount + "].type", 3);
-        uniformi(programObject3D, "lightCount", ++lightCount);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
+        uniformf("lights.direction.3d." + lightCount, programObject3D, "lights[" + lightCount + "].direction", [dir[0], dir[1], dir[2]]);
+        uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights[" + lightCount + "].concentration", concentration);
+        uniformf("lights.angle.3d." + lightCount, programObject3D, "lights[" + lightCount + "].angle", angle);
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 3);
+        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
 
@@ -6538,11 +6554,11 @@
         if (doFill === true) {
           curContext.useProgram(programObject3D);
 
-          disableVertexAttribPointer(programObject3D, "aTexture");
+          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-          uniformMatrix(programObject3D, "model", false, model.array());
-          uniformMatrix(programObject3D, "view", false, view.array());
-          uniformMatrix(programObject3D, "projection", false, proj.array());
+          uniformMatrix("model3d", programObject3D, "model", false, model.array());
+          uniformMatrix("view3d", programObject3D, "view", false, view.array());
+          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -6550,7 +6566,7 @@
           // developers can start playing around with styles.
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
-          uniformf(programObject3D, "color", fillStyle);
+          uniformf("color3d", programObject3D, "color", fillStyle);
 
           // Create the normal transformation matrix
           var v = new PMatrix3D();
@@ -6566,14 +6582,14 @@
           normalMatrix.invert();
           normalMatrix.transpose();
 
-          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
-          vertexAttribPointer(programObject3D, "Vertex", 3, boxBuffer);
-          vertexAttribPointer(programObject3D, "Normal", 3, boxNormBuffer);
+          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
 
           // Ugly hack. Can't simply disable the vertex attribute
           // array. No idea why, so I'm passing in dummy data.
-          vertexAttribPointer(programObject3D, "aColor", 3, boxNormBuffer);
+          vertexAttribPointer("aColor3d", programObject3D, "aColor", 3, boxNormBuffer);
 
           curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -6581,15 +6597,15 @@
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", false, model.array());
-          uniformMatrix(programObject2D, "view", false, view.array());
-          uniformMatrix(programObject2D, "projection", false, proj.array());
+          uniformMatrix("model2d", programObject2D, "model", false, model.array());
+          uniformMatrix("view2d", programObject2D, "view", false, view.array());
+          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, boxOutlineBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
@@ -6766,19 +6782,19 @@
           normalMatrix.transpose();
 
           curContext.useProgram(programObject3D);
-          disableVertexAttribPointer(programObject3D, "aTexture");
+          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-          uniformMatrix(programObject3D, "model", false, model.array());
-          uniformMatrix(programObject3D, "view", false, view.array());
-          uniformMatrix(programObject3D, "projection", false, proj.array());
-          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+          uniformMatrix("model3d", programObject3D, "model", false, model.array());
+          uniformMatrix("view3d", programObject3D, "view", false, view.array());
+          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
-          vertexAttribPointer(programObject3D, "Vertex", 3, sphereBuffer);
-          vertexAttribPointer(programObject3D, "Normal", 3, sphereBuffer);
+          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
 
           // Ugly hack. Can't simply disable the vertex attribute
           // array. No idea why, so I'm passing in dummy data.
-          vertexAttribPointer(programObject3D, "aColor", 3, sphereBuffer);
+          vertexAttribPointer("aColor3d", programObject3D, "aColor", 3, sphereBuffer);
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -6787,7 +6803,7 @@
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
 
-          uniformf(programObject3D, "color", fillStyle);
+          uniformf("color3d", programObject3D, "color", fillStyle);
 
           curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -6795,15 +6811,15 @@
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", false, model.array());
-          uniformMatrix(programObject2D, "view", false, view.array());
-          uniformMatrix(programObject2D, "projection", false, proj.array());
+          uniformMatrix("model2d", programObject2D, "model", false, model.array());
+          uniformMatrix("view2d", programObject2D, "view", false, view.array());
+          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, sphereBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
@@ -6871,22 +6887,22 @@
       // either a shade of gray or a 'color' object.
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "usingMat", true);
+        uniformi("usingMat3d", programObject3D, "usingMat", true);
 
         if (a.length === 1) {
           // color object was passed in
           if (typeof a[0] === "string") {
             var c = a[0].slice(5, -1).split(",");
-            uniformf(programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
+            uniformf("mat_ambient3d", programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
           }
           // else a single number was passed in for gray shade
           else {
-            uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
+            uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
           }
         }
         // Otherwise three values were provided (r,g,b)
         else {
-          uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
+          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
         }
       }
     };
@@ -6897,7 +6913,7 @@
 
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "usingMat", true);
+        uniformi("usingMat3d", programObject3D, "usingMat", true);
 
         // If only one argument was provided, the user either gave us a
         // shade of gray or a 'color' object.
@@ -6905,16 +6921,16 @@
           // color object was passed in
           if (typeof a[0] === "string") {
             var c = a[0].slice(5, -1).split(",");
-            uniformf(programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
+            uniformf("mat_emissive3d", programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
           }
           // else a regular number was passed in for gray shade
           else {
-            uniformf(programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
+            uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
           }
         }
         // Otherwise three values were provided (r,g,b)
         else {
-          uniformf(programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
+          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
         }
       }
     };
@@ -6922,8 +6938,8 @@
     p.shininess = function shininess(shine) {
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "usingMat", true);
-        uniformf(programObject3D, "shininess", shine);
+        uniformi("usingMat3d", programObject3D, "usingMat", true);
+        uniformf("shininess3d", programObject3D, "shininess", shine);
       }
     };
 
@@ -6940,8 +6956,8 @@
 
       if (p.use3DContext) {
         curContext.useProgram(programObject3D);
-        uniformi(programObject3D, "usingMat", true);
-        uniformf(programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
+        uniformi("usingMat3d", programObject3D, "usingMat", true);
+        uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
       }
     };
 
@@ -7069,7 +7085,7 @@
 
       if (p.use3DContext) {
         curContext.useProgram(programObject2D);
-        uniformf(programObject2D, "pointSize", w);
+        uniformf("pointSize2d", programObject2D, "pointSize", w);
       } else {
         curContext.lineWidth = w;
       }
@@ -7127,17 +7143,17 @@
         proj.transpose();
 
         curContext.useProgram(programObject2D);
-        uniformMatrix(programObject2D, "model", false, model.array());
-        uniformMatrix(programObject2D, "view", false, view.array());
-        uniformMatrix(programObject2D, "projection", false, proj.array());
+        uniformMatrix("model2d", programObject2D, "model", false, model.array());
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
         if (lineWidth > 0 && doStroke) {
           // this will be replaced with the new bit shifting color code
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
           curContext.drawArrays(curContext.POINTS, 0, 1);
         }
@@ -7243,13 +7259,13 @@
       proj.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix(programObjectUnlitShape, "uView", false, view.array());
-      uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
+      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
+      uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
 
-      vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, pointBuffer);
+      vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObjectUnlitShape, "aColor", 4, fillColorBuffer);
+      vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
@@ -7281,13 +7297,13 @@
       proj.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix(programObjectUnlitShape, "uView", false, view.array());
-      uniformMatrix(programObjectUnlitShape, "uProjection", false, proj.array());
+      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
+      uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
 
-      vertexAttribPointer(programObjectUnlitShape, "aVertex", 3, lineBuffer);
+      vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
+      vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       curContext.lineWidth(lineWidth);
@@ -7317,23 +7333,23 @@
       proj.transpose();
 
       curContext.useProgram( programObject3D );
-      uniformMatrix( programObject3D, "model", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
-      uniformMatrix( programObject3D, "view", false, view.array() );
-      uniformMatrix( programObject3D, "projection", false, proj.array() );
+      uniformMatrix("model3d", programObject3D, "model", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
+      uniformMatrix("view3d", programObject3D, "view", false, view.array() );
+      uniformMatrix("projection3d", programObject3D, "projection", false, proj.array() );
 
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
 
-      uniformf(programObject3D, "color", [-1,0,0,0]);
+      uniformf("color3d", programObject3D, "color", [-1,0,0,0]);
 
-      vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
+      vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
-      vertexAttribPointer(programObject3D, "aColor", 4, fillColorBuffer);
+      vertexAttribPointer("aColor3d", programObject3D, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       // No support for lights....yet
-      disableVertexAttribPointer(programObject3D, "Normal");
+      disableVertexAttribPointer("normal3d", programObject3D, "Normal");
 
       var i;
 
@@ -7352,8 +7368,8 @@
           if( tArray[i+1] > 1.0 ){ tArray[i+1] -= (tArray[i+1] - 1.0);}
         }
 
-        uniformi(programObject3D, "usingTexture", usingTexture);
-        vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
+        uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
+        vertexAttribPointer("aTexture3d", programObject3D, "aTexture", 2, shapeTexVBO);
         curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW);
       }
 
@@ -7813,7 +7829,7 @@
           // with a color.
           usingTexture = false;
           curContext.useProgram(programObject3D);
-          uniformi(programObject3D, "usingTexture", usingTexture);
+          uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
         }
 
         // 2D context
@@ -8006,10 +8022,9 @@
       }
 
       var s = curTightness;
-      curveBasisMatrix.set(((s - 1) / 2).toFixed(2), ((s + 3) / 2).toFixed(2),
-                           ((-3 - s) / 2).toFixed(2), ((1 - s) / 2).toFixed(2),
-                           (1 - s), ((-5 - s) / 2).toFixed(2), (s + 2), ((s - 1) / 2).toFixed(2),
-                           ((s - 1) / 2).toFixed(2), 0, ((1 - s) / 2).toFixed(2), 0, 0, 1, 0, 0);
+      curveBasisMatrix.set((s - 1) / 2, (s + 3) / 2, (-3 - s) / 2, (1 - s) / 2,
+                           (1 - s), (-5 - s) / 2, (s + 2), (s - 1) / 2,
+                           (s - 1) / 2, 0, (1 - s) / 2, 0, 0, 1, 0, 0);
 
       splineForward(curveDet, curveDrawMatrix);
 
@@ -8144,7 +8159,7 @@
       curTexture.height = pimage.height;
       usingTexture = true;
       curContext.useProgram(programObject3D);
-      uniformi(programObject3D, "usingTexture", usingTexture);
+      uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
     };
 
     p.textureMode = function(mode){
@@ -8267,24 +8282,75 @@
     };
 
     p.arc = function arc(x, y, width, height, start, stop) {
-      if (width <= 0) {
-        return;
-      }
+      if (width <= 0 || stop < start) { return; }
 
       if (curEllipseMode === PConstants.CORNER) {
         x += width / 2;
         y += height / 2;
+      } else if (curEllipseMode === PConstants.CORNERS) {
+        width = width - x;
+        height = height - y;
+      } else if (curEllipseMode === PConstants.RADIUS) {
+        x = x - width;
+        y = y - height;
+        width = width * 2;
+        height = height * 2;
+      } else if (curEllipseMode === PConstants.CENTER) {
+        x = x - width/2;
+        y = y - height/2;
+      }
+      // make sure that we're starting at a useful point
+      while (start < 0) {
+        start += PConstants.TWO_PI;
+        stop += PConstants.TWO_PI;
+      }
+      if (stop - start > PConstants.TWO_PI) {
+        start = 0;
+        stop = PConstants.TWO_PI;
+      }
+      var hr = width / 2;
+      var vr = height / 2;
+
+      var centerX = x + hr;
+      var centerY = y + vr;
+      
+      var i, ii, startLUT, stopLUT;
+      if (doFill) {
+        // shut off stroke for a minute
+        var savedStroke = doStroke;
+        doStroke = false;
+
+        startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
+        stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
+
+        p.beginShape();
+        p.vertex(centerX, centerY);
+        for (i = startLUT; i < stopLUT; i++) {
+          ii = i % PConstants.SINCOS_LENGTH;
+          if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
+          p.vertex(centerX + parseFloat(Math.cos(ii * PConstants.DEG_TO_RAD * 0.5)) * hr,centerY + parseFloat(Math.sin(ii * PConstants.DEG_TO_RAD * 0.5)) * vr);
+        }
+        p.endShape(PConstants.CLOSE);
+        doStroke = savedStroke;
       }
 
-      curContext.moveTo(x, y);
-      curContext.beginPath();
-      curContext.arc(x, y, curEllipseMode === PConstants.CENTER_RADIUS ? width : width / 2, start, stop, false);
+      if (doStroke) {
+        // and doesn't include the first (center) vertex.
+        var savedFill = doFill;
+        doFill = false;
 
-      executeContextStroke();
-      curContext.lineTo(x, y);
+        startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
+        stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
 
-      executeContextFill();
-      curContext.closePath();
+        p.beginShape(); 
+        for (i = startLUT; i < stopLUT; i ++) {
+          ii = i % PConstants.SINCOS_LENGTH;
+          if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
+          p.vertex(centerX + parseFloat(Math.cos(ii * PConstants.DEG_TO_RAD * 0.5)) * hr, centerY + parseFloat(Math.sin(ii * PConstants.DEG_TO_RAD * 0.5)) * vr);
+        }
+        p.endShape();
+        doFill = savedFill;
+      }
     };
 
     p.line = function line() {
@@ -8321,17 +8387,17 @@
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
 
-          uniformMatrix(programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
-          uniformMatrix(programObject2D, "view", false, view.array());
-          uniformMatrix(programObject2D, "projection", false, proj.array());
+          uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+          uniformMatrix("view2d", programObject2D, "view", false, view.array());
+          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
           curContext.lineWidth(lineWidth);
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, lineBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, lineBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
           curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
           curContext.drawArrays(curContext.LINES, 0, 2);
@@ -8448,15 +8514,15 @@
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", false, model.array());
-          uniformMatrix(programObject2D, "view", false, view.array());
-          uniformMatrix(programObject2D, "projection", false, proj.array());
+          uniformMatrix("model2d", programObject2D, "model", false, model.array());
+          uniformMatrix("view2d", programObject2D, "view", false, view.array());
+          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          uniformf(programObject2D, "color", strokeStyle);
-          uniformi(programObject2D, "picktype", 0);
+          uniformf("color2d", programObject2D, "color", strokeStyle);
+          uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          vertexAttribPointer(programObject2D, "Vertex", 3, rectBuffer);
-          disableVertexAttribPointer(programObject2D, "aTextureCoord");
+          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
+          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
           curContext.lineWidth(lineWidth);
           curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
@@ -8464,9 +8530,9 @@
 
         if (doFill) {
           curContext.useProgram(programObject3D);
-          uniformMatrix(programObject3D, "model", false, model.array());
-          uniformMatrix(programObject3D, "view", false, view.array());
-          uniformMatrix(programObject3D, "projection", false, proj.array());
+          uniformMatrix("model3d", programObject3D, "model", false, model.array());
+          uniformMatrix("view3d", programObject3D, "view", false, view.array());
+          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -8475,7 +8541,7 @@
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
 
-          uniformf(programObject3D, "color", fillStyle);
+          uniformf("color3d", programObject3D, "color", fillStyle);
 
           var v = new PMatrix3D();
           v.set(view);
@@ -8490,10 +8556,10 @@
           normalMatrix.invert();
           normalMatrix.transpose();
 
-          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
-          vertexAttribPointer(programObject3D, "Vertex", 3, rectBuffer);
-          vertexAttribPointer(programObject3D, "Normal", 3, rectNormBuffer);
+          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
 
           curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -8780,7 +8846,7 @@
       this.mask = function(mask) {
         this.__mask = undef;
 
-        if (mask instanceof PImage) {
+        if (mask.constructor.name === "PImage") {
           if (mask.width === this.width && mask.height === this.height) {
             this.__mask = mask;
           } else {
@@ -9260,7 +9326,7 @@
 
           if (img.__mask) {
             var j, size;
-            if (img.__mask instanceof PImage) {
+            if (img.__mask.constructor.name === "PImage") {
               var objMask = img.__mask.toImageData();
               for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
                 // using it as an alpha channel
@@ -10268,6 +10334,7 @@
     p.textSize = function textSize(size) {
       if (size) {
         curTextSize = size;
+        curTextLeading = (p.textAscent() + p.textDescent()) * 1.275;
       }
     };
 
@@ -10305,6 +10372,27 @@
       }
     };
 
+    p.textLeading = function textLeading(leading) {
+      curTextLeading = leading;
+    };
+
+    var measureTextCanvas = function(fontFace, fontSize, baseLine, text) {
+      this.canvas = document.createElement('canvas');
+      this.canvas.setAttribute('width', fontSize + "px");
+      this.canvas.setAttribute('height', fontSize + "px");
+      this.ctx = this.canvas.getContext("2d");
+      this.ctx.font = fontSize + "pt " + fontFace;
+      this.ctx.fillStyle = "black";
+      this.ctx.fillRect (0, 0, fontSize, fontSize); 
+      this.ctx.fillStyle = "white";
+      this.ctx.fillText(text, 0, baseLine);
+      this.imageData = this.ctx.getImageData(0, 0, fontSize, fontSize);
+
+      this.get = function(x, y) {
+        return this.imageData.data[((y*(this.imageData.width*4)) + (x*4))];
+      };
+    };
+
     p.textAscent = (function() {
       var oldTextSize = undef,
           oldTextFont = undef,
@@ -10325,15 +10413,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          if (graphics !== undef) {
-            graphics.size(curTextSize, curTextSize);
-          } else {
-            graphics = p.createGraphics(curTextSize, curTextSize);
-          }
-          graphics.background(0);
-          graphics.fill(255);
-          graphics.textFont(curTextFont, curTextSize);
-          graphics.text(character, 0, curTextSize);
+          graphics = new measureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
 
           // binary search for highest pixel
           while(yLoc !== bottom) {
@@ -10381,15 +10461,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          if (graphics !== undef) {
-            graphics.size(curTextSize, curTextSize);
-          } else {
-            graphics = p.createGraphics(curTextSize, curTextSize);
-          }
-          graphics.background(0);
-          graphics.fill(255);
-          graphics.textFont(curTextFont, curTextSize);
-          graphics.text(character, 0, 0);
+          graphics = new measureTextCanvas(curTextFont.name, curTextSize, 0, character);
 
           // binary search for lowest pixel
           while(yLoc !== bottom) {
@@ -10631,10 +10703,14 @@
       var aspect = textcanvas.width/textcanvas.height;
       curContext = oldContext;
 
+      curContext.bindTexture(curContext.TEXTURE_2D, textTex);
       executeTexImage2D(textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
-      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
-      curContext.generateMipmap(curContext.TEXTURE_2D);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
+      // If we don't have a power of two texture, we can't mipmap it.
+      // curContext.generateMipmap(curContext.TEXTURE_2D);
 
       // horizontal offset/alignment
       var xOffset = 0;
@@ -10660,14 +10736,14 @@
       proj.transpose();
 
       curContext.useProgram(programObject2D);
-      vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
-      vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
-      uniformi(programObject2D, "uSampler", [0]);
-      uniformi(programObject2D, "picktype", 1);
-      uniformMatrix(programObject2D, "model", false,  model.array());
-      uniformMatrix(programObject2D, "view", false, view.array());
-      uniformMatrix(programObject2D, "projection", false, proj.array());
-      uniformf(programObject2D, "color", fillStyle);
+      vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, textBuffer);
+      vertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord", 2, textureBuffer);
+      uniformi("uSampler2d", programObject2D, "uSampler", [0]);
+      uniformi("picktype2d", programObject2D, "picktype", 1);
+      uniformMatrix("model2d", programObject2D, "model", false,  model.array());
+      uniformMatrix("view2d", programObject2D, "view", false, view.array());
+      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+      uniformf("color2d", programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
     }
@@ -10686,18 +10762,18 @@
 
       var yOffset;
       if(verticalTextAlignment === PConstants.TOP) {
-        yOffset = (1-baselineOffset) * curTextSize;
+        yOffset = (1-baselineOffset) * curTextLeading;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        yOffset = (1-baselineOffset - linesCount/2) * curTextSize;
+        yOffset = (1-baselineOffset - linesCount/2) * curTextLeading;
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
-        yOffset = (1-baselineOffset - linesCount) * curTextSize;
+        yOffset = (1-baselineOffset - linesCount) * curTextLeading;
       } else { //  if(verticalTextAlignment === PConstants.BASELINE) {
-        yOffset = (1 - linesCount) * curTextSize;
+        yOffset = 0;
       }
       for(var i=0;i<linesCount;++i) {
         var line = lines[i];
         lineFunction(line, x, y + yOffset, z, horizontalTextAlignment);
-        yOffset += curTextSize;
+        yOffset += curTextLeading;
       }
     }
 
@@ -10709,84 +10785,62 @@
         return;
       }
 
-      var spaceMark = -1;
-      var start = 0;
-      var lineWidth = 0;
-      var textboxWidth = width;
-
-      var yOffset = 0;
-
       curContext.font = curTextSize + "px " + curTextFont.name;
 
-      var drawCommands = [];
-      var hadSpaceBefore = false;
-      for (var j=0, len=str.length; j < len; j++) {
-        var currentChar = str[j];
-        var letterWidth;
+      var spaceLoc = null,
+          yOffset = 0,
+          lineWidth = 0,
+          letterWidth = 0,
+          strings = str.split("\n");
 
-        if ("fillText" in curContext) {
-          letterWidth = curContext.measureText(currentChar).width;
-        } else if ("mozDrawText" in curContext) {
-          letterWidth = curContext.mozMeasureText(currentChar);
-        }
-
-        if (currentChar !== "\n" && (currentChar === " " || (hadSpaceBefore && str[j + 1] === " ") ||
-            lineWidth + 2 * letterWidth < textboxWidth)) { // check a line of text
-          if (currentChar === " ") {
-            spaceMark = j;
+      for (var j = 0; j < strings.length; j++) {
+        for (var jj = 0; jj < strings[j].length; jj++) {
+          if ("fillText" in curContext) {
+            letterWidth = curContext.measureText(strings[j][jj]).width;
+          } else if ("mozDrawText" in curContext) {
+            letterWidth = curContext.mozMeasureText(strings[j][jj]);
           }
           lineWidth += letterWidth;
-        } else { // draw a line of text
-          if (start === spaceMark + 1) { // in case a whole line without a space
-            spaceMark = j;
+          if (strings[j][jj] === " ") {
+            spaceLoc = jj;
           }
-
-          if (str[j] === "\n") {
-            drawCommands.push({text:str.substring(start, j), width: lineWidth, offset: yOffset});
-            start = j + 1;
-          } else {
-            drawCommands.push({text:str.substring(start, spaceMark + 1), width: lineWidth, offset: yOffset});
-            start = spaceMark + 1;
+          if (lineWidth >= width && strings[j][jj] !== " ") {
+            if (spaceLoc === null) {
+              spaceLoc = jj;
+            }
+            strings.splice(j, 1, strings[j].substring(0, spaceLoc+1), strings[j].substring(spaceLoc+1));
+            spaceLoc = null;
           }
-          yOffset += curTextSize;
-
-          lineWidth = 0;
-          j = start - 1;
         }
-        hadSpaceBefore = currentChar === " ";
+        lineWidth = letterWidth = 0;
       } // for (var j=
 
-      if (start < len) { // draw the last line
-        drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
-        yOffset += curTextSize;
-      }
-
       // actual draw
-      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
+      var lineFunction = p.use3DContext ? text$line$3d : text$line;
       var xOffset = 0;
-      if (horizontalTextAlignment === PConstants.CENTER) {
+      if(horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width / 2;
-      } else if (horizontalTextAlignment === PConstants.RIGHT) {
+      } else if(horizontalTextAlignment === PConstants.RIGHT) {
         xOffset = width;
       }
 
       // offsets for alignment
       var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
-      if (verticalTextAlignment === PConstants.BOTTOM) {
-        boxYOffset2 = height-yOffset;
-      } else if (verticalTextAlignment === PConstants.CENTER) {
-        boxYOffset2 = (height-yOffset) / 2;
+      if(verticalTextAlignment === PConstants.BOTTOM) {
+        boxYOffset2 = height - (strings.length * curTextLeading);
+      } else if(verticalTextAlignment === PConstants.CENTER) {
+        boxYOffset2 = (height - (strings.length * curTextLeading)) / 2;
       }
 
-      for (var il=0,ll=drawCommands.length; il<ll; ++il) {
-        var command = drawCommands[il];
-        if (command.offset + boxYOffset2 < 0) {
+      for(var il=0,ll=strings.length; il<ll; ++il, yOffset += curTextLeading) {
+        if(yOffset + boxYOffset2 < 0) {
           continue; // skip if not inside box yet
         }
-        if (command.offset + boxYOffset2 + curTextSize > height) {
+        if(yOffset + boxYOffset2 + curTextLeading > height) {
           break; // stop if no enough space for one more line draw
         }
-        lineFunction(command.text, x + xOffset, y + command.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
+        lineFunction(strings[il], x + xOffset, y + yOffset + boxYOffset1 + boxYOffset2,
+                     z, horizontalTextAlignment);
       }
     }
 
@@ -11085,6 +11139,32 @@
       }
     };
 
+    p.createJavaArray = function createJavaArray(type, bounds) {
+      var result = null;
+      if (typeof bounds[0] === 'number') {
+        var itemsCount = 0 | bounds[0];
+        if (bounds.length <= 1) {
+          if (type === "int") {
+            result = new Int32Array(itemsCount);
+          } else if (type === "float") {
+            result = new Float32Array(itemsCount);
+          } else {
+            result = new Array(itemsCount);
+          }
+          for (var i = 0; i < itemsCount; ++i) {
+            result[i] = 0;
+          }
+        } else {
+          result = [];
+          var newBounds = bounds.slice(1);
+          for (var j = 0; j < itemsCount; ++j) {
+            result.push(createJavaArray(type, newBounds));
+          }
+        }
+      }
+      return result;
+    };
+
     //////////////////////////////////////////////////////////////////////////
     // Event handling
     //////////////////////////////////////////////////////////////////////////
@@ -11193,8 +11273,26 @@
     //////////////////////////////////////////////////////////////////////////
     // Keyboard Events
     //////////////////////////////////////////////////////////////////////////
+    
+    function keyCodeMap(code){
+      // Coded keys
+      if (codedKeys.indexOf(code) >= 0) {
+        p.keyCode = code;
+        if (code === p.INS) {
+          p.keyCode = 155; 
+        }
+        return PConstants.CODED;
+      }
+      switch(code){
+        case 13:
+          return 10;  // Enter
+        case 46:
+          return 127; // Delete
+      }
+      return code;
+    }
 
-    function keyCodeMap(code, shift) {
+    function charCodeMap(code, shift) {
       // Letters
       if (code >= 65 && code <= 90) { // A-Z
         // Keys return ASCII for upcased letters.
@@ -11233,12 +11331,6 @@
             return 41; // )
           }
         }
-      }
-
-      // Coded keys
-      else if (codedKeys.indexOf(code) >= 0) { // SHIFT, CONTROL, ALT, LEFT, RIGHT, UP, DOWN
-        p.keyCode = code;
-        return PConstants.CODED;
       }
 
       // Symbols and their shift-symbols
@@ -11280,39 +11372,178 @@
       return code;
     }
 
-    attach(document, "keydown", function(e) {
-      p.__keyPressed = true;
-      p.keyCode = null;
-      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+    // used to reproduce P5 key strokes (normally the first stroke)
+    function normalKeyDown(){
+      var tempKeyCode;
+      p.keyPressed();
+      tempKeyCode = p.keyCode;
+      p.keyCode = 0;
+      p.keyTyped();
+      p.keyCode = tempKeyCode;
+    }
 
-      if (typeof p.keyPressed === "function") {
-        p.keyPressed();
+    // used to reproduce P5 key strokes (generally the refiring of keys)
+    function refireKeyDown(){
+      var tempKeyCode;
+      p.keyReleased();
+      p.keyPressed();
+      tempKeyCode = p.keyCode;
+      p.keyCode = 0;
+      p.keyTyped();
+      p.keyCode = tempKeyCode;
+    }
+
+    // event listeners call this function in order to deal with the keys being pressed
+    function keyFunc(e, type) {
+      var tempKeyCode;
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+      if (type === "keypress") {
+        if (e.keyCode === e.charCode) {  // Hack for Google Chrome that bypasses problem with keys being the same keyCode
+          p.keyCode = -1;               // for keydown and keypress - like s and F4 give the same keyCode of 115
+        }
       }
+      switch (p.keyCode) {
+        case 19:  // Pause-Break
+        case 33:  // Page Up
+        case 34:  // Page Down
+        case 35:  // End
+        case 36:  // Home
+        case 37:  // Left Arrow
+        case 38:  // Up Arrow
+        case 39:  // Right Arrow
+        case 40:  // Down Arrow
+        case 45:  // Insert
+        case 112: // F1
+        case 113: // F2
+        case 114: // F3
+        case 115: // F4
+        case 116: // F5
+        case 117: // F6
+        case 118: // F7
+        case 119: // F8
+        case 120: // F9
+        case 121: // F10
+        case 122: // F11
+        case 123: // F12
+        case 145: // Scroll Lock
+        case 155: // Insert
+        case 224: // NumPad Up
+        case 225: // NumPad Down
+        case 226: // NumPad Left
+        case 227: // NumPad Right
+          if (type === "keydown") {
+            if (gRefire) {
+              p.keyReleased();
+              p.keyPressed();
+            } else {
+              p.keyPressed();
+              gRefire = true;
+            }
+          } else if (type === "keypress") {
+            if (firstCodedDown) {
+              firstCodedDown = false;
+            } else {
+              p.keyReleased();
+              p.keyPressed();
+            }
+          } else if (type === "keyup") {
+            p.keyReleased();
+            if (firstCodedDown === false) { firstCodedDown = true; }
+            if (gRefire){ gRefire = false; }
+          }
+          break;
+        case 16:  // Shift
+        case 17:  // Ctrl
+        case 18:  // Alt
+        case 20:  // Caps Lock
+        case 144: // Num Lock
+          if (type === "keydown") {
+            p.keyPressed();
+          } else if (type === "keyup") {
+            p.keyReleased();
+          }
+          break;
+        case 46:  // Delete
+        case 13: // Enter
+          if (type === "keydown") {
+            if (firstEDGKeyDown === true) {
+              firstEDGKeyDown = false;
+              normalKeyDown();
+            } else {
+              refireKeyDown();
+            }
+          } else if (type === "keypress") {
+            if (firstEDMKeyDown === true) {
+              firstEDMKeyDown = false;
+            } else {
+              refireKeyDown();
+            }
+          } else if (type === "keyup") {
+            p.keyCode = e.keyCode;
+            p.keyReleased();
+            if (firstEDGKeyDown === false) { firstEDGKeyDown = true; }
+            if (firstEDMKeyDown === false) { firstEDMKeyDown = true; }
+          }
+          break;
+        default:
+          if (p.keyCode === -1) {
+            p.keyCode = e.keyCode;
+          }
+          if (e.keyCode === 0) {
+            p.key = charCodeMap(e.charCode, e.shiftKey);  // dealing with Mozilla key strokes
+            if (type === "keypress") {
+              if (firstMKeyDown === true) {
+                firstMKeyDown = false;
+              } else {
+                refireKeyDown();
+              }
+            } else if (type === "keyup") {
+              p.keyCode = e.keyCode;
+              p.keyReleased();
+              if (firstMKeyDown === false) { firstMKeyDown = true; }
+            }
+          } else {
+            p.key = charCodeMap(e.keyCode, e.shiftKey);  // dealing with Google key strokes
+            if (type === "keydown") {
+              if (firstGKeyDown === true) {
+                firstGKeyDown = false;
+                normalKeyDown();
+              } else {
+                refireKeyDown();
+              }
+            } else if (type === "keyup") {
+              p.keyCode = e.keyCode;
+              p.keyReleased();
+              if (firstMKeyDown === false) { firstMKeyDown = true; }
+              if (firstGKeyDown === false) { firstGKeyDown = true; }
+            }
+          }
+          break;
+      }   
+    }
+
+    attach(document, "keydown", function(e) {
+      p.keyCode = e.keyCode;
+      p.__keyPressed = true;
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+      if (p.key !== PConstants.CODED) {
+        p.key = charCodeMap(e.keyCode, e.shiftKey);
+      }
+      keyFunc(e, "keydown");
+    });
+    
+    attach(document, "keypress", function (e) {
+      keyFunc(e, "keypress");
     });
 
     attach(document, "keyup", function(e) {
-      p.keyCode = null;
-      p.key = keyCodeMap(e.keyCode, e.shiftKey);
-
-      //TODO: This needs to only be made false if all keys have been released.
+      p.keyCode = e.keyCode;
       p.__keyPressed = false;
-
-      if (typeof p.keyReleased === "function") {
-        p.keyReleased();
+      p.key = keyCodeMap(e.keyCode, e.shiftKey);
+      if (p.key !== PConstants.CODED) {
+        p.key = charCodeMap(e.keyCode, e.shiftKey);
       }
-    });
-
-    attach(document, "keypress", function (e) {
-      // In Firefox, e.keyCode is not currently set with keypress.
-      //
-      // keypress will always happen after a keydown, so p.keyCode and p.key
-      // should remain correct. Some browsers (chrome) refire keydown when
-      // key repeats happen, others (firefox) don't. Either way keyCode and
-      // key should remain correct.
-
-      if (p.keyTyped) {
-        p.keyTyped();
-      }
+      keyFunc(e, "keyup");
     });
 
     // Place-holder for debugging function
@@ -11325,10 +11556,10 @@
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
-      if(aCode instanceof Processing.Sketch) {
+      if (aCode instanceof Processing.Sketch) {
         // Use sketch as is
         curSketch = aCode;
-      } else if(typeof aCode === "function") {
+      } else if (typeof aCode === "function") {
         // Wrap function with default sketch parameters
         curSketch = new Processing.Sketch(aCode);
       } else {
@@ -11437,6 +11668,8 @@
 
   // Processing global methods and constants for the parser
   function getGlobalMembers() {
+    // The names array contains the names of everything that is inside "p."
+    // When something new is added to "p." it must also be added to this list.
     var names = [ /* this code is generated by jsglobals.js */
       "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix",
       "arc", "arrayCopy", "asin", "atan", "atan2", "background",
@@ -11467,7 +11700,7 @@
       "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage",
       "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
       "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
-      "printCamera", "println", "printMatrix", "printProjection", "PShape",
+      "printCamera", "println", "printMatrix", "printProjection", "PShape","PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random",
       "Random", "randomSeed", "rect", "rectMode", "red", "redraw",
       "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY",
@@ -11477,11 +11710,11 @@
       "sort", "specular", "sphere", "sphereDetail", "splice", "split",
       "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
       "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
-      "textAlign", "textAscent", "textDescent", "textFont", "textMode",
-      "textSize", "texture", "textureMode", "textWidth", "tint", "translate",
-      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
-      "vertex", "width", "XMLElement", "year", "__frameRate", "__keyPressed",
-      "__mousePressed"];
+      "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
+      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
+      "translate", "triangle", "trim", "unbinary", "unhex", "updatePixels",
+      "use3DContext", "vertex", "width", "XMLElement", "year", "__frameRate",
+       "__keyPressed", "__mousePressed", "__int_cast"];
 
     var members = {};
     var i, l;
@@ -11500,11 +11733,39 @@
     }
     return members;
   }
+  
+/*
 
-  // Parser starts
+    Parser converts Java-like syntax into JavaScript.
+    Creates an Abstract Syntax Tree -- "Light AST" from the Java-like code.
+
+    It is an object tree. The root object is created from the AstRoot class, which contains statements.
+
+    A statement object can be of type: AstForStatement, AstCatchStatement, AstPrefixStatement, AstMethod, AstClass,
+    AstInterface, AstFunction, AstStatementBlock and AstLabel.
+
+    AstPrefixStatement can be a statement of type: if, switch, while, with, do, else, finally, return, throw, try, break, and continue.
+
+    These object's toString function returns the JavaScript code for the statement.
+
+    Any processing calls need "processing." prepended to them.
+
+    Similarly, calls from inside classes need "$this_1.", prepended to them,
+    with 1 being the depth level for inner classes.
+    This includes members passed down from inheritance.
+
+    The resulting code is then eval'd and run.
+
+*/
+
+  // parser begins
   function parseProcessing(code) {
     var globalMembers = getGlobalMembers();
 
+    // masks parentheses, brackets and braces with '"A5"'
+    // where A is the bracket type, and 5 is the index in an array containing all brackets split into atoms
+    // 'while(true){}' -> 'while"B1""A2"'
+    // parentheses() = B, brackets[] = C and braces{} = A
     function splitToAtoms(code) {
       var atoms = [];
       var items = code.split(/([\{\[\(\)\]\}])/);
@@ -11526,17 +11787,20 @@
       return atoms;
     }
 
+    // replaces strings and regexs keyed by index with an array of strings
     function injectStrings(code, strings) {
       return code.replace(/'(\d+)'/g, function(all, index) {
         var val = strings[index];
         if(val.charAt(0) === "/") {
           return val;
         } else {
-          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new processing.Character(" + val + "))" : val;
+          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
         }
       });
     }
 
+    // trims off leading and trailing spaces
+    // returns an object. object.left, object.middle, object.right, object.untrim
     function trimSpaces(string) {
       var m1 = /^\s*/.exec(string), result;
       if(m1[0].length === string.length) {
@@ -11549,6 +11813,7 @@
       return result;
     }
 
+    // simple trim of leading and trailing spaces
     function trim(string) {
       return string.replace(/^\s+/,'').replace(/\s+$/,'');
     }
@@ -11571,8 +11836,11 @@
 
     function getAtomIndex(templ) { return templ.substring(2, templ.length - 1); }
 
+    // remove carriage returns "\r"
     var codeWoExtraCr = code.replace(/\r\n?|\n\r/g, "\n");
 
+    // masks strings and regexs with "'5'", where 5 is the index in an array containing all strings and regexs
+    // also removes all comments
     var strings = [];
     var codeWoStrings = codeWoExtraCr.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g,
     function(all, quoted, aposed, regexCtx, prefix, regex, singleComment, comment) {
@@ -11608,7 +11876,7 @@
       declaredClasses[classId] = class_;
     }
 
-    // function defined below
+    // functions defined below
     var transformClassBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
 
     var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
@@ -11618,6 +11886,8 @@
     var attrAndTypeRegex = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*/;
     var functionsRegex = /\bfunction(?:\s+([A-Za-z_$][\w$]*))?\s*("B\d+")\s*("A\d+")/g;
 
+    // This converts classes, methods and functions into atoms, and adds them to the atoms array.
+    // classes = E, methods = D and functions = H
     function extractClassesAndMethods(code) {
       var s = code;
       s = s.replace(classesRegex, function(all) {
@@ -11632,6 +11902,8 @@
       return s;
     }
 
+    // This converts constructors into atoms, and adds them to the atoms array.
+    // constructors = G
     function extractConstructors(code, className) {
       var result = code.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
         if(name !== className) {
@@ -11643,12 +11915,14 @@
       return result;
     }
 
+    // AstParam contains the name of a parameter inside a function declaration
     function AstParam(name) {
       this.name = name;
     }
     AstParam.prototype.toString = function() {
       return this.name;
     };
+    // AstParams contains an array of AstParam objects
     function AstParams(params) {
       this.params = params;
     }
@@ -11697,13 +11971,13 @@
       s = s.replace(functionsRegex, function(all) {
         return addAtom(all, 'H');
       });
-      // new type[?] --> new ArrayList(?)
+      // new type[?] --> createJavaArray('type', [?])
       s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*("C\d+"(?:\s*"C\d+")*)/g, function(all, type, index) {
         var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; }).
-          replace(/\[\s*\]/g, "[0]").replace(/\s*\]\s*\[\s*/g, ", ");
-
-        var arrayInitializer = "(" + args.substring(1, args.length - 1) + ")";
-        return 'new ArrayList' + addAtom(arrayInitializer, 'B');
+          replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
+        var arrayInitializer = "{" + args.substring(1, args.length - 1) + "}";
+        var createArrayArgs = "('" + type + "', " + addAtom(arrayInitializer, 'A') + ")";
+        return '$p.createJavaArray' + addAtom(createArrayArgs, 'B');
       });
       // .length() --> .length
       s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");
@@ -11711,13 +11985,13 @@
       s = s.replace(/#([0-9A-Fa-f]{6})\b/g, function(all, digits) {
         return "0xFF" + digits;
       });
-      // delete (type)???, (int)??? -> 0|???
+      // delete (type)???, except (int)???
       s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
         var atom = atoms[index];
         if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
           return all;
         } else if(/^\(\s*int\s*\)$/.test(atom)) {
-          return "0|" + next;
+          return "(int)" + next;
         } else {
           var indexParts = atom.split(/"C(\d+)"/g);
           if(indexParts.length > 1) {
@@ -11729,10 +12003,22 @@
           return "" + next;
         }
       });
+      // (int)??? -> __int_cast(???)
+      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~]+)/g, function(all, arg) {
+        var trimmed = trimSpaces(arg);
+        return trimmed.untrim("__int_cast(" + trimmed.middle + ")");
+      });
       // super() -> $superCstr(), super. -> $super.;
       s = s.replace(/\bsuper(\s*"B\d+")/g, "$$superCstr$1").replace(/\bsuper(\s*\.)/g, "$$super$1");
+      // 000.43->0.43 and 0010f->10, but not 0010
+      s = s.replace(/\b0+((\d*)(?:\.[\d*])?(?:[eE][\-\+]?\d+)?[fF]?)\b/, function(all, numberWo0, intPart) {
+        if( numberWo0 === intPart) {
+          return all;
+        }
+        return intPart === "" ? "0" + numberWo0 : numberWo0;
+      });
       // 3.0f -> 3.0
-      s = s.replace(/\b(\.?\d+)[fF]/g, "$1");
+      s = s.replace(/\b(\.?\d+\.?)[fF]\b/g, "$1");
       // Weird (?) parsing errors with %
       s = s.replace(/([^\s])%([^=\s])/g, "$1 % $2");
       // Since frameRate() and frameRate are different things,
@@ -11806,8 +12092,8 @@
       var oldContext = replaceContext;
       // saving "this." and parameters
       var names = appendToLookupTable({"this":null}, this.params.getNames());
-      replaceContext = function(name) {
-        return names.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return names.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "function";
       if(this.name) {
@@ -11829,8 +12115,8 @@
     }
     AstInlineObject.prototype.toString = function() {
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-          return name === "this"? name : oldContext(name); // saving "this."
+      replaceContext = function (subject) {
+          return subject.name === "this" ? "this" : oldContext(subject); // saving "this."
       };
       var result = "";
       for(var i=0,l=this.members.length;i<l;++i) {
@@ -11877,12 +12163,13 @@
     }
 
     function replaceContextInVars(expr) {
-      return expr.replace(/(\.\s*)?(\b[A-Za-z_$][\w$]*\b)/g,
-        function(all, memberAccessSign, identifier) {
+      return expr.replace(/(\.\s*)?(\b[A-Za-z_$][\w$]*\b)(\s*\.\s*(\b[A-Za-z_$][\w$]*\b)(\s*\()?)?/g,
+        function(all, memberAccessSign, identifier, suffix, subMember, callSign) {
           if(memberAccessSign) {
             return all;
           } else {
-            return replaceContext(identifier);
+            var subject = { name: identifier, member: subMember, callSign: !!callSign };
+            return replaceContext(subject) + (suffix === undef ? "" : suffix);
           }
         });
     }
@@ -12063,11 +12350,11 @@
       this.body = body;
     }
     AstClassMethod.prototype.toString = function(){
-      var thisReplacement = replaceContext("this");
+      var thisReplacement = replaceContext({ name: "this" });
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "$p.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
         this.body +");";
@@ -12078,8 +12365,9 @@
     function transformClassMethod(method) {
       var m = methodsRegex.exec(method);
       methodsRegex.lastIndex = 0;
+      var body = m[6] !== ';' ? atoms[getAtomIndex(m[6])] : "{}";
       return new AstClassMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
-        transformStatementsBlock(atoms[getAtomIndex(m[6])]) );
+        transformStatementsBlock(body) );
     }
 
     function AstClassField(definitions, fieldType, isStatic) {
@@ -12095,7 +12383,7 @@
       return names;
     };
     AstClassField.prototype.toString = function() {
-      var thisPrefix = replaceContext("this") + ".";
+      var thisPrefix = replaceContext({ name: "this" });
       if(this.isStatic) {
         var className = this.owner.name;
         var staticDeclarations = [];
@@ -12104,14 +12392,14 @@
           var name = definition.name, staticName = className + "." + name;
           var declaration = "if(" + staticName + " === void(0)) {\n" +
             " " + staticName + " = " + definition.value + "; }\n" +
-            "$p.defineProperty(" + replaceContext("this") + ", " +
+            "$p.defineProperty(" + thisPrefix + ", " +
             "'" + name + "', { get: function(){return " + staticName + ";}, " +
             "set: function(val){" + staticName + " = val;} });\n";
           staticDeclarations.push(declaration);
         }
         return staticDeclarations.join("");
       } else {
-        return thisPrefix + this.definitions.join("; " + thisPrefix);
+        return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
       }
     };
 
@@ -12133,8 +12421,8 @@
     AstConstructor.prototype.toString = function() {
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var prefix = "function $constr_" + this.params.params.length + this.params.toString();
       var body = this.body.toString();
@@ -12207,24 +12495,24 @@
         thisClassMethods = appendToLookupTable({}, members.methods),
         thisClassInners = appendToLookupTable({}, members.innerClasses);
 
-      var oldContext = replaceContext, inConstructors = false;
-      replaceContext = function(name) {
+      var oldContext = replaceContext;
+      replaceContext = function (subject) {
+        var name = subject.name;
         if(name === "this") {
-          return selfId;
+          return subject.callSign ? selfId + ".$self" : selfId;
         } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
         } else if(thisClassMethods.hasOwnProperty(name)) {
-          // keeping |"this." + name| for speed
-          return inConstructors ? "this.$self." + name : "this." + name;
+          return selfId + ".$self." + name;
         }
-        return oldContext(name);
+        return oldContext(subject);
       };
 
       if(this.baseClassName) {
         result += "var $super = { $upcast: " + selfId + " };\n";
         result += "function $superCstr(){" + this.baseClassName + ".apply($super,arguments)}\n";
       } else {
-        result += "function $superCstr(){processing.extendClassChain("+ selfId +")}\n";
+        result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
       }
 
       result += this.functions.join('\n') + '\n';
@@ -12234,9 +12522,8 @@
       result += this.methods.join('\n') + '\n';
       result += this.misc.tail;
 
-      inConstructors = true;
       result += this.cstrs.join('\n') + '\n';
-      inConstructors = false;
+
 
       result += "function $constr() {\n";
       var cstrsIfs = [];
@@ -12324,7 +12611,6 @@
         "$p." + this.name + " = " + this.name + ";";
     };
 
-
     function transformGlobalClass(class_) {
       var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
       classesRegex.lastIndex = 0;
@@ -12350,8 +12636,8 @@
     AstMethod.prototype.toString = function(){
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
-      replaceContext = function(name) {
-        return paramNames.hasOwnProperty(name) ? name : oldContext(name);
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "function " + this.name + this.params + " " + this.body + "\n" +
         "$p." + this.name + " = " + this.name + ";";
@@ -12369,6 +12655,7 @@
 
     function preStatementsTransform(statements) {
       var s = statements;
+      // turns multiple catch blocks into one, because we have no way to properly get into them anyway.
       s = s.replace(/\b(catch\s*"B\d+"\s*"A\d+")(\s*catch\s*"B\d+"\s*"A\d+")+/g, "$1");
       return s;
     }
@@ -12411,6 +12698,8 @@
       var res = [];
       statements = preStatementsTransform(statements);
       var lastIndex = 0, m, space;
+      // m contains the matches from the nextStatement regexp, null if there are no matches.
+      // nextStatement.exec starts searching at nextStatement.lastIndex.
       while((m = nextStatement.exec(statements)) !== null) {
         if(m[1] !== undef) { // catch, for ...
           var i = statements.lastIndexOf('"B', nextStatement.lastIndex);
@@ -12490,8 +12779,8 @@
 
       // replacing context only when necessary
       if(!isLookupTableEmpty(localNames)) {
-        replaceContext = function(name) {
-          return localNames.hasOwnProperty(name) ? name : oldContext(name);
+        replaceContext = function (subject) {
+          return localNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
         };
       }
 
@@ -12510,7 +12799,8 @@
     }
     AstRoot.prototype.toString = function() {
       var localNames = getLocalNames(this.statements);
-      replaceContext = function(name) {
+      replaceContext = function (subject) {
+        var name = subject.name;
         if(localNames.hasOwnProperty(name)) {
           return name;
         } else if(globalMembers.hasOwnProperty(name) ||
@@ -12586,8 +12876,9 @@
     var transformed = transformMain();
     generateMetadata(transformed);
 
-    // remove empty extra lines with space
     var redendered = transformed.toString();
+
+    // remove empty extra lines with space
     redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
 
     return injectStrings(redendered, strings);
@@ -12650,6 +12941,7 @@
     }
 
     // Check if 3D context is invoked -- this is not the best way to do this.
+    // Following regex replaces strings, comments and regexs with an empty string
     var codeWoStrings = aCode.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g, "");
     if (codeWoStrings.match(/\bsize\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
       sketch.use3DContext = true;

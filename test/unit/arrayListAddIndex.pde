@@ -10,9 +10,9 @@ l.add(2, "3");
 l.add(3,"4");
 l.add("5");
 
-_checkEqual(l[0], "1");
-_checkEqual(l[1], "2");
-_checkEqual(l[2], "3");
-_checkEqual(l[3], "4");
-_checkEqual(l[4], "5");
+_checkEqual(l.get(0), "1");
+_checkEqual(l.get(1), "2");
+_checkEqual(l.get(2), "3");
+_checkEqual(l.get(3), "4");
+_checkEqual(l.get(4), "5");
 
