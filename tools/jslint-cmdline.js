@@ -74,6 +74,7 @@ var JSLINT = (function () {
         Float32Array: true,
         Uint8Array: true,
         Uint16Array: true,
+        Int32Array: true,
         CanvasRenderingContext2D: true,
         DOMParser: true,
         close: false,
