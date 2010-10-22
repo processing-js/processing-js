@@ -11162,14 +11162,19 @@
         });
       }
 
+      var properties = [];
       for (var propertyName in baseClass) {
         if (!(propertyName in subClass)) {
           if (typeof baseClass[propertyName] === 'function') {
             subClass[propertyName] = baseClass[propertyName];
           } else if(propertyName !== "$upcast") {
-            extendGetterSetter(propertyName);
+            // Delaying the properties extension due to the IE9 bug (see #918).
+            properties.push(propertyName); 
           }
         }
+      }
+      while (properties.length > 0) {
+        extendGetterSetter(properties.shift());
       }
     }
 
