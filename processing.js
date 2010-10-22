@@ -1127,7 +1127,7 @@
         pathOpen = false,
         mouseDragging = false,
         curColorMode = PConstants.RGB,
-        curTint = function() {},
+        curTint = null,
         curTextSize = 12,
         curTextFont = "Arial",
         curTextLeading = 14,
@@ -8785,6 +8785,7 @@
         } else if (arguments.length === 10) {
           p.blend(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE, this);
         }
+        delete this.sourceImg;
       };
 
       this.copy = function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
@@ -8793,6 +8794,7 @@
         } else if (arguments.length === 9) {
           p.blend(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight, PConstants.REPLACE, this);
         }
+        delete this.sourceImg;
       };
 
       this.filter = function(mode, param) {
@@ -8802,6 +8804,7 @@
           // no param specified, send null to show its invalid
           p.filter(mode, null, this);
         }
+        delete this.sourceImg;
       };
 
       this.save = function(file){
@@ -8815,9 +8818,9 @@
           if (this.width !== 0 || this.height !== 0) {
             // make aspect ratio if w or h is 0
             if (w === 0 && h !== 0) {
-              w = this.width / this.height * h;
+              w = Math.floor(this.width / this.height * h);
             } else if (h === 0 && w !== 0) {
-              h = w / (this.width / this.height);
+              h = Math.floor(this.height / this.width * w);
             }
             // put 'this.imageData' into a new canvas
             var canvas = getCanvasData(this.imageData).canvas;
@@ -8977,9 +8980,9 @@
       if (curSketch.imageCache.images[file]) {
         return new PImage(curSketch.imageCache.images[file]);
       }
-      // else aysnc load it
+      // else async load it
       else {
-        var pimg = new PImage(0, 0, PConstants.ARGB);
+        var pimg = new PImage();
         var img = document.createElement('img');
 
         pimg.sourceImg = img;
@@ -9057,15 +9060,19 @@
       } else {
         // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
         // changed for 0.9, offset start point needs to be *4
-        var start = y * img.width * 4 + (x*4);
-        var end = (y + h) * img.width * 4 + ((x + w) * 4);
-        var c = new PImage(w, h, PConstants.RGB);
-        for (var i = start, j = 0; i < end; i++, j++) {
-          // changed in 0.9
-          c.imageData.data[j] = img.imageData.data[i];
-          if ((j+1) % (w*4) === 0) {
-            //completed one line, increment i by offset
-            i += (img.width - w) * 4;
+        var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data, 
+          imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
+        // Don't need to copy pixels from the image outside ranges.
+        var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
+          stopRow = Math.min(h, imgHeight - y), stopColumn = Math.min(w, imgWidth - x);
+        for (var i = startRow; i < stopRow; ++i) {
+          var sourceOffset = ((y + i) * imgWidth + (x + startColumn)) * 4;
+          var targetOffset = (i * w + startColumn) * 4;
+          for (var j = startColumn; j < stopColumn; ++j) {
+            cData[targetOffset++] = imgData[sourceOffset++];
+            cData[targetOffset++] = imgData[sourceOffset++];
+            cData[targetOffset++] = imgData[sourceOffset++];
+            cData[targetOffset++] = imgData[sourceOffset++];
           }
         }
         return c;
@@ -9308,28 +9315,40 @@
           p.endShape();
         } else {
           var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-          var obj = img.toImageData();
+          //var fastImage = ("sourceImg" in img) && curTint === null && !img.__mask;
+          var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
+          if (fastImage) {
+            var htmlElement = img.sourceImg;
+            // Using HTML element's width and height in case if the image was resized.
+            curContext.drawImage(htmlElement, 0, 0, 
+              htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
+          } else {
+            var obj = img.toImageData();
 
-          if (img.__mask) {
-            var j, size;
-            if (img.__mask.constructor.name === "PImage") {
-              var objMask = img.__mask.toImageData();
-              for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
-                // using it as an alpha channel
-                obj.data[j + 1] = objMask.data[j];
-                // but only the blue color channel
-              }
-            } else {
-              for (j = 0, size = img.__mask.length; j < size; ++j) {
-                obj.data[(j << 2) + 3] = img.__mask[j];
+            if (img.__mask) {
+              var j, size;
+              if (img.__mask.constructor.name === "PImage") {
+                var objMask = img.__mask.toImageData();
+                for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+                  // using it as an alpha channel
+                  obj.data[j + 1] = objMask.data[j];
+                  // but only the blue color channel
+                }
+              } else {
+                for (j = 0, size = img.__mask.length; j < size; ++j) {
+                  obj.data[(j << 2) + 3] = img.__mask[j];
+                }
               }
             }
+
+            // Tint the image
+            if(curTint !== null) {
+              curTint(obj);
+            }
+
+            curContext.drawImage(getCanvasData(obj).canvas, 0, 0, 
+              img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
           }
-
-          // draw the image
-          curTint(obj);
-
-          curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
         }
       }
     };
@@ -9363,7 +9382,7 @@
     };
 
     p.noTint = function noTint() {
-      curTint = function() {};
+      curTint = null;
     };
 
     p.copy = function copy(src, sx, sy, sw, sh, dx, dy, dw, dh) {
