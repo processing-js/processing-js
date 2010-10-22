@@ -8732,6 +8732,24 @@
       }
     };
 
+    var saveNumber = 0;
+
+    p.saveFrame = function saveFrame(file) {
+      if(file === undef) {
+        // use default name template if parameter is not specified
+        file = "screen-####.png";
+      }
+      // Increment changeable part: screen-0000.png, screen-0001.png, ...
+      var frameFilename = file.replace(/#+/, function(all) {
+        var s = "" + (saveNumber++);
+        while(s.length < all.length) {
+          s = "0" + s;
+        }
+        return s;
+      });
+      p.save(frameFilename);
+    };
+
     var utilityContext2d = document.createElement("canvas").getContext("2d");
 
     var canvasDataCache = [undef, undef, undef]; // we need three for now
@@ -10268,22 +10286,44 @@
     // Font handling
     ////////////////////////////////////////////////////////////////////////////
 
+    // Defines system (non-SVG) font.
+    function PFont(name) {
+      this.name = "sans-serif";
+      if(name !== undef) {
+        switch(name) {
+          case "sans-serif":
+          case "serif":
+          case "monospace":
+          case "fantasy":
+          case "cursive":
+            this.name = name;
+            break;
+          default:
+            this.name = "\"" + name + "\", sans-serif";
+            break;
+        }
+      }
+      this.origName = name;
+    }
+    PFont.prototype.width = function(str) {
+      if ("measureText" in curContext) {
+        return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
+      } else if ("mozMeasureText" in curContext) {
+        return curContext.mozMeasureText(typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
+      } else {
+        return 0;
+      }
+    };
+    // Lists all standard fonts
+    PFont.list = function() {
+      return ["sans-serif", "serif", "monospace", "fantasy", "cursive"];
+    };
+    p.PFont = PFont;
+
     // Loads a font from an SVG or Canvas API
     p.loadFont = function loadFont(name) {
-      if (name.indexOf(".svg") === -1) {
-        return {
-          name: "\"" + name + "\", sans-serif",
-          origName: name,
-          width: function(str) {
-            if ("measureText" in curContext) {
-              return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
-            } else if ("mozMeasureText" in curContext) {
-              return curContext.mozMeasureText(typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
-            } else {
-              return 0;
-            }
-          }
-        };
+      if (name === undef || name.indexOf(".svg") === -1) {
+        return new PFont(name);
       } else {
         // If the font is a glyph, calculate by SVG table
         var font = p.loadGlyphs(name);
@@ -11697,14 +11737,14 @@
       "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY",
       "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise",
       "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal",
-      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage",
+      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PFont", "PImage",
       "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
       "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
       "printCamera", "println", "printMatrix", "printProjection", "PShape","PShapeSVG",
       "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random",
       "Random", "randomSeed", "rect", "rectMode", "red", "redraw",
       "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY",
-      "rotateZ", "round", "saturation", "save", "saveStrings", "scale",
+      "rotateZ", "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
       "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
       "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth",
       "sort", "specular", "sphere", "sphereDetail", "splice", "split",
@@ -11880,7 +11920,7 @@
     var transformClassBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
 
     var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
-    var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
+    var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract|synchronized)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
     var fieldTest = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
     var cstrsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+")/g;
     var attrAndTypeRegex = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*/;

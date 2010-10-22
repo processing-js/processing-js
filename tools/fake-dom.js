@@ -13,6 +13,7 @@ var canvas = {
   appendChild: __elem_func__,
   removeChild: __empty_func__,
   toDataURL: __empty_func__,
+  localName: "canvas",
   getContext:  function() {
                  return {
                    translate: __empty_func__,
@@ -70,7 +71,19 @@ var canvas = {
                    getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
                    createImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
                    drawImage: __empty_func__,
-                   putImageData: __empty_func__
+                   putImageData: __empty_func__,
+                   lineWidth: __empty_func__,
+                   disable: __empty_func__,
+                   drawArrays: __empty_func__,
+                   polygonOffset: __empty_func__,
+                   createTexture: __empty_func__,
+                   texImage2D: __empty_func__,
+                   texParameteri: __empty_func__,
+                   generateMipmap: __empty_func__,
+                   uniformMatrix4fv: __empty_func__,
+                   uniform4fv: __empty_func__,
+                   disableVertexAttribArray: __empty_func__,
+                   bindTexture: __empty_func__
                  };
   },
   style: {
@@ -138,51 +151,4 @@ window.XMLHttpRequest.prototype.status = 200;
 
 var Image = __empty_func__;
 
-// Constructors not included in many parser tests to allow them to run
-var Table = __empty_func__;
-Table.prototype.getRowCount = __empty_func__;
-Table.prototype.getTableMax = __empty_func__;
- 
-var FloatTable = __empty_func__;
-FloatTable.prototype.getRowCount = __empty_func__;
-FloatTable.prototype.getColumnCount = __empty_func__;
-FloatTable.prototype.getColumnName = function() { return "name"; };
-FloatTable.prototype.getRowNames = function() { return ["2004","2005", "2006", "2007", "2008", "2009", "2010"]; };
-FloatTable.prototype.getTableMax = function() { return 4; };
-
-var OBJModel        = __empty_func__;
-OBJModel.prototype.load = __empty_func__;
-
-var Serial          = __empty_func__;
-Serial.begin = __empty_func__;
-
-var WordMap         = __empty_func__;
-WordMap.prototype.addWord = __empty_func__;
-WordMap.prototype.finishAdd = __empty_func__;
-
-var Treemap         = __empty_func__;
-Treemap.prototype.draw = __empty_func__;
-
-var FixedSpring     = __empty_func__;
-var Spring2D        = __empty_func__;
-var Particle        = __empty_func__;
-var ArrowParticle   = __empty_func__;
-var LimitedParticle = __empty_func__;
-var GenParticle = __empty_func__;
-var DragButton = __empty_func__;
-var Button = __empty_func__;
-var Check = __empty_func__;
-var Radio = __empty_func__;
-var Scrollbar = __empty_func__;
-var SpinArm = __empty_func__;
-var EggRing = __empty_func__;
-var OverRect = __empty_func__;
-var OverCircle = __empty_func__;
-var SpinSpots = __empty_func__;
-
-
-var SearchClient = __empty_func__;
-var WebSearchRequest = __empty_func__;
 var localStorage = __empty_func__;
-
-

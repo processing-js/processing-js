@@ -3,57 +3,32 @@
 # can temporarily remove a test from this list by commenting it out with a leading #
 # and add comments explaining why a test has been added/commented out.
 
+# SimpleDateFormat
 test/parser/Fry-Visualizing-Data/ch05-salaryper/step_08b_web/step_08b_web.pde
-test/parser/Fry-Visualizing-Data/ch06-zipdecode/round_09c_focus_handling/round_09c_focus_handling.pde
-test/parser/Fry-Visualizing-Data/ch07-hierarchies/file_tree_queue_08b/file_tree_queue_08b.pde
-test/parser/Fry-Visualizing-Data/ch07-hierarchies/filetreemap_06b/filetreemap_06b.pde
-test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_06c_variable_size_nodes/step_06c_variable_size_nodes.pde
-test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_07c_save_pdf/step_07c_save_pdf.pde
+# createWriter (see #166)
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_08c_graphviz/step_08c_graphviz.pde
+# line as function and variable
 test/parser/Processing-Book-001/Appendixes/Appendix B/_02/_02.pde
-test/parser/Processing-Book-001/Extensions/3D/_05/_05.pde
-test/parser/Processing-Book-001/Extensions/Electronics/_01A/_01A.pde
-test/parser/Processing-Book-001/Extensions/Electronics/_03A/_03A.pde
-test/parser/Processing-Book-001/Extensions/Electronics/_04A/_04A.pde
-test/parser/Processing-Book-001/Extensions/Mobile/_01/_01.pde
-test/parser/Processing-Book-001/Extensions/Mobile/_02/_02.pde
-test/parser/Processing-Book-001/Extensions/Mobile/_03/_03.pde
-test/parser/Processing-Book-001/Extensions/Mobile/_04/_04.pde
-test/parser/Processing-Book-001/Extensions/Mobile/_06/_06.pde
-test/parser/Processing-Book-001/Extensions/Mobile/_07/_07.pde
-test/parser/Processing-Book-001/Extensions/Mobile/_08/_08.pde
-test/parser/Processing-Book-001/Extensions/Network/_01/_01.pde
-test/parser/Processing-Book-001/Extensions/Network/_02A/_02A.pde
-test/parser/Processing-Book-001/Extensions/Network/_02B/_02B.pde
-test/parser/Processing-Book-001/Extensions/Network/_04/_04.pde
-test/parser/Processing-Book-001/Extensions/Print/_02/_02.pde
-test/parser/Processing-Book-001/Extensions/Sound/_01/_01.pde
-test/parser/Processing-Book-001/Extensions/Sound/_02/_02.pde
-test/parser/Processing-Book-001/Extensions/Sound/_03/_03.pde
-test/parser/Processing-Book-001/Extensions/Sound/_04/_04.pde
-test/parser/Processing-Book-001/Extensions/Sound/_05/_05.pde
-test/parser/Processing-Book-001/Extensions/Vision/_01/_01.pde
-test/parser/Processing-Book-001/Extensions/Vision/_02/_02.pde
-test/parser/Processing-Book-001/Extensions/Vision/_03/_03.pde
-test/parser/Processing-Book-001/Extensions/Vision/_04/_04.pde
-test/parser/Processing-Book-001/Illustrations/page_100/page_100.pde
-test/parser/Processing-Book-001/Illustrations/page_110/page_110.pde
-test/parser/Processing-Book-001/Illustrations/page_126/page_126.pde
-test/parser/Processing-Book-001/Illustrations/page_222/page_222.pde
-test/parser/Processing-Book-001/Illustrations/page_250/page_250.pde
-test/parser/Processing-Book-001/Illustrations/page_326/page_326.pde
-test/parser/Processing-Book-001/Illustrations/page_346/page_346.pde
-test/parser/Processing-Book-001/Synthesis/_13_withoutTitle/_13_withoutTitle.pde
-test/parser/Processing-Book-001/Synthesis/_15_tree/_15_tree.pde
+# Variable with "delete" name
 test/parser/Processing-Book-001/Synthesis/_16_sodaprocessing/_16_sodaprocessing.pde
+# p5 error example: The B in "background" is capitalized
 test/parser/Processing-Book-001/Units 00-17/01 Structure 1/_04/_04.pde
+# p5 error example: n expected to be a variable
 test/parser/Processing-Book-001/Units 00-17/11 Data 2/_01/_01.pde
+# startsWith and endsWith String functions
 test/parser/Processing-Book-001/Units 00-17/12 Data 3/_10/_10.pde
+# arraycopy (vs arrayCopy)
 test/parser/Processing-Book-001/Units 31-42/33 Data 4/_20/_20.pde
+# arraycopy (vs arrayCopy)
 test/parser/Processing-Book-001/Units 31-42/33 Data 4/_22/_22.pde
+# test harness issue: Background image must be the same dimensions as the canvas.
 test/parser/Processing-Book-001/Units 31-42/40 Image 5/_11/_11.pde
+# createWriter (see #166)
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_04/_04.pde
+# createWriter (see #166)
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
+# startsWith and endsWith String functions
 test/parser/Processing-Book-001/Units 43-51/46 Input 6/_07/_07.pde
+# Known issue with overloaded methods
 test/unit/overloadedMethodCall.pde
 
