@@ -6060,7 +6060,7 @@
         }
 
         if (!curContext) {
-          throw "OPENGL 3D context is not supported on this browser.";
+          throw "WebGL context is not supported on this browser.";
         } else {
           for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
             sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
