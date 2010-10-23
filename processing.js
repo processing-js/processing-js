@@ -371,7 +371,8 @@
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
   function setupTypedArray(name, fallback) {
     // check if TypedArray exists
-    if (typeof this[name] !== "function") {
+    // typeof on Minefield and Chrome return function, typeof on Webkit returns object.
+    if (typeof this[name] !== "function" && typeof this[name] !== "object") {
       // nope.. check if WebGLArray exists
       if (typeof this[fallback] === "function") {
         this[name] = this[fallback];
