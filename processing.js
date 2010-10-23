@@ -8285,19 +8285,18 @@
 
     p.arc = function arc(x, y, width, height, start, stop) {
       if (width <= 0 || stop < start) { return; }
-
-      if (curEllipseMode === PConstants.CORNER) {
-        x += width / 2;
-        y += height / 2;
-      } else if (curEllipseMode === PConstants.CORNERS) {
+      
+      if (curEllipseMode == PConstants.CORNERS) {
         width = width - x;
         height = height - y;
-      } else if (curEllipseMode === PConstants.RADIUS) {
+
+      } else if (curEllipseMode == PConstants.RADIUS) {
         x = x - width;
         y = y - height;
         width = width * 2;
         height = height * 2;
-      } else if (curEllipseMode === PConstants.CENTER) {
+
+      } else if (curEllipseMode == PConstants.CENTER) {
         x = x - width/2;
         y = y - height/2;
       }
@@ -8312,19 +8311,15 @@
       }
       var hr = width / 2;
       var vr = height / 2;
-
       var centerX = x + hr;
-      var centerY = y + vr;
-      
+      var centerY = y + vr;     
       var i, ii, startLUT, stopLUT;
       if (doFill) {
         // shut off stroke for a minute
         var savedStroke = doStroke;
         doStroke = false;
-
         startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
         stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
-
         p.beginShape();
         p.vertex(centerX, centerY);
         for (i = startLUT; i < stopLUT; i++) {
@@ -8340,10 +8335,8 @@
         // and doesn't include the first (center) vertex.
         var savedFill = doFill;
         doFill = false;
-
         startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
         stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
-
         p.beginShape(); 
         for (i = startLUT; i < stopLUT; i ++) {
           ii = i % PConstants.SINCOS_LENGTH;
