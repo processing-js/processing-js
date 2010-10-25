@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+	<title>Processing.js SVG LoadImage() rotate.svg with Transformations</title>
+  <script type="text/javascript" src="../../../processing.js"></script> 
+	<script type="text/javascript" src="../../init.js"></script> 
+
+</head>
+<body>
+	<p id="svgtext">text</p>
+
+	<script id="script" type="application/processing">
+		String[] svgs = loadStrings("illegal.txt");
+		next = 0;
+
+		void setup() {
+			size(800,250);
+			smooth();
+			noLoop();
+		}
+
+		void draw() {
+			background(200);
+			if(next<svgs.length)
+			{
+				String header = "<svg width='12cm' height='4cm' viewBox='0 0 1200 400' xmlns='http://www.w3.org/2000/svg' version='1.1'>";
+				String footer = "</svg>";
+				String s = svgs[next++];
+				document.getElementById("svgtext").innerHTML = s.replace("<","&lt;").replace(">","&gt;");
+				PShape s = new PShapeSVG(new XMLElement(header+s+footer));
+				shape(s);
+			}
+		}
+
+		void mouseClicked()
+		{
+			redraw();
+		}
+	</script>
+	<canvas id="display" ></canvas>
+	<p>Click canvas to try next test case</p>
+</body>
+</html>
