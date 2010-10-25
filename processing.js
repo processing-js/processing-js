@@ -1007,18 +1007,23 @@
     return PVector;
   }());
 
+  // Building defaultScope. Changing of the prototype protects 
+  // internal Processing code from the changes in defaultScope
+  function DefaultScope() {}
+  DefaultScope.prototype = PConstants; 
+
+  var defaultScope = new DefaultScope();
+  defaultScope.ArrayList   = ArrayList;
+  defaultScope.HashMap     = HashMap;
+  defaultScope.PVector     = PVector;
+  //defaultScope.PImage    = PImage;     // TODO
+  //defaultScope.PShape    = PShape;     // TODO
+  //defaultScope.PShapeSVG = PShapeSVG;  // TODO
+
   var Processing = this.Processing = function Processing(curElement, aCode) {
     // When something new is added to "p." it must also be added to the "names" array.
     // The names array contains the names of everything that is inside "p."
     var p = this;
-
-    // Include Package Classes -- do this differently in the future.
-    p.ArrayList   = ArrayList;
-    p.HashMap     = HashMap;
-    p.PVector     = PVector;
-    //p.PImage    = PImage;     // TODO
-    //p.PShape    = PShape;     // TODO
-    //p.PShapeSVG = PShapeSVG;  // TODO
 
     // PJS specific (non-p5) methods and properties to externalize
     p.externals = {
@@ -1127,7 +1132,7 @@
         pathOpen = false,
         mouseDragging = false,
         curColorMode = PConstants.RGB,
-        curTint = function() {},
+        curTint = null,
         curTextSize = 12,
         curTextFont = "Arial",
         curTextLeading = 14,
@@ -5231,6 +5236,15 @@
 
       Processing.removeInstance(p.externals.canvas.id);
 
+      // Step through the libraries to detach them
+      for (var lib in Processing.lib) {
+        if (Processing.lib.hasOwnProperty(lib)) {
+          if (Processing.lib[lib].hasOwnProperty("detach")) {
+            Processing.lib[lib].detach(p);
+          }
+        }
+      }
+
       for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
         var elem = eventHandlers[i][0],
             type = eventHandlers[i][1],
@@ -6069,7 +6083,7 @@
         }
 
         if (!curContext) {
-          throw "OPENGL 3D context is not supported on this browser.";
+          throw "WebGL context is not supported on this browser.";
         } else {
           for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
             sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
@@ -6434,12 +6448,12 @@
         upZ = 0;
       }
 
-      var z = new p.PVector(eyeX - centerX, eyeY - centerY, eyeZ - centerZ);
-      var y = new p.PVector(upX, upY, upZ);
+      var z = new PVector(eyeX - centerX, eyeY - centerY, eyeZ - centerZ);
+      var y = new PVector(upX, upY, upZ);
       var transX, transY, transZ;
       z.normalize();
-      var x = p.PVector.cross(y, z);
-      y = p.PVector.cross(z, x);
+      var x = PVector.cross(y, z);
+      y = PVector.cross(z, x);
       x.normalize();
       y.normalize();
 
@@ -8741,6 +8755,24 @@
       }
     };
 
+    var saveNumber = 0;
+
+    p.saveFrame = function saveFrame(file) {
+      if(file === undef) {
+        // use default name template if parameter is not specified
+        file = "screen-####.png";
+      }
+      // Increment changeable part: screen-0000.png, screen-0001.png, ...
+      var frameFilename = file.replace(/#+/, function(all) {
+        var s = "" + (saveNumber++);
+        while(s.length < all.length) {
+          s = "0" + s;
+        }
+        return s;
+      });
+      p.save(frameFilename);
+    };
+
     var utilityContext2d = document.createElement("canvas").getContext("2d");
 
     var canvasDataCache = [undef, undef, undef]; // we need three for now
@@ -8794,6 +8826,7 @@
         } else if (arguments.length === 10) {
           p.blend(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE, this);
         }
+        delete this.sourceImg;
       };
 
       this.copy = function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
@@ -8802,6 +8835,7 @@
         } else if (arguments.length === 9) {
           p.blend(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight, PConstants.REPLACE, this);
         }
+        delete this.sourceImg;
       };
 
       this.filter = function(mode, param) {
@@ -8811,6 +8845,7 @@
           // no param specified, send null to show its invalid
           p.filter(mode, null, this);
         }
+        delete this.sourceImg;
       };
 
       this.save = function(file){
@@ -8824,9 +8859,9 @@
           if (this.width !== 0 || this.height !== 0) {
             // make aspect ratio if w or h is 0
             if (w === 0 && h !== 0) {
-              w = this.width / this.height * h;
+              w = Math.floor(this.width / this.height * h);
             } else if (h === 0 && w !== 0) {
-              h = w / (this.width / this.height);
+              h = Math.floor(this.height / this.width * w);
             }
             // put 'this.imageData' into a new canvas
             var canvas = getCanvasData(this.imageData).canvas;
@@ -8986,9 +9021,9 @@
       if (curSketch.imageCache.images[file]) {
         return new PImage(curSketch.imageCache.images[file]);
       }
-      // else aysnc load it
+      // else async load it
       else {
-        var pimg = new PImage(0, 0, PConstants.ARGB);
+        var pimg = new PImage();
         var img = document.createElement('img');
 
         pimg.sourceImg = img;
@@ -9066,15 +9101,19 @@
       } else {
         // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
         // changed for 0.9, offset start point needs to be *4
-        var start = y * img.width * 4 + (x*4);
-        var end = (y + h) * img.width * 4 + ((x + w) * 4);
-        var c = new PImage(w, h, PConstants.RGB);
-        for (var i = start, j = 0; i < end; i++, j++) {
-          // changed in 0.9
-          c.imageData.data[j] = img.imageData.data[i];
-          if ((j+1) % (w*4) === 0) {
-            //completed one line, increment i by offset
-            i += (img.width - w) * 4;
+        var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data, 
+          imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
+        // Don't need to copy pixels from the image outside ranges.
+        var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
+          stopRow = Math.min(h, imgHeight - y), stopColumn = Math.min(w, imgWidth - x);
+        for (var i = startRow; i < stopRow; ++i) {
+          var sourceOffset = ((y + i) * imgWidth + (x + startColumn)) * 4;
+          var targetOffset = (i * w + startColumn) * 4;
+          for (var j = startColumn; j < stopColumn; ++j) {
+            cData[targetOffset++] = imgData[sourceOffset++];
+            cData[targetOffset++] = imgData[sourceOffset++];
+            cData[targetOffset++] = imgData[sourceOffset++];
+            cData[targetOffset++] = imgData[sourceOffset++];
           }
         }
         return c;
@@ -9317,28 +9356,40 @@
           p.endShape();
         } else {
           var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-          var obj = img.toImageData();
+          //var fastImage = ("sourceImg" in img) && curTint === null && !img.__mask;
+          var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
+          if (fastImage) {
+            var htmlElement = img.sourceImg;
+            // Using HTML element's width and height in case if the image was resized.
+            curContext.drawImage(htmlElement, 0, 0, 
+              htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
+          } else {
+            var obj = img.toImageData();
 
-          if (img.__mask) {
-            var j, size;
-            if (img.__mask.constructor.name === "PImage") {
-              var objMask = img.__mask.toImageData();
-              for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
-                // using it as an alpha channel
-                obj.data[j + 1] = objMask.data[j];
-                // but only the blue color channel
-              }
-            } else {
-              for (j = 0, size = img.__mask.length; j < size; ++j) {
-                obj.data[(j << 2) + 3] = img.__mask[j];
+            if (img.__mask) {
+              var j, size;
+              if (img.__mask.constructor.name === "PImage") {
+                var objMask = img.__mask.toImageData();
+                for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+                  // using it as an alpha channel
+                  obj.data[j + 1] = objMask.data[j];
+                  // but only the blue color channel
+                }
+              } else {
+                for (j = 0, size = img.__mask.length; j < size; ++j) {
+                  obj.data[(j << 2) + 3] = img.__mask[j];
+                }
               }
             }
+
+            // Tint the image
+            if(curTint !== null) {
+              curTint(obj);
+            }
+
+            curContext.drawImage(getCanvasData(obj).canvas, 0, 0, 
+              img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
           }
-
-          // draw the image
-          curTint(obj);
-
-          curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
         }
       }
     };
@@ -9372,7 +9423,7 @@
     };
 
     p.noTint = function noTint() {
-      curTint = function() {};
+      curTint = null;
     };
 
     p.copy = function copy(src, sx, sy, sw, sh, dx, dy, dw, dh) {
@@ -10258,22 +10309,44 @@
     // Font handling
     ////////////////////////////////////////////////////////////////////////////
 
+    // Defines system (non-SVG) font.
+    function PFont(name) {
+      this.name = "sans-serif";
+      if(name !== undef) {
+        switch(name) {
+          case "sans-serif":
+          case "serif":
+          case "monospace":
+          case "fantasy":
+          case "cursive":
+            this.name = name;
+            break;
+          default:
+            this.name = "\"" + name + "\", sans-serif";
+            break;
+        }
+      }
+      this.origName = name;
+    }
+    PFont.prototype.width = function(str) {
+      if ("measureText" in curContext) {
+        return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
+      } else if ("mozMeasureText" in curContext) {
+        return curContext.mozMeasureText(typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
+      } else {
+        return 0;
+      }
+    };
+    // Lists all standard fonts
+    PFont.list = function() {
+      return ["sans-serif", "serif", "monospace", "fantasy", "cursive"];
+    };
+    p.PFont = PFont;
+
     // Loads a font from an SVG or Canvas API
     p.loadFont = function loadFont(name) {
-      if (name.indexOf(".svg") === -1) {
-        return {
-          name: "\"" + name + "\", sans-serif",
-          origName: name,
-          width: function(str) {
-            if ("measureText" in curContext) {
-              return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
-            } else if ("mozMeasureText" in curContext) {
-              return curContext.mozMeasureText(typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
-            } else {
-              return 0;
-            }
-          }
-        };
+      if (name === undef || name.indexOf(".svg") === -1) {
+        return new PFont(name);
       } else {
         // If the font is a glyph, calculate by SVG table
         var font = p.loadGlyphs(name);
@@ -10320,16 +10393,20 @@
     };
 
     // Sets a 'current font' for use
-    p.textFont = function textFont(name, size) {
-      curTextFont = name;
-      p.textSize(size);
+    p.textFont = function textFont(font, size) {
+      curTextFont = font;
+      if (size) {
+        p.textSize(size);
+      } else {
+        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      }
     };
 
     // Sets the font size
     p.textSize = function textSize(size) {
       if (size) {
         curTextSize = size;
-        curTextLeading = (p.textAscent() + p.textDescent()) * 1.275;
+        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
       }
     };
 
@@ -10606,8 +10683,6 @@
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
         if (str && ("fillText" in curContext || "mozDrawText" in curContext)) {
-          curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-
           if (isFillDirty) {
             curContext.fillStyle = p.color.toString(currentFillColor);
             isFillDirty = false;
@@ -11094,14 +11169,19 @@
         });
       }
 
+      var properties = [];
       for (var propertyName in baseClass) {
         if (!(propertyName in subClass)) {
           if (typeof baseClass[propertyName] === 'function') {
             subClass[propertyName] = baseClass[propertyName];
           } else if(propertyName !== "$upcast") {
-            extendGetterSetter(propertyName);
+            // Delaying the properties extension due to the IE9 bug (see #918).
+            properties.push(propertyName); 
           }
         }
+      }
+      while (properties.length > 0) {
+        extendGetterSetter(properties.shift());
       }
     }
 
@@ -11612,15 +11692,20 @@
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
         if (Processing.lib.hasOwnProperty(i)) {
-          // Init the libraries in the context of this p_instance
-          Processing.lib[i].call(this);
+          if(Processing.lib[i].hasOwnProperty("attach")) {
+            // use attach function if present
+            Processing.lib[i].attach(p);
+          } else if(Processing.lib[i] instanceof Function)  {
+            // Init the libraries in the context of this p_instance (legacy)
+            Processing.lib[i].call(this);
+          }
         }
       }
 
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
-          curSketch.attach(processing, PConstants);
+          curSketch.attach(processing, defaultScope);
 
           // Run void setup()
           if (processing.setup) {
@@ -11654,13 +11739,15 @@
 
   };
 
+  Processing.prototype = defaultScope;
+
   // Processing global methods and constants for the parser
   function getGlobalMembers() {
     // The names array contains the names of everything that is inside "p."
     // When something new is added to "p." it must also be added to this list.
     var names = [ /* this code is generated by jsglobals.js */
       "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix",
-      "arc", "arrayCopy", "ArrayList", "asin", "atan", "atan2", "background",
+      "arc", "arrayCopy", "asin", "atan", "atan2", "background",
       "beginCamera", "beginDraw", "beginShape", "bezier", "bezierDetail",
       "bezierPoint", "bezierTangent", "bezierVertex", "binary", "blend",
       "blendColor", "blit_resize", "blue", "boolean", "box", "breakShape",
@@ -11674,7 +11761,7 @@
       "expand", "externals", "fill", "filter", "filter_bilinear",
       "filter_new_scanline", "float", "floor", "focused", "frameCount",
       "frameRate", "frustum", "get", "glyphLook", "glyphTable", "green",
-      "HashMap", "height", "hex", "hint", "hour", "hue", "image", "imageMode",
+      "height", "hex", "hint", "hour", "hue", "image", "imageMode",
       "Import", "int", "intersect", "join", "key", "keyCode", "keyPressed",
       "keyReleased", "keyTyped", "lerp", "lerpColor", "lightFalloff", "lights",
       "lightSpecular", "line", "link", "loadBytes", "loadFont", "loadGlyphs",
@@ -11685,14 +11772,14 @@
       "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY",
       "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise",
       "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal",
-      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PImage",
+      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PFont", "PImage",
       "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
       "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
       "printCamera", "println", "printMatrix", "printProjection", "PShape","PShapeSVG",
-      "pushMatrix", "pushStyle", "PVector", "quad", "radians", "random",
+      "pushMatrix", "pushStyle", "quad", "radians", "random",
       "Random", "randomSeed", "rect", "rectMode", "red", "redraw",
       "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY",
-      "rotateZ", "round", "saturation", "save", "saveStrings", "scale",
+      "rotateZ", "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
       "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
       "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth",
       "sort", "specular", "sphere", "sphereDetail", "splice", "split",
@@ -11782,7 +11869,7 @@
         if(val.charAt(0) === "/") {
           return val;
         } else {
-          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new processing.Character(" + val + "))" : val;
+          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
         }
       });
     }
@@ -11868,7 +11955,7 @@
     var transformClassBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
 
     var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
-    var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
+    var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract|synchronized)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
     var fieldTest = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
     var cstrsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+")/g;
     var attrAndTypeRegex = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*/;
@@ -11965,7 +12052,7 @@
           replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
         var arrayInitializer = "{" + args.substring(1, args.length - 1) + "}";
         var createArrayArgs = "('" + type + "', " + addAtom(arrayInitializer, 'A') + ")";
-        return 'processing.createJavaArray' + addAtom(createArrayArgs, 'B');
+        return '$p.createJavaArray' + addAtom(createArrayArgs, 'B');
       });
       // .length() --> .length
       s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");
@@ -12344,7 +12431,7 @@
       replaceContext = function (subject) {
         return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
-      var result = "processing.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
+      var result = "$p.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
         this.body +");";
       replaceContext = oldContext;
       return result;
@@ -12380,7 +12467,7 @@
           var name = definition.name, staticName = className + "." + name;
           var declaration = "if(" + staticName + " === void(0)) {\n" +
             " " + staticName + " = " + definition.value + "; }\n" +
-            "processing.defineProperty(" + thisPrefix + ", " +
+            "$p.defineProperty(" + thisPrefix + ", " +
             "'" + name + "', { get: function(){return " + staticName + ";}, " +
             "set: function(val){" + staticName + " = val;} });\n";
           staticDeclarations.push(declaration);
@@ -12500,7 +12587,7 @@
         result += "var $super = { $upcast: " + selfId + " };\n";
         result += "function $superCstr(){" + this.baseClassName + ".apply($super,arguments)}\n";
       } else {
-        result += "function $superCstr(){processing.extendClassChain("+ selfId +")}\n";
+        result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
       }
 
       result += this.functions.join('\n') + '\n';
@@ -12578,7 +12665,7 @@
     }
     AstInterface.prototype.toString = function() {
       return "function " + this.name + "() {  throw 'This is an interface'; }\n" +
-        "processing." + this.name + " = " + this.name + ";";
+        "$p." + this.name + " = " + this.name + ";";
     };
     function AstClass(name, body) {
       this.name = name;
@@ -12596,7 +12683,7 @@
       }
       return "function " + this.name + "() {\n" + this.body + "}\n" +
         staticVars + "\n" +
-        "processing." + this.name + " = " + this.name + ";";
+        "$p." + this.name + " = " + this.name + ";";
     };
 
     function transformGlobalClass(class_) {
@@ -12628,7 +12715,7 @@
         return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var result = "function " + this.name + this.params + " " + this.body + "\n" +
-        "processing." + this.name + " = " + this.name + ";";
+        "$p." + this.name + " = " + this.name + ";";
       replaceContext = oldContext;
       return result;
     };
@@ -12791,16 +12878,15 @@
         var name = subject.name;
         if(localNames.hasOwnProperty(name)) {
           return name;
-        } else if(globalMembers.hasOwnProperty(name)) {
-          // Any processing calls need "processing." prepended to them.
-          return "processing." + name;
-        } else if(PConstants.hasOwnProperty(name)) {
-          return "$constants." + name;
+        } else if(globalMembers.hasOwnProperty(name) ||
+                  PConstants.hasOwnProperty(name) || 
+                  defaultScope.hasOwnProperty(name)) {
+          return "$p." + name;
         }
         return name;
       };
       var result = "// this code was autogenerated from PJS\n" +
-        "(function(processing, $constants) {\n" +
+        "(function($p) {\n" +
         this.statements.join('') + "\n})";
       replaceContext = null;
       return result;
@@ -13219,6 +13305,14 @@
   // Share lib space
   Processing.lib = {};
 
+  Processing.registerLibrary = function(name, desc) {
+    Processing.lib[name] = desc;
+
+    if(desc.hasOwnProperty("init")) {
+      desc.init(defaultScope);
+    }
+  };
+
   // Store Processing instances
   Processing.instances = [];
   Processing.instanceIds = {};
@@ -13339,13 +13433,13 @@
       }
     };
     this.sourceCode = undefined;
-    this.attach = function(processing, constants) {
+    this.attach = function(processing) {
       // either attachFunction or sourceCode must be present on attach
       if(typeof this.attachFunction === "function") {
-        this.attachFunction(processing, constants);
+        this.attachFunction(processing);
       } else if(this.sourceCode) {
         var func = eval(this.sourceCode);
-        func(processing, constants);
+        func(processing);
         this.attachFunction = func;
       } else {
         throw "Unable to attach sketch to the processing instance";
