@@ -3573,7 +3573,7 @@
             attr.setValue(arguments[2]);
           } else {
             attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
-            this.attributes.addElement(attr);
+            this.attributes.push(attr);
           }
         } else {
           attr = this.findAttribute(arguments[0]);
@@ -3581,7 +3581,7 @@
             attr.setValue(arguments[1]);
           } else {
             attr = new XMLAttribute(arguments[0], arguments[0], null, arguments[1], "CDATA");
-            this.attributes.addElement(attr);
+            this.attributes.push(attr);
           }
         }
       },
