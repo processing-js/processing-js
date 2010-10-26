@@ -8287,17 +8287,17 @@
     p.arc = function arc(x, y, width, height, start, stop) {
       if (width <= 0 || stop < start) { return; }
       
-      if (curEllipseMode == PConstants.CORNERS) {
+      if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
 
-      } else if (curEllipseMode == PConstants.RADIUS) {
+      } else if (curEllipseMode === PConstants.RADIUS) {
         x = x - width;
         y = y - height;
         width = width * 2;
         height = height * 2;
 
-      } else if (curEllipseMode == PConstants.CENTER) {
+      } else if (curEllipseMode === PConstants.CENTER) {
         x = x - width/2;
         y = y - height/2;
       }
