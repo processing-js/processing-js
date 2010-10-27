@@ -3581,7 +3581,7 @@
             attr.setValue(arguments[2]);
           } else {
             attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
-            this.attributes.addElement(attr);
+            this.attributes.push(attr);
           }
         } else {
           attr = this.findAttribute(arguments[0]);
@@ -3589,7 +3589,7 @@
             attr.setValue(arguments[1]);
           } else {
             attr = new XMLAttribute(arguments[0], arguments[0], null, arguments[1], "CDATA");
-            this.attributes.addElement(attr);
+            this.attributes.push(attr);
           }
         }
       },
@@ -8287,17 +8287,17 @@
     p.arc = function arc(x, y, width, height, start, stop) {
       if (width <= 0 || stop < start) { return; }
       
-      if (curEllipseMode == PConstants.CORNERS) {
+      if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
 
-      } else if (curEllipseMode == PConstants.RADIUS) {
+      } else if (curEllipseMode === PConstants.RADIUS) {
         x = x - width;
         y = y - height;
         width = width * 2;
         height = height * 2;
 
-      } else if (curEllipseMode == PConstants.CENTER) {
+      } else if (curEllipseMode === PConstants.CENTER) {
         x = x - width/2;
         y = y - height/2;
       }
@@ -11246,12 +11246,20 @@
       p.pmouseX = p.mouseX;
       p.pmouseY = p.mouseY;
 
+      // Find element offset
       if (element.offsetParent) {
         do {
           offsetX += element.offsetLeft;
           offsetY += element.offsetTop;
         } while ((element = element.offsetParent));
       }
+      
+      // Find Scroll offset
+      element = curElement;
+      do {
+        offsetX -= element.scrollLeft || 0;
+        offsetY -= element.scrollTop || 0;
+      } while ((element = element.parentNode));
 
       // Add padding and border style widths to offset
       offsetX += stylePaddingLeft;
@@ -11260,10 +11268,8 @@
       offsetX += styleBorderLeft;
       offsetY += styleBorderTop;
 
-      // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
-      // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
-      p.mouseX = e.pageX - offsetX;
-      p.mouseY = e.pageY - offsetY;
+      p.mouseX = e.clientX - offsetX;
+      p.mouseY = e.clientY - offsetY;
 
       if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
         p.mouseMoved();
