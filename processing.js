@@ -9312,19 +9312,27 @@
       } else { // 2d context
         if (color !== undef) {
           refreshBackground = function() {
+            saveContext(); 
+            curContext.setTransform(1, 0, 0, 1, 0, 0);
+
             if (curSketch.options.isTransparent) {
               curContext.clearRect(0,0, p.width, p.height);
             }
             curContext.fillStyle = p.color.toString(color);
             curContext.fillRect(0, 0, p.width, p.height);
             isFillDirty = true;
+            restoreContext(); 
           };
         } else {
           refreshBackground = function() {
+            saveContext(); 
+            curContext.setTransform(1, 0, 0, 1, 0, 0);
             p.image(img, 0, 0);
+            restoreContext();
           };
         }
       }
+      
       refreshBackground();
     };
 
