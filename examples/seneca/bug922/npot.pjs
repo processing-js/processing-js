@@ -1,0 +1,91 @@
+import processing.opengl.*;
+/* @pjs preload="250_250.jpg,256_257.jpg,512_512.jpg"; */
+
+PImage crate, crate2, crate3;
+
+void setup()
+{
+  size(400, 400, OPENGL);
+  crate = loadImage("250_250.jpg");
+  crate2 = loadImage("256_257.jpg");
+  crate3 = loadImage("512_512.jpg");
+  textureMode(NORMALIZED);
+}
+
+float yRot = 0;
+float xRot = 0;
+
+float s = 1;
+float r = 0;
+
+void drawBox(PImage i){
+  beginShape(QUADS);
+
+  texture(i);
+
+  // -Z "back" face
+  vertex( 1, -1, -1, 0, 0);
+  vertex(-1, -1, -1, 1, 0);
+  vertex(-1,  1, -1, 1, 1);
+  vertex( 1,  1, -1, 0, 1);
+
+  vertex(-1, -1,  1, 0, 0);
+  vertex( 1, -1,  1, 1, 0);
+  vertex( 1,  1,  1, 1, 1);
+  vertex(-1,  1,  1, 0, 1);
+
+  // +Y "bottom" face
+  vertex(-1,  1,  1, 0, 0);
+  vertex( 1,  1,  1, 1, 0);
+  vertex( 1,  1, -1, 1, 1);
+  vertex(-1,  1, -1, 0, 1);
+
+  // -Y "top" face
+  vertex(-1, -1, -1, 0, 0);
+  vertex( 1, -1, -1, 1, 0);
+  vertex( 1, -1,  1, 1, 1);
+  vertex(-1, -1,  1, 0, 1);
+
+  // +X "right" face
+  vertex( 1, -1,  1, 0, 0);
+  vertex( 1, -1, -1, 1, 0);
+  vertex( 1,  1, -1, 1, 1);
+  vertex( 1,  1,  1, 0, 1);
+
+  // -X "left" face
+  vertex(-1, -1, -1, 0, 0);
+  vertex(-1, -1,  1, 1, 0);
+  vertex(-1,  1,  1, 1, 1);
+  vertex(-1,  1, -1, 0, 1);
+
+  endShape();
+}
+
+void draw()
+{
+  background(0);
+
+  pushMatrix();
+    translate(width/2-80, height/2, 150);
+    rotateY(yRot+=0.005);
+    rotateX(xRot+=0.008);
+    scale(20);
+    drawBox(crate);
+  popMatrix();
+
+  pushMatrix();
+    translate(width/2, height/2, 150);
+    rotateY(yRot+=0.005);
+    rotateX(xRot+=0.008);
+    scale(20);
+    drawBox(crate2);
+  popMatrix();
+
+  pushMatrix();
+    translate(width/2+80, height/2, 150);
+    rotateY(yRot+=0.005);
+    rotateX(xRot+=0.008);
+    scale(20);
+    drawBox(crate3);
+  popMatrix();
+}
