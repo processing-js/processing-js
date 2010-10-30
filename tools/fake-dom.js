@@ -83,7 +83,8 @@ var canvas = {
                    uniformMatrix4fv: __empty_func__,
                    uniform4fv: __empty_func__,
                    disableVertexAttribArray: __empty_func__,
-                   bindTexture: __empty_func__
+                   bindTexture: __empty_func__,
+                   setTransform: __empty_func__
                  };
   },
   style: {
