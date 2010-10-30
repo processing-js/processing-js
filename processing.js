@@ -9312,19 +9312,27 @@
       } else { // 2d context
         if (color !== undef) {
           refreshBackground = function() {
+            saveContext(); 
+            curContext.setTransform(1, 0, 0, 1, 0, 0);
+
             if (curSketch.options.isTransparent) {
               curContext.clearRect(0,0, p.width, p.height);
             }
             curContext.fillStyle = p.color.toString(color);
             curContext.fillRect(0, 0, p.width, p.height);
             isFillDirty = true;
+            restoreContext(); 
           };
         } else {
           refreshBackground = function() {
+            saveContext(); 
+            curContext.setTransform(1, 0, 0, 1, 0, 0);
             p.image(img, 0, 0);
+            restoreContext();
           };
         }
       }
+      
       refreshBackground();
     };
 
@@ -11703,6 +11711,10 @@
           // Run void setup()
           if (processing.setup) {
             processing.setup();
+            // if any transforms were performed in setup reset to identify matrix so draw loop is unpoluted
+            if (!curSketch.use3DContext) {
+              curContext.setTransform(1, 0, 0, 1, 0, 0);
+            }
           }
 
           // some pixels can be cached, flushing
