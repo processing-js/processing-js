@@ -36,3 +36,6 @@ Obj1 obj = new Obj1();
 int r8 = 4 * (4 + (int)obj. run() + 1);
 _checkEqual(r8, 4);
 
+int neg  = -(int)3.6;
+int neg2 = (int)3.6;
+_checkEqual(neg, -neg2);
