@@ -5530,7 +5530,20 @@
 
     // Load a file or URL into strings
     p.loadStrings = function loadStrings(filename) {
-      return (localStorage[filename] ? localStorage[filename] : ajax(filename).slice(0, -1)).split("\n");
+      if (localStorage[filename]) {
+        return localStorage[filename].split("\n"); 
+      }
+
+      var filecontent = ajax(filename);
+      if(typeof filecontent !== "string" || filecontent === "") {
+        return [];
+      }
+
+      // deal with the fact that Windows uses \r\n, Unix uses \n,
+      // Mac uses \r, and we actually expect \n
+      filecontent = filecontent.replace(/(\r\n?)/g,"\n").replace(/\n$/,""); 
+
+      return filecontent.split("\n");
     };
 
     // Writes an array of strings to a file, one line per string
