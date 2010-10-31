@@ -11461,7 +11461,6 @@
     // used to reproduce P5 key strokes (generally the refiring of keys)
     function refireKeyDown(){
       var tempKeyCode;
-      p.keyReleased();
       p.keyPressed();
       tempKeyCode = p.keyCode;
       p.keyCode = 0;
