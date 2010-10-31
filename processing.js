@@ -8132,8 +8132,30 @@
         pimage.__texture = texture;
 
         var cvs = document.createElement('canvas');
-        cvs.width = pimage.width;
-        cvs.height = pimage.height;
+
+        // WebGL requires power of two textures
+        if(pimage.width & (pimage.width-1) === 0 ){
+          cvs.width = pimage.width;
+        }
+        else{
+          var i = 1;
+          while (i < pimage.width){
+            i *= 2;
+          }
+          cvs.width = i;
+        }
+        
+        if(pimage.height & (pimage.height-1) === 0 ){
+          cvs.height = pimage.height;
+        }
+        else{
+          var i = 1;
+          while (i < pimage.height){
+            i *= 2;
+          }
+          cvs.height = i;
+        }
+        
         var ctx = cvs.getContext('2d');
         var textureImage = ctx.createImageData(cvs.width, cvs.height);
 
