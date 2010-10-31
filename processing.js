@@ -8140,7 +8140,7 @@
           cvs.width = i;
         }
         
-       if(pimage.height & (pimage.height-1) === 0 ){
+        if(pimage.height & (pimage.height-1) === 0 ){
           cvs.height = pimage.height;
         }
         else{
