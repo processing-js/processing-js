@@ -2929,7 +2929,7 @@
         this.params[2] = this.element.getFloatAttribute("width");
         this.params[3] = this.element.getFloatAttribute("height");
         if (this.params[2] < 0 || this.params[3] < 0) {
-          p.println("error parsing rect negative width or height found");
+          throw("error parsing rect negative width or height found");
         }
 
       },
@@ -2945,13 +2945,13 @@
         if (val) { //this is a circle
           rx = ry = this.element.getFloatAttribute("r");
           if (rx < 0) {
-            p.println("error parsing circle negative radius found");
+            throw("error parsing circle negative radius found");
           }
         } else {
           rx = this.element.getFloatAttribute("rx");
           ry = this.element.getFloatAttribute("ry");
           if (rx < 0 || ry < 0) {
-            p.println("error parsing ellipse negative x-axis radius or y-axis radius found");
+            throw("error parsing ellipse negative x-axis radius or y-axis radius found");
           }
         }
         this.params[0] -= rx;
