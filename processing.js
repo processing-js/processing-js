@@ -1022,6 +1022,11 @@
   //defaultScope.PShapeSVG = PShapeSVG;  // TODO
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
+    // Previously we allowed calling Processing as a func instead of ctor, but no longer.
+    if (!(this instanceof Processing)) {
+      throw("called Processing constructor as if it were a function: missing 'new'.");
+    }
+
     // When something new is added to "p." it must also be added to the "names" array.
     // The names array contains the names of everything that is inside "p."
     var p = this;
