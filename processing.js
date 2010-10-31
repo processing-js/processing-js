@@ -2929,7 +2929,7 @@
         this.params[2] = this.element.getFloatAttribute("width");
         this.params[3] = this.element.getFloatAttribute("height");
         if (this.params[2] < 0 || this.params[3] < 0) {
-          throw("error parsing rect negative width or height found");
+          throw("svg error: negative width or height found while parsing <rect>"); 
         }
 
       },
@@ -2945,13 +2945,13 @@
         if (val) { //this is a circle
           rx = ry = this.element.getFloatAttribute("r");
           if (rx < 0) {
-            throw("error parsing circle negative radius found");
+            throw("svg error: negative radius found while parsing <circle>");
           }
         } else {
           rx = this.element.getFloatAttribute("rx");
           ry = this.element.getFloatAttribute("ry");
           if (rx < 0 || ry < 0) {
-            throw("error parsing ellipse negative x-axis radius or y-axis radius found");
+            throw("svg error: negative x-axis radius or y-axis radius found while parsing <ellipse>");
           }
         }
         this.params[0] -= rx;
