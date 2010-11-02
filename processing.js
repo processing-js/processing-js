@@ -2628,6 +2628,8 @@
                 break;
               case 109:  // m - move to (relative)
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+                  cx += tmpArray[0];
+                  cy += tmpArray[1];
                   this.parsePathMoveto(cx,cy);
                   if (tmpArray.length > 2) {
                     for (j = 2; j < tmpArray.length; j+=2) {
