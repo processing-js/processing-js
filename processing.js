@@ -2628,8 +2628,6 @@
                 break;
               case 109:  // m - move to (relative)
                 if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                  cx += tmpArray[0];
-                  cy += tmpArray[1];
                   this.parsePathMoveto(cx,cy);
                   if (tmpArray.length > 2) {
                     for (j = 2; j < tmpArray.length; j+=2) {
@@ -2936,6 +2934,9 @@
         this.params[1] = this.element.getFloatAttribute("y");
         this.params[2] = this.element.getFloatAttribute("width");
         this.params[3] = this.element.getFloatAttribute("height");
+        if (this.params[2] < 0 || this.params[3] < 0) {
+          throw("svg error: negative width or height found while parsing <rect>"); 
+        }
 
       },
       parseEllipse: function(val) {
@@ -2943,15 +2944,21 @@
         this.family = PConstants.PRIMITIVE;
         this.params = [];
 
-        this.params[0] = this.element.getFloatAttribute("cx");
-        this.params[1] = this.element.getFloatAttribute("cy");
+        this.params[0] = this.element.getFloatAttribute("cx") | 0;
+        this.params[1] = this.element.getFloatAttribute("cy") | 0;
 
         var rx, ry;
-        if (val) {
+        if (val) { //this is a circle
           rx = ry = this.element.getFloatAttribute("r");
+          if (rx < 0) {
+            throw("svg error: negative radius found while parsing <circle>");
+          }
         } else {
           rx = this.element.getFloatAttribute("rx");
           ry = this.element.getFloatAttribute("ry");
+          if (rx < 0 || ry < 0) {
+            throw("svg error: negative x-axis radius or y-axis radius found while parsing <ellipse>");
+          }
         }
         this.params[0] -= rx;
         this.params[1] -= ry;
