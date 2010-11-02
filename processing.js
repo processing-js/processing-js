@@ -1022,6 +1022,11 @@
   //defaultScope.PShapeSVG = PShapeSVG;  // TODO
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
+    // Previously we allowed calling Processing as a func instead of ctor, but no longer.
+    if (!(this instanceof Processing)) {
+      throw("called Processing constructor as if it were a function: missing 'new'.");
+    }
+
     // When something new is added to "p." it must also be added to the "names" array.
     // The names array contains the names of everything that is inside "p."
     var p = this;
@@ -2931,6 +2936,9 @@
         this.params[1] = this.element.getFloatAttribute("y");
         this.params[2] = this.element.getFloatAttribute("width");
         this.params[3] = this.element.getFloatAttribute("height");
+        if (this.params[2] < 0 || this.params[3] < 0) {
+          throw("svg error: negative width or height found while parsing <rect>"); 
+        }
 
       },
       parseEllipse: function(val) {
@@ -2938,15 +2946,21 @@
         this.family = PConstants.PRIMITIVE;
         this.params = [];
 
-        this.params[0] = this.element.getFloatAttribute("cx");
-        this.params[1] = this.element.getFloatAttribute("cy");
+        this.params[0] = this.element.getFloatAttribute("cx") | 0;
+        this.params[1] = this.element.getFloatAttribute("cy") | 0;
 
         var rx, ry;
-        if (val) {
+        if (val) { //this is a circle
           rx = ry = this.element.getFloatAttribute("r");
+          if (rx < 0) {
+            throw("svg error: negative radius found while parsing <circle>");
+          }
         } else {
           rx = this.element.getFloatAttribute("rx");
           ry = this.element.getFloatAttribute("ry");
+          if (rx < 0 || ry < 0) {
+            throw("svg error: negative x-axis radius or y-axis radius found while parsing <ellipse>");
+          }
         }
         this.params[0] -= rx;
         this.params[1] -= ry;
@@ -5530,7 +5544,20 @@
 
     // Load a file or URL into strings
     p.loadStrings = function loadStrings(filename) {
-      return (localStorage[filename] ? localStorage[filename] : ajax(filename).slice(0, -1)).split("\n");
+      if (localStorage[filename]) {
+        return localStorage[filename].split("\n"); 
+      }
+
+      var filecontent = ajax(filename);
+      if(typeof filecontent !== "string" || filecontent === "") {
+        return [];
+      }
+
+      // deal with the fact that Windows uses \r\n, Unix uses \n,
+      // Mac uses \r, and we actually expect \n
+      filecontent = filecontent.replace(/(\r\n?)/g,"\n").replace(/\n$/,""); 
+
+      return filecontent.split("\n");
     };
 
     // Writes an array of strings to a file, one line per string
@@ -8127,8 +8154,30 @@
         pimage.__texture = texture;
 
         var cvs = document.createElement('canvas');
-        cvs.width = pimage.width;
-        cvs.height = pimage.height;
+
+        // WebGL requires power of two textures
+        if(pimage.width & (pimage.width-1) === 0 ){
+          cvs.width = pimage.width;
+        }
+        else{
+          var i = 1;
+          while (i < pimage.width){
+            i *= 2;
+          }
+          cvs.width = i;
+        }
+        
+        if(pimage.height & (pimage.height-1) === 0 ){
+          cvs.height = pimage.height;
+        }
+        else{
+          var i = 1;
+          while (i < pimage.height){
+            i *= 2;
+          }
+          cvs.height = i;
+        }
+        
         var ctx = cvs.getContext('2d');
         var textureImage = ctx.createImageData(cvs.width, cvs.height);
 
@@ -11461,7 +11510,6 @@
     // used to reproduce P5 key strokes (generally the refiring of keys)
     function refireKeyDown(){
       var tempKeyCode;
-      p.keyReleased();
       p.keyPressed();
       tempKeyCode = p.keyCode;
       p.keyCode = 0;
