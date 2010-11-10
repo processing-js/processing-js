@@ -10948,10 +10948,12 @@
     }
 
     function text$6(str, x, y, width, height, z) {
-      if (str.length === 0) { // is empty string
+      // 'fail' on 0-valued dimensions
+      if (str.length === 0 || width === 0 || height === 0) { 
         return;
       }
-      if(curTextSize > height) { // is text height larger than box
+      // also 'fail' if the text height is larger than the bounding height
+      if(curTextSize > height) {
         return;
       }
 
@@ -10959,16 +10961,16 @@
       var start = 0;
       var lineWidth = 0;
       var textboxWidth = width;
-
       var yOffset = 0;
-
       curContext.font = curTextSize + "px " + curTextFont.name;
-
       var drawCommands = [];
-      var hadSpaceBefore = false;
-      for (var j=0, len=str.length; j < len; j++) {
-        var currentChar = str[j];
-        var letterWidth;
+      
+      // run through text, character-by-character
+      for (var charPos=0, len=str.length; charPos < len; charPos++)
+      {
+        var currentChar = str[charPos];
+        var letterWidth = 0;
+        var spaceChar = (currentChar === " ");
 
         if ("fillText" in curContext) {
           letterWidth = curContext.measureText(currentChar).width;
@@ -10976,38 +10978,48 @@
           letterWidth = curContext.mozMeasureText(currentChar);
         }
 
-        if (currentChar !== "\n" && (currentChar === " " || (hadSpaceBefore && str[j + 1] === " ") ||
-            lineWidth + 2 * letterWidth < textboxWidth)) { // check a line of text
-          if (currentChar === " ") {
-            spaceMark = j;
-          }
+        // if we aren't looking at a newline, and the text still fits, keep processing
+        if (currentChar !== "\n" && (lineWidth + letterWidth < textboxWidth)) {
+          if (spaceChar) { spaceMark = charPos; }
           lineWidth += letterWidth;
-        } else { // draw a line of text
-          if (start === spaceMark + 1) { // in case a whole line without a space
-            spaceMark = j;
+        }
+
+        // if we're looking at a newline, or the text no longer fits, push the section that fit into the drawcommand list
+        else
+        {
+          if (spaceMark + 1 === start) { 
+            if(charPos>0) {
+              // Whole line without spaces so far.
+              spaceMark = charPos;
+            } else {
+              // 'fail', because the line can't even fit the first character
+              return;
+            }
           }
 
-          if (str[j] === "\n") {
-            drawCommands.push({text:str.substring(start, j), width: lineWidth, offset: yOffset});
-            start = j + 1;
+          if (currentChar === "\n") {
+            drawCommands.push({text:str.substring(start, charPos), width: lineWidth, offset: yOffset});
+            start = charPos + 1;
           } else {
-            drawCommands.push({text:str.substring(start, spaceMark + 1), width: lineWidth, offset: yOffset});
+            // current is not a newline, which means the line doesn't fit in box. push text.
+            drawCommands.push({text:str.substring(start, spaceMark), width: lineWidth, offset: yOffset});
             start = spaceMark + 1;
           }
+
+          // newline + return
           yOffset += curTextSize;
-
           lineWidth = 0;
-          j = start - 1;
+          charPos = start - 1;
         }
-        hadSpaceBefore = currentChar === " ";
-      } // for (var j=
+      }
 
-      if (start < len) { // draw the last line
+      // push the remaining text
+      if (start < len) { 
         drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
         yOffset += curTextSize;
       }
 
-      // actual draw
+      // determine which function to use for drawing text
       var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       var xOffset = 0;
       if (horizontalTextAlignment === PConstants.CENTER) {
@@ -11024,15 +11036,14 @@
         boxYOffset2 = (height-yOffset) / 2;
       }
 
-      for (var il=0,ll=drawCommands.length; il<ll; ++il) {
-        var command = drawCommands[il];
-        if (command.offset + boxYOffset2 < 0) {
-          continue; // skip if not inside box yet
-        }
-        if (command.offset + boxYOffset2 + curTextSize > height) {
-          break; // stop if no enough space for one more line draw
-        }
-        lineFunction(command.text, x + xOffset, y + command.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
+      for (var command=0, end=drawCommands.length; command<end; command++) {
+        var drawCommand = drawCommands[command];
+        // skip if not inside box yet
+        if (drawCommand.offset + boxYOffset2 < 0) { continue; }
+        // stop if no enough space for one more line draw
+        if (drawCommand.offset + boxYOffset2 + curTextSize > height) { break; }
+        // finally, draw text on canvas
+        lineFunction(drawCommand.text, x + xOffset, y + drawCommand.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
       }
     }
 
