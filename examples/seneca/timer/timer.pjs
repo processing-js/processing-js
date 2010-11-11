@@ -1,0 +1,39 @@
+int currentFrameRate = 30;
+int x = 0;
+
+void setup() {
+  size(500, 200);
+  frameRate(currentFrameRate);
+}
+
+void draw() {
+  background(0);
+  // frame rate bar
+  stroke(#808080);
+  line(0, 10, width-1, 10);
+  for(int i=0;i<width;i+=5) {
+    line(i,7,i,13);
+  }
+  fill(#FF4040);
+  int hiTimerMark = (int)(1000 / 20);
+  line(hiTimerMark,2,hiTimerMark,18);
+  fill(#4040FF);
+  rect(currentFrameRate - 4, 6, 8, 8);
+  
+  // running line
+  stroke(#00FF00);
+  if(++x >= width) x = 0;
+  line(x, 50, x, height - 50);
+  
+  // current rate text
+  fill(#FFFFFF);
+  text("" + nf(frameRate, 0, 2) + " fps (set to " + currentFrameRate + " fps)",
+    10, height - 10);
+}
+
+void mousePressed() {
+  if(mouseY > 20) return;
+  
+  currentFrameRate = mouseX;
+  frameRate(currentFrameRate);
+}
