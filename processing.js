@@ -2721,7 +2721,7 @@
      *
      * @see PShape
      */  
-    var PShapeSVG = function() {
+    var PShapeSVG = p.PShapeSVG = function() {
       p.PShape.call( this ); // PShape is the base class.
       if (arguments.length === 1) { //xml element coming in
         this.element  = arguments[0] ;//new p.XMLElement(null, arguments[0]);
