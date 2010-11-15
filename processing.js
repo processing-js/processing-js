@@ -7270,43 +7270,9 @@
     p.noLoop = function noLoop() {
       doLoop = false;
       loopStarted = false;
-<<<<<<< HEAD
-      stopLooping();
-    };
-
-    var highPrecisionTimer = null;
-    if(window.postMessage instanceof Function) { // XXX also DOM check?
-      highPrecisionTimer = function(fn, interval) {
-        var isTimerActive = true;
-        var nextTime = new Date().valueOf() + interval;
-        var messageCookie = "$PJS:high-precision-timer";
-        function looping(event) {
-          if(event.data !== messageCookie || event.source !== window) {
-            return; // not our message
-          }
-          if(isTimerActive) {
-            var currentTime = new Date().valueOf();
-            if(nextTime <= currentTime) {
-              fn();
-              nextTime = currentTime + interval;
-            }
-            window.postMessage(messageCookie, "*");
-          } else {
-            window.removeEventListener("message", looping, false);
-          }
-        }
-        window.addEventListener("message", looping, false);
-        window.postMessage(messageCookie, "*");
-        return function() {
-          isTimerActive = false;
-        };
-      };
-    }
-=======
       clearInterval(looping);
     };
->>>>>>> 3c33b6d... timer via postMessage
-
+    
     /**
     * Causes Processing to continuously execute the code within draw(). If noLoop() is called, 
     * the code in draw() stops executing.
@@ -7327,30 +7293,10 @@
           }
           p.redraw();
         } catch(e_loop) {
-<<<<<<< HEAD
-          stopLooping();
-          throw e_loop;
-        }
-      }
-
-      var highPrecisionTimerPresent = window.postMessage instanceof Function; // XXX DOM check?
-      var MIN_MS_FOR_NORMAL_TIMER = 20;
-
-      if(highPrecisionTimer !== null && curMsPerFrame < MIN_MS_FOR_NORMAL_TIMER) {
-        stopLooping = highPrecisionTimer(tick, curMsPerFrame);
-      } else {
-        var looping = window.setInterval(tick, curMsPerFrame);
-        stopLooping = function() {
-          window.clearInterval(looping);
-        };
-      }
-=======
           window.clearInterval(looping);
           throw e_loop;
         }
       }, curMsPerFrame);
->>>>>>> 3c33b6d... timer via postMessage
-
       doLoop = true;
       loopStarted = true;
     };
