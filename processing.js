@@ -1222,7 +1222,7 @@
         lineWidth = 1,
         loopStarted = false,
         doLoop = true,
-        stopLooping = function() {},
+        looping = 0,
         curRectMode = PConstants.CORNER,
         curEllipseMode = PConstants.CENTER,
         normalX = 0,
@@ -7270,6 +7270,7 @@
     p.noLoop = function noLoop() {
       doLoop = false;
       loopStarted = false;
+<<<<<<< HEAD
       stopLooping();
     };
 
@@ -7301,6 +7302,10 @@
         };
       };
     }
+=======
+      clearInterval(looping);
+    };
+>>>>>>> 3c33b6d... timer via postMessage
 
     /**
     * Causes Processing to continuously execute the code within draw(). If noLoop() is called, 
@@ -7315,13 +7320,14 @@
         return;
       }
 
-      function tick() {
+      looping = window.setInterval(function() {
         try {
           if (document.hasFocus instanceof Function) {
             p.focused = document.hasFocus();
           }
           p.redraw();
         } catch(e_loop) {
+<<<<<<< HEAD
           stopLooping();
           throw e_loop;
         }
@@ -7338,6 +7344,12 @@
           window.clearInterval(looping);
         };
       }
+=======
+          window.clearInterval(looping);
+          throw e_loop;
+        }
+      }, curMsPerFrame);
+>>>>>>> 3c33b6d... timer via postMessage
 
       doLoop = true;
       loopStarted = true;
@@ -7378,7 +7390,7 @@
     * @returns none
     */
     p.exit = function exit() {
-      stopLooping();
+      window.clearInterval(looping);
 
       Processing.removeInstance(p.externals.canvas.id);
 
