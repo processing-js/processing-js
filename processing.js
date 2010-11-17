@@ -8502,7 +8502,7 @@
     /**
     * Converts a radian measurement to its corresponding value in degrees. Radians and degrees are two ways of
     * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
-    * 90° = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
+    * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
     *
     * @param {int|float} value        an angle in radians
     *
@@ -8517,7 +8517,7 @@
     /**
     * Converts a degree measurement to its corresponding value in radians. Radians and degrees are two ways of
     * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
-    * 90° = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
+    * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
     *
     * @param {int|float} value        an angle in radians
     *
