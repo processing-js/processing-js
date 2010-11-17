@@ -3007,7 +3007,7 @@
       /**
        * @member PShapeSVG
        * The parsePath() function parses the <path> element of the svg file
-       * A path is defined by including a ‘path’ element which contains a d="(path data)" attribute, where the ‘d’ attribute contains
+       * A path is defined by including a path element which contains a d="(path data)" attribute, where the d attribute contains
        * the moveto, line, curve (both cubic and quadratic Béziers), arc and closepath instructions.
        **/
       parsePath: function() {
