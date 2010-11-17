@@ -88,11 +88,12 @@
       <canvas data-processing-sources="anything.pjs"></canvas> 
     </body>
   </html>
-  Note that the .pjs file needs to be named anything.pjs and that there is a 
-  custom attribute data-processing-sources that is used to link the sketch to
+  Note that the .pjs file needs to be named anything.pjs (or whatever you named your file)
+  and that there is a custom attribute data-processing-sources that is used to link the sketch to
   the <canvas>.
   
   Here is an example of a .pjs or .pde file:
+  
   void setup()
   {
     size(200,200);
@@ -116,7 +117,7 @@
 
   Processing uses the concept of a data directory, where images and other
   are located. Processing.js does not include this. As a result, you should 
-  always provide file pages (e.g., images) that are relative to your web page, 
+  always provide files (e.g., images) that are relative to your web page, 
   which is the norm on the web.  
   
   Processing.js implements Processing, but not all of Java
@@ -132,7 +133,7 @@
   Processing has many rendering modes to choose from, depending on the desired 
   quality and speed for graphics (e.g., OPENGL, P3D, JAVA2D, etc.). Processing.js 
   uses <canvas> which provides either a 2D drawing context or a 3D context based on 
-  WebGL a version of OpenGL for the web). Therefore, whatever you choose, you will 
+  WebGL a version of OpenGL for the web. Therefore, whatever you choose, you will 
   end-up with either the 2D or 3D context.
   
   Division which is expected to produce an integer might need explicit casting
@@ -143,6 +144,7 @@
   can sometimes become problematic, as numbers become doubles, and introduce a 
   fractional part. The fix is to explicitly cast any division to an integer that 
   exhibits this behaviour:
+  
   // before
   int g = mouseX / i;
 
@@ -165,6 +167,7 @@
   The Processing.js Directives are hints to the browser that are written in 
   comments rather than in the Processing code itself. Here is an example of 
   loadImage():
+  
   /* @pjs preload="picture.jpg"; */
   PImage img;
 
@@ -173,6 +176,7 @@
     image(img, 0, 0);
   }
   Note the syntax (below) to preload multiple images:
+  
   /* @pjs preload="picture.jpg,picture2.jpg,picture3.png"; */  
   
   Processing.js requires more care with variable naming than Processing
