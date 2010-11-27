@@ -16436,7 +16436,22 @@
       }
     });
 
-    var atoms = splitToAtoms(codeWoStrings);
+    // removes generics
+    var genericsWereRemoved;
+    var codeWoGenerics = codeWoStrings;
+    do {
+      genericsWereRemoved = false;
+      codeWoGenerics = codeWoGenerics.replace(/([\<]?)\<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*\>([=]?)/g,
+      function(all, before, types, after) {
+        if(!!before || !!after) {
+          return all;
+        }
+        genericsWereRemoved = true;
+        return "";
+      });
+    } while (genericsWereRemoved);
+
+    var atoms = splitToAtoms(codeWoGenerics);
     var replaceContext;
     var declaredClasses = {}, currentClassId, classIdSeed = 0;
 
