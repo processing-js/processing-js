@@ -765,7 +765,7 @@
         };
 
         this.toArray = function() {
-          var result = new ArrayList(0);
+          var result = [];
           var it = this.iterator();
           while (it.hasNext()) {
             result.push(it.next());
@@ -955,7 +955,7 @@
       };
 
       this.values = function() {
-        var result = new ArrayList(0);
+        var result = [];
         var it = this.entrySet().iterator();
         while (it.hasNext()) {
           var entry = it.next();
