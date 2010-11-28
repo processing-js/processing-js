@@ -395,6 +395,57 @@
   setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
 
   /**
+   * Returns Java hashCode() result for the object. If the object has the "hashCode" function,
+   * it preforms the call of this function. Otherwise it uses/creates the "$id" property,
+   * which is used as the hashCode.
+   *
+   * @param {Object} obj          The object.
+   * @returns {int}               The object's hash code.
+   */
+  function virtHashCode(obj) {
+    if (obj.constructor === String) {
+      var hash = 0;
+      for (var i = 0; i < obj.length; ++i) {
+        hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
+      }
+      return hash;
+    } else if (typeof(obj) !== "object") {
+      return obj & 0xFFFFFFFF;
+    } else if (obj.hashCode instanceof Function) {
+      return obj.hashCode();
+    } else {
+      if (obj.$id === undef) {
+        obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+      }
+      return obj.$id;
+    }
+  }
+
+  /**
+   * Returns Java equals() result for two objects. If the first object 
+   * has the "equals" function, it preforms the call of this function. 
+   * Otherwise the method uses the JavaScript === operator.
+   *
+   * @param {Object} obj          The first object.
+   * @param {Object} other        The second object.
+   *
+   * @returns {boolean}           true if the objects are equal.
+   */
+  function virtEquals(obj, other) {
+    if (obj === null || other === null) {
+      return (obj === null) && (other === null);
+    } else if (obj.constructor === String) {
+      return obj === other;
+    } else if (typeof(obj) !== "object") {
+      return obj === other;
+    } else if (obj.equals instanceof Function) {
+      return obj.equals(other);
+    } else {
+      return obj === other;
+    }
+  }
+
+  /**
    * An ArrayList stores a variable number of objects.
    *
    * @param {int} initialCapacity optional defines the initial capacity of the list, it's empty by default
@@ -442,7 +493,12 @@
        * @returns {boolean} true if the specified element is present; false otherwise.
        */
       this.contains = function(item) {
-        return array.indexOf(item) !== -1;
+        for (var i = 0, len = array.length; i < len; ++i) {
+          if (virtEquals(item, array[i])) {
+            return true;
+          }
+        }
+        return false;
       };
       /**
        * @member ArrayList
@@ -573,39 +629,6 @@
   * @param {Map} m                        gives the new HashMap the same mappings as this Map
   */
   var HashMap = (function() {
-    function virtHashCode(obj) {
-      if (obj.constructor === String) {
-        var hash = 0;
-        for (var i = 0; i < obj.length; ++i) {
-          hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
-        }
-        return hash;
-      } else if (typeof(obj) !== "object") {
-        return obj & 0xFFFFFFFF;
-      } else if ("hashCode" in obj) {
-        return obj.hashCode.call(obj);
-      } else {
-        if (obj.$id === undef) {
-          obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
-        }
-        return obj.$id;
-      }
-    }
-
-    function virtEquals(obj, other) {
-      if (obj === null || other === null) {
-        return (obj === null) && (other === null);
-      } else if (obj.constructor === String) {
-        return obj === other;
-      } else if (typeof(obj) !== "object") {
-        return obj === other;
-      } else if ("equals" in obj) {
-        return obj.equals.call(obj, other);
-      } else {
-        return obj === other;
-      }
-    }
-
     /**
     * @member HashMap
     * A HashMap stores a collection of objects, each referenced by a key. This is similar to an Array, only
