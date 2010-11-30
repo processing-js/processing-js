@@ -17081,7 +17081,7 @@
         if(name === "this") {
           // returns "$this_N.$self" pointer instead of "this" in cases:
           // "this()", "this.XXX()", "this", but not for "this.XXX"
-          return subject.callSign || !subject.member ? selfId + ".$self" : selfId
+          return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
         } else if(name === "[this]") {
           return selfId;
         } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
