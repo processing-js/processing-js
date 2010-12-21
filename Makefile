@@ -78,7 +78,7 @@ check-summary:
 	${TOOLSDIR}/runtests.py -s ${JSSHELL}
 
 check-lint: ${TOOLSDIR}/jslint.js
-	python ${TOOLSDIR}/jslint.py ${JSSHELL} ./processing.js
+	${TOOLSDIR}/jslint.py ${JSSHELL} processing.js
 
 ${TOOLSDIR}/jslint.js:
 	$(error The ./tools/jslint.js is not downloaded from the http://www.jslint.com/jslint.js. Please run "make get-lint" to use wget to download this file)

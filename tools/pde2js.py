@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import sys, os, os.path, signal
-import jsshellhelper
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 
@@ -10,15 +9,11 @@ class Converter(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
 
   def run(self, jsshell, filename, strip=None):
-    tmpFile = jsshellhelper.createEscapedFile(filename)
-
     cmd = [jsshell,
            '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
            '-f', os.path.join(self.toolsdir, '..', 'processing.js'),
-           '-f', os.path.join(self.toolsdir, 'cleaner.js'),
            '-f', os.path.join(self.toolsdir, 'jsbeautify.js'),
-           '-f', tmpFile,
-           '-e', 'var pcode = __unescape_string(); print(js_beautify(Processing.parse(pcode, Processing(canvas, pcode))));\n']
+           '-e', 'var pcode = snarf("%s"); print(js_beautify(Processing.compile(pcode).sourceCode));\n'  % os.path.relpath(filename)]
 
     proc = Popen(cmd)
 
@@ -29,8 +24,6 @@ class Converter(object):
     # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
     stdout, stderr = proc.communicate()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-    jsshellhelper.cleanUp(tmpFile)
 
 def main():
     parser = OptionParser()

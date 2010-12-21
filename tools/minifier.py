@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import sys, os, os.path, signal
-import jsshellhelper
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 
@@ -10,13 +9,9 @@ class Minifier(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
 
   def run(self, jsshell, filename):
-    tmpFile = jsshellhelper.createEscapedFile(filename)
-
     cmd = [jsshell,
            '-f', os.path.join(self.toolsdir, 'jsmin.js'),
-           '-f', os.path.join(self.toolsdir, 'cleaner.js'),
-           '-f', tmpFile,
-           '-e', "var input = __unescape_string(); print(jsmin('', input, 2));"]
+           '-e', "var input = snarf('%s'); print(jsmin('', input, 2));" % os.path.relpath(filename)]
 
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
@@ -25,8 +20,6 @@ class Minifier(object):
       print stdout
     else:
       print stderr
-
-    jsshellhelper.cleanUp(tmpFile)
 
 def main():
     parser = OptionParser()

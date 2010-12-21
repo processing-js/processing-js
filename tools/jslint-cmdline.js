@@ -1,6 +1,4 @@
-function runJslint(filename) {
-    var input = snarf(filename);
-    input += "\n/*globals ImageData*/";
+function runJslint(input) {
     var e, i;
     // input will come from the env via python
     if (!JSLINT(input, {
@@ -46,6 +44,6 @@ function runJslint(filename) {
             }
         }
     } else {
-        print("jslint: No problems found in " + filename);
+        print("jslint: No problems found");
     }
 }
