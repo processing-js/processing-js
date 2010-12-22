@@ -71,7 +71,8 @@ class ProcessingTests(object):
                 continue
 
               if filename.endswith('.pde'):
-                  one_test = 'var parserTest = {name:"' + fullpath + '", body: snarf("%s")};\n' % os.path.relpath(fullpath)
+                  one_test = 'var parserTest = {name:"%s", body: snarf("%s")};\n' % (fullpath, 
+                             os.path.relpath(fullpath).replace('\\', '/'))
 
                   testCmd = [jsshell,
                              '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
@@ -190,7 +191,7 @@ class ProcessingTests(object):
                              '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
                              '-f', os.path.join(self.toolsdir, 'test-harness.js')]
               elif filename.endswith('.pde'):
-                  execTest = 'eval(new Processing(canvas, \'UnitTests();\' + snarf("%s") + \'\\n_printTestSummary();\'));' % os.path.relpath(fullpath)
+                  execTest = 'eval(new Processing(canvas, \'UnitTests();\' + snarf("%s") + \'\\n_printTestSummary();\'));' % os.path.relpath(fullpath).replace('\\', '/')
                   testCmd = [jsshell,
                              '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
                              '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
