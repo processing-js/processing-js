@@ -3017,7 +3017,7 @@
         var c;
         var pathData = p.trim(this.element.getStringAttribute("d").replace(/[\s,]+/g,' ')); //change multiple spaces and commas to single space
         if (pathData === null) { return; }
-        pathData = pathData.toCharArray();
+        pathData = p.__toCharArray(pathData);
         var cx     = 0,
             cy     = 0,
             ctrlX  = 0,
@@ -7896,39 +7896,118 @@
       return results.length > 0 ? results : null;
     };
     /**
-     * The replaceAll() function searches all matches between a substring (or regular expression) and a string, and replaces the matched substring with a new substring
+     * The __replaceAll() function searches all matches between a substring (or regular expression) and a string, 
+     * and replaces the matched substring with a new substring
      *
-     * @param {String} re         a substring or a regular expression
+     * @param {String} subject    a substring
+     * @param {String} regex      a substring or a regular expression
      * @param {String} replace    the string to replace the found value
      *
-     * @return {String[]} returns an array of matches
+     * @return {String} returns result
      *
      * @see #match
      */
-    String.prototype.replaceAll = function(re, replace) {
-      return this.replace(new RegExp(re, "g"), replace);
+    p.__replaceAll = function(subject, regex, replacement) {
+      if (typeof subject !== "string") {
+        arguments.shift();
+        return subject.replaceAll.apply(subject, arguments);
+      }
+
+      return subject.replace(new RegExp(regex, "g"), replacement);
     };
     /**
-     * The equals() function compares two strings to see if they are the same.
+     * The __replaceFirst() function searches first matche between a substring (or regular expression) and a string, 
+     * and replaces the matched substring with a new substring
+     *
+     * @param {String} subject    a substring
+     * @param {String} regex      a substring or a regular expression
+     * @param {String} replace    the string to replace the found value
+     *
+     * @return {String} returns result
+     *
+     * @see #match
+     */
+    p.__replaceFirst = function(subject, regex, replacement) {
+      if (typeof subject !== "string") {
+        arguments.shift();
+        return subject.replaceFirst.apply(subject, arguments);
+      }
+
+      return subject.replace(new RegExp(regex, ""), replacement);
+    };
+    /**
+     * The __replace() function searches all matches between a substring and a string, 
+     * and replaces the matched substring with a new substring
+     *
+     * @param {String} subject         a substring
+     * @param {String} what         a substring to find
+     * @param {String} replacement    the string to replace the found value
+     *
+     * @return {String} returns result
+     */
+    p.__replace = function(subject, what, replacement) {
+      if (typeof subject !== "string") {
+        arguments.shift();
+        return subject.replace.apply(subject, arguments);
+      }
+      if (what instanceof RegExp) {
+        return subject.replace(what, replacement);
+      }
+
+      if (typeof what !== "string") {
+        what = what.toString();
+      }
+      if (what === "") {
+        return subject;
+      }
+      
+      var i = subject.indexOf(what);
+      if (i < 0) {
+        return subject;
+      }
+      
+      var j = 0, result = "";
+      do {
+        result += subject.substring(j, i) + replacement;
+        j = i + what.length;
+      } while ( (i = subject.indexOf(what, j)) >= 0);
+      return result + subject.substring(j);
+    };
+    /**
+     * The __equals() function compares two strings (or objects) to see if they are the same.
      * This method is necessary because it's not possible to compare strings using the equality operator (==).
      * Returns true if the strings are the same and false if they are not.
      *
-     * @param {String} str  a string used for comparison
+     * @param {String} subject  a string used for comparison
+     * @param {String} other  a string used for comparison with
      *
      * @return {boolean} true is the strings are the same false otherwise
      */
-    String.prototype.equals = function equals(str) {
-      return this.valueOf() === str.valueOf();
+    p.__equals = function(subject, other) {
+      if (subject.equals instanceof Function) {
+        arguments.shift();
+        return subject.equals.apply(subject, arguments);
+      }
+
+      // TODO use virtEquals for HashMap here
+      return subject.valueOf() === other.valueOf();
     };
     /**
-     * The toCharArray() function splits the string into a char array.
+     * The __toCharArray() function splits the string into a char array.
+     *
+     * @param {String} subject The string
      *
      * @return {Char[]} a char array
      */
-    String.prototype.toCharArray = function() {
-      var chars = this.split("");
-      for (var i = chars.length - 1; i >= 0; i--) {
-        chars[i] = new Char(chars[i]);
+    p.__toCharArray = function(subject) {
+      if (typeof subject !== "string") {
+        arguments.shift();
+        return subject.toCharArray.apply(subject, arguments);
+      }
+
+      var chars = [];
+      for (var i = 0, len = subject.length; i < len; ++i) {
+        chars[i] = new Char(subject.charAt(i));
       }
       return chars;
     };
@@ -7944,6 +8023,35 @@
      */
     p.match = function(str, regexp) {
       return str.match(regexp);
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Other java specific functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * The returns hash code of the.
+     *
+     * @param {Object} subject The string
+     *
+     * @return {int} a hash code
+     */
+    p.__hashCode = function(subject) {
+      if (subject.hashCode instanceof Function) {
+        arguments.shift();
+        return subject.hashCode.apply(subject, arguments);
+      }
+
+      // TODO use virtHashCode for HashMap here
+      return 0 | subject;
+    };
+    /**
+     * The __printStackTrace() prints stack trace to the console.
+     *
+     * @param {Exception} subject The error
+     */
+    p.__printStackTrace = function(subject) {
+      p.println("Exception: " + subject.toString() );
     };
 
     var logBuffer = [];
@@ -16294,7 +16402,8 @@
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "translate", "triangle", "trim", "unbinary", "unhex", "updatePixels",
       "use3DContext", "vertex", "width", "XMLElement", "year", "__frameRate",
-       "__keyPressed", "__mousePressed", "__int_cast"];
+      "__keyPressed", "__mousePressed", "__int_cast", "__replace", "__replaceAll", 
+      "__replaceFirst", "__equals", "__hashCode", "__toCharArray", "__printStackTrace"];
 
     var members = {};
     var i, l;
@@ -16632,6 +16741,21 @@
             }
           }
         });
+      // Java method replacements for: replace, replaceAll, replaceFirst, equals, hashCode, etc.
+      //   xxx.replace(yyy) -> __replace(xxx, yyy)
+      //   "xx".replace(yyy) -> __replace("xx", yyy)
+      var repeatJavaReplacement;
+      do {
+        repeatJavaReplacement = false;
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace)\s*"B(\d+)"/g, 
+          function(all, subject, method, atomIndex) {
+            var atom = atoms[atomIndex];
+            repeatJavaReplacement = true;
+            var trimmed = trimSpaces(atom.substring(1, atom.length - 1));
+            return "__" + method  + ( trimmed.middle === "" ? addAtom("(" + subject.replace(/\.\s*$/, "") + ")", 'B') :
+              addAtom("(" + subject.replace(/\.\s*$/, "") + "," + trimmed.middle + ")", 'B') );
+          });
+      } while (repeatJavaReplacement);
       // this() -> $constr()
       s = s.replace(/\bthis(\s*"B\d+")/g, "$$constr$1");
 
@@ -17536,10 +17660,6 @@
     var compiledPde = parseProcessing(code);
     sketch.sourceCode = compiledPde;
     return sketch;
-  };
-
-  Error.prototype.printStackTrace = function() {
-     return this.toString();
   };
 
   // tinylog lite JavaScript library
