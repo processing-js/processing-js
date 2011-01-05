@@ -1637,6 +1637,7 @@
       "uniform mat4 projection;" +
       "uniform mat4 normalTransform;" +
 
+      "const int MAX_LIGHTS = 8;" +
       "uniform int lightCount;" +
       "uniform vec3 falloff;" +
 
@@ -1650,7 +1651,7 @@
       "  vec3 halfVector;" +
       "  float concentration;" +
       "};" +
-      "uniform Light lights[8];" +
+      "uniform Light lights[MAX_LIGHTS];" +
 
       "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
       // Get the vector from the light to the vertex
@@ -1767,7 +1768,7 @@
       "  }" +
       "  else {" +
            // WebGL forces us to iterate over a constant value
-      "    for( int i = 0; i < 8; i++ ) {" +
+      "    for( int i = 0; i < MAX_LIGHTS; i++ ) {" +
       
       "      if(lights[i].isOn == false){" +
       "        continue;" +
@@ -9359,6 +9360,7 @@
         uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights[" + lightCount + "].concentration", concentration);
         uniformf("lights.angle.3d." + lightCount, programObject3D, "lights[" + lightCount + "].angle", angle);
         uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 3);
+        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
