@@ -1641,7 +1641,7 @@
       "uniform vec3 falloff;" +
 
       "struct Light {" +
-      "  bool dummy;" +
+      "  bool isOn;" +
       "  int type;" +
       "  vec3 color;" +
       "  vec3 position;" +
@@ -1766,7 +1766,13 @@
       "    frontColor = col + vec4(mat_specular,1.0);" +
       "  }" +
       "  else {" +
-      "    for( int i = 0; i < lightCount; i++ ) {" +
+           // WebGL forces us to iterate over a constant value
+      "    for( int i = 0; i < 8; i++ ) {" +
+      
+      "      if(lights[i].isOn == false){" +
+      "        continue;" +
+      "      }" +
+      
       "      if( lights[i].type == 0 ) {" +
       "        AmbientLight( finalAmbient, ecPos, lights[i] );" +
       "      }" +
@@ -9088,6 +9094,7 @@
         uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
         uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
         uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 0);
+        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9140,6 +9147,7 @@
         uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
         uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", [-dir[0], -dir[1], -dir[2]]);
         uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 1);
+        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9269,6 +9277,7 @@
         uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
         uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
         uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 2);
+        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
