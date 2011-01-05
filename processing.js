@@ -11366,6 +11366,9 @@
     });
 
     attach(curElement, "mouseout", function(e) {
+      if (typeof p.mouseOut === "function") {
+        p.mouseOut();
+      }
     });
 
     attach(curElement, "mousedown", function(e) {
