@@ -11695,11 +11695,20 @@
         }
       }
 
+      // Sets all of the Processing defaults. Called before setup() in executeSketch()
+      var setDefaults = function(processing) {
+        processing.background(0xF0F0F0); // Default background color in PS5, a "light gray"
+        processing.size(100, 100); // Default size in PS5
+      };
+
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           curSketch.attach(processing, defaultScope);
-
+          
+          // Run void PJSdefault()
+          setDefaults(processing);
+          
           // Run void setup()
           if (processing.setup) {
             processing.setup();
