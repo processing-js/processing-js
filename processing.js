@@ -17960,7 +17960,7 @@
   // Automatic Initialization Method
   var init = function() {
     function loadAndExecute(canvas, sources) {
-      var code = [], errors = [], sourcesCount = sources.length;
+      var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
 
       function ajaxAsync(url, callback) {
         var xhr = new XMLHttpRequest();
@@ -17984,12 +17984,17 @@
       function loadBlock(index, filename) {
         ajaxAsync(filename, function (block, error) {
           code[index] = block;
+          ++loaded;
           if (error) {
             errors.push("  " + filename + " ==> " + error);
           }
-          if (code.length === sourcesCount) {
+          if (loaded === sourcesCount) {
             if (errors.length === 0) {
-              Processing.addInstance(new Processing(canvas, code.join("\n")));
+              try {
+                Processing.addInstance(new Processing(canvas, code.join("\n")));
+              } catch(e) {
+                Processing.logger.log("Unable to execute pjs sketch: " + e);
+              }
             } else {
               Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
             }
