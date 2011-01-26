@@ -17959,6 +17959,49 @@
 
   // Automatic Initialization Method
   var init = function() {
+    function loadAndExecute(canvas, sources) {
+      var code = [], errors = [], sourcesCount = sources.length;
+
+      function ajaxAsync(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {  
+            var error;
+            if (xhr.status !== 200 && xhr.status !== 0) {
+              error = "Invalid XHR status " + xhr.status;
+            } else if (xhr.responseText === "") {
+              error = "No content";
+            }
+            callback(xhr.responseText, error);
+          }
+        };
+        xhr.open("GET", url, true);
+        xhr.overrideMimeType("application/json");
+        xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
+        xhr.send(null);
+      }
+
+      function loadBlock(index, filename) {
+        ajaxAsync(filename, function (block, error) {
+          code[index] = block;
+          if (error) {
+            errors.push("  " + filename + " ==> " + error);
+          }
+          if (code.length === sourcesCount) {
+            if (errors.length === 0) {
+              Processing.addInstance(new Processing(canvas, code.join("\n")));
+            } else {
+              Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
+            }
+          }
+        });
+      }
+
+      for (var i = 0; i < sourcesCount; ++i) {
+        loadBlock(i, sources[i]);
+      }
+    }
+
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
@@ -17972,23 +18015,16 @@
         }
       }
       if (processingSources) {
-        // The problem: if the HTML canvas dimensions differ from the
-        // dimensions specified in the size() call in the sketch, for
-        // 3D sketches, browsers will either not render or render the
-        // scene incorrectly. To fix this, we need to adjust the attributes
-        // of the canvas width and height.
-        // Get the source, we'll need to find what the user has used in size()
         var filenames = processingSources.split(' ');
-        var code = "";
-        for (var j = 0, fl = filenames.length; j < fl; j++) {
+        for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
-            var block = ajax(filenames[j]);
-            if (block !== false) {
-              code += ";\n" + block;
-            }
+            j++;
+          } else {
+            filenames.splice(j, 1);
           }
         }
-        Processing.addInstance(new Processing(canvas[i], code));
+
+        loadAndExecute(canvas[i], filenames);
       }
     }
   };
