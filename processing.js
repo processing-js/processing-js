@@ -17977,7 +17977,7 @@
         };
         xhr.open("GET", url, true);
         if (xhr.overrideMimeType) {
-          xhr.overrideMimeType("application/json"); // FIX FF errors on first line, see #679
+          xhr.overrideMimeType("application/json");
         }
         xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
         xhr.send(null);
