@@ -16214,7 +16214,7 @@
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           curSketch.attach(processing, defaultScope);
           
-          // Run void PJSdefault()
+          // Run void setDefaults()
           setDefaults(processing);
           
           // Run void setup()
