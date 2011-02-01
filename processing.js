@@ -16966,7 +16966,7 @@
       this.body = body;
     }
     AstClassMethod.prototype.toString = function(){
-      var thisReplacement = replaceContext({ name: "this" });
+      var thisReplacement = replaceContext({ name: "[this]" });
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function (subject) {
@@ -16999,7 +16999,7 @@
       return names;
     };
     AstClassField.prototype.toString = function() {
-      var thisPrefix = replaceContext({ name: "this" });
+      var thisPrefix = replaceContext({ name: "[this]" });
       if(this.isStatic) {
         var className = this.owner.name;
         var staticDeclarations = [];
@@ -17115,7 +17115,11 @@
       replaceContext = function (subject) {
         var name = subject.name;
         if(name === "this") {
-          return subject.callSign ? selfId + ".$self" : selfId;
+          // returns "$this_N.$self" pointer instead of "this" in cases:
+          // "this()", "this.XXX()", "this", but not for "this.XXX"
+          return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
+        } else if(name === "[this]") {
+          return selfId;
         } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
         } else if(thisClassMethods.hasOwnProperty(name)) {
