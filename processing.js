@@ -16205,7 +16205,12 @@
 
       // Sets all of the Processing defaults. Called before setup() in executeSketch()
       var setDefaults = function(processing) {
-        processing.size(100, 100); // Default size in P5
+        // Default size in P5 is 100x100, but we need to choose the correct context, 2D or 3D
+        if (processing.use3DContext) {
+          processing.size(100, 100, processing.P3D);
+        } else {
+          processing.size(100, 100);
+        }
         processing.background(204, 204, 204); // Default background color in P5, a "light gray"
       };
 
