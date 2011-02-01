@@ -16217,10 +16217,10 @@
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
-          curSketch.attach(processing, defaultScope);
-          
-          // Run void setDefaults()
+          // Run void setDefaults() before attach() to work with embedded scripts
           setDefaults(processing);
+          
+          curSketch.attach(processing, defaultScope);
           
           // Run void setup()
           if (processing.setup) {
