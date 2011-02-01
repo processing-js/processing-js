@@ -4414,9 +4414,9 @@
           return this.getChildren(items[offset]);
         }
         var matches = this.getChildren(items[offset]);
-        var kidMatches;
+        var kidMatches = [];
         for (var i = 0; i < matches.length; i++) {
-          kidMatches = matches[i].getChildrenRecursive(items, offset+1);
+          kidMatches = kidMatches.concat(matches[i].getChildrenRecursive(items, offset+1));
         }
         return kidMatches;
       },
