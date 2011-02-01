@@ -16205,8 +16205,8 @@
 
       // Sets all of the Processing defaults. Called before setup() in executeSketch()
       var setDefaults = function(processing) {
-        processing.background(0xF0F0F0); // Default background color in PS5, a "light gray"
-        processing.size(100, 100); // Default size in PS5
+        processing.size(100, 100); // Default size in P5
+        processing.background(0xF0F0F0); // Default background color in P5, a "light gray"
       };
 
       var executeSketch = function(processing) {
