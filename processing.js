@@ -7286,6 +7286,9 @@
         return;
       }
 
+      timeSinceLastFPS = new Date().getTime();
+      framesSinceLastFPS = 0;
+
       looping = window.setInterval(function() {
         try {
           if (document.hasFocus instanceof Function) {
