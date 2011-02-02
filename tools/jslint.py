@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import sys, os, os.path, signal
-import jsshellhelper
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 
@@ -10,13 +9,11 @@ class Linter(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
 
   def run(self, jsshell, filename):
-    tmpFile = jsshellhelper.createEscapedFile(filename)
 
     cmd = [jsshell,
-           '-f', os.path.join(self.toolsdir, 'cleaner.js'),
-           '-f', tmpFile,
-           '-e', 'var input = __unescape_string();\n',
-           '-f', os.path.join(self.toolsdir, 'jslint-cmdline.js')]
+           '-f', os.path.join(self.toolsdir, 'jslint.js'),
+           '-f', os.path.join(self.toolsdir, 'jslint-cmdline.js'),
+           '-e', 'runJslint(snarf("%s"));\n' % os.path.relpath(filename)]
 
     proc = Popen(cmd)
     stdout, stderr = proc.communicate()
@@ -25,8 +22,6 @@ class Linter(object):
       print stdout
     else:
       print stderr
-
-    jsshellhelper.cleanUp(tmpFile)
 
 
 def main():

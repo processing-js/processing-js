@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import sys, os, os.path, signal
-import jsshellhelper
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 
@@ -9,13 +8,9 @@ from subprocess import Popen, PIPE, STDOUT
 class Beautifier(object):
   toolsdir = os.path.dirname(os.path.abspath(__file__))
   def run(self, jsshell, filename):
-    tmpFile = jsshellhelper.createEscapedFile(filename)
-
     cmd = [jsshell,
            '-f', os.path.join(self.toolsdir, 'jsbeautify.js'),
-           '-f', os.path.join(self.toolsdir, 'cleaner.js'),
-           '-f', tmpFile,
-           '-e', "var input = __unescape_string(); print(js_beautify(input, {indent_size: 2}));"]
+           '-e', "var input = snarf('%s'); print(js_beautify(input, {indent_size: 2}));" % os.path.relpath(filename)]
 
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
@@ -24,8 +19,6 @@ class Beautifier(object):
       print stdout
     else:
       print stderr
-
-    jsshellhelper.cleanUp(tmpFile)
 
 def main():
     parser = OptionParser()

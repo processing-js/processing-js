@@ -382,7 +382,9 @@
           if (obj instanceof Array) {
             return obj;
           } else if (typeof obj === "number") {
-            return new Array(obj);
+            var arr = [];
+            arr.length = obj;
+            return arr;
           }
         };
       }
@@ -418,9 +420,15 @@
     }
 
     function ArrayList() {
-      var array = arguments.length === 0 ? [] :
-        typeof arguments[0] === 'number' ? new Array(0 | arguments[0]) :
-        arguments[0];
+      var array;
+      if (arguments.length === 0) {
+        array = [];
+      } else if (arguments.length > 0 && typeof arguments[0] !== 'number') {
+        array = arguments[0];
+      } else {
+        array = [];
+        array.length = 0 | arguments[0];
+      }
 
       /**
        * @member ArrayList
@@ -623,7 +631,8 @@
 
       var initialCapacity = arguments.length > 0 ? arguments[0] : 16;
       var loadFactor = arguments.length > 1 ? arguments[1] : 0.75;
-      var buckets = new Array(initialCapacity);
+      var buckets = [];
+      buckets.length = initialCapacity;
       var count = 0;
       var hashMap = this;
 
@@ -637,7 +646,8 @@
             allEntries = allEntries.concat(buckets[i]);
           }
         }
-        buckets = new Array(buckets.length * 2);
+        buckets = [];
+        buckets.length = buckets.length * 2;
         for (var j = 0; j < allEntries.length; ++j) {
           var index = virtHashCode(allEntries[j].key) % buckets.length;
           var bucket = buckets[index];
@@ -804,7 +814,8 @@
 
       this.clear = function() {
         count = 0;
-        buckets = new Array(initialCapacity);
+        buckets = [];
+        buckets.length = initialCapacity;
       };
 
       this.clone = function() {
@@ -1330,8 +1341,8 @@
         sphereX = [],
         sphereY = [],
         sphereZ = [],
-        sinLUT = new Array(PConstants.SINCOS_LENGTH),
-        cosLUT = new Array(PConstants.SINCOS_LENGTH),
+        sinLUT = new Float32Array(PConstants.SINCOS_LENGTH),
+        cosLUT = new Float32Array(PConstants.SINCOS_LENGTH),
         sphereVerts,
         sphereNorms;
 
@@ -1509,7 +1520,7 @@
     };
 
     // Stores states for pushStyle() and popStyle().
-    var styleArray = new Array(0);
+    var styleArray = [];
 
     // Vertices are specified in a counter-clockwise order
     // triangles are in this order: back, front, right, bottom, left, top
@@ -2864,35 +2875,25 @@
        */
       parseMatrix: function(str) {
         this.checkMatrix(2);
-        var pieces = [];
-        str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
-          // get a list of transform definitions
-          pieces.push(p.trim(all));
-        });
-        if (pieces.length === 0) {
-          p.println("Transformation:" + str + " is empty");
+        var pieces = str.split(/\b(\w+)\(\s*(.*?)\s*\)/g);
+        if (pieces.length === 1) {
+          // p.println("Transformation:" + str + " is empty");
           return null;
         }
-        for (var i =0; i< pieces.length; i++) {
-          var m = [];
-          pieces[i].replace(/\((.*?)\)/, (function() {
-            return function(all, params) {
-              // get the coordinates that can be separated by spaces or a comma
-              m = params.replace(/,+/g, " ").split(/\s+/);
-            };
-          }()));
+        for (var i = 1; i < pieces.length; i += 3) {
+          var m = pieces[i+1].split(/[,\s]+/g);
 
-          if (pieces[i].indexOf("matrix") !== -1) {
+          if (pieces[i] === "matrix") {
             this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
-          } else if (pieces[i].indexOf("translate") !== -1) {
+          } else if (pieces[i] === "translate") {
             var tx = m[0];
             var ty = (m.length === 2) ? m[1] : 0;
             this.matrix.translate(tx,ty);
-          } else if (pieces[i].indexOf("scale") !== -1) {
+          } else if (pieces[i] === "scale") {
             var sx = m[0];
             var sy = (m.length === 2) ? m[1] : m[0];
             this.matrix.scale(sx,sy);
-          } else if (pieces[i].indexOf("rotate") !== -1) {
+          } else if (pieces[i] === "rotate") {
             var angle = m[0];
             if (m.length === 1) {
               this.matrix.rotate(p.radians(angle));
@@ -2901,9 +2902,9 @@
               this.matrix.rotate(p.radians(m[0]));
               this.matrix.translate(-m[1], -m[2]);
             }
-          } else if (pieces[i].indexOf("skewX") !== -1) {
+          } else if (pieces[i] === "skewX") {
             this.matrix.skewX(parseFloat(m[0]));
-          } else if (pieces[i].indexOf("skewY") !== -1) {
+          } else if (pieces[i] === "skewY") {
             this.matrix.skewY(m[0]);
           }
         }
@@ -8769,7 +8770,7 @@
       // http://www.noisemachine.com/talk1/17b.html
       // http://mrl.nyu.edu/~perlin/noise/
       // generate permutation
-      var perm = new Array(512);
+      var perm = new Uint8Array(512);
       for(i=0;i<256;++i) { perm[i] = i; }
       for(i=0;i<256;++i) { var t = perm[j = rnd.nextInt() & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
       // copy to avoid taking mod in perm[0];
@@ -9901,8 +9902,8 @@
       }
 
       var delta = PConstants.SINCOS_LENGTH / ures;
-      var cx = new Array(ures);
-      var cz = new Array(ures);
+      var cx = new Float32Array(ures);
+      var cz = new Float32Array(ures);
       // calc unit circle in XZ plane
       for (i = 0; i < ures; i++) {
         cx[i] = cosLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
@@ -9915,9 +9916,9 @@
       var currVert = 0;
 
       // re-init arrays to store vertices
-      sphereX = new Array(vertCount);
-      sphereY = new Array(vertCount);
-      sphereZ = new Array(vertCount);
+      sphereX = new Float32Array(vertCount);
+      sphereY = new Float32Array(vertCount);
+      sphereZ = new Float32Array(vertCount);
 
       var angle_step = (PConstants.SINCOS_LENGTH * 0.5) / vres;
       var angle = angle_step;
@@ -13970,7 +13971,7 @@
       if (p.shared.blurRadius !== radius) {
         p.shared.blurRadius = radius;
         p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
-        p.shared.blurKernel = new Array(p.shared.blurKernelSize);
+        p.shared.blurKernel = new Float32Array(p.shared.blurKernelSize);
         // init blurKernel
         for (i = 0; i < p.shared.blurKernelSize; i++) {
           p.shared.blurKernel[i] = 0;
@@ -13987,10 +13988,10 @@
       var sum, cr, cg, cb, ca, c, m;
       var read, ri, ym, ymi, bk0;
       var wh = aImg.pixels.getLength();
-      var r2 = new Array(wh);
-      var g2 = new Array(wh);
-      var b2 = new Array(wh);
-      var a2 = new Array(wh);
+      var r2 = new Float32Array(wh);
+      var g2 = new Float32Array(wh);
+      var b2 = new Float32Array(wh);
+      var a2 = new Float32Array(wh);
       var yi = 0;
       var x, y, i;
 
@@ -14074,7 +14075,7 @@
     var dilate = function dilate(isInverted, aImg) {
       var currIdx = 0;
       var maxIdx = aImg.pixels.getLength();
-      var out = new Array(maxIdx);
+      var out = new Int32Array(maxIdx);
       var currRowIdx, maxRowIdx, colOrig, colOut, currLum;
       var idxRight, idxLeft, idxUp, idxDown,
           colRight, colLeft, colUp, colDown,
@@ -15006,14 +15007,14 @@
       curTextLeading = leading;
     };
 
-    var measureTextCanvas = function(fontFace, fontSize, baseLine, text) {
+    function MeasureTextCanvas(fontFace, fontSize, baseLine, text) {
       this.canvas = document.createElement('canvas');
       this.canvas.setAttribute('width', fontSize + "px");
       this.canvas.setAttribute('height', fontSize + "px");
       this.ctx = this.canvas.getContext("2d");
       this.ctx.font = fontSize + "pt " + fontFace;
       this.ctx.fillStyle = "black";
-      this.ctx.fillRect (0, 0, fontSize, fontSize);
+      this.ctx.fillRect(0, 0, fontSize, fontSize);
       this.ctx.fillStyle = "white";
       this.ctx.fillText(text, 0, baseLine);
       this.imageData = this.ctx.getImageData(0, 0, fontSize, fontSize);
@@ -15021,7 +15022,7 @@
       this.get = function(x, y) {
         return this.imageData.data[((y*(this.imageData.width*4)) + (x*4))];
       };
-    };
+    }
 
     /**
      * textAscent() height of the font above the baseline of the current font at its current size, in pixels.
@@ -15050,7 +15051,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          graphics = new measureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
+          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
 
           // binary search for highest pixel
           while(yLoc !== bottom) {
@@ -15105,7 +15106,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          graphics = new measureTextCanvas(curTextFont.name, curTextSize, 0, character);
+          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, 0, character);
 
           // binary search for lowest pixel
           while(yLoc !== bottom) {
@@ -15563,6 +15564,7 @@
       }
       else if (tMode === PConstants.SHAPE) {
         // TODO: requires beginRaw function
+        return;
       } else {
         if (arguments.length === 3) { // for text( str, x, y)
           text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
@@ -15864,7 +15866,8 @@
           } else if (type === "float") {
             result = new Float32Array(itemsCount);
           } else {
-            result = new Array(itemsCount);
+            result = [];
+            result.length = itemsCount;
           }
           for (var i = 0; i < itemsCount; ++i) {
             result[i] = 0;
@@ -16698,8 +16701,8 @@
       });
       // new type[?] --> createJavaArray('type', [?])
       s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*("C\d+"(?:\s*"C\d+")*)/g, function(all, type, index) {
-        var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; }).
-          replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
+        var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; })
+          .replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
         var arrayInitializer = "{" + args.substring(1, args.length - 1) + "}";
         var createArrayArgs = "('" + type + "', " + addAtom(arrayInitializer, 'A') + ")";
         return '$p.createJavaArray' + addAtom(createArrayArgs, 'B');
