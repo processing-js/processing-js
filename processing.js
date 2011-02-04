@@ -8031,6 +8031,23 @@
       }
     }
 
+    /**
+     * Converts the passed parameter to the function to its boolean value. 
+     * It will return an array of booleans if an array is passed in.
+     *
+     * @param {int, byte, string} what          the parameter to be converted to boolean
+     * @param {int[], byte[], string[]} what    the array to be converted to boolean
+     *
+     * @return {boolean|boolean[]} retrurns a boolean or an array of booleans
+     */    
+    p.parseBoolean = function (what) {
+      if (typeof what === 'object') {
+        return p['boolean'](what);
+      } else {
+        return booleanScalar(what);
+      }
+    };
+    
     p['boolean'] = function(val) {
       if (val instanceof Array) {
         var ret = [];
@@ -16277,7 +16294,7 @@
       "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY",
       "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise",
       "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal",
-      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PFont", "PImage",
+      "noSmooth", "noStroke", "noTint", "ortho", "parseBoolean", "peg", "perspective", "PFont", "PImage",
       "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
       "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
       "printCamera", "println", "printMatrix", "printProjection", "PShape","PShapeSVG",
