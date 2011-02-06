@@ -52,7 +52,10 @@ charExp[0]="@";
 charExp[1]="M";
 charExp[2]="a";
 charExp[3]="t";
-//_checkEqual(charExp, str(charArr));
+_checkEqual(charExp, str(charArr));
+
+stringTest = "false-28R-32.61024";
+_checkEqual(stringTest, (str(false) + str(-28) + str('R') + str(-32.6) + str(1024)));
 
 float[] floatArr=new float[4];
 floatArr[0]=10.5;
