@@ -16211,7 +16211,13 @@
         } else {
           processing.size(100, 100);
         }
-        processing.background(204, 204, 204); // Default background color in P5, a "light gray"
+        
+        // Default background color in P5, light gray
+        processing.background(204, 204, 204);
+        
+        // Default text font/size in P5 is Arial 12
+        var defaultFont = processing.loadFont("Arial");
+        processing.textFont(defaultFont, 12);
       };
 
       var executeSketch = function(processing) {

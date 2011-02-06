@@ -1,5 +1,7 @@
 // These are the test files in this dir to be run.
 var tests = [
+  { path: "defaults-background_and_size.pde", tags: ["2D"] },
+  { path: "defaults-text.pde", tags: ["2D"] },
   { path: "simple.pde", tags: ["2D"] },
   { path: "arc-tangent.pde",  tags: ["2D"] },
   { path: "bezier.pde", tags: ["2D"] },
