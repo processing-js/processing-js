@@ -9018,30 +9018,6 @@
 
       // Externalize the context
       p.externals.context = curContext;
-
-      /**
-      * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
-      *
-      * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
-      *
-      * @see PImage
-      */
-      p.toImageData = function() {
-        if(!p.use3DContext){
-          return curContext.getImageData(0, 0, this.width, this.height);
-        } else {
-          var c = document.createElement("canvas");
-          var ctx = c.getContext("2d");
-          var obj = ctx.createImageData(this.width, this.height);
-          var uBuff = new Uint8Array(this.width * this.height * 4);
-          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-          for(var i =0; i < uBuff.length; i++){
-            obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
-          }
-
-          return obj;
-        }
-      };
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -13260,6 +13236,31 @@
       var pg = new Processing(canvas);
       pg.size(w, h, render);
       pg.canvas = canvas;
+      
+      /**
+      * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
+      *
+      * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
+      *
+      * @see PImage
+      */
+      pg.toImageData = function() {
+        if(!p.use3DContext){
+          return curContext.getImageData(0, 0, this.width, this.height);
+        } else {
+          var c = document.createElement("canvas");
+          var ctx = c.getContext("2d");
+          var obj = ctx.createImageData(this.width, this.height);
+          var uBuff = new Uint8Array(this.width * this.height * 4);
+          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
+          for(var i =0; i < uBuff.length; i++){
+            obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
+          }
+
+          return obj;
+        }
+      };
+      
       //Processing.addInstance(pg); // TODO: this function does not exist in this scope
       return pg;
     };
