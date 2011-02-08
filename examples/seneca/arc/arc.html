@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Processing.js test of arc()</title>
+    <script type="text/javascript" src="../../../processing.js"></script>
+   
+</head>
+<body>
+    <h1>
+		<!-- name of your function and test description -->
+		arc()
+    </h1>
+    
+    <p>
+         	Draws an arc in the display window. 
+	</p>
+
+    <!-- include your processing file below -->
+     <canvas datasrc="arc.pjs"></canvas>
+    <img src="arc.jpg" valign="top" />
+    <br />
+    
+    <canvas datasrc="arc2.pjs"></canvas> ellipseMode(CENTER);
+    <img src="arc2.jpg" valign="top"/>
+    <br />
+    
+    <canvas datasrc="arc3.pjs"></canvas>ellipseMode(CORNER);
+    <img src="arc3.jpg" valign="top" />
+    <br />
+   
+    <h1>
+        Source Code:</h1>
+    <pre>
+background(125);
+arc(50, 55, 50, 50, 0, PI/2);
+noFill();
+arc(50, 55, 60, 60, PI/2, PI);
+arc(50, 55, 70, 70, PI, TWO_PI-PI/2);
+arc(50, 55, 80, 80, TWO_PI-PI/2, TWO_PI);
+
+//////////////////////////////////////////////////////////////////
+
+void setup()
+{
+  size(300, 200);
+  background(255);
+  smooth();
+  
+  rectMode(CENTER); // show bounding boxes
+  stroke(128);
+  rect(35, 35, 50, 50);
+  rect(105, 35, 50, 50);
+  rect(175, 35, 50, 50);
+  rect(105, 105, 100, 50);
+  
+  stroke(0);
+  arc(35, 35, 50, 50, 0, PI / 2.0); // lower quarter circle 
+  arc(105, 35, 50, 50, -PI, 0);  // upper half of circle
+  arc(175, 35, 50, 50, -PI / 6, PI / 6); // 60 degrees
+  arc(105, 105, 100, 50, PI / 2, 3 * PI / 2); // 180 degrees
+}
+        </pre>
+    <br />
+</body>
+</html>

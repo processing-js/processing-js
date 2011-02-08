@@ -69,3 +69,125 @@
   results in unusable frame-rates for moderately complex visualizations.
                             
   //////////////////////////////////////////////////////////////////////////////
+
+  SETTING UP A SIMPLE SKETCH
+  
+  In order to get a sketch going in the browser you will need to download the 
+  processing.js file and make two new files - one with the extension .html and 
+  the other with the extension .pde or .pjs.
+   
+  The .html file will have a link to the processing.js file you have downloaded,
+  and a <canvas> tag with a link to the .pde or .pjs file that you made.
+  
+  Here is an example of an .html file:
+  <html>
+    <head>
+      <script src="processing.js"></script> //ensure a correct path to the file
+    </head>
+    <body>
+      <canvas data-processing-sources="anything.pjs"></canvas> 
+    </body>
+  </html>
+  Note that the .pjs file needs to be named anything.pjs (or whatever you named your file)
+  and that there is a custom attribute data-processing-sources that is used to link the sketch to
+  the <canvas>.
+  
+  Here is an example of a .pjs or .pde file:
+  
+  void setup()
+  {
+    size(200,200);
+    background(125);
+    fill(255);
+    noLoop();
+    PFont fontA = loadFont("courier");
+    textFont(fontA, 14);  
+  }
+
+  void draw(){  
+    text("Hello Web!",20,20);
+    println("Hello ErrorLog!");
+  }
+                            
+  //////////////////////////////////////////////////////////////////////////////
+  
+  THINGS TO KNOW AS A PROCESSING DEVELOPER USING PROCESSING.JS
+  
+  Processing.js has no data directory
+
+  Processing uses the concept of a data directory, where images and other
+  are located. Processing.js does not include this. As a result, you should 
+  always provide files (e.g., images) that are relative to your web page, 
+  which is the norm on the web.  
+  
+  Processing.js implements Processing, but not all of Java
+
+  Processing.js is compatible with Processing, but is not, and will never be, 
+  fully compatible with Java. If your sketch uses functions or classes not 
+  defined as part of Processing, they are unlikely to work with Processing.js. 
+  Similarly, libraries that are written for Processing, which are written in Java 
+  instead of Processing, will most likely not work.
+  
+  Processing.js only has two rendering modes
+
+  Processing has many rendering modes to choose from, depending on the desired 
+  quality and speed for graphics (e.g., OPENGL, P3D, JAVA2D, etc.). Processing.js 
+  uses <canvas> which provides either a 2D drawing context or a 3D context based on 
+  WebGL a version of OpenGL for the web. Therefore, whatever you choose, you will 
+  end-up with either the 2D or 3D context.
+  
+  Division which is expected to produce an integer might need explicit casting
+
+  There are a class of bugs that arise when converting Processing code to 
+  Processing.js that involve integer vs. floating point division. What was 
+  straight-up integer division in Processing code, when converted to Processing.js, 
+  can sometimes become problematic, as numbers become doubles, and introduce a 
+  fractional part. The fix is to explicitly cast any division to an integer that 
+  exhibits this behaviour:
+  
+  // before
+  int g = mouseX / i;
+
+  // after
+  int g = (int)(mouseX / i);
+  
+  Processing.js has to cheat to simulate Processing's synchronous I/O
+
+  Processing uses a synchronous I/O model, which means that functions like 
+  loadImage() take time to execute, and while they are running, nothing else 
+  happens: the program waits until loadImage() is done before moving on to the 
+  next statement. This means that you can count on the value returned by a 
+  function like loadImage() being usable in the next line of code.
+
+  Web browsers don't work like this. The web uses an asynchronous I/O model, which 
+  means that functions which load external resources can't make the program wait 
+  until they finish. In order to replicate Processing's load* functions, you have 
+  to use a special Processing.js Directive.
+
+  The Processing.js Directives are hints to the browser that are written in 
+  comments rather than in the Processing code itself. Here is an example of 
+  loadImage():
+  
+  /* @pjs preload="picture.jpg"; */
+  PImage img;
+
+  void setup() {
+    img = loadImage("picture.jpg");
+    image(img, 0, 0);
+  }
+  Note the syntax (below) to preload multiple images:
+  
+  /* @pjs preload="picture.jpg,picture2.jpg,picture3.png"; */  
+  
+  Processing.js requires more care with variable naming than Processing
+  
+  One of the powerful features of JavaScript is its dynamic, typeless nature. Where 
+  typed languages like Java, and therefore Processing, can reuse names without fear 
+  of ambiguity (e.g., method overloading), Processing.js cannot. Without getting into 
+  the inner-workings of JavaScript, the best advice for Processing developers is to 
+  not use function/class/etc. names from Processing as variable names. For example, 
+  a variable named line might seem reasonable, but it will cause issues with the 
+  similarly named line() function built-into Processing and Processing.js.
+  
+  //////////////////////////////////////////////////////////////////////////////
+
