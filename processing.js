@@ -15648,6 +15648,28 @@
       return p.glyphTable[url];
     };
 
+    /**
+     * Gets the sketch parameter value. The parameter can be defined as the canvas attribute with 
+     * the "data-processing-" prefix or provided in the pjs directive (e.g. /* @pjs param-test="52" ... ).
+     * The function tries the canvas attributes, then the pjs directive content.
+     *
+     * @param   {String}    name          The name of the param to read.
+     *
+     * @returns {String}    The parameter value, or null if parameter is not defined.
+     */
+    p.param = function(name) {
+      // trying attribute that was specified in CANVAS
+      var attributeName = "data-processing-" + name;
+      if(curElement.hasAttribute(attributeName)) {
+        return curElement.getAttribute(attributeName);
+      }
+      // fallback to default params
+      if(curSketch.params.hasOwnProperty(name)) {
+        return curSketch.params[name];
+      }
+      return null;
+    };
+
     ////////////////////////////////////////////////////////////////////////////
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
@@ -16277,7 +16299,7 @@
       "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY",
       "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise",
       "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal",
-      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PFont", "PImage",
+      "noSmooth", "noStroke", "noTint", "ortho", "param", "peg", "perspective", "PFont", "PImage",
       "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
       "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
       "printCamera", "println", "printMatrix", "printProjection", "PShape","PShapeSVG",
@@ -17513,6 +17535,8 @@
             sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
             sketch.options.pauseOnBlur = value === "true";
+          } else if (key.substring(0, 6) === "param-") {
+            sketch.params[key.substring(6)] = value;
           } else {
             sketch.options[key] = value;
           }
@@ -17847,6 +17871,7 @@
       crispLines: false,
       pauseOnBlur: false
     };
+    this.params = {};
     this.imageCache = {
       pending: 0,
       images: {},
