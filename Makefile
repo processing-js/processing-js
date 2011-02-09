@@ -1,5 +1,6 @@
 # Make sure $JSSHELL points to your js shell binary in .profile or .bashrc
 TOOLSDIR=./tools
+CLOSUREJAR=${TOOLSDIR}/closure/compiler.jar
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
@@ -90,8 +91,6 @@ bespin: create-release
 	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/loader.js -o ./tools/ide/js/loader.min.js
 	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/bespin.js -o ./tools/ide/js/bespin.min.js
 	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/pjs-box.js -o ./tools/ide/js/pjs-box.min.js
-
-CLOSUREJAR ?= $(error Specify a valid path to a Google closure jar file in ~/.profile: export CLOSUREJAR=~/compiler.jar)
 
 SKETCHRUN ?= runSketch
 SKETCHINPUT ?= $(error Specify an input filename in SKETCHINPUT when using package-sketch)
