@@ -16351,11 +16351,31 @@
         }
       }
 
+      // Sets all of the Processing defaults. Called before setup() in executeSketch()
+      var setDefaults = function(processing) {
+        // Default size in P5 is 100x100, but we need to choose the correct context, 2D or 3D
+        if (processing.use3DContext) {
+          processing.size(100, 100, processing.P3D);
+        } else {
+          processing.size(100, 100);
+        }
+        
+        // Default background color in P5, light gray
+        processing.background(204, 204, 204);
+        
+        // Default text font/size in P5 is Arial 12
+        var defaultFont = processing.loadFont("Arial");
+        processing.textFont(defaultFont, 12);
+      };
+
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
+          // Run void setDefaults() before attach() to work with embedded scripts
+          setDefaults(processing);
+          
           curSketch.attach(processing, defaultScope);
-
+          
           // Run void setup()
           if (processing.setup) {
             processing.setup();
