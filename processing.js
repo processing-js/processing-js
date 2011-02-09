@@ -11370,6 +11370,12 @@
         p.mouseOut();
       }
     });
+    
+    attach(curElement, "mouseover", function(e) {
+      if (typeof p.mouseOver === "function") {
+        p.mouseOver();
+      }
+    });
 
     attach(curElement, "mousedown", function(e) {
       p.__mousePressed = true;
