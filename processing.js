@@ -10579,15 +10579,6 @@
       curShape = type;
       curvePoints = [];
       vertArray = [];
-<<<<<<< HEAD
-=======
-      /*
-      if(p.use3DContext)
-      {
-        //normalMode = NORMAL_MODE_AUTO;
-      }
-      */
->>>>>>> 78134e68387cf970abffb0c8f519faed67df0447
     };
 
     /**
@@ -16328,7 +16319,6 @@
     return members;
   }
 
-<<<<<<< HEAD
 /*
 
     Parser converts Java-like syntax into JavaScript.
@@ -16353,12 +16343,6 @@
 
 */
 
-  // parser begins
-=======
-//#if PARSER
-
-  // Parser starts
->>>>>>> 78134e68387cf970abffb0c8f519faed67df0447
   function parseProcessing(code) {
     var globalMembers = getGlobalMembers();
 
