@@ -1012,6 +1012,8 @@
     p.mousePressed    = undef;
     p.mouseReleased   = undef;
     p.mouseScrolled   = undef;
+    p.mouseOver       = undef;
+    p.mouseOut        = undef; 
     p.key             = undef;
     p.keyCode         = undef;
     p.keyPressed      = undef;
