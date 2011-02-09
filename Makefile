@@ -72,8 +72,9 @@ yui: create-release
 check: check-globals
 	${TOOLSDIR}/runtests.py ${JSSHELL}
 
-check-release: yui
+check-release: yui closure
 	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-${VERSION}.min.js
+	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-${VERSION}.closure.js
 
 check-summary:
 	${TOOLSDIR}/runtests.py -s ${JSSHELL}
