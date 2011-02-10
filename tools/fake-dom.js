@@ -148,6 +148,7 @@ window.XMLHttpRequest.prototype.open = __empty_func__;
 window.XMLHttpRequest.prototype.send = __empty_func__;
 window.XMLHttpRequest.prototype.responseText = "some text";
 window.XMLHttpRequest.prototype.setRequestHeader = __empty_func__;
+window.XMLHttpRequest.prototype.overrideMimeType = __empty_func__;
 window.XMLHttpRequest.prototype.status = 200;
 
 var Image = __empty_func__;
