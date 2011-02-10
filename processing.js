@@ -15851,6 +15851,10 @@
       }
     };
 
+    p.extendStaticMembers = function(derived, base) {
+      extendClass(derived, base);
+    };
+
     p.addMethod = function addMethod(object, name, fn, superAccessor) {
       if (object[name]) {
         var args = fn.length,
@@ -16819,7 +16823,7 @@
       body.owner = this;
     }
     AstInlineClass.prototype.toString = function() {
-      return "new (function() {\n" + this.body + "})";
+      return "new (" + this.body + ")";
     };
 
     function transformInlineClass(class_) {
@@ -17066,6 +17070,12 @@
       }
     }
 
+    function sortByWeight(array) {
+      array.sort(function (a,b) {
+        return b.weight - a.weight; 
+      });
+    }
+
     function AstInnerInterface(name) {
       this.name = name;
     }
@@ -17073,36 +17083,38 @@
       return  "this." + this.name + " = function " + this.name + "() { "+
         "throw 'This is an interface'; };";
     };
-    function AstInnerClass(name, body) {
+    function AstInnerClass(name, body, isStatic) {
       this.name = name;
       this.body = body;
+      this.isStatic = isStatic;
       body.owner = this;
     }
     AstInnerClass.prototype.toString = function() {
-      return "this." + this.name + " = function " + this.name + "() {\n" +
-        this.body + "};";
+      return "" + this.body;
     };
 
     function transformInnerClass(class_) {
       var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
       classesRegex.lastIndex = 0;
+      var isStatic = m[1].indexOf("static") >= 0;
       var body = atoms[getAtomIndex(m[6])];
       if(m[2] === "interface") {
         return new AstInnerInterface(m[3]);
       } else {
         var oldClassId = currentClassId, newClassId = generateClassId();
         currentClassId = newClassId;
-        var innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]));
+        var innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]), isStatic);
         appendClass(innerClass, newClassId, oldClassId);
         currentClassId = oldClassId;
         return innerClass;
       }
     }
 
-    function AstClassMethod(name, params, body) {
+    function AstClassMethod(name, params, body, isStatic) {
       this.name = name;
       this.params = params;
       this.body = body;
+      this.isStatic = isStatic;
     }
     AstClassMethod.prototype.toString = function(){
       var thisReplacement = replaceContext({ name: "[this]" });
@@ -17111,8 +17123,7 @@
       replaceContext = function (subject) {
         return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
-      var result = "$p.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
-        this.body +");";
+      var result = "function " + this.methodId + this.params + " " + this.body +"\n";
       replaceContext = oldContext;
       return result;
     };
@@ -17120,9 +17131,10 @@
     function transformClassMethod(method) {
       var m = methodsRegex.exec(method);
       methodsRegex.lastIndex = 0;
+      var isStatic = m[1].indexOf("static") >= 0;
       var body = m[6] !== ';' ? atoms[getAtomIndex(m[6])] : "{}";
       return new AstClassMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
-        transformStatementsBlock(body) );
+        transformStatementsBlock(body), isStatic );
     }
 
     function AstClassField(definitions, fieldType, isStatic) {
@@ -17209,26 +17221,25 @@
         fields[i].owner = this;
       }
     }
-    AstClassBody.prototype.getMembers = function() {
-      var members;
+    AstClassBody.prototype.getMembers = function(classFields, classMethods, classInners) {
       if(this.owner.base) {
-        members = this.owner.base.body.getMembers();
-      } else {
-        members = { fields: [], methods: [], innerClasses: [] };
+        this.owner.base.body.getMembers(classFields, classMethods, classInners);
       }
       var i, j, l, m;
       for(i=0,l=this.fields.length;i<l;++i) {
-        members.fields = members.fields.concat(this.fields[i].getNames());
+        var fieldNames = this.fields[i].getNames();
+        for(j=0,m=fieldNames.length;j<m;++j) {
+          classFields[fieldNames[j]] = this.fields[i];
+        }
       }
       for(i=0,l=this.methods.length;i<l;++i) {
         var method = this.methods[i];
-        members.methods.push(method.name);
+        classMethods[method.name] = method;
       }
       for(i=0,l=this.innerClasses.length;i<l;++i) {
         var innerClass = this.innerClasses[i];
-        members.innerClasses.push(innerClass.name);
+        classInners[innerClass.name] = innerClass;
       }
-      return members;
     };
     AstClassBody.prototype.toString = function() {
       function getScopeLevel(p) {
@@ -17243,12 +17254,12 @@
       var scopeLevel = getScopeLevel(this.owner);
 
       var selfId = "$this_" + scopeLevel;
+      var className = this.name;
       var result = "var " + selfId + " = this;\n";
+      var staticDefinitions = "";
 
-      var members = this.getMembers();
-      var thisClassFields = appendToLookupTable({}, members.fields),
-        thisClassMethods = appendToLookupTable({}, members.methods),
-        thisClassInners = appendToLookupTable({}, members.innerClasses);
+      var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
+      this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
 
       var oldContext = replaceContext;
       replaceContext = function (subject) {
@@ -17257,17 +17268,17 @@
           // returns "$this_N.$self" pointer instead of "this" in cases:
           // "this()", "this.XXX()", "this", but not for "this.XXX"
           return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
-        } else if(name === "[this]") {
-          return selfId;
-        } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
+        } else if(thisClassFields.hasOwnProperty(name)) {
+          return thisClassFields[name].isStatic ? className + "." + name : selfId + "." + name;
+        } else if(thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
         } else if(thisClassMethods.hasOwnProperty(name)) {
-          return selfId + ".$self." + name;
+          return thisClassMethods[name].isStatic ? className + "." + name : selfId + ".$self." + name;
         }
         return oldContext(subject);
-      };
+      }; 
 
-      if(this.baseClassName) {
+      if (this.baseClassName) {
         result += "var $super = { $upcast: " + selfId + " };\n";
         result += "function $superCstr(){" + this.baseClassName + ".apply($super,arguments);" +
           "if(!('$self' in $super)) $p.extendClassChain($super)}\n";
@@ -17275,19 +17286,73 @@
         result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
       }
 
-      result += this.functions.join('\n') + '\n';
-      result += this.innerClasses.join('\n');
+      if (this.base) {
+        // base class name can be present, but class is not
+        staticDefinitions += "$p.extendStaticMembers(" + className + ", " + this.baseClassName + ");\n";
+      }
 
-      result += this.fields.join(";\n") + ";\n";
-      result += this.methods.join('\n') + '\n';
-      result += this.misc.tail;
+      var i, l, j, m;
 
-      result += this.cstrs.join('\n') + '\n';
+      if (this.functions.length > 0) {
+        result += this.functions.join('\n') + '\n';
+      }
 
+      sortByWeight(this.innerClasses);
+      for (i = 0, l = this.innerClasses.length; i < l; ++i) {
+        var innerClass = this.innerClasses[i];
+        if (innerClass.isStatic) {
+          staticDefinitions += className + "." + innerClass.name + " = " + innerClass + ";\n";
+          result += selfId + "." + innerClass.name + " = " + className + "." + innerClass.name + ";\n";
+        } else {
+          result += selfId + "." + innerClass.name + " = " + innerClass + ";\n";
+        }
+      }
+
+      for (i = 0, l = this.fields.length; i < l; ++i) {
+        var field = this.fields[i];
+        if (field.isStatic) {
+          staticDefinitions += className + "." + field.definitions.join(";\n" + className + ".") + ";\n";
+          for (j = 0, m = field.definitions.length; j < m; ++j) {
+            var fieldName = field.definitions[j].name, staticName = className + "." + fieldName;
+            result += "$p.defineProperty(" + selfId + ", '" + fieldName + "', {" +
+              "get: function(){return " + staticName + "}, " +
+              "set: function(val){" + staticName + " = val}});\n";
+          }
+        } else {
+          result += selfId + "." + field.definitions.join(";\n" + selfId + ".") + ";\n";
+        }
+      }
+      var methodOverloads = {};
+      for (i = 0, l = this.methods.length; i < l; ++i) {
+        var method = this.methods[i];
+        var overload = methodOverloads[method.name];
+        var methodId = method.name + "$" + method.params.params.length;
+        if (overload) {
+          ++overload;
+          methodId += "_" + overload;
+        } else {
+          overload = 1;
+        }
+        method.methodId = methodId;
+        methodOverloads[method.name] = overload;
+        if (method.isStatic) {
+          staticDefinitions += method;
+          staticDefinitions += "$p.addMethod(" + className + ", '" + method.name + "', " + methodId + ");\n";
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n"
+        } else {
+          result += method;
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n"
+        }
+      }
+      result += trim(this.misc.tail);
+
+      if (this.cstrs.length > 0) {
+        result += this.cstrs.join('\n') + '\n';
+      }
 
       result += "function $constr() {\n";
       var cstrsIfs = [];
-      for(var i=0,l=this.cstrs.length;i<l;++i) {
+      for (i = 0, l = this.cstrs.length; i < l; ++i) {
         var paramsLength = this.cstrs[i].params.params.length;
         cstrsIfs.push("if(arguments.length === " + paramsLength + ") { " +
           "$constr_" + paramsLength + ".apply(" + selfId + ", arguments); }");
@@ -17296,11 +17361,15 @@
         result += cstrsIfs.join(" else ") + " else ";
       }
       // ??? add check if length is 0, otherwise fail
-      result += "$superCstr(); }\n";
+      result += "$superCstr();\n}\n";
       result += "$constr.apply(null, arguments);\n";
 
       replaceContext = oldContext;
-      return result;
+      return "(function() {\n" +
+        "function " + className + "() {\n" + result + "}\n" +
+        staticDefinitions +
+        "return " + className + ";\n" +
+        "})()";
     };
 
     transformClassBody = function(body, name, baseName, impls) {
@@ -17320,7 +17389,7 @@
       var i;
 
       if(baseName !== undef) {
-        baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*)\s*$/g, "$1");
+        baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*$/g, "$1");
       }
 
       for(i = 0; i < functions.length; ++i) {
@@ -17358,16 +17427,7 @@
       body.owner = this;
     }
     AstClass.prototype.toString = function() {
-      var staticVars = "";
-      for (var i = 0, l = this.body.fields.length; i < l; i++) {
-        if (this.body.fields[i].isStatic) {
-          for (var x = 0, xl = this.body.fields[i].definitions.length; x < xl; x++) {
-            staticVars += "var " + this.body.fields[i].definitions[x].name + " = " + this.body.name + "." + this.body.fields[i].definitions[x] + ";";
-          }
-        }
-      }
-      return "function " + this.name + "() {\n" + this.body + "}\n" +
-        staticVars + "\n" +
+      return "var " + this.name + " = " + this.body + ";\n" +
         "$p." + this.name + " = " + this.name + ";";
     };
 
@@ -17558,6 +17618,16 @@
       this.statements = statements;
     }
     AstRoot.prototype.toString = function() {
+      var classes = [], otherStatements = [];
+      for (var i = 0, len = this.statements.length; i < len; ++i) {
+        if (this.statements[i] instanceof AstClass) {
+          classes.push(this.statements[i]);
+        } else {
+          otherStatements.push(this.statements[i]);
+        }
+      }
+      sortByWeight(classes);
+
       var localNames = getLocalNames(this.statements);
       replaceContext = function (subject) {
         var name = subject.name;
@@ -17572,7 +17642,8 @@
       };
       var result = "// this code was autogenerated from PJS\n" +
         "(function($p) {\n" +
-        this.statements.join('') + "\n})";
+        classes.join('') + "\n" +
+        otherStatements.join('') + "\n})";
       replaceContext = null;
       return result;
     };
@@ -17627,14 +17698,52 @@
           class_ = declaredClasses[id];
           var baseClassName = class_.body.baseClassName;
           if(baseClassName) {
-            class_.base = findInScopes(class_, baseClassName);
+            var parent = findInScopes(class_, baseClassName);
+            if (parent) {
+              class_.base = parent;
+              if (!parent.derived) {
+                parent.derived = [];
+              }
+              parent.derived.push(class_);
+            }
           }
+        }
+      }
+    }
+
+    function setWeight(ast) {
+      var queue = [], checked = {};
+      var id, class_;
+      // queue most inner and non-inherited
+      for (id in declaredClasses) {
+        if (declaredClasses.hasOwnProperty(id)) {
+          class_ = declaredClasses[id];
+          if (!class_.inScope && !class_.derived) {
+            queue.push(id);
+            checked[id] = true;
+            class_.weight = 0;
+          }
+        }
+      }
+      while (queue.length > 0) {
+        id = queue.shift();
+        class_ = declaredClasses[id];
+        if (class_.scopeId && !checked[class_.scopeId]) {
+          queue.push(class_.scopeId);
+          checked[class_.scopeId] = true;
+          declaredClasses[class_.scopeId].weight = class_.weight + 1;
+        }
+        if (class_.base && !checked[class_.base.classId]) {
+          queue.push(class_.base.classId);
+          checked[class_.base.classId] = true;
+          class_.base.weight = class_.weight + 1;
         }
       }
     }
 
     var transformed = transformMain();
     generateMetadata(transformed);
+    setWeight(transformed);
 
     var redendered = transformed.toString();
 
