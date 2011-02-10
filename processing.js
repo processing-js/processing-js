@@ -8107,11 +8107,11 @@
       if (val instanceof Array) {
         var arr = [];
         for (var i = 0; i < val.length; i++) {
-          arr.push(val[i] + "");
+          arr.push(val[i].toString() + "");
         }
         return arr;
       } else {
-        return (val + "");
+        return (val.toString() + "");
       }
     };
     /**
