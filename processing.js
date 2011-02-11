@@ -15748,7 +15748,130 @@
       }
       eventHandlers.push([elem, type, fn]);
     }
+    var firstTouch = false;
+    function touchSetup (curElement) {
+      if (!firstTouch) {
+        //removes unwanted behaviour of the canvas when touching canvas
+        curElement.setAttribute("style","-webkit-user-select: none");
+        curElement.setAttribute("onclick","void(0)");
+        curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
+        //loop though eventHandlers and remove mouse listeners
+        for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
+          var elem = eventHandlers[i][0],
+              type = eventHandlers[i][1],
+              fn   = eventHandlers[i][2];
+          if (type === "mouseout" || type === "mousemove" || type === "mousedown" || type === "mouseup" || 
+              type === "DOMMouseScroll"  || type === "mousewheel") {
+            if (elem.removeEventListener) {
+              elem.removeEventListener(type, fn, false);
+            } else if (elem.detachEvent) {
+              elem.detachEvent("on" + type, fn);
+            }
+          }
+        }
+      }
+      firstTouch = true;
+    }
+    
+    attach(curElement, "touchstart", function(e) {
+      touchSetup(curElement);
+      var element = curElement, offsetX = 0, offsetY = 0;
+      p.pmouseX = p.mouseX;
+      p.pmouseY = p.mouseY;
 
+      if (element.offsetParent) {
+        do {
+          offsetX += element.offsetLeft;
+          offsetY += element.offsetTop;
+        } while ((element = element.offsetParent));
+      }
+
+      element = curElement;
+      do {
+        offsetX -= element.scrollLeft || 0;
+        offsetY -= element.scrollTop || 0;
+      } while ((element = element.parentNode));
+
+      offsetX += stylePaddingLeft;
+      offsetY += stylePaddingTop;
+
+      offsetX += styleBorderLeft;
+      offsetY += styleBorderTop;
+
+      p.mouseX = e.touches[0].pageX - offsetX;
+      p.mouseY = e.touches[0].pageY - offsetY;
+      p.__mousePressed = true;
+      p.mouseDragging = false;
+      switch (e.which) {
+      case 1:
+        p.mouseButton = PConstants.LEFT;
+        break;
+      case 2:
+        p.mouseButton = PConstants.CENTER;
+        break;
+      case 3:
+        p.mouseButton = PConstants.RIGHT;
+        break;
+      }
+
+      if (typeof p.mousePressed === "function") {
+        p.mousePressed();
+      }
+    });
+    
+    attach(curElement, "touchend", function(e) {
+      p.__mousePressed = false;
+
+      if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
+        p.mouseClicked();
+      }
+
+      if (typeof p.mouseReleased === "function") {
+        p.mouseReleased();
+      }
+    });
+    
+    attach(curElement, "touchmove", function(e) {
+      e.preventDefault();
+      var element = curElement, offsetX = 0, offsetY = 0;
+
+      p.pmouseX = p.mouseX;
+      p.pmouseY = p.mouseY;
+
+      // Find element offset
+      if (element.offsetParent) {
+        do {
+          offsetX += element.offsetLeft;
+          offsetY += element.offsetTop;
+        } while ((element = element.offsetParent));
+      }
+
+      // Find Scroll offset
+      element = curElement;
+      do {
+        offsetX -= element.scrollLeft || 0;
+        offsetY -= element.scrollTop || 0;
+      } while ((element = element.parentNode));
+
+      // Add padding and border style widths to offset
+      offsetX += stylePaddingLeft;
+      offsetY += stylePaddingTop;
+
+      offsetX += styleBorderLeft;
+      offsetY += styleBorderTop;
+
+      p.mouseX = e.touches[0].pageX - offsetX;
+      p.mouseY = e.touches[0].pageY - offsetY;
+
+      if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
+        p.mouseMoved();
+      }
+      if (typeof p.mouseDragged === "function" && p.__mousePressed) {
+        p.mouseDragged();
+        p.mouseDragging = true;
+      }
+    });
+    
     attach(curElement, "mousemove", function(e) {
       var element = curElement, offsetX = 0, offsetY = 0;
 
