@@ -1249,9 +1249,9 @@
         mouseDragging = false,
         curColorMode = PConstants.RGB,
         curTint = null,
-        curTextSize = 12,
-        curTextFont = "Arial",
-        curTextLeading = 14,
+        curTextSize,
+        curTextFont,
+        curTextLeading,
         getLoaded = false,
         start = new Date().getTime(),
         timeSinceLastFPS = start,
@@ -16215,9 +16215,10 @@
         // Default background color in P5, light gray
         processing.background(204, 204, 204);
         
-        // Default text font/size in P5 is Arial 12
+        // Default text font/size in P5 is Arial 12pt, with 14pt leader
         var defaultFont = processing.loadFont("Arial");
         processing.textFont(defaultFont, 12);
+        processing.textLeading(14);
       };
 
       var executeSketch = function(processing) {
