@@ -4,7 +4,7 @@ int intVar = 0;
 boolean intBool = parseBoolean(intVar);
 
 int[] intArray = {0, 1, 5};
-boolean[] intBoolArray = new parseBoolean(intArray); //double check the new keyword
+boolean[] intBoolArray = parseBoolean(intArray); 
   
 string strVar = "true";
 boolean strBool = parseBoolean(strVar);

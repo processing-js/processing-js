@@ -8041,13 +8041,9 @@
      * @return {boolean|boolean[]} retrurns a boolean or an array of booleans
      */    
     p.parseBoolean = function (what) {
-      if (typeof what === 'object') {
         return p['boolean'](what);
-      } else {
-        return booleanScalar(what);
-      }
-    };
-    
+    }
+      
     p['boolean'] = function(val) {
       if (val instanceof Array) {
         var ret = [];
