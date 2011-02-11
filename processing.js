@@ -13245,7 +13245,8 @@
       * @see PImage
       */
       pg.toImageData = function() {
-        if(!p.use3DContext){
+        var curContext = this.externals.context;
+        if(!this.use3DContext){
           return curContext.getImageData(0, 0, this.width, this.height);
         } else {
           var c = document.createElement("canvas");
@@ -13253,8 +13254,8 @@
           var obj = ctx.createImageData(this.width, this.height);
           var uBuff = new Uint8Array(this.width * this.height * 4);
           curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-          for(var i =0; i < uBuff.length; i++){
-            obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
+          for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
+            obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
           }
 
           return obj;
