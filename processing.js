@@ -1892,7 +1892,9 @@
             }
           } else {  // drawing 3D vertices
             for (i = 0, l = this.vertices.length; i < l; i++) {
-              p.vertex(this.vertices[i][0], this.vertices[i][1], this.vertices[i][2]);
+              p.vertex(this.vertices[i][0], 
+                       this.vertices[i][1], 
+                       this.vertices[i][2]);
             }
           }
         } else {  // coded set of vertices
@@ -1910,12 +1912,16 @@
                 p.breakShape = false;
                 index++;
               } else if (this.vertexCodes[j] === PConstants.BEZIER_VERTEX) {
-                p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1],
-                               this.vertices[index+1][0], this.vertices[index+1][1],
-                               this.vertices[index+2][0], this.vertices[index+2][1]);
+                p.bezierVertex(this.vertices[index+0][0], 
+                               this.vertices[index+0][1],
+                               this.vertices[index+1][0], 
+                               this.vertices[index+1][1],
+                               this.vertices[index+2][0],
+                               this.vertices[index+2][1]);
                 index += 3;
               } else if (this.vertexCodes[j] === PConstants.CURVE_VERTEX) {
-                p.curveVertex(this.vertices[index][0], this.vertices[index][1]);
+                p.curveVertex(this.vertices[index][0], 
+                              this.vertices[index][1]);
                 index++;
               } else if (this.vertexCodes[j] ===  PConstants.BREAK) {
                 p.breakShape = true;
@@ -1924,7 +1930,9 @@
           } else {  // drawing a 3D path
             for (j = 0, k = this.vertexCodes.length; j < k; j++) {
               if (this.vertexCodes[j] === PConstants.VERTEX) {
-                p.vertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                p.vertex(this.vertices[index][0], 
+                         this.vertices[index][1], 
+                         this.vertices[index][2]);
                 if (this.vertices[index]["moveTo"] === true) {
                   vertArray[vertArray.length-1]["moveTo"] = true;
                 } else if (this.vertices[index]["moveTo"] === false) {
@@ -1932,12 +1940,20 @@
                 }
                 p.breakShape = false;
               } else if (this.vertexCodes[j] ===  PConstants.BEZIER_VERTEX) {
-                p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1], this.vertices[index+0][2],
-                               this.vertices[index+1][0], this.vertices[index+1][1], this.vertices[index+1][2],
-                               this.vertices[index+2][0], this.vertices[index+2][1], this.vertices[index+2][2]);
+                p.bezierVertex(this.vertices[index+0][0], 
+                               this.vertices[index+0][1],
+                               this.vertices[index+0][2],
+                               this.vertices[index+1][0],
+                               this.vertices[index+1][1],
+                               this.vertices[index+1][2],
+                               this.vertices[index+2][0],
+                               this.vertices[index+2][1],
+                               this.vertices[index+2][2]);
                 index += 3;
               } else if (this.vertexCodes[j] === PConstants.CURVE_VERTEX) {
-                p.curveVertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                p.curveVertex(this.vertices[index][0],
+                              this.vertices[index][1],
+                              this.vertices[index][2]);
                 index++;
               } else if (this.vertexCodes[j] === PConstants.BREAK) {
                 p.breakShape = true;
@@ -1994,17 +2010,32 @@
         } else if (this.kind === PConstants.RECT) {
           if (this.image !== null) {
             p.imageMode(PConstants.CORNER);
-            p.image(this.image, this.params[0], this.params[1], this.params[2], this.params[3]);
+            p.image(this.image,
+                    this.params[0],
+                    this.params[1],
+                    this.params[2],
+                    this.params[3]);
           } else {
             p.rectMode(PConstants.CORNER);
-            p.rect(this.params[0], this.params[1], this.params[2], this.params[3]);
+            p.rect(this.params[0],
+                   this.params[1],
+                   this.params[2],
+                   this.params[3]);
           }
         } else if (this.kind === PConstants.ELLIPSE) {
           p.ellipseMode(PConstants.CORNER);
-          p.ellipse(this.params[0], this.params[1], this.params[2], this.params[3]);
+          p.ellipse(this.params[0],
+                    this.params[1],
+                    this.params[2],
+                    this.params[3]);
         } else if (this.kind === PConstants.ARC) {
           p.ellipseMode(PConstants.CORNER);
-          p.arc(this.params[0], this.params[1], this.params[2], this.params[3], this.params[4], this.params[5]);
+          p.arc(this.params[0],
+                this.params[1],
+                this.params[2],
+                this.params[3],
+                this.params[4],
+                this.params[5]);
         } else if (this.kind === PConstants.BOX) {
           if (this.params.length === 1) {
             p.box(this.params[0]);
@@ -2018,7 +2049,12 @@
       pre: function() {
         if (this.matrix) {
           p.pushMatrix();
-          curContext.transform(this.matrix.elements[0], this.matrix.elements[3], this.matrix.elements[1], this.matrix.elements[4], this.matrix.elements[2], this.matrix.elements[5]);
+          curContext.transform(this.matrix.elements[0],
+                               this.matrix.elements[3],
+                               this.matrix.elements[1],
+                               this.matrix.elements[4],
+                               this.matrix.elements[2],
+                               this.matrix.elements[5]);
           //p.applyMatrix(this.matrix.elements[0],this.matrix.elements[0]);
         }
         if (this.style) {
@@ -2132,7 +2168,10 @@
           this.matrix.rotate(arguments[0]);
         } else {
           this.checkMatrix(3);
-          this.matrix.rotate(arguments[0], arguments[1], arguments[2] ,arguments[3]);
+          this.matrix.rotate(arguments[0],
+                             arguments[1],
+                             arguments[2],
+                             arguments[3]);
         }
       },
       scale: function() {
@@ -2153,10 +2192,14 @@
       },
       applyMatrix: function(matrix) {
         if (arguments.length === 1) {
-          this.applyMatrix(matrix.elements[0], matrix.elements[1], 0, matrix.elements[2],
-                          matrix.elements[3], matrix.elements[4], 0, matrix.elements[5],
-                          0, 0, 1, 0,
-                          0, 0, 0, 1);
+          this.applyMatrix(matrix.elements[0],
+                           matrix.elements[1], 0,
+                           matrix.elements[2],
+                           matrix.elements[3],
+                           matrix.elements[4], 0,
+                           matrix.elements[5],
+                           0, 0, 1, 0,
+                           0, 0, 0, 1);
         } else if (arguments.length === 6) {
           this.checkMatrix(2);
           this.matrix.apply(arguments[0], arguments[1], arguments[2], 0,
@@ -2166,10 +2209,22 @@
 
         } else if (arguments.length === 16) {
           this.checkMatrix(3);
-          this.matrix.apply(arguments[0], arguments[1], arguments[2], arguments[3],
-                            arguments[4], arguments[5], arguments[6], arguments[7],
-                            arguments[8], arguments[9], arguments[10], arguments[11],
-                            arguments[12], arguments[13], arguments[14], arguments[15]);
+          this.matrix.apply(arguments[0],
+                            arguments[1],
+                            arguments[2],
+                            arguments[3],
+                            arguments[4],
+                            arguments[5],
+                            arguments[6],
+                            arguments[7],
+                            arguments[8],
+                            arguments[9],
+                            arguments[10],
+                            arguments[11],
+                            arguments[12],
+                            arguments[13],
+                            arguments[14],
+                            arguments[15]);
         }
       }
     };
@@ -2186,7 +2241,7 @@
         this.stroke              = false;
         this.strokeColor         = PConstants.ALPHA_MASK;
         this.strokeWeight        = 1;
-        this.strokeCap           = PConstants.SQUARE;  // equivalent to BUTT in svg spec
+        this.strokeCap           = PConstants.SQUARE;  // BUTT in svg spec
         this.strokeJoin          = PConstants.MITER;
         this.strokeGradient      = null;
         this.strokeGradientPaint = null;
@@ -2216,7 +2271,7 @@
             this.stroke              = false;
             this.strokeColor         = PConstants.ALPHA_MASK;
             this.strokeWeight        = 1;
-            this.strokeCap           = PConstants.SQUARE;  // equivalent to BUTT in svg spec
+            this.strokeCap           = PConstants.SQUARE;  // BUTT in svg spec
             this.strokeJoin          = PConstants.MITER;
             this.strokeGradient      = "";
             this.strokeGradientPaint = "";
@@ -2291,7 +2346,7 @@
 
           //show warning
           throw("The width and/or height is not " +
-                                "readable in the <svg> tag of this file.");
+                "readable in the <svg> tag of this file.");
         }
       }
       this.parseColors(this.element);
@@ -2404,7 +2459,8 @@
       } else if (name === "linearGradient") {
         //return new LinearGradient(this, elem);
       } else if (name === "text") {
-        //p.println("Text in SVG files is not currently supported, convert text to outlines instead." );
+        //p.println("Text in SVG files is not currently supported " +
+        //          "convert text to outlines instead.");
       } else if (name === "filter") {
         //p.println("Filters are not supported.");
       } else if (name === "mask") {
@@ -2421,7 +2477,8 @@
       var pathDataChars = [];
       var c;
       //change multiple spaces and commas to single space
-      var pathData = p.trim(this.element.getStringAttribute("d").replace(/[\s,]+/g,' ')); 
+      var pathData = p.trim(this.element.getStringAttribute("d")
+                            .replace(/[\s,]+/g,' '));
       if (pathData === null) { 
         return;
       }
@@ -2451,14 +2508,18 @@
       var command;
       while (i< pathData.length) {
         valOf = pathData[i].valueOf();
-        if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { // if it's a letter
+        if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { 
+          // if it's a letter
           // populate the tmpArray with coordinates
           j = i;
           i++;
           if (i < pathData.length) { // don't go over boundary of array
             tmpArray = [];
             valOf = pathData[i].valueOf();
-            while (!((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 100) || (valOf >= 102 && valOf <= 122)) && flag === false) { // if its NOT a letter
+            while (!((valOf >= 65 && valOf <= 90) ||
+                     (valOf >= 97 && valOf <= 100) || 
+                     (valOf >= 102 && valOf <= 122)) 
+                     && flag === false) { // if its NOT a letter
               if (valOf === 32) { //if its a space and the str isn't empty
                 // sometimes you get a space after the letter
                 if (str !== "") {
@@ -2497,7 +2558,8 @@
           command = pathData[j];
           valOf = command.valueOf();
           if (valOf === 77) {  // M - move to (absolute)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { // need one+ pairs of co-ordinates
+						if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { 
+						  // need one+ pairs of co-ordinates
 							cx = tmpArray[0];
 							cy = tmpArray[1];
 							this.parsePathMoveto(cx, cy);
@@ -2511,7 +2573,8 @@
 							}
 						}
           } else if (valOf === 109) {  // m - move to (relative)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						  // need one+ pairs of co-ordinates
 							this.parsePathMoveto(cx,cy);
 							if (tmpArray.length > 2) {
 								for (j = 2, k = tmpArray.length; j < k; j+=2) {
@@ -2523,7 +2586,8 @@
 							}
 						}
           } else if (valOf === 76) { // L - lineto (absolute)
-            if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+            if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+              // need one+ pairs of co-ordinates
               for (j = 0, k = tmpArray.length; j < k; j+=2) {
                 cx = tmpArray[j];
                 cy = tmpArray[j + 1];
@@ -2531,7 +2595,8 @@
               }
             }
           } else if (valOf === 108) { // l - lineto (relative)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						  // need one+ pairs of co-ordinates
 							for (j = 0, k = tmpArray.length; j < k; j+=2) {
 								cx += tmpArray[j];
 								cy += tmpArray[j+1];
@@ -2539,27 +2604,32 @@
 							}
 						}
           } else if (valOf === 72) { // H - horizontal lineto (absolute)
-						for (j = 0, k = tmpArray.length; j < k; j++) { // multiple x co-ordinates can be provided
+						for (j = 0, k = tmpArray.length; j < k; j++) { 
+						  // multiple x co-ordinates can be provided
 							cx = tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 104) { // h - horizontal lineto (relative)
-						for (j = 0, k = tmpArray.length; j < k; j++) { // multiple x co-ordinates can be provided
+						for (j = 0, k = tmpArray.length; j < k; j++) { 
+						  // multiple x co-ordinates can be provided
 							cx += tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 86) { // V - vertical lineto (absolute)
-						for (j = 0, k = tmpArray.length; j < k; j++) { // multiple y co-ordinates can be provided
+						for (j = 0, k = tmpArray.length; j < k; j++) { 
+						  // multiple y co-ordinates can be provided
 							cy = tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 118) { // v - vertical lineto (relative)
-						for (j = 0, k = tmpArray.length; j < k; j++) { // multiple y co-ordinates can be provided
+						for (j = 0, k = tmpArray.length; j < k; j++) { 
+						  // multiple y co-ordinates can be provided
 							cy += tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 67) { // C - curve to (absolute)
-						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
+						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { 
+						  // need one+ multiples of 6 co-ordinates
 							for (j = 0, k = tmpArray.length; j < k; j+=6) {
 								ctrlX1 = tmpArray[j];
 								ctrlY1 = tmpArray[j + 1];
@@ -2567,13 +2637,19 @@
 								ctrlY2 = tmpArray[j + 3];
 								endX   = tmpArray[j + 4];
 								endY   = tmpArray[j + 5];
-								this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+								this.parsePathCurveto(ctrlX1, 
+								                      ctrlY1,
+								                      ctrlX2,
+								                      ctrlY2,
+								                      endX,
+								                      endY);
 								cx = endX;
 								cy = endY;
 							}
 						}
           } else if (valOf === 99) { // c - curve to (relative)
-						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
+						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) {
+						  // need one+ multiples of 6 co-ordinates
 							for (j = 0, k = tmpArray.length; j < k; j+=6) {
 								ctrlX1 = cx + tmpArray[j];
 								ctrlY1 = cy + tmpArray[j + 1];
@@ -2581,15 +2657,22 @@
 								ctrlY2 = cy + tmpArray[j + 3];
 								endX   = cx + tmpArray[j + 4];
 								endY   = cy + tmpArray[j + 5];
-								this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+								this.parsePathCurveto(ctrlX1,
+								                      ctrlY1,
+								                      ctrlX2,
+								                      ctrlY2,
+								                      endX,
+								                      endY);
 								cx = endX;
 								cy = endY;
 							}
 						}
           } else if (valOf === 83) { // S - curve to shorthand (absolute)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						  // need one+ multiples of 4 co-ordinates
 							for (j = 0, k = tmpArray.length; j < k; j+=4) {
-								if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
+								if (lastInstruction.toLowerCase() ===  "c" ||
+								    lastInstruction.toLowerCase() ===  "s") {
 									ppx    = this.vertices[ this.vertices.length-2 ][0];
 									ppy    = this.vertices[ this.vertices.length-2 ][1];
 									px     = this.vertices[ this.vertices.length-1 ][0];
@@ -2597,7 +2680,8 @@
 									ctrlX1 = px + (px - ppx);
 									ctrlY1 = py + (py - ppy);
 								} else {
-									//If there is no previous curve, the current point will be used as the first control point.
+									//If there is no previous curve, 
+									//the current point will be used as the first control point.
 									ctrlX1 = this.vertices[this.vertices.length-1][0];
 									ctrlY1 = this.vertices[this.vertices.length-1][1];
 								}
@@ -2605,15 +2689,22 @@
 								ctrlY2 = tmpArray[j + 1];
 								endX   = tmpArray[j + 2];
 								endY   = tmpArray[j + 3];
-								this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+								this.parsePathCurveto(ctrlX1,
+								                      ctrlY1,
+								                      ctrlX2,
+								                      ctrlY2,
+								                      endX,
+								                      endY);
 								cx = endX;
 								cy = endY;
 							}
 						}
           } else if (valOf === 115) { // s - curve to shorthand (relative)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						  // need one+ multiples of 4 co-ordinates
 							for (j = 0, k = tmpArray.length; j < k; j+=4) {
-								if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
+								if (lastInstruction.toLowerCase() ===  "c" || 
+								    lastInstruction.toLowerCase() ===  "s") {
 									ppx    = this.vertices[this.vertices.length-2][0];
 									ppy    = this.vertices[this.vertices.length-2][1];
 									px     = this.vertices[this.vertices.length-1][0];
@@ -2621,7 +2712,8 @@
 									ctrlX1 = px + (px - ppx);
 									ctrlY1 = py + (py - ppy);
 								} else {
-									//If there is no previous curve, the current point will be used as the first control point.
+									//If there is no previous curve,
+									//the current point will be used as the first control point.
 									ctrlX1 = this.vertices[this.vertices.length-1][0];
 									ctrlY1 = this.vertices[this.vertices.length-1][1];
 								}
@@ -2629,13 +2721,19 @@
 								ctrlY2 = cy + tmpArray[j + 1];
 								endX   = cx + tmpArray[j + 2];
 								endY   = cy + tmpArray[j + 3];
-								this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+								this.parsePathCurveto(ctrlX1,
+								                      ctrlY1,
+								                      ctrlX2,
+								                      ctrlY2,
+								                      endX,
+								                      endY);
 								cx = endX;
 								cy = endY;
 							}
 						}
           } else if (valOf === 81) { // Q - quadratic curve to (absolute)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						  // need one+ multiples of 4 co-ordinates
 							for (j = 0, k = tmpArray.length; j < k; j+=4) {
 								ctrlX = tmpArray[j];
 								ctrlY = tmpArray[j + 1];
@@ -2647,7 +2745,8 @@
 							}
 						}
           } else if (valOf === 113) { // q - quadratic curve to (relative)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						  // need one+ multiples of 4 co-ordinates
 							for (j = 0, k = tmpArray.length; j < k; j+=4) {
 								ctrlX = cx + tmpArray[j];
 								ctrlY = cy + tmpArray[j + 1];
@@ -2658,10 +2757,13 @@
 								cy = endY;
 							}
 						}
-          } else if (valOf === 84) { // T - quadratic curve to shorthand (absolute)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+          } else if (valOf === 84) { 
+            // T - quadratic curve to shorthand (absolute)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						  // need one+ pairs of co-ordinates
 							for (j = 0, k = tmpArray.length; j < k; j+=2) {
-								if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
+								if (lastInstruction.toLowerCase() ===  "q" ||
+								    lastInstruction.toLowerCase() ===  "t") {
 									ppx   = this.vertices[this.vertices.length-2][0];
 									ppy   = this.vertices[this.vertices.length-2][1];
 									px    = this.vertices[this.vertices.length-1][0];
@@ -2669,8 +2771,9 @@
 									ctrlX = px + (px - ppx);
 									ctrlY = py + (py - ppy);
 								} else {
-									// If there is no previous command or if the previous command was not a Q, q, T or t,
-									// assume the control point is coincident with the current point.
+									// If there is no previous command or if the previous command
+									// was not a Q, q, T or t, assume the control point is 
+									// coincident with the current point.
 									ctrlX = cx;
 									ctrlY = cy;
 								}
@@ -2681,10 +2784,13 @@
 								cy = endY;
 							}
 						}
-          } else if (valOf === 116) {  // t - quadratic curve to shorthand (relative)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+          } else if (valOf === 116) {  
+            // t - quadratic curve to shorthand (relative)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						  // need one+ pairs of co-ordinates
 							for (j = 0, k = tmpArray.length; j < k; j+=2) {
-								if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
+								if (lastInstruction.toLowerCase() ===  "q" ||
+								    lastInstruction.toLowerCase() ===  "t") {
 									ppx   = this.vertices[this.vertices.length-2][0];
 									ppy   = this.vertices[this.vertices.length-2][1];
 									px    = this.vertices[this.vertices.length-1][0];
@@ -2692,8 +2798,9 @@
 									ctrlX = px + (px - ppx);
 									ctrlY = py + (py - ppy);
 								} else {
-									// If there is no previous command or if the previous command was not a Q, q, T or t,
-									// assume the control point is coincident with the current point.
+									// If there is no previous command or if the previous command
+									// was not a Q, q, T or t, assume the control point is 
+									// coincident with the current point.
 									ctrlX = cx;
 									ctrlY = cy;
 								}
@@ -2741,7 +2848,8 @@
       if (this.vertices.length > 0) {
         this.parsePathCode(PConstants.VERTEX);
         this.parsePathVertex(px, py);
-        // add property to distinguish between curContext.moveTo or curContext.lineTo
+        // add property to distinguish between curContext.moveTo 
+        // or curContext.lineTo
         this.vertices[this.vertices.length-1]["moveTo"] = false;
       } else {
         throw ("Path must start with M/m");
@@ -2754,7 +2862,8 @@
       }
       this.parsePathCode(PConstants.VERTEX);
       this.parsePathVertex(px, py);
-      // add property to distinguish between curContext.moveTo or curContext.lineTo
+      // add property to distinguish between curContext.moveTo
+      // or curContext.lineTo
       this.vertices[this.vertices.length-1]["moveTo"] = true;
     };
     
@@ -2772,7 +2881,8 @@
     PShapeSVG.prototype.parsePoly = function(val) {
       this.family    = PConstants.PATH;
       this.close     = val;
-      var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/[,\s]+/g,' '));
+      var pointsAttr = p.trim(this.element.getStringAttribute("points")
+                              .replace(/[,\s]+/g,' '));
       if (pointsAttr !== null) {
         //split into array
         var pointsBuffer = pointsAttr.split(" ");
@@ -2784,7 +2894,8 @@
             this.vertices.push(verts);
           }
         } else {
-          //p.println("Error parsing polygon points: odd number of coordinates provided");
+          //p.println("Error parsing polygon points: " + 
+          //          "odd number of coordinates provided");
         }
       }
     };
@@ -2839,7 +2950,8 @@
         this.setStroke(element.getAttribute("stroke"));
       }
       if (element.hasAttribute("stroke-width")) {
-        // if NaN (i.e. if it's 'inherit') then default back to the inherit setting
+        // if NaN (i.e. if it's 'inherit') then default
+        // back to the inherit setting
         this.setStrokeWeight(element.getAttribute("stroke-width"));
       }
       if (element.hasAttribute("stroke-linejoin") ) {
@@ -2882,7 +2994,8 @@
     
     PShapeSVG.prototype.setFillOpacity = function(opacityText) {
       this.fillOpacity = parseFloat(opacityText);
-      this.fillColor   = this.fillOpacity * 255  << 24 | this.fillColor & 0xFFFFFF;
+      this.fillColor   = this.fillOpacity * 255  << 24 |
+                         this.fillColor & 0xFFFFFF;
     };
     
     PShapeSVG.prototype.setFill = function (fillText) {
@@ -2891,7 +3004,9 @@
         this.fill = false;
       } else if (fillText.indexOf("#") === 0) {
         this.fill      = true;
-        this.fillColor = opacityMask | (parseInt(fillText.substring(1), 16 )) & 0xFFFFFF;
+        this.fillColor = opacityMask | 
+                         (parseInt(fillText.substring(1), 16 )) &
+                         0xFFFFFF;
       } else if (fillText.indexOf("rgb") === 0) {
         this.fill      = true;
         this.fillColor = opacityMask | this.parseRGB(fillText);
@@ -2908,14 +3023,18 @@
       } else {
         if (colors[fillText]) {
           this.fill      = true;
-          this.fillColor = opacityMask | (parseInt(colors[fillText].substring(1), 16)) & 0xFFFFFF;
+          this.fillColor = opacityMask |
+                           (parseInt(colors[fillText].substring(1), 16)) &
+                           0xFFFFFF;
         }
       }
     };
     
     PShapeSVG.prototype.setOpacity = function(opacity) {
-      this.strokeColor = parseFloat(opacity) * 255 << 24 | this.strokeColor & 0xFFFFFF;
-      this.fillColor   = parseFloat(opacity) * 255 << 24 | this.fillColor & 0xFFFFFF;
+      this.strokeColor = parseFloat(opacity) * 255 << 24 |
+                         this.strokeColor & 0xFFFFFF;
+      this.fillColor   = parseFloat(opacity) * 255 << 24 |
+                         this.fillColor & 0xFFFFFF;
     };
     
     PShapeSVG.prototype.setStroke = function(strokeText) {
@@ -2924,7 +3043,9 @@
         this.stroke = false;
       } else if (strokeText.charAt( 0 ) === "#") {
         this.stroke      = true;
-        this.strokeColor = opacityMask | (parseInt( strokeText.substring( 1 ), 16 )) & 0xFFFFFF;
+        this.strokeColor = opacityMask |
+                           (parseInt( strokeText.substring( 1 ), 16 )) &
+                           0xFFFFFF;
       } else if (strokeText.indexOf( "rgb" ) === 0 ) {
         this.stroke = true;
         this.strokeColor = opacityMask | this.parseRGB(strokeText);
@@ -2933,14 +3054,18 @@
           //this.strokeObject = findChild(strokeName);
         /*if (strokeObject instanceof Gradient) {
           strokeGradient = (Gradient) strokeObject;
-          strokeGradientPaint = calcGradientPaint(strokeGradient); //, opacity);
+          strokeGradientPaint = calcGradientPaint(strokeGradient); 
+                                //, opacity);
         } else {
-          System.err.println("url " + strokeName + " refers to unexpected data");
+          System.err.println("url " + strokeName +
+                             " refers to unexpected data");
         }*/
       } else {
         if (colors[strokeText]){
           this.stroke      = true;
-          this.strokeColor = opacityMask | (parseInt(colors[strokeText].substring(1), 16)) & 0xFFFFFF;
+          this.strokeColor = opacityMask |
+                             (parseInt(colors[strokeText].substring(1), 16)) &
+                             0xFFFFFF;
         }
       }
     };
@@ -2975,7 +3100,9 @@
     
     PShapeSVG.prototype.setStrokeOpacity =  function (opacityText) {
       this.strokeOpacity = parseFloat(opacityText);
-      this.strokeColor   = this.strokeOpacity * 255 << 24 | this.strokeColor & 0xFFFFFF;
+      this.strokeColor   = this.strokeOpacity * 255 << 24 |
+                           this.strokeColor &
+                           0xFFFFFF;
     };
     
     PShapeSVG.prototype.parseRGB = function(color) {
