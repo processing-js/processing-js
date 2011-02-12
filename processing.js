@@ -1837,15 +1837,13 @@
       },
       disableStyle: function(){
         this.style = false;
-        for(var i = 0; i < this.children.length; i++)
-        {
+        for(var i = 0, l=this.children.length; i<l; i++) {
           this.children[i].disableStyle();
         }
       },
       enableStyle: function(){
         this.style = true;
-        for(var i = 0; i < this.children.length; i++)
-        {
+        for(var i = 0, l=this.children.length; i<l; i++) {
           this.children[i].enableStyle();
         }
       },
@@ -1886,24 +1884,23 @@
         if (this.vertices.length === 0) { return; }
 
         p.beginShape();
-        var i;
+        var i, l;
         if (this.vertexCodes.length === 0) {  // each point is a simple vertex
           if (this.vertices[0].length === 2) {  // drawing 2D vertices
-            for (i = 0; i < this.vertices.length; i++) {
+            for (i = 0, l = this.vertices.length; i < l; i++) {
               p.vertex(this.vertices[i][0], this.vertices[i][1]);
             }
           } else {  // drawing 3D vertices
-            for (i = 0; i < this.vertices.length; i++) {
+            for (i = 0, l = this.vertices.length; i < l; i++) {
               p.vertex(this.vertices[i][0], this.vertices[i][1], this.vertices[i][2]);
             }
           }
         } else {  // coded set of vertices
           var index = 0;
-          var j;
+          var j, k;
           if (this.vertices[0].length === 2) {  // drawing a 2D path
-            for (j = 0; j < this.vertexCodes.length; j++) {
-              switch (this.vertexCodes[j]) {
-              case PConstants.VERTEX:
+            for (j = 0, k = this.vertexCodes.length; j < k; j++) {
+              if (this.vertexCodes[j] === PConstants.VERTEX) {
                 p.vertex(this.vertices[index][0], this.vertices[index][1]);
                 if ( this.vertices[index]["moveTo"] === true) {
                   vertArray[vertArray.length-1]["moveTo"] = true;
@@ -1912,47 +1909,38 @@
                 }
                 p.breakShape = false;
                 index++;
-                break;
-              case PConstants.BEZIER_VERTEX:
+              } else if (this.vertexCodes[j] === PConstants.BEZIER_VERTEX) {
                 p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1],
                                this.vertices[index+1][0], this.vertices[index+1][1],
                                this.vertices[index+2][0], this.vertices[index+2][1]);
                 index += 3;
-                break;
-              case PConstants.CURVE_VERTEX:
+              } else if (this.vertexCodes[j] === PConstants.CURVE_VERTEX) {
                 p.curveVertex(this.vertices[index][0], this.vertices[index][1]);
                 index++;
-                break;
-              case PConstants.BREAK:
+              } else if (this.vertexCodes[j] ===  PConstants.BREAK) {
                 p.breakShape = true;
-                break;
               }
             }
           } else {  // drawing a 3D path
-            for (j = 0; j < this.vertexCodes.length; j++) {
-              switch (this.vertexCodes[j]) {
-                case PConstants.VERTEX:
-                  p.vertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
-                  if (this.vertices[index]["moveTo"] === true) {
-                    vertArray[vertArray.length-1]["moveTo"] = true;
-                  } else if (this.vertices[index]["moveTo"] === false) {
-                    vertArray[vertArray.length-1]["moveTo"] = false;
-                  }
-                  p.breakShape = false;
-                  break;
-                case PConstants.BEZIER_VERTEX:
-                  p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1], this.vertices[index+0][2],
-                                 this.vertices[index+1][0], this.vertices[index+1][1], this.vertices[index+1][2],
-                                 this.vertices[index+2][0], this.vertices[index+2][1], this.vertices[index+2][2]);
-                  index += 3;
-                  break;
-                case PConstants.CURVE_VERTEX:
-                  p.curveVertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
-                  index++;
-                  break;
-                case PConstants.BREAK:
-                  p.breakShape = true;
-                  break;
+            for (j = 0, k = this.vertexCodes.length; j < k; j++) {
+              if (this.vertexCodes[j] === PConstants.VERTEX) {
+                p.vertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                if (this.vertices[index]["moveTo"] === true) {
+                  vertArray[vertArray.length-1]["moveTo"] = true;
+                } else if (this.vertices[index]["moveTo"] === false) {
+                  vertArray[vertArray.length-1]["moveTo"] = false;
+                }
+                p.breakShape = false;
+              } else if (this.vertexCodes[j] ===  PConstants.BEZIER_VERTEX) {
+                p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1], this.vertices[index+0][2],
+                               this.vertices[index+1][0], this.vertices[index+1][1], this.vertices[index+1][2],
+                               this.vertices[index+2][0], this.vertices[index+2][1], this.vertices[index+2][2]);
+                index += 3;
+              } else if (this.vertexCodes[j] === PConstants.CURVE_VERTEX) {
+                p.curveVertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
+                index++;
+              } else if (this.vertexCodes[j] === PConstants.BREAK) {
+                p.breakShape = true;
               }
             }
           }
@@ -1961,13 +1949,13 @@
       },
       drawGeometry: function() {
         p.beginShape(this.kind);
-        var i;
+        var i, j;
         if (this.style) {
-          for (i = 0; i < this.vertices.length; i++) {
+          for (i = 0, j = this.vertices.length; i < j; i++) {
             p.vertex(this.vertices[i]);
           }
         } else {
-          for (i = 0; i < this.vertices.length; i++) {
+          for (i = 0, j = this.vertices.length; i < j; i++) {
             var vert = this.vertices[i];
             if (vert[2] === 0) {
               p.vertex(vert[0], vert[1]);
@@ -1979,62 +1967,52 @@
         p.endShape();
       },
       drawGroup: function() {
-        for (var i = 0; i < this.children.length; i++) {
+        for (var i = 0, j = this.children.length; i < j; i++) {
           this.children[i].draw();
         }
       },
       drawPrimitive: function() {
-        switch (this.kind) {
-          case PConstants.POINT:
-            p.point(this.params[0], this.params[1]);
-            break;
-          case PConstants.LINE:
-            if (this.params.length === 4) {  // 2D
-              p.line(this.params[0], this.params[1],
-                     this.params[2], this.params[3]);
-            } else {  // 3D
-              p.line(this.params[0], this.params[1], this.params[2],
-                     this.params[3], this.params[4], this.params[5]);
-            }
-            break;
-          case PConstants.TRIANGLE:
-            p.triangle(this.params[0], this.params[1],
-                       this.params[2], this.params[3],
-                       this.params[4], this.params[5]);
-            break;
-          case PConstants.QUAD:
-            p.quad(this.params[0], this.params[1],
-                   this.params[2], this.params[3],
-                   this.params[4], this.params[5],
-                   this.params[6], this.params[7]);
-            break;
-          case PConstants.RECT:
-            if (this.image !== null) {
-              p.imageMode(PConstants.CORNER);
-              p.image(this.image, this.params[0], this.params[1], this.params[2], this.params[3]);
-            } else {
-              p.rectMode(PConstants.CORNER);
-              p.rect(this.params[0], this.params[1], this.params[2], this.params[3]);
-            }
-            break;
-          case PConstants.ELLIPSE:
-            p.ellipseMode(PConstants.CORNER);
-            p.ellipse(this.params[0], this.params[1], this.params[2], this.params[3]);
-            break;
-          case PConstants.ARC:
-            p.ellipseMode(PConstants.CORNER);
-            p.arc(this.params[0], this.params[1], this.params[2], this.params[3], this.params[4], this.params[5]);
-            break;
-          case PConstants.BOX:
-            if (this.params.length === 1) {
-              p.box(this.params[0]);
-            } else {
-              p.box(this.params[0], this.params[1], this.params[2]);
-            }
-            break;
-          case PConstants.SPHERE:
-            p.sphere(this.params[0]);
-            break;
+        if (this.kind === PConstants.POINT) {
+          p.point(this.params[0], this.params[1]);
+        } else if (this.kind === PConstants.LINE) {
+          if (this.params.length === 4) {  // 2D
+            p.line(this.params[0], this.params[1],
+                   this.params[2], this.params[3]);
+          } else {  // 3D
+            p.line(this.params[0], this.params[1], this.params[2],
+                   this.params[3], this.params[4], this.params[5]);
+          }
+        } else if (this.kind === PConstants.TRIANGLE) {
+          p.triangle(this.params[0], this.params[1],
+                     this.params[2], this.params[3],
+                     this.params[4], this.params[5]);
+        } else if (this.kind === PConstants.QUAD) {
+          p.quad(this.params[0], this.params[1],
+                 this.params[2], this.params[3],
+                 this.params[4], this.params[5],
+                 this.params[6], this.params[7]);
+        } else if (this.kind === PConstants.RECT) {
+          if (this.image !== null) {
+            p.imageMode(PConstants.CORNER);
+            p.image(this.image, this.params[0], this.params[1], this.params[2], this.params[3]);
+          } else {
+            p.rectMode(PConstants.CORNER);
+            p.rect(this.params[0], this.params[1], this.params[2], this.params[3]);
+          }
+        } else if (this.kind === PConstants.ELLIPSE) {
+          p.ellipseMode(PConstants.CORNER);
+          p.ellipse(this.params[0], this.params[1], this.params[2], this.params[3]);
+        } else if (this.kind === PConstants.ARC) {
+          p.ellipseMode(PConstants.CORNER);
+          p.arc(this.params[0], this.params[1], this.params[2], this.params[3], this.params[4], this.params[5]);
+        } else if (this.kind === PConstants.BOX) {
+          if (this.params.length === 1) {
+            p.box(this.params[0]);
+          } else {
+            p.box(this.params[0], this.params[1], this.params[2]);
+          }
+        } else if (this.kind === PConstants.SPHERE) {
+          p.sphere(this.params[0]);
         }
       },
       pre: function() {
@@ -2081,22 +2059,19 @@
           return this.children[child];
         } else {
           var found,
-              i;
+              i,j;
           if(child === "" || this.name === child){
             return this;
           } else {
-            if(this.nameTable.length > 0)
-            {
-              for(i = 0; i < this.nameTable.length || found; i++)
-              {
+            if(this.nameTable.length > 0) {
+              for(i = 0, j = this.nameTable.length; i < j || found; i++) {
                 if(this.nameTable[i].getName === child) {
                   found = this.nameTable[i];
                 }
               }
               if (found) { return found; }
             }
-            for(i = 0; i < this.children.lenth; i++)
-            {
+            for(i = 0, j = this.children.length; i < j; i++) {
               found = this.children[i].getChild(child);
               if(found) { return found; }
             }
@@ -2338,10 +2313,10 @@
         pieces.push(p.trim(all));
       });
       if (pieces.length === 0) {
-        p.println("Transformation:" + str + " is empty");
+        //p.println("Transformation:" + str + " is empty");
         return null;
       }
-      for (var i =0; i< pieces.length; i++) {
+      for (var i = 0, j = pieces.length; i < j; i++) {
         var m = [];
         pieces[i].replace(/\((.*?)\)/, (function() {
           return function(all, params) {
@@ -2381,7 +2356,7 @@
     PShapeSVG.prototype.parseChildren = function(element) {
       var newelement = element.getChildren();
       var children   = new p.PShape();
-      for (var i = 0; i < newelement.length; i++) {
+      for (var i = 0, j = newelement.length; i < j; i++) {
         var kid = this.parseChild(newelement[i]);
         if (kid) {
           children.addChild(kid);
@@ -2397,61 +2372,45 @@
     PShapeSVG.prototype.parseChild = function( elem ) {
       var name = elem.getName();
       var shape;
-      switch (name) {
-        case "g":
-          shape = new PShapeSVG(this, elem);
-          break;
-        case "defs":
-          // generally this will contain gradient info, so may
-          // as well just throw it into a group element for parsing
-          shape = new PShapeSVG(this, elem);
-          break;
-        case "line":
-          shape = new PShapeSVG(this, elem);
-          shape.parseLine();
-          break;
-        case "circle":
-          shape = new PShapeSVG(this, elem);
-          shape.parseEllipse(true);
-          break;
-        case "ellipse":
-          shape = new PShapeSVG(this, elem);
-          shape.parseEllipse(false);
-          break;
-        case "rect":
-          shape = new PShapeSVG(this, elem);
-          shape.parseRect();
-          break;
-        case "polygon":
-          shape = new PShapeSVG(this, elem);
-          shape.parsePoly(true);
-          break;
-        case "polyline":
-          shape = new PShapeSVG(this, elem);
-          shape.parsePoly(false);
-          break;
-        case "path":
-          shape = new PShapeSVG(this, elem);
-          shape.parsePath();
-          break;
-        case "radialGradient":
-          //return new RadialGradient(this, elem);
-          break;
-        case "linearGradient":
-          //return new LinearGradient(this, elem);
-          break;
-        case "text":
-          p.println("Text in SVG files is not currently supported, convert text to outlines instead." );
-          break;
-        case "filter":
-          p.println("Filters are not supported.");
-          break;
-        case "mask":
-          p.println("Masks are not supported.");
-          break;
-        default:
-          p.println("Ignoring  <" + name + "> tag.");
-          break;
+      if (name === "g") {
+        shape = new PShapeSVG(this, elem);
+      } else if (name === "defs") {
+        // generally this will contain gradient info, so may
+        // as well just throw it into a group element for parsing
+        shape = new PShapeSVG(this, elem);
+      } else if (name === "line") {
+        shape = new PShapeSVG(this, elem);
+        shape.parseLine();
+      } else if (name === "circle") {
+        shape = new PShapeSVG(this, elem);
+        shape.parseEllipse(true);
+      } else if (name === "ellipse") {
+        shape = new PShapeSVG(this, elem);
+        shape.parseEllipse(false);
+      } else if (name === "rect") {
+        shape = new PShapeSVG(this, elem);
+        shape.parseRect();
+      } else if (name === "polygon") {
+        shape = new PShapeSVG(this, elem);
+        shape.parsePoly(true);
+      } else if (name === "polyline") {
+        shape = new PShapeSVG(this, elem);
+        shape.parsePoly(false);
+      } else if (name === "path") {
+        shape = new PShapeSVG(this, elem);
+        shape.parsePath();
+      } else if (name === "radialGradient") {
+        //return new RadialGradient(this, elem);
+      } else if (name === "linearGradient") {
+        //return new LinearGradient(this, elem);
+      } else if (name === "text") {
+        //p.println("Text in SVG files is not currently supported, convert text to outlines instead." );
+      } else if (name === "filter") {
+        //p.println("Filters are not supported.");
+      } else if (name === "mask") {
+        //p.println("Masks are not supported.");
+      } else {
+        //p.println("Ignoring  <" + name + "> tag.");
       }
       return shape;
     };
@@ -2461,8 +2420,11 @@
       this.kind = 0;
       var pathDataChars = [];
       var c;
-      var pathData = p.trim(this.element.getStringAttribute("d").replace(/[\s,]+/g,' ')); //change multiple spaces and commas to single space
-      if (pathData === null) { return; }
+      //change multiple spaces and commas to single space
+      var pathData = p.trim(this.element.getStringAttribute("d").replace(/[\s,]+/g,' ')); 
+      if (pathData === null) { 
+        return;
+      }
       pathData = pathData.toCharArray();
       var cx     = 0,
           cy     = 0,
@@ -2480,6 +2442,7 @@
           py     = 0,
           i      = 0,
           j      = 0,
+          k      = 0,
           valOf  = 0;
       var str = "";
       var tmpArray =[];
@@ -2488,22 +2451,22 @@
       var command;
       while (i< pathData.length) {
         valOf = pathData[i].valueOf();
-        if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { // if its a letter
+        if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { // if it's a letter
           // populate the tmpArray with coordinates
           j = i;
           i++;
-          if (i < pathData.length) { // dont go over boundary of array
+          if (i < pathData.length) { // don't go over boundary of array
             tmpArray = [];
             valOf = pathData[i].valueOf();
             while (!((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 100) || (valOf >= 102 && valOf <= 122)) && flag === false) { // if its NOT a letter
               if (valOf === 32) { //if its a space and the str isn't empty
-                // somethimes you get a space after the letter
+                // sometimes you get a space after the letter
                 if (str !== "") {
                   tmpArray.push(parseFloat(str));
                   str = "";
                 }
                 i++;
-              } else if (valOf === 45) { //if its a -
+              } else if (valOf === 45) { //if it's a -
                 // allow for 'e' notation in numbers, e.g. 2.10e-9
                 if (pathData[i-1].valueOf() === 101) {
                   str += pathData[i].toString();
@@ -2520,7 +2483,7 @@
                 str += pathData[i].toString();
                 i++;
               }
-              if (i === pathData.length) { // dont go over boundary of array
+              if (i === pathData.length) { // don't go over boundary of array
                 flag = true;
               } else {
                 valOf = pathData[i].valueOf();
@@ -2532,249 +2495,219 @@
             str = "";
           }
           command = pathData[j];
-          switch (command.valueOf()) {
-            case 77:  // M - move to (absolute)
-              if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { // need one+ pairs of co-ordinates
-                cx = tmpArray[0];
-                cy = tmpArray[1];
-                this.parsePathMoveto(cx, cy);
-                if (tmpArray.length > 2) {
-                  for (j = 2; j < tmpArray.length; j+=2) {
-                    // absolute line to
-                    cx = tmpArray[j];
-                    cy = tmpArray[j+1];
-                    this.parsePathLineto(cx,cy);
-                  }
-                }
-              }
-              break;
-            case 109:  // m - move to (relative)
-              if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                this.parsePathMoveto(cx,cy);
-                if (tmpArray.length > 2) {
-                  for (j = 2; j < tmpArray.length; j+=2) {
-                    // relative line to
-                    cx += tmpArray[j];
-                    cy += tmpArray[j + 1];
-                    this.parsePathLineto(cx,cy);
-                  }
-                }
-              }
-              break;
-            case 76: // L - lineto (absolute)
+          valOf = command.valueOf();
+          if (valOf === 77) {  // M - move to (absolute)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { // need one+ pairs of co-ordinates
+							cx = tmpArray[0];
+							cy = tmpArray[1];
+							this.parsePathMoveto(cx, cy);
+							if (tmpArray.length > 2) {
+								for (j = 2, k = tmpArray.length; j < k; j+=2) {
+									// absolute line to
+									cx = tmpArray[j];
+									cy = tmpArray[j+1];
+									this.parsePathLineto(cx,cy);
+								}
+							}
+						}
+          } else if (valOf === 109) {  // m - move to (relative)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+							this.parsePathMoveto(cx,cy);
+							if (tmpArray.length > 2) {
+								for (j = 2, k = tmpArray.length; j < k; j+=2) {
+									// relative line to
+									cx += tmpArray[j];
+									cy += tmpArray[j + 1];
+									this.parsePathLineto(cx,cy);
+								}
+							}
+						}
+          } else if (valOf === 76) { // L - lineto (absolute)
             if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-              for (j = 0; j < tmpArray.length; j+=2) {
+              for (j = 0, k = tmpArray.length; j < k; j+=2) {
                 cx = tmpArray[j];
                 cy = tmpArray[j + 1];
                 this.parsePathLineto(cx,cy);
               }
             }
-            break;
-
-            case 108: // l - lineto (relative)
-              if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                for (j = 0; j < tmpArray.length; j+=2) {
-                  cx += tmpArray[j];
-                  cy += tmpArray[j+1];
-                  this.parsePathLineto(cx,cy);
-                }
+          } else if (valOf === 108) { // l - lineto (relative)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+							for (j = 0, k = tmpArray.length; j < k; j+=2) {
+								cx += tmpArray[j];
+								cy += tmpArray[j+1];
+								this.parsePathLineto(cx,cy);
+							}
+						}
+          } else if (valOf === 72) { // H - horizontal lineto (absolute)
+						for (j = 0, k = tmpArray.length; j < k; j++) { // multiple x co-ordinates can be provided
+							cx = tmpArray[j];
+							this.parsePathLineto(cx, cy);
+						}
+          } else if (valOf === 104) { // h - horizontal lineto (relative)
+						for (j = 0, k = tmpArray.length; j < k; j++) { // multiple x co-ordinates can be provided
+							cx += tmpArray[j];
+							this.parsePathLineto(cx, cy);
+						}
+          } else if (valOf === 86) { // V - vertical lineto (absolute)
+						for (j = 0, k = tmpArray.length; j < k; j++) { // multiple y co-ordinates can be provided
+							cy = tmpArray[j];
+							this.parsePathLineto(cx, cy);
+						}
+          } else if (valOf === 118) { // v - vertical lineto (relative)
+						for (j = 0, k = tmpArray.length; j < k; j++) { // multiple y co-ordinates can be provided
+							cy += tmpArray[j];
+							this.parsePathLineto(cx, cy);
+						}
+          } else if (valOf === 67) { // C - curve to (absolute)
+						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
+							for (j = 0, k = tmpArray.length; j < k; j+=6) {
+								ctrlX1 = tmpArray[j];
+								ctrlY1 = tmpArray[j + 1];
+								ctrlX2 = tmpArray[j + 2];
+								ctrlY2 = tmpArray[j + 3];
+								endX   = tmpArray[j + 4];
+								endY   = tmpArray[j + 5];
+								this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 99) { // c - curve to (relative)
+						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
+							for (j = 0, k = tmpArray.length; j < k; j+=6) {
+								ctrlX1 = cx + tmpArray[j];
+								ctrlY1 = cy + tmpArray[j + 1];
+								ctrlX2 = cx + tmpArray[j + 2];
+								ctrlY2 = cy + tmpArray[j + 3];
+								endX   = cx + tmpArray[j + 4];
+								endY   = cy + tmpArray[j + 5];
+								this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 83) { // S - curve to shorthand (absolute)
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+							for (j = 0, k = tmpArray.length; j < k; j+=4) {
+								if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
+									ppx    = this.vertices[ this.vertices.length-2 ][0];
+									ppy    = this.vertices[ this.vertices.length-2 ][1];
+									px     = this.vertices[ this.vertices.length-1 ][0];
+									py     = this.vertices[ this.vertices.length-1 ][1];
+									ctrlX1 = px + (px - ppx);
+									ctrlY1 = py + (py - ppy);
+								} else {
+									//If there is no previous curve, the current point will be used as the first control point.
+									ctrlX1 = this.vertices[this.vertices.length-1][0];
+									ctrlY1 = this.vertices[this.vertices.length-1][1];
+								}
+								ctrlX2 = tmpArray[j];
+								ctrlY2 = tmpArray[j + 1];
+								endX   = tmpArray[j + 2];
+								endY   = tmpArray[j + 3];
+								this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 115) { // s - curve to shorthand (relative)
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+							for (j = 0, k = tmpArray.length; j < k; j+=4) {
+								if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
+									ppx    = this.vertices[this.vertices.length-2][0];
+									ppy    = this.vertices[this.vertices.length-2][1];
+									px     = this.vertices[this.vertices.length-1][0];
+									py     = this.vertices[this.vertices.length-1][1];
+									ctrlX1 = px + (px - ppx);
+									ctrlY1 = py + (py - ppy);
+								} else {
+									//If there is no previous curve, the current point will be used as the first control point.
+									ctrlX1 = this.vertices[this.vertices.length-1][0];
+									ctrlY1 = this.vertices[this.vertices.length-1][1];
+								}
+								ctrlX2 = cx + tmpArray[j];
+								ctrlY2 = cy + tmpArray[j + 1];
+								endX   = cx + tmpArray[j + 2];
+								endY   = cy + tmpArray[j + 3];
+								this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 81) { // Q - quadratic curve to (absolute)
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+							for (j = 0, k = tmpArray.length; j < k; j+=4) {
+								ctrlX = tmpArray[j];
+								ctrlY = tmpArray[j + 1];
+								endX  = tmpArray[j + 2];
+								endY  = tmpArray[j + 3];
+								this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 113) { // q - quadratic curve to (relative)
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
+							for (j = 0, k = tmpArray.length; j < k; j+=4) {
+								ctrlX = cx + tmpArray[j];
+								ctrlY = cy + tmpArray[j + 1];
+								endX  = cx + tmpArray[j + 2];
+								endY  = cy + tmpArray[j + 3];
+								this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 84) { // T - quadratic curve to shorthand (absolute)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+							for (j = 0, k = tmpArray.length; j < k; j+=2) {
+								if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
+									ppx   = this.vertices[this.vertices.length-2][0];
+									ppy   = this.vertices[this.vertices.length-2][1];
+									px    = this.vertices[this.vertices.length-1][0];
+									py    = this.vertices[this.vertices.length-1][1];
+									ctrlX = px + (px - ppx);
+									ctrlY = py + (py - ppy);
+								} else {
+									// If there is no previous command or if the previous command was not a Q, q, T or t,
+									// assume the control point is coincident with the current point.
+									ctrlX = cx;
+									ctrlY = cy;
+								}
+								endX  = tmpArray[j];
+								endY  = tmpArray[j + 1];
+								this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 116) {  // t - quadratic curve to shorthand (relative)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
+							for (j = 0, k = tmpArray.length; j < k; j+=2) {
+								if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
+									ppx   = this.vertices[this.vertices.length-2][0];
+									ppy   = this.vertices[this.vertices.length-2][1];
+									px    = this.vertices[this.vertices.length-1][0];
+									py    = this.vertices[this.vertices.length-1][1];
+									ctrlX = px + (px - ppx);
+									ctrlY = py + (py - ppy);
+								} else {
+									// If there is no previous command or if the previous command was not a Q, q, T or t,
+									// assume the control point is coincident with the current point.
+									ctrlX = cx;
+									ctrlY = cy;
+								}
+								endX  = cx + tmpArray[j];
+								endY  = cy + tmpArray[j + 1];
+                this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+                cx = endX;
+                cy = endY;
               }
-              break;
-
-            case 72: // H - horizontal lineto (absolute)
-              for (j = 0; j < tmpArray.length; j++) { // multiple x co-ordinates can be provided
-                cx = tmpArray[j];
-                this.parsePathLineto(cx, cy);
-              }
-              break;
-
-            case 104: // h - horizontal lineto (relative)
-              for (j = 0; j < tmpArray.length; j++) { // multiple x co-ordinates can be provided
-                cx += tmpArray[j];
-                this.parsePathLineto(cx, cy);
-              }
-              break;
-
-            case 86: // V - vertical lineto (absolute)
-              for (j = 0; j < tmpArray.length; j++) { // multiple y co-ordinates can be provided
-                cy = tmpArray[j];
-                this.parsePathLineto(cx, cy);
-              }
-              break;
-
-            case 118: // v - vertical lineto (relative)
-              for (j = 0; j < tmpArray.length; j++) { // multiple y co-ordinates can be provided
-                cy += tmpArray[j];
-                this.parsePathLineto(cx, cy);
-              }
-              break;
-
-            case 67: // C - curve to (absolute)
-              if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
-                for (j = 0; j < tmpArray.length; j+=6) {
-                  ctrlX1 = tmpArray[j];
-                  ctrlY1 = tmpArray[j + 1];
-                  ctrlX2 = tmpArray[j + 2];
-                  ctrlY2 = tmpArray[j + 3];
-                  endX   = tmpArray[j + 4];
-                  endY   = tmpArray[j + 5];
-                  this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                  cx = endX;
-                  cy = endY;
-                }
-              }
-              break;
-
-            case 99: // c - curve to (relative)
-              if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
-                for (j = 0; j < tmpArray.length; j+=6) {
-                  ctrlX1 = cx + tmpArray[j];
-                  ctrlY1 = cy + tmpArray[j + 1];
-                  ctrlX2 = cx + tmpArray[j + 2];
-                  ctrlY2 = cy + tmpArray[j + 3];
-                  endX   = cx + tmpArray[j + 4];
-                  endY   = cy + tmpArray[j + 5];
-                  this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                  cx = endX;
-                  cy = endY;
-                }
-              }
-              break;
-
-            case 83: // S - curve to shorthand (absolute)
-              if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
-                for (j = 0; j < tmpArray.length; j+=4) {
-                  if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
-                    ppx    = this.vertices[ this.vertices.length-2 ][0];
-                    ppy    = this.vertices[ this.vertices.length-2 ][1];
-                    px     = this.vertices[ this.vertices.length-1 ][0];
-                    py     = this.vertices[ this.vertices.length-1 ][1];
-                    ctrlX1 = px + (px - ppx);
-                    ctrlY1 = py + (py - ppy);
-                  } else {
-                    //If there is no previous curve, the current point will be used as the first control point.
-                    ctrlX1 = this.vertices[this.vertices.length-1][0];
-                    ctrlY1 = this.vertices[this.vertices.length-1][1];
-                  }
-                  ctrlX2 = tmpArray[j];
-                  ctrlY2 = tmpArray[j + 1];
-                  endX   = tmpArray[j + 2];
-                  endY   = tmpArray[j + 3];
-                  this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                  cx = endX;
-                  cy = endY;
-                }
-              }
-              break;
-
-            case 115: // s - curve to shorthand (relative)
-              if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
-                for (j = 0; j < tmpArray.length; j+=4) {
-                  if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
-                    ppx    = this.vertices[this.vertices.length-2][0];
-                    ppy    = this.vertices[this.vertices.length-2][1];
-                    px     = this.vertices[this.vertices.length-1][0];
-                    py     = this.vertices[this.vertices.length-1][1];
-                    ctrlX1 = px + (px - ppx);
-                    ctrlY1 = py + (py - ppy);
-                  } else {
-                    //If there is no previous curve, the current point will be used as the first control point.
-                    ctrlX1 = this.vertices[this.vertices.length-1][0];
-                    ctrlY1 = this.vertices[this.vertices.length-1][1];
-                  }
-                  ctrlX2 = cx + tmpArray[j];
-                  ctrlY2 = cy + tmpArray[j + 1];
-                  endX   = cx + tmpArray[j + 2];
-                  endY   = cy + tmpArray[j + 3];
-                  this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                  cx = endX;
-                  cy = endY;
-                }
-              }
-              break;
-
-            case 81: // Q - quadratic curve to (absolute)
-              if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
-                for (j = 0; j < tmpArray.length; j+=4) {
-                  ctrlX = tmpArray[j];
-                  ctrlY = tmpArray[j + 1];
-                  endX  = tmpArray[j + 2];
-                  endY  = tmpArray[j + 3];
-                  this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-                  cx = endX;
-                  cy = endY;
-                }
-              }
-              break;
-
-            case 113: // q - quadratic curve to (relative)
-              if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
-                for (j = 0; j < tmpArray.length; j+=4) {
-                  ctrlX = cx + tmpArray[j];
-                  ctrlY = cy + tmpArray[j + 1];
-                  endX  = cx + tmpArray[j + 2];
-                  endY  = cy + tmpArray[j + 3];
-                  this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-                  cx = endX;
-                  cy = endY;
-                }
-              }
-              break;
-
-            case 84: // T - quadratic curve to shorthand (absolute)
-              if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                for (j = 0; j < tmpArray.length; j+=2) {
-                  if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
-                    ppx   = this.vertices[this.vertices.length-2][0];
-                    ppy   = this.vertices[this.vertices.length-2][1];
-                    px    = this.vertices[this.vertices.length-1][0];
-                    py    = this.vertices[this.vertices.length-1][1];
-                    ctrlX = px + (px - ppx);
-                    ctrlY = py + (py - ppy);
-                  } else {
-                    // If there is no previous command or if the previous command was not a Q, q, T or t,
-                    // assume the control point is coincident with the current point.
-                    ctrlX = cx;
-                    ctrlY = cy;
-                  }
-                  endX  = tmpArray[j];
-                  endY  = tmpArray[j + 1];
-                  this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-                  cx = endX;
-                  cy = endY;
-                }
-              }
-              break;
-
-            case 116:  // t - quadratic curve to shorthand (relative)
-              if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                for (j = 0; j < tmpArray.length; j+=2) {
-                  if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
-                    ppx   = this.vertices[this.vertices.length-2][0];
-                    ppy   = this.vertices[this.vertices.length-2][1];
-                    px    = this.vertices[this.vertices.length-1][0];
-                    py    = this.vertices[this.vertices.length-1][1];
-                    ctrlX = px + (px - ppx);
-                    ctrlY = py + (py - ppy);
-                  } else {
-                    // If there is no previous command or if the previous command was not a Q, q, T or t,
-                    // assume the control point is coincident with the current point.
-                    ctrlX = cx;
-                    ctrlY = cy;
-                  }
-                  endX  = cx + tmpArray[j];
-                  endY  = cy + tmpArray[j + 1];
-                  this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-                  cx = endX;
-                  cy = endY;
-                }
-              }
-              break;
-
-            case 90: //Z
-            case 122: //z
-              this.close = true;
-              break;
+            }
+          } else if (valOf === 90) {
+            //Z
+          } else if (valOf === 122) { //z
+            this.close = true;
           }
           lastInstruction = command.toString();
         } else { i++;}
@@ -2844,14 +2777,14 @@
         //split into array
         var pointsBuffer = pointsAttr.split(" ");
         if (pointsBuffer.length % 2 === 0) {
-          for (var i = 0; i < pointsBuffer.length; i++) {
+          for (var i = 0, j = pointsBuffer.length; i < j; i++) {
             var verts = [];
             verts[0]  = pointsBuffer[i];
             verts[1]  = pointsBuffer[++i];
             this.vertices.push(verts);
           }
         } else {
-          p.println("Error parsing polygon points: odd number of coordinates provided");
+          //p.println("Error parsing polygon points: odd number of coordinates provided");
         }
       }
     };
@@ -2924,37 +2857,25 @@
         var styleText   = element.getStringAttribute("style");
         var styleTokens = styleText.toString().split( ";" );
 
-        for (var i = 0; i < styleTokens.length; i++) {
+        for (var i = 0, j = styleTokens.length; i < j; i++) {
           var tokens = p.trim(styleTokens[i].split( ":" ));
-          switch(tokens[0]){
-            case "fill":
+          if (tokens[0] === "fill") {
               this.setFill(tokens[1]);
-              break;
-            case "fill-opacity":
-
+          } else if (tokens[0] === "fill-opacity") {
               this.setFillOpacity(tokens[1]);
-
-              break;
-            case "stroke":
+          } else if (tokens[0] === "stroke") {
               this.setStroke(tokens[1]);
-              break;
-            case "stroke-width":
+          } else if (tokens[0] === "stroke-width") {
               this.setStrokeWeight(tokens[1]);
-              break;
-            case "stroke-linecap":
+          } else if (tokens[0] === "stroke-linecap") {
               this.setStrokeCap(tokens[1]);
-              break;
-            case "stroke-linejoin":
+          } else if (tokens[0] === "stroke-linejoin") {
               this.setStrokeJoin(tokens[1]);
-              break;
-            case "stroke-opacity":
+          } else if (tokens[0] === "stroke-opacity") {
               this.setStrokeOpacity(tokens[1]);
-              break;
-            case "opacity":
+          } else if (tokens[0] === "opacity") {
               this.setOpacity(tokens[1]);
-              break;
-            // Other attributes are not yet implemented
-          }
+          } // Other attributes are not yet implemented
         }
       }
     };
@@ -3274,14 +3195,14 @@
         if (object instanceof XMLElement) {
           if (this.name !== object.getLocalName) { return false; }
           if (this.attributes.length !== object.getAttributeCount()) { return false; }
-          for (var i = 0; i < this.attributes.length; i++){
+          for (var i = 0, j = this.attributes.length; i < j; i++){
             if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
             if (this.attributes[i].getValue() !== object.attributes[i].getValue()) { return false; }
             if (this.attributes[i].getType()  !== object.attributes[i].getType()) { return false; }
           }
           if (this.children.length !== object.getChildCount()) { return false; }
           var child1, child2;
-          for (i = 0; i < this.children.length; i++) {
+          for (i = 0, j = this.children.length; i < j; i++) {
             child1 = this.getChildAtIndex(i);
             child2 = object.getChildAtIndex(i);
             if (! child1.equalsXMLElement(child2)) { return false; }
@@ -3367,7 +3288,7 @@
           this.getChildRecursive(index.split("/"), 0);
         } else {
           var kid, kidName;
-          for (var i = 0; i < this.getChildCount(); i++) {
+          for (var i = 0, j = this.getChildCount(); i < j; i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
             if (kidName !== null && kidName === index) {
@@ -3386,7 +3307,7 @@
           } else {
             var matches = [];
             var kid, kidName;
-            for (var i = 0; i < this.getChildCount(); i++) {
+            for (var i = 0, j = this.getChildCount(); i < j; i++) {
               kid = this.getChild(i);
               kidName = kid.getName();
               if (kidName !== null && kidName === arguments[0]) {
@@ -3404,7 +3325,7 @@
       },
       getChildRecursive: function (items, offset) {
         var kid, kidName;
-        for(var i = 0; i < this.getChildCount(); i++) {
+        for(var i = 0, j = this.getChildCount(); i < j; i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
             if (kidName !== null && kidName === items[offset]) {
@@ -3424,7 +3345,7 @@
         }
         var matches = this.getChildren(items[offset]);
         var kidMatches;
-        for (var i = 0; i < matches.length; i++) {
+        for (var i = 0, j = matches.length; i < j; i++) {
           kidMatches = matches[i].getChildrenRecursive(items, offset+1);
         }
         return kidMatches;
@@ -3444,13 +3365,14 @@
           xmlelement.parent  = parent;
         }
 
-        for (var l = 0; l < elementpath.attributes.length; l++) {
+        for (var l = 0, m = elementpath.attributes.length; l < m; l++) {
           tmpattrib    = elementpath.attributes[l];
           xmlattribute = new XMLAttribute(tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType);
           xmlelement.attributes.push(xmlattribute);
         }
 
-        for (var node in elementpath.childNodes){
+        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
+          var node = elementpath.childNodes[l]; // lonnen - 'maybe?'
           if(elementpath.childNodes[node].nodeType === 1) { //ELEMENT_NODE type
             xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
           }
@@ -3462,14 +3384,14 @@
       },
       listChildren: function() {
         var arr = [];
-        for (var i = 0; i < this.children.length; i++) {
+        for (var i = 0, j = this.children.length; i < j; i++) {
           arr.push( this.getChild(i).getName());
         }
         return arr;
       },
       removeAttribute: function (name , namespace) {
         this.namespace = namespace || "";
-        for (var i = 0; i < this.attributes.length; i++){
+        for (var i = 0, j = this.attributes.length; i < j; i++) {
           if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
             this.attributes.splice(i, 0);
           }
@@ -3477,7 +3399,7 @@
       },
       removeChild: function(child) {
         if (child) {
-          for (var i = 0; i < this.children.length; i++) {
+          for (var i = 0, j = this.attributes.length; i < j; i++) {
             if (this.children[i].equalsXMLElement(child)) {
               this.children.splice(i, 0);
             }
@@ -3491,7 +3413,7 @@
       },
       findAttribute: function (name, namespace) {
         this.namespace = namespace || "";
-        for (var i = 0; i < this.attributes.length; i++ ) {
+        for (var i = 0, j = this.attributes.length; i < j; i++) {
           if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
              return this.attributes[i];
           }
