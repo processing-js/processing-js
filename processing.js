@@ -84,7 +84,7 @@
     if (typeof window[name] !== "function" && typeof window[name] !== "object") {
       // nope.. check if WebGLArray exists
       if (typeof window[fallback] === "function") {
-        return this[fallback];
+        return window[fallback];
       } else {
         // nope.. set as Native JS array
         return function(obj) {
