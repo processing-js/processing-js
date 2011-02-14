@@ -7,7 +7,13 @@ var __testFiles = {
   "test6.txt" : "\rline2",
   "test7.txt" : "\n"
 };
-ajax = function(url) { return __testFiles[url]; };
+XMLHttpRequest = function() {};
+XMLHttpRequest.prototype = {
+  open: function(method, url) { this.responseText = __testFiles[url]; },
+  status: 200,
+  send: function() {},
+  setRequestHeader: function() {}
+};
 
 String[] s1 = loadStrings("test1.txt");
 _checkEqual(1, s1.length);
