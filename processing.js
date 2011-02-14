@@ -31,6 +31,8 @@
     return xhr.responseText;
   };
 
+  var isDOMPresent = ("document" in this) && !("fake" in this.document);
+
   /* Browsers fixes start */
   function fixReplaceByRegExp() {
     var re = /t/g;
@@ -6325,30 +6327,29 @@
     * @see colorMode
     */
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
+
       // 4 arguments: (R, G, B, A) or (H, S, B, A)
       if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef && aValue4 !== undef) {
         return color$4(aValue1, aValue2, aValue3, aValue4);
       }
 
       // 3 arguments: (R, G, B) or (H, S, B)
-      else if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef) {
-        return color$4(aValue1, aValue2, aValue3, colorModeA);
+      if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef) {
+        return color$4(aValue1, aValue2, aValue3, colorModeA); 
       }
 
       // 2 arguments: (Color, A) or (Grayscale, A)
-      else if (aValue1 !== undef && aValue2 !== undef) {
+      if (aValue1 !== undef && aValue2 !== undef) {
         return color$2(aValue1, aValue2);
       }
 
       // 1 argument: (Grayscale) or (Color)
-      else if (typeof aValue1 === "number") {
+      if (typeof aValue1 === "number") {
         return color$1(aValue1);
       }
 
       // Default
-      else {
-        return color$4(colorModeX, colorModeY, colorModeZ, colorModeA);
-      }
+      return color$4(colorModeX, colorModeY, colorModeZ, colorModeA);
     };
 
     // Ease of use function to extract the colour bits into a string
@@ -16325,8 +16326,12 @@
         // Wrap function with default sketch parameters
         curSketch = new Processing.Sketch(aCode);
       } else {
+//#if PARSER
         // Compile the code
         curSketch = Processing.compile(aCode);
+//#else
+//      throw "PJS compile is not supported";
+//#endif
       }
 
       // Expose internal field for diagnostics and testing
@@ -16428,7 +16433,7 @@
       curSketch.options.isTransparent = true;
     }
 
-  };
+  }
 
   Processing.prototype = defaultScope;
 
@@ -16525,7 +16530,6 @@
 
 */
 
-  // parser begins
   function parseProcessing(code) {
     var globalMembers = getGlobalMembers();
 
@@ -17850,6 +17854,10 @@
     return sketch;
   };
 
+  Error.prototype.printStackTrace = function() {
+     return this.toString();
+  };
+
   // tinylog lite JavaScript library
   // http://purl.eligrey.com/tinylog/lite
   /*global tinylog,print*/
@@ -18159,20 +18167,27 @@
       pending: 0,
       images: {},
       add: function(href) {
-        var img = new Image();
-        img.onload = (function(owner) {
-          return function() {
-            owner.pending--;
-          };
-        }(this));
-        this.pending++;
-        this.images[href] = img;
-        img.src = href;
+        if(isDOMPresent) {
+          var img = new Image();
+          img.onload = (function(owner) {
+            return function() {
+              owner.pending--;
+            };
+          }(this));
+          this.pending++;
+          this.images[href] = img;
+          img.src = href;
+        } else {
+          this.images[href] = null;
+        }
       }
     };
     this.fonts = {
       // template element used to compare font sizes
       template: (function() {
+        if(!isDOMPresent) {
+          return null;
+        }
         var element = document.createElement('p');
         element.style.fontFamily = "serif";
         element.style.fontSize = "72px";
@@ -18220,7 +18235,7 @@
       // string containing a css @font-face list of custom fonts
       fontFamily: "",
       // style element to hold the @font-face string
-      style: document.createElement('style'),
+      style: (isDOMPresent ? document.createElement('style') : null),
       // adds a font to the font cache
       // creates an element using the font, to start loading the font,
       // and compare against a default font to see if the custom font is loaded
@@ -18258,11 +18273,29 @@
         throw "Unable to attach sketch to the processing instance";
       }
     };
+//#if PARSER
     this.toString = function() {
-      return this.sourceCode || "[attach: " + this.attachFunction + "]";
+      var i;
+      var code = "((function(Sketch) {\n";
+      code += "var sketch = new Sketch(\n" + this.sourceCode + ");\n";
+      code += "sketch.use3DContext = " + this.use3DContext + ";\n";
+      for(i in this.options) {
+        if(this.options.hasOwnProperty(i)) {
+          var value = this.options[i];
+          code += "sketch.options." + i + " = " +
+            (typeof value === 'string' ? '\"' + value + '\"' : "" + value) + ";\n";
+        }
+      }
+      for(i in this.imageCache) {
+        if(this.options.hasOwnProperty(i)) {
+          code += "sketch.imageCache.add(\"" + i + "\");\n";
+        }
+      }
+      // TODO serialize fonts
+      code += "return sketch;\n})(Processing.Sketch))";
+      return code;
     };
-    this.onblur = function() {};
-    this.onfocus = function() {};
+//#endif
   };
 
   // Automatic Initialization Method
@@ -18344,21 +18377,27 @@
     }
   };
 
-  document.addEventListener('DOMContentLoaded', function() {
-    init();
-  }, false);
+  if(isDOMPresent) {
+    window['Processing'] = Processing;
 
-  // pauseOnBlur handling
-  window.addEventListener('blur', function() {
-    for (var i = 0; i < Processing.instances.length; i++) {
-      Processing.instances[i].externals.onblur();
-    }
-  }, false);
+    document.addEventListener('DOMContentLoaded', function() {
+      init();
+    }, false);
 
-  window.addEventListener('focus', function() {
-    for (var i = 0; i < Processing.instances.length; i++) {
-      Processing.instances[i].externals.onfocus();
-    }
-  }, false);
+    // pauseOnBlur handling
+    window.addEventListener('blur', function() {
+      for (var i = 0; i < Processing.instances.length; i++) {
+        Processing.instances[i].externals.onblur();
+      }
+    }, false);
 
+    window.addEventListener('focus', function() {
+      for (var i = 0; i < Processing.instances.length; i++) {
+        Processing.instances[i].externals.onfocus();
+      }
+    }, false);
+  } else {
+    // DOM is not found
+    this.Processing = Processing;
+  }
 }());
