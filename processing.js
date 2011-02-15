@@ -1882,27 +1882,24 @@
       },
       drawPath: function(){
         if (this.vertices.length === 0) { return; }
-
         p.beginShape();
-        var i, l;
         if (this.vertexCodes.length === 0) {  // each point is a simple vertex
           if (this.vertices[0].length === 2) {  // drawing 2D vertices
-            for (i = 0, l = this.vertices.length; i < l; i++) {
+            for (var i = 0, j = this.vertices.length; i < j; i++) {
               p.vertex(this.vertices[i][0], this.vertices[i][1]);
             }
           } else {  // drawing 3D vertices
-            for (i = 0, l = this.vertices.length; i < l; i++) {
-              p.vertex(this.vertices[i][0], 
-                       this.vertices[i][1], 
-                       this.vertices[i][2]);
+            for (var k = 0, l = this.vertices.length; k < l; k++) {
+              p.vertex(this.vertices[k][0], 
+                       this.vertices[k][1], 
+                       this.vertices[k][2]);
             }
           }
         } else {  // coded set of vertices
           var index = 0;
-          var j, k;
           if (this.vertices[0].length === 2) {  // drawing a 2D path
-            for (j = 0, k = this.vertexCodes.length; j < k; j++) {
-              if (this.vertexCodes[j] === PConstants.VERTEX) {
+            for (var m = 0, n = this.vertexCodes.length; m < n; m++) {
+              if (this.vertexCodes[m] === PConstants.VERTEX) {
                 p.vertex(this.vertices[index][0], this.vertices[index][1]);
                 if ( this.vertices[index]["moveTo"] === true) {
                   vertArray[vertArray.length-1]["moveTo"] = true;
@@ -1911,7 +1908,7 @@
                 }
                 p.breakShape = false;
                 index++;
-              } else if (this.vertexCodes[j] === PConstants.BEZIER_VERTEX) {
+              } else if (this.vertexCodes[m] === PConstants.BEZIER_VERTEX) {
                 p.bezierVertex(this.vertices[index+0][0], 
                                this.vertices[index+0][1],
                                this.vertices[index+1][0], 
@@ -1919,17 +1916,17 @@
                                this.vertices[index+2][0],
                                this.vertices[index+2][1]);
                 index += 3;
-              } else if (this.vertexCodes[j] === PConstants.CURVE_VERTEX) {
+              } else if (this.vertexCodes[m] === PConstants.CURVE_VERTEX) {
                 p.curveVertex(this.vertices[index][0], 
                               this.vertices[index][1]);
                 index++;
-              } else if (this.vertexCodes[j] ===  PConstants.BREAK) {
+              } else if (this.vertexCodes[m] ===  PConstants.BREAK) {
                 p.breakShape = true;
               }
             }
           } else {  // drawing a 3D path
-            for (j = 0, k = this.vertexCodes.length; j < k; j++) {
-              if (this.vertexCodes[j] === PConstants.VERTEX) {
+            for (var q = 0, r = this.vertexCodes.length; q < r; q++) {
+              if (this.vertexCodes[q] === PConstants.VERTEX) {
                 p.vertex(this.vertices[index][0], 
                          this.vertices[index][1], 
                          this.vertices[index][2]);
@@ -1939,7 +1936,7 @@
                   vertArray[vertArray.length-1]["moveTo"] = false;
                 }
                 p.breakShape = false;
-              } else if (this.vertexCodes[j] ===  PConstants.BEZIER_VERTEX) {
+              } else if (this.vertexCodes[q] ===  PConstants.BEZIER_VERTEX) {
                 p.bezierVertex(this.vertices[index+0][0], 
                                this.vertices[index+0][1],
                                this.vertices[index+0][2],
@@ -1950,12 +1947,12 @@
                                this.vertices[index+2][1],
                                this.vertices[index+2][2]);
                 index += 3;
-              } else if (this.vertexCodes[j] === PConstants.CURVE_VERTEX) {
+              } else if (this.vertexCodes[q] === PConstants.CURVE_VERTEX) {
                 p.curveVertex(this.vertices[index][0],
                               this.vertices[index][1],
                               this.vertices[index][2]);
                 index++;
-              } else if (this.vertexCodes[j] === PConstants.BREAK) {
+              } else if (this.vertexCodes[q] === PConstants.BREAK) {
                 p.breakShape = true;
               }
             }
@@ -1965,14 +1962,13 @@
       },
       drawGeometry: function() {
         p.beginShape(this.kind);
-        var i, j;
         if (this.style) {
-          for (i = 0, j = this.vertices.length; i < j; i++) {
+          for (var i = 0, j = this.vertices.length; i < j; i++) {
             p.vertex(this.vertices[i]);
           }
         } else {
-          for (i = 0, j = this.vertices.length; i < j; i++) {
-            var vert = this.vertices[i];
+          for (var k = 0, l = this.vertices.length; k < l; k++) {
+            var vert = this.vertices[k];
             if (vert[2] === 0) {
               p.vertex(vert[0], vert[1]);
             } else {
@@ -2094,20 +2090,19 @@
         if (typeof child === 'number') {
           return this.children[child];
         } else {
-          var found,
-              i,j;
+          var found;
           if(child === "" || this.name === child){
             return this;
           } else {
             if(this.nameTable.length > 0) {
-              for(i = 0, j = this.nameTable.length; i < j || found; i++) {
+              for (var i = 0, j = this.nameTable.length; i < j || found; i++) {
                 if(this.nameTable[i].getName === child) {
                   found = this.nameTable[i];
                 }
               }
               if (found) { return found; }
             }
-            for(i = 0, j = this.children.length; i < j; i++) {
+            for(var i = 0, j = this.children.length; i < j; i++) {
               found = this.children[i].getChild(child);
               if(found) { return found; }
             }
@@ -2498,8 +2493,6 @@
           px     = 0,
           py     = 0,
           i      = 0,
-          j      = 0,
-          k      = 0,
           valOf  = 0;
       var str = "";
       var tmpArray =[];
@@ -2564,7 +2557,7 @@
 							cy = tmpArray[1];
 							this.parsePathMoveto(cx, cy);
 							if (tmpArray.length > 2) {
-								for (j = 2, k = tmpArray.length; j < k; j+=2) {
+								for (var j = 2, k = tmpArray.length; j < k; j+=2) {
 									// absolute line to
 									cx = tmpArray[j];
 									cy = tmpArray[j+1];
@@ -2577,7 +2570,7 @@
 						  // need one+ pairs of co-ordinates
 							this.parsePathMoveto(cx,cy);
 							if (tmpArray.length > 2) {
-								for (j = 2, k = tmpArray.length; j < k; j+=2) {
+								for (var j = 2, k = tmpArray.length; j < k; j+=2) {
 									// relative line to
 									cx += tmpArray[j];
 									cy += tmpArray[j + 1];
@@ -2588,7 +2581,7 @@
           } else if (valOf === 76) { // L - lineto (absolute)
             if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
               // need one+ pairs of co-ordinates
-              for (j = 0, k = tmpArray.length; j < k; j+=2) {
+              for (var j = 0, k = tmpArray.length; j < k; j+=2) {
                 cx = tmpArray[j];
                 cy = tmpArray[j + 1];
                 this.parsePathLineto(cx,cy);
@@ -2597,32 +2590,32 @@
           } else if (valOf === 108) { // l - lineto (relative)
 						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
 						  // need one+ pairs of co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=2) {
+							for (var j = 0, k = tmpArray.length; j < k; j+=2) {
 								cx += tmpArray[j];
 								cy += tmpArray[j+1];
 								this.parsePathLineto(cx,cy);
 							}
 						}
           } else if (valOf === 72) { // H - horizontal lineto (absolute)
-						for (j = 0, k = tmpArray.length; j < k; j++) { 
+						for (var j = 0, k = tmpArray.length; j < k; j++) { 
 						  // multiple x co-ordinates can be provided
 							cx = tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 104) { // h - horizontal lineto (relative)
-						for (j = 0, k = tmpArray.length; j < k; j++) { 
+						for (var j = 0, k = tmpArray.length; j < k; j++) { 
 						  // multiple x co-ordinates can be provided
 							cx += tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 86) { // V - vertical lineto (absolute)
-						for (j = 0, k = tmpArray.length; j < k; j++) { 
+						for (var j = 0, k = tmpArray.length; j < k; j++) { 
 						  // multiple y co-ordinates can be provided
 							cy = tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 118) { // v - vertical lineto (relative)
-						for (j = 0, k = tmpArray.length; j < k; j++) { 
+						for (var j = 0, k = tmpArray.length; j < k; j++) { 
 						  // multiple y co-ordinates can be provided
 							cy += tmpArray[j];
 							this.parsePathLineto(cx, cy);
@@ -2630,7 +2623,7 @@
           } else if (valOf === 67) { // C - curve to (absolute)
 						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { 
 						  // need one+ multiples of 6 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=6) {
+							for (var j = 0, k = tmpArray.length; j < k; j+=6) {
 								ctrlX1 = tmpArray[j];
 								ctrlY1 = tmpArray[j + 1];
 								ctrlX2 = tmpArray[j + 2];
@@ -2650,7 +2643,7 @@
           } else if (valOf === 99) { // c - curve to (relative)
 						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) {
 						  // need one+ multiples of 6 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=6) {
+							for (var j = 0, k = tmpArray.length; j < k; j+=6) {
 								ctrlX1 = cx + tmpArray[j];
 								ctrlY1 = cy + tmpArray[j + 1];
 								ctrlX2 = cx + tmpArray[j + 2];
@@ -2670,7 +2663,7 @@
           } else if (valOf === 83) { // S - curve to shorthand (absolute)
 						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
 						  // need one+ multiples of 4 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=4) {
+							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
 								if (lastInstruction.toLowerCase() ===  "c" ||
 								    lastInstruction.toLowerCase() ===  "s") {
 									ppx    = this.vertices[ this.vertices.length-2 ][0];
@@ -2702,7 +2695,7 @@
           } else if (valOf === 115) { // s - curve to shorthand (relative)
 						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
 						  // need one+ multiples of 4 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=4) {
+							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
 								if (lastInstruction.toLowerCase() ===  "c" || 
 								    lastInstruction.toLowerCase() ===  "s") {
 									ppx    = this.vertices[this.vertices.length-2][0];
@@ -2734,7 +2727,7 @@
           } else if (valOf === 81) { // Q - quadratic curve to (absolute)
 						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
 						  // need one+ multiples of 4 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=4) {
+							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
 								ctrlX = tmpArray[j];
 								ctrlY = tmpArray[j + 1];
 								endX  = tmpArray[j + 2];
@@ -2747,7 +2740,7 @@
           } else if (valOf === 113) { // q - quadratic curve to (relative)
 						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
 						  // need one+ multiples of 4 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=4) {
+							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
 								ctrlX = cx + tmpArray[j];
 								ctrlY = cy + tmpArray[j + 1];
 								endX  = cx + tmpArray[j + 2];
@@ -2761,7 +2754,7 @@
             // T - quadratic curve to shorthand (absolute)
 						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
 						  // need one+ pairs of co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=2) {
+							for (var j = 0, k = tmpArray.length; j < k; j+=2) {
 								if (lastInstruction.toLowerCase() ===  "q" ||
 								    lastInstruction.toLowerCase() ===  "t") {
 									ppx   = this.vertices[this.vertices.length-2][0];
@@ -2788,7 +2781,7 @@
             // t - quadratic curve to shorthand (relative)
 						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
 						  // need one+ pairs of co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=2) {
+							for (var j = 0, k = tmpArray.length; j < k; j+=2) {
 								if (lastInstruction.toLowerCase() ===  "q" ||
 								    lastInstruction.toLowerCase() ===  "t") {
 									ppx   = this.vertices[this.vertices.length-2][0];
@@ -3329,7 +3322,7 @@
           }
           if (this.children.length !== object.getChildCount()) { return false; }
           var child1, child2;
-          for (i = 0, j = this.children.length; i < j; i++) {
+          for (var i = 0, j = this.children.length; i < j; i++) {
             child1 = this.getChildAtIndex(i);
             child2 = object.getChildAtIndex(i);
             if (! child1.equalsXMLElement(child2)) { return false; }
@@ -3498,7 +3491,7 @@
           xmlelement.attributes.push(xmlattribute);
         }
 
-        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
+        for (var l = 0, m = elementpath.childNodes.length; l < m; l++) {
           var node = elementpath.childNodes[l]; // lonnen - 'maybe?'
           if(elementpath.childNodes[node].nodeType === 1) { //ELEMENT_NODE type
             xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
