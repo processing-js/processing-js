@@ -2152,13 +2152,13 @@
       this.width     = null;
       this.height    = null;
       this.parent    = null;
-
-      /**
-       * PShape methods
-       * missing: findChild(), apply(), contains(), findChild(), getPrimitive(), getParams(), getVertex() , getVertexCount(),
-       * getVertexCode() , getVertexCodes() , getVertexCodeCount(), getVertexX(), getVertexY(), getVertexZ()
-       */
-
+    };
+    /**
+      * PShape methods
+      * missing: findChild(), apply(), contains(), findChild(), getPrimitive(), getParams(), getVertex() , getVertexCount(),
+      * getVertexCode() , getVertexCodes() , getVertexCodeCount(), getVertexX(), getVertexY(), getVertexZ()
+      */    
+    PShape.prototype = {
       /**
        * @member PShape
        * The isVisible() function returns a boolean value "true" if the image is set to be visible, "false" if not. This is modified with the <b>setVisible()</b> parameter.
@@ -2167,9 +2167,9 @@
        *
        * @return {boolean}  returns "true" if the image is set to be visible, "false" if not
        */
-      this.isVisible = function(){
+      isVisible: function(){
         return this.visible;
-      };
+      },
       /**
        * @member PShape
        * The setVisible() function sets the shape to be visible or invisible. This is determined by the value of the <b>visible</b> parameter.
@@ -2178,91 +2178,89 @@
        *
        * @param {boolean} visible "false" makes the shape invisible and "true" makes it visible
        */
-      this.setVisible = function (visible){
+      setVisible: function (visible){
         this.visible = visible;
-      };
+      },
       /**
        * @member PShape
        * The disableStyle() function disables the shape's style data and uses Processing's current styles. Styles include attributes such as colors, stroke weight, and stroke joints.
        * Overrides this shape's style information and uses PGraphics styles and colors. Identical to ignoreStyles(true). Also disables styles for all child shapes.
        */
-      this.disableStyle = function(){
+      disableStyle: function(){
         this.style = false;
-        for(var i = 0; i < this.children.length; i++)
-        {
+        for(var i = 0, j=this.children.length; i<j; i++) {
           this.children[i].disableStyle();
         }
-      };
+      },
       /**
        * @member PShape
        * The enableStyle() function enables the shape's style data and ignores Processing's current styles. Styles include attributes such as colors, stroke weight, and stroke joints.
        */
-      this.enableStyle = function(){
+      enableStyle: function(){
         this.style = true;
-        for(var i = 0; i < this.children.length; i++)
-        {
+        for(var i = 0, j=this.children.length; i<j; i++) {
           this.children[i].enableStyle();
         }
-      };
+      },
       /**
        * @member PShape
        * The getFamily function returns the shape type
        *
        * @return {int} the shape type, one of GROUP, PRIMITIVE, PATH, or GEOMETRY
        */
-      this.getFamily = function(){
+      getFamily: function(){
         return this.family;
-      };
+      },
       /**
        * @member PShape
        * The getWidth() function gets the width of the drawing area (not necessarily the shape boundary).
        */
-      this.getWidth = function(){
+      getWidth: function(){
         return this.width;
-      };
+      },
       /**
        * @member PShape
        * The getHeight() function gets the height of the drawing area (not necessarily the shape boundary).
        */
-      this.getHeight = function(){
+      getHeight: function(){
         return this.height;
-      };
+      },
       /**
        * @member PShape
        * The setName() function sets the name of the shape
        *
        * @param {String} name the name of the shape
-       */
-      this.setName = function(name){
+       */  
+      setName: function(name){
         this.name = name;
-      };
+      },
       /**
        * @member PShape
        * The getName() function returns the name of the shape
        *
        * @return {String} the name of the shape
        */
-      this.getName = function(){
+      getName: function(){
         return this.name;
-      };
+      },
       /**
        * @member PShape
        * Called by the following (the shape() command adds the g)
        * PShape s = loadShapes("blah.svg");
        * shape(s);
        */
-      this.draw = function(){
+      draw: function(){
         if (this.visible) {
           this.pre();
           this.drawImpl();
           this.post();
         }
-      };
+      },
       /**
        * @member PShape
        * the drawImpl() function draws the SVG document.
        */
-      this.drawImpl = function(){
+      drawImpl: function(){
         if (this.family === PConstants.GROUP) {
           this.drawGroup();
         } else if (this.family === PConstants.PRIMITIVE) {
@@ -2272,33 +2270,31 @@
         } else if (this.family === PConstants.PATH) {
           this.drawPath();
         }
-      };
+      },
       /**
        * @member PShape
        * The drawPath() function draws the <path> part of the SVG document.
        */
-      this.drawPath = function(){
+      drawPath: function(){
         if (this.vertices.length === 0) { return; }
-
         p.beginShape();
-        var i;
         if (this.vertexCodes.length === 0) {  // each point is a simple vertex
           if (this.vertices[0].length === 2) {  // drawing 2D vertices
-            for (i = 0; i < this.vertices.length; i++) {
+            for (var i = 0, j = this.vertices.length; i < j; i++) {
               p.vertex(this.vertices[i][0], this.vertices[i][1]);
             }
           } else {  // drawing 3D vertices
-            for (i = 0; i < this.vertices.length; i++) {
-              p.vertex(this.vertices[i][0], this.vertices[i][1], this.vertices[i][2]);
+            for (var i = 0, j = this.vertices.length; i < j; i++) {
+              p.vertex(this.vertices[i][0], 
+                       this.vertices[i][1], 
+                       this.vertices[i][2]);
             }
           }
         } else {  // coded set of vertices
           var index = 0;
-          var j;
           if (this.vertices[0].length === 2) {  // drawing a 2D path
-            for (j = 0; j < this.vertexCodes.length; j++) {
-              switch (this.vertexCodes[j]) {
-              case PConstants.VERTEX:
+            for (var i = 0, j = this.vertexCodes.length; i < j; i++) {
+              if (this.vertexCodes[i] === PConstants.VERTEX) {
                 p.vertex(this.vertices[index][0], this.vertices[index][1]);
                 if ( this.vertices[index]["moveTo"] === true) {
                   vertArray[vertArray.length-1]["moveTo"] = true;
@@ -2307,66 +2303,70 @@
                 }
                 p.breakShape = false;
                 index++;
-                break;
-              case PConstants.BEZIER_VERTEX:
-                p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1],
-                               this.vertices[index+1][0], this.vertices[index+1][1],
-                               this.vertices[index+2][0], this.vertices[index+2][1]);
+              } else if (this.vertexCodes[i] === PConstants.BEZIER_VERTEX) {
+                p.bezierVertex(this.vertices[index+0][0], 
+                               this.vertices[index+0][1],
+                               this.vertices[index+1][0], 
+                               this.vertices[index+1][1],
+                               this.vertices[index+2][0],
+                               this.vertices[index+2][1]);
                 index += 3;
-                break;
-              case PConstants.CURVE_VERTEX:
-                p.curveVertex(this.vertices[index][0], this.vertices[index][1]);
+              } else if (this.vertexCodes[i] === PConstants.CURVE_VERTEX) {
+                p.curveVertex(this.vertices[index][0], 
+                              this.vertices[index][1]);
                 index++;
-                break;
-              case PConstants.BREAK:
+              } else if (this.vertexCodes[i] ===  PConstants.BREAK) {
                 p.breakShape = true;
-                break;
               }
             }
           } else {  // drawing a 3D path
-            for (j = 0; j < this.vertexCodes.length; j++) {
-              switch (this.vertexCodes[j]) {
-                case PConstants.VERTEX:
-                  p.vertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
-                  if (this.vertices[index]["moveTo"] === true) {
-                    vertArray[vertArray.length-1]["moveTo"] = true;
-                  } else if (this.vertices[index]["moveTo"] === false) {
-                    vertArray[vertArray.length-1]["moveTo"] = false;
-                  }
-                  p.breakShape = false;
-                  break;
-                case PConstants.BEZIER_VERTEX:
-                  p.bezierVertex(this.vertices[index+0][0], this.vertices[index+0][1], this.vertices[index+0][2],
-                                 this.vertices[index+1][0], this.vertices[index+1][1], this.vertices[index+1][2],
-                                 this.vertices[index+2][0], this.vertices[index+2][1], this.vertices[index+2][2]);
-                  index += 3;
-                  break;
-                case PConstants.CURVE_VERTEX:
-                  p.curveVertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index][2]);
-                  index++;
-                  break;
-                case PConstants.BREAK:
-                  p.breakShape = true;
-                  break;
+            for (var i = 0, j = this.vertexCodes.length; i < j; i++) {
+              if (this.vertexCodes[i] === PConstants.VERTEX) {
+                p.vertex(this.vertices[index][0], 
+                         this.vertices[index][1], 
+                         this.vertices[index][2]);
+                if (this.vertices[index]["moveTo"] === true) {
+                  vertArray[vertArray.length-1]["moveTo"] = true;
+                } else if (this.vertices[index]["moveTo"] === false) {
+                  vertArray[vertArray.length-1]["moveTo"] = false;
+                }
+                p.breakShape = false;
+              } else if (this.vertexCodes[i] ===  PConstants.BEZIER_VERTEX) {
+                p.bezierVertex(this.vertices[index+0][0], 
+                               this.vertices[index+0][1],
+                               this.vertices[index+0][2],
+                               this.vertices[index+1][0],
+                               this.vertices[index+1][1],
+                               this.vertices[index+1][2],
+                               this.vertices[index+2][0],
+                               this.vertices[index+2][1],
+                               this.vertices[index+2][2]);
+                index += 3;
+              } else if (this.vertexCodes[i] === PConstants.CURVE_VERTEX) {
+                p.curveVertex(this.vertices[index][0],
+                              this.vertices[index][1],
+                              this.vertices[index][2]);
+                index++;
+              } else if (this.vertexCodes[i] === PConstants.BREAK) {
+                p.breakShape = true;
               }
             }
           }
         }
         p.endShape(this.close ? PConstants.CLOSE : PConstants.OPEN);
-      };
+      },
       /**
        * @member PShape
        * The drawGeometry() function draws the geometry part of the SVG document.
        */
-      this.drawGeometry = function() {
+      drawGeometry: function() {
         p.beginShape(this.kind);
-        var i;
         if (this.style) {
-          for (i = 0; i < this.vertices.length; i++) {
+          for (var i = 0, j = this.vertices.length; i < j; i++) {
             p.vertex(this.vertices[i]);
           }
         } else {
-          for (i = 0; i < this.vertices.length; i++) {
+          for (var i = 0, j = this.vertices.length; i < j; i++) {
             var vert = this.vertices[i];
             if (vert[2] === 0) {
               p.vertex(vert[0], vert[1]);
@@ -2376,106 +2376,116 @@
           }
         }
         p.endShape();
-      };
+      },
       /**
        * @member PShape
        * The drawGroup() function draws the <g> part of the SVG document.
        */
-      this.drawGroup = function() {
-        for (var i = 0; i < this.children.length; i++) {
+      drawGroup: function() {
+        for (var i = 0, j = this.children.length; i < j; i++) {
           this.children[i].draw();
         }
-      };
+      },
       /**
        * @member PShape
        * The drawPrimitive() function draws SVG document shape elements. These can be point, line, triangle, quad, rect, ellipse, arc, box, or sphere.
        */
-      this.drawPrimitive = function() {
-        switch (this.kind) {
-          case PConstants.POINT:
-            p.point(this.params[0], this.params[1]);
-            break;
-          case PConstants.LINE:
-            if (this.params.length === 4) {  // 2D
-              p.line(this.params[0], this.params[1],
-                     this.params[2], this.params[3]);
-            } else {  // 3D
-              p.line(this.params[0], this.params[1], this.params[2],
-                     this.params[3], this.params[4], this.params[5]);
-            }
-            break;
-          case PConstants.TRIANGLE:
-            p.triangle(this.params[0], this.params[1],
-                       this.params[2], this.params[3],
-                       this.params[4], this.params[5]);
-            break;
-          case PConstants.QUAD:
-            p.quad(this.params[0], this.params[1],
-                   this.params[2], this.params[3],
-                   this.params[4], this.params[5],
-                   this.params[6], this.params[7]);
-            break;
-          case PConstants.RECT:
-            if (this.image !== null) {
-              p.imageMode(PConstants.CORNER);
-              p.image(this.image, this.params[0], this.params[1], this.params[2], this.params[3]);
-            } else {
-              p.rectMode(PConstants.CORNER);
-              p.rect(this.params[0], this.params[1], this.params[2], this.params[3]);
-            }
-            break;
-          case PConstants.ELLIPSE:
-            p.ellipseMode(PConstants.CORNER);
-            p.ellipse(this.params[0], this.params[1], this.params[2], this.params[3]);
-            break;
-          case PConstants.ARC:
-            p.ellipseMode(PConstants.CORNER);
-            p.arc(this.params[0], this.params[1], this.params[2], this.params[3], this.params[4], this.params[5]);
-            break;
-          case PConstants.BOX:
-            if (this.params.length === 1) {
-              p.box(this.params[0]);
-            } else {
-              p.box(this.params[0], this.params[1], this.params[2]);
-            }
-            break;
-          case PConstants.SPHERE:
-            p.sphere(this.params[0]);
-            break;
+      drawPrimitive: function() {
+        if (this.kind === PConstants.POINT) {
+          p.point(this.params[0], this.params[1]);
+        } else if (this.kind === PConstants.LINE) {
+          if (this.params.length === 4) {  // 2D
+            p.line(this.params[0], this.params[1],
+                   this.params[2], this.params[3]);
+          } else {  // 3D
+            p.line(this.params[0], this.params[1], this.params[2],
+                   this.params[3], this.params[4], this.params[5]);
+          }
+        } else if (this.kind === PConstants.TRIANGLE) {
+          p.triangle(this.params[0], this.params[1],
+                     this.params[2], this.params[3],
+                     this.params[4], this.params[5]);
+        } else if (this.kind === PConstants.QUAD) {
+          p.quad(this.params[0], this.params[1],
+                 this.params[2], this.params[3],
+                 this.params[4], this.params[5],
+                 this.params[6], this.params[7]);
+        } else if (this.kind === PConstants.RECT) {
+          if (this.image !== null) {
+            p.imageMode(PConstants.CORNER);
+            p.image(this.image,
+                    this.params[0],
+                    this.params[1],
+                    this.params[2],
+                    this.params[3]);
+          } else {
+            p.rectMode(PConstants.CORNER);
+            p.rect(this.params[0],
+                   this.params[1],
+                   this.params[2],
+                   this.params[3]);
+          }
+        } else if (this.kind === PConstants.ELLIPSE) {
+          p.ellipseMode(PConstants.CORNER);
+          p.ellipse(this.params[0],
+                    this.params[1],
+                    this.params[2],
+                    this.params[3]);
+        } else if (this.kind === PConstants.ARC) {
+          p.ellipseMode(PConstants.CORNER);
+          p.arc(this.params[0],
+                this.params[1],
+                this.params[2],
+                this.params[3],
+                this.params[4],
+                this.params[5]);
+        } else if (this.kind === PConstants.BOX) {
+          if (this.params.length === 1) {
+            p.box(this.params[0]);
+          } else {
+            p.box(this.params[0], this.params[1], this.params[2]);
+          }
+        } else if (this.kind === PConstants.SPHERE) {
+          p.sphere(this.params[0]);
         }
-      };
+      },
       /**
        * @member PShape
        * The pre() function performs the preparations before the SVG is drawn. This includes doing transformations and storing previous styles.
        */
-      this.pre = function() {
+      pre: function() {
         if (this.matrix) {
           p.pushMatrix();
-          curContext.transform(this.matrix.elements[0], this.matrix.elements[3], this.matrix.elements[1], this.matrix.elements[4], this.matrix.elements[2], this.matrix.elements[5]);
+          curContext.transform(this.matrix.elements[0],
+                               this.matrix.elements[3],
+                               this.matrix.elements[1],
+                               this.matrix.elements[4],
+                               this.matrix.elements[2],
+                               this.matrix.elements[5]);
           //p.applyMatrix(this.matrix.elements[0],this.matrix.elements[0]);
         }
         if (this.style) {
           p.pushStyle();
           this.styles();
         }
-      };
+      },
       /**
        * @member PShape
        * The post() function performs the necessary actions after the SVG is drawn. This includes removing transformations and removing added styles.
        */
-      this.post = function() {
+      post: function() {
         if (this.matrix) {
           p.popMatrix();
         }
         if (this.style) {
           p.popStyle();
         }
-      };
+      },
       /**
        * @member PShape
        * The styles() function changes the Processing's current styles
        */
-      this.styles = function() {
+      styles: function() {
         if (this.stroke) {
           p.stroke(this.strokeColor);
           p.strokeWeight(this.strokeWeight);
@@ -2491,7 +2501,7 @@
         } else {
           p.noFill();
         }
-      };
+      },
       /**
        * @member PShape
        * The getChild() function extracts a child shape from a parent shape. Specify the name of the shape with the <b>target</b> parameter or the
@@ -2503,56 +2513,52 @@
        *
        * @return {PShape} returns a child element of a shape as a PShape object or null if there is an error
        */
-      this.getChild = function() {
-        if (typeof arguments[0] === 'number') {
-          return this.children[arguments[0]];
+      getChild: function(child) {
+        if (typeof child === 'number') {
+          return this.children[child];
         } else {
-          var found,
-              i;
-          if(arguments[0] === "" || this.name === arguments[0]){
+          var found;
+          if(child === "" || this.name === child){
             return this;
           } else {
-            if(this.nameTable.length > 0)
-            {
-              for(i = 0; i < this.nameTable.length || found; i++)
-              {
-                if(this.nameTable[i].getName === arguments[0]) {
+            if(this.nameTable.length > 0) {
+              for(var i = 0, j = this.nameTable.length; i < j || found; i++) {
+                if(this.nameTable[i].getName === child) {
                   found = this.nameTable[i];
                 }
               }
               if (found) { return found; }
             }
-            for(i = 0; i < this.children.lenth; i++)
-            {
-              found = this.children[i].getChild(arguments[0]);
+            for(var i = 0, j = this.children.length; i < j; i++) {
+              found = this.children[i].getChild(child);
               if(found) { return found; }
             }
           }
           return null;
         }
-      };
+      },
       /**
        * @member PShape
        * The getChildCount() returns the number of children
        *
        * @return {int} returns a count of children
        */
-      this.getChildCount = function () {
+      getChildCount: function () {
         return this.children.length;
-      };
+      },
       /**
        * @member PShape
        * The addChild() adds a child to the PShape.
        *
        * @param {PShape} child the child to add
        */
-      this.addChild = function( child ) {
+      addChild: function( child ) {
         this.children.push(child);
         child.parent = this;
         if (child.getName() !== null) {
           this.addName(child.getName(), child);
         }
-      };
+      },
       /**
        * @member PShape
        * The addName() functions adds a shape to the name lookup table.
@@ -2560,13 +2566,13 @@
        * @param {String} name   the name to be added
        * @param {PShape} shape  the shape
        */
-      this.addName = function(name,  shape) {
+      addName: function(name,  shape) {
         if (this.parent !== null) {
           this.parent.addName( name, shape );
         } else {
           this.nameTable.push( [name, shape] );
         }
-      };
+      },
       /**
        * @member PShape
        * The translate() function specifies an amount to displace the shape. The <b>x</b> parameter specifies left/right translation, the <b>y</b> parameter specifies up/down translation, and the <b>z</b> parameter specifies translations toward/away from the screen.
@@ -2581,7 +2587,7 @@
        * @see PMatrix2D#translate
        * @see PMatrix3D#translate
        */
-      this.translate = function() {
+      translate: function() {
         if(arguments.length === 2)
         {
           this.checkMatrix(2);
@@ -2590,7 +2596,7 @@
           this.checkMatrix(3);
           this.matrix.translate(arguments[0], arguments[1], 0);
         }
-      };
+      },
       /**
        * @member PShape
        * The checkMatrix() function makes sure that the shape's matrix is 1) not null, and 2) has a matrix
@@ -2598,7 +2604,7 @@
        *
        * @param {int} dimensions the specified number of dimensions
        */
-      this.checkMatrix = function(dimensions) {
+      checkMatrix: function(dimensions) {
         if(this.matrix === null) {
           if(dimensions === 2) {
             this.matrix = new p.PMatrix2D();
@@ -2608,7 +2614,7 @@
         }else if(dimensions === 3 && this.matrix instanceof p.PMatrix2D) {
           this.matrix = new p.PMatrix3D();
         }
-      };
+      },
       /**
        * @member PShape
        * The rotateX() function rotates a shape around the x-axis the amount specified by the <b>angle</b> parameter. Angles should be specified in radians (values from 0 to TWO_PI) or converted to radians with the <b>radians()</b> method.
@@ -2621,9 +2627,9 @@
        *
        * @see PMatrix3D#rotateX
        */
-      this.rotateX = function(angle) {
+      rotateX: function(angle) {
         this.rotate(angle, 1, 0, 0);
-      };
+      },
       /**
        * @member PShape
        * The rotateY() function rotates a shape around the y-axis the amount specified by the <b>angle</b> parameter. Angles should be specified in radians (values from 0 to TWO_PI) or converted to radians with the <b>radians()</b> method.
@@ -2636,9 +2642,9 @@
        *
        * @see PMatrix3D#rotateY
        */
-      this.rotateY = function(angle) {
+      rotateY: function(angle) {
         this.rotate(angle, 0, 1, 0);
-      };
+      },
       /**
        * @member PShape
        * The rotateZ() function rotates a shape around the z-axis the amount specified by the <b>angle</b> parameter. Angles should be specified in radians (values from 0 to TWO_PI) or converted to radians with the <b>radians()</b> method.
@@ -2651,9 +2657,9 @@
        *
        * @see PMatrix3D#rotateZ
        */
-      this.rotateZ = function(angle) {
+      rotateZ: function(angle) {
         this.rotate(angle, 0, 0, 1);
-      };
+      },
       /**
        * @member PShape
        * The rotate() function rotates a shape the amount specified by the <b>angle</b> parameter. Angles should be specified in radians (values from 0 to TWO_PI) or converted to radians with the <b>radians()</b> method.
@@ -2670,15 +2676,18 @@
        * @see PMatrix2D#rotate
        * @see PMatrix3D#rotate
        */
-      this.rotate = function() {
+      rotate: function() {
         if(arguments.length === 1){
           this.checkMatrix(2);
           this.matrix.rotate(arguments[0]);
         } else {
           this.checkMatrix(3);
-          this.matrix.rotate(arguments[0], arguments[1], arguments[2] ,arguments[3]);
+          this.matrix.rotate(arguments[0],
+                             arguments[1],
+                             arguments[2],
+                             arguments[3]);
         }
-      };
+      },
       /**
        * @member PShape
        * The scale() function increases or decreases the size of a shape by expanding and contracting vertices. Shapes always scale from the relative origin of their bounding box.
@@ -2695,7 +2704,7 @@
        * @see PMatrix2D#scale
        * @see PMatrix3D#scale
        */
-      this.scale = function() {
+      scale: function() {
         if(arguments.length === 2) {
           this.checkMatrix(2);
           this.matrix.scale(arguments[0], arguments[1]);
@@ -2706,7 +2715,7 @@
           this.checkMatrix(2);
           this.matrix.scale(arguments[0]);
         }
-      };
+      },
       /**
        * @member PShape
        * The resetMatrix() function resets the matrix
@@ -2714,10 +2723,10 @@
        * @see PMatrix2D#reset
        * @see PMatrix3D#reset
        */
-      this.resetMatrix = function() {
+      resetMatrix: function() {
         this.checkMatrix(2);
         this.matrix.reset();
-      };
+      },
       /**
        * @member PShape
        * The applyMatrix() function multiplies this matrix by another matrix of type PMatrix3D or PMatrix2D.
@@ -2728,12 +2737,16 @@
        * @see PMatrix2D#apply
        * @see PMatrix3D#apply
        */
-      this.applyMatrix = function(matrix) {
+      applyMatrix: function(matrix) {
         if (arguments.length === 1) {
-          this.applyMatrix(matrix.elements[0], matrix.elements[1], 0, matrix.elements[2],
-                          matrix.elements[3], matrix.elements[4], 0, matrix.elements[5],
-                          0, 0, 1, 0,
-                          0, 0, 0, 1);
+          this.applyMatrix(matrix.elements[0],
+                           matrix.elements[1], 0,
+                           matrix.elements[2],
+                           matrix.elements[3],
+                           matrix.elements[4], 0,
+                           matrix.elements[5],
+                           0, 0, 1, 0,
+                           0, 0, 0, 1);
         } else if (arguments.length === 6) {
           this.checkMatrix(2);
           this.matrix.apply(arguments[0], arguments[1], arguments[2], 0,
@@ -2743,12 +2756,24 @@
 
         } else if (arguments.length === 16) {
           this.checkMatrix(3);
-          this.matrix.apply(arguments[0], arguments[1], arguments[2], arguments[3],
-                            arguments[4], arguments[5], arguments[6], arguments[7],
-                            arguments[8], arguments[9], arguments[10], arguments[11],
-                            arguments[12], arguments[13], arguments[14], arguments[15]);
+          this.matrix.apply(arguments[0],
+                            arguments[1],
+                            arguments[2],
+                            arguments[3],
+                            arguments[4],
+                            arguments[5],
+                            arguments[6],
+                            arguments[7],
+                            arguments[8],
+                            arguments[9],
+                            arguments[10],
+                            arguments[11],
+                            arguments[12],
+                            arguments[13],
+                            arguments[14],
+                            arguments[15]);
         }
-      };
+      }
     };
 
     /**
@@ -2776,7 +2801,7 @@
         this.stroke              = false;
         this.strokeColor         = PConstants.ALPHA_MASK;
         this.strokeWeight        = 1;
-        this.strokeCap           = PConstants.SQUARE;  // equivalent to BUTT in svg spec
+        this.strokeCap           = PConstants.SQUARE;  // BUTT in svg spec
         this.strokeJoin          = PConstants.MITER;
         this.strokeGradient      = null;
         this.strokeGradientPaint = null;
@@ -2806,7 +2831,7 @@
             this.stroke              = false;
             this.strokeColor         = PConstants.ALPHA_MASK;
             this.strokeWeight        = 1;
-            this.strokeCap           = PConstants.SQUARE;  // equivalent to BUTT in svg spec
+            this.strokeCap           = PConstants.SQUARE;  // BUTT in svg spec
             this.strokeJoin          = PConstants.MITER;
             this.strokeGradient      = "";
             this.strokeGradientPaint = "";
@@ -2881,7 +2906,7 @@
 
           //show warning
           throw("The width and/or height is not " +
-                                "readable in the <svg> tag of this file.");
+                "readable in the <svg> tag of this file.");
         }
       }
       this.parseColors(this.element);
@@ -2892,928 +2917,930 @@
      * PShapeSVG methods
      * missing: getChild(), print(), parseStyleAttributes(), styles() - deals with strokeGradient and fillGradient
      */
-    PShapeSVG.prototype = {
-      /**
-       * @member PShapeSVG
-       * The parseMatrix() function parses the specified SVG matrix into a PMatrix2D. Note that PMatrix2D
-       * is rotated relative to the SVG definition, so parameters are rearranged
-       * here. More about the transformation matrices in
-       * <a href="http://www.w3.org/TR/SVG/coords.html#TransformAttribute">this section</a>
-       * of the SVG documentation.
-       *
-       * @param {String} str text of the matrix param.
-       *
-       * @return {PMatrix2D} a PMatrix2D
-       */
-      parseMatrix: function(str) {
-        this.checkMatrix(2);
-        var pieces = str.split(/\b(\w+)\(\s*(.*?)\s*\)/g);
-        if (pieces.length === 1) {
-          // p.println("Transformation:" + str + " is empty");
-          return null;
-        }
-        for (var i = 1; i < pieces.length; i += 3) {
-          var m = pieces[i+1].split(/[,\s]+/g);
+    PShapeSVG.prototype = new PShape();
+    /**
+     * @member PShapeSVG
+     * The parseMatrix() function parses the specified SVG matrix into a PMatrix2D. Note that PMatrix2D
+     * is rotated relative to the SVG definition, so parameters are rearranged
+     * here. More about the transformation matrices in
+     * <a href="http://www.w3.org/TR/SVG/coords.html#TransformAttribute">this section</a>
+     * of the SVG documentation.
+     *
+     * @param {String} str text of the matrix param.
+     *
+     * @return {PMatrix2D} a PMatrix2D
+     */
+    PShapeSVG.prototype.parseMatrix = function(str) {
+      this.checkMatrix(2);
+      var pieces = [];
+      str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
+        // get a list of transform definitions
+        pieces.push(p.trim(all));
+      });
+      if (pieces.length === 0) {
+        //p.println("Transformation:" + str + " is empty");
+        return null;
+      }
+      for (var i = 0, j = pieces.length; i < j; i++) {
+        var m = [];
+        pieces[i].replace(/\((.*?)\)/, (function() {
+          return function(all, params) {
+            // get the coordinates that can be separated by spaces or a comma
+            m = params.replace(/,+/g, " ").split(/\s+/);
+          };
+        }()));
 
-          if (pieces[i] === "matrix") {
-            this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
-          } else if (pieces[i] === "translate") {
-            var tx = m[0];
-            var ty = (m.length === 2) ? m[1] : 0;
-            this.matrix.translate(tx,ty);
-          } else if (pieces[i] === "scale") {
-            var sx = m[0];
-            var sy = (m.length === 2) ? m[1] : m[0];
-            this.matrix.scale(sx,sy);
-          } else if (pieces[i] === "rotate") {
-            var angle = m[0];
-            if (m.length === 1) {
-              this.matrix.rotate(p.radians(angle));
-            } else if (m.length === 3) {
-              this.matrix.translate(m[1], m[2]);
-              this.matrix.rotate(p.radians(m[0]));
-              this.matrix.translate(-m[1], -m[2]);
-            }
-          } else if (pieces[i] === "skewX") {
-            this.matrix.skewX(parseFloat(m[0]));
-          } else if (pieces[i] === "skewY") {
-            this.matrix.skewY(m[0]);
+        if (pieces[i].indexOf("matrix") !== -1) {
+          this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
+        } else if (pieces[i].indexOf("translate") !== -1) {
+          var tx = m[0];
+          var ty = (m.length === 2) ? m[1] : 0;
+          this.matrix.translate(tx,ty);
+        } else if (pieces[i].indexOf("scale") !== -1) {
+          var sx = m[0];
+          var sy = (m.length === 2) ? m[1] : m[0];
+          this.matrix.scale(sx,sy);
+        } else if (pieces[i].indexOf("rotate") !== -1) {
+          var angle = m[0];
+          if (m.length === 1) {
+            this.matrix.rotate(p.radians(angle));
+          } else if (m.length === 3) {
+            this.matrix.translate(m[1], m[2]);
+            this.matrix.rotate(p.radians(m[0]));
+            this.matrix.translate(-m[1], -m[2]);
           }
+        } else if (pieces[i].indexOf("skewX") !== -1) {
+          this.matrix.skewX(parseFloat(m[0]));
+        } else if (pieces[i].indexOf("skewY") !== -1) {
+          this.matrix.skewY(m[0]);
         }
-        return this.matrix;
-      },
-      /**
-       * @member PShapeSVG
-       * The parseChildren() function parses the specified XMLElement
-       *
-       * @param {XMLElement}element the XMLElement to parse
-       */
-      parseChildren:function(element) {
-        var newelement = element.getChildren();
-        var children   = new p.PShape();
-        for (var i = 0; i < newelement.length; i++) {
-          var kid = this.parseChild(newelement[i]);
-          if (kid) {
-            children.addChild(kid);
-          }
+      }
+      return this.matrix;
+    };
+    /**
+     * @member PShapeSVG
+     * The parseChildren() function parses the specified XMLElement
+     *
+     * @param {XMLElement}element the XMLElement to parse
+     */
+    PShapeSVG.prototype.parseChildren = function(element) {
+      var newelement = element.getChildren();
+      var children   = new p.PShape();
+      for (var i = 0, j = newelement.length; i < j; i++) {
+        var kid = this.parseChild(newelement[i]);
+        if (kid) {
+          children.addChild(kid);
         }
-        this.children.push(children);
-      },
-      /**
-       * @member PShapeSVG
-       * The getName() function returns the name
-       *
-       * @return {String} the name
-       */
-      getName: function() {
-        return this.name;
-      },
-      /**
-       * @member PShapeSVG
-       * The parseChild() function parses a child XML element.
-       *
-       * @param {XMLElement} elem the element to parse
-       *
-       * @return {PShape} the newly created PShape
-       */
-      parseChild: function( elem ) {
-        var name = elem.getName();
-        var shape;
-        switch (name) {
-          case "g":
-            shape = new PShapeSVG(this, elem);
-            break;
-          case "defs":
-            // generally this will contain gradient info, so may
-            // as well just throw it into a group element for parsing
-            shape = new PShapeSVG(this, elem);
-            break;
-          case "line":
-            shape = new PShapeSVG(this, elem);
-            shape.parseLine();
-            break;
-          case "circle":
-            shape = new PShapeSVG(this, elem);
-            shape.parseEllipse(true);
-            break;
-          case "ellipse":
-            shape = new PShapeSVG(this, elem);
-            shape.parseEllipse(false);
-            break;
-          case "rect":
-            shape = new PShapeSVG(this, elem);
-            shape.parseRect();
-            break;
-          case "polygon":
-            shape = new PShapeSVG(this, elem);
-            shape.parsePoly(true);
-            break;
-          case "polyline":
-            shape = new PShapeSVG(this, elem);
-            shape.parsePoly(false);
-            break;
-          case "path":
-            shape = new PShapeSVG(this, elem);
-            shape.parsePath();
-            break;
-          case "radialGradient":
-            //return new RadialGradient(this, elem);
-            break;
-          case "linearGradient":
-            //return new LinearGradient(this, elem);
-            break;
-          case "text":
-            p.println("Text in SVG files is not currently supported, convert text to outlines instead." );
-            break;
-          case "filter":
-            p.println("Filters are not supported.");
-            break;
-          case "mask":
-            p.println("Masks are not supported.");
-            break;
-          default:
-            p.println("Ignoring  <" + name + "> tag.");
-            break;
-        }
-        return shape;
-      },
-      /**
-       * @member PShapeSVG
-       * The parsePath() function parses the <path> element of the svg file
-       * A path is defined by including a path element which contains a d="(path data)" attribute, where the d attribute contains
-       * the moveto, line, curve (both cubic and quadratic Beziers), arc and closepath instructions.
-       **/
-      parsePath: function() {
-        this.family = PConstants.PATH;
-        this.kind = 0;
-        var pathDataChars = [];
-        var c;
-        var pathData = p.trim(this.element.getStringAttribute("d").replace(/[\s,]+/g,' ')); //change multiple spaces and commas to single space
-        if (pathData === null) { return; }
-        pathData = p.__toCharArray(pathData);
-        var cx     = 0,
-            cy     = 0,
-            ctrlX  = 0,
-            ctrlY  = 0,
-            ctrlX1 = 0,
-            ctrlX2 = 0,
-            ctrlY1 = 0,
-            ctrlY2 = 0,
-            endX   = 0,
-            endY   = 0,
-            ppx    = 0,
-            ppy    = 0,
-            px     = 0,
-            py     = 0,
-            i      = 0,
-            j      = 0,
-            valOf  = 0;
-        var str = "";
-        var tmpArray =[];
-        var flag = false;
-        var lastInstruction;
-        var command;
-        while (i< pathData.length) {
-          valOf = pathData[i].valueOf();
-          if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { // if its a letter
-            // populate the tmpArray with coordinates
-            j = i;
-            i++;
-            if (i < pathData.length) { // dont go over boundary of array
-              tmpArray = [];
-              valOf = pathData[i].valueOf();
-              while (!((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 100) || (valOf >= 102 && valOf <= 122)) && flag === false) { // if its NOT a letter
-                if (valOf === 32) { //if its a space and the str isn't empty
-                  // somethimes you get a space after the letter
-                  if (str !== "") {
-                    tmpArray.push(parseFloat(str));
-                    str = "";
-                  }
-                  i++;
-                } else if (valOf === 45) { //if its a -
-                  // allow for 'e' notation in numbers, e.g. 2.10e-9
-                  if (pathData[i-1].valueOf() === 101) {
-                    str += pathData[i].toString();
-                    i++;
-                  } else {
-                    // sometimes no space separator after (ex: 104.535-16.322)
-                    if (str !== "") {
-                      tmpArray.push(parseFloat(str));
-                    }
-                    str = pathData[i].toString();
-                    i++;
-                  }
-                } else {
+      }
+      this.children.push(children);
+    };
+    /**
+     * @member PShapeSVG
+     * The getName() function returns the name
+     *
+     * @return {String} the name
+     */
+    PShapeSVG.prototype.getName = function() {
+      return this.name;
+    };
+    /**
+     * @member PShapeSVG
+     * The parseChild() function parses a child XML element.
+     *
+     * @param {XMLElement} elem the element to parse
+     *
+     * @return {PShape} the newly created PShape
+     */
+    PShapeSVG.prototype.parseChild = function( elem ) {
+      var name = elem.getName();
+      var shape;
+      if (name === "g") {
+        shape = new PShapeSVG(this, elem);
+      } else if (name === "defs") {
+        // generally this will contain gradient info, so may
+        // as well just throw it into a group element for parsing
+        shape = new PShapeSVG(this, elem);
+      } else if (name === "line") {
+        shape = new PShapeSVG(this, elem);
+        shape.parseLine();
+      } else if (name === "circle") {
+        shape = new PShapeSVG(this, elem);
+        shape.parseEllipse(true);
+      } else if (name === "ellipse") {
+        shape = new PShapeSVG(this, elem);
+        shape.parseEllipse(false);
+      } else if (name === "rect") {
+        shape = new PShapeSVG(this, elem);
+        shape.parseRect();
+      } else if (name === "polygon") {
+        shape = new PShapeSVG(this, elem);
+        shape.parsePoly(true);
+      } else if (name === "polyline") {
+        shape = new PShapeSVG(this, elem);
+        shape.parsePoly(false);
+      } else if (name === "path") {
+        shape = new PShapeSVG(this, elem);
+        shape.parsePath();
+      } else if (name === "radialGradient") {
+        //return new RadialGradient(this, elem);
+      } else if (name === "linearGradient") {
+        //return new LinearGradient(this, elem);
+      } else if (name === "text") {
+        //p.println("Text in SVG files is not currently supported " +
+        //          "convert text to outlines instead.");
+      } else if (name === "filter") {
+        //p.println("Filters are not supported.");
+      } else if (name === "mask") {
+        //p.println("Masks are not supported.");
+      } else {
+        //p.println("Ignoring  <" + name + "> tag.");
+      }
+      return shape;
+    };
+    /**
+     * @member PShapeSVG
+     * The parsePath() function parses the <path> element of the svg file
+     * A path is defined by including a path element which contains a d="(path data)" attribute, where the d attribute contains
+     * the moveto, line, curve (both cubic and quadratic Beziers), arc and closepath instructions.
+     **/
+    PShapeSVG.prototype.parsePath = function() {
+      this.family = PConstants.PATH;
+      this.kind = 0;
+      var pathDataChars = [];
+      var c;
+      //change multiple spaces and commas to single space
+      var pathData = p.trim(this.element.getStringAttribute("d")
+                            .replace(/[\s,]+/g,' '));
+      if (pathData === null) { 
+        return;
+      }
+      pathData = pathData.toCharArray();
+      var cx     = 0,
+          cy     = 0,
+          ctrlX  = 0,
+          ctrlY  = 0,
+          ctrlX1 = 0,
+          ctrlX2 = 0,
+          ctrlY1 = 0,
+          ctrlY2 = 0,
+          endX   = 0,
+          endY   = 0,
+          ppx    = 0,
+          ppy    = 0,
+          px     = 0,
+          py     = 0,
+          i      = 0,
+          valOf  = 0;
+      var str = "";
+      var tmpArray =[];
+      var flag = false;
+      var lastInstruction;
+      var command;
+      while (i< pathData.length) {
+        valOf = pathData[i].valueOf();
+        if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { 
+          // if it's a letter
+          // populate the tmpArray with coordinates
+          j = i;
+          i++;
+          if (i < pathData.length) { // don't go over boundary of array
+            tmpArray = [];
+            valOf = pathData[i].valueOf();
+            while (!((valOf >= 65 && valOf <= 90) ||
+                     (valOf >= 97 && valOf <= 100) || 
+                     (valOf >= 102 && valOf <= 122)) 
+                     && flag === false) { // if its NOT a letter
+              if (valOf === 32) { //if its a space and the str isn't empty
+                // sometimes you get a space after the letter
+                if (str !== "") {
+                  tmpArray.push(parseFloat(str));
+                  str = "";
+                }
+                i++;
+              } else if (valOf === 45) { //if it's a -
+                // allow for 'e' notation in numbers, e.g. 2.10e-9
+                if (pathData[i-1].valueOf() === 101) {
                   str += pathData[i].toString();
                   i++;
-                }
-                if (i === pathData.length) { // dont go over boundary of array
-                  flag = true;
                 } else {
-                  valOf = pathData[i].valueOf();
+                  // sometimes no space separator after (ex: 104.535-16.322)
+                  if (str !== "") {
+                    tmpArray.push(parseFloat(str));
+                  }
+                  str = pathData[i].toString();
+                  i++;
                 }
+              } else {
+                str += pathData[i].toString();
+                i++;
+              }
+              if (i === pathData.length) { // don't go over boundary of array
+                flag = true;
+              } else {
+                valOf = pathData[i].valueOf();
               }
             }
-            if (str !== "") {
-              tmpArray.push(parseFloat(str));
-              str = "";
-            }
-            command = pathData[j];
-            switch (command.valueOf()) {
-              case 77:  // M - move to (absolute)
-                if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { // need one+ pairs of co-ordinates
-                  cx = tmpArray[0];
-                  cy = tmpArray[1];
-                  this.parsePathMoveto(cx, cy);
-                  if (tmpArray.length > 2) {
-                    for (j = 2; j < tmpArray.length; j+=2) {
-                      // absolute line to
-                      cx = tmpArray[j];
-                      cy = tmpArray[j+1];
-                      this.parsePathLineto(cx,cy);
-                    }
-                  }
-                }
-                break;
-              case 109:  // m - move to (relative)
-                if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                  cx += tmpArray[0];
-                  cy += tmpArray[1];
-                  this.parsePathMoveto(cx,cy);
-                  if (tmpArray.length > 2) {
-                    for (j = 2; j < tmpArray.length; j+=2) {
-                      // relative line to
-                      cx += tmpArray[j];
-                      cy += tmpArray[j + 1];
-                      this.parsePathLineto(cx,cy);
-                    }
-                  }
-                }
-                break;
-              case 76: // L - lineto (absolute)
-              if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                for (j = 0; j < tmpArray.length; j+=2) {
-                  cx = tmpArray[j];
-                  cy = tmpArray[j + 1];
-                  this.parsePathLineto(cx,cy);
-                }
+          }
+          if (str !== "") {
+            tmpArray.push(parseFloat(str));
+            str = "";
+          }
+          command = pathData[j];
+          valOf = command.valueOf();
+          if (valOf === 77) {  // M - move to (absolute)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { 
+						  // need one+ pairs of co-ordinates
+							cx = tmpArray[0];
+							cy = tmpArray[1];
+							this.parsePathMoveto(cx, cy);
+							if (tmpArray.length > 2) {
+								for (var j = 2, k = tmpArray.length; j < k; j+=2) {
+									// absolute line to
+									cx = tmpArray[j];
+									cy = tmpArray[j+1];
+									this.parsePathLineto(cx,cy);
+								}
+							}
+						}
+          } else if (valOf === 109) {  // m - move to (relative)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						  // need one+ pairs of co-ordinates
+							this.parsePathMoveto(cx,cy);
+							if (tmpArray.length > 2) {
+								for (var j = 2, k = tmpArray.length; j < k; j+=2) {
+									// relative line to
+									cx += tmpArray[j];
+									cy += tmpArray[j + 1];
+									this.parsePathLineto(cx,cy);
+								}
+							}
+						}
+          } else if (valOf === 76) { // L - lineto (absolute)
+            if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+              // need one+ pairs of co-ordinates
+              for (var j = 0, k = tmpArray.length; j < k; j+=2) {
+                cx = tmpArray[j];
+                cy = tmpArray[j + 1];
+                this.parsePathLineto(cx,cy);
               }
-              break;
-
-              case 108: // l - lineto (relative)
-                if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                  for (j = 0; j < tmpArray.length; j+=2) {
-                    cx += tmpArray[j];
-                    cy += tmpArray[j+1];
-                    this.parsePathLineto(cx,cy);
-                  }
-                }
-                break;
-
-              case 72: // H - horizontal lineto (absolute)
-                for (j = 0; j < tmpArray.length; j++) { // multiple x co-ordinates can be provided
-                  cx = tmpArray[j];
-                  this.parsePathLineto(cx, cy);
-                }
-                break;
-
-              case 104: // h - horizontal lineto (relative)
-                for (j = 0; j < tmpArray.length; j++) { // multiple x co-ordinates can be provided
-                  cx += tmpArray[j];
-                  this.parsePathLineto(cx, cy);
-                }
-                break;
-
-              case 86: // V - vertical lineto (absolute)
-                for (j = 0; j < tmpArray.length; j++) { // multiple y co-ordinates can be provided
-                  cy = tmpArray[j];
-                  this.parsePathLineto(cx, cy);
-                }
-                break;
-
-              case 118: // v - vertical lineto (relative)
-                for (j = 0; j < tmpArray.length; j++) { // multiple y co-ordinates can be provided
-                  cy += tmpArray[j];
-                  this.parsePathLineto(cx, cy);
-                }
-                break;
-
-              case 67: // C - curve to (absolute)
-                if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
-                  for (j = 0; j < tmpArray.length; j+=6) {
-                    ctrlX1 = tmpArray[j];
-                    ctrlY1 = tmpArray[j + 1];
-                    ctrlX2 = tmpArray[j + 2];
-                    ctrlY2 = tmpArray[j + 3];
-                    endX   = tmpArray[j + 4];
-                    endY   = tmpArray[j + 5];
-                    this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                    cx = endX;
-                    cy = endY;
-                  }
-                }
-                break;
-
-              case 99: // c - curve to (relative)
-                if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { // need one+ multiples of 6 co-ordinates
-                  for (j = 0; j < tmpArray.length; j+=6) {
-                    ctrlX1 = cx + tmpArray[j];
-                    ctrlY1 = cy + tmpArray[j + 1];
-                    ctrlX2 = cx + tmpArray[j + 2];
-                    ctrlY2 = cy + tmpArray[j + 3];
-                    endX   = cx + tmpArray[j + 4];
-                    endY   = cy + tmpArray[j + 5];
-                    this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                    cx = endX;
-                    cy = endY;
-                  }
-                }
-                break;
-
-              case 83: // S - curve to shorthand (absolute)
-                if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
-                  for (j = 0; j < tmpArray.length; j+=4) {
-                    if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
-                      ppx    = this.vertices[ this.vertices.length-2 ][0];
-                      ppy    = this.vertices[ this.vertices.length-2 ][1];
-                      px     = this.vertices[ this.vertices.length-1 ][0];
-                      py     = this.vertices[ this.vertices.length-1 ][1];
-                      ctrlX1 = px + (px - ppx);
-                      ctrlY1 = py + (py - ppy);
-                    } else {
-                      //If there is no previous curve, the current point will be used as the first control point.
-                      ctrlX1 = this.vertices[this.vertices.length-1][0];
-                      ctrlY1 = this.vertices[this.vertices.length-1][1];
-                    }
-                    ctrlX2 = tmpArray[j];
-                    ctrlY2 = tmpArray[j + 1];
-                    endX   = tmpArray[j + 2];
-                    endY   = tmpArray[j + 3];
-                    this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                    cx = endX;
-                    cy = endY;
-                  }
-                }
-                break;
-
-              case 115: // s - curve to shorthand (relative)
-                if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
-                  for (j = 0; j < tmpArray.length; j+=4) {
-                    if (lastInstruction.toLowerCase() ===  "c" || lastInstruction.toLowerCase() ===  "s") {
-                      ppx    = this.vertices[this.vertices.length-2][0];
-                      ppy    = this.vertices[this.vertices.length-2][1];
-                      px     = this.vertices[this.vertices.length-1][0];
-                      py     = this.vertices[this.vertices.length-1][1];
-                      ctrlX1 = px + (px - ppx);
-                      ctrlY1 = py + (py - ppy);
-                    } else {
-                      //If there is no previous curve, the current point will be used as the first control point.
-                      ctrlX1 = this.vertices[this.vertices.length-1][0];
-                      ctrlY1 = this.vertices[this.vertices.length-1][1];
-                    }
-                    ctrlX2 = cx + tmpArray[j];
-                    ctrlY2 = cy + tmpArray[j + 1];
-                    endX   = cx + tmpArray[j + 2];
-                    endY   = cy + tmpArray[j + 3];
-                    this.parsePathCurveto(ctrlX1, ctrlY1, ctrlX2, ctrlY2, endX, endY);
-                    cx = endX;
-                    cy = endY;
-                  }
-                }
-                break;
-
-              case 81: // Q - quadratic curve to (absolute)
-                if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
-                  for (j = 0; j < tmpArray.length; j+=4) {
-                    ctrlX = tmpArray[j];
-                    ctrlY = tmpArray[j + 1];
-                    endX  = tmpArray[j + 2];
-                    endY  = tmpArray[j + 3];
-                    this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-                    cx = endX;
-                    cy = endY;
-                  }
-                }
-                break;
-
-              case 113: // q - quadratic curve to (relative)
-                if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { // need one+ multiples of 4 co-ordinates
-                  for (j = 0; j < tmpArray.length; j+=4) {
-                    ctrlX = cx + tmpArray[j];
-                    ctrlY = cy + tmpArray[j + 1];
-                    endX  = cx + tmpArray[j + 2];
-                    endY  = cy + tmpArray[j + 3];
-                    this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-                    cx = endX;
-                    cy = endY;
-                  }
-                }
-                break;
-
-              case 84: // T - quadratic curve to shorthand (absolute)
-                if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                  for (j = 0; j < tmpArray.length; j+=2) {
-                    if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
-                      ppx   = this.vertices[this.vertices.length-2][0];
-                      ppy   = this.vertices[this.vertices.length-2][1];
-                      px    = this.vertices[this.vertices.length-1][0];
-                      py    = this.vertices[this.vertices.length-1][1];
-                      ctrlX = px + (px - ppx);
-                      ctrlY = py + (py - ppy);
-                    } else {
-                      // If there is no previous command or if the previous command was not a Q, q, T or t,
-                      // assume the control point is coincident with the current point.
-                      ctrlX = cx;
-                      ctrlY = cy;
-                    }
-                    endX  = tmpArray[j];
-                    endY  = tmpArray[j + 1];
-                    this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-                    cx = endX;
-                    cy = endY;
-                  }
-                }
-                break;
-
-              case 116:  // t - quadratic curve to shorthand (relative)
-                if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { // need one+ pairs of co-ordinates
-                  for (j = 0; j < tmpArray.length; j+=2) {
-                    if (lastInstruction.toLowerCase() ===  "q" || lastInstruction.toLowerCase() ===  "t") {
-                      ppx   = this.vertices[this.vertices.length-2][0];
-                      ppy   = this.vertices[this.vertices.length-2][1];
-                      px    = this.vertices[this.vertices.length-1][0];
-                      py    = this.vertices[this.vertices.length-1][1];
-                      ctrlX = px + (px - ppx);
-                      ctrlY = py + (py - ppy);
-                    } else {
-                      // If there is no previous command or if the previous command was not a Q, q, T or t,
-                      // assume the control point is coincident with the current point.
-                      ctrlX = cx;
-                      ctrlY = cy;
-                    }
-                    endX  = cx + tmpArray[j];
-                    endY  = cy + tmpArray[j + 1];
-                    this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-                    cx = endX;
-                    cy = endY;
-                  }
-                }
-                break;
-
-              case 90: //Z
-              case 122: //z
-                this.close = true;
-                break;
             }
-            lastInstruction = command.toString();
-          } else { i++;}
-        }
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parsePath() helper function
-       *
-       * @see PShapeSVG#parsePath
-       */
-      parsePathQuadto: function(x1, y1, cx, cy, x2, y2) {
-        if (this.vertices.length > 0) {
-          this.parsePathCode(PConstants.BEZIER_VERTEX);
-          // x1/y1 already covered by last moveto, lineto, or curveto
-          this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
-          this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
-          this.parsePathVertex(x2, y2);
-        } else {
-          throw ("Path must start with M/m");
-        }
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parsePath() helper function
-       *
-       * @see PShapeSVG#parsePath
-       */
-      parsePathCurveto : function(x1,  y1, x2, y2, x3, y3) {
-        if (this.vertices.length > 0) {
-          this.parsePathCode(PConstants.BEZIER_VERTEX );
-          this.parsePathVertex(x1, y1);
-          this.parsePathVertex(x2, y2);
-          this.parsePathVertex(x3, y3);
-        } else {
-          throw ("Path must start with M/m");
-        }
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parsePath() helper function
-       *
-       * @see PShapeSVG#parsePath
-       */
-      parsePathLineto: function(px, py) {
-        if (this.vertices.length > 0) {
-          this.parsePathCode(PConstants.VERTEX);
-          this.parsePathVertex(px, py);
-          // add property to distinguish between curContext.moveTo or curContext.lineTo
-          this.vertices[this.vertices.length-1]["moveTo"] = false;
-        } else {
-          throw ("Path must start with M/m");
-        }
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parsePath() helper function
-       *
-       * @see PShapeSVG#parsePath
-       */
-      parsePathMoveto: function(px, py) {
-        if (this.vertices.length > 0) {
-          this.parsePathCode(PConstants.BREAK);
-        }
+          } else if (valOf === 108) { // l - lineto (relative)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						  // need one+ pairs of co-ordinates
+							for (var j = 0, k = tmpArray.length; j < k; j+=2) {
+								cx += tmpArray[j];
+								cy += tmpArray[j+1];
+								this.parsePathLineto(cx,cy);
+							}
+						}
+          } else if (valOf === 72) { // H - horizontal lineto (absolute)
+						for (var j = 0, k = tmpArray.length; j < k; j++) { 
+						  // multiple x co-ordinates can be provided
+							cx = tmpArray[j];
+							this.parsePathLineto(cx, cy);
+						}
+          } else if (valOf === 104) { // h - horizontal lineto (relative)
+						for (var j = 0, k = tmpArray.length; j < k; j++) { 
+						  // multiple x co-ordinates can be provided
+							cx += tmpArray[j];
+							this.parsePathLineto(cx, cy);
+						}
+          } else if (valOf === 86) { // V - vertical lineto (absolute)
+						for (var j = 0, k = tmpArray.length; j < k; j++) { 
+						  // multiple y co-ordinates can be provided
+							cy = tmpArray[j];
+							this.parsePathLineto(cx, cy);
+						}
+          } else if (valOf === 118) { // v - vertical lineto (relative)
+						for (var j = 0, k = tmpArray.length; j < k; j++) { 
+						  // multiple y co-ordinates can be provided
+							cy += tmpArray[j];
+							this.parsePathLineto(cx, cy);
+						}
+          } else if (valOf === 67) { // C - curve to (absolute)
+						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { 
+						  // need one+ multiples of 6 co-ordinates
+							for (var j = 0, k = tmpArray.length; j < k; j+=6) {
+								ctrlX1 = tmpArray[j];
+								ctrlY1 = tmpArray[j + 1];
+								ctrlX2 = tmpArray[j + 2];
+								ctrlY2 = tmpArray[j + 3];
+								endX   = tmpArray[j + 4];
+								endY   = tmpArray[j + 5];
+								this.parsePathCurveto(ctrlX1, 
+								                      ctrlY1,
+								                      ctrlX2,
+								                      ctrlY2,
+								                      endX,
+								                      endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 99) { // c - curve to (relative)
+						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) {
+						  // need one+ multiples of 6 co-ordinates
+							for (var j = 0, k = tmpArray.length; j < k; j+=6) {
+								ctrlX1 = cx + tmpArray[j];
+								ctrlY1 = cy + tmpArray[j + 1];
+								ctrlX2 = cx + tmpArray[j + 2];
+								ctrlY2 = cy + tmpArray[j + 3];
+								endX   = cx + tmpArray[j + 4];
+								endY   = cy + tmpArray[j + 5];
+								this.parsePathCurveto(ctrlX1,
+								                      ctrlY1,
+								                      ctrlX2,
+								                      ctrlY2,
+								                      endX,
+								                      endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 83) { // S - curve to shorthand (absolute)
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						  // need one+ multiples of 4 co-ordinates
+							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
+								if (lastInstruction.toLowerCase() ===  "c" ||
+								    lastInstruction.toLowerCase() ===  "s") {
+									ppx    = this.vertices[ this.vertices.length-2 ][0];
+									ppy    = this.vertices[ this.vertices.length-2 ][1];
+									px     = this.vertices[ this.vertices.length-1 ][0];
+									py     = this.vertices[ this.vertices.length-1 ][1];
+									ctrlX1 = px + (px - ppx);
+									ctrlY1 = py + (py - ppy);
+								} else {
+									//If there is no previous curve, 
+									//the current point will be used as the first control point.
+									ctrlX1 = this.vertices[this.vertices.length-1][0];
+									ctrlY1 = this.vertices[this.vertices.length-1][1];
+								}
+								ctrlX2 = tmpArray[j];
+								ctrlY2 = tmpArray[j + 1];
+								endX   = tmpArray[j + 2];
+								endY   = tmpArray[j + 3];
+								this.parsePathCurveto(ctrlX1,
+								                      ctrlY1,
+								                      ctrlX2,
+								                      ctrlY2,
+								                      endX,
+								                      endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 115) { // s - curve to shorthand (relative)
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						  // need one+ multiples of 4 co-ordinates
+							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
+								if (lastInstruction.toLowerCase() ===  "c" || 
+								    lastInstruction.toLowerCase() ===  "s") {
+									ppx    = this.vertices[this.vertices.length-2][0];
+									ppy    = this.vertices[this.vertices.length-2][1];
+									px     = this.vertices[this.vertices.length-1][0];
+									py     = this.vertices[this.vertices.length-1][1];
+									ctrlX1 = px + (px - ppx);
+									ctrlY1 = py + (py - ppy);
+								} else {
+									//If there is no previous curve,
+									//the current point will be used as the first control point.
+									ctrlX1 = this.vertices[this.vertices.length-1][0];
+									ctrlY1 = this.vertices[this.vertices.length-1][1];
+								}
+								ctrlX2 = cx + tmpArray[j];
+								ctrlY2 = cy + tmpArray[j + 1];
+								endX   = cx + tmpArray[j + 2];
+								endY   = cy + tmpArray[j + 3];
+								this.parsePathCurveto(ctrlX1,
+								                      ctrlY1,
+								                      ctrlX2,
+								                      ctrlY2,
+								                      endX,
+								                      endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 81) { // Q - quadratic curve to (absolute)
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						  // need one+ multiples of 4 co-ordinates
+							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
+								ctrlX = tmpArray[j];
+								ctrlY = tmpArray[j + 1];
+								endX  = tmpArray[j + 2];
+								endY  = tmpArray[j + 3];
+								this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 113) { // q - quadratic curve to (relative)
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						  // need one+ multiples of 4 co-ordinates
+							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
+								ctrlX = cx + tmpArray[j];
+								ctrlY = cy + tmpArray[j + 1];
+								endX  = cx + tmpArray[j + 2];
+								endY  = cy + tmpArray[j + 3];
+								this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 84) { 
+            // T - quadratic curve to shorthand (absolute)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						  // need one+ pairs of co-ordinates
+							for (var j = 0, k = tmpArray.length; j < k; j+=2) {
+								if (lastInstruction.toLowerCase() ===  "q" ||
+								    lastInstruction.toLowerCase() ===  "t") {
+									ppx   = this.vertices[this.vertices.length-2][0];
+									ppy   = this.vertices[this.vertices.length-2][1];
+									px    = this.vertices[this.vertices.length-1][0];
+									py    = this.vertices[this.vertices.length-1][1];
+									ctrlX = px + (px - ppx);
+									ctrlY = py + (py - ppy);
+								} else {
+									// If there is no previous command or if the previous command
+									// was not a Q, q, T or t, assume the control point is 
+									// coincident with the current point.
+									ctrlX = cx;
+									ctrlY = cy;
+								}
+								endX  = tmpArray[j];
+								endY  = tmpArray[j + 1];
+								this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+								cx = endX;
+								cy = endY;
+							}
+						}
+          } else if (valOf === 116) {  
+            // t - quadratic curve to shorthand (relative)
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						  // need one+ pairs of co-ordinates
+							for (var j = 0, k = tmpArray.length; j < k; j+=2) {
+								if (lastInstruction.toLowerCase() ===  "q" ||
+								    lastInstruction.toLowerCase() ===  "t") {
+									ppx   = this.vertices[this.vertices.length-2][0];
+									ppy   = this.vertices[this.vertices.length-2][1];
+									px    = this.vertices[this.vertices.length-1][0];
+									py    = this.vertices[this.vertices.length-1][1];
+									ctrlX = px + (px - ppx);
+									ctrlY = py + (py - ppy);
+								} else {
+									// If there is no previous command or if the previous command
+									// was not a Q, q, T or t, assume the control point is 
+									// coincident with the current point.
+									ctrlX = cx;
+									ctrlY = cy;
+								}
+								endX  = cx + tmpArray[j];
+								endY  = cy + tmpArray[j + 1];
+                this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+                cx = endX;
+                cy = endY;
+              }
+            }
+          } else if (valOf === 90) {
+            //Z
+          } else if (valOf === 122) { //z
+            this.close = true;
+          }
+          lastInstruction = command.toString();
+        } else { i++;}
+      }
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parsePath() helper function
+     *
+     * @see PShapeSVG#parsePath
+     */
+    PShapeSVG.prototype.parsePathQuadto = function(x1, y1, cx, cy, x2, y2) {
+      if (this.vertices.length > 0) {
+        this.parsePathCode(PConstants.BEZIER_VERTEX);
+        // x1/y1 already covered by last moveto, lineto, or curveto
+        this.parsePathVertex(x1 + ((cx-x1)*2/3), y1 + ((cy-y1)*2/3));
+        this.parsePathVertex(x2 + ((cx-x2)*2/3), y2 + ((cy-y2)*2/3));
+        this.parsePathVertex(x2, y2);
+      } else {
+        throw ("Path must start with M/m");
+      }
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parsePath() helper function
+     *
+     * @see PShapeSVG#parsePath
+     */
+    PShapeSVG.prototype.parsePathCurveto = function(x1,  y1, x2, y2, x3, y3) {
+      if (this.vertices.length > 0) {
+        this.parsePathCode(PConstants.BEZIER_VERTEX );
+        this.parsePathVertex(x1, y1);
+        this.parsePathVertex(x2, y2);
+        this.parsePathVertex(x3, y3);
+      } else {
+        throw ("Path must start with M/m");
+      }
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parsePath() helper function
+     *
+     * @see PShapeSVG#parsePath
+     */
+    PShapeSVG.prototype.parsePathLineto = function(px, py) {
+      if (this.vertices.length > 0) {
         this.parsePathCode(PConstants.VERTEX);
         this.parsePathVertex(px, py);
-        // add property to distinguish between curContext.moveTo or curContext.lineTo
-        this.vertices[this.vertices.length-1]["moveTo"] = true;
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parsePath() helper function
-       *
-       * @see PShapeSVG#parsePath
-       */
-      parsePathVertex: function(x,  y) {
-        var verts = [];
-        verts[0]  = x;
-        verts[1]  = y;
-        this.vertices.push(verts);
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parsePath() helper function
-       *
-       * @see PShapeSVG#parsePath
-       */
-      parsePathCode: function(what) {
-        this.vertexCodes.push(what);
-      },
-      /**
-       * @member PShapeSVG
-       * The parsePoly() function parses a polyline or polygon from an SVG file.
-       *
-       * @param {boolean}val true if shape is closed (polygon), false if not (polyline)
-       */
-      parsePoly: function(val) {
-        this.family    = PConstants.PATH;
-        this.close     = val;
-        var pointsAttr = p.trim(this.element.getStringAttribute("points").replace(/[,\s]+/g,' '));
-        if (pointsAttr !== null) {
-          //split into array
-          var pointsBuffer = pointsAttr.split(" ");
-          if (pointsBuffer.length % 2 === 0) {
-            for (var i = 0; i < pointsBuffer.length; i++) {
-              var verts = [];
-              verts[0]  = pointsBuffer[i];
-              verts[1]  = pointsBuffer[++i];
-              this.vertices.push(verts);
-            }
-          } else {
-            p.println("Error parsing polygon points: odd number of coordinates provided");
-          }
-        }
-      },
-      /**
-       * @member PShapeSVG
-       * The parseRect() function parses a rect from an SVG file.
-       */
-      parseRect: function() {
-        this.kind      = PConstants.RECT;
-        this.family    = PConstants.PRIMITIVE;
-        this.params    = [];
-        this.params[0] = this.element.getFloatAttribute("x");
-        this.params[1] = this.element.getFloatAttribute("y");
-        this.params[2] = this.element.getFloatAttribute("width");
-        this.params[3] = this.element.getFloatAttribute("height");
-        if (this.params[2] < 0 || this.params[3] < 0) {
-          throw("svg error: negative width or height found while parsing <rect>");
-        }
-
-      },
-      /**
-       * @member PShapeSVG
-       * The parseEllipse() function handles parsing ellipse and circle tags.
-       *
-       * @param {boolean}val true if this is a circle and not an ellipse
-       */
-      parseEllipse: function(val) {
-        this.kind   = PConstants.ELLIPSE;
-        this.family = PConstants.PRIMITIVE;
-        this.params = [];
-
-        this.params[0] = this.element.getFloatAttribute("cx") | 0;
-        this.params[1] = this.element.getFloatAttribute("cy") | 0;
-
-        var rx, ry;
-        if (val) { //this is a circle
-          rx = ry = this.element.getFloatAttribute("r");
-          if (rx < 0) {
-            throw("svg error: negative radius found while parsing <circle>");
+        // add property to distinguish between curContext.moveTo 
+        // or curContext.lineTo
+        this.vertices[this.vertices.length-1]["moveTo"] = false;
+      } else {
+        throw ("Path must start with M/m");
+      }
+    };
+    
+    PShapeSVG.prototype.parsePathMoveto = function(px, py) {
+      if (this.vertices.length > 0) {
+        this.parsePathCode(PConstants.BREAK);
+      }
+      this.parsePathCode(PConstants.VERTEX);
+      this.parsePathVertex(px, py);
+      // add property to distinguish between curContext.moveTo
+      // or curContext.lineTo
+      this.vertices[this.vertices.length-1]["moveTo"] = true;
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parsePath() helper function
+     *
+     * @see PShapeSVG#parsePath
+     */
+    PShapeSVG.prototype.parsePathVertex = function(x,  y) {
+      var verts = [];
+      verts[0]  = x;
+      verts[1]  = y;
+      this.vertices.push(verts);
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parsePath() helper function
+     *
+     * @see PShapeSVG#parsePath
+     */
+    PShapeSVG.prototype.parsePathCode = function(what) {
+      this.vertexCodes.push(what);
+    };
+    /**
+     * @member PShapeSVG
+     * The parsePoly() function parses a polyline or polygon from an SVG file.
+     *
+     * @param {boolean}val true if shape is closed (polygon), false if not (polyline)
+     */
+    PShapeSVG.prototype.parsePoly = function(val) {
+      this.family    = PConstants.PATH;
+      this.close     = val;
+      var pointsAttr = p.trim(this.element.getStringAttribute("points")
+                              .replace(/[,\s]+/g,' '));
+      if (pointsAttr !== null) {
+        //split into array
+        var pointsBuffer = pointsAttr.split(" ");
+        if (pointsBuffer.length % 2 === 0) {
+          for (var i = 0, j = pointsBuffer.length; i < j; i++) {
+            var verts = [];
+            verts[0]  = pointsBuffer[i];
+            verts[1]  = pointsBuffer[++i];
+            this.vertices.push(verts);
           }
         } else {
-          rx = this.element.getFloatAttribute("rx");
-          ry = this.element.getFloatAttribute("ry");
-          if (rx < 0 || ry < 0) {
-            throw("svg error: negative x-axis radius or y-axis radius found while parsing <ellipse>");
-          }
+          //p.println("Error parsing polygon points: " + 
+          //          "odd number of coordinates provided");
         }
-        this.params[0] -= rx;
-        this.params[1] -= ry;
+      }
+    };
+    /**
+     * @member PShapeSVG
+     * The parseRect() function parses a rect from an SVG file.
+     */
+    PShapeSVG.prototype.parseRect = function() {
+      this.kind      = PConstants.RECT;
+      this.family    = PConstants.PRIMITIVE;
+      this.params    = [];
+      this.params[0] = this.element.getFloatAttribute("x");
+      this.params[1] = this.element.getFloatAttribute("y");
+      this.params[2] = this.element.getFloatAttribute("width");
+      this.params[3] = this.element.getFloatAttribute("height");
+    };
+    /**
+     * @member PShapeSVG
+     * The parseEllipse() function handles parsing ellipse and circle tags.
+     *
+     * @param {boolean}val true if this is a circle and not an ellipse
+     */
+    PShapeSVG.prototype.parseEllipse = function(val) {
+      this.kind   = PConstants.ELLIPSE;
+      this.family = PConstants.PRIMITIVE;
+      this.params = [];
 
-        this.params[2] = rx*2;
-        this.params[3] = ry*2;
-      },
-      /**
-       * @member PShapeSVG
-       * The parseLine() function handles parsing line tags.
-       *
-       * @param {boolean}val true if this is a circle and not an ellipse
-       */
-      parseLine: function() {
-        this.kind = PConstants.LINE;
-        this.family = PConstants.PRIMITIVE;
-        this.params = [];
-        this.params[0] = this.element.getFloatAttribute("x1");
-        this.params[1] = this.element.getFloatAttribute("y1");
-        this.params[2] = this.element.getFloatAttribute("x2");
-        this.params[3] = this.element.getFloatAttribute("y2");
-      },
-      /**
-       * @member PShapeSVG
-       * The parseColors() function handles parsing the opacity, strijem stroke-width, stroke-linejoin,stroke-linecap, fill, and style attributes
-       *
-       * @param {XMLElement}element the element of which attributes to parse
-       */
-      parseColors: function(element) {
-        if (element.hasAttribute("opacity")) {
-          this.setOpacity(element.getAttribute("opacity"));
-        }
-        if (element.hasAttribute("stroke")) {
-          this.setStroke(element.getAttribute("stroke"));
-        }
-        if (element.hasAttribute("stroke-width")) {
-          // if NaN (i.e. if it's 'inherit') then default back to the inherit setting
-          this.setStrokeWeight(element.getAttribute("stroke-width"));
-        }
-        if (element.hasAttribute("stroke-linejoin") ) {
-          this.setStrokeJoin(element.getAttribute("stroke-linejoin"));
-        }
-        if (element.hasAttribute("stroke-linecap")) {
-          this.setStrokeCap(element.getStringAttribute("stroke-linecap"));
-        }
-        // fill defaults to black (though stroke defaults to "none")
-        // http://www.w3.org/TR/SVG/painting.html#FillProperties
-        if (element.hasAttribute("fill")) {
-          this.setFill(element.getStringAttribute("fill"));
-        }
-        if (element.hasAttribute("style")) {
-          var styleText   = element.getStringAttribute("style");
-          var styleTokens = styleText.toString().split( ";" );
+      this.params[0] = this.element.getFloatAttribute("cx");
+      this.params[1] = this.element.getFloatAttribute("cy");
 
-          for (var i = 0; i < styleTokens.length; i++) {
-            var tokens = p.trim(styleTokens[i].split( ":" ));
-            switch(tokens[0]){
-              case "fill":
-                this.setFill(tokens[1]);
-                break;
-              case "fill-opacity":
-                this.setFillOpacity(tokens[1]);
-                break;
-              case "stroke":
-                this.setStroke(tokens[1]);
-                break;
-              case "stroke-width":
-                this.setStrokeWeight(tokens[1]);
-                break;
-              case "stroke-linecap":
-                this.setStrokeCap(tokens[1]);
-                break;
-              case "stroke-linejoin":
-                this.setStrokeJoin(tokens[1]);
-                break;
-              case "stroke-opacity":
-                this.setStrokeOpacity(tokens[1]);
-                break;
-              case "opacity":
-                this.setOpacity(tokens[1]);
-                break;
-              // Other attributes are not yet implemented
-            }
-          }
+      var rx, ry;
+      if (val) {
+        rx = ry = this.element.getFloatAttribute("r");
+      } else {
+        rx = this.element.getFloatAttribute("rx");
+        ry = this.element.getFloatAttribute("ry");
+      }
+      this.params[0] -= rx;
+      this.params[1] -= ry;
+
+      this.params[2] = rx*2;
+      this.params[3] = ry*2;
+    };
+    /**
+     * @member PShapeSVG
+     * The parseLine() function handles parsing line tags.
+     *
+     * @param {boolean}val true if this is a circle and not an ellipse
+     */
+    PShapeSVG.prototype.parseLine = function() {
+      this.kind = PConstants.LINE;
+      this.family = PConstants.PRIMITIVE;
+      this.params = [];
+      this.params[0] = this.element.getFloatAttribute("x1");
+      this.params[1] = this.element.getFloatAttribute("y1");
+      this.params[2] = this.element.getFloatAttribute("x2");
+      this.params[3] = this.element.getFloatAttribute("y2");
+    };
+    /**
+     * @member PShapeSVG
+     * The parseColors() function handles parsing the opacity, strijem stroke-width, stroke-linejoin,stroke-linecap, fill, and style attributes
+     *
+     * @param {XMLElement}element the element of which attributes to parse
+     */
+    PShapeSVG.prototype.parseColors = function(element) {
+      if (element.hasAttribute("opacity")) {
+        this.setOpacity(element.getAttribute("opacity"));
+      }
+      if (element.hasAttribute("stroke")) {
+        this.setStroke(element.getAttribute("stroke"));
+      }
+      if (element.hasAttribute("stroke-width")) {
+        // if NaN (i.e. if it's 'inherit') then default
+        // back to the inherit setting
+        this.setStrokeWeight(element.getAttribute("stroke-width"));
+      }
+      if (element.hasAttribute("stroke-linejoin") ) {
+        this.setStrokeJoin(element.getAttribute("stroke-linejoin"));
+      }
+      if (element.hasAttribute("stroke-linecap")) {
+        this.setStrokeCap(element.getStringAttribute("stroke-linecap"));
+      }
+      // fill defaults to black (though stroke defaults to "none")
+      // http://www.w3.org/TR/SVG/painting.html#FillProperties
+      if (element.hasAttribute("fill")) {
+        this.setFill(element.getStringAttribute("fill"));
+      }
+      if (element.hasAttribute("style")) {
+        var styleText   = element.getStringAttribute("style");
+        var styleTokens = styleText.toString().split( ";" );
+
+        for (var i = 0, j = styleTokens.length; i < j; i++) {
+          var tokens = p.trim(styleTokens[i].split( ":" ));
+          if (tokens[0] === "fill") {
+              this.setFill(tokens[1]);
+          } else if (tokens[0] === "fill-opacity") {
+              this.setFillOpacity(tokens[1]);
+          } else if (tokens[0] === "stroke") {
+              this.setStroke(tokens[1]);
+          } else if (tokens[0] === "stroke-width") {
+              this.setStrokeWeight(tokens[1]);
+          } else if (tokens[0] === "stroke-linecap") {
+              this.setStrokeCap(tokens[1]);
+          } else if (tokens[0] === "stroke-linejoin") {
+              this.setStrokeJoin(tokens[1]);
+          } else if (tokens[0] === "stroke-opacity") {
+              this.setStrokeOpacity(tokens[1]);
+          } else if (tokens[0] === "opacity") {
+              this.setOpacity(tokens[1]);
+          } // Other attributes are not yet implemented
         }
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parseColors() helper function
-       *
-       * @param {String} opacityText the value of fillOpacity
-       *
-       * @see PShapeSVG#parseColors
-       */
-      setFillOpacity: function(opacityText) {
-        this.fillOpacity = parseFloat(opacityText);
-        this.fillColor   = this.fillOpacity * 255  << 24 | this.fillColor & 0xFFFFFF;
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parseColors() helper function
-       *
-       * @param {String} fillText the value of fill
-       *
-       * @see PShapeSVG#parseColors
-       */
-      setFill: function (fillText) {
-        var opacityMask = this.fillColor & 0xFF000000;
-        if (fillText === "none") {
-          this.fill = false;
-        } else if (fillText.indexOf("#") === 0) {
-          this.fill      = true;
-          if (fillText.length === 4) {
-            // convert #00F to #0000FF
-            fillText = fillText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
-          }
-          this.fillColor = opacityMask | (parseInt(fillText.substring(1), 16)) & 0xFFFFFF;
-        } else if (fillText.indexOf("rgb") === 0) {
-          this.fill      = true;
-          this.fillColor = opacityMask | this.parseRGB(fillText);
-        } else if (fillText.indexOf("url(#") === 0) {
-          this.fillName = fillText.substring(5, fillText.length - 1 );
-          /*Object fillObject = findChild(fillName);
-          if (fillObject instanceof Gradient) {
-            fill = true;
-            fillGradient = (Gradient) fillObject;
-            fillGradientPaint = calcGradientPaint(fillGradient); //, opacity);
-          } else {
-            System.err.println("url " + fillName + " refers to unexpected data");
-          }*/
+      }
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parseColors() helper function
+     *
+     * @param {String} opacityText the value of fillOpacity
+     *
+     * @see PShapeSVG#parseColors
+     */  
+    PShapeSVG.prototype.setFillOpacity = function(opacityText) {
+      this.fillOpacity = parseFloat(opacityText);
+      this.fillColor   = this.fillOpacity * 255  << 24 |
+                         this.fillColor & 0xFFFFFF;
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parseColors() helper function
+     *
+     * @param {String} fillText the value of fill
+     *
+     * @see PShapeSVG#parseColors
+     */
+    PShapeSVG.prototype.setFill = function (fillText) {
+      var opacityMask = this.fillColor & 0xFF000000;
+      if (fillText === "none") {
+        this.fill = false;
+      } else if (fillText.indexOf("#") === 0) {
+        this.fill      = true;
+        this.fillColor = opacityMask | 
+                         (parseInt(fillText.substring(1), 16 )) &
+                         0xFFFFFF;
+      } else if (fillText.indexOf("rgb") === 0) {
+        this.fill      = true;
+        this.fillColor = opacityMask | this.parseRGB(fillText);
+      } else if (fillText.indexOf("url(#") === 0) {
+        this.fillName = fillText.substring(5, fillText.length - 1 );
+        /*Object fillObject = findChild(fillName);
+        if (fillObject instanceof Gradient) {
+          fill = true;
+          fillGradient = (Gradient) fillObject;
+          fillGradientPaint = calcGradientPaint(fillGradient); //, opacity);
         } else {
-          if (colors[fillText]) {
-            this.fill      = true;
-            this.fillColor = opacityMask | (parseInt(colors[fillText].substring(1), 16)) & 0xFFFFFF;
-          }
+          System.err.println("url " + fillName + " refers to unexpected data");
+        }*/
+      } else {
+        if (colors[fillText]) {
+          this.fill      = true;
+          this.fillColor = opacityMask |
+                           (parseInt(colors[fillText].substring(1), 16)) &
+                           0xFFFFFF;
         }
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parseColors() helper function
-       *
-       * @param {String} opacity the value of opacity
-       *
-       * @see PShapeSVG#parseColors
-       */
-      setOpacity: function(opacity) {
-        this.strokeColor = parseFloat(opacity) * 255 << 24 | this.strokeColor & 0xFFFFFF;
-        this.fillColor   = parseFloat(opacity) * 255 << 24 | this.fillColor & 0xFFFFFF;
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parseColors() helper function
-       *
-       * @param {String} strokeText the value to set stroke to
-       *
-       * @see PShapeSVG#parseColors
-       */
-      setStroke: function(strokeText) {
-        var opacityMask = this.strokeColor & 0xFF000000;
-        if (strokeText === "none") {
-          this.stroke = false;
-        } else if (strokeText.charAt( 0 ) === "#") {
+      }
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parseColors() helper function
+     *
+     * @param {String} opacity the value of opacity
+     *
+     * @see PShapeSVG#parseColors
+     */
+    PShapeSVG.prototype.setOpacity = function(opacity) {
+      this.strokeColor = parseFloat(opacity) * 255 << 24 |
+                         this.strokeColor & 0xFFFFFF;
+      this.fillColor   = parseFloat(opacity) * 255 << 24 |
+                         this.fillColor & 0xFFFFFF;
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parseColors() helper function
+     *
+     * @param {String} strokeText the value to set stroke to
+     *
+     * @see PShapeSVG#parseColors
+     */
+    PShapeSVG.prototype.setStroke = function(strokeText) {
+      var opacityMask = this.strokeColor & 0xFF000000;
+      if (strokeText === "none") {
+        this.stroke = false;
+      } else if (strokeText.charAt( 0 ) === "#") {
+        this.stroke      = true;
+        this.strokeColor = opacityMask |
+                           (parseInt( strokeText.substring( 1 ), 16 )) &
+                           0xFFFFFF;
+      } else if (strokeText.indexOf( "rgb" ) === 0 ) {
+        this.stroke = true;
+        this.strokeColor = opacityMask | this.parseRGB(strokeText);
+      } else if (strokeText.indexOf( "url(#" ) === 0) {
+        this.strokeName = strokeText.substring(5, strokeText.length - 1);
+          //this.strokeObject = findChild(strokeName);
+        /*if (strokeObject instanceof Gradient) {
+          strokeGradient = (Gradient) strokeObject;
+          strokeGradientPaint = calcGradientPaint(strokeGradient); 
+                                //, opacity);
+        } else {
+          System.err.println("url " + strokeName +
+                             " refers to unexpected data");
+        }*/
+      } else {
+        if (colors[strokeText]){
           this.stroke      = true;
-          if (strokeText.length === 4) {
-            // convert #00F to #0000FF
-            strokeText = strokeText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
-          }
-          this.strokeColor = opacityMask | (parseInt( strokeText.substring(1), 16)) & 0xFFFFFF;
-         } else if (strokeText.indexOf( "rgb" ) === 0 ) {
-          this.stroke = true;
-          this.strokeColor = opacityMask | this.parseRGB(strokeText);
-        } else if (strokeText.indexOf( "url(#" ) === 0) {
-          this.strokeName = strokeText.substring(5, strokeText.length - 1);
-            //this.strokeObject = findChild(strokeName);
-          /*if (strokeObject instanceof Gradient) {
-            strokeGradient = (Gradient) strokeObject;
-            strokeGradientPaint = calcGradientPaint(strokeGradient); //, opacity);
-          } else {
-            System.err.println("url " + strokeName + " refers to unexpected data");
-          }*/
-        } else {
-          if (colors[strokeText]){
-            this.stroke      = true;
-            this.strokeColor = opacityMask | (parseInt(colors[strokeText].substring(1), 16)) & 0xFFFFFF;
-          }
+          this.strokeColor = opacityMask |
+                             (parseInt(colors[strokeText].substring(1), 16)) &
+                             0xFFFFFF;
         }
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parseColors() helper function
-       *
-       * @param {String} weight the value to set strokeWeight to
-       *
-       * @see PShapeSVG#parseColors
-       */
-      setStrokeWeight: function(weight) {
-        this.strokeWeight = this.parseUnitSize(weight);
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parseColors() helper function
-       *
-       * @param {String} linejoin the value to set strokeJoin to
-       *
-       * @see PShapeSVG#parseColors
-       */
-      setStrokeJoin: function(linejoin) {
-        if (linejoin === "miter") {
-          this.strokeJoin = PConstants.MITER;
+      }
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parseColors() helper function
+     *
+     * @param {String} weight the value to set strokeWeight to
+     *
+     * @see PShapeSVG#parseColors
+     */
+    PShapeSVG.prototype.setStrokeWeight = function(weight) {
+      this.strokeWeight = this.parseUnitSize(weight);
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parseColors() helper function
+     *
+     * @param {String} linejoin the value to set strokeJoin to
+     *
+     * @see PShapeSVG#parseColors
+     */
+    PShapeSVG.prototype.setStrokeJoin = function(linejoin) {
+      if (linejoin === "miter") {
+        this.strokeJoin = PConstants.MITER;
 
-        } else if (linejoin === "round") {
-          this.strokeJoin = PConstants.ROUND;
+      } else if (linejoin === "round") {
+        this.strokeJoin = PConstants.ROUND;
 
-        } else if (linejoin === "bevel") {
-          this.strokeJoin = PConstants.BEVEL;
-        }
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parseColors() helper function
-       *
-       * @param {String} linecap the value to set strokeCap to
-       *
-       * @see PShapeSVG#parseColors
-       */
-      setStrokeCap: function (linecap) {
-        if (linecap === "butt") {
-          this.strokeCap = PConstants.SQUARE;
+      } else if (linejoin === "bevel") {
+        this.strokeJoin = PConstants.BEVEL;
+      }
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parseColors() helper function
+     *
+     * @param {String} linecap the value to set strokeCap to
+     *
+     * @see PShapeSVG#parseColors
+     */
+    PShapeSVG.prototype.setStrokeCap = function (linecap) {
+      if (linecap === "butt") {
+        this.strokeCap = PConstants.SQUARE;
 
-        } else if (linecap === "round") {
-          this.strokeCap = PConstants.ROUND;
+      } else if (linecap === "round") {
+        this.strokeCap = PConstants.ROUND;
 
-        } else if (linecap === "square") {
-          this.strokeCap = PConstants.PROJECT;
-        }
-      },
-      /**
-       * @member PShapeSVG
-       * PShapeSVG.parseColors() helper function
-       *
-       * @param {String} opacityText the value to set stroke opacity to
-       *
-       * @see PShapeSVG#parseColors
-       */
-      setStrokeOpacity: function (opacityText) {
-        this.strokeOpacity = parseFloat(opacityText);
-        this.strokeColor   = this.strokeOpacity * 255 << 24 | this.strokeColor & 0xFFFFFF;
-      },
-      /**
-       * @member PShapeSVG
-       * The parseRGB() function parses an rbg() color string and returns a color int
-       *
-       * @param {String} color the color to parse in rbg() format
-       *
-       * @return {int} the equivalent color int
-       */
-      parseRGB: function(color) {
-        var sub    = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
-        var values = sub.split(", ");
-        return (values[0] << 16) | (values[1] << 8) | (values[2]);
-      },
-      /**
-       * @member PShapeSVG
-       * The parseUnitSize() function parse a size that may have a suffix for its units.
-       * Ignoring cases where this could also be a percentage.
-       * The <A HREF="http://www.w3.org/TR/SVG/coords.html#Units">units</A> spec:
-       * <UL>
-       * <LI>"1pt" equals "1.25px" (and therefore 1.25 user units)
-       * <LI>"1pc" equals "15px" (and therefore 15 user units)
-       * <LI>"1mm" would be "3.543307px" (3.543307 user units)
-       * <LI>"1cm" equals "35.43307px" (and therefore 35.43307 user units)
-       * <LI>"1in" equals "90px" (and therefore 90 user units)
-       * </UL>
-       */
-      parseUnitSize: function (text) {
-        var len = text.length - 2;
-        if (len < 0) { return text; }
-        if (text.indexOf("pt") === len) {
-          return parseFloat(text.substring(0, len)) * 1.25;
-        } else if (text.indexOf("pc") === len) {
-          return parseFloat( text.substring( 0, len)) * 15;
-        } else if (text.indexOf("mm") === len) {
-          return parseFloat( text.substring(0, len)) * 3.543307;
-        } else if (text.indexOf("cm") === len) {
-          return parseFloat(text.substring(0, len)) * 35.43307;
-        } else if (text.indexOf("in") === len) {
-          return parseFloat(text.substring(0, len)) * 90;
-        } else if (text.indexOf("px") === len) {
-          return parseFloat(text.substring(0, len));
-        } else {
-          return parseFloat(text);
-        }
+      } else if (linecap === "square") {
+        this.strokeCap = PConstants.PROJECT;
+      }
+    };
+    /**
+     * @member PShapeSVG
+     * PShapeSVG.parseColors() helper function
+     *
+     * @param {String} opacityText the value to set stroke opacity to
+     *
+     * @see PShapeSVG#parseColors
+     */
+    PShapeSVG.prototype.setStrokeOpacity =  function (opacityText) {
+      this.strokeOpacity = parseFloat(opacityText);
+      this.strokeColor   = this.strokeOpacity * 255 << 24 |
+                           this.strokeColor &
+                           0xFFFFFF;
+    };
+    /**
+     * @member PShapeSVG
+     * The parseRGB() function parses an rbg() color string and returns a color int
+     *
+     * @param {String} color the color to parse in rbg() format
+     *
+     * @return {int} the equivalent color int
+     */
+    PShapeSVG.prototype.parseRGB = function(color) {
+      var sub    = color.substring(color.indexOf('(') + 1, color.indexOf(')'));
+      var values = sub.split(", ");
+      return (values[0] << 16) | (values[1] << 8) | (values[2]);
+    };
+    /**
+     * @member PShapeSVG
+     * The parseUnitSize() function parse a size that may have a suffix for its units.
+     * Ignoring cases where this could also be a percentage.
+     * The <A HREF="http://www.w3.org/TR/SVG/coords.html#Units">units</A> spec:
+     * <UL>
+     * <LI>"1pt" equals "1.25px" (and therefore 1.25 user units)
+     * <LI>"1pc" equals "15px" (and therefore 15 user units)
+     * <LI>"1mm" would be "3.543307px" (3.543307 user units)
+     * <LI>"1cm" equals "35.43307px" (and therefore 35.43307 user units)
+     * <LI>"1in" equals "90px" (and therefore 90 user units)
+     * </UL>
+     */
+    PShapeSVG.prototype.parseUnitSize = function (text) {
+      var len = text.length - 2;
+      if (len < 0) { return text; }
+      if (text.indexOf("pt") === len) {
+        return parseFloat(text.substring(0, len)) * 1.25;
+      } else if (text.indexOf("pc") === len) {
+        return parseFloat( text.substring( 0, len)) * 15;
+      } else if (text.indexOf("mm") === len) {
+        return parseFloat( text.substring(0, len)) * 3.543307;
+      } else if (text.indexOf("cm") === len) {
+        return parseFloat(text.substring(0, len)) * 35.43307;
+      } else if (text.indexOf("in") === len) {
+        return parseFloat(text.substring(0, len)) * 90;
+      } else if (text.indexOf("px") === len) {
+        return parseFloat(text.substring(0, len));
+      } else {
+        return parseFloat(text);
       }
     };
     /**
@@ -4172,14 +4199,14 @@
         if (object instanceof XMLElement) {
           if (this.name !== object.getLocalName()) { return false; }
           if (this.attributes.length !== object.getAttributeCount()) { return false; }
-          for (var i = 0; i < this.attributes.length; i++){
+          for (var i = 0, j = this.attributes.length; i < j; i++){
             if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
             if (this.attributes[i].getValue() !== object.attributes[i].getValue()) { return false; }
             if (this.attributes[i].getType()  !== object.attributes[i].getType()) { return false; }
           }
           if (this.children.length !== object.getChildCount()) { return false; }
           var child1, child2;
-          for (i = 0; i < this.children.length; i++) {
+          for (var i = 0, j = this.children.length; i < j; i++) {
             child1 = this.getChildAtIndex(i);
             child2 = object.getChildAtIndex(i);
             if (! child1.equalsXMLElement(child2)) { return false; }
@@ -4351,7 +4378,7 @@
           this.getChildRecursive(arguments[0].split("/"), 0);
         } else {
           var kid, kidName;
-          for (var i = 0; i < this.getChildCount(); i++) {
+          for (var i = 0, j = this.getChildCount(); i < j; i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
             if (kidName !== null && kidName === arguments[0]) {
@@ -4383,7 +4410,7 @@
           } else {
             var matches = [];
             var kid, kidName;
-            for (var i = 0; i < this.getChildCount(); i++) {
+            for (var i = 0, j = this.getChildCount(); i < j; i++) {
               kid = this.getChild(i);
               kidName = kid.getName();
               if (kidName !== null && kidName === arguments[0]) {
@@ -4419,7 +4446,7 @@
        */
       getChildRecursive: function (items, offset) {
         var kid, kidName;
-        for(var i = 0; i < this.getChildCount(); i++) {
+        for(var i = 0, j = this.getChildCount(); i < j; i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
             if (kidName !== null && kidName === items[offset]) {
@@ -4479,13 +4506,14 @@
           xmlelement.parent  = parent;
         }
 
-        for (var l = 0; l < elementpath.attributes.length; l++) {
+        for (var l = 0, m = elementpath.attributes.length; l < m; l++) {
           tmpattrib    = elementpath.attributes[l];
           xmlattribute = new XMLAttribute(tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType);
           xmlelement.attributes.push(xmlattribute);
         }
 
-        for (var node in elementpath.childNodes){
+        for (var l = 0, m = elementpath.childNodes.length; l < m; l++) {
+          var node = elementpath.childNodes[l]; // lonnen - 'maybe?'
           if(elementpath.childNodes[node].nodeType === 1) { //ELEMENT_NODE type
             xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
           }
@@ -4510,7 +4538,7 @@
        */
       listChildren: function() {
         var arr = [];
-        for (var i = 0; i < this.children.length; i++) {
+        for (var i = 0, j = this.children.length; i < j; i++) {
           arr.push( this.getChild(i).getName());
         }
         return arr;
@@ -4524,7 +4552,7 @@
        */
       removeAttribute: function (name , namespace) {
         this.namespace = namespace || "";
-        for (var i = 0; i < this.attributes.length; i++){
+        for (var i = 0, j = this.attributes.length; i < j; i++) {
           if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
             this.attributes.splice(i, 1);
           }
@@ -4538,7 +4566,7 @@
        */
       removeChild: function(child) {
         if (child) {
-          for (var i = 0; i < this.children.length; i++) {
+          for (var i = 0, j = this.attributes.length; i < j; i++) {
             if (this.children[i].equalsXMLElement(child)) {
               this.children.splice(i, 1);
             }
@@ -4567,7 +4595,7 @@
        */
       findAttribute: function (name, namespace) {
         this.namespace = namespace || "";
-        for (var i = 0; i < this.attributes.length; i++ ) {
+        for (var i = 0, j = this.attributes.length; i < j; i++) {
           if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
              return this.attributes[i];
           }
@@ -16000,6 +16028,9 @@
     });
 
     attach(curElement, "mouseout", function(e) {
+      if (typeof p.mouseOut === "function") {
+        p.mouseOut();
+      }
     });
 
     attach(curElement, "mousedown", function(e) {

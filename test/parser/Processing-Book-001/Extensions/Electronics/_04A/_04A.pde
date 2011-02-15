@@ -1,10 +1,6 @@
 // Read data from the serial port and set the position of a servomotor
 // according to the value
-<<<<<<< HEAD
-Servo myservo; // Create servo object to control a servo
-=======
 Servo myservo = new Servo(); // Create servo object to control a servo
->>>>>>> 649c9bbd8298fb0570e236d1df8c943af8f6cfdd
 
 int servoPin = 0; // Connect yellow servo wire to digital I/O pin 0
 int val = 0; // Data received from the serial port
