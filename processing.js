@@ -7902,11 +7902,7 @@
      * @see #match
      */
     function removeFirstArgument(args) {
-      var result = [];
-      for (var i = 1, l = args.length; i < l; ++i) {
-        result.push(args[i]);
-      }
-      return result;
+      return Array.prototype.slice.call(args, 1);
     }
 
     ////////////////////////////////////////////////////////////////////////////
