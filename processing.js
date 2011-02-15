@@ -1837,13 +1837,13 @@
       },
       disableStyle: function(){
         this.style = false;
-        for(var i = 0, l=this.children.length; i<l; i++) {
+        for(var i = 0, j=this.children.length; i<j; i++) {
           this.children[i].disableStyle();
         }
       },
       enableStyle: function(){
         this.style = true;
-        for(var i = 0, l=this.children.length; i<l; i++) {
+        for(var i = 0, j=this.children.length; i<j; i++) {
           this.children[i].enableStyle();
         }
       },
@@ -1889,17 +1889,17 @@
               p.vertex(this.vertices[i][0], this.vertices[i][1]);
             }
           } else {  // drawing 3D vertices
-            for (var k = 0, l = this.vertices.length; k < l; k++) {
-              p.vertex(this.vertices[k][0], 
-                       this.vertices[k][1], 
-                       this.vertices[k][2]);
+            for (var i = 0, j = this.vertices.length; i < j; i++) {
+              p.vertex(this.vertices[i][0], 
+                       this.vertices[i][1], 
+                       this.vertices[i][2]);
             }
           }
         } else {  // coded set of vertices
           var index = 0;
           if (this.vertices[0].length === 2) {  // drawing a 2D path
-            for (var m = 0, n = this.vertexCodes.length; m < n; m++) {
-              if (this.vertexCodes[m] === PConstants.VERTEX) {
+            for (var i = 0, j = this.vertexCodes.length; i < j; i++) {
+              if (this.vertexCodes[i] === PConstants.VERTEX) {
                 p.vertex(this.vertices[index][0], this.vertices[index][1]);
                 if ( this.vertices[index]["moveTo"] === true) {
                   vertArray[vertArray.length-1]["moveTo"] = true;
@@ -1908,7 +1908,7 @@
                 }
                 p.breakShape = false;
                 index++;
-              } else if (this.vertexCodes[m] === PConstants.BEZIER_VERTEX) {
+              } else if (this.vertexCodes[i] === PConstants.BEZIER_VERTEX) {
                 p.bezierVertex(this.vertices[index+0][0], 
                                this.vertices[index+0][1],
                                this.vertices[index+1][0], 
@@ -1916,17 +1916,17 @@
                                this.vertices[index+2][0],
                                this.vertices[index+2][1]);
                 index += 3;
-              } else if (this.vertexCodes[m] === PConstants.CURVE_VERTEX) {
+              } else if (this.vertexCodes[i] === PConstants.CURVE_VERTEX) {
                 p.curveVertex(this.vertices[index][0], 
                               this.vertices[index][1]);
                 index++;
-              } else if (this.vertexCodes[m] ===  PConstants.BREAK) {
+              } else if (this.vertexCodes[i] ===  PConstants.BREAK) {
                 p.breakShape = true;
               }
             }
           } else {  // drawing a 3D path
-            for (var q = 0, r = this.vertexCodes.length; q < r; q++) {
-              if (this.vertexCodes[q] === PConstants.VERTEX) {
+            for (var i = 0, j = this.vertexCodes.length; i < j; i++) {
+              if (this.vertexCodes[i] === PConstants.VERTEX) {
                 p.vertex(this.vertices[index][0], 
                          this.vertices[index][1], 
                          this.vertices[index][2]);
@@ -1936,7 +1936,7 @@
                   vertArray[vertArray.length-1]["moveTo"] = false;
                 }
                 p.breakShape = false;
-              } else if (this.vertexCodes[q] ===  PConstants.BEZIER_VERTEX) {
+              } else if (this.vertexCodes[i] ===  PConstants.BEZIER_VERTEX) {
                 p.bezierVertex(this.vertices[index+0][0], 
                                this.vertices[index+0][1],
                                this.vertices[index+0][2],
@@ -1947,12 +1947,12 @@
                                this.vertices[index+2][1],
                                this.vertices[index+2][2]);
                 index += 3;
-              } else if (this.vertexCodes[q] === PConstants.CURVE_VERTEX) {
+              } else if (this.vertexCodes[i] === PConstants.CURVE_VERTEX) {
                 p.curveVertex(this.vertices[index][0],
                               this.vertices[index][1],
                               this.vertices[index][2]);
                 index++;
-              } else if (this.vertexCodes[q] === PConstants.BREAK) {
+              } else if (this.vertexCodes[i] === PConstants.BREAK) {
                 p.breakShape = true;
               }
             }
@@ -1967,8 +1967,8 @@
             p.vertex(this.vertices[i]);
           }
         } else {
-          for (var k = 0, l = this.vertices.length; k < l; k++) {
-            var vert = this.vertices[k];
+          for (var i = 0, j = this.vertices.length; i < j; i++) {
+            var vert = this.vertices[i];
             if (vert[2] === 0) {
               p.vertex(vert[0], vert[1]);
             } else {
@@ -2090,19 +2090,20 @@
         if (typeof child === 'number') {
           return this.children[child];
         } else {
-          var found;
+          var found,
+              i,j;
           if(child === "" || this.name === child){
             return this;
           } else {
             if(this.nameTable.length > 0) {
-              for (var i = 0, j = this.nameTable.length; i < j || found; i++) {
+              for(i = 0, j = this.nameTable.length; i < j || found; i++) {
                 if(this.nameTable[i].getName === child) {
                   found = this.nameTable[i];
                 }
               }
               if (found) { return found; }
             }
-            for(var i = 0, j = this.children.length; i < j; i++) {
+            for(i = 0, j = this.children.length; i < j; i++) {
               found = this.children[i].getChild(child);
               if(found) { return found; }
             }
@@ -2493,6 +2494,8 @@
           px     = 0,
           py     = 0,
           i      = 0,
+          j      = 0,
+          k      = 0,
           valOf  = 0;
       var str = "";
       var tmpArray =[];
