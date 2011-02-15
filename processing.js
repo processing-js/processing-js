@@ -2090,20 +2090,19 @@
         if (typeof child === 'number') {
           return this.children[child];
         } else {
-          var found,
-              i,j;
+          var found;
           if(child === "" || this.name === child){
             return this;
           } else {
             if(this.nameTable.length > 0) {
-              for(i = 0, j = this.nameTable.length; i < j || found; i++) {
+              for(var i = 0, j = this.nameTable.length; i < j || found; i++) {
                 if(this.nameTable[i].getName === child) {
                   found = this.nameTable[i];
                 }
               }
               if (found) { return found; }
             }
-            for(i = 0, j = this.children.length; i < j; i++) {
+            for(var i = 0, j = this.children.length; i < j; i++) {
               found = this.children[i].getChild(child);
               if(found) { return found; }
             }
@@ -2494,8 +2493,6 @@
           px     = 0,
           py     = 0,
           i      = 0,
-          j      = 0,
-          k      = 0,
           valOf  = 0;
       var str = "";
       var tmpArray =[];
