@@ -7892,6 +7892,23 @@
       return ret;
     };
 
+    /**
+     * Removes the first argument from the arguments set -- shifts.
+     *
+     * @param {Arguments} args  The Arguments object.
+     *
+     * @return {Object[]}       Returns an array of arguments except first one.
+     *
+     * @see #match
+     */
+    function removeFirstArgument(args) {
+      var result = [];
+      for (var i = 1, l = args.length; i < l; ++i) {
+        result.push(args[i]);
+      }
+      return result;
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // String Functions
     ////////////////////////////////////////////////////////////////////////////
@@ -7932,8 +7949,7 @@
      */
     p.__replaceAll = function(subject, regex, replacement) {
       if (typeof subject !== "string") {
-        arguments.shift();
-        return subject.replaceAll.apply(subject, arguments);
+        return subject.replaceAll.apply(subject, removeFirstArgument(arguments));
       }
 
       return subject.replace(new RegExp(regex, "g"), replacement);
@@ -7952,8 +7968,7 @@
      */
     p.__replaceFirst = function(subject, regex, replacement) {
       if (typeof subject !== "string") {
-        arguments.shift();
-        return subject.replaceFirst.apply(subject, arguments);
+        return subject.replaceFirst.apply(subject, removeFirstArgument(arguments));
       }
 
       return subject.replace(new RegExp(regex, ""), replacement);
@@ -7970,8 +7985,7 @@
      */
     p.__replace = function(subject, what, replacement) {
       if (typeof subject !== "string") {
-        arguments.shift();
-        return subject.replace.apply(subject, arguments);
+        return subject.replace.apply(subject, removeFirstArgument(arguments));
       }
       if (what instanceof RegExp) {
         return subject.replace(what, replacement);
@@ -8008,8 +8022,7 @@
      */
     p.__equals = function(subject, other) {
       if (subject.equals instanceof Function) {
-        arguments.shift();
-        return subject.equals.apply(subject, arguments);
+        return subject.equals.apply(subject, removeFirstArgument(arguments));
       }
 
       // TODO use virtEquals for HashMap here
@@ -8024,8 +8037,7 @@
      */
     p.__toCharArray = function(subject) {
       if (typeof subject !== "string") {
-        arguments.shift();
-        return subject.toCharArray.apply(subject, arguments);
+        return subject.toCharArray.apply(subject, removeFirstArgument(arguments));
       }
 
       var chars = [];
@@ -8061,8 +8073,7 @@
      */
     p.__hashCode = function(subject) {
       if (subject.hashCode instanceof Function) {
-        arguments.shift();
-        return subject.hashCode.apply(subject, arguments);
+        return subject.hashCode.apply(subject, removeFirstArgument(arguments));
       }
 
       // TODO use virtHashCode for HashMap here
