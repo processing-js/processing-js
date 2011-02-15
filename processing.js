@@ -23,12 +23,17 @@
   var ajax = function ajax(url) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url, false);
+    if (xhr.overrideMimeType) {
+      xhr.overrideMimeType("text/plain");
+    }
     xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT");
     xhr.send(null);
     // failed request?
     if (xhr.status !== 200 && xhr.status !== 0) { throw ("XMLHttpRequest failed, status code " + xhr.status); }
     return xhr.responseText;
   };
+
+  var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
   /* Browsers fixes start */
   function fixReplaceByRegExp() {
@@ -382,7 +387,9 @@
           if (obj instanceof Array) {
             return obj;
           } else if (typeof obj === "number") {
-            return new Array(obj);
+            var arr = [];
+            arr.length = obj;
+            return arr;
           }
         };
       }
@@ -393,6 +400,57 @@
   setupTypedArray("Int32Array",   "WebGLIntArray");
   setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
   setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
+
+  /**
+   * Returns Java hashCode() result for the object. If the object has the "hashCode" function,
+   * it preforms the call of this function. Otherwise it uses/creates the "$id" property,
+   * which is used as the hashCode.
+   *
+   * @param {Object} obj          The object.
+   * @returns {int}               The object's hash code.
+   */
+  function virtHashCode(obj) {
+    if (obj.constructor === String) {
+      var hash = 0;
+      for (var i = 0; i < obj.length; ++i) {
+        hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
+      }
+      return hash;
+    } else if (typeof(obj) !== "object") {
+      return obj & 0xFFFFFFFF;
+    } else if (obj.hashCode instanceof Function) {
+      return obj.hashCode();
+    } else {
+      if (obj.$id === undef) {
+        obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+      }
+      return obj.$id;
+    }
+  }
+
+  /**
+   * Returns Java equals() result for two objects. If the first object 
+   * has the "equals" function, it preforms the call of this function. 
+   * Otherwise the method uses the JavaScript === operator.
+   *
+   * @param {Object} obj          The first object.
+   * @param {Object} other        The second object.
+   *
+   * @returns {boolean}           true if the objects are equal.
+   */
+  function virtEquals(obj, other) {
+    if (obj === null || other === null) {
+      return (obj === null) && (other === null);
+    } else if (obj.constructor === String) {
+      return obj === other;
+    } else if (typeof(obj) !== "object") {
+      return obj === other;
+    } else if (obj.equals instanceof Function) {
+      return obj.equals(other);
+    } else {
+      return obj === other;
+    }
+  }
 
   /**
    * An ArrayList stores a variable number of objects.
@@ -418,9 +476,15 @@
     }
 
     function ArrayList() {
-      var array = arguments.length === 0 ? [] :
-        typeof arguments[0] === 'number' ? new Array(0 | arguments[0]) :
-        arguments[0];
+      var array;
+      if (arguments.length === 0) {
+        array = [];
+      } else if (arguments.length > 0 && typeof arguments[0] !== 'number') {
+        array = arguments[0];
+      } else {
+        array = [];
+        array.length = 0 | arguments[0];
+      }
 
       /**
        * @member ArrayList
@@ -442,7 +506,12 @@
        * @returns {boolean} true if the specified element is present; false otherwise.
        */
       this.contains = function(item) {
-        return array.indexOf(item) !== -1;
+        for (var i = 0, len = array.length; i < len; ++i) {
+          if (virtEquals(item, array[i])) {
+            return true;
+          }
+        }
+        return false;
       };
       /**
        * @member ArrayList
@@ -573,39 +642,6 @@
   * @param {Map} m                        gives the new HashMap the same mappings as this Map
   */
   var HashMap = (function() {
-    function virtHashCode(obj) {
-      if (obj.constructor === String) {
-        var hash = 0;
-        for (var i = 0; i < obj.length; ++i) {
-          hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
-        }
-        return hash;
-      } else if (typeof(obj) !== "object") {
-        return obj & 0xFFFFFFFF;
-      } else if ("hashCode" in obj) {
-        return obj.hashCode.call(obj);
-      } else {
-        if (obj.$id === undef) {
-          obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
-        }
-        return obj.$id;
-      }
-    }
-
-    function virtEquals(obj, other) {
-      if (obj === null || other === null) {
-        return (obj === null) && (other === null);
-      } else if (obj.constructor === String) {
-        return obj === other;
-      } else if (typeof(obj) !== "object") {
-        return obj === other;
-      } else if ("equals" in obj) {
-        return obj.equals.call(obj, other);
-      } else {
-        return obj === other;
-      }
-    }
-
     /**
     * @member HashMap
     * A HashMap stores a collection of objects, each referenced by a key. This is similar to an Array, only
@@ -623,7 +659,8 @@
 
       var initialCapacity = arguments.length > 0 ? arguments[0] : 16;
       var loadFactor = arguments.length > 1 ? arguments[1] : 0.75;
-      var buckets = new Array(initialCapacity);
+      var buckets = [];
+      buckets.length = initialCapacity;
       var count = 0;
       var hashMap = this;
 
@@ -637,7 +674,8 @@
             allEntries = allEntries.concat(buckets[i]);
           }
         }
-        buckets = new Array(buckets.length * 2);
+        buckets = [];
+        buckets.length = buckets.length * 2;
         for (var j = 0; j < allEntries.length; ++j) {
           var index = virtHashCode(allEntries[j].key) % buckets.length;
           var bucket = buckets[index];
@@ -765,7 +803,7 @@
         };
 
         this.toArray = function() {
-          var result = new ArrayList(0);
+          var result = [];
           var it = this.iterator();
           while (it.hasNext()) {
             result.push(it.next());
@@ -804,7 +842,8 @@
 
       this.clear = function() {
         count = 0;
-        buckets = new Array(initialCapacity);
+        buckets = [];
+        buckets.length = initialCapacity;
       };
 
       this.clone = function() {
@@ -955,7 +994,7 @@
       };
 
       this.values = function() {
-        var result = new ArrayList(0);
+        var result = [];
         var it = this.entrySet().iterator();
         while (it.hasNext()) {
           var entry = it.next();
@@ -1330,8 +1369,8 @@
         sphereX = [],
         sphereY = [],
         sphereZ = [],
-        sinLUT = new Array(PConstants.SINCOS_LENGTH),
-        cosLUT = new Array(PConstants.SINCOS_LENGTH),
+        sinLUT = new Float32Array(PConstants.SINCOS_LENGTH),
+        cosLUT = new Float32Array(PConstants.SINCOS_LENGTH),
         sphereVerts,
         sphereNorms;
 
@@ -1509,20 +1548,17 @@
     };
 
     // Stores states for pushStyle() and popStyle().
-    var styleArray = new Array(0);
+    var styleArray = [];
 
     // Vertices are specified in a counter-clockwise order
     // triangles are in this order: back, front, right, bottom, left, top
     var boxVerts = new Float32Array([
-       0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-      -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,
-      -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,
-       0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,
-       0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5,  0.5,
-      -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,
-      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,
-      -0.5,  0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5,
-      -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5]);
+       0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,
+       0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,
+       0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,
+       0.5, -0.5, -0.5,  0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5,
+       0.5,  0.5,  0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5]);
 
     var boxOutlineVerts = new Float32Array([
        0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,
@@ -1637,11 +1673,12 @@
       "uniform mat4 projection;" +
       "uniform mat4 normalTransform;" +
 
+      "const int MAX_LIGHTS = 8;" +
       "uniform int lightCount;" +
       "uniform vec3 falloff;" +
 
       "struct Light {" +
-      "  bool dummy;" +
+      "  bool isOn;" +
       "  int type;" +
       "  vec3 color;" +
       "  vec3 position;" +
@@ -1650,7 +1687,7 @@
       "  vec3 halfVector;" +
       "  float concentration;" +
       "};" +
-      "uniform Light lights[8];" +
+      "uniform Light lights[MAX_LIGHTS];" +
 
       "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
       // Get the vector from the light to the vertex
@@ -1766,7 +1803,13 @@
       "    frontColor = col + vec4(mat_specular,1.0);" +
       "  }" +
       "  else {" +
-      "    for( int i = 0; i < lightCount; i++ ) {" +
+           // WebGL forces us to iterate over a constant value
+      "    for( int i = 0; i < MAX_LIGHTS; i++ ) {" +
+      
+      "      if(lights[i].isOn == false){" +
+      "        continue;" +
+      "      }" +
+      
       "      if( lights[i].type == 0 ) {" +
       "        AmbientLight( finalAmbient, ecPos, lights[i] );" +
       "      }" +
@@ -2864,35 +2907,25 @@
        */
       parseMatrix: function(str) {
         this.checkMatrix(2);
-        var pieces = [];
-        str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
-          // get a list of transform definitions
-          pieces.push(p.trim(all));
-        });
-        if (pieces.length === 0) {
-          p.println("Transformation:" + str + " is empty");
+        var pieces = str.split(/\b(\w+)\(\s*(.*?)\s*\)/g);
+        if (pieces.length === 1) {
+          // p.println("Transformation:" + str + " is empty");
           return null;
         }
-        for (var i =0; i< pieces.length; i++) {
-          var m = [];
-          pieces[i].replace(/\((.*?)\)/, (function() {
-            return function(all, params) {
-              // get the coordinates that can be separated by spaces or a comma
-              m = params.replace(/,+/g, " ").split(/\s+/);
-            };
-          }()));
+        for (var i = 1; i < pieces.length; i += 3) {
+          var m = pieces[i+1].split(/[,\s]+/g);
 
-          if (pieces[i].indexOf("matrix") !== -1) {
+          if (pieces[i] === "matrix") {
             this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
-          } else if (pieces[i].indexOf("translate") !== -1) {
+          } else if (pieces[i] === "translate") {
             var tx = m[0];
             var ty = (m.length === 2) ? m[1] : 0;
             this.matrix.translate(tx,ty);
-          } else if (pieces[i].indexOf("scale") !== -1) {
+          } else if (pieces[i] === "scale") {
             var sx = m[0];
             var sy = (m.length === 2) ? m[1] : m[0];
             this.matrix.scale(sx,sy);
-          } else if (pieces[i].indexOf("rotate") !== -1) {
+          } else if (pieces[i] === "rotate") {
             var angle = m[0];
             if (m.length === 1) {
               this.matrix.rotate(p.radians(angle));
@@ -2901,9 +2934,9 @@
               this.matrix.rotate(p.radians(m[0]));
               this.matrix.translate(-m[1], -m[2]);
             }
-          } else if (pieces[i].indexOf("skewX") !== -1) {
+          } else if (pieces[i] === "skewX") {
             this.matrix.skewX(parseFloat(m[0]));
-          } else if (pieces[i].indexOf("skewY") !== -1) {
+          } else if (pieces[i] === "skewY") {
             this.matrix.skewY(m[0]);
           }
         }
@@ -3017,7 +3050,7 @@
         var c;
         var pathData = p.trim(this.element.getStringAttribute("d").replace(/[\s,]+/g,' ')); //change multiple spaces and commas to single space
         if (pathData === null) { return; }
-        pathData = pathData.toCharArray();
+        pathData = p.__toCharArray(pathData);
         var cx     = 0,
             cy     = 0,
             ctrlX  = 0,
@@ -4414,9 +4447,9 @@
           return this.getChildren(items[offset]);
         }
         var matches = this.getChildren(items[offset]);
-        var kidMatches;
+        var kidMatches = [];
         for (var i = 0; i < matches.length; i++) {
-          kidMatches = matches[i].getChildrenRecursive(items, offset+1);
+          kidMatches = kidMatches.concat(matches[i].getChildrenRecursive(items, offset+1));
         }
         return kidMatches;
       },
@@ -6293,30 +6326,29 @@
     * @see colorMode
     */
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
+
       // 4 arguments: (R, G, B, A) or (H, S, B, A)
       if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef && aValue4 !== undef) {
         return color$4(aValue1, aValue2, aValue3, aValue4);
       }
 
       // 3 arguments: (R, G, B) or (H, S, B)
-      else if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef) {
-        return color$4(aValue1, aValue2, aValue3, colorModeA);
+      if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef) {
+        return color$4(aValue1, aValue2, aValue3, colorModeA); 
       }
 
       // 2 arguments: (Color, A) or (Grayscale, A)
-      else if (aValue1 !== undef && aValue2 !== undef) {
+      if (aValue1 !== undef && aValue2 !== undef) {
         return color$2(aValue1, aValue2);
       }
 
       // 1 argument: (Grayscale) or (Color)
-      else if (typeof aValue1 === "number") {
+      if (typeof aValue1 === "number") {
         return color$1(aValue1);
       }
 
       // Default
-      else {
-        return color$4(colorModeX, colorModeY, colorModeZ, colorModeA);
-      }
+      return color$4(colorModeX, colorModeY, colorModeZ, colorModeA);
     };
 
     // Ease of use function to extract the colour bits into a string
@@ -7286,6 +7318,9 @@
         return;
       }
 
+      timeSinceLastFPS = new Date().getTime();
+      framesSinceLastFPS = 0;
+
       looping = window.setInterval(function() {
         try {
           if (document.hasFocus instanceof Function) {
@@ -7869,6 +7904,23 @@
       return ret;
     };
 
+    /**
+     * Removes the first argument from the arguments set -- shifts.
+     *
+     * @param {Arguments} args  The Arguments object.
+     *
+     * @return {Object[]}       Returns an array of arguments except first one.
+     *
+     * @see #match
+     */
+    function removeFirstArgument(args) {
+      var result = [];
+      for (var i = 1, l = args.length; i < l; ++i) {
+        result.push(args[i]);
+      }
+      return result;
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // String Functions
     ////////////////////////////////////////////////////////////////////////////
@@ -7896,39 +7948,113 @@
       return results.length > 0 ? results : null;
     };
     /**
-     * The replaceAll() function searches all matches between a substring (or regular expression) and a string, and replaces the matched substring with a new substring
+     * The __replaceAll() function searches all matches between a substring (or regular expression) and a string, 
+     * and replaces the matched substring with a new substring
      *
-     * @param {String} re         a substring or a regular expression
+     * @param {String} subject    a substring
+     * @param {String} regex      a substring or a regular expression
      * @param {String} replace    the string to replace the found value
      *
-     * @return {String[]} returns an array of matches
+     * @return {String} returns result
      *
      * @see #match
      */
-    String.prototype.replaceAll = function(re, replace) {
-      return this.replace(new RegExp(re, "g"), replace);
+    p.__replaceAll = function(subject, regex, replacement) {
+      if (typeof subject !== "string") {
+        return subject.replaceAll.apply(subject, removeFirstArgument(arguments));
+      }
+
+      return subject.replace(new RegExp(regex, "g"), replacement);
     };
     /**
-     * The equals() function compares two strings to see if they are the same.
+     * The __replaceFirst() function searches first matche between a substring (or regular expression) and a string, 
+     * and replaces the matched substring with a new substring
+     *
+     * @param {String} subject    a substring
+     * @param {String} regex      a substring or a regular expression
+     * @param {String} replace    the string to replace the found value
+     *
+     * @return {String} returns result
+     *
+     * @see #match
+     */
+    p.__replaceFirst = function(subject, regex, replacement) {
+      if (typeof subject !== "string") {
+        return subject.replaceFirst.apply(subject, removeFirstArgument(arguments));
+      }
+
+      return subject.replace(new RegExp(regex, ""), replacement);
+    };
+    /**
+     * The __replace() function searches all matches between a substring and a string, 
+     * and replaces the matched substring with a new substring
+     *
+     * @param {String} subject         a substring
+     * @param {String} what         a substring to find
+     * @param {String} replacement    the string to replace the found value
+     *
+     * @return {String} returns result
+     */
+    p.__replace = function(subject, what, replacement) {
+      if (typeof subject !== "string") {
+        return subject.replace.apply(subject, removeFirstArgument(arguments));
+      }
+      if (what instanceof RegExp) {
+        return subject.replace(what, replacement);
+      }
+
+      if (typeof what !== "string") {
+        what = what.toString();
+      }
+      if (what === "") {
+        return subject;
+      }
+      
+      var i = subject.indexOf(what);
+      if (i < 0) {
+        return subject;
+      }
+      
+      var j = 0, result = "";
+      do {
+        result += subject.substring(j, i) + replacement;
+        j = i + what.length;
+      } while ( (i = subject.indexOf(what, j)) >= 0);
+      return result + subject.substring(j);
+    };
+    /**
+     * The __equals() function compares two strings (or objects) to see if they are the same.
      * This method is necessary because it's not possible to compare strings using the equality operator (==).
      * Returns true if the strings are the same and false if they are not.
      *
-     * @param {String} str  a string used for comparison
+     * @param {String} subject  a string used for comparison
+     * @param {String} other  a string used for comparison with
      *
      * @return {boolean} true is the strings are the same false otherwise
      */
-    String.prototype.equals = function equals(str) {
-      return this.valueOf() === str.valueOf();
+    p.__equals = function(subject, other) {
+      if (subject.equals instanceof Function) {
+        return subject.equals.apply(subject, removeFirstArgument(arguments));
+      }
+
+      // TODO use virtEquals for HashMap here
+      return subject.valueOf() === other.valueOf();
     };
     /**
-     * The toCharArray() function splits the string into a char array.
+     * The __toCharArray() function splits the string into a char array.
+     *
+     * @param {String} subject The string
      *
      * @return {Char[]} a char array
      */
-    String.prototype.toCharArray = function() {
-      var chars = this.split("");
-      for (var i = chars.length - 1; i >= 0; i--) {
-        chars[i] = new Char(chars[i]);
+    p.__toCharArray = function(subject) {
+      if (typeof subject !== "string") {
+        return subject.toCharArray.apply(subject, removeFirstArgument(arguments));
+      }
+
+      var chars = [];
+      for (var i = 0, len = subject.length; i < len; ++i) {
+        chars[i] = new Char(subject.charAt(i));
       }
       return chars;
     };
@@ -7944,6 +8070,34 @@
      */
     p.match = function(str, regexp) {
       return str.match(regexp);
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Other java specific functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * The returns hash code of the.
+     *
+     * @param {Object} subject The string
+     *
+     * @return {int} a hash code
+     */
+    p.__hashCode = function(subject) {
+      if (subject.hashCode instanceof Function) {
+        return subject.hashCode.apply(subject, removeFirstArgument(arguments));
+      }
+
+      // TODO use virtHashCode for HashMap here
+      return 0 | subject;
+    };
+    /**
+     * The __printStackTrace() prints stack trace to the console.
+     *
+     * @param {Exception} subject The error
+     */
+    p.__printStackTrace = function(subject) {
+      p.println("Exception: " + subject.toString() );
     };
 
     var logBuffer = [];
@@ -7988,11 +8142,11 @@
       if (val instanceof Array) {
         var arr = [];
         for (var i = 0; i < val.length; i++) {
-          arr.push(val[i] + "");
+          arr.push(val[i].toString() + "");
         }
         return arr;
       } else {
-        return (val + "");
+        return (val.toString() + "");
       }
     };
     /**
@@ -8031,6 +8185,19 @@
       }
     }
 
+    /**
+     * Converts the passed parameter to the function to its boolean value. 
+     * It will return an array of booleans if an array is passed in.
+     *
+     * @param {int, byte, string} what          the parameter to be converted to boolean
+     * @param {int[], byte[], string[]} what    the array to be converted to boolean
+     *
+     * @return {boolean|boolean[]} retrurns a boolean or an array of booleans
+     */    
+    p.parseBoolean = function (what) {
+        return p['boolean'](what);
+    }
+      
     p['boolean'] = function(val) {
       if (val instanceof Array) {
         var ret = [];
@@ -8658,7 +8825,7 @@
       // http://www.noisemachine.com/talk1/17b.html
       // http://mrl.nyu.edu/~perlin/noise/
       // generate permutation
-      var perm = new Array(512);
+      var perm = new Uint8Array(512);
       for(i=0;i<256;++i) { perm[i] = i; }
       for(i=0;i<256;++i) { var t = perm[j = rnd.nextInt() & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
       // copy to avoid taking mod in perm[0];
@@ -9088,6 +9255,7 @@
         uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
         uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
         uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 0);
+        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9140,6 +9308,7 @@
         uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
         uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", [-dir[0], -dir[1], -dir[2]]);
         uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 1);
+        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9269,6 +9438,7 @@
         uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
         uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
         uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 2);
+        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9350,6 +9520,7 @@
         uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights[" + lightCount + "].concentration", concentration);
         uniformf("lights.angle.3d." + lightCount, programObject3D, "lights[" + lightCount + "].angle", angle);
         uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 3);
+        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9790,8 +9961,8 @@
       }
 
       var delta = PConstants.SINCOS_LENGTH / ures;
-      var cx = new Array(ures);
-      var cz = new Array(ures);
+      var cx = new Float32Array(ures);
+      var cz = new Float32Array(ures);
       // calc unit circle in XZ plane
       for (i = 0; i < ures; i++) {
         cx[i] = cosLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
@@ -9804,9 +9975,9 @@
       var currVert = 0;
 
       // re-init arrays to store vertices
-      sphereX = new Array(vertCount);
-      sphereY = new Array(vertCount);
-      sphereZ = new Array(vertCount);
+      sphereX = new Float32Array(vertCount);
+      sphereY = new Float32Array(vertCount);
+      sphereZ = new Float32Array(vertCount);
 
       var angle_step = (PConstants.SINCOS_LENGTH * 0.5) / vres;
       var angle = angle_step;
@@ -13859,7 +14030,7 @@
       if (p.shared.blurRadius !== radius) {
         p.shared.blurRadius = radius;
         p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
-        p.shared.blurKernel = new Array(p.shared.blurKernelSize);
+        p.shared.blurKernel = new Float32Array(p.shared.blurKernelSize);
         // init blurKernel
         for (i = 0; i < p.shared.blurKernelSize; i++) {
           p.shared.blurKernel[i] = 0;
@@ -13876,10 +14047,10 @@
       var sum, cr, cg, cb, ca, c, m;
       var read, ri, ym, ymi, bk0;
       var wh = aImg.pixels.getLength();
-      var r2 = new Array(wh);
-      var g2 = new Array(wh);
-      var b2 = new Array(wh);
-      var a2 = new Array(wh);
+      var r2 = new Float32Array(wh);
+      var g2 = new Float32Array(wh);
+      var b2 = new Float32Array(wh);
+      var a2 = new Float32Array(wh);
       var yi = 0;
       var x, y, i;
 
@@ -13963,7 +14134,7 @@
     var dilate = function dilate(isInverted, aImg) {
       var currIdx = 0;
       var maxIdx = aImg.pixels.getLength();
-      var out = new Array(maxIdx);
+      var out = new Int32Array(maxIdx);
       var currRowIdx, maxRowIdx, colOrig, colOut, currLum;
       var idxRight, idxLeft, idxUp, idxDown,
           colRight, colLeft, colUp, colDown,
@@ -14895,14 +15066,14 @@
       curTextLeading = leading;
     };
 
-    var measureTextCanvas = function(fontFace, fontSize, baseLine, text) {
+    function MeasureTextCanvas(fontFace, fontSize, baseLine, text) {
       this.canvas = document.createElement('canvas');
       this.canvas.setAttribute('width', fontSize + "px");
       this.canvas.setAttribute('height', fontSize + "px");
       this.ctx = this.canvas.getContext("2d");
       this.ctx.font = fontSize + "pt " + fontFace;
       this.ctx.fillStyle = "black";
-      this.ctx.fillRect (0, 0, fontSize, fontSize);
+      this.ctx.fillRect(0, 0, fontSize, fontSize);
       this.ctx.fillStyle = "white";
       this.ctx.fillText(text, 0, baseLine);
       this.imageData = this.ctx.getImageData(0, 0, fontSize, fontSize);
@@ -14910,7 +15081,7 @@
       this.get = function(x, y) {
         return this.imageData.data[((y*(this.imageData.width*4)) + (x*4))];
       };
-    };
+    }
 
     /**
      * textAscent() height of the font above the baseline of the current font at its current size, in pixels.
@@ -14939,7 +15110,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          graphics = new measureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
+          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
 
           // binary search for highest pixel
           while(yLoc !== bottom) {
@@ -14994,7 +15165,7 @@
               yLoc        = curTextSize/2;
 
           // setup off screen image to write and measure text from
-          graphics = new measureTextCanvas(curTextFont.name, curTextSize, 0, character);
+          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, 0, character);
 
           // binary search for lowest pixel
           while(yLoc !== bottom) {
@@ -15309,45 +15480,79 @@
     }
 
     function text$6(str, x, y, width, height, z) {
-      if (str.length === 0) { // is empty string
+      // 'fail' on 0-valued dimensions
+      if (str.length === 0 || width === 0 || height === 0) { 
         return;
       }
-      if(curTextSize > height) { // is text height larger than box
+      // also 'fail' if the text height is larger than the bounding height
+      if(curTextSize > height) {
         return;
       }
 
+      var spaceMark = -1;
+      var start = 0;
+      var lineWidth = 0;
+      var textboxWidth = width;
+      var yOffset = 0;
       curContext.font = curTextSize + "px " + curTextFont.name;
+      var drawCommands = [];
+      
+      // run through text, character-by-character
+      for (var charPos=0, len=str.length; charPos < len; charPos++)
+      {
+        var currentChar = str[charPos];
+        var letterWidth = 0;
+        var spaceChar = (currentChar === " ");
 
-      var spaceLoc = null,
-          yOffset = 0,
-          lineWidth = 0,
-          letterWidth = 0,
-          strings = str.split("\n");
-
-      for (var j = 0; j < strings.length; j++) {
-        for (var jj = 0; jj < strings[j].length; jj++) {
-          if ("fillText" in curContext) {
-            letterWidth = curContext.measureText(strings[j][jj]).width;
-          } else if ("mozDrawText" in curContext) {
-            letterWidth = curContext.mozMeasureText(strings[j][jj]);
-          }
-          lineWidth += letterWidth;
-          if (strings[j][jj] === " ") {
-            spaceLoc = jj;
-          }
-          if (lineWidth >= width && strings[j][jj] !== " ") {
-            if (spaceLoc === null) {
-              spaceLoc = jj;
-            }
-            strings.splice(j, 1, strings[j].substring(0, spaceLoc+1), strings[j].substring(spaceLoc+1));
-            spaceLoc = null;
-          }
+        if ("fillText" in curContext) {
+          letterWidth = curContext.measureText(currentChar).width;
+        } else if ("mozDrawText" in curContext) {
+          letterWidth = curContext.mozMeasureText(currentChar);
         }
-        lineWidth = letterWidth = 0;
-      } // for (var j=
 
-      // actual draw
-      var lineFunction = p.use3DContext ? text$line$3d : text$line;
+        // if we aren't looking at a newline, and the text still fits, keep processing
+        if (currentChar !== "\n" && (lineWidth + letterWidth < textboxWidth)) {
+          if (spaceChar) { spaceMark = charPos; }
+          lineWidth += letterWidth;
+        }
+
+        // if we're looking at a newline, or the text no longer fits, push the section that fit into the drawcommand list
+        else
+        {
+          if (spaceMark + 1 === start) { 
+            if(charPos>0) {
+              // Whole line without spaces so far.
+              spaceMark = charPos;
+            } else {
+              // 'fail', because the line can't even fit the first character
+              return;
+            }
+          }
+
+          if (currentChar === "\n") {
+            drawCommands.push({text:str.substring(start, charPos), width: lineWidth, offset: yOffset});
+            start = charPos + 1;
+          } else {
+            // current is not a newline, which means the line doesn't fit in box. push text.
+            drawCommands.push({text:str.substring(start, spaceMark), width: lineWidth, offset: yOffset});
+            start = spaceMark + 1;
+          }
+
+          // newline + return
+          yOffset += curTextSize;
+          lineWidth = 0;
+          charPos = start - 1;
+        }
+      }
+
+      // push the remaining text
+      if (start < len) { 
+        drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
+        yOffset += curTextSize;
+      }
+
+      // determine which function to use for drawing text
+      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       var xOffset = 0;
       if(horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width / 2;
@@ -15363,15 +15568,14 @@
         boxYOffset2 = (height - (strings.length * curTextLeading)) / 2;
       }
 
-      for(var il=0,ll=strings.length; il<ll; ++il, yOffset += curTextLeading) {
-        if(yOffset + boxYOffset2 < 0) {
-          continue; // skip if not inside box yet
-        }
-        if(yOffset + boxYOffset2 + curTextLeading > height) {
-          break; // stop if no enough space for one more line draw
-        }
-        lineFunction(strings[il], x + xOffset, y + yOffset + boxYOffset1 + boxYOffset2,
-                     z, horizontalTextAlignment);
+      for (var command=0, end=drawCommands.length; command<end; command++) {
+        var drawCommand = drawCommands[command];
+        // skip if not inside box yet
+        if (drawCommand.offset + boxYOffset2 < 0) { continue; }
+        // stop if no enough space for one more line draw
+        if (drawCommand.offset + boxYOffset2 + curTextSize > height) { break; }
+        // finally, draw text on canvas
+        lineFunction(drawCommand.text, x + xOffset, y + drawCommand.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
       }
     }
 
@@ -15419,6 +15623,7 @@
       }
       else if (tMode === PConstants.SHAPE) {
         // TODO: requires beginRaw function
+        return;
       } else {
         if (arguments.length === 3) { // for text( str, x, y)
           text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
@@ -15693,6 +15898,10 @@
       }
     };
 
+    p.extendStaticMembers = function(derived, base) {
+      extendClass(derived, base);
+    };
+
     p.addMethod = function addMethod(object, name, fn, superAccessor) {
       if (object[name]) {
         var args = fn.length,
@@ -15720,7 +15929,8 @@
           } else if (type === "float") {
             result = new Float32Array(itemsCount);
           } else {
-            result = new Array(itemsCount);
+            result = [];
+            result.length = itemsCount;
           }
           for (var i = 0; i < itemsCount; ++i) {
             result[i] = 0;
@@ -16139,8 +16349,12 @@
         // Wrap function with default sketch parameters
         curSketch = new Processing.Sketch(aCode);
       } else {
+//#if PARSER
         // Compile the code
         curSketch = Processing.compile(aCode);
+//#else
+//      throw "PJS compile is not supported";
+//#endif
       }
 
       // Expose internal field for diagnostics and testing
@@ -16242,7 +16456,7 @@
       curSketch.options.isTransparent = true;
     }
 
-  };
+  }
 
   Processing.prototype = defaultScope;
 
@@ -16277,7 +16491,7 @@
       "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY",
       "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise",
       "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal",
-      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PFont", "PImage",
+      "noSmooth", "noStroke", "noTint", "ortho", "parseBoolean", "peg", "perspective", "PFont", "PImage",
       "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
       "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
       "printCamera", "println", "printMatrix", "printProjection", "PShape","PShapeSVG",
@@ -16294,7 +16508,8 @@
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "translate", "triangle", "trim", "unbinary", "unhex", "updatePixels",
       "use3DContext", "vertex", "width", "XMLElement", "year", "__frameRate",
-       "__keyPressed", "__mousePressed", "__int_cast"];
+      "__keyPressed", "__mousePressed", "__int_cast", "__replace", "__replaceAll", 
+      "__replaceFirst", "__equals", "__hashCode", "__toCharArray", "__printStackTrace"];
 
     var members = {};
     var i, l;
@@ -16338,7 +16553,6 @@
 
 */
 
-  // parser begins
   function parseProcessing(code) {
     var globalMembers = getGlobalMembers();
 
@@ -16553,8 +16767,8 @@
       });
       // new type[?] --> createJavaArray('type', [?])
       s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*("C\d+"(?:\s*"C\d+")*)/g, function(all, type, index) {
-        var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; }).
-          replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
+        var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; })
+          .replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
         var arrayInitializer = "{" + args.substring(1, args.length - 1) + "}";
         var createArrayArgs = "('" + type + "', " + addAtom(arrayInitializer, 'A') + ")";
         return '$p.createJavaArray' + addAtom(createArrayArgs, 'B');
@@ -16610,7 +16824,7 @@
       //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
       //   pixels.length => pixels.getLength()
       //   pixels = ar => pixels.set(ar) | pixels => pixels.toArray()
-      s = s.replace(/\bpixels\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}\?\:]+))?/g,
+      s = s.replace(/\bpixels\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}]+))?/g,
         function(all, indexOrLength, index, atomIndex, equalsPart, rightSide) {
           if(index) {
             var atom = atoms[atomIndex];
@@ -16632,6 +16846,21 @@
             }
           }
         });
+      // Java method replacements for: replace, replaceAll, replaceFirst, equals, hashCode, etc.
+      //   xxx.replace(yyy) -> __replace(xxx, yyy)
+      //   "xx".replace(yyy) -> __replace("xx", yyy)
+      var repeatJavaReplacement;
+      do {
+        repeatJavaReplacement = false;
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace)\s*"B(\d+)"/g, 
+          function(all, subject, method, atomIndex) {
+            var atom = atoms[atomIndex];
+            repeatJavaReplacement = true;
+            var trimmed = trimSpaces(atom.substring(1, atom.length - 1));
+            return "__" + method  + ( trimmed.middle === "" ? addAtom("(" + subject.replace(/\.\s*$/, "") + ")", 'B') :
+              addAtom("(" + subject.replace(/\.\s*$/, "") + "," + trimmed.middle + ")", 'B') );
+          });
+      } while (repeatJavaReplacement);
       // this() -> $constr()
       s = s.replace(/\bthis(\s*"B\d+")/g, "$$constr$1");
 
@@ -16644,7 +16873,7 @@
       body.owner = this;
     }
     AstInlineClass.prototype.toString = function() {
-      return "new (function() {\n" + this.body + "})";
+      return "new (" + this.body + ")";
     };
 
     function transformInlineClass(class_) {
@@ -16891,6 +17120,12 @@
       }
     }
 
+    function sortByWeight(array) {
+      array.sort(function (a,b) {
+        return b.weight - a.weight; 
+      });
+    }
+
     function AstInnerInterface(name) {
       this.name = name;
     }
@@ -16898,46 +17133,47 @@
       return  "this." + this.name + " = function " + this.name + "() { "+
         "throw 'This is an interface'; };";
     };
-    function AstInnerClass(name, body) {
+    function AstInnerClass(name, body, isStatic) {
       this.name = name;
       this.body = body;
+      this.isStatic = isStatic;
       body.owner = this;
     }
     AstInnerClass.prototype.toString = function() {
-      return "this." + this.name + " = function " + this.name + "() {\n" +
-        this.body + "};";
+      return "" + this.body;
     };
 
     function transformInnerClass(class_) {
       var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
       classesRegex.lastIndex = 0;
+      var isStatic = m[1].indexOf("static") >= 0;
       var body = atoms[getAtomIndex(m[6])];
       if(m[2] === "interface") {
         return new AstInnerInterface(m[3]);
       } else {
         var oldClassId = currentClassId, newClassId = generateClassId();
         currentClassId = newClassId;
-        var innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]));
+        var innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]), isStatic);
         appendClass(innerClass, newClassId, oldClassId);
         currentClassId = oldClassId;
         return innerClass;
       }
     }
 
-    function AstClassMethod(name, params, body) {
+    function AstClassMethod(name, params, body, isStatic) {
       this.name = name;
       this.params = params;
       this.body = body;
+      this.isStatic = isStatic;
     }
     AstClassMethod.prototype.toString = function(){
-      var thisReplacement = replaceContext({ name: "this" });
+      var thisReplacement = replaceContext({ name: "[this]" });
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function (subject) {
         return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
-      var result = "$p.addMethod(" + thisReplacement + ", '" + this.name + "', function " + this.params + " " +
-        this.body +");";
+      var result = "function " + this.methodId + this.params + " " + this.body +"\n";
       replaceContext = oldContext;
       return result;
     };
@@ -16945,9 +17181,10 @@
     function transformClassMethod(method) {
       var m = methodsRegex.exec(method);
       methodsRegex.lastIndex = 0;
+      var isStatic = m[1].indexOf("static") >= 0;
       var body = m[6] !== ';' ? atoms[getAtomIndex(m[6])] : "{}";
       return new AstClassMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
-        transformStatementsBlock(body) );
+        transformStatementsBlock(body), isStatic );
     }
 
     function AstClassField(definitions, fieldType, isStatic) {
@@ -16963,7 +17200,7 @@
       return names;
     };
     AstClassField.prototype.toString = function() {
-      var thisPrefix = replaceContext({ name: "this" });
+      var thisPrefix = replaceContext({ name: "[this]" });
       if(this.isStatic) {
         var className = this.owner.name;
         var staticDeclarations = [];
@@ -17034,26 +17271,25 @@
         fields[i].owner = this;
       }
     }
-    AstClassBody.prototype.getMembers = function() {
-      var members;
+    AstClassBody.prototype.getMembers = function(classFields, classMethods, classInners) {
       if(this.owner.base) {
-        members = this.owner.base.body.getMembers();
-      } else {
-        members = { fields: [], methods: [], innerClasses: [] };
+        this.owner.base.body.getMembers(classFields, classMethods, classInners);
       }
       var i, j, l, m;
       for(i=0,l=this.fields.length;i<l;++i) {
-        members.fields = members.fields.concat(this.fields[i].getNames());
+        var fieldNames = this.fields[i].getNames();
+        for(j=0,m=fieldNames.length;j<m;++j) {
+          classFields[fieldNames[j]] = this.fields[i];
+        }
       }
       for(i=0,l=this.methods.length;i<l;++i) {
         var method = this.methods[i];
-        members.methods.push(method.name);
+        classMethods[method.name] = method;
       }
       for(i=0,l=this.innerClasses.length;i<l;++i) {
         var innerClass = this.innerClasses[i];
-        members.innerClasses.push(innerClass.name);
+        classInners[innerClass.name] = innerClass;
       }
-      return members;
     };
     AstClassBody.prototype.toString = function() {
       function getScopeLevel(p) {
@@ -17068,46 +17304,105 @@
       var scopeLevel = getScopeLevel(this.owner);
 
       var selfId = "$this_" + scopeLevel;
+      var className = this.name;
       var result = "var " + selfId + " = this;\n";
+      var staticDefinitions = "";
 
-      var members = this.getMembers();
-      var thisClassFields = appendToLookupTable({}, members.fields),
-        thisClassMethods = appendToLookupTable({}, members.methods),
-        thisClassInners = appendToLookupTable({}, members.innerClasses);
+      var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
+      this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
 
       var oldContext = replaceContext;
       replaceContext = function (subject) {
         var name = subject.name;
         if(name === "this") {
-          return subject.callSign ? selfId + ".$self" : selfId;
-        } else if(thisClassFields.hasOwnProperty(name) || thisClassInners.hasOwnProperty(name)) {
+          // returns "$this_N.$self" pointer instead of "this" in cases:
+          // "this()", "this.XXX()", "this", but not for "this.XXX"
+          return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
+        } else if(thisClassFields.hasOwnProperty(name)) {
+          return thisClassFields[name].isStatic ? className + "." + name : selfId + "." + name;
+        } else if(thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
         } else if(thisClassMethods.hasOwnProperty(name)) {
-          return selfId + ".$self." + name;
+          return thisClassMethods[name].isStatic ? className + "." + name : selfId + ".$self." + name;
         }
         return oldContext(subject);
-      };
+      }; 
 
-      if(this.baseClassName) {
+      if (this.baseClassName) {
         result += "var $super = { $upcast: " + selfId + " };\n";
-        result += "function $superCstr(){" + this.baseClassName + ".apply($super,arguments)}\n";
+        result += "function $superCstr(){" + this.baseClassName + ".apply($super,arguments);" +
+          "if(!('$self' in $super)) $p.extendClassChain($super)}\n";
       } else {
         result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
       }
 
-      result += this.functions.join('\n') + '\n';
-      result += this.innerClasses.join('\n');
+      if (this.base) {
+        // base class name can be present, but class is not
+        staticDefinitions += "$p.extendStaticMembers(" + className + ", " + this.baseClassName + ");\n";
+      }
 
-      result += this.fields.join(";\n") + ";\n";
-      result += this.methods.join('\n') + '\n';
-      result += this.misc.tail;
+      var i, l, j, m;
 
-      result += this.cstrs.join('\n') + '\n';
+      if (this.functions.length > 0) {
+        result += this.functions.join('\n') + '\n';
+      }
 
+      sortByWeight(this.innerClasses);
+      for (i = 0, l = this.innerClasses.length; i < l; ++i) {
+        var innerClass = this.innerClasses[i];
+        if (innerClass.isStatic) {
+          staticDefinitions += className + "." + innerClass.name + " = " + innerClass + ";\n";
+          result += selfId + "." + innerClass.name + " = " + className + "." + innerClass.name + ";\n";
+        } else {
+          result += selfId + "." + innerClass.name + " = " + innerClass + ";\n";
+        }
+      }
+
+      for (i = 0, l = this.fields.length; i < l; ++i) {
+        var field = this.fields[i];
+        if (field.isStatic) {
+          staticDefinitions += className + "." + field.definitions.join(";\n" + className + ".") + ";\n";
+          for (j = 0, m = field.definitions.length; j < m; ++j) {
+            var fieldName = field.definitions[j].name, staticName = className + "." + fieldName;
+            result += "$p.defineProperty(" + selfId + ", '" + fieldName + "', {" +
+              "get: function(){return " + staticName + "}, " +
+              "set: function(val){" + staticName + " = val}});\n";
+          }
+        } else {
+          result += selfId + "." + field.definitions.join(";\n" + selfId + ".") + ";\n";
+        }
+      }
+      var methodOverloads = {};
+      for (i = 0, l = this.methods.length; i < l; ++i) {
+        var method = this.methods[i];
+        var overload = methodOverloads[method.name];
+        var methodId = method.name + "$" + method.params.params.length;
+        if (overload) {
+          ++overload;
+          methodId += "_" + overload;
+        } else {
+          overload = 1;
+        }
+        method.methodId = methodId;
+        methodOverloads[method.name] = overload;
+        if (method.isStatic) {
+          staticDefinitions += method;
+          staticDefinitions += "$p.addMethod(" + className + ", '" + method.name + "', " + methodId + ");\n";
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n"
+        } else {
+          result += method;
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n"
+        }
+      }
+      result += trim(this.misc.tail);
+
+      if (this.cstrs.length > 0) {
+        result += this.cstrs.join('\n') + '\n';
+      }
 
       result += "function $constr() {\n";
       var cstrsIfs = [];
-      for(var i=0,l=this.cstrs.length;i<l;++i) {
+      for (i = 0, l = this.cstrs.length; i < l; ++i) {
         var paramsLength = this.cstrs[i].params.params.length;
         cstrsIfs.push("if(arguments.length === " + paramsLength + ") { " +
           "$constr_" + paramsLength + ".apply(" + selfId + ", arguments); }");
@@ -17116,11 +17411,15 @@
         result += cstrsIfs.join(" else ") + " else ";
       }
       // ??? add check if length is 0, otherwise fail
-      result += "$superCstr(); }\n";
+      result += "$superCstr();\n}\n";
       result += "$constr.apply(null, arguments);\n";
 
       replaceContext = oldContext;
-      return result;
+      return "(function() {\n" +
+        "function " + className + "() {\n" + result + "}\n" +
+        staticDefinitions +
+        "return " + className + ";\n" +
+        "})()";
     };
 
     transformClassBody = function(body, name, baseName, impls) {
@@ -17140,7 +17439,7 @@
       var i;
 
       if(baseName !== undef) {
-        baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*)\s*$/g, "$1");
+        baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*$/g, "$1");
       }
 
       for(i = 0; i < functions.length; ++i) {
@@ -17178,16 +17477,7 @@
       body.owner = this;
     }
     AstClass.prototype.toString = function() {
-      var staticVars = "";
-      for (var i = 0, l = this.body.fields.length; i < l; i++) {
-        if (this.body.fields[i].isStatic) {
-          for (var x = 0, xl = this.body.fields[i].definitions.length; x < xl; x++) {
-            staticVars += "var " + this.body.fields[i].definitions[x].name + " = " + this.body.name + "." + this.body.fields[i].definitions[x] + ";";
-          }
-        }
-      }
-      return "function " + this.name + "() {\n" + this.body + "}\n" +
-        staticVars + "\n" +
+      return "var " + this.name + " = " + this.body + ";\n" +
         "$p." + this.name + " = " + this.name + ";";
     };
 
@@ -17378,6 +17668,16 @@
       this.statements = statements;
     }
     AstRoot.prototype.toString = function() {
+      var classes = [], otherStatements = [];
+      for (var i = 0, len = this.statements.length; i < len; ++i) {
+        if (this.statements[i] instanceof AstClass) {
+          classes.push(this.statements[i]);
+        } else {
+          otherStatements.push(this.statements[i]);
+        }
+      }
+      sortByWeight(classes);
+
       var localNames = getLocalNames(this.statements);
       replaceContext = function (subject) {
         var name = subject.name;
@@ -17392,7 +17692,8 @@
       };
       var result = "// this code was autogenerated from PJS\n" +
         "(function($p) {\n" +
-        this.statements.join('') + "\n})";
+        classes.join('') + "\n" +
+        otherStatements.join('') + "\n})";
       replaceContext = null;
       return result;
     };
@@ -17447,14 +17748,52 @@
           class_ = declaredClasses[id];
           var baseClassName = class_.body.baseClassName;
           if(baseClassName) {
-            class_.base = findInScopes(class_, baseClassName);
+            var parent = findInScopes(class_, baseClassName);
+            if (parent) {
+              class_.base = parent;
+              if (!parent.derived) {
+                parent.derived = [];
+              }
+              parent.derived.push(class_);
+            }
           }
+        }
+      }
+    }
+
+    function setWeight(ast) {
+      var queue = [], checked = {};
+      var id, class_;
+      // queue most inner and non-inherited
+      for (id in declaredClasses) {
+        if (declaredClasses.hasOwnProperty(id)) {
+          class_ = declaredClasses[id];
+          if (!class_.inScope && !class_.derived) {
+            queue.push(id);
+            checked[id] = true;
+            class_.weight = 0;
+          }
+        }
+      }
+      while (queue.length > 0) {
+        id = queue.shift();
+        class_ = declaredClasses[id];
+        if (class_.scopeId && !checked[class_.scopeId]) {
+          queue.push(class_.scopeId);
+          checked[class_.scopeId] = true;
+          declaredClasses[class_.scopeId].weight = class_.weight + 1;
+        }
+        if (class_.base && !checked[class_.base.classId]) {
+          queue.push(class_.base.classId);
+          checked[class_.base.classId] = true;
+          class_.base.weight = class_.weight + 1;
         }
       }
     }
 
     var transformed = transformMain();
     generateMetadata(transformed);
+    setWeight(transformed);
 
     var redendered = transformed.toString();
 
@@ -17851,20 +18190,27 @@
       pending: 0,
       images: {},
       add: function(href) {
-        var img = new Image();
-        img.onload = (function(owner) {
-          return function() {
-            owner.pending--;
-          };
-        }(this));
-        this.pending++;
-        this.images[href] = img;
-        img.src = href;
+        if(isDOMPresent) {
+          var img = new Image();
+          img.onload = (function(owner) {
+            return function() {
+              owner.pending--;
+            };
+          }(this));
+          this.pending++;
+          this.images[href] = img;
+          img.src = href;
+        } else {
+          this.images[href] = null;
+        }
       }
     };
     this.fonts = {
       // template element used to compare font sizes
       template: (function() {
+        if(!isDOMPresent) {
+          return null;
+        }
         var element = document.createElement('p');
         element.style.fontFamily = "serif";
         element.style.fontSize = "72px";
@@ -17912,7 +18258,7 @@
       // string containing a css @font-face list of custom fonts
       fontFamily: "",
       // style element to hold the @font-face string
-      style: document.createElement('style'),
+      style: (isDOMPresent ? document.createElement('style') : null),
       // adds a font to the font cache
       // creates an element using the font, to start loading the font,
       // and compare against a default font to see if the custom font is loaded
@@ -17950,15 +18296,83 @@
         throw "Unable to attach sketch to the processing instance";
       }
     };
+//#if PARSER
     this.toString = function() {
-      return this.sourceCode || "[attach: " + this.attachFunction + "]";
+      var i;
+      var code = "((function(Sketch) {\n";
+      code += "var sketch = new Sketch(\n" + this.sourceCode + ");\n";
+      code += "sketch.use3DContext = " + this.use3DContext + ";\n";
+      for(i in this.options) {
+        if(this.options.hasOwnProperty(i)) {
+          var value = this.options[i];
+          code += "sketch.options." + i + " = " +
+            (typeof value === 'string' ? '\"' + value + '\"' : "" + value) + ";\n";
+        }
+      }
+      for(i in this.imageCache) {
+        if(this.options.hasOwnProperty(i)) {
+          code += "sketch.imageCache.add(\"" + i + "\");\n";
+        }
+      }
+      // TODO serialize fonts
+      code += "return sketch;\n})(Processing.Sketch))";
+      return code;
     };
-    this.onblur = function() {};
-    this.onfocus = function() {};
+//#endif
   };
 
   // Automatic Initialization Method
   var init = function() {
+    function loadAndExecute(canvas, sources) {
+      var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
+
+      function ajaxAsync(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {  
+            var error;
+            if (xhr.status !== 200 && xhr.status !== 0) {
+              error = "Invalid XHR status " + xhr.status;
+            } else if (xhr.responseText === "") {
+              error = "No content";
+            }
+            callback(xhr.responseText, error);
+          }
+        };
+        xhr.open("GET", url, true);
+        if (xhr.overrideMimeType) {
+          xhr.overrideMimeType("application/json");
+        }
+        xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
+        xhr.send(null);
+      }
+
+      function loadBlock(index, filename) {
+        ajaxAsync(filename, function (block, error) {
+          code[index] = block;
+          ++loaded;
+          if (error) {
+            errors.push("  " + filename + " ==> " + error);
+          }
+          if (loaded === sourcesCount) {
+            if (errors.length === 0) {
+              try {
+                Processing.addInstance(new Processing(canvas, code.join("\n")));
+              } catch(e) {
+                Processing.logger.log("Unable to execute pjs sketch: " + e);
+              }
+            } else {
+              Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
+            }
+          }
+        });
+      }
+
+      for (var i = 0; i < sourcesCount; ++i) {
+        loadBlock(i, sources[i]);
+      }
+    }
+
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
@@ -17972,42 +18386,41 @@
         }
       }
       if (processingSources) {
-        // The problem: if the HTML canvas dimensions differ from the
-        // dimensions specified in the size() call in the sketch, for
-        // 3D sketches, browsers will either not render or render the
-        // scene incorrectly. To fix this, we need to adjust the attributes
-        // of the canvas width and height.
-        // Get the source, we'll need to find what the user has used in size()
         var filenames = processingSources.split(' ');
-        var code = "";
-        for (var j = 0, fl = filenames.length; j < fl; j++) {
+        for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
-            var block = ajax(filenames[j]);
-            if (block !== false) {
-              code += ";\n" + block;
-            }
+            j++;
+          } else {
+            filenames.splice(j, 1);
           }
         }
-        Processing.addInstance(new Processing(canvas[i], code));
+
+        loadAndExecute(canvas[i], filenames);
       }
     }
   };
 
-  document.addEventListener('DOMContentLoaded', function() {
-    init();
-  }, false);
+  if(isDOMPresent) {
+    window['Processing'] = Processing;
 
-  // pauseOnBlur handling
-  window.addEventListener('blur', function() {
-    for (var i = 0; i < Processing.instances.length; i++) {
-      Processing.instances[i].externals.onblur();
-    }
-  }, false);
+    document.addEventListener('DOMContentLoaded', function() {
+      init();
+    }, false);
 
-  window.addEventListener('focus', function() {
-    for (var i = 0; i < Processing.instances.length; i++) {
-      Processing.instances[i].externals.onfocus();
-    }
-  }, false);
+    // pauseOnBlur handling
+    window.addEventListener('blur', function() {
+      for (var i = 0; i < Processing.instances.length; i++) {
+        Processing.instances[i].externals.onblur();
+      }
+    }, false);
 
+    window.addEventListener('focus', function() {
+      for (var i = 0; i < Processing.instances.length; i++) {
+        Processing.instances[i].externals.onfocus();
+      }
+    }, false);
+  } else {
+    // DOM is not found
+    this.Processing = Processing;
+  }
 }());

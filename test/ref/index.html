@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -108,7 +108,9 @@
       function download(file) {
         var req = new XMLHttpRequest();
         req.open('GET', file, false);
-        req.overrideMimeType('text/plain; charset=x-user-defined');
+        if (req.overrideMimeType) {
+          req.overrideMimeType('text/plain');
+        }
         req.send(null);
         if (req.status != 200 && req.status !=0) {
           return null;
