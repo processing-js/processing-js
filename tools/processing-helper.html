@@ -107,6 +107,8 @@
                 pixels[i] = arr[i];
               }
               
+              var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
+              
               // Opera doesn't have btoa() so this won't work there.
               document.location.href = "data:text/plain;charset=utf-8;base64," + 
                                        btoa('//' + dimensions + pixels.toString() + '\n' + this.code.value);
