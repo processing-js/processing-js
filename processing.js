@@ -15660,11 +15660,21 @@
     p.param = function(name) {
       // trying attribute that was specified in CANVAS
       var attributeName = "data-processing-" + name;
-      if(curElement.hasAttribute(attributeName)) {
+      if (curElement.hasAttribute(attributeName)) {
         return curElement.getAttribute(attributeName);
       }
+      // trying child PARAM elements of the CANVAS
+      for (var i = 0, len = curElement.childNodes.length; i < len; ++i) {
+        var item = curElement.childNodes.item(i);
+        if (item.nodeType !== 1 || item.tagName.toLowerCase() !== "param") {
+          continue;
+        }
+        if (item.getAttribute("name") === name) {
+          return item.getAttribute("value");
+        }
+      }
       // fallback to default params
-      if(curSketch.params.hasOwnProperty(name)) {
+      if (curSketch.params.hasOwnProperty(name)) {
         return curSketch.params[name];
       }
       return null;

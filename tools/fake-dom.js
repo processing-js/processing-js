@@ -11,6 +11,7 @@ var canvas = {
   addEventListener: __empty_func__,
   appendChild: __elem_func__,
   removeChild: __empty_func__,
+  childNodes: { length: 0 },
   toDataURL: __empty_func__,
   localName: "canvas",
   getContext:  function() {
