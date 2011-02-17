@@ -1150,6 +1150,31 @@
     return PVector;
   }());
 
+  /**
+  * A ObjectIterator is an iterator wrapper for objects. If passed object contains 
+  * the iterator method, the object instance will be replaced by the result returned by 
+  * this method call. If passed object is an array, the ObjectIterator instance iterates 
+  * through its items.
+  *
+  * @param {Object} obj          The object to be iterated.
+  */
+  var ObjectIterator = function(obj) {
+    if (obj.iterator instanceof Function) {
+      return obj.iterator();
+    } else if (obj instanceof Array) {
+      // iterate through array items
+      var index = -1;
+      this.hasNext = function() { 
+        return ++index < obj.length;
+      };
+      this.next = function() {
+        return obj[index];
+      };
+    } else {
+      throw "Unable to iterate: " + obj;
+    }
+  };
+
   // Building defaultScope. Changing of the prototype protects
   // internal Processing code from the changes in defaultScope
   function DefaultScope() {}
@@ -1159,6 +1184,7 @@
   defaultScope.ArrayList   = ArrayList;
   defaultScope.HashMap     = HashMap;
   defaultScope.PVector     = PVector;
+  defaultScope.ObjectIterator = ObjectIterator;
   //defaultScope.PImage    = PImage;     // TODO
   //defaultScope.PShape    = PShape;     // TODO
   //defaultScope.PShapeSVG = PShapeSVG;  // TODO
@@ -17157,11 +17183,31 @@
       return "(" + init + " in " + this.container + ")";
     };
 
+    function AstForEachExpression(initStatement, container) {
+      this.initStatement = initStatement;
+      this.container = container;
+    }
+    AstForEachExpression.iteratorId = 0;
+    AstForEachExpression.prototype.toString = function() {
+      var init = this.initStatement.toString();
+      var iterator = "$it" + (AstForEachExpression.iteratorId++);
+      var variableName = init.replace(/^\s*var\s*/, "").split("=")[0];
+      var initIteratorAndVariable = "var " + iterator + " = new $p.ObjectIterator(" + this.container + "), " +
+         variableName + " = void(0)";
+      var nextIterationCondition = iterator + ".hasNext() && ((" + 
+         variableName + " = " + iterator + ".next()) || true)";
+      return "(" + initIteratorAndVariable + "; " + nextIterationCondition + ";)";
+    };
+
     function transformForExpression(expr) {
       var content;
-      if(/\bin\b/.test(expr)) {
+      if (/\bin\b/.test(expr)) {
         content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
         return new AstForInExpression( transformStatement(trim(content[0])),
+          transformExpression(content[1]));
+      } else if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
+        content = expr.substring(1, expr.length - 1).split(":");
+        return new AstForEachExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
       } else {
         content = expr.substring(1, expr.length - 1).split(";");
