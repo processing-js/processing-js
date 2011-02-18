@@ -16532,7 +16532,8 @@
       curSketch.options.isTransparent = true;
     }
 
-  }
+    Processing.addInstance(this);
+  }; // Processing() ends
 
   Processing.prototype = defaultScope;
 
@@ -18451,7 +18452,7 @@
           if (loaded === sourcesCount) {
             if (errors.length === 0) {
               try {
-                Processing.addInstance(new Processing(canvas, code.join("\n")));
+                return new Processing(canvas, code.join("\n"));
               } catch(e) {
                 Processing.logger.log("Unable to execute pjs sketch: " + e);
               }
