@@ -16536,6 +16536,7 @@
 
   Processing.prototype = defaultScope;
 
+//#if PARSER
   // Processing global methods and constants for the parser
   function getGlobalMembers() {
     // The names array contains the names of everything that is inside "p."
@@ -17972,10 +17973,7 @@
     sketch.sourceCode = compiledPde;
     return sketch;
   };
-
-  Error.prototype.printStackTrace = function() {
-     return this.toString();
-  };
+//#endif
 
   // tinylog lite JavaScript library
   // http://purl.eligrey.com/tinylog/lite
