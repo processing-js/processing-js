@@ -13482,8 +13482,7 @@
           return obj;
         }
       };
-      
-      //Processing.addInstance(pg); // TODO: this function does not exist in this scope
+
       return pg;
     };
 
