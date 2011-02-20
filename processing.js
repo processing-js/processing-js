@@ -1239,6 +1239,8 @@
     p.mousePressed    = undef;
     p.mouseReleased   = undef;
     p.mouseScrolled   = undef;
+    p.mouseOver       = undef;
+    p.mouseOut        = undef; 
     p.key             = undef;
     p.keyCode         = undef;
     p.keyPressed      = function(){};  // needed to remove function checks
@@ -16011,7 +16013,7 @@
       eventHandlers.push([elem, type, fn]);
     }
 
-    attach(curElement, "mousemove", function(e) {
+    function updateMousePosition(curElement, event) {
       var element = curElement, offsetX = 0, offsetY = 0;
 
       p.pmouseX = p.mouseX;
@@ -16039,9 +16041,14 @@
       offsetX += styleBorderLeft;
       offsetY += styleBorderTop;
 
-      p.mouseX = e.clientX - offsetX;
-      p.mouseY = e.clientY - offsetY;
+      // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
+      // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
+      p.mouseX = event.pageX - offsetX;
+      p.mouseY = event.pageY - offsetY;
+    }
 
+    attach(curElement, "mousemove", function(e) {
+      updateMousePosition(curElement, e);
       if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
         p.mouseMoved();
       }
@@ -16054,6 +16061,13 @@
     attach(curElement, "mouseout", function(e) {
       if (typeof p.mouseOut === "function") {
         p.mouseOut();
+      }
+    });
+    
+    attach(curElement, "mouseover", function(e) {
+      updateMousePosition(curElement, e);
+      if (typeof p.mouseOver === "function") {
+        p.mouseOver();
       }
     });
 
@@ -16564,7 +16578,7 @@
       "loadImage", "loadPixels", "loadShape", "loadStrings", "log", "loop",
       "mag", "map", "match", "matchAll", "max", "millis", "min", "minute", "mix",
       "modelX", "modelY", "modelZ", "modes", "month", "mouseButton",
-      "mouseClicked", "mouseDragged", "mouseMoved", "mousePressed",
+      "mouseClicked", "mouseDragged", "mouseMoved", "mouseOut", "mouseOver", "mousePressed",
       "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY",
       "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise",
       "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal",
