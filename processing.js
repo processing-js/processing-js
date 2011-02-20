@@ -1218,8 +1218,8 @@
      * often used when you want to warn people they need to click on the
      * browser before it will work.
     */
-    p.focused         = true;
-    p.breakShape      = false;
+    p.focused         =  false;
+    p.breakShape    = false;
 
     // Glyph path storage for textFonts
     p.glyphTable      = {};
@@ -7379,9 +7379,6 @@
 
       looping = window.setInterval(function() {
         try {
-          if (document.hasFocus instanceof Function) {
-            p.focused = document.hasFocus();
-          }
           p.redraw();
         } catch(e_loop) {
           window.clearInterval(looping);
@@ -16435,20 +16432,30 @@
         curElement.mozOpaque = !curSketch.options.isTransparent;
       }
 
-      // Initialize the onfocus and onblur event handler externals
+      // the onfocus and onblur events are handled in two parts.
+      // 1) the p.focused property is handled per sketch
+      curElement.onfocus = function() {
+        p.focused=true;
+      };
+
+      curElement.onblur = function() {
+        p.focused=false;
+      };
+
+      // 2) looping status is handled per page, based on the pauseOnBlur @pjs directive
       if (curSketch.options.pauseOnBlur) {
-        p.externals.onfocus = function() {
+        window.addEventListener('focus', function() {
           if (doLoop) {
             p.loop();
           }
-        };
+        }, false);
 
-        p.externals.onblur = function() {
+        window.addEventListener('blur', function() {
           if (doLoop && loopStarted) {
             p.noLoop();
             doLoop = true; // make sure to keep this true after the noLoop call
           }
-        };
+        }, false);
       }
 
       if (!curSketch.use3DContext) {
@@ -18514,19 +18521,6 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       init();
-    }, false);
-
-    // pauseOnBlur handling
-    window.addEventListener('blur', function() {
-      for (var i = 0; i < Processing.instances.length; i++) {
-        Processing.instances[i].externals.onblur();
-      }
-    }, false);
-
-    window.addEventListener('focus', function() {
-      for (var i = 0; i < Processing.instances.length; i++) {
-        Processing.instances[i].externals.onfocus();
-      }
     }, false);
   } else {
     // DOM is not found
