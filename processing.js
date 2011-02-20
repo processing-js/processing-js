@@ -1174,6 +1174,10 @@
     p.mousePressed    = undef;
     p.mouseReleased   = undef;
     p.mouseScrolled   = undef;
+    p.touchStart      = undef;
+    p.touchEnd        = undef;
+    p.touchMove       = undef;
+    p.touchCancel     = undef;
     p.key             = undef;
     p.keyCode         = undef;
     p.keyPressed      = function(){};  // needed to remove function checks
@@ -15748,33 +15752,54 @@
       }
       eventHandlers.push([elem, type, fn]);
     }
-    var firstTouch = false;
-    function touchSetup (curElement) {
-      if (!firstTouch) {
-        //removes unwanted behaviour of the canvas when touching canvas
-        curElement.setAttribute("style","-webkit-user-select: none");
-        curElement.setAttribute("onclick","void(0)");
-        curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
-        //loop though eventHandlers and remove mouse listeners
-        for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-          var elem = eventHandlers[i][0],
-              type = eventHandlers[i][1],
-              fn   = eventHandlers[i][2];
-          if (type === "mouseout" || type === "mousemove" || type === "mousedown" || type === "mouseup" || 
-              type === "DOMMouseScroll"  || type === "mousewheel") {
-            if (elem.removeEventListener) {
-              elem.removeEventListener(type, fn, false);
-            } else if (elem.detachEvent) {
-              elem.detachEvent("on" + type, fn);
-            }
-          }
-        }
+    
+    function detach(elem, type, fn) {
+      if (elem.removeEventListener) {
+        elem.removeEventListener(type, fn, false);
+      } else if (elem.detachEvent) {
+        elem.detachEvent("on" + type, fn);
       }
-      firstTouch = true;
     }
     
-    attach(curElement, "touchstart", function(e) {
-      touchSetup(curElement);
+    //////////////////////////////////////////////////////////////////////////
+    // Touch event handling
+    //////////////////////////////////////////////////////////////////////////
+    
+    attach(curElement, "touchstart", function (t) {
+      // Removes unwanted behaviour of the canvas when touching canvas
+      curElement.setAttribute("style","-webkit-user-select: none");
+      curElement.setAttribute("onclick","void(0)");
+      curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
+      // Loop though eventHandlers and remove mouse listeners
+      for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
+        var elem = eventHandlers[i][0],
+            type = eventHandlers[i][1],
+            fn   = eventHandlers[i][2];
+        if (type === "mouseout" || type === "mousemove" || type === "mousedown" || type === "mouseup" || 
+            type === "DOMMouseScroll"  || type === "mousewheel" || type === "touchstart") {
+          detach(elem, type, fn);
+        }
+      }
+      
+      // Are we going to emulate mouse events or are touch events implemented by sketch?
+      if (p.touchStart != undef && p.touchMove != undef && p.touchEnd != undef && p.touchCancel != undef) {
+        attach(curElement, "touchstart", p.touchStart);
+        attach(curElement, "touchmove", p.touchMove);
+        attach(curElement, "touchend", p.touchEnd);
+        attach(curElement, "touchcancel", p.touchCancel);
+        // Need to send the touchstart event we ate
+        p.touchStart(t);
+      } else {
+        attach(curElement, "touchstart", emulatedMouseStart);
+        attach(curElement, "touchmove", emulatedMouseMove);
+        attach(curElement, "touchend", emulatedMouseEnd);
+        attach(curElement, "touchcancel", emulatedMouseEnd);
+        // Need to send the touchstart event we ate
+        emulatedMouseStart(t);
+      }
+    });
+    
+    var emulatedMouseStart = function(e) {
       var element = curElement, offsetX = 0, offsetY = 0;
       p.pmouseX = p.mouseX;
       p.pmouseY = p.mouseY;
@@ -15802,24 +15827,14 @@
       p.mouseY = e.touches[0].pageY - offsetY;
       p.__mousePressed = true;
       p.mouseDragging = false;
-      switch (e.which) {
-      case 1:
-        p.mouseButton = PConstants.LEFT;
-        break;
-      case 2:
-        p.mouseButton = PConstants.CENTER;
-        break;
-      case 3:
-        p.mouseButton = PConstants.RIGHT;
-        break;
-      }
+      p.mouseButton = PConstants.LEFT;
 
       if (typeof p.mousePressed === "function") {
         p.mousePressed();
       }
-    });
+    }
     
-    attach(curElement, "touchend", function(e) {
+    var emulatedMouseEnd = function(e) {
       p.__mousePressed = false;
 
       if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
@@ -15829,9 +15844,9 @@
       if (typeof p.mouseReleased === "function") {
         p.mouseReleased();
       }
-    });
+    }
     
-    attach(curElement, "touchmove", function(e) {
+    var emulatedMouseMove = function(e) {
       e.preventDefault();
       var element = curElement, offsetX = 0, offsetY = 0;
 
@@ -15870,7 +15885,11 @@
         p.mouseDragged();
         p.mouseDragging = true;
       }
-    });
+    }
+    
+    //////////////////////////////////////////////////////////////////////////
+    // Mouse event handling
+    //////////////////////////////////////////////////////////////////////////
     
     attach(curElement, "mousemove", function(e) {
       var element = curElement, offsetX = 0, offsetY = 0;
@@ -16374,50 +16393,50 @@
     // The names array contains the names of everything that is inside "p."
     // When something new is added to "p." it must also be added to this list.
     var names = [ /* this code is generated by jsglobals.js */
-      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix",
-      "arc", "arrayCopy", "asin", "atan", "atan2", "background",
-      "beginCamera", "beginDraw", "beginShape", "bezier", "bezierDetail",
-      "bezierPoint", "bezierTangent", "bezierVertex", "binary", "blend",
-      "blendColor", "blit_resize", "blue", "boolean", "box", "breakShape",
-      "brightness", "byte", "camera", "ceil", "char", "Character", "clear",
-      "color", "colorMode", "concat", "console", "constrain", "copy", "cos",
-      "createFont", "createGraphics", "createImage", "cursor", "curve",
-      "curveDetail", "curvePoint", "curveTangent", "curveTightness",
-      "curveVertex", "day", "defaultColor", "degrees", "directionalLight",
-      "disableContextMenu", "dist", "draw", "ellipse", "ellipseMode", "emissive",
-      "enableContextMenu", "endCamera", "endDraw", "endShape", "exit", "exp",
-      "expand", "externals", "fill", "filter", "filter_bilinear",
-      "filter_new_scanline", "float", "floor", "focused", "frameCount",
-      "frameRate", "frustum", "get", "glyphLook", "glyphTable", "green",
-      "height", "hex", "hint", "hour", "hue", "image", "imageMode",
-      "Import", "int", "intersect", "join", "key", "keyCode", "keyPressed",
-      "keyReleased", "keyTyped", "lerp", "lerpColor", "lightFalloff", "lights",
-      "lightSpecular", "line", "link", "loadBytes", "loadFont", "loadGlyphs",
-      "loadImage", "loadPixels", "loadShape", "loadStrings", "log", "loop",
-      "mag", "map", "match", "matchAll", "max", "millis", "min", "minute", "mix",
-      "modelX", "modelY", "modelZ", "modes", "month", "mouseButton",
-      "mouseClicked", "mouseDragged", "mouseMoved", "mousePressed",
-      "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", "mouseY",
-      "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise",
-      "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal",
-      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PFont", "PImage",
-      "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY",
-      "point", "pointLight", "popMatrix", "popStyle", "pow", "print",
-      "printCamera", "println", "printMatrix", "printProjection", "PShape","PShapeSVG",
-      "pushMatrix", "pushStyle", "quad", "radians", "random",
-      "Random", "randomSeed", "rect", "rectMode", "red", "redraw",
-      "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY",
-      "rotateZ", "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
-      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
-      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth",
-      "sort", "specular", "sphere", "sphereDetail", "splice", "split",
-      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
-      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
-      "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
-      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
-      "translate", "triangle", "trim", "unbinary", "unhex", "updatePixels",
-      "use3DContext", "vertex", "width", "XMLElement", "year", "__frameRate",
-       "__keyPressed", "__mousePressed", "__int_cast"];
+      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix", 
+      "arc", "arrayCopy", "asin", "atan", "atan2", "background", "beginCamera", 
+      "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint", 
+      "bezierTangent", "bezierVertex", "binary", "blend", "blendColor", 
+      "blit_resize", "blue", "boolean", "box", "breakShape", "brightness", 
+      "byte", "camera", "ceil", "char", "Character", "clear", "color", 
+      "colorMode", "concat", "console", "constrain", "copy", "cos", "createFont", 
+      "createGraphics", "createImage", "cursor", "curve", "curveDetail", 
+      "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day", 
+      "defaultColor", "degrees", "directionalLight", "disableContextMenu", 
+      "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu", 
+      "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals", 
+      "fill", "filter", "filter_bilinear", "filter_new_scanline", "float", 
+      "floor", "focused", "frameCount", "frameRate", "frustum", "get", 
+      "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour", "hue", 
+      "image", "imageMode", "Import", "int", "intersect", "join", "key", 
+      "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor", 
+      "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes", 
+      "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape", 
+      "loadStrings", "log", "loop", "mag", "map", "match", "matchAll", "max", 
+      "millis", "min", "minute", "mix", "modelX", "modelY", "modelZ", "modes", 
+      "month", "mouseButton", "mouseClicked", "mouseDragged", "mouseMoved", 
+      "mousePressed", "mouseReleased", "mouseScroll", "mouseScrolled", "mouseX", 
+      "mouseY", "name", "nf", "nfc", "nfp", "nfs", "noCursor", "noFill", "noise", 
+      "noiseDetail", "noiseSeed", "noLights", "noLoop", "norm", "normal", 
+      "noSmooth", "noStroke", "noTint", "ortho", "peg", "perspective", "PFont", 
+      "PImage", "pixels", "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", 
+      "pmouseY", "point", "pointLight", "popMatrix", "popStyle", "pow", "print", 
+      "printCamera", "println", "printMatrix", "printProjection", "PShape", 
+      "PShapeSVG", "pushMatrix", "pushStyle", "quad", "radians", "random", 
+      "Random", "randomSeed", "rect", "rectMode", "red", "redraw", 
+      "requestImage", "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", 
+      "rotateZ", "round", "saturation", "save", "saveFrame", "saveStrings", 
+      "scale", "screenX", "screenY", "screenZ", "second", "set", "setup", 
+      "shape", "shapeMode", "shared", "shininess", "shorten", "sin", "size", 
+      "smooth", "sort", "specular", "sphere", "sphereDetail", "splice", "split", 
+      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke", 
+      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text", 
+      "textAlign", "textAscent", "textDescent", "textFont", "textLeading", 
+      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", 
+      "touchCancel", "touchEnd", "touchMove", "touchStart", "translate", 
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
+      "vertex", "width", "XMLElement", "year", "__frameRate", "__int_cast", 
+      "__keyPressed", "__mousePressed"];
 
     var members = {};
     var i, l;
