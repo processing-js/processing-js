@@ -16025,8 +16025,8 @@
       }
     }
     
-    function updateMousePosition(curElement, event) {
-      var element = curElement, offsetX = 0, offsetY = 0;
+    function calculateOffset(curElement, event) {
+      var element = curElement, offsetX = 0, offsetY = 0, offset = {};
 
       p.pmouseX = p.mouseX;
       p.pmouseY = p.mouseY;
@@ -16053,15 +16053,28 @@
       offsetX += styleBorderLeft;
       offsetY += styleBorderTop;
 
-      // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
-      p.mouseX = event.pageX - offsetX;
-      p.mouseY = event.pageY - offsetY;
+      offset.X = offsetX;
+      offset.Y = offsetY;
       
-      // Hack TouchEvent canvas-specific x/y properties
-      if (event instanceof TouchEvent) {
-        event.pX = event.pageX - offsetX;
-        event.pY = event.pageY - offsetY;
-      }
+      return offset;
+    }
+    
+    function updateMousePosition(curElement, event) {
+      var offset = calculateOffset(curElement, event);
+      
+      // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
+      p.mouseX = event.pageX - offset.X;
+      p.mouseY = event.pageY - offset.Y;
+    }
+    
+    // Return a TouchEvent with canvas-specific x/y co-ordinates
+    function modifyTouchEvent(event) {
+      var offset = calculateOffset(curElement, event);
+      
+      event.pjsX = event.pageX - offset.X;
+      event.pjsY = event.pageY - offset.Y;
+      
+      return event;
     }
     
     //////////////////////////////////////////////////////////////////////////
@@ -16086,7 +16099,7 @@
       
       // Are we going to emulate mouse events or are touch events implemented by sketch?
       if (p.touchStart != undef && p.touchMove != undef && p.touchEnd != undef && p.touchCancel != undef) {
-        attach(curElement, "touchstart", p.touchStart);
+        attach(curElement, "touchstart", p.touchStart); // Need to modify TouchEvent here //
         attach(curElement, "touchmove", p.touchMove);
         attach(curElement, "touchend", p.touchEnd);
         attach(curElement, "touchcancel", p.touchCancel);
