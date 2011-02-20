@@ -1,5 +1,7 @@
 // These are the test files in this dir to be run.
 var tests = [
+  { path: "defaults-background_and_size.pde", tags: ["2D"] },
+  { path: "defaults-text.pde", tags: ["2D"] },
   { path: "simple.pde", tags: ["2D"] },
   { path: "arc-tangent.pde",  tags: ["2D"] },
   { path: "bezier.pde", tags: ["2D"] },
@@ -29,6 +31,7 @@ var tests = [
   { path: "shininess_p5test.pde", tags: ["3D"] },
   { path: "specular_p5test.pde", tags: ["3D"] },
   { path: "spotLight_p5test.pde", tags: ["3D"] },
+  { path: "createGraphics.pde", tags: ["3D"] },
   { path: "createimage.pde", tags: ["2D"] },
   { path: "self-1-success.pde", tags: ["Calibration"] },
   { path: "self-2-fail.pde", tags: ["Calibration"] },
