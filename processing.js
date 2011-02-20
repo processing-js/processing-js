@@ -16130,6 +16130,18 @@
     // Keyboard Events
     //////////////////////////////////////////////////////////////////////////
 
+    // Get the DOM element if string was passed
+    if (typeof curElement === "string") {
+      curElement = document.getElementById(curElement);
+    }
+    
+    // In order to catch key events in a canvas, it needs to be "specially focusable",
+    // by assigning it a tabindex. If no tabindex is specified on-page, set this to 0.
+    // (this value was chosen after consultation with an accessibility expert)
+    if(!curElement.getAttribute("tabindex")) {
+      curElement.setAttribute("tabindex", 0);
+    }
+
     function keyCodeMap(code){
       // Coded keys
       if (codedKeys.indexOf(code) >= 0) {
@@ -16377,7 +16389,7 @@
       }
     }
 
-    attach(document, "keydown", function(e) {
+    attach(curElement, "keydown", function(e) {
       p.keyCode = e.keyCode;
       p.__keyPressed = true;
       p.key = keyCodeMap(e.keyCode, e.shiftKey);
@@ -16387,11 +16399,11 @@
       keyFunc(e, "keydown");
     });
 
-    attach(document, "keypress", function (e) {
+    attach(curElement, "keypress", function (e) {
       keyFunc(e, "keypress");
     });
 
-    attach(document, "keyup", function(e) {
+    attach(curElement, "keyup", function(e) {
       p.keyCode = e.keyCode;
       p.__keyPressed = false;
       p.key = keyCodeMap(e.keyCode, e.shiftKey);
@@ -16403,11 +16415,6 @@
 
     // Place-holder for debugging function
     Processing.debug = function(e) {};
-
-    // Get the DOM element if string was passed
-    if (typeof curElement === "string") {
-      curElement = document.getElementById(curElement);
-    }
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
