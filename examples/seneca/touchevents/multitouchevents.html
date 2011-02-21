@@ -61,7 +61,7 @@
 <body> 
 	<h1>Multi touch event handling</h1> 
 	<p>Presents a grey 700x700 sketch that can only be drawn on with a touchscreen</p>
-	<p>Each finger draws a different colour</p>
+	<p>Each finger draws a different colour. Will not do anything with a mouse</p>
 	<!-- copy paste your processing code below this script tag --> 
 	<script id="script" type="application/processing"> 
 void setup() {
@@ -72,7 +72,7 @@ void setup() {
 
 // For touchscreens
 void touchStart(t) {
-  for (int i = 0; i < t.changedTouches.length; i++) {
+  for (int i = 0; i < t.touches.length; i++) {
     if (i == 0) {
       fill(0);
     } else if (i == 1) {
@@ -84,12 +84,12 @@ void touchStart(t) {
     } else if (i == 4) {
       fill(255)
     }
-    ellipse(t.touches[i].pjsX, t.touches[i].pjsY, 10, 10);
+    ellipse(t.touches[i].offsetX, t.touches[i].offsetY, 10, 10);
   }
 }
 
 void touchMove(t) {
-  for (int i = 0; i < t.changedTouches.length; i++) {
+  for (int i = 0; i < t.touches.length; i++) {
     if (i == 0) {
       fill(0);
     } else if (i == 1) {
@@ -101,7 +101,7 @@ void touchMove(t) {
     } else if (i == 4) {
       fill(255)
     }
-    ellipse(t.touches[i].pjsX, t.touches[i].pjsY, 10, 10);
+    ellipse(t.touches[i].offsetX, t.touches[i].offsetY, 10, 10);
   }
 }
 

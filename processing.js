@@ -16026,7 +16026,7 @@
     }
     
     function calculateOffset(curElement, event) {
-      var element = curElement, offsetX = 0, offsetY = 0, offset = {};
+      var element = curElement, offset = { "X":0, "Y":0};
 
       p.pmouseX = p.mouseX;
       p.pmouseY = p.mouseY;
@@ -16034,27 +16034,28 @@
       // Find element offset
       if (element.offsetParent) {
         do {
-          offsetX += element.offsetLeft;
-          offsetY += element.offsetTop;
+          offset.X += element.offsetLeft;
+          offset.Y += element.offsetTop;
         } while ((element = element.offsetParent));
       }
 
       // Find Scroll offset
       element = curElement;
       do {
-        offsetX -= element.scrollLeft || 0;
-        offsetY -= element.scrollTop || 0;
+        offset.X -= element.scrollLeft || 0;
+        offset.Y -= element.scrollTop || 0;
       } while ((element = element.parentNode));
 
       // Add padding and border style widths to offset
-      offsetX += stylePaddingLeft;
-      offsetY += stylePaddingTop;
+      offset.X += stylePaddingLeft;
+      offset.Y += stylePaddingTop;
 
-      offsetX += styleBorderLeft;
-      offsetY += styleBorderTop;
-
-      offset.X = offsetX;
-      offset.Y = offsetY;
+      offset.X += styleBorderLeft;
+      offset.Y += styleBorderTop;
+      
+      // Take into account any scrolling done
+      offset.X += window.pageXOffset;
+      offset.Y += window.pageYOffset;
       
       return offset;
     }
@@ -16068,23 +16069,23 @@
     }
     
     // Return a TouchEvent with canvas-specific x/y co-ordinates
-    function modifyTouchEvent(t) {
+    function addTouchEventOffset(t) {
       var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]);
       
       for (i = 0; i < t.touches.length; i++) {
-        t.touches[i].pjsX = t.touches[i].pageX - offset.X;
-        t.touches[i].pjsY = t.touches[i].pageY - offset.Y;
+        t.touches[i].offsetX = t.touches[i].pageX - offset.X;
+        t.touches[i].offsetY = t.touches[i].pageY - offset.Y;
       }
       for (i = 0; i < t.targetTouches.length; i++) {
-        t.targetTouches[i].pjsX = t.targetTouches[i].pageX - offset.X;
-        t.targetTouches[i].pjsY = t.targetTouches[i].pageY - offset.Y;
+        t.targetTouches[i].offsetX = t.targetTouches[i].pageX - offset.X;
+        t.targetTouches[i].offsetY = t.targetTouches[i].pageY - offset.Y;
       }
       for (i = 0; i < t.changedTouches.length; i++) {
-        t.changedTouches[i].pjsX = t.changedTouches[i].pageX - offset.X;
-        t.changedTouches[i].pjsY = t.changedTouches[i].pageY - offset.Y;
+        t.changedTouches[i].offsetX = t.changedTouches[i].pageX - offset.X;
+        t.changedTouches[i].offsetY = t.changedTouches[i].pageY - offset.Y;
       }
       
-      return event;
+      return t;
     }
     
     //////////////////////////////////////////////////////////////////////////
@@ -16108,37 +16109,38 @@
         }
       }
       
-      // If there are any native touch events defined in the sketch, connect the ones that exist
+      // If there are any native touch events defined in the sketch, connect all of them
       // Otherwise, connect all of the emulated mouse events
       if (p.touchStart != undef || p.touchMove != undef || p.touchEnd != undef || p.touchCancel != undef) {
-        if (p.touchStart != undef) {
-          attach(curElement, "touchstart", function(t) {
-            t = modifyTouchEvent(t);
+        attach(curElement, "touchstart", function(t) {
+          if (p.touchStart != undef) {
+            t = addTouchEventOffset(t);
             p.touchStart(t);
-          });
-        }
+          }
+        });
         
-        if (p.touchMove != undef) {
-          attach(curElement, "touchmove", function(t) {
+        attach(curElement, "touchmove", function(t) {
+          if (p.touchMove != undef) {
             t.preventDefault(); // Stop the viewport from scrolling
-            t = modifyTouchEvent(t);
+            t = addTouchEventOffset(t);
             p.touchMove(t);
-          });
-        }
+          }
+        });
         
-        if (p.touchEnd != undef) {
-          attach(curElement, "touchend", function(t) {
-            t = modifyTouchEvent(t);
+        attach(curElement, "touchend", function(t) {
+          if (p.touchEnd != undef) {
+            t = addTouchEventOffset(t);
             p.touchEnd(t);
-          });
-        }
+          }
+        });
         
-        if (p.touchCancel != undef) {
-          attach(curElement, "touchcancel", function(t) {
-            t = modifyTouchEvent(t);
+        attach(curElement, "touchcancel", function(t) {
+          if (p.touchCancel != undef) {
+            t = addTouchEventOffset(t);
             p.touchCancel(t);
-          });
-        }
+          }
+        });
+        
       } else {
         // Emulated touch start/mouse down event
         attach(curElement, "touchstart", function(e) {

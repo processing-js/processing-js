@@ -80,11 +80,11 @@ void draw() {
 
 // For touchscreens
 void touchStart(t) {
-  ellipse(t.touches[0].pjsX, t.touches[0].pjsY, 10, 10);
+  ellipse(t.touches[0].offsetX, t.touches[0].offsetY, 10, 10);
 }
 
 void touchMove(t) {
-  ellipse(t.touches[0].pjsX, t.touches[0].pjsY, 10, 10);
+  ellipse(t.touches[0].offsetX, t.touches[0].offsetY, 10, 10);
 }
 
 	</script> 
