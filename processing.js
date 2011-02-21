@@ -16068,11 +16068,21 @@
     }
     
     // Return a TouchEvent with canvas-specific x/y co-ordinates
-    function modifyTouchEvent(event) {
-      var offset = calculateOffset(curElement, event);
+    function modifyTouchEvent(t) {
+      var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]);
       
-      event.pjsX = event.pageX - offset.X;
-      event.pjsY = event.pageY - offset.Y;
+      for (i = 0; i < t.touches.length; i++) {
+        t.touches[i].pjsX = t.touches[i].pageX - offset.X;
+        t.touches[i].pjsY = t.touches[i].pageY - offset.Y;
+      }
+      for (i = 0; i < t.targetTouches.length; i++) {
+        t.targetTouches[i].pjsX = t.targetTouches[i].pageX - offset.X;
+        t.targetTouches[i].pjsY = t.targetTouches[i].pageY - offset.Y;
+      }
+      for (i = 0; i < t.changedTouches.length; i++) {
+        t.changedTouches[i].pjsX = t.changedTouches[i].pageX - offset.X;
+        t.changedTouches[i].pjsY = t.changedTouches[i].pageY - offset.Y;
+      }
       
       return event;
     }
@@ -16091,66 +16101,89 @@
         var elem = eventHandlers[i][0],
             type = eventHandlers[i][1],
             fn   = eventHandlers[i][2];
+        // Have this function remove itself from the eventHandlers list too
         if (type === "mouseout" || type === "mousemove" || type === "mousedown" || type === "mouseup" || 
             type === "DOMMouseScroll"  || type === "mousewheel" || type === "touchstart") {
           detach(elem, type, fn);
         }
       }
       
-      // Are we going to emulate mouse events or are touch events implemented by sketch?
-      if (p.touchStart != undef && p.touchMove != undef && p.touchEnd != undef && p.touchCancel != undef) {
-        attach(curElement, "touchstart", p.touchStart); // Need to modify TouchEvent here //
-        attach(curElement, "touchmove", p.touchMove);
-        attach(curElement, "touchend", p.touchEnd);
-        attach(curElement, "touchcancel", p.touchCancel);
-        // Need to send the touchstart event we ate
-        p.touchStart(t);
+      // If there are any native touch events defined in the sketch, connect the ones that exist
+      // Otherwise, connect all of the emulated mouse events
+      if (p.touchStart != undef || p.touchMove != undef || p.touchEnd != undef || p.touchCancel != undef) {
+        if (p.touchStart != undef) {
+          attach(curElement, "touchstart", function(t) {
+            t = modifyTouchEvent(t);
+            p.touchStart(t);
+          });
+        }
+        
+        if (p.touchMove != undef) {
+          attach(curElement, "touchmove", function(t) {
+            t.preventDefault(); // Stop the viewport from scrolling
+            t = modifyTouchEvent(t);
+            p.touchMove(t);
+          });
+        }
+        
+        if (p.touchEnd != undef) {
+          attach(curElement, "touchend", function(t) {
+            t = modifyTouchEvent(t);
+            p.touchEnd(t);
+          });
+        }
+        
+        if (p.touchCancel != undef) {
+          attach(curElement, "touchcancel", function(t) {
+            t = modifyTouchEvent(t);
+            p.touchCancel(t);
+          });
+        }
       } else {
-        attach(curElement, "touchstart", emulatedMouseStart);
-        attach(curElement, "touchmove", emulatedMouseMove);
-        attach(curElement, "touchend", emulatedMouseEnd);
-        attach(curElement, "touchcancel", emulatedMouseEnd);
-        // Need to send the touchstart event we ate
-        emulatedMouseStart(t);
+        // Emulated touch start/mouse down event
+        attach(curElement, "touchstart", function(e) {
+          updateMousePosition(curElement, e.touches[0]);
+          
+          p.__mousePressed = true;
+          p.mouseDragging = false;
+          p.mouseButton = PConstants.LEFT;
+          
+          if (typeof p.mousePressed === "function") {
+            p.mousePressed();
+          }
+        });
+        
+        // Emulated touch move/mouse move event
+        attach(curElement, "touchmove", function(e) {
+          e.preventDefault();
+          updateMousePosition(curElement, e.touches[0]);
+          
+          if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
+            p.mouseMoved();
+          }
+          if (typeof p.mouseDragged === "function" && p.__mousePressed) {
+            p.mouseDragged();
+            p.mouseDragging = true;
+          }
+        });
+        
+        // Emulated touch up/mouse up event
+        attach(curElement, "touchend", function(e) {
+          p.__mousePressed = false;
+          
+          if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
+            p.mouseClicked();
+          }
+          
+          if (typeof p.mouseReleased === "function") {
+            p.mouseReleased();
+          }
+        });
       }
-    });
-    
-    var emulatedMouseStart = function(e) {
-      updateMousePosition(curElement, e.touches[0]);
       
-      p.__mousePressed = true;
-      p.mouseDragging = false;
-      p.mouseButton = PConstants.LEFT;
-
-      if (typeof p.mousePressed === "function") {
-        p.mousePressed();
-      }
-    }
-    
-    var emulatedMouseEnd = function(e) {
-      p.__mousePressed = false;
-
-      if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
-        p.mouseClicked();
-      }
-
-      if (typeof p.mouseReleased === "function") {
-        p.mouseReleased();
-      }
-    }
-    
-    var emulatedMouseMove = function(e) {
-      e.preventDefault();
-      updateMousePosition(curElement, e.touches[0]);
-
-      if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
-        p.mouseMoved();
-      }
-      if (typeof p.mouseDragged === "function" && p.__mousePressed) {
-        p.mouseDragged();
-        p.mouseDragging = true;
-      }
-    }
+      // Refire the touch start event we consumed in this function
+      curElement.dispatchEvent(t)
+    });
     
     //////////////////////////////////////////////////////////////////////////
     // Mouse event handling
