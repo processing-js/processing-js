@@ -21,8 +21,8 @@ void setup() {
   child.removeAttribute("id");
   numSites = child.getAttributeCount();
   println("Number of first child attributes after remove: " + numSites);   
-  println("Does the 'id' attribute exist?:" +child.hasAttribute("id"));
-  println("Get url attribute" +child.getAttribute("url", null, "anna"));
+  println("Does the 'id' attribute exist?: " +child.hasAttribute("id"));
+  println("Get url attribute: " +child.getAttribute("url", null, "anna"));
 }
 
 	</script>
@@ -47,7 +47,7 @@ void setup() {
   child.removeAttribute("id");
   numSites = child.getAttributeCount();
   println("Number of first child attributes after remove: " + numSites);   
-  println("Does the 'id' attribute exist?:" +child.hasAttribute("id")); // prints flase;
+  println("Does the 'id' attribute exist?: " +child.hasAttribute("id")); // prints flase;
   println("Get url attribute: " +child.getAttribute("url", null, "anna")); // prints processing.org
 }
 </pre>
