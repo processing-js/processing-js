@@ -1705,12 +1705,12 @@
       "uniform mat4 projection;" +
       "uniform mat4 normalTransform;" +
 
-      "const int MAX_LIGHTS = 8;" +
       "uniform int lightCount;" +
       "uniform vec3 falloff;" +
 
+      // careful changing the order of these fields. Some cards 
+      // have issues with memory alignment
       "struct Light {" +
-      "  bool isOn;" +
       "  int type;" +
       "  vec3 color;" +
       "  vec3 position;" +
@@ -1719,24 +1719,49 @@
       "  vec3 halfVector;" +
       "  float concentration;" +
       "};" +
-      "uniform Light lights[MAX_LIGHTS];" +
+      
+      // nVidia cards have issues with arrays of structures
+      // so instead we create 8 instances of Light
+      "uniform Light lights0;" +
+      "uniform Light lights1;" +
+      "uniform Light lights2;" +
+      "uniform Light lights3;" +
+      "uniform Light lights4;" +
+      "uniform Light lights5;" +
+      "uniform Light lights6;" +
+      "uniform Light lights7;" +
+
+     // GLSL does not support switch
+      "Light getLight(int index){" +
+      "  if(index == 0) return lights0;" +
+      "  if(index == 1) return lights1;" +
+      "  if(index == 2) return lights2;" +
+      "  if(index == 3) return lights3;" +
+      "  if(index == 4) return lights4;" +
+      "  if(index == 5) return lights5;" +
+      "  if(index == 6) return lights6;" +
+      // some cards complain that not all paths return if we have 
+      // this last one in a conditional.
+      "  return lights7;" +
+      "}" +
 
       "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
       // Get the vector from the light to the vertex
       // Get the distance from the current vector to the light position
       "  float d = length( light.position - ecPos );" +
-      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + "  totalAmbient += light.color * attenuation;" +
+      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + 
+      "  totalAmbient += light.color * attenuation;" +
       "}" +
 
-      "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" +
+      "void DirectionalLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
       "  float powerfactor = 0.0;" +
-      "  float nDotVP = max(0.0, dot( vertNormal, light.position ));" +
-      "  float nDotVH = max(0.0, dot( vertNormal, normalize( light.position-ecPos )));" +
+      "  float nDotVP = max(0.0, dot( vertNormal, normalize(-light.position) ));" +
+      "  float nDotVH = max(0.0, dot( vertNormal, normalize(-light.position-ecPos )));" +
 
       "  if( nDotVP != 0.0 ){" +
       "    powerfactor = pow( nDotVH, shininess );" +
       "  }" +
-
+      
       "  col += light.color * nDotVP;" +
       "  spec += specular * powerfactor;" +
       "}" +
@@ -1778,7 +1803,7 @@
 
       // calculate the vector from the current vertex to the light.
       "  vec3 VP = light.position - ecPos; " +
-      "  vec3 ldir = normalize( light.direction );" +
+      "  vec3 ldir = normalize( -light.direction );" +
 
       // get the distance from the spotlight and the vertex
       "  float d = length( VP );" +
@@ -1790,12 +1815,14 @@
       "  float spotDot = dot( VP, ldir );" +
 
       // if the vertex falls inside the cone
-      "  if( spotDot < cos( light.angle ) ) {" +
-      "    spotAttenuation = pow( spotDot, light.concentration );" +
-      "  }" +
-      "  else{" +
+      // The following is failing on Windows systems
+      // removed until we find a workaround
+      //"  if( spotDot < cos( light.angle ) ) {" +
+      //"    spotAttenuation = pow( spotDot, light.concentration );" +
+      //"  }" +
+      //"  else{" +
       "    spotAttenuation = 1.0;" +
-      "  }" +
+      //"  }" +
       "  attenuation *= spotAttenuation;" +
 
       "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
@@ -1819,6 +1846,7 @@
       "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
 
       "  vec4 col = color;" +
+        
       "  if(color[0] == -1.0){" +
       "    col = aColor;" +
       "  }" +
@@ -1836,32 +1864,36 @@
       "  }" +
       "  else {" +
            // WebGL forces us to iterate over a constant value
-      "    for( int i = 0; i < MAX_LIGHTS; i++ ) {" +
+           // so we can't iterate using lightCount
+      "    for( int i = 0; i < 8; i++ ) {" +
+      "      Light l = getLight(i);" +
       
-      "      if(lights[i].isOn == false){" +
-      "        continue;" +
+      // We can stop iterating if we know we have gone past
+      // the number of lights which are on
+      "      if( i >= lightCount ){" +
+      "        break;" +
       "      }" +
       
-      "      if( lights[i].type == 0 ) {" +
-      "        AmbientLight( finalAmbient, ecPos, lights[i] );" +
+      "      if( l.type == 0 ) {" +
+      "        AmbientLight( finalAmbient, ecPos, l );" +
       "      }" +
-      "      else if( lights[i].type == 1 ) {" +
-      "        DirectionalLight( finalDiffuse,ecPos, finalSpecular, norm, lights[i] );" +
+      "      else if( l.type == 1 ) {" +
+      "        DirectionalLight( finalDiffuse, finalSpecular, norm, ecPos, l );" +
       "      }" +
-      "      else if( lights[i].type == 2 ) {" +
-      "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
+      "      else if( l.type == 2 ) {" +
+      "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, l );" +
       "      }" +
-      "      else if( lights[i].type == 3 ) {" +
-      "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" +
+      "      else {" +
+      "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, l );" +
       "      }" +
       "    }" +
 
       "   if( usingMat == false ) {" +
-      "    frontColor = vec4(  " +
-      "      vec3(col) * finalAmbient +" +
-      "      vec3(col) * finalDiffuse +" +
-      "      vec3(col) * finalSpecular," +
-      "      col[3] );" +
+      "     frontColor = vec4(" +
+      "       vec3(col) * finalAmbient +" +
+      "       vec3(col) * finalDiffuse +" +
+      "       vec3(col) * finalSpecular," +
+      "       col[3] );" +
       "   }" +
       "   else{" +
       "     frontColor = vec4( " +
@@ -1872,6 +1904,7 @@
       "       col[3] );" +
       "    }" +
       "  }" +
+      
       "  vTexture.xy = aTexture.xy;" +
       "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
       "}";
@@ -1939,7 +1972,7 @@
         }
       }
     }
-
+    
     /**
      * Sets a uniform int or int array in a program object to a particular
      * value. Before calling this function, ensure the correct
@@ -9274,9 +9307,10 @@
      * @param {int | float} r red or hue value
      * @param {int | float} g green or hue value
      * @param {int | float} b blue or hue value
-     * @param {int | float} x ignored
-     * @param {int | float} y ignored
-     * @param {int | float} z ignored
+     *
+     * @param {int | float} x
+     * @param {int | float} y
+     * @param {int | float} z
      *
      * @returns none
      *
@@ -9290,7 +9324,7 @@
         if (lightCount === PConstants.MAX_LIGHTS) {
           throw "can only create " + PConstants.MAX_LIGHTS + " lights";
         }
-
+        
         var pos = new PVector(x, y, z);
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
@@ -9298,10 +9332,9 @@
         view.mult(pos, pos);
 
         curContext.useProgram(programObject3D);
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 0);
-        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 0);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9342,19 +9375,17 @@
 
         curContext.useProgram(programObject3D);
 
-        // Less code than manually multiplying, but I'll fix
-        // this when I have more time.
-        var dir = [nx, ny, nz, 0.0000001];
-
+        // We need to multiply the direction by the model view matrix, but
+        // the mult function checks the w component of the vector, if it isn't
+        // present, it uses 1, so we use a very small value as a work around.
+        var dir = [nx, ny, nz, -0.00000000001];
         var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
+        view.set(modelView.array());
         view.mult(dir, dir);
-
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", [-dir[0], -dir[1], -dir[2]]);
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 1);
-        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
+        
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", [dir[0], -dir[1], dir[2]]);
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9481,10 +9512,9 @@
         view.mult(pos, pos);
 
         curContext.useProgram(programObject3D);
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 2);
-        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 2);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9552,21 +9582,19 @@
         view.apply(modelView.array());
         view.mult(pos, pos);
 
-        // transform the spotlight's direction
-        // need to find a solution for this one. Maybe manual mult?
-        var dir = [nx, ny, nz, 0.0000001];
-        view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
+        // We need to multiply the direction by the model view matrix, but
+        // the mult function checks the w component of the vector, if it isn't
+        // present, it uses 1, so we use a very small value as a work around.
+        var dir = [nx, ny, nz, -0.00000001];
+        view.set(modelView.array());
         view.mult(dir, dir);
 
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights[" + lightCount + "].color", [r / 255, g / 255, b / 255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights[" + lightCount + "].position", pos.array());
-        uniformf("lights.direction.3d." + lightCount, programObject3D, "lights[" + lightCount + "].direction", [dir[0], dir[1], dir[2]]);
-        uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights[" + lightCount + "].concentration", concentration);
-        uniformf("lights.angle.3d." + lightCount, programObject3D, "lights[" + lightCount + "].angle", angle);
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights[" + lightCount + "].type", 3);
-        uniformi("lights.isOn.3d." + lightCount, programObject3D, "lights[" + lightCount + "].isOn", true);
+        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
+        uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", [dir[0], -dir[1], dir[2]]);
+        uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
+        uniformf("lights.angle.3d." + lightCount, programObject3D, "lights" + lightCount + ".angle", angle);
+        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 3);
         uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
       }
     };
@@ -9831,8 +9859,6 @@
         if (doFill === true) {
           curContext.useProgram(programObject3D);
 
-          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
-
           uniformMatrix("model3d", programObject3D, "model", false, model.array());
           uniformMatrix("view3d", programObject3D, "view", false, view.array());
           uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
@@ -9843,6 +9869,7 @@
           // developers can start playing around with styles.
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
+
           uniformf("color3d", programObject3D, "color", fillStyle);
 
           // Create the normal transformation matrix
@@ -9864,9 +9891,9 @@
           vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
           vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
 
-          // Ugly hack. Can't simply disable the vertex attribute
-          // array. No idea why, so I'm passing in dummy data.
-          vertexAttribPointer("aColor3d", programObject3D, "aColor", 3, boxNormBuffer);
+          // Turn off per vertex colors
+          disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
+          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
           curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -10101,9 +10128,8 @@
           vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
           vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
 
-          // Ugly hack. Can't simply disable the vertex attribute
-          // array. No idea why, so I'm passing in dummy data.
-          vertexAttribPointer("aColor3d", programObject3D, "aColor", 3, sphereBuffer);
+          // Turn off per vertex colors
+          disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -16671,7 +16697,7 @@
           // Run void setup()
           if (processing.setup) {
             processing.setup();
-            // if any transforms were performed in setup reset to identify matrix so draw loop is unpoluted
+            // if any transforms were performed in setup reset to identify matrix so draw loop is unpolluted
             if (!curSketch.use3DContext) {
               curContext.setTransform(1, 0, 0, 1, 0, 0);
             }
