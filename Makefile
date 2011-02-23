@@ -124,7 +124,7 @@ package-sketch:
 	rm ${SKETCHOUTPUT}.src
 	echo "Created ${SKETCHOUTPUT}"
 
-api-only:
+api-only: create-release
 	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js > ./release/processing-api-${VERSION}.js
 	java -jar ${CLOSUREJAR} --js=./release/processing-api-${VERSION}.js \
                           --js_output_file=./release/processing-api-${VERSION}.min.js
