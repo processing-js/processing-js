@@ -1241,6 +1241,10 @@
     p.mouseScrolled   = undef;
     p.mouseOver       = undef;
     p.mouseOut        = undef; 
+    p.touchStart      = undef;
+    p.touchEnd        = undef;
+    p.touchMove       = undef;
+    p.touchCancel     = undef;
     p.key             = undef;
     p.keyCode         = undef;
     p.keyPressed      = function(){};  // needed to remove function checks
@@ -4073,14 +4077,14 @@
         this.children   = [];
         this.fullName   = arguments[0] || "";
         if (arguments[1]) {
-            this.name = arguments[1];
+          this.name = arguments[1];
         } else {
-            var index = this.fullName.indexOf(':');
-            if (index >= 0) {
-                this.name = this.fullName.substring(index + 1);
-            } else {
-                this.name = this.fullName;
-            }
+          var index = this.fullName.indexOf(':');
+          if (index >= 0) {
+            this.name = this.fullName.substring(index + 1);
+          } else {
+            this.name = this.fullName;
+          }
         }
         this.namespace = arguments[1];
         this.content   = "";
@@ -4122,9 +4126,7 @@
         this.systemID   = "";
         this.lineNr     = "";
         this.parent     = null;
-
       }
-      return this;
     };
     /**
      * XMLElement methods
@@ -4536,14 +4538,18 @@
 
         for (var l = 0, m = elementpath.attributes.length; l < m; l++) {
           tmpattrib    = elementpath.attributes[l];
-          xmlattribute = new XMLAttribute(tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType);
+          xmlattribute = new XMLAttribute(tmpattrib.getname,
+                                          tmpattrib.nodeName,
+                                          tmpattrib.namespaceURI,
+                                          tmpattrib.nodeValue,
+                                          tmpattrib.nodeType);
           xmlelement.attributes.push(xmlattribute);
         }
 
         for (var l = 0, m = elementpath.childNodes.length; l < m; l++) {
-          var node = elementpath.childNodes[l]; // lonnen - 'maybe?'
-          if(elementpath.childNodes[node].nodeType === 1) { //ELEMENT_NODE type
-            xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
+          var node = elementpath.childNodes[l];
+          if (node.nodeType === 1) { // ELEMENT_NODE type
+            xmlelement.children.push(xmlelement.parseChildrenRecursive(xmlelement, node));
           }
         }
         return xmlelement;
@@ -16011,9 +16017,19 @@
       }
       eventHandlers.push([elem, type, fn]);
     }
-
-    function updateMousePosition(curElement, event) {
-      var element = curElement, offsetX = 0, offsetY = 0;
+    
+    function detach(elem, type, fn) {
+      if (elem.removeEventListener) {
+        elem.removeEventListener(type, fn, false);
+      } else if (elem.detachEvent) {
+        elem.detachEvent("on" + type, fn);
+      }
+    }
+    
+    function calculateOffset(curElement, event) {
+      var element = curElement,
+        offsetX = 0,
+        offsetY = 0;
 
       p.pmouseX = p.mouseX;
       p.pmouseY = p.mouseY;
@@ -16039,12 +16055,150 @@
 
       offsetX += styleBorderLeft;
       offsetY += styleBorderTop;
-
+      
+      // Take into account any scrolling done
+      offsetX += window.pageXOffset;
+      offsetY += window.pageYOffset;
+      
+      return {'X':offsetX,'Y':offsetY};
+    }
+    
+    function updateMousePosition(curElement, event) {
+      var offset = calculateOffset(curElement, event);
+      
       // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
       // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
-      p.mouseX = event.pageX - offsetX;
-      p.mouseY = event.pageY - offsetY;
+      p.mouseX = event.pageX - offset.X;
+      p.mouseY = event.pageY - offset.Y;
     }
+    
+    // Return a TouchEvent with canvas-specific x/y co-ordinates
+    function addTouchEventOffset(t) {
+      var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]);
+      
+      for (i = 0; i < t.touches.length; i++) {
+        var touch = t.touches[i];
+        touch.offsetX = touch.pageX - offset.X;
+        touch.offsetY = touch.pageY - offset.Y;
+      }
+      for (i = 0; i < t.targetTouches.length; i++) {
+        var targetTouch = t.targetTouches[i];
+        targetTouch.offsetX = targetTouch.pageX - offset.X;
+        targetTouch.offsetY = targetTouch.pageY - offset.Y;
+      }
+      for (i = 0; i < t.changedTouches.length; i++) {
+        var changedTouch = t.changedTouches[i];
+        changedTouch.offsetX = changedTouch.pageX - offset.X;
+        changedTouch.offsetY = changedTouch.pageY - offset.Y;
+      }
+      
+      return t;
+    }
+    
+    //////////////////////////////////////////////////////////////////////////
+    // Touch event handling
+    //////////////////////////////////////////////////////////////////////////
+    
+    attach(curElement, "touchstart", function (t) {
+      // Removes unwanted behaviour of the canvas when touching canvas
+      curElement.setAttribute("style","-webkit-user-select: none");
+      curElement.setAttribute("onclick","void(0)");
+      curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
+      // Loop though eventHandlers and remove mouse listeners
+      for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
+        var elem = eventHandlers[i][0],
+            type = eventHandlers[i][1],
+            fn   = eventHandlers[i][2];
+        // Have this function remove itself from the eventHandlers list too
+        if (type === "mouseout" ||  type === "mousemove" ||
+            type === "mousedown" || type === "mouseup" ||
+            type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
+          detach(elem, type, fn);
+        }
+      }
+      
+      // If there are any native touch events defined in the sketch, connect all of them
+      // Otherwise, connect all of the emulated mouse events
+      if (p.touchStart !== undef || p.touchMove !== undef ||
+          p.touchEnd !== undef || p.touchCancel !== undef) {
+        attach(curElement, "touchstart", function(t) {
+          if (p.touchStart !== undef) {
+            t = addTouchEventOffset(t);
+            p.touchStart(t);
+          }
+        });
+        
+        attach(curElement, "touchmove", function(t) {
+          if (p.touchMove !== undef) {
+            t.preventDefault(); // Stop the viewport from scrolling
+            t = addTouchEventOffset(t);
+            p.touchMove(t);
+          }
+        });
+        
+        attach(curElement, "touchend", function(t) {
+          if (p.touchEnd !== undef) {
+            t = addTouchEventOffset(t);
+            p.touchEnd(t);
+          }
+        });
+        
+        attach(curElement, "touchcancel", function(t) {
+          if (p.touchCancel !== undef) {
+            t = addTouchEventOffset(t);
+            p.touchCancel(t);
+          }
+        });
+        
+      } else {
+        // Emulated touch start/mouse down event
+        attach(curElement, "touchstart", function(e) {
+          updateMousePosition(curElement, e.touches[0]);
+          
+          p.__mousePressed = true;
+          p.mouseDragging = false;
+          p.mouseButton = PConstants.LEFT;
+          
+          if (typeof p.mousePressed === "function") {
+            p.mousePressed();
+          }
+        });
+        
+        // Emulated touch move/mouse move event
+        attach(curElement, "touchmove", function(e) {
+          e.preventDefault();
+          updateMousePosition(curElement, e.touches[0]);
+          
+          if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
+            p.mouseMoved();
+          }
+          if (typeof p.mouseDragged === "function" && p.__mousePressed) {
+            p.mouseDragged();
+            p.mouseDragging = true;
+          }
+        });
+        
+        // Emulated touch up/mouse up event
+        attach(curElement, "touchend", function(e) {
+          p.__mousePressed = false;
+          
+          if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
+            p.mouseClicked();
+          }
+          
+          if (typeof p.mouseReleased === "function") {
+            p.mouseReleased();
+          }
+        });
+      }
+      
+      // Refire the touch start event we consumed in this function
+      curElement.dispatchEvent(t)
+    });
+    
+    //////////////////////////////////////////////////////////////////////////
+    // Mouse event handling
+    //////////////////////////////////////////////////////////////////////////
 
     attach(curElement, "mousemove", function(e) {
       updateMousePosition(curElement, e);
@@ -16557,52 +16711,53 @@
     // The names array contains the names of everything that is inside "p."
     // When something new is added to "p." it must also be added to this list.
     var names = [ /* this code is generated by jsglobals.js */
-      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix",
-      "arc", "arrayCopy", "asin", "atan", "atan2", "background", "beginCamera",
-      "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint",
-      "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
-      "blit_resize", "blue", "boolean", "box", "breakShape", "brightness",
-      "byte", "camera", "ceil", "char", "Character", "clear", "color",
-      "colorMode", "concat", "console", "constrain", "copy", "cos", "createFont",
-      "createGraphics", "createImage", "cursor", "curve", "curveDetail",
-      "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
-      "defaultColor", "degrees", "directionalLight", "disableContextMenu",
-      "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu",
-      "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
-      "fill", "filter", "filter_bilinear", "filter_new_scanline", "float",
-      "floor", "focused", "frameCount", "frameRate", "frustum", "get",
-      "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour", "hue",
-      "image", "imageMode", "Import", "int", "intersect", "join", "key",
-      "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
-      "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
-      "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape",
-      "loadStrings", "log", "loop", "mag", "map", "match", "matchAll", "max",
-      "millis", "min", "minute", "mix", "modelX", "modelY", "modelZ", "modes",
-      "month", "mouseButton", "mouseClicked", "mouseDragged", "mouseMoved",
-      "mouseOut", "mouseOver", "mousePressed", "mouseReleased", "mouseScroll",
-      "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
-      "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
-      "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
-      "parseBoolean", "peg", "perspective", "PFont", "PImage", "pixels",
-      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
-      "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
-      "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
-      "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
-      "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
-      "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ",
-      "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
-      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
-      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth",
-      "sort", "specular", "sphere", "sphereDetail", "splice", "split",
-      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
-      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
-      "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
-      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
-      "translate", "triangle", "trim", "unbinary", "unhex", "updatePixels",
-      "use3DContext", "vertex", "width", "XMLElement", "year", "__equals",
-      "__frameRate", "__hashCode", "__int_cast", "__keyPressed",
-      "__mousePressed", "__printStackTrace", "__replace", "__replaceAll",
-      "__replaceFirst", "__toCharArray"];
+      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix", 
+      "arc", "arrayCopy", "asin", "atan", "atan2", "background", "beginCamera", 
+      "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint", 
+      "bezierTangent", "bezierVertex", "binary", "blend", "blendColor", 
+      "blit_resize", "blue", "boolean", "box", "breakShape", "brightness", 
+      "byte", "camera", "ceil", "char", "Character", "clear", "color", 
+      "colorMode", "concat", "console", "constrain", "copy", "cos", "createFont", 
+      "createGraphics", "createImage", "cursor", "curve", "curveDetail", 
+      "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day", 
+      "defaultColor", "degrees", "directionalLight", "disableContextMenu", 
+      "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu", 
+      "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals", 
+      "fill", "filter", "filter_bilinear", "filter_new_scanline", "float", 
+      "floor", "focused", "frameCount", "frameRate", "frustum", "get", 
+      "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour", "hue", 
+      "image", "imageMode", "Import", "int", "intersect", "join", "key", 
+      "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor", 
+      "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes", 
+      "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape", 
+      "loadStrings", "log", "loop", "mag", "map", "match", "matchAll", "max", 
+      "millis", "min", "minute", "mix", "modelX", "modelY", "modelZ", "modes", 
+      "month", "mouseButton", "mouseClicked", "mouseDragged", "mouseMoved", 
+      "mouseOut", "mouseOver", "mousePressed", "mouseReleased", "mouseScroll", 
+      "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs", 
+      "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights", 
+      "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho", 
+      "parseBoolean", "peg", "perspective", "PFont", "PImage", "pixels", 
+      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point", 
+      "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera", 
+      "println", "printMatrix", "printProjection", "PShape", "PShapeSVG", 
+      "pushMatrix", "pushStyle", "quad", "radians", "random", "Random", 
+      "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage", 
+      "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ", 
+      "round", "saturation", "save", "saveFrame", "saveStrings", "scale", 
+      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape", 
+      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth", 
+      "sort", "specular", "sphere", "sphereDetail", "splice", "split", 
+      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke", 
+      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text", 
+      "textAlign", "textAscent", "textDescent", "textFont", "textLeading", 
+      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", 
+      "touchCancel", "touchEnd", "touchMove", "touchStart", "translate", 
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
+      "vertex", "width", "XMLElement", "year", "__equals", "__frameRate", 
+      "__hashCode", "__int_cast", "__keyPressed", "__mousePressed", 
+      "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst", 
+      "__toCharArray"];
 
     var members = {};
     var i, l;
