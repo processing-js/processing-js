@@ -16027,7 +16027,9 @@
     }
     
     function calculateOffset(curElement, event) {
-      var element = curElement, offset = { "X":0, "Y":0};
+      var element = curElement,
+        offsetX = 0,
+        offsetY = 0;
 
       p.pmouseX = p.mouseX;
       p.pmouseY = p.mouseY;
@@ -16035,36 +16037,37 @@
       // Find element offset
       if (element.offsetParent) {
         do {
-          offset.X += element.offsetLeft;
-          offset.Y += element.offsetTop;
+          offsetX += element.offsetLeft;
+          offsetY += element.offsetTop;
         } while ((element = element.offsetParent));
       }
 
       // Find Scroll offset
       element = curElement;
       do {
-        offset.X -= element.scrollLeft || 0;
-        offset.Y -= element.scrollTop || 0;
+        offsetX -= element.scrollLeft || 0;
+        offsetY -= element.scrollTop || 0;
       } while ((element = element.parentNode));
 
       // Add padding and border style widths to offset
-      offset.X += stylePaddingLeft;
-      offset.Y += stylePaddingTop;
+      offsetX += stylePaddingLeft;
+      offsetY += stylePaddingTop;
 
-      offset.X += styleBorderLeft;
-      offset.Y += styleBorderTop;
+      offsetX += styleBorderLeft;
+      offsetY += styleBorderTop;
       
       // Take into account any scrolling done
-      offset.X += window.pageXOffset;
-      offset.Y += window.pageYOffset;
+      offsetX += window.pageXOffset;
+      offsetY += window.pageYOffset;
       
-      return offset;
+      return {'X':offsetX,'Y':offsetY};
     }
     
     function updateMousePosition(curElement, event) {
       var offset = calculateOffset(curElement, event);
       
       // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
+      // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
       p.mouseX = event.pageX - offset.X;
       p.mouseY = event.pageY - offset.Y;
     }
@@ -16074,16 +16077,19 @@
       var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]);
       
       for (i = 0; i < t.touches.length; i++) {
-        t.touches[i].offsetX = t.touches[i].pageX - offset.X;
-        t.touches[i].offsetY = t.touches[i].pageY - offset.Y;
+        var touch = t.touches[i];
+        touch.offsetX = touch.pageX - offset.X;
+        touch.offsetY = touch.pageY - offset.Y;
       }
       for (i = 0; i < t.targetTouches.length; i++) {
-        t.targetTouches[i].offsetX = t.targetTouches[i].pageX - offset.X;
-        t.targetTouches[i].offsetY = t.targetTouches[i].pageY - offset.Y;
+        var targetTouch = t.targetTouches[i];
+        targetTouch.offsetX = targetTouch.pageX - offset.X;
+        targetTouch.offsetY = targetTouch.pageY - offset.Y;
       }
       for (i = 0; i < t.changedTouches.length; i++) {
-        t.changedTouches[i].offsetX = t.changedTouches[i].pageX - offset.X;
-        t.changedTouches[i].offsetY = t.changedTouches[i].pageY - offset.Y;
+        var changedTouch = t.changedTouches[i];
+        changedTouch.offsetX = changedTouch.pageX - offset.X;
+        changedTouch.offsetY = changedTouch.pageY - offset.Y;
       }
       
       return t;
@@ -16104,24 +16110,26 @@
             type = eventHandlers[i][1],
             fn   = eventHandlers[i][2];
         // Have this function remove itself from the eventHandlers list too
-        if (type === "mouseout" || type === "mousemove" || type === "mousedown" || type === "mouseup" || 
-            type === "DOMMouseScroll"  || type === "mousewheel" || type === "touchstart") {
+        if (type === "mouseout" ||  type === "mousemove" ||
+            type === "mousedown" || type === "mouseup" ||
+            type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
           detach(elem, type, fn);
         }
       }
       
       // If there are any native touch events defined in the sketch, connect all of them
       // Otherwise, connect all of the emulated mouse events
-      if (p.touchStart != undef || p.touchMove != undef || p.touchEnd != undef || p.touchCancel != undef) {
+      if (p.touchStart !== undef || p.touchMove !== undef ||
+          p.touchEnd !== undef || p.touchCancel !== undef) {
         attach(curElement, "touchstart", function(t) {
-          if (p.touchStart != undef) {
+          if (p.touchStart !== undef) {
             t = addTouchEventOffset(t);
             p.touchStart(t);
           }
         });
         
         attach(curElement, "touchmove", function(t) {
-          if (p.touchMove != undef) {
+          if (p.touchMove !== undef) {
             t.preventDefault(); // Stop the viewport from scrolling
             t = addTouchEventOffset(t);
             p.touchMove(t);
@@ -16129,14 +16137,14 @@
         });
         
         attach(curElement, "touchend", function(t) {
-          if (p.touchEnd != undef) {
+          if (p.touchEnd !== undef) {
             t = addTouchEventOffset(t);
             p.touchEnd(t);
           }
         });
         
         attach(curElement, "touchcancel", function(t) {
-          if (p.touchCancel != undef) {
+          if (p.touchCancel !== undef) {
             t = addTouchEventOffset(t);
             p.touchCancel(t);
           }
