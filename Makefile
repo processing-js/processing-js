@@ -127,8 +127,7 @@ package-sketch:
 api-only:
 	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js > ./release/processing-api-${VERSION}.js
 	java -jar ${CLOSUREJAR} --js=./release/processing-api-${VERSION}.js \
-                          --js_output_file=./release/processing-api-${VERSION}.min.js \
-                          --compilation_level ADVANCED_OPTIMIZATIONS
+                          --js_output_file=./release/processing-api-${VERSION}.min.js
 
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
