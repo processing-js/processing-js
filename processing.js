@@ -1736,7 +1736,7 @@
       "  if(index == 4) return lights4;" +
       "  if(index == 5) return lights5;" +
       "  if(index == 6) return lights6;" +
-      "  if(index == 7) return lights7;" +
+      "  return lights7;" +
       "}" +
 
       "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
@@ -1809,12 +1809,14 @@
       "  float spotDot = dot( VP, ldir );" +
 
       // if the vertex falls inside the cone
-      "  if( spotDot < cos( light.angle ) ) {" +
-      "    spotAttenuation = pow( spotDot, light.concentration );" +
-      "  }" +
-      "  else{" +
+      // The following is failing on Windows systems
+      // removed until we find a workaround
+      //"  if( spotDot < cos( light.angle ) ) {" +
+      //"    spotAttenuation = pow( spotDot, light.concentration );" +
+      //"  }" +
+      //"  else{" +
       "    spotAttenuation = 1.0;" +
-      "  }" +
+      //"  }" +
       "  attenuation *= spotAttenuation;" +
 
       "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
@@ -1875,7 +1877,7 @@
       "      else if( l.type == 2 ) {" +
       "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, l );" +
       "      }" +
-      "      else if( l.type == 3 ) {" +
+      "      else {" +
       "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, l );" +
       "      }" +
       "    }" +
@@ -16537,7 +16539,7 @@
           // Run void setup()
           if (processing.setup) {
             processing.setup();
-            // if any transforms were performed in setup reset to identify matrix so draw loop is unpoluted
+            // if any transforms were performed in setup reset to identify matrix so draw loop is unpolluted
             if (!curSketch.use3DContext) {
               curContext.setTransform(1, 0, 0, 1, 0, 0);
             }
