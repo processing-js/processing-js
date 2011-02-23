@@ -1736,6 +1736,8 @@
       "  if(index == 4) return lights4;" +
       "  if(index == 5) return lights5;" +
       "  if(index == 6) return lights6;" +
+      // some cards complain that not all paths return if we have 
+      // this last one in a conditional.
       "  return lights7;" +
       "}" +
 
