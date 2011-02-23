@@ -9067,186 +9067,195 @@
     * @see createGraphics
     * @see screen
     */
-    p.size = function size(aWidth, aHeight, aMode) {
-      if (aMode && (aMode === PConstants.WEBGL)) {
-        // get the 3D rendering context
-        try {
-          // If the HTML <canvas> dimensions differ from the
-          // dimensions specified in the size() call in the sketch, for
-          // 3D sketches, browsers will either not render or render the
-          // scene incorrectly. To fix this, we need to adjust the
-          // width and height attributes of the canvas.
-          if (curElement.width !== aWidth || curElement.height !== aHeight) {
-            curElement.setAttribute("width", aWidth);
-            curElement.setAttribute("height", aHeight);
+    p.size = (function() {
+      var size3DCalled = false;
+      
+      return function size(aWidth, aHeight, aMode) {
+        if (aMode && (aMode === PConstants.WEBGL)) {
+          if (size3DCalled) {
+            throw "Multiple calls to size() for 3D renders are not allowed.";
           }
-          curContext = curElement.getContext("experimental-webgl");
-          p.use3DContext = true;
-          canTex = curContext.createTexture(); // texture
-          textTex = curContext.createTexture(); // texture
-        } catch(e_size) {
-          Processing.debug(e_size);
-        }
-
-        if (!curContext) {
-          throw "WebGL context is not supported on this browser.";
+          size3DCalled = true;
+          
+          // get the 3D rendering context
+          try {
+            // If the HTML <canvas> dimensions differ from the
+            // dimensions specified in the size() call in the sketch, for
+            // 3D sketches, browsers will either not render or render the
+            // scene incorrectly. To fix this, we need to adjust the
+            // width and height attributes of the canvas.
+            if (curElement.width !== aWidth || curElement.height !== aHeight) {
+              curElement.setAttribute("width", aWidth);
+              curElement.setAttribute("height", aHeight);
+            }
+            curContext = curElement.getContext("experimental-webgl");
+            p.use3DContext = true;
+            canTex = curContext.createTexture(); // texture
+            textTex = curContext.createTexture(); // texture
+          } catch(e_size) {
+            Processing.debug(e_size);
+          }
+  
+          if (!curContext) {
+            throw "WebGL context is not supported on this browser.";
+          } else {
+            for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
+              sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
+              cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
+            }
+            // Set defaults
+            curContext.viewport(0, 0, curElement.width, curElement.height);
+            curContext.enable(curContext.DEPTH_TEST);
+            curContext.enable(curContext.BLEND);
+            curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
+            refreshBackground(); // sets clearColor default;
+  
+            // Create the program objects to render 2D (points, lines) and
+            // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
+            // lighting calculations could be ommitted from that program object.
+            programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
+  
+            // set the defaults
+            curContext.useProgram(programObject2D);
+            p.strokeWeight(1.0);
+  
+            programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
+            programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
+  
+            // Now that the programs have been compiled, we can set the default
+            // states for the lights.
+            curContext.useProgram(programObject3D);
+  
+            // assume we aren't using textures by default
+            uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
+            p.lightFalloff(1, 0, 0);
+            p.shininess(1);
+            p.ambient(255, 255, 255);
+            p.specular(0, 0, 0);
+  
+            // Create buffers for 3D primitives
+            boxBuffer = curContext.createBuffer();
+            curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
+            curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
+  
+            boxNormBuffer = curContext.createBuffer();
+            curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
+            curContext.bufferData(curContext.ARRAY_BUFFER, boxNorms, curContext.STATIC_DRAW);
+  
+            boxOutlineBuffer = curContext.createBuffer();
+            curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
+            curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
+  
+            // used to draw the rectangle and the outline
+            rectBuffer = curContext.createBuffer();
+            curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
+            curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
+  
+            rectNormBuffer = curContext.createBuffer();
+            curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
+            curContext.bufferData(curContext.ARRAY_BUFFER, rectNorms, curContext.STATIC_DRAW);
+  
+            // The sphere vertices are specified dynamically since the user
+            // can change the level of detail. Everytime the user does that
+            // using sphereDetail(), the new vertices are calculated.
+            sphereBuffer = curContext.createBuffer();
+  
+            lineBuffer = curContext.createBuffer();
+  
+            // Shape buffers
+            fillBuffer = curContext.createBuffer();
+            fillColorBuffer = curContext.createBuffer();
+            strokeColorBuffer = curContext.createBuffer();
+            shapeTexVBO = curContext.createBuffer();
+  
+            pointBuffer = curContext.createBuffer();
+            curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
+            curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0, 0, 0]), curContext.STATIC_DRAW);
+  
+            textBuffer = curContext.createBuffer();
+            curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
+            curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
+  
+            textureBuffer = curContext.createBuffer();
+            curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
+            curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
+  
+            indexBuffer = curContext.createBuffer();
+            curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,2,3,0]), curContext.STATIC_DRAW);
+  
+            cam = new PMatrix3D();
+            cameraInv = new PMatrix3D();
+            forwardTransform = new PMatrix3D();
+            reverseTransform = new PMatrix3D();
+            modelView = new PMatrix3D();
+            modelViewInv = new PMatrix3D();
+            projection = new PMatrix3D();
+            p.camera();
+            p.perspective();
+            forwardTransform = modelView;
+            reverseTransform = modelViewInv;
+  
+            userMatrixStack = new PMatrixStack();
+            // used by both curve and bezier, so just init here
+            curveBasisMatrix = new PMatrix3D();
+            curveToBezierMatrix = new PMatrix3D();
+            curveDrawMatrix = new PMatrix3D();
+            bezierDrawMatrix = new PMatrix3D();
+            bezierBasisInverse = new PMatrix3D();
+            bezierBasisMatrix = new PMatrix3D();
+            bezierBasisMatrix.set(-1, 3, -3, 1, 3, -6, 3, 0, -3, 3, 0, 0, 1, 0, 0, 0);
+          }
+          p.stroke(0);
+          p.fill(255);
         } else {
-          for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
-            sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
-            cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
+          if (curContext === undef) {
+            // size() was called without p.init() default context, ie. p.createGraphics()
+            curContext = curElement.getContext("2d");
+            p.use3DContext = false;
+            userMatrixStack = new PMatrixStack();
+            modelView = new PMatrix2D();
           }
-          // Set defaults
-          curContext.viewport(0, 0, curElement.width, curElement.height);
-          curContext.enable(curContext.DEPTH_TEST);
-          curContext.enable(curContext.BLEND);
-          curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
-          refreshBackground(); // sets clearColor default;
-
-          // Create the program objects to render 2D (points, lines) and
-          // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
-          // lighting calculations could be ommitted from that program object.
-          programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
-
-          // set the defaults
-          curContext.useProgram(programObject2D);
-          p.strokeWeight(1.0);
-
-          programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
-          programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
-
-          // Now that the programs have been compiled, we can set the default
-          // states for the lights.
-          curContext.useProgram(programObject3D);
-
-          // assume we aren't using textures by default
-          uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
-          p.lightFalloff(1, 0, 0);
-          p.shininess(1);
-          p.ambient(255, 255, 255);
-          p.specular(0, 0, 0);
-
-          // Create buffers for 3D primitives
-          boxBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
-
-          boxNormBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, boxNorms, curContext.STATIC_DRAW);
-
-          boxOutlineBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
-
-          // used to draw the rectangle and the outline
-          rectBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
-
-          rectNormBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, rectNorms, curContext.STATIC_DRAW);
-
-          // The sphere vertices are specified dynamically since the user
-          // can change the level of detail. Everytime the user does that
-          // using sphereDetail(), the new vertices are calculated.
-          sphereBuffer = curContext.createBuffer();
-
-          lineBuffer = curContext.createBuffer();
-
-          // Shape buffers
-          fillBuffer = curContext.createBuffer();
-          fillColorBuffer = curContext.createBuffer();
-          strokeColorBuffer = curContext.createBuffer();
-          shapeTexVBO = curContext.createBuffer();
-
-          pointBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0, 0, 0]), curContext.STATIC_DRAW);
-
-          textBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
-
-          textureBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
-
-          indexBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
-          curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,2,3,0]), curContext.STATIC_DRAW);
-
-          cam = new PMatrix3D();
-          cameraInv = new PMatrix3D();
-          forwardTransform = new PMatrix3D();
-          reverseTransform = new PMatrix3D();
-          modelView = new PMatrix3D();
-          modelViewInv = new PMatrix3D();
-          projection = new PMatrix3D();
-          p.camera();
-          p.perspective();
-          forwardTransform = modelView;
-          reverseTransform = modelViewInv;
-
-          userMatrixStack = new PMatrixStack();
-          // used by both curve and bezier, so just init here
-          curveBasisMatrix = new PMatrix3D();
-          curveToBezierMatrix = new PMatrix3D();
-          curveDrawMatrix = new PMatrix3D();
-          bezierDrawMatrix = new PMatrix3D();
-          bezierBasisInverse = new PMatrix3D();
-          bezierBasisMatrix = new PMatrix3D();
-          bezierBasisMatrix.set(-1, 3, -3, 1, 3, -6, 3, 0, -3, 3, 0, 0, 1, 0, 0, 0);
         }
-        p.stroke(0);
-        p.fill(255);
-      } else {
-        if (curContext === undef) {
-          // size() was called without p.init() default context, ie. p.createGraphics()
-          curContext = curElement.getContext("2d");
-          p.use3DContext = false;
-          userMatrixStack = new PMatrixStack();
-          modelView = new PMatrix2D();
+  
+        // The default 2d context has already been created in the p.init() stage if
+        // a 3d context was not specified. This is so that a 2d context will be
+        // available if size() was not called.
+        var props = {
+          fillStyle: curContext.fillStyle,
+          strokeStyle: curContext.strokeStyle,
+          lineCap: curContext.lineCap,
+          lineJoin: curContext.lineJoin
+        };
+        // remove the style width and height properties to ensure that the canvas gets set to
+        // aWidth and aHeight coming in
+        if (curElement.style.length > 0 ) {
+          curElement.style.removeProperty("width");
+          curElement.style.removeProperty("height");
         }
-      }
-
-      // The default 2d context has already been created in the p.init() stage if
-      // a 3d context was not specified. This is so that a 2d context will be
-      // available if size() was not called.
-      var props = {
-        fillStyle: curContext.fillStyle,
-        strokeStyle: curContext.strokeStyle,
-        lineCap: curContext.lineCap,
-        lineJoin: curContext.lineJoin
+  
+        curElement.width = p.width = aWidth || 100;
+        curElement.height = p.height = aHeight || 100;
+  
+        for (var j in props) {
+          if (props) {
+            curContext[j] = props[j];
+          }
+        }
+        
+        // Reset the text style. This is a terrible hack, only because of how 3D contexts are initialized
+        this.textSize(curTextSize);
+        
+        // redraw the background if background was called before size
+        refreshBackground();
+  
+        // set 5% for pixels to cache (or 1000)
+        maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
+  
+        // Externalize the context
+        p.externals.context = curContext;
       };
-      // remove the style width and height properties to ensure that the canvas gets set to
-      // aWidth and aHeight coming in
-      if (curElement.style.length > 0 ) {
-        curElement.style.removeProperty("width");
-        curElement.style.removeProperty("height");
-      }
-
-      curElement.width = p.width = aWidth || 100;
-      curElement.height = p.height = aHeight || 100;
-
-      for (var j in props) {
-        if (props) {
-          curContext[j] = props[j];
-        }
-      }
-      
-      // Reset the text style. This is a terrible hack, only because of how 3D contexts are initialized
-      this.textSize(curTextSize);
-      
-      // redraw the background if background was called before size
-      refreshBackground();
-
-      // set 5% for pixels to cache (or 1000)
-      maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
-
-      // Externalize the context
-      p.externals.context = curContext;
-    };
+    })();
 
     ////////////////////////////////////////////////////////////////////////////
     // Lights
