@@ -1203,9 +1203,7 @@
     p.externals = {
       canvas:  curElement,
       context: undef,
-      sketch:  undef,
-      onblur:  function() {},
-      onfocus: function() {}
+      sketch:  undef
     };
 
     p.name            = 'Processing.js Instance'; // Set Processing defaults / environment variables
@@ -1218,8 +1216,8 @@
      * often used when you want to warn people they need to click on the
      * browser before it will work.
     */
-    p.focused         =  false;
-    p.breakShape    = false;
+    p.focused         = false;
+    p.breakShape      = false;
 
     // Glyph path storage for textFonts
     p.glyphTable      = {};
@@ -16435,27 +16433,27 @@
       // the onfocus and onblur events are handled in two parts.
       // 1) the p.focused property is handled per sketch
       curElement.onfocus = function() {
-        p.focused=true;
+        p.focused = true;
       };
 
       curElement.onblur = function() {
-        p.focused=false;
+        p.focused = false;
       };
 
       // 2) looping status is handled per page, based on the pauseOnBlur @pjs directive
       if (curSketch.options.pauseOnBlur) {
-        window.addEventListener('focus', function() {
+        attach(window, 'focus', function() {
           if (doLoop) {
             p.loop();
           }
-        }, false);
+        });
 
-        window.addEventListener('blur', function() {
+        attach(window, 'blur', function() {
           if (doLoop && loopStarted) {
             p.noLoop();
             doLoop = true; // make sure to keep this true after the noLoop call
           }
-        }, false);
+        });
       }
 
       if (!curSketch.use3DContext) {
