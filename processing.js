@@ -16433,13 +16433,9 @@
         };
       }
 
-      keyTrigger = curElement;
-      
       // if keyboard events should be handled globally, the listeners should
       // be bound to the document window, rather than to the current canvas
-      if (curSketch.options.globalKeyEvents) {
-        keyTrigger = window;
-      }
+      keyTrigger = curSketch.options.globalKeyEvents ? window : curElement;
 
       attach(keyTrigger, "keydown", function(e) {
         p.keyCode = e.keyCode;
