@@ -4536,14 +4536,18 @@
 
         for (var l = 0, m = elementpath.attributes.length; l < m; l++) {
           tmpattrib    = elementpath.attributes[l];
-          xmlattribute = new XMLAttribute(tmpattrib.getname , tmpattrib.nodeName, tmpattrib.namespaceURI , tmpattrib.nodeValue , tmpattrib.nodeType);
+          xmlattribute = new XMLAttribute(tmpattrib.getname,
+                                          tmpattrib.nodeName,
+                                          tmpattrib.namespaceURI,
+                                          tmpattrib.nodeValue,
+                                          tmpattrib.nodeType);
           xmlelement.attributes.push(xmlattribute);
         }
 
         for (var l = 0, m = elementpath.childNodes.length; l < m; l++) {
-          var node = elementpath.childNodes[l]; // lonnen - 'maybe?'
-          if(elementpath.childNodes[node].nodeType === 1) { //ELEMENT_NODE type
-            xmlelement.children.push( xmlelement.parseChildrenRecursive(xmlelement, elementpath.childNodes[node]));
+          var node = elementpath.childNodes[l];
+          if (node.nodeType === 1) { // ELEMENT_NODE type
+            xmlelement.children.push(xmlelement.parseChildrenRecursive(xmlelement, node));
           }
         }
         return xmlelement;
