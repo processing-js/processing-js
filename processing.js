@@ -16137,8 +16137,7 @@
     
     // In order to catch key events in a canvas, it needs to be "specially focusable",
     // by assigning it a tabindex. If no tabindex is specified on-page, set this to 0.
-    // (this value was chosen after consultation with an accessibility expert)
-    if(!curElement.getAttribute("tabindex")) {
+    if (!curElement.getAttribute("tabindex")) {
       curElement.setAttribute("tabindex", 0);
     }
 
@@ -16389,30 +16388,6 @@
       }
     }
 
-    attach(curElement, "keydown", function(e) {
-      p.keyCode = e.keyCode;
-      p.__keyPressed = true;
-      p.key = keyCodeMap(e.keyCode, e.shiftKey);
-      if (p.key !== PConstants.CODED) {
-        p.key = charCodeMap(e.keyCode, e.shiftKey);
-      }
-      keyFunc(e, "keydown");
-    });
-
-    attach(curElement, "keypress", function (e) {
-      keyFunc(e, "keypress");
-    });
-
-    attach(curElement, "keyup", function(e) {
-      p.keyCode = e.keyCode;
-      p.__keyPressed = false;
-      p.key = keyCodeMap(e.keyCode, e.shiftKey);
-      if (p.key !== PConstants.CODED) {
-        p.key = charCodeMap(e.keyCode, e.shiftKey);
-      }
-      keyFunc(e, "keyup");
-    });
-
     // Place-holder for debugging function
     Processing.debug = function(e) {};
 
@@ -16457,6 +16432,38 @@
           }
         };
       }
+
+      keyTrigger = curElement;
+      
+      // if keyboard events should be handled globally, the listeners should
+      // be bound to the document window, rather than to the current canvas
+      if (curSketch.options.globalKeyEvents) {
+        keyTrigger = window;
+      }
+
+      attach(keyTrigger, "keydown", function(e) {
+        p.keyCode = e.keyCode;
+        p.__keyPressed = true;
+        p.key = keyCodeMap(e.keyCode, e.shiftKey);
+        if (p.key !== PConstants.CODED) {
+          p.key = charCodeMap(e.keyCode, e.shiftKey);
+        }
+        keyFunc(e, "keydown");
+      });
+
+      attach(keyTrigger, "keypress", function (e) {
+        keyFunc(e, "keypress");
+      });
+
+      attach(keyTrigger, "keyup", function(e) {
+        p.keyCode = e.keyCode;
+        p.__keyPressed = false;
+        p.key = keyCodeMap(e.keyCode, e.shiftKey);
+        if (p.key !== PConstants.CODED) {
+          p.key = charCodeMap(e.keyCode, e.shiftKey);
+        }
+        keyFunc(e, "keyup");
+      });
 
       if (!curSketch.use3DContext) {
         // Setup default 2d canvas context.
@@ -17971,6 +17978,8 @@
             sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
             sketch.options.pauseOnBlur = value === "true";
+          } else if (key === "globalKeyEvents") {
+            sketch.options.globalKeyEvents = value === "true";
           } else {
             sketch.options[key] = value;
           }
@@ -18300,7 +18309,8 @@
     this.options = {
       isTransparent: false,
       crispLines: false,
-      pauseOnBlur: false
+      pauseOnBlur: false,
+      globalKeyEvents: false
     };
     this.imageCache = {
       pending: 0,
