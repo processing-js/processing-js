@@ -1320,9 +1320,9 @@
         mouseDragging = false,
         curColorMode = PConstants.RGB,
         curTint = null,
-        curTextSize,
-        curTextFont,
-        curTextLeading,
+        curTextSize = 12,
+        curTextFont = {name: "\"Arial\", sans-serif", origName: "Arial"},
+        curTextLeading = 14,
         getLoaded = false,
         start = new Date().getTime(),
         timeSinceLastFPS = start,
@@ -9234,7 +9234,10 @@
           curContext[j] = props[j];
         }
       }
-
+      
+      // Reset the text style. This is a terrible hack, only because of how 3D contexts are initialized
+      this.textSize(curTextSize);
+      
       // redraw the background if background was called before size
       refreshBackground();
 
@@ -16641,20 +16644,11 @@
 
       // Sets all of the Processing defaults. Called before setup() in executeSketch()
       var setDefaults = function(processing) {
-        // Default size in P5 is 100x100, but we need to choose the correct context, 2D or 3D
-        if (processing.use3DContext) {
-          processing.size(100, 100, processing.P3D);
-        } else {
+        // Default size in P5 is 100x100 with a light gray background, but only set this for 2D
+        if (!processing.use3DContext) {
           processing.size(100, 100);
+          processing.background(204, 204, 204);
         }
-        
-        // Default background color in P5, light gray
-        processing.background(204, 204, 204);
-        
-        // Default text font/size in P5 is Arial 12pt, with 14pt leader
-        var defaultFont = processing.loadFont("Arial");
-        processing.textFont(defaultFont, 12);
-        processing.textLeading(14);
       };
 
       var executeSketch = function(processing) {
