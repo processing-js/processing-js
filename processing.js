@@ -17090,8 +17090,8 @@
 
       if(this.baseClassName) {
         result += "var $super = { $upcast: " + selfId + " };\n";
-        result += "function $superCstr(){" + this.baseClassName + ".apply($super,arguments);" +
-          "if(!('$self' in $super)) $p.extendClassChain($super)}\n";
+        result += "function $superCstr(){" + oldContext({name: this.baseClassName}) + 
+          ".apply($super,arguments);if(!('$self' in $super)) $p.extendClassChain($super)}\n";
       } else {
         result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
       }
