@@ -7433,7 +7433,7 @@
     p.exit = function exit() {
       window.clearInterval(looping);
 
-      Processing.removeInstance(p.externals.canvas.id);
+      removeInstance(p.externals.canvas.id);
 
       // Step through the libraries to detach them
       for (var lib in Processing.lib) {
@@ -13488,8 +13488,7 @@
           return obj;
         }
       };
-      
-      //Processing.addInstance(pg); // TODO: this function does not exist in this scope
+
       return pg;
     };
 
@@ -16680,6 +16679,9 @@
         }
       };
 
+      // Only store an instance of non-createGraphics instances.
+      addInstance(this);
+
       // The parser adds custom methods to the processing context
       // this renames p to processing so these methods will run
       executeSketch(p);
@@ -16689,8 +16691,7 @@
       curSketch = new Processing.Sketch();
       curSketch.options.isTransparent = true;
     }
-
-  }
+  }; // Processing() ends
 
   Processing.prototype = defaultScope;
 
@@ -18411,25 +18412,26 @@
     }
   };
 
-  // Store Processing instances
+  // Store Processing instances. Only Processing.instances,
+  // Processing.getInstanceById are exposed.
   Processing.instances = [];
-  Processing.instanceIds = {};
+  var processingInstanceIds = {};
 
-  Processing.removeInstance = function(id) {
-    Processing.instances.splice(Processing.instanceIds[id], 1);
-    delete Processing.instanceIds[id];
+  var removeInstance = function(id) {
+    Processing.instances.splice(processingInstanceIds[id], 1);
+    delete processingInstanceIds[id];
   };
 
-  Processing.addInstance = function(processing) {
+  var addInstance = function(processing) {
     if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
       processing.externals.canvas.id = "__processing" + Processing.instances.length;
     }
-    Processing.instanceIds[processing.externals.canvas.id] = Processing.instances.length;
+    processingInstanceIds[processing.externals.canvas.id] = Processing.instances.length;
     Processing.instances.push(processing);
   };
 
   Processing.getInstanceById = function(name) {
-    return Processing.instances[Processing.instanceIds[name]];
+    return Processing.instances[processingInstanceIds[name]];
   };
 
   Processing.Sketch = function(attachFunction) {
@@ -18611,7 +18613,7 @@
           if (loaded === sourcesCount) {
             if (errors.length === 0) {
               try {
-                Processing.addInstance(new Processing(canvas, code.join("\n")));
+                return new Processing(canvas, code.join("\n"));
               } catch(e) {
                 Processing.logger.log("Unable to execute pjs sketch: " + e);
               }
