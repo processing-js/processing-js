@@ -5260,7 +5260,7 @@
           z = source[2];
           w = source[3] || 1;
 
-          if ( (!target || target.length !== 3) && target.length !== 4) {
+          if ( !target || (target.length !== 3 && target.length !== 4) ) {
             target = [0, 0, 0];
           }
         }
@@ -11123,7 +11123,7 @@
       }
 
       // curveVertex
-      if ( (isCurve && curShape === PConstants.POLYGON) || (isCurve && curShape === undef) ) {
+      if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
         if (p.use3DContext) {
           lineVertArray = fillVertArray;
           if (doStroke) {
@@ -11166,7 +11166,7 @@
         }
       }
       // bezierVertex
-      else if ( (isBezier && curShape === PConstants.POLYGON) || (isBezier && curShape === undef) ) {
+      else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         if (p.use3DContext) {
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
@@ -15664,9 +15664,9 @@
       // offsets for alignment
       var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
       if(verticalTextAlignment === PConstants.BOTTOM) {
-        boxYOffset2 = height - (str.length * curTextLeading);
+        boxYOffset2 = height - (drawCommands.length * curTextLeading);
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        boxYOffset2 = (height - (str.length * curTextLeading)) / 2;
+        boxYOffset2 = (height - (drawCommands.length * curTextLeading)) / 2;
       }
 
       for (var command=0, end=drawCommands.length; command<end; command++) {
