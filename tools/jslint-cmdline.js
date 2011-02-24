@@ -25,6 +25,7 @@ function runJslint(input) {
         immed: true,
         newcap: true,
         /*
+        forvar: true,
         bitwise: true,
         nomen: true,
         onevar: true,
