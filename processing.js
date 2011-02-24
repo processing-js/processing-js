@@ -4622,6 +4622,7 @@
         for (var i = 0, j = this.attributes.length; i < j; i++) {
           if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
             this.attributes.splice(i, 1);
+            break;
           }
         }
       },
@@ -4633,9 +4634,10 @@
        */
       removeChild: function(child) {
         if (child) {
-          for (var i = 0, j = this.attributes.length; i < j; i++) {
+          for (var i = 0, j = this.children.length; i < j; i++) {
             if (this.children[i].equalsXMLElement(child)) {
               this.children.splice(i, 1);
+              break;
             }
           }
         }
@@ -4649,6 +4651,7 @@
       removeChildAtIndex: function(index) {
         if (this.children.length > index) { //make sure its not outofbounds
           this.children.splice(index, 1);
+          return;
         }
       },
       /**
