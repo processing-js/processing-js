@@ -89,7 +89,11 @@ var canvas = {
   },
   style: {
     setProperty: __empty_func__
-  }
+  },
+  __attributes : { "data-processing-sources" : "test.pjs" },
+  hasAttribute : function(name) { return this.__attributes.hasOwnProperty(name.toLowerCase()); },
+  getAttribute : function(name) { return this.__attributes[name.toLowerCase()]; },
+  setAttribute : function(name, value) { this.__attributes[name.toLowerCase()] = value; }
 };
  
 var HTMLImageElement = __empty_func__;
