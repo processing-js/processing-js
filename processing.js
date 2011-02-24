@@ -429,8 +429,8 @@
   }
 
   /**
-   * Returns Java equals() result for two objects. If the first object 
-   * has the "equals" function, it preforms the call of this function. 
+   * Returns Java equals() result for two objects. If the first object
+   * has the "equals" function, it preforms the call of this function.
    * Otherwise the method uses the JavaScript === operator.
    *
    * @param {Object} obj          The first object.
@@ -1151,9 +1151,9 @@
   }());
 
   /**
-  * A ObjectIterator is an iterator wrapper for objects. If passed object contains 
-  * the iterator method, the object instance will be replaced by the result returned by 
-  * this method call. If passed object is an array, the ObjectIterator instance iterates 
+  * A ObjectIterator is an iterator wrapper for objects. If passed object contains
+  * the iterator method, the object instance will be replaced by the result returned by
+  * this method call. If passed object is an array, the ObjectIterator instance iterates
   * through its items.
   *
   * @param {Object} obj          The object to be iterated.
@@ -1164,7 +1164,7 @@
     } else if (obj instanceof Array) {
       // iterate through array items
       var index = -1;
-      this.hasNext = function() { 
+      this.hasNext = function() {
         return ++index < obj.length;
       };
       this.next = function() {
@@ -1238,7 +1238,7 @@
     p.mouseReleased   = undef;
     p.mouseScrolled   = undef;
     p.mouseOver       = undef;
-    p.mouseOut        = undef; 
+    p.mouseOut        = undef;
     p.touchStart      = undef;
     p.touchEnd        = undef;
     p.touchMove       = undef;
@@ -1706,7 +1706,7 @@
       "uniform int lightCount;" +
       "uniform vec3 falloff;" +
 
-      // careful changing the order of these fields. Some cards 
+      // careful changing the order of these fields. Some cards
       // have issues with memory alignment
       "struct Light {" +
       "  int type;" +
@@ -1717,7 +1717,7 @@
       "  vec3 halfVector;" +
       "  float concentration;" +
       "};" +
-      
+
       // nVidia cards have issues with arrays of structures
       // so instead we create 8 instances of Light
       "uniform Light lights0;" +
@@ -1738,7 +1738,7 @@
       "  if(index == 4) return lights4;" +
       "  if(index == 5) return lights5;" +
       "  if(index == 6) return lights6;" +
-      // some cards complain that not all paths return if we have 
+      // some cards complain that not all paths return if we have
       // this last one in a conditional.
       "  return lights7;" +
       "}" +
@@ -1747,7 +1747,7 @@
       // Get the vector from the light to the vertex
       // Get the distance from the current vector to the light position
       "  float d = length( light.position - ecPos );" +
-      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + 
+      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
       "  totalAmbient += light.color * attenuation;" +
       "}" +
 
@@ -1759,7 +1759,7 @@
       "  if( nDotVP != 0.0 ){" +
       "    powerfactor = pow( nDotVH, shininess );" +
       "  }" +
-      
+
       "  col += light.color * nDotVP;" +
       "  spec += specular * powerfactor;" +
       "}" +
@@ -1844,7 +1844,7 @@
       "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
 
       "  vec4 col = color;" +
-        
+
       "  if(color[0] == -1.0){" +
       "    col = aColor;" +
       "  }" +
@@ -1865,13 +1865,13 @@
            // so we can't iterate using lightCount
       "    for( int i = 0; i < 8; i++ ) {" +
       "      Light l = getLight(i);" +
-      
+
       // We can stop iterating if we know we have gone past
       // the number of lights which are on
       "      if( i >= lightCount ){" +
       "        break;" +
       "      }" +
-      
+
       "      if( l.type == 0 ) {" +
       "        AmbientLight( finalAmbient, ecPos, l );" +
       "      }" +
@@ -1902,7 +1902,7 @@
       "       col[3] );" +
       "    }" +
       "  }" +
-      
+
       "  vTexture.xy = aTexture.xy;" +
       "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
       "}";
@@ -1970,7 +1970,7 @@
         }
       }
     }
-    
+
     /**
      * Sets a uniform int or int array in a program object to a particular
      * value. Before calling this function, ensure the correct
@@ -2220,7 +2220,7 @@
       * PShape methods
       * missing: findChild(), apply(), contains(), findChild(), getPrimitive(), getParams(), getVertex() , getVertexCount(),
       * getVertexCode() , getVertexCodes() , getVertexCodeCount(), getVertexX(), getVertexY(), getVertexZ()
-      */    
+      */
     PShape.prototype = {
       /**
        * @member PShape
@@ -2293,7 +2293,7 @@
        * The setName() function sets the name of the shape
        *
        * @param {String} name the name of the shape
-       */  
+       */
       setName: function(name){
         this.name = name;
       },
@@ -2339,24 +2339,25 @@
        * The drawPath() function draws the <path> part of the SVG document.
        */
       drawPath: function(){
+        var i, j;
         if (this.vertices.length === 0) { return; }
         p.beginShape();
         if (this.vertexCodes.length === 0) {  // each point is a simple vertex
           if (this.vertices[0].length === 2) {  // drawing 2D vertices
-            for (var i = 0, j = this.vertices.length; i < j; i++) {
+            for (i = 0, j = this.vertices.length; i < j; i++) {
               p.vertex(this.vertices[i][0], this.vertices[i][1]);
             }
           } else {  // drawing 3D vertices
-            for (var i = 0, j = this.vertices.length; i < j; i++) {
-              p.vertex(this.vertices[i][0], 
-                       this.vertices[i][1], 
+            for (i = 0, j = this.vertices.length; i < j; i++) {
+              p.vertex(this.vertices[i][0],
+                       this.vertices[i][1],
                        this.vertices[i][2]);
             }
           }
         } else {  // coded set of vertices
           var index = 0;
           if (this.vertices[0].length === 2) {  // drawing a 2D path
-            for (var i = 0, j = this.vertexCodes.length; i < j; i++) {
+            for (i = 0, j = this.vertexCodes.length; i < j; i++) {
               if (this.vertexCodes[i] === PConstants.VERTEX) {
                 p.vertex(this.vertices[index][0], this.vertices[index][1]);
                 if ( this.vertices[index]["moveTo"] === true) {
@@ -2367,15 +2368,15 @@
                 p.breakShape = false;
                 index++;
               } else if (this.vertexCodes[i] === PConstants.BEZIER_VERTEX) {
-                p.bezierVertex(this.vertices[index+0][0], 
+                p.bezierVertex(this.vertices[index+0][0],
                                this.vertices[index+0][1],
-                               this.vertices[index+1][0], 
+                               this.vertices[index+1][0],
                                this.vertices[index+1][1],
                                this.vertices[index+2][0],
                                this.vertices[index+2][1]);
                 index += 3;
               } else if (this.vertexCodes[i] === PConstants.CURVE_VERTEX) {
-                p.curveVertex(this.vertices[index][0], 
+                p.curveVertex(this.vertices[index][0],
                               this.vertices[index][1]);
                 index++;
               } else if (this.vertexCodes[i] ===  PConstants.BREAK) {
@@ -2383,10 +2384,10 @@
               }
             }
           } else {  // drawing a 3D path
-            for (var i = 0, j = this.vertexCodes.length; i < j; i++) {
+            for (i = 0, j = this.vertexCodes.length; i < j; i++) {
               if (this.vertexCodes[i] === PConstants.VERTEX) {
-                p.vertex(this.vertices[index][0], 
-                         this.vertices[index][1], 
+                p.vertex(this.vertices[index][0],
+                         this.vertices[index][1],
                          this.vertices[index][2]);
                 if (this.vertices[index]["moveTo"] === true) {
                   vertArray[vertArray.length-1]["moveTo"] = true;
@@ -2395,7 +2396,7 @@
                 }
                 p.breakShape = false;
               } else if (this.vertexCodes[i] ===  PConstants.BEZIER_VERTEX) {
-                p.bezierVertex(this.vertices[index+0][0], 
+                p.bezierVertex(this.vertices[index+0][0],
                                this.vertices[index+0][1],
                                this.vertices[index+0][2],
                                this.vertices[index+1][0],
@@ -2423,13 +2424,14 @@
        * The drawGeometry() function draws the geometry part of the SVG document.
        */
       drawGeometry: function() {
+        var i, j;
         p.beginShape(this.kind);
         if (this.style) {
-          for (var i = 0, j = this.vertices.length; i < j; i++) {
+          for (i = 0, j = this.vertices.length; i < j; i++) {
             p.vertex(this.vertices[i]);
           }
         } else {
-          for (var i = 0, j = this.vertices.length; i < j; i++) {
+          for (i = 0, j = this.vertices.length; i < j; i++) {
             var vert = this.vertices[i];
             if (vert[2] === 0) {
               p.vertex(vert[0], vert[1]);
@@ -2577,6 +2579,7 @@
        * @return {PShape} returns a child element of a shape as a PShape object or null if there is an error
        */
       getChild: function(child) {
+        var i, j;
         if (typeof child === 'number') {
           return this.children[child];
         } else {
@@ -2585,14 +2588,14 @@
             return this;
           } else {
             if(this.nameTable.length > 0) {
-              for(var i = 0, j = this.nameTable.length; i < j || found; i++) {
+              for(i = 0, j = this.nameTable.length; i < j || found; i++) {
                 if(this.nameTable[i].getName === child) {
                   found = this.nameTable[i];
                 }
               }
               if (found) { return found; }
             }
-            for(var i = 0, j = this.children.length; i < j; i++) {
+            for(i = 0, j = this.children.length; i < j; i++) {
               found = this.children[i].getChild(child);
               if(found) { return found; }
             }
@@ -3134,7 +3137,7 @@
       //change multiple spaces and commas to single space
       var pathData = p.trim(this.element.getStringAttribute("d")
                             .replace(/[\s,]+/g,' '));
-      if (pathData === null) { 
+      if (pathData === null) {
         return;
       }
       pathData = pathData.toCharArray();
@@ -3159,9 +3162,10 @@
       var flag = false;
       var lastInstruction;
       var command;
+      var j, k;
       while (i< pathData.length) {
         valOf = pathData[i].valueOf();
-        if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) { 
+        if ((valOf >= 65 && valOf <= 90) || (valOf >= 97 && valOf <= 122)) {
           // if it's a letter
           // populate the tmpArray with coordinates
           j = i;
@@ -3170,8 +3174,8 @@
             tmpArray = [];
             valOf = pathData[i].valueOf();
             while (!((valOf >= 65 && valOf <= 90) ||
-                     (valOf >= 97 && valOf <= 100) || 
-                     (valOf >= 102 && valOf <= 122)) 
+                     (valOf >= 97 && valOf <= 100) ||
+                     (valOf >= 102 && valOf <= 122))
                      && flag === false) { // if its NOT a letter
               if (valOf === 32) { //if its a space and the str isn't empty
                 // sometimes you get a space after the letter
@@ -3211,13 +3215,13 @@
           command = pathData[j];
           valOf = command.valueOf();
           if (valOf === 77) {  // M - move to (absolute)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) { 
+						if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) {
 						  // need one+ pairs of co-ordinates
 							cx = tmpArray[0];
 							cy = tmpArray[1];
 							this.parsePathMoveto(cx, cy);
 							if (tmpArray.length > 2) {
-								for (var j = 2, k = tmpArray.length; j < k; j+=2) {
+								for (j = 2, k = tmpArray.length; j < k; j+=2) {
 									// absolute line to
 									cx = tmpArray[j];
 									cy = tmpArray[j+1];
@@ -3226,11 +3230,11 @@
 							}
 						}
           } else if (valOf === 109) {  // m - move to (relative)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
 						  // need one+ pairs of co-ordinates
 							this.parsePathMoveto(cx,cy);
 							if (tmpArray.length > 2) {
-								for (var j = 2, k = tmpArray.length; j < k; j+=2) {
+								for (j = 2, k = tmpArray.length; j < k; j+=2) {
 									// relative line to
 									cx += tmpArray[j];
 									cy += tmpArray[j + 1];
@@ -3239,58 +3243,58 @@
 							}
 						}
           } else if (valOf === 76) { // L - lineto (absolute)
-            if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+            if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
               // need one+ pairs of co-ordinates
-              for (var j = 0, k = tmpArray.length; j < k; j+=2) {
+              for (j = 0, k = tmpArray.length; j < k; j+=2) {
                 cx = tmpArray[j];
                 cy = tmpArray[j + 1];
                 this.parsePathLineto(cx,cy);
               }
             }
           } else if (valOf === 108) { // l - lineto (relative)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
 						  // need one+ pairs of co-ordinates
-							for (var j = 0, k = tmpArray.length; j < k; j+=2) {
+							for (j = 0, k = tmpArray.length; j < k; j+=2) {
 								cx += tmpArray[j];
 								cy += tmpArray[j+1];
 								this.parsePathLineto(cx,cy);
 							}
 						}
           } else if (valOf === 72) { // H - horizontal lineto (absolute)
-						for (var j = 0, k = tmpArray.length; j < k; j++) { 
+						for (j = 0, k = tmpArray.length; j < k; j++) {
 						  // multiple x co-ordinates can be provided
 							cx = tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 104) { // h - horizontal lineto (relative)
-						for (var j = 0, k = tmpArray.length; j < k; j++) { 
+						for (j = 0, k = tmpArray.length; j < k; j++) {
 						  // multiple x co-ordinates can be provided
 							cx += tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 86) { // V - vertical lineto (absolute)
-						for (var j = 0, k = tmpArray.length; j < k; j++) { 
+						for (j = 0, k = tmpArray.length; j < k; j++) {
 						  // multiple y co-ordinates can be provided
 							cy = tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 118) { // v - vertical lineto (relative)
-						for (var j = 0, k = tmpArray.length; j < k; j++) { 
+						for (j = 0, k = tmpArray.length; j < k; j++) {
 						  // multiple y co-ordinates can be provided
 							cy += tmpArray[j];
 							this.parsePathLineto(cx, cy);
 						}
           } else if (valOf === 67) { // C - curve to (absolute)
-						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) { 
+						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) {
 						  // need one+ multiples of 6 co-ordinates
-							for (var j = 0, k = tmpArray.length; j < k; j+=6) {
+							for (j = 0, k = tmpArray.length; j < k; j+=6) {
 								ctrlX1 = tmpArray[j];
 								ctrlY1 = tmpArray[j + 1];
 								ctrlX2 = tmpArray[j + 2];
 								ctrlY2 = tmpArray[j + 3];
 								endX   = tmpArray[j + 4];
 								endY   = tmpArray[j + 5];
-								this.parsePathCurveto(ctrlX1, 
+								this.parsePathCurveto(ctrlX1,
 								                      ctrlY1,
 								                      ctrlX2,
 								                      ctrlY2,
@@ -3303,7 +3307,7 @@
           } else if (valOf === 99) { // c - curve to (relative)
 						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) {
 						  // need one+ multiples of 6 co-ordinates
-							for (var j = 0, k = tmpArray.length; j < k; j+=6) {
+							for (j = 0, k = tmpArray.length; j < k; j+=6) {
 								ctrlX1 = cx + tmpArray[j];
 								ctrlY1 = cy + tmpArray[j + 1];
 								ctrlX2 = cx + tmpArray[j + 2];
@@ -3321,9 +3325,9 @@
 							}
 						}
           } else if (valOf === 83) { // S - curve to shorthand (absolute)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
 						  // need one+ multiples of 4 co-ordinates
-							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
+							for (j = 0, k = tmpArray.length; j < k; j+=4) {
 								if (lastInstruction.toLowerCase() ===  "c" ||
 								    lastInstruction.toLowerCase() ===  "s") {
 									ppx    = this.vertices[ this.vertices.length-2 ][0];
@@ -3333,7 +3337,7 @@
 									ctrlX1 = px + (px - ppx);
 									ctrlY1 = py + (py - ppy);
 								} else {
-									//If there is no previous curve, 
+									//If there is no previous curve,
 									//the current point will be used as the first control point.
 									ctrlX1 = this.vertices[this.vertices.length-1][0];
 									ctrlY1 = this.vertices[this.vertices.length-1][1];
@@ -3353,10 +3357,10 @@
 							}
 						}
           } else if (valOf === 115) { // s - curve to shorthand (relative)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
 						  // need one+ multiples of 4 co-ordinates
-							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
-								if (lastInstruction.toLowerCase() ===  "c" || 
+							for (j = 0, k = tmpArray.length; j < k; j+=4) {
+								if (lastInstruction.toLowerCase() ===  "c" ||
 								    lastInstruction.toLowerCase() ===  "s") {
 									ppx    = this.vertices[this.vertices.length-2][0];
 									ppy    = this.vertices[this.vertices.length-2][1];
@@ -3385,9 +3389,9 @@
 							}
 						}
           } else if (valOf === 81) { // Q - quadratic curve to (absolute)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
 						  // need one+ multiples of 4 co-ordinates
-							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
+							for (j = 0, k = tmpArray.length; j < k; j+=4) {
 								ctrlX = tmpArray[j];
 								ctrlY = tmpArray[j + 1];
 								endX  = tmpArray[j + 2];
@@ -3398,9 +3402,9 @@
 							}
 						}
           } else if (valOf === 113) { // q - quadratic curve to (relative)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) { 
+						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
 						  // need one+ multiples of 4 co-ordinates
-							for (var j = 0, k = tmpArray.length; j < k; j+=4) {
+							for (j = 0, k = tmpArray.length; j < k; j+=4) {
 								ctrlX = cx + tmpArray[j];
 								ctrlY = cy + tmpArray[j + 1];
 								endX  = cx + tmpArray[j + 2];
@@ -3410,11 +3414,11 @@
 								cy = endY;
 							}
 						}
-          } else if (valOf === 84) { 
+          } else if (valOf === 84) {
             // T - quadratic curve to shorthand (absolute)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
 						  // need one+ pairs of co-ordinates
-							for (var j = 0, k = tmpArray.length; j < k; j+=2) {
+							for (j = 0, k = tmpArray.length; j < k; j+=2) {
 								if (lastInstruction.toLowerCase() ===  "q" ||
 								    lastInstruction.toLowerCase() ===  "t") {
 									ppx   = this.vertices[this.vertices.length-2][0];
@@ -3425,7 +3429,7 @@
 									ctrlY = py + (py - ppy);
 								} else {
 									// If there is no previous command or if the previous command
-									// was not a Q, q, T or t, assume the control point is 
+									// was not a Q, q, T or t, assume the control point is
 									// coincident with the current point.
 									ctrlX = cx;
 									ctrlY = cy;
@@ -3437,11 +3441,11 @@
 								cy = endY;
 							}
 						}
-          } else if (valOf === 116) {  
+          } else if (valOf === 116) {
             // t - quadratic curve to shorthand (relative)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) { 
+						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
 						  // need one+ pairs of co-ordinates
-							for (var j = 0, k = tmpArray.length; j < k; j+=2) {
+							for (j = 0, k = tmpArray.length; j < k; j+=2) {
 								if (lastInstruction.toLowerCase() ===  "q" ||
 								    lastInstruction.toLowerCase() ===  "t") {
 									ppx   = this.vertices[this.vertices.length-2][0];
@@ -3452,7 +3456,7 @@
 									ctrlY = py + (py - ppy);
 								} else {
 									// If there is no previous command or if the previous command
-									// was not a Q, q, T or t, assume the control point is 
+									// was not a Q, q, T or t, assume the control point is
 									// coincident with the current point.
 									ctrlX = cx;
 									ctrlY = cy;
@@ -3516,14 +3520,14 @@
       if (this.vertices.length > 0) {
         this.parsePathCode(PConstants.VERTEX);
         this.parsePathVertex(px, py);
-        // add property to distinguish between curContext.moveTo 
+        // add property to distinguish between curContext.moveTo
         // or curContext.lineTo
         this.vertices[this.vertices.length-1]["moveTo"] = false;
       } else {
         throw ("Path must start with M/m");
       }
     };
-    
+
     PShapeSVG.prototype.parsePathMoveto = function(px, py) {
       if (this.vertices.length > 0) {
         this.parsePathCode(PConstants.BREAK);
@@ -3577,7 +3581,7 @@
             this.vertices.push(verts);
           }
         } else {
-          //p.println("Error parsing polygon points: " + 
+          //p.println("Error parsing polygon points: " +
           //          "odd number of coordinates provided");
         }
       }
@@ -3699,7 +3703,7 @@
      * @param {String} opacityText the value of fillOpacity
      *
      * @see PShapeSVG#parseColors
-     */  
+     */
     PShapeSVG.prototype.setFillOpacity = function(opacityText) {
       this.fillOpacity = parseFloat(opacityText);
       this.fillColor   = this.fillOpacity * 255  << 24 |
@@ -3719,7 +3723,7 @@
         this.fill = false;
       } else if (fillText.indexOf("#") === 0) {
         this.fill      = true;
-        this.fillColor = opacityMask | 
+        this.fillColor = opacityMask |
                          (parseInt(fillText.substring(1), 16 )) &
                          0xFFFFFF;
       } else if (fillText.indexOf("rgb") === 0) {
@@ -3783,7 +3787,7 @@
           //this.strokeObject = findChild(strokeName);
         /*if (strokeObject instanceof Gradient) {
           strokeGradient = (Gradient) strokeObject;
-          strokeGradientPaint = calcGradientPaint(strokeGradient); 
+          strokeGradientPaint = calcGradientPaint(strokeGradient);
                                 //, opacity);
         } else {
           System.err.println("url " + strokeName +
@@ -4258,16 +4262,17 @@
        */
       equalsXMLElement: function (object) {
         if (object instanceof XMLElement) {
+          var i, j;
           if (this.name !== object.getLocalName()) { return false; }
           if (this.attributes.length !== object.getAttributeCount()) { return false; }
-          for (var i = 0, j = this.attributes.length; i < j; i++){
+          for (i = 0, j = this.attributes.length; i < j; i++){
             if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
             if (this.attributes[i].getValue() !== object.attributes[i].getValue()) { return false; }
             if (this.attributes[i].getType()  !== object.attributes[i].getType()) { return false; }
           }
           if (this.children.length !== object.getChildCount()) { return false; }
           var child1, child2;
-          for (var i = 0, j = this.children.length; i < j; i++) {
+          for (i = 0, j = this.children.length; i < j; i++) {
             child1 = this.getChildAtIndex(i);
             child2 = object.getChildAtIndex(i);
             if (! child1.equalsXMLElement(child2)) { return false; }
@@ -4555,7 +4560,8 @@
       parseChildrenRecursive: function (parent , elementpath){
         var xmlelement,
           xmlattribute,
-          tmpattrib;
+          tmpattrib,
+          l, m;
         if (!parent) {
           this.fullName = elementpath.localName;
           this.name     = elementpath.nodeName;
@@ -4567,7 +4573,7 @@
           xmlelement.parent  = parent;
         }
 
-        for (var l = 0, m = elementpath.attributes.length; l < m; l++) {
+        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
           tmpattrib    = elementpath.attributes[l];
           xmlattribute = new XMLAttribute(tmpattrib.getname,
                                           tmpattrib.nodeName,
@@ -4577,7 +4583,7 @@
           xmlelement.attributes.push(xmlattribute);
         }
 
-        for (var l = 0, m = elementpath.childNodes.length; l < m; l++) {
+        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
           var node = elementpath.childNodes[l];
           if (node.nodeType === 1) { // ELEMENT_NODE type
             xmlelement.children.push(xmlelement.parseChildrenRecursive(xmlelement, node));
@@ -5254,7 +5260,7 @@
           z = source[2];
           w = source[3] || 1;
 
-          if (!target || target.length !== 3 && target.length !== 4) {
+          if ( (!target || target.length !== 3) && target.length !== 4) {
             target = [0, 0, 0];
           }
         }
@@ -6430,7 +6436,7 @@
 
       // 3 arguments: (R, G, B) or (H, S, B)
       if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef) {
-        return color$4(aValue1, aValue2, aValue3, colorModeA); 
+        return color$4(aValue1, aValue2, aValue3, colorModeA);
       }
 
       // 2 arguments: (Color, A) or (Grayscale, A)
@@ -8037,7 +8043,7 @@
       return results.length > 0 ? results : null;
     };
     /**
-     * The __replaceAll() function searches all matches between a substring (or regular expression) and a string, 
+     * The __replaceAll() function searches all matches between a substring (or regular expression) and a string,
      * and replaces the matched substring with a new substring
      *
      * @param {String} subject    a substring
@@ -8056,7 +8062,7 @@
       return subject.replace(new RegExp(regex, "g"), replacement);
     };
     /**
-     * The __replaceFirst() function searches first matche between a substring (or regular expression) and a string, 
+     * The __replaceFirst() function searches first matche between a substring (or regular expression) and a string,
      * and replaces the matched substring with a new substring
      *
      * @param {String} subject    a substring
@@ -8075,7 +8081,7 @@
       return subject.replace(new RegExp(regex, ""), replacement);
     };
     /**
-     * The __replace() function searches all matches between a substring and a string, 
+     * The __replace() function searches all matches between a substring and a string,
      * and replaces the matched substring with a new substring
      *
      * @param {String} subject         a substring
@@ -8098,12 +8104,12 @@
       if (what === "") {
         return subject;
       }
-      
+
       var i = subject.indexOf(what);
       if (i < 0) {
         return subject;
       }
-      
+
       var j = 0, result = "";
       do {
         result += subject.substring(j, i) + replacement;
@@ -8275,18 +8281,18 @@
     }
 
     /**
-     * Converts the passed parameter to the function to its boolean value. 
+     * Converts the passed parameter to the function to its boolean value.
      * It will return an array of booleans if an array is passed in.
      *
      * @param {int, byte, string} what          the parameter to be converted to boolean
      * @param {int[], byte[], string[]} what    the array to be converted to boolean
      *
      * @return {boolean|boolean[]} retrurns a boolean or an array of booleans
-     */    
+     */
     p.parseBoolean = function (what) {
         return p['boolean'](what);
-    }
-      
+    };
+
     p['boolean'] = function(val) {
       if (val instanceof Array) {
         var ret = [];
@@ -9100,14 +9106,14 @@
     */
     p.size = (function() {
       var size3DCalled = false;
-      
+
       return function size(aWidth, aHeight, aMode) {
         if (aMode && (aMode === PConstants.WEBGL)) {
           if (size3DCalled) {
             throw "Multiple calls to size() for 3D renders are not allowed.";
           }
           size3DCalled = true;
-          
+
           // get the 3D rendering context
           try {
             // If the HTML <canvas> dimensions differ from the
@@ -9126,7 +9132,7 @@
           } catch(e_size) {
             Processing.debug(e_size);
           }
-  
+
           if (!curContext) {
             throw "WebGL context is not supported on this browser.";
           } else {
@@ -9140,81 +9146,81 @@
             curContext.enable(curContext.BLEND);
             curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
             refreshBackground(); // sets clearColor default;
-  
+
             // Create the program objects to render 2D (points, lines) and
             // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
             // lighting calculations could be ommitted from that program object.
             programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
-  
+
             // set the defaults
             curContext.useProgram(programObject2D);
             p.strokeWeight(1.0);
-  
+
             programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
             programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
-  
+
             // Now that the programs have been compiled, we can set the default
             // states for the lights.
             curContext.useProgram(programObject3D);
-  
+
             // assume we aren't using textures by default
             uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
             p.lightFalloff(1, 0, 0);
             p.shininess(1);
             p.ambient(255, 255, 255);
             p.specular(0, 0, 0);
-  
+
             // Create buffers for 3D primitives
             boxBuffer = curContext.createBuffer();
             curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
             curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
-  
+
             boxNormBuffer = curContext.createBuffer();
             curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
             curContext.bufferData(curContext.ARRAY_BUFFER, boxNorms, curContext.STATIC_DRAW);
-  
+
             boxOutlineBuffer = curContext.createBuffer();
             curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
             curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
-  
+
             // used to draw the rectangle and the outline
             rectBuffer = curContext.createBuffer();
             curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
             curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
-  
+
             rectNormBuffer = curContext.createBuffer();
             curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
             curContext.bufferData(curContext.ARRAY_BUFFER, rectNorms, curContext.STATIC_DRAW);
-  
+
             // The sphere vertices are specified dynamically since the user
             // can change the level of detail. Everytime the user does that
             // using sphereDetail(), the new vertices are calculated.
             sphereBuffer = curContext.createBuffer();
-  
+
             lineBuffer = curContext.createBuffer();
-  
+
             // Shape buffers
             fillBuffer = curContext.createBuffer();
             fillColorBuffer = curContext.createBuffer();
             strokeColorBuffer = curContext.createBuffer();
             shapeTexVBO = curContext.createBuffer();
-  
+
             pointBuffer = curContext.createBuffer();
             curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
             curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0, 0, 0]), curContext.STATIC_DRAW);
-  
+
             textBuffer = curContext.createBuffer();
             curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
             curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
-  
+
             textureBuffer = curContext.createBuffer();
             curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
             curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
-  
+
             indexBuffer = curContext.createBuffer();
             curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
             curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,2,3,0]), curContext.STATIC_DRAW);
-  
+
             cam = new PMatrix3D();
             cameraInv = new PMatrix3D();
             forwardTransform = new PMatrix3D();
@@ -9226,7 +9232,7 @@
             p.perspective();
             forwardTransform = modelView;
             reverseTransform = modelViewInv;
-  
+
             userMatrixStack = new PMatrixStack();
             // used by both curve and bezier, so just init here
             curveBasisMatrix = new PMatrix3D();
@@ -9248,7 +9254,7 @@
             modelView = new PMatrix2D();
           }
         }
-  
+
         // The default 2d context has already been created in the p.init() stage if
         // a 3d context was not specified. This is so that a 2d context will be
         // available if size() was not called.
@@ -9264,25 +9270,25 @@
           curElement.style.removeProperty("width");
           curElement.style.removeProperty("height");
         }
-  
+
         curElement.width = p.width = aWidth || 100;
         curElement.height = p.height = aHeight || 100;
-  
+
         for (var j in props) {
           if (props) {
             curContext[j] = props[j];
           }
         }
-        
+
         // Reset the text style. This is a terrible hack, only because of how 3D contexts are initialized
         this.textSize(curTextSize);
-        
+
         // redraw the background if background was called before size
         refreshBackground();
-  
+
         // set 5% for pixels to cache (or 1000)
         maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
-  
+
         // Externalize the context
         p.externals.context = curContext;
       };
@@ -9322,7 +9328,7 @@
         if (lightCount === PConstants.MAX_LIGHTS) {
           throw "can only create " + PConstants.MAX_LIGHTS + " lights";
         }
-        
+
         var pos = new PVector(x, y, z);
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
@@ -9380,7 +9386,7 @@
         var view = new PMatrix3D();
         view.set(modelView.array());
         view.mult(dir, dir);
-        
+
         uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
         uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", [dir[0], -dir[1], dir[2]]);
         uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
@@ -11117,7 +11123,7 @@
       }
 
       // curveVertex
-      if (isCurve && curShape === PConstants.POLYGON || isCurve && curShape === undef) {
+      if ( (isCurve && curShape === PConstants.POLYGON) || (isCurve && curShape === undef) ) {
         if (p.use3DContext) {
           lineVertArray = fillVertArray;
           if (doStroke) {
@@ -11160,7 +11166,7 @@
         }
       }
       // bezierVertex
-      else if (isBezier && curShape === PConstants.POLYGON || isBezier && curShape === undef) {
+      else if ( (isBezier && curShape === PConstants.POLYGON) || (isBezier && curShape === undef) ) {
         if (p.use3DContext) {
           lineVertArray = fillVertArray;
           lineVertArray.splice(lineVertArray.length - 3);
@@ -11863,7 +11869,7 @@
         pimage.__texture = texture;
 
         var cvs = document.createElement('canvas');
-        
+
         var pot;
 
         // WebGL requires power of two textures
@@ -13501,7 +13507,7 @@
       var pg = new Processing(canvas);
       pg.size(w, h, render);
       pg.canvas = canvas;
-      
+
       /**
       * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
       *
@@ -15576,7 +15582,7 @@
 
     function text$6(str, x, y, width, height, z) {
       // 'fail' on 0-valued dimensions
-      if (str.length === 0 || width === 0 || height === 0) { 
+      if (str.length === 0 || width === 0 || height === 0) {
         return;
       }
       // also 'fail' if the text height is larger than the bounding height
@@ -15591,7 +15597,7 @@
       var yOffset = 0;
       curContext.font = curTextSize + "px " + curTextFont.name;
       var drawCommands = [];
-      
+
       // run through text, character-by-character
       for (var charPos=0, len=str.length; charPos < len; charPos++)
       {
@@ -15614,7 +15620,7 @@
         // if we're looking at a newline, or the text no longer fits, push the section that fit into the drawcommand list
         else
         {
-          if (spaceMark + 1 === start) { 
+          if (spaceMark + 1 === start) {
             if(charPos>0) {
               // Whole line without spaces so far.
               spaceMark = charPos;
@@ -15641,7 +15647,7 @@
       }
 
       // push the remaining text
-      if (start < len) { 
+      if (start < len) {
         drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
         yOffset += curTextSize;
       }
@@ -15658,9 +15664,9 @@
       // offsets for alignment
       var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
       if(verticalTextAlignment === PConstants.BOTTOM) {
-        boxYOffset2 = height - (strings.length * curTextLeading);
+        boxYOffset2 = height - (str.length * curTextLeading);
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        boxYOffset2 = (height - (strings.length * curTextLeading)) / 2;
+        boxYOffset2 = (height - (str.length * curTextLeading)) / 2;
       }
 
       for (var command=0, end=drawCommands.length; command<end; command++) {
@@ -16053,7 +16059,7 @@
       }
       eventHandlers.push([elem, type, fn]);
     }
-    
+
     function detach(elem, type, fn) {
       if (elem.removeEventListener) {
         elem.removeEventListener(type, fn, false);
@@ -16061,7 +16067,7 @@
         elem.detachEvent("on" + type, fn);
       }
     }
-    
+
     function calculateOffset(curElement, event) {
       var element = curElement,
         offsetX = 0,
@@ -16075,7 +16081,7 @@
         do {
           offsetX += element.offsetLeft;
           offsetY += element.offsetTop;
-        } while ((element = element.offsetParent));
+        } while (!!(element = element.offsetParent));
       }
 
       // Find Scroll offset
@@ -16083,7 +16089,7 @@
       do {
         offsetX -= element.scrollLeft || 0;
         offsetY -= element.scrollTop || 0;
-      } while ((element = element.parentNode));
+      } while (!!(element = element.parentNode));
 
       // Add padding and border style widths to offset
       offsetX += stylePaddingLeft;
@@ -16091,27 +16097,28 @@
 
       offsetX += styleBorderLeft;
       offsetY += styleBorderTop;
-      
+
       // Take into account any scrolling done
       offsetX += window.pageXOffset;
       offsetY += window.pageYOffset;
-      
+
       return {'X':offsetX,'Y':offsetY};
     }
-    
+
     function updateMousePosition(curElement, event) {
       var offset = calculateOffset(curElement, event);
-      
+
       // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
       // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
       p.mouseX = event.pageX - offset.X;
       p.mouseY = event.pageY - offset.Y;
     }
-    
+
     // Return a TouchEvent with canvas-specific x/y co-ordinates
     function addTouchEventOffset(t) {
-      var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]);
-      
+      var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]),
+          i;
+
       for (i = 0; i < t.touches.length; i++) {
         var touch = t.touches[i];
         touch.offsetX = touch.pageX - offset.X;
@@ -16127,14 +16134,14 @@
         changedTouch.offsetX = changedTouch.pageX - offset.X;
         changedTouch.offsetY = changedTouch.pageY - offset.Y;
       }
-      
+
       return t;
     }
-    
+
     //////////////////////////////////////////////////////////////////////////
     // Touch event handling
     //////////////////////////////////////////////////////////////////////////
-    
+
     attach(curElement, "touchstart", function (t) {
       // Removes unwanted behaviour of the canvas when touching canvas
       curElement.setAttribute("style","-webkit-user-select: none");
@@ -16152,7 +16159,7 @@
           detach(elem, type, fn);
         }
       }
-      
+
       // If there are any native touch events defined in the sketch, connect all of them
       // Otherwise, connect all of the emulated mouse events
       if (p.touchStart !== undef || p.touchMove !== undef ||
@@ -16163,7 +16170,7 @@
             p.touchStart(t);
           }
         });
-        
+
         attach(curElement, "touchmove", function(t) {
           if (p.touchMove !== undef) {
             t.preventDefault(); // Stop the viewport from scrolling
@@ -16171,40 +16178,40 @@
             p.touchMove(t);
           }
         });
-        
+
         attach(curElement, "touchend", function(t) {
           if (p.touchEnd !== undef) {
             t = addTouchEventOffset(t);
             p.touchEnd(t);
           }
         });
-        
+
         attach(curElement, "touchcancel", function(t) {
           if (p.touchCancel !== undef) {
             t = addTouchEventOffset(t);
             p.touchCancel(t);
           }
         });
-        
+
       } else {
         // Emulated touch start/mouse down event
         attach(curElement, "touchstart", function(e) {
           updateMousePosition(curElement, e.touches[0]);
-          
+
           p.__mousePressed = true;
           p.mouseDragging = false;
           p.mouseButton = PConstants.LEFT;
-          
+
           if (typeof p.mousePressed === "function") {
             p.mousePressed();
           }
         });
-        
+
         // Emulated touch move/mouse move event
         attach(curElement, "touchmove", function(e) {
           e.preventDefault();
           updateMousePosition(curElement, e.touches[0]);
-          
+
           if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
             p.mouseMoved();
           }
@@ -16213,25 +16220,25 @@
             p.mouseDragging = true;
           }
         });
-        
+
         // Emulated touch up/mouse up event
         attach(curElement, "touchend", function(e) {
           p.__mousePressed = false;
-          
+
           if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
             p.mouseClicked();
           }
-          
+
           if (typeof p.mouseReleased === "function") {
             p.mouseReleased();
           }
         });
       }
-      
+
       // Refire the touch start event we consumed in this function
-      curElement.dispatchEvent(t)
+      curElement.dispatchEvent(t);
     });
-    
+
     //////////////////////////////////////////////////////////////////////////
     // Mouse event handling
     //////////////////////////////////////////////////////////////////////////
@@ -16252,7 +16259,7 @@
         p.mouseOut();
       }
     });
-    
+
     attach(curElement, "mouseover", function(e) {
       updateMousePosition(curElement, e);
       if (typeof p.mouseOver === "function") {
@@ -16323,7 +16330,7 @@
     if (typeof curElement === "string") {
       curElement = document.getElementById(curElement);
     }
-    
+
     // In order to catch key events in a canvas, it needs to be "specially focusable",
     // by assigning it a tabindex. If no tabindex is specified on-page, set this to 0.
     if (!curElement.getAttribute("tabindex")) {
@@ -16634,7 +16641,7 @@
 
       // if keyboard events should be handled globally, the listeners should
       // be bound to the document window, rather than to the current canvas
-      keyTrigger = curSketch.options.globalKeyEvents ? window : curElement;
+      var keyTrigger = curSketch.options.globalKeyEvents ? window : curElement;
 
       attach(keyTrigger, "keydown", function(e) {
         p.keyCode = e.keyCode;
@@ -16709,9 +16716,9 @@
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           // Run void setDefaults() before attach() to work with embedded scripts
           setDefaults(processing);
-          
+
           curSketch.attach(processing, defaultScope);
-          
+
           // Run void setup()
           if (processing.setup) {
             processing.setup();
@@ -16758,52 +16765,52 @@
     // The names array contains the names of everything that is inside "p."
     // When something new is added to "p." it must also be added to this list.
     var names = [ /* this code is generated by jsglobals.js */
-      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix", 
-      "arc", "arrayCopy", "asin", "atan", "atan2", "background", "beginCamera", 
-      "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint", 
-      "bezierTangent", "bezierVertex", "binary", "blend", "blendColor", 
-      "blit_resize", "blue", "boolean", "box", "breakShape", "brightness", 
-      "byte", "camera", "ceil", "char", "Character", "clear", "color", 
-      "colorMode", "concat", "console", "constrain", "copy", "cos", "createFont", 
-      "createGraphics", "createImage", "cursor", "curve", "curveDetail", 
-      "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day", 
-      "defaultColor", "degrees", "directionalLight", "disableContextMenu", 
-      "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu", 
-      "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals", 
-      "fill", "filter", "filter_bilinear", "filter_new_scanline", "float", 
-      "floor", "focused", "frameCount", "frameRate", "frustum", "get", 
-      "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour", "hue", 
-      "image", "imageMode", "Import", "int", "intersect", "join", "key", 
-      "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor", 
-      "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes", 
-      "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape", 
-      "loadStrings", "log", "loop", "mag", "map", "match", "matchAll", "max", 
-      "millis", "min", "minute", "mix", "modelX", "modelY", "modelZ", "modes", 
-      "month", "mouseButton", "mouseClicked", "mouseDragged", "mouseMoved", 
-      "mouseOut", "mouseOver", "mousePressed", "mouseReleased", "mouseScroll", 
-      "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs", 
-      "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights", 
-      "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho", 
-      "parseBoolean", "peg", "perspective", "PFont", "PImage", "pixels", 
-      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point", 
-      "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera", 
-      "println", "printMatrix", "printProjection", "PShape", "PShapeSVG", 
-      "pushMatrix", "pushStyle", "quad", "radians", "random", "Random", 
-      "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage", 
-      "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ", 
-      "round", "saturation", "save", "saveFrame", "saveStrings", "scale", 
-      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape", 
-      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth", 
-      "sort", "specular", "sphere", "sphereDetail", "splice", "split", 
-      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke", 
-      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text", 
-      "textAlign", "textAscent", "textDescent", "textFont", "textLeading", 
-      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", 
-      "touchCancel", "touchEnd", "touchMove", "touchStart", "translate", 
-      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext", 
-      "vertex", "width", "XMLElement", "year", "__equals", "__frameRate", 
-      "__hashCode", "__int_cast", "__keyPressed", "__mousePressed", 
-      "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst", 
+      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix",
+      "arc", "arrayCopy", "asin", "atan", "atan2", "background", "beginCamera",
+      "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint",
+      "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
+      "blit_resize", "blue", "boolean", "box", "breakShape", "brightness",
+      "byte", "camera", "ceil", "char", "Character", "clear", "color",
+      "colorMode", "concat", "console", "constrain", "copy", "cos", "createFont",
+      "createGraphics", "createImage", "cursor", "curve", "curveDetail",
+      "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
+      "defaultColor", "degrees", "directionalLight", "disableContextMenu",
+      "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu",
+      "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
+      "fill", "filter", "filter_bilinear", "filter_new_scanline", "float",
+      "floor", "focused", "frameCount", "frameRate", "frustum", "get",
+      "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour", "hue",
+      "image", "imageMode", "Import", "int", "intersect", "join", "key",
+      "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
+      "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
+      "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape",
+      "loadStrings", "log", "loop", "mag", "map", "match", "matchAll", "max",
+      "millis", "min", "minute", "mix", "modelX", "modelY", "modelZ", "modes",
+      "month", "mouseButton", "mouseClicked", "mouseDragged", "mouseMoved",
+      "mouseOut", "mouseOver", "mousePressed", "mouseReleased", "mouseScroll",
+      "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
+      "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
+      "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
+      "parseBoolean", "peg", "perspective", "PFont", "PImage", "pixels",
+      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
+      "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
+      "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
+      "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
+      "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
+      "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ",
+      "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
+      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
+      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth",
+      "sort", "specular", "sphere", "sphereDetail", "splice", "split",
+      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
+      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
+      "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
+      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
+      "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
+      "vertex", "width", "XMLElement", "year", "__equals", "__frameRate",
+      "__hashCode", "__int_cast", "__keyPressed", "__mousePressed",
+      "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
       "__toCharArray"];
 
     var members = {};
@@ -17147,7 +17154,7 @@
       var repeatJavaReplacement;
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace)\s*"B(\d+)"/g, 
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace)\s*"B(\d+)"/g,
           function(all, subject, method, atomIndex) {
             var atom = atoms[atomIndex];
             repeatJavaReplacement = true;
@@ -17413,7 +17420,7 @@
       var variableName = init.replace(/^\s*var\s*/, "").split("=")[0];
       var initIteratorAndVariable = "var " + iterator + " = new $p.ObjectIterator(" + this.container + "), " +
          variableName + " = void(0)";
-      var nextIterationCondition = iterator + ".hasNext() && ((" + 
+      var nextIterationCondition = iterator + ".hasNext() && ((" +
          variableName + " = " + iterator + ".next()) || true)";
       return "(" + initIteratorAndVariable + "; " + nextIterationCondition + ";)";
     };
@@ -17437,7 +17444,7 @@
 
     function sortByWeight(array) {
       array.sort(function (a,b) {
-        return b.weight - a.weight; 
+        return b.weight - a.weight;
       });
     }
 
@@ -17641,11 +17648,11 @@
           return thisClassMethods[name].isStatic ? className + "." + name : selfId + ".$self." + name;
         }
         return oldContext(subject);
-      }; 
+      };
 
       if (this.baseClassName) {
         result += "var $super = { $upcast: " + selfId + " };\n";
-        result += "function $superCstr(){" + oldContext({name: this.baseClassName}) + 
+        result += "function $superCstr(){" + oldContext({name: this.baseClassName}) +
           ".apply($super,arguments);if(!('$self' in $super)) $p.extendClassChain($super)}\n";
       } else {
         result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
@@ -17703,10 +17710,10 @@
         if (method.isStatic) {
           staticDefinitions += method;
           staticDefinitions += "$p.addMethod(" + className + ", '" + method.name + "', " + methodId + ");\n";
-          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n"
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n";
         } else {
           result += method;
-          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n"
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n";
         }
       }
       result += trim(this.misc.tail);
@@ -18645,7 +18652,7 @@
       function ajaxAsync(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {  
+          if (xhr.readyState === 4) {
             var error;
             if (xhr.status !== 200 && xhr.status !== 0) {
               error = "Invalid XHR status " + xhr.status;
