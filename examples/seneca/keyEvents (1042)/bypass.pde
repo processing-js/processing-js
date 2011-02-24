@@ -1,0 +1,1 @@
+/* @pjs globalKeyEvents="true"; */
