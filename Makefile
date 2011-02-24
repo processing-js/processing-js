@@ -16,7 +16,7 @@ VERSION ?= $(error Specify a version for your release (e.g., VERSION=0.5))
 
 release: release-files zipped examples
 
-release-files: pjs yui closure example release-docs
+release-files: pjs yui closure api-only example release-docs
 
 zipped: release-files
 	gzip -9 -c ./release/processing-${VERSION}.min.js > ./release/processing-${VERSION}.min.js.gz
@@ -79,14 +79,8 @@ check-release: yui closure
 check-summary:
 	${TOOLSDIR}/runtests.py -s ${JSSHELL}
 
-check-lint: ${TOOLSDIR}/jslint.js
+check-lint:
 	${TOOLSDIR}/jslint.py ${JSSHELL} processing.js
-
-${TOOLSDIR}/jslint.js:
-	$(error The ./tools/jslint.js is not downloaded from the http://www.jslint.com/jslint.js. Please run "make get-lint" to use wget to download this file)
-
-get-lint:
-	wget -O ./tools/jslint.js "http://www.jslint.com/jslint.js" 
 
 check-parser:
 	${TOOLSDIR}/runtests.py -p ${JSSHELL}
@@ -123,6 +117,11 @@ package-sketch:
 	java -jar ${CLOSUREJAR} --js=${SKETCHOUTPUT}.src --js_output_file=${SKETCHOUTPUT} --compilation_level ADVANCED_OPTIMIZATIONS
 	rm ${SKETCHOUTPUT}.src
 	echo "Created ${SKETCHOUTPUT}"
+
+api-only: create-release
+	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js > ./release/processing-api-${VERSION}.js
+	java -jar ${CLOSUREJAR} --js=./release/processing-api-${VERSION}.js \
+                          --js_output_file=./release/processing-api-${VERSION}.min.js
 
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
