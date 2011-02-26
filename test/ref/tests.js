@@ -25,6 +25,7 @@ var tests = [
   { path: "ambient_p5test.pde", tags: ["3D"] },
   { path: "directionalLight_p5test_1.pde", tags: ["3D"] },
   { path: "directionalLight_p5test_2.pde", tags: ["3D"] },
+  { path: "directionalLight_scale.pde", tags: ["3D"] },  
   { path: "emissive_p5test.pde", tags: ["3D"] },
   { path: "lightSpecular_p5test.pde", tags: ["3D"] },
   { path: "pointLight_p5test.pde", tags: ["3D"] },
