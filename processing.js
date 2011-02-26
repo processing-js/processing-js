@@ -1199,6 +1199,12 @@
     // The names array contains the names of everything that is inside "p."
     var p = this;
 
+    var pgraphicsMode = (arguments.length === 0);
+    if (pgraphicsMode) {
+      curElement = document.createElement("canvas");
+      p.canvas = curElement;
+    }
+
     // PJS specific (non-p5) methods and properties to externalize
     p.externals = {
       canvas:  curElement,
@@ -13503,36 +13509,8 @@
      * @param {String} filename the name of the file (not supported yet)
      */
     p.createGraphics = function createGraphics(w, h, render) {
-      var canvas = document.createElement("canvas");
-      var pg = new Processing(canvas);
+      var pg = new Processing();
       pg.size(w, h, render);
-      pg.canvas = canvas;
-
-      /**
-      * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
-      *
-      * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
-      *
-      * @see PImage
-      */
-      pg.toImageData = function() {
-        var curContext = this.externals.context;
-        if(!this.use3DContext){
-          return curContext.getImageData(0, 0, this.width, this.height);
-        } else {
-          var c = document.createElement("canvas");
-          var ctx = c.getContext("2d");
-          var obj = ctx.createImageData(this.width, this.height);
-          var uBuff = new Uint8Array(this.width * this.height * 4);
-          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-          for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
-            obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
-          }
-
-          return obj;
-        }
-      };
-
       return pg;
     };
 
@@ -16588,13 +16566,16 @@
     Processing.debug = function(e) {};
 
     // Send aCode Processing syntax to be converted to JavaScript
-    if (aCode) {
+    if (!pgraphicsMode) {
       if (aCode instanceof Processing.Sketch) {
         // Use sketch as is
         curSketch = aCode;
       } else if (typeof aCode === "function") {
         // Wrap function with default sketch parameters
         curSketch = new Processing.Sketch(aCode);
+      } else if (!aCode) {
+        // Empty sketch
+        curSketch = new Processing.Sketch(function (){});
       } else {
 //#if PARSER
         // Compile the code
@@ -16754,6 +16735,29 @@
       // or called via createGraphics
       curSketch = new Processing.Sketch();
       curSketch.options.isTransparent = true;
+
+      /**
+      * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
+      *
+      * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
+      *
+      * @see PImage
+      */
+      p.toImageData = function() {
+        if(!p.use3DContext){
+          return curContext.getImageData(0, 0, this.width, this.height);
+        } else {
+          var c = document.createElement("canvas");
+          var ctx = c.getContext("2d");
+          var obj = ctx.createImageData(this.width, this.height);
+          var uBuff = new Uint8Array(this.width * this.height * 4);
+          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
+          for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
+            obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
+          }
+          return obj;
+        }
+      };
     }
   }; // Processing() ends
 
