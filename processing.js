@@ -3140,7 +3140,7 @@
       if (pathData === null) {
         return;
       }
-      pathData = pathData.toCharArray();
+      pathData = p.__toCharArray(pathData);
       var cx     = 0,
           cy     = 0,
           ctrlX  = 0,
