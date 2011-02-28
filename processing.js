@@ -3140,7 +3140,7 @@
       if (pathData === null) {
         return;
       }
-      pathData = pathData.toCharArray();
+      pathData = p.__toCharArray(pathData);
       var cx     = 0,
           cy     = 0,
           ctrlX  = 0,
@@ -3215,33 +3215,33 @@
           command = pathData[j];
           valOf = command.valueOf();
           if (valOf === 77) {  // M - move to (absolute)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) {
-						  // need one+ pairs of co-ordinates
-							cx = tmpArray[0];
-							cy = tmpArray[1];
-							this.parsePathMoveto(cx, cy);
-							if (tmpArray.length > 2) {
-								for (j = 2, k = tmpArray.length; j < k; j+=2) {
-									// absolute line to
-									cx = tmpArray[j];
-									cy = tmpArray[j+1];
-									this.parsePathLineto(cx,cy);
-								}
-							}
-						}
+            if (tmpArray.length >= 2 && tmpArray.length % 2 ===0) {
+              // need one+ pairs of co-ordinates
+              cx = tmpArray[0];
+              cy = tmpArray[1];
+              this.parsePathMoveto(cx, cy);
+              if (tmpArray.length > 2) {
+                for (j = 2, k = tmpArray.length; j < k; j+=2) {
+                  // absolute line to
+                  cx = tmpArray[j];
+                  cy = tmpArray[j+1];
+                  this.parsePathLineto(cx,cy);
+                }
+              }
+            }
           } else if (valOf === 109) {  // m - move to (relative)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
-						  // need one+ pairs of co-ordinates
-							this.parsePathMoveto(cx,cy);
-							if (tmpArray.length > 2) {
-								for (j = 2, k = tmpArray.length; j < k; j+=2) {
-									// relative line to
-									cx += tmpArray[j];
-									cy += tmpArray[j + 1];
-									this.parsePathLineto(cx,cy);
-								}
-							}
-						}
+            if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
+              // need one+ pairs of co-ordinates
+              this.parsePathMoveto(cx,cy);
+              if (tmpArray.length > 2) {
+                for (j = 2, k = tmpArray.length; j < k; j+=2) {
+                  // relative line to
+                  cx += tmpArray[j];
+                  cy += tmpArray[j + 1];
+                  this.parsePathLineto(cx,cy);
+                }
+              }
+            }
           } else if (valOf === 76) { // L - lineto (absolute)
             if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
               // need one+ pairs of co-ordinates
@@ -3252,217 +3252,217 @@
               }
             }
           } else if (valOf === 108) { // l - lineto (relative)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
-						  // need one+ pairs of co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=2) {
-								cx += tmpArray[j];
-								cy += tmpArray[j+1];
-								this.parsePathLineto(cx,cy);
-							}
-						}
+            if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
+              // need one+ pairs of co-ordinates
+              for (j = 0, k = tmpArray.length; j < k; j+=2) {
+                cx += tmpArray[j];
+                cy += tmpArray[j+1];
+                this.parsePathLineto(cx,cy);
+              }
+            }
           } else if (valOf === 72) { // H - horizontal lineto (absolute)
-						for (j = 0, k = tmpArray.length; j < k; j++) {
-						  // multiple x co-ordinates can be provided
-							cx = tmpArray[j];
-							this.parsePathLineto(cx, cy);
-						}
+            for (j = 0, k = tmpArray.length; j < k; j++) {
+              // multiple x co-ordinates can be provided
+              cx = tmpArray[j];
+              this.parsePathLineto(cx, cy);
+            }
           } else if (valOf === 104) { // h - horizontal lineto (relative)
-						for (j = 0, k = tmpArray.length; j < k; j++) {
-						  // multiple x co-ordinates can be provided
-							cx += tmpArray[j];
-							this.parsePathLineto(cx, cy);
-						}
+            for (j = 0, k = tmpArray.length; j < k; j++) {
+              // multiple x co-ordinates can be provided
+              cx += tmpArray[j];
+              this.parsePathLineto(cx, cy);
+            }
           } else if (valOf === 86) { // V - vertical lineto (absolute)
-						for (j = 0, k = tmpArray.length; j < k; j++) {
-						  // multiple y co-ordinates can be provided
-							cy = tmpArray[j];
-							this.parsePathLineto(cx, cy);
-						}
+            for (j = 0, k = tmpArray.length; j < k; j++) {
+              // multiple y co-ordinates can be provided
+              cy = tmpArray[j];
+              this.parsePathLineto(cx, cy);
+            }
           } else if (valOf === 118) { // v - vertical lineto (relative)
-						for (j = 0, k = tmpArray.length; j < k; j++) {
-						  // multiple y co-ordinates can be provided
-							cy += tmpArray[j];
-							this.parsePathLineto(cx, cy);
-						}
+            for (j = 0, k = tmpArray.length; j < k; j++) {
+              // multiple y co-ordinates can be provided
+              cy += tmpArray[j];
+              this.parsePathLineto(cx, cy);
+            }
           } else if (valOf === 67) { // C - curve to (absolute)
-						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) {
-						  // need one+ multiples of 6 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=6) {
-								ctrlX1 = tmpArray[j];
-								ctrlY1 = tmpArray[j + 1];
-								ctrlX2 = tmpArray[j + 2];
-								ctrlY2 = tmpArray[j + 3];
-								endX   = tmpArray[j + 4];
-								endY   = tmpArray[j + 5];
-								this.parsePathCurveto(ctrlX1,
-								                      ctrlY1,
-								                      ctrlX2,
-								                      ctrlY2,
-								                      endX,
-								                      endY);
-								cx = endX;
-								cy = endY;
-							}
-						}
+            if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) {
+              // need one+ multiples of 6 co-ordinates
+              for (j = 0, k = tmpArray.length; j < k; j+=6) {
+                ctrlX1 = tmpArray[j];
+                ctrlY1 = tmpArray[j + 1];
+                ctrlX2 = tmpArray[j + 2];
+                ctrlY2 = tmpArray[j + 3];
+                endX   = tmpArray[j + 4];
+                endY   = tmpArray[j + 5];
+                this.parsePathCurveto(ctrlX1,
+                                      ctrlY1,
+                                      ctrlX2,
+                                      ctrlY2,
+                                      endX,
+                                      endY);
+                cx = endX;
+                cy = endY;
+              }
+            }
           } else if (valOf === 99) { // c - curve to (relative)
-						if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) {
-						  // need one+ multiples of 6 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=6) {
-								ctrlX1 = cx + tmpArray[j];
-								ctrlY1 = cy + tmpArray[j + 1];
-								ctrlX2 = cx + tmpArray[j + 2];
-								ctrlY2 = cy + tmpArray[j + 3];
-								endX   = cx + tmpArray[j + 4];
-								endY   = cy + tmpArray[j + 5];
-								this.parsePathCurveto(ctrlX1,
-								                      ctrlY1,
-								                      ctrlX2,
-								                      ctrlY2,
-								                      endX,
-								                      endY);
-								cx = endX;
-								cy = endY;
-							}
-						}
+            if (tmpArray.length >= 6 && tmpArray.length % 6 === 0) {
+              // need one+ multiples of 6 co-ordinates
+              for (j = 0, k = tmpArray.length; j < k; j+=6) {
+                ctrlX1 = cx + tmpArray[j];
+                ctrlY1 = cy + tmpArray[j + 1];
+                ctrlX2 = cx + tmpArray[j + 2];
+                ctrlY2 = cy + tmpArray[j + 3];
+                endX   = cx + tmpArray[j + 4];
+                endY   = cy + tmpArray[j + 5];
+                this.parsePathCurveto(ctrlX1,
+                                      ctrlY1,
+                                      ctrlX2,
+                                      ctrlY2,
+                                      endX,
+                                      endY);
+                cx = endX;
+                cy = endY;
+              }
+            }
           } else if (valOf === 83) { // S - curve to shorthand (absolute)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
-						  // need one+ multiples of 4 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=4) {
-								if (lastInstruction.toLowerCase() ===  "c" ||
-								    lastInstruction.toLowerCase() ===  "s") {
-									ppx    = this.vertices[ this.vertices.length-2 ][0];
-									ppy    = this.vertices[ this.vertices.length-2 ][1];
-									px     = this.vertices[ this.vertices.length-1 ][0];
-									py     = this.vertices[ this.vertices.length-1 ][1];
-									ctrlX1 = px + (px - ppx);
-									ctrlY1 = py + (py - ppy);
-								} else {
-									//If there is no previous curve,
-									//the current point will be used as the first control point.
-									ctrlX1 = this.vertices[this.vertices.length-1][0];
-									ctrlY1 = this.vertices[this.vertices.length-1][1];
-								}
-								ctrlX2 = tmpArray[j];
-								ctrlY2 = tmpArray[j + 1];
-								endX   = tmpArray[j + 2];
-								endY   = tmpArray[j + 3];
-								this.parsePathCurveto(ctrlX1,
-								                      ctrlY1,
-								                      ctrlX2,
-								                      ctrlY2,
-								                      endX,
-								                      endY);
-								cx = endX;
-								cy = endY;
-							}
-						}
+            if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
+              // need one+ multiples of 4 co-ordinates
+              for (j = 0, k = tmpArray.length; j < k; j+=4) {
+                if (lastInstruction.toLowerCase() ===  "c" ||
+                    lastInstruction.toLowerCase() ===  "s") {
+                  ppx    = this.vertices[ this.vertices.length-2 ][0];
+                  ppy    = this.vertices[ this.vertices.length-2 ][1];
+                  px     = this.vertices[ this.vertices.length-1 ][0];
+                  py     = this.vertices[ this.vertices.length-1 ][1];
+                  ctrlX1 = px + (px - ppx);
+                  ctrlY1 = py + (py - ppy);
+                } else {
+                  //If there is no previous curve,
+                  //the current point will be used as the first control point.
+                  ctrlX1 = this.vertices[this.vertices.length-1][0];
+                  ctrlY1 = this.vertices[this.vertices.length-1][1];
+                }
+                ctrlX2 = tmpArray[j];
+                ctrlY2 = tmpArray[j + 1];
+                endX   = tmpArray[j + 2];
+                endY   = tmpArray[j + 3];
+                this.parsePathCurveto(ctrlX1,
+                                      ctrlY1,
+                                      ctrlX2,
+                                      ctrlY2,
+                                      endX,
+                                      endY);
+                cx = endX;
+                cy = endY;
+              }
+            }
           } else if (valOf === 115) { // s - curve to shorthand (relative)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
-						  // need one+ multiples of 4 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=4) {
-								if (lastInstruction.toLowerCase() ===  "c" ||
-								    lastInstruction.toLowerCase() ===  "s") {
-									ppx    = this.vertices[this.vertices.length-2][0];
-									ppy    = this.vertices[this.vertices.length-2][1];
-									px     = this.vertices[this.vertices.length-1][0];
-									py     = this.vertices[this.vertices.length-1][1];
-									ctrlX1 = px + (px - ppx);
-									ctrlY1 = py + (py - ppy);
-								} else {
-									//If there is no previous curve,
-									//the current point will be used as the first control point.
-									ctrlX1 = this.vertices[this.vertices.length-1][0];
-									ctrlY1 = this.vertices[this.vertices.length-1][1];
-								}
-								ctrlX2 = cx + tmpArray[j];
-								ctrlY2 = cy + tmpArray[j + 1];
-								endX   = cx + tmpArray[j + 2];
-								endY   = cy + tmpArray[j + 3];
-								this.parsePathCurveto(ctrlX1,
-								                      ctrlY1,
-								                      ctrlX2,
-								                      ctrlY2,
-								                      endX,
-								                      endY);
-								cx = endX;
-								cy = endY;
-							}
-						}
+            if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
+              // need one+ multiples of 4 co-ordinates
+              for (j = 0, k = tmpArray.length; j < k; j+=4) {
+                if (lastInstruction.toLowerCase() ===  "c" ||
+                    lastInstruction.toLowerCase() ===  "s") {
+                  ppx    = this.vertices[this.vertices.length-2][0];
+                  ppy    = this.vertices[this.vertices.length-2][1];
+                  px     = this.vertices[this.vertices.length-1][0];
+                  py     = this.vertices[this.vertices.length-1][1];
+                  ctrlX1 = px + (px - ppx);
+                  ctrlY1 = py + (py - ppy);
+                } else {
+                  //If there is no previous curve,
+                  //the current point will be used as the first control point.
+                  ctrlX1 = this.vertices[this.vertices.length-1][0];
+                  ctrlY1 = this.vertices[this.vertices.length-1][1];
+                }
+                ctrlX2 = cx + tmpArray[j];
+                ctrlY2 = cy + tmpArray[j + 1];
+                endX   = cx + tmpArray[j + 2];
+                endY   = cy + tmpArray[j + 3];
+                this.parsePathCurveto(ctrlX1,
+                                      ctrlY1,
+                                      ctrlX2,
+                                      ctrlY2,
+                                      endX,
+                                      endY);
+                cx = endX;
+                cy = endY;
+              }
+            }
           } else if (valOf === 81) { // Q - quadratic curve to (absolute)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
-						  // need one+ multiples of 4 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=4) {
-								ctrlX = tmpArray[j];
-								ctrlY = tmpArray[j + 1];
-								endX  = tmpArray[j + 2];
-								endY  = tmpArray[j + 3];
-								this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-								cx = endX;
-								cy = endY;
-							}
-						}
+            if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
+              // need one+ multiples of 4 co-ordinates
+              for (j = 0, k = tmpArray.length; j < k; j+=4) {
+                ctrlX = tmpArray[j];
+                ctrlY = tmpArray[j + 1];
+                endX  = tmpArray[j + 2];
+                endY  = tmpArray[j + 3];
+                this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+                cx = endX;
+                cy = endY;
+              }
+            }
           } else if (valOf === 113) { // q - quadratic curve to (relative)
-						if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
-						  // need one+ multiples of 4 co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=4) {
-								ctrlX = cx + tmpArray[j];
-								ctrlY = cy + tmpArray[j + 1];
-								endX  = cx + tmpArray[j + 2];
-								endY  = cy + tmpArray[j + 3];
-								this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-								cx = endX;
-								cy = endY;
-							}
-						}
+            if (tmpArray.length >= 4 && tmpArray.length % 4 === 0) {
+              // need one+ multiples of 4 co-ordinates
+              for (j = 0, k = tmpArray.length; j < k; j+=4) {
+                ctrlX = cx + tmpArray[j];
+                ctrlY = cy + tmpArray[j + 1];
+                endX  = cx + tmpArray[j + 2];
+                endY  = cy + tmpArray[j + 3];
+                this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+                cx = endX;
+                cy = endY;
+              }
+            }
           } else if (valOf === 84) {
             // T - quadratic curve to shorthand (absolute)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
-						  // need one+ pairs of co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=2) {
-								if (lastInstruction.toLowerCase() ===  "q" ||
-								    lastInstruction.toLowerCase() ===  "t") {
-									ppx   = this.vertices[this.vertices.length-2][0];
-									ppy   = this.vertices[this.vertices.length-2][1];
-									px    = this.vertices[this.vertices.length-1][0];
-									py    = this.vertices[this.vertices.length-1][1];
-									ctrlX = px + (px - ppx);
-									ctrlY = py + (py - ppy);
-								} else {
-									// If there is no previous command or if the previous command
-									// was not a Q, q, T or t, assume the control point is
-									// coincident with the current point.
-									ctrlX = cx;
-									ctrlY = cy;
-								}
-								endX  = tmpArray[j];
-								endY  = tmpArray[j + 1];
-								this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
-								cx = endX;
-								cy = endY;
-							}
-						}
+            if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
+              // need one+ pairs of co-ordinates
+              for (j = 0, k = tmpArray.length; j < k; j+=2) {
+                if (lastInstruction.toLowerCase() ===  "q" ||
+                    lastInstruction.toLowerCase() ===  "t") {
+                  ppx   = this.vertices[this.vertices.length-2][0];
+                  ppy   = this.vertices[this.vertices.length-2][1];
+                  px    = this.vertices[this.vertices.length-1][0];
+                  py    = this.vertices[this.vertices.length-1][1];
+                  ctrlX = px + (px - ppx);
+                  ctrlY = py + (py - ppy);
+                } else {
+                  // If there is no previous command or if the previous command
+                  // was not a Q, q, T or t, assume the control point is
+                  // coincident with the current point.
+                  ctrlX = cx;
+                  ctrlY = cy;
+                }
+                endX  = tmpArray[j];
+                endY  = tmpArray[j + 1];
+                this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
+                cx = endX;
+                cy = endY;
+              }
+            }
           } else if (valOf === 116) {
             // t - quadratic curve to shorthand (relative)
-						if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
-						  // need one+ pairs of co-ordinates
-							for (j = 0, k = tmpArray.length; j < k; j+=2) {
-								if (lastInstruction.toLowerCase() ===  "q" ||
-								    lastInstruction.toLowerCase() ===  "t") {
-									ppx   = this.vertices[this.vertices.length-2][0];
-									ppy   = this.vertices[this.vertices.length-2][1];
-									px    = this.vertices[this.vertices.length-1][0];
-									py    = this.vertices[this.vertices.length-1][1];
-									ctrlX = px + (px - ppx);
-									ctrlY = py + (py - ppy);
-								} else {
-									// If there is no previous command or if the previous command
-									// was not a Q, q, T or t, assume the control point is
-									// coincident with the current point.
-									ctrlX = cx;
-									ctrlY = cy;
-								}
-								endX  = cx + tmpArray[j];
-								endY  = cy + tmpArray[j + 1];
+            if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
+              // need one+ pairs of co-ordinates
+              for (j = 0, k = tmpArray.length; j < k; j+=2) {
+                if (lastInstruction.toLowerCase() ===  "q" ||
+                    lastInstruction.toLowerCase() ===  "t") {
+                  ppx   = this.vertices[this.vertices.length-2][0];
+                  ppy   = this.vertices[this.vertices.length-2][1];
+                  px    = this.vertices[this.vertices.length-1][0];
+                  py    = this.vertices[this.vertices.length-1][1];
+                  ctrlX = px + (px - ppx);
+                  ctrlY = py + (py - ppy);
+                } else {
+                  // If there is no previous command or if the previous command
+                  // was not a Q, q, T or t, assume the control point is
+                  // coincident with the current point.
+                  ctrlX = cx;
+                  ctrlY = cy;
+                }
+                endX  = cx + tmpArray[j];
+                endY  = cy + tmpArray[j + 1];
                 this.parsePathQuadto(cx, cy, ctrlX, ctrlY, endX, endY);
                 cx = endX;
                 cy = endY;
