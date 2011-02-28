@@ -1,0 +1,14 @@
+void setup(){
+  size(300, 300, P3D);
+  noStroke();
+}
+
+void draw(){
+  background(0);
+  lights();
+    translate(width/2, height/2, 0);
+    for(int i = 0; i < 100; i++){
+      sphere(30);
+  }
+  document.getElementById('fps').innerHTML = Math.floor(frameRate);
+}
