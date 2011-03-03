@@ -1279,6 +1279,7 @@
     // "Private" variables used to maintain state
     var curContext,
         curSketch,
+        drawing, // hold a Drawing2D or Drawing3D object
         online = true,
         doFill = true,
         fillStyle = [1.0, 1.0, 1.0, 1.0],
@@ -2163,6 +2164,44 @@
 
       return programObject;
     };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 2D/3D drawing handling
+    ////////////////////////////////////////////////////////////////////////////
+    var Drawing2D = function() {};
+    var Drawing3D = function() {};
+    
+    /**
+     * Specifies an amount to displace objects within the display window. The x parameter specifies left/right translation,
+     * the y parameter specifies up/down translation, and the z parameter specifies translations toward/away from the screen.
+     * Using this function with the z  parameter requires using the P3D or OPENGL parameter in combination with size as shown
+     * in the above example. Transformations apply to everything that happens after and subsequent calls to the function
+     * accumulates the effect. For example, calling translate(50, 0) and then translate(20, 0) is the same as translate(70, 0).
+     * If translate() is called within draw(), the transformation is reset when the loop begins again.
+     * This function can be further controlled by the pushMatrix() and popMatrix().
+     *
+     * @param {int|float} x        left/right translation
+     * @param {int|float} y        up/down translation
+     * @param {int|float} z        forward/back translation
+     *
+     * @returns none
+     *
+     * @see pushMatrix
+     * @see popMatrix
+     * @see scale
+     * @see rotate
+     * @see rotateX
+     * @see rotateY
+     * @see rotateZ
+     */
+    Drawing2D.prototype.translate = function translate(x, y, z) {
+      curContext.translate(x, y);
+    }
+    
+    Drawing3D.prototype.translate = function translate(x, y, z) {
+      forwardTransform.translate(x, y, z);
+      reverseTransform.invTranslate(x, y, z);
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
@@ -6868,38 +6907,6 @@
     */
     p.printMatrix = function printMatrix() {
       modelView.print();
-    };
-
-    /**
-    * Specifies an amount to displace objects within the display window. The x parameter specifies left/right translation,
-    * the y parameter specifies up/down translation, and the z parameter specifies translations toward/away from the screen.
-    * Using this function with the z  parameter requires using the P3D or OPENGL parameter in combination with size as shown
-    * in the above example. Transformations apply to everything that happens after and subsequent calls to the function
-    * accumulates the effect. For example, calling translate(50, 0) and then translate(20, 0) is the same as translate(70, 0).
-    * If translate() is called within draw(), the transformation is reset when the loop begins again.
-    * This function can be further controlled by the pushMatrix() and popMatrix().
-    *
-    * @param {int|float} x        left/right translation
-    * @param {int|float} y        up/down translation
-    * @param {int|float} z        forward/back translation
-    *
-    * @returns none
-    *
-    * @see pushMatrix
-    * @see popMatrix
-    * @see scale
-    * @see rotate
-    * @see rotateX
-    * @see rotateY
-    * @see rotateZ
-    */
-    p.translate = function translate(x, y, z) {
-      if (p.use3DContext) {
-        forwardTransform.translate(x, y, z);
-        reverseTransform.invTranslate(x, y, z);
-      } else {
-        curContext.translate(x, y);
-      }
     };
 
     /**
@@ -16607,6 +16614,17 @@
       // Expose internal field for diagnostics and testing
       p.externals.sketch = curSketch;
 
+      // Drawing2D/Drawing3D
+      if (curSketch.use3DContext) {
+        drawing = new Drawing3D();
+      } else {
+        drawing = new Drawing2D();
+      }
+      
+      // Wire up functions
+      p.translate = drawing.translate;
+      
+      // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
 
       if ("mozOpaque" in curElement) {
