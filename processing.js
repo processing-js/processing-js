@@ -6966,12 +6966,12 @@
     * @see rotateY
     * @see rotateZ
     */
-    p.pushMatrix = function pushMatrix() {
-      if (p.use3DContext) {
-        userMatrixStack.load(modelView);
-      } else {
-        saveContext();
-      }
+    Drawing2D.prototype.pushMatrix = function pushMatrix() {
+      saveContext();
+    };
+    
+    Drawing3D.prototype.pushMatrix = function pushMatrix() {
+      userMatrixStack.load(modelView);
     };
 
     /**
@@ -16631,9 +16631,10 @@
         drawing = new Drawing2D();
       }
       
-      // Wire up functions
+      // Wire up functions (Should this be put into an array instead?)
       p.translate = drawing.translate;
       p.scale = drawing.scale;
+      p.pushMatrix = drawing.pushMatrix;
       p.applyMatrix = drawing.applyMatrix;
       
       // For compatibility until this re-write is complete
