@@ -2174,9 +2174,9 @@
     var Drawing3D = function() {};
     
     // Setup the prototype chain
-    Drawing2D.prototype = new DrawingShared;
+    Drawing2D.prototype = new DrawingShared();
     Drawing2D.prototype.constructor = Drawing2D;
-    Drawing3D.prototype = new DrawingShared;
+    Drawing3D.prototype = new DrawingShared();
     Drawing3D.prototype.constructor = Drawing3D;
     
     /**
@@ -2204,12 +2204,12 @@
      */
     Drawing2D.prototype.translate = function translate(x, y, z) {
       curContext.translate(x, y);
-    }
+    };
     
     Drawing3D.prototype.translate = function translate(x, y, z) {
       forwardTransform.translate(x, y, z);
       reverseTransform.invTranslate(x, y, z);
-    }
+    };
     
     /**
     * Multiplies the current matrix by the one specified through the parameters. This is very slow because it will
@@ -2229,7 +2229,7 @@
       var a = arguments;
       forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
       reverseTransform.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
-    }
+    };
     
     Drawing2D.prototype.applyMatrix = function() {
       var a = arguments;
@@ -2237,8 +2237,8 @@
         a[cnt] = 0;
       }
       a[10] = a[15] = 1;
-      DrawingShared.prototype.applyMatrix.apply(this, arguments)
-    }
+      DrawingShared.prototype.applyMatrix.apply(this, arguments);
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
