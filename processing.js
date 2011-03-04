@@ -7149,7 +7149,7 @@
       curContext.rotate(angleInRadians);
     };
     
-    Drawing2D.prototype.rotate = function rotate(angleInRadians) {
+    Drawing3D.prototype.rotate = function rotate(angleInRadians) {
       forwardTransform.rotateZ(angleInRadians);
       reverseTransform.invRotateZ(angleInRadians);
     };
@@ -7360,7 +7360,7 @@
     * @see noLoop
     * @see loop
     */
-    p.redraw = function redraw() {
+    DrawingShared.prototype.redraw = function redraw() {
       var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
@@ -7373,29 +7373,39 @@
       }
 
       p.frameCount++;
-
+    };
+    
+    Drawing2D.prototype.redraw = function redraw() {
+      DrawingShared.prototype.redraw.apply(this, arguments);
+      
       inDraw = true;
-
-      if (p.use3DContext) {
-        // even if the color buffer isn't cleared with background(),
-        // the depth buffer needs to be cleared regardless.
-        curContext.clear(curContext.DEPTH_BUFFER_BIT);
-        curContextCache = { attributes: {}, locations: {} };
-        // Delete all the lighting states and the materials the
-        // user set in the last draw() call.
-        p.noLights();
-        p.lightFalloff(1, 0, 0);
-        p.shininess(1);
-        p.ambient(255, 255, 255);
-        p.specular(0, 0, 0);
-        p.camera();
-        p.draw();
-      } else {
-        saveContext();
-        p.draw();
-        restoreContext();
-      }
-
+      
+      saveContext();
+      p.draw();
+      restoreContext();
+      
+      inDraw = false;
+    };
+    
+    Drawing3D.prototype.redraw = function redraw() {
+      DrawingShared.prototype.redraw.apply(this, arguments);
+      
+      inDraw = true;
+      
+      // even if the color buffer isn't cleared with background(),
+      // the depth buffer needs to be cleared regardless.
+      curContext.clear(curContext.DEPTH_BUFFER_BIT);
+      curContextCache = { attributes: {}, locations: {} };
+      // Delete all the lighting states and the materials the
+      // user set in the last draw() call.
+      p.noLights();
+      p.lightFalloff(1, 0, 0);
+      p.shininess(1);
+      p.ambient(255, 255, 255);
+      p.specular(0, 0, 0);
+      p.camera();
+      p.draw();
+      
       inDraw = false;
     };
 
@@ -16638,7 +16648,8 @@
       p.popMatrix = drawing.popMatrix;
       p.resetMatrix = drawing.resetMatrix;
       p.applyMatrix = drawing.applyMatrix;
-      p.rotate = drawing.applyMatrix;
+      p.rotate = drawing.rotate;
+      p.redraw = drawing.redraw;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
