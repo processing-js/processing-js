@@ -6886,28 +6886,28 @@
     };
 
     /**
-     * Specifies an amount to displace objects within the display window. The x parameter specifies left/right translation,
-     * the y parameter specifies up/down translation, and the z parameter specifies translations toward/away from the screen.
-     * Using this function with the z  parameter requires using the P3D or OPENGL parameter in combination with size as shown
-     * in the above example. Transformations apply to everything that happens after and subsequent calls to the function
-     * accumulates the effect. For example, calling translate(50, 0) and then translate(20, 0) is the same as translate(70, 0).
-     * If translate() is called within draw(), the transformation is reset when the loop begins again.
-     * This function can be further controlled by the pushMatrix() and popMatrix().
-     *
-     * @param {int|float} x        left/right translation
-     * @param {int|float} y        up/down translation
-     * @param {int|float} z        forward/back translation
-     *
-     * @returns none
-     *
-     * @see pushMatrix
-     * @see popMatrix
-     * @see scale
-     * @see rotate
-     * @see rotateX
-     * @see rotateY
-     * @see rotateZ
-     */
+    * Specifies an amount to displace objects within the display window. The x parameter specifies left/right translation,
+    * the y parameter specifies up/down translation, and the z parameter specifies translations toward/away from the screen.
+    * Using this function with the z  parameter requires using the P3D or OPENGL parameter in combination with size as shown
+    * in the above example. Transformations apply to everything that happens after and subsequent calls to the function
+    * accumulates the effect. For example, calling translate(50, 0) and then translate(20, 0) is the same as translate(70, 0).
+    * If translate() is called within draw(), the transformation is reset when the loop begins again.
+    * This function can be further controlled by the pushMatrix() and popMatrix().
+    *
+    * @param {int|float} x        left/right translation
+    * @param {int|float} y        up/down translation
+    * @param {int|float} z        forward/back translation
+    *
+    * @returns none
+    *
+    * @see pushMatrix
+    * @see popMatrix
+    * @see scale
+    * @see rotate
+    * @see rotateX
+    * @see rotateY
+    * @see rotateZ
+    */
     Drawing2D.prototype.translate = function translate(x, y, z) {
       curContext.translate(x, y);
     };
@@ -7013,19 +7013,19 @@
     };
 
     /**
-     * Multiplies the current matrix by the one specified through the parameters. This is very slow because it will
-     * try to calculate the inverse of the transform, so avoid it whenever possible. The equivalent function
-     * in OpenGL is glMultMatrix().
-     *
-     * @param {int|float} n00-n15      numbers which define the 4x4 matrix to be multiplied
-     *
-     * @returns none
-     *
-     * @see popMatrix
-     * @see pushMatrix
-     * @see resetMatrix
-     * @see printMatrix
-     */
+    * Multiplies the current matrix by the one specified through the parameters. This is very slow because it will
+    * try to calculate the inverse of the transform, so avoid it whenever possible. The equivalent function
+    * in OpenGL is glMultMatrix().
+    *
+    * @param {int|float} n00-n15      numbers which define the 4x4 matrix to be multiplied
+    *
+    * @returns none
+    *
+    * @see popMatrix
+    * @see pushMatrix
+    * @see resetMatrix
+    * @see printMatrix
+    */
     DrawingShared.prototype.applyMatrix = function() {
       var a = arguments;
       forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
