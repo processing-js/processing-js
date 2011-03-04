@@ -7145,13 +7145,13 @@
     * @see popMatrix
     * @see pushMatrix
     */
-    p.rotate = function rotate(angleInRadians) {
-      if (p.use3DContext) {
-        forwardTransform.rotateZ(angleInRadians);
-        reverseTransform.invRotateZ(angleInRadians);
-      } else {
-        curContext.rotate(angleInRadians);
-      }
+    Drawing2D.prototype.rotate = function rotate(angleInRadians) {
+      curContext.rotate(angleInRadians);
+    };
+    
+    Drawing2D.prototype.rotate = function rotate(angleInRadians) {
+      forwardTransform.rotateZ(angleInRadians);
+      reverseTransform.invRotateZ(angleInRadians);
     };
 
     /**
@@ -16638,6 +16638,7 @@
       p.popMatrix = drawing.popMatrix;
       p.resetMatrix = drawing.resetMatrix;
       p.applyMatrix = drawing.applyMatrix;
+      p.rotate = drawing.applyMatrix;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
