@@ -6941,13 +6941,13 @@
     * @see rotateY
     * @see rotateZ
     */
-    p.scale = function scale(x, y, z) {
-      if (p.use3DContext) {
-        forwardTransform.scale(x, y, z);
-        reverseTransform.invScale(x, y, z);
-      } else {
-        curContext.scale(x, y || x);
-      }
+    Drawing2D.prototype.scale = function scale(x, y, z) {
+      curContext.scale(x, y || x);
+    };
+    
+    Drawing3D.prototype.scale = function scale(x, y, z) {
+      forwardTransform.scale(x, y, z);
+      reverseTransform.invScale(x, y, z);
     };
 
     /**
@@ -16633,6 +16633,7 @@
       
       // Wire up functions
       p.translate = drawing.translate;
+      p.scale = drawing.scale;
       p.applyMatrix = drawing.applyMatrix;
       
       // For compatibility until this re-write is complete
