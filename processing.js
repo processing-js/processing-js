@@ -2168,8 +2168,16 @@
     ////////////////////////////////////////////////////////////////////////////
     // 2D/3D drawing handling
     ////////////////////////////////////////////////////////////////////////////
+    // Objects for shared, 2D and 3D contexts
+    var DrawingShared = function() {};
     var Drawing2D = function() {};
     var Drawing3D = function() {};
+    
+    // Setup the prototype chain
+    Drawing2D.prototype = new DrawingShared;
+    Drawing2D.prototype.constructor = Drawing2D;
+    Drawing3D.prototype = new DrawingShared;
+    Drawing3D.prototype.constructor = Drawing3D;
     
     /**
      * Specifies an amount to displace objects within the display window. The x parameter specifies left/right translation,
@@ -2201,6 +2209,35 @@
     Drawing3D.prototype.translate = function translate(x, y, z) {
       forwardTransform.translate(x, y, z);
       reverseTransform.invTranslate(x, y, z);
+    }
+    
+    /**
+    * Multiplies the current matrix by the one specified through the parameters. This is very slow because it will
+    * try to calculate the inverse of the transform, so avoid it whenever possible. The equivalent function
+    * in OpenGL is glMultMatrix().
+    *
+    * @param {int|float} n00-n15      numbers which define the 4x4 matrix to be multiplied
+    *
+    * @returns none
+    *
+    * @see popMatrix
+    * @see pushMatrix
+    * @see resetMatrix
+    * @see printMatrix
+    */
+    DrawingShared.prototype.applyMatrix = function() {
+      var a = arguments;
+      forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
+      reverseTransform.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
+    }
+    
+    Drawing2D.prototype.applyMatrix = function() {
+      var a = arguments;
+      for (var cnt = a.length; cnt < 16; cnt++) {
+        a[cnt] = 0;
+      }
+      a[10] = a[15] = 1;
+      DrawingShared.prototype.applyMatrix.apply(this, arguments)
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -7002,33 +7039,6 @@
       } else {
         curContext.setTransform(1,0,0,1,0,0);
       }
-    };
-
-    /**
-    * Multiplies the current matrix by the one specified through the parameters. This is very slow because it will
-    * try to calculate the inverse of the transform, so avoid it whenever possible. The equivalent function
-    * in OpenGL is glMultMatrix().
-    *
-    * @param {int|float} n00-n15      numbers which define the 4x4 matrix to be multiplied
-    *
-    * @returns none
-    *
-    * @see popMatrix
-    * @see pushMatrix
-    * @see resetMatrix
-    * @see printMatrix
-    */
-    p.applyMatrix = function applyMatrix() {
-      var a = arguments;
-      if (!p.use3DContext) {
-        for (var cnt = a.length; cnt < 16; cnt++) {
-          a[cnt] = 0;
-        }
-        a[10] = a[15] = 1;
-      }
-
-      forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
-      reverseTransform.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
     };
 
     /**
@@ -16623,6 +16633,7 @@
       
       // Wire up functions
       p.translate = drawing.translate;
+      p.applyMatrix = drawing.applyMatrix;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
