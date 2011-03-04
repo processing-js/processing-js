@@ -2212,19 +2212,19 @@
     };
     
     /**
-    * Multiplies the current matrix by the one specified through the parameters. This is very slow because it will
-    * try to calculate the inverse of the transform, so avoid it whenever possible. The equivalent function
-    * in OpenGL is glMultMatrix().
-    *
-    * @param {int|float} n00-n15      numbers which define the 4x4 matrix to be multiplied
-    *
-    * @returns none
-    *
-    * @see popMatrix
-    * @see pushMatrix
-    * @see resetMatrix
-    * @see printMatrix
-    */
+     * Multiplies the current matrix by the one specified through the parameters. This is very slow because it will
+     * try to calculate the inverse of the transform, so avoid it whenever possible. The equivalent function
+     * in OpenGL is glMultMatrix().
+     *
+     * @param {int|float} n00-n15      numbers which define the 4x4 matrix to be multiplied
+     *
+     * @returns none
+     *
+     * @see popMatrix
+     * @see pushMatrix
+     * @see resetMatrix
+     * @see printMatrix
+     */
     DrawingShared.prototype.applyMatrix = function() {
       var a = arguments;
       forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
