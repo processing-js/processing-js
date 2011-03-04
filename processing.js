@@ -6985,12 +6985,12 @@
     * @see popMatrix
     * @see pushMatrix
     */
-    p.popMatrix = function popMatrix() {
-      if (p.use3DContext) {
-        modelView.set(userMatrixStack.pop());
-      } else {
-        restoreContext();
-      }
+    Drawing2D.prototype.popMatrix = function popMatrix() {
+      restoreContext();
+    };
+    
+    Drawing3D.prototype.popMatrix = function popMatrix() {
+      modelView.set(userMatrixStack.pop());
     };
 
     /**
@@ -7003,13 +7003,13 @@
     * @see applyMatrix
     * @see printMatrix
     */
-    p.resetMatrix = function resetMatrix() {
-      if (p.use3DContext) {
-        forwardTransform.reset();
-        reverseTransform.reset();
-      } else {
-        curContext.setTransform(1,0,0,1,0,0);
-      }
+    Drawing2D.prototype.resetMatrix = function resetMatrix() {
+      curContext.setTransform(1,0,0,1,0,0);
+    };
+    
+    Drawing3D.prototype.resetMatrix = function resetMatrix() {
+      forwardTransform.reset();
+      reverseTransform.reset();
     };
 
     /**
@@ -16635,6 +16635,8 @@
       p.translate = drawing.translate;
       p.scale = drawing.scale;
       p.pushMatrix = drawing.pushMatrix;
+      p.popMatrix = drawing.popMatrix;
+      p.resetMatrix = drawing.resetMatrix;
       p.applyMatrix = drawing.applyMatrix;
       
       // For compatibility until this re-write is complete
