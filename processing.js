@@ -9102,18 +9102,20 @@
     };
 
     // Set default background behavior for 2D and 3D contexts
-    var refreshBackground = function() {
+    Drawing2D.prototype.refreshBackground = function() {
       if (!curSketch.options.isTransparent) {
-        if (p.use3DContext) {
-          // fill background default opaque gray
-          curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
-          curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
-        } else {
-          // fill background default opaque gray
-          curContext.fillStyle = "rgb(204, 204, 204)";
-          curContext.fillRect(0, 0, p.width, p.height);
-          isFillDirty = true;
-        }
+        // fill background default opaque gray
+        curContext.fillStyle = "rgb(204, 204, 204)";
+        curContext.fillRect(0, 0, p.width, p.height);
+        isFillDirty = true;
+      }
+    };
+    
+    Drawing3D.prototype.refreshBackground = function() {
+      if (!curSketch.options.isTransparent) {
+        // fill background default opaque gray
+        curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
+        curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
       }
     };
 
@@ -16650,6 +16652,7 @@
       p.applyMatrix = drawing.applyMatrix;
       p.rotate = drawing.rotate;
       p.redraw = drawing.redraw;
+      refreshBackground = drawing.refreshBackground;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
