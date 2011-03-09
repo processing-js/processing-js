@@ -9404,27 +9404,27 @@
      * @see pointLight
      * @see spotLight
     */
-    p.directionalLight = function(r, g, b, nx, ny, nz) {
-      if (p.use3DContext) {
-        if (lightCount === PConstants.MAX_LIGHTS) {
-          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
-        }
-
-        curContext.useProgram(programObject3D);
-
-        // We need to multiply the direction by the model view matrix, but
-        // the mult function checks the w component of the vector, if it isn't
-        // present, it uses 1, so we use a very small value as a work around.
-        var dir = [nx, ny, nz, -0.00000000001];
-        var view = new PMatrix3D();
-        view.set(modelView.array());
-        view.mult(dir, dir);
-
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", [dir[0], -dir[1], dir[2]]);
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
-        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+    Drawing2D.prototype.directionalLight = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.directionalLight = function(r, g, b, nx, ny, nz) {
+      if (lightCount === PConstants.MAX_LIGHTS) {
+        throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
+
+      curContext.useProgram(programObject3D);
+
+      // We need to multiply the direction by the model view matrix, but
+      // the mult function checks the w component of the vector, if it isn't
+      // present, it uses 1, so we use a very small value as a work around.
+      var dir = [nx, ny, nz, -0.00000000001];
+      var view = new PMatrix3D();
+      view.set(modelView.array());
+      view.mult(dir, dir);
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", [dir[0], -dir[1], dir[2]]);
+      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
+      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
 
     /**
@@ -16656,8 +16656,9 @@
       p.applyMatrix = drawing.applyMatrix;
       p.rotate = drawing.rotate;
       p.redraw = drawing.redraw;
-      refreshBackground = drawing.refreshBackground;
+      var refreshBackground = drawing.refreshBackground;
       p.ambientLight = drawing.ambientLight;
+      p.directionalLight = drawing.directionalLight;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
