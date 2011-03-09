@@ -2181,7 +2181,7 @@
     
     // A no-op function for when the user calls 3D functions from a 2D sketch
     // We can change this to a throw or console.error() later if we want
-    DrawingShared.prototype.3DonlyFunction = function(){};
+    DrawingShared.prototype.a3DOnlyFunction = function(){};
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
@@ -9356,7 +9356,7 @@
      * @see pointLight
      * @see spotLight
     */
-    Drawing2D.prototype.ambientLight = DrawingShared.prototype.3DonlyFunction;
+    Drawing2D.prototype.ambientLight = DrawingShared.prototype.a3DOnlyFunction;
     
     Drawing3D.prototype.ambientLight = function(r, g, b, x, y, z) {
       if (lightCount === PConstants.MAX_LIGHTS) {
@@ -16657,6 +16657,7 @@
       p.rotate = drawing.rotate;
       p.redraw = drawing.redraw;
       refreshBackground = drawing.refreshBackground;
+      p.ambientLight = drawing.ambientLight;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
