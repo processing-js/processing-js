@@ -9454,11 +9454,11 @@
      * @see spotLight
      * @see lightSpecular
     */
-    p.lightFalloff = function lightFalloff(constant, linear, quadratic) {
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
-      }
+    Drawing2D.prototype.lightFalloff = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.lightFalloff = function (constant, linear, quadratic) {
+      curContext.useProgram(programObject3D);
+      uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
     };
 
     /**
@@ -9480,11 +9480,11 @@
      * @see pointLight
      * @see spotLight
     */
-    p.lightSpecular = function lightSpecular(r, g, b) {
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
-      }
+    Drawing2D.prototype.lightSpecular = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.lightSpecular = function (r, g, b) {
+      curContext.useProgram(programObject3D);
+      uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
     };
 
     /**
@@ -16659,6 +16659,8 @@
       var refreshBackground = drawing.refreshBackground;
       p.ambientLight = drawing.ambientLight;
       p.directionalLight = drawing.directionalLight;
+      p.lightFalloff = drawing.lightFalloff;
+      p.lightSpecular = drawing.lightSpecular;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
