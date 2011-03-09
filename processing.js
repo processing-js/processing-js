@@ -7038,7 +7038,7 @@
         a[cnt] = 0;
       }
       a[10] = a[15] = 1;
-      DrawingShared.prototype.applyMatrix.apply(this, arguments);
+      DrawingShared.prototype.applyMatrix.apply(this, a);
     };
 
     /**
