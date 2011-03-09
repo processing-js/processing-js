@@ -2178,6 +2178,10 @@
     Drawing2D.prototype.constructor = Drawing2D;
     Drawing3D.prototype = new DrawingShared();
     Drawing3D.prototype.constructor = Drawing3D;
+    
+    // A no-op function for when the user calls 3D functions from a 2D sketch
+    // We can change this to a throw or console.error() later if we want
+    DrawingShared.prototype.3DonlyFunction = function(){};
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
@@ -9352,24 +9356,24 @@
      * @see pointLight
      * @see spotLight
     */
-    p.ambientLight = function(r, g, b, x, y, z) {
-      if (p.use3DContext) {
-        if (lightCount === PConstants.MAX_LIGHTS) {
-          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
-        }
-
-        var pos = new PVector(x, y, z);
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.mult(pos, pos);
-
-        curContext.useProgram(programObject3D);
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 0);
-        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+    Drawing2D.prototype.ambientLight = DrawingShared.prototype.3DonlyFunction;
+    
+    Drawing3D.prototype.ambientLight = function(r, g, b, x, y, z) {
+      if (lightCount === PConstants.MAX_LIGHTS) {
+        throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
+
+      var pos = new PVector(x, y, z);
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.mult(pos, pos);
+
+      curContext.useProgram(programObject3D);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
+      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 0);
+      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
 
     /**
