@@ -4293,7 +4293,7 @@
        *
        * @return {boolean} true if the element equals another element
        */
-      equalsXMLElement: function (object) {
+      equals = equalsXMLElement: function (object) {
         if (object instanceof XMLElement) {
           var i, j;
           if (this.name !== object.getLocalName()) { return false; }
@@ -4306,8 +4306,8 @@
           if (this.children.length !== object.getChildCount()) { return false; }
           var child1, child2;
           for (i = 0, j = this.children.length; i < j; i++) {
-            child1 = this.getChildAtIndex(i);
-            child2 = object.getChildAtIndex(i);
+            child1 = this.getChild(i);
+            child2 = object.getChild(i);
             if (! child1.equalsXMLElement(child2)) { return false; }
           }
           return true;
