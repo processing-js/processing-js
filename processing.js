@@ -10320,30 +10320,30 @@
      * @see specular
      * @see shininess
     */
-    p.ambient = function ambient() {
+    Drawing2D.prototype.ambient = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.ambient = function() {
       // create an alias to shorten code
       var a = arguments;
 
       // either a shade of gray or a 'color' object.
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformi("usingMat3d", programObject3D, "usingMat", true);
+      curContext.useProgram(programObject3D);
+      uniformi("usingMat3d", programObject3D, "usingMat", true);
 
-        if (a.length === 1) {
-          // color object was passed in
-          if (typeof a[0] === "string") {
-            var c = a[0].slice(5, -1).split(",");
-            uniformf("mat_ambient3d", programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
-          }
-          // else a single number was passed in for gray shade
-          else {
-            uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
-          }
+      if (a.length === 1) {
+        // color object was passed in
+        if (typeof a[0] === "string") {
+          var c = a[0].slice(5, -1).split(",");
+          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
         }
-        // Otherwise three values were provided (r,g,b)
+        // else a single number was passed in for gray shade
         else {
-          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
+          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
         }
+      }
+      // Otherwise three values were provided (r,g,b)
+      else {
+        uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
       }
     };
 
@@ -16667,6 +16667,7 @@
       p.spotLight = drawing.spotLight;
       p.box = drawing.box;
       p.sphere = drawing.sphere;
+      p.ambient = drawing.ambient;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
