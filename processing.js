@@ -10371,31 +10371,31 @@
      * @see specular
      * @see shininess
     */
-    p.emissive = function emissive() {
+    Drawing2D.prototype.emissive = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.emissive = function() {
       // create an alias to shorten code
       var a = arguments;
 
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformi("usingMat3d", programObject3D, "usingMat", true);
+      curContext.useProgram(programObject3D);
+      uniformi("usingMat3d", programObject3D, "usingMat", true);
 
-        // If only one argument was provided, the user either gave us a
-        // shade of gray or a 'color' object.
-        if (a.length === 1) {
-          // color object was passed in
-          if (typeof a[0] === "string") {
-            var c = a[0].slice(5, -1).split(",");
-            uniformf("mat_emissive3d", programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
-          }
-          // else a regular number was passed in for gray shade
-          else {
-            uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
-          }
+      // If only one argument was provided, the user either gave us a
+      // shade of gray or a 'color' object.
+      if (a.length === 1) {
+        // color object was passed in
+        if (typeof a[0] === "string") {
+          var c = a[0].slice(5, -1).split(",");
+          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
         }
-        // Otherwise three values were provided (r,g,b)
+        // else a regular number was passed in for gray shade
         else {
-          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
+          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
         }
+      }
+      // Otherwise three values were provided (r,g,b)
+      else {
+        uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
       }
     };
 
@@ -10408,12 +10408,12 @@
      *
      * @returns none
     */
-    p.shininess = function shininess(shine) {
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformi("usingMat3d", programObject3D, "usingMat", true);
-        uniformf("shininess3d", programObject3D, "shininess", shine);
-      }
+    Drawing2D.prototype.shininess = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.shininess = function(shine) {
+      curContext.useProgram(programObject3D);
+      uniformi("usingMat3d", programObject3D, "usingMat", true);
+      uniformf("shininess3d", programObject3D, "shininess", shine);
     };
 
     /**
@@ -10452,14 +10452,14 @@
      * @see emissive
      * @see shininess
     */
-    p.specular = function specular() {
+    Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.specular = function() {
       var c = p.color.apply(this, arguments);
 
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformi("usingMat3d", programObject3D, "usingMat", true);
-        uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
-      }
+      curContext.useProgram(programObject3D);
+      uniformi("usingMat3d", programObject3D, "usingMat", true);
+      uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -16668,6 +16668,9 @@
       p.box = drawing.box;
       p.sphere = drawing.sphere;
       p.ambient = drawing.ambient;
+      p.emissive = drawing.emissive;
+      p.shininess = drawing.shininess;
+      p.specular = drawing.specular;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
