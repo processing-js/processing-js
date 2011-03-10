@@ -4149,7 +4149,8 @@
     XMLElement.prototype = {
       /**
        * @member XMLElement
-       * The parse() function retrieves the file via ajax() and uses DOMParser() parseFromString method to make an XML document
+       * The parse() function retrieves the file via ajax() and uses DOMParser()
+       * parseFromString method to make an XML document
        * @addon
        *
        * @param {String} filename name of the XML/SVG file to load
@@ -4206,7 +4207,7 @@
           return this.createPCDataElement(elementpath.textContent);
         }      
 
-	// bind all attributes
+        // bind all attributes
         for (l = 0, m = elementpath.attributes.length; l < m; l++) {
           tmpattrib    = elementpath.attributes[l];
           xmlattribute = new XMLAttribute(tmpattrib.getname,
@@ -4217,7 +4218,7 @@
           xmlelement.attributes.push(xmlattribute);
         }
 
-	// bind all children
+        // bind all children
         for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
           var node = elementpath.childNodes[l];
           if (node.nodeType === 1 || node.nodeType === 3) { // ELEMENT_NODE or TEXT_NODE
@@ -4764,14 +4765,18 @@
        toString: function() {
          // shortcut for text nodes
          if(this.type==="TEXT") { return this.content; }
+
          // real XMLElements
          var tagstring = (this.namespace!=="" && this.namespace!=this.name? this.namespace + ":" : "") + this.name;
          var xmlstring =  "<" + tagstring;
+
          // serialize the attributes to XML string
          for (a in this.attributes) {
            var attr = this.attributes[a];
            xmlstring += " "  + attr.getName() + "=" + '"' + attr.getValue() + '"';
          }
+
+         // serialize all children to XML string
          if (this.children.length==0) {
            if (this.content==="") {
              xmlstring += "/>";
@@ -4780,16 +4785,14 @@
            }
          } else {
            xmlstring += ">";
-           // serialise all children
            for(c in this.children) {
              xmlstring += this.children[c].toString();
            }
            xmlstring += "</" + tagstring + ">";
          }
-         return xmlstring;s
+         return xmlstring;
        }
     };
-
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
