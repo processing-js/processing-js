@@ -9534,26 +9534,26 @@
      * @see ambientLight
      * @see spotLight
     */
-    p.pointLight = function(r, g, b, x, y, z) {
-      if (p.use3DContext) {
-        if (lightCount === PConstants.MAX_LIGHTS) {
-          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
-        }
-
-        // place the point in view space once instead of once per vertex
-        // in the shader.
-        var pos = new PVector(x, y, z);
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.mult(pos, pos);
-
-        curContext.useProgram(programObject3D);
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 2);
-        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+    Drawing2D.prototype.pointLight = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.pointLight = function(r, g, b, x, y, z) {
+      if (lightCount === PConstants.MAX_LIGHTS) {
+        throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
+
+      // place the point in view space once instead of once per vertex
+      // in the shader.
+      var pos = new PVector(x, y, z);
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.mult(pos, pos);
+
+      curContext.useProgram(programObject3D);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
+      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 2);
+      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
 
     /**
@@ -9566,12 +9566,12 @@
      *
      * @see lights
     */
-    p.noLights = function noLights() {
-      if (p.use3DContext) {
-        lightCount = 0;
-        curContext.useProgram(programObject3D);
-        uniformi("lightCount3d", programObject3D, "lightCount", lightCount);
-      }
+    Drawing2D.prototype.noLights = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.noLights = function() {
+      lightCount = 0;
+      curContext.useProgram(programObject3D);
+      uniformi("lightCount3d", programObject3D, "lightCount", lightCount);
     };
 
     /**
@@ -9603,37 +9603,37 @@
      * @see ambientLight
      * @see pointLight
     */
-    p.spotLight = function spotLight(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
-      if (p.use3DContext) {
-        if (lightCount === PConstants.MAX_LIGHTS) {
-          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
-        }
-
-        curContext.useProgram(programObject3D);
-
-        // place the point in view space once instead of once per vertex
-        // in the shader.
-        var pos = new PVector(x, y, z);
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.mult(pos, pos);
-
-        // We need to multiply the direction by the model view matrix, but
-        // the mult function checks the w component of the vector, if it isn't
-        // present, it uses 1, so we use a very small value as a work around.
-        var dir = [nx, ny, nz, -0.00000001];
-        view.set(modelView.array());
-        view.mult(dir, dir);
-
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-        uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", [dir[0], -dir[1], dir[2]]);
-        uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
-        uniformf("lights.angle.3d." + lightCount, programObject3D, "lights" + lightCount + ".angle", angle);
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 3);
-        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+    Drawing2D.prototype.spotLight = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.spotLight = function(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
+      if (lightCount === PConstants.MAX_LIGHTS) {
+        throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
+
+      curContext.useProgram(programObject3D);
+
+      // place the point in view space once instead of once per vertex
+      // in the shader.
+      var pos = new PVector(x, y, z);
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.mult(pos, pos);
+
+      // We need to multiply the direction by the model view matrix, but
+      // the mult function checks the w component of the vector, if it isn't
+      // present, it uses 1, so we use a very small value as a work around.
+      var dir = [nx, ny, nz, -0.00000001];
+      view.set(modelView.array());
+      view.mult(dir, dir);
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
+      uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", [dir[0], -dir[1], dir[2]]);
+      uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
+      uniformf("lights.angle.3d." + lightCount, programObject3D, "lights" + lightCount + ".angle", angle);
+      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 3);
+      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -9870,89 +9870,90 @@
      * @param {int|float} h  dimension of the box in the y-dimension
      * @param {int|float} d  dimension of the box in the z-dimension
      */
-    p.box = function(w, h, d) {
-      if (p.use3DContext) {
-        // user can uniformly scale the box by
-        // passing in only one argument.
-        if (!h || !d) {
-          h = d = w;
-        }
+    Drawing2D.prototype.box = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.box = function(w, h, d) {
+      // user can uniformly scale the box by
+      // passing in only one argument.
+      if (!h || !d) {
+        h = d = w;
+      }
 
-        // Modeling transformation
-        var model = new PMatrix3D();
-        model.scale(w, h, d);
+      // Modeling transformation
+      var model = new PMatrix3D();
+      model.scale(w, h, d);
 
-        // viewing transformation needs to have Y flipped
-        // becuase that's what Processing does.
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
+      // viewing transformation needs to have Y flipped
+      // becuase that's what Processing does.
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
 
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
 
-        if (doFill === true) {
-          curContext.useProgram(programObject3D);
+      if (doFill === true) {
+        curContext.useProgram(programObject3D);
 
-          uniformMatrix("model3d", programObject3D, "model", false, model.array());
-          uniformMatrix("view3d", programObject3D, "view", false, view.array());
-          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+        uniformMatrix("model3d", programObject3D, "model", false, model.array());
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());
+        uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
 
-          // fix stitching problems. (lines get occluded by triangles
-          // since they share the same depth values). This is not entirely
-          // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles.
-          curContext.enable(curContext.POLYGON_OFFSET_FILL);
-          curContext.polygonOffset(1, 1);
+        // fix stitching problems. (lines get occluded by triangles
+        // since they share the same depth values). This is not entirely
+        // working, but it's a start for drawing the outline. So
+        // developers can start playing around with styles.
+        curContext.enable(curContext.POLYGON_OFFSET_FILL);
+        curContext.polygonOffset(1, 1);
 
-          uniformf("color3d", programObject3D, "color", fillStyle);
+        uniformf("color3d", programObject3D, "color", fillStyle);
 
-          // Create the normal transformation matrix
-          var v = new PMatrix3D();
-          v.set(view);
+        // Create the normal transformation matrix
+        var v = new PMatrix3D();
+        v.set(view);
 
-          var m = new PMatrix3D();
-          m.set(model);
+        var m = new PMatrix3D();
+        m.set(model);
 
-          v.mult(m);
+        v.mult(m);
 
-          var normalMatrix = new PMatrix3D();
-          normalMatrix.set(v);
-          normalMatrix.invert();
-          normalMatrix.transpose();
+        var normalMatrix = new PMatrix3D();
+        normalMatrix.set(v);
+        normalMatrix.invert();
+        normalMatrix.transpose();
 
-          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+        uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
-          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
-          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
+        vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
+        vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
 
-          // Turn off per vertex colors
-          disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
-          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
+        // Turn off per vertex colors
+        disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
+        disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-          curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
-          curContext.disable(curContext.POLYGON_OFFSET_FILL);
-        }
+        curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
+        curContext.disable(curContext.POLYGON_OFFSET_FILL);
+      }
 
-        if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject2D);
-          uniformMatrix("model2d", programObject2D, "model", false, model.array());
-          uniformMatrix("view2d", programObject2D, "view", false, view.array());
-          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+      if (lineWidth > 0 && doStroke) {
+        curContext.useProgram(programObject2D);
+        uniformMatrix("model2d", programObject2D, "model", false, model.array());
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
-          curContext.lineWidth(lineWidth);
-          curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
-        }
+        curContext.lineWidth(lineWidth);
+        curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
       }
     };
+
     /**
      * The initSphere() function is a helper function used by <b>sphereDetail()</b>
      * This function creates and stores sphere vertices every time the user changes sphere detail.
@@ -16661,6 +16662,10 @@
       p.directionalLight = drawing.directionalLight;
       p.lightFalloff = drawing.lightFalloff;
       p.lightSpecular = drawing.lightSpecular;
+      p.pointLight = drawing.pointLight;
+      p.noLights = drawing.noLights;
+      p.spotLight = drawing.spotLight;
+      p.box = drawing.box;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
