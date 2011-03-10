@@ -10117,86 +10117,86 @@
      *
      * @param {int|float} r the radius of the sphere
      */
-    p.sphere = function() {
-      if (p.use3DContext) {
-        var sRad = arguments[0], c;
+    Drawing2D.prototype.sphere = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.sphere = function() {
+      var sRad = arguments[0], c;
 
-        if ((sphereDetailU < 3) || (sphereDetailV < 2)) {
-          p.sphereDetail(30);
-        }
+      if ((sphereDetailU < 3) || (sphereDetailV < 2)) {
+        p.sphereDetail(30);
+      }
 
-        // Modeling transformation
-        var model = new PMatrix3D();
-        model.scale(sRad, sRad, sRad);
+      // Modeling transformation
+      var model = new PMatrix3D();
+      model.scale(sRad, sRad, sRad);
 
-        // viewing transformation needs to have Y flipped
-        // becuase that's what Processing does.
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
+      // viewing transformation needs to have Y flipped
+      // becuase that's what Processing does.
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
 
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
 
-        if (doFill === true) {
-          // Create a normal transformation matrix
-          var v = new PMatrix3D();
-          v.set(view);
+      if (doFill === true) {
+        // Create a normal transformation matrix
+        var v = new PMatrix3D();
+        v.set(view);
 
-          var m = new PMatrix3D();
-          m.set(model);
+        var m = new PMatrix3D();
+        m.set(model);
 
-          v.mult(m);
+        v.mult(m);
 
-          var normalMatrix = new PMatrix3D();
-          normalMatrix.set(v);
-          normalMatrix.invert();
-          normalMatrix.transpose();
+        var normalMatrix = new PMatrix3D();
+        normalMatrix.set(v);
+        normalMatrix.invert();
+        normalMatrix.transpose();
 
-          curContext.useProgram(programObject3D);
-          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
+        curContext.useProgram(programObject3D);
+        disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-          uniformMatrix("model3d", programObject3D, "model", false, model.array());
-          uniformMatrix("view3d", programObject3D, "view", false, view.array());
-          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
-          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+        uniformMatrix("model3d", programObject3D, "model", false, model.array());
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());
+        uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+        uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
-          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
-          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
+        vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
+        vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
 
-          // Turn off per vertex colors
-          disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
+        // Turn off per vertex colors
+        disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
 
-          // fix stitching problems. (lines get occluded by triangles
-          // since they share the same depth values). This is not entirely
-          // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles.
-          curContext.enable(curContext.POLYGON_OFFSET_FILL);
-          curContext.polygonOffset(1, 1);
+        // fix stitching problems. (lines get occluded by triangles
+        // since they share the same depth values). This is not entirely
+        // working, but it's a start for drawing the outline. So
+        // developers can start playing around with styles.
+        curContext.enable(curContext.POLYGON_OFFSET_FILL);
+        curContext.polygonOffset(1, 1);
 
-          uniformf("color3d", programObject3D, "color", fillStyle);
+        uniformf("color3d", programObject3D, "color", fillStyle);
 
-          curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
-          curContext.disable(curContext.POLYGON_OFFSET_FILL);
-        }
+        curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
+        curContext.disable(curContext.POLYGON_OFFSET_FILL);
+      }
 
-        if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject2D);
-          uniformMatrix("model2d", programObject2D, "model", false, model.array());
-          uniformMatrix("view2d", programObject2D, "view", false, view.array());
-          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+      if (lineWidth > 0 && doStroke) {
+        curContext.useProgram(programObject2D);
+        uniformMatrix("model2d", programObject2D, "model", false, model.array());
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          curContext.lineWidth(lineWidth);
-          curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
-        }
+        curContext.lineWidth(lineWidth);
+        curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
       }
     };
 
@@ -16666,6 +16666,7 @@
       p.noLights = drawing.noLights;
       p.spotLight = drawing.spotLight;
       p.box = drawing.box;
+      p.sphere = drawing.sphere;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
