@@ -4107,9 +4107,18 @@
      * @param {Integer }lineNr   the line in the XML data where the element starts
      */
     var XMLElement = p.XMLElement = function() {
+      this.attributes = [];
+      this.children   = [];
+      this.fullName   = null;
+      this.name       = null;
+      this.namespace  = "";
+      this.content = null;
+      this.parent    = null;
+      this.lineNr     = "";
+      this.systemID   = "";
+      this.type = "ELEMENT";
+
       if (arguments.length === 4) {
-        this.attributes = [];
-        this.children   = [];
         this.fullName   = arguments[0] || "";
         if (arguments[1]) {
           this.name = arguments[1];
@@ -4122,45 +4131,14 @@
           }
         }
         this.namespace = arguments[1];
-        this.content   = "";
         this.lineNr    = arguments[3];
         this.systemID  = arguments[2];
-        this.parent    = null;
       }
-      else if ((arguments.length === 2 && arguments[1].indexOf(".") > -1) ) { // filename or svg xml element
-        this.attributes = [];
-        this.children   = [];
-        this.fullName   = "";
-        this.name       = "";
-        this.namespace  = "";
-        this.content    = "";
-        this.systemID   = "";
-        this.lineNr     = "";
-        this.parent     = null;
+      else if ((arguments.length === 2 && arguments[1].indexOf(".") > -1) ) {
+        // filename or svg xml element
         this.parse(arguments[arguments.length -1]);
       } else if (arguments.length === 1 && typeof arguments[0] === "string"){
-        //xml string
-        this.attributes = [];
-        this.children   = [];
-        this.fullName   = "";
-        this.name       = "";
-        this.namespace  = "";
-        this.content    = "";
-        this.systemID   = "";
-        this.lineNr     = "";
-        this.parent     = null;
         this.parse(arguments[0]);
-      }
-      else { //empty ctor
-        this.attributes = [];
-        this.children   = [];
-        this.fullName   = "";
-        this.name       = "";
-        this.namespace  = "";
-        this.content    = "";
-        this.systemID   = "";
-        this.lineNr     = "";
-        this.parent     = null;
       }
     };
     /**
@@ -4200,6 +4178,57 @@
       },
       /**
        * @member XMLElement
+       * Internal helper function for parse().
+       * Loops through the
+       * @addon
+       *
+       * @param {XMLElement} parent                      the parent node
+       * @param {XML document childNodes} elementpath    the remaining nodes that need parsing
+       *
+       * @return {XMLElement} the new element and its children elements
+       */
+      parseChildrenRecursive: function (parent , elementpath){
+        var xmlelement,
+          xmlattribute,
+          tmpattrib,
+          l, m;
+        if (!parent) { // this element is the root element
+          this.fullName = elementpath.localName;
+          this.name     = elementpath.nodeName;
+          xmlelement    = this;
+        } else { // this element has a parent
+          xmlelement         = new XMLElement(elementpath.localName, elementpath.nodeName, "", "");
+          xmlelement.parent  = parent;
+        }
+        
+        // if this is a text node, return a PCData element, instead of an XML element
+        if(elementpath.nodeType===3 && elementpath.textContent!="") {
+          return this.createPCDataElement(elementpath.textContent);
+        }      
+
+	// bind all attributes
+        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
+          tmpattrib    = elementpath.attributes[l];
+          xmlattribute = new XMLAttribute(tmpattrib.getname,
+                                          tmpattrib.nodeName,
+                                          tmpattrib.namespaceURI,
+                                          tmpattrib.nodeValue,
+                                          tmpattrib.nodeType);
+          xmlelement.attributes.push(xmlattribute);
+        }
+
+	// bind all children
+        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
+          var node = elementpath.childNodes[l];
+          if (node.nodeType === 1 || node.nodeType === 3) { // ELEMENT_NODE or TEXT_NODE
+            xmlelement.children.push(xmlelement.parseChildrenRecursive(xmlelement, node));
+          }
+        }
+
+        return xmlelement;
+      },
+      /**
+       * @member XMLElement
        * The createElement() function Creates an empty element
        *
        * @param {String} fullName   the full name of the element
@@ -4216,6 +4245,18 @@
       },
       /**
        * @member XMLElement
+       * The createPCDataElement() function creates an element to be used for #PCDATA content
+       *
+       * @return {XMLElement} new XMLElement element
+       */
+      createPCDataElement: function (content) {
+        var pcdata = new XMLElement();
+        pcdata.content = content;
+        pcdata.type = "TEXT";
+        return pcdata;
+      },
+      /**
+       * @member XMLElement
        * The hasAttribute() function returns whether an attribute exists
        *
        * @param {String} name      name of the attribute
@@ -4229,15 +4270,6 @@
         } else if (arguments.length === 2) {
           return this.getAttribute(arguments[0],arguments[1]) !== null;
         }
-      },
-      /**
-       * @member XMLElement
-       * The createPCDataElement() function creates an element to be used for #PCDATA content
-       *
-       * @return {XMLElement} new XMLElement element
-       */
-      createPCDataElement: function () {
-        return new XMLElement();
       },
       /**
        * @member XMLElement
@@ -4548,51 +4580,6 @@
       },
       /**
        * @member XMLElement
-       * Internal helper function for parse().
-       * Loops through the
-       * @addon
-       *
-       * @param {XMLElement} parent                      the parent node
-       * @param {XML document childNodes} elementpath    the remaining nodes that need parsing
-       *
-       * @return {XMLElement} the new element and its children elements
-       */
-      parseChildrenRecursive: function (parent , elementpath){
-        var xmlelement,
-          xmlattribute,
-          tmpattrib,
-          l, m;
-        if (!parent) {
-          this.fullName = elementpath.localName;
-          this.name     = elementpath.nodeName;
-          this.content  = elementpath.textContent || "";
-          xmlelement    = this;
-        } else { // a parent
-          xmlelement         = new XMLElement(elementpath.localName, elementpath.nodeName, "", "");
-          xmlelement.content = elementpath.textContent || "";
-          xmlelement.parent  = parent;
-        }
-
-        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
-          tmpattrib    = elementpath.attributes[l];
-          xmlattribute = new XMLAttribute(tmpattrib.getname,
-                                          tmpattrib.nodeName,
-                                          tmpattrib.namespaceURI,
-                                          tmpattrib.nodeValue,
-                                          tmpattrib.nodeType);
-          xmlelement.attributes.push(xmlattribute);
-        }
-
-        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
-          var node = elementpath.childNodes[l];
-          if (node.nodeType === 1) { // ELEMENT_NODE type
-            xmlelement.children.push(xmlelement.parseChildrenRecursive(xmlelement, node));
-          }
-        }
-        return xmlelement;
-      },
-      /**
-       * @member XMLElement
        * The isLeaf() function returns whether the element is a leaf element.
        *
        * @return {boolean} true if the element has no children.
@@ -4748,12 +4735,59 @@
       getName: function() {
         return this.fullName;
       },
+      /**
+       * @member XMLElement
+       * The getLocalName() function returns the local name (i.e. the name excluding an eventual namespace
+       * prefix) of the element.
+       *
+       * @return {String} the name, or null if the element only contains #PCDATA.
+       */
       getLocalName: function() {
         return this.name;
       },
+      /**
+       * @member XMLElement
+       * The getAttributeCount() function returns the number of attributes for the node
+       * that this XMLElement represents.
+       *
+       * @return {int} the number of attributes in this XMLelement
+       */
       getAttributeCount: function() {
         return this.attributes.length;
-      }
+      },
+      /**
+       * @member XMLElement
+       * The toString() function returns the XML definition of an XMLElement.
+       *
+       * @return {String} the XML definition of this XMLElement
+       */
+       toString: function() {
+         // shortcut for text nodes
+         if(this.type==="TEXT") { return this.content; }
+         // real XMLElements
+         var tagstring = (this.namespace!=="" && this.namespace!=this.name? this.namespace + ":" : "") + this.name;
+         var xmlstring =  "<" + tagstring;
+         // serialize the attributes to XML string
+         for (a in this.attributes) {
+           var attr = this.attributes[a];
+           xmlstring += " "  + attr.getName() + "=" + '"' + attr.getValue() + '"';
+         }
+         if (this.children.length==0) {
+           if (this.content==="") {
+             xmlstring += "/>";
+           } else {
+             xmlstring += ">" + this.content + "</"+tagstring+">";
+           }
+         } else {
+           xmlstring += ">";
+           // serialise all children
+           for(c in this.children) {
+             xmlstring += this.children[c].toString();
+           }
+           xmlstring += "</" + tagstring + ">";
+         }
+         return xmlstring;s
+       }
     };
 
 
