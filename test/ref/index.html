@@ -33,7 +33,7 @@
       document.getElementById('sigma').value = sigma;
       var epsilon = 0.05; // match accuracy ~5%
       document.getElementById('epsilon').value = epsilon;
-      var kernel, kernelSize, kernelSum;
+      var kernel, kernelSize;
       buildKernel();     
 
       try {
@@ -83,12 +83,6 @@
             for (i = 0; i < kernelSize; ++i) {
                 var g = Math.exp(-(i * i + j * j) / (2 * ss)) / factor;
                 kernel[j].push(g);
-            }
-        }
-        kernelSum = 0;
-        for (j = 1 - kernelSize; j < kernelSize; ++j) {
-            for (i = 1 - kernelSize; i < kernelSize; ++i) {
-                kernelSum += kernel[Math.abs(j)][Math.abs(i)];
             }
         }
       }
@@ -300,6 +294,19 @@
                 }
                 j+=4;
               }
+              if (failed && is3D) {
+                var w = 4 * test.width, offset1 = 0, offset2 = diffData.data.length - w;
+                while(offset1 < offset2) {
+                  for(var col=0; col<w; col++) {
+                    var tmp = diffData.data[offset1];
+                    diffData.data[offset1] = diffData.data[offset2];
+                    diffData.data[offset2] = tmp;
+                    offset1++;
+                    offset2++;
+                  }
+                  offset2 -= w + w;
+                }
+              }
               if (failed) {
                 diffCtx.putImageData(diffData, 0, 0);
                 title.innerHTML = titleText(i+1, tl, totalTime, test.name, "pixels off");
@@ -329,21 +336,27 @@
 
         for (var y = 0; y < height; ++y) {
           for (var x = 0; x < width; ++x) {
-            var r = 0, g = 0, b = 0, a = 0;
-            for (j = 1 - kernelSize; j < kernelSize; ++j) {
-              if (y + j < 0 || y + j >= height) continue;
-              for (i = 1 - kernelSize; i < kernelSize; ++i) {
-                if (x + i < 0 || x + i >= width) continue;
-                r += data[4 * ((y + j) * width + (x + i)) + 0] * kernel[Math.abs(j)][Math.abs(i)];
-                g += data[4 * ((y + j) * width + (x + i)) + 1] * kernel[Math.abs(j)][Math.abs(i)];
-                b += data[4 * ((y + j) * width + (x + i)) + 2] * kernel[Math.abs(j)][Math.abs(i)];
-                a += data[4 * ((y + j) * width + (x + i)) + 3] * kernel[Math.abs(j)][Math.abs(i)];
+            var r = 0, g = 0, b = 0, a = 0, sum = 0;
+            var j = Math.max(1 - kernelSize, -y), jabs = -j;
+            for (; j < kernelSize; jabs = Math.abs(++j)) {
+              if(y + j >= height) { break; }
+              var i = Math.max(1 - kernelSize, -x), iabs = -i;
+              var offset = 4 * ((y + j) * width + (x + i));
+              for (; i < kernelSize; iabs = Math.abs(++i)) {
+                if (x + i >= width) { break; }
+                var k = kernel[jabs][iabs];
+                r += data[offset++] * k;
+                g += data[offset++] * k;
+                b += data[offset++] * k;
+                a += data[offset++] * k;
+                sum += k;
               }
             }
-            newData[4 * (y * width + x) + 0] = r / kernelSum;
-            newData[4 * (y * width + x) + 1] = g / kernelSum;
-            newData[4 * (y * width + x) + 2] = b / kernelSum;
-            newData[4 * (y * width + x) + 3] = a / kernelSum;               
+            var destOffset = 4 * (y * width + x);
+            newData[destOffset++] = r / sum;
+            newData[destOffset++] = g / sum;
+            newData[destOffset++] = b / sum;
+            newData[destOffset++] = a / sum;
           }
         }
 
