@@ -5711,12 +5711,7 @@
      * @param {Object | Array} matrix the matrix to be pushed into the stack
      */
     PMatrixStack.prototype.load = function load() {
-      var tmpMatrix;
-      if (p.use3DContext) {
-        tmpMatrix = new PMatrix3D();
-      } else {
-        tmpMatrix = new PMatrix2D();
-      }
+      var tmpMatrix = drawing.newPMatrix;
 
       if (arguments.length === 1) {
         tmpMatrix.set(arguments[0]);
@@ -5725,6 +5720,14 @@
       }
       this.matrixStack.push(tmpMatrix);
     };
+    
+    Drawing2D.prototype.newPMatrix = function() {
+      return new PMatrix2D();
+    }
+    
+    Drawing3D.prototype.newPMatrix = function() {
+      return new PMatrix3D();
+    }
 
     /**
      * @member PMatrixStack
@@ -5751,12 +5754,7 @@
      * @returns {Object} the matrix at the top of the stack
      */
     PMatrixStack.prototype.peek = function peek() {
-      var tmpMatrix;
-      if (p.use3DContext) {
-        tmpMatrix = new PMatrix3D();
-      } else {
-        tmpMatrix = new PMatrix2D();
-      }
+      var tmpMatrix = drawing.newPMatrix;
 
       tmpMatrix.set(this.matrixStack[this.matrixStack.length - 1]);
       return tmpMatrix;
