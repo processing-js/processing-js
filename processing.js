@@ -10586,19 +10586,23 @@
      * @see #background()
      * @see #colorMode()
      */
-    p.fill = function fill() {
+    DrawingShared.prototype.fill = function() {
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       if(color === currentFillColor && doFill) {
         return;
       }
       doFill = true;
       currentFillColor = color;
-
-      if (p.use3DContext) {
-        fillStyle = p.color.toGLArray(color);
-      } else {
-        isFillDirty = true;
-      }
+    };
+    
+    Drawing2D.prototype.fill = function() {
+      DrawingShared.prototype.fill.apply(this, arguments);
+      isFillDirty = true;
+    };
+    
+    Drawing3D.prototype.fill = function() {
+      DrawingShared.prototype.fill.apply(this, arguments);
+      fillStyle = p.color.toGLArray(currentFillColor);
     };
 
     function executeContextFill() {
@@ -16671,6 +16675,7 @@
       p.emissive = drawing.emissive;
       p.shininess = drawing.shininess;
       p.specular = drawing.specular;
+      p.fill = drawing.fill;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
