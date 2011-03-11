@@ -1,0 +1,17 @@
+void setup() {
+  size(200, 100, P3D);
+  //draw 2d primitives filled
+  ellipse(120, 20, 30, 30);
+  rect(140, 10, 20, 20);
+  arc(175, 75, 30, 30, 0, PI/2);
+  quad(150, 50, 155, 70, 180, 50, 175, 30);
+  triangle(110, 90, 130, 90, 120, 70);
+  
+  //draw 2d primitives nofill
+  noFill();
+  ellipse(20, 20, 30, 30);
+  rect(40, 10, 20, 20);
+  arc(75, 75, 30, 30, 0, PI/2);
+  quad(50, 50, 55, 70, 80, 50, 75, 30);
+  triangle(10, 90, 30, 90, 20, 70);
+}

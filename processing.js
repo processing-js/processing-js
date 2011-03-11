@@ -12780,7 +12780,9 @@
               colorVertArray.push(vertArray[i][j]);
             }
           }
-          fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+          if (doFill) {
+            fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+          }
         }
       }
     };
