@@ -10800,61 +10800,61 @@
      *
      * @see #beginShape()
      */
-    p.point = function point(x, y, z) {
-      if (p.use3DContext) {
-        var model = new PMatrix3D();
+    Drawing2D.prototype.point = function(x, y, z) {
+      if (doStroke) {
+        // TODO if strokeWeight > 1, do circle
 
-        // move point to position
-        model.translate(x, y, z || 0);
-        model.transpose();
-
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
-
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
-
-        curContext.useProgram(programObject2D);
-        uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
-        if (lineWidth > 0 && doStroke) {
-          // this will be replaced with the new bit shifting color code
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
-
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
-          curContext.drawArrays(curContext.POINTS, 0, 1);
-        }
-      } else {
-        if (doStroke) {
-          // TODO if strokeWeight > 1, do circle
-
-          if (curSketch.options.crispLines) {
-            var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
-            var c = p.get(x, y);
-            p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
+        if (curSketch.options.crispLines) {
+          var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
+          var c = p.get(x, y);
+          p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
+        } else {
+          if (lineWidth > 1){
+            curContext.fillStyle = p.color.toString(currentStrokeColor);
+            isFillDirty = true;
+            curContext.beginPath();
+            curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
+            curContext.fill();
+            curContext.closePath();
           } else {
-            if (lineWidth > 1){
-              curContext.fillStyle = p.color.toString(currentStrokeColor);
-              isFillDirty = true;
-              curContext.beginPath();
-              curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
-              curContext.fill();
-              curContext.closePath();
-            } else {
-              curContext.fillStyle = p.color.toString(currentStrokeColor);
-              curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-              isFillDirty = true;
-            }
+            curContext.fillStyle = p.color.toString(currentStrokeColor);
+            curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+            isFillDirty = true;
           }
         }
+      }
+    };
+    
+    Drawing3D.prototype.point = function(x, y, z) {
+      var model = new PMatrix3D();
+
+      // move point to position
+      model.translate(x, y, z || 0);
+      model.transpose();
+
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
+
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+
+      curContext.useProgram(programObject2D);
+      uniformMatrix("model2d", programObject2D, "model", false, model.array());
+      uniformMatrix("view2d", programObject2D, "view", false, view.array());
+      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+
+      if (lineWidth > 0 && doStroke) {
+        // this will be replaced with the new bit shifting color code
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
+
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
+
+        curContext.drawArrays(curContext.POINTS, 0, 1);
       }
     };
 
@@ -16696,6 +16696,7 @@
       p.strokeWeight = drawing.strokeWeight;
       p.smooth = drawing.smooth;
       p.noSmooth = drawing.noSmooth;
+      p.point = drawing.point;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
