@@ -1,0 +1,187 @@
+﻿<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Processing.js Performance Tests</title>
+    <script src="../../processing.js"></script>
+    <script src="tests.js"></script>
+    <style>
+      .test  { border: solid 1px; margin: 5px; }
+      .title { margin-left: 5px; }
+    </style>
+  </head>
+  <body>
+    <h1>Processing.js Performance Test Runner</h1>
+    <p>To start the tests click Start.  Each test is run in order (downloaded from the server).  Tests are run for a maximum number of frames (specified below), and the time recorded.</p>
+
+    <h3>Settings</h3>
+    <div>Run Tests: <select id="test-type" onchange="updateSelectedTests();">
+      <option value="2D,3D" selected>2D and 3D</option>
+      <option value="2D">2D Only</option>
+      <option value="3D">3D Only</option>
+      <option value="Calibration">Calibration</option>
+    </select>&nbsp;
+    Iterations Per Test: <input type="text" size="4" id="iterations" onchange="updateIterations();">&nbsp;
+    <input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
+
+    <h3>Results</h3>
+    <div id="results" style="margin: 5px; padding-top: 10px;"></div>
+    <div id="total"></div>
+
+    <script>
+      var selectedTests = [];
+      var total = document.getElementById('total');
+      total.innerHTML = '';
+
+      updateSelectedTests();
+
+      // Tolerance values and kernel for blur
+      var iterationCount = 1000;
+      document.getElementById('iterations').value = iterationCount;
+
+      function updateSelectedTests() {
+        var selectControl = document.getElementById('test-type');
+        var selectedTags = selectControl.value.split(',');
+
+        selectedTests = new Array();
+        for (var i = 0; i < tests.length; ++i) {
+          var found = false;
+          // checking if any selected tags present in test tags
+          for (var j = 0; j < selectedTags.length && !found; ++j) {
+            for (var q = 0; q < tests[i].tags.length && !found; ++q) {
+              if (tests[i].tags[q] == selectedTags[j]) found = true;
+            }
+          }
+          if (found) {
+            selectedTests.push(tests[i]);
+          }
+        }
+
+        var testCount = document.getElementById('testCount');
+        testCount.innerHTML = '&nbsp;(' + selectedTests.length + ' tests)';
+      }
+
+      function updateIterations() {
+        var newIterationCount = document.getElementById('iterations').value;
+        if (newIterationCount) {
+          iterationCount = parseInt(newIterationCount, 10);
+        }
+      }
+
+      function download(file) {
+        var req = new XMLHttpRequest();
+        req.open('GET', file, false);
+        if (req.overrideMimeType) {
+          req.overrideMimeType('text/plain');
+        }
+        req.send(null);
+        if (req.status != 200 && req.status !=0) {
+          return null;
+        } else {
+          return req.responseText;
+        }
+      }
+
+      function getTest(testName) {
+        var responseText = download(testName);
+
+        function is3D(script) {
+          // look for size(100,100,OPENGL) or size(100,100,P3D)
+          var match = script.match(/size\([\s]*[\d]+[\s]*\,[\s]*[\d]+[\s]*\,?([^\)]+)?\)/);
+          if (match && match[1]) {
+            return match[1] == "OPENGL" || match[1] == "P3D";
+          }
+          return false;
+        }
+
+        if (!responseText) {
+          return null;
+        }
+
+        // Split out the canvas info in the comment:
+        var test = {name: testName, code: responseText};
+        test.is3D = is3D(test.code);
+        return test;
+      }
+
+      function runTests(tests) {
+        var results = document.getElementById('results');
+        results.innerHTML = '<div id="status" style="margin-bottom: 10px;">Running... (this may take some time)</div>';
+        var total = document.getElementById('total');
+        total.innerHTML = '';
+
+        var buildCanvas = function(id, w, h) {
+          var c = document.createElement('canvas');
+          c.id = id;
+          c.width = w;
+          c.height = h;
+          c.className = "test";
+          return c;
+        };
+
+        var link = function(name) {
+          return '<a href="' + name + '">' + name + '</a>';
+        };
+
+        var titleText = function(testNumber, testTotal, time, testName, failMessage) {
+          return "Test (" + testNumber + "/" + testTotal + ") " + link(testName) +
+                 (failMessage ? " -- FAILED (" + failMessage + ")" : " -- Total Time for " + iterationCount + " frames: <b>" + time + "ms</b>");
+        };
+
+        var passedCount = 0, failedCount = 0, tl = tests.length;
+        function nextTest(testNum) {
+          if (testNum < tl) {
+            window.setTimeout(function() { runOne(testNum); }, 50);
+          } else {
+            var info = "Tests Completed - " + failedCount + " failed, " + passedCount + " passed, " + (failedCount + passedCount) + " total."
+            document.getElementById('status').innerHTML = info;
+            total.innerHTML = info;
+          }
+        }
+
+        var runOne = function(i) {
+          var test = getTest(tests[i].path);
+          var result = document.createElement('div');
+          result.id = test.name;
+          var title = document.createElement('div');
+          title.className = "title";
+          result.appendChild(title);
+          results.appendChild(result);
+
+          if (test) {
+            var canvas = buildCanvas(test.name + '-canvas', test.width, test.height);
+            result.appendChild(canvas);
+
+            // draw the current version from code, timing it
+            var startTime = (new Date).getTime();
+            var p;
+            try {
+
+              // Force the test to not loop--we'll do that.
+              var code = "noLoop();\n" + test.code;
+              p = new Processing(canvas, code);
+
+              var startTime = (new Date).getTime();
+
+              for (var iters = 0; iters < iterationCount; iters++) {
+                p.redraw();
+              }
+
+              var endTime = (new Date).getTime();
+              title.innerHTML = titleText(i+1, tl, endTime - startTime, test.name);
+
+            } catch (e) {
+              title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed: " + e.toString());
+              failedCount++;
+              return nextTest(i+1);
+            }
+
+            var is3D = p.use3DContext;
+          }
+          nextTest(i+1);
+        };
+        window.setTimeout(function() { runOne(0); }, 50);
+      };
+    </script>
+  </body>
+</html>
