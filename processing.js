@@ -10747,9 +10747,13 @@
      * @see #hint()
      * @see #size()
      */
-    p.smooth = function() {
+    DrawingShared.prototype.smooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
+    };
+    
+    Drawing2D.prototype.smooth = function() {
+      DrawingShared.prototype.smooth.apply(this, arguments);
+      if ("mozImageSmoothingEnabled" in curContext) {
         curContext.mozImageSmoothingEnabled = true;
       }
     };
@@ -10759,9 +10763,13 @@
      *
      * @see #smooth()
      */
-    p.noSmooth = function() {
+    DrawingShared.prototype.noSmooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
+    };
+    
+    Drawing2D.prototype.smooth = function() {
+      DrawingShared.prototype.noSmooth.apply(this, arguments);
+      if ("mozImageSmoothingEnabled" in curContext) {
         curContext.mozImageSmoothingEnabled = false;
       }
     };
@@ -16686,6 +16694,8 @@
       p.fill = drawing.fill;
       p.stroke = drawing.stroke;
       p.strokeWeight = drawing.strokeWeight;
+      p.smooth = drawing.smooth;
+      p.noSmooth = drawing.noSmooth;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
