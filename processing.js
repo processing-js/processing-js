@@ -10672,8 +10672,8 @@
     
     Drawing3D.prototype.stroke = function() {
       DrawingShared.prototype.stroke.apply(this, arguments);
-      strokeStyle = p.color.toGLArray(color);
-    }
+      strokeStyle = p.color.toGLArray(currentStrokeColor);
+    };
 
     function executeContextStroke() {
       if(doStroke) {
