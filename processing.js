@@ -10656,20 +10656,24 @@
      * @see #background()
      * @see #colorMode()
      */
-    p.stroke = function stroke() {
+    DrawingShared.prototype.stroke = function() {
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       if(color === currentStrokeColor && doStroke) {
         return;
       }
       doStroke = true;
       currentStrokeColor = color;
-
-      if (p.use3DContext) {
-        strokeStyle = p.color.toGLArray(color);
-      } else {
-        isStrokeDirty = true;
-      }
     };
+    
+    Drawing2D.prototype.stroke = function() {
+      DrawingShared.prototype.stroke.apply(this, arguments);
+      isStrokeDirty = true;
+    };
+    
+    Drawing3D.prototype.stroke = function() {
+      DrawingShared.prototype.stroke.apply(this, arguments);
+      strokeStyle = p.color.toGLArray(color);
+    }
 
     function executeContextStroke() {
       if(doStroke) {
@@ -16676,6 +16680,7 @@
       p.shininess = drawing.shininess;
       p.specular = drawing.specular;
       p.fill = drawing.fill;
+      p.stroke = drawing.stroke;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
