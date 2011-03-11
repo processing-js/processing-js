@@ -10701,15 +10701,19 @@
      *
      * @param {int|float} w the weight (in pixels) of the stroke
      */
-    p.strokeWeight = function strokeWeight(w) {
+    DrawingShared.prototype.strokeWeight = function(w) {
       lineWidth = w;
-
-      if (p.use3DContext) {
-        curContext.useProgram(programObject2D);
-        uniformf("pointSize2d", programObject2D, "pointSize", w);
-      } else {
-        curContext.lineWidth = w;
-      }
+    };
+    
+    Drawing2D.prototype.strokeWeight = function(w) {
+      DrawingShared.prototype.strokeWeight.apply(this, arguments);
+      curContext.lineWidth = w;
+    };
+    
+    Drawing3D.prototype.strokeWeight = function(w) {
+      DrawingShared.prototype.strokeWeight.apply(this, arguments);
+      curContext.useProgram(programObject2D);
+      uniformf("pointSize2d", programObject2D, "pointSize", w);
     };
 
     /**
@@ -16681,6 +16685,7 @@
       p.specular = drawing.specular;
       p.fill = drawing.fill;
       p.stroke = drawing.stroke;
+      p.strokeWeight = drawing.strokeWeight;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
