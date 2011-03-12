@@ -12395,85 +12395,87 @@
     * @see strokeCap
     * @see beginShape
     */
-    p.line = function line() {
+    Drawing2D.prototype.line = function() {
       var x1, y1, z1, x2, y2, z2;
+      
+      x1 = arguments[0];
+      y1 = arguments[1];
+      x2 = arguments[2];
+      y2 = arguments[3];
 
-      if (p.use3DContext) {
-        if (arguments.length === 6) {
-          x1 = arguments[0];
-          y1 = arguments[1];
-          z1 = arguments[2];
-          x2 = arguments[3];
-          y2 = arguments[4];
-          z2 = arguments[5];
-        } else if (arguments.length === 4) {
-          x1 = arguments[0];
-          y1 = arguments[1];
-          z1 = 0;
-          x2 = arguments[2];
-          y2 = arguments[3];
-          z2 = 0;
+      // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
+      if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
+        var temp;
+        if(x1 === x2) {
+          if(y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
+          for(var y=y1;y<=y2;++y) {
+            p.set(x1, y, currentStrokeColor);
+          }
+        } else {
+          if(x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
+          for(var x=x1;x<=x2;++x) {
+            p.set(x, y1, currentStrokeColor);
+          }
         }
+        return;
+      }
 
-        var lineVerts = [x1, y1, z1, x2, y2, z2];
-
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
-
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
-
-        if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject2D);
-
-          uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
-          uniformMatrix("view2d", programObject2D, "view", false, view.array());
-          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
-
-          curContext.lineWidth(lineWidth);
-
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, lineBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
-          curContext.drawArrays(curContext.LINES, 0, 2);
-        }
-      } else {
+      if (doStroke) {
+        curContext.beginPath();
+        curContext.moveTo(x1 || 0, y1 || 0);
+        curContext.lineTo(x2 || 0, y2 || 0);
+        executeContextStroke();
+        curContext.closePath();
+      }
+    };
+    
+    Drawing3D.prototype.line = function() {
+      var x1, y1, z1, x2, y2, z2;
+      
+      if (arguments.length === 6) {
         x1 = arguments[0];
         y1 = arguments[1];
+        z1 = arguments[2];
+        x2 = arguments[3];
+        y2 = arguments[4];
+        z2 = arguments[5];
+      } else if (arguments.length === 4) {
+        x1 = arguments[0];
+        y1 = arguments[1];
+        z1 = 0;
         x2 = arguments[2];
         y2 = arguments[3];
+        z2 = 0;
+      }
 
-        // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
-        if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
-          var temp;
-          if(x1 === x2) {
-            if(y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
-            for(var y=y1;y<=y2;++y) {
-              p.set(x1, y, currentStrokeColor);
-            }
-          } else {
-            if(x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
-            for(var x=x1;x<=x2;++x) {
-              p.set(x, y1, currentStrokeColor);
-            }
-          }
-          return;
-        }
+      var lineVerts = [x1, y1, z1, x2, y2, z2];
 
-        if (doStroke) {
-          curContext.beginPath();
-          curContext.moveTo(x1 || 0, y1 || 0);
-          curContext.lineTo(x2 || 0, y2 || 0);
-          executeContextStroke();
-          curContext.closePath();
-        }
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
+
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+
+      if (lineWidth > 0 && doStroke) {
+        curContext.useProgram(programObject2D);
+
+        uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
+
+        curContext.lineWidth(lineWidth);
+
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, lineBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
+
+        curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
+        curContext.drawArrays(curContext.LINES, 0, 2);
       }
     };
 
@@ -12492,24 +12494,28 @@
      * @see bezierVertex
      * @see curve
      */
-    p.bezier = function bezier() {
-      if( arguments.length === 8 && !p.use3DContext ){
-          p.beginShape();
-          p.vertex( arguments[0], arguments[1] );
-          p.bezierVertex( arguments[2], arguments[3],
-                          arguments[4], arguments[5],
-                          arguments[6], arguments[7] );
-          p.endShape();
+    Drawing2D.prototype.bezier = function() {
+      if (arguments.length === 8){
+        p.beginShape();
+        p.vertex( arguments[0], arguments[1] );
+        p.bezierVertex( arguments[2], arguments[3],
+                        arguments[4], arguments[5],
+                        arguments[6], arguments[7] );
+        p.endShape();
+      } else {
+        throw("Please use the proper parameters!");
       }
-      else if( arguments.length === 12 && p.use3DContext ){
-          p.beginShape();
-          p.vertex( arguments[0], arguments[1], arguments[2] );
-          p.bezierVertex( arguments[3], arguments[4], arguments[5],
-                          arguments[6], arguments[7], arguments[8],
-                          arguments[9], arguments[10], arguments[11] );
-          p.endShape();
-      }
-      else {
+    };
+    
+    Drawing3D.prototype.bezier = function() {
+      if (arguments.length === 12) {
+        p.beginShape();
+        p.vertex( arguments[0], arguments[1], arguments[2] );
+        p.bezierVertex( arguments[3], arguments[4], arguments[5],
+                        arguments[6], arguments[7], arguments[8],
+                        arguments[9], arguments[10], arguments[11] );
+        p.endShape();
+      } else {
         throw("Please use the proper parameters!");
       }
     };
@@ -12662,124 +12668,123 @@
     * @see rectMode
     * @see quad
     */
-    p.rect = function rect(x, y, width, height) {
-      if (p.use3DContext) {
-        // Modeling transformation
-        var model = new PMatrix3D();
-        model.translate(x, y, 0);
-        model.scale(width, height, 1);
-        model.transpose();
-
-        // viewing transformation needs to have Y flipped
-        // becuase that's what Processing does.
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
-
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
-
-        if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject2D);
-          uniformMatrix("model2d", programObject2D, "model", false, model.array());
-          uniformMatrix("view2d", programObject2D, "view", false, view.array());
-          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
-
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
-          curContext.lineWidth(lineWidth);
-          curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
-        }
-
-        if (doFill) {
-          curContext.useProgram(programObject3D);
-          uniformMatrix("model3d", programObject3D, "model", false, model.array());
-          uniformMatrix("view3d", programObject3D, "view", false, view.array());
-          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
-
-          // fix stitching problems. (lines get occluded by triangles
-          // since they share the same depth values). This is not entirely
-          // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles.
-          curContext.enable(curContext.POLYGON_OFFSET_FILL);
-          curContext.polygonOffset(1, 1);
-
-          uniformf("color3d", programObject3D, "color", fillStyle);
-
-          var v = new PMatrix3D();
-          v.set(view);
-
-          var m = new PMatrix3D();
-          m.set(model);
-
-          v.mult(m);
-
-          var normalMatrix = new PMatrix3D();
-          normalMatrix.set(v);
-          normalMatrix.invert();
-          normalMatrix.transpose();
-
-          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
-
-          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
-          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
-
-          curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
-          curContext.disable(curContext.POLYGON_OFFSET_FILL);
-        }
+    Drawing2D.prototype.rect = function(x, y, width, height) {
+      if (!width && !height) {
+        return;
       }
-      else{
-        if (!width && !height) {
-          return;
+
+      // if only stroke is enabled, do it "crisp"
+      if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
+        var i, x2 = x + width - 1, y2 = y + height - 1;
+        for(i=0;i<width;++i) {
+          p.set(x + i, y, currentStrokeColor);
+          p.set(x + i, y2, currentStrokeColor);
         }
-
-        // if only stroke is enabled, do it "crisp"
-        if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
-          var i, x2 = x + width - 1, y2 = y + height - 1;
-          for(i=0;i<width;++i) {
-            p.set(x + i, y, currentStrokeColor);
-            p.set(x + i, y2, currentStrokeColor);
-          }
-          for(i=0;i<height;++i) {
-            p.set(x, y + i, currentStrokeColor);
-            p.set(x2, y + i, currentStrokeColor);
-          }
-          return;
+        for(i=0;i<height;++i) {
+          p.set(x, y + i, currentStrokeColor);
+          p.set(x2, y + i, currentStrokeColor);
         }
+        return;
+      }
 
-        curContext.beginPath();
+      curContext.beginPath();
 
-        var offsetStart = 0;
-        var offsetEnd = 0;
+      var offsetStart = 0;
+      var offsetEnd = 0;
 
-        if (curRectMode === PConstants.CORNERS) {
-          width -= x;
-          height -= y;
-        }
+      if (curRectMode === PConstants.CORNERS) {
+        width -= x;
+        height -= y;
+      }
 
-        if (curRectMode === PConstants.RADIUS) {
-          width *= 2;
-          height *= 2;
-        }
+      if (curRectMode === PConstants.RADIUS) {
+        width *= 2;
+        height *= 2;
+      }
 
-        if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
-          x -= width / 2;
-          y -= height / 2;
-        }
+      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      }
 
-        curContext.rect(
-        Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
+      curContext.rect(
+      Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
 
-        executeContextFill();
-        executeContextStroke();
+      executeContextFill();
+      executeContextStroke();
 
-        curContext.closePath();
+      curContext.closePath();
+    };
+    
+    Drawing3D.prototype.rect = function(x, y, width, height) {
+      // Modeling transformation
+      var model = new PMatrix3D();
+      model.translate(x, y, 0);
+      model.scale(width, height, 1);
+      model.transpose();
+
+      // viewing transformation needs to have Y flipped
+      // becuase that's what Processing does.
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
+
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+
+      if (lineWidth > 0 && doStroke) {
+        curContext.useProgram(programObject2D);
+        uniformMatrix("model2d", programObject2D, "model", false, model.array());
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
+
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
+
+        curContext.lineWidth(lineWidth);
+        curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
+      }
+
+      if (doFill) {
+        curContext.useProgram(programObject3D);
+        uniformMatrix("model3d", programObject3D, "model", false, model.array());
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());
+        uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+
+        // fix stitching problems. (lines get occluded by triangles
+        // since they share the same depth values). This is not entirely
+        // working, but it's a start for drawing the outline. So
+        // developers can start playing around with styles.
+        curContext.enable(curContext.POLYGON_OFFSET_FILL);
+        curContext.polygonOffset(1, 1);
+
+        uniformf("color3d", programObject3D, "color", fillStyle);
+
+        var v = new PMatrix3D();
+        v.set(view);
+
+        var m = new PMatrix3D();
+        m.set(model);
+
+        v.mult(m);
+
+        var normalMatrix = new PMatrix3D();
+        normalMatrix.set(v);
+        normalMatrix.invert();
+        normalMatrix.transpose();
+
+        uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+
+        vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
+        vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
+
+        curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
+        curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
     };
 
@@ -16740,6 +16745,9 @@
       p.bezierVertex = drawing.bezierVertex;
       p.curveVertex = drawing.curveVertex;
       p.curve = drawing.curve;
+      p.line = drawing.line;
+      p.bezier = drawing.bezier;
+      p.rect = drawing.rect;
     };
 
     // Send aCode Processing syntax to be converted to JavaScript
