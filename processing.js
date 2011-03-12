@@ -11872,51 +11872,57 @@
      * @see vertex
      * @see bezier
      */
-    p.bezierVertex = function bezierVertex() {
+    Drawing2D.prototype.bezierVertex = function() {
       isBezier = true;
       var vert = [];
       if (firstVert) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
-      } else {
-        if (arguments.length === 9) {
-          if (p.use3DContext) {
-            if (bezierDrawMatrix === undef) {
-              bezierDrawMatrix = new PMatrix3D();
-            }
-            // setup matrix for forward differencing to speed up drawing
-            var lastPoint = vertArray.length - 1;
-            splineForward( bezDetail, bezierDrawMatrix );
-            bezierDrawMatrix.apply( bezierBasisMatrix );
-            var draw = bezierDrawMatrix.array();
-            var x1 = vertArray[lastPoint][0],
-                y1 = vertArray[lastPoint][1],
-                z1 = vertArray[lastPoint][2];
-            var xplot1 = draw[4] * x1 + draw[5] * arguments[0] + draw[6] * arguments[3] + draw[7] * arguments[6];
-            var xplot2 = draw[8] * x1 + draw[9] * arguments[0] + draw[10]* arguments[3] + draw[11]* arguments[6];
-            var xplot3 = draw[12]* x1 + draw[13]* arguments[0] + draw[14]* arguments[3] + draw[15]* arguments[6];
-
-            var yplot1 = draw[4] * y1 + draw[5] * arguments[1] + draw[6] * arguments[4] + draw[7] * arguments[7];
-            var yplot2 = draw[8] * y1 + draw[9] * arguments[1] + draw[10]* arguments[4] + draw[11]* arguments[7];
-            var yplot3 = draw[12]* y1 + draw[13]* arguments[1] + draw[14]* arguments[4] + draw[15]* arguments[7];
-
-            var zplot1 = draw[4] * z1 + draw[5] * arguments[2] + draw[6] * arguments[5] + draw[7] * arguments[8];
-            var zplot2 = draw[8] * z1 + draw[9] * arguments[2] + draw[10]* arguments[5] + draw[11]* arguments[8];
-            var zplot3 = draw[12]* z1 + draw[13]* arguments[2] + draw[14]* arguments[5] + draw[15]* arguments[8];
-            for (var j = 0; j < bezDetail; j++) {
-              x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
-              y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
-              z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
-              p.vertex(x1, y1, z1);
-            }
-            p.vertex(arguments[6], arguments[7], arguments[8]);
-          }
-        } else {
-          for (var i = 0; i < arguments.length; i++) {
-            vert[i] = arguments[i];
-          }
-          vertArray.push(vert);
-          vertArray[vertArray.length -1]["isVert"] = false;
+      }
+      
+      for (var i = 0; i < arguments.length; i++) {
+        vert[i] = arguments[i];
+      }
+      vertArray.push(vert);
+      vertArray[vertArray.length -1]["isVert"] = false;
+    };
+    
+    Drawing3D.prototype.bezierVertex = function() {
+      isBezier = true;
+      var vert = [];
+      if (firstVert) {
+        throw ("vertex() must be used at least once before calling bezierVertex()");
+      }
+      
+      if (arguments.length === 9) {
+        if (bezierDrawMatrix === undef) {
+          bezierDrawMatrix = new PMatrix3D();
         }
+        // setup matrix for forward differencing to speed up drawing
+        var lastPoint = vertArray.length - 1;
+        splineForward( bezDetail, bezierDrawMatrix );
+        bezierDrawMatrix.apply( bezierBasisMatrix );
+        var draw = bezierDrawMatrix.array();
+        var x1 = vertArray[lastPoint][0],
+            y1 = vertArray[lastPoint][1],
+            z1 = vertArray[lastPoint][2];
+        var xplot1 = draw[4] * x1 + draw[5] * arguments[0] + draw[6] * arguments[3] + draw[7] * arguments[6];
+        var xplot2 = draw[8] * x1 + draw[9] * arguments[0] + draw[10]* arguments[3] + draw[11]* arguments[6];
+        var xplot3 = draw[12]* x1 + draw[13]* arguments[0] + draw[14]* arguments[3] + draw[15]* arguments[6];
+
+        var yplot1 = draw[4] * y1 + draw[5] * arguments[1] + draw[6] * arguments[4] + draw[7] * arguments[7];
+        var yplot2 = draw[8] * y1 + draw[9] * arguments[1] + draw[10]* arguments[4] + draw[11]* arguments[7];
+        var yplot3 = draw[12]* y1 + draw[13]* arguments[1] + draw[14]* arguments[4] + draw[15]* arguments[7];
+
+        var zplot1 = draw[4] * z1 + draw[5] * arguments[2] + draw[6] * arguments[5] + draw[7] * arguments[8];
+        var zplot2 = draw[8] * z1 + draw[9] * arguments[2] + draw[10]* arguments[5] + draw[11]* arguments[8];
+        var zplot3 = draw[12]* z1 + draw[13]* arguments[2] + draw[14]* arguments[5] + draw[15]* arguments[8];
+        for (var j = 0; j < bezDetail; j++) {
+          x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+          y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+          z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
+          p.vertex(x1, y1, z1);
+        }
+        p.vertex(arguments[6], arguments[7], arguments[8]);
       }
     };
 
@@ -16726,6 +16732,7 @@
       p.point = drawing.point;
       p.vertex = drawing.vertex;
       p.endShape = drawing.endShape;
+      p.bezierVertex = drawing.bezierVertex;
     };
 
     // Send aCode Processing syntax to be converted to JavaScript
