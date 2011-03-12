@@ -10906,7 +10906,7 @@
      * @see curveVertex
      * @see texture
      */
-    p.vertex = function vertex() {
+    DrawingShared.prototype.vertex = function() {
       var vert = [];
 
       if (firstVert) { firstVert = false; }
@@ -10925,29 +10925,39 @@
         vert[4] = arguments[4] || 0;
       }
 
-      vert["isVert"] =  true;
-
-      if (p.use3DContext) {
-        // fill rgba
-        vert[5] = fillStyle[0];
-        vert[6] = fillStyle[1];
-        vert[7] = fillStyle[2];
-        vert[8] = fillStyle[3];
-        // stroke rgba
-        vert[9] = strokeStyle[0];
-        vert[10] = strokeStyle[1];
-        vert[11] = strokeStyle[2];
-        vert[12] = strokeStyle[3];
-        //normals
-        vert[13] = normalX;
-        vert[14] = normalY;
-        vert[15] = normalZ;
-      } else {
-        // fill and stroke color
-        vert[5] = currentFillColor;
-        vert[6] = currentStrokeColor;
-      }
-
+      vert["isVert"] = true;
+      
+      return vert; 
+    };
+    
+    Drawing2D.prototype.vertex = function() {
+      var vert = DrawingShared.prototype.vertex.apply(this, arguments);
+      
+      // fill and stroke color
+      vert[5] = currentFillColor;
+      vert[6] = currentStrokeColor;
+      
+      vertArray.push(vert);
+    };
+    
+    Drawing3D.prototype.vertex = function() {
+      var vert = DrawingShared.prototype.vertex.apply(this, arguments);
+      
+      // fill rgba
+      vert[5] = fillStyle[0];
+      vert[6] = fillStyle[1];
+      vert[7] = fillStyle[2];
+      vert[8] = fillStyle[3];
+      // stroke rgba
+      vert[9] = strokeStyle[0];
+      vert[10] = strokeStyle[1];
+      vert[11] = strokeStyle[2];
+      vert[12] = strokeStyle[3];
+      //normals
+      vert[13] = normalX;
+      vert[14] = normalY;
+      vert[15] = normalZ;
+      
       vertArray.push(vert);
     };
 
@@ -16701,6 +16711,7 @@
       p.smooth = drawing.smooth;
       p.noSmooth = drawing.noSmooth;
       p.point = drawing.point;
+      p.vertex = drawing.vertex;
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
