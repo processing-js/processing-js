@@ -24,12 +24,13 @@
     Iterations Per Test: <input type="text" size="4" id="iterations" onchange="updateIterations();">&nbsp;
     <input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
 
-    <h3>Results</h3>
+    <h3>Results [total time for all tests: <span id="totalTime">0</span>ms]</h3>
     <div id="results" style="margin: 5px; padding-top: 10px;"></div>
     <div id="total"></div>
 
     <script>
       var selectedTests = [];
+      var totalTime = 0;
       var total = document.getElementById('total');
       total.innerHTML = '';
 
@@ -110,6 +111,8 @@
         var total = document.getElementById('total');
         total.innerHTML = '';
 
+        totalTime = 0;
+
         var buildCanvas = function(id, w, h) {
           var c = document.createElement('canvas');
           c.id = id;
@@ -128,12 +131,12 @@
                  (failMessage ? " -- FAILED (" + failMessage + ")" : " -- Total Time for " + iterationCount + " frames: <b>" + time + "ms</b>");
         };
 
-        var passedCount = 0, failedCount = 0, tl = tests.length;
+        var tl = tests.length;
         function nextTest(testNum) {
           if (testNum < tl) {
             window.setTimeout(function() { runOne(testNum); }, 50);
           } else {
-            var info = "Tests Completed - " + failedCount + " failed, " + passedCount + " passed, " + (failedCount + passedCount) + " total."
+            var info = "Completed " + tl + " tests.";
             document.getElementById('status').innerHTML = info;
             total.innerHTML = info;
           }
@@ -168,7 +171,11 @@
               }
 
               var endTime = (new Date).getTime();
-              title.innerHTML = titleText(i+1, tl, endTime - startTime, test.name);
+              var diff = endTime - startTime;
+              totalTime += diff;
+
+              title.innerHTML = titleText(i+1, tl, diff, test.name);
+              document.getElementById('totalTime').innerHTML = totalTime;
 
             } catch (e) {
               title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed: " + e.toString());
