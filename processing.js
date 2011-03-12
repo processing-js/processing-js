@@ -12101,36 +12101,38 @@
      * @see vertex
      * @see bezierVertex
      */
-    p.curveVertex = function(x, y, z) {
+    Drawing2D.prototype.curveVertex = function(x, y, z) {
       isCurve = true;
-      if(p.use3DContext){
-        if (!curveInited){
-          curveInit();
-        }
-        var vert = [];
-        vert[0] = x;
-        vert[1] = y;
-        vert[2] = z;
-        curveVertArray.push(vert);
-        curveVertCount++;
-
-        if (curveVertCount > 3){
-          curveVertexSegment( curveVertArray[curveVertCount-4][0],
-                              curveVertArray[curveVertCount-4][1],
-                              curveVertArray[curveVertCount-4][2],
-                              curveVertArray[curveVertCount-3][0],
-                              curveVertArray[curveVertCount-3][1],
-                              curveVertArray[curveVertCount-3][2],
-                              curveVertArray[curveVertCount-2][0],
-                              curveVertArray[curveVertCount-2][1],
-                              curveVertArray[curveVertCount-2][2],
-                              curveVertArray[curveVertCount-1][0],
-                              curveVertArray[curveVertCount-1][1],
-                              curveVertArray[curveVertCount-1][2] );
-        }
+      
+      p.vertex(x, y, z);
+    };
+    
+    Drawing3D.prototype.curveVertex = function(x, y, z) {
+      isCurve = true;
+      
+      if (!curveInited) {
+        curveInit();
       }
-      else{
-        p.vertex(x, y, z);
+      var vert = [];
+      vert[0] = x;
+      vert[1] = y;
+      vert[2] = z;
+      curveVertArray.push(vert);
+      curveVertCount++;
+
+      if (curveVertCount > 3){
+        curveVertexSegment( curveVertArray[curveVertCount-4][0],
+                            curveVertArray[curveVertCount-4][1],
+                            curveVertArray[curveVertCount-4][2],
+                            curveVertArray[curveVertCount-3][0],
+                            curveVertArray[curveVertCount-3][1],
+                            curveVertArray[curveVertCount-3][2],
+                            curveVertArray[curveVertCount-2][0],
+                            curveVertArray[curveVertCount-2][1],
+                            curveVertArray[curveVertCount-2][2],
+                            curveVertArray[curveVertCount-1][0],
+                            curveVertArray[curveVertCount-1][1],
+                            curveVertArray[curveVertCount-1][2] );
       }
     };
 
@@ -16733,6 +16735,7 @@
       p.vertex = drawing.vertex;
       p.endShape = drawing.endShape;
       p.bezierVertex = drawing.bezierVertex;
+      p.curveVertex = drawing.curveVertex;
     };
 
     // Send aCode Processing syntax to be converted to JavaScript
