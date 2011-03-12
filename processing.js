@@ -9103,6 +9103,8 @@
       noiseProfile.generator = undef;
     };
 
+    var refreshBackground = function(){}; // Fix JSLint errors until background() is refactored
+    
     // Set default background behavior for 2D and 3D contexts
     Drawing2D.prototype.refreshBackground = function() {
       if (!curSketch.options.isTransparent) {
@@ -9328,7 +9330,7 @@
         
         DrawingShared.prototype.size.apply(this, arguments);
       };
-    })();
+    }());
 
     ////////////////////////////////////////////////////////////////////////////
     // Lights
@@ -16654,28 +16656,9 @@
     // Place-holder for debugging function
     Processing.debug = function(e) {};
 
-    // Send aCode Processing syntax to be converted to JavaScript
-    if (aCode) {
-      if (aCode instanceof Processing.Sketch) {
-        // Use sketch as is
-        curSketch = aCode;
-      } else if (typeof aCode === "function") {
-        // Wrap function with default sketch parameters
-        curSketch = new Processing.Sketch(aCode);
-      } else {
-//#if PARSER
-        // Compile the code
-        curSketch = Processing.compile(aCode);
-//#else
-//      throw "PJS compile is not supported";
-//#endif
-      }
-
-      // Expose internal field for diagnostics and testing
-      p.externals.sketch = curSketch;
-
+    var wireDimensionalFunctions = function(mode) {
       // Drawing2D/Drawing3D
-      if (curSketch.use3DContext) {
+      if (mode === '3D') {
         drawing = new Drawing3D();
       } else {
         drawing = new Drawing2D();
@@ -16690,7 +16673,7 @@
       p.applyMatrix = drawing.applyMatrix;
       p.rotate = drawing.rotate;
       p.redraw = drawing.redraw;
-      var refreshBackground = drawing.refreshBackground;
+      refreshBackground = drawing.refreshBackground;
       p.size = drawing.size;
       p.ambientLight = drawing.ambientLight;
       p.directionalLight = drawing.directionalLight;
@@ -16712,6 +16695,33 @@
       p.noSmooth = drawing.noSmooth;
       p.point = drawing.point;
       p.vertex = drawing.vertex;
+    };
+
+    // Send aCode Processing syntax to be converted to JavaScript
+    if (aCode) {
+      if (aCode instanceof Processing.Sketch) {
+        // Use sketch as is
+        curSketch = aCode;
+      } else if (typeof aCode === "function") {
+        // Wrap function with default sketch parameters
+        curSketch = new Processing.Sketch(aCode);
+      } else {
+//#if PARSER
+        // Compile the code
+        curSketch = Processing.compile(aCode);
+//#else
+//      throw "PJS compile is not supported";
+//#endif
+      }
+
+      // Expose internal field for diagnostics and testing
+      p.externals.sketch = curSketch;
+
+      if (curSketch.use3DContext) {
+        wireDimensionalFunctions('3D');
+      } else {
+        wireDimensionalFunctions('2D');
+      }
       
       // For compatibility until this re-write is complete
       p.use3DContext = curSketch.use3DContext;
@@ -16861,6 +16871,17 @@
       // or called via createGraphics
       curSketch = new Processing.Sketch();
       curSketch.options.isTransparent = true;
+      
+      // Hack to make PGraphics work again after splitting size()
+      p.size = function(w, h, render) {
+        if (render && render === PConstants.WEBGL) {
+          wireDimensionalFunctions('3D');
+        } else {
+          wireDimensionalFunctions('2D');
+        }
+        
+        p.size(w, h, render);
+      };
     }
   }; // Processing() ends
 
