@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -24,12 +24,13 @@
     Iterations Per Test: <input type="text" size="4" id="iterations" onchange="updateIterations();">&nbsp;
     <input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
 
-    <h3>Results [total time for all tests: <span id="totalTime">0</span>ms]</h3>
+    <h3>Results [total time for all tests: <span id="totalTime">0</span>ms] <button id="report" style="display:none" onclick="report();">Generate Report</button></h3>
     <div id="results" style="margin: 5px; padding-top: 10px;"></div>
     <div id="total"></div>
 
     <script>
       var selectedTests = [];
+      var finishedTests;
       var totalTime = 0;
       var total = document.getElementById('total');
       total.innerHTML = '';
@@ -39,6 +40,32 @@
       // Tolerance values and kernel for blur
       var iterationCount = 1000;
       document.getElementById('iterations').value = iterationCount;
+
+      function generateReport(tests) {
+        var report = {
+                       testDate: new Date().toString(),
+                       userAgent: window.navigator.userAgent,
+                       data: []
+                     };
+
+        for (var i=0; i < tests.length; i++) {
+          if (tests[i].completed) {
+            report.data.push(tests[i]);
+          }
+        }
+
+        return JSON.stringify(report);
+      }
+
+      function report() {
+        if (!finishedTests) {
+          alert("You must run the tests first.");
+          return;
+        }
+
+        // Using text/plain vs. application/json so it's easier to copy/paste
+        document.location.href = "data:text/plain," + generateReport(finishedTests);
+      }
 
       function updateSelectedTests() {
         var selectControl = document.getElementById('test-type');
@@ -111,6 +138,9 @@
         var total = document.getElementById('total');
         total.innerHTML = '';
 
+        document.getElementById('report').style.display = "none";
+        finishedTests = null;
+
         totalTime = 0;
 
         var buildCanvas = function(id, w, h) {
@@ -139,10 +169,18 @@
             var info = "Completed " + tl + " tests.";
             document.getElementById('status').innerHTML = info;
             total.innerHTML = info;
+            finishedTests = tests;
+
+            document.getElementById('report').style.display = "inline";
           }
         }
 
         var runOne = function(i) {
+          if (!tests[i]) {
+            alert("Error: no test found.");
+            return;
+          }
+
           var test = getTest(tests[i].path);
           var result = document.createElement('div');
           result.id = test.name;
@@ -177,9 +215,12 @@
               title.innerHTML = titleText(i+1, tl, diff, test.name);
               document.getElementById('totalTime').innerHTML = totalTime;
 
+              // Mark this test run a success with time
+              tests[i].completed = true;
+              tests[i].time = diff;
+
             } catch (e) {
               title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed: " + e.toString());
-              failedCount++;
               return nextTest(i+1);
             }
 
