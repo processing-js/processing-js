@@ -12800,7 +12800,7 @@
      *
      * @see ellipseMode
      */
-    p.ellipse = function ellipse(x, y, width, height) {
+    DrawingShared.prototype.ellipse = function(x, y, width, height) {
       x = x || 0;
       y = y || 0;
 
@@ -12822,82 +12822,99 @@
         x += width / 2;
         y += height / 2;
       }
-
-      var offsetStart = 0;
-
+      
+      return {'x':x, 'y':y, 'width':width, 'height':height};
+    };
+    
+    Drawing2D.prototype.ellipse = function(x, y, width, height) {
+      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
+      x = params['x'];
+      y = params['y'];
+      width = params['width'];
+      height = params['height'];
+      
       // Shortcut for drawing a 2D circle
-      if ((!p.use3DContext) && (width === height)) {
+      if (width === height) {
         curContext.beginPath();
         curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, PConstants.TWO_PI, false);
         executeContextFill();
         executeContextStroke();
         curContext.closePath();
-      }
-      else {
+      } else {
         var w = width / 2,
           h = height / 2,
           C = 0.5522847498307933;
         var c_x = C * w,
           c_y = C * h;
+        
+        p.beginShape();
+        p.vertex(x + w, y);
+        p.bezierVertex(x + w, y - c_y, x + c_x, y - h, x, y - h);
+        p.bezierVertex(x - c_x, y - h, x - w, y - c_y, x - w, y);
+        p.bezierVertex(x - w, y + c_y, x - c_x, y + h, x, y + h);
+        p.bezierVertex(x + c_x, y + h, x + w, y + c_y, x + w, y);
+        p.endShape();
+      }
+    };
+    
+    Drawing3D.prototype.ellipse = function(x, y, width, height) {
+      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
+      x = params['x'];
+      y = params['y'];
+      width = params['width'];
+      height = params['height'];
+      
+      var w = width / 2,
+        h = height / 2,
+        C = 0.5522847498307933;
+      var c_x = C * w,
+        c_y = C * h;
+      
+      p.beginShape();
+      p.vertex(x + w, y);
+      p.bezierVertex(x + w, y - c_y, 0, x + c_x, y - h, 0, x, y - h, 0);
+      p.bezierVertex(x - c_x, y - h, 0, x - w, y - c_y, 0, x - w, y, 0);
+      p.bezierVertex(x - w, y + c_y, 0, x - c_x, y + h, 0, x, y + h, 0);
+      p.bezierVertex(x + c_x, y + h, 0, x + w, y + c_y, 0, x + w, y, 0);
+      p.endShape();
 
-        if(!p.use3DContext){
-          // TODO: Audit
-          p.beginShape();
-          p.vertex(x + w, y);
-          p.bezierVertex(x + w, y - c_y, x + c_x, y - h, x, y - h);
-          p.bezierVertex(x - c_x, y - h, x - w, y - c_y, x - w, y);
-          p.bezierVertex(x - w, y + c_y, x - c_x, y + h, x, y + h);
-          p.bezierVertex(x + c_x, y + h, x + w, y + c_y, x + w, y);
-          p.endShape();
+      //temporary workaround to not working fills for bezier -- will fix later
+      var xAv = 0, yAv = 0, i, j;
+      for(i = 0; i < vertArray.length; i++){
+        xAv += vertArray[i][0];
+        yAv += vertArray[i][1];
+      }
+      xAv /= vertArray.length;
+      yAv /= vertArray.length;
+      var vert = [],
+          fillVertArray = [],
+          colorVertArray = [];
+      vert[0] = xAv;
+      vert[1] = yAv;
+      vert[2] = 0;
+      vert[3] = 0;
+      vert[4] = 0;
+      vert[5] = fillStyle[0];
+      vert[6] = fillStyle[1];
+      vert[7] = fillStyle[2];
+      vert[8] = fillStyle[3];
+      vert[9] = strokeStyle[0];
+      vert[10] = strokeStyle[1];
+      vert[11] = strokeStyle[2];
+      vert[12] = strokeStyle[3];
+      vert[13] = normalX;
+      vert[14] = normalY;
+      vert[15] = normalZ;
+      vertArray.unshift(vert);
+      for(i = 0; i < vertArray.length; i++){
+        for(j = 0; j < 3; j++){
+          fillVertArray.push(vertArray[i][j]);
         }
-        else{
-          p.beginShape();
-          p.vertex(x + w, y);
-          p.bezierVertex(x + w, y - c_y, 0, x + c_x, y - h, 0, x, y - h, 0);
-          p.bezierVertex(x - c_x, y - h, 0, x - w, y - c_y, 0, x - w, y, 0);
-          p.bezierVertex(x - w, y + c_y, 0, x - c_x, y + h, 0, x, y + h, 0);
-          p.bezierVertex(x + c_x, y + h, 0, x + w, y + c_y, 0, x + w, y, 0);
-          p.endShape();
-
-          //temporary workaround to not working fills for bezier -- will fix later
-          var xAv = 0, yAv = 0, i, j;
-          for(i = 0; i < vertArray.length; i++){
-            xAv += vertArray[i][0];
-            yAv += vertArray[i][1];
-          }
-          xAv /= vertArray.length;
-          yAv /= vertArray.length;
-          var vert = [],
-              fillVertArray = [],
-              colorVertArray = [];
-          vert[0] = xAv;
-          vert[1] = yAv;
-          vert[2] = 0;
-          vert[3] = 0;
-          vert[4] = 0;
-          vert[5] = fillStyle[0];
-          vert[6] = fillStyle[1];
-          vert[7] = fillStyle[2];
-          vert[8] = fillStyle[3];
-          vert[9] = strokeStyle[0];
-          vert[10] = strokeStyle[1];
-          vert[11] = strokeStyle[2];
-          vert[12] = strokeStyle[3];
-          vert[13] = normalX;
-          vert[14] = normalY;
-          vert[15] = normalZ;
-          vertArray.unshift(vert);
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 0; j < 3; j++){
-              fillVertArray.push(vertArray[i][j]);
-            }
-            for(j = 5; j < 9; j++){
-              colorVertArray.push(vertArray[i][j]);
-            }
-          }
-          fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+        for(j = 5; j < 9; j++){
+          colorVertArray.push(vertArray[i][j]);
         }
       }
+      fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
     };
 
     /**
@@ -16748,6 +16765,7 @@
       p.line = drawing.line;
       p.bezier = drawing.bezier;
       p.rect = drawing.rect;
+      p.ellipse = drawing.ellipse;
     };
 
     // Send aCode Processing syntax to be converted to JavaScript
