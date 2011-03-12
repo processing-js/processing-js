@@ -13647,11 +13647,10 @@
       *
       * @see PImage
       */
-      pg.toImageData = function() {
-        var curContext = this.externals.context;
-        if(!this.use3DContext){
-          return curContext.getImageData(0, 0, this.width, this.height);
-        } else {
+      if (render === PConstants.WEBGL) {
+        pg.toImageData = function() { // 3D
+          var curContext = this.externals.context;
+          
           var c = document.createElement("canvas");
           var ctx = c.getContext("2d");
           var obj = ctx.createImageData(this.width, this.height);
@@ -13660,10 +13659,16 @@
           for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
             obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
           }
-
+          
           return obj;
-        }
-      };
+        };
+      } else {
+        pg.toImageData = function() { // 2D
+          var curContext = this.externals.context;
+          
+          return curContext.getImageData(0, 0, this.width, this.height);
+        };
+      }
 
       return pg;
     };
