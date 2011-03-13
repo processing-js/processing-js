@@ -10751,7 +10751,7 @@
       curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
     };
     
-    Drawing2D.prototype.smooth = function() {
+    Drawing2D.prototype.noSmooth = function() {
       DrawingShared.prototype.noSmooth.apply(this, arguments);
       if ("mozImageSmoothingEnabled" in curContext) {
         curContext.mozImageSmoothingEnabled = false;
@@ -16854,12 +16854,8 @@
 
       if (!curSketch.use3DContext) {
         // Setup default 2d canvas context.
-        curContext = curElement.getContext('2d');
-
-        // Externalize the default context
-        p.externals.context = curContext;
-
-        modelView = new PMatrix2D();
+        // Moving this here removes the number of times we need to check use3DContext
+        p.size(100, 100);
 
         // Canvas has trouble rendering single pixel stuff on whole-pixel
         // counts, so we slightly offset it (this is super lame).
@@ -16868,8 +16864,6 @@
         curContext.lineCap = 'round';
 
         // Set default stroke and fill color
-        p.stroke(0);
-        p.fill(255);
         p.noSmooth();
         p.disableContextMenu();
       }
@@ -16887,21 +16881,9 @@
         }
       }
 
-      // Sets all of the Processing defaults. Called before setup() in executeSketch()
-      var setDefaults = function(processing) {
-        // Default size in P5 is 100x100 with a light gray background, but only set this for 2D
-        if (!processing.use3DContext) {
-          processing.size(100, 100);
-          processing.background(204, 204, 204);
-        }
-      };
-
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
-          // Run void setDefaults() before attach() to work with embedded scripts
-          setDefaults(processing);
-
           curSketch.attach(processing, defaultScope);
 
           // Run void setup()
