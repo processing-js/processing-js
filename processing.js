@@ -15540,7 +15540,7 @@
     }
 
     // Print some text to the Canvas
-    function text$line(str, x, y, z, align) {
+    Drawing2D.prototype.text$line = function(str, x, y, z, align) {
       var textWidth = 0, xOffset = 0;
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
@@ -15606,9 +15606,9 @@
         }
         restoreContext();
       }
-    }
+    };
 
-    function text$line$3d(str, x, y, z, align) {
+    Drawing3D.prototype.text$line = function(str, x, y, z, align) {
       // handle case for 3d text
       if (textcanvas === undef) {
         textcanvas = document.createElement("canvas");
@@ -15629,7 +15629,7 @@
       curContext.textBaseline="top";
 
       // paint on 2D canvas
-      text$line(str,0,0,0,PConstants.LEFT);
+      Drawing2D.prototype.text$line(str,0,0,0,PConstants.LEFT);
 
       // use it as a texture
       var aspect = textcanvas.width/textcanvas.height;
@@ -15678,10 +15678,9 @@
       uniformf("color2d", programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
-    }
+    };
 
     function text$4(str, x, y, z) {
-      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       var lines, linesCount;
       if(str.indexOf('\n') < 0) {
         lines = [str];
@@ -15704,7 +15703,7 @@
       }
       for(var i=0;i<linesCount;++i) {
         var line = lines[i];
-        lineFunction(line, x, y + yOffset, z, horizontalTextAlignment);
+        drawing.text$line(line, x, y + yOffset, z, horizontalTextAlignment);
         yOffset += curTextLeading;
       }
     }
@@ -15782,7 +15781,6 @@
       }
 
       // determine which function to use for drawing text
-      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       var xOffset = 0;
       if(horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width / 2;
@@ -15805,7 +15803,7 @@
         // stop if no enough space for one more line draw
         if (drawCommand.offset + boxYOffset2 + curTextSize > height) { break; }
         // finally, draw text on canvas
-        lineFunction(drawCommand.text, x + xOffset, y + drawCommand.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
+        drawing.text$line(drawCommand.text, x + xOffset, y + drawCommand.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
       }
     }
 
