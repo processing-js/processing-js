@@ -1207,7 +1207,6 @@
     };
 
     p.name            = 'Processing.js Instance'; // Set Processing defaults / environment variables
-    p.use3DContext    = false; // default '2d' canvas context
 
     /**
      * Confirms if a Processing program is "focused", meaning that it is
@@ -16790,9 +16789,6 @@
       } else {
         wireDimensionalFunctions('2D');
       }
-      
-      // For compatibility until this re-write is complete
-      p.use3DContext = curSketch.use3DContext;
 
       if ("mozOpaque" in curElement) {
         curElement.mozOpaque = !curSketch.options.isTransparent;
@@ -16854,7 +16850,7 @@
 
       if (!curSketch.use3DContext) {
         // Setup default 2d canvas context.
-        // Moving this here removes the number of times we need to check use3DContext
+        // Moving this here removes the number of times we need to check the 3D variable
         p.size(100, 100);
 
         // Canvas has trouble rendering single pixel stuff on whole-pixel
@@ -16985,7 +16981,7 @@
       "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
-      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
+      "triangle", "trim", "unbinary", "unhex", "updatePixels",
       "vertex", "width", "XMLElement", "year", "__equals", "__frameRate",
       "__hashCode", "__int_cast", "__keyPressed", "__mousePressed",
       "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
