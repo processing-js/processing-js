@@ -15267,29 +15267,29 @@
      * @see #text
      * @see #textFont
      */
-    p.textWidth = function textWidth(str) {
-      if (p.use3DContext) {
-        if (textcanvas === undef) {
-          textcanvas = document.createElement("canvas");
-        }
-        var oldContext = curContext;
-        curContext = textcanvas.getContext("2d");
-        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-        if ("fillText" in curContext) {
-          textcanvas.width = curContext.measureText(str).width;
-        } else if ("mozDrawText" in curContext) {
-          textcanvas.width = curContext.mozMeasureText(str);
-        }
-        curContext = oldContext;
-        return textcanvas.width;
-      } else {
-        curContext.font = curTextSize + "px " + curTextFont.name;
-        if ("fillText" in curContext) {
-          return curContext.measureText(str).width;
-        } else if ("mozDrawText" in curContext) {
-          return curContext.mozMeasureText(str);
-        }
+    Drawing2D.prototype.textWidth = function(str) {
+      curContext.font = curTextSize + "px " + curTextFont.name;
+      if ("fillText" in curContext) {
+        return curContext.measureText(str).width;
+      } else if ("mozDrawText" in curContext) {
+        return curContext.mozMeasureText(str);
       }
+    };
+    
+    Drawing3D.prototype.textWidth = function(str) {
+      if (textcanvas === undef) {
+        textcanvas = document.createElement("canvas");
+      }
+      var oldContext = curContext;
+      curContext = textcanvas.getContext("2d");
+      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      if ("fillText" in curContext) {
+        textcanvas.width = curContext.measureText(str).width;
+      } else if ("mozDrawText" in curContext) {
+        textcanvas.width = curContext.mozMeasureText(str);
+      }
+      curContext = oldContext;
+      return textcanvas.width;
     };
 
     p.textLeading = function textLeading(leading) {
@@ -16764,6 +16764,7 @@
       p.ellipse = drawing.ellipse;
       p.background = drawing.background;
       p.image = drawing.image;
+      p.textWidth = drawing.textWidth;
     };
 
     // Send aCode Processing syntax to be converted to JavaScript
