@@ -17756,7 +17756,7 @@
         else { cstrs.push(index); }
         return "";
       });
-      var fields = declarations.split(/;(?:\s*;)*/g);
+      var fields = declarations.replace(/^(?:\s*;)+/, "").split(/;(?:\s*;)*/g);
       var baseClassName;
       var i;
 
