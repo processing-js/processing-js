@@ -9103,26 +9103,6 @@
       noiseProfile.generator = undef;
     };
 
-    var refreshBackground = function(){}; // Fix JSLint errors until background() is refactored
-    
-    // Set default background behavior for 2D and 3D contexts
-    Drawing2D.prototype.refreshBackground = function() {
-      if (!curSketch.options.isTransparent) {
-        // fill background default opaque gray
-        curContext.fillStyle = "rgb(204, 204, 204)";
-        curContext.fillRect(0, 0, p.width, p.height);
-        isFillDirty = true;
-      }
-    };
-    
-    Drawing3D.prototype.refreshBackground = function() {
-      if (!curSketch.options.isTransparent) {
-        // fill background default opaque gray
-        curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
-        curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
-      }
-    };
-
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     /**
     * Defines the dimension of the display window in units of pixels. The size() function must
@@ -9167,10 +9147,10 @@
       }
 
       // Reset the text style. This is a terrible hack, only because of how 3D contexts are initialized
-      this.textSize(curTextSize);
+      p.textSize(curTextSize);
 
-      // redraw the background if background was called before size
-      refreshBackground();
+      // set the background to a light gray
+      p.background(204 / 255);
 
       // set 5% for pixels to cache (or 1000)
       maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
@@ -9230,7 +9210,6 @@
         curContext.enable(curContext.DEPTH_TEST);
         curContext.enable(curContext.BLEND);
         curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
-        refreshBackground(); // sets clearColor default;
 
         // Create the program objects to render 2D (points, lines) and
         // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
@@ -13939,8 +13918,7 @@
      * @see #tint()
      * @see #colorMode()
      */
-    // Draw an image or a color to the background
-    p.background = function background() {
+    Drawing2D.prototype.background = function() {
       var color, a, img;
       // background params are either a color or a PImage
       if (typeof arguments[0] === 'number') {
@@ -13959,43 +13937,51 @@
       } else {
         throw "Incorrect background parameters.";
       }
+      
+      if (color !== undef) {
+        saveContext();
+        curContext.setTransform(1, 0, 0, 1, 0, 0);
 
-      if (p.use3DContext) {
-        if (color !== undef) {
-          var c = p.color.toGLArray(color);
-          refreshBackground = function() {
-            curContext.clearColor(c[0], c[1], c[2], c[3]);
-            curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
-          };
-        } else {
-          // Handle image background for 3d context. not done yet.
-          refreshBackground = function() {};
+        if (curSketch.options.isTransparent) {
+          curContext.clearRect(0,0, p.width, p.height);
         }
-      } else { // 2d context
-        if (color !== undef) {
-          refreshBackground = function() {
-            saveContext();
-            curContext.setTransform(1, 0, 0, 1, 0, 0);
-
-            if (curSketch.options.isTransparent) {
-              curContext.clearRect(0,0, p.width, p.height);
-            }
-            curContext.fillStyle = p.color.toString(color);
-            curContext.fillRect(0, 0, p.width, p.height);
-            isFillDirty = true;
-            restoreContext();
-          };
-        } else {
-          refreshBackground = function() {
-            saveContext();
-            curContext.setTransform(1, 0, 0, 1, 0, 0);
-            p.image(img, 0, 0);
-            restoreContext();
-          };
-        }
+        curContext.fillStyle = p.color.toString(color);
+        curContext.fillRect(0, 0, p.width, p.height);
+        isFillDirty = true;
+        restoreContext();
+      } else {
+        saveContext();
+        curContext.setTransform(1, 0, 0, 1, 0, 0);
+        p.image(img, 0, 0);
+        restoreContext();
       }
+    };
+    
+    Drawing3D.prototype.background = function() {
+      var color, a, img;
+      // background params are either a color or a PImage
+      if (typeof arguments[0] === 'number') {
+        color = p.color.apply(this, arguments);
 
-      refreshBackground();
+        // override alpha value, processing ignores the alpha for background color
+        if (!curSketch.options.isTransparent) {
+          color = color | PConstants.ALPHA_MASK;
+        }
+      } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
+        img = arguments[0];
+
+        if (!img.pixels || img.width !== p.width || img.height !== p.height) {
+          throw "Background image must be the same dimensions as the canvas.";
+        }
+      } else {
+        throw "Incorrect background parameters.";
+      }
+      
+      var c = p.color.toGLArray(color);
+      curContext.clearColor(c[0], c[1], c[2], c[3]);
+      curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+      
+      // An image as a background in 3D is not implemented yet
     };
 
     // Draws an image to the Canvas
@@ -14022,55 +14008,61 @@
     * @see background
     * @see alpha
     */
-    p.image = function image(img, x, y, w, h) {
+    Drawing2D.prototype.image = function(img, x, y, w, h) {
       if (img.width > 0) {
         var wid = w || img.width;
         var hgt = h || img.height;
-        if (p.use3DContext) {
-          p.beginShape(p.QUADS);
-          p.texture(img.externals.canvas);
-          p.vertex(x, y, 0, 0, 0);
-          p.vertex(x, y+hgt, 0, 0, hgt);
-          p.vertex(x+wid, y+hgt, 0, wid, hgt);
-          p.vertex(x+wid, y, 0, wid, 0);
-          p.endShape();
+        
+        var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
+        //var fastImage = ("sourceImg" in img) && curTint === null && !img.__mask;
+        var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
+        if (fastImage) {
+          var htmlElement = img.sourceImg;
+          // Using HTML element's width and height in case if the image was resized.
+          curContext.drawImage(htmlElement, 0, 0,
+            htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
         } else {
-          var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-          //var fastImage = ("sourceImg" in img) && curTint === null && !img.__mask;
-          var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
-          if (fastImage) {
-            var htmlElement = img.sourceImg;
-            // Using HTML element's width and height in case if the image was resized.
-            curContext.drawImage(htmlElement, 0, 0,
-              htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
-          } else {
-            var obj = img.toImageData();
+          var obj = img.toImageData();
 
-            if (img.__mask) {
-              var j, size;
-              if (img.__mask.constructor.name === "PImage") {
-                var objMask = img.__mask.toImageData();
-                for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
-                  // using it as an alpha channel
-                  obj.data[j + 1] = objMask.data[j];
-                  // but only the blue color channel
-                }
-              } else {
-                for (j = 0, size = img.__mask.length; j < size; ++j) {
-                  obj.data[(j << 2) + 3] = img.__mask[j];
-                }
+          if (img.__mask) {
+            var j, size;
+            if (img.__mask.constructor.name === "PImage") {
+              var objMask = img.__mask.toImageData();
+              for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+                // using it as an alpha channel
+                obj.data[j + 1] = objMask.data[j];
+                // but only the blue color channel
+              }
+            } else {
+              for (j = 0, size = img.__mask.length; j < size; ++j) {
+                obj.data[(j << 2) + 3] = img.__mask[j];
               }
             }
-
-            // Tint the image
-            if(curTint !== null) {
-              curTint(obj);
-            }
-
-            curContext.drawImage(getCanvasData(obj).canvas, 0, 0,
-              img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
           }
+
+          // Tint the image
+          if(curTint !== null) {
+            curTint(obj);
+          }
+
+          curContext.drawImage(getCanvasData(obj).canvas, 0, 0,
+            img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
         }
+      }
+    };
+    
+    Drawing3D.prototype.image = function(img, x, y, w, h) {
+      if (img.width > 0) {
+        var wid = w || img.width;
+        var hgt = h || img.height;
+        
+        p.beginShape(p.QUADS);
+        p.texture(img.externals.canvas);
+        p.vertex(x, y, 0, 0, 0);
+        p.vertex(x, y+hgt, 0, 0, hgt);
+        p.vertex(x+wid, y+hgt, 0, wid, hgt);
+        p.vertex(x+wid, y, 0, wid, 0);
+        p.endShape();
       }
     };
 
@@ -16741,7 +16733,6 @@
       p.applyMatrix = drawing.applyMatrix;
       p.rotate = drawing.rotate;
       p.redraw = drawing.redraw;
-      refreshBackground = drawing.refreshBackground;
       p.size = drawing.size;
       p.ambientLight = drawing.ambientLight;
       p.directionalLight = drawing.directionalLight;
@@ -16771,6 +16762,8 @@
       p.bezier = drawing.bezier;
       p.rect = drawing.rect;
       p.ellipse = drawing.ellipse;
+      p.background = drawing.background;
+      p.image = drawing.image;
     };
 
     // Send aCode Processing syntax to be converted to JavaScript
