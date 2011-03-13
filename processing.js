@@ -6911,11 +6911,11 @@
     * @see rotateY
     * @see rotateZ
     */
-    Drawing2D.prototype.translate = function translate(x, y, z) {
+    Drawing2D.prototype.translate = function(x, y, z) {
       curContext.translate(x, y);
     };
     
-    Drawing3D.prototype.translate = function translate(x, y, z) {
+    Drawing3D.prototype.translate = function(x, y, z) {
       forwardTransform.translate(x, y, z);
       reverseTransform.invTranslate(x, y, z);
     };
@@ -6944,11 +6944,11 @@
     * @see rotateY
     * @see rotateZ
     */
-    Drawing2D.prototype.scale = function scale(x, y, z) {
+    Drawing2D.prototype.scale = function(x, y, z) {
       curContext.scale(x, y || x);
     };
     
-    Drawing3D.prototype.scale = function scale(x, y, z) {
+    Drawing3D.prototype.scale = function(x, y, z) {
       forwardTransform.scale(x, y, z);
       reverseTransform.invScale(x, y, z);
     };
@@ -6969,11 +6969,11 @@
     * @see rotateY
     * @see rotateZ
     */
-    Drawing2D.prototype.pushMatrix = function pushMatrix() {
+    Drawing2D.prototype.pushMatrix = function() {
       saveContext();
     };
     
-    Drawing3D.prototype.pushMatrix = function pushMatrix() {
+    Drawing3D.prototype.pushMatrix = function() {
       userMatrixStack.load(modelView);
     };
 
@@ -6988,11 +6988,11 @@
     * @see popMatrix
     * @see pushMatrix
     */
-    Drawing2D.prototype.popMatrix = function popMatrix() {
+    Drawing2D.prototype.popMatrix = function() {
       restoreContext();
     };
     
-    Drawing3D.prototype.popMatrix = function popMatrix() {
+    Drawing3D.prototype.popMatrix = function() {
       modelView.set(userMatrixStack.pop());
     };
 
@@ -7006,11 +7006,11 @@
     * @see applyMatrix
     * @see printMatrix
     */
-    Drawing2D.prototype.resetMatrix = function resetMatrix() {
+    Drawing2D.prototype.resetMatrix = function() {
       curContext.setTransform(1,0,0,1,0,0);
     };
     
-    Drawing3D.prototype.resetMatrix = function resetMatrix() {
+    Drawing3D.prototype.resetMatrix = function() {
       forwardTransform.reset();
       reverseTransform.reset();
     };
@@ -7148,11 +7148,11 @@
     * @see popMatrix
     * @see pushMatrix
     */
-    Drawing2D.prototype.rotate = function rotate(angleInRadians) {
+    Drawing2D.prototype.rotate = function(angleInRadians) {
       curContext.rotate(angleInRadians);
     };
     
-    Drawing3D.prototype.rotate = function rotate(angleInRadians) {
+    Drawing3D.prototype.rotate = function(angleInRadians) {
       forwardTransform.rotateZ(angleInRadians);
       reverseTransform.invRotateZ(angleInRadians);
     };
@@ -7363,7 +7363,7 @@
     * @see noLoop
     * @see loop
     */
-    DrawingShared.prototype.redraw = function redraw() {
+    DrawingShared.prototype.redraw = function() {
       var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
@@ -7378,7 +7378,7 @@
       p.frameCount++;
     };
     
-    Drawing2D.prototype.redraw = function redraw() {
+    Drawing2D.prototype.redraw = function() {
       DrawingShared.prototype.redraw.apply(this, arguments);
       
       inDraw = true;
@@ -7390,7 +7390,7 @@
       inDraw = false;
     };
     
-    Drawing3D.prototype.redraw = function redraw() {
+    Drawing3D.prototype.redraw = function() {
       DrawingShared.prototype.redraw.apply(this, arguments);
       
       inDraw = true;
@@ -9442,7 +9442,7 @@
     */
     Drawing2D.prototype.lightFalloff = DrawingShared.prototype.a3DOnlyFunction;
     
-    Drawing3D.prototype.lightFalloff = function (constant, linear, quadratic) {
+    Drawing3D.prototype.lightFalloff = function(constant, linear, quadratic) {
       curContext.useProgram(programObject3D);
       uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
     };
@@ -9468,7 +9468,7 @@
     */
     Drawing2D.prototype.lightSpecular = DrawingShared.prototype.a3DOnlyFunction;
     
-    Drawing3D.prototype.lightSpecular = function (r, g, b) {
+    Drawing3D.prototype.lightSpecular = function(r, g, b) {
       curContext.useProgram(programObject3D);
       uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
     };
@@ -13940,7 +13940,7 @@
         }
         
         lastBackgroundObj = img;
-      } else {
+      } else if (lastBackgroundObj === undefined) {
         color = p.color(204);
 
         // override alpha value, processing ignores the alpha for background color
