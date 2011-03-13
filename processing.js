@@ -9150,7 +9150,7 @@
       p.textSize(curTextSize);
 
       // set the background to a light gray
-      p.background(204 / 255);
+      p.background(204);
 
       // set 5% for pixels to cache (or 1000)
       maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
