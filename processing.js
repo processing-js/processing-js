@@ -1207,7 +1207,8 @@
     };
 
     p.name            = 'Processing.js Instance'; // Set Processing defaults / environment variables
-
+    p.use3DContext    = false; // default '2d' canvas context, required for ref/perf tests
+    
     /**
      * Confirms if a Processing program is "focused", meaning that it is
      * active and will accept input from mouse or keyboard. This variable
@@ -1309,6 +1310,7 @@
         curTightness = 0,
         curveDet = 20,
         curveInited = false,
+        lastBackgroundObj,
         bezDetail = 20,
         colorModeA = 255,
         colorModeX = 255,
@@ -9148,8 +9150,9 @@
       // Reset the text style. This is a terrible hack, only because of how 3D contexts are initialized
       p.textSize(curTextSize);
 
-      // set the background to a light gray
-      p.background(204);
+      // Set the background to whatever it was called last as if background() was called before size()
+      // If background() hasn't been called before, set background() to a light gray
+      p.background();
 
       // set 5% for pixels to cache (or 1000)
       maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
@@ -13917,66 +13920,64 @@
      * @see #tint()
      * @see #colorMode()
      */
-    Drawing2D.prototype.background = function() {
-      var color, a, img;
-      // background params are either a color or a PImage
-      if (typeof arguments[0] === 'number') {
+    DrawingShared.prototype.background = function() {
+      var color, img;
+      // background params are either a color, a PImage or undefined which reapplies the lastBackgroundObj
+      if (arguments.length === 1 && typeof arguments[0] === 'number') {
         color = p.color.apply(this, arguments);
 
         // override alpha value, processing ignores the alpha for background color
         if (!curSketch.options.isTransparent) {
           color = color | PConstants.ALPHA_MASK;
         }
+        
+        lastBackgroundObj = color;
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
         img = arguments[0];
 
         if (!img.pixels || img.width !== p.width || img.height !== p.height) {
           throw "Background image must be the same dimensions as the canvas.";
         }
+        
+        lastBackgroundObj = img;
       } else {
-        throw "Incorrect background parameters.";
+        color = p.color(204);
+
+        // override alpha value, processing ignores the alpha for background color
+        if (!curSketch.options.isTransparent) {
+          color = color | PConstants.ALPHA_MASK;
+        }
+        
+        lastBackgroundObj = color;
       }
+    };
+    
+    Drawing2D.prototype.background = function() {
+      DrawingShared.prototype.background.apply(this, arguments);
       
-      if (color !== undef) {
+      if (typeof lastBackgroundObj === 'number') {
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
 
         if (curSketch.options.isTransparent) {
           curContext.clearRect(0,0, p.width, p.height);
         }
-        curContext.fillStyle = p.color.toString(color);
+        curContext.fillStyle = p.color.toString(lastBackgroundObj);
         curContext.fillRect(0, 0, p.width, p.height);
         isFillDirty = true;
         restoreContext();
       } else {
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
-        p.image(img, 0, 0);
+        p.image(lastBackgroundObj, 0, 0);
         restoreContext();
       }
     };
     
     Drawing3D.prototype.background = function() {
-      var color, a, img;
-      // background params are either a color or a PImage
-      if (typeof arguments[0] === 'number') {
-        color = p.color.apply(this, arguments);
-
-        // override alpha value, processing ignores the alpha for background color
-        if (!curSketch.options.isTransparent) {
-          color = color | PConstants.ALPHA_MASK;
-        }
-      } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
-        img = arguments[0];
-
-        if (!img.pixels || img.width !== p.width || img.height !== p.height) {
-          throw "Background image must be the same dimensions as the canvas.";
-        }
-      } else {
-        throw "Incorrect background parameters.";
-      }
+      DrawingShared.prototype.background.apply(this, arguments);
       
-      var c = p.color.toGLArray(color);
+      var c = p.color.toGLArray(lastBackgroundObj);
       curContext.clearColor(c[0], c[1], c[2], c[3]);
       curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
       
@@ -16789,6 +16790,9 @@
       } else {
         wireDimensionalFunctions('2D');
       }
+      
+      // For ref/perf test compatibility until those are fixed
+      p.use3DContext = curSketch.use3DContext;
 
       if ("mozOpaque" in curElement) {
         curElement.mozOpaque = !curSketch.options.isTransparent;
@@ -16981,7 +16985,7 @@
       "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
-      "triangle", "trim", "unbinary", "unhex", "updatePixels",
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
       "vertex", "width", "XMLElement", "year", "__equals", "__frameRate",
       "__hashCode", "__int_cast", "__keyPressed", "__mousePressed",
       "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
