@@ -29,8 +29,10 @@
     <div id="total"></div>
 
     <script>
+      var MAX_TEST_TIME = 5000; // ms of time to allow a test to run before halting and failing.
       var selectedTests = [];
       var finishedTests;
+      var failedTests = 0;
       var totalTime = 0;
       var total = document.getElementById('total');
       total.innerHTML = '';
@@ -140,6 +142,7 @@
 
         document.getElementById('report').style.display = "none";
         finishedTests = null;
+        failedTests = 0;
 
         totalTime = 0;
 
@@ -166,7 +169,8 @@
           if (testNum < tl) {
             window.setTimeout(function() { runOne(testNum); }, 50);
           } else {
-            var info = "Completed " + tl + " tests.";
+            var passed = tl - failedTests;
+            var info = "Completed " + passed + " of " + tl + " tests (" + failedTests + " failed).";
             document.getElementById('status').innerHTML = info;
             total.innerHTML = info;
             finishedTests = tests;
@@ -202,9 +206,16 @@
               var code = "noLoop();\n" + test.code;
               p = new Processing(canvas, code);
 
-              var startTime = (new Date).getTime();
+              var startTime = (new Date).getTime(),
+                  failed = false;
 
               for (var iters = 0; iters < iterationCount; iters++) {
+                if ( (new Date()).getTime() - startTime > MAX_TEST_TIME ) {
+                  // Exceeded allowable test run time, fail and bail
+                  failed = true;
+                  failedTests++;
+                  break;
+                }
                 p.redraw();
               }
 
@@ -212,7 +223,12 @@
               var diff = endTime - startTime;
               totalTime += diff;
 
-              title.innerHTML = titleText(i+1, tl, diff, test.name);
+              if (failed) {
+                title.innerHTML = titleText(i+1, tl, "-", test.name,
+                                  "Test exceeded maximum test time (" + MAX_TEST_TIME + "ms), halted.");
+              } else {
+                title.innerHTML = titleText(i+1, tl, diff, test.name);
+              }
               document.getElementById('totalTime').innerHTML = totalTime;
 
               // Mark this test run a success with time
@@ -228,7 +244,7 @@
           }
           nextTest(i+1);
         };
-        window.setTimeout(function() { runOne(0); }, 50);
+        window.setTimeout(function() { runOne(0); }, 25);
       };
     </script>
   </body>
