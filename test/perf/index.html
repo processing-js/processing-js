@@ -98,7 +98,7 @@
 
       function download(file) {
         var req = new XMLHttpRequest();
-        req.open('GET', file, false);
+        req.open('GET', file + "?t=" + new Date().getTime(), false);
         if (req.overrideMimeType) {
           req.overrideMimeType('text/plain');
         }
