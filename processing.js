@@ -15141,28 +15141,19 @@
     p.textWidth = function textWidth(str) {
       var lines = str.split(/\r?\n/g), width = 0;
       var i, linesCount = lines.length;
+      var textContext;
       if (p.use3DContext) {
         if (textcanvas === undef) {
           textcanvas = document.createElement("canvas");
         }
-        var textContext = textcanvas.getContext("2d");
-        textContext.font = textContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-        for (i = 0; i < linesCount; ++i) {
-          if ("fillText" in textContext) {
-            width = Math.max(width, textContext.measureText(lines[i]).width);
-          } else if ("mozDrawText" in textContext) {
-            width = Math.max(width, textContext.mozMeasureText(lines[i]));
-          }
-        }
+        textContext = textcanvas.getContext("2d");
       } else {
-        curContext.font = curTextSize + "px " + curTextFont.name;
-        for (i = 0; i < linesCount; ++i) {
-          if ("fillText" in curContext) {
-            width = Math.max(width, curContext.measureText(lines[i]).width);
-          } else if ("mozDrawText" in curContext) {
-            width = Math.max(width, curContext.mozMeasureText(lines[i]));
-          }
-        }
+        textContext = curContext;
+      }
+
+      textContext.font =  curTextSize + "px " + curTextFont.name;
+      for (i = 0; i < linesCount; ++i) {
+        width = Math.max(width, textContext.measureText(lines[i]).width);
       }
       return width;
     };
