@@ -15139,28 +15139,32 @@
      * @see #textFont
      */
     p.textWidth = function textWidth(str) {
+      var lines = str.split(/\r?\n/g), width = 0;
+      var i, linesCount = lines.length;
       if (p.use3DContext) {
         if (textcanvas === undef) {
           textcanvas = document.createElement("canvas");
         }
-        var oldContext = curContext;
-        curContext = textcanvas.getContext("2d");
-        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-        if ("fillText" in curContext) {
-          textcanvas.width = curContext.measureText(str).width;
-        } else if ("mozDrawText" in curContext) {
-          textcanvas.width = curContext.mozMeasureText(str);
+        var textContext = textcanvas.getContext("2d");
+        textContext.font = textContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+        for (i = 0; i < linesCount; ++i) {
+          if ("fillText" in textContext) {
+            width = Math.max(width, textContext.measureText(lines[i]).width);
+          } else if ("mozDrawText" in textContext) {
+            width = Math.max(width, textContext.mozMeasureText(lines[i]));
+          }
         }
-        curContext = oldContext;
-        return textcanvas.width;
       } else {
         curContext.font = curTextSize + "px " + curTextFont.name;
-        if ("fillText" in curContext) {
-          return curContext.measureText(str).width;
-        } else if ("mozDrawText" in curContext) {
-          return curContext.mozMeasureText(str);
+        for (i = 0; i < linesCount; ++i) {
+          if ("fillText" in curContext) {
+            width = Math.max(width, curContext.measureText(lines[i]).width);
+          } else if ("mozDrawText" in curContext) {
+            width = Math.max(width, curContext.mozMeasureText(lines[i]));
+          }
         }
       }
+      return width;
     };
 
     p.textLeading = function textLeading(leading) {
