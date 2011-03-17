@@ -9881,7 +9881,7 @@
       proj.set(projection);
       proj.transpose();
 
-      if (doFill === true) {
+      if (doFill) {
         curContext.useProgram(programObject3D);
 
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
@@ -10128,7 +10128,7 @@
       proj.set(projection);
       proj.transpose();
 
-      if (doFill === true) {
+      if (doFill) {
         // Create a normal transformation matrix
         var v = new PMatrix3D();
         v.set(view);
@@ -11213,13 +11213,11 @@
       else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         curContext.beginPath();
         for (i = 0; i < vertArray.length; i++) {
-          if (vertArray[i]["isVert"] === true) { //if it is a vertex move to the position
-            if (vertArray[i]["moveTo"] === true) {
+          if (vertArray[i]["isVert"]) { //if it is a vertex move to the position
+            if (vertArray[i]["moveTo"]) {
               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-            } else if (vertArray[i]["moveTo"] === false){
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
             } else {
-              curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
             }
           } else { //otherwise continue drawing bezier
             curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
@@ -11379,11 +11377,9 @@
           curContext.beginPath();
           curContext.moveTo(vertArray[0][0], vertArray[0][1]);
           for (i = 1; i < vertArray.length; i++) {
-            if (vertArray[i]["isVert"] === true ) { //if it is a vertex move to the position
-              if (vertArray[i]["moveTo"] === true) {
+            if (vertArray[i]["isVert"]) { //if it is a vertex move to the position
+              if (vertArray[i]["moveTo"]) {
                 curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-              } else if (vertArray[i]["moveTo"] === false){
-                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
               } else {
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
               }
