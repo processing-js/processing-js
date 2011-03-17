@@ -12382,14 +12382,14 @@
       // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
       if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
         var temp;
-        if(x1 === x2) {
-          if(y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
-          for(var y=y1;y<=y2;++y) {
+        if (x1 === x2) {
+          if (y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
+          for (var y=y1;y<=y2;++y) {
             p.set(x1, y, currentStrokeColor);
           }
         } else {
-          if(x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
-          for(var x=x1;x<=x2;++x) {
+          if (x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
+          for (var x=x1;x<=x2;++x) {
             p.set(x, y1, currentStrokeColor);
           }
         }
@@ -12652,11 +12652,11 @@
       // if only stroke is enabled, do it "crisp"
       if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
         var i, x2 = x + width - 1, y2 = y + height - 1;
-        for(i=0;i<width;++i) {
+        for (i=0;i<width;++i) {
           p.set(x + i, y, currentStrokeColor);
           p.set(x + i, y2, currentStrokeColor);
         }
-        for(i=0;i<height;++i) {
+        for (i=0;i<height;++i) {
           p.set(x, y + i, currentStrokeColor);
           p.set(x2, y + i, currentStrokeColor);
         }
@@ -12856,7 +12856,7 @@
 
       //temporary workaround to not working fills for bezier -- will fix later
       var xAv = 0, yAv = 0, i, j;
-      for(i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArray.length; i++) {
         xAv += vertArray[i][0];
         yAv += vertArray[i][1];
       }
@@ -12882,11 +12882,11 @@
       vert[14] = normalY;
       vert[15] = normalZ;
       vertArray.unshift(vert);
-      for(i = 0; i < vertArray.length; i++) {
-        for(j = 0; j < 3; j++) {
+      for (i = 0; i < vertArray.length; i++) {
+        for (j = 0; j < 3; j++) {
           fillVertArray.push(vertArray[i][j]);
         }
-        for(j = 5; j < 9; j++) {
+        for (j = 5; j < 9; j++) {
           colorVertArray.push(vertArray[i][j]);
         }
       }
@@ -14036,7 +14036,7 @@
           }
 
           // Tint the image
-          if(curTint !== null) {
+          if (curTint !== null) {
             curTint(obj);
           }
 
