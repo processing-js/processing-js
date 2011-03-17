@@ -11452,7 +11452,7 @@
           colorVertArray.push(vertArray[0][i]);
         }
 
-       for (i = 9; i < 13; i++) {
+        for (i = 9; i < 13; i++) {
           strokeVertArray.push(vertArray[0][i]);
         }
 
