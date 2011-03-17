@@ -12471,29 +12471,29 @@
      * @see curve
      */
     Drawing2D.prototype.bezier = function() {
-      if (arguments.length === 8) {
-        p.beginShape();
-        p.vertex( arguments[0], arguments[1] );
-        p.bezierVertex( arguments[2], arguments[3],
-                        arguments[4], arguments[5],
-                        arguments[6], arguments[7] );
-        p.endShape();
-      } else {
-        throw("Please use the proper parameters!");
+      if (arguments.length !== 8) {
+        throw("You must use 8 parameters for bezier() in 2D mode");
       }
+      
+      p.beginShape();
+      p.vertex( arguments[0], arguments[1] );
+      p.bezierVertex( arguments[2], arguments[3],
+                      arguments[4], arguments[5],
+                      arguments[6], arguments[7] );
+      p.endShape();
     };
     
     Drawing3D.prototype.bezier = function() {
-      if (arguments.length === 12) {
-        p.beginShape();
-        p.vertex( arguments[0], arguments[1], arguments[2] );
-        p.bezierVertex( arguments[3], arguments[4], arguments[5],
-                        arguments[6], arguments[7], arguments[8],
-                        arguments[9], arguments[10], arguments[11] );
-        p.endShape();
-      } else {
-        throw("Please use the proper parameters!");
+      if (arguments.length !== 12) {
+        throw("You must use 12 parameters for bezier() in 3D mode");
       }
+      
+      p.beginShape();
+      p.vertex( arguments[0], arguments[1], arguments[2] );
+      p.bezierVertex( arguments[3], arguments[4], arguments[5],
+                      arguments[6], arguments[7], arguments[8],
+                      arguments[9], arguments[10], arguments[11] );
+      p.endShape();
     };
 
     /**
