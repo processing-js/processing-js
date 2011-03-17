@@ -12144,8 +12144,7 @@
      * @see #bezier()
      */
     Drawing2D.prototype.curve = function() {
-      if (arguments.length === 8) // curve(x1, y1, x2, y2, x3, y3, x4, y4)
-      {
+      if (arguments.length === 8) { // curve(x1, y1, x2, y2, x3, y3, x4, y4)
         p.beginShape();
         p.curveVertex(arguments[0], arguments[1]);
         p.curveVertex(arguments[2], arguments[3]);
@@ -12156,8 +12155,7 @@
     };
     
     Drawing3D.prototype.curve = function() {
-      if (arguments.length === 12) // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
-      {
+      if (arguments.length === 12) { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
         p.beginShape();
         p.curveVertex(arguments[0], arguments[1], arguments[2]);
         p.curveVertex(arguments[3], arguments[4], arguments[5]);
