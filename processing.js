@@ -9147,7 +9147,7 @@
         }
       }
 
-      // Reset the text style. This is a terrible hack, only because of how 3D contexts are initialized
+      // Reset the text font/size
       p.textSize(curTextSize);
 
       // Set the background to whatever it was called last as if background() was called before size()
