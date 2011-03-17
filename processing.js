@@ -9125,7 +9125,7 @@
       // The default 2d context has already been created in the p.init() stage if
       // a 3d context was not specified. This is so that a 2d context will be
       // available if size() was not called.
-      var props = {
+      var savedProperties = {
         fillStyle: curContext.fillStyle,
         strokeStyle: curContext.strokeStyle,
         lineCap: curContext.lineCap,
@@ -9141,9 +9141,9 @@
       curElement.width = p.width = aWidth || 100;
       curElement.height = p.height = aHeight || 100;
 
-      for (var j in props) {
-        if (props) {
-          curContext[j] = props[j];
+      for (var prop in savedProperties) {
+        if (savedProperties.hasOwnProperty(prop)) {
+          curContext[prop] = savedProperties[prop];
         }
       }
 
