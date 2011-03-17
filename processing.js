@@ -9163,7 +9163,7 @@
     
     Drawing2D.prototype.size = function(aWidth, aHeight, aMode) {
       if (curContext === undef) {
-        // size() was called without p.init() default context, ie. p.createGraphics()
+        // size() was called without p.init() default context, i.e. p.createGraphics()
         curContext = curElement.getContext("2d");
         userMatrixStack = new PMatrixStack();
         modelView = new PMatrix2D();
