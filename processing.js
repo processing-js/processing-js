@@ -10796,7 +10796,7 @@
           var c = p.get(x, y);
           p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
         } else {
-          if (lineWidth > 1){
+          if (lineWidth > 1) {
             curContext.fillStyle = p.color.toString(currentStrokeColor);
             isFillDirty = true;
             curContext.beginPath();
@@ -12098,7 +12098,7 @@
       curveVertArray.push(vert);
       curveVertCount++;
 
-      if (curveVertCount > 3){
+      if (curveVertCount > 3) {
         curveVertexSegment( curveVertArray[curveVertCount-4][0],
                             curveVertArray[curveVertCount-4][1],
                             curveVertArray[curveVertCount-4][2],
@@ -12473,7 +12473,7 @@
      * @see curve
      */
     Drawing2D.prototype.bezier = function() {
-      if (arguments.length === 8){
+      if (arguments.length === 8) {
         p.beginShape();
         p.vertex( arguments[0], arguments[1] );
         p.bezierVertex( arguments[2], arguments[3],
@@ -12858,7 +12858,7 @@
 
       //temporary workaround to not working fills for bezier -- will fix later
       var xAv = 0, yAv = 0, i, j;
-      for(i = 0; i < vertArray.length; i++){
+      for(i = 0; i < vertArray.length; i++) {
         xAv += vertArray[i][0];
         yAv += vertArray[i][1];
       }
@@ -12884,11 +12884,11 @@
       vert[14] = normalY;
       vert[15] = normalZ;
       vertArray.unshift(vert);
-      for(i = 0; i < vertArray.length; i++){
-        for(j = 0; j < 3; j++){
+      for(i = 0; i < vertArray.length; i++) {
+        for(j = 0; j < 3; j++) {
           fillVertArray.push(vertArray[i][j]);
         }
-        for(j = 5; j < 9; j++){
+        for(j = 5; j < 9; j++) {
           colorVertArray.push(vertArray[i][j]);
         }
       }
