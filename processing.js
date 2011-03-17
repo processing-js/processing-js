@@ -1207,8 +1207,8 @@
     };
 
     p.name            = 'Processing.js Instance'; // Set Processing defaults / environment variables
-    p.use3DContext    = false; // default '2d' canvas context, required for ref/perf tests
-    
+    p.use3DContext    = false; // default '2d' canvas context
+
     /**
      * Confirms if a Processing program is "focused", meaning that it is
      * active and will accept input from mouse or keyboard. This variable
