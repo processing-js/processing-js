@@ -11126,9 +11126,9 @@
 
       firstVert = true;
       var i, j, k;
-      var last = vertArray.length - 1;
+      var vertArrayLength = vertArrayLength;
 
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
         for (j = 0; j < 3; j++) {
           fillVertArray.push(vertArray[i][j]);
         }
@@ -11136,7 +11136,7 @@
 
       // 5,6,7,8
       // R,G,B,A - fill colour
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
         for (j = 5; j < 9; j++) {
           colorVertArray.push(vertArray[i][j]);
         }
@@ -11144,14 +11144,14 @@
 
       // 9,10,11,12
       // R, G, B, A - stroke colour
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
         for (j = 9; j < 13; j++) {
           strokeVertArray.push(vertArray[i][j]);
         }
       }
 
       // texture u,v
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
         texVertArray.push(vertArray[i][3]);
         texVertArray.push(vertArray[i][4]);
       }
@@ -11177,7 +11177,7 @@
       
       // curveVertex
       if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
-        if (vertArray.length > 3) {
+        if (vertArrayLength > 3) {
           var b = [],
               s = 1 - curTightness;
           curContext.beginPath();
@@ -11190,7 +11190,7 @@
             * |0         (1-t)/6    1         (t-1)/6 |
             * |0         0          0         0       |
             */
-          for (i = 1; (i+2) < vertArray.length; i++) {
+          for (i = 1; (i+2) < vertArrayLength; i++) {
             b[0] = [vertArray[i][0], vertArray[i][1]];
             b[1] = [vertArray[i][0] + (s * vertArray[i+1][0] - s * vertArray[i-1][0]) / 6,
                    vertArray[i][1] + (s * vertArray[i+1][1] - s * vertArray[i-1][1]) / 6];
@@ -11212,7 +11212,7 @@
       // bezierVertex
       else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         curContext.beginPath();
-        for (i = 0; i < vertArray.length; i++) {
+        for (i = 0; i < vertArrayLength; i++) {
           if (vertArray[i]["isVert"]) { //if it is a vertex move to the position
             if (vertArray[i]["moveTo"]) {
               curContext.moveTo(vertArray[i][0], vertArray[i][1]);
@@ -11235,21 +11235,21 @@
       // render the vertices provided
       else {
         if (curShape === PConstants.POINTS) {
-          for (i = 0; i < vertArray.length; i++) {
+          for (i = 0; i < vertArrayLength; i++) {
             if (doStroke) {
               p.stroke(vertArray[i][6]);
             }
             p.point(vertArray[i][0], vertArray[i][1]);
           }
         } else if (curShape === PConstants.LINES) {
-          for (i = 0; (i + 1) < vertArray.length; i+=2) {
+          for (i = 0; (i + 1) < vertArrayLength; i+=2) {
             if (doStroke) {
               p.stroke(vertArray[i+1][6]);
             }
             p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
           }
         } else if (curShape === PConstants.TRIANGLES) {
-          for (i = 0; (i + 2) < vertArray.length; i+=3) {
+          for (i = 0; (i + 2) < vertArrayLength; i+=3) {
             curContext.beginPath();
             curContext.moveTo(vertArray[i][0], vertArray[i][1]);
             curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
@@ -11268,7 +11268,7 @@
             curContext.closePath();
           }
         } else if (curShape === PConstants.TRIANGLE_STRIP) {
-          for (i = 0; (i+1) < vertArray.length; i++) {
+          for (i = 0; (i+1) < vertArrayLength; i++) {
             curContext.beginPath();
             curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
             curContext.lineTo(vertArray[i][0], vertArray[i][1]);
@@ -11280,7 +11280,7 @@
               p.fill(vertArray[i+1][5]);
             }
 
-            if (i + 2 < vertArray.length) {
+            if (i + 2 < vertArrayLength) {
               curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
               if (doStroke) {
                 p.stroke(vertArray[i+2][6]);
@@ -11294,7 +11294,7 @@
             curContext.closePath();
           }
         } else if (curShape === PConstants.TRIANGLE_FAN) {
-          if (vertArray.length > 2) {
+          if (vertArrayLength > 2) {
             curContext.beginPath();
             curContext.moveTo(vertArray[0][0], vertArray[0][1]);
             curContext.lineTo(vertArray[1][0], vertArray[1][1]);
@@ -11310,7 +11310,7 @@
             }
 
             curContext.closePath();
-            for (i = 3; i < vertArray.length; i++) {
+            for (i = 3; i < vertArrayLength; i++) {
               curContext.beginPath();
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
@@ -11329,7 +11329,7 @@
             }
           }
         } else if (curShape === PConstants.QUADS) {
-          for (i = 0; (i + 3) < vertArray.length; i+=4) {
+          for (i = 0; (i + 3) < vertArrayLength; i+=4) {
             curContext.beginPath();
             curContext.moveTo(vertArray[i][0], vertArray[i][1]);
             for (j = 1; j < 4; j++) {
@@ -11349,10 +11349,10 @@
             curContext.closePath();
           }
         } else if (curShape === PConstants.QUAD_STRIP) {
-          if (vertArray.length > 3) {
-            for (i = 0; (i+1) < vertArray.length; i+=2) {
+          if (vertArrayLength > 3) {
+            for (i = 0; (i+1) < vertArrayLength; i+=2) {
               curContext.beginPath();
-              if (i+3 < vertArray.length) {
+              if (i+3 < vertArrayLength) {
                 curContext.moveTo(vertArray[i+2][0], vertArray[i+2][1]);
                 curContext.lineTo(vertArray[i][0], vertArray[i][1]);
                 curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
@@ -11376,7 +11376,7 @@
         } else {
           curContext.beginPath();
           curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-          for (i = 1; i < vertArray.length; i++) {
+          for (i = 1; i < vertArrayLength; i++) {
             if (vertArray[i]["isVert"]) { //if it is a vertex move to the position
               if (vertArray[i]["moveTo"]) {
                 curContext.moveTo(vertArray[i][0], vertArray[i][1]);
@@ -11412,9 +11412,9 @@
 
       firstVert = true;
       var i, j, k;
-      var last = vertArray.length - 1;
+      var vertArrayLength = vertArrayLength;
 
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
         for (j = 0; j < 3; j++) {
           fillVertArray.push(vertArray[i][j]);
         }
@@ -11422,7 +11422,7 @@
 
       // 5,6,7,8
       // R,G,B,A - fill colour
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
         for (j = 5; j < 9; j++) {
           colorVertArray.push(vertArray[i][j]);
         }
@@ -11430,14 +11430,14 @@
 
       // 9,10,11,12
       // R, G, B, A - stroke colour
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
         for (j = 9; j < 13; j++) {
           strokeVertArray.push(vertArray[i][j]);
         }
       }
 
       // texture u,v
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
         texVertArray.push(vertArray[i][3]);
         texVertArray.push(vertArray[i][4]);
       }
@@ -11464,8 +11464,8 @@
       // bezierVertex
       else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         lineVertArray = fillVertArray;
-        lineVertArray.splice(lineVertArray.length - 3);
-        strokeVertArray.splice(strokeVertArray.length - 4);
+        lineVertArray.splice(linevertArrayLength - 3);
+        strokeVertArray.splice(strokevertArrayLength - 4);
         if (doStroke) {
           line3D(lineVertArray, null, strokeVertArray);
         }
@@ -11477,27 +11477,27 @@
       // render the vertices provided
       else {
         if (curShape === PConstants.POINTS) {       // if POINTS was the specified parameter in beginShape
-          for (i = 0; i < vertArray.length; i++) {  // loop through and push the point location information to the array
+          for (i = 0; i < vertArrayLength; i++) {  // loop through and push the point location information to the array
             for (j = 0; j < 3; j++) {
               lineVertArray.push(vertArray[i][j]);
             }
           }
           point3D(lineVertArray, strokeVertArray);  // render function for points
         } else if (curShape === PConstants.LINES) { // if LINES was the specified parameter in beginShape
-          for (i = 0; i < vertArray.length; i++) {  // loop through and push the point location information to the array
+          for (i = 0; i < vertArrayLength; i++) {  // loop through and push the point location information to the array
             for (j = 0; j < 3; j++) {
               lineVertArray.push(vertArray[i][j]);
             }
           }
-          for (i = 0; i < vertArray.length; i++) {  // loop through and push the color information to the array
+          for (i = 0; i < vertArrayLength; i++) {  // loop through and push the color information to the array
             for (j = 5; j < 9; j++) {
               colorVertArray.push(vertArray[i][j]);
             }
           }
           line3D(lineVertArray, "LINES", strokeVertArray);  // render function for lines
         } else if (curShape === PConstants.TRIANGLES) {     // if TRIANGLES was the specified parameter in beginShape
-          if (vertArray.length > 2) {
-            for (i = 0; (i+2) < vertArray.length; i+=3) {   // loop through the array per triangle
+          if (vertArrayLength > 2) {
+            for (i = 0; (i+2) < vertArrayLength; i+=3) {   // loop through the array per triangle
               fillVertArray = [];
               texVertArray = [];
               lineVertArray = [];
@@ -11529,8 +11529,8 @@
             }
           }
         } else if (curShape === PConstants.TRIANGLE_STRIP) {    // if TRIANGLE_STRIP was the specified parameter in beginShape
-          if (vertArray.length > 2) {
-            for (i = 0; (i+2) < vertArray.length; i++) {
+          if (vertArrayLength > 2) {
+            for (i = 0; (i+2) < vertArrayLength; i++) {
               lineVertArray = [];
               fillVertArray = [];
               strokeVertArray = [];
@@ -11563,7 +11563,7 @@
             }
           }
         } else if (curShape === PConstants.TRIANGLE_FAN) {
-          if (vertArray.length > 2) {
+          if (vertArrayLength > 2) {
             for (i = 0; i < 3; i++) {
               for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[i][j]);
@@ -11578,7 +11578,7 @@
               line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
             }
 
-            for (i = 2; (i+1) < vertArray.length; i++) {
+            for (i = 2; (i+1) < vertArrayLength; i++) {
               lineVertArray = [];
               strokeVertArray = [];
               lineVertArray.push(vertArray[0][0]);
@@ -11609,7 +11609,7 @@
             }
           }
         } else if (curShape === PConstants.QUADS) {
-          for (i = 0; (i + 3) < vertArray.length; i+=4) {
+          for (i = 0; (i + 3) < vertArrayLength; i+=4) {
             lineVertArray = [];
             for (j = 0; j < 4; j++) {
               for (k = 0; k < 3; k++) {
@@ -11668,7 +11668,7 @@
           }
         } else if (curShape === PConstants.QUAD_STRIP) {
           var tempArray = [];
-          if (vertArray.length > 3) {
+          if (vertArrayLength > 3) {
             for (i = 0; i < 2; i++) {
               for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[i][j]);
@@ -11682,11 +11682,11 @@
             }
 
             line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
-            if (vertArray.length > 4 && vertArray.length % 2 > 0) {
-              tempArray = fillVertArray.splice(fillVertArray.length - 3);
+            if (vertArrayLength > 4 && vertArrayLength % 2 > 0) {
+              tempArray = fillVertArray.splice(fillvertArrayLength - 3);
               vertArray.pop();
             }
-            for (i = 0; (i+3) < vertArray.length; i+=2) {
+            for (i = 0; (i+3) < vertArrayLength; i+=2) {
               lineVertArray = [];
               strokeVertArray = [];
               for (j = 0; j < 3; j++) {
@@ -11726,7 +11726,7 @@
         // If the user didn't specify a type (LINES, TRIANGLES, etc)
         else {
           // If only one vertex was specified, it must be a point
-          if (vertArray.length === 1) {
+          if (vertArrayLength === 1) {
             for (j = 0; j < 3; j++) {
               lineVertArray.push(vertArray[0][j]);
             }
@@ -11735,7 +11735,7 @@
             }
             point3D(lineVertArray,strokeVertArray);
           } else {
-            for (i = 0; i < vertArray.length; i++) {
+            for (i = 0; i < vertArrayLength; i++) {
               for (j = 0; j < 3; j++) {
                 lineVertArray.push(vertArray[i][j]);
               }
