@@ -14009,7 +14009,6 @@
         var hgt = h || img.height;
         
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-        //var fastImage = ("sourceImg" in img) && curTint === null && !img.__mask;
         var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
         if (fastImage) {
           var htmlElement = img.sourceImg;
