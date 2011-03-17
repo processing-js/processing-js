@@ -6911,7 +6911,7 @@
     * @see rotateY
     * @see rotateZ
     */
-    Drawing2D.prototype.translate = function(x, y, z) {
+    Drawing2D.prototype.translate = function(x, y) {
       curContext.translate(x, y);
     };
     
@@ -6944,7 +6944,7 @@
     * @see rotateY
     * @see rotateZ
     */
-    Drawing2D.prototype.scale = function(x, y, z) {
+    Drawing2D.prototype.scale = function(x, y) {
       curContext.scale(x, y || x);
     };
     
@@ -10106,7 +10106,7 @@
     Drawing2D.prototype.sphere = DrawingShared.prototype.a3DOnlyFunction;
     
     Drawing3D.prototype.sphere = function() {
-      var sRad = arguments[0], c;
+      var sRad = arguments[0];
 
       if ((sphereDetailU < 3) || (sphereDetailV < 2)) {
         p.sphereDetail(30);
@@ -10786,7 +10786,7 @@
      *
      * @see #beginShape()
      */
-    Drawing2D.prototype.point = function(x, y, z) {
+    Drawing2D.prototype.point = function(x, y) {
       if (doStroke) {
         // TODO if strokeWeight > 1, do circle
 
@@ -12082,10 +12082,10 @@
      * @see vertex
      * @see bezierVertex
      */
-    Drawing2D.prototype.curveVertex = function(x, y, z) {
+    Drawing2D.prototype.curveVertex = function(x, y) {
       isCurve = true;
       
-      p.vertex(x, y, z);
+      p.vertex(x, y);
     };
     
     Drawing3D.prototype.curveVertex = function(x, y, z) {
@@ -12159,7 +12159,7 @@
     };
     
     Drawing3D.prototype.curve = function() {
-      if (arguments.length === 12) // curve(x1, y1, x2, y2, x3, y3, x4, y4)
+      if (arguments.length === 12) // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
       {
         p.beginShape();
         p.curveVertex(arguments[0], arguments[1], arguments[2]);
@@ -12377,7 +12377,7 @@
     * @see beginShape
     */
     Drawing2D.prototype.line = function() {
-      var x1, y1, z1, x2, y2, z2;
+      var x1, y1, x2, y2;
       
       x1 = arguments[0];
       y1 = arguments[1];
