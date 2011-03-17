@@ -9207,6 +9207,7 @@
           sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
           cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
         }
+
         // Set defaults
         curContext.viewport(0, 0, curElement.width, curElement.height);
         curContext.enable(curContext.DEPTH_TEST);
