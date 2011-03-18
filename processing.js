@@ -11123,37 +11123,42 @@
       var colorVertArray = [];
       var strokeVertArray = [];
       var texVertArray = [];
+      var cachedVertArray;
 
       firstVert = true;
       var i, j, k;
-      var vertArrayLength = vertArrayLength;
+      var vertArrayLength = vertArray.length;
 
       for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
         for (j = 0; j < 3; j++) {
-          fillVertArray.push(vertArray[i][j]);
+          fillVertArray.push(cachedVertArray[j]);
         }
       }
 
       // 5,6,7,8
       // R,G,B,A - fill colour
       for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
         for (j = 5; j < 9; j++) {
-          colorVertArray.push(vertArray[i][j]);
+          colorVertArray.push(cachedVertArray[j]);
         }
       }
 
       // 9,10,11,12
       // R, G, B, A - stroke colour
       for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
         for (j = 9; j < 13; j++) {
-          strokeVertArray.push(vertArray[i][j]);
+          strokeVertArray.push(cachedVertArray[j]);
         }
       }
 
       // texture u,v
       for (i = 0; i < vertArrayLength; i++) {
-        texVertArray.push(vertArray[i][3]);
-        texVertArray.push(vertArray[i][4]);
+        cachedVertArray = vertArray[i];
+        texVertArray.push(cachedVertArray[3]);
+        texVertArray.push(cachedVertArray[4]);
       }
 
       // if shape is closed, push the first point into the last point (including colours)
@@ -11191,9 +11196,10 @@
             * |0         0          0         0       |
             */
           for (i = 1; (i+2) < vertArrayLength; i++) {
-            b[0] = [vertArray[i][0], vertArray[i][1]];
-            b[1] = [vertArray[i][0] + (s * vertArray[i+1][0] - s * vertArray[i-1][0]) / 6,
-                   vertArray[i][1] + (s * vertArray[i+1][1] - s * vertArray[i-1][1]) / 6];
+            cachedVertArray = vertArray[i];
+            b[0] = [cachedVertArray[0], cachedVertArray[1]];
+            b[1] = [cachedVertArray[0] + (s * vertArray[i+1][0] - s * vertArray[i-1][0]) / 6,
+                   cachedVertArray[1] + (s * vertArray[i+1][1] - s * vertArray[i-1][1]) / 6];
             b[2] = [vertArray[i+1][0] + (s * vertArray[i][0] - s * vertArray[i+2][0]) / 6,
                    vertArray[i+1][1] + (s * vertArray[i][1] - s * vertArray[i+2][1]) / 6];
             b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
@@ -11213,11 +11219,12 @@
       else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         curContext.beginPath();
         for (i = 0; i < vertArrayLength; i++) {
+          cachedVertArray = vertArray[i];
           if (vertArray[i]["isVert"]) { //if it is a vertex move to the position
             if (vertArray[i]["moveTo"]) {
-              curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+              curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
             } else {
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
             }
           } else { //otherwise continue drawing bezier
             curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
@@ -11236,25 +11243,28 @@
       else {
         if (curShape === PConstants.POINTS) {
           for (i = 0; i < vertArrayLength; i++) {
+            cachedVertArray = vertArray[i];
             if (doStroke) {
-              p.stroke(vertArray[i][6]);
+              p.stroke(cachedVertArray[6]);
             }
-            p.point(vertArray[i][0], vertArray[i][1]);
+            p.point(cachedVertArray[0], cachedVertArray[1]);
           }
         } else if (curShape === PConstants.LINES) {
           for (i = 0; (i + 1) < vertArrayLength; i+=2) {
+            cachedVertArray = vertArray[i];
             if (doStroke) {
               p.stroke(vertArray[i+1][6]);
             }
-            p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
+            p.line(cachedVertArray[0], cachedVertArray[1], vertArray[i+1][0], vertArray[i+1][1]);
           }
         } else if (curShape === PConstants.TRIANGLES) {
           for (i = 0; (i + 2) < vertArrayLength; i+=3) {
+            cachedVertArray = vertArray[i];
             curContext.beginPath();
-            curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+            curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
             curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
             curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-            curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+            curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
 
             if (doFill) {
               p.fill(vertArray[i+2][5]);
@@ -11269,9 +11279,10 @@
           }
         } else if (curShape === PConstants.TRIANGLE_STRIP) {
           for (i = 0; (i+1) < vertArrayLength; i++) {
+            cachedVertArray = vertArray[i];
             curContext.beginPath();
             curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
-            curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+            curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
 
             if (doStroke) {
               p.stroke(vertArray[i+1][6]);
@@ -11311,17 +11322,18 @@
 
             curContext.closePath();
             for (i = 3; i < vertArrayLength; i++) {
+              cachedVertArray = vertArray[i];
               curContext.beginPath();
               curContext.moveTo(vertArray[0][0], vertArray[0][1]);
               curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+              curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
 
               if (doFill) {
-                p.fill(vertArray[i][5]);
+                p.fill(cachedVertArray[5]);
                 executeContextFill();
               }
               if (doStroke) {
-                p.stroke(vertArray[i][6]);
+                p.stroke(cachedVertArray[6]);
                 executeContextStroke();
               }
 
@@ -11330,12 +11342,13 @@
           }
         } else if (curShape === PConstants.QUADS) {
           for (i = 0; (i + 3) < vertArrayLength; i+=4) {
+            cachedVertArray = vertArray[i];
             curContext.beginPath();
-            curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+            curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
             for (j = 1; j < 4; j++) {
               curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
             }
-            curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+            curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
 
             if (doFill) {
               p.fill(vertArray[i+3][5]);
@@ -11351,10 +11364,11 @@
         } else if (curShape === PConstants.QUAD_STRIP) {
           if (vertArrayLength > 3) {
             for (i = 0; (i+1) < vertArrayLength; i+=2) {
+              cachedVertArray = vertArray[i];
               curContext.beginPath();
               if (i+3 < vertArrayLength) {
                 curContext.moveTo(vertArray[i+2][0], vertArray[i+2][1]);
-                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+                curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
                 curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
                 curContext.lineTo(vertArray[i+3][0], vertArray[i+3][1]);
 
@@ -11365,7 +11379,7 @@
                   p.stroke(vertArray[i+3][6]);
                 }
               } else {
-                curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+                curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
                 curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               }
               executeContextFill();
@@ -11377,11 +11391,12 @@
           curContext.beginPath();
           curContext.moveTo(vertArray[0][0], vertArray[0][1]);
           for (i = 1; i < vertArrayLength; i++) {
-            if (vertArray[i]["isVert"]) { //if it is a vertex move to the position
-              if (vertArray[i]["moveTo"]) {
-                curContext.moveTo(vertArray[i][0], vertArray[i][1]);
+            cachedVertArray = vertArray[i];
+            if (cachedVertArray["isVert"]) { //if it is a vertex move to the position
+              if (cachedVertArray["moveTo"]) {
+                curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
               } else {
-                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
+                curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
               }
             }
           }
@@ -11409,37 +11424,42 @@
       var colorVertArray = [];
       var strokeVertArray = [];
       var texVertArray = [];
+      var cachedVertArray;
 
       firstVert = true;
       var i, j, k;
-      var vertArrayLength = vertArrayLength;
+      var vertArrayLength = vertArray.length;
 
       for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
         for (j = 0; j < 3; j++) {
-          fillVertArray.push(vertArray[i][j]);
+          fillVertArray.push(cachedVertArray[j]);
         }
       }
 
       // 5,6,7,8
       // R,G,B,A - fill colour
       for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
         for (j = 5; j < 9; j++) {
-          colorVertArray.push(vertArray[i][j]);
+          colorVertArray.push(cachedVertArray[j]);
         }
       }
 
       // 9,10,11,12
       // R, G, B, A - stroke colour
       for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
         for (j = 9; j < 13; j++) {
-          strokeVertArray.push(vertArray[i][j]);
+          strokeVertArray.push(cachedVertArray[j]);
         }
       }
 
       // texture u,v
       for (i = 0; i < vertArrayLength; i++) {
-        texVertArray.push(vertArray[i][3]);
-        texVertArray.push(vertArray[i][4]);
+        cachedVertArray = vertArray[i];
+        texVertArray.push(cachedVertArray[3]);
+        texVertArray.push(cachedVertArray[4]);
       }
 
       // if shape is closed, push the first point into the last point (including colours)
@@ -11464,8 +11484,8 @@
       // bezierVertex
       else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         lineVertArray = fillVertArray;
-        lineVertArray.splice(linevertArrayLength - 3);
-        strokeVertArray.splice(strokevertArrayLength - 4);
+        lineVertArray.splice(lineVertArray.length - 3);
+        strokeVertArray.splice(strokeVertArray.length - 4);
         if (doStroke) {
           line3D(lineVertArray, null, strokeVertArray);
         }
@@ -11478,20 +11498,23 @@
       else {
         if (curShape === PConstants.POINTS) {       // if POINTS was the specified parameter in beginShape
           for (i = 0; i < vertArrayLength; i++) {  // loop through and push the point location information to the array
+            cachedVertArray = vertArray[i];
             for (j = 0; j < 3; j++) {
-              lineVertArray.push(vertArray[i][j]);
+              lineVertArray.push(cachedVertArray[j]);
             }
           }
           point3D(lineVertArray, strokeVertArray);  // render function for points
         } else if (curShape === PConstants.LINES) { // if LINES was the specified parameter in beginShape
           for (i = 0; i < vertArrayLength; i++) {  // loop through and push the point location information to the array
+            cachedVertArray = vertArray[i];
             for (j = 0; j < 3; j++) {
-              lineVertArray.push(vertArray[i][j]);
+              lineVertArray.push(cachedVertArray[j]);
             }
           }
           for (i = 0; i < vertArrayLength; i++) {  // loop through and push the color information to the array
+            cachedVertArray = vertArray[i];
             for (j = 5; j < 9; j++) {
-              colorVertArray.push(vertArray[i][j]);
+              colorVertArray.push(cachedVertArray[j]);
             }
           }
           line3D(lineVertArray, "LINES", strokeVertArray);  // render function for lines
@@ -11565,13 +11588,15 @@
         } else if (curShape === PConstants.TRIANGLE_FAN) {
           if (vertArrayLength > 2) {
             for (i = 0; i < 3; i++) {
+              cachedVertArray = vertArray[i];
               for (j = 0; j < 3; j++) {
-                lineVertArray.push(vertArray[i][j]);
+                lineVertArray.push(cachedVertArray[j]);
               }
             }
             for (i = 0; i < 3; i++) {
+              cachedVertArray = vertArray[i];
               for (j = 9; j < 13; j++) {
-                strokeVertArray.push(vertArray[i][j]);
+                strokeVertArray.push(cachedVertArray[j]);
               }
             }
             if (doStroke) {
@@ -11612,8 +11637,9 @@
           for (i = 0; (i + 3) < vertArrayLength; i+=4) {
             lineVertArray = [];
             for (j = 0; j < 4; j++) {
+              cachedVertArray = vertArray[i+j];
               for (k = 0; k < 3; k++) {
-                lineVertArray.push(vertArray[i+j][k]);
+                lineVertArray.push(cachedVertArray[k]);
               }
             }
             if (doStroke) {
@@ -11670,20 +11696,22 @@
           var tempArray = [];
           if (vertArrayLength > 3) {
             for (i = 0; i < 2; i++) {
+              cachedVertArray = vertArray[i];
               for (j = 0; j < 3; j++) {
-                lineVertArray.push(vertArray[i][j]);
+                lineVertArray.push(cachedVertArray[j]);
               }
             }
 
             for (i = 0; i < 2; i++) {
+              cachedVertArray = vertArray[i];
               for (j = 9; j < 13; j++) {
-                strokeVertArray.push(vertArray[i][j]);
+                strokeVertArray.push(cachedVertArray[j]);
               }
             }
 
             line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
             if (vertArrayLength > 4 && vertArrayLength % 2 > 0) {
-              tempArray = fillVertArray.splice(fillvertArrayLength - 3);
+              tempArray = fillVertArray.splice(fillVertArray.length - 3);
               vertArray.pop();
             }
             for (i = 0; (i+3) < vertArrayLength; i+=2) {
@@ -11736,11 +11764,12 @@
             point3D(lineVertArray,strokeVertArray);
           } else {
             for (i = 0; i < vertArrayLength; i++) {
+              cachedVertArray = vertArray[i];
               for (j = 0; j < 3; j++) {
-                lineVertArray.push(vertArray[i][j]);
+                lineVertArray.push(cachedVertArray[j]);
               }
               for (j = 5; j < 9; j++) {
-                strokeVertArray.push(vertArray[i][j]);
+                strokeVertArray.push(cachedVertArray[j]);
               }
             }
             if (closeShape) {
