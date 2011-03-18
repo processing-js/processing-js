@@ -15974,7 +15974,7 @@
       var properties = [];
       for (var propertyName in baseClass) {
         if (typeof baseClass[propertyName] === 'function') {
-          // Overriding all all non overriden functions
+          // Overriding all non-overriden functions
           if (!subClass.hasOwnProperty(propertyName)) {
             subClass[propertyName] = baseClass[propertyName];
           }
