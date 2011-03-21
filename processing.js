@@ -1185,7 +1185,7 @@
     // Remapped vars
     p.__mousePressed  = false;
     p.__keyPressed    = false;
-    p.__frameRate     = 0;
+    p.__frameRate     = 60;
 
     // The current animation frame
     p.frameCount      = 0;
@@ -7316,7 +7316,7 @@
     p.frameRate = function frameRate(aRate) {
       curFrameRate = aRate;
       curMsPerFrame = 1000 / curFrameRate;
-	  p.__frameRate = aRate;
+
       // clear and reset interval
       if (doLoop) {
         p.noLoop();
