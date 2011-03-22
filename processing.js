@@ -13258,6 +13258,12 @@
         this.height = aHeight || 1;
         this.imageData = utilityContext2d.createImageData(this.width, this.height);
         this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
+        if (this.format === PConstants.RGB) {
+          // Set the alpha channel of an RGB image to opaque.
+          for (var i = 3, data = this.imageData.data, len = data.length; i < len; i += 4) {
+            data[i] = 255;
+          }
+        }
       } else {
         this.width = 0;
         this.height = 0;
