@@ -21,7 +21,7 @@
     <div id="results" style="margin: 5px; padding-top: 10px;"></div>
     <div id="total"></div>
 
-    <script>
+    <script type="text/javascript">
       var selectedTests = [];
       var total = document.getElementById('total');
       total.innerHTML = '';
@@ -210,12 +210,12 @@
           }
         };
 
-        var passedCount = 0, failedCount = 0, tl = tests.length;
+        var passedCount = 0, failedCount = 0, knownFailedCount = 0, tl = tests.length;
         function nextTest(testNum) {
           if (testNum < tl) {
             window.setTimeout(function() { runOne(testNum); }, 10);
           } else {
-            var info = "Tests Completed - " + failedCount + " failed, " + passedCount + " passed, " + (failedCount + passedCount) + " total."
+            var info = "Tests Completed - " + failedCount + " failed, " + knownFailedCount + " known failures, " + passedCount + " passed, " + (failedCount + passedCount + knownFailedCount) + " total."
             document.getElementById('status').innerHTML = info;
             total.innerHTML = info;
           }
@@ -223,6 +223,7 @@
 
         var runOne = function(i) {
           var test = getTest(tests[i].path);
+          test.knownFailureTicket = tests[i].knownFailureTicket;
           var result = document.createElement('div');
           result.id = test.name;
           var title = document.createElement('div');
@@ -304,8 +305,14 @@
                   }
                   if (failed) {
                     diffCtx.putImageData(diffData, 0, 0);
-                    title.innerHTML = titleText(i+1, tl, totalTime, test.name, "pixels off");
-                    failedCount++;
+                    if (test.knownFailureTicket) {
+                      title.innerHTML = titleText(i+1, tl, totalTime, test.name, "Known failure. See <a href='https://processing-js.lighthouseapp.com/projects/41284/tickets/" + test.knownFailureTicket + "'>ticket #" + test.knownFailureTicket + "</a>");
+                      knownFailedCount++;
+                    } else {
+                      title.innerHTML = titleText(i+1, tl, totalTime, test.name, "pixels off");
+                      failedCount++;
+                    }
+                    
                   } else {
                     diffCtx.fillStyle = "rgb(0,255,0)";
                     diffCtx.fillRect (0, 0, diff.width, diff.height);
