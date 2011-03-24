@@ -6,6 +6,9 @@ var tests = [
   { path: "random-point.pde", tags: ["2D"] },
   { path: "random-fill.pde", tags: ["2D"] },
   { path: "random-line.pde", tags: ["2D"] },
+  { path: "triangle.pde", tags: ["2D"] },
+  { path: "arc.pde", tags: ["2D"] },
+  { path: "pimage-resize.pde", tags: ["2D"] },
   { path: "rainbow-spirograph.pde", tags: ["2D"] },
   { path: "plants.pde", tags: ["2D"] }
 ];
