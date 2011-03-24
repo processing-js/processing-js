@@ -242,15 +242,15 @@
             });
             
             var failedDiv = document.createElement('div');
-            failedDiv.innerHTML = '<h3>Failed</h3>';
+            failedDiv.innerHTML = '<hr><h3>Failed ' + failedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
             results.appendChild(failedDiv);
             
             var knownFailureDiv = document.createElement('div');
-            knownFailureDiv.innerHTML = '<h3>Known Failures</h3>';
+            knownFailureDiv.innerHTML = '<hr><h3>Known Failures ' + knownFailedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
             results.appendChild(knownFailureDiv);
             
             var passDiv = document.createElement('div');
-            passDiv.innerHTML = '<h3>Passed</h3>';
+            passDiv.innerHTML = '<hr><h3>Passed ' + passedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
             results.appendChild(passDiv);
             
             for (var i = 0; i < sortedDivs.length; i++) {
