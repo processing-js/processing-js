@@ -19,7 +19,7 @@ var tests = [
   { path: "true-false.pde", tags: ["2D"] },
   { path: "variable-scope.pde", tags: ["2D"] },
   { path: "variables.pde", tags: ["2D"] },
-  { path: "words.pde", tags: ["2D"], epsilonOverride: 0.125 }, /* See ticket #1172 */
+  { path: "words.pde", tags: ["2D"], epsilonOverride: 0.20 }, /* See ticket #1172 */
   { path: "defaults-text.pde", tags: ["2D"], epsilonOverride: 0.07 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
   { path: "arc-tangent.pde",  tags: ["2D"] },
@@ -105,5 +105,5 @@ var tests = [
   { path: "beginEndShape-3dtriangles2.pde", tags:["endShape3D"]},
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D"]},
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D"]},
-  { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.25} /* See ticket #1172 */
+  { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35} /* See ticket #1172 */
 ];
