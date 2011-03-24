@@ -8393,6 +8393,32 @@
       return 0|val;
     };
 
+    p.__instanceof = function(obj, type) {
+      if (typeof obj === "string") {
+        // special case for strings
+        return type === Object || type === String;
+      }
+
+      if (obj instanceof type) {
+        // fast check if obj is already of type instance
+        return true;
+      }
+
+      if (typeof obj !== "object" || obj === null) {
+        return false; // not an object or null
+      }
+
+      var objType = obj.constructor;
+      while (objType.hasOwnProperty("$base")) {
+        objType = objType.$base;
+        if (objType === type) {
+          return true; // object was found
+        }
+      }
+
+      return false;
+    };
+
     ////////////////////////////////////////////////////////////////////////////
     // Math functions
     ////////////////////////////////////////////////////////////////////////////
@@ -16809,7 +16835,7 @@
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
       "vertex", "width", "XMLElement", "year", "__equals", "__frameRate",
-      "__hashCode", "__int_cast", "__keyPressed", "__mousePressed",
+      "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
       "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
       "__toCharArray"];
 
@@ -17161,6 +17187,15 @@
             var trimmed = trimSpaces(atom.substring(1, atom.length - 1));
             return "__" + method  + ( trimmed.middle === "" ? addAtom("(" + subject.replace(/\.\s*$/, "") + ")", 'B') :
               addAtom("(" + subject.replace(/\.\s*$/, "") + "," + trimmed.middle + ")", 'B') );
+          });
+      } while (repeatJavaReplacement);
+      // xxx instanceof yyy -> __instanceof(xxx, yyy)
+      do {
+        repeatJavaReplacement = false;
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*(?:\.\s*[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*)*)instanceof\s+([A-Za-z_$][\w$]*\s*(?:\.\s*[A-Za-z_$][\w$]*)*)/g,
+          function(all, subject, type) {
+            repeatJavaReplacement = true;
+            return "__instanceof" + addAtom("(" + subject + ", " + type + ")", 'B');
           });
       } while (repeatJavaReplacement);
       // this() -> $constr()
@@ -17629,6 +17664,7 @@
       var className = this.name;
       var result = "var " + selfId + " = this;\n";
       var staticDefinitions = "";
+      var metadata = "";
 
       var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
       this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
@@ -17650,17 +17686,20 @@
         return oldContext(subject);
       };
 
+      var resolvedBaseClassName;
       if (this.baseClassName) {
+        resolvedBaseClassName = oldContext({name: this.baseClassName});
         result += "var $super = { $upcast: " + selfId + " };\n";
-        result += "function $superCstr(){" + oldContext({name: this.baseClassName}) +
+        result += "function $superCstr(){" + resolvedBaseClassName +
           ".apply($super,arguments);if(!('$self' in $super)) $p.extendClassChain($super)}\n";
       } else {
         result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
       }
 
-      if (this.base) {
+      if (this.owner.base) {
         // base class name can be present, but class is not
-        staticDefinitions += "$p.extendStaticMembers(" + className + ", " + this.baseClassName + ");\n";
+        staticDefinitions += "$p.extendStaticMembers(" + className + ", " + resolvedBaseClassName + ");\n";
+        metadata += className + ".$base = " + resolvedBaseClassName + ";\n";
       }
 
       var i, l, j, m;
@@ -17740,6 +17779,7 @@
       return "(function() {\n" +
         "function " + className + "() {\n" + result + "}\n" +
         staticDefinitions +
+        metadata +
         "return " + className + ";\n" +
         "})()";
     };
