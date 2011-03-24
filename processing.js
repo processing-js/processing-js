@@ -16129,13 +16129,14 @@
 
       var properties = [];
       for (var propertyName in baseClass) {
-        if (!(propertyName in subClass)) {
-          if (typeof baseClass[propertyName] === 'function') {
+        if (typeof baseClass[propertyName] === 'function') {
+          // Overriding all non-overriden functions
+          if (!subClass.hasOwnProperty(propertyName)) {
             subClass[propertyName] = baseClass[propertyName];
-          } else if(propertyName !== "$upcast") {
-            // Delaying the properties extension due to the IE9 bug (see #918).
-            properties.push(propertyName);
           }
+        } else if(propertyName !== "$upcast" && !(propertyName in subClass)) {
+          // Delaying the properties extension due to the IE9 bug (see #918).
+          properties.push(propertyName);
         }
       }
       while (properties.length > 0) {
