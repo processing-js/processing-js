@@ -175,9 +175,9 @@
           return '<a href="' + name + '">' + name + '</a>';
         };
 
-        var titleText = function(testNumber, testTotal, time, testName, failMessage) {
+        var titleText = function(testNumber, testTotal, time, testName, hasFailed, message) {
           return "Test (" + testNumber + "/" + testTotal + ") [" + time + "ms]: " + link(testName) + 
-                 (failMessage ? " -- FAILED (" + failMessage + ")" : " -- PASSED");
+                 (hasFailed ? " -- FAILED (" + message + ")" : message ? " -- PASSED (" + message + ")" : " -- PASSED ");
         };
 
         var getPixels = function(aCanvas, isWebGL) {        
@@ -224,6 +224,7 @@
         var runOne = function(i) {
           var test = getTest(tests[i].path);
           test.knownFailureTicket = tests[i].knownFailureTicket;
+          test.epsilonOverride = tests[i].epsilonOverride
           var result = document.createElement('div');
           result.id = test.name;
           var title = document.createElement('div');
@@ -231,6 +232,9 @@
           result.appendChild(title);
           results.appendChild(result);
           var valueEpsilon = epsilon * 255;
+          if (test.epsilonOverride) {
+            valueEpsilon = test.epsilonOverride * 255;
+          }
 
           if (test) {
             var original = buildCanvas(test.name + '-original', test.width, test.height);
@@ -249,7 +253,7 @@
             try {
               p = new Processing(current, test.code);
             } catch (e) {
-              title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed: " + e.toString());
+              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
               failedCount++;
               return nextTest(i+1);
             }
@@ -278,7 +282,7 @@
                 // do a visual diff on the pixels
                 var currData = getPixels(current, is3D);
                 if (!currData) {
-                  title.innerHTML = titleText(i+1, tl, totalTime, test.name, "can't diff pixels");
+                  title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "can't diff pixels");
                   failedCount++;
                   return nextTest(i+1);
                 }
@@ -303,24 +307,26 @@
                     }
                     j+=4;
                   }
-                  if (failed) {
+                  if (test.knownFailureTicket) {
                     diffCtx.putImageData(diffData, 0, 0);
-                    if (test.knownFailureTicket) {
-                      title.innerHTML = titleText(i+1, tl, totalTime, test.name, "Known failure. See <a href='https://processing-js.lighthouseapp.com/projects/41284/tickets/" + test.knownFailureTicket + "'>ticket #" + test.knownFailureTicket + "</a>");
-                      knownFailedCount++;
-                    } else {
-                      title.innerHTML = titleText(i+1, tl, totalTime, test.name, "pixels off");
-                      failedCount++;
-                    }
-                    
+                    title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "Known failure. See <a href='https://processing-js.lighthouseapp.com/projects/41284/tickets/" + test.knownFailureTicket + "'>ticket #" + test.knownFailureTicket + "</a>");
+                    knownFailedCount++;
+                  } else if (failed) {
+                    diffCtx.putImageData(diffData, 0, 0);
+                    title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "pixels off");
+                    failedCount++;
                   } else {
                     diffCtx.fillStyle = "rgb(0,255,0)";
                     diffCtx.fillRect (0, 0, diff.width, diff.height);
-                    title.innerHTML = titleText(i+1, tl, totalTime, test.name);
+                    if (test.epsilonOverride) {
+                      title.innerHTML = titleText(i+1, tl, totalTime, test.name, false, "epsilonOverride = " + test.epsilonOverride);
+                    } else {
+                      title.innerHTML = titleText(i+1, tl, totalTime, test.name, false, "");
+                    }
                     passedCount++;
                   }
                 } else {
-                  title.innerHTML = titleText(i+1, tl, totalTime, test.name, "size mismatch");
+                  title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "size mismatch");
                   failedCount++;
                 }
                 nextTest(i+1);
@@ -338,7 +344,7 @@
             }
             validateResult();
           } else {
-            title.innerHTML = titleText(i+1, tl, totalTime, test.name, "invalid test");
+            title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "invalid test");
             failedCount++;
             nextTest(i+1);
           }
