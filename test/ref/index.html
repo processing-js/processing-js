@@ -215,9 +215,34 @@
           if (testNum < tl) {
             window.setTimeout(function() { runOne(testNum); }, 10);
           } else {
-            var info = "Tests Completed - " + failedCount + " failed, " + knownFailedCount + " known failures, " + passedCount + " passed, " + (failedCount + passedCount + knownFailedCount) + " total."
+            var info = "Tests Completed - " + failedCount + " failed, " + knownFailedCount + " known failures, " + passedCount + " passed, " + (failedCount + passedCount + knownFailedCount) + " total.";
             document.getElementById('status').innerHTML = info;
             total.innerHTML = info;
+            
+            // sort the tests into failed, known failures, and passed
+            var sortedDivs = [];
+            while (results.hasChildNodes()) {
+              sortedDivs.push(results.lastChild);
+              results.removeChild(results.lastChild);
+            }
+            sortedDivs.sort(function(a, b) {
+              if (a.className === b.className) {
+                if (a.id < b.id) {
+                  return -1;
+                } else {
+                  return 1;
+                }
+              } else if (a.className < b.className) {
+                return -1;
+              } else {
+                return 1;
+              }
+            });
+            
+            for (var i = 0; i < tl; i++) {
+              results.appendChild(sortedDivs[i]);
+            }
+            
           }
         }
 
@@ -226,7 +251,7 @@
           test.knownFailureTicket = tests[i].knownFailureTicket;
           test.epsilonOverride = tests[i].epsilonOverride
           var result = document.createElement('div');
-          result.id = test.name;
+          result.id = i
           var title = document.createElement('div');
           title.className = "title";
           result.appendChild(title);
@@ -254,6 +279,7 @@
               p = new Processing(current, test.code);
             } catch (e) {
               title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
+              result.className = "failed";
               failedCount++;
               return nextTest(i+1);
             }
@@ -283,6 +309,7 @@
                 var currData = getPixels(current, is3D);
                 if (!currData) {
                   title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "can't diff pixels");
+                  result.className = "failed";
                   failedCount++;
                   return nextTest(i+1);
                 }
@@ -310,23 +337,28 @@
                   if (test.knownFailureTicket) {
                     diffCtx.putImageData(diffData, 0, 0);
                     title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "Known failure. See <a href='https://processing-js.lighthouseapp.com/projects/41284/tickets/" + test.knownFailureTicket + "'>ticket #" + test.knownFailureTicket + "</a>");
+                    result.className = "knownfailure";
                     knownFailedCount++;
                   } else if (failed) {
                     diffCtx.putImageData(diffData, 0, 0);
                     title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "pixels off");
+                    result.className = "failed";
                     failedCount++;
                   } else {
                     diffCtx.fillStyle = "rgb(0,255,0)";
                     diffCtx.fillRect (0, 0, diff.width, diff.height);
                     if (test.epsilonOverride) {
                       title.innerHTML = titleText(i+1, tl, totalTime, test.name, false, "epsilonOverride = " + test.epsilonOverride);
+                      result.className = "passed";
                     } else {
                       title.innerHTML = titleText(i+1, tl, totalTime, test.name, false, "");
+                      result.className = "passed";
                     }
                     passedCount++;
                   }
                 } else {
                   title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "size mismatch");
+                  result.className = "failed";
                   failedCount++;
                 }
                 nextTest(i+1);
@@ -345,6 +377,7 @@
             validateResult();
           } else {
             title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "invalid test");
+            result.className = "failed";
             failedCount++;
             nextTest(i+1);
           }
