@@ -16029,6 +16029,10 @@
       extendClass(derived, base);
     };
 
+    p.extendInterfaceMembers = function(derived, base) {
+      extendClass(derived, base);
+    };
+
     p.addMethod = function addMethod(object, name, fn, superAccessor) {
       if (object[name]) {
         var args = fn.length,
@@ -16999,9 +17003,9 @@
     }
 
     // functions defined below
-    var transformClassBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
+    var transformClassBody, transformInterfaceBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
 
-    var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
+    var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
     var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract|synchronized)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
     var fieldTest = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
     var cstrsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+")/g;
@@ -17483,12 +17487,14 @@
       });
     }
 
-    function AstInnerInterface(name) {
+    function AstInnerInterface(name, body, isStatic) {
       this.name = name;
+      this.body = body;
+      this.isStatic = isStatic;
+      body.owner = this;
     }
     AstInnerInterface.prototype.toString = function() {
-      return  "this." + this.name + " = function " + this.name + "() { "+
-        "throw 'This is an interface'; };";
+      return "" + this.body;
     };
     function AstInnerClass(name, body, isStatic) {
       this.name = name;
@@ -17504,17 +17510,17 @@
       var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
       classesRegex.lastIndex = 0;
       var isStatic = m[1].indexOf("static") >= 0;
-      var body = atoms[getAtomIndex(m[6])];
+      var body = atoms[getAtomIndex(m[6])], innerClass;
+      var oldClassId = currentClassId, newClassId = generateClassId();
+      currentClassId = newClassId;
       if(m[2] === "interface") {
-        return new AstInnerInterface(m[3]);
+        innerClass = new AstInnerInterface(m[3], transformInterfaceBody(body, m[3], m[4]), isStatic);
       } else {
-        var oldClassId = currentClassId, newClassId = generateClassId();
-        currentClassId = newClassId;
-        var innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]), isStatic);
-        appendClass(innerClass, newClassId, oldClassId);
-        currentClassId = oldClassId;
-        return innerClass;
+        innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]), isStatic);
       }
+      appendClass(innerClass, newClassId, oldClassId);
+      currentClassId = oldClassId;
+      return innerClass;
     }
 
     function AstClassMethod(name, params, body, isStatic) {
@@ -17524,7 +17530,6 @@
       this.isStatic = isStatic;
     }
     AstClassMethod.prototype.toString = function(){
-      var thisReplacement = replaceContext({ name: "[this]" });
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function (subject) {
@@ -17614,10 +17619,136 @@
       return new AstConstructor(params, transformStatementsBlock(atoms[m[2]]));
     }
 
-    function AstClassBody(name, baseClassName, functions, methods, fields, cstrs, innerClasses, misc) {
+    function AstInterfaceBody(name, interfacesNames, methodsNames, fields, innerClasses, misc) {
+      var i,l;
+      this.name = name;
+      this.interfacesNames = interfacesNames;
+      this.methodsNames = methodsNames;
+      this.fields = fields;
+      this.innerClasses = innerClasses;
+      this.misc = misc;
+      for(i=0,l=fields.length; i<l; ++i) {
+        fields[i].owner = this;
+      }
+    }
+    AstInterfaceBody.prototype.getMembers = function(classFields, classMethods, classInners) {
+      if(this.owner.base) {
+        this.owner.base.body.getMembers(classFields, classMethods, classInners);
+      }
+      var i, j, l, m;
+      for(i=0,l=this.fields.length;i<l;++i) {
+        var fieldNames = this.fields[i].getNames();
+        for(j=0,m=fieldNames.length;j<m;++j) {
+          classFields[fieldNames[j]] = this.fields[i];
+        }
+      }
+      for(i=0,l=this.methodsNames.length;i<l;++i) {
+        var methodName = this.methodsNames[i];
+        classMethods[methodName] = true;
+      }
+      for(i=0,l=this.innerClasses.length;i<l;++i) {
+        var innerClass = this.innerClasses[i];
+        classInners[innerClass.name] = innerClass;
+      }
+    };
+    AstInterfaceBody.prototype.toString = function() {
+      function getScopeLevel(p) {
+        var i = 0;
+        while(p) {
+          ++i;
+          p=p.scope;
+        }
+        return i;
+      }
+
+      var scopeLevel = getScopeLevel(this.owner);
+
+      var className = this.name;
+      var staticDefinitions = "";
+      var metadata = "";
+
+      var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
+      this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
+
+      var i, l, j, m;
+
+      if (this.owner.interfaces) {
+        // interface name can be present, but interface is not
+        var resolvedInterfaces = [], resolvedInterface;
+        for (i = 0, l = this.interfacesNames.length; i < l; ++i) {
+          if (!this.owner.interfaces[i]) {
+            continue;
+          }
+          resolvedInterface = replaceContext({name: this.interfacesNames[i]});
+          resolvedInterfaces.push(resolvedInterface);
+          staticDefinitions += "$p.extendInterfaceMembers(" + className + ", " + resolvedInterface + ");\n";
+        }
+        metadata += className + ".$interfaces = [" + resolvedInterfaces.join(", ") + "];\n";
+      }
+      metadata += className + ".$methods = [\'" + this.methodsNames.join("\', \'") + "\'];\n";
+
+      sortByWeight(this.innerClasses);
+      for (i = 0, l = this.innerClasses.length; i < l; ++i) {
+        var innerClass = this.innerClasses[i];
+        if (innerClass.isStatic) {
+          staticDefinitions += className + "." + innerClass.name + " = " + innerClass + ";\n";
+        }
+      }
+
+      for (i = 0, l = this.fields.length; i < l; ++i) {
+        var field = this.fields[i];
+        if (field.isStatic) {
+          staticDefinitions += className + "." + field.definitions.join(";\n" + className + ".") + ";\n";
+        }
+      }
+
+      return "(function() {\n" +
+        "function " + className + "() { throw \'Unable to create the interface\'; }\n" +
+        staticDefinitions +
+        metadata +
+        "return " + className + ";\n" +
+        "})()";
+    };
+
+    transformInterfaceBody = function(body, name, baseInterfaces) {
+      var declarations = body.substring(1, body.length - 1);
+      declarations = extractClassesAndMethods(declarations);
+      declarations = extractConstructors(declarations, name);
+      var methodsNames = [], classes = [];
+      declarations = declarations.replace(/"([DE])(\d+)"/g, function(all, type, index) {
+        if(type === 'D') { methodsNames.push(index); }
+        else if(type === 'E') { classes.push(index); }
+        return "";
+      });
+      var fields = declarations.split(/;(?:\s*;)*/g);
+      var baseInterfaceNames;
+      var i, l;
+
+      if(baseInterfaces !== undef) {
+        baseInterfaceNames = baseInterfaces.replace(/^\s*extends\s+(.+?)\s*$/g, "$1").split(/\s*,\s*/g);
+      }
+
+      for(i = 0, l = methodsNames.length; i < l; ++i) {
+        var method = transformClassMethod(atoms[methodsNames[i]]);
+        methodsNames[i] = method.name;
+      }
+      for(i = 0, l = fields.length - 1; i < l; ++i) {
+        var field = trimSpaces(fields[i]);
+        fields[i] = transformClassField(field.middle);
+      }
+      var tail = fields.pop();
+      for(i = 0, l = classes.length; i < l; ++i) {
+        classes[i] = transformInnerClass(atoms[classes[i]]);
+      }
+
+      return new AstInterfaceBody(name, baseInterfaceNames, methodsNames, fields, classes, { tail: tail });
+    };
+
+    function AstClassBody(name, baseClassName, interfacesNames, functions, methods, fields, cstrs, innerClasses, misc) {
       var i,l;
       this.name = name;
       this.baseClassName = baseClassName;
+      this.interfacesNames = interfacesNames;
       this.functions = functions;
       this.methods = methods;
       this.fields = fields;
@@ -17704,6 +17835,20 @@
 
       var i, l, j, m;
 
+      if (this.owner.interfaces) {
+        // interface name can be present, but interface is not
+        var resolvedInterfaces = [], resolvedInterface;
+        for (i = 0, l = this.interfacesNames.length; i < l; ++i) {
+          if (!this.owner.interfaces[i]) {
+            continue;
+          }
+          resolvedInterface = oldContext({name: this.interfacesNames[i]});
+          resolvedInterfaces.push(resolvedInterface);
+          staticDefinitions += "$p.extendInterfaceMembers(" + className + ", " + resolvedInterface + ");\n";
+        }
+        metadata += className + ".$interfaces = [" + resolvedInterfaces.join(", ") + "];\n";
+      }
+
       if (this.functions.length > 0) {
         result += this.functions.join('\n') + '\n';
       }
@@ -17784,7 +17929,7 @@
         "})()";
     };
 
-    transformClassBody = function(body, name, baseName, impls) {
+    transformClassBody = function(body, name, baseName, interfaces) {
       var declarations = body.substring(1, body.length - 1);
       declarations = extractClassesAndMethods(declarations);
       declarations = extractConstructors(declarations, name);
@@ -17797,11 +17942,15 @@
         return "";
       });
       var fields = declarations.split(/;(?:\s*;)*/g);
-      var baseClassName;
+      var baseClassName, interfacesNames;
       var i;
 
       if(baseName !== undef) {
         baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*$/g, "$1");
+      }
+
+      if(interfaces !== undef) {
+        interfacesNames = interfaces.replace(/^\s*implements\s+(.+?)\s*$/g, "$1").split(/\s*,\s*/g);
       }
 
       for(i = 0; i < functions.length; ++i) {
@@ -17822,16 +17971,18 @@
         classes[i] = transformInnerClass(atoms[classes[i]]);
       }
 
-      return new AstClassBody(name, baseClassName, functions, methods, fields, cstrs,
+      return new AstClassBody(name, baseClassName, interfacesNames, functions, methods, fields, cstrs,
         classes, { tail: tail });
     };
 
-    function AstInterface(name) {
+    function AstInterface(name, body) {
       this.name = name;
+      this.body = body;
+      body.owner = this;
     }
     AstInterface.prototype.toString = function() {
-      return "function " + this.name + "() {  throw 'This is an interface'; }\n" +
-        "$p." + this.name + " = " + this.name + ";";
+      return "var " + this.name + " = " + this.body + ";\n" +
+        "$p." + this.name + " = " + this.name + ";\n";
     };
     function AstClass(name, body) {
       this.name = name;
@@ -17840,24 +17991,24 @@
     }
     AstClass.prototype.toString = function() {
       return "var " + this.name + " = " + this.body + ";\n" +
-        "$p." + this.name + " = " + this.name + ";";
+        "$p." + this.name + " = " + this.name + ";\n";
     };
 
     function transformGlobalClass(class_) {
       var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
       classesRegex.lastIndex = 0;
       var body = atoms[getAtomIndex(m[6])];
+      var oldClassId = currentClassId, newClassId = generateClassId();
+      currentClassId = newClassId;
+      var globalClass;
       if(m[2] === "interface") {
-        return new AstInterface(m[3]);
+        globalClass = new AstInterface(m[3], transformInterfaceBody(body, m[3], m[4]) );
       } else {
-        var oldClassId = currentClassId, newClassId = generateClassId();
-        currentClassId = newClassId;
-        var globalClass = new AstClass(m[3], transformClassBody(body, m[3], m[4], m[5]) );
-        appendClass(globalClass, newClassId, oldClassId);
-
-        currentClassId = oldClassId;
-        return globalClass;
+        globalClass = new AstClass(m[3], transformClassBody(body, m[3], m[4], m[5]) );
       }
+      appendClass(globalClass, newClassId, oldClassId);
+      currentClassId = oldClassId;
+      return globalClass;
     }
 
     function AstMethod(name, params, body) {
@@ -18030,12 +18181,13 @@
       this.statements = statements;
     }
     AstRoot.prototype.toString = function() {
-      var classes = [], otherStatements = [];
+      var classes = [], otherStatements = [], statement;
       for (var i = 0, len = this.statements.length; i < len; ++i) {
-        if (this.statements[i] instanceof AstClass) {
-          classes.push(this.statements[i]);
+        statement = this.statements[i];
+        if (statement instanceof AstClass || statement instanceof AstInterface) {
+          classes.push(statement);
         } else {
-          otherStatements.push(this.statements[i]);
+          otherStatements.push(statement);
         }
       }
       sortByWeight(classes);
@@ -18119,6 +18271,24 @@
               parent.derived.push(class_);
             }
           }
+          var interfacesNames = class_.body.interfacesNames,
+            interfaces = [], i, l;
+          if (interfacesNames && interfacesNames.length > 0) {
+            for (i = 0, l = interfacesNames.length; i < l; ++i) {
+              var interface_ = findInScopes(class_, interfacesNames[i]);
+              interfaces.push(interface_);
+              if (!interface_) {
+                continue;
+              }
+              if (!interface_.derived) {
+                interface_.derived = [];
+              }
+              interface_.derived.push(class_);
+            }
+            if (interfaces.length > 0) {
+              class_.interfaces = interfaces;
+            }
+          }
         }
       }
     }
@@ -18149,6 +18319,17 @@
           queue.push(class_.base.classId);
           checked[class_.base.classId] = true;
           class_.base.weight = class_.weight + 1;
+        }
+        if (class_.interfaces) {
+          var i, l;
+          for (i = 0, l = class_.interfaces.length; i < l; ++i) {
+            if (!class_.interfaces[i] || checked[class_.interfaces[i].classId]) {
+              continue;
+            }
+            queue.push(class_.interfaces[i].classId);
+            checked[class_.interfaces[i].classId] = true;
+            class_.interfaces[i].weight = class_.weight + 1;
+          }
         }
       }
     }
