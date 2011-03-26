@@ -9,6 +9,9 @@ var tests = [
   { path: "triangle.pde", tags: ["2D"] },
   { path: "arc.pde", tags: ["2D"] },
   { path: "pimage-resize.pde", tags: ["2D"] },
+  { path: "pimage-filter-gray.pde", tags: ["2D"] },
+  { path: "pimage-blend-hardlight.pde", tags: ["2D"] },
+  { path: "pimage-blend-exclusion.pde", tags: ["2D"] },
   { path: "rainbow-spirograph.pde", tags: ["2D"] },
   { path: "plants.pde", tags: ["2D"] }
 ];
