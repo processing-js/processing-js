@@ -18,7 +18,7 @@ boolean r2 = b instanceof A;
 boolean r3 = a instanceof B;
 boolean r4 = b instanceof B;
 boolean r5 = a instanceof I;
-boolean r6 = true; // TODO b instanceof I;
+boolean r6 = b instanceof I;
 
 _checkEqual(
   [r1, r2, r3, r4, r5, r6],

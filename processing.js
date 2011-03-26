@@ -8394,6 +8394,10 @@
     };
 
     p.__instanceof = function(obj, type) {
+      if (typeof type !== "function") {
+        throw "Function is expected as type argument for instanceof operator";
+      }
+
       if (typeof obj === "string") {
         // special case for strings
         return type === Object || type === String;
@@ -8409,6 +8413,29 @@
       }
 
       var objType = obj.constructor;
+      if (type.$isInterface) {
+        // expecting the interface
+        // queueing interfaces from type and its base classes
+        var interfaces = [];
+        while (objType) {
+          if (objType.$interfaces) {
+            interfaces = interfaces.concat(objType.$interfaces);
+          }
+          objType = objType.$base;
+        }
+        while (interfaces.length > 0) {
+          var i = interfaces.shift();
+          if (i === type) {
+            return true;
+          }
+          // wide search in base interfaces
+          if (i.$interfaces) {
+            interfaces = interfaces.concat(i.$interfaces);
+          }
+        }
+        return false;
+      }
+
       while (objType.hasOwnProperty("$base")) {
         objType = objType.$base;
         if (objType === type) {
@@ -17182,25 +17209,27 @@
       //   xxx.replace(yyy) -> __replace(xxx, yyy)
       //   "xx".replace(yyy) -> __replace("xx", yyy)
       var repeatJavaReplacement;
+      function replacePrototypeMethods(all, subject, method, atomIndex) {
+        var atom = atoms[atomIndex];
+        repeatJavaReplacement = true;
+        var trimmed = trimSpaces(atom.substring(1, atom.length - 1));
+        return "__" + method  + ( trimmed.middle === "" ? addAtom("(" + subject.replace(/\.\s*$/, "") + ")", 'B') :
+          addAtom("(" + subject.replace(/\.\s*$/, "") + "," + trimmed.middle + ")", 'B') );
+      }
       do {
         repeatJavaReplacement = false;
         s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace)\s*"B(\d+)"/g,
-          function(all, subject, method, atomIndex) {
-            var atom = atoms[atomIndex];
-            repeatJavaReplacement = true;
-            var trimmed = trimSpaces(atom.substring(1, atom.length - 1));
-            return "__" + method  + ( trimmed.middle === "" ? addAtom("(" + subject.replace(/\.\s*$/, "") + ")", 'B') :
-              addAtom("(" + subject.replace(/\.\s*$/, "") + "," + trimmed.middle + ")", 'B') );
-          });
+          replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
+      function replaceInstanceof(all, subject, type) {
+        repeatJavaReplacement = true;
+        return "__instanceof" + addAtom("(" + subject + ", " + type + ")", 'B');
+      }
       do {
         repeatJavaReplacement = false;
         s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*(?:\.\s*[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*)*)instanceof\s+([A-Za-z_$][\w$]*\s*(?:\.\s*[A-Za-z_$][\w$]*)*)/g,
-          function(all, subject, type) {
-            repeatJavaReplacement = true;
-            return "__instanceof" + addAtom("(" + subject + ", " + type + ")", 'B');
-          });
+          replaceInstanceof);
       } while (repeatJavaReplacement);
       // this() -> $constr()
       s = s.replace(/\bthis(\s*"B\d+")/g, "$$constr$1");
@@ -17218,19 +17247,15 @@
     };
 
     function transformInlineClass(class_) {
-      var m = new RegExp(/\bnew\s*(Runnable)\s*"B\d+"\s*"A(\d+)"/).exec(class_);
-      if(m === null) {
-        return "null";
-      } else {
-        var oldClassId = currentClassId, newClassId = generateClassId();
-        currentClassId = newClassId;
-        // only Runnable supported
-        var inlineClass = new AstInlineClass("Runnable", transformClassBody(atoms[m[2]], m[1]));
-        appendClass(inlineClass, newClassId, oldClassId);
-
-        currentClassId = oldClassId;
-        return inlineClass;
-      }
+      var m = new RegExp(/\bnew\s*([A-Za-z_$][\w$]*\s*(?:\.\s*[A-Za-z_$][\w$]*)*)\s*"B\d+"\s*"A(\d+)"/).exec(class_);
+      var oldClassId = currentClassId, newClassId = generateClassId();
+      currentClassId = newClassId;
+      var uniqueClassName = m[1] + "$" + newClassId;
+      var inlineClass = new AstInlineClass(uniqueClassName,
+        transformClassBody(atoms[m[2]], uniqueClassName, "", "implements " + m[1]));
+      appendClass(inlineClass, newClassId, oldClassId);
+      currentClassId = oldClassId;
+      return inlineClass;
     }
 
     function AstFunction(name, params, body) {
@@ -17685,6 +17710,7 @@
         }
         metadata += className + ".$interfaces = [" + resolvedInterfaces.join(", ") + "];\n";
       }
+      metadata += className + ".$isInterface = true;\n";
       metadata += className + ".$methods = [\'" + this.methodsNames.join("\', \'") + "\'];\n";
 
       sortByWeight(this.innerClasses);
@@ -17823,6 +17849,7 @@
         result += "var $super = { $upcast: " + selfId + " };\n";
         result += "function $superCstr(){" + resolvedBaseClassName +
           ".apply($super,arguments);if(!('$self' in $super)) $p.extendClassChain($super)}\n";
+        metadata += className + ".$base = " + resolvedBaseClassName + ";\n";
       } else {
         result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
       }
@@ -17830,7 +17857,6 @@
       if (this.owner.base) {
         // base class name can be present, but class is not
         staticDefinitions += "$p.extendStaticMembers(" + className + ", " + resolvedBaseClassName + ");\n";
-        metadata += className + ".$base = " + resolvedBaseClassName + ";\n";
       }
 
       var i, l, j, m;
