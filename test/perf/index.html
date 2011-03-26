@@ -194,7 +194,6 @@
             result.appendChild(canvas);
 
             // draw the current version from code, timing it
-            var startTime = (new Date).getTime();
             var p;
             try {
 
@@ -202,31 +201,55 @@
               var code = "noLoop();\n" + test.code;
               p = new Processing(canvas, code);
 
-              var startTime = (new Date).getTime();
+              function runBenchmark() {
+                try {
+                  var startTime = (new Date).getTime();
 
-              for (var iters = 0; iters < iterationCount; iters++) {
-                p.redraw();
+                  for (var iters = 0; iters < iterationCount; iters++) {
+                    p.redraw();
+                  }
+
+                  var endTime = (new Date).getTime();
+                  var diff = endTime - startTime;
+                  totalTime += diff;
+
+                  title.innerHTML = titleText(i+1, tl, diff, test.name);
+                  document.getElementById('totalTime').innerHTML = totalTime;
+
+                  // Mark this test run a success with time
+                  tests[i].completed = true;
+                  tests[i].time = diff;
+                  nextTest(i+1);
+                } catch (e) {
+                  title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed during execution: " + e.toString());
+                  nextTest(i+1);
+                }
               }
 
-              var endTime = (new Date).getTime();
-              var diff = endTime - startTime;
-              totalTime += diff;
-
-              title.innerHTML = titleText(i+1, tl, diff, test.name);
-              document.getElementById('totalTime').innerHTML = totalTime;
-
-              // Mark this test run a success with time
-              tests[i].completed = true;
-              tests[i].time = diff;
-
+              if (!p.draw) {
+                // preload present
+                var initInterval, attempts = 20;
+                initInterval = setInterval(function() {
+                  if (p.draw) {
+                    clearInterval(initInterval);
+                    runBenchmark();
+                    return;
+                  }
+                  if (--attempts <= 0) {
+                    clearInterval(initInterval);
+                    title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed initialization");
+                    nextTest(i+1);
+                    return;
+                  }
+                }, 100);
+                return;
+              }
+              runBenchmark();
             } catch (e) {
               title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed: " + e.toString());
-              return nextTest(i+1);
+              nextTest(i+1);
             }
-
-            var is3D = p.use3DContext;
           }
-          nextTest(i+1);
         };
         window.setTimeout(function() { runOne(0); }, 50);
       };
