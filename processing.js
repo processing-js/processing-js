@@ -18725,7 +18725,7 @@
             filenames.splice(j, 1);
           }
         }
-        Processing.loadSketchFromSources(canvas[i], filenames);
+        loadSketchFromSources(canvas[i], filenames);
       }
     }
   };
