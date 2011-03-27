@@ -1,5 +1,5 @@
 int i = 0;
-
+randomSeed(0);
 void setup() {  // this is run once.
     // set the background color
     background(255);

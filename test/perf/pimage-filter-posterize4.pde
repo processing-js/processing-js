@@ -5,6 +5,6 @@ void setup() {  // this is run once.
   image(img,0,0);
 }
 void draw() {
-  img.resize(50,0);
+  img.filter(POSTERIZE, 4);
   image(img, 50, 50);
 }

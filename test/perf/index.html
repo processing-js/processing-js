@@ -16,9 +16,10 @@
 
     <h3>Settings</h3>
     <div>Run Tests: <select id="test-type" onchange="updateSelectedTests();">
-      <option value="2D,3D" selected>2D and 3D</option>
+      <option value="2D,3D" selected="selected">2D and 3D</option>
       <option value="2D">2D Only</option>
       <option value="3D">3D Only</option>
+      <option value="PImage">PImage Only</option>
       <option value="Calibration">Calibration</option>
     </select>&nbsp;
     Iterations Per Test: <input type="text" size="4" id="iterations" onchange="updateIterations();">&nbsp;
