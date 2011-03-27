@@ -14826,7 +14826,6 @@
                                         destPixels[((destOffset + x) * 4) + 2],
                                         destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
-              destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.add(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
               destPixels[(destOffset + x) * 4 + 1] = destColor[1];
