@@ -36,38 +36,6 @@
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
   /* Browsers fixes start */
-  function fixReplaceByRegExp() {
-    var re = /t/g;
-    if ("t".replace(re,"") !== null && re.exec("t")) {
-      return; // it is not necessary
-    }
-    var _ie_replace = String.prototype.replace;
-    String.prototype.replace = function(searchValue, repaceValue) {
-      var result = _ie_replace.apply(this, arguments);
-      if (searchValue instanceof RegExp && searchValue.global) {
-        searchValue.lastIndex = 0;
-      }
-      return result;
-    };
-  }
-
-  function fixMatchByRegExp() {
-    var re = /t/g;
-    if ("t".match(re) !== null && re.exec("t")) {
-      return; // it is not necessary
-    }
-    var _ie_match = String.prototype.match;
-    String.prototype.match = function(searchValue) {
-      var result = _ie_match.apply(this, arguments);
-      if(searchValue instanceof RegExp && searchValue.global) {
-        searchValue.lastIndex = 0;
-      }
-      return result;
-    };
-  }
-  fixReplaceByRegExp();
-  fixMatchByRegExp();
-
   (function fixOperaCreateImageData() {
     try {
       if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
