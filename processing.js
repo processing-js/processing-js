@@ -12833,6 +12833,11 @@
     
     Drawing2D.prototype.ellipse = function(x, y, width, height) {
       var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
+      
+      if (!params) {
+        return;
+      }
+      
       x = params['x'];
       y = params['y'];
       width = params['width'];
@@ -12864,6 +12869,11 @@
     
     Drawing3D.prototype.ellipse = function(x, y, width, height) {
       var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
+      
+      if (!params) {
+        return;
+      }
+      
       x = params['x'];
       y = params['y'];
       width = params['width'];
