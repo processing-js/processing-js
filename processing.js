@@ -16029,7 +16029,7 @@
         if (!(propertyName in subClass)) {
           if (typeof baseClass[propertyName] === 'function') {
             subClass[propertyName] = baseClass[propertyName];
-          } else if(propertyName !== "$upcast") {
+          } else if(propertyName.charAt(0) !== "$") { // ignore system/hidden properties
             // Delaying the properties extension due to the IE9 bug (see #918).
             properties.push(propertyName);
           }
