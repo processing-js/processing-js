@@ -1,3 +1,14 @@
+March 29, 2011 - Release 1.1.1
+
+  * Add known failures to ref tests 
+  * Convert test-suite tests to REF tests 
+  * Fixed inheritance for certain (js object) methods still broken (1.1)
+  * Fixed more extra semi-colon breaking 
+  * Fixed createImage for RGB format produces image with transparent background 
+  * Removed String.prototype.match and .replace in IE9 
+  * Removed static beginCamera/endCamera examples from repo 
+  * Re-factor 3D and 2D drawing functions into separate objects 
+  
 March 1, 2011 - Release 1.1
 
   * Added mouseover, mouseout events
