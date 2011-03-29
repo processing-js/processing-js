@@ -480,7 +480,7 @@
       if (arguments.length === 0) {
         array = [];
       } else if (arguments.length > 0 && typeof arguments[0] !== 'number') {
-        array = arguments[0];
+        array = arguments[0].toArray();
       } else {
         array = [];
         array.length = 0 | arguments[0];
@@ -611,7 +611,7 @@
        * @returns {ArrayList} a clone of this ArrayList instance
        */
       this.clone = function() {
-        return new ArrayList(array.slice(0));
+        return new ArrayList(this);
       };
 
       /**
