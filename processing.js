@@ -606,9 +606,10 @@
           return array.splice(item, 1)[0];
         } else {
           item = this.indexOf(item);
-          if (item>-1) {
+          if (item > -1) {
             array.splice(item, 1);
-            return true; }
+            return true;
+          }
           return false;
         }
       };
