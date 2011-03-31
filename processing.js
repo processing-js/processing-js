@@ -632,6 +632,10 @@
       var count = 0;
       var hashMap = this;
 
+      function getBucketIndex(key) {
+        var index = virtHashCode(key) % buckets.length;
+        return index < 0 ? buckets.length + index : index;
+      }
       function ensureLoad() {
         if (count <= loadFactor * buckets.length) {
           return;
@@ -642,10 +646,11 @@
             allEntries = allEntries.concat(buckets[i]);
           }
         }
+        var newBucketsLength = buckets.length * 2;
         buckets = [];
-        buckets.length = buckets.length * 2;
+        buckets.length = newBucketsLength;
         for (var j = 0; j < allEntries.length; ++j) {
-          var index = virtHashCode(allEntries[j].key) % buckets.length;
+          var index = getBucketIndex(allEntries[j].key);
           var bucket = buckets[index];
           if (bucket === undef) {
             buckets[index] = bucket = [];
@@ -821,7 +826,7 @@
       };
 
       this.containsKey = function(key) {
-        var index = virtHashCode(key) % buckets.length;
+        var index = getBucketIndex(key);
         var bucket = buckets[index];
         if (bucket === undef) {
           return false;
@@ -866,7 +871,7 @@
       };
 
       this.get = function(key) {
-        var index = virtHashCode(key) % buckets.length;
+        var index = getBucketIndex(key);
         var bucket = buckets[index];
         if (bucket === undef) {
           return null;
@@ -900,7 +905,7 @@
       };
 
       this.put = function(key, value) {
-        var index = virtHashCode(key) % buckets.length;
+        var index = getBucketIndex(key);
         var bucket = buckets[index];
         if (bucket === undef) {
           ++count;
@@ -936,7 +941,7 @@
       };
 
       this.remove = function(key) {
-        var index = virtHashCode(key) % buckets.length;
+        var index = getBucketIndex(key);
         var bucket = buckets[index];
         if (bucket === undef) {
           return null;
