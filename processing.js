@@ -14073,15 +14073,6 @@
       }
     };
 
-    // Clears a rectangle in the Canvas element or the whole Canvas
-    p.clear = function clear(x, y, width, height) {
-      if (arguments.length === 0) {
-        curContext.clearRect(0, 0, p.width, p.height);
-      } else {
-        curContext.clearRect(x, y, width, height);
-      }
-    };
-
     /**
      * The tint() function sets the fill value for displaying images. Images can be tinted to
      * specified colors or made transparent by setting the alpha.
