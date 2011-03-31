@@ -17292,7 +17292,7 @@
         }
       });
       // (int)??? -> __int_cast(???)
-      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~]+)/g, function(all, arg) {
+      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~\<\>\=]+)/g, function(all, arg) {
         var trimmed = trimSpaces(arg);
         return trimmed.untrim("__int_cast(" + trimmed.middle + ")");
       });
