@@ -16906,36 +16906,6 @@
       curSketch = new Processing.Sketch();
       curSketch.options.isTransparent = true;
 
-      /**
-      * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
-      *
-      * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
-      *
-      * @see PImage
-      */
-      if (render === PConstants.WEBGL) {
-        pg.toImageData = function() { // 3D
-          var curContext = this.externals.context;
-          
-          var c = document.createElement("canvas");
-          var ctx = c.getContext("2d");
-          var obj = ctx.createImageData(this.width, this.height);
-          var uBuff = new Uint8Array(this.width * this.height * 4);
-          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-          for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
-            obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
-          }
-          
-          return obj;
-        };
-      } else {
-        pg.toImageData = function() { // 2D
-          var curContext = this.externals.context;
-          
-          return curContext.getImageData(0, 0, this.width, this.height);
-        };
-      }
-
       // Hack to make PGraphics work again after splitting size()
       p.size = function(w, h, render) {
         if (render && render === PConstants.WEBGL) {
@@ -16943,7 +16913,32 @@
         } else {
           wireDimensionalFunctions('2D');
         }
-        
+
+        /**
+        * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
+        *
+        * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
+        *
+        * @see PImage
+        */
+        if (render === PConstants.WEBGL) {
+          p.toImageData = function() { // 3D
+            var c = document.createElement("canvas");
+            var ctx = c.getContext("2d");
+            var obj = ctx.createImageData(this.width, this.height);
+            var uBuff = new Uint8Array(this.width * this.height * 4);
+            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
+            for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
+              obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
+            }
+            return obj;
+          };
+        } else {
+          p.toImageData = function() { // 2D
+            return curContext.getImageData(0, 0, this.width, this.height);
+          };
+        }
+
         p.size(w, h, render);
       };
     }
