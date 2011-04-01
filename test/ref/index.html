@@ -18,10 +18,11 @@
     <div>Run Tests: <select id="test-type" onchange="updateSelectedTests();"><option value="2D,3D" selected>2D and 3D</option><option value="2D">2D Only</option><option value="3D">3D Only</option><option value="endShape2D">endShape2D</option><option value="endShape3D">endShape3D</option><option value="Calibration">Calibration</option></select>&nbsp;Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">&nbsp;Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">&nbsp;<input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
 
     <h3>Results</h3>
+    <div id="status" style="margin-bottom: 10px;"></div>
     <div id="results" style="margin: 5px; padding-top: 10px;"></div>
     <div id="total"></div>
 
-    <script>
+    <script type="text/javascript">
       var selectedTests = [];
       var total = document.getElementById('total');
       total.innerHTML = '';
@@ -158,7 +159,8 @@
 
       function runTests(tests) {
         var results = document.getElementById('results');
-        results.innerHTML = '<div id="status" style="margin-bottom: 10px;">Running... (this may take some time)</div>';
+        var status = document.getElementById('status');
+        status.innerHTML = 'Running... (this may take some time)';
         var total = document.getElementById('total');
         total.innerHTML = '';
 
@@ -175,9 +177,9 @@
           return '<a href="' + name + '">' + name + '</a>';
         };
 
-        var titleText = function(testNumber, testTotal, time, testName, failMessage) {
+        var titleText = function(testNumber, testTotal, time, testName, hasFailed, message) {
           return "Test (" + testNumber + "/" + testTotal + ") [" + time + "ms]: " + link(testName) + 
-                 (failMessage ? " -- FAILED (" + failMessage + ")" : " -- PASSED");
+                 (hasFailed ? " -- FAILED (" + message + ")" : message ? " -- PASSED (" + message + ")" : " -- PASSED ");
         };
 
         var getPixels = function(aCanvas, isWebGL) {        
@@ -210,26 +212,87 @@
           }
         };
 
-        var passedCount = 0, failedCount = 0, tl = tests.length;
+        var passedCount = 0, failedCount = 0, knownFailedCount = 0, tl = tests.length;
         function nextTest(testNum) {
           if (testNum < tl) {
             window.setTimeout(function() { runOne(testNum); }, 10);
           } else {
-            var info = "Tests Completed - " + failedCount + " failed, " + passedCount + " passed, " + (failedCount + passedCount) + " total."
+            var info = "Tests Completed - " + failedCount + " failed, " + knownFailedCount + " known failures, " + passedCount + " passed, " + (failedCount + passedCount + knownFailedCount) + " total.";
             document.getElementById('status').innerHTML = info;
             total.innerHTML = info;
+            
+            // sort the tests into failed, known failures, and passed
+            var sortedDivs = [];
+            while (results.hasChildNodes()) {
+              sortedDivs.push(results.lastChild);
+              results.removeChild(results.lastChild);
+            }
+            sortedDivs.sort(function(a, b) {
+              if (a.className === b.className) {
+                if (a.id < b.id) {
+                  return -1;
+                } else {
+                  return 1;
+                }
+              } else if (a.className < b.className) {
+                return -1;
+              } else {
+                return 1;
+              }
+            });
+            
+            var failedDiv = document.createElement('div');
+            failedDiv.innerHTML = '<hr><h3>Failed ' + failedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
+            results.appendChild(failedDiv);
+            
+            var knownFailureDiv = document.createElement('div');
+            knownFailureDiv.innerHTML = '<hr><h3>Known Failures ' + knownFailedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
+            results.appendChild(knownFailureDiv);
+            
+            var passDiv = document.createElement('div');
+            passDiv.innerHTML = '<hr><h3>Passed ' + passedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
+            results.appendChild(passDiv);
+            
+            for (var i = 0; i < sortedDivs.length; i++) {
+              if (sortedDivs[i].className === 'failed') {
+                failedDiv.appendChild(sortedDivs[i]);
+              } else if (sortedDivs[i].className === 'knownfailure') {
+                knownFailureDiv.appendChild(sortedDivs[i]);
+              } else {
+                passDiv.appendChild(sortedDivs[i]);
+              }
+            }
+            
+            if (failedDiv.childNodes.length <= 1) {
+              var temp = document.createElement('p');
+              temp.innerHTML = 'No failed tests';
+              failedDiv.appendChild(temp);
+            } else if (knownFailureDiv.childNodes.length <= 1) {
+              var temp = document.createElement('p');
+              temp.innerHTML = 'No failed tests';
+              knownFailureDiv.appendChild(temp);
+            } else if (passDiv.childNodes.length <= 1) {
+              var temp = document.createElement('p');
+              temp.innerHTML = 'No failed tests';
+              passDiv.appendChild(temp);
+            }
           }
         }
 
         var runOne = function(i) {
           var test = getTest(tests[i].path);
+          test.knownFailureTicket = tests[i].knownFailureTicket;
+          test.epsilonOverride = tests[i].epsilonOverride
           var result = document.createElement('div');
-          result.id = test.name;
+          result.id = i
           var title = document.createElement('div');
           title.className = "title";
           result.appendChild(title);
           results.appendChild(result);
           var valueEpsilon = epsilon * 255;
+          if (test.epsilonOverride) {
+            valueEpsilon = test.epsilonOverride * 255;
+          }
 
           if (test) {
             var original = buildCanvas(test.name + '-original', test.width, test.height);
@@ -248,77 +311,109 @@
             try {
               p = new Processing(current, test.code);
             } catch (e) {
-              title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed: " + e.toString());
+              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
+              result.className = "failed";
               failedCount++;
               return nextTest(i+1);
             }
             var totalTime = (new Date).getTime() - startTime;
-            var is3D = p.use3DContext;
 
-            // draw the original based on stored pixels
-            var origCtx = original.getContext('2d');
-            var origData = origCtx.createImageData(original.width, original.height);
-            for (var l=0; l < pixelsLen; l++) {
-              if (is3D) {
-                // WebGL inverts the rows in readPixels vs. the 2D context. Flip the image around so it looks right
-                origData.data[l] = test.pixels[(original.height - 1 - Math.floor(l / 4 / original.width)) * 
-                                                original.width * 4 + (l % (original.width * 4))];
-              } else {
-                origData.data[l] = test.pixels[l];
-              }
-            }
-            origCtx.putImageData(origData, 0, 0);
+            function validateResult() {
+                var is3D = p.use3DContext;
 
-            // Blur pixels for diff
-            test.pixels = blur(test.pixels, test.width, test.height);
-
-            // do a visual diff on the pixels
-            var currData = getPixels(current, is3D);
-            if (!currData) {
-              title.innerHTML = titleText(i+1, tl, totalTime, test.name, "can't diff pixels");
-              failedCount++;
-              return nextTest(i+1);
-            }
-
-            if (currData.length == test.pixels.length) {
-              currData = blur(currData, test.width, test.height);
-              var diffCtx = diff.getContext('2d');
-              var diffData = diffCtx.createImageData(current.width, current.height);
-              var tp = test.pixels;
-              var failed = false;
-              for (var j=0; j < pixelsLen;) {
-                if (Math.abs(currData[j] - tp[j]) < valueEpsilon  &&
-                    Math.abs(currData[j + 1] - tp[j + 1]) < valueEpsilon &&
-                    Math.abs(currData[j + 2] - tp[j + 2]) < valueEpsilon &&
-                    Math.abs(currData[j + 3] - tp[j + 3]) < valueEpsilon)  {
-                  diffData.data[j] = diffData.data[j+1] = diffData.data[j+2] = diffData.data[j+3] = 0;
-                } else {
-                  diffData.data[j] = 255;
-                  diffData.data[j+1] = diffData.data[j+2] = 0;
-                  diffData.data[j+3] = 255;
-                  failed = true;
+                // draw the original based on stored pixels
+                var origCtx = original.getContext('2d');
+                var origData = origCtx.createImageData(original.width, original.height);
+                for (var l=0; l < pixelsLen; l++) {
+                  if (is3D) {
+                    // WebGL inverts the rows in readPixels vs. the 2D context. Flip the image around so it looks right
+                    origData.data[l] = test.pixels[(original.height - 1 - Math.floor(l / 4 / original.width)) * 
+                                                    original.width * 4 + (l % (original.width * 4))];
+                  } else {
+                    origData.data[l] = test.pixels[l];
+                  }
                 }
-                j+=4;
-              }
-              if (failed) {
-                diffCtx.putImageData(diffData, 0, 0);
-                title.innerHTML = titleText(i+1, tl, totalTime, test.name, "pixels off");
-                failedCount++;
-              } else {
-                diffCtx.fillStyle = "rgb(0,255,0)";
-                diffCtx.fillRect (0, 0, diff.width, diff.height);
-                title.innerHTML = titleText(i+1, tl, totalTime, test.name);
-                passedCount++;
-              }
-            } else {
-              title.innerHTML = titleText(i+1, tl, totalTime, test.name, "size mismatch");
-              failedCount++;
+                origCtx.putImageData(origData, 0, 0);
+
+                // Blur pixels for diff
+                test.pixels = blur(test.pixels, test.width, test.height);
+
+                // do a visual diff on the pixels
+                var currData = getPixels(current, is3D);
+                if (!currData) {
+                  title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "can't diff pixels");
+                  result.className = "failed";
+                  failedCount++;
+                  return nextTest(i+1);
+                }
+
+                if (currData.length == test.pixels.length) {
+                  currData = blur(currData, test.width, test.height);
+                  var diffCtx = diff.getContext('2d');
+                  var diffData = diffCtx.createImageData(current.width, current.height);
+                  var tp = test.pixels;
+                  var failed = false;
+                  for (var j=0; j < pixelsLen;) {
+                    if (Math.abs(currData[j] - tp[j]) < valueEpsilon  &&
+                        Math.abs(currData[j + 1] - tp[j + 1]) < valueEpsilon &&
+                        Math.abs(currData[j + 2] - tp[j + 2]) < valueEpsilon &&
+                        Math.abs(currData[j + 3] - tp[j + 3]) < valueEpsilon)  {
+                      diffData.data[j] = diffData.data[j+1] = diffData.data[j+2] = diffData.data[j+3] = 0;
+                    } else {
+                      diffData.data[j] = 255;
+                      diffData.data[j+1] = diffData.data[j+2] = 0;
+                      diffData.data[j+3] = 255;
+                      failed = true;
+                    }
+                    j+=4;
+                  }
+                  if (test.knownFailureTicket) {
+                    diffCtx.putImageData(diffData, 0, 0);
+                    title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "Known failure. See <a href='https://processing-js.lighthouseapp.com/projects/41284/tickets/" + test.knownFailureTicket + "'>ticket #" + test.knownFailureTicket + "</a>");
+                    result.className = "knownfailure";
+                    knownFailedCount++;
+                  } else if (failed) {
+                    diffCtx.putImageData(diffData, 0, 0);
+                    title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "pixels off");
+                    result.className = "failed";
+                    failedCount++;
+                  } else {
+                    diffCtx.fillStyle = "rgb(0,255,0)";
+                    diffCtx.fillRect (0, 0, diff.width, diff.height);
+                    if (test.epsilonOverride) {
+                      title.innerHTML = titleText(i+1, tl, totalTime, test.name, false, "epsilonOverride = " + test.epsilonOverride);
+                      result.className = "passed";
+                    } else {
+                      title.innerHTML = titleText(i+1, tl, totalTime, test.name, false, "");
+                      result.className = "passed";
+                    }
+                    passedCount++;
+                  }
+                } else {
+                  title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "size mismatch");
+                  result.className = "failed";
+                  failedCount++;
+                }
+                nextTest(i+1);
             }
+
+            var validationDelay = 0;
+            if (/@pjs\s+preload\b/.test(test.code)) {
+              validationDelay = 100;
+            }
+
+            if (validationDelay > 0) {
+              totalTime = "-"; // we are not sure how long test was run
+              setTimeout(validateResult, validationDelay);
+              return; // exit without nextTest
+            }
+            validateResult();
           } else {
-            title.innerHTML = titleText(i+1, tl, totalTime, test.name, "invalid test");
+            title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "invalid test");
+            result.className = "failed";
             failedCount++;
+            nextTest(i+1);
           }
-          nextTest(i+1);
         };
         window.setTimeout(function() { runOne(0); }, 10);
       }
