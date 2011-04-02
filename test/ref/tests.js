@@ -40,16 +40,16 @@ var tests = [
   { path: "box.pde", tags: ["3D"], knownFailureTicket: "852" },
   { path: "ambientLight_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_1.pde", tags: ["3D"] },
-  { path: "ambientLight_p5test_2.pde", tags: ["3D"], knownFailureTicket: "1173" },
+  { path: "ambientLight_p5test_2.pde", tags: ["3D"] }, /* See ticket #1173 */
   { path: "ambient_p5test.pde", tags: ["3D"] },
   { path: "directionalLight_p5test_1.pde", tags: ["3D"] },
   { path: "directionalLight_p5test_2.pde", tags: ["3D"] },
   { path: "emissive_p5test.pde", tags: ["3D"] },
-  { path: "lightSpecular_p5test.pde", tags: ["3D"], knownFailureTicket: "1173" },
+  { path: "lightSpecular_p5test.pde", tags: ["3D"]}, /* See ticket #1173 */
   { path: "pointLight_p5test.pde", tags: ["3D"] },
   { path: "shininess_p5test.pde", tags: ["3D"] },
-  { path: "specular_p5test.pde", tags: ["3D"], knownFailureTicket: "1173" },
-  { path: "spotLight_p5test.pde", tags: ["3D"], knownFailureTicket: "1173" },
+  { path: "specular_p5test.pde", tags: ["3D"]}, /* See ticket #1173 */
+  { path: "spotLight_p5test.pde", tags: ["3D"]}, /* See ticket #1173 */
   { path: "createGraphics.pde", tags: ["3D"], knownFailureTicket: "1075" },
   { path: "createimage.pde", tags: ["2D"] },
   { path: "array.pde", tags: ["2D"] },

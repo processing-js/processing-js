@@ -1724,7 +1724,7 @@
       "void DirectionalLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
       "  float powerfactor = 0.0;" +
       "  float nDotVP = max(0.0, dot( vertNormal, normalize(-light.position) ));" +
-      "  float nDotVH = max(0.0, dot( vertNormal, normalize(-light.position-ecPos )));" +
+      "  float nDotVH = max(0.0, dot( vertNormal, normalize(-light.position-normalize(ecPos) )));" +
 
       "  if( nDotVP != 0.0 ){" +
       "    powerfactor = pow( nDotVH, shininess );" +
@@ -1734,7 +1734,7 @@
       "  spec += specular * powerfactor;" +
       "}" +
 
-      "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+      "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
       "  float powerfactor;" +
 
       // Get the vector from the light to the vertex
@@ -1749,7 +1749,7 @@
       "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
 
       "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
-      "  vec3 halfVector = normalize( VP + eye );" +
+      "  vec3 halfVector = normalize( VP - normalize(ecPos) );" +
       "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 
       "  if( nDotVP == 0.0) {" +
@@ -1765,7 +1765,7 @@
 
       /*
       */
-      "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+      "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
       "  float spotAttenuation;" +
       "  float powerfactor;" +
 
@@ -1783,18 +1783,16 @@
       "  float spotDot = dot( VP, ldir );" +
 
       // if the vertex falls inside the cone
-      // The following is failing on Windows systems
-      // removed until we find a workaround
-      //"  if( spotDot < cos( light.angle ) ) {" +
-      //"    spotAttenuation = pow( spotDot, light.concentration );" +
-      //"  }" +
-      //"  else{" +
-      "    spotAttenuation = 1.0;" +
-      //"  }" +
+      "  if( spotDot > cos( light.angle ) ) {" +
+      "    spotAttenuation = pow( spotDot, light.concentration );" +
+      "  }" +
+      "  else{" +
+      "    spotAttenuation = 0.0;" +
+      "  }" +
       "  attenuation *= spotAttenuation;" +
 
       "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
-      "  vec3 halfVector = normalize( VP + eye );" +
+      "  vec3 halfVector = normalize( VP - normalize(ecPos) );" +
       "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 
       "  if( nDotVP == 0.0 ) {" +
@@ -1823,7 +1821,6 @@
 
       "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
-      "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
 
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
@@ -1849,10 +1846,10 @@
       "        DirectionalLight( finalDiffuse, finalSpecular, norm, ecPos, l );" +
       "      }" +
       "      else if( l.type == 2 ) {" +
-      "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, l );" +
+      "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, l );" +
       "      }" +
       "      else {" +
-      "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, l );" +
+      "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, l );" +
       "      }" +
       "    }" +
 
@@ -7373,7 +7370,8 @@
       p.lightFalloff(1, 0, 0);
       p.shininess(1);
       p.ambient(255, 255, 255);
-      p.specular(0, 0, 0);
+      p.specular(128, 128, 128);
+      p.emissive(0, 0, 0);
       p.camera();
       p.draw();
       
@@ -9203,7 +9201,8 @@
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
         p.ambient(255, 255, 255);
-        p.specular(0, 0, 0);
+        p.specular(128, 128, 128);
+        p.emissive(0, 0, 0);
 
         // Create buffers for 3D primitives
         boxBuffer = curContext.createBuffer();
