@@ -1649,6 +1649,8 @@
       "  }"+
       "}";
 
+    var webglMaxTempsWorkaround = /Windows/.test(navigator.userAgent);
+
     // Vertex shader for boxes and spheres
     var vertexShaderSource3D =
       "varying vec4 frontColor;" +
@@ -1783,6 +1785,8 @@
       "  float spotDot = dot( VP, ldir );" +
 
       // if the vertex falls inside the cone
+      (webglMaxTempsWorkaround ? // Windows reports max temps error if light.angle is used
+      "  spotAttenuation = 1.0; " :
       "  if( spotDot > cos( light.angle ) ) {" +
       "    spotAttenuation = pow( spotDot, light.concentration );" +
       "  }" +
@@ -1790,6 +1794,7 @@
       "    spotAttenuation = 0.0;" +
       "  }" +
       "  attenuation *= spotAttenuation;" +
+      "") +
 
       "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
       "  vec3 halfVector = normalize( VP - normalize(ecPos) );" +
