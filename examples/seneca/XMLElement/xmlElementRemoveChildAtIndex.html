@@ -15,7 +15,7 @@ void setup() {
   size(200, 200);
   xml = new XMLElement(this, "sites.xml");
   int numSites = xml.getChildCount();
-  println("Number of Children before add: " + numSites);
+  println("Number of Children before remove: " + numSites);
   xml.removeChildAtIndex(0);
   println("removeChildAtIndex(0)");
   numSites = xml.getChildCount();
@@ -44,7 +44,7 @@ void setup() {
   size(200, 200);
   xml = new XMLElement(this, "sites.xml");
   int numSites = xml.getChildCount();
-  println("Number of Children before add: " + numSites);
+  println("Number of Children before remove: " + numSites);
   xml.removeChildAtIndex(0);
   println("removeChildAtIndex(0)");
   numSites = xml.getChildCount();

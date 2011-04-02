@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Processing.js test of parseBoolean()</title>
+
+    <script src="../../../processing.js"></script>
+    <canvas data-processing-sources="parseBoolean.pjs" width="200" height="200"></canvas>
+  <body>
+    <p>
+      Converts the passed parameter to the function to its boolean value. It will return an array of booleans if an array is passed in.</p>
+
+    <h2>
+        Test:</h2>
+    <pre>
+void setup() {
+  size(10, 10);
+}
+
+void draw() {
+  int intVar = 0;
+  boolean intBool = parseBoolean(intVar);
+  println("int:0 = " + intBool);
+  
+  int[] intArray = {0, 1, 5};
+  boolean[] intBoolArray = parseBoolean(intArray);
+  println("int Array: {0, 1, 5} = " + intBoolArray);
+  
+  string strVar = "true";
+  boolean strBool = parseBoolean(strVar);
+  println("string: \"true\" = " + strBool);
+  
+  string[] strArray = {"false", "TRUE", "True"};
+  boolean[] strBoolArray = parseBoolean(strArray);
+  println("string Array: {\"false\", \"TRUE\", \"True\"} = " + strBoolArray);
+  
+  byte byteVar = 0;
+  boolean byteBool = parseBoolean(byteVar);
+  println("byte: 0 = " + byteBool);
+  
+  byte[] byteArray = {0, 1};
+  boolean[] byteBoolArray = parseBoolean(byteArray);
+  println("byte Array: {0, 1} = " + byteBoolArray);
+  
+  noLoop();
+}
+    </pre>
+    <br />
+</body>
+</html>

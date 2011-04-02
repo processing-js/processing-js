@@ -1,0 +1,56 @@
+<html>
+<head>
+	<title>p.focused test</title>
+	<script type="text/javascript" src="../../../processing.js"></script>
+	<script type="text/javascript">
+	// bind javascript to Processing instance
+	function bindJavascript() {
+		for(i=1;i<=8;i++) { 
+			var pjs = Processing.getInstanceById("test" + i);
+			try { pjs.bindJavascript(this); }
+			catch(e) { setTimeout(bindJavascript, 250); }}}
+	bindJavascript();
+	</script>
+</head>
+<body>
+
+	<p>no pauseOnBlur directive</p>
+	<table><tr><td>
+		<p>sketch 1 (index 1)</p>
+		<canvas id="test1" style="border: 1px solid black;" data-processing-sources="focusblur.pde" tabindex="1"></canvas>
+		<div style="text-align: center; font-style: italic;">focussable</div>
+	</td><td>
+		<p>sketch 2 (no index) </p>
+		<canvas id="test2" style="border: 1px solid black;" data-processing-sources="focusblur.pde"></canvas>
+		<div>&nbsp;</div>
+	</td><td>
+		<p>sketch 3 (index 2)</p>
+		<canvas id="test3" style="border: 1px solid black;" data-processing-sources="focusblur.pde" tabindex="2"></canvas>
+		<div style="text-align: center; font-style: italic;">focussable</div>
+	</td><td>
+		<p>sketch 4 (no index)</p>
+		<canvas id="test4" style="border: 1px solid black;" data-processing-sources="focusblur.pde"></canvas>
+		<div>&nbsp;</div>
+	</td></tr></table>
+
+	<p>/* @pjs pauseOnBlur="true"; */</p>
+	<table><tr><td>
+		<p>sketch 5 (index 3)</p>
+		<canvas id="test5" style="border: 1px solid black;" data-processing-sources="pauseonblur.pde" tabindex="3"></canvas>
+		<div style="text-align: center; font-style: italic;">focussable</div>
+	</td><td>
+		<p>sketch 6 (no index) </p>
+		<canvas id="test6" style="border: 1px solid black;" data-processing-sources="pauseonblur.pde"></canvas>
+		<div>&nbsp;</div>
+	</td><td>
+		<p>sketch 7 (index 4)</p>
+		<canvas id="test7" style="border: 1px solid black;" data-processing-sources="pauseonblur.pde" tabindex="4"></canvas>
+		<div style="text-align: center; font-style: italic;">focussable</div>
+	</td><td>
+		<p>sketch 8 (no index)</p>
+		<canvas id="test8" style="border: 1px solid black;" data-processing-sources="pauseonblur.pde"></canvas>
+		<div>&nbsp;</div>
+	</td></tr></table>	
+
+</body>
+</html>

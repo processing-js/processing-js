@@ -89,7 +89,11 @@ var canvas = {
   },
   style: {
     setProperty: __empty_func__
-  }
+  },
+  __attributes : { "data-processing-sources" : "test.pjs" },
+  hasAttribute : function(name) { return this.__attributes.hasOwnProperty(name.toLowerCase()); },
+  getAttribute : function(name) { return this.__attributes[name.toLowerCase()]; },
+  setAttribute : function(name, value) { this.__attributes[name.toLowerCase()] = value; }
 };
  
 var HTMLImageElement = __empty_func__;
@@ -148,6 +152,7 @@ window.XMLHttpRequest.prototype.open = __empty_func__;
 window.XMLHttpRequest.prototype.send = __empty_func__;
 window.XMLHttpRequest.prototype.responseText = "some text";
 window.XMLHttpRequest.prototype.setRequestHeader = __empty_func__;
+window.XMLHttpRequest.prototype.overrideMimeType = __empty_func__;
 window.XMLHttpRequest.prototype.status = 200;
 
 var Image = __empty_func__;

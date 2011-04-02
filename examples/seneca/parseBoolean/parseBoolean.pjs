@@ -1,0 +1,33 @@
+//	Processing.js Example
+
+void setup() {
+  size(10, 10);
+}
+
+void draw() {
+  int intVar = 0;
+  boolean intBool = parseBoolean(intVar);
+  println("int:0 = " + intBool);
+
+  int[] intArray = {0, 1, 5};
+  boolean[] intBoolArray = parseBoolean(intArray);
+  println("int Array: {0, 1, 5} = " + intBoolArray);
+  
+  string strVar = "true";
+  boolean strBool = parseBoolean(strVar);
+  println("string: \"true\" = " + strBool);
+  
+  string[] strArray = {"false", "TRUE", "True"};
+  boolean[] strBoolArray = parseBoolean(strArray);
+  println("string Array: {\"false\", \"TRUE\", \"True\"} = " + strBoolArray);
+  
+  byte byteVar = 0;
+  boolean byteBool = parseBoolean(byteVar);
+  println("byte: 0 = " + byteBool);
+  
+  byte[] byteArray = {0, 1};
+  boolean[] byteBoolArray = parseBoolean(byteArray);
+  println("byte Array: {0, 1} = " + byteBoolArray);
+  
+  noLoop();
+}

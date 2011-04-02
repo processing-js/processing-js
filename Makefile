@@ -1,5 +1,6 @@
 # Make sure $JSSHELL points to your js shell binary in .profile or .bashrc
 TOOLSDIR=./tools
+CLOSUREJAR=${TOOLSDIR}/closure/compiler.jar
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
@@ -15,7 +16,7 @@ VERSION ?= $(error Specify a version for your release (e.g., VERSION=0.5))
 
 release: release-files zipped examples
 
-release-files: pjs yui example release-docs
+release-files: pjs yui closure api-only example release-docs
 
 zipped: release-files
 	gzip -9 -c ./release/processing-${VERSION}.min.js > ./release/processing-${VERSION}.min.js.gz
@@ -71,8 +72,9 @@ yui: create-release
 check: check-globals
 	${TOOLSDIR}/runtests.py ${JSSHELL}
 
-check-release: yui
+check-release: yui closure
 	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-${VERSION}.min.js
+	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-${VERSION}.closure.js
 
 check-summary:
 	${TOOLSDIR}/runtests.py -s ${JSSHELL}
@@ -85,12 +87,42 @@ check-parser:
 
 check-unit:
 	${TOOLSDIR}/runtests.py -u ${JSSHELL}
-  
+
 bespin: create-release
 	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/loader.js -o ./tools/ide/js/loader.min.js
 	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/bespin.js -o ./tools/ide/js/bespin.min.js
 	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/pjs-box.js -o ./tools/ide/js/pjs-box.min.js
-  
+
+SKETCHRUN ?= runSketch
+SKETCHINPUT ?= $(error Specify an input filename in SKETCHINPUT when using package-sketch)
+SKETCHOUTPUT ?= ${SKETCHINPUT}.js
+
+closure: create-release
+	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-${VERSION}.closure.js
+
+check-closure: create-release
+	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-closure.js
+	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-closure.js
+
+compile-sketch:
+	${JSSHELL} -f processing.js -f ${TOOLSDIR}/jscompile.js < ${SKETCHINPUT} > ${SKETCHOUTPUT}
+	echo "Created ${SKETCHOUTPUT}"
+
+package-sketch:
+	echo "function ${SKETCHRUN}(canvas) {" > ${SKETCHOUTPUT}.src
+	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js >> ${SKETCHOUTPUT}.src
+	echo "return new Processing(canvas," >> ${SKETCHOUTPUT}.src
+	${JSSHELL} -f processing.js -f ${TOOLSDIR}/jscompile.js  < ${SKETCHINPUT} >> ${SKETCHOUTPUT}.src
+	echo "); } window['${SKETCHRUN}']=${SKETCHRUN};" >> ${SKETCHOUTPUT}.src
+	java -jar ${CLOSUREJAR} --js=${SKETCHOUTPUT}.src --js_output_file=${SKETCHOUTPUT} --compilation_level ADVANCED_OPTIMIZATIONS
+	rm ${SKETCHOUTPUT}.src
+	echo "Created ${SKETCHOUTPUT}"
+
+api-only: create-release
+	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js > ./release/processing-api-${VERSION}.js
+	java -jar ${CLOSUREJAR} --js=./release/processing-api-${VERSION}.js \
+                          --js_output_file=./release/processing-api-${VERSION}.min.js
+
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 
