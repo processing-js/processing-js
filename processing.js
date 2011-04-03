@@ -36,38 +36,6 @@
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
   /* Browsers fixes start */
-  function fixReplaceByRegExp() {
-    var re = /t/g;
-    if ("t".replace(re,"") !== null && re.exec("t")) {
-      return; // it is not necessary
-    }
-    var _ie_replace = String.prototype.replace;
-    String.prototype.replace = function(searchValue, repaceValue) {
-      var result = _ie_replace.apply(this, arguments);
-      if (searchValue instanceof RegExp && searchValue.global) {
-        searchValue.lastIndex = 0;
-      }
-      return result;
-    };
-  }
-
-  function fixMatchByRegExp() {
-    var re = /t/g;
-    if ("t".match(re) !== null && re.exec("t")) {
-      return; // it is not necessary
-    }
-    var _ie_match = String.prototype.match;
-    String.prototype.match = function(searchValue) {
-      var result = _ie_match.apply(this, arguments);
-      if(searchValue instanceof RegExp && searchValue.global) {
-        searchValue.lastIndex = 0;
-      }
-      return result;
-    };
-  }
-  fixReplaceByRegExp();
-  fixMatchByRegExp();
-
   (function fixOperaCreateImageData() {
     try {
       if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
@@ -1279,6 +1247,7 @@
     // "Private" variables used to maintain state
     var curContext,
         curSketch,
+        drawing, // hold a Drawing2D or Drawing3D object
         online = true,
         doFill = true,
         fillStyle = [1.0, 1.0, 1.0, 1.0],
@@ -1309,6 +1278,7 @@
         curTightness = 0,
         curveDet = 20,
         curveInited = false,
+        lastBackgroundObj,
         bezDetail = 20,
         colorModeA = 255,
         colorModeX = 255,
@@ -2163,6 +2133,24 @@
 
       return programObject;
     };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 2D/3D drawing handling
+    ////////////////////////////////////////////////////////////////////////////
+    // Objects for shared, 2D and 3D contexts
+    var DrawingShared = function() {};
+    var Drawing2D = function() {};
+    var Drawing3D = function() {};
+    
+    // Setup the prototype chain
+    Drawing2D.prototype = new DrawingShared();
+    Drawing2D.prototype.constructor = Drawing2D;
+    Drawing3D.prototype = new DrawingShared();
+    Drawing3D.prototype.constructor = Drawing3D;
+    
+    // A no-op function for when the user calls 3D functions from a 2D sketch
+    // We can change this to a throw or console.error() later if we want
+    DrawingShared.prototype.a3DOnlyFunction = function(){};
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
@@ -5692,12 +5680,7 @@
      * @param {Object | Array} matrix the matrix to be pushed into the stack
      */
     PMatrixStack.prototype.load = function load() {
-      var tmpMatrix;
-      if (p.use3DContext) {
-        tmpMatrix = new PMatrix3D();
-      } else {
-        tmpMatrix = new PMatrix2D();
-      }
+      var tmpMatrix = drawing.newPMatrix();
 
       if (arguments.length === 1) {
         tmpMatrix.set(arguments[0]);
@@ -5705,6 +5688,14 @@
         tmpMatrix.set(arguments);
       }
       this.matrixStack.push(tmpMatrix);
+    };
+    
+    Drawing2D.prototype.newPMatrix = function() {
+      return new PMatrix2D();
+    };
+    
+    Drawing3D.prototype.newPMatrix = function() {
+      return new PMatrix3D();
     };
 
     /**
@@ -5732,12 +5723,7 @@
      * @returns {Object} the matrix at the top of the stack
      */
     PMatrixStack.prototype.peek = function peek() {
-      var tmpMatrix;
-      if (p.use3DContext) {
-        tmpMatrix = new PMatrix3D();
-      } else {
-        tmpMatrix = new PMatrix2D();
-      }
+      var tmpMatrix = drawing.newPMatrix();
 
       tmpMatrix.set(this.matrixStack[this.matrixStack.length - 1]);
       return tmpMatrix;
@@ -6893,13 +6879,13 @@
     * @see rotateY
     * @see rotateZ
     */
-    p.translate = function translate(x, y, z) {
-      if (p.use3DContext) {
-        forwardTransform.translate(x, y, z);
-        reverseTransform.invTranslate(x, y, z);
-      } else {
-        curContext.translate(x, y);
-      }
+    Drawing2D.prototype.translate = function(x, y) {
+      curContext.translate(x, y);
+    };
+    
+    Drawing3D.prototype.translate = function(x, y, z) {
+      forwardTransform.translate(x, y, z);
+      reverseTransform.invTranslate(x, y, z);
     };
 
     /**
@@ -6926,13 +6912,13 @@
     * @see rotateY
     * @see rotateZ
     */
-    p.scale = function scale(x, y, z) {
-      if (p.use3DContext) {
-        forwardTransform.scale(x, y, z);
-        reverseTransform.invScale(x, y, z);
-      } else {
-        curContext.scale(x, y || x);
-      }
+    Drawing2D.prototype.scale = function(x, y) {
+      curContext.scale(x, y || x);
+    };
+    
+    Drawing3D.prototype.scale = function(x, y, z) {
+      forwardTransform.scale(x, y, z);
+      reverseTransform.invScale(x, y, z);
     };
 
     /**
@@ -6951,12 +6937,12 @@
     * @see rotateY
     * @see rotateZ
     */
-    p.pushMatrix = function pushMatrix() {
-      if (p.use3DContext) {
-        userMatrixStack.load(modelView);
-      } else {
-        saveContext();
-      }
+    Drawing2D.prototype.pushMatrix = function() {
+      saveContext();
+    };
+    
+    Drawing3D.prototype.pushMatrix = function() {
+      userMatrixStack.load(modelView);
     };
 
     /**
@@ -6970,12 +6956,12 @@
     * @see popMatrix
     * @see pushMatrix
     */
-    p.popMatrix = function popMatrix() {
-      if (p.use3DContext) {
-        modelView.set(userMatrixStack.pop());
-      } else {
-        restoreContext();
-      }
+    Drawing2D.prototype.popMatrix = function() {
+      restoreContext();
+    };
+    
+    Drawing3D.prototype.popMatrix = function() {
+      modelView.set(userMatrixStack.pop());
     };
 
     /**
@@ -6988,13 +6974,13 @@
     * @see applyMatrix
     * @see printMatrix
     */
-    p.resetMatrix = function resetMatrix() {
-      if (p.use3DContext) {
-        forwardTransform.reset();
-        reverseTransform.reset();
-      } else {
-        curContext.setTransform(1,0,0,1,0,0);
-      }
+    Drawing2D.prototype.resetMatrix = function() {
+      curContext.setTransform(1,0,0,1,0,0);
+    };
+    
+    Drawing3D.prototype.resetMatrix = function() {
+      forwardTransform.reset();
+      reverseTransform.reset();
     };
 
     /**
@@ -7011,17 +6997,19 @@
     * @see resetMatrix
     * @see printMatrix
     */
-    p.applyMatrix = function applyMatrix() {
+    DrawingShared.prototype.applyMatrix = function() {
       var a = arguments;
-      if (!p.use3DContext) {
-        for (var cnt = a.length; cnt < 16; cnt++) {
-          a[cnt] = 0;
-        }
-        a[10] = a[15] = 1;
-      }
-
       forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
       reverseTransform.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
+    };
+    
+    Drawing2D.prototype.applyMatrix = function() {
+      var a = arguments;
+      for (var cnt = a.length; cnt < 16; cnt++) {
+        a[cnt] = 0;
+      }
+      a[10] = a[15] = 1;
+      DrawingShared.prototype.applyMatrix.apply(this, a);
     };
 
     /**
@@ -7128,13 +7116,13 @@
     * @see popMatrix
     * @see pushMatrix
     */
-    p.rotate = function rotate(angleInRadians) {
-      if (p.use3DContext) {
-        forwardTransform.rotateZ(angleInRadians);
-        reverseTransform.invRotateZ(angleInRadians);
-      } else {
-        curContext.rotate(angleInRadians);
-      }
+    Drawing2D.prototype.rotate = function(angleInRadians) {
+      curContext.rotate(angleInRadians);
+    };
+    
+    Drawing3D.prototype.rotate = function(angleInRadians) {
+      forwardTransform.rotateZ(angleInRadians);
+      reverseTransform.invRotateZ(angleInRadians);
     };
 
     /**
@@ -7343,7 +7331,7 @@
     * @see noLoop
     * @see loop
     */
-    p.redraw = function redraw() {
+    DrawingShared.prototype.redraw = function() {
       var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
@@ -7356,29 +7344,39 @@
       }
 
       p.frameCount++;
-
+    };
+    
+    Drawing2D.prototype.redraw = function() {
+      DrawingShared.prototype.redraw.apply(this, arguments);
+      
       inDraw = true;
-
-      if (p.use3DContext) {
-        // even if the color buffer isn't cleared with background(),
-        // the depth buffer needs to be cleared regardless.
-        curContext.clear(curContext.DEPTH_BUFFER_BIT);
-        curContextCache = { attributes: {}, locations: {} };
-        // Delete all the lighting states and the materials the
-        // user set in the last draw() call.
-        p.noLights();
-        p.lightFalloff(1, 0, 0);
-        p.shininess(1);
-        p.ambient(255, 255, 255);
-        p.specular(0, 0, 0);
-        p.camera();
-        p.draw();
-      } else {
-        saveContext();
-        p.draw();
-        restoreContext();
-      }
-
+      
+      saveContext();
+      p.draw();
+      restoreContext();
+      
+      inDraw = false;
+    };
+    
+    Drawing3D.prototype.redraw = function() {
+      DrawingShared.prototype.redraw.apply(this, arguments);
+      
+      inDraw = true;
+      
+      // even if the color buffer isn't cleared with background(),
+      // the depth buffer needs to be cleared regardless.
+      curContext.clear(curContext.DEPTH_BUFFER_BIT);
+      curContextCache = { attributes: {}, locations: {} };
+      // Delete all the lighting states and the materials the
+      // user set in the last draw() call.
+      p.noLights();
+      p.lightFalloff(1, 0, 0);
+      p.shininess(1);
+      p.ambient(255, 255, 255);
+      p.specular(0, 0, 0);
+      p.camera();
+      p.draw();
+      
       inDraw = false;
     };
 
@@ -9074,22 +9072,6 @@
       noiseProfile.generator = undef;
     };
 
-    // Set default background behavior for 2D and 3D contexts
-    var refreshBackground = function() {
-      if (!curSketch.options.isTransparent) {
-        if (p.use3DContext) {
-          // fill background default opaque gray
-          curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
-          curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
-        } else {
-          // fill background default opaque gray
-          curContext.fillStyle = "rgb(204, 204, 204)";
-          curContext.fillRect(0, 0, p.width, p.height);
-          isFillDirty = true;
-        }
-      }
-    };
-
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     /**
     * Defines the dimension of the display window in units of pixels. The size() function must
@@ -9104,195 +9086,201 @@
     * @see createGraphics
     * @see screen
     */
-    p.size = (function() {
-      var size3DCalled = false;
-
-      return function size(aWidth, aHeight, aMode) {
-        if (aMode && (aMode === PConstants.WEBGL)) {
-          if (size3DCalled) {
-            throw "Multiple calls to size() for 3D renders are not allowed.";
-          }
-          size3DCalled = true;
-
-          // get the 3D rendering context
-          try {
-            // If the HTML <canvas> dimensions differ from the
-            // dimensions specified in the size() call in the sketch, for
-            // 3D sketches, browsers will either not render or render the
-            // scene incorrectly. To fix this, we need to adjust the
-            // width and height attributes of the canvas.
-            if (curElement.width !== aWidth || curElement.height !== aHeight) {
-              curElement.setAttribute("width", aWidth);
-              curElement.setAttribute("height", aHeight);
-            }
-            curContext = curElement.getContext("experimental-webgl");
-            p.use3DContext = true;
-            canTex = curContext.createTexture(); // texture
-            textTex = curContext.createTexture(); // texture
-          } catch(e_size) {
-            Processing.debug(e_size);
-          }
-
-          if (!curContext) {
-            throw "WebGL context is not supported on this browser.";
-          } else {
-            for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
-              sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
-              cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
-            }
-            // Set defaults
-            curContext.viewport(0, 0, curElement.width, curElement.height);
-            curContext.enable(curContext.DEPTH_TEST);
-            curContext.enable(curContext.BLEND);
-            curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
-            refreshBackground(); // sets clearColor default;
-
-            // Create the program objects to render 2D (points, lines) and
-            // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
-            // lighting calculations could be ommitted from that program object.
-            programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
-
-            // set the defaults
-            curContext.useProgram(programObject2D);
-            p.strokeWeight(1.0);
-
-            programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
-            programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
-
-            // Now that the programs have been compiled, we can set the default
-            // states for the lights.
-            curContext.useProgram(programObject3D);
-
-            // assume we aren't using textures by default
-            uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
-            p.lightFalloff(1, 0, 0);
-            p.shininess(1);
-            p.ambient(255, 255, 255);
-            p.specular(0, 0, 0);
-
-            // Create buffers for 3D primitives
-            boxBuffer = curContext.createBuffer();
-            curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-            curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
-
-            boxNormBuffer = curContext.createBuffer();
-            curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
-            curContext.bufferData(curContext.ARRAY_BUFFER, boxNorms, curContext.STATIC_DRAW);
-
-            boxOutlineBuffer = curContext.createBuffer();
-            curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
-            curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
-
-            // used to draw the rectangle and the outline
-            rectBuffer = curContext.createBuffer();
-            curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
-            curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
-
-            rectNormBuffer = curContext.createBuffer();
-            curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
-            curContext.bufferData(curContext.ARRAY_BUFFER, rectNorms, curContext.STATIC_DRAW);
-
-            // The sphere vertices are specified dynamically since the user
-            // can change the level of detail. Everytime the user does that
-            // using sphereDetail(), the new vertices are calculated.
-            sphereBuffer = curContext.createBuffer();
-
-            lineBuffer = curContext.createBuffer();
-
-            // Shape buffers
-            fillBuffer = curContext.createBuffer();
-            fillColorBuffer = curContext.createBuffer();
-            strokeColorBuffer = curContext.createBuffer();
-            shapeTexVBO = curContext.createBuffer();
-
-            pointBuffer = curContext.createBuffer();
-            curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
-            curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0, 0, 0]), curContext.STATIC_DRAW);
-
-            textBuffer = curContext.createBuffer();
-            curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
-            curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
-
-            textureBuffer = curContext.createBuffer();
-            curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
-            curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
-
-            indexBuffer = curContext.createBuffer();
-            curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
-            curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,2,3,0]), curContext.STATIC_DRAW);
-
-            cam = new PMatrix3D();
-            cameraInv = new PMatrix3D();
-            forwardTransform = new PMatrix3D();
-            reverseTransform = new PMatrix3D();
-            modelView = new PMatrix3D();
-            modelViewInv = new PMatrix3D();
-            projection = new PMatrix3D();
-            p.camera();
-            p.perspective();
-            forwardTransform = modelView;
-            reverseTransform = modelViewInv;
-
-            userMatrixStack = new PMatrixStack();
-            // used by both curve and bezier, so just init here
-            curveBasisMatrix = new PMatrix3D();
-            curveToBezierMatrix = new PMatrix3D();
-            curveDrawMatrix = new PMatrix3D();
-            bezierDrawMatrix = new PMatrix3D();
-            bezierBasisInverse = new PMatrix3D();
-            bezierBasisMatrix = new PMatrix3D();
-            bezierBasisMatrix.set(-1, 3, -3, 1, 3, -6, 3, 0, -3, 3, 0, 0, 1, 0, 0, 0);
-          }
-          p.stroke(0);
-          p.fill(255);
-        } else {
-          if (curContext === undef) {
-            // size() was called without p.init() default context, ie. p.createGraphics()
-            curContext = curElement.getContext("2d");
-            p.use3DContext = false;
-            userMatrixStack = new PMatrixStack();
-            modelView = new PMatrix2D();
-          }
-        }
-
-        // The default 2d context has already been created in the p.init() stage if
-        // a 3d context was not specified. This is so that a 2d context will be
-        // available if size() was not called.
-        var props = {
-          fillStyle: curContext.fillStyle,
-          strokeStyle: curContext.strokeStyle,
-          lineCap: curContext.lineCap,
-          lineJoin: curContext.lineJoin
-        };
-        // remove the style width and height properties to ensure that the canvas gets set to
-        // aWidth and aHeight coming in
-        if (curElement.style.length > 0 ) {
-          curElement.style.removeProperty("width");
-          curElement.style.removeProperty("height");
-        }
-
-        curElement.width = p.width = aWidth || 100;
-        curElement.height = p.height = aHeight || 100;
-
-        for (var j in props) {
-          if (props) {
-            curContext[j] = props[j];
-          }
-        }
-
-        // Reset the text style. This is a terrible hack, only because of how 3D contexts are initialized
-        this.textSize(curTextSize);
-
-        // redraw the background if background was called before size
-        refreshBackground();
-
-        // set 5% for pixels to cache (or 1000)
-        maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
-
-        // Externalize the context
-        p.externals.context = curContext;
+    DrawingShared.prototype.size = function(aWidth, aHeight, aMode) {
+      p.stroke(0);
+      p.fill(255);
+      
+      // The default 2d context has already been created in the p.init() stage if
+      // a 3d context was not specified. This is so that a 2d context will be
+      // available if size() was not called.
+      var savedProperties = {
+        fillStyle: curContext.fillStyle,
+        strokeStyle: curContext.strokeStyle,
+        lineCap: curContext.lineCap,
+        lineJoin: curContext.lineJoin
       };
-    })();
+      // remove the style width and height properties to ensure that the canvas gets set to
+      // aWidth and aHeight coming in
+      if (curElement.style.length > 0 ) {
+        curElement.style.removeProperty("width");
+        curElement.style.removeProperty("height");
+      }
+
+      curElement.width = p.width = aWidth || 100;
+      curElement.height = p.height = aHeight || 100;
+
+      for (var prop in savedProperties) {
+        if (savedProperties.hasOwnProperty(prop)) {
+          curContext[prop] = savedProperties[prop];
+        }
+      }
+
+      // Reset the text font/size
+      p.textSize(curTextSize);
+
+      // Set the background to whatever it was called last as if background() was called before size()
+      // If background() hasn't been called before, set background() to a light gray
+      p.background();
+
+      // set 5% for pixels to cache (or 1000)
+      maxPixelsCached = Math.max(1000, aWidth * aHeight * 0.05);
+
+      // Externalize the context
+      p.externals.context = curContext;
+    };
+    
+    Drawing2D.prototype.size = function(aWidth, aHeight, aMode) {
+      if (curContext === undef) {
+        // size() was called without p.init() default context, i.e. p.createGraphics()
+        curContext = curElement.getContext("2d");
+        userMatrixStack = new PMatrixStack();
+        modelView = new PMatrix2D();
+      }
+      
+      DrawingShared.prototype.size.apply(this, arguments);
+    };
+    
+    Drawing3D.prototype.size = (function() {
+      var size3DCalled = false;
+      
+      return function size(aWidth, aHeight, aMode) {
+        if (size3DCalled) {
+          throw "Multiple calls to size() for 3D renders are not allowed.";
+        }
+        size3DCalled = true;
+
+        // get the 3D rendering context
+        try {
+          // If the HTML <canvas> dimensions differ from the
+          // dimensions specified in the size() call in the sketch, for
+          // 3D sketches, browsers will either not render or render the
+          // scene incorrectly. To fix this, we need to adjust the
+          // width and height attributes of the canvas.
+          if (curElement.width !== aWidth || curElement.height !== aHeight) {
+            curElement.setAttribute("width", aWidth);
+            curElement.setAttribute("height", aHeight);
+          }
+          curContext = curElement.getContext("experimental-webgl");
+          canTex = curContext.createTexture(); // texture
+          textTex = curContext.createTexture(); // texture
+        } catch(e_size) {
+          Processing.debug(e_size);
+        }
+
+        if (!curContext) {
+          throw "WebGL context is not supported on this browser.";
+        }
+        
+        for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
+          sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
+          cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
+        }
+
+        // Set defaults
+        curContext.viewport(0, 0, curElement.width, curElement.height);
+        curContext.enable(curContext.DEPTH_TEST);
+        curContext.enable(curContext.BLEND);
+        curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
+
+        // Create the program objects to render 2D (points, lines) and
+        // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
+        // lighting calculations could be ommitted from that program object.
+        programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
+
+        // set the defaults
+        curContext.useProgram(programObject2D);
+        p.strokeWeight(1.0);
+
+        programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
+        programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
+
+        // Now that the programs have been compiled, we can set the default
+        // states for the lights.
+        curContext.useProgram(programObject3D);
+
+        // assume we aren't using textures by default
+        uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
+        p.lightFalloff(1, 0, 0);
+        p.shininess(1);
+        p.ambient(255, 255, 255);
+        p.specular(0, 0, 0);
+
+        // Create buffers for 3D primitives
+        boxBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
+        curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
+
+        boxNormBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
+        curContext.bufferData(curContext.ARRAY_BUFFER, boxNorms, curContext.STATIC_DRAW);
+
+        boxOutlineBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
+        curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
+
+        // used to draw the rectangle and the outline
+        rectBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
+        curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
+
+        rectNormBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
+        curContext.bufferData(curContext.ARRAY_BUFFER, rectNorms, curContext.STATIC_DRAW);
+
+        // The sphere vertices are specified dynamically since the user
+        // can change the level of detail. Everytime the user does that
+        // using sphereDetail(), the new vertices are calculated.
+        sphereBuffer = curContext.createBuffer();
+
+        lineBuffer = curContext.createBuffer();
+
+        // Shape buffers
+        fillBuffer = curContext.createBuffer();
+        fillColorBuffer = curContext.createBuffer();
+        strokeColorBuffer = curContext.createBuffer();
+        shapeTexVBO = curContext.createBuffer();
+
+        pointBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
+        curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0, 0, 0]), curContext.STATIC_DRAW);
+
+        textBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, textBuffer );
+        curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([1,1,0,-1,1,0,-1,-1,0,1,-1,0]), curContext.STATIC_DRAW);
+
+        textureBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, textureBuffer);
+        curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array([0,0,1,0,1,1,0,1]), curContext.STATIC_DRAW);
+
+        indexBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        curContext.bufferData(curContext.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2,2,3,0]), curContext.STATIC_DRAW);
+
+        cam = new PMatrix3D();
+        cameraInv = new PMatrix3D();
+        forwardTransform = new PMatrix3D();
+        reverseTransform = new PMatrix3D();
+        modelView = new PMatrix3D();
+        modelViewInv = new PMatrix3D();
+        projection = new PMatrix3D();
+        p.camera();
+        p.perspective();
+        forwardTransform = modelView;
+        reverseTransform = modelViewInv;
+
+        userMatrixStack = new PMatrixStack();
+        // used by both curve and bezier, so just init here
+        curveBasisMatrix = new PMatrix3D();
+        curveToBezierMatrix = new PMatrix3D();
+        curveDrawMatrix = new PMatrix3D();
+        bezierDrawMatrix = new PMatrix3D();
+        bezierBasisInverse = new PMatrix3D();
+        bezierBasisMatrix = new PMatrix3D();
+        bezierBasisMatrix.set(-1, 3, -3, 1, 3, -6, 3, 0, -3, 3, 0, 0, 1, 0, 0, 0);
+        
+        DrawingShared.prototype.size.apply(this, arguments);
+      };
+    }());
 
     ////////////////////////////////////////////////////////////////////////////
     // Lights
@@ -9323,24 +9311,24 @@
      * @see pointLight
      * @see spotLight
     */
-    p.ambientLight = function(r, g, b, x, y, z) {
-      if (p.use3DContext) {
-        if (lightCount === PConstants.MAX_LIGHTS) {
-          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
-        }
-
-        var pos = new PVector(x, y, z);
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.mult(pos, pos);
-
-        curContext.useProgram(programObject3D);
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 0);
-        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+    Drawing2D.prototype.ambientLight = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.ambientLight = function(r, g, b, x, y, z) {
+      if (lightCount === PConstants.MAX_LIGHTS) {
+        throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
+
+      var pos = new PVector(x, y, z);
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.mult(pos, pos);
+
+      curContext.useProgram(programObject3D);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
+      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 0);
+      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
 
     /**
@@ -9371,27 +9359,27 @@
      * @see pointLight
      * @see spotLight
     */
-    p.directionalLight = function(r, g, b, nx, ny, nz) {
-      if (p.use3DContext) {
-        if (lightCount === PConstants.MAX_LIGHTS) {
-          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
-        }
-
-        curContext.useProgram(programObject3D);
-
-        // We need to multiply the direction by the model view matrix, but
-        // the mult function checks the w component of the vector, if it isn't
-        // present, it uses 1, so we use a very small value as a work around.
-        var dir = [nx, ny, nz, -0.00000000001];
-        var view = new PMatrix3D();
-        view.set(modelView.array());
-        view.mult(dir, dir);
-
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", [dir[0], -dir[1], dir[2]]);
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
-        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+    Drawing2D.prototype.directionalLight = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.directionalLight = function(r, g, b, nx, ny, nz) {
+      if (lightCount === PConstants.MAX_LIGHTS) {
+        throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
+
+      curContext.useProgram(programObject3D);
+
+      // We need to multiply the direction by the model view matrix, but
+      // the mult function checks the w component of the vector, if it isn't
+      // present, it uses 1, so we use a very small value as a work around.
+      var dir = [nx, ny, nz, -0.00000000001];
+      var view = new PMatrix3D();
+      view.set(modelView.array());
+      view.mult(dir, dir);
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", [dir[0], -dir[1], dir[2]]);
+      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
+      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
 
     /**
@@ -9421,11 +9409,11 @@
      * @see spotLight
      * @see lightSpecular
     */
-    p.lightFalloff = function lightFalloff(constant, linear, quadratic) {
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
-      }
+    Drawing2D.prototype.lightFalloff = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.lightFalloff = function(constant, linear, quadratic) {
+      curContext.useProgram(programObject3D);
+      uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
     };
 
     /**
@@ -9447,11 +9435,11 @@
      * @see pointLight
      * @see spotLight
     */
-    p.lightSpecular = function lightSpecular(r, g, b) {
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
-      }
+    Drawing2D.prototype.lightSpecular = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.lightSpecular = function(r, g, b) {
+      curContext.useProgram(programObject3D);
+      uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
     };
 
     /**
@@ -9501,26 +9489,26 @@
      * @see ambientLight
      * @see spotLight
     */
-    p.pointLight = function(r, g, b, x, y, z) {
-      if (p.use3DContext) {
-        if (lightCount === PConstants.MAX_LIGHTS) {
-          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
-        }
-
-        // place the point in view space once instead of once per vertex
-        // in the shader.
-        var pos = new PVector(x, y, z);
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.mult(pos, pos);
-
-        curContext.useProgram(programObject3D);
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 2);
-        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+    Drawing2D.prototype.pointLight = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.pointLight = function(r, g, b, x, y, z) {
+      if (lightCount === PConstants.MAX_LIGHTS) {
+        throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
+
+      // place the point in view space once instead of once per vertex
+      // in the shader.
+      var pos = new PVector(x, y, z);
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.mult(pos, pos);
+
+      curContext.useProgram(programObject3D);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
+      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 2);
+      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
 
     /**
@@ -9533,12 +9521,12 @@
      *
      * @see lights
     */
-    p.noLights = function noLights() {
-      if (p.use3DContext) {
-        lightCount = 0;
-        curContext.useProgram(programObject3D);
-        uniformi("lightCount3d", programObject3D, "lightCount", lightCount);
-      }
+    Drawing2D.prototype.noLights = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.noLights = function() {
+      lightCount = 0;
+      curContext.useProgram(programObject3D);
+      uniformi("lightCount3d", programObject3D, "lightCount", lightCount);
     };
 
     /**
@@ -9570,37 +9558,37 @@
      * @see ambientLight
      * @see pointLight
     */
-    p.spotLight = function spotLight(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
-      if (p.use3DContext) {
-        if (lightCount === PConstants.MAX_LIGHTS) {
-          throw "can only create " + PConstants.MAX_LIGHTS + " lights";
-        }
-
-        curContext.useProgram(programObject3D);
-
-        // place the point in view space once instead of once per vertex
-        // in the shader.
-        var pos = new PVector(x, y, z);
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.mult(pos, pos);
-
-        // We need to multiply the direction by the model view matrix, but
-        // the mult function checks the w component of the vector, if it isn't
-        // present, it uses 1, so we use a very small value as a work around.
-        var dir = [nx, ny, nz, -0.00000001];
-        view.set(modelView.array());
-        view.mult(dir, dir);
-
-        uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
-        uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-        uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", [dir[0], -dir[1], dir[2]]);
-        uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
-        uniformf("lights.angle.3d." + lightCount, programObject3D, "lights" + lightCount + ".angle", angle);
-        uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 3);
-        uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+    Drawing2D.prototype.spotLight = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.spotLight = function(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
+      if (lightCount === PConstants.MAX_LIGHTS) {
+        throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
+
+      curContext.useProgram(programObject3D);
+
+      // place the point in view space once instead of once per vertex
+      // in the shader.
+      var pos = new PVector(x, y, z);
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.mult(pos, pos);
+
+      // We need to multiply the direction by the model view matrix, but
+      // the mult function checks the w component of the vector, if it isn't
+      // present, it uses 1, so we use a very small value as a work around.
+      var dir = [nx, ny, nz, -0.00000001];
+      view.set(modelView.array());
+      view.mult(dir, dir);
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
+      uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", [dir[0], -dir[1], dir[2]]);
+      uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
+      uniformf("lights.angle.3d." + lightCount, programObject3D, "lights" + lightCount + ".angle", angle);
+      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 3);
+      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -9837,96 +9825,98 @@
      * @param {int|float} h  dimension of the box in the y-dimension
      * @param {int|float} d  dimension of the box in the z-dimension
      */
-    p.box = function(w, h, d) {
-      if (p.use3DContext) {
-        // user can uniformly scale the box by
-        // passing in only one argument.
-        if (!h || !d) {
-          h = d = w;
+    Drawing2D.prototype.box = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.box = function(w, h, d) {
+      // user can uniformly scale the box by
+      // passing in only one argument.
+      if (!h || !d) {
+        h = d = w;
+      }
+
+      // Modeling transformation
+      var model = new PMatrix3D();
+      model.scale(w, h, d);
+
+      // viewing transformation needs to have Y flipped
+      // becuase that's what Processing does.
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
+
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+
+      if (doFill) {
+        curContext.useProgram(programObject3D);
+
+        uniformMatrix("model3d", programObject3D, "model", false, model.array());
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());
+        uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+
+        // fix stitching problems. (lines get occluded by triangles
+        // since they share the same depth values). This is not entirely
+        // working, but it's a start for drawing the outline. So
+        // developers can start playing around with styles.
+        curContext.enable(curContext.POLYGON_OFFSET_FILL);
+        curContext.polygonOffset(1, 1);
+
+        uniformf("color3d", programObject3D, "color", fillStyle);
+
+        // Calculating the normal matrix can be expensive, so only
+        // do it if it's necessary
+        if(lightCount > 0){
+          // Create the normal transformation matrix
+          var v = new PMatrix3D();
+          v.set(view);
+
+          var m = new PMatrix3D();
+          m.set(model);
+
+          v.mult(m);
+
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+          normalMatrix.transpose();
+
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
+        }
+        else{
+          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
         }
 
-        // Modeling transformation
-        var model = new PMatrix3D();
-        model.scale(w, h, d);
+        vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
 
-        // viewing transformation needs to have Y flipped
-        // becuase that's what Processing does.
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
 
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
+        // Turn off per vertex colors
+        disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
+        disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-        if (doFill === true) {
-          curContext.useProgram(programObject3D);
+        curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
+        curContext.disable(curContext.POLYGON_OFFSET_FILL);
+      }
 
-          uniformMatrix("model3d", programObject3D, "model", false, model.array());
-          uniformMatrix("view3d", programObject3D, "view", false, view.array());
-          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+      if (lineWidth > 0 && doStroke) {
+        curContext.useProgram(programObject2D);
+        uniformMatrix("model2d", programObject2D, "model", false, model.array());
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          // fix stitching problems. (lines get occluded by triangles
-          // since they share the same depth values). This is not entirely
-          // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles.
-          curContext.enable(curContext.POLYGON_OFFSET_FILL);
-          curContext.polygonOffset(1, 1);
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          uniformf("color3d", programObject3D, "color", fillStyle);
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
-          // Calculating the normal matrix can be expensive, so only
-          // do it if it's necessary
-          if(lightCount > 0){
-            // Create the normal transformation matrix
-            var v = new PMatrix3D();
-            v.set(view);
-
-            var m = new PMatrix3D();
-            m.set(model);
-
-            v.mult(m);
-
-            var normalMatrix = new PMatrix3D();
-            normalMatrix.set(v);
-            normalMatrix.invert();
-            normalMatrix.transpose();
-
-            uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
-            vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
-          }
-          else{
-            disableVertexAttribPointer("normal3d", programObject3D, "Normal");
-          }
-
-          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
-
-          // Turn off per vertex colors
-          disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
-          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
-
-          curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
-          curContext.disable(curContext.POLYGON_OFFSET_FILL);
-        }
-
-        if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject2D);
-          uniformMatrix("model2d", programObject2D, "model", false, model.array());
-          uniformMatrix("view2d", programObject2D, "view", false, view.array());
-          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
-
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
-          curContext.lineWidth(lineWidth);
-          curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
-        }
+        curContext.lineWidth(lineWidth);
+        curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
       }
     };
+
     /**
      * The initSphere() function is a helper function used by <b>sphereDetail()</b>
      * This function creates and stores sphere vertices every time the user changes sphere detail.
@@ -10090,95 +10080,94 @@
      *
      * @param {int|float} r the radius of the sphere
      */
-    p.sphere = function() {
-      if (p.use3DContext) {
-        var sRad = arguments[0], c;
+    Drawing2D.prototype.sphere = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.sphere = function() {
+      var sRad = arguments[0];
 
-        if ((sphereDetailU < 3) || (sphereDetailV < 2)) {
-          p.sphereDetail(30);
+      if ((sphereDetailU < 3) || (sphereDetailV < 2)) {
+        p.sphereDetail(30);
+      }
+
+      // Modeling transformation
+      var model = new PMatrix3D();
+      model.scale(sRad, sRad, sRad);
+
+      // viewing transformation needs to have Y flipped
+      // becuase that's what Processing does.
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
+
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+
+      if (doFill) {
+        // Calculating the normal matrix can be expensive, so only
+        // do it if it's necessary
+        if(lightCount > 0){
+          // Create a normal transformation matrix
+          var v = new PMatrix3D();
+          v.set(view);
+
+          var m = new PMatrix3D();
+          m.set(model);
+
+          v.mult(m);
+
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+          normalMatrix.transpose();
+          
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
+        }
+        else{
+          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
         }
 
-        // Modeling transformation
-        var model = new PMatrix3D();
-        model.scale(sRad, sRad, sRad);
+        curContext.useProgram(programObject3D);
+        disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-        // viewing transformation needs to have Y flipped
-        // becuase that's what Processing does.
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
+        uniformMatrix("model3d", programObject3D, "model", false, model.array());
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());
+        uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
 
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
+        vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
 
-        if (doFill === true) {
-        
-          // Calculating the normal matrix can be expensive, so only
-          // do it if it's necessary
-          if(lightCount > 0){
-            // Create a normal transformation matrix
-            var v = new PMatrix3D();
-            v.set(view);
+        // Turn off per vertex colors
+        disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
 
-            var m = new PMatrix3D();
-            m.set(model);
+        // fix stitching problems. (lines get occluded by triangles
+        // since they share the same depth values). This is not entirely
+        // working, but it's a start for drawing the outline. So
+        // developers can start playing around with styles.
+        curContext.enable(curContext.POLYGON_OFFSET_FILL);
+        curContext.polygonOffset(1, 1);
 
-            v.mult(m);
+        uniformf("color3d", programObject3D, "color", fillStyle);
 
-            var normalMatrix = new PMatrix3D();
-            normalMatrix.set(v);
-            normalMatrix.invert();
-            normalMatrix.transpose();
-            
-            uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
-            vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
-          }
-          else{
-            disableVertexAttribPointer("normal3d", programObject3D, "Normal");
-          }
+        curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
+        curContext.disable(curContext.POLYGON_OFFSET_FILL);
+      }
 
-          curContext.useProgram(programObject3D);
-          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
+      if (lineWidth > 0 && doStroke) {
+        curContext.useProgram(programObject2D);
+        uniformMatrix("model2d", programObject2D, "model", false, model.array());
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
-          uniformMatrix("model3d", programObject3D, "model", false, model.array());
-          uniformMatrix("view3d", programObject3D, "view", false, view.array());
-          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
-          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
 
-          // Turn off per vertex colors
-          disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
-
-          // fix stitching problems. (lines get occluded by triangles
-          // since they share the same depth values). This is not entirely
-          // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles.
-          curContext.enable(curContext.POLYGON_OFFSET_FILL);
-          curContext.polygonOffset(1, 1);
-
-          uniformf("color3d", programObject3D, "color", fillStyle);
-
-          curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
-          curContext.disable(curContext.POLYGON_OFFSET_FILL);
-        }
-
-        if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject2D);
-          uniformMatrix("model2d", programObject2D, "model", false, model.array());
-          uniformMatrix("view2d", programObject2D, "view", false, view.array());
-          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
-
-          curContext.lineWidth(lineWidth);
-          curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
-        }
+        curContext.lineWidth(lineWidth);
+        curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
       }
     };
 
@@ -10302,30 +10291,30 @@
      * @see specular
      * @see shininess
     */
-    p.ambient = function ambient() {
+    Drawing2D.prototype.ambient = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.ambient = function() {
       // create an alias to shorten code
       var a = arguments;
 
       // either a shade of gray or a 'color' object.
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformi("usingMat3d", programObject3D, "usingMat", true);
+      curContext.useProgram(programObject3D);
+      uniformi("usingMat3d", programObject3D, "usingMat", true);
 
-        if (a.length === 1) {
-          // color object was passed in
-          if (typeof a[0] === "string") {
-            var c = a[0].slice(5, -1).split(",");
-            uniformf("mat_ambient3d", programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
-          }
-          // else a single number was passed in for gray shade
-          else {
-            uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
-          }
+      if (a.length === 1) {
+        // color object was passed in
+        if (typeof a[0] === "string") {
+          var c = a[0].slice(5, -1).split(",");
+          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
         }
-        // Otherwise three values were provided (r,g,b)
+        // else a single number was passed in for gray shade
         else {
-          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
+          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
         }
+      }
+      // Otherwise three values were provided (r,g,b)
+      else {
+        uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
       }
     };
 
@@ -10353,31 +10342,31 @@
      * @see specular
      * @see shininess
     */
-    p.emissive = function emissive() {
+    Drawing2D.prototype.emissive = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.emissive = function() {
       // create an alias to shorten code
       var a = arguments;
 
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformi("usingMat3d", programObject3D, "usingMat", true);
+      curContext.useProgram(programObject3D);
+      uniformi("usingMat3d", programObject3D, "usingMat", true);
 
-        // If only one argument was provided, the user either gave us a
-        // shade of gray or a 'color' object.
-        if (a.length === 1) {
-          // color object was passed in
-          if (typeof a[0] === "string") {
-            var c = a[0].slice(5, -1).split(",");
-            uniformf("mat_emissive3d", programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
-          }
-          // else a regular number was passed in for gray shade
-          else {
-            uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
-          }
+      // If only one argument was provided, the user either gave us a
+      // shade of gray or a 'color' object.
+      if (a.length === 1) {
+        // color object was passed in
+        if (typeof a[0] === "string") {
+          var c = a[0].slice(5, -1).split(",");
+          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
         }
-        // Otherwise three values were provided (r,g,b)
+        // else a regular number was passed in for gray shade
         else {
-          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
+          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
         }
+      }
+      // Otherwise three values were provided (r,g,b)
+      else {
+        uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
       }
     };
 
@@ -10390,12 +10379,12 @@
      *
      * @returns none
     */
-    p.shininess = function shininess(shine) {
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformi("usingMat3d", programObject3D, "usingMat", true);
-        uniformf("shininess3d", programObject3D, "shininess", shine);
-      }
+    Drawing2D.prototype.shininess = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.shininess = function(shine) {
+      curContext.useProgram(programObject3D);
+      uniformi("usingMat3d", programObject3D, "usingMat", true);
+      uniformf("shininess3d", programObject3D, "shininess", shine);
     };
 
     /**
@@ -10434,14 +10423,14 @@
      * @see emissive
      * @see shininess
     */
-    p.specular = function specular() {
+    Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
+    
+    Drawing3D.prototype.specular = function() {
       var c = p.color.apply(this, arguments);
 
-      if (p.use3DContext) {
-        curContext.useProgram(programObject3D);
-        uniformi("usingMat3d", programObject3D, "usingMat", true);
-        uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
-      }
+      curContext.useProgram(programObject3D);
+      uniformi("usingMat3d", programObject3D, "usingMat", true);
+      uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -10568,19 +10557,23 @@
      * @see #background()
      * @see #colorMode()
      */
-    p.fill = function fill() {
+    DrawingShared.prototype.fill = function() {
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       if(color === currentFillColor && doFill) {
         return;
       }
       doFill = true;
       currentFillColor = color;
-
-      if (p.use3DContext) {
-        fillStyle = p.color.toGLArray(color);
-      } else {
-        isFillDirty = true;
-      }
+    };
+    
+    Drawing2D.prototype.fill = function() {
+      DrawingShared.prototype.fill.apply(this, arguments);
+      isFillDirty = true;
+    };
+    
+    Drawing3D.prototype.fill = function() {
+      DrawingShared.prototype.fill.apply(this, arguments);
+      fillStyle = p.color.toGLArray(currentFillColor);
     };
 
     function executeContextFill() {
@@ -10634,19 +10627,23 @@
      * @see #background()
      * @see #colorMode()
      */
-    p.stroke = function stroke() {
+    DrawingShared.prototype.stroke = function() {
       var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
       if(color === currentStrokeColor && doStroke) {
         return;
       }
       doStroke = true;
       currentStrokeColor = color;
-
-      if (p.use3DContext) {
-        strokeStyle = p.color.toGLArray(color);
-      } else {
-        isStrokeDirty = true;
-      }
+    };
+    
+    Drawing2D.prototype.stroke = function() {
+      DrawingShared.prototype.stroke.apply(this, arguments);
+      isStrokeDirty = true;
+    };
+    
+    Drawing3D.prototype.stroke = function() {
+      DrawingShared.prototype.stroke.apply(this, arguments);
+      strokeStyle = p.color.toGLArray(currentStrokeColor);
     };
 
     function executeContextStroke() {
@@ -10675,15 +10672,19 @@
      *
      * @param {int|float} w the weight (in pixels) of the stroke
      */
-    p.strokeWeight = function strokeWeight(w) {
+    DrawingShared.prototype.strokeWeight = function(w) {
       lineWidth = w;
-
-      if (p.use3DContext) {
-        curContext.useProgram(programObject2D);
-        uniformf("pointSize2d", programObject2D, "pointSize", w);
-      } else {
-        curContext.lineWidth = w;
-      }
+    };
+    
+    Drawing2D.prototype.strokeWeight = function(w) {
+      DrawingShared.prototype.strokeWeight.apply(this, arguments);
+      curContext.lineWidth = w;
+    };
+    
+    Drawing3D.prototype.strokeWeight = function(w) {
+      DrawingShared.prototype.strokeWeight.apply(this, arguments);
+      curContext.useProgram(programObject2D);
+      uniformf("pointSize2d", programObject2D, "pointSize", w);
     };
 
     /**
@@ -10717,9 +10718,13 @@
      * @see #hint()
      * @see #size()
      */
-    p.smooth = function() {
+    DrawingShared.prototype.smooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
+    };
+    
+    Drawing2D.prototype.smooth = function() {
+      DrawingShared.prototype.smooth.apply(this, arguments);
+      if ("mozImageSmoothingEnabled" in curContext) {
         curContext.mozImageSmoothingEnabled = true;
       }
     };
@@ -10729,9 +10734,13 @@
      *
      * @see #smooth()
      */
-    p.noSmooth = function() {
+    DrawingShared.prototype.noSmooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-      if (!p.use3DContext && "mozImageSmoothingEnabled" in curContext) {
+    };
+    
+    Drawing2D.prototype.noSmooth = function() {
+      DrawingShared.prototype.noSmooth.apply(this, arguments);
+      if ("mozImageSmoothingEnabled" in curContext) {
         curContext.mozImageSmoothingEnabled = false;
       }
     };
@@ -10762,61 +10771,61 @@
      *
      * @see #beginShape()
      */
-    p.point = function point(x, y, z) {
-      if (p.use3DContext) {
-        var model = new PMatrix3D();
+    Drawing2D.prototype.point = function(x, y) {
+      if (doStroke) {
+        // TODO if strokeWeight > 1, do circle
 
-        // move point to position
-        model.translate(x, y, z || 0);
-        model.transpose();
-
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
-
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
-
-        curContext.useProgram(programObject2D);
-        uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
-        if (lineWidth > 0 && doStroke) {
-          // this will be replaced with the new bit shifting color code
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
-
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
-          curContext.drawArrays(curContext.POINTS, 0, 1);
-        }
-      } else {
-        if (doStroke) {
-          // TODO if strokeWeight > 1, do circle
-
-          if (curSketch.options.crispLines) {
-            var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
-            var c = p.get(x, y);
-            p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
+        if (curSketch.options.crispLines) {
+          var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
+          var c = p.get(x, y);
+          p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
+        } else {
+          if (lineWidth > 1) {
+            curContext.fillStyle = p.color.toString(currentStrokeColor);
+            isFillDirty = true;
+            curContext.beginPath();
+            curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
+            curContext.fill();
+            curContext.closePath();
           } else {
-            if (lineWidth > 1){
-              curContext.fillStyle = p.color.toString(currentStrokeColor);
-              isFillDirty = true;
-              curContext.beginPath();
-              curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
-              curContext.fill();
-              curContext.closePath();
-            } else {
-              curContext.fillStyle = p.color.toString(currentStrokeColor);
-              curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-              isFillDirty = true;
-            }
+            curContext.fillStyle = p.color.toString(currentStrokeColor);
+            curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
+            isFillDirty = true;
           }
         }
+      }
+    };
+    
+    Drawing3D.prototype.point = function(x, y, z) {
+      var model = new PMatrix3D();
+
+      // move point to position
+      model.translate(x, y, z || 0);
+      model.transpose();
+
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
+
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+
+      curContext.useProgram(programObject2D);
+      uniformMatrix("model2d", programObject2D, "model", false, model.array());
+      uniformMatrix("view2d", programObject2D, "view", false, view.array());
+      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+
+      if (lineWidth > 0 && doStroke) {
+        // this will be replaced with the new bit shifting color code
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
+
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
+
+        curContext.drawArrays(curContext.POINTS, 0, 1);
       }
     };
 
@@ -10865,7 +10874,7 @@
      * @see curveVertex
      * @see texture
      */
-    p.vertex = function vertex() {
+    DrawingShared.prototype.vertex = function() {
       var vert = [];
 
       if (firstVert) { firstVert = false; }
@@ -10884,29 +10893,39 @@
         vert[4] = arguments[4] || 0;
       }
 
-      vert["isVert"] =  true;
-
-      if (p.use3DContext) {
-        // fill rgba
-        vert[5] = fillStyle[0];
-        vert[6] = fillStyle[1];
-        vert[7] = fillStyle[2];
-        vert[8] = fillStyle[3];
-        // stroke rgba
-        vert[9] = strokeStyle[0];
-        vert[10] = strokeStyle[1];
-        vert[11] = strokeStyle[2];
-        vert[12] = strokeStyle[3];
-        //normals
-        vert[13] = normalX;
-        vert[14] = normalY;
-        vert[15] = normalZ;
-      } else {
-        // fill and stroke color
-        vert[5] = currentFillColor;
-        vert[6] = currentStrokeColor;
-      }
-
+      vert["isVert"] = true;
+      
+      return vert; 
+    };
+    
+    Drawing2D.prototype.vertex = function() {
+      var vert = DrawingShared.prototype.vertex.apply(this, arguments);
+      
+      // fill and stroke color
+      vert[5] = currentFillColor;
+      vert[6] = currentStrokeColor;
+      
+      vertArray.push(vert);
+    };
+    
+    Drawing3D.prototype.vertex = function() {
+      var vert = DrawingShared.prototype.vertex.apply(this, arguments);
+      
+      // fill rgba
+      vert[5] = fillStyle[0];
+      vert[6] = fillStyle[1];
+      vert[7] = fillStyle[2];
+      vert[8] = fillStyle[3];
+      // stroke rgba
+      vert[9] = strokeStyle[0];
+      vert[10] = strokeStyle[1];
+      vert[11] = strokeStyle[2];
+      vert[12] = strokeStyle[3];
+      //normals
+      vert[13] = normalX;
+      vert[14] = normalY;
+      vert[15] = normalZ;
+      
       vertArray.push(vert);
     };
 
@@ -11080,44 +11099,50 @@
      *
      * @see beginShape
      */
-    p.endShape = function endShape(mode){
+    Drawing2D.prototype.endShape = function(mode) {
+      // Duplicated in Drawing3D; too many variables used
       var closeShape = mode === PConstants.CLOSE;
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
       var strokeVertArray = [];
       var texVertArray = [];
+      var cachedVertArray;
 
       firstVert = true;
       var i, j, k;
-      var last = vertArray.length - 1;
+      var vertArrayLength = vertArray.length;
 
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
         for (j = 0; j < 3; j++) {
-          fillVertArray.push(vertArray[i][j]);
+          fillVertArray.push(cachedVertArray[j]);
         }
       }
 
       // 5,6,7,8
       // R,G,B,A - fill colour
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
         for (j = 5; j < 9; j++) {
-          colorVertArray.push(vertArray[i][j]);
+          colorVertArray.push(cachedVertArray[j]);
         }
       }
 
       // 9,10,11,12
       // R, G, B, A - stroke colour
-      for (i = 0; i < vertArray.length; i++) {
+      for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
         for (j = 9; j < 13; j++) {
-          strokeVertArray.push(vertArray[i][j]);
+          strokeVertArray.push(cachedVertArray[j]);
         }
       }
 
       // texture u,v
-      for (i = 0; i < vertArray.length; i++) {
-        texVertArray.push(vertArray[i][3]);
-        texVertArray.push(vertArray[i][4]);
+      for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
+        texVertArray.push(cachedVertArray[3]);
+        texVertArray.push(cachedVertArray[4]);
       }
 
       // if shape is closed, push the first point into the last point (including colours)
@@ -11137,110 +11162,32 @@
         texVertArray.push(vertArray[0][3]);
         texVertArray.push(vertArray[0][4]);
       }
-
+      // End duplication
+      
       // curveVertex
       if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
-        if (p.use3DContext) {
-          lineVertArray = fillVertArray;
-          if (doStroke) {
-            line3D(lineVertArray, null, strokeVertArray);
-          }
-          if (doFill) {
-            fill3D(fillVertArray, null, colorVertArray); // fill isn't working in 3d curveVertex
-          }
-        } else {
-          if (vertArray.length > 3) {
-            var b = [],
-                s = 1 - curTightness;
-            curContext.beginPath();
-            curContext.moveTo(vertArray[1][0], vertArray[1][1]);
-              /*
-              * Matrix to convert from Catmull-Rom to cubic Bezier
-              * where t = curTightness
-              * |0         1          0         0       |
-              * |(t-1)/6   1          (1-t)/6   0       |
-              * |0         (1-t)/6    1         (t-1)/6 |
-              * |0         0          0         0       |
-              */
-            for (i = 1; (i+2) < vertArray.length; i++) {
-              b[0] = [vertArray[i][0], vertArray[i][1]];
-              b[1] = [vertArray[i][0] + (s * vertArray[i+1][0] - s * vertArray[i-1][0]) / 6,
-                     vertArray[i][1] + (s * vertArray[i+1][1] - s * vertArray[i-1][1]) / 6];
-              b[2] = [vertArray[i+1][0] + (s * vertArray[i][0] - s * vertArray[i+2][0]) / 6,
-                     vertArray[i+1][1] + (s * vertArray[i][1] - s * vertArray[i+2][1]) / 6];
-              b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
-              curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
-            }
-            // close the shape
-            if (closeShape) {
-              curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-            }
-            executeContextFill();
-            executeContextStroke();
-            curContext.closePath();
-          }
-        }
-      }
-      // bezierVertex
-      else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
-        if (p.use3DContext) {
-          lineVertArray = fillVertArray;
-          lineVertArray.splice(lineVertArray.length - 3);
-          strokeVertArray.splice(strokeVertArray.length - 4);
-          if (doStroke) {
-            line3D(lineVertArray, null, strokeVertArray);
-          }
-          if (doFill) {
-            fill3D(fillVertArray, "TRIANGLES", colorVertArray);
-          }
-
-          // TODO: Fill not properly working yet, will fix later
-          /*fillVertArray = [];
-          colorVertArray = [];
-          tempArray.reverse();
-          for(i = 0; (i+1) < 10; i++){
-            for(j = 0; j < 3; j++){
-              fillVertArray.push(tempArray[i][j]);
-            }
-            for(j = 5; j < 9; j++){
-              colorVertArray.push(tempArray[i][j]);
-            }
-            for(j = 0; j < 3; j++){
-              fillVertArray.push(vertArray[i][j]);
-            }
-            for(j = 5; j < 9; j++){
-              colorVertArray.push(vertArray[i][j]);
-            }
-            for(j = 0; j < 3; j++){
-              fillVertArray.push(vertArray[i+1][j]);
-            }
-            for(j = 5; j < 9; j++){
-              colorVertArray.push(vertArray[i][j]);
-            }
-          }
-
-          strokeVertArray = [];
-          for(i = 0; i < tempArray.length/3; i++){
-            strokeVertArray.push(255);
-            strokeVertArray.push(0);
-            strokeVertArray.push(0);
-            strokeVertArray.push(255);
-          }
-          point3D(tempArray, strokeVertArray);*/
-        } else {
+        if (vertArrayLength > 3) {
+          var b = [],
+              s = 1 - curTightness;
           curContext.beginPath();
-          for (i = 0; i < vertArray.length; i++) {
-            if (vertArray[i]["isVert"] === true) { //if it is a vertex move to the position
-              if (vertArray[i]["moveTo"] === true) {
-                curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-              } else if (vertArray[i]["moveTo"] === false){
-                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-              } else {
-                curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-              }
-            } else { //otherwise continue drawing bezier
-              curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
-            }
+          curContext.moveTo(vertArray[1][0], vertArray[1][1]);
+            /*
+            * Matrix to convert from Catmull-Rom to cubic Bezier
+            * where t = curTightness
+            * |0         1          0         0       |
+            * |(t-1)/6   1          (1-t)/6   0       |
+            * |0         (1-t)/6    1         (t-1)/6 |
+            * |0         0          0         0       |
+            */
+          for (i = 1; (i+2) < vertArrayLength; i++) {
+            cachedVertArray = vertArray[i];
+            b[0] = [cachedVertArray[0], cachedVertArray[1]];
+            b[1] = [cachedVertArray[0] + (s * vertArray[i+1][0] - s * vertArray[i-1][0]) / 6,
+                   cachedVertArray[1] + (s * vertArray[i+1][1] - s * vertArray[i-1][1]) / 6];
+            b[2] = [vertArray[i+1][0] + (s * vertArray[i][0] - s * vertArray[i+2][0]) / 6,
+                   vertArray[i+1][1] + (s * vertArray[i][1] - s * vertArray[i+2][1]) / 6];
+            b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
+            curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
           }
           // close the shape
           if (closeShape) {
@@ -11250,460 +11197,587 @@
           executeContextStroke();
           curContext.closePath();
         }
-      } else {  // render the vertices provided
-        if (p.use3DContext) { // in 3D context
-          if (curShape === PConstants.POINTS) {       // if POINTS was the specified parameter in beginShape
-            for (i = 0; i < vertArray.length; i++) {  // loop through and push the point location information to the array
-              for (j = 0; j < 3; j++) {
-                lineVertArray.push(vertArray[i][j]);
-              }
-            }
-            point3D(lineVertArray, strokeVertArray);  // render function for points
-          } else if (curShape === PConstants.LINES) { // if LINES was the specified parameter in beginShape
-            for (i = 0; i < vertArray.length; i++) {  // loop through and push the point location information to the array
-              for (j = 0; j < 3; j++) {
-                lineVertArray.push(vertArray[i][j]);
-              }
-            }
-            for (i = 0; i < vertArray.length; i++) {  // loop through and push the color information to the array
-              for (j = 5; j < 9; j++) {
-                colorVertArray.push(vertArray[i][j]);
-              }
-            }
-            line3D(lineVertArray, "LINES", strokeVertArray);  // render function for lines
-          } else if (curShape === PConstants.TRIANGLES) {     // if TRIANGLES was the specified parameter in beginShape
-            if (vertArray.length > 2) {
-              for (i = 0; (i+2) < vertArray.length; i+=3) {   // loop through the array per triangle
-                fillVertArray = [];
-                texVertArray = [];
-                lineVertArray = [];
-                colorVertArray = [];
-                strokeVertArray = [];
-                for (j = 0; j < 3; j++) {
-                  for (k = 0; k < 3; k++) {                   // loop through and push
-                    lineVertArray.push(vertArray[i+j][k]);    // the line point location information
-                    fillVertArray.push(vertArray[i+j][k]);    // and fill point location information
-                  }
-                }
-                for (j = 0; j < 3; j++) {                     // loop through and push the texture information
-                  for (k = 3; k < 5; k++) {
-                    texVertArray.push(vertArray[i+j][k]);
-                  }
-                }
-                for (j = 0; j < 3; j++) {
-                  for (k = 5; k < 9; k++) {                   // loop through and push
-                    colorVertArray.push(vertArray[i+j][k]);   // the colour information
-                    strokeVertArray.push(vertArray[i+j][k+4]);// and the stroke information
-                  }
-                }
-                if (doStroke) {
-                  line3D(lineVertArray, "LINE_LOOP", strokeVertArray );               // line render function
-                }
-                if (doFill || usingTexture) {
-                  fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);   // fill shape render function
-                }
-              }
-            }
-          } else if (curShape === PConstants.TRIANGLE_STRIP) {    // if TRIANGLE_STRIP was the specified parameter in beginShape
-            if (vertArray.length > 2) {
-              for (i = 0; (i+2) < vertArray.length; i++) {
-                lineVertArray = [];
-                fillVertArray = [];
-                strokeVertArray = [];
-                colorVertArray = [];
-                texVertArray = [];
-                for (j = 0; j < 3; j++) {
-                  for (k = 0; k < 3; k++) {
-                    lineVertArray.push(vertArray[i+j][k]);
-                    fillVertArray.push(vertArray[i+j][k]);
-                  }
-                }
-                for (j = 0; j < 3; j++) {
-                  for (k = 3; k < 5; k++) {
-                    texVertArray.push(vertArray[i+j][k]);
-                  }
-                }
-                for (j = 0; j < 3; j++) {
-                  for (k = 5; k < 9; k++) {
-                    strokeVertArray.push(vertArray[i+j][k+4]);
-                    colorVertArray.push(vertArray[i+j][k]);
-                  }
-                }
-
-                if (doFill || usingTexture) {
-                  fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
-                }
-                if (doStroke) {
-                  line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
-                }
-              }
-            }
-          } else if (curShape === PConstants.TRIANGLE_FAN) {
-            if (vertArray.length > 2) {
-              for (i = 0; i < 3; i++) {
-                for (j = 0; j < 3; j++) {
-                  lineVertArray.push(vertArray[i][j]);
-                }
-              }
-              for (i = 0; i < 3; i++) {
-                for (j = 9; j < 13; j++) {
-                  strokeVertArray.push(vertArray[i][j]);
-                }
-              }
-              if (doStroke) {
-                line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
-              }
-
-              for (i = 2; (i+1) < vertArray.length; i++) {
-                lineVertArray = [];
-                strokeVertArray = [];
-                lineVertArray.push(vertArray[0][0]);
-                lineVertArray.push(vertArray[0][1]);
-                lineVertArray.push(vertArray[0][2]);
-
-                strokeVertArray.push(vertArray[0][9]);
-                strokeVertArray.push(vertArray[0][10]);
-                strokeVertArray.push(vertArray[0][11]);
-                strokeVertArray.push(vertArray[0][12]);
-
-                for (j = 0; j < 2; j++) {
-                  for (k = 0; k < 3; k++) {
-                    lineVertArray.push(vertArray[i+j][k]);
-                  }
-                }
-                for (j = 0; j < 2; j++) {
-                  for (k = 9; k < 13; k++) {
-                    strokeVertArray.push(vertArray[i+j][k]);
-                  }
-                }
-                if (doStroke) {
-                  line3D(lineVertArray, "LINE_STRIP",strokeVertArray);
-                }
-              }
-              if (doFill || usingTexture) {
-                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
-              }
-            }
-          } else if (curShape === PConstants.QUADS) {
-            for (i = 0; (i + 3) < vertArray.length; i+=4) {
-              lineVertArray = [];
-              for (j = 0; j < 4; j++) {
-                for (k = 0; k < 3; k++) {
-                  lineVertArray.push(vertArray[i+j][k]);
-                }
-              }
-              if (doStroke) {
-                line3D(lineVertArray, "LINE_LOOP",strokeVertArray);
-              }
-
-              if (doFill) {
-                fillVertArray = [];
-                colorVertArray = [];
-                texVertArray = [];
-                for (j = 0; j < 3; j++) {
-                  fillVertArray.push(vertArray[i][j]);
-                }
-                for (j = 5; j < 9; j++) {
-                  colorVertArray.push(vertArray[i][j]);
-                }
-
-                for (j = 0; j < 3; j++) {
-                  fillVertArray.push(vertArray[i+1][j]);
-                }
-                for (j = 5; j < 9; j++) {
-                  colorVertArray.push(vertArray[i+1][j]);
-                }
-
-                for (j = 0; j < 3; j++) {
-                  fillVertArray.push(vertArray[i+3][j]);
-                }
-                for (j = 5; j < 9; j++) {
-                  colorVertArray.push(vertArray[i+3][j]);
-                }
-
-                for (j = 0; j < 3; j++) {
-                  fillVertArray.push(vertArray[i+2][j]);
-                }
-                for (j = 5; j < 9; j++) {
-                  colorVertArray.push(vertArray[i+2][j]);
-                }
-
-                if (usingTexture) {
-                  texVertArray.push(vertArray[i+0][3]);
-                  texVertArray.push(vertArray[i+0][4]);
-                  texVertArray.push(vertArray[i+1][3]);
-                  texVertArray.push(vertArray[i+1][4]);
-                  texVertArray.push(vertArray[i+3][3]);
-                  texVertArray.push(vertArray[i+3][4]);
-                  texVertArray.push(vertArray[i+2][3]);
-                  texVertArray.push(vertArray[i+2][4]);
-                }
-
-                fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
-              }
-            }
-          } else if (curShape === PConstants.QUAD_STRIP) {
-            var tempArray = [];
-            if (vertArray.length > 3) {
-              for (i = 0; i < 2; i++) {
-                for (j = 0; j < 3; j++) {
-                  lineVertArray.push(vertArray[i][j]);
-                }
-              }
-
-              for (i = 0; i < 2; i++) {
-                for (j = 9; j < 13; j++) {
-                  strokeVertArray.push(vertArray[i][j]);
-                }
-              }
-
-              line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
-              if (vertArray.length > 4 && vertArray.length % 2 > 0) {
-                tempArray = fillVertArray.splice(fillVertArray.length - 3);
-                vertArray.pop();
-              }
-              for (i = 0; (i+3) < vertArray.length; i+=2) {
-                lineVertArray = [];
-                strokeVertArray = [];
-                for (j = 0; j < 3; j++) {
-                  lineVertArray.push(vertArray[i+1][j]);
-                }
-                for (j = 0; j < 3; j++) {
-                  lineVertArray.push(vertArray[i+3][j]);
-                }
-                for (j = 0; j < 3; j++) {
-                  lineVertArray.push(vertArray[i+2][j]);
-                }
-                for (j = 0; j < 3; j++) {
-                  lineVertArray.push(vertArray[i+0][j]);
-                }
-                for (j = 9; j < 13; j++) {
-                  strokeVertArray.push(vertArray[i+1][j]);
-                }
-                for (j = 9; j < 13; j++) {
-                  strokeVertArray.push(vertArray[i+3][j]);
-                }
-                for (j = 9; j < 13; j++) {
-                  strokeVertArray.push(vertArray[i+2][j]);
-                }
-                for (j = 9; j < 13; j++) {
-                  strokeVertArray.push(vertArray[i+0][j]);
-                }
-                if (doStroke) {
-                  line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
-                }
-              }
-
-              if (doFill || usingTexture) {
-                fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
-              }
-            }
-          }
-          // If the user didn't specify a type (LINES, TRIANGLES, etc)
-          else {
-            // If only one vertex was specified, it must be a point
-            if (vertArray.length === 1) {
-              for (j = 0; j < 3; j++) {
-                lineVertArray.push(vertArray[0][j]);
-              }
-              for (j = 9; j < 13; j++) {
-                strokeVertArray.push(vertArray[0][j]);
-              }
-              point3D(lineVertArray,strokeVertArray);
+      }
+      
+      // bezierVertex
+      else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
+        curContext.beginPath();
+        for (i = 0; i < vertArrayLength; i++) {
+          cachedVertArray = vertArray[i];
+          if (vertArray[i]["isVert"]) { //if it is a vertex move to the position
+            if (vertArray[i]["moveTo"]) {
+              curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
             } else {
-              for (i = 0; i < vertArray.length; i++) {
-                for (j = 0; j < 3; j++) {
-                  lineVertArray.push(vertArray[i][j]);
-                }
-                for (j = 5; j < 9; j++) {
-                  strokeVertArray.push(vertArray[i][j]);
-                }
-              }
-              if (closeShape) {
-                line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
-              } else {
-                line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
-              }
-
-              // fill is ignored if textures are used
-              if (doFill || usingTexture) {
-                fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
-              }
+              curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
             }
+          } else { //otherwise continue drawing bezier
+            curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
           }
-          // everytime beginShape is followed by a call to
-          // texture(), texturing it turned back on. We do this to
-          // figure out if the shape should be textured or filled
-          // with a color.
-          usingTexture = false;
-          curContext.useProgram(programObject3D);
-          uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
         }
+        // close the shape
+        if (closeShape) {
+          curContext.lineTo(vertArray[0][0], vertArray[0][1]);
+        }
+        executeContextFill();
+        executeContextStroke();
+        curContext.closePath();
+      }
+      
+      // render the vertices provided
+      else {
+        if (curShape === PConstants.POINTS) {
+          for (i = 0; i < vertArrayLength; i++) {
+            cachedVertArray = vertArray[i];
+            if (doStroke) {
+              p.stroke(cachedVertArray[6]);
+            }
+            p.point(cachedVertArray[0], cachedVertArray[1]);
+          }
+        } else if (curShape === PConstants.LINES) {
+          for (i = 0; (i + 1) < vertArrayLength; i+=2) {
+            cachedVertArray = vertArray[i];
+            if (doStroke) {
+              p.stroke(vertArray[i+1][6]);
+            }
+            p.line(cachedVertArray[0], cachedVertArray[1], vertArray[i+1][0], vertArray[i+1][1]);
+          }
+        } else if (curShape === PConstants.TRIANGLES) {
+          for (i = 0; (i + 2) < vertArrayLength; i+=3) {
+            cachedVertArray = vertArray[i];
+            curContext.beginPath();
+            curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
+            curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
+            curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
+            curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
 
-        // 2D context
-        else {
-          if (curShape === PConstants.POINTS) {
-            for (i = 0; i < vertArray.length; i++) {
-              if (doStroke) {
-                p.stroke(vertArray[i][6]);
-              }
-              p.point(vertArray[i][0], vertArray[i][1]);
+            if (doFill) {
+              p.fill(vertArray[i+2][5]);
+              executeContextFill();
             }
-          } else if (curShape === PConstants.LINES) {
-            for (i = 0; (i + 1) < vertArray.length; i+=2) {
-              if (doStroke) {
-                p.stroke(vertArray[i+1][6]);
-              }
-              p.line(vertArray[i][0], vertArray[i][1], vertArray[i+1][0], vertArray[i+1][1]);
+            if (doStroke) {
+              p.stroke(vertArray[i+2][6]);
+              executeContextStroke();
             }
-          } else if (curShape === PConstants.TRIANGLES) {
-            for (i = 0; (i + 2) < vertArray.length; i+=3) {
-              curContext.beginPath();
-              curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-              curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
+
+            curContext.closePath();
+          }
+        } else if (curShape === PConstants.TRIANGLE_STRIP) {
+          for (i = 0; (i+1) < vertArrayLength; i++) {
+            cachedVertArray = vertArray[i];
+            curContext.beginPath();
+            curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
+            curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
+
+            if (doStroke) {
+              p.stroke(vertArray[i+1][6]);
+            }
+            if (doFill) {
+              p.fill(vertArray[i+1][5]);
+            }
+
+            if (i + 2 < vertArrayLength) {
               curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-
-              if (doFill) {
-                p.fill(vertArray[i+2][5]);
-                executeContextFill();
-              }
               if (doStroke) {
                 p.stroke(vertArray[i+2][6]);
-                executeContextStroke();
-              }
-
-              curContext.closePath();
-            }
-          } else if (curShape === PConstants.TRIANGLE_STRIP) {
-            for (i = 0; (i+1) < vertArray.length; i++) {
-              curContext.beginPath();
-              curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-
-              if (doStroke) {
-                p.stroke(vertArray[i+1][6]);
               }
               if (doFill) {
-                p.fill(vertArray[i+1][5]);
+                p.fill(vertArray[i+2][5]);
               }
-
-              if (i + 2 < vertArray.length) {
-                curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-                if (doStroke) {
-                  p.stroke(vertArray[i+2][6]);
-                }
-                if (doFill) {
-                  p.fill(vertArray[i+2][5]);
-                }
-              }
-              executeContextFill();
-              executeContextStroke();
-              curContext.closePath();
-            }
-          } else if (curShape === PConstants.TRIANGLE_FAN) {
-            if (vertArray.length > 2) {
-              curContext.beginPath();
-              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-              curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-              curContext.lineTo(vertArray[2][0], vertArray[2][1]);
-
-              if (doFill) {
-                p.fill(vertArray[2][5]);
-                executeContextFill();
-              }
-              if (doStroke) {
-                p.stroke(vertArray[2][6]);
-                executeContextStroke();
-              }
-
-              curContext.closePath();
-              for (i = 3; i < vertArray.length; i++) {
-                curContext.beginPath();
-                curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-                curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-                curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-
-                if (doFill) {
-                  p.fill(vertArray[i][5]);
-                  executeContextFill();
-                }
-                if (doStroke) {
-                  p.stroke(vertArray[i][6]);
-                  executeContextStroke();
-                }
-
-                curContext.closePath();
-              }
-            }
-          } else if (curShape === PConstants.QUADS) {
-            for (i = 0; (i + 3) < vertArray.length; i+=4) {
-              curContext.beginPath();
-              curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-              for (j = 1; j < 4; j++) {
-                curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
-              }
-              curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-
-              if (doFill) {
-                p.fill(vertArray[i+3][5]);
-                executeContextFill();
-              }
-              if (doStroke) {
-                p.stroke(vertArray[i+3][6]);
-                executeContextStroke();
-              }
-
-              curContext.closePath();
-            }
-          } else if (curShape === PConstants.QUAD_STRIP) {
-            if (vertArray.length > 3) {
-              for (i = 0; (i+1) < vertArray.length; i+=2) {
-                curContext.beginPath();
-                if (i+3 < vertArray.length) {
-                  curContext.moveTo(vertArray[i+2][0], vertArray[i+2][1]);
-                  curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                  curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-                  curContext.lineTo(vertArray[i+3][0], vertArray[i+3][1]);
-
-                  if (doFill) {
-                    p.fill(vertArray[i+3][5]);
-                  }
-                  if (doStroke) {
-                    p.stroke(vertArray[i+3][6]);
-                  }
-                } else {
-                  curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-                  curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-                }
-                executeContextFill();
-                executeContextStroke();
-                curContext.closePath();
-              }
-            }
-          } else {
-            curContext.beginPath();
-            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            for (i = 1; i < vertArray.length; i++) {
-              if (vertArray[i]["isVert"] === true ) { //if it is a vertex move to the position
-                if (vertArray[i]["moveTo"] === true) {
-                  curContext.moveTo(vertArray[i][0], vertArray[i][1]);
-                } else if (vertArray[i]["moveTo"] === false){
-                  curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                } else {
-                  curContext.lineTo(vertArray[i][0], vertArray[i][1]);
-                }
-              }
-            }
-            if (closeShape) {
-              curContext.lineTo(vertArray[0][0], vertArray[0][1]);
             }
             executeContextFill();
             executeContextStroke();
             curContext.closePath();
           }
+        } else if (curShape === PConstants.TRIANGLE_FAN) {
+          if (vertArrayLength > 2) {
+            curContext.beginPath();
+            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
+            curContext.lineTo(vertArray[1][0], vertArray[1][1]);
+            curContext.lineTo(vertArray[2][0], vertArray[2][1]);
+
+            if (doFill) {
+              p.fill(vertArray[2][5]);
+              executeContextFill();
+            }
+            if (doStroke) {
+              p.stroke(vertArray[2][6]);
+              executeContextStroke();
+            }
+
+            curContext.closePath();
+            for (i = 3; i < vertArrayLength; i++) {
+              cachedVertArray = vertArray[i];
+              curContext.beginPath();
+              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
+              curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
+              curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
+
+              if (doFill) {
+                p.fill(cachedVertArray[5]);
+                executeContextFill();
+              }
+              if (doStroke) {
+                p.stroke(cachedVertArray[6]);
+                executeContextStroke();
+              }
+
+              curContext.closePath();
+            }
+          }
+        } else if (curShape === PConstants.QUADS) {
+          for (i = 0; (i + 3) < vertArrayLength; i+=4) {
+            cachedVertArray = vertArray[i];
+            curContext.beginPath();
+            curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
+            for (j = 1; j < 4; j++) {
+              curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
+            }
+            curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
+
+            if (doFill) {
+              p.fill(vertArray[i+3][5]);
+              executeContextFill();
+            }
+            if (doStroke) {
+              p.stroke(vertArray[i+3][6]);
+              executeContextStroke();
+            }
+
+            curContext.closePath();
+          }
+        } else if (curShape === PConstants.QUAD_STRIP) {
+          if (vertArrayLength > 3) {
+            for (i = 0; (i+1) < vertArrayLength; i+=2) {
+              cachedVertArray = vertArray[i];
+              curContext.beginPath();
+              if (i+3 < vertArrayLength) {
+                curContext.moveTo(vertArray[i+2][0], vertArray[i+2][1]);
+                curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
+                curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
+                curContext.lineTo(vertArray[i+3][0], vertArray[i+3][1]);
+
+                if (doFill) {
+                  p.fill(vertArray[i+3][5]);
+                }
+                if (doStroke) {
+                  p.stroke(vertArray[i+3][6]);
+                }
+              } else {
+                curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
+                curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
+              }
+              executeContextFill();
+              executeContextStroke();
+              curContext.closePath();
+            }
+          }
+        } else {
+          curContext.beginPath();
+          curContext.moveTo(vertArray[0][0], vertArray[0][1]);
+          for (i = 1; i < vertArrayLength; i++) {
+            cachedVertArray = vertArray[i];
+            if (cachedVertArray["isVert"]) { //if it is a vertex move to the position
+              if (cachedVertArray["moveTo"]) {
+                curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
+              } else {
+                curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
+              }
+            }
+          }
+          if (closeShape) {
+            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
+          }
+          executeContextFill();
+          executeContextStroke();
+          curContext.closePath();
         }
       }
+      
+      // Reset some settings
+      isCurve = false;
+      isBezier = false;
+      curveVertArray = [];
+      curveVertCount = 0;
+    };
+    
+    Drawing3D.prototype.endShape = function(mode) {
+      // Duplicated in Drawing3D; too many variables used
+      var closeShape = mode === PConstants.CLOSE;
+      var lineVertArray = [];
+      var fillVertArray = [];
+      var colorVertArray = [];
+      var strokeVertArray = [];
+      var texVertArray = [];
+      var cachedVertArray;
+
+      firstVert = true;
+      var i, j, k;
+      var vertArrayLength = vertArray.length;
+
+      for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
+        for (j = 0; j < 3; j++) {
+          fillVertArray.push(cachedVertArray[j]);
+        }
+      }
+
+      // 5,6,7,8
+      // R,G,B,A - fill colour
+      for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
+        for (j = 5; j < 9; j++) {
+          colorVertArray.push(cachedVertArray[j]);
+        }
+      }
+
+      // 9,10,11,12
+      // R, G, B, A - stroke colour
+      for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
+        for (j = 9; j < 13; j++) {
+          strokeVertArray.push(cachedVertArray[j]);
+        }
+      }
+
+      // texture u,v
+      for (i = 0; i < vertArrayLength; i++) {
+        cachedVertArray = vertArray[i];
+        texVertArray.push(cachedVertArray[3]);
+        texVertArray.push(cachedVertArray[4]);
+      }
+
+      // if shape is closed, push the first point into the last point (including colours)
+      if (closeShape) {
+        fillVertArray.push(vertArray[0][0]);
+        fillVertArray.push(vertArray[0][1]);
+        fillVertArray.push(vertArray[0][2]);
+
+        for (i = 5; i < 9; i++) {
+          colorVertArray.push(vertArray[0][i]);
+        }
+
+        for (i = 9; i < 13; i++) {
+          strokeVertArray.push(vertArray[0][i]);
+        }
+
+        texVertArray.push(vertArray[0][3]);
+        texVertArray.push(vertArray[0][4]);
+      }
+      // End duplication
+      
+      // bezierVertex
+      else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
+        lineVertArray = fillVertArray;
+        lineVertArray.splice(lineVertArray.length - 3);
+        strokeVertArray.splice(strokeVertArray.length - 4);
+        if (doStroke) {
+          line3D(lineVertArray, null, strokeVertArray);
+        }
+        if (doFill) {
+          fill3D(fillVertArray, "TRIANGLES", colorVertArray);
+        }
+      }
+      
+      // render the vertices provided
+      else {
+        if (curShape === PConstants.POINTS) {       // if POINTS was the specified parameter in beginShape
+          for (i = 0; i < vertArrayLength; i++) {  // loop through and push the point location information to the array
+            cachedVertArray = vertArray[i];
+            for (j = 0; j < 3; j++) {
+              lineVertArray.push(cachedVertArray[j]);
+            }
+          }
+          point3D(lineVertArray, strokeVertArray);  // render function for points
+        } else if (curShape === PConstants.LINES) { // if LINES was the specified parameter in beginShape
+          for (i = 0; i < vertArrayLength; i++) {  // loop through and push the point location information to the array
+            cachedVertArray = vertArray[i];
+            for (j = 0; j < 3; j++) {
+              lineVertArray.push(cachedVertArray[j]);
+            }
+          }
+          for (i = 0; i < vertArrayLength; i++) {  // loop through and push the color information to the array
+            cachedVertArray = vertArray[i];
+            for (j = 5; j < 9; j++) {
+              colorVertArray.push(cachedVertArray[j]);
+            }
+          }
+          line3D(lineVertArray, "LINES", strokeVertArray);  // render function for lines
+        } else if (curShape === PConstants.TRIANGLES) {     // if TRIANGLES was the specified parameter in beginShape
+          if (vertArrayLength > 2) {
+            for (i = 0; (i+2) < vertArrayLength; i+=3) {   // loop through the array per triangle
+              fillVertArray = [];
+              texVertArray = [];
+              lineVertArray = [];
+              colorVertArray = [];
+              strokeVertArray = [];
+              for (j = 0; j < 3; j++) {
+                for (k = 0; k < 3; k++) {                   // loop through and push
+                  lineVertArray.push(vertArray[i+j][k]);    // the line point location information
+                  fillVertArray.push(vertArray[i+j][k]);    // and fill point location information
+                }
+              }
+              for (j = 0; j < 3; j++) {                     // loop through and push the texture information
+                for (k = 3; k < 5; k++) {
+                  texVertArray.push(vertArray[i+j][k]);
+                }
+              }
+              for (j = 0; j < 3; j++) {
+                for (k = 5; k < 9; k++) {                   // loop through and push
+                  colorVertArray.push(vertArray[i+j][k]);   // the colour information
+                  strokeVertArray.push(vertArray[i+j][k+4]);// and the stroke information
+                }
+              }
+              if (doStroke) {
+                line3D(lineVertArray, "LINE_LOOP", strokeVertArray );               // line render function
+              }
+              if (doFill || usingTexture) {
+                fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);   // fill shape render function
+              }
+            }
+          }
+        } else if (curShape === PConstants.TRIANGLE_STRIP) {    // if TRIANGLE_STRIP was the specified parameter in beginShape
+          if (vertArrayLength > 2) {
+            for (i = 0; (i+2) < vertArrayLength; i++) {
+              lineVertArray = [];
+              fillVertArray = [];
+              strokeVertArray = [];
+              colorVertArray = [];
+              texVertArray = [];
+              for (j = 0; j < 3; j++) {
+                for (k = 0; k < 3; k++) {
+                  lineVertArray.push(vertArray[i+j][k]);
+                  fillVertArray.push(vertArray[i+j][k]);
+                }
+              }
+              for (j = 0; j < 3; j++) {
+                for (k = 3; k < 5; k++) {
+                  texVertArray.push(vertArray[i+j][k]);
+                }
+              }
+              for (j = 0; j < 3; j++) {
+                for (k = 5; k < 9; k++) {
+                  strokeVertArray.push(vertArray[i+j][k+4]);
+                  colorVertArray.push(vertArray[i+j][k]);
+                }
+              }
+
+              if (doFill || usingTexture) {
+                fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
+              }
+              if (doStroke) {
+                line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
+              }
+            }
+          }
+        } else if (curShape === PConstants.TRIANGLE_FAN) {
+          if (vertArrayLength > 2) {
+            for (i = 0; i < 3; i++) {
+              cachedVertArray = vertArray[i];
+              for (j = 0; j < 3; j++) {
+                lineVertArray.push(cachedVertArray[j]);
+              }
+            }
+            for (i = 0; i < 3; i++) {
+              cachedVertArray = vertArray[i];
+              for (j = 9; j < 13; j++) {
+                strokeVertArray.push(cachedVertArray[j]);
+              }
+            }
+            if (doStroke) {
+              line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
+            }
+
+            for (i = 2; (i+1) < vertArrayLength; i++) {
+              lineVertArray = [];
+              strokeVertArray = [];
+              lineVertArray.push(vertArray[0][0]);
+              lineVertArray.push(vertArray[0][1]);
+              lineVertArray.push(vertArray[0][2]);
+
+              strokeVertArray.push(vertArray[0][9]);
+              strokeVertArray.push(vertArray[0][10]);
+              strokeVertArray.push(vertArray[0][11]);
+              strokeVertArray.push(vertArray[0][12]);
+
+              for (j = 0; j < 2; j++) {
+                for (k = 0; k < 3; k++) {
+                  lineVertArray.push(vertArray[i+j][k]);
+                }
+              }
+              for (j = 0; j < 2; j++) {
+                for (k = 9; k < 13; k++) {
+                  strokeVertArray.push(vertArray[i+j][k]);
+                }
+              }
+              if (doStroke) {
+                line3D(lineVertArray, "LINE_STRIP",strokeVertArray);
+              }
+            }
+            if (doFill || usingTexture) {
+              fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
+            }
+          }
+        } else if (curShape === PConstants.QUADS) {
+          for (i = 0; (i + 3) < vertArrayLength; i+=4) {
+            lineVertArray = [];
+            for (j = 0; j < 4; j++) {
+              cachedVertArray = vertArray[i+j];
+              for (k = 0; k < 3; k++) {
+                lineVertArray.push(cachedVertArray[k]);
+              }
+            }
+            if (doStroke) {
+              line3D(lineVertArray, "LINE_LOOP",strokeVertArray);
+            }
+
+            if (doFill) {
+              fillVertArray = [];
+              colorVertArray = [];
+              texVertArray = [];
+              for (j = 0; j < 3; j++) {
+                fillVertArray.push(vertArray[i][j]);
+              }
+              for (j = 5; j < 9; j++) {
+                colorVertArray.push(vertArray[i][j]);
+              }
+
+              for (j = 0; j < 3; j++) {
+                fillVertArray.push(vertArray[i+1][j]);
+              }
+              for (j = 5; j < 9; j++) {
+                colorVertArray.push(vertArray[i+1][j]);
+              }
+
+              for (j = 0; j < 3; j++) {
+                fillVertArray.push(vertArray[i+3][j]);
+              }
+              for (j = 5; j < 9; j++) {
+                colorVertArray.push(vertArray[i+3][j]);
+              }
+
+              for (j = 0; j < 3; j++) {
+                fillVertArray.push(vertArray[i+2][j]);
+              }
+              for (j = 5; j < 9; j++) {
+                colorVertArray.push(vertArray[i+2][j]);
+              }
+
+              if (usingTexture) {
+                texVertArray.push(vertArray[i+0][3]);
+                texVertArray.push(vertArray[i+0][4]);
+                texVertArray.push(vertArray[i+1][3]);
+                texVertArray.push(vertArray[i+1][4]);
+                texVertArray.push(vertArray[i+3][3]);
+                texVertArray.push(vertArray[i+3][4]);
+                texVertArray.push(vertArray[i+2][3]);
+                texVertArray.push(vertArray[i+2][4]);
+              }
+
+              fill3D(fillVertArray, "TRIANGLE_STRIP", colorVertArray, texVertArray);
+            }
+          }
+        } else if (curShape === PConstants.QUAD_STRIP) {
+          var tempArray = [];
+          if (vertArrayLength > 3) {
+            for (i = 0; i < 2; i++) {
+              cachedVertArray = vertArray[i];
+              for (j = 0; j < 3; j++) {
+                lineVertArray.push(cachedVertArray[j]);
+              }
+            }
+
+            for (i = 0; i < 2; i++) {
+              cachedVertArray = vertArray[i];
+              for (j = 9; j < 13; j++) {
+                strokeVertArray.push(cachedVertArray[j]);
+              }
+            }
+
+            line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
+            if (vertArrayLength > 4 && vertArrayLength % 2 > 0) {
+              tempArray = fillVertArray.splice(fillVertArray.length - 3);
+              vertArray.pop();
+            }
+            for (i = 0; (i+3) < vertArrayLength; i+=2) {
+              lineVertArray = [];
+              strokeVertArray = [];
+              for (j = 0; j < 3; j++) {
+                lineVertArray.push(vertArray[i+1][j]);
+              }
+              for (j = 0; j < 3; j++) {
+                lineVertArray.push(vertArray[i+3][j]);
+              }
+              for (j = 0; j < 3; j++) {
+                lineVertArray.push(vertArray[i+2][j]);
+              }
+              for (j = 0; j < 3; j++) {
+                lineVertArray.push(vertArray[i+0][j]);
+              }
+              for (j = 9; j < 13; j++) {
+                strokeVertArray.push(vertArray[i+1][j]);
+              }
+              for (j = 9; j < 13; j++) {
+                strokeVertArray.push(vertArray[i+3][j]);
+              }
+              for (j = 9; j < 13; j++) {
+                strokeVertArray.push(vertArray[i+2][j]);
+              }
+              for (j = 9; j < 13; j++) {
+                strokeVertArray.push(vertArray[i+0][j]);
+              }
+              if (doStroke) {
+                line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
+              }
+            }
+
+            if (doFill || usingTexture) {
+              fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
+            }
+          }
+        }
+        // If the user didn't specify a type (LINES, TRIANGLES, etc)
+        else {
+          // If only one vertex was specified, it must be a point
+          if (vertArrayLength === 1) {
+            for (j = 0; j < 3; j++) {
+              lineVertArray.push(vertArray[0][j]);
+            }
+            for (j = 9; j < 13; j++) {
+              strokeVertArray.push(vertArray[0][j]);
+            }
+            point3D(lineVertArray,strokeVertArray);
+          } else {
+            for (i = 0; i < vertArrayLength; i++) {
+              cachedVertArray = vertArray[i];
+              for (j = 0; j < 3; j++) {
+                lineVertArray.push(cachedVertArray[j]);
+              }
+              for (j = 5; j < 9; j++) {
+                strokeVertArray.push(cachedVertArray[j]);
+              }
+            }
+            if (closeShape) {
+              line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
+            } else {
+              line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
+            }
+
+            // fill is ignored if textures are used
+            if (doFill || usingTexture) {
+              fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
+            }
+          }
+        }
+        // everytime beginShape is followed by a call to
+        // texture(), texturing it turned back on. We do this to
+        // figure out if the shape should be textured or filled
+        // with a color.
+        usingTexture = false;
+        curContext.useProgram(programObject3D);
+        uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
+      }
+      
+      // Reset some settings
       isCurve = false;
       isBezier = false;
       curveVertArray = [];
@@ -11789,51 +11863,57 @@
      * @see vertex
      * @see bezier
      */
-    p.bezierVertex = function bezierVertex() {
+    Drawing2D.prototype.bezierVertex = function() {
       isBezier = true;
       var vert = [];
       if (firstVert) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
-      } else {
-        if (arguments.length === 9) {
-          if (p.use3DContext) {
-            if (bezierDrawMatrix === undef) {
-              bezierDrawMatrix = new PMatrix3D();
-            }
-            // setup matrix for forward differencing to speed up drawing
-            var lastPoint = vertArray.length - 1;
-            splineForward( bezDetail, bezierDrawMatrix );
-            bezierDrawMatrix.apply( bezierBasisMatrix );
-            var draw = bezierDrawMatrix.array();
-            var x1 = vertArray[lastPoint][0],
-                y1 = vertArray[lastPoint][1],
-                z1 = vertArray[lastPoint][2];
-            var xplot1 = draw[4] * x1 + draw[5] * arguments[0] + draw[6] * arguments[3] + draw[7] * arguments[6];
-            var xplot2 = draw[8] * x1 + draw[9] * arguments[0] + draw[10]* arguments[3] + draw[11]* arguments[6];
-            var xplot3 = draw[12]* x1 + draw[13]* arguments[0] + draw[14]* arguments[3] + draw[15]* arguments[6];
-
-            var yplot1 = draw[4] * y1 + draw[5] * arguments[1] + draw[6] * arguments[4] + draw[7] * arguments[7];
-            var yplot2 = draw[8] * y1 + draw[9] * arguments[1] + draw[10]* arguments[4] + draw[11]* arguments[7];
-            var yplot3 = draw[12]* y1 + draw[13]* arguments[1] + draw[14]* arguments[4] + draw[15]* arguments[7];
-
-            var zplot1 = draw[4] * z1 + draw[5] * arguments[2] + draw[6] * arguments[5] + draw[7] * arguments[8];
-            var zplot2 = draw[8] * z1 + draw[9] * arguments[2] + draw[10]* arguments[5] + draw[11]* arguments[8];
-            var zplot3 = draw[12]* z1 + draw[13]* arguments[2] + draw[14]* arguments[5] + draw[15]* arguments[8];
-            for (var j = 0; j < bezDetail; j++) {
-              x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
-              y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
-              z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
-              p.vertex(x1, y1, z1);
-            }
-            p.vertex(arguments[6], arguments[7], arguments[8]);
-          }
-        } else {
-          for (var i = 0; i < arguments.length; i++) {
-            vert[i] = arguments[i];
-          }
-          vertArray.push(vert);
-          vertArray[vertArray.length -1]["isVert"] = false;
+      }
+      
+      for (var i = 0; i < arguments.length; i++) {
+        vert[i] = arguments[i];
+      }
+      vertArray.push(vert);
+      vertArray[vertArray.length -1]["isVert"] = false;
+    };
+    
+    Drawing3D.prototype.bezierVertex = function() {
+      isBezier = true;
+      var vert = [];
+      if (firstVert) {
+        throw ("vertex() must be used at least once before calling bezierVertex()");
+      }
+      
+      if (arguments.length === 9) {
+        if (bezierDrawMatrix === undef) {
+          bezierDrawMatrix = new PMatrix3D();
         }
+        // setup matrix for forward differencing to speed up drawing
+        var lastPoint = vertArray.length - 1;
+        splineForward( bezDetail, bezierDrawMatrix );
+        bezierDrawMatrix.apply( bezierBasisMatrix );
+        var draw = bezierDrawMatrix.array();
+        var x1 = vertArray[lastPoint][0],
+            y1 = vertArray[lastPoint][1],
+            z1 = vertArray[lastPoint][2];
+        var xplot1 = draw[4] * x1 + draw[5] * arguments[0] + draw[6] * arguments[3] + draw[7] * arguments[6];
+        var xplot2 = draw[8] * x1 + draw[9] * arguments[0] + draw[10]* arguments[3] + draw[11]* arguments[6];
+        var xplot3 = draw[12]* x1 + draw[13]* arguments[0] + draw[14]* arguments[3] + draw[15]* arguments[6];
+
+        var yplot1 = draw[4] * y1 + draw[5] * arguments[1] + draw[6] * arguments[4] + draw[7] * arguments[7];
+        var yplot2 = draw[8] * y1 + draw[9] * arguments[1] + draw[10]* arguments[4] + draw[11]* arguments[7];
+        var yplot3 = draw[12]* y1 + draw[13]* arguments[1] + draw[14]* arguments[4] + draw[15]* arguments[7];
+
+        var zplot1 = draw[4] * z1 + draw[5] * arguments[2] + draw[6] * arguments[5] + draw[7] * arguments[8];
+        var zplot2 = draw[8] * z1 + draw[9] * arguments[2] + draw[10]* arguments[5] + draw[11]* arguments[8];
+        var zplot3 = draw[12]* z1 + draw[13]* arguments[2] + draw[14]* arguments[5] + draw[15]* arguments[8];
+        for (var j = 0; j < bezDetail; j++) {
+          x1 += xplot1; xplot1 += xplot2; xplot2 += xplot3;
+          y1 += yplot1; yplot1 += yplot2; yplot2 += yplot3;
+          z1 += zplot1; zplot1 += zplot2; zplot2 += zplot3;
+          p.vertex(x1, y1, z1);
+        }
+        p.vertex(arguments[6], arguments[7], arguments[8]);
       }
     };
 
@@ -12012,36 +12092,38 @@
      * @see vertex
      * @see bezierVertex
      */
-    p.curveVertex = function(x, y, z) {
+    Drawing2D.prototype.curveVertex = function(x, y) {
       isCurve = true;
-      if(p.use3DContext){
-        if (!curveInited){
-          curveInit();
-        }
-        var vert = [];
-        vert[0] = x;
-        vert[1] = y;
-        vert[2] = z;
-        curveVertArray.push(vert);
-        curveVertCount++;
-
-        if (curveVertCount > 3){
-          curveVertexSegment( curveVertArray[curveVertCount-4][0],
-                              curveVertArray[curveVertCount-4][1],
-                              curveVertArray[curveVertCount-4][2],
-                              curveVertArray[curveVertCount-3][0],
-                              curveVertArray[curveVertCount-3][1],
-                              curveVertArray[curveVertCount-3][2],
-                              curveVertArray[curveVertCount-2][0],
-                              curveVertArray[curveVertCount-2][1],
-                              curveVertArray[curveVertCount-2][2],
-                              curveVertArray[curveVertCount-1][0],
-                              curveVertArray[curveVertCount-1][1],
-                              curveVertArray[curveVertCount-1][2] );
-        }
+      
+      p.vertex(x, y);
+    };
+    
+    Drawing3D.prototype.curveVertex = function(x, y, z) {
+      isCurve = true;
+      
+      if (!curveInited) {
+        curveInit();
       }
-      else{
-        p.vertex(x, y, z);
+      var vert = [];
+      vert[0] = x;
+      vert[1] = y;
+      vert[2] = z;
+      curveVertArray.push(vert);
+      curveVertCount++;
+
+      if (curveVertCount > 3) {
+        curveVertexSegment( curveVertArray[curveVertCount-4][0],
+                            curveVertArray[curveVertCount-4][1],
+                            curveVertArray[curveVertCount-4][2],
+                            curveVertArray[curveVertCount-3][0],
+                            curveVertArray[curveVertCount-3][1],
+                            curveVertArray[curveVertCount-3][2],
+                            curveVertArray[curveVertCount-2][0],
+                            curveVertArray[curveVertCount-2][1],
+                            curveVertArray[curveVertCount-2][2],
+                            curveVertArray[curveVertCount-1][0],
+                            curveVertArray[curveVertCount-1][1],
+                            curveVertArray[curveVertCount-1][2] );
       }
     };
 
@@ -12074,24 +12156,25 @@
      * @see #curveTightness()
      * @see #bezier()
      */
-    p.curve = function curve() {
-      if (arguments.length === 8) // curve(x1, y1, x2, y2, x3, y3, x4, y4)
-      {
+    Drawing2D.prototype.curve = function() {
+      if (arguments.length === 8) { // curve(x1, y1, x2, y2, x3, y3, x4, y4)
         p.beginShape();
         p.curveVertex(arguments[0], arguments[1]);
         p.curveVertex(arguments[2], arguments[3]);
         p.curveVertex(arguments[4], arguments[5]);
         p.curveVertex(arguments[6], arguments[7]);
         p.endShape();
-      } else { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
-        if (p.use3DContext) {
-          p.beginShape();
-          p.curveVertex(arguments[0], arguments[1], arguments[2]);
-          p.curveVertex(arguments[3], arguments[4], arguments[5]);
-          p.curveVertex(arguments[6], arguments[7], arguments[8]);
-          p.curveVertex(arguments[9], arguments[10], arguments[11]);
-          p.endShape();
-        }
+      }
+    };
+    
+    Drawing3D.prototype.curve = function() {
+      if (arguments.length === 12) { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+        p.beginShape();
+        p.curveVertex(arguments[0], arguments[1], arguments[2]);
+        p.curveVertex(arguments[3], arguments[4], arguments[5]);
+        p.curveVertex(arguments[6], arguments[7], arguments[8]);
+        p.curveVertex(arguments[9], arguments[10], arguments[11]);
+        p.endShape();
       }
     };
 
@@ -12301,85 +12384,87 @@
     * @see strokeCap
     * @see beginShape
     */
-    p.line = function line() {
+    Drawing2D.prototype.line = function() {
+      var x1, y1, x2, y2;
+      
+      x1 = arguments[0];
+      y1 = arguments[1];
+      x2 = arguments[2];
+      y2 = arguments[3];
+
+      // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
+      if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
+        var temp;
+        if (x1 === x2) {
+          if (y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
+          for (var y=y1;y<=y2;++y) {
+            p.set(x1, y, currentStrokeColor);
+          }
+        } else {
+          if (x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
+          for (var x=x1;x<=x2;++x) {
+            p.set(x, y1, currentStrokeColor);
+          }
+        }
+        return;
+      }
+
+      if (doStroke) {
+        curContext.beginPath();
+        curContext.moveTo(x1 || 0, y1 || 0);
+        curContext.lineTo(x2 || 0, y2 || 0);
+        executeContextStroke();
+        curContext.closePath();
+      }
+    };
+    
+    Drawing3D.prototype.line = function() {
       var x1, y1, z1, x2, y2, z2;
-
-      if (p.use3DContext) {
-        if (arguments.length === 6) {
-          x1 = arguments[0];
-          y1 = arguments[1];
-          z1 = arguments[2];
-          x2 = arguments[3];
-          y2 = arguments[4];
-          z2 = arguments[5];
-        } else if (arguments.length === 4) {
-          x1 = arguments[0];
-          y1 = arguments[1];
-          z1 = 0;
-          x2 = arguments[2];
-          y2 = arguments[3];
-          z2 = 0;
-        }
-
-        var lineVerts = [x1, y1, z1, x2, y2, z2];
-
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
-
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
-
-        if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject2D);
-
-          uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
-          uniformMatrix("view2d", programObject2D, "view", false, view.array());
-          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
-
-          curContext.lineWidth(lineWidth);
-
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, lineBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
-          curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
-          curContext.drawArrays(curContext.LINES, 0, 2);
-        }
-      } else {
+      
+      if (arguments.length === 6) {
         x1 = arguments[0];
         y1 = arguments[1];
+        z1 = arguments[2];
+        x2 = arguments[3];
+        y2 = arguments[4];
+        z2 = arguments[5];
+      } else if (arguments.length === 4) {
+        x1 = arguments[0];
+        y1 = arguments[1];
+        z1 = 0;
         x2 = arguments[2];
         y2 = arguments[3];
+        z2 = 0;
+      }
 
-        // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
-        if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
-          var temp;
-          if(x1 === x2) {
-            if(y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
-            for(var y=y1;y<=y2;++y) {
-              p.set(x1, y, currentStrokeColor);
-            }
-          } else {
-            if(x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
-            for(var x=x1;x<=x2;++x) {
-              p.set(x, y1, currentStrokeColor);
-            }
-          }
-          return;
-        }
+      var lineVerts = [x1, y1, z1, x2, y2, z2];
 
-        if (doStroke) {
-          curContext.beginPath();
-          curContext.moveTo(x1 || 0, y1 || 0);
-          curContext.lineTo(x2 || 0, y2 || 0);
-          executeContextStroke();
-          curContext.closePath();
-        }
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
+
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+
+      if (lineWidth > 0 && doStroke) {
+        curContext.useProgram(programObject2D);
+
+        uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
+
+        curContext.lineWidth(lineWidth);
+
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, lineBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
+
+        curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
+        curContext.drawArrays(curContext.LINES, 0, 2);
       }
     };
 
@@ -12398,26 +12483,30 @@
      * @see bezierVertex
      * @see curve
      */
-    p.bezier = function bezier() {
-      if( arguments.length === 8 && !p.use3DContext ){
-          p.beginShape();
-          p.vertex( arguments[0], arguments[1] );
-          p.bezierVertex( arguments[2], arguments[3],
-                          arguments[4], arguments[5],
-                          arguments[6], arguments[7] );
-          p.endShape();
+    Drawing2D.prototype.bezier = function() {
+      if (arguments.length !== 8) {
+        throw("You must use 8 parameters for bezier() in 2D mode");
       }
-      else if( arguments.length === 12 && p.use3DContext ){
-          p.beginShape();
-          p.vertex( arguments[0], arguments[1], arguments[2] );
-          p.bezierVertex( arguments[3], arguments[4], arguments[5],
-                          arguments[6], arguments[7], arguments[8],
-                          arguments[9], arguments[10], arguments[11] );
-          p.endShape();
+      
+      p.beginShape();
+      p.vertex( arguments[0], arguments[1] );
+      p.bezierVertex( arguments[2], arguments[3],
+                      arguments[4], arguments[5],
+                      arguments[6], arguments[7] );
+      p.endShape();
+    };
+    
+    Drawing3D.prototype.bezier = function() {
+      if (arguments.length !== 12) {
+        throw("You must use 12 parameters for bezier() in 3D mode");
       }
-      else {
-        throw("Please use the proper parameters!");
-      }
+      
+      p.beginShape();
+      p.vertex( arguments[0], arguments[1], arguments[2] );
+      p.bezierVertex( arguments[3], arguments[4], arguments[5],
+                      arguments[6], arguments[7], arguments[8],
+                      arguments[9], arguments[10], arguments[11] );
+      p.endShape();
     };
 
     /**
@@ -12568,130 +12657,128 @@
     * @see rectMode
     * @see quad
     */
-    p.rect = function rect(x, y, width, height) {
-      if (p.use3DContext) {
-        // Modeling transformation
-        var model = new PMatrix3D();
-        model.translate(x, y, 0);
-        model.scale(width, height, 1);
-        model.transpose();
-
-        // viewing transformation needs to have Y flipped
-        // becuase that's what Processing does.
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-        view.transpose();
-
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
-
-        if (lineWidth > 0 && doStroke) {
-          curContext.useProgram(programObject2D);
-          uniformMatrix("model2d", programObject2D, "model", false, model.array());
-          uniformMatrix("view2d", programObject2D, "view", false, view.array());
-          uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
-          uniformf("color2d", programObject2D, "color", strokeStyle);
-          uniformi("picktype2d", programObject2D, "picktype", 0);
-
-          vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
-          disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
-          curContext.lineWidth(lineWidth);
-          curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
-        }
-
-        if (doFill) {
-          curContext.useProgram(programObject3D);
-          uniformMatrix("model3d", programObject3D, "model", false, model.array());
-          uniformMatrix("view3d", programObject3D, "view", false, view.array());
-          uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
-
-          // fix stitching problems. (lines get occluded by triangles
-          // since they share the same depth values). This is not entirely
-          // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles.
-          curContext.enable(curContext.POLYGON_OFFSET_FILL);
-          curContext.polygonOffset(1, 1);
-
-          uniformf("color3d", programObject3D, "color", fillStyle);
-
-          if(lightCount > 0){
-            var v = new PMatrix3D();
-            v.set(view);
-
-            var m = new PMatrix3D();
-            m.set(model);
-
-            v.mult(m);
-
-            var normalMatrix = new PMatrix3D();
-            normalMatrix.set(v);
-            normalMatrix.invert();
-            normalMatrix.transpose();
-
-            uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
-            vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
-          }
-          else{
-            disableVertexAttribPointer("normal3d", programObject3D, "Normal");
-          }
-          
-          vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
-
-
-          curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
-          curContext.disable(curContext.POLYGON_OFFSET_FILL);
-        }
+    Drawing2D.prototype.rect = function(x, y, width, height) {
+      if (!width && !height) {
+        return;
       }
-      else{
-        if (!width && !height) {
-          return;
+
+      // if only stroke is enabled, do it "crisp"
+      if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
+        var i, x2 = x + width - 1, y2 = y + height - 1;
+        for (i=0;i<width;++i) {
+          p.set(x + i, y, currentStrokeColor);
+          p.set(x + i, y2, currentStrokeColor);
         }
-
-        // if only stroke is enabled, do it "crisp"
-        if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
-          var i, x2 = x + width - 1, y2 = y + height - 1;
-          for(i=0;i<width;++i) {
-            p.set(x + i, y, currentStrokeColor);
-            p.set(x + i, y2, currentStrokeColor);
-          }
-          for(i=0;i<height;++i) {
-            p.set(x, y + i, currentStrokeColor);
-            p.set(x2, y + i, currentStrokeColor);
-          }
-          return;
+        for (i=0;i<height;++i) {
+          p.set(x, y + i, currentStrokeColor);
+          p.set(x2, y + i, currentStrokeColor);
         }
+        return;
+      }
 
-        curContext.beginPath();
+      curContext.beginPath();
 
-        var offsetStart = 0;
-        var offsetEnd = 0;
+      var offsetStart = 0;
+      var offsetEnd = 0;
 
-        if (curRectMode === PConstants.CORNERS) {
-          width -= x;
-          height -= y;
+      if (curRectMode === PConstants.CORNERS) {
+        width -= x;
+        height -= y;
+      }
+
+      if (curRectMode === PConstants.RADIUS) {
+        width *= 2;
+        height *= 2;
+      }
+
+      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      }
+
+      curContext.rect(
+      Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
+
+      executeContextFill();
+      executeContextStroke();
+
+      curContext.closePath();
+    };
+    
+    Drawing3D.prototype.rect = function(x, y, width, height) {
+      // Modeling transformation
+      var model = new PMatrix3D();
+      model.translate(x, y, 0);
+      model.scale(width, height, 1);
+      model.transpose();
+
+      // viewing transformation needs to have Y flipped
+      // becuase that's what Processing does.
+      var view = new PMatrix3D();
+      view.scale(1, -1, 1);
+      view.apply(modelView.array());
+      view.transpose();
+
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+
+      if (lineWidth > 0 && doStroke) {
+        curContext.useProgram(programObject2D);
+        uniformMatrix("model2d", programObject2D, "model", false, model.array());
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+
+        uniformf("color2d", programObject2D, "color", strokeStyle);
+        uniformi("picktype2d", programObject2D, "picktype", 0);
+
+        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
+        disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
+
+        curContext.lineWidth(lineWidth);
+        curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
+      }
+
+      if (doFill) {
+        curContext.useProgram(programObject3D);
+        uniformMatrix("model3d", programObject3D, "model", false, model.array());
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());
+        uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+
+        // fix stitching problems. (lines get occluded by triangles
+        // since they share the same depth values). This is not entirely
+        // working, but it's a start for drawing the outline. So
+        // developers can start playing around with styles.
+        curContext.enable(curContext.POLYGON_OFFSET_FILL);
+        curContext.polygonOffset(1, 1);
+
+        uniformf("color3d", programObject3D, "color", fillStyle);
+
+        if(lightCount > 0){
+          var v = new PMatrix3D();
+          v.set(view);
+
+          var m = new PMatrix3D();
+          m.set(model);
+
+          v.mult(m);
+
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+          normalMatrix.transpose();
+
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
         }
-
-        if (curRectMode === PConstants.RADIUS) {
-          width *= 2;
-          height *= 2;
+        else{
+          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
         }
+        
+        vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
 
-        if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
-          x -= width / 2;
-          y -= height / 2;
-        }
-
-        curContext.rect(
-        Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
-
-        executeContextFill();
-        executeContextStroke();
-
-        curContext.closePath();
+        curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
+        curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
     };
 
@@ -12707,7 +12794,7 @@
      *
      * @see ellipseMode
      */
-    p.ellipse = function ellipse(x, y, width, height) {
+    DrawingShared.prototype.ellipse = function(x, y, width, height) {
       x = x || 0;
       y = y || 0;
 
@@ -12729,82 +12816,109 @@
         x += width / 2;
         y += height / 2;
       }
-
-      var offsetStart = 0;
-
+      
+      return {'x':x, 'y':y, 'width':width, 'height':height};
+    };
+    
+    Drawing2D.prototype.ellipse = function(x, y, width, height) {
+      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
+      
+      if (!params) {
+        return;
+      }
+      
+      x = params['x'];
+      y = params['y'];
+      width = params['width'];
+      height = params['height'];
+      
       // Shortcut for drawing a 2D circle
-      if ((!p.use3DContext) && (width === height)) {
+      if (width === height) {
         curContext.beginPath();
         curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, PConstants.TWO_PI, false);
         executeContextFill();
         executeContextStroke();
         curContext.closePath();
-      }
-      else {
+      } else {
         var w = width / 2,
           h = height / 2,
           C = 0.5522847498307933;
         var c_x = C * w,
           c_y = C * h;
+        
+        p.beginShape();
+        p.vertex(x + w, y);
+        p.bezierVertex(x + w, y - c_y, x + c_x, y - h, x, y - h);
+        p.bezierVertex(x - c_x, y - h, x - w, y - c_y, x - w, y);
+        p.bezierVertex(x - w, y + c_y, x - c_x, y + h, x, y + h);
+        p.bezierVertex(x + c_x, y + h, x + w, y + c_y, x + w, y);
+        p.endShape();
+      }
+    };
+    
+    Drawing3D.prototype.ellipse = function(x, y, width, height) {
+      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
+      
+      if (!params) {
+        return;
+      }
+      
+      x = params['x'];
+      y = params['y'];
+      width = params['width'];
+      height = params['height'];
+      
+      var w = width / 2,
+        h = height / 2,
+        C = 0.5522847498307933;
+      var c_x = C * w,
+        c_y = C * h;
+      
+      p.beginShape();
+      p.vertex(x + w, y);
+      p.bezierVertex(x + w, y - c_y, 0, x + c_x, y - h, 0, x, y - h, 0);
+      p.bezierVertex(x - c_x, y - h, 0, x - w, y - c_y, 0, x - w, y, 0);
+      p.bezierVertex(x - w, y + c_y, 0, x - c_x, y + h, 0, x, y + h, 0);
+      p.bezierVertex(x + c_x, y + h, 0, x + w, y + c_y, 0, x + w, y, 0);
+      p.endShape();
 
-        if(!p.use3DContext){
-          // TODO: Audit
-          p.beginShape();
-          p.vertex(x + w, y);
-          p.bezierVertex(x + w, y - c_y, x + c_x, y - h, x, y - h);
-          p.bezierVertex(x - c_x, y - h, x - w, y - c_y, x - w, y);
-          p.bezierVertex(x - w, y + c_y, x - c_x, y + h, x, y + h);
-          p.bezierVertex(x + c_x, y + h, x + w, y + c_y, x + w, y);
-          p.endShape();
+      //temporary workaround to not working fills for bezier -- will fix later
+      var xAv = 0, yAv = 0, i, j;
+      for (i = 0; i < vertArray.length; i++) {
+        xAv += vertArray[i][0];
+        yAv += vertArray[i][1];
+      }
+      xAv /= vertArray.length;
+      yAv /= vertArray.length;
+      var vert = [],
+          fillVertArray = [],
+          colorVertArray = [];
+      vert[0] = xAv;
+      vert[1] = yAv;
+      vert[2] = 0;
+      vert[3] = 0;
+      vert[4] = 0;
+      vert[5] = fillStyle[0];
+      vert[6] = fillStyle[1];
+      vert[7] = fillStyle[2];
+      vert[8] = fillStyle[3];
+      vert[9] = strokeStyle[0];
+      vert[10] = strokeStyle[1];
+      vert[11] = strokeStyle[2];
+      vert[12] = strokeStyle[3];
+      vert[13] = normalX;
+      vert[14] = normalY;
+      vert[15] = normalZ;
+      vertArray.unshift(vert);
+      for (i = 0; i < vertArray.length; i++) {
+        for (j = 0; j < 3; j++) {
+          fillVertArray.push(vertArray[i][j]);
         }
-        else{
-          p.beginShape();
-          p.vertex(x + w, y);
-          p.bezierVertex(x + w, y - c_y, 0, x + c_x, y - h, 0, x, y - h, 0);
-          p.bezierVertex(x - c_x, y - h, 0, x - w, y - c_y, 0, x - w, y, 0);
-          p.bezierVertex(x - w, y + c_y, 0, x - c_x, y + h, 0, x, y + h, 0);
-          p.bezierVertex(x + c_x, y + h, 0, x + w, y + c_y, 0, x + w, y, 0);
-          p.endShape();
-
-          //temporary workaround to not working fills for bezier -- will fix later
-          var xAv = 0, yAv = 0, i, j;
-          for(i = 0; i < vertArray.length; i++){
-            xAv += vertArray[i][0];
-            yAv += vertArray[i][1];
-          }
-          xAv /= vertArray.length;
-          yAv /= vertArray.length;
-          var vert = [],
-              fillVertArray = [],
-              colorVertArray = [];
-          vert[0] = xAv;
-          vert[1] = yAv;
-          vert[2] = 0;
-          vert[3] = 0;
-          vert[4] = 0;
-          vert[5] = fillStyle[0];
-          vert[6] = fillStyle[1];
-          vert[7] = fillStyle[2];
-          vert[8] = fillStyle[3];
-          vert[9] = strokeStyle[0];
-          vert[10] = strokeStyle[1];
-          vert[11] = strokeStyle[2];
-          vert[12] = strokeStyle[3];
-          vert[13] = normalX;
-          vert[14] = normalY;
-          vert[15] = normalZ;
-          vertArray.unshift(vert);
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 0; j < 3; j++){
-              fillVertArray.push(vertArray[i][j]);
-            }
-            for(j = 5; j < 9; j++){
-              colorVertArray.push(vertArray[i][j]);
-            }
-          }
-          fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
+        for (j = 5; j < 9; j++) {
+          colorVertArray.push(vertArray[i][j]);
         }
       }
+      fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
     };
 
     /**
@@ -13280,6 +13394,12 @@
         this.height = aHeight || 1;
         this.imageData = utilityContext2d.createImageData(this.width, this.height);
         this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
+        if (this.format === PConstants.RGB) {
+          // Set the alpha channel of an RGB image to opaque.
+          for (var i = 3, data = this.imageData.data, len = data.length; i < len; i += 4) {
+            data[i] = 255;
+          }
+        }
       } else {
         this.width = 0;
         this.height = 0;
@@ -13537,11 +13657,10 @@
       *
       * @see PImage
       */
-      pg.toImageData = function() {
-        var curContext = this.externals.context;
-        if(!this.use3DContext){
-          return curContext.getImageData(0, 0, this.width, this.height);
-        } else {
+      if (render === PConstants.WEBGL) {
+        pg.toImageData = function() { // 3D
+          var curContext = this.externals.context;
+          
           var c = document.createElement("canvas");
           var ctx = c.getContext("2d");
           var obj = ctx.createImageData(this.width, this.height);
@@ -13550,10 +13669,16 @@
           for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
             obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
           }
-
+          
           return obj;
-        }
-      };
+        };
+      } else {
+        pg.toImageData = function() { // 2D
+          var curContext = this.externals.context;
+          
+          return curContext.getImageData(0, 0, this.width, this.height);
+        };
+      }
 
       return pg;
     };
@@ -13824,63 +13949,68 @@
      * @see #tint()
      * @see #colorMode()
      */
-    // Draw an image or a color to the background
-    p.background = function background() {
-      var color, a, img;
-      // background params are either a color or a PImage
-      if (typeof arguments[0] === 'number') {
+    DrawingShared.prototype.background = function() {
+      var color, img;
+      // background params are either a color, a PImage or undefined which reapplies the lastBackgroundObj
+      if (arguments.length === 1 && typeof arguments[0] === 'number') {
         color = p.color.apply(this, arguments);
 
         // override alpha value, processing ignores the alpha for background color
         if (!curSketch.options.isTransparent) {
           color = color | PConstants.ALPHA_MASK;
         }
+        
+        lastBackgroundObj = color;
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
         img = arguments[0];
 
         if (!img.pixels || img.width !== p.width || img.height !== p.height) {
           throw "Background image must be the same dimensions as the canvas.";
         }
+        
+        lastBackgroundObj = img;
+      } else if (lastBackgroundObj === undefined) {
+        color = p.color(204);
+
+        // override alpha value, processing ignores the alpha for background color
+        if (!curSketch.options.isTransparent) {
+          color = color | PConstants.ALPHA_MASK;
+        }
+        
+        lastBackgroundObj = color;
+      }
+    };
+    
+    Drawing2D.prototype.background = function() {
+      DrawingShared.prototype.background.apply(this, arguments);
+      
+      if (typeof lastBackgroundObj === 'number') {
+        saveContext();
+        curContext.setTransform(1, 0, 0, 1, 0, 0);
+
+        if (curSketch.options.isTransparent) {
+          curContext.clearRect(0,0, p.width, p.height);
+        }
+        curContext.fillStyle = p.color.toString(lastBackgroundObj);
+        curContext.fillRect(0, 0, p.width, p.height);
+        isFillDirty = true;
+        restoreContext();
       } else {
-        throw "Incorrect background parameters.";
+        saveContext();
+        curContext.setTransform(1, 0, 0, 1, 0, 0);
+        p.image(lastBackgroundObj, 0, 0);
+        restoreContext();
       }
-
-      if (p.use3DContext) {
-        if (color !== undef) {
-          var c = p.color.toGLArray(color);
-          refreshBackground = function() {
-            curContext.clearColor(c[0], c[1], c[2], c[3]);
-            curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
-          };
-        } else {
-          // Handle image background for 3d context. not done yet.
-          refreshBackground = function() {};
-        }
-      } else { // 2d context
-        if (color !== undef) {
-          refreshBackground = function() {
-            saveContext();
-            curContext.setTransform(1, 0, 0, 1, 0, 0);
-
-            if (curSketch.options.isTransparent) {
-              curContext.clearRect(0,0, p.width, p.height);
-            }
-            curContext.fillStyle = p.color.toString(color);
-            curContext.fillRect(0, 0, p.width, p.height);
-            isFillDirty = true;
-            restoreContext();
-          };
-        } else {
-          refreshBackground = function() {
-            saveContext();
-            curContext.setTransform(1, 0, 0, 1, 0, 0);
-            p.image(img, 0, 0);
-            restoreContext();
-          };
-        }
-      }
-
-      refreshBackground();
+    };
+    
+    Drawing3D.prototype.background = function() {
+      DrawingShared.prototype.background.apply(this, arguments);
+      
+      var c = p.color.toGLArray(lastBackgroundObj);
+      curContext.clearColor(c[0], c[1], c[2], c[3]);
+      curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+      
+      // An image as a background in 3D is not implemented yet
     };
 
     // Draws an image to the Canvas
@@ -13907,55 +14037,60 @@
     * @see background
     * @see alpha
     */
-    p.image = function image(img, x, y, w, h) {
+    Drawing2D.prototype.image = function(img, x, y, w, h) {
       if (img.width > 0) {
         var wid = w || img.width;
         var hgt = h || img.height;
-        if (p.use3DContext) {
-          p.beginShape(p.QUADS);
-          p.texture(img.externals.canvas);
-          p.vertex(x, y, 0, 0, 0);
-          p.vertex(x, y+hgt, 0, 0, hgt);
-          p.vertex(x+wid, y+hgt, 0, wid, hgt);
-          p.vertex(x+wid, y, 0, wid, 0);
-          p.endShape();
+        
+        var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
+        var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
+        if (fastImage) {
+          var htmlElement = img.sourceImg;
+          // Using HTML element's width and height in case if the image was resized.
+          curContext.drawImage(htmlElement, 0, 0,
+            htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
         } else {
-          var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-          //var fastImage = ("sourceImg" in img) && curTint === null && !img.__mask;
-          var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
-          if (fastImage) {
-            var htmlElement = img.sourceImg;
-            // Using HTML element's width and height in case if the image was resized.
-            curContext.drawImage(htmlElement, 0, 0,
-              htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
-          } else {
-            var obj = img.toImageData();
+          var obj = img.toImageData();
 
-            if (img.__mask) {
-              var j, size;
-              if (img.__mask.constructor.name === "PImage") {
-                var objMask = img.__mask.toImageData();
-                for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
-                  // using it as an alpha channel
-                  obj.data[j + 1] = objMask.data[j];
-                  // but only the blue color channel
-                }
-              } else {
-                for (j = 0, size = img.__mask.length; j < size; ++j) {
-                  obj.data[(j << 2) + 3] = img.__mask[j];
-                }
+          if (img.__mask) {
+            var j, size;
+            if (img.__mask.constructor.name === "PImage") {
+              var objMask = img.__mask.toImageData();
+              for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
+                // using it as an alpha channel
+                obj.data[j + 1] = objMask.data[j];
+                // but only the blue color channel
+              }
+            } else {
+              for (j = 0, size = img.__mask.length; j < size; ++j) {
+                obj.data[(j << 2) + 3] = img.__mask[j];
               }
             }
-
-            // Tint the image
-            if(curTint !== null) {
-              curTint(obj);
-            }
-
-            curContext.drawImage(getCanvasData(obj).canvas, 0, 0,
-              img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
           }
+
+          // Tint the image
+          if (curTint !== null) {
+            curTint(obj);
+          }
+
+          curContext.drawImage(getCanvasData(obj).canvas, 0, 0,
+            img.width, img.height, bounds.x, bounds.y, bounds.w, bounds.h);
         }
+      }
+    };
+    
+    Drawing3D.prototype.image = function(img, x, y, w, h) {
+      if (img.width > 0) {
+        var wid = w || img.width;
+        var hgt = h || img.height;
+        
+        p.beginShape(p.QUADS);
+        p.texture(img.externals.canvas);
+        p.vertex(x, y, 0, 0, 0);
+        p.vertex(x, y+hgt, 0, 0, hgt);
+        p.vertex(x+wid, y+hgt, 0, wid, hgt);
+        p.vertex(x+wid, y, 0, wid, 0);
+        p.endShape();
       }
     };
 
@@ -15160,29 +15295,29 @@
      * @see #text
      * @see #textFont
      */
-    p.textWidth = function textWidth(str) {
-      if (p.use3DContext) {
-        if (textcanvas === undef) {
-          textcanvas = document.createElement("canvas");
-        }
-        var oldContext = curContext;
-        curContext = textcanvas.getContext("2d");
-        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-        if ("fillText" in curContext) {
-          textcanvas.width = curContext.measureText(str).width;
-        } else if ("mozDrawText" in curContext) {
-          textcanvas.width = curContext.mozMeasureText(str);
-        }
-        curContext = oldContext;
-        return textcanvas.width;
-      } else {
-        curContext.font = curTextSize + "px " + curTextFont.name;
-        if ("fillText" in curContext) {
-          return curContext.measureText(str).width;
-        } else if ("mozDrawText" in curContext) {
-          return curContext.mozMeasureText(str);
-        }
+    Drawing2D.prototype.textWidth = function(str) {
+      curContext.font = curTextSize + "px " + curTextFont.name;
+      if ("fillText" in curContext) {
+        return curContext.measureText(str).width;
+      } else if ("mozDrawText" in curContext) {
+        return curContext.mozMeasureText(str);
       }
+    };
+    
+    Drawing3D.prototype.textWidth = function(str) {
+      if (textcanvas === undef) {
+        textcanvas = document.createElement("canvas");
+      }
+      var oldContext = curContext;
+      curContext = textcanvas.getContext("2d");
+      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      if ("fillText" in curContext) {
+        textcanvas.width = curContext.measureText(str).width;
+      } else if ("mozDrawText" in curContext) {
+        textcanvas.width = curContext.mozMeasureText(str);
+      }
+      curContext = oldContext;
+      return textcanvas.width;
     };
 
     p.textLeading = function textLeading(leading) {
@@ -15433,7 +15568,7 @@
     }
 
     // Print some text to the Canvas
-    function text$line(str, x, y, z, align) {
+    Drawing2D.prototype.text$line = function(str, x, y, z, align) {
       var textWidth = 0, xOffset = 0;
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
@@ -15499,9 +15634,9 @@
         }
         restoreContext();
       }
-    }
+    };
 
-    function text$line$3d(str, x, y, z, align) {
+    Drawing3D.prototype.text$line = function(str, x, y, z, align) {
       // handle case for 3d text
       if (textcanvas === undef) {
         textcanvas = document.createElement("canvas");
@@ -15522,7 +15657,7 @@
       curContext.textBaseline="top";
 
       // paint on 2D canvas
-      text$line(str,0,0,0,PConstants.LEFT);
+      Drawing2D.prototype.text$line(str,0,0,0,PConstants.LEFT);
 
       // use it as a texture
       var aspect = textcanvas.width/textcanvas.height;
@@ -15571,10 +15706,9 @@
       uniformf("color2d", programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
-    }
+    };
 
     function text$4(str, x, y, z) {
-      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       var lines, linesCount;
       if(str.indexOf('\n') < 0) {
         lines = [str];
@@ -15597,7 +15731,7 @@
       }
       for(var i=0;i<linesCount;++i) {
         var line = lines[i];
-        lineFunction(line, x, y + yOffset, z, horizontalTextAlignment);
+        drawing.text$line(line, x, y + yOffset, z, horizontalTextAlignment);
         yOffset += curTextLeading;
       }
     }
@@ -15675,7 +15809,6 @@
       }
 
       // determine which function to use for drawing text
-      var lineFunction = p.use3DContext ?  text$line$3d : text$line;
       var xOffset = 0;
       if(horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width / 2;
@@ -15698,7 +15831,7 @@
         // stop if no enough space for one more line draw
         if (drawCommand.offset + boxYOffset2 + curTextSize > height) { break; }
         // finally, draw text on canvas
-        lineFunction(drawCommand.text, x + xOffset, y + drawCommand.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
+        drawing.text$line(drawCommand.text, x + xOffset, y + drawCommand.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
       }
     }
 
@@ -15995,13 +16128,14 @@
 
       var properties = [];
       for (var propertyName in baseClass) {
-        if (!(propertyName in subClass)) {
-          if (typeof baseClass[propertyName] === 'function') {
+        if (typeof baseClass[propertyName] === 'function') {
+          // Overriding all non-overriden functions
+          if (!subClass.hasOwnProperty(propertyName)) {
             subClass[propertyName] = baseClass[propertyName];
-          } else if(propertyName !== "$upcast") {
-            // Delaying the properties extension due to the IE9 bug (see #918).
-            properties.push(propertyName);
           }
+        } else if(propertyName !== "$upcast" && !(propertyName in subClass)) {
+          // Delaying the properties extension due to the IE9 bug (see #918).
+          properties.push(propertyName);
         }
       }
       while (properties.length > 0) {
@@ -16609,6 +16743,57 @@
     // Place-holder for debugging function
     Processing.debug = function(e) {};
 
+    var wireDimensionalFunctions = function(mode) {
+      // Drawing2D/Drawing3D
+      if (mode === '3D') {
+        drawing = new Drawing3D();
+      } else {
+        drawing = new Drawing2D();
+      }
+      
+      // Wire up functions (Should this be put into an array instead?)
+      p.translate = drawing.translate;
+      p.scale = drawing.scale;
+      p.pushMatrix = drawing.pushMatrix;
+      p.popMatrix = drawing.popMatrix;
+      p.resetMatrix = drawing.resetMatrix;
+      p.applyMatrix = drawing.applyMatrix;
+      p.rotate = drawing.rotate;
+      p.redraw = drawing.redraw;
+      p.size = drawing.size;
+      p.ambientLight = drawing.ambientLight;
+      p.directionalLight = drawing.directionalLight;
+      p.lightFalloff = drawing.lightFalloff;
+      p.lightSpecular = drawing.lightSpecular;
+      p.pointLight = drawing.pointLight;
+      p.noLights = drawing.noLights;
+      p.spotLight = drawing.spotLight;
+      p.box = drawing.box;
+      p.sphere = drawing.sphere;
+      p.ambient = drawing.ambient;
+      p.emissive = drawing.emissive;
+      p.shininess = drawing.shininess;
+      p.specular = drawing.specular;
+      p.fill = drawing.fill;
+      p.stroke = drawing.stroke;
+      p.strokeWeight = drawing.strokeWeight;
+      p.smooth = drawing.smooth;
+      p.noSmooth = drawing.noSmooth;
+      p.point = drawing.point;
+      p.vertex = drawing.vertex;
+      p.endShape = drawing.endShape;
+      p.bezierVertex = drawing.bezierVertex;
+      p.curveVertex = drawing.curveVertex;
+      p.curve = drawing.curve;
+      p.line = drawing.line;
+      p.bezier = drawing.bezier;
+      p.rect = drawing.rect;
+      p.ellipse = drawing.ellipse;
+      p.background = drawing.background;
+      p.image = drawing.image;
+      p.textWidth = drawing.textWidth;
+    };
+
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
       if (aCode instanceof Processing.Sketch) {
@@ -16629,6 +16814,13 @@
       // Expose internal field for diagnostics and testing
       p.externals.sketch = curSketch;
 
+      if (curSketch.use3DContext) {
+        wireDimensionalFunctions('3D');
+      } else {
+        wireDimensionalFunctions('2D');
+      }
+      
+      // For ref/perf test compatibility until those are fixed
       p.use3DContext = curSketch.use3DContext;
 
       if ("mozOpaque" in curElement) {
@@ -16691,12 +16883,8 @@
 
       if (!curSketch.use3DContext) {
         // Setup default 2d canvas context.
-        curContext = curElement.getContext('2d');
-
-        // Externalize the default context
-        p.externals.context = curContext;
-
-        modelView = new PMatrix2D();
+        // Moving this here removes the number of times we need to check the 3D variable
+        p.size(100, 100);
 
         // Canvas has trouble rendering single pixel stuff on whole-pixel
         // counts, so we slightly offset it (this is super lame).
@@ -16705,8 +16893,6 @@
         curContext.lineCap = 'round';
 
         // Set default stroke and fill color
-        p.stroke(0);
-        p.fill(255);
         p.noSmooth();
         p.disableContextMenu();
       }
@@ -16724,21 +16910,9 @@
         }
       }
 
-      // Sets all of the Processing defaults. Called before setup() in executeSketch()
-      var setDefaults = function(processing) {
-        // Default size in P5 is 100x100 with a light gray background, but only set this for 2D
-        if (!processing.use3DContext) {
-          processing.size(100, 100);
-          processing.background(204, 204, 204);
-        }
-      };
-
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
-          // Run void setDefaults() before attach() to work with embedded scripts
-          setDefaults(processing);
-
           curSketch.attach(processing, defaultScope);
 
           // Run void setup()
@@ -16776,6 +16950,17 @@
       // or called via createGraphics
       curSketch = new Processing.Sketch();
       curSketch.options.isTransparent = true;
+      
+      // Hack to make PGraphics work again after splitting size()
+      p.size = function(w, h, render) {
+        if (render && render === PConstants.WEBGL) {
+          wireDimensionalFunctions('3D');
+        } else {
+          wireDimensionalFunctions('2D');
+        }
+        
+        p.size(w, h, render);
+      };
     }
   }; // Processing() ends
 
@@ -17778,7 +17963,7 @@
         else { cstrs.push(index); }
         return "";
       });
-      var fields = declarations.split(/;(?:\s*;)*/g);
+      var fields = declarations.replace(/^(?:\s*;)+/, "").split(/;(?:\s*;)*/g);
       var baseClassName;
       var i;
 

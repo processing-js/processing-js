@@ -1,3 +1,54 @@
+March 29, 2011 - Release 1.1.1
+
+  * Add known failures to ref tests 
+  * Convert test-suite tests to REF tests 
+  * Fixed inheritance for certain (js object) methods still broken (1.1)
+  * Fixed more extra semi-colon breaking 
+  * Fixed createImage for RGB format produces image with transparent background 
+  * Removed String.prototype.match and .replace in IE9 
+  * Removed static beginCamera/endCamera examples from repo 
+  * Re-factor 3D and 2D drawing functions into separate objects 
+  
+March 1, 2011 - Release 1.1
+
+  * Added mouseover, mouseout events
+  * Added parseBoolean()
+  * Added make file option to create an API only version of processing.js
+  * Added webkit touch events natively in pjs
+  * Added custom pjs packager for pre-parsed code
+  * Added Java for each loop is now supported
+  * Fixed PJS defaults not matching P5 where reasonable
+  * Fixed 3D demos broken on systems running OSX 10.6 using nVidia cards
+  * Fixed key event filtering per sketch (multi-sketch page setup)
+  * Fixed xmlElementRemoveAttribute test failing
+  * Fixed XMLElement.parseChildrenRecursive
+  * Fixed XMLElement constructor returning this
+  * Fixed OO bug with classes
+  * Fixed Processing instances not always being added to Processing.instances
+  * Fixed P3D not respecting noFill()
+  * Fixed ref test runner broken on IE9
+  * Fixed ajax() should be asynchronous
+  * Fixed XMLElement.getChildren(path) not returning all the children
+  * Fixed inheriting from ArrayList failing
+  * Fixed toImageData() scope issue
+  * Fixed ArrayList contains() not checking equality (1.0)
+  * Fixed shaders being broken with new restrictions on non-constant loops
+  * Fixed Ref test creation problem with WebGL
+  * Fixed parsing problem with the ternary operator and the pixel array
+  * Fixed box vertices and comments not being congruent
+  * Fixed loop() going relatively mad after a noLoop() and more than 0 second wait
+  * Fixed Minefield from reporting syntax error on first line
+  * Fixed text() function width and height restrictions being unreliable
+  * Fixed unexpected result when converting char() to str()
+  * Fixed jsshell tests to use snarf() instead of munging strings
+  * Fixed pollution of object prototypes
+  * Fixed static methods not working
+  * Updated the way document focus is checked at the start of every frame redraw (1.0)
+  * Updated fake-dom.js to support xhr.overrideMimeType
+  * Updated PShape to use prototypes
+  * Updated numerous website reference pages
+  * Removed pimagefilter.pde, and filter.pde files from unit tests
+
 November 17, 2010 - Release 1.0
 
   * Added source level documentation for functions
