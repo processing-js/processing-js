@@ -18882,6 +18882,14 @@
       }
     }
 
+    // make sure to unload all sketches first
+    if (Processing.instances.length > 0) {
+      for (p in Processing.instances) {
+        Processing.instances[p].exit();
+      }
+    }
+
+    // process all <canvas>-indicated sketches
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
@@ -18903,15 +18911,49 @@
             filenames.splice(j, 1);
           }
         }
-
         loadAndExecute(canvas[i], filenames);
+      }
+    }
+    
+    // process all <script>-indicated sketches
+    var scripts = document.getElementsByTagName('script');
+    for (s in scripts) {
+      var script = scripts[s];
+      if (!script.getAttribute) {
+        continue;
+      }
+
+      var type = script.getAttribute("type");
+      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
+        var canvas;
+        var target = script.getAttribute("target");
+        if (target) {
+          canvas = document.getElementById(target);
+        } else {
+          var nextSibling = script.nextSibling;
+          while (nextSibling && nextSibling.nodeType != 1) {
+            nextSibling = nextSibling.nextSibling;
+          }
+          if (nextSibling.nodeName.toLowerCase() === "canvas") {
+            canvas = nextSibling;
+          }
+        }
+
+        if (canvas && canvas != null) {
+          if (script.getAttribute("src")) {
+            var filenames = script.getAttribute("src").split(/\s+/);
+            loadAndExecute(canvas, filenames);
+            continue;
+          }
+          var source =  script.innerText || script.textContent;
+          new Processing(canvas, source);
+        }
       }
     }
   };
 
   if(isDOMPresent) {
     window['Processing'] = Processing;
-
     document.addEventListener('DOMContentLoaded', function() {
       init();
     }, false);
