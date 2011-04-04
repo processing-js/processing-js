@@ -18882,13 +18882,6 @@
       }
     }
 
-    // make sure to unload all sketches first
-    if (Processing.instances.length > 0) {
-      for (p in Processing.instances) {
-        Processing.instances[p].exit();
-      }
-    }
-
     // process all <canvas>-indicated sketches
     var canvas = document.getElementsByTagName('canvas');
 
