@@ -90,6 +90,7 @@ var tests = [
   { path: "beginEndShape-2dtriangles2.pde", tags:["endShape2D"]},
   { path: "beginEndShape-2dtrianglestrip1.pde", tags:["endShape2D"]},
   { path: "beginEndShape-2dtrianglestrip2.pde", tags:["endShape2D"]},
+  { path: "beginEndShape-2dvertex.pde", tags:["endShape2D"]},
   { path: "beginEndShape-3dlines.pde", tags:["endShape3D"] },
   { path: "beginEndShape-3dnoclose.pde", tags:["endShape3D"] },
   { path: "beginEndShape-3dnomod.pde", tags:["endShape3D"]},
