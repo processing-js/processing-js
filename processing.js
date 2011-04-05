@@ -11143,6 +11143,8 @@
      */
     Drawing2D.prototype.endShape = function(mode) {
       // Duplicated in Drawing3D; too many variables used
+      if (vertArray.length === 0) { return; }
+
       var closeShape = mode === PConstants.CLOSE;
       var lineVertArray = [];
       var fillVertArray = [];
@@ -11444,6 +11446,8 @@
     
     Drawing3D.prototype.endShape = function(mode) {
       // Duplicated in Drawing3D; too many variables used
+      if (vertArray.length === 0) { return; }
+
       var closeShape = mode === PConstants.CLOSE;
       var lineVertArray = [];
       var fillVertArray = [];
@@ -12383,7 +12387,7 @@
         for (i = startLUT; i < stopLUT; i++) {
           ii = i % PConstants.SINCOS_LENGTH;
           if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
-          p.vertex(centerX + parseFloat(Math.cos(ii * PConstants.DEG_TO_RAD * 0.5)) * hr,centerY + parseFloat(Math.sin(ii * PConstants.DEG_TO_RAD * 0.5)) * vr);
+          p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
         }
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
@@ -12399,8 +12403,10 @@
         for (i = startLUT; i < stopLUT; i ++) {
           ii = i % PConstants.SINCOS_LENGTH;
           if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
-          p.vertex(centerX + parseFloat(Math.cos(ii * PConstants.DEG_TO_RAD * 0.5)) * hr, centerY + parseFloat(Math.sin(ii * PConstants.DEG_TO_RAD * 0.5)) * vr);
+          p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
         }
+        ii = stopLUT % PConstants.SINCOS_LENGTH;
+        p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
         p.endShape();
         doFill = savedFill;
       }
