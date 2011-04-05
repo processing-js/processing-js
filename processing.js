@@ -13291,13 +13291,13 @@
       this.mask = function(mask) {
         this.__mask = undef;
 
-        if (mask.constructor.name === "PImage") {
+        if (mask instanceof PImage) {
           if (mask.width === this.width && mask.height === this.height) {
             this.__mask = mask;
           } else {
             throw "mask must have the same dimensions as PImage.";
           }
-        } else if (typeof mask === "object" && mask.constructor === Array) { // this is a pixel array
+        } else if (mask instanceof Array) { // this is a pixel array
           // mask pixel array needs to be the same length as this.pixels
           // how do we update this for 0.9 this.imageData holding pixels ^^
           // mask.constructor ? and this.pixels.length = this.imageData.data.length instead ?
@@ -14091,7 +14091,7 @@
 
           if (img.__mask) {
             var j, size;
-            if (img.__mask.constructor.name === "PImage") {
+            if (img.__mask instanceof PImage) {
               var objMask = img.__mask.toImageData();
               for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
                 // using it as an alpha channel
