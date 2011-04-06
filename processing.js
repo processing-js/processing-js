@@ -4280,25 +4280,30 @@
        *
        * @return {boolean} true if the element equals another element
        */
-      equals: function (object) {
-        if (object instanceof XMLElement) {
+      equals: function(other) {
+        if (other instanceof XMLElement) {
           var i, j;
-          if (this.name !== object.getLocalName()) { return false; }
-          if (this.attributes.length !== object.getAttributeCount()) { return false; }
+          if (this.name !== other.getLocalName()) { return false; }
+          if (this.attributes.length !== other.getAttributeCount()) { return false; }
           for (i = 0, j = this.attributes.length; i < j; i++){
-            if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
-            if (this.attributes[i].getValue() !== object.attributes[i].getValue()) { return false; }
-            if (this.attributes[i].getType()  !== object.attributes[i].getType()) { return false; }
+            if (!other.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
+            if (this.attributes[i].getValue() !== other.attributes[i].getValue()) { return false; }
+            if (this.attributes[i].getType() !== other.attributes[i].getType()) { return false; }
           }
-          if (this.children.length !== object.getChildCount()) { return false; }
-          var child1, child2;
-          for (i = 0, j = this.children.length; i < j; i++) {
-            child1 = this.getChild(i);
-            child2 = object.getChild(i);
-            if (! child1.equals(child2)) { return false; }
+          if (this.children.length !== other.getChildCount()) { return false; }
+          if (this.children.length>0) {
+            var child1, child2;
+            for (i = 0, j = this.children.length; i < j; i++) {
+              child1 = this.getChild(i);
+              child2 = other.getChild(i);
+              if (!child1.equals(child2)) { return false; }
+            }
+            return true;
+          } else {
+            return (this.content === other.content);
           }
-          return true;
         }
+        return false;
       },
       /**
        * @member XMLElement
