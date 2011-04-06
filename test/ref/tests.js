@@ -51,6 +51,7 @@ var tests = [
   { path: "specular_p5test.pde", tags: ["3D"], knownFailureTicket: "1173" },
   { path: "spotLight_p5test.pde", tags: ["3D"], knownFailureTicket: "1173" },
   { path: "createGraphics.pde", tags: ["3D"], knownFailureTicket: "1075" },
+  { path: "rect-directional-light.pde", tags: ["3D"] },
   { path: "createimage.pde", tags: ["2D"] },
   { path: "array.pde", tags: ["2D"] },
   { path: "background-image.pde", tags: ["2D"] },
