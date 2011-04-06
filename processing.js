@@ -8287,16 +8287,12 @@
      * Converts the passed parameter to the function to its boolean value.
      * It will return an array of booleans if an array is passed in.
      *
-     * @param {int, byte, string} what          the parameter to be converted to boolean
-     * @param {int[], byte[], string[]} what    the array to be converted to boolean
+     * @param {int, byte, string} val          the parameter to be converted to boolean
+     * @param {int[], byte[], string[]} val    the array to be converted to boolean[]
      *
-     * @return {boolean|boolean[]} retrurns a boolean or an array of booleans
+     * @return {boolean|boolean[]} returns a boolean or an array of booleans
      */
-    p.parseBoolean = function (what) {
-        return p['boolean'](what);
-    };
-
-    p['boolean'] = function(val) {
+    p.parseBoolean = function (val) {
       if (val instanceof Array) {
         var ret = [];
         for (var i = 0; i < val.length; i++) {
@@ -8308,20 +8304,38 @@
       }
     };
 
-    // a byte is a number between -128 and 127
-    p['byte'] = function(aNumber) {
-      if (aNumber instanceof Array) {
+    /**
+     * Converts the passed parameter to the function to its byte value. 
+     * A byte is a number between -128 and 127.
+     * It will return an array of bytes if an array is passed in.
+     *
+     * @param {int, char} what        the parameter to be conveted to byte
+     * @param {int[], char[]} what    the array to be converted to byte[]
+     *
+     * @return {byte|byte[]} returns a byte or an array of bytes
+     */
+    p.parseByte = function(what) {
+      if (what instanceof Array) {
         var bytes = [];
-        for (var i = 0; i < aNumber.length; i++) {
-          bytes.push((0 - (aNumber[i] & 0x80)) | (aNumber[i] & 0x7F));
+        for (var i = 0; i < what.length; i++) {
+          bytes.push((0 - (what[i] & 0x80)) | (what[i] & 0x7F));
         }
         return bytes;
       } else {
-        return (0 - (aNumber & 0x80)) | (aNumber & 0x7F);
+        return (0 - (what & 0x80)) | (what & 0x7F);
       }
     };
 
-    p['char'] = function(key) {
+    /**
+     * Converts the passed parameter to the function to its char value. 
+     * It will return an array of chars if an array is passed in.
+     *
+     * @param {int, byte} key        the parameter to be conveted to char
+     * @param {int[], byte[]} key    the array to be converted to char[]
+     *
+     * @return {char|char[]} returns a char or an array of chars
+     */
+    p.parseChar = function(key) {
       if (typeof key === "number") {
         return new Char(String.fromCharCode(key & 0xFFFF));
       } else if (key instanceof Array) {
@@ -8351,7 +8365,16 @@
       }
     }
 
-    p['float'] = function(val) {
+    /**
+     * Converts the passed parameter to the function to its float value. 
+     * It will return an array of floats if an array is passed in.
+     *
+     * @param {int, char, boolean, string} val            the parameter to be conveted to float
+     * @param {int[], char[], boolean[], string[]} val    the array to be converted to float[]
+     *
+     * @return {float|float[]} returns a float or an array of floats
+     */
+    p.parseFloat = function(val) {
       if (val instanceof Array) {
         var ret = [];
         for (var i = 0; i < val.length; i++) {
@@ -8363,32 +8386,42 @@
       }
     };
 
-    function intScalar(val) {
+    function intScalar(val, radix) {
       if (typeof val === 'number') {
         return val & 0xFFFFFFFF;
       } else if (typeof val === 'boolean') {
         return val ? 1 : 0;
       } else if (typeof val === 'string') {
-        var number = parseInt(val, 10); // Force decimal radix. Don't convert hex or octal (just like p5)
+        var number = parseInt(val, radix || 10); // Default to decimal radix.
         return number & 0xFFFFFFFF;
       } else if (val instanceof Char) {
         return val.code;
       }
     }
 
-    p['int'] = function(val) {
+    /**
+     * Converts the passed parameter to the function to its int value. 
+     * It will return an array of ints if an array is passed in.
+     *
+     * @param {string, char, boolean, float} val            the parameter to be conveted to int
+     * @param {string[], char[], boolean[], float[]} val    the array to be converted to int[]
+     * @param {int} radix                                   optional the radix of the number (for js compatibility)
+     *
+     * @return {int|int[]} returns a int or an array of ints
+     */
+    p.parseInt = function(val, radix) {
       if (val instanceof Array) {
         var ret = [];
         for (var i = 0; i < val.length; i++) {
           if (typeof val[i] === 'string' && !/^\s*[+\-]?\d+\s*$/.test(val[i])) {
             ret.push(0);
           } else {
-            ret.push(intScalar(val[i]));
+            ret.push(intScalar(val[i], radix));
           }
         }
         return ret;
       } else {
-        return intScalar(val);
+        return intScalar(val, radix);
       }
     };
 
@@ -16218,14 +16251,8 @@
       if (typeof bounds[0] === 'number') {
         var itemsCount = 0 | bounds[0];
         if (bounds.length <= 1) {
-          if (type === "int") {
-            result = new Int32Array(itemsCount);
-          } else if (type === "float") {
-            result = new Float32Array(itemsCount);
-          } else {
-            result = [];
-            result.length = itemsCount;
-          }
+          result = [];
+          result.length = itemsCount;
           for (var i = 0; i < itemsCount; ++i) {
             result[i] = 0;
           }
@@ -17013,18 +17040,18 @@
       "arc", "arrayCopy", "asin", "atan", "atan2", "background", "beginCamera",
       "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint",
       "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
-      "blit_resize", "blue", "boolean", "box", "breakShape", "brightness",
-      "byte", "camera", "ceil", "char", "Character", "clear", "color",
+      "blit_resize", "blue", "box", "breakShape", "brightness",
+      "camera", "ceil", "Character", "clear", "color",
       "colorMode", "concat", "console", "constrain", "copy", "cos", "createFont",
       "createGraphics", "createImage", "cursor", "curve", "curveDetail",
       "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
       "defaultColor", "degrees", "directionalLight", "disableContextMenu",
       "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu",
       "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
-      "fill", "filter", "filter_bilinear", "filter_new_scanline", "float",
+      "fill", "filter", "filter_bilinear", "filter_new_scanline",
       "floor", "focused", "frameCount", "frameRate", "frustum", "get",
       "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour", "hue",
-      "image", "imageMode", "Import", "int", "intersect", "join", "key",
+      "image", "imageMode", "Import", "intersect", "join", "key",
       "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
       "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
       "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape",
@@ -17035,7 +17062,8 @@
       "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
-      "parseBoolean", "peg", "perspective", "PFont", "PImage", "pixels",
+      "parseBoolean", "parseByte", "parseChar", "parseFloat", "parseInt", 
+      "peg", "perspective", "PFont", "PImage", "pixels",
       "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
@@ -17381,6 +17409,10 @@
       // the Processing.js source, replace frameRate so it isn't
       // confused with frameRate(), as well as keyPressed and mousePressed
       s = s.replace(/\b(frameRate|keyPressed|mousePressed)\b(?!\s*"B)/g, "__$1");
+      // "boolean", "byte", "int", etc. => "parseBoolean", "parseByte", "parseInt", etc.
+      s = s.replace(/\b(boolean|byte|char|float|int)\s*"B/g, function(all, name) {
+        return "parse" + name.substring(0, 1).toUpperCase() + name.substring(1) + "\"B";
+      });
       // "pixels" replacements:
       //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
       //   pixels.length => pixels.getLength()
