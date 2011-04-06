@@ -4274,26 +4274,13 @@
       },
       /**
        * @member XMLElement
-       * The equals() function checks to see if the element being passed in equals another element
-       *
-       * @param {Object} rawElement the element to compare to
-       *
-       * @return {boolean} true if the element equals another element
-       */
-      equals: function(object){
-        if (typeof object === "Object") {
-          return this.equalsXMLElement(object);
-        }
-      },
-      /**
-       * @member XMLElement
-       * The equalsXMLElement() function checks to see if the XMLElement being passed in equals another XMLElement
+       * The equals() function checks to see if the XMLElement being passed in equals another XMLElement
        *
        * @param {XMLElement} rawElement the element to compare to
        *
        * @return {boolean} true if the element equals another element
        */
-      equals = equalsXMLElement: function (object) {
+      equals: function (object) {
         if (object instanceof XMLElement) {
           var i, j;
           if (this.name !== object.getLocalName()) { return false; }
@@ -4308,7 +4295,7 @@
           for (i = 0, j = this.children.length; i < j; i++) {
             child1 = this.getChild(i);
             child2 = object.getChild(i);
-            if (! child1.equalsXMLElement(child2)) { return false; }
+            if (! child1.equals(child2)) { return false; }
           }
           return true;
         }
@@ -4627,7 +4614,7 @@
       removeChild: function(child) {
         if (child) {
           for (var i = 0, j = this.children.length; i < j; i++) {
-            if (this.children[i].equalsXMLElement(child)) {
+            if (this.children[i].equals(child)) {
               this.children.splice(i, 1);
               break;
             }
