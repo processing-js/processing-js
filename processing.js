@@ -1823,8 +1823,12 @@
       "  if(color[0] == -1.0){" +
       "    col = aColor;" +
       "  }" +
-
-      "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
+      
+      // We use the sphere vertices as the normals when we create the sphere buffer.
+      // But this only works if the sphere vertices are unit length, so we 
+      // have to normalize the normals here. Since this is only required for spheres
+      // we could consider placing this in a conditional later on.
+      "  vec3 norm = normalize(vec3( normalTransform * vec4( Normal, 0.0 ) ));" +
 
       "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
