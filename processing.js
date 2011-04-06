@@ -9463,16 +9463,22 @@
 
       curContext.useProgram(programObject3D);
 
+      var mvm = new PMatrix3D();
+      mvm.scale(1, -1, 1);
+      mvm.apply(modelView.array());
+      mvm = mvm.array();
+      
       // We need to multiply the direction by the model view matrix, but
       // the mult function checks the w component of the vector, if it isn't
-      // present, it uses 1, so we use a very small value as a work around.
-      var dir = [nx, ny, nz, -0.00000000001];
-      var view = new PMatrix3D();
-      view.set(modelView.array());
-      view.mult(dir, dir);
+      // present, it uses 1, so we manually multiply.
+      var dir = [
+        mvm[0] * nx + mvm[4] * ny + mvm[8] * nz,
+        mvm[1] * nx + mvm[5] * ny + mvm[9] * nz,
+        mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
+      ];
 
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
-      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", [dir[0], -dir[1], dir[2]]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", dir);
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
@@ -9598,7 +9604,7 @@
       view.scale(1, -1, 1);
       view.apply(modelView.array());
       view.mult(pos, pos);
-
+      
       curContext.useProgram(programObject3D);
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
@@ -9662,24 +9668,29 @@
 
       curContext.useProgram(programObject3D);
 
-      // place the point in view space once instead of once per vertex
-      // in the shader.
+      // multiply the position and direction by the model view matrix
+      // once per object rather than once per vertex.
       var pos = new PVector(x, y, z);
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
-      view.apply(modelView.array());
-      view.mult(pos, pos);
+      var mvm = new PMatrix3D();
+      mvm.scale(1, -1, 1);
+      mvm.apply(modelView.array());
+      mvm.mult(pos, pos);
+
+      // convert to array since we need to directly access the elements
+      mvm = mvm.array();
 
       // We need to multiply the direction by the model view matrix, but
       // the mult function checks the w component of the vector, if it isn't
       // present, it uses 1, so we use a very small value as a work around.
-      var dir = [nx, ny, nz, -0.00000001];
-      view.set(modelView.array());
-      view.mult(dir, dir);
-
+      var dir = [
+          mvm[0] * nx + mvm[4] * ny + mvm[8] * nz,
+          mvm[1] * nx + mvm[5] * ny + mvm[9] * nz,
+          mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
+      ];
+      
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-      uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", [dir[0], -dir[1], dir[2]]);
+      uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", dir);
       uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
       uniformf("lights.angle.3d." + lightCount, programObject3D, "lights" + lightCount + ".angle", angle);
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 3);
