@@ -9971,24 +9971,32 @@
 
         uniformf("color3d", programObject3D, "color", fillStyle);
 
-        // Create the normal transformation matrix
-        var v = new PMatrix3D();
-        v.set(view);
+        // Calculating the normal matrix can be expensive, so only
+        // do it if it's necessary
+        if(lightCount > 0){
+          // Create the normal transformation matrix
+          var v = new PMatrix3D();
+          v.set(view);
 
-        var m = new PMatrix3D();
-        m.set(model);
+          var m = new PMatrix3D();
+          m.set(model);
 
-        v.mult(m);
+          v.mult(m);
 
-        var normalMatrix = new PMatrix3D();
-        normalMatrix.set(v);
-        normalMatrix.invert();
-        normalMatrix.transpose();
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+          normalMatrix.transpose();
 
-        uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
+        }
+        else{
+          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+        }
 
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
-        vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
+
 
         // Turn off per vertex colors
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
@@ -10203,19 +10211,29 @@
       proj.transpose();
 
       if (doFill) {
-        // Create a normal transformation matrix
-        var v = new PMatrix3D();
-        v.set(view);
+        // Calculating the normal matrix can be expensive, so only
+        // do it if it's necessary
+        if(lightCount > 0){
+          // Create a normal transformation matrix
+          var v = new PMatrix3D();
+          v.set(view);
 
-        var m = new PMatrix3D();
-        m.set(model);
+          var m = new PMatrix3D();
+          m.set(model);
 
-        v.mult(m);
+          v.mult(m);
 
-        var normalMatrix = new PMatrix3D();
-        normalMatrix.set(v);
-        normalMatrix.invert();
-        normalMatrix.transpose();
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+          normalMatrix.transpose();
+          
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
+        }
+        else{
+          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+        }
 
         curContext.useProgram(programObject3D);
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
@@ -10223,10 +10241,8 @@
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
         uniformMatrix("view3d", programObject3D, "view", false, view.array());
         uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
-        uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
-        vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
 
         // Turn off per vertex colors
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
@@ -12850,23 +12866,28 @@
 
         uniformf("color3d", programObject3D, "color", fillStyle);
 
-        var v = new PMatrix3D();
-        v.set(view);
+        if(lightCount > 0){
+          var v = new PMatrix3D();
+          v.set(view);
 
-        var m = new PMatrix3D();
-        m.set(model);
+          var m = new PMatrix3D();
+          m.set(model);
 
-        v.mult(m);
+          v.mult(m);
 
-        var normalMatrix = new PMatrix3D();
-        normalMatrix.set(v);
-        normalMatrix.invert();
-        normalMatrix.transpose();
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+          normalMatrix.transpose();
 
-        uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
-
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
+        }
+        else{
+          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+        }
+        
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
-        vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
 
         curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
