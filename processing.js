@@ -13581,7 +13581,9 @@
       }
       // if image is in the preloader cache return a new PImage
       if (curSketch.imageCache.images[file]) {
-        return new PImage(curSketch.imageCache.images[file]);
+        var pimg = new PImage(curSketch.imageCache.images[file]);
+        pimg.loaded = true;
+        return pimg;
       }
       // else async load it
       else {
