@@ -10,7 +10,7 @@ var tests = [
   { path: "arc.pde", tags: ["2D"] },
   { path: "pimage-resize.pde", tags: ["2D", "PImage"] },
   { path: "pimage-mask-image.pde", tags: ["2D", "PImage"] },
-  { path: "pimage-copy.pde", tags: ["3D", "PImage"] },
+  { path: "pimage-copy.pde", tags: ["2D", "PImage"] },
   { path: "pimage-filter-threshold.pde", tags: ["2D", "PImage"] },
   { path: "pimage-filter-gray.pde", tags: ["2D", "PImage"] },
   { path: "pimage-filter-invert.pde", tags: ["2D", "PImage"] },
