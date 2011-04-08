@@ -208,9 +208,16 @@
 
               function runBenchmark() {
                 try {
-                  var startTime = (new Date).getTime();
+                  var startTime = (new Date).getTime(),
+                      failed = false;
 
                   for (var iters = 0; iters < iterationCount; iters++) {
+                    if ( (new Date()).getTime() - startTime > MAX_TEST_TIME ) {
+                      // Exceeded allowable test run time, fail and bail
+                      failed = true;
+                      failedTests++;
+                      break;
+                    }
                     p.redraw();
                   }
 
@@ -218,19 +225,24 @@
                   var diff = endTime - startTime;
                   totalTime += diff;
 
-                  title.innerHTML = titleText(i+1, tl, diff, test.name);
+                  if (failed) {
+                    title.innerHTML = titleText(i+1, tl, "-", test.name,
+                                      "Test exceeded maximum test time (" + MAX_TEST_TIME + "ms), halted.");
+                  } else {
+                    title.innerHTML = titleText(i+1, tl, diff, test.name);
+                  }
                   document.getElementById('totalTime').innerHTML = totalTime;
 
                   // Mark this test run a success with time
                   tests[i].completed = true;
                   tests[i].time = diff;
-                  nextTest(i+1);
                 } catch (e) {
                   title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed during execution: " + e.toString());
                   nextTest(i+1);
                 }
+                var is3D = p.use3DContext;
               }
-
+              nextTest(i+1);
               if (!p.draw) {
                 // preload present
                 var initInterval, attempts = 20;
