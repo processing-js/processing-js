@@ -14078,7 +14078,9 @@
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
         img = arguments[0];
 
-        if (!img.pixels || img.width !== p.width || img.height !== p.height) {
+        if (!img.loaded) {
+          throw "Image pixels were not available. Be sure to use @pjs preloading directive.";
+        } else if(img.width !== p.width || img.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
         
