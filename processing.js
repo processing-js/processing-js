@@ -4312,7 +4312,12 @@
        * @return {String} the (possibly null) content
        */
       getContent: function(){
-         return this.content;
+        if (this.type === "TEXT") {
+          return this.content; }
+        else if (this.children.length === 0 && this.children[0].type === "TEXT") {
+          return this.children[0].content;
+        }
+        return null;
       },
       /**
        * @member XMLElement
@@ -4692,6 +4697,9 @@
        * @param {String} content     the (possibly null) content
        */
       setContent: function(content) {
+        if (this.children.length>0) {
+          Processing.debug("Tried to set content for XMLElement with children"); }
+        createPCDataElement
         this.content = content;
       },
       /**
@@ -4754,35 +4762,36 @@
        *
        * @return {String} the XML definition of this XMLElement
        */
-       toString: function() {
-         // shortcut for text nodes
-         if(this.type==="TEXT") { return this.content; }
+      toString: function() {
+        // shortcut for text nodes
+        if(this.type==="TEXT") { return this.content; }
 
-         // real XMLElements
-         var tagstring = (this.namespace!=="" && this.namespace!=this.name? this.namespace + ":" : "") + this.name;
-         var xmlstring =  "<" + tagstring;
+        // real XMLElements
+        var tagstring = (this.namespace!=="" && this.namespace!=this.name? this.namespace + ":" : "") + this.name;
+        var xmlstring =  "<" + tagstring;
+        var a,c;
 
-         // serialize the attributes to XML string
-         for (a in this.attributes) {
-           var attr = this.attributes[a];
-           xmlstring += " "  + attr.getName() + "=" + '"' + attr.getValue() + '"';
-         }
+        // serialize the attributes to XML string
+        for (a = 0; a<this.attributes.length; a++) {
+          var attr = this.attributes[a];
+          xmlstring += " "  + attr.getName() + "=" + '"' + attr.getValue() + '"';
+        }
 
-         // serialize all children to XML string
-         if (this.children.length==0) {
-           if (this.content==="") {
-             xmlstring += "/>";
-           } else {
-             xmlstring += ">" + this.content + "</"+tagstring+">";
-           }
-         } else {
-           xmlstring += ">";
-           for(c in this.children) {
-             xmlstring += this.children[c].toString();
-           }
-           xmlstring += "</" + tagstring + ">";
-         }
-         return xmlstring;
+        // serialize all children to XML string
+        if (this.children.length==0) {
+          if (this.content==="") {
+            xmlstring += "/>";
+          } else {
+            xmlstring += ">" + this.content + "</"+tagstring+">";
+          }
+        } else {
+          xmlstring += ">";
+          for (c = 0; c<this.children.length; c++) {
+            xmlstring += this.children[c].toString();
+          }
+          xmlstring += "</" + tagstring + ">";
+        }
+        return xmlstring;
        }
     };
 
