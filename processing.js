@@ -2157,7 +2157,7 @@
     ////////////////////////////////////////////////////////////////////////////
     var charMap = {};
 
-    var Char = p.Character = function Char(chr) {
+    var Char = p.Character = function(chr) {
       if (typeof chr === 'string' && chr.length === 1) {
         this.code = chr.charCodeAt(0);
       } else {
@@ -14073,15 +14073,6 @@
       }
     };
 
-    // Clears a rectangle in the Canvas element or the whole Canvas
-    p.clear = function(x, y, width, height) {
-      if (arguments.length === 0) {
-        curContext.clearRect(0, 0, p.width, p.height);
-      } else {
-        curContext.clearRect(x, y, width, height);
-      }
-    };
-
     /**
      * The tint() function sets the fill value for displaying images. Images can be tinted to
      * specified colors or made transparent by setting the alpha.
@@ -15895,7 +15886,7 @@
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
-    p.loadGlyphs = function loadGlyph(url) {
+    p.loadGlyphs = function(url) {
       var x, y, cx, cy, nx, ny, d, a, lastCom, lenC, horiz_adv_x, getXY = '[0-9\\-]+', path;
 
       // Return arrays of SVG commands and coords
@@ -16008,7 +15999,7 @@
       };
 
       // Parse SVG font-file into block of Canvas commands
-      var parseSVGFont = function parseSVGFontse(svg) {
+      var parseSVGFont = function(svg) {
         // Store font attributes
         var font = svg.getElementsByTagName("font");
         p.glyphTable[url].horiz_adv_x = font[0].getAttribute("horiz-adv-x");
@@ -16175,7 +16166,7 @@
           result = [];
           var newBounds = bounds.slice(1);
           for (var j = 0; j < itemsCount; ++j) {
-            result.push(createJavaArray(type, newBounds));
+            result.push(p.createJavaArray(type, newBounds));
           }
         }
       }
