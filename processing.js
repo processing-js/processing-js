@@ -4192,7 +4192,8 @@
         var xmlelement,
           xmlattribute,
           tmpattrib,
-          l, m;
+          l, m,
+          child;
         if (!parent) { // this element is the root element
           this.fullName = elementpath.localName;
           this.name     = elementpath.nodeName;
@@ -4202,8 +4203,8 @@
           xmlelement.parent  = parent;
         }
         
-        // if this is a text node, return a PCData element, instead of an XML element
-        if(elementpath.nodeType===3 && elementpath.textContent!="") {
+        // if this is a text node, return a PCData element, instead of an XML element.
+        if(elementpath.nodeType === 3 && elementpath.textContent !== "") {
           return this.createPCDataElement(elementpath.textContent);
         }      
 
@@ -4222,7 +4223,10 @@
         for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
           var node = elementpath.childNodes[l];
           if (node.nodeType === 1 || node.nodeType === 3) { // ELEMENT_NODE or TEXT_NODE
-            xmlelement.children.push(xmlelement.parseChildrenRecursive(xmlelement, node));
+            child = xmlelement.parseChildrenRecursive(xmlelement, node);
+            if (child !== null) {
+              xmlelement.children.push(child);
+            }
           }
         }
 
@@ -4246,11 +4250,16 @@
       },
       /**
        * @member XMLElement
-       * The createPCDataElement() function creates an element to be used for #PCDATA content
+       * The createPCDataElement() function creates an element to be used for #PCDATA content.
+       * Because Processing discards whitespace TEXT nodes, this method will not build an element
+       * if the passed content is empty after trimming for whitespace.
        *
-       * @return {XMLElement} new XMLElement element
+       * @return {XMLElement} new "test" XMLElement, or null if content consists only of whitespace
        */
       createPCDataElement: function (content) {
+        if(content.replace(/^\s+$/g,"") === "") {
+          return null;
+        }
         var pcdata = new XMLElement();
         pcdata.content = content;
         pcdata.type = "TEXT";
@@ -4314,7 +4323,7 @@
       getContent: function(){
         if (this.type === "TEXT") {
           return this.content; }
-        else if (this.children.length === 0 && this.children[0].type === "TEXT") {
+        else if (this.children.length === 1 && this.children[0].type === "TEXT") {
           return this.children[0].content;
         }
         return null;
@@ -4640,7 +4649,6 @@
       removeChildAtIndex: function(index) {
         if (this.children.length > index) { //make sure its not outofbounds
           this.children.splice(index, 1);
-          return;
         }
       },
       /**
