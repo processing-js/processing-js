@@ -4294,11 +4294,20 @@
           var i, j;
           if (this.name !== other.getLocalName()) { return false; }
           if (this.attributes.length !== other.getAttributeCount()) { return false; }
-          for (i = 0, j = this.attributes.length; i < j; i++){
-            if (!other.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
-            if (this.attributes[i].getValue() !== other.attributes[i].getValue()) { return false; }
-            if (this.attributes[i].getType() !== other.attributes[i].getType()) { return false; }
+
+          // attributes may be ordered differently
+          if (this.attributes.length !== other.attributes.length) { return false; }
+          var attr_name, attr_ns, attr_value, attr_type, attr_other;
+          for (i = 0, j = this.attributes.length; i < j; i++) {
+            attr_name = this.attributes[i].getName();
+            attr_ns = this.attributes[i].getNamespace();
+            attr_other = other.findAttribute(attr_name, attr_ns);
+            if (attr_other === null) { return false; }
+            if (this.attributes[i].getValue() !== attr_other.getValue()) { return false; }
+            if (this.attributes[i].getType() !== attr_other.getType()) { return false; }
           }
+
+          // children must be ordered identically
           if (this.children.length !== other.getChildCount()) { return false; }
           if (this.children.length>0) {
             var child1, child2;
@@ -4667,6 +4676,7 @@
              return this.attributes[i];
           }
         }
+        return null;
       },
       /**
        * @member XMLElement
