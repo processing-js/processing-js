@@ -12743,44 +12743,45 @@
           p.bezierVertex(x - w, y + c_y, 0, x - c_x, y + h, 0, x, y + h, 0);
           p.bezierVertex(x + c_x, y + h, 0, x + w, y + c_y, 0, x + w, y, 0);
           p.endShape();
-
+          
           //temporary workaround to not working fills for bezier -- will fix later
-          var xAv = 0, yAv = 0, i, j;
-          for(i = 0; i < vertArray.length; i++){
-            xAv += vertArray[i][0];
-            yAv += vertArray[i][1];
-          }
-          xAv /= vertArray.length;
-          yAv /= vertArray.length;
-          var vert = [],
-              fillVertArray = [],
-              colorVertArray = [];
-          vert[0] = xAv;
-          vert[1] = yAv;
-          vert[2] = 0;
-          vert[3] = 0;
-          vert[4] = 0;
-          vert[5] = fillStyle[0];
-          vert[6] = fillStyle[1];
-          vert[7] = fillStyle[2];
-          vert[8] = fillStyle[3];
-          vert[9] = strokeStyle[0];
-          vert[10] = strokeStyle[1];
-          vert[11] = strokeStyle[2];
-          vert[12] = strokeStyle[3];
-          vert[13] = normalX;
-          vert[14] = normalY;
-          vert[15] = normalZ;
-          vertArray.unshift(vert);
-          for(i = 0; i < vertArray.length; i++){
-            for(j = 0; j < 3; j++){
-              fillVertArray.push(vertArray[i][j]);
-            }
-            for(j = 5; j < 9; j++){
-              colorVertArray.push(vertArray[i][j]);
-            }
-          }
           if (doFill) {
+            alert("")
+            var xAv = 0, yAv = 0, i, j;
+            for(i = 0; i < vertArray.length; i++){
+              xAv += vertArray[i][0];
+              yAv += vertArray[i][1];
+            }
+            xAv /= vertArray.length;
+            yAv /= vertArray.length;
+            var vert = [],
+                fillVertArray = [],
+                colorVertArray = [];
+            vert[0] = xAv;
+            vert[1] = yAv;
+            vert[2] = 0;
+            vert[3] = 0;
+            vert[4] = 0;
+            vert[5] = fillStyle[0];
+            vert[6] = fillStyle[1];
+            vert[7] = fillStyle[2];
+            vert[8] = fillStyle[3];
+            vert[9] = strokeStyle[0];
+            vert[10] = strokeStyle[1];
+            vert[11] = strokeStyle[2];
+            vert[12] = strokeStyle[3];
+            vert[13] = normalX;
+            vert[14] = normalY;
+            vert[15] = normalZ;
+            vertArray.unshift(vert);
+            for(i = 0; i < vertArray.length; i++){
+              for(j = 0; j < 3; j++){
+                fillVertArray.push(vertArray[i][j]);
+              }
+              for(j = 5; j < 9; j++){
+                colorVertArray.push(vertArray[i][j]);
+              }
+            }
             fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray);
           }
         }
