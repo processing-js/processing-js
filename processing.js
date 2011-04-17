@@ -12746,7 +12746,6 @@
           
           //temporary workaround to not working fills for bezier -- will fix later
           if (doFill) {
-            alert("")
             var xAv = 0, yAv = 0, i, j;
             for(i = 0; i < vertArray.length; i++){
               xAv += vertArray[i][0];
