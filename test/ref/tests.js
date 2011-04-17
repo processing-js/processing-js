@@ -32,6 +32,7 @@ var tests = [
   { path: "specular_p5test.pde", tags: ["3D"] },
   { path: "spotLight_p5test.pde", tags: ["3D"] },
   { path: "createGraphics.pde", tags: ["3D"] },
+  { path: "3d-ellipse-fill-noFill-stoke-noStroke.pde", tags: ["3D"] },
   { path: "createimage.pde", tags: ["2D"] },
   { path: "self-1-success.pde", tags: ["Calibration"] },
   { path: "self-2-fail.pde", tags: ["Calibration"] },
