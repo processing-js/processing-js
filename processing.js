@@ -14888,7 +14888,11 @@
                                         destPixels[((destOffset + x) * 4) + 1],
                                         destPixels[((destOffset + x) * 4) + 2],
                                         destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.filter_bilinear());
+              if (img.format !== PConstants.RGB && destPixels[(destOffset + x) * 4] !== 255) {
+                destColor = p.color.toArray(p.modes.blend(destColor, p.filter_bilinear()));
+              } else {
+                destColor = p.color.toArray(p.filter_bilinear());
+              }
               //destPixels[destOffset + x] = p.filter_bilinear();
               destPixels[(destOffset + x) * 4] = destColor[0];
               destPixels[(destOffset + x) * 4 + 1] = destColor[1];
