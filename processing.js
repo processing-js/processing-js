@@ -2172,6 +2172,8 @@
     var Char = p.Character = function Char(chr) {
       if (typeof chr === 'string' && chr.length === 1) {
         this.code = chr.charCodeAt(0);
+      } else if (typeof chr === 'number') {
+        this.code = chr;
       } else {
         this.code = NaN;
       }
@@ -16568,7 +16570,7 @@
             p.keyCode = e.keyCode;
           }
           if (e.keyCode === 0) {
-            p.key = String.fromCharCode(charCodeMap(e.keyCode, e.shiftKey));  // dealing with Google key strokes
+            p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));  // dealing with Google key strokes
             if (type === "keypress") {
               if (firstMKeyDown === true) {
                 firstMKeyDown = false;
@@ -16581,7 +16583,7 @@
               if (firstMKeyDown === false) { firstMKeyDown = true; }
             }
           } else {
-            p.key = String.fromCharCode(charCodeMap(e.keyCode, e.shiftKey));  // dealing with Google key strokes
+            p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));  // dealing with Google key strokes
             if (type === "keydown") {
               if (firstGKeyDown === true) {
                 firstGKeyDown = false;
@@ -16664,7 +16666,7 @@
         p.__keyPressed = true;
         p.key = keyCodeMap(e.keyCode, e.shiftKey);
         if (p.key !== PConstants.CODED) {
-          p.key = String.fromCharCode(charCodeMap(e.keyCode, e.shiftKey)); 
+          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey)); 
         }
         keyFunc(e, "keydown");
       });
@@ -16678,7 +16680,7 @@
         p.__keyPressed = false;
         p.key = keyCodeMap(e.keyCode, e.shiftKey);
         if (p.key !== PConstants.CODED) {
-          p.key = String.fromCharCode(charCodeMap(e.keyCode, e.shiftKey));  
+          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey)); 
         }
         keyFunc(e, "keyup");
       });
