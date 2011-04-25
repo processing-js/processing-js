@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # inspired by - http://mxr.mozilla.org/mozilla-central/source/testing/xpcshell/runxpcshelltests.py
 import sys, os, os.path, signal, re
-import jsshellhelper
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 
@@ -72,14 +71,12 @@ class ProcessingTests(object):
                 continue
 
               if filename.endswith('.pde'):
-                  tmpFile = jsshellhelper.createEscapedFile(fullpath)
-                  one_test = 'var parserTest = {name:"' + fullpath + '", body: __unescape_string()};\n'
+                  one_test = 'var parserTest = {name:"%s", body: snarf("%s")};\n' % (fullpath, 
+                             os.path.relpath(fullpath).replace('\\', '/'))
 
                   testCmd = [jsshell,
                              '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
                              '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
-                             '-f', os.path.join(self.toolsdir, 'cleaner.js'),
-                             '-f', tmpFile,
                              '-e', one_test,
                              '-f', os.path.join(self.toolsdir, 'fake-extensions.js'),
                              '-f', os.path.join(self.toolsdir, 'test-harness.js')]
@@ -158,8 +155,6 @@ class ProcessingTests(object):
                       for ln in m2.group(1).split(','):
                         self.linesCalled.add(int(ln))
 
-                  jsshellhelper.cleanUp(tmpFile)
-
   def runUnitTests(self, jsshell, testPattern=None, summaryOnly=False, processingPath=None):
       """Run all .js unit tests in test/unit through the test harness."""
       # TODO: add support for doing .pjs unit tests.
@@ -181,7 +176,6 @@ class ProcessingTests(object):
               if testPattern and self.shouldSkipTest(testPattern, fullpath):
                 continue
 
-              tmpFile = None
               testCmd = None
 
               if filename.endswith('.js'):
@@ -197,14 +191,12 @@ class ProcessingTests(object):
                              '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
                              '-f', os.path.join(self.toolsdir, 'test-harness.js')]
               elif filename.endswith('.pde'):
-                  tmpFile = jsshellhelper.createEscapedFile(fullpath)
+                  execTest = 'eval(new Processing(canvas, \'UnitTests();\' + snarf("%s") + \'\\n_printTestSummary();\'));' % os.path.relpath(fullpath).replace('\\', '/')
                   testCmd = [jsshell,
                              '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
                              '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
                              '-f', os.path.join(self.toolsdir, 'test-harness-lib.js'),
-                             '-f', os.path.join(self.toolsdir, 'cleaner.js'),
-                             '-f', tmpFile,
-                             '-e', 'eval(new Processing(canvas, \'UnitTests();\' + __unescape_string() + \'_printTestSummary();\'));']
+                             '-e', execTest]
               else:
                 continue
 
@@ -274,9 +266,6 @@ class ProcessingTests(object):
               if m2 and m2.group:
                 for ln in m2.group(1).split(','):
                   self.linesCalled.add(int(ln))
-
-              if tmpFile:
-                jsshellhelper.cleanUp(tmpFile)
 
   def initCodeLines(self, processingPath):
       if processingPath:

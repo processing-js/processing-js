@@ -70,52 +70,23 @@
             if (!p.use3DContext) {
               var context = this.canvas.getContext('2d');
               var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
-              var pixels = [];
-            
-              for(var i = 0, idl = imgData.length; i < idl; i++){
-                pixels[i] = imgData[i];
-              }
-            
-              var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
-              document.location.href= "data:text/plain;charset=utf-8;base64," + 
-                                    btoa('//' + dimensions + pixels + '\n' + this.code.value);
+            // else, we'll need to call WebGL's readPixels.
             } else {
-              // else, we'll need to call WebGL's readPixels.
               // The order of the pixels go from bottom to top, left to right.
-
-              // Safari returns a regular JS object for readPixels.
-              // Minefield returns a WebGLUnsignedByteArray.
-              // Chromium raises an exception because of an XHR bug.
-              // So we need to handle each case differently.
-            
-              var browserString = navigator.userAgent;
-              var regex = /Safari/i;
-              var isSafari = browserString.match(regex);
-
               var context = this.canvas.getContext("experimental-webgl");
-            
-              // Safari returns null if format RGB is requested
-              var unsignedBuffer = context.readPixels(0,0,this.canvas.width,this.canvas.height,context.RGBA, context.UNSIGNED_BYTE);
-              var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
-              var pixels = [];
-            
-              if (isSafari) {
-                // extract the data from the WebGLUnsignedByteArray and place
-                // it in a JS array for easy manipulation.
-                for (var i = 0, ubl = unsignedBuffer.length; i < ubl; i++){
-                  pixels[i] = unsignedBuffer[i];
-                }
-              } else if(!isSafari) {
-                // Minefield no longer has .toString() on ImageData.data
-                for (var i = 0, ubl = unsignedBuffer.data.length; i < ubl; i++){
-                  pixels[i] = unsignedBuffer.data[i];
-                }
-              }
-
-              // Opera doesn't have btoa() so this won't work there.
-              document.location.href = "data:text/plain;charset=utf-8;base64," + 
-                                       btoa('//' + dimensions + pixels.toString() + '\n' + this.code.value);
+              var imgData = new Uint8Array(this.canvas.width * this.canvas.height * 4);
+              context.readPixels(0, 0, this.canvas.width, this.canvas.height, context.RGBA, context.UNSIGNED_BYTE, imgData);
             }
+
+            var pixels = [];
+            for(var i = 0, idl = imgData.length; i < idl; i++){
+              pixels[i] = imgData[i];
+            }
+
+            var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
+            // Opera doesn't have btoa() so this won't work there.
+            document.location.href= "data:text/plain;charset=utf-8;base64," + 
+                                     btoa('//' + dimensions + pixels + '\n' + this.code.value);
           } catch (e) {
             this.output.value = "Error creating ref test! Error was: " + e.toString();
           }

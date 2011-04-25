@@ -1,4 +1,4 @@
-// 	Processing.js Example
+//	Processing.js Example
 
 void setup() {
   size(200, 200);

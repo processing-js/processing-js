@@ -1,0 +1,40 @@
+﻿Ball bouncer;
+boolean play = false;
+
+void setup() {
+  frameRate(24);
+  if(!play) noLoop();
+  bouncer = new Ball(); }
+
+void draw() {
+  bouncer.computeNextStep(width, height, frameRate);
+  fill(0,0,0,20);
+  rect(0,0,width,height);
+  fill(255);
+  bouncer.draw();
+}
+
+boolean moo = true;
+void mousePressed() {
+  if(moo) {
+    play=true;
+    println("resuming, frame count is "+frameCount);
+    loop(); 
+  } else { 
+    println("stopping at frame "+frameCount);
+    noLoop(); }
+  moo = !moo; }
+
+class Ball
+{
+  int pos = 0;
+  int step = 0;
+  int radius = 20;
+  void computeNextStep(int sketch_width, int sketch_height, float frame_rate) {
+    step = (int) ((step + 1) % frame_rate);
+    float sin_value = abs(sin(PI*step/(float)frame_rate));
+    float bounce_height = (sketch_height/2) * sin_value;
+    float ball_height = sketch_height - (bounce_height + radius);
+    pos = (int)ball_height; }
+  void draw() { ellipse(width/2,pos,radius,radius); }
+}
