@@ -14573,8 +14573,7 @@
       if (p.shared.blurRadius !== radius) {
         p.shared.blurRadius = radius;
         p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
-        //p.shared.blurKernel = new Float32Array(p.shared.blurKernelSize);
-        p.shared.blurKernel = new Array(p.shared.blurKernelSize);
+        p.shared.blurKernel = new Float32Array(p.shared.blurKernelSize);
         // init blurKernel
         var sharedBlurKernelSize = p.shared.blurKernelSize;
         for (i = 0; i < sharedBlurKernelSize; i++) {
@@ -14592,14 +14591,10 @@
       var sum, cr, cg, cb, ca, c, m;
       var read, ri, ym, ymi, bk0;
       var wh = aImg.pixels.getLength();
-//      var r2 = new Float32Array(wh);
-//      var g2 = new Float32Array(wh);
-//      var b2 = new Float32Array(wh);
-//      var a2 = new Float32Array(wh);
-      var r2 = new Array(wh);
-      var g2 = new Array(wh);
-      var b2 = new Array(wh);
-      var a2 = new Array(wh);
+      var r2 = new Float32Array(wh);
+      var g2 = new Float32Array(wh);
+      var b2 = new Float32Array(wh);
+      var a2 = new Float32Array(wh);
       var yi = 0;
       var x, y, i;
 
