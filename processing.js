@@ -632,6 +632,10 @@
       var count = 0;
       var hashMap = this;
 
+      function getBucketIndex(key) {
+        var index = virtHashCode(key) % buckets.length;
+        return index < 0 ? buckets.length + index : index;
+      }
       function ensureLoad() {
         if (count <= loadFactor * buckets.length) {
           return;
@@ -642,10 +646,11 @@
             allEntries = allEntries.concat(buckets[i]);
           }
         }
+        var newBucketsLength = buckets.length * 2;
         buckets = [];
-        buckets.length = buckets.length * 2;
+        buckets.length = newBucketsLength;
         for (var j = 0; j < allEntries.length; ++j) {
-          var index = virtHashCode(allEntries[j].key) % buckets.length;
+          var index = getBucketIndex(allEntries[j].key);
           var bucket = buckets[index];
           if (bucket === undef) {
             buckets[index] = bucket = [];
@@ -821,7 +826,7 @@
       };
 
       this.containsKey = function(key) {
-        var index = virtHashCode(key) % buckets.length;
+        var index = getBucketIndex(key);
         var bucket = buckets[index];
         if (bucket === undef) {
           return false;
@@ -866,7 +871,7 @@
       };
 
       this.get = function(key) {
-        var index = virtHashCode(key) % buckets.length;
+        var index = getBucketIndex(key);
         var bucket = buckets[index];
         if (bucket === undef) {
           return null;
@@ -900,7 +905,7 @@
       };
 
       this.put = function(key, value) {
-        var index = virtHashCode(key) % buckets.length;
+        var index = getBucketIndex(key);
         var bucket = buckets[index];
         if (bucket === undef) {
           ++count;
@@ -936,7 +941,7 @@
       };
 
       this.remove = function(key) {
-        var index = virtHashCode(key) % buckets.length;
+        var index = getBucketIndex(key);
         var bucket = buckets[index];
         if (bucket === undef) {
           return null;
@@ -1157,6 +1162,149 @@
   //defaultScope.PShape    = PShape;     // TODO
   //defaultScope.PShapeSVG = PShapeSVG;  // TODO
 
+  var colors = {
+    aliceblue:            "#f0f8ff",
+    antiquewhite:         "#faebd7",
+    aqua:                 "#00ffff",
+    aquamarine:           "#7fffd4",
+    azure:                "#f0ffff",
+    beige:                "#f5f5dc",
+    bisque:               "#ffe4c4",
+    black:                "#000000",
+    blanchedalmond:       "#ffebcd",
+    blue:                 "#0000ff",
+    blueviolet:           "#8a2be2",
+    brown:                "#a52a2a",
+    burlywood:            "#deb887",
+    cadetblue:            "#5f9ea0",
+    chartreuse:           "#7fff00",
+    chocolate:            "#d2691e",
+    coral:                "#ff7f50",
+    cornflowerblue:       "#6495ed",
+    cornsilk:             "#fff8dc",
+    crimson:              "#dc143c",
+    cyan:                 "#00ffff",
+    darkblue:             "#00008b",
+    darkcyan:             "#008b8b",
+    darkgoldenrod:        "#b8860b",
+    darkgray:             "#a9a9a9",
+    darkgreen:            "#006400",
+    darkkhaki:            "#bdb76b",
+    darkmagenta:          "#8b008b",
+    darkolivegreen:       "#556b2f",
+    darkorange:           "#ff8c00",
+    darkorchid:           "#9932cc",
+    darkred:              "#8b0000",
+    darksalmon:           "#e9967a",
+    darkseagreen:         "#8fbc8f",
+    darkslateblue:        "#483d8b",
+    darkslategray:        "#2f4f4f",
+    darkturquoise:        "#00ced1",
+    darkviolet:           "#9400d3",
+    deeppink:             "#ff1493",
+    deepskyblue:          "#00bfff",
+    dimgray:              "#696969",
+    dodgerblue:           "#1e90ff",
+    firebrick:            "#b22222",
+    floralwhite:          "#fffaf0",
+    forestgreen:          "#228b22",
+    fuchsia:              "#ff00ff",
+    gainsboro:            "#dcdcdc",
+    ghostwhite:           "#f8f8ff",
+    gold:                 "#ffd700",
+    goldenrod:            "#daa520",
+    gray:                 "#808080",
+    green:                "#008000",
+    greenyellow:          "#adff2f",
+    honeydew:             "#f0fff0",
+    hotpink:              "#ff69b4",
+    indianred:            "#cd5c5c",
+    indigo:               "#4b0082",
+    ivory:                "#fffff0",
+    khaki:                "#f0e68c",
+    lavender:             "#e6e6fa",
+    lavenderblush:        "#fff0f5",
+    lawngreen:            "#7cfc00",
+    lemonchiffon:         "#fffacd",
+    lightblue:            "#add8e6",
+    lightcoral:           "#f08080",
+    lightcyan:            "#e0ffff",
+    lightgoldenrodyellow: "#fafad2",
+    lightgrey:            "#d3d3d3",
+    lightgreen:           "#90ee90",
+    lightpink:            "#ffb6c1",
+    lightsalmon:          "#ffa07a",
+    lightseagreen:        "#20b2aa",
+    lightskyblue:         "#87cefa",
+    lightslategray:       "#778899",
+    lightsteelblue:       "#b0c4de",
+    lightyellow:          "#ffffe0",
+    lime:                 "#00ff00",
+    limegreen:            "#32cd32",
+    linen:                "#faf0e6",
+    magenta:              "#ff00ff",
+    maroon:               "#800000",
+    mediumaquamarine:     "#66cdaa",
+    mediumblue:           "#0000cd",
+    mediumorchid:         "#ba55d3",
+    mediumpurple:         "#9370d8",
+    mediumseagreen:       "#3cb371",
+    mediumslateblue:      "#7b68ee",
+    mediumspringgreen:    "#00fa9a",
+    mediumturquoise:      "#48d1cc",
+    mediumvioletred:      "#c71585",
+    midnightblue:         "#191970",
+    mintcream:            "#f5fffa",
+    mistyrose:            "#ffe4e1",
+    moccasin:             "#ffe4b5",
+    navajowhite:          "#ffdead",
+    navy:                 "#000080",
+    oldlace:              "#fdf5e6",
+    olive:                "#808000",
+    olivedrab:            "#6b8e23",
+    orange:               "#ffa500",
+    orangered:            "#ff4500",
+    orchid:               "#da70d6",
+    palegoldenrod:        "#eee8aa",
+    palegreen:            "#98fb98",
+    paleturquoise:        "#afeeee",
+    palevioletred:        "#d87093",
+    papayawhip:           "#ffefd5",
+    peachpuff:            "#ffdab9",
+    peru:                 "#cd853f",
+    pink:                 "#ffc0cb",
+    plum:                 "#dda0dd",
+    powderblue:           "#b0e0e6",
+    purple:               "#800080",
+    red:                  "#ff0000",
+    rosybrown:            "#bc8f8f",
+    royalblue:            "#4169e1",
+    saddlebrown:          "#8b4513",
+    salmon:               "#fa8072",
+    sandybrown:           "#f4a460",
+    seagreen:             "#2e8b57",
+    seashell:             "#fff5ee",
+    sienna:               "#a0522d",
+    silver:               "#c0c0c0",
+    skyblue:              "#87ceeb",
+    slateblue:            "#6a5acd",
+    slategray:            "#708090",
+    snow:                 "#fffafa",
+    springgreen:          "#00ff7f",
+    steelblue:            "#4682b4",
+    tan:                  "#d2b48c",
+    teal:                 "#008080",
+    thistle:              "#d8bfd8",
+    tomato:               "#ff6347",
+    turquoise:            "#40e0d0",
+    violet:               "#ee82ee",
+    wheat:                "#f5deb3",
+    white:                "#ffffff",
+    whitesmoke:           "#f5f5f5",
+    yellow:               "#ffff00",
+    yellowgreen:          "#9acd32"
+  };
+  
   var Processing = this.Processing = function Processing(curElement, aCode) {
     // Previously we allowed calling Processing as a func instead of ctor, but no longer.
     if (!(this instanceof Processing)) {
@@ -1404,149 +1552,6 @@
     //PShape stuff
     var curShapeMode = PConstants.CORNER;
 
-    var colors = {
-      aliceblue:            "#f0f8ff",
-      antiquewhite:         "#faebd7",
-      aqua:                 "#00ffff",
-      aquamarine:           "#7fffd4",
-      azure:                "#f0ffff",
-      beige:                "#f5f5dc",
-      bisque:               "#ffe4c4",
-      black:                "#000000",
-      blanchedalmond:       "#ffebcd",
-      blue:                 "#0000ff",
-      blueviolet:           "#8a2be2",
-      brown:                "#a52a2a",
-      burlywood:            "#deb887",
-      cadetblue:            "#5f9ea0",
-      chartreuse:           "#7fff00",
-      chocolate:            "#d2691e",
-      coral:                "#ff7f50",
-      cornflowerblue:       "#6495ed",
-      cornsilk:             "#fff8dc",
-      crimson:              "#dc143c",
-      cyan:                 "#00ffff",
-      darkblue:             "#00008b",
-      darkcyan:             "#008b8b",
-      darkgoldenrod:        "#b8860b",
-      darkgray:             "#a9a9a9",
-      darkgreen:            "#006400",
-      darkkhaki:            "#bdb76b",
-      darkmagenta:          "#8b008b",
-      darkolivegreen:       "#556b2f",
-      darkorange:           "#ff8c00",
-      darkorchid:           "#9932cc",
-      darkred:              "#8b0000",
-      darksalmon:           "#e9967a",
-      darkseagreen:         "#8fbc8f",
-      darkslateblue:        "#483d8b",
-      darkslategray:        "#2f4f4f",
-      darkturquoise:        "#00ced1",
-      darkviolet:           "#9400d3",
-      deeppink:             "#ff1493",
-      deepskyblue:          "#00bfff",
-      dimgray:              "#696969",
-      dodgerblue:           "#1e90ff",
-      firebrick:            "#b22222",
-      floralwhite:          "#fffaf0",
-      forestgreen:          "#228b22",
-      fuchsia:              "#ff00ff",
-      gainsboro:            "#dcdcdc",
-      ghostwhite:           "#f8f8ff",
-      gold:                 "#ffd700",
-      goldenrod:            "#daa520",
-      gray:                 "#808080",
-      green:                "#008000",
-      greenyellow:          "#adff2f",
-      honeydew:             "#f0fff0",
-      hotpink:              "#ff69b4",
-      indianred:            "#cd5c5c",
-      indigo:               "#4b0082",
-      ivory:                "#fffff0",
-      khaki:                "#f0e68c",
-      lavender:             "#e6e6fa",
-      lavenderblush:        "#fff0f5",
-      lawngreen:            "#7cfc00",
-      lemonchiffon:         "#fffacd",
-      lightblue:            "#add8e6",
-      lightcoral:           "#f08080",
-      lightcyan:            "#e0ffff",
-      lightgoldenrodyellow: "#fafad2",
-      lightgrey:            "#d3d3d3",
-      lightgreen:           "#90ee90",
-      lightpink:            "#ffb6c1",
-      lightsalmon:          "#ffa07a",
-      lightseagreen:        "#20b2aa",
-      lightskyblue:         "#87cefa",
-      lightslategray:       "#778899",
-      lightsteelblue:       "#b0c4de",
-      lightyellow:          "#ffffe0",
-      lime:                 "#00ff00",
-      limegreen:            "#32cd32",
-      linen:                "#faf0e6",
-      magenta:              "#ff00ff",
-      maroon:               "#800000",
-      mediumaquamarine:     "#66cdaa",
-      mediumblue:           "#0000cd",
-      mediumorchid:         "#ba55d3",
-      mediumpurple:         "#9370d8",
-      mediumseagreen:       "#3cb371",
-      mediumslateblue:      "#7b68ee",
-      mediumspringgreen:    "#00fa9a",
-      mediumturquoise:      "#48d1cc",
-      mediumvioletred:      "#c71585",
-      midnightblue:         "#191970",
-      mintcream:            "#f5fffa",
-      mistyrose:            "#ffe4e1",
-      moccasin:             "#ffe4b5",
-      navajowhite:          "#ffdead",
-      navy:                 "#000080",
-      oldlace:              "#fdf5e6",
-      olive:                "#808000",
-      olivedrab:            "#6b8e23",
-      orange:               "#ffa500",
-      orangered:            "#ff4500",
-      orchid:               "#da70d6",
-      palegoldenrod:        "#eee8aa",
-      palegreen:            "#98fb98",
-      paleturquoise:        "#afeeee",
-      palevioletred:        "#d87093",
-      papayawhip:           "#ffefd5",
-      peachpuff:            "#ffdab9",
-      peru:                 "#cd853f",
-      pink:                 "#ffc0cb",
-      plum:                 "#dda0dd",
-      powderblue:           "#b0e0e6",
-      purple:               "#800080",
-      red:                  "#ff0000",
-      rosybrown:            "#bc8f8f",
-      royalblue:            "#4169e1",
-      saddlebrown:          "#8b4513",
-      salmon:               "#fa8072",
-      sandybrown:           "#f4a460",
-      seagreen:             "#2e8b57",
-      seashell:             "#fff5ee",
-      sienna:               "#a0522d",
-      silver:               "#c0c0c0",
-      skyblue:              "#87ceeb",
-      slateblue:            "#6a5acd",
-      slategray:            "#708090",
-      snow:                 "#fffafa",
-      springgreen:          "#00ff7f",
-      steelblue:            "#4682b4",
-      tan:                  "#d2b48c",
-      teal:                 "#008080",
-      thistle:              "#d8bfd8",
-      tomato:               "#ff6347",
-      turquoise:            "#40e0d0",
-      violet:               "#ee82ee",
-      wheat:                "#f5deb3",
-      white:                "#ffffff",
-      whitesmoke:           "#f5f5f5",
-      yellow:               "#ffff00",
-      yellowgreen:          "#9acd32"
-    };
-
     // Stores states for pushStyle() and popStyle().
     var styleArray = [];
 
@@ -1579,7 +1584,7 @@
     // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP
     var rectVerts = new Float32Array([0,0,0, 0,1,0, 1,1,0, 1,0,0]);
 
-    var rectNorms = new Float32Array([0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1]);
+    var rectNorms = new Float32Array([0,0,1, 0,0,1, 0,0,1, 0,0,1]);
 
     // Vertex shader for points and lines
     var vShaderSrcUnlitShape =
@@ -1818,8 +1823,12 @@
       "  if(color[0] == -1.0){" +
       "    col = aColor;" +
       "  }" +
-
-      "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
+      
+      // We use the sphere vertices as the normals when we create the sphere buffer.
+      // But this only works if the sphere vertices are unit length, so we 
+      // have to normalize the normals here. Since this is only required for spheres
+      // we could consider placing this in a conditional later on.
+      "  vec3 norm = normalize(vec3( normalTransform * vec4( Normal, 0.0 ) ));" +
 
       "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
@@ -8285,16 +8294,12 @@
      * Converts the passed parameter to the function to its boolean value.
      * It will return an array of booleans if an array is passed in.
      *
-     * @param {int, byte, string} what          the parameter to be converted to boolean
-     * @param {int[], byte[], string[]} what    the array to be converted to boolean
+     * @param {int, byte, string} val          the parameter to be converted to boolean
+     * @param {int[], byte[], string[]} val    the array to be converted to boolean[]
      *
-     * @return {boolean|boolean[]} retrurns a boolean or an array of booleans
+     * @return {boolean|boolean[]} returns a boolean or an array of booleans
      */
-    p.parseBoolean = function (what) {
-        return p['boolean'](what);
-    };
-
-    p['boolean'] = function(val) {
+    p.parseBoolean = function (val) {
       if (val instanceof Array) {
         var ret = [];
         for (var i = 0; i < val.length; i++) {
@@ -8306,20 +8311,38 @@
       }
     };
 
-    // a byte is a number between -128 and 127
-    p['byte'] = function(aNumber) {
-      if (aNumber instanceof Array) {
+    /**
+     * Converts the passed parameter to the function to its byte value. 
+     * A byte is a number between -128 and 127.
+     * It will return an array of bytes if an array is passed in.
+     *
+     * @param {int, char} what        the parameter to be conveted to byte
+     * @param {int[], char[]} what    the array to be converted to byte[]
+     *
+     * @return {byte|byte[]} returns a byte or an array of bytes
+     */
+    p.parseByte = function(what) {
+      if (what instanceof Array) {
         var bytes = [];
-        for (var i = 0; i < aNumber.length; i++) {
-          bytes.push((0 - (aNumber[i] & 0x80)) | (aNumber[i] & 0x7F));
+        for (var i = 0; i < what.length; i++) {
+          bytes.push((0 - (what[i] & 0x80)) | (what[i] & 0x7F));
         }
         return bytes;
       } else {
-        return (0 - (aNumber & 0x80)) | (aNumber & 0x7F);
+        return (0 - (what & 0x80)) | (what & 0x7F);
       }
     };
 
-    p['char'] = function(key) {
+    /**
+     * Converts the passed parameter to the function to its char value. 
+     * It will return an array of chars if an array is passed in.
+     *
+     * @param {int, byte} key        the parameter to be conveted to char
+     * @param {int[], byte[]} key    the array to be converted to char[]
+     *
+     * @return {char|char[]} returns a char or an array of chars
+     */
+    p.parseChar = function(key) {
       if (typeof key === "number") {
         return new Char(String.fromCharCode(key & 0xFFFF));
       } else if (key instanceof Array) {
@@ -8349,7 +8372,16 @@
       }
     }
 
-    p['float'] = function(val) {
+    /**
+     * Converts the passed parameter to the function to its float value. 
+     * It will return an array of floats if an array is passed in.
+     *
+     * @param {int, char, boolean, string} val            the parameter to be conveted to float
+     * @param {int[], char[], boolean[], string[]} val    the array to be converted to float[]
+     *
+     * @return {float|float[]} returns a float or an array of floats
+     */
+    p.parseFloat = function(val) {
       if (val instanceof Array) {
         var ret = [];
         for (var i = 0; i < val.length; i++) {
@@ -8361,37 +8393,100 @@
       }
     };
 
-    function intScalar(val) {
+    function intScalar(val, radix) {
       if (typeof val === 'number') {
         return val & 0xFFFFFFFF;
       } else if (typeof val === 'boolean') {
         return val ? 1 : 0;
       } else if (typeof val === 'string') {
-        var number = parseInt(val, 10); // Force decimal radix. Don't convert hex or octal (just like p5)
+        var number = parseInt(val, radix || 10); // Default to decimal radix.
         return number & 0xFFFFFFFF;
       } else if (val instanceof Char) {
         return val.code;
       }
     }
 
-    p['int'] = function(val) {
+    /**
+     * Converts the passed parameter to the function to its int value. 
+     * It will return an array of ints if an array is passed in.
+     *
+     * @param {string, char, boolean, float} val            the parameter to be conveted to int
+     * @param {string[], char[], boolean[], float[]} val    the array to be converted to int[]
+     * @param {int} radix                                   optional the radix of the number (for js compatibility)
+     *
+     * @return {int|int[]} returns a int or an array of ints
+     */
+    p.parseInt = function(val, radix) {
       if (val instanceof Array) {
         var ret = [];
         for (var i = 0; i < val.length; i++) {
           if (typeof val[i] === 'string' && !/^\s*[+\-]?\d+\s*$/.test(val[i])) {
             ret.push(0);
           } else {
-            ret.push(intScalar(val[i]));
+            ret.push(intScalar(val[i], radix));
           }
         }
         return ret;
       } else {
-        return intScalar(val);
+        return intScalar(val, radix);
       }
     };
 
     p.__int_cast = function(val) {
       return 0|val;
+    };
+
+    p.__instanceof = function(obj, type) {
+      if (typeof type !== "function") {
+        throw "Function is expected as type argument for instanceof operator";
+      }
+
+      if (typeof obj === "string") {
+        // special case for strings
+        return type === Object || type === String;
+      }
+
+      if (obj instanceof type) {
+        // fast check if obj is already of type instance
+        return true;
+      }
+
+      if (typeof obj !== "object" || obj === null) {
+        return false; // not an object or null
+      }
+
+      var objType = obj.constructor;
+      if (type.$isInterface) {
+        // expecting the interface
+        // queueing interfaces from type and its base classes
+        var interfaces = [];
+        while (objType) {
+          if (objType.$interfaces) {
+            interfaces = interfaces.concat(objType.$interfaces);
+          }
+          objType = objType.$base;
+        }
+        while (interfaces.length > 0) {
+          var i = interfaces.shift();
+          if (i === type) {
+            return true;
+          }
+          // wide search in base interfaces
+          if (i.$interfaces) {
+            interfaces = interfaces.concat(i.$interfaces);
+          }
+        }
+        return false;
+      }
+
+      while (objType.hasOwnProperty("$base")) {
+        objType = objType.$base;
+        if (objType === type) {
+          return true; // object was found
+        }
+      }
+
+      return false;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -9371,16 +9466,22 @@
 
       curContext.useProgram(programObject3D);
 
+      var mvm = new PMatrix3D();
+      mvm.scale(1, -1, 1);
+      mvm.apply(modelView.array());
+      mvm = mvm.array();
+      
       // We need to multiply the direction by the model view matrix, but
       // the mult function checks the w component of the vector, if it isn't
-      // present, it uses 1, so we use a very small value as a work around.
-      var dir = [nx, ny, nz, -0.00000000001];
-      var view = new PMatrix3D();
-      view.set(modelView.array());
-      view.mult(dir, dir);
+      // present, it uses 1, so we manually multiply.
+      var dir = [
+        mvm[0] * nx + mvm[4] * ny + mvm[8] * nz,
+        mvm[1] * nx + mvm[5] * ny + mvm[9] * nz,
+        mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
+      ];
 
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
-      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", [dir[0], -dir[1], dir[2]]);
+      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", dir);
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
     };
@@ -9506,7 +9607,7 @@
       view.scale(1, -1, 1);
       view.apply(modelView.array());
       view.mult(pos, pos);
-
+      
       curContext.useProgram(programObject3D);
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
@@ -9570,24 +9671,29 @@
 
       curContext.useProgram(programObject3D);
 
-      // place the point in view space once instead of once per vertex
-      // in the shader.
+      // multiply the position and direction by the model view matrix
+      // once per object rather than once per vertex.
       var pos = new PVector(x, y, z);
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
-      view.apply(modelView.array());
-      view.mult(pos, pos);
+      var mvm = new PMatrix3D();
+      mvm.scale(1, -1, 1);
+      mvm.apply(modelView.array());
+      mvm.mult(pos, pos);
+
+      // convert to array since we need to directly access the elements
+      mvm = mvm.array();
 
       // We need to multiply the direction by the model view matrix, but
       // the mult function checks the w component of the vector, if it isn't
       // present, it uses 1, so we use a very small value as a work around.
-      var dir = [nx, ny, nz, -0.00000001];
-      view.set(modelView.array());
-      view.mult(dir, dir);
-
+      var dir = [
+          mvm[0] * nx + mvm[4] * ny + mvm[8] * nz,
+          mvm[1] * nx + mvm[5] * ny + mvm[9] * nz,
+          mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
+      ];
+      
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-      uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", [dir[0], -dir[1], dir[2]]);
+      uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", dir);
       uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
       uniformf("lights.angle.3d." + lightCount, programObject3D, "lights" + lightCount + ".angle", angle);
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 3);
@@ -9868,24 +9974,32 @@
 
         uniformf("color3d", programObject3D, "color", fillStyle);
 
-        // Create the normal transformation matrix
-        var v = new PMatrix3D();
-        v.set(view);
+        // Calculating the normal matrix can be expensive, so only
+        // do it if it's necessary
+        if(lightCount > 0){
+          // Create the normal transformation matrix
+          var v = new PMatrix3D();
+          v.set(view);
 
-        var m = new PMatrix3D();
-        m.set(model);
+          var m = new PMatrix3D();
+          m.set(model);
 
-        v.mult(m);
+          v.mult(m);
 
-        var normalMatrix = new PMatrix3D();
-        normalMatrix.set(v);
-        normalMatrix.invert();
-        normalMatrix.transpose();
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+          normalMatrix.transpose();
 
-        uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
+        }
+        else{
+          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+        }
 
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
-        vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
+
 
         // Turn off per vertex colors
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
@@ -10100,19 +10214,29 @@
       proj.transpose();
 
       if (doFill) {
-        // Create a normal transformation matrix
-        var v = new PMatrix3D();
-        v.set(view);
+        // Calculating the normal matrix can be expensive, so only
+        // do it if it's necessary
+        if(lightCount > 0){
+          // Create a normal transformation matrix
+          var v = new PMatrix3D();
+          v.set(view);
 
-        var m = new PMatrix3D();
-        m.set(model);
+          var m = new PMatrix3D();
+          m.set(model);
 
-        v.mult(m);
+          v.mult(m);
 
-        var normalMatrix = new PMatrix3D();
-        normalMatrix.set(v);
-        normalMatrix.invert();
-        normalMatrix.transpose();
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+          normalMatrix.transpose();
+          
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
+        }
+        else{
+          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+        }
 
         curContext.useProgram(programObject3D);
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
@@ -10120,10 +10244,8 @@
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
         uniformMatrix("view3d", programObject3D, "view", false, view.array());
         uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
-        uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
 
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
-        vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
 
         // Turn off per vertex colors
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
@@ -11088,6 +11210,8 @@
      */
     Drawing2D.prototype.endShape = function(mode) {
       // Duplicated in Drawing3D; too many variables used
+      if (vertArray.length === 0) { return; }
+
       var closeShape = mode === PConstants.CLOSE;
       var lineVertArray = [];
       var fillVertArray = [];
@@ -11389,6 +11513,8 @@
     
     Drawing3D.prototype.endShape = function(mode) {
       // Duplicated in Drawing3D; too many variables used
+      if (vertArray.length === 0) { return; }
+
       var closeShape = mode === PConstants.CLOSE;
       var lineVertArray = [];
       var fillVertArray = [];
@@ -12329,7 +12455,7 @@
         for (i = startLUT; i < stopLUT; i++) {
           ii = i % PConstants.SINCOS_LENGTH;
           if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
-          p.vertex(centerX + parseFloat(Math.cos(ii * PConstants.DEG_TO_RAD * 0.5)) * hr,centerY + parseFloat(Math.sin(ii * PConstants.DEG_TO_RAD * 0.5)) * vr);
+          p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
         }
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
@@ -12345,8 +12471,10 @@
         for (i = startLUT; i < stopLUT; i ++) {
           ii = i % PConstants.SINCOS_LENGTH;
           if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
-          p.vertex(centerX + parseFloat(Math.cos(ii * PConstants.DEG_TO_RAD * 0.5)) * hr, centerY + parseFloat(Math.sin(ii * PConstants.DEG_TO_RAD * 0.5)) * vr);
+          p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
         }
+        ii = stopLUT % PConstants.SINCOS_LENGTH;
+        p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
         p.endShape();
         doFill = savedFill;
       }
@@ -12742,23 +12870,28 @@
 
         uniformf("color3d", programObject3D, "color", fillStyle);
 
-        var v = new PMatrix3D();
-        v.set(view);
+        if(lightCount > 0){
+          var v = new PMatrix3D();
+          v.set(view);
 
-        var m = new PMatrix3D();
-        m.set(model);
+          var m = new PMatrix3D();
+          m.set(model);
 
-        v.mult(m);
+          v.mult(m);
 
-        var normalMatrix = new PMatrix3D();
-        normalMatrix.set(v);
-        normalMatrix.invert();
-        normalMatrix.transpose();
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+          normalMatrix.transpose();
 
-        uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
-
+          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
+        }
+        else{
+          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+        }
+        
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
-        vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
 
         curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -13237,13 +13370,13 @@
       this.mask = function(mask) {
         this.__mask = undef;
 
-        if (mask.constructor.name === "PImage") {
+        if (mask instanceof PImage) {
           if (mask.width === this.width && mask.height === this.height) {
             this.__mask = mask;
           } else {
             throw "mask must have the same dimensions as PImage.";
           }
-        } else if (typeof mask === "object" && mask.constructor === Array) { // this is a pixel array
+        } else if (mask instanceof Array) { // this is a pixel array
           // mask pixel array needs to be the same length as this.pixels
           // how do we update this for 0.9 this.imageData holding pixels ^^
           // mask.constructor ? and this.pixels.length = this.imageData.data.length instead ?
@@ -13452,7 +13585,9 @@
       }
       // if image is in the preloader cache return a new PImage
       if (curSketch.imageCache.images[file]) {
-        return new PImage(curSketch.imageCache.images[file]);
+        var pimg = new PImage(curSketch.imageCache.images[file]);
+        pimg.loaded = true;
+        return pimg;
       }
       // else async load it
       else {
@@ -14038,7 +14173,7 @@
 
           if (img.__mask) {
             var j, size;
-            if (img.__mask.constructor.name === "PImage") {
+            if (img.__mask instanceof PImage) {
               var objMask = img.__mask.toImageData();
               for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
                 // using it as an alpha channel
@@ -14075,16 +14210,6 @@
         p.vertex(x+wid, y+hgt, 0, wid, hgt);
         p.vertex(x+wid, y, 0, wid, 0);
         p.endShape();
-      }
-    };
-
-    // Clears a rectangle in the Canvas element or the whole Canvas
-    p.clear = function clear(x, y, width, height) {
-      var curContext = drawing.$ensureContext();
-      if (arguments.length === 0) {
-        curContext.clearRect(0, 0, p.width, p.height);
-      } else {
-        curContext.clearRect(x, y, width, height);
       }
     };
 
@@ -14810,7 +14935,6 @@
                                         destPixels[((destOffset + x) * 4) + 2],
                                         destPixels[((destOffset + x) * 4) + 3]);
               destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
-              destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
               //destPixels[destOffset + x] = p.modes.add(destPixels[destOffset + x], p.filter_bilinear());
               destPixels[(destOffset + x) * 4] = destColor[0];
               destPixels[(destOffset + x) * 4 + 1] = destColor[1];
@@ -15281,20 +15405,30 @@
      * @see #textFont
      */
     Drawing2D.prototype.textWidth = function(str) {
-      curContext.font = curTextSize + "px " + curTextFont.name;
-      return curContext.measureText(str).width;
+      var lines = toP5String(str).split(/\r?\n/g), width = 0;
+      var i, linesCount = lines.length;
+
+      curContext.font =  curTextSize + "px " + curTextFont.name;
+      for (i = 0; i < linesCount; ++i) {
+        width = Math.max(width, curContext.measureText(lines[i]).width);
+      }
+      return width;
     };
     
     Drawing3D.prototype.textWidth = function(str) {
+      var lines = toP5String(str).split(/\r?\n/g), width = 0;
+      var i, linesCount = lines.length;
       if (textcanvas === undef) {
         textcanvas = document.createElement("canvas");
       }
-      var oldContext = curContext;
-      curContext = textcanvas.getContext("2d");
-      curContext.font = curTextSize + "px " + curTextFont.name;
-      textcanvas.width = curContext.measureText(str).width;
-      curContext = oldContext;
-      return textcanvas.width;
+
+      var textContext = textcanvas.getContext("2d");
+      textContext.font =  curTextSize + "px " + curTextFont.name;
+      
+      for (i = 0; i < linesCount; ++i) {
+        width = Math.max(width, textContext.measureText(lines[i]).width);
+      }
+      return width;
     };
 
     p.textLeading = function textLeading(leading) {
@@ -16191,7 +16325,7 @@
           if (!subClass.hasOwnProperty(propertyName)) {
             subClass[propertyName] = baseClass[propertyName];
           }
-        } else if(propertyName !== "$upcast" && !(propertyName in subClass)) {
+        } else if(propertyName.charAt(0) !== "$" && !(propertyName in subClass)) {
           // Delaying the properties extension due to the IE9 bug (see #918).
           properties.push(propertyName);
         }
@@ -16217,6 +16351,10 @@
       extendClass(derived, base);
     };
 
+    p.extendInterfaceMembers = function(derived, base) {
+      extendClass(derived, base);
+    };
+
     p.addMethod = function addMethod(object, name, fn, superAccessor) {
       if (object[name]) {
         var args = fn.length,
@@ -16239,14 +16377,8 @@
       if (typeof bounds[0] === 'number') {
         var itemsCount = 0 | bounds[0];
         if (bounds.length <= 1) {
-          if (type === "int") {
-            result = new Int32Array(itemsCount);
-          } else if (type === "float") {
-            result = new Float32Array(itemsCount);
-          } else {
-            result = [];
-            result.length = itemsCount;
-          }
+          result = [];
+          result.length = itemsCount;
           for (var i = 0; i < itemsCount; ++i) {
             result[i] = 0;
           }
@@ -16951,18 +17083,18 @@
       "arc", "arrayCopy", "asin", "atan", "atan2", "background", "beginCamera",
       "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint",
       "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
-      "blit_resize", "blue", "boolean", "box", "breakShape", "brightness",
-      "byte", "camera", "ceil", "char", "Character", "clear", "color",
+      "blit_resize", "blue", "box", "breakShape", "brightness",
+      "camera", "ceil", "Character", "color",
       "colorMode", "concat", "console", "constrain", "copy", "cos", "createFont",
       "createGraphics", "createImage", "cursor", "curve", "curveDetail",
       "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
       "defaultColor", "degrees", "directionalLight", "disableContextMenu",
       "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu",
       "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
-      "fill", "filter", "filter_bilinear", "filter_new_scanline", "float",
+      "fill", "filter", "filter_bilinear", "filter_new_scanline",
       "floor", "focused", "frameCount", "frameRate", "frustum", "get",
       "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour", "hue",
-      "image", "imageMode", "Import", "int", "intersect", "join", "key",
+      "image", "imageMode", "Import", "intersect", "join", "key",
       "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
       "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
       "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape",
@@ -16973,7 +17105,8 @@
       "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
-      "parseBoolean", "peg", "perspective", "PFont", "PImage", "pixels",
+      "parseBoolean", "parseByte", "parseChar", "parseFloat", "parseInt", 
+      "peg", "perspective", "PFont", "PImage", "pixels",
       "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
@@ -16991,7 +17124,7 @@
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
       "vertex", "width", "XMLElement", "year", "__equals", "__frameRate",
-      "__hashCode", "__int_cast", "__keyPressed", "__mousePressed",
+      "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
       "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
       "__toCharArray"];
 
@@ -17134,7 +17267,22 @@
       }
     });
 
-    var atoms = splitToAtoms(codeWoStrings);
+    // removes generics
+    var genericsWereRemoved;
+    var codeWoGenerics = codeWoStrings;
+    do {
+      genericsWereRemoved = false;
+      codeWoGenerics = codeWoGenerics.replace(/([\<]?)\<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*\>([=]?)/g,
+      function(all, before, types, after) {
+        if(!!before || !!after) {
+          return all;
+        }
+        genericsWereRemoved = true;
+        return "";
+      });
+    } while (genericsWereRemoved);
+
+    var atoms = splitToAtoms(codeWoGenerics);
     var replaceContext;
     var declaredClasses = {}, currentClassId, classIdSeed = 0;
 
@@ -17155,9 +17303,9 @@
     }
 
     // functions defined below
-    var transformClassBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
+    var transformClassBody, transformInterfaceBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
 
-    var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
+    var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
     var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract|synchronized)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
     var fieldTest = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
     var cstrsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+")/g;
@@ -17228,7 +17376,7 @@
       if(paramsWoPars !== "") {
         var paramList = paramsWoPars.split(",");
         for(var i=0; i < paramList.length; ++i) {
-          var param = /\b([A-Za-z_$][\w$]*\b)\s*("[ABC][\d]*")?$/.exec(paramList[i]);
+          var param = /\b([A-Za-z_$][\w$]*\b)(\s*"[ABC][\d]*")*\s*$/.exec(paramList[i]);
           result.push(new AstParam(param[1]));
         }
       }
@@ -17282,7 +17430,7 @@
         }
       });
       // (int)??? -> __int_cast(???)
-      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~]+)/g, function(all, arg) {
+      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~\<\>\=]+)/g, function(all, arg) {
         var trimmed = trimSpaces(arg);
         return trimmed.untrim("__int_cast(" + trimmed.middle + ")");
       });
@@ -17304,6 +17452,10 @@
       // the Processing.js source, replace frameRate so it isn't
       // confused with frameRate(), as well as keyPressed and mousePressed
       s = s.replace(/\b(frameRate|keyPressed|mousePressed)\b(?!\s*"B)/g, "__$1");
+      // "boolean", "byte", "int", etc. => "parseBoolean", "parseByte", "parseInt", etc.
+      s = s.replace(/\b(boolean|byte|char|float|int)\s*"B/g, function(all, name) {
+        return "parse" + name.substring(0, 1).toUpperCase() + name.substring(1) + "\"B";
+      });
       // "pixels" replacements:
       //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
       //   pixels.length => pixels.getLength()
@@ -17334,16 +17486,27 @@
       //   xxx.replace(yyy) -> __replace(xxx, yyy)
       //   "xx".replace(yyy) -> __replace("xx", yyy)
       var repeatJavaReplacement;
+      function replacePrototypeMethods(all, subject, method, atomIndex) {
+        var atom = atoms[atomIndex];
+        repeatJavaReplacement = true;
+        var trimmed = trimSpaces(atom.substring(1, atom.length - 1));
+        return "__" + method  + ( trimmed.middle === "" ? addAtom("(" + subject.replace(/\.\s*$/, "") + ")", 'B') :
+          addAtom("(" + subject.replace(/\.\s*$/, "") + "," + trimmed.middle + ")", 'B') );
+      }
       do {
         repeatJavaReplacement = false;
         s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace)\s*"B(\d+)"/g,
-          function(all, subject, method, atomIndex) {
-            var atom = atoms[atomIndex];
-            repeatJavaReplacement = true;
-            var trimmed = trimSpaces(atom.substring(1, atom.length - 1));
-            return "__" + method  + ( trimmed.middle === "" ? addAtom("(" + subject.replace(/\.\s*$/, "") + ")", 'B') :
-              addAtom("(" + subject.replace(/\.\s*$/, "") + "," + trimmed.middle + ")", 'B') );
-          });
+          replacePrototypeMethods);
+      } while (repeatJavaReplacement);
+      // xxx instanceof yyy -> __instanceof(xxx, yyy)
+      function replaceInstanceof(all, subject, type) {
+        repeatJavaReplacement = true;
+        return "__instanceof" + addAtom("(" + subject + ", " + type + ")", 'B');
+      }
+      do {
+        repeatJavaReplacement = false;
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*(?:\.\s*[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*)*)instanceof\s+([A-Za-z_$][\w$]*\s*(?:\.\s*[A-Za-z_$][\w$]*)*)/g,
+          replaceInstanceof);
       } while (repeatJavaReplacement);
       // this() -> $constr()
       s = s.replace(/\bthis(\s*"B\d+")/g, "$$constr$1");
@@ -17361,19 +17524,15 @@
     };
 
     function transformInlineClass(class_) {
-      var m = new RegExp(/\bnew\s*(Runnable)\s*"B\d+"\s*"A(\d+)"/).exec(class_);
-      if(m === null) {
-        return "null";
-      } else {
-        var oldClassId = currentClassId, newClassId = generateClassId();
-        currentClassId = newClassId;
-        // only Runnable supported
-        var inlineClass = new AstInlineClass("Runnable", transformClassBody(atoms[m[2]], m[1]));
-        appendClass(inlineClass, newClassId, oldClassId);
-
-        currentClassId = oldClassId;
-        return inlineClass;
-      }
+      var m = new RegExp(/\bnew\s*([A-Za-z_$][\w$]*\s*(?:\.\s*[A-Za-z_$][\w$]*)*)\s*"B\d+"\s*"A(\d+)"/).exec(class_);
+      var oldClassId = currentClassId, newClassId = generateClassId();
+      currentClassId = newClassId;
+      var uniqueClassName = m[1] + "$" + newClassId;
+      var inlineClass = new AstInlineClass(uniqueClassName,
+        transformClassBody(atoms[m[2]], uniqueClassName, "", "implements " + m[1]));
+      appendClass(inlineClass, newClassId, oldClassId);
+      currentClassId = oldClassId;
+      return inlineClass;
     }
 
     function AstFunction(name, params, body) {
@@ -17630,12 +17789,14 @@
       });
     }
 
-    function AstInnerInterface(name) {
+    function AstInnerInterface(name, body, isStatic) {
       this.name = name;
+      this.body = body;
+      this.isStatic = isStatic;
+      body.owner = this;
     }
     AstInnerInterface.prototype.toString = function() {
-      return  "this." + this.name + " = function " + this.name + "() { "+
-        "throw 'This is an interface'; };";
+      return "" + this.body;
     };
     function AstInnerClass(name, body, isStatic) {
       this.name = name;
@@ -17651,17 +17812,17 @@
       var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
       classesRegex.lastIndex = 0;
       var isStatic = m[1].indexOf("static") >= 0;
-      var body = atoms[getAtomIndex(m[6])];
+      var body = atoms[getAtomIndex(m[6])], innerClass;
+      var oldClassId = currentClassId, newClassId = generateClassId();
+      currentClassId = newClassId;
       if(m[2] === "interface") {
-        return new AstInnerInterface(m[3]);
+        innerClass = new AstInnerInterface(m[3], transformInterfaceBody(body, m[3], m[4]), isStatic);
       } else {
-        var oldClassId = currentClassId, newClassId = generateClassId();
-        currentClassId = newClassId;
-        var innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]), isStatic);
-        appendClass(innerClass, newClassId, oldClassId);
-        currentClassId = oldClassId;
-        return innerClass;
+        innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]), isStatic);
       }
+      appendClass(innerClass, newClassId, oldClassId);
+      currentClassId = oldClassId;
+      return innerClass;
     }
 
     function AstClassMethod(name, params, body, isStatic) {
@@ -17671,7 +17832,6 @@
       this.isStatic = isStatic;
     }
     AstClassMethod.prototype.toString = function(){
-      var thisReplacement = replaceContext({ name: "[this]" });
       var paramNames = appendToLookupTable({}, this.params.getNames());
       var oldContext = replaceContext;
       replaceContext = function (subject) {
@@ -17761,10 +17921,137 @@
       return new AstConstructor(params, transformStatementsBlock(atoms[m[2]]));
     }
 
-    function AstClassBody(name, baseClassName, functions, methods, fields, cstrs, innerClasses, misc) {
+    function AstInterfaceBody(name, interfacesNames, methodsNames, fields, innerClasses, misc) {
+      var i,l;
+      this.name = name;
+      this.interfacesNames = interfacesNames;
+      this.methodsNames = methodsNames;
+      this.fields = fields;
+      this.innerClasses = innerClasses;
+      this.misc = misc;
+      for(i=0,l=fields.length; i<l; ++i) {
+        fields[i].owner = this;
+      }
+    }
+    AstInterfaceBody.prototype.getMembers = function(classFields, classMethods, classInners) {
+      if(this.owner.base) {
+        this.owner.base.body.getMembers(classFields, classMethods, classInners);
+      }
+      var i, j, l, m;
+      for(i=0,l=this.fields.length;i<l;++i) {
+        var fieldNames = this.fields[i].getNames();
+        for(j=0,m=fieldNames.length;j<m;++j) {
+          classFields[fieldNames[j]] = this.fields[i];
+        }
+      }
+      for(i=0,l=this.methodsNames.length;i<l;++i) {
+        var methodName = this.methodsNames[i];
+        classMethods[methodName] = true;
+      }
+      for(i=0,l=this.innerClasses.length;i<l;++i) {
+        var innerClass = this.innerClasses[i];
+        classInners[innerClass.name] = innerClass;
+      }
+    };
+    AstInterfaceBody.prototype.toString = function() {
+      function getScopeLevel(p) {
+        var i = 0;
+        while(p) {
+          ++i;
+          p=p.scope;
+        }
+        return i;
+      }
+
+      var scopeLevel = getScopeLevel(this.owner);
+
+      var className = this.name;
+      var staticDefinitions = "";
+      var metadata = "";
+
+      var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
+      this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
+
+      var i, l, j, m;
+
+      if (this.owner.interfaces) {
+        // interface name can be present, but interface is not
+        var resolvedInterfaces = [], resolvedInterface;
+        for (i = 0, l = this.interfacesNames.length; i < l; ++i) {
+          if (!this.owner.interfaces[i]) {
+            continue;
+          }
+          resolvedInterface = replaceContext({name: this.interfacesNames[i]});
+          resolvedInterfaces.push(resolvedInterface);
+          staticDefinitions += "$p.extendInterfaceMembers(" + className + ", " + resolvedInterface + ");\n";
+        }
+        metadata += className + ".$interfaces = [" + resolvedInterfaces.join(", ") + "];\n";
+      }
+      metadata += className + ".$isInterface = true;\n";
+      metadata += className + ".$methods = [\'" + this.methodsNames.join("\', \'") + "\'];\n";
+
+      sortByWeight(this.innerClasses);
+      for (i = 0, l = this.innerClasses.length; i < l; ++i) {
+        var innerClass = this.innerClasses[i];
+        if (innerClass.isStatic) {
+          staticDefinitions += className + "." + innerClass.name + " = " + innerClass + ";\n";
+        }
+      }
+
+      for (i = 0, l = this.fields.length; i < l; ++i) {
+        var field = this.fields[i];
+        if (field.isStatic) {
+          staticDefinitions += className + "." + field.definitions.join(";\n" + className + ".") + ";\n";
+        }
+      }
+
+      return "(function() {\n" +
+        "function " + className + "() { throw \'Unable to create the interface\'; }\n" +
+        staticDefinitions +
+        metadata +
+        "return " + className + ";\n" +
+        "})()";
+    };
+
+    transformInterfaceBody = function(body, name, baseInterfaces) {
+      var declarations = body.substring(1, body.length - 1);
+      declarations = extractClassesAndMethods(declarations);
+      declarations = extractConstructors(declarations, name);
+      var methodsNames = [], classes = [];
+      declarations = declarations.replace(/"([DE])(\d+)"/g, function(all, type, index) {
+        if(type === 'D') { methodsNames.push(index); }
+        else if(type === 'E') { classes.push(index); }
+        return "";
+      });
+      var fields = declarations.split(/;(?:\s*;)*/g);
+      var baseInterfaceNames;
+      var i, l;
+
+      if(baseInterfaces !== undef) {
+        baseInterfaceNames = baseInterfaces.replace(/^\s*extends\s+(.+?)\s*$/g, "$1").split(/\s*,\s*/g);
+      }
+
+      for(i = 0, l = methodsNames.length; i < l; ++i) {
+        var method = transformClassMethod(atoms[methodsNames[i]]);
+        methodsNames[i] = method.name;
+      }
+      for(i = 0, l = fields.length - 1; i < l; ++i) {
+        var field = trimSpaces(fields[i]);
+        fields[i] = transformClassField(field.middle);
+      }
+      var tail = fields.pop();
+      for(i = 0, l = classes.length; i < l; ++i) {
+        classes[i] = transformInnerClass(atoms[classes[i]]);
+      }
+
+      return new AstInterfaceBody(name, baseInterfaceNames, methodsNames, fields, classes, { tail: tail });
+    };
+
+    function AstClassBody(name, baseClassName, interfacesNames, functions, methods, fields, cstrs, innerClasses, misc) {
       var i,l;
       this.name = name;
       this.baseClassName = baseClassName;
+      this.interfacesNames = interfacesNames;
       this.functions = functions;
       this.methods = methods;
       this.fields = fields;
@@ -17811,6 +18098,7 @@
       var className = this.name;
       var result = "var " + selfId + " = this;\n";
       var staticDefinitions = "";
+      var metadata = "";
 
       var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
       this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
@@ -17832,20 +18120,37 @@
         return oldContext(subject);
       };
 
+      var resolvedBaseClassName;
       if (this.baseClassName) {
+        resolvedBaseClassName = oldContext({name: this.baseClassName});
         result += "var $super = { $upcast: " + selfId + " };\n";
-        result += "function $superCstr(){" + oldContext({name: this.baseClassName}) +
+        result += "function $superCstr(){" + resolvedBaseClassName +
           ".apply($super,arguments);if(!('$self' in $super)) $p.extendClassChain($super)}\n";
+        metadata += className + ".$base = " + resolvedBaseClassName + ";\n";
       } else {
         result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
       }
 
-      if (this.base) {
+      if (this.owner.base) {
         // base class name can be present, but class is not
-        staticDefinitions += "$p.extendStaticMembers(" + className + ", " + this.baseClassName + ");\n";
+        staticDefinitions += "$p.extendStaticMembers(" + className + ", " + resolvedBaseClassName + ");\n";
       }
 
       var i, l, j, m;
+
+      if (this.owner.interfaces) {
+        // interface name can be present, but interface is not
+        var resolvedInterfaces = [], resolvedInterface;
+        for (i = 0, l = this.interfacesNames.length; i < l; ++i) {
+          if (!this.owner.interfaces[i]) {
+            continue;
+          }
+          resolvedInterface = oldContext({name: this.interfacesNames[i]});
+          resolvedInterfaces.push(resolvedInterface);
+          staticDefinitions += "$p.extendInterfaceMembers(" + className + ", " + resolvedInterface + ");\n";
+        }
+        metadata += className + ".$interfaces = [" + resolvedInterfaces.join(", ") + "];\n";
+      }
 
       if (this.functions.length > 0) {
         result += this.functions.join('\n') + '\n';
@@ -17922,11 +18227,12 @@
       return "(function() {\n" +
         "function " + className + "() {\n" + result + "}\n" +
         staticDefinitions +
+        metadata +
         "return " + className + ";\n" +
         "})()";
     };
 
-    transformClassBody = function(body, name, baseName, impls) {
+    transformClassBody = function(body, name, baseName, interfaces) {
       var declarations = body.substring(1, body.length - 1);
       declarations = extractClassesAndMethods(declarations);
       declarations = extractConstructors(declarations, name);
@@ -17939,11 +18245,15 @@
         return "";
       });
       var fields = declarations.replace(/^(?:\s*;)+/, "").split(/;(?:\s*;)*/g);
-      var baseClassName;
+      var baseClassName, interfacesNames;
       var i;
 
       if(baseName !== undef) {
         baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*$/g, "$1");
+      }
+
+      if(interfaces !== undef) {
+        interfacesNames = interfaces.replace(/^\s*implements\s+(.+?)\s*$/g, "$1").split(/\s*,\s*/g);
       }
 
       for(i = 0; i < functions.length; ++i) {
@@ -17964,16 +18274,18 @@
         classes[i] = transformInnerClass(atoms[classes[i]]);
       }
 
-      return new AstClassBody(name, baseClassName, functions, methods, fields, cstrs,
+      return new AstClassBody(name, baseClassName, interfacesNames, functions, methods, fields, cstrs,
         classes, { tail: tail });
     };
 
-    function AstInterface(name) {
+    function AstInterface(name, body) {
       this.name = name;
+      this.body = body;
+      body.owner = this;
     }
     AstInterface.prototype.toString = function() {
-      return "function " + this.name + "() {  throw 'This is an interface'; }\n" +
-        "$p." + this.name + " = " + this.name + ";";
+      return "var " + this.name + " = " + this.body + ";\n" +
+        "$p." + this.name + " = " + this.name + ";\n";
     };
     function AstClass(name, body) {
       this.name = name;
@@ -17982,24 +18294,24 @@
     }
     AstClass.prototype.toString = function() {
       return "var " + this.name + " = " + this.body + ";\n" +
-        "$p." + this.name + " = " + this.name + ";";
+        "$p." + this.name + " = " + this.name + ";\n";
     };
 
     function transformGlobalClass(class_) {
       var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
       classesRegex.lastIndex = 0;
       var body = atoms[getAtomIndex(m[6])];
+      var oldClassId = currentClassId, newClassId = generateClassId();
+      currentClassId = newClassId;
+      var globalClass;
       if(m[2] === "interface") {
-        return new AstInterface(m[3]);
+        globalClass = new AstInterface(m[3], transformInterfaceBody(body, m[3], m[4]) );
       } else {
-        var oldClassId = currentClassId, newClassId = generateClassId();
-        currentClassId = newClassId;
-        var globalClass = new AstClass(m[3], transformClassBody(body, m[3], m[4], m[5]) );
-        appendClass(globalClass, newClassId, oldClassId);
-
-        currentClassId = oldClassId;
-        return globalClass;
+        globalClass = new AstClass(m[3], transformClassBody(body, m[3], m[4], m[5]) );
       }
+      appendClass(globalClass, newClassId, oldClassId);
+      currentClassId = oldClassId;
+      return globalClass;
     }
 
     function AstMethod(name, params, body) {
@@ -18172,12 +18484,13 @@
       this.statements = statements;
     }
     AstRoot.prototype.toString = function() {
-      var classes = [], otherStatements = [];
+      var classes = [], otherStatements = [], statement;
       for (var i = 0, len = this.statements.length; i < len; ++i) {
-        if (this.statements[i] instanceof AstClass) {
-          classes.push(this.statements[i]);
+        statement = this.statements[i];
+        if (statement instanceof AstClass || statement instanceof AstInterface) {
+          classes.push(statement);
         } else {
-          otherStatements.push(this.statements[i]);
+          otherStatements.push(statement);
         }
       }
       sortByWeight(classes);
@@ -18261,6 +18574,24 @@
               parent.derived.push(class_);
             }
           }
+          var interfacesNames = class_.body.interfacesNames,
+            interfaces = [], i, l;
+          if (interfacesNames && interfacesNames.length > 0) {
+            for (i = 0, l = interfacesNames.length; i < l; ++i) {
+              var interface_ = findInScopes(class_, interfacesNames[i]);
+              interfaces.push(interface_);
+              if (!interface_) {
+                continue;
+              }
+              if (!interface_.derived) {
+                interface_.derived = [];
+              }
+              interface_.derived.push(class_);
+            }
+            if (interfaces.length > 0) {
+              class_.interfaces = interfaces;
+            }
+          }
         }
       }
     }
@@ -18291,6 +18622,17 @@
           queue.push(class_.base.classId);
           checked[class_.base.classId] = true;
           class_.base.weight = class_.weight + 1;
+        }
+        if (class_.interfaces) {
+          var i, l;
+          for (i = 0, l = class_.interfaces.length; i < l; ++i) {
+            if (!class_.interfaces[i] || checked[class_.interfaces[i].classId]) {
+              continue;
+            }
+            queue.push(class_.interfaces[i].classId);
+            checked[class_.interfaces[i].classId] = true;
+            class_.interfaces[i].weight = class_.weight + 1;
+          }
         }
       }
     }
