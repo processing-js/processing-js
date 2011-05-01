@@ -17,8 +17,7 @@
 var canvas1 = document.getElementById("canvas1");
 var processing = new Processing(canvas1);
 processing.size(200, 200);
-
-setInterval(function() {
+processing.draw = function() {
   // determine center and max clock arm length
   var centerX = processing.width / 2, centerY = processing.height / 2;
   var maxArmLength = Math.min(centerX, centerY);
@@ -46,7 +45,8 @@ setInterval(function() {
   // Moving hour arm by second increments
   var secondsPosition = now.getSeconds() / 60;
   drawArm(secondsPosition, 0.90, 1);
-}, 1000);
+};
+processing.loop();
 </script>
 
 <div style="height:0px;width:0px;overflow:hidden;"></div>
