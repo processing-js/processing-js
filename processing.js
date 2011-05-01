@@ -15125,8 +15125,6 @@
     PFont.prototype.width = function(str) {
       if ("measureText" in curContext) {
         return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
-      } else if ("mozMeasureText" in curContext) {
-        return curContext.mozMeasureText(typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
       } else {
         return 0;
       }
@@ -15229,7 +15227,7 @@
         p.textSize(size);
       } else {
         var curContext = drawing.$ensureContext();
-        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+        curContext.font = curTextSize + "px " + curTextFont.name;
       }
     };
 
@@ -15247,7 +15245,7 @@
       if (size) {
         curTextSize = size;
         var curContext = drawing.$ensureContext();
-        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+        curContext.font = curTextSize + "px " + curTextFont.name;
       }
     };
 
@@ -15283,12 +15281,8 @@
      * @see #textFont
      */
     Drawing2D.prototype.textWidth = function(str) {
-      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-      if ("fillText" in curContext) {
-        return curContext.measureText(str).width;
-      } else if ("mozDrawText" in curContext) {
-        return curContext.mozMeasureText(str);
-      }
+      curContext.font = curTextSize + "px " + curTextFont.name;
+      return curContext.measureText(str).width;
     };
     
     Drawing3D.prototype.textWidth = function(str) {
@@ -15297,12 +15291,8 @@
       }
       var oldContext = curContext;
       curContext = textcanvas.getContext("2d");
-      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-      if ("fillText" in curContext) {
-        textcanvas.width = curContext.measureText(str).width;
-      } else if ("mozDrawText" in curContext) {
-        textcanvas.width = curContext.mozMeasureText(str);
-      }
+      curContext.font = curTextSize + "px " + curTextFont.name;
+      textcanvas.width = curContext.measureText(str).width;
       curContext = oldContext;
       return textcanvas.width;
     };
@@ -15559,7 +15549,7 @@
       var textWidth = 0, xOffset = 0;
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
-        if (str && ("fillText" in curContext || "mozDrawText" in curContext)) {
+        if (str && ("fillText" in curContext)) {
           if (isFillDirty) {
             curContext.fillStyle = p.color.toString(currentFillColor);
             isFillDirty = false;
@@ -15567,11 +15557,7 @@
 
           // horizontal offset/alignment
           if(align === PConstants.RIGHT || align === PConstants.CENTER) {
-            if ("fillText" in curContext) {
-              textWidth = curContext.measureText(str).width;
-            } else if ("mozDrawText" in curContext) {
-              textWidth = curContext.mozMeasureText(str);
-            }
+            textWidth = curContext.measureText(str).width;
 
             if(align === PConstants.RIGHT) {
               xOffset = -textWidth;
@@ -15580,14 +15566,7 @@
             }
           }
 
-          if ("fillText" in curContext) {
-            curContext.fillText(str, x+xOffset, y);
-          } else if ("mozDrawText" in curContext) {
-            saveContext();
-            curContext.translate(x+xOffset, y);
-            curContext.mozDrawText(str);
-            restoreContext();
-          }
+          curContext.fillText(str, x+xOffset, y);
         }
       } else {
         // If the font is a Batik SVG font...
@@ -15630,17 +15609,12 @@
       }
       var oldContext = curContext;
       curContext = textcanvas.getContext("2d");
-      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-      var textWidth = 0;
-      if ("fillText" in curContext) {
-        textWidth = curContext.measureText(str).width;
-      } else if ("mozDrawText" in curContext) {
-        textWidth = curContext.mozMeasureText(str);
-      }
+      curContext.font = curTextSize + "px " + curTextFont.name;
+      var textWidth = curContext.measureText(str).width;
       textcanvas.width = textWidth;
       textcanvas.height = curTextSize;
       curContext = textcanvas.getContext("2d"); // refreshes curContext
-      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      curContext.font = curTextSize + "px " + curTextFont.name;
       curContext.textBaseline="top";
 
       // paint on 2D canvas
@@ -15738,21 +15712,15 @@
       var lineWidth = 0;
       var textboxWidth = width;
       var yOffset = 0;
-      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      curContext.font = curTextSize + "px " + curTextFont.name;
       var drawCommands = [];
 
       // run through text, character-by-character
       for (var charPos=0, len=str.length; charPos < len; charPos++)
       {
         var currentChar = str[charPos];
-        var letterWidth = 0;
         var spaceChar = (currentChar === " ");
-
-        if ("fillText" in curContext) {
-          letterWidth = curContext.measureText(currentChar).width;
-        } else if ("mozDrawText" in curContext) {
-          letterWidth = curContext.mozMeasureText(currentChar);
-        }
+        var letterWidth = curContext.measureText(currentChar).width;
 
         // if we aren't looking at a newline, and the text still fits, keep processing
         if (currentChar !== "\n" && (lineWidth + letterWidth < textboxWidth)) {
