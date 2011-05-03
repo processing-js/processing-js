@@ -506,7 +506,22 @@
           throw("Please use the proper number of parameters.");
         }
       };
-
+      /**
+       * @member ArrayList
+       * ArrayList.addAll() appends all of the elements in the specified Collection
+       * to the end of this list, in the order that they are returned by the specified
+       * Collection's Iterator. 
+       *
+       * @param {collection} Any iterable object (ArrayList, HashMap.keySet(), etc.)
+       */
+      this.addAll = function(collection) {
+        if(collection.iterator) {
+          var it = collection.iterator();
+          while(it.hasNext()) {
+            array.push(it.next());
+          }
+        }
+      };
       /**
        * @member ArrayList
        * ArrayList.set() Replaces the element at the specified position in this list with the specified element.
