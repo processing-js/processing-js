@@ -515,9 +515,9 @@
        * @param {collection} Any iterable object (ArrayList, HashMap.keySet(), etc.)
        */
       this.addAll = function(collection) {
-        if(collection.iterator) {
+        if (collection.iterator) {
           var it = collection.iterator();
-          while(it.hasNext()) {
+          while (it.hasNext()) {
             array.push(it.next());
           }
         }
