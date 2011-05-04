@@ -7357,7 +7357,8 @@
     
     Drawing2D.prototype.redraw = function() {
       DrawingShared.prototype.redraw.apply(this, arguments);
-      
+
+      curContext.lineWidth = lineWidth;
       inDraw = true;
       
       saveContext();
