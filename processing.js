@@ -5982,7 +5982,7 @@
     */
     p.subset = function(array, offset, length) {
       if (arguments.length === 2) {
-        return array.slice(offset, array.length - offset);
+        return array.slice(offset, array.length);
       } else if (arguments.length === 3) {
         return array.slice(offset, offset + length);
       }
