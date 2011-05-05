@@ -508,18 +508,37 @@
       };
       /**
        * @member ArrayList
-       * ArrayList.addAll() appends all of the elements in the specified Collection
-       * to the end of this list, in the order that they are returned by the specified
-       * Collection's Iterator. 
+       * ArrayList.addAll(collection) appends all of the elements in the specified
+       * Collection to the end of this list, in the order that they are returned by
+       * the specified Collection's Iterator. 
        *
+       * When called as addAll(index, collection) the elements are inserted into
+       * this list at the position indicated by index.
+       *
+       * @param {index} Optional; specifies the position the colletion should be inserted at
        * @param {collection} Any iterable object (ArrayList, HashMap.keySet(), etc.)
+       * @throws out of bounds error for negative index, or index greater than list size.
        */
-      this.addAll = function(collection) {
-        if (collection.iterator) {
-          var it = collection.iterator();
+      this.addAll = function(arg1, arg2) {
+        // addAll(int, Collection)
+        if (typeof arg1 === "number") {
+          if (arg1 < 0 || arg1 >= array.length) {
+            throw("Index out of bounds for addAll: "+arg1+" greater or equal than "+array.length);
+          }
+          var it = arg2.iterator();
+          while (it.hasNext()) {
+            array.splice(arg1++, 0, it.next());
+          }
+        }
+        // addAll(Collection)
+        else if (arg1.iterator) {
+          var it = arg1.iterator();
           while (it.hasNext()) {
             array.push(it.next());
           }
+        }
+        else {
+          throw("Incompatible argument for addAll: not a iterable collection");
         }
       };
       /**

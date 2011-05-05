@@ -11,3 +11,13 @@ one.addAll(two);
 String[] elements = one.toArray();
 String[] match = {"one", "two", "three", "four"};
 _checkEqual(elements, match);
+
+ArrayList three = new ArrayList();
+three.add("five");
+three.add("six");
+
+one.addAll(2,three);
+
+String[] elements2 = one.toArray();
+String[] match2 = {"one", "two", "five", "six", "three", "four"};
+_checkEqual(elements2, match2);
