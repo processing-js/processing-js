@@ -16192,6 +16192,38 @@
       return p.glyphTable[url];
     };
 
+    /**
+     * Gets the sketch parameter value. The parameter can be defined as the canvas attribute with 
+     * the "data-processing-" prefix or provided in the pjs directive (e.g. /* @pjs param-test="52" ... ).
+     * The function tries the canvas attributes, then the pjs directive content.
+     *
+     * @param   {String}    name          The name of the param to read.
+     *
+     * @returns {String}    The parameter value, or null if parameter is not defined.
+     */
+    p.param = function(name) {
+      // trying attribute that was specified in CANVAS
+      var attributeName = "data-processing-" + name;
+      if (curElement.hasAttribute(attributeName)) {
+        return curElement.getAttribute(attributeName);
+      }
+      // trying child PARAM elements of the CANVAS
+      for (var i = 0, len = curElement.childNodes.length; i < len; ++i) {
+        var item = curElement.childNodes.item(i);
+        if (item.nodeType !== 1 || item.tagName.toLowerCase() !== "param") {
+          continue;
+        }
+        if (item.getAttribute("name") === name) {
+          return item.getAttribute("value");
+        }
+      }
+      // fallback to default params
+      if (curSketch.params.hasOwnProperty(name)) {
+        return curSketch.params[name];
+      }
+      return null;
+    };
+
     ////////////////////////////////////////////////////////////////////////////
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
@@ -17107,7 +17139,7 @@
       "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
-      "parseBoolean", "parseByte", "parseChar", "parseFloat", "parseInt", 
+      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat", "parseInt",
       "peg", "perspective", "PFont", "PImage", "pixels",
       "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
@@ -18702,6 +18734,8 @@
             sketch.options.pauseOnBlur = value === "true";
           } else if (key === "globalKeyEvents") {
             sketch.options.globalKeyEvents = value === "true";
+          } else if (key.substring(0, 6) === "param-") {
+            sketch.params[key.substring(6)] = value;
           } else {
             sketch.options[key] = value;
           }
@@ -19035,6 +19069,7 @@
       pauseOnBlur: false,
       globalKeyEvents: false
     };
+    this.params = {};
     this.imageCache = {
       pending: 0,
       images: {},
