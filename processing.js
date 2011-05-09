@@ -19013,6 +19013,7 @@
           };
 
           tinylogLite[log](message);
+          updateSafetyMargin();
         };
       }());
     } else if (typeof print === func) { // JS shell
