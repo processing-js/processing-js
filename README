@@ -4,96 +4,104 @@
 
   //////////////////////////////////////////////////////////////////////////////
 
-  License           MIT (see included LICENSE)
-  Original Author   John Resig: http://ejohn.org
-                    see included AUTHORS file for contributer list
+  License           MIT (see included LICENSE file for full license)
+  Original Author   John Resig (http://ejohn.org)
+  Maintainers       See included AUTHORS file for contributer list
 
-  Web Site          http://processingjs.org  
-  Java Version      http://processing.org
-  Github Repo.      http://github.com/jeresig/processing-js
+  Web Site          http://processingjs.org
+  Github Repo       http://github.com/jeresig/processing-js (see guidelines)
   Bug Tracking      http://processing-js.lighthouseapp.com
-  Mozilla POW!      http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
-  Test Suite        http://processing-js.buildingsky.net
 
-  Maintained by       
-    Seneca          http://zenit.senecac.on.ca/wiki/index.php/Processing.js
-    Hyper-Metrix    http://hyper-metrix.com/#Processing
-    BuildingSky     http://weare.buildingsky.net/pages/processing-js
-
+  Contributing and/or Participating Organizations
+    The Processing Project and Community  http://processing.org
+    The Mozilla Foundation                https://www.mozilla.org/foundation/
+    Seneca College (CDOT)                 http://zenit.senecac.on.ca/wiki/
 
   IMPORTANT! - NOTE FOR DEVELOPERS
-  Please read the guidelines before pushing your code to the repository. The 
-  function(s) you are working on may already be finished and queued for push. 
-  
+  Please read the guidelines before pushing your code to the repository. The
+  function(s) you are working on may already be finished and queued for push.
 
   GUIDELINES
   http://processing-js.lighthouseapp.com/projects/41284/project-workflow
 
-  
   IRC CHANNEL
-  Join the development team at irc://irc.mozilla.org/processing.js for more info
+  Join the development team at irc://irc.mozilla.org/processing.js
 
+  MAILING LIST
+  User discussions happen at http://groups.google.com/group/processingjs
 
-  Processing.js is an open programming language for people who want to program
-  images, animation, and interactions for the web without using Flash or Java
-  applets. Processing.js uses Javascript to draw shapes and manipulate images
-  on the HTML5 Canvas element. The code is light-weight, simple to learn and
-  makes an ideal tool for visualizing data, creating user-interfaces and
-  developing web-based games.
+  TWITTER
+  http://twitter.com/processingjs
 
-  The Processing language was created by Ben Fry and Casey Reas. It evolved
-  from ideas explored in the Aesthetics and Computation Group at the MIT Media
-  Lab and was originally intended to be used in a Java run-time environment. In
-  the Summer of 2008, John Resig ( inventor of jQuery ), ported the 2D context
-  of Processing to Javascript for use in web pages. Much like the native
-  language, Processing.js is a community driven project, and continues to grow
-  as browser technology advances.
-  
+  //////////////////////////////////////////////////////////////////////////////
+
+  WHAT IS PROCESSING.JS?
+
+  Processing.js is the sister project of the popular Processing visual programming
+  language, designed for the web. Processing.js makes your data visualizations,
+  digital art, interactive animations, educational graphs, video games, etc. work
+  using web standards and without any plug-ins. You write code using the Processing
+  language (or JavaScript), include it in your web page, and Processing.js does the
+  rest.
+
+  Processing.js is perhaps best thought of as a JavaScript runtime for  the Processing
+  language. Where Processing relies upon Java for its graphics back-end, Processing.js
+  uses the web--HTML5, canvas, and WebGL--to create 2D and 3D graphics, without
+  developers having to learn those APIs and technologies.
+
+  Originally developed by Ben Fry and Casey Reas, Processing started as an open
+  source programming language based on Java to help the electronic arts and visual
+  design communities learn the basics of computer programming in a visual context.
+  Processing.js takes this to the next level, allowing Processing code to be run by
+  any HTML5 compatible browser, including current versions of Firefox, Safari,
+  Chrome, Opera, and Internet Explorer 9+. Processing.js brings the best of visual
+  programming to the web, both for Processing and web developers.
+
+  Much like the native language, Processing.js is a community driven project,
+  and continues to grow as browser technology advances.  Processing.js is now
+  compatible with Processing, and has an active developer and user community.
 
   //////////////////////////////////////////////////////////////////////////////
 
   PLATFORM AND BROWSER COMPATIBILITY
-  
+
   Processing.js is explicitly developed for and actively tested on browsers that
-  support the HTML5 <Canvas> element. Processing.js runs in FireFox, Safari, 
-  Chrome and Opera but is not currently supported in Internet Explorer.
-   
-  Processing.js aims for 100 percent compatibility across all supported browsers; 
-  however, differences between individual canvas implementations may give 
-  slightly different results in your sketches.  
-  
-  Implementing Processing.js in Flash or Silverlight is not recommended, as Java
-  already occupies the browser plug-in space for this library. For users
-  wishing to run Processing.js in Silverlight, see Paul Irish's Silverlight
-  implementation. Using Internet Explorer Canvas with Processing.js typically
-  results in unusable frame-rates for moderately complex visualizations.
-                            
+  support the HTML5 <canvas> element. Processing.js runs in FireFox, Safari,
+  Chrome, Opera, and Internet Explorer 9+.
+
+  Processing.js aims for 100 percent compatibility across all supported browsers;
+  however, differences between individual canvas implementations may give
+  slightly different results in your sketches.
+
   //////////////////////////////////////////////////////////////////////////////
 
   SETTING UP A SIMPLE SKETCH
-  
-  In order to get a sketch going in the browser you will need to download the 
-  processing.js file and make two new files - one with the extension .html and 
+
+  In order to get a sketch going in the browser you will need to download the
+  processing.js file and make two new files - one with the extension .html and
   the other with the extension .pde or .pjs.
-   
+
   The .html file will have a link to the processing.js file you have downloaded,
   and a <canvas> tag with a link to the .pde or .pjs file that you made.
-  
+
   Here is an example of an .html file:
+
+  <!doctype html>
   <html>
     <head>
-      <script src="processing.js"></script> //ensure a correct path to the file
+      <script src="processing.js"></script>
     </head>
     <body>
-      <canvas data-processing-sources="anything.pjs"></canvas> 
+      <canvas data-processing-sources="anything.pjs"></canvas>
     </body>
   </html>
+
   Note that the .pjs file needs to be named anything.pjs (or whatever you named your file)
   and that there is a custom attribute data-processing-sources that is used to link the sketch to
   the <canvas>.
-  
-  Here is an example of a .pjs or .pde file:
-  
+
+  Here is an example of a .pjs file (.pde is also acceptable):
+
   void setup()
   {
     size(200,200);
@@ -101,93 +109,28 @@
     fill(255);
     noLoop();
     PFont fontA = loadFont("courier");
-    textFont(fontA, 14);  
+    textFont(fontA, 14);
   }
 
-  void draw(){  
+  void draw(){
     text("Hello Web!",20,20);
     println("Hello ErrorLog!");
   }
-                            
-  //////////////////////////////////////////////////////////////////////////////
-  
-  THINGS TO KNOW AS A PROCESSING DEVELOPER USING PROCESSING.JS
-  
-  Processing.js has no data directory
 
-  Processing uses the concept of a data directory, where images and other
-  are located. Processing.js does not include this. As a result, you should 
-  always provide files (e.g., images) that are relative to your web page, 
-  which is the norm on the web.  
-  
-  Processing.js implements Processing, but not all of Java
+  Many more examples are available on the Processing.js website.
 
-  Processing.js is compatible with Processing, but is not, and will never be, 
-  fully compatible with Java. If your sketch uses functions or classes not 
-  defined as part of Processing, they are unlikely to work with Processing.js. 
-  Similarly, libraries that are written for Processing, which are written in Java 
-  instead of Processing, will most likely not work.
-  
-  Processing.js only has two rendering modes
-
-  Processing has many rendering modes to choose from, depending on the desired 
-  quality and speed for graphics (e.g., OPENGL, P3D, JAVA2D, etc.). Processing.js 
-  uses <canvas> which provides either a 2D drawing context or a 3D context based on 
-  WebGL a version of OpenGL for the web. Therefore, whatever you choose, you will 
-  end-up with either the 2D or 3D context.
-  
-  Division which is expected to produce an integer might need explicit casting
-
-  There are a class of bugs that arise when converting Processing code to 
-  Processing.js that involve integer vs. floating point division. What was 
-  straight-up integer division in Processing code, when converted to Processing.js, 
-  can sometimes become problematic, as numbers become doubles, and introduce a 
-  fractional part. The fix is to explicitly cast any division to an integer that 
-  exhibits this behaviour:
-  
-  // before
-  int g = mouseX / i;
-
-  // after
-  int g = (int)(mouseX / i);
-  
-  Processing.js has to cheat to simulate Processing's synchronous I/O
-
-  Processing uses a synchronous I/O model, which means that functions like 
-  loadImage() take time to execute, and while they are running, nothing else 
-  happens: the program waits until loadImage() is done before moving on to the 
-  next statement. This means that you can count on the value returned by a 
-  function like loadImage() being usable in the next line of code.
-
-  Web browsers don't work like this. The web uses an asynchronous I/O model, which 
-  means that functions which load external resources can't make the program wait 
-  until they finish. In order to replicate Processing's load* functions, you have 
-  to use a special Processing.js Directive.
-
-  The Processing.js Directives are hints to the browser that are written in 
-  comments rather than in the Processing code itself. Here is an example of 
-  loadImage():
-  
-  /* @pjs preload="picture.jpg"; */
-  PImage img;
-
-  void setup() {
-    img = loadImage("picture.jpg");
-    image(img, 0, 0);
-  }
-  Note the syntax (below) to preload multiple images:
-  
-  /* @pjs preload="picture.jpg,picture2.jpg,picture3.png"; */  
-  
-  Processing.js requires more care with variable naming than Processing
-  
-  One of the powerful features of JavaScript is its dynamic, typeless nature. Where 
-  typed languages like Java, and therefore Processing, can reuse names without fear 
-  of ambiguity (e.g., method overloading), Processing.js cannot. Without getting into 
-  the inner-workings of JavaScript, the best advice for Processing developers is to 
-  not use function/class/etc. names from Processing as variable names. For example, 
-  a variable named line might seem reasonable, but it will cause issues with the 
-  similarly named line() function built-into Processing and Processing.js.
-  
   //////////////////////////////////////////////////////////////////////////////
 
+  LEARN MORE ABOUT PROCESSING.JS
+
+  Processing developers should start with the Processing.js Quick Start Guide for
+  Processing Developers, http://processingjs.org/reference/articles/p5QuickStart.
+
+  JavaScript developers should start with the Processing.js Quick Start Guide for
+  JavaScript Developers, http://processingjs.org/reference/articles/jsQuickStart
+
+  A more detailed guide is http://processingjs.org/reference/articles/PomaxGuide.
+
+  Complete reference information is available at http://processingjs.org/reference.
+
+  //////////////////////////////////////////////////////////////////////////////
