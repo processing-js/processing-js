@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://www.processing.org/reference/screenY_.html">Processing.org</a></h1>
+    <h2>Test for screenX(), screenY(), screenZ()</h2>
+
+    <p>This pages tests screenY().<br />
+    <p>
+      <canvas datasrc="screenXProjection.pjs" width="100" height="100"> </canvas>
+    </p>
+    
+    <pre>
+void setup() {
+  size(100,100);
+}
+
+void draw() {
+  pushMatrix();
+  translate(100,100);
+  String result = "" + screenX(5,6);
+  println(result); //prints 105
+  popMatrix();
+}</pre>
+
+  </body>
+</html>
