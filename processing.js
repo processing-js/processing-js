@@ -18883,20 +18883,20 @@
     }
 
     // process all <canvas>-indicated sketches
-    var canvas = document.getElementsByTagName('canvas');
-
-    for (var i = 0, l = canvas.length; i < l; i++) {
+    var canvasElements = document.getElementsByTagName('canvas');
+    var filenames;
+    for (var i = 0, l = canvasElements.length; i < l; i++) {
       // datasrc and data-src are deprecated.
-      var processingSources = canvas[i].getAttribute('data-processing-sources');
+      var processingSources = canvasElements[i].getAttribute('data-processing-sources');
       if (processingSources === null) {
         // Temporary fallback for datasrc and data-src
-        processingSources = canvas[i].getAttribute('data-src');
+        processingSources = canvasElements[i].getAttribute('data-src');
         if (processingSources === null) {
-          processingSources = canvas[i].getAttribute('datasrc');
+          processingSources = canvasElements[i].getAttribute('datasrc');
         }
       }
       if (processingSources) {
-        var filenames = processingSources.split(' ');
+        filenames = processingSources.split(' ');
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -18910,7 +18910,8 @@
     
     // process all <script>-indicated sketches
     var scripts = document.getElementsByTagName('script');
-    for (s in scripts) {
+    var s, source, instance;
+    for (s = 0; s < scripts.length; s++) {
       var script = scripts[s];
       if (!script.getAttribute) {
         continue;
@@ -18918,13 +18919,13 @@
 
       var type = script.getAttribute("type");
       if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
+        var target = script.getAttribute("data-target");
         var canvas;
-        var target = script.getAttribute("target");
         if (target) {
           canvas = document.getElementById(target);
         } else {
           var nextSibling = script.nextSibling;
-          while (nextSibling && nextSibling.nodeType != 1) {
+          while (nextSibling && nextSibling.nodeType !== 1) {
             nextSibling = nextSibling.nextSibling;
           }
           if (nextSibling.nodeName.toLowerCase() === "canvas") {
@@ -18932,14 +18933,14 @@
           }
         }
 
-        if (canvas && canvas != null) {
+        if (canvas && canvas !== null) {
           if (script.getAttribute("src")) {
-            var filenames = script.getAttribute("src").split(/\s+/);
+            filenames = script.getAttribute("src").split(/\s+/);
             loadAndExecute(canvas, filenames);
             continue;
           }
-          var source =  script.innerText || script.textContent;
-          new Processing(canvas, source);
+          source =  script.innerText || script.textContent;
+          instance = new Processing(canvas, source);
         }
       }
     }
