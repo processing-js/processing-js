@@ -75,26 +75,23 @@
 
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
   function setupTypedArray(name, fallback) {
-    // check if TypedArray exists, and use if so.
+    // Check if TypedArray exists, and use if so.
     if (name in window) {
       return window[name];
     }
 
-    // typeof on Minefield and Chrome return function, typeof on Webkit returns object.
-    if (typeof window[name] !== "function" && typeof window[name] !== "object") {
-      // nope.. check if WebGLArray exists
-      if (typeof window[fallback] === "function") {
-        return window[fallback];
-      } else {
-        // nope.. set as Native JS array
-        return function(obj) {
-          if (obj instanceof Array) {
-            return obj;
-          } else if (typeof obj === "number") {
-            return new Array(obj);
-          }
-        };
-      }
+    // Check if WebGLArray exists
+    if (typeof window[fallback] === "function") {
+      return window[fallback];
+    } else {
+      // Use Native JS array
+      return function(obj) {
+        if (obj instanceof Array) {
+          return obj;
+        } else if (typeof obj === "number") {
+          return new Array(obj);
+        }
+      };
     }
   }
 
