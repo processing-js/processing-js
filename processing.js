@@ -1536,6 +1536,7 @@
         modelView,
         modelViewInv,
         userMatrixStack,
+        userReverseMatrixStack,
         inverseCopy,
         projection,
         manipulatingCamera = false,
