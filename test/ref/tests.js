@@ -105,5 +105,6 @@ var tests = [
   { path: "beginEndShape-3dtriangles2.pde", tags:["endShape3D"]},
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D"]},
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D"]},
-  { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35} /* See ticket #1172 */
+  { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35}, /* See ticket #1172 */
+  { path: "imageCopy.pde", tags:["2D"]}
 ];
