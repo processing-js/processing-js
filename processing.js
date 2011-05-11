@@ -1315,6 +1315,12 @@
     // The names array contains the names of everything that is inside "p."
     var p = this;
 
+    var pgraphicsMode = (arguments.length === 0);
+    if (pgraphicsMode) {
+      curElement = document.createElement("canvas");
+      p.canvas = curElement;
+    }
+
     // PJS specific (non-p5) methods and properties to externalize
     p.externals = {
       canvas:  curElement,
@@ -1654,6 +1660,8 @@
       "  }"+
       "}";
 
+    var webglMaxTempsWorkaround = /Windows/.test(navigator.userAgent);
+
     // Vertex shader for boxes and spheres
     var vertexShaderSource3D =
       "varying vec4 frontColor;" +
@@ -1729,7 +1737,7 @@
       "void DirectionalLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
       "  float powerfactor = 0.0;" +
       "  float nDotVP = max(0.0, dot( vertNormal, normalize(-light.position) ));" +
-      "  float nDotVH = max(0.0, dot( vertNormal, normalize(-light.position-ecPos )));" +
+      "  float nDotVH = max(0.0, dot( vertNormal, normalize(-light.position-normalize(ecPos) )));" +
 
       "  if( nDotVP != 0.0 ){" +
       "    powerfactor = pow( nDotVH, shininess );" +
@@ -1739,7 +1747,7 @@
       "  spec += specular * powerfactor;" +
       "}" +
 
-      "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+      "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
       "  float powerfactor;" +
 
       // Get the vector from the light to the vertex
@@ -1754,7 +1762,7 @@
       "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
 
       "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
-      "  vec3 halfVector = normalize( VP + eye );" +
+      "  vec3 halfVector = normalize( VP - normalize(ecPos) );" +
       "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 
       "  if( nDotVP == 0.0) {" +
@@ -1770,7 +1778,7 @@
 
       /*
       */
-      "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+      "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
       "  float spotAttenuation;" +
       "  float powerfactor;" +
 
@@ -1788,18 +1796,19 @@
       "  float spotDot = dot( VP, ldir );" +
 
       // if the vertex falls inside the cone
-      // The following is failing on Windows systems
-      // removed until we find a workaround
-      //"  if( spotDot < cos( light.angle ) ) {" +
-      //"    spotAttenuation = pow( spotDot, light.concentration );" +
-      //"  }" +
-      //"  else{" +
-      "    spotAttenuation = 1.0;" +
-      //"  }" +
+      (webglMaxTempsWorkaround ? // Windows reports max temps error if light.angle is used
+      "  spotAttenuation = 1.0; " :
+      "  if( spotDot > cos( light.angle ) ) {" +
+      "    spotAttenuation = pow( spotDot, light.concentration );" +
+      "  }" +
+      "  else{" +
+      "    spotAttenuation = 0.0;" +
+      "  }" +
       "  attenuation *= spotAttenuation;" +
+      "") +
 
       "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
-      "  vec3 halfVector = normalize( VP + eye );" +
+      "  vec3 halfVector = normalize( VP - normalize(ecPos) );" +
       "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 
       "  if( nDotVP == 0.0 ) {" +
@@ -1832,7 +1841,6 @@
 
       "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
-      "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
 
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
@@ -1858,10 +1866,10 @@
       "        DirectionalLight( finalDiffuse, finalSpecular, norm, ecPos, l );" +
       "      }" +
       "      else if( l.type == 2 ) {" +
-      "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, l );" +
+      "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, l );" +
       "      }" +
       "      else {" +
-      "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, l );" +
+      "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, l );" +
       "      }" +
       "    }" +
 
@@ -5976,7 +5984,7 @@
     */
     p.subset = function(array, offset, length) {
       if (arguments.length === 2) {
-        return array.slice(offset, array.length - offset);
+        return array.slice(offset, array.length);
       } else if (arguments.length === 3) {
         return array.slice(offset, offset + length);
       }
@@ -7382,7 +7390,8 @@
       p.lightFalloff(1, 0, 0);
       p.shininess(1);
       p.ambient(255, 255, 255);
-      p.specular(0, 0, 0);
+      p.specular(128, 128, 128);
+      p.emissive(0, 0, 0);
       p.camera();
       p.draw();
       
@@ -9298,7 +9307,8 @@
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
         p.ambient(255, 255, 255);
-        p.specular(0, 0, 0);
+        p.specular(128, 128, 128);
+        p.emissive(0, 0, 0);
 
         // Create buffers for 3D primitives
         boxBuffer = curContext.createBuffer();
@@ -13759,41 +13769,8 @@
      * @param {String} filename the name of the file (not supported yet)
      */
     p.createGraphics = function createGraphics(w, h, render) {
-      var canvas = document.createElement("canvas");
-      var pg = new Processing(canvas);
+      var pg = new Processing();
       pg.size(w, h, render);
-      pg.canvas = canvas;
-
-      /**
-      * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
-      *
-      * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
-      *
-      * @see PImage
-      */
-      if (render === PConstants.WEBGL) {
-        pg.toImageData = function() { // 3D
-          var curContext = this.externals.context;
-          
-          var c = document.createElement("canvas");
-          var ctx = c.getContext("2d");
-          var obj = ctx.createImageData(this.width, this.height);
-          var uBuff = new Uint8Array(this.width * this.height * 4);
-          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-          for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
-            obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
-          }
-          
-          return obj;
-        };
-      } else {
-        pg.toImageData = function() { // 2D
-          var curContext = this.externals.context;
-          
-          return curContext.getImageData(0, 0, this.width, this.height);
-        };
-      }
-
       return pg;
     };
 
@@ -16215,6 +16192,38 @@
       return p.glyphTable[url];
     };
 
+    /**
+     * Gets the sketch parameter value. The parameter can be defined as the canvas attribute with 
+     * the "data-processing-" prefix or provided in the pjs directive (e.g. /* @pjs param-test="52" ... ).
+     * The function tries the canvas attributes, then the pjs directive content.
+     *
+     * @param   {String}    name          The name of the param to read.
+     *
+     * @returns {String}    The parameter value, or null if parameter is not defined.
+     */
+    p.param = function(name) {
+      // trying attribute that was specified in CANVAS
+      var attributeName = "data-processing-" + name;
+      if (curElement.hasAttribute(attributeName)) {
+        return curElement.getAttribute(attributeName);
+      }
+      // trying child PARAM elements of the CANVAS
+      for (var i = 0, len = curElement.childNodes.length; i < len; ++i) {
+        var item = curElement.childNodes.item(i);
+        if (item.nodeType !== 1 || item.tagName.toLowerCase() !== "param") {
+          continue;
+        }
+        if (item.getAttribute("name") === name) {
+          return item.getAttribute("value");
+        }
+      }
+      // fallback to default params
+      if (curSketch.params.hasOwnProperty(name)) {
+        return curSketch.params[name];
+      }
+      return null;
+    };
+
     ////////////////////////////////////////////////////////////////////////////
     // Class methods
     ////////////////////////////////////////////////////////////////////////////
@@ -16899,13 +16908,16 @@
     };
 
     // Send aCode Processing syntax to be converted to JavaScript
-    if (aCode) {
+    if (!pgraphicsMode) {
       if (aCode instanceof Processing.Sketch) {
         // Use sketch as is
         curSketch = aCode;
       } else if (typeof aCode === "function") {
         // Wrap function with default sketch parameters
         curSketch = new Processing.Sketch(aCode);
+      } else if (!aCode) {
+        // Empty sketch
+        curSketch = new Processing.Sketch(function (){});
       } else {
 //#if PARSER
         // Compile the code
@@ -17054,7 +17066,7 @@
       // or called via createGraphics
       curSketch = new Processing.Sketch();
       curSketch.options.isTransparent = true;
-      
+
       // Hack to make PGraphics work again after splitting size()
       p.size = function(w, h, render) {
         if (render && render === PConstants.WEBGL) {
@@ -17062,7 +17074,32 @@
         } else {
           wireDimensionalFunctions('2D');
         }
-        
+
+        /**
+        * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
+        *
+        * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
+        *
+        * @see PImage
+        */
+        if (render === PConstants.WEBGL) {
+          p.toImageData = function() { // 3D
+            var c = document.createElement("canvas");
+            var ctx = c.getContext("2d");
+            var obj = ctx.createImageData(this.width, this.height);
+            var uBuff = new Uint8Array(this.width * this.height * 4);
+            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
+            for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
+              obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
+            }
+            return obj;
+          };
+        } else {
+          p.toImageData = function() { // 2D
+            return curContext.getImageData(0, 0, this.width, this.height);
+          };
+        }
+
         p.size(w, h, render);
       };
     }
@@ -17102,7 +17139,7 @@
       "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
-      "parseBoolean", "parseByte", "parseChar", "parseFloat", "parseInt", 
+      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat", "parseInt",
       "peg", "perspective", "PFont", "PImage", "pixels",
       "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
@@ -18697,6 +18734,8 @@
             sketch.options.pauseOnBlur = value === "true";
           } else if (key === "globalKeyEvents") {
             sketch.options.globalKeyEvents = value === "true";
+          } else if (key.substring(0, 6) === "param-") {
+            sketch.params[key.substring(6)] = value;
           } else {
             sketch.options[key] = value;
           }
@@ -18974,6 +19013,7 @@
           };
 
           tinylogLite[log](message);
+          updateSafetyMargin();
         };
       }());
     } else if (typeof print === func) { // JS shell
@@ -19030,6 +19070,7 @@
       pauseOnBlur: false,
       globalKeyEvents: false
     };
+    this.params = {};
     this.imageCache = {
       pending: 0,
       images: {},
