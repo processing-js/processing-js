@@ -18904,7 +18904,7 @@
             filenames.splice(j, 1);
           }
         }
-        loadAndExecute(canvas[i], filenames);
+        loadAndExecute(canvasElements[i], filenames);
       }
     }
     

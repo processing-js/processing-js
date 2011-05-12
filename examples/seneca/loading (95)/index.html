@@ -4,10 +4,10 @@
 	<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>
 	<title>Script init() test</title>
 
-	<script type="text/javascript" src="../../../processing.js"></script>
+  <script type="text/javascript" src="../../../processing.js"></script> 
 
-	<script type="text/processing" src="c1.pde" target="c1"></script>
-	<script type="text/processing" target="c2">
+	<script type="text/processing" src="c1.pde" data-target="c1"></script>
+	<script type="text/processing" data-target="c2">
     String lstring = "C2 loaded successfully!";
     void setup() {
       size(200,100);
@@ -18,8 +18,8 @@
       float tw = textWidth(lstring);
       text(lstring, (width-tw)/2, height/2); }
   </script>
-	<script type="application/processing" src="c3.pde" target="c3"></script>
-	<script type="application/processing" target="c4">
+	<script type="application/processing" src="c3.pde" data-target="c3"></script>
+	<script type="application/processing" data-target="c4">
     String lstring = "C4 loaded successfully!";
     void setup() {
       size(200,100);
@@ -42,7 +42,7 @@
   to see if they are linked to the correct <canvas> elements
 -->
 <body>
-	<script type="text/processing" target="c5">
+	<script type="text/processing" data-target="c5">
     String lstring = "C5 loaded successfully!";
     void setup() {
       size(200,100);
@@ -53,7 +53,7 @@
       float tw = textWidth(lstring);
       text(lstring, (width-tw)/2, height/2); }
   </script>
-	<script type="application/processing" target="c6">
+	<script type="application/processing" data-target="c6">
     String lstring = "C6 loaded successfully!";
     void setup() {
       size(200,100);
@@ -64,8 +64,8 @@
       float tw = textWidth(lstring);
       text(lstring, (width-tw)/2, height/2); }
   </script>
-	<script type="text/processing" target="c7" src="c7.pde"></script>
-	<script type="application/processing" target="c8" src="c8.pde"></script>
+	<script type="text/processing" data-target="c7" src="c7.pde"></script>
+	<script type="application/processing" data-target="c8" src="c8.pde"></script>
 
 
   <h1>Sketch loading test; both inline and from source</h1>
@@ -74,41 +74,35 @@
   <h2>canvas 1 - script-src from head for text/processing</h2>
   <pre>&lt;head&gt;
   ...
-  &lt;script type="text/processing" src="c1.pde" target="c1"&gt;&lt;/script&gt;
+  &lt;script type="text/processing" src="c1.pde" data-target="c1"&gt;&lt;/script&gt;
   ...
 &lt;/head&gt;</pre>
 	<canvas id="c1"></canvas>
-  <p style="color:#660000;">NOTE: violates HTML spec because script has a 'target' attribute</p>
-
 
   <h2>canvas 2 - script block from head for text/processing</h2>
   <pre>&lt;head&gt;
   ...
-  &lt;script type="text/processing" target="c2"&gt; /*code*/ &lt;/script&gt;
+  &lt;script type="text/processing" data-target="c2"&gt; /*code*/ &lt;/script&gt;
   ...
 &lt;/head&gt;</pre>
 	<canvas id="c2"></canvas>
-  <p style="color:#660000;">NOTE: violates HTML spec because script has a 'target' attribute</p>
-
 
   <h2>canvas 3 - script-src from head for application/processing</h2>
   <pre>&lt;head&gt;
   ...
-  &lt;script type="application/processing" src="c3.pde" target="c3"&gt;&lt;/script&gt;
+  &lt;script type="application/processing" src="c3.pde" data-target="c3"&gt;&lt;/script&gt;
   ...
 &lt;/head&gt;</pre>
 	<canvas id="c3"></canvas>
-  <p style="color:#660000;">NOTE: violates HTML spec because script has a 'target' attribute</p>
 
 
   <h2>canvas 4 - script block from head for application/processing</h2>
   <pre>&lt;head&gt;
   ...
-  &lt;script type="application/processing" target="c4"&gt; /*code*/ &lt;/script&gt;
+  &lt;script type="application/processing" data-target="c4"&gt; /*code*/ &lt;/script&gt;
   ...
 &lt;/head&gt;</pre>
 	<canvas id="c4"></canvas>
-  <p style="color:#660000;">NOTE: violates HTML spec because script has a 'target' attribute</p>
 
 
   <h2>canvas (anonymous 1) - inline sketch without a target for text/processing</h2>
@@ -175,7 +169,7 @@
 
   <h2>canvas 5 - inline sketch with target for text/processing</h2>
   <pre>&lt;body&gt;
-  &lt;script type="text/processing" target="c5"&gt;
+  &lt;script type="text/processing" data-target="c5"&gt;
     String lstring = "C5 loaded successfully!";
     void setup() {
       size(200,100);
@@ -193,12 +187,11 @@
   ...
 &lt;/body&gt;</pre>
 	<canvas id="c5"></canvas>
-  <p style="color:#660000;">NOTE: violates HTML spec because script has a 'target' attribute</p>
 
 
   <h2>canvas 6 - inline sketch with target for application/processing</h2>
   <pre>&lt;body&gt;
-  &lt;script type="application/processing" target="c6"&gt;
+  &lt;script type="application/processing" data-target="c6"&gt;
     String lstring = "C6 loaded successfully!";
     void setup() {
       size(200,100);
@@ -216,30 +209,24 @@
   ...
 &lt;/body&gt;</pre>
 	<canvas id="c6"></canvas>
-  <p style="color:#660000;">NOTE: violates HTML spec because script has a 'target' attribute</p>
-
 
   <h2>canvas 7 - script-src from body for text/processing, using target</h2>
   <pre>&lt;body&gt;
-  &lt;script type="text/processing" src="c7.pde" target="c7"&gt;&lt;/script&gt;
+  &lt;script type="text/processing" src="c7.pde" data-target="c7"&gt;&lt;/script&gt;
   ...
   &lt;canvas id="c7"&gt;&lt;/canvas&gt;
   ...
 &lt;/body&gt;</pre>
 	<canvas id="c7"></canvas>
-  <p style="color:#660000;">NOTE: violates HTML spec because script has a 'target' attribute</p>
-
 
   <h2>canvas 8 - script-src from body for application/processing, using target</h2>
   <pre>&lt;body&gt;
-  &lt;script type="application/processing" src="c8.pde" target="c8"&gt;&lt;/script&gt;
+  &lt;script type="application/processing" src="c8.pde" data-target="c8"&gt;&lt;/script&gt;
   ...
   &lt;canvas id="c8"&gt;&lt;/canvas&gt;
   ...
 &lt;/body&gt;</pre>
 	<canvas id="c8"></canvas>
-  <p style="color:#660000;">NOTE: violates HTML spec because script has a 'target' attribute</p>
-
 
   <h2>canvas 9 - script-src from body for text/processing, no target</h2>
   <pre>  &lt;script type="text/processing" src="c9.pde"&gt;&lt;/script&gt;
