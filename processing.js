@@ -4333,6 +4333,13 @@
         }
       },
       /**
+       * Processing 1.5 XML API wrapper for the generic String
+       * attribute getter. This may only take one argument.
+       */
+      getString: function(attributeName) {
+        return this.getStringAttribute(attributeName);
+      },
+      /**
        * @member XMLElement
        * The getFloatAttribute() function returns the float attribute of the element.
        * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
@@ -4353,6 +4360,13 @@
         }
       },
       /**
+       * Processing 1.5 XML API wrapper for the generic float
+       * attribute getter. This may only take one argument.
+       */
+      getFloat: function(attributeName) {
+        return this.getFloatAttribute(attributeName);
+      },
+      /**
        * @member XMLElement
        * The getIntAttribute() function returns the integer attribute of the element.
        * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
@@ -4371,6 +4385,13 @@
         } else {
           return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+      },
+      /**
+       * Processing 1.5 XML API wrapper for the generic int
+       * attribute getter. This may only take one argument.
+       */
+      getInt: function(attributeName) {
+        return this.getIntAttribute(attributeName);
       },
       /**
        * @member XMLElement
@@ -4744,7 +4765,16 @@
       }
     };
 
-
+    /**
+     * static Processing 1.5 XML API wrapper for the
+     * parse method. This may only take one argument.
+     */
+    XMLElement.parse = function(xmlstring) {
+      var element = new XMLElement();
+      element.parse(xmlstring);
+      return element;
+    };
+    
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
     ////////////////////////////////////////////////////////////////////////////
