@@ -14713,7 +14713,7 @@
     };
 
     p.blit_resize = function(img, srcX1, srcY1, srcX2, srcY2, destPixels,
-                                         screenW, screenH, destX1, destY1, destX2, destY2, mode) {
+                              screenW, screenH, destX1, destY1, destX2, destY2, mode) {
       var x, y; // iterator vars
       if (srcX1 < 0) {
         srcX1 = 0;
