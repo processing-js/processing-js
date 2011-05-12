@@ -18474,6 +18474,12 @@
       }
       return result;
     };
+    function AstSwitchCase(expr) {
+      this.expr = expr;
+    }
+    AstSwitchCase.prototype.toString = function() {
+      return "case " + this.expr + ":";
+    };
     function AstLabel(label) {
       this.label = label;
     }
@@ -18482,7 +18488,7 @@
     };
 
     transformStatements = function(statements, transformMethod, transformClass) {
-      var nextStatement = new RegExp(/\b(catch|for|if|switch|while|with)\s*"B(\d+)"|\b(do|else|finally|return|throw|try|break|continue)\b|("[ADEH](\d+)")|\b((?:case\s[^:]+|[A-Za-z_$][\w$]*\s*):)|(;)/g);
+      var nextStatement = new RegExp(/\b(catch|for|if|switch|while|with)\s*"B(\d+)"|\b(do|else|finally|return|throw|try|break|continue)\b|("[ADEH](\d+)")|\b(case)\s+([^:]+):|\b([A-Za-z_$][\w$]*\s*:)|(;)/g);
       var res = [];
       statements = preStatementsTransform(statements);
       var lastIndex = 0, m, space;
@@ -18519,8 +18525,10 @@
           } else {
             res.push(transformStatementsBlock(atoms[atomIndex]));
           }
-        } else if(m[6] !== undef) { // label
-          space = statements.substring(lastIndex, nextStatement.lastIndex - m[6].length);
+        } else if(m[6] !== undef) { // switch case
+          res.push(new AstSwitchCase(transformExpression(trim(m[7]))));
+        } else if(m[8] !== undef) { // label
+          space = statements.substring(lastIndex, nextStatement.lastIndex - m[8].length);
           if(trim(space).length !== 0) { continue; } // avoiding ?: construct
           res.push(new AstLabel(statements.substring(lastIndex, nextStatement.lastIndex)) );
         } else { // semicolon
