@@ -11933,7 +11933,7 @@
             }
             if (closeShape) {
               line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
-            } else {
+            } else if (doStroke) {
               line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
             }
 
