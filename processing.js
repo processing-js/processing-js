@@ -4113,9 +4113,18 @@
      * @param {Integer }lineNr   the line in the XML data where the element starts
      */
     var XMLElement = p.XMLElement = function() {
+      this.attributes = [];
+      this.children   = [];
+      this.fullName   = null;
+      this.name       = null;
+      this.namespace  = "";
+      this.content = null;
+      this.parent    = null;
+      this.lineNr     = "";
+      this.systemID   = "";
+      this.type = "ELEMENT";
+
       if (arguments.length === 4) {
-        this.attributes = [];
-        this.children   = [];
         this.fullName   = arguments[0] || "";
         if (arguments[1]) {
           this.name = arguments[1];
@@ -4128,45 +4137,14 @@
           }
         }
         this.namespace = arguments[1];
-        this.content   = "";
         this.lineNr    = arguments[3];
         this.systemID  = arguments[2];
-        this.parent    = null;
       }
-      else if ((arguments.length === 2 && arguments[1].indexOf(".") > -1) ) { // filename or svg xml element
-        this.attributes = [];
-        this.children   = [];
-        this.fullName   = "";
-        this.name       = "";
-        this.namespace  = "";
-        this.content    = "";
-        this.systemID   = "";
-        this.lineNr     = "";
-        this.parent     = null;
+      else if ((arguments.length === 2 && arguments[1].indexOf(".") > -1) ) {
+        // filename or svg xml element
         this.parse(arguments[arguments.length -1]);
       } else if (arguments.length === 1 && typeof arguments[0] === "string"){
-        //xml string
-        this.attributes = [];
-        this.children   = [];
-        this.fullName   = "";
-        this.name       = "";
-        this.namespace  = "";
-        this.content    = "";
-        this.systemID   = "";
-        this.lineNr     = "";
-        this.parent     = null;
         this.parse(arguments[0]);
-      }
-      else { //empty ctor
-        this.attributes = [];
-        this.children   = [];
-        this.fullName   = "";
-        this.name       = "";
-        this.namespace  = "";
-        this.content    = "";
-        this.systemID   = "";
-        this.lineNr     = "";
-        this.parent     = null;
       }
     };
     /**
@@ -4177,7 +4155,8 @@
     XMLElement.prototype = {
       /**
        * @member XMLElement
-       * The parse() function retrieves the file via ajax() and uses DOMParser() parseFromString method to make an XML document
+       * The parse() function retrieves the file via ajax() and uses DOMParser()
+       * parseFromString method to make an XML document
        * @addon
        *
        * @param {String} filename name of the XML/SVG file to load
@@ -4206,6 +4185,61 @@
       },
       /**
        * @member XMLElement
+       * Internal helper function for parse().
+       * Loops through the
+       * @addon
+       *
+       * @param {XMLElement} parent                      the parent node
+       * @param {XML document childNodes} elementpath    the remaining nodes that need parsing
+       *
+       * @return {XMLElement} the new element and its children elements
+       */
+      parseChildrenRecursive: function (parent , elementpath){
+        var xmlelement,
+          xmlattribute,
+          tmpattrib,
+          l, m,
+          child;
+        if (!parent) { // this element is the root element
+          this.fullName = elementpath.localName;
+          this.name     = elementpath.nodeName;
+          xmlelement    = this;
+        } else { // this element has a parent
+          xmlelement         = new XMLElement(elementpath.localName, elementpath.nodeName, "", "");
+          xmlelement.parent  = parent;
+        }
+        
+        // if this is a text node, return a PCData element, instead of an XML element.
+        if(elementpath.nodeType === 3 && elementpath.textContent !== "") {
+          return this.createPCDataElement(elementpath.textContent);
+        }      
+
+        // bind all attributes
+        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
+          tmpattrib    = elementpath.attributes[l];
+          xmlattribute = new XMLAttribute(tmpattrib.getname,
+                                          tmpattrib.nodeName,
+                                          tmpattrib.namespaceURI,
+                                          tmpattrib.nodeValue,
+                                          tmpattrib.nodeType);
+          xmlelement.attributes.push(xmlattribute);
+        }
+
+        // bind all children
+        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
+          var node = elementpath.childNodes[l];
+          if (node.nodeType === 1 || node.nodeType === 3) { // ELEMENT_NODE or TEXT_NODE
+            child = xmlelement.parseChildrenRecursive(xmlelement, node);
+            if (child !== null) {
+              xmlelement.children.push(child);
+            }
+          }
+        }
+
+        return xmlelement;
+      },
+      /**
+       * @member XMLElement
        * The createElement() function Creates an empty element
        *
        * @param {String} fullName   the full name of the element
@@ -4219,6 +4253,23 @@
         } else {
           return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
+      },
+      /**
+       * @member XMLElement
+       * The createPCDataElement() function creates an element to be used for #PCDATA content.
+       * Because Processing discards whitespace TEXT nodes, this method will not build an element
+       * if the passed content is empty after trimming for whitespace.
+       *
+       * @return {XMLElement} new "test" XMLElement, or null if content consists only of whitespace
+       */
+      createPCDataElement: function (content) {
+        if(content.replace(/^\s+$/g,"") === "") {
+          return null;
+        }
+        var pcdata = new XMLElement();
+        pcdata.content = content;
+        pcdata.type = "TEXT";
+        return pcdata;
       },
       /**
        * @member XMLElement
@@ -4238,52 +4289,42 @@
       },
       /**
        * @member XMLElement
-       * The createPCDataElement() function creates an element to be used for #PCDATA content
-       *
-       * @return {XMLElement} new XMLElement element
-       */
-      createPCDataElement: function () {
-        return new XMLElement();
-      },
-      /**
-       * @member XMLElement
-       * The equals() function checks to see if the element being passed in equals another element
-       *
-       * @param {Object} rawElement the element to compare to
-       *
-       * @return {boolean} true if the element equals another element
-       */
-      equals: function(object){
-        if (typeof object === "Object") {
-          return this.equalsXMLElement(object);
-        }
-      },
-      /**
-       * @member XMLElement
-       * The equalsXMLElement() function checks to see if the XMLElement being passed in equals another XMLElement
+       * The equals() function checks to see if the XMLElement being passed in equals another XMLElement
        *
        * @param {XMLElement} rawElement the element to compare to
        *
        * @return {boolean} true if the element equals another element
        */
-      equalsXMLElement: function (object) {
-        if (object instanceof XMLElement) {
-          var i, j;
-          if (this.name !== object.getLocalName()) { return false; }
-          if (this.attributes.length !== object.getAttributeCount()) { return false; }
-          for (i = 0, j = this.attributes.length; i < j; i++){
-            if (! object.hasAttribute(this.attributes[i].getName(), this.attributes[i].getNamespace())) { return false; }
-            if (this.attributes[i].getValue() !== object.attributes[i].getValue()) { return false; }
-            if (this.attributes[i].getType()  !== object.attributes[i].getType()) { return false; }
-          }
-          if (this.children.length !== object.getChildCount()) { return false; }
+      equals: function(other) {
+        if (!(other instanceof XMLElement)) {
+          return false;
+        }
+        var i, j;
+        if (this.name !== other.getLocalName()) { return false; }
+        if (this.attributes.length !== other.getAttributeCount()) { return false; }
+        // attributes may be ordered differently
+        if (this.attributes.length !== other.attributes.length) { return false; }
+        var attr_name, attr_ns, attr_value, attr_type, attr_other;
+        for (i = 0, j = this.attributes.length; i < j; i++) {
+          attr_name = this.attributes[i].getName();
+          attr_ns = this.attributes[i].getNamespace();
+          attr_other = other.findAttribute(attr_name, attr_ns);
+          if (attr_other === null) { return false; }
+          if (this.attributes[i].getValue() !== attr_other.getValue()) { return false; }
+          if (this.attributes[i].getType() !== attr_other.getType()) { return false; }
+        }
+        // children must be ordered identically
+        if (this.children.length !== other.getChildCount()) { return false; }
+        if (this.children.length>0) {
           var child1, child2;
           for (i = 0, j = this.children.length; i < j; i++) {
-            child1 = this.getChildAtIndex(i);
-            child2 = object.getChildAtIndex(i);
-            if (! child1.equalsXMLElement(child2)) { return false; }
+            child1 = this.getChild(i);
+            child2 = other.getChild(i);
+            if (!child1.equals(child2)) { return false; }
           }
           return true;
+        } else {
+          return (this.content === other.content);
         }
       },
       /**
@@ -4293,7 +4334,12 @@
        * @return {String} the (possibly null) content
        */
       getContent: function(){
-         return this.content;
+        if (this.type === "TEXT") {
+          return this.content; }
+        else if (this.children.length === 1 && this.children[0].type === "TEXT") {
+          return this.children[0].content;
+        }
+        return null;
       },
       /**
        * @member XMLElement
@@ -4554,51 +4600,6 @@
       },
       /**
        * @member XMLElement
-       * Internal helper function for parse().
-       * Loops through the
-       * @addon
-       *
-       * @param {XMLElement} parent                      the parent node
-       * @param {XML document childNodes} elementpath    the remaining nodes that need parsing
-       *
-       * @return {XMLElement} the new element and its children elements
-       */
-      parseChildrenRecursive: function (parent , elementpath){
-        var xmlelement,
-          xmlattribute,
-          tmpattrib,
-          l, m;
-        if (!parent) {
-          this.fullName = elementpath.localName;
-          this.name     = elementpath.nodeName;
-          this.content  = elementpath.textContent || "";
-          xmlelement    = this;
-        } else { // a parent
-          xmlelement         = new XMLElement(elementpath.localName, elementpath.nodeName, "", "");
-          xmlelement.content = elementpath.textContent || "";
-          xmlelement.parent  = parent;
-        }
-
-        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
-          tmpattrib    = elementpath.attributes[l];
-          xmlattribute = new XMLAttribute(tmpattrib.getname,
-                                          tmpattrib.nodeName,
-                                          tmpattrib.namespaceURI,
-                                          tmpattrib.nodeValue,
-                                          tmpattrib.nodeType);
-          xmlelement.attributes.push(xmlattribute);
-        }
-
-        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
-          var node = elementpath.childNodes[l];
-          if (node.nodeType === 1) { // ELEMENT_NODE type
-            xmlelement.children.push(xmlelement.parseChildrenRecursive(xmlelement, node));
-          }
-        }
-        return xmlelement;
-      },
-      /**
-       * @member XMLElement
        * The isLeaf() function returns whether the element is a leaf element.
        *
        * @return {boolean} true if the element has no children.
@@ -4645,7 +4646,7 @@
       removeChild: function(child) {
         if (child) {
           for (var i = 0, j = this.children.length; i < j; i++) {
-            if (this.children[i].equalsXMLElement(child)) {
+            if (this.children[i].equals(child)) {
               this.children.splice(i, 1);
               break;
             }
@@ -4661,7 +4662,6 @@
       removeChildAtIndex: function(index) {
         if (this.children.length > index) { //make sure its not outofbounds
           this.children.splice(index, 1);
-          return;
         }
       },
       /**
@@ -4680,6 +4680,7 @@
              return this.attributes[i];
           }
         }
+        return null;
       },
       /**
        * @member XMLElement
@@ -4718,6 +4719,8 @@
        * @param {String} content     the (possibly null) content
        */
       setContent: function(content) {
+        if (this.children.length>0) {
+          Processing.debug("Tried to set content for XMLElement with children"); }
         this.content = content;
       },
       /**
@@ -4754,14 +4757,64 @@
       getName: function() {
         return this.fullName;
       },
+      /**
+       * @member XMLElement
+       * The getLocalName() function returns the local name (i.e. the name excluding an eventual namespace
+       * prefix) of the element.
+       *
+       * @return {String} the name, or null if the element only contains #PCDATA.
+       */
       getLocalName: function() {
         return this.name;
       },
+      /**
+       * @member XMLElement
+       * The getAttributeCount() function returns the number of attributes for the node
+       * that this XMLElement represents.
+       *
+       * @return {int} the number of attributes in this XMLelement
+       */
       getAttributeCount: function() {
         return this.attributes.length;
-      }
-    };
+      },
+      /**
+       * @member XMLElement
+       * The toString() function returns the XML definition of an XMLElement.
+       *
+       * @return {String} the XML definition of this XMLElement
+       */
+      toString: function() {
+        // shortcut for text nodes
+        if(this.type==="TEXT") { return this.content; }
 
+        // real XMLElements
+        var tagstring = (this.namespace!=="" && this.namespace!=this.name? this.namespace + ":" : "") + this.name;
+        var xmlstring =  "<" + tagstring;
+        var a,c;
+
+        // serialize the attributes to XML string
+        for (a = 0; a<this.attributes.length; a++) {
+          var attr = this.attributes[a];
+          xmlstring += " "  + attr.getName() + "=" + '"' + attr.getValue() + '"';
+        }
+
+        // serialize all children to XML string
+        if (this.children.length==0) {
+          if (this.content==="") {
+            xmlstring += "/>";
+          } else {
+            xmlstring += ">" + this.content + "</"+tagstring+">";
+          }
+        } else {
+          xmlstring += ">";
+          for (c = 0; c<this.children.length; c++) {
+            xmlstring += this.children[c].toString();
+          }
+          xmlstring += "</" + tagstring + ">";
+        }
+        return xmlstring;
+       }
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
