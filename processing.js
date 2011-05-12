@@ -12569,8 +12569,14 @@
       x2 = arguments[2];
       y2 = arguments[3];
 
+      // a line is only defined if it has different start and end coordinates.
+      // If they are the same, we call point instead.
+      if (x1===x2 && y1===y2) {
+        p.point(x1,y1);
+      } 
+
       // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
-      if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
+      else if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
         var temp;
         if (x1 === x2) {
           if (y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
@@ -12586,7 +12592,7 @@
         return;
       }
 
-      if (doStroke) {
+      else if (doStroke) {
         curContext.beginPath();
         curContext.moveTo(x1 || 0, y1 || 0);
         curContext.lineTo(x2 || 0, y2 || 0);
@@ -12612,6 +12618,13 @@
         x2 = arguments[2];
         y2 = arguments[3];
         z2 = 0;
+      }
+
+      // a line is only defined if it has different start and end coordinates.
+      // If they are the same, we call point instead.
+      if (x1===x2 && y1===y2 && z1===z2) {
+        p.point(x1,y1,z1);
+        return;
       }
 
       var lineVerts = [x1, y1, z1, x2, y2, z2];
