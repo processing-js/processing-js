@@ -45,6 +45,34 @@
       }
     } catch(e) {}
   }());
+
+  // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
+  function setupTypedArray(name, fallback) {
+    // Check if TypedArray exists, and use if so.
+    if (name in window) {
+      return window[name];
+    }
+
+    // Check if WebGLArray exists
+    if (typeof window[fallback] === "function") {
+      return window[fallback];
+    } else {
+      // Use Native JS array
+      return function(obj) {
+        if (obj instanceof Array) {
+          return obj;
+        } else if (typeof obj === "number") {
+          return new Array(obj);
+        }
+      };
+    }
+  }
+
+  var Float32Array = setupTypedArray("Float32Array", "WebGLFloatArray"),
+      Int32Array   = setupTypedArray("Int32Array",   "WebGLIntArray"),
+      Uint16Array  = setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray"),
+      Uint8Array   = setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
+
   /* Browsers fixes end */
 
   var PConstants = {
@@ -340,34 +368,6 @@
     NORMAL_MODE_VERTEX: 2,
     MAX_LIGHTS:         8
   };
-
-  // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
-  function setupTypedArray(name, fallback) {
-    // check if TypedArray exists
-    // typeof on Minefield and Chrome return function, typeof on Webkit returns object.
-    if (typeof this[name] !== "function" && typeof this[name] !== "object") {
-      // nope.. check if WebGLArray exists
-      if (typeof this[fallback] === "function") {
-        this[name] = this[fallback];
-      } else {
-        // nope.. set as Native JS array
-        this[name] = function(obj) {
-          if (obj instanceof Array) {
-            return obj;
-          } else if (typeof obj === "number") {
-            var arr = [];
-            arr.length = obj;
-            return arr;
-          }
-        };
-      }
-    }
-  }
-
-  setupTypedArray("Float32Array", "WebGLFloatArray");
-  setupTypedArray("Int32Array",   "WebGLIntArray");
-  setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray");
-  setupTypedArray("Uint8Array",   "WebGLUnsignedByteArray");
 
   /**
    * Returns Java hashCode() result for the object. If the object has the "hashCode" function,
