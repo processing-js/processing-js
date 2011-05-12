@@ -20,7 +20,7 @@
 
   var undef; // intentionally left undefined
 
-  var ajax = function ajax(url) {
+  var ajax = function(url) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url, false);
     if (xhr.overrideMimeType) {
@@ -1162,6 +1162,7 @@
   //defaultScope.PShape    = PShape;     // TODO
   //defaultScope.PShapeSVG = PShapeSVG;  // TODO
 
+
   var colors = {
     aliceblue:            "#f0f8ff",
     antiquewhite:         "#faebd7",
@@ -1305,7 +1306,7 @@
     yellowgreen:          "#9acd32"
   };
   
-  var Processing = this.Processing = function Processing(curElement, aCode) {
+  var Processing = this.Processing = function(curElement, aCode) {
     // Previously we allowed calling Processing as a func instead of ctor, but no longer.
     if (!(this instanceof Processing)) {
       throw("called Processing constructor as if it were a function: missing 'new'.");
@@ -2089,7 +2090,7 @@
       }
     }
 
-    var imageModeCorner = function imageModeCorner(x, y, w, h, whAreSizes) {
+    var imageModeCorner = function(x, y, w, h, whAreSizes) {
       return {
         x: x,
         y: y,
@@ -2099,7 +2100,7 @@
     };
     var imageModeConvert = imageModeCorner;
 
-    var imageModeCorners = function imageModeCorners(x, y, w, h, whAreSizes) {
+    var imageModeCorners = function(x, y, w, h, whAreSizes) {
       return {
         x: x,
         y: y,
@@ -2108,7 +2109,7 @@
       };
     };
 
-    var imageModeCenter = function imageModeCenter(x, y, w, h, whAreSizes) {
+    var imageModeCenter = function(x, y, w, h, whAreSizes) {
       return {
         x: x - w / 2,
         y: y - h / 2,
@@ -2174,7 +2175,7 @@
     ////////////////////////////////////////////////////////////////////////////
     var charMap = {};
 
-    var Char = p.Character = function Char(chr) {
+    var Char = p.Character = function(chr) {
       if (typeof chr === 'string' && chr.length === 1) {
         this.code = chr.charCodeAt(0);
       } else {
@@ -4770,7 +4771,7 @@
      * in the matrix, then number of digits left of the decimal.
      * Call from PMatrix2D and PMatrix3D's print() function.
      */
-    var printMatrixHelper = function printMatrixHelper(elements) {
+    var printMatrixHelper = function(elements) {
       var big = 0;
       for (var i = 0; i < elements.length; i++) {
         if (i !== 0) {
@@ -5127,7 +5128,7 @@
      * PMatrix3D is a 4x4  matrix implementation. The constructor accepts another PMatrix3D or a list of six or sixteen float elements.
      * If no parameters are provided the matrix is set to the identity matrix.
      */
-    var PMatrix3D = p.PMatrix3D = function PMatrix3D() {
+    var PMatrix3D = p.PMatrix3D = function() {
       // When a matrix is created, it is set to an identity matrix
       this.reset();
     };
@@ -5686,7 +5687,7 @@
      * @private
      * The matrix stack stores the transformations and translations that occur within the space.
      */
-    var PMatrixStack = p.PMatrixStack = function PMatrixStack() {
+    var PMatrixStack = p.PMatrixStack = function() {
       this.matrixStack = [];
     };
 
@@ -5696,7 +5697,7 @@
      *
      * @param {Object | Array} matrix the matrix to be pushed into the stack
      */
-    PMatrixStack.prototype.load = function load() {
+    PMatrixStack.prototype.load = function() {
       var tmpMatrix = drawing.newPMatrix();
 
       if (arguments.length === 1) {
@@ -5719,7 +5720,7 @@
      * @member PMatrixStack
      * push adds a duplicate of the top of the stack onto the stack - uses the peek function
      */
-    PMatrixStack.prototype.push = function push() {
+    PMatrixStack.prototype.push = function() {
       this.matrixStack.push(this.peek());
     };
 
@@ -5729,7 +5730,7 @@
      *
      * @returns {Object} the matrix at the top of the stack
      */
-    PMatrixStack.prototype.pop = function pop() {
+    PMatrixStack.prototype.pop = function() {
       return this.matrixStack.pop();
     };
 
@@ -5739,7 +5740,7 @@
      *
      * @returns {Object} the matrix at the top of the stack
      */
-    PMatrixStack.prototype.peek = function peek() {
+    PMatrixStack.prototype.peek = function() {
       var tmpMatrix = drawing.newPMatrix();
 
       tmpMatrix.set(this.matrixStack[this.matrixStack.length - 1]);
@@ -5752,7 +5753,7 @@
      *
      * @param {Object | Array} matrix the matrix to be multiplied into the stack
      */
-    PMatrixStack.prototype.mult = function mult(matrix) {
+    PMatrixStack.prototype.mult = function(matrix) {
       this.matrixStack[this.matrixStack.length - 1].apply(matrix);
     };
 
@@ -6430,7 +6431,7 @@
     *
     * @see colorMode
     */
-    p.color = function color(aValue1, aValue2, aValue3, aValue4) {
+    p.color = function(aValue1, aValue2, aValue3, aValue4) {
 
       // 4 arguments: (R, G, B, A) or (H, S, B, A)
       if (aValue1 !== undef && aValue2 !== undef && aValue3 !== undef && aValue4 !== undef) {
@@ -6603,7 +6604,7 @@
       return  p.color.toHSB(colInt)[0];
     };
 
-    var verifyChannel = function verifyChannel(aColor) {
+    var verifyChannel = function(aColor) {
       if (aColor.constructor === Array) {
         return aColor;
       } else {
@@ -6705,7 +6706,7 @@
     * @see blendColor
     * @see color
     */
-    p.lerpColor = function lerpColor(c1, c2, amt) {
+    p.lerpColor = function(c1, c2, amt) {
       // Get RGBA values for Color 1 to floats
       var colorBits1 = p.color(c1);
       var r1 = (colorBits1 & PConstants.RED_MASK) >>> 16;
@@ -6769,7 +6770,7 @@
     * @see fill
     * @see stroke
     */
-    p.colorMode = function colorMode() { // mode, range1, range2, range3, range4
+    p.colorMode = function() { // mode, range1, range2, range3, range4
       curColorMode = arguments[0];
       if (arguments.length > 1) {
         colorModeX   = arguments[1];
@@ -6869,7 +6870,7 @@
     * @see resetMatrix
     * @see applyMatrix
     */
-    p.printMatrix = function printMatrix() {
+    p.printMatrix = function() {
       modelView.print();
     };
 
@@ -7156,7 +7157,7 @@
     *
     * @see popStyle
     */
-    p.pushStyle = function pushStyle() {
+    p.pushStyle = function() {
       // Save the canvas state.
       saveContext();
 
@@ -7191,7 +7192,7 @@
     *
     * @see pushStyle
     */
-    p.popStyle = function popStyle() {
+    p.popStyle = function() {
       var oldState = styleArray.pop();
 
       if (oldState) {
@@ -7234,7 +7235,7 @@
     * @see day
     * @see month
     */
-    p.year = function year() {
+    p.year = function() {
       return new Date().getFullYear();
     };
     /**
@@ -7250,7 +7251,7 @@
     * @see day
     * @see year
     */
-    p.month = function month() {
+    p.month = function() {
       return new Date().getMonth() + 1;
     };
     /**
@@ -7266,7 +7267,7 @@
     * @see month
     * @see year
     */
-    p.day = function day() {
+    p.day = function() {
       return new Date().getDate();
     };
     /**
@@ -7282,7 +7283,7 @@
     * @see day
     * @see year
     */
-    p.hour = function hour() {
+    p.hour = function() {
       return new Date().getHours();
     };
     /**
@@ -7298,7 +7299,7 @@
     * @see day
     * @see year
     */
-    p.minute = function minute() {
+    p.minute = function() {
       return new Date().getMinutes();
     };
     /**
@@ -7314,7 +7315,7 @@
     * @see day
     * @see year
     */
-    p.second = function second() {
+    p.second = function() {
       return new Date().getSeconds();
     };
     /**
@@ -7330,7 +7331,7 @@
     * @see day
     * @see year
     */
-    p.millis = function millis() {
+    p.millis = function() {
       return new Date().getTime() - start;
     };
 
@@ -7418,7 +7419,7 @@
     * @see draw
     * @see loop
     */
-    p.noLoop = function noLoop() {
+    p.noLoop = function() {
       doLoop = false;
       loopStarted = false;
       clearInterval(looping);
@@ -7432,7 +7433,7 @@
     *
     * @see noLoop
     */
-    p.loop = function loop() {
+    p.loop = function() {
       if (loopStarted) {
         return;
       }
@@ -7464,7 +7465,7 @@
     *
     * @see delay
     */
-    p.frameRate = function frameRate(aRate) {
+    p.frameRate = function(aRate) {
       curFrameRate = aRate;
       curMsPerFrame = 1000 / curFrameRate;
 
@@ -7486,7 +7487,7 @@
     *
     * @returns none
     */
-    p.exit = function exit() {
+    p.exit = function() {
       window.clearInterval(looping);
 
       removeInstance(p.externals.canvas.id);
@@ -7533,7 +7534,7 @@
     *
     * @see noCursor
     */
-    p.cursor = function cursor() {
+    p.cursor = function() {
       if (arguments.length > 1 || (arguments.length === 1 && arguments[0] instanceof p.PImage)) {
         var image = arguments[0],
           x, y;
@@ -7567,7 +7568,7 @@
     *
     * @see cursor
     */
-    p.noCursor = function noCursor() {
+    p.noCursor = function() {
       curCursor = curElement.style.cursor = PConstants.NOCURSOR;
     };
 
@@ -7591,11 +7592,11 @@
     // PGraphics methods
     // TODO: These functions are suppose to be called before any operations are called on the
     //       PGraphics object. They currently do nothing.
-    p.beginDraw = function beginDraw() {};
-    p.endDraw = function endDraw() {};
+    p.beginDraw = function() {};
+    p.endDraw = function() {};
 
     // Imports an external Processing.js library
-    p.Import = function Import(lib) {
+    p.Import = function(lib) {
       // Replace evil-eval method with a DOM <script> tag insert method that
       // binds new lib code to the Processing.lib names-space and the current
       // p context. -F1LT3R
@@ -7606,11 +7607,11 @@
       e.stopPropagation();
     };
 
-    p.disableContextMenu = function disableContextMenu() {
+    p.disableContextMenu = function() {
       curElement.addEventListener('contextmenu', contextMenu, false);
     };
 
-    p.enableContextMenu = function enableContextMenu() {
+    p.enableContextMenu = function() {
       curElement.removeEventListener('contextmenu', contextMenu, false);
     };
 
@@ -7705,7 +7706,7 @@
     * @see binary
     * @see unbinary
     */
-    p.unbinary = function unbinary(binaryString) {
+    p.unbinary = function(binaryString) {
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
       var i;
@@ -7873,7 +7874,7 @@
     */
     p.nfc = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits, ","); };
 
-    var decimalToHex = function decimalToHex(d, padding) {
+    var decimalToHex = function(d, padding) {
       //if there is no padding value added, default padding to 8 else go into while statement.
       padding = (padding === undef || padding === null) ? padding = 8 : padding;
       if (d < 0) {
@@ -7906,7 +7907,7 @@
     * @see binary
     * @see unbinary
     */
-    p.hex = function hex(value, len) {
+    p.hex = function(value, len) {
       if (arguments.length === 1) {
         if (value instanceof Char) {
           len = 4;
@@ -7965,7 +7966,7 @@
     * @see saveStrings
     * @see saveBytes
     */
-    p.loadStrings = function loadStrings(filename) {
+    p.loadStrings = function(filename) {
       if (localStorage[filename]) {
         return localStorage[filename].split("\n");
       }
@@ -7993,7 +7994,7 @@
     * @see loadStrings
     * @see saveBytes
     */
-    p.saveStrings = function saveStrings(filename, strings) {
+    p.saveStrings = function(filename, strings) {
       localStorage[filename] = strings.join('\n');
     };
 
@@ -8009,7 +8010,7 @@
     * @see saveStrings
     * @see saveBytes
     */
-    p.loadBytes = function loadBytes(url, strings) {
+    p.loadBytes = function(url, strings) {
       var string = ajax(url);
       var ret = [];
 
@@ -8047,7 +8048,7 @@
      *
      * @see #match
      */
-    p.matchAll = function matchAll(aString, aRegExp) {
+    p.matchAll = function(aString, aRegExp) {
       var results = [],
           latest;
       var regexp = new RegExp(aRegExp, "g");
@@ -8224,7 +8225,7 @@
      * @see #join
      * @see #print
      */
-    p.println = function println(message) {
+    p.println = function(message) {
       var bufferLen = logBuffer.length;
       if (bufferLen) {
         Processing.logger.log(logBuffer.join(""));
@@ -8244,13 +8245,13 @@
      *
      * @see #join
      */
-    p.print = function print(message) {
+    p.print = function(message) {
       logBuffer.push(message);
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
     // passed in, and will come out as numbers.
-    p.str = function str(val) {
+    p.str = function(val) {
       if (val instanceof Array) {
         var arr = [];
         for (var i = 0; i < val.length; i++) {
@@ -8939,7 +8940,7 @@
     * @see randomSeed
     * @see noise
     */
-    p.random = function random() {
+    p.random = function() {
       if(arguments.length === 0) {
         return currentRandom();
       } else if(arguments.length === 1) {
@@ -9572,7 +9573,7 @@
      * @see noLights
      *
     */
-    p.lights = function lights() {
+    p.lights = function() {
       p.ambientLight(128, 128, 128);
       p.directionalLight(128, 128, 128, 0, 0, -1);
       p.lightFalloff(1, 0, 0);
@@ -9732,7 +9733,7 @@
      * @see rotate
      * @see scale
      */
-    p.beginCamera = function beginCamera() {
+    p.beginCamera = function() {
       if (manipulatingCamera) {
         throw ("You cannot call beginCamera() again before calling endCamera()");
       } else {
@@ -9748,7 +9749,7 @@
      *
      * @see beginCamera
      */
-    p.endCamera = function endCamera() {
+    p.endCamera = function() {
       if (!manipulatingCamera) {
         throw ("You cannot call endCamera() before calling beginCamera()");
       } else {
@@ -9782,7 +9783,7 @@
      * @see endCamera
      * @see frustum
      */
-    p.camera = function camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
+    p.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
       if (arguments.length === 0) {
         //in case canvas is resized
         cameraX = curElement.width / 2;
@@ -9834,7 +9835,7 @@
      * @param {float} zNear   z-position of nearest clipping plane
      * @param {float} zFar    z-positions of farthest clipping plane
      */
-    p.perspective = function perspective(fov, aspect, near, far) {
+    p.perspective = function(fov, aspect, near, far) {
       if (arguments.length === 0) {
         //in case canvas is resized
         cameraY = curElement.height / 2;
@@ -9872,7 +9873,7 @@
      * @see endCamera
      * @see perspective
      */
-    p.frustum = function frustum(left, right, bottom, top, near, far) {
+    p.frustum = function(left, right, bottom, top, near, far) {
       frustumMode = true;
       projection = new PMatrix3D();
       projection.set((2 * near) / (right - left), 0, (right + left) / (right - left),
@@ -9895,7 +9896,7 @@
      * @param {float} near   maximum distance from the origin to the viewer
      * @param {float} far    maximum distance from the origin away from the viewer
      */
-    p.ortho = function ortho(left, right, bottom, top, near, far) {
+    p.ortho = function(left, right, bottom, top, near, far) {
       if (arguments.length === 0) {
         left = 0;
         right = p.width;
@@ -10133,7 +10134,7 @@
      *
      * @see #sphere()
      */
-    p.sphereDetail = function sphereDetail(ures, vres) {
+    p.sphereDetail = function(ures, vres) {
       var i;
 
       if (arguments.length === 1) {
@@ -10309,7 +10310,7 @@
      * @see modelY
      * @see modelZ
     */
-    p.modelX = function modelX(x, y, z) {
+    p.modelX = function(x, y, z) {
       var mv = modelView.array();
       var ci = cameraInv.array();
 
@@ -10341,7 +10342,7 @@
      * @see modelX
      * @see modelZ
     */
-    p.modelY = function modelY(x, y, z) {
+    p.modelY = function(x, y, z) {
       var mv = modelView.array();
       var ci = cameraInv.array();
 
@@ -10372,7 +10373,7 @@
      * @see modelX
      * @see modelY
     */
-    p.modelZ = function modelZ(x, y, z) {
+    p.modelZ = function(x, y, z) {
       var mv = modelView.array();
       var ci = cameraInv.array();
 
@@ -10567,7 +10568,7 @@
      * @see screenY
      * @see screenZ
     */
-    p.screenX = function screenX( x, y, z ) {
+    p.screenX = function( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
 
@@ -10598,7 +10599,7 @@
      * @see screenX
      * @see screenZ
     */
-    p.screenY = function screenY( x, y, z ) {
+    p.screenY = function( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
 
@@ -10629,7 +10630,7 @@
      * @see screenX
      * @see screenY
     */
-    p.screenZ = function screenZ( x, y, z ) {
+    p.screenZ = function( x, y, z ) {
       var mv = modelView.array();
       var pj = projection.array();
 
@@ -10710,7 +10711,7 @@
      * @see #fill()
      *
      */
-    p.noFill = function noFill() {
+    p.noFill = function() {
       doFill = false;
     };
 
@@ -10779,7 +10780,7 @@
      *
      * @see #stroke()
      */
-    p.noStroke = function noStroke() {
+    p.noStroke = function() {
       doStroke = false;
     };
 
@@ -10811,7 +10812,7 @@
      *
      * @param {int} value Either SQUARE, PROJECT, or ROUND
      */
-    p.strokeCap = function strokeCap(value) {
+    p.strokeCap = function(value) {
       curContext.lineCap = value;
     };
 
@@ -10822,7 +10823,7 @@
      *
      * @param {int} value Either SQUARE, PROJECT, or ROUND
      */
-    p.strokeJoin = function strokeJoin(value) {
+    p.strokeJoin = function(value) {
       curContext.lineJoin = value;
     };
 
@@ -10963,7 +10964,7 @@
      * @see curveVertex
      * @see bezierVertex
      */
-    p.beginShape = function beginShape(type) {
+    p.beginShape = function(type) {
       curShape = type;
       curvePoints = [];
       vertArray = [];
@@ -11057,7 +11058,7 @@
      * @see endShape
      * @see vertex
      */
-    var point3D = function point3D(vArray, cArray){
+    var point3D = function(vArray, cArray){
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
       view.apply(modelView.array());
@@ -11092,7 +11093,7 @@
      * @see endShape
      * @see vertex
      */
-    var line3D = function line3D(vArray, mode, cArray){
+    var line3D = function(vArray, mode, cArray){
       var ctxMode;
       if (mode === "LINES"){
         ctxMode = curContext.LINES;
@@ -11141,7 +11142,7 @@
      * @see endShape
      * @see vertex
      */
-    var fill3D = function fill3D(vArray, mode, cArray, tArray){
+    var fill3D = function(vArray, mode, cArray, tArray){
       var ctxMode;
       if(mode === "TRIANGLES"){
         ctxMode = curContext.TRIANGLES;
@@ -12329,7 +12330,7 @@
      * @see curveVertex()
      * @see curveTightness()
      */
-    p.curveDetail = function curveDetail(detail) {
+    p.curveDetail = function(detail) {
       curveDet = detail;
       curveInit();
     };
@@ -12350,7 +12351,7 @@
     *
     * @see rect
     */
-    p.rectMode = function rectMode(aRectMode) {
+    p.rectMode = function(aRectMode) {
       curRectMode = aRectMode;
     };
 
@@ -12397,7 +12398,7 @@
     *
     * @see ellipse
     */
-    p.ellipseMode = function ellipseMode(aEllipseMode) {
+    p.ellipseMode = function(aEllipseMode) {
       curEllipseMode = aEllipseMode;
     };
 
@@ -12420,7 +12421,7 @@
      * @see #ellipseMode()
      * @see #ellipse()
      */
-    p.arc = function arc(x, y, width, height, start, stop) {
+    p.arc = function(x, y, width, height, start, stop) {
       if (width <= 0 || stop < start) { return; }
 
       if (curEllipseMode === PConstants.CORNERS) {
@@ -12642,7 +12643,7 @@
      * @see curveVertex
      * @see curveTightness
      */
-    p.bezierDetail = function bezierDetail( detail ){
+    p.bezierDetail = function( detail ){
       bezDetail = detail;
     };
 
@@ -12663,7 +12664,7 @@
      * @see #bezierVertex()
      * @see #curvePoint()
      */
-    p.bezierPoint = function bezierPoint(a, b, c, d, t) {
+    p.bezierPoint = function(a, b, c, d, t) {
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
 
@@ -12681,7 +12682,7 @@
      * @see #bezierVertex()
      * @see #curvePoint()
      */
-    p.bezierTangent = function bezierTangent(a, b, c, d, t) {
+    p.bezierTangent = function(a, b, c, d, t) {
       return (3 * t * t * (-a + 3 * b - 3 * c + d) + 6 * t * (a - 2 * b + c) + 3 * (-a + b));
     };
 
@@ -12702,7 +12703,7 @@
      * @see #curveVertex()
      * @see #bezierPoint()
      */
-    p.curvePoint = function curvePoint(a, b, c, d, t) {
+    p.curvePoint = function(a, b, c, d, t) {
       return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
     };
 
@@ -12721,7 +12722,7 @@
      * @see #curvePoint()
      * @see #bezierTangent()
      */
-    p.curveTangent = function curveTangent(a, b, c, d, t) {
+    p.curveTangent = function(a, b, c, d, t) {
       return 0.5 * ((-a + c) + 2 * (2 * a - 5 * b + 4 * c - d) * t + 3 * (-a + 3 * b - 3 * c + d) * t * t);
     };
 
@@ -12736,7 +12737,7 @@
      * @param {int | float} x3 x-coordinate of the third point
      * @param {int | float} y3 y-coordinate of the third point
      */
-    p.triangle = function triangle(x1, y1, x2, y2, x3, y3) {
+    p.triangle = function(x1, y1, x2, y2, x3, y3) {
       p.beginShape(PConstants.TRIANGLES);
       p.vertex(x1, y1, 0);
       p.vertex(x2, y2, 0);
@@ -12758,7 +12759,7 @@
      * @param {float | int} x4 x-coordinate of the fourth corner
      * @param {float | int} y4 y-coordinate of the fourth corner
      */
-    p.quad = function quad(x1, y1, x2, y2, x3, y3, x4, y4) {
+    p.quad = function(x1, y1, x2, y2, x3, y3, x4, y4) {
       p.beginShape(PConstants.QUADS);
       p.vertex(x1, y1, 0);
       p.vertex(x2, y2, 0);
@@ -13058,7 +13059,7 @@
     * @see endShape
     * @see lights
     */
-    p.normal = function normal(nx, ny, nz) {
+    p.normal = function(nx, ny, nz) {
       if (arguments.length !== 3 || !(typeof nx === "number" && typeof ny === "number" && typeof nz === "number")) {
         throw "normal() requires three numeric arguments.";
       }
@@ -13094,7 +13095,7 @@
     * @see saveFrame
     * @see createGraphics
     */
-    p.save = function save(file, img) {
+    p.save = function(file, img) {
       // file is unused at the moment
       // may implement this differently in later release
       if (img !== undef) {
@@ -13106,7 +13107,7 @@
 
     var saveNumber = 0;
 
-    p.saveFrame = function saveFrame(file) {
+    p.saveFrame = function(file) {
       if(file === undef) {
         // use default name template if parameter is not specified
         file = "screen-####.png";
@@ -13173,7 +13174,7 @@
     * @see imageMode
     * @see createImage
     */
-    var PImage = function PImage(aWidth, aHeight, aFormat) {
+    var PImage = function(aWidth, aHeight, aFormat) {
       this.get = function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
@@ -13550,7 +13551,7 @@
     * @see PImage
     * @see PGraphics
     */
-    p.createImage = function createImage(w, h, mode) {
+    p.createImage = function(w, h, mode) {
       return new PImage(w,h,mode);
     };
 
@@ -13585,7 +13586,7 @@
     * @see imageMode
     * @see background
     */
-    p.loadImage = function loadImage(file, type, callback) {
+    p.loadImage = function(file, type, callback) {
       // if type is specified add it with a . to file to make the filename
       if (type) {
         file = file + "." + type;
@@ -13737,7 +13738,7 @@
     * @see pixels[]
     * @see imageMode
     */
-    p.get = function get(x, y, w, h, img) {
+    p.get = function(x, y, w, h, img) {
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
       if (arguments.length === 2) {
         return get$2(x, y);
@@ -13769,7 +13770,7 @@
      * @param {int} renderer    Either P2D, P3D, JAVA2D, PDF, DXF
      * @param {String} filename the name of the file (not supported yet)
      */
-    p.createGraphics = function createGraphics(w, h, render) {
+    p.createGraphics = function(w, h, render) {
       var pg = new Processing();
       pg.size(w, h, render);
       return pg;
@@ -13868,7 +13869,7 @@
     * @see pixels[]
     * @see imageMode
     */
-    p.set = function set(x, y, obj, img) {
+    p.set = function(x, y, obj, img) {
       var color, oldFill;
       if (arguments.length === 3) {
         // called p.set(), was it with a color or a img ?
@@ -14000,7 +14001,7 @@
     * @see createGraphics
     * @see size
     */
-    p.hint = function hint(which) {
+    p.hint = function(which) {
       if (which === PConstants.DISABLE_DEPTH_TEST) {
          curContext.disable(curContext.DEPTH_TEST);
          curContext.depthMask(false);
@@ -14218,7 +14219,7 @@
      * @see #noTint()
      * @see #image()
      */
-    p.tint = function tint() {
+    p.tint = function() {
       var tintColor = p.color.apply(this, arguments);
       var r = p.red(tintColor) / colorModeX;
       var g = p.green(tintColor) / colorModeY;
@@ -14243,7 +14244,7 @@
      * @see #tint()
      * @see #image()
      */
-    p.noTint = function noTint() {
+    p.noTint = function() {
       curTint = null;
     };
 
@@ -14266,7 +14267,7 @@
     * @see blend
     * @see get
     */
-    p.copy = function copy(src, sx, sy, sw, sh, dx, dy, dw, dh) {
+    p.copy = function(src, sx, sy, sw, sh, dx, dy, dw, dh) {
       if (arguments.length === 8) {
         // shift everything, and introduce p
         dh = dw;
@@ -14316,7 +14317,7 @@
     *                           OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, BURN
     * @see filter
     */
-    p.blend = function blend(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
+    p.blend = function(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
       if (arguments.length === 9) {
         // shift everything, and introduce p
         mode = dh;
@@ -14365,7 +14366,7 @@
     };
 
     // helper function for filter()
-    var buildBlurKernel = function buildBlurKernel(r) {
+    var buildBlurKernel = function(r) {
       var radius = p.floor(r * 3.5), i, radiusi;
       radius = (radius < 1) ? 1 : ((radius < 248) ? radius : 248);
       if (p.shared.blurRadius !== radius) {
@@ -14384,7 +14385,7 @@
       }
     };
 
-    var blurARGB = function blurARGB(r, aImg) {
+    var blurARGB = function(r, aImg) {
       var sum, cr, cg, cb, ca, c, m;
       var read, ri, ym, ymi, bk0;
       var wh = aImg.pixels.getLength();
@@ -14472,7 +14473,7 @@
     };
 
     // helper funtion for ERODE and DILATE modes of filter()
-    var dilate = function dilate(isInverted, aImg) {
+    var dilate = function(isInverted, aImg) {
       var currIdx = 0;
       var maxIdx = aImg.pixels.getLength();
       var out = new Int32Array(maxIdx);
@@ -14612,7 +14613,7 @@
     *
     * @see blend
     */
-    p.filter = function filter(kind, param, aImg){
+    p.filter = function(kind, param, aImg){
       var img, col, lum, i;
 
       if (arguments.length === 3) {
@@ -14750,7 +14751,7 @@
       blurKernel: null
     };
 
-    p.intersect = function intersect(sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2) {
+    p.intersect = function(sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2) {
       var sw = sx2 - sx1 + 1;
       var sh = sy2 - sy1 + 1;
       var dw = dx2 - dx1 + 1;
@@ -14780,7 +14781,7 @@
       return ! (dw <= 0 || dh <= 0);
     };
 
-    p.filter_new_scanline = function filter_new_scanline() {
+    p.filter_new_scanline = function() {
       p.shared.sX = p.shared.srcXOffset;
       p.shared.fracV = p.shared.srcYOffset & PConstants.PREC_MAXVAL;
       p.shared.ifV = PConstants.PREC_MAXVAL - p.shared.fracV;
@@ -14788,7 +14789,7 @@
       p.shared.v2 = Math.min((p.shared.srcYOffset >> PConstants.PRECISIONB) + 1, p.shared.ih1) * p.shared.iw;
     };
 
-    p.filter_bilinear = function filter_bilinear() {
+    p.filter_bilinear = function() {
       p.shared.fracU = p.shared.sX & PConstants.PREC_MAXVAL;
       p.shared.ifU = PConstants.PREC_MAXVAL - p.shared.fracU;
       p.shared.ul = (p.shared.ifU * p.shared.ifV) >> PConstants.PRECISIONB;
@@ -14825,8 +14826,8 @@
       return p.shared.a | p.shared.r | p.shared.g | p.shared.b;
     };
 
-    p.blit_resize = function blit_resize(img, srcX1, srcY1, srcX2, srcY2, destPixels,
-                                         screenW, screenH, destX1, destY1, destX2, destY2, mode) {
+    p.blit_resize = function(img, srcX1, srcY1, srcX2, srcY2, destPixels,
+                              screenW, screenH, destX1, destY1, destX2, destY2, mode) {
       var x, y; // iterator vars
       if (srcX1 < 0) {
         srcX1 = 0;
@@ -15246,7 +15247,7 @@
      * @see #text
      * @see #createFont
      */
-    p.loadFont = function loadFont(name) {
+    p.loadFont = function(name) {
       if (name === undef || name.indexOf(".svg") === -1) {
         return new PFont(name);
       } else {
@@ -15320,7 +15321,7 @@
      * @see #PFont
      * @see #text
      */
-    p.textFont = function textFont(font, size) {
+    p.textFont = function(font, size) {
       curTextFont = font;
       if (size) {
         p.textSize(size);
@@ -15339,7 +15340,7 @@
      * @see #PFont
      * @see #text
      */
-    p.textSize = function textSize(size) {
+    p.textSize = function(size) {
       if (size) {
         curTextSize = size;
         curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
@@ -15356,7 +15357,7 @@
      * @see #PFont
      * @see #text
      */
-    p.textAlign = function textAlign() {
+    p.textAlign = function() {
       if(arguments.length === 1) {
         horizontalTextAlignment = arguments[0];
       } else if(arguments.length === 2) {
@@ -15404,7 +15405,7 @@
       return width;
     };
 
-    p.textLeading = function textLeading(leading) {
+    p.textLeading = function(leading) {
       curTextLeading = leading;
     };
 
@@ -15536,7 +15537,7 @@
     }());
 
     // A lookup table for characters that can not be referenced by Object
-    p.glyphLook = function glyphLook(font, chr) {
+    p.glyphLook = function(font, chr) {
       try {
         switch (chr) {
         case "1":
@@ -15936,7 +15937,7 @@
      * @see #PFont
      * @see #textFont
      */
-    p.text = function text() {
+    p.text = function() {
       if (tMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
         p.pushMatrix();
         p.resetMatrix();
@@ -15995,17 +15996,17 @@
      * @see textFont
      * @see createFont
      */
-    p.textMode = function textMode(mode){
+    p.textMode = function(mode){
       tMode = mode;
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
-    p.loadGlyphs = function loadGlyph(url) {
+    p.loadGlyphs = function(url) {
       var x, y, cx, cy, nx, ny, d, a, lastCom, lenC, horiz_adv_x, getXY = '[0-9\\-]+', path;
 
       // Return arrays of SVG commands and coords
       // get this to use p.matchAll() - will need to work around the lack of null return
-      var regex = function regex(needle, hay) {
+      var regex = function(needle, hay) {
         var i = 0,
           results = [],
           latest, regexp = new RegExp(needle, "g");
@@ -16017,7 +16018,7 @@
         return results;
       };
 
-      var buildPath = function buildPath(d) {
+      var buildPath = function(d) {
         var c = regex("[A-Za-z][0-9\\- ]+|Z", d);
 
         // Begin storing path object
@@ -16113,7 +16114,7 @@
       };
 
       // Parse SVG font-file into block of Canvas commands
-      var parseSVGFont = function parseSVGFontse(svg) {
+      var parseSVGFont = function(svg) {
         // Store font attributes
         var font = svg.getElementsByTagName("font");
         p.glyphTable[url].horiz_adv_x = font[0].getAttribute("horiz-adv-x");
@@ -16152,7 +16153,7 @@
       };
 
       // Load and parse Batik SVG font as XML into a Processing Glyph object
-      var loadXML = function loadXML() {
+      var loadXML = function() {
         var xmlDoc;
 
         try {
@@ -16279,7 +16280,7 @@
       extendClass(derived, base);
     };
 
-    p.addMethod = function addMethod(object, name, fn, superAccessor) {
+    p.addMethod = function(object, name, fn, superAccessor) {
       if (object[name]) {
         var args = fn.length,
           oldfn = object[name];
@@ -16296,7 +16297,7 @@
       }
     };
 
-    p.createJavaArray = function createJavaArray(type, bounds) {
+    p.createJavaArray = function(type, bounds) {
       var result = null;
       if (typeof bounds[0] === 'number') {
         var itemsCount = 0 | bounds[0];
@@ -16310,7 +16311,7 @@
           result = [];
           var newBounds = bounds.slice(1);
           for (var j = 0; j < itemsCount; ++j) {
-            result.push(createJavaArray(type, newBounds));
+            result.push(p.createJavaArray(type, newBounds));
           }
         }
       }
