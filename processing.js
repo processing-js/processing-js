@@ -521,18 +521,19 @@
        */
       this.addAll = function(arg1, arg2) {
         // addAll(int, Collection)
+        var it;
         if (typeof arg1 === "number") {
-          if (arg1 < 0 || arg1 >= array.length) {
+          if (arg1 < 0 || arg1 > array.length) {
             throw("Index out of bounds for addAll: "+arg1+" greater or equal than "+array.length);
           }
-          var it = arg2.iterator();
+          it = arg2.iterator();
           while (it.hasNext()) {
             array.splice(arg1++, 0, it.next());
           }
         }
         // addAll(Collection)
         else if (arg1.iterator) {
-          var it = arg1.iterator();
+          it = ObjectIterator(arg1);
           while (it.hasNext()) {
             array.push(it.next());
           }

@@ -21,3 +21,9 @@ one.addAll(2,three);
 String[] elements2 = one.toArray();
 String[] match2 = {"one", "two", "five", "six", "three", "four"};
 _checkEqual(elements2, match2);
+
+one = new ArrayList();
+two = new ArrayList();
+two.add("t");
+one.addAll(0, two);
+_checkEqual(one.get(0), "t");
