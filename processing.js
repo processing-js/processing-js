@@ -1381,8 +1381,8 @@
     p.frameCount      = 0;
 
     // The height/width of the canvas
-    p.width           = curElement.width  - 0;
-    p.height          = curElement.height - 0;
+    p.width           = 100;
+    p.height          = 100;
 
     p.defineProperty = function(obj, name, desc) {
       if("defineProperty" in Object) {
@@ -1540,12 +1540,12 @@
         manipulatingCamera = false,
         frustumMode = false,
         cameraFOV = 60 * (Math.PI / 180),
-        cameraX = curElement.width / 2,
-        cameraY = curElement.height / 2,
+        cameraX = p.width / 2,
+        cameraY = p.height / 2,
         cameraZ = cameraY / Math.tan(cameraFOV / 2),
         cameraNear = cameraZ / 10,
         cameraFar = cameraZ * 10,
-        cameraAspect = curElement.width / curElement.height;
+        cameraAspect = p.width / p.height;
 
     var vertArray = [],
         curveVertArray = [],
@@ -2157,12 +2157,15 @@
     var DrawingShared = function() {};
     var Drawing2D = function() {};
     var Drawing3D = function() {};
+    var DrawingPre = function() {};
     
     // Setup the prototype chain
     Drawing2D.prototype = new DrawingShared();
     Drawing2D.prototype.constructor = Drawing2D;
     Drawing3D.prototype = new DrawingShared();
     Drawing3D.prototype.constructor = Drawing3D;
+    DrawingPre.prototype = new DrawingShared();
+    DrawingPre.prototype.constructor = DrawingPre;
     
     // A no-op function for when the user calls 3D functions from a 2D sketch
     // We can change this to a throw or console.error() later if we want
@@ -5749,7 +5752,7 @@
      * @param {Object | Array} matrix the matrix to be pushed into the stack
      */
     PMatrixStack.prototype.load = function() {
-      var tmpMatrix = drawing.newPMatrix();
+      var tmpMatrix = drawing.$newPMatrix();
 
       if (arguments.length === 1) {
         tmpMatrix.set(arguments[0]);
@@ -5759,11 +5762,11 @@
       this.matrixStack.push(tmpMatrix);
     };
     
-    Drawing2D.prototype.newPMatrix = function() {
+    Drawing2D.prototype.$newPMatrix = function() {
       return new PMatrix2D();
     };
     
-    Drawing3D.prototype.newPMatrix = function() {
+    Drawing3D.prototype.$newPMatrix = function() {
       return new PMatrix3D();
     };
 
@@ -5792,7 +5795,7 @@
      * @returns {Object} the matrix at the top of the stack
      */
     PMatrixStack.prototype.peek = function() {
-      var tmpMatrix = drawing.newPMatrix();
+      var tmpMatrix = drawing.$newPMatrix();
 
       tmpMatrix.set(this.matrixStack[this.matrixStack.length - 1]);
       return tmpMatrix;
@@ -10864,7 +10867,8 @@
      * @param {int} value Either SQUARE, PROJECT, or ROUND
      */
     p.strokeCap = function(value) {
-      curContext.lineCap = value;
+      drawing.$ensureContext().lineCap = value;
+
     };
 
     /**
@@ -10875,7 +10879,7 @@
      * @param {int} value Either SQUARE, PROJECT, or ROUND
      */
     p.strokeJoin = function(value) {
-      curContext.lineJoin = value;
+      drawing.$ensureContext().lineJoin = value;
     };
 
     /**
@@ -12127,6 +12131,7 @@
      * @see vertex
     */
     p.texture = function(pimage) {
+      var curContext = drawing.$ensureContext();
       if (pimage.localName === "canvas") {
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
         executeTexImage2D(pimage);
@@ -14005,7 +14010,7 @@
     * @see updatePixels
     */
     p.loadPixels = function() {
-      p.imageData = curContext.getImageData(0, 0, p.width, p.height);
+      p.imageData = drawing.$ensureContext().getImageData(0, 0, p.width, p.height);
     };
 
     // Draws a 1-Dimensional pixel array to Canvas
@@ -14024,7 +14029,7 @@
     */
     p.updatePixels = function() {
       if (p.imageData) {
-        curContext.putImageData(p.imageData, 0, 0);
+        drawing.$ensureContext().putImageData(p.imageData, 0, 0);
       }
     };
 
@@ -14066,6 +14071,7 @@
     * @see size
     */
     p.hint = function(which) {
+      var curContext = drawing.$ensureContext();
       if (which === PConstants.DISABLE_DEPTH_TEST) {
          curContext.disable(curContext.DEPTH_TEST);
          curContext.depthMask(false);
@@ -15287,8 +15293,6 @@
     PFont.prototype.width = function(str) {
       if ("measureText" in curContext) {
         return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
-      } else if ("mozMeasureText" in curContext) {
-        return curContext.mozMeasureText(typeof str === "number" ? String.fromCharCode(str) : str) / curTextSize;
       } else {
         return 0;
       }
@@ -15390,7 +15394,8 @@
       if (size) {
         p.textSize(size);
       } else {
-        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+        var curContext = drawing.$ensureContext();
+        curContext.font = curTextSize + "px " + curTextFont.name;
       }
     };
 
@@ -15407,7 +15412,8 @@
     p.textSize = function(size) {
       if (size) {
         curTextSize = size;
-        curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+        var curContext = drawing.$ensureContext();
+        curContext.font = curTextSize + "px " + curTextFont.name;
       }
     };
 
@@ -15459,7 +15465,7 @@
       if (textcanvas === undef) {
         textcanvas = document.createElement("canvas");
       }
-      
+
       var textContext = textcanvas.getContext("2d");
       textContext.font =  curTextSize + "px " + curTextFont.name;
       
@@ -15721,7 +15727,7 @@
       var textWidth = 0, xOffset = 0;
       // If the font is a standard Canvas font...
       if (!curTextFont.glyph) {
-        if (str && ("fillText" in curContext || "mozDrawText" in curContext)) {
+        if (str && ("fillText" in curContext)) {
           if (isFillDirty) {
             curContext.fillStyle = p.color.toString(currentFillColor);
             isFillDirty = false;
@@ -15729,11 +15735,7 @@
 
           // horizontal offset/alignment
           if(align === PConstants.RIGHT || align === PConstants.CENTER) {
-            if ("fillText" in curContext) {
-              textWidth = curContext.measureText(str).width;
-            } else if ("mozDrawText" in curContext) {
-              textWidth = curContext.mozMeasureText(str);
-            }
+            textWidth = curContext.measureText(str).width;
 
             if(align === PConstants.RIGHT) {
               xOffset = -textWidth;
@@ -15742,14 +15744,7 @@
             }
           }
 
-          if ("fillText" in curContext) {
-            curContext.fillText(str, x+xOffset, y);
-          } else if ("mozDrawText" in curContext) {
-            saveContext();
-            curContext.translate(x+xOffset, y);
-            curContext.mozDrawText(str);
-            restoreContext();
-          }
+          curContext.fillText(str, x+xOffset, y);
         }
       } else {
         // If the font is a Batik SVG font...
@@ -15792,17 +15787,12 @@
       }
       var oldContext = curContext;
       curContext = textcanvas.getContext("2d");
-      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-      var textWidth = 0;
-      if ("fillText" in curContext) {
-        textWidth = curContext.measureText(str).width;
-      } else if ("mozDrawText" in curContext) {
-        textWidth = curContext.mozMeasureText(str);
-      }
+      curContext.font = curTextSize + "px " + curTextFont.name;
+      var textWidth = curContext.measureText(str).width;
       textcanvas.width = textWidth;
       textcanvas.height = curTextSize;
       curContext = textcanvas.getContext("2d"); // refreshes curContext
-      curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+      curContext.font = curTextSize + "px " + curTextFont.name;
       curContext.textBaseline="top";
 
       // paint on 2D canvas
@@ -15907,14 +15897,8 @@
       for (var charPos=0, len=str.length; charPos < len; charPos++)
       {
         var currentChar = str[charPos];
-        var letterWidth = 0;
         var spaceChar = (currentChar === " ");
-
-        if ("fillText" in curContext) {
-          letterWidth = curContext.measureText(currentChar).width;
-        } else if ("mozDrawText" in curContext) {
-          letterWidth = curContext.mozMeasureText(currentChar);
-        }
+        var letterWidth = curContext.measureText(currentChar).width;
 
         // if we aren't looking at a newline, and the text still fits, keep processing
         if (currentChar !== "\n" && (lineWidth + letterWidth < textboxWidth)) {
@@ -16288,6 +16272,109 @@
         return curSketch.params[name];
       }
       return null;
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 2D/3D methods wiring utils
+    ////////////////////////////////////////////////////////////////////////////
+    function wireDimensionalFunctions(mode) {
+      // Drawing2D/Drawing3D
+      if (mode === '3D') {
+        drawing = new Drawing3D();
+      } else if (mode === '2D') {
+        drawing = new Drawing2D();
+      } else {
+        drawing = new DrawingPre();
+      }
+
+      // Wire up functions (Use DrawingPre properties names)
+      for (var i in DrawingPre.prototype) {
+        if (DrawingPre.prototype.hasOwnProperty(i) && i.indexOf("$") < 0) {
+          p[i] = drawing[i];
+        }
+      }
+
+      // Run initialization
+      drawing.$init();
+    }
+
+    function createDrawingPreFunction(name) {
+      return function() {
+        wireDimensionalFunctions("2D");
+        return drawing[name].apply(this, arguments);
+      }
+    }
+    DrawingPre.prototype.translate = createDrawingPreFunction("translate");
+    DrawingPre.prototype.scale = createDrawingPreFunction("scale");
+    DrawingPre.prototype.pushMatrix = createDrawingPreFunction("pushMatrix");
+    DrawingPre.prototype.popMatrix = createDrawingPreFunction("popMatrix");
+    DrawingPre.prototype.resetMatrix = createDrawingPreFunction("resetMatrix");
+    DrawingPre.prototype.applyMatrix = createDrawingPreFunction("applyMatrix");
+    DrawingPre.prototype.rotate = createDrawingPreFunction("rotate");
+    DrawingPre.prototype.redraw = createDrawingPreFunction("redraw");
+    DrawingPre.prototype.ambientLight = createDrawingPreFunction("ambientLight");
+    DrawingPre.prototype.directionalLight = createDrawingPreFunction("directionalLight");
+    DrawingPre.prototype.lightFalloff = createDrawingPreFunction("lightFalloff");
+    DrawingPre.prototype.lightSpecular = createDrawingPreFunction("lightSpecular");
+    DrawingPre.prototype.pointLight = createDrawingPreFunction("pointLight");
+    DrawingPre.prototype.noLights = createDrawingPreFunction("noLights");
+    DrawingPre.prototype.spotLight = createDrawingPreFunction("spotLight");
+    DrawingPre.prototype.box = createDrawingPreFunction("box");
+    DrawingPre.prototype.sphere = createDrawingPreFunction("sphere");
+    DrawingPre.prototype.ambient = createDrawingPreFunction("ambient");
+    DrawingPre.prototype.emissive = createDrawingPreFunction("emissive");
+    DrawingPre.prototype.shininess = createDrawingPreFunction("shininess");
+    DrawingPre.prototype.specular = createDrawingPreFunction("specular");
+    DrawingPre.prototype.fill = createDrawingPreFunction("fill");
+    DrawingPre.prototype.stroke = createDrawingPreFunction("stroke");
+    DrawingPre.prototype.strokeWeight = createDrawingPreFunction("strokeWeight");
+    DrawingPre.prototype.smooth = createDrawingPreFunction("smooth");
+    DrawingPre.prototype.noSmooth = createDrawingPreFunction("noSmooth");
+    DrawingPre.prototype.point = createDrawingPreFunction("point");
+    DrawingPre.prototype.vertex = createDrawingPreFunction("vertex");
+    DrawingPre.prototype.endShape = createDrawingPreFunction("endShape");
+    DrawingPre.prototype.bezierVertex = createDrawingPreFunction("bezierVertex");
+    DrawingPre.prototype.curveVertex = createDrawingPreFunction("curveVertex");
+    DrawingPre.prototype.curve = createDrawingPreFunction("curve");
+    DrawingPre.prototype.line = createDrawingPreFunction("line");
+    DrawingPre.prototype.bezier = createDrawingPreFunction("bezier");
+    DrawingPre.prototype.rect = createDrawingPreFunction("rect");
+    DrawingPre.prototype.ellipse = createDrawingPreFunction("ellipse");
+    DrawingPre.prototype.background = createDrawingPreFunction("background");
+    DrawingPre.prototype.image = createDrawingPreFunction("image");
+    DrawingPre.prototype.textWidth = createDrawingPreFunction("textWidth");
+    DrawingPre.prototype.text$line = createDrawingPreFunction("text$line");
+    DrawingPre.prototype.$ensureContext = createDrawingPreFunction("$ensureContext");
+    DrawingPre.prototype.$newPMatrix = createDrawingPreFunction("$newPMatrix");
+
+    DrawingPre.prototype.size = function(aWidth, aHeight, aMode) {
+      wireDimensionalFunctions(aMode === PConstants.WEBGL ? "3D" : "2D");
+      p.size(aWidth, aHeight, aMode);
+    };
+
+    DrawingPre.prototype.$init = function() {};
+    Drawing2D.prototype.$init = function() {
+      // Setup default 2d canvas context.
+      // Moving this here removes the number of times we need to check the 3D variable
+      p.size(p.width, p.height);
+
+      // Canvas has trouble rendering single pixel stuff on whole-pixel
+      // counts, so we slightly offset it (this is super lame).
+      curContext.translate(0.5, 0.5);
+
+      curContext.lineCap = 'round';
+
+      // Set default stroke and fill color
+      p.noSmooth();
+      p.disableContextMenu();
+    };
+    Drawing3D.prototype.$init = function() {
+      // For ref/perf test compatibility until those are fixed
+      p.use3DContext = true;
+    };
+
+    DrawingShared.prototype.$ensureContext = function() {
+      return curContext;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -16922,57 +17009,6 @@
     // Place-holder for debugging function
     Processing.debug = function(e) {};
 
-    var wireDimensionalFunctions = function(mode) {
-      // Drawing2D/Drawing3D
-      if (mode === '3D') {
-        drawing = new Drawing3D();
-      } else {
-        drawing = new Drawing2D();
-      }
-      
-      // Wire up functions (Should this be put into an array instead?)
-      p.translate = drawing.translate;
-      p.scale = drawing.scale;
-      p.pushMatrix = drawing.pushMatrix;
-      p.popMatrix = drawing.popMatrix;
-      p.resetMatrix = drawing.resetMatrix;
-      p.applyMatrix = drawing.applyMatrix;
-      p.rotate = drawing.rotate;
-      p.redraw = drawing.redraw;
-      p.size = drawing.size;
-      p.ambientLight = drawing.ambientLight;
-      p.directionalLight = drawing.directionalLight;
-      p.lightFalloff = drawing.lightFalloff;
-      p.lightSpecular = drawing.lightSpecular;
-      p.pointLight = drawing.pointLight;
-      p.noLights = drawing.noLights;
-      p.spotLight = drawing.spotLight;
-      p.box = drawing.box;
-      p.sphere = drawing.sphere;
-      p.ambient = drawing.ambient;
-      p.emissive = drawing.emissive;
-      p.shininess = drawing.shininess;
-      p.specular = drawing.specular;
-      p.fill = drawing.fill;
-      p.stroke = drawing.stroke;
-      p.strokeWeight = drawing.strokeWeight;
-      p.smooth = drawing.smooth;
-      p.noSmooth = drawing.noSmooth;
-      p.point = drawing.point;
-      p.vertex = drawing.vertex;
-      p.endShape = drawing.endShape;
-      p.bezierVertex = drawing.bezierVertex;
-      p.curveVertex = drawing.curveVertex;
-      p.curve = drawing.curve;
-      p.line = drawing.line;
-      p.bezier = drawing.bezier;
-      p.rect = drawing.rect;
-      p.ellipse = drawing.ellipse;
-      p.background = drawing.background;
-      p.image = drawing.image;
-      p.textWidth = drawing.textWidth;
-    };
-
     // Send aCode Processing syntax to be converted to JavaScript
     if (!pgraphicsMode) {
       if (aCode instanceof Processing.Sketch) {
@@ -16996,15 +17032,8 @@
       // Expose internal field for diagnostics and testing
       p.externals.sketch = curSketch;
 
-      if (curSketch.use3DContext) {
-        wireDimensionalFunctions('3D');
-      } else {
-        wireDimensionalFunctions('2D');
-      }
+      wireDimensionalFunctions();
       
-      // For ref/perf test compatibility until those are fixed
-      p.use3DContext = curSketch.use3DContext;
-
       if ("mozOpaque" in curElement) {
         curElement.mozOpaque = !curSketch.options.isTransparent;
       }
@@ -17063,22 +17092,6 @@
         keyFunc(e, "keyup");
       });
 
-      if (!curSketch.use3DContext) {
-        // Setup default 2d canvas context.
-        // Moving this here removes the number of times we need to check the 3D variable
-        p.size(100, 100);
-
-        // Canvas has trouble rendering single pixel stuff on whole-pixel
-        // counts, so we slightly offset it (this is super lame).
-        curContext.translate(0.5, 0.5);
-
-        curContext.lineCap = 'round';
-
-        // Set default stroke and fill color
-        p.noSmooth();
-        p.disableContextMenu();
-      }
-
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
         if (Processing.lib.hasOwnProperty(i)) {
@@ -17101,7 +17114,7 @@
           if (processing.setup) {
             processing.setup();
             // if any transforms were performed in setup reset to identify matrix so draw loop is unpolluted
-            if (!curSketch.use3DContext) {
+            if (curContext && !p.use3DContext) {
               curContext.setTransform(1, 0, 0, 1, 0, 0);
             }
           }
@@ -17132,6 +17145,8 @@
       // or called via createGraphics
       curSketch = new Processing.Sketch();
       curSketch.options.isTransparent = true;
+
+      wireDimensionalFunctions();
 
       // Hack to make PGraphics work again after splitting size()
       p.size = function(w, h, render) {
@@ -18816,13 +18831,6 @@
         }
       }
     }
-
-    // Check if 3D context is invoked -- this is not the best way to do this.
-    // Following regex replaces strings, comments and regexs with an empty string
-    var codeWoStrings = aCode.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g, "");
-    if (codeWoStrings.match(/\bsize\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\);/)) {
-      sketch.use3DContext = true;
-    }
     return aCode;
   }
 
@@ -19137,7 +19145,6 @@
 
   Processing.Sketch = function(attachFunction) {
     this.attachFunction = attachFunction; // can be optional
-    this.use3DContext = false;
     this.options = {
       isTransparent: false,
       crispLines: false,
@@ -19260,7 +19267,6 @@
       var i;
       var code = "((function(Sketch) {\n";
       code += "var sketch = new Sketch(\n" + this.sourceCode + ");\n";
-      code += "sketch.use3DContext = " + this.use3DContext + ";\n";
       for(i in this.options) {
         if(this.options.hasOwnProperty(i)) {
           var value = this.options[i];
