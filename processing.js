@@ -14079,7 +14079,7 @@
         img = arguments[0];
 
         if (!img.loaded) {
-          throw "Image pixels were not available. Be sure to use @pjs preloading directive.";
+          throw "Error using image in background(): PImage not loaded.";
         } else if(img.width !== p.width || img.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
