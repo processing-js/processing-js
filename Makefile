@@ -112,7 +112,7 @@ package-sketch:
 	echo "function ${SKETCHRUN}(canvas) {" > ${SKETCHOUTPUT}.src
 	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js >> ${SKETCHOUTPUT}.src
 	echo "return new Processing(canvas," >> ${SKETCHOUTPUT}.src
-	${JSSHELL} -f processing.js -f ${TOOLSDIR}/jscompile.js  < ${SKETCHINPUT} >> ${SKETCHOUTPUT}.src
+	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f processing.js -f ${TOOLSDIR}/jscompile.js < ${SKETCHINPUT} >> ${SKETCHOUTPUT}.src
 	echo "); } window['${SKETCHRUN}']=${SKETCHRUN};" >> ${SKETCHOUTPUT}.src
 	java -jar ${CLOSUREJAR} --js=${SKETCHOUTPUT}.src --js_output_file=${SKETCHOUTPUT} --compilation_level ADVANCED_OPTIMIZATIONS
 	rm ${SKETCHOUTPUT}.src

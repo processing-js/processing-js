@@ -16,9 +16,7 @@
 
  */
 
-(function() {
-
-  var undef; // intentionally left undefined
+(function(window, document, Math, undef) {
 
   var ajax = function(url) {
     var xhr = new XMLHttpRequest();
@@ -19371,4 +19369,4 @@
     // DOM is not found
     this.Processing = Processing;
   }
-}());
+}(window, window.document, Math));
