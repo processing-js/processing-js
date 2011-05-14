@@ -472,14 +472,25 @@
        * @returns {boolean} true if the specified element is present; false otherwise.
        */
       this.contains = function(item) {
+        return this.indexOf(item)>-1;
+      };
+       /**
+       * @member ArrayList
+       * ArrayList.indexOf() Returns the position this element takes in the list, or -1 if the element is not found.
+       *
+       * @param {Object} item element whose position in this List is to be tested.
+       *
+       * @returns {int} the list position that the first match for this element holds in the list, or -1 if it is not in the list.
+       */
+      this.indexOf = function(item) {
         for (var i = 0, len = array.length; i < len; ++i) {
           if (virtEquals(item, array[i])) {
-            return true;
+            return i;
           }
         }
-        return false;
+        return -1;
       };
-      /**
+     /**
        * @member ArrayList
        * ArrayList.add() Adds the specified element to this list.
        *
@@ -549,15 +560,24 @@
 
       /**
        * @member ArrayList
-       * ArrayList.remove() Removes the element at the specified position in this list.
-       * Shifts any subsequent elements to the left (subtracts one from their indices).
+       * ArrayList.remove() Removes an element either based on index, if the argument is a number, or
+       * by equality check, if the argument is an object.
        *
-       * @param {int} index the index of the element to removed.
+       * @param {int|Object} item either the index of the element to be removed, or the element itself.
        *
-       * @returns {Object} the element that was removed from the list
+       * @returns {Object|boolean} If removal is by index, the element that was removed, or null if nothing was removed. If removal is by object, true if removal occurred, otherwise false.
        */
-      this.remove = function(i) {
-        return array.splice(i, 1)[0];
+      this.remove = function(item) {
+        if (typeof item === 'number') {
+          return array.splice(item, 1)[0];
+        } else {
+          item = this.indexOf(item);
+          if (item > -1) {
+            array.splice(item, 1);
+            return true;
+          }
+          return false;
+        }
       };
 
       /**
