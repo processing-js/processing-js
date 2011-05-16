@@ -1395,7 +1395,7 @@
     // Remapped vars
     p.__mousePressed  = false;
     p.__keyPressed    = false;
-    p.__frameRate     = 0;
+    p.__frameRate     = 60;
 
     // The current animation frame
     p.frameCount      = 0;
