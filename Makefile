@@ -16,7 +16,7 @@ VERSION ?= $(error Specify a version for your release (e.g., VERSION=0.5))
 
 release: release-files zipped examples
 
-release-files: pjs yui closure api-only example release-docs
+release-files: pjs closure api-only example release-docs
 
 zipped: release-files
 	gzip -9 -c ./release/processing-${VERSION}.min.js > ./release/processing-${VERSION}.min.js.gz
@@ -65,16 +65,15 @@ minified: create-release
 	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.jsmin.js
 
 yui: create-release
-	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge processing.js -o ./release/processing-${VERSION}.min.js
+	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge processing.js -o ./release/processing-${VERSION}.yui.js
 # check for any parsing errors in compiled version of processing.js
-	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.min.js
+	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.yui.js
 
 check: check-globals
 	${TOOLSDIR}/runtests.py ${JSSHELL}
 
-check-release: yui closure
+check-release: closure
 	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-${VERSION}.min.js
-	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-${VERSION}.closure.js
 
 check-summary:
 	${TOOLSDIR}/runtests.py -s ${JSSHELL}
@@ -98,7 +97,7 @@ SKETCHINPUT ?= $(error Specify an input filename in SKETCHINPUT when using packa
 SKETCHOUTPUT ?= ${SKETCHINPUT}.js
 
 closure: create-release
-	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-${VERSION}.closure.js
+	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-${VERSION}.min.js
 
 check-closure: create-release
 	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-closure.js
@@ -112,7 +111,7 @@ package-sketch:
 	echo "function ${SKETCHRUN}(canvas) {" > ${SKETCHOUTPUT}.src
 	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js >> ${SKETCHOUTPUT}.src
 	echo "return new Processing(canvas," >> ${SKETCHOUTPUT}.src
-	${JSSHELL} -f processing.js -f ${TOOLSDIR}/jscompile.js  < ${SKETCHINPUT} >> ${SKETCHOUTPUT}.src
+	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f processing.js -f ${TOOLSDIR}/jscompile.js < ${SKETCHINPUT} >> ${SKETCHOUTPUT}.src
 	echo "); } window['${SKETCHRUN}']=${SKETCHRUN};" >> ${SKETCHOUTPUT}.src
 	java -jar ${CLOSUREJAR} --js=${SKETCHOUTPUT}.src --js_output_file=${SKETCHOUTPUT} --compilation_level ADVANCED_OPTIMIZATIONS
 	rm ${SKETCHOUTPUT}.src
