@@ -9360,6 +9360,18 @@
         }
         size3DCalled = true;
 
+        function getGLContext(canvas) {
+          var ctxNames = ['experimental-webgl', 'webgl', 'webkit-3d'],
+              gl;
+
+          for (var i=0, l=ctxNames.length; i<l; i++) {
+            gl = canvas.getContext(ctxNames[i]);
+            if (gl) break;
+          }
+
+          return gl;
+        }
+
         // get the 3D rendering context
         try {
           // If the HTML <canvas> dimensions differ from the
@@ -9371,7 +9383,7 @@
             curElement.setAttribute("width", aWidth);
             curElement.setAttribute("height", aHeight);
           }
-          curContext = curElement.getContext("experimental-webgl");
+          curContext = getGLContext(curElement);
           canTex = curContext.createTexture(); // texture
           textTex = curContext.createTexture(); // texture
         } catch(e_size) {
