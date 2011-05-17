@@ -7497,7 +7497,7 @@
       p.lightFalloff(1, 0, 0);
       p.shininess(1);
       p.ambient(255, 255, 255);
-      p.specular(128, 128, 128);
+      p.specular(0, 0, 0);
       p.emissive(0, 0, 0);
       p.camera();
       p.draw();
@@ -9426,7 +9426,7 @@
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
         p.ambient(255, 255, 255);
-        p.specular(128, 128, 128);
+        p.specular(0, 0, 0);
         p.emissive(0, 0, 0);
 
         // Create buffers for 3D primitives
