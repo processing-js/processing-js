@@ -14603,11 +14603,14 @@
       var aImgHeight = aImg.height;
       var aImgWidth = aImg.width;
       var sharedBlurKernelSize = p.shared.blurKernelSize;
+      var sharedBlurRadius = p.shared.blurRadius;
+      var sharedBlurKernal = p.shared.blurKernel;
+      var pix = aImg.imageData.data;
 
       for (y = 0; y < aImgHeight; y++) {
         for (x = 0; x < aImgWidth; x++) {
           cb = cg = cr = ca = sum = 0;
-          read = x - p.shared.blurRadius;
+          read = x - sharedBlurRadius;
           if (read<0) {
             bk0 = -read;
             read = 0;
@@ -14622,11 +14625,11 @@
               break;
             }
             var offset = (read + yi) *4;
-            m = p.shared.blurKernel[i];
-            ca += m * aImg.imageData.data[offset+3];
-            cr += m * aImg.imageData.data[offset];
-            cg += m * aImg.imageData.data[offset+1];
-            cb += m * aImg.imageData.data[offset+2];
+            m = sharedBlurKernal[i];
+            ca += m * pix[offset + 3];
+            cr += m * pix[offset];
+            cg += m * pix[offset + 1];
+            cb += m * pix[offset + 2];
             sum += m;
             read++;
           }
@@ -14640,7 +14643,7 @@
       }
 
       yi = 0;
-      ym = -p.shared.blurRadius;
+      ym = -sharedBlurRadius;
       ymi = ym*aImgWidth;
 
       for (y = 0; y < aImgHeight; y++) {
@@ -14661,7 +14664,7 @@
             if (ri >= aImgHeight) {
               break;
             }
-            m = p.shared.blurKernel[i];
+            m = sharedBlurKernal[i];
             ca += m * a2[read];
             cr += m * r2[read];
             cg += m * g2[read];
@@ -14671,10 +14674,10 @@
             read += aImgWidth;
           }
           var offset = (x + yi) *4;
-          aImg.imageData.data[offset] = cr/sum;
-          aImg.imageData.data[offset+1] = cg/sum;
-          aImg.imageData.data[offset+2] = cb/sum;
-          aImg.imageData.data[offset+3] = ca/sum;
+          pix[offset] = cr / sum;
+          pix[offset + 1] = cg / sum;
+          pix[offset + 2] = cb / sum;
+          pix[offset + 3] = ca / sum;
         }
         yi += aImgWidth;
         ymi += aImgWidth;
