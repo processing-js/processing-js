@@ -10730,7 +10730,7 @@
      *
      * @param {int | float} x 3D x coordinate to be mapped
      * @param {int | float} y 3D y coordinate to be mapped
-     * @param {int | float} z 3D z coordinate to be mapped
+     * @param {int | float} z 3D z optional coordinate to be mapped
      *
      * @returns {float}
      *
@@ -10739,7 +10739,7 @@
     */
     p.screenX = function( x, y, z ) {
       var mv = modelView.array();
-      if( mv.length == 16 )
+      if( mv.length === 16 )
       {
         var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
         var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
@@ -10766,7 +10766,7 @@
      *
      * @param {int | float} x 3D x coordinate to be mapped
      * @param {int | float} y 3D y coordinate to be mapped
-     * @param {int | float} z 3D z coordinate to be mapped
+     * @param {int | float} z 3D z optional coordinate to be mapped
      *
      * @returns {float}
      *
@@ -10775,8 +10775,7 @@
     */
     p.screenY = function screenY( x, y, z ) {
       var mv = forwardTransform.array();
-      
-      if( mv.length == 16 )
+      if( mv.length === 16 )
       {
       	var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
       	var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
@@ -10812,8 +10811,7 @@
     */
     p.screenZ = function screenZ( x, y, z ) {
       var mv = forwardTransform.array();
-      
-      if( mv.length != 16 )
+      if( mv.length !== 16 )
       	return 0;
  
       var pj = projection.array();
