@@ -14574,16 +14574,18 @@
         p.shared.blurRadius = radius;
         p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
         p.shared.blurKernel = new Float32Array(p.shared.blurKernelSize);
-        // init blurKernel
+        var sharedBlurKernal = p.shared.blurKernel;
         var sharedBlurKernelSize = p.shared.blurKernelSize;
+        var sharedBlurRadius = p.shared.blurRadius;
+        // init blurKernel
         for (i = 0; i < sharedBlurKernelSize; i++) {
-          p.shared.blurKernel[i] = 0;
+          sharedBlurKernal[i] = 0;
         }
         var radiusiSquared = (radius - 1) * (radius - 1);
         for (i = 1; i < radius; i++) {
-          p.shared.blurKernel[radius+i] = p.shared.blurKernel[radiusi] = radiusiSquared;
+          sharedBlurKernal[radius + i] = sharedBlurKernal[radiusi] = radiusiSquared;
         }
-        p.shared.blurKernel[radius] = radius * radius;
+        sharedBlurKernal[radius] = radius * radius;
       }
     };
 
