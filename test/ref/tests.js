@@ -86,7 +86,7 @@ var tests = [
   { path: "beginEndShape-2dquadstrip1.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.07 },
   { path: "beginEndShape-2dquadstrip2.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.10 },
   { path: "beginEndShape-2dtrianglefan1.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.12 },
-  { path: "beginEndShape-2dtrianglefan2.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.15 },
+  { path: "beginEndShape-2dtrianglefan2.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.17 },
   { path: "beginEndShape-2dtriangles1.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.12 },
   { path: "beginEndShape-2dtriangles2.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.12 },
   { path: "beginEndShape-2dtrianglestrip1.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.15 },
