@@ -44,7 +44,7 @@
   language (or JavaScript), include it in your web page, and Processing.js does the
   rest.
 
-  Processing.js is perhaps best thought of as a JavaScript runtime for  the Processing
+  Processing.js is perhaps best thought of as a JavaScript runtime for the Processing
   language. Where Processing relies upon Java for its graphics back-end, Processing.js
   uses the web--HTML5, canvas, and WebGL--to create 2D and 3D graphics, without
   developers having to learn those APIs and technologies.
@@ -54,7 +54,7 @@
   design communities learn the basics of computer programming in a visual context.
   Processing.js takes this to the next level, allowing Processing code to be run by
   any HTML5 compatible browser, including current versions of Firefox, Safari,
-  Chrome, Opera, and Internet Explorer 9+. Processing.js brings the best of visual
+  Chrome, Opera, and Internet Explorer. Processing.js brings the best of visual
   programming to the web, both for Processing and web developers.
 
   Much like the native language, Processing.js is a community driven project,
