@@ -26,6 +26,7 @@
     <input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
 
     <h3>Results [total time for all tests: <span id="totalTime">0</span>ms] <button id="report" style="display:none" onclick="report();">Generate Report</button></h3>
+    <div id="status" style="margin-bottom: 10px; display: none;">Running... (this may take some time)</div>
     <div id="results" style="margin: 5px; padding-top: 10px;"></div>
     <div id="total"></div>
 
@@ -137,7 +138,7 @@
 
       function runTests(tests) {
         var results = document.getElementById('results');
-        results.innerHTML = '<div id="status" style="margin-bottom: 10px;">Running... (this may take some time)</div>';
+        results.innerHTML = '';
         var total = document.getElementById('total');
         total.innerHTML = '';
 
@@ -160,9 +161,9 @@
           return '<a href="' + name + '">' + name + '</a>';
         };
 
-        var titleText = function(testNumber, testTotal, time, testName, failMessage) {
+        var titleText = function(testNumber, testTotal, time, testName, testIterations, failMessage) {
           return "Test (" + testNumber + "/" + testTotal + ") " + link(testName) +
-                 (failMessage ? " -- FAILED (" + failMessage + ")" : " -- Total Time for " + iterationCount + " frames: <b>" + time + "ms</b>");
+                 (failMessage ? " -- FAILED (" + failMessage + ")" : " -- Total Time for " + testIterations + " frames: <b>" + time + "ms</b>");
         };
 
         var tl = tests.length;
@@ -175,8 +176,47 @@
             document.getElementById('status').innerHTML = info;
             total.innerHTML = info;
             finishedTests = tests;
-
+            
+            document.getElementById('status').style.display = "none";
             document.getElementById('report').style.display = "inline";
+            
+            // sort the tests into failed and passed
+            var sortedDivs = [];
+            while (results.hasChildNodes()) {
+              sortedDivs.push(results.firstChild);
+              results.removeChild(results.firstChild);
+            }
+            /*sortedDivs.sort(function(a, b) {
+              if (a.className === b.className) {
+                return 0;
+              } else if (a.className < b.className) {
+                return -1;
+              } else {
+                return 1;
+              }
+            });*/
+            
+            var failedDiv = document.createElement('div');
+            failedDiv.innerHTML = '<hr><h3>Failed ' + failedTests + ' of ' + (passed + failedTests) + '</h3>';
+            results.appendChild(failedDiv);
+            
+            var passDiv = document.createElement('div');
+            passDiv.innerHTML = '<hr><h3>Passed ' + passed + ' of ' + (passed + failedTests) + '</h3>';
+            results.appendChild(passDiv);
+            
+            for (var i = 0; i < sortedDivs.length; i++) {
+              if (sortedDivs[i].className === 'failed') {
+                failedDiv.appendChild(sortedDivs[i]);
+              } else {
+                passDiv.appendChild(sortedDivs[i]);
+              }
+            }
+            
+            if (failedDiv.childNodes.length === 0) {
+              var temp = document.createElement('p');
+              temp.innerHTML = 'No failed tests';
+              failedDiv.appendChild(temp);
+            }
           }
         }
 
@@ -187,6 +227,7 @@
           }
 
           var test = getTest(tests[i].path);
+          var iterCount = tests[i].iterationOverride || iterationCount;
           var result = document.createElement('div');
           result.id = test.name;
           var title = document.createElement('div');
@@ -211,7 +252,7 @@
                   var startTime = (new Date).getTime(),
                       failed = false;
 
-                  for (var iters = 0; iters < iterationCount; iters++) {
+                  for (var iters = 0; iters < iterCount; iters++) {
                     if ( (new Date()).getTime() - startTime > MAX_TEST_TIME ) {
                       // Exceeded allowable test run time, fail and bail
                       failed = true;
@@ -226,10 +267,12 @@
                   totalTime += diff;
 
                   if (failed) {
-                    title.innerHTML = titleText(i+1, tl, "-", test.name,
+                    result.className = "failed";
+                    title.innerHTML = titleText(i+1, tl, "-", test.name, iterCount,
                                       "Test exceeded maximum test time (" + MAX_TEST_TIME + "ms), halted.");
                   } else {
-                    title.innerHTML = titleText(i+1, tl, diff, test.name);
+                    result.className = "passed";
+                    title.innerHTML = titleText(i+1, tl, diff, test.name, iterCount);
                   }
                   document.getElementById('totalTime').innerHTML = totalTime;
 
@@ -237,7 +280,8 @@
                   tests[i].completed = true;
                   tests[i].time = diff;
                 } catch (e) {
-                  title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed during execution: " + e.toString());
+                  result.className = "failed";
+                  title.innerHTML = titleText(i+1, tl, 0, test.name, iterCount, "Processing failed during execution: " + e.toString());
                   nextTest(i+1);
                 }
                 var is3D = p.use3DContext;
@@ -254,7 +298,8 @@
                   }
                   if (--attempts <= 0) {
                     clearInterval(initInterval);
-                    title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed initialization");
+                    result.className = "failed";
+                    title.innerHTML = titleText(i+1, tl, 0, test.name, interCount, "Processing failed initialization");
                     nextTest(i+1);
                     return;
                   }
@@ -263,7 +308,8 @@
               }
               runBenchmark();
             } catch (e) {
-              title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed: " + e.toString());
+              result.className = "failed";
+              title.innerHTML = titleText(i+1, tl, 0, test.name, iterCount, "Processing failed: " + e.toString());
               nextTest(i+1);
             }
           }
