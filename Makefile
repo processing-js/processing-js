@@ -1,147 +1,169 @@
-# Make sure $JSSHELL points to your js shell binary in .profile or .bashrc
-TOOLSDIR=./tools
-CLOSUREJAR=${TOOLSDIR}/closure/compiler.jar
+#############################################################################################
+# NOTES:
+#
+# This Makefile assumes that you have the following installed, setup:
+#
+#  python
+#  java
+#  Unixy shell (use msys on Windows)
+#  $JSSHELL environment variable in .profile or .bashrc pointing to a SpiderMonkey binary
+#############################################################################################
 
-# Rule for making pure JS code from a .pde (runs through parser + beautify)
-%.js : %.pde
-	${TOOLSDIR}/pde2js.py ${JSSHELL} $?
-
-all: release
-
-create-release: clean
-	mkdir ./release
-
-# Version number used in naming release files.
-VERSION ?= $(error Specify a version for your release (e.g., VERSION=0.5))
-
-release: release-files zipped examples
-
-release-files: pjs closure api-only example release-docs
-
-zipped: release-files
-	gzip -9 -c ./release/processing-${VERSION}.min.js > ./release/processing-${VERSION}.min.js.gz
-	find ./release -print | zip -j ./release/processing.js-${VERSION}.zip -@
-
-release-docs: create-release
-	cp AUTHORS ./release
-	cat README | sed -e 's/@VERSION@/${VERSION}/' > ./release/README
-	cp LICENSE ./release
-	cp CHANGELOG ./release
-
-example: create-release pjs
-	echo "<script src=\"processing-${VERSION}.js\"></script>" > ./release/example.html
-	echo "<canvas datasrc=\"example.pjs\" width=\"200\" height=\"200\"></canvas>" >> ./release/example.html
-	cp example.pjs ./release
-
-examples: pjs
-	mkdir ./release/processing-js-${VERSION}-examples
-	cp ./release/processing-${VERSION}.js ./release/processing-js-${VERSION}-examples/processing.js
-	cp -R examples ./release/processing-js-${VERSION}-examples
-	cd ./release ; zip -r processing-js-${VERSION}-examples.zip processing-js-${VERSION}-examples
-	rm -fr ./release/processing-js-${VERSION}-examples
-
-pretty: create-release
-	${TOOLSDIR}/jsbeautify.py ${JSSHELL} processing.js > ./release/processing-${VERSION}.js.tmp
-# check for any parsing errors in pretty version of processing.js
-	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.js.tmp
-	cat ./release/processing-${VERSION}.js.tmp | sed -e 's/@VERSION@/${VERSION}/' > ./release/processing-${VERSION}.js
-	rm -f ./release/processing-${VERSION}.js.tmp
-
-pjs: create-release
-	cp processing.js ./release/processing-${VERSION}.js.tmp
-# check for any parsing errors in processing.js
-	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.js.tmp
-	cat ./release/processing-${VERSION}.js.tmp | sed -e 's/@VERSION@/${VERSION}/' > ./release/processing-${VERSION}.js
-	rm -f ./release/processing-${VERSION}.js.tmp
-
-packed: create-release
-	${TOOLSDIR}/packer.py ${JSSHELL} processing.js > ./release/processing-${VERSION}.packed.js
-# check for any parsing errors in packed version of processing.js
-	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.packed.js
-
-minified: create-release
-	${TOOLSDIR}/minifier.py ${JSSHELL} processing.js > ./release/processing-${VERSION}.jsmin.js
-# check for any parsing errors in minified version of processing.js
-	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.jsmin.js
-
-yui: create-release
-	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge processing.js -o ./release/processing-${VERSION}.yui.js
-# check for any parsing errors in compiled version of processing.js
-	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ./release/processing-${VERSION}.yui.js
-
-check: check-globals
-	${TOOLSDIR}/runtests.py ${JSSHELL}
-
-check-release: closure
-	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-${VERSION}.min.js
-
-check-summary:
-	${TOOLSDIR}/runtests.py -s ${JSSHELL}
-
-check-lint:
-	${TOOLSDIR}/jslint.py ${JSSHELL} processing.js
-
-check-parser:
-	${TOOLSDIR}/runtests.py -p ${JSSHELL}
-
-check-unit:
-	${TOOLSDIR}/runtests.py -u ${JSSHELL}
-
-bespin: create-release
-	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/loader.js -o ./tools/ide/js/loader.min.js
-	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/bespin.js -o ./tools/ide/js/bespin.min.js
-	java -jar ${TOOLSDIR}/yui/yuicompressor-2.4.2.jar --nomunge tools/ide/js/pjs-box.js -o ./tools/ide/js/pjs-box.min.js
-
-SKETCHRUN ?= runSketch
-SKETCHINPUT ?= $(error Specify an input filename in SKETCHINPUT when using package-sketch)
-SKETCHOUTPUT ?= ${SKETCHINPUT}.js
-
-closure: create-release
-	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-${VERSION}.min.js
-
-check-closure: create-release
-	java -jar ${CLOSUREJAR} --js=processing.js --js_output_file=./release/processing-closure.js
-	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-closure.js
-
-compile-sketch:
-	${JSSHELL} -f processing.js -f ${TOOLSDIR}/jscompile.js < ${SKETCHINPUT} > ${SKETCHOUTPUT}
-	echo "Created ${SKETCHOUTPUT}"
-
-package-sketch:
-	echo "function ${SKETCHRUN}(canvas) {" > ${SKETCHOUTPUT}.src
-	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js >> ${SKETCHOUTPUT}.src
-	echo "return new Processing(canvas," >> ${SKETCHOUTPUT}.src
-	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f processing.js -f ${TOOLSDIR}/jscompile.js < ${SKETCHINPUT} >> ${SKETCHOUTPUT}.src
-	echo "); } window['${SKETCHRUN}']=${SKETCHRUN};" >> ${SKETCHOUTPUT}.src
-	java -jar ${CLOSUREJAR} --js=${SKETCHOUTPUT}.src --js_output_file=${SKETCHOUTPUT} --compilation_level ADVANCED_OPTIMIZATIONS
-	rm ${SKETCHOUTPUT}.src
-	echo "Created ${SKETCHOUTPUT}"
-
-api-only: create-release
-	${JSSHELL} -f ${TOOLSDIR}/jspreprocess.js -e "PARSER=false;preprocess();" < processing.js > ./release/processing-api-${VERSION}.js
-	java -jar ${CLOSUREJAR} --js=./release/processing-api-${VERSION}.js \
-                          --js_output_file=./release/processing-api-${VERSION}.min.js
+JSSHELL ?= $(error Specify a valid path to a js shell binary in ~/.profile: export JSSHELL=C:\path\js.exe or /path/js)
 
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 
-# Most targets use commands that need a js shell path specified
-JSSHELL ?= $(error Specify a valid path to a js shell binary in ~/.profile: export JSSHELL=C:\path\js.exe or /path/js)
+# Version number used in naming release files. Defaults to DEV_VERSION
+VERSION ?= DEV_VERSION
+
+# Override QUIET on the cmd line if you want more output:
+# $ make QUIET=
+QUIET ?= > /dev/null 2>&1
+
+EMPTY :=
+SRC_DIR :=.
+P5 :=processing
+PJS :=$(P5).js
+PJS_SRC :=$(SRC_DIR)/$(PJS)
+PJS_VERSION :=$(P5)-$(VERSION)
+
+RELEASE_DIR :=$(SRC_DIR)/release
+PJS_RELEASE_PREFIX :=$(RELEASE_DIR)/$(PJS_VERSION)
+PJS_RELEASE_SRC :=$(PJS_RELEASE_PREFIX).js
+PJS_RELEASE_MIN :=$(PJS_RELEASE_PREFIX).min.js
+EXAMPLE_HTML :=$(RELEASE_DIR)/example.html
+EXAMPLES_DIR :=$(PJS_RELEASE_PREFIX)-examples
+
+TOOLS_DIR :=$(SRC_DIR)/tools
+FAKE_DOM :=$(TOOLS_DIR)/fake-dom.js
+CLOSUREJAR :=$(TOOLS_DIR)/closure/compiler.jar
+RUNTESTS :=@@$(TOOLS_DIR)/runtests.py $(JSSHELL)
+RUNJS :=@@$(JSSHELL) -f $(FAKE_DOM) -f
+
+SKETCHRUN :=runSketch
+SKETCHINPUT ?=$(error Specify an input filename in SKETCHINPUT when using package-sketch)
+SKETCHOUTPUTSRC ?=$(SKETCHINPUT).src
+SKETCHOUTPUT ?=$(SKETCHINPUT).js
+
+preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_SRC) >> $(1)
+compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3)
+
+# Rule for making pure JS code from a .pde (runs through parser + beautify)
+%.js : %.pde
+	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
+
+all: check
+
+release-dir: clean
+	@@mkdir $(RELEASE_DIR)
+
+release: release-files zipped examples
+	@@echo "Release Created, see $(RELEASE_DIR)"
+
+release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs
+
+zipped: release-files
+	@@echo "Creating zipped archives..."
+	@@gzip -9 -c $(PJS_RELEASE_MIN) > $(PJS_RELEASE_MIN).gz $(QUIET)
+	@@find $(RELEASE_DIR) -print | zip -j $(PJS_RELEASE_PREFIX).zip -@ $(QUIET)
+
+release-docs:
+	@@echo "Copying project release docs..."
+	@@cp $(SRC_DIR)/AUTHORS $(RELEASE_DIR)
+	@@cat $(SRC_DIR)/README | sed -e 's/@VERSION@/$(VERSION)/' > $(RELEASE_DIR)/README
+	@@cp $(SRC_DIR)/LICENSE $(RELEASE_DIR) $(QUIET)
+	@@cp $(SRC_DIR)/CHANGELOG $(RELEASE_DIR) $(QUIET)
+
+example: $(PJS_RELEASE_SRC)
+	@@echo "Creating example.html..."
+	@@echo "<script src=\"$(PJS_VERSION).js\"></script>" > $(EXAMPLE_HTML)
+	@@echo "<canvas datasrc=\"example.pjs\" width=\"200\" height=\"200\"></canvas>" >> $(EXAMPLE_HTML)
+	@@cp $(SRC_DIR)/example.pjs $(RELEASE_DIR)
+
+examples: $(PJS_RELEASE_SRC)
+	@@echo "Copying examples..."
+	@@mkdir $(EXAMPLES_DIR)
+	@@cp $(PJS_RELEASE_SRC) $(EXAMPLES_DIR)/$(PJS)
+	@@cp -R $(SRC_DIR)/examples $(EXAMPLES_DIR) $(QUIET)
+	@@cd $(RELEASE_DIR); zip -r $(PJS_VERSION)-examples.zip $(PJS_VERSION)-examples $(QUIET)
+	@@rm -fr $(EXAMPLES_DIR)
+
+pretty: $(PJS_RELEASE_SRC)
+	@@echo "Creating beautified processing.js..."
+	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(PJS_RELEASE_SRC) > $(PJS_RELEASE_SRC).tmp
+	@@$(JSSHELL) -f $(FAKE_DOM) -f $(PJS_RELEASE_SRC).tmp
+	@@mv $(PJS_RELEASE_SRC).tmp $(PJS_RELEASE_SRC)
+
+$(PJS_RELEASE_SRC): release-dir
+	@@echo "Creating processing.js..."
+	@@cp $(PJS_SRC) $(PJS_RELEASE_SRC).tmp
+	@@$(RUNJS) $(PJS_RELEASE_SRC).tmp
+	@@cat $(PJS_RELEASE_SRC).tmp | sed -e 's/@VERSION@/$(VERSION)/' > $(PJS_RELEASE_SRC)
+	@@rm -f $(PJS_RELEASE_SRC).tmp
+
+check: check-globals check-tests
+
+check-tests:
+	$(RUNTESTS)
+
+check-release: closure
+	$(RUNTESTS) -l $(PJS_RELEASE_MIN)
+
+check-summary:
+	$(RUNTESTS) -s
+
+check-lint:
+	$(TOOLS_DIR)/jslint.py $(JSSHELL) $(PJS_SRC)
+
+check-parser:
+	$(RUNTESTS) -p
+
+check-unit:
+	$(RUNTESTS) -u
+
+add-coverage: release-dir
+	@@cat $(PJS_SRC) | $(JSSHELL) -f $(TOOLS_DIR)/jscoverage.js > $(RELEASE_DIR)/$(P5)-cv.js
 
 check-one:
-	${TOOLSDIR}/runtests.py ${JSSHELL} -t ${TEST}
-
-add-coverage: create-release
-	cat processing.js | ${JSSHELL} -f ${TOOLSDIR}/jscoverage.js > ./release/processing-cv.js
+	$(RUNTESTS) -t $(TEST)
 
 check-coverage: add-coverage
-	${TOOLSDIR}/runtests.py ${JSSHELL} -l ./release/processing-cv.js -c ./release/codecoverage.txt
+	@@echo "Creating codecoverate.txt..."
+	@@$(RUNTESTS) -l $(RELEASE_DIR)/$(P5)-cv.js -c $(RELEASE_DIR)/codecoverage.txt
 
 check-globals:
-	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ${TOOLSDIR}/jsglobals.js -e "findDifference()" < processing.js
+	@@$(RUNJS) $(TOOLS_DIR)/jsglobals.js -e "findDifference()" < $(PJS_SRC)
 
 print-globals:
-	${JSSHELL} -f ${TOOLSDIR}/fake-dom.js -f ${TOOLSDIR}/jsglobals.js -e "printNames()" < processing.js
+	@@$(RUNJS) $(TOOLS_DIR)/jsglobals.js -e "printNames()" < $(PJS_SRC)
+
+closure: release-dir
+	@@$(call compile,$(PJS_SRC),$(PJS_RELEASE_MIN),$(EMPTY)) $(QUIET)
+
+compile-sketch:
+	@@$(RUNJS) $(PJS_SRC) -f $(TOOLS_DIR)/jscompile.js < $(SKETCHINPUT) > $(SKETCHOUTPUT)
+	@@echo "Created $(SKETCHOUTPUT)"
+
+package-sketch:
+	@@echo "function $(SKETCHRUN)(canvas) {" > $(SKETCHOUTPUTSRC)
+	@@$(call preprocess,$(SKETCHOUTPUTSRC))
+	@@echo "return new Processing(canvas," >> $(SKETCHOUTPUTSRC)
+	@@$(RUNJS) $(PJS_SRC) -f $(TOOLS_DIR)/jscompile.js < $(SKETCHINPUT) >> $(SKETCHOUTPUTSRC)
+	@@echo "); } window['$(SKETCHRUN)']=$(SKETCHRUN);" >> $(SKETCHOUTPUTSRC)
+	@@$(call compile,$(SKETCHOUTPUTSRC),$(SKETCHOUTPUT),--compilation_level ADVANCED_OPTIMIZATIONS)
+	@@rm -f $(SKETCHOUTPUTSRC)
+	@@echo "Created $(SKETCHOUTPUT)"
+
+api-only: release-dir
+	@@echo "Creating processing.js API version..."
+	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js)
+	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY)) $(QUIET)
+
+# For testing: Run a simple web server so files that need http:// work
+server:
+	@@echo "Starting web server at http://localhost:9914/ (use ctrl+ c to stop)..."
+	@@python -m SimpleHTTPServer 9914
 
 clean:
-	rm -fr ./release
+	@@rm -fr $(RELEASE_DIR)
