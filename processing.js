@@ -9372,6 +9372,11 @@
 
       // Externalize the context
       p.externals.context = curContext;
+      
+      for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
+        sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
+        cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
+      }
     };
     
     Drawing2D.prototype.size = function(aWidth, aHeight, aMode) {
@@ -9426,11 +9431,6 @@
 
         if (!curContext) {
           throw "WebGL context is not supported on this browser.";
-        }
-        
-        for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
-          sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
-          cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
         }
 
         // Set defaults
@@ -12604,21 +12604,22 @@
       var vr = height / 2;
       var centerX = x + hr;
       var centerY = y + vr;
-      var i, ii, startLUT, stopLUT;
+      var startLUT = Math.floor(-0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
+      var stopLUT  = Math.floor(0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
+      var i, j;
       if (doFill) {
         // shut off stroke for a minute
         var savedStroke = doStroke;
         doStroke = false;
-        startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
-        stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
         p.beginShape();
         p.vertex(centerX, centerY);
-        for (i = startLUT; i < stopLUT; i++) {
-          ii = i % PConstants.SINCOS_LENGTH;
-          if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
-          p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
+        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
+          if (j >= PConstants.SINCOS_LENGTH) {
+            j = j - PConstants.SINCOS_LENGTH;
+          }
+          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         }
-        p.endShape(PConstants.CLOSE);
+        p.endShape();
         doStroke = savedStroke;
       }
 
@@ -12626,16 +12627,16 @@
         // and doesn't include the first (center) vertex.
         var savedFill = doFill;
         doFill = false;
-        startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
-        stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
         p.beginShape();
-        for (i = startLUT; i < stopLUT; i ++) {
-          ii = i % PConstants.SINCOS_LENGTH;
-          if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
-          p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
+        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
+          if (j >= PConstants.SINCOS_LENGTH) {
+            j = j - PConstants.SINCOS_LENGTH;
+          }
+          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         }
-        ii = stopLUT % PConstants.SINCOS_LENGTH;
-        p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
+        // explicitly add the last vertex, for precision
+        j = stopLUT - PConstants.SINCOS_LENGTH;
+        p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         p.endShape();
         doFill = savedFill;
       }
