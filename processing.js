@@ -8198,6 +8198,32 @@
       return results.length > 0 ? results : null;
     };
     /**
+     * The contains(string) function returns true if the string passed in the parameter
+     * is a substring of this string. It returns false if the string passed
+     * in the parameter is not a substring of this string.
+     *
+     * @param {String} The string to look for in the current string
+     *
+     * @return {boolean} returns true if this string contains
+     * the string passed as parameter. returns false, otherwise.
+     *
+     */
+    p.__contains = function (subject, subStr) {
+      if (typeof subject !== "string") {
+        subject.shift();
+        return subject.contains.apply(subject, subStr);
+      }
+      //Parameter is not null AND
+      //The type of the parameter is the same as this object (string)
+      //The javascript function that finds a substring returns 0 or higher
+      return (
+        (subject !== null) &&
+        (subStr !== null) &&
+        (typeof subStr === "string") &&
+        (subject.indexOf(subStr) > -1)
+      ) ;
+    } ;
+    /**
      * The __replaceAll() function searches all matches between a substring (or regular expression) and a string,
      * and replaces the matched substring with a new substring
      *
@@ -17369,7 +17395,7 @@
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
-      "vertex", "width", "XMLElement", "year", "__equals", "__frameRate",
+      "vertex", "width", "XMLElement", "year", "__contains", "__equals", "__frameRate",
       "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
       "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
       "__toCharArray", "__split"];
@@ -17741,7 +17767,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace|split)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|hashCode|toCharArray|printStackTrace|split)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)

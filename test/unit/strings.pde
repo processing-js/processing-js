@@ -36,3 +36,37 @@ _checkEqual(stuff.size(), 0);
 
 s2 = reverse(s2);
 _checkEqual(s2[0], "NC");
+
+//Testing the contains functions of the string class
+String strLiteralA = "March, 13th 2011" ;
+String strLiteralB = "March" ;
+
+_checkEqual(strLiteralA.contains("") , true);
+_checkEqual( strLiteralA.contains(strLiteralA), true);
+_checkEqual( strLiteralA.contains("March"), true);
+_checkEqual( strLiteralA.contains("2011"), true);
+_checkEqual( strLiteralA.contains(strLiteralB), true);
+_checkEqual( strLiteralA.contains(strLiteralB + ","), true);
+
+_checkEqual( strLiteralA.contains(null), false);
+_checkEqual( strLiteralA.contains(2011), false);
+_checkEqual( strLiteralA.contains(" "), false);
+_checkEqual( strLiteralA.contains(strLiteralB + " "), false);
+_checkEqual( strLiteralB.contains(strLiteralA), false);
+String charsStr = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+String result = "";
+
+int randomCharIndex, ii;
+//Generate a random string
+for (ii = 0; ii < 1024; ii++)
+{
+  randomCharIndex = Math.floor(Math.random() * 1000) % charsStr.length;
+  result = result + charsStr.substr(randomCharIndex , 1);
+}
+
+String resultCopy = result;
+
+_checkEqual(resultCopy.contains(result) , true);
+_checkEqual(result.contains(resultCopy) , true);
+
+
