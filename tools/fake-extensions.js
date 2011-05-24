@@ -165,6 +165,10 @@ Processing.lib.MockExtensions = function() {
   this.Edge = function() {
     this.increment = __noop_func__;
   };
+  this.SimpleMapItem = __noop_func__;
+  this.SimpleMapModel = __noop_func__;
+  this.Module = __noop_func__;
+  this.Spin = __noop_func__;
 };
 
 Processing.lib.MockExtensions.exports = [
@@ -180,7 +184,8 @@ Processing.lib.MockExtensions.exports = [
   "SearchClient", "WebSearchRequest",
   "Integrator", "ColorIntegrator", "Place", "Slurper",
   "RankedLongArray", "BoundsIntegrator", "FolderItem", "FileItem", "SwingUtilities",
-  "File", "Node", "Edge"
+  "File", "Node", "Edge",
+  "SimpleMapItem", "SimpleMapModel", "Module", "Spin"
 ];
 
 })();
