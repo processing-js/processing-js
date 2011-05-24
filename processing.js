@@ -12623,7 +12623,7 @@
           }
           p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         }
-        p.endShape(CLOSE);
+        p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
       }
 
