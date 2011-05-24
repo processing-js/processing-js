@@ -515,7 +515,39 @@
           throw("Please use the proper number of parameters.");
         }
       };
-
+      /**
+       * @member ArrayList
+       * ArrayList.addAll(collection) appends all of the elements in the specified
+       * Collection to the end of this list, in the order that they are returned by
+       * the specified Collection's Iterator. 
+       *
+       * When called as addAll(index, collection) the elements are inserted into
+       * this list at the position indicated by index.
+       *
+       * @param {index} Optional; specifies the position the colletion should be inserted at
+       * @param {collection} Any iterable object (ArrayList, HashMap.keySet(), etc.)
+       * @throws out of bounds error for negative index, or index greater than list size.
+       */
+      this.addAll = function(arg1, arg2) {
+        // addAll(int, Collection)
+        var it;
+        if (typeof arg1 === "number") {
+          if (arg1 < 0 || arg1 > array.length) {
+            throw("Index out of bounds for addAll: " + arg1 + " greater or equal than " + array.length);
+          }
+          it = new ObjectIterator(arg2);
+          while (it.hasNext()) {
+            array.splice(arg1++, 0, it.next());
+          }
+        }
+        // addAll(Collection)
+        else {
+          it = new ObjectIterator(arg1);
+          while (it.hasNext()) {
+            array.push(it.next());
+          }
+        }
+      };
       /**
        * @member ArrayList
        * ArrayList.set() Replaces the element at the specified position in this list with the specified element.
@@ -8277,6 +8309,40 @@
       return chars;
     };
     /**
+     * The __split() function splits a string using the regex delimiter
+     * specified. If limit is specified, the resultant array will have number
+     * of elements equal to or less than the limit.
+     *
+     * @param {String} subject string to be split
+     * @param {String} regexp  regex string used to split the subject
+     * @param {int}    limit   max number of tokens to be returned
+     *
+     * @return {String[]} an array of tokens from the split string
+     */
+    p.__split = function(subject, regex, limit) {
+      var pattern = new RegExp(regex);
+
+      // If limit is not specified, use JavaScript's built-in String.split.
+      if ((limit == undef) || (limit < 1)) {
+        return subject.split(pattern);
+      }
+
+      // If limit is specified, JavaScript's built-in String.split has a
+      // different behaviour than Java's. A Java-compatible implementation is
+      // provided here.
+      var result = [], currSubject = subject, pos;
+      while (((pos = currSubject.search(pattern)) != -1)
+          && (result.length < (limit - 1))) {
+        var match = pattern.exec(currSubject).toString();
+        result.push(currSubject.substring(0, pos));
+        currSubject = currSubject.substring(pos + match.length);
+      }
+      if ((pos != -1) || (currSubject != "")) {
+        result.push(currSubject);
+      }
+      return result;
+    };
+    /**
      * The match() function matches a string with a regular expression, and returns the match as an
      * array. The first index is the matching expression, and array elements
      * [1] and higher represent each of the groups (sequences found in parens).
@@ -11998,7 +12064,7 @@
             }
             if (closeShape) {
               line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
-            } else {
+            } else if (doStroke) {
               line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
             }
 
@@ -17306,7 +17372,7 @@
       "vertex", "width", "XMLElement", "year", "__equals", "__frameRate",
       "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
       "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
-      "__toCharArray"];
+      "__toCharArray", "__split"];
 
     var members = {};
     var i, l;
@@ -17675,7 +17741,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace|split)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
@@ -19171,7 +19237,7 @@
   }());
   // end of tinylog lite JavaScript library
 
-  Processing.logger = tinylogLite;
+  Processing.logger = window.console || tinylogLite;
 
   Processing.version = "@VERSION@";
 
@@ -19351,72 +19417,80 @@
 //#endif
   };
 
-  // Automatic Initialization Method
-  var init = function() {
-    function loadAndExecute(canvas, sources) {
-      var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
+  /**
+   * aggregate all source code into a single file, then rewrite that
+   * source and bind to canvas via new Processing(canvas, sourcestring).
+   * @param {CANVAS} canvas The html canvas element to bind to
+   * @param {String[]} source The array of files that must be loaded
+   */
+  var loadSketchFromSources = function(canvas, sources) {
+    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
 
-      function ajaxAsync(url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            var error;
-            if (xhr.status !== 200 && xhr.status !== 0) {
-              error = "Invalid XHR status " + xhr.status;
-            } else if (xhr.responseText === "") {
-              error = "No content";
-            }
-            callback(xhr.responseText, error);
+    function ajaxAsync(url, callback) {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          var error;
+          if (xhr.status !== 200 && xhr.status !== 0) {
+            error = "Invalid XHR status " + xhr.status;
+          } else if (xhr.responseText === "") {
+            error = "No content";
           }
-        };
-        xhr.open("GET", url, true);
-        if (xhr.overrideMimeType) {
-          xhr.overrideMimeType("application/json");
+          callback(xhr.responseText, error);
         }
-        xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
-        xhr.send(null);
+      };
+      xhr.open("GET", url, true);
+      if (xhr.overrideMimeType) {
+        xhr.overrideMimeType("application/json");
       }
-
-      function loadBlock(index, filename) {
-        ajaxAsync(filename, function (block, error) {
-          code[index] = block;
-          ++loaded;
-          if (error) {
-            errors.push("  " + filename + " ==> " + error);
-          }
-          if (loaded === sourcesCount) {
-            if (errors.length === 0) {
-              try {
-                return new Processing(canvas, code.join("\n"));
-              } catch(e) {
-                Processing.logger.log("Unable to execute pjs sketch: " + e);
-              }
-            } else {
-              Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
-            }
-          }
-        });
-      }
-
-      for (var i = 0; i < sourcesCount; ++i) {
-        loadBlock(i, sources[i]);
-      }
+      xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
+      xhr.send(null);
     }
 
+    function loadBlock(index, filename) {
+      ajaxAsync(filename, function (block, error) {
+        code[index] = block;
+        ++loaded;
+        if (error) {
+          errors.push("  " + filename + " ==> " + error);
+        }
+        if (loaded === sourcesCount) {
+          if (errors.length === 0) {
+            try {
+              return new Processing(canvas, code.join("\n"));
+            } catch(e) {
+              Processing.logger.log("Unable to execute pjs sketch: " + e);
+            }
+          } else {
+            Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
+          }
+        }
+      });
+    }
+
+    for (var i = 0; i < sourcesCount; ++i) {
+      loadBlock(i, sources[i]);
+    }
+  };
+
+  /**
+   * Automatic initialization function.
+   */
+  var init = function() {
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
       // datasrc and data-src are deprecated.
-      var processingSources = canvas[i].getAttribute('data-processing-sources');
+      var processingSources = canvasElements[i].getAttribute('data-processing-sources');
       if (processingSources === null) {
         // Temporary fallback for datasrc and data-src
-        processingSources = canvas[i].getAttribute('data-src');
+        processingSources = canvasElements[i].getAttribute('data-src');
         if (processingSources === null) {
-          processingSources = canvas[i].getAttribute('datasrc');
+          processingSources = canvasElements[i].getAttribute('datasrc');
         }
       }
       if (processingSources) {
-        var filenames = processingSources.split(' ');
+        filenames = processingSources.split(' ');
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -19424,18 +19498,66 @@
             filenames.splice(j, 1);
           }
         }
-
-        loadAndExecute(canvas[i], filenames);
+        loadAndExecute(canvasElements[i], filenames);
       }
+    }
+    
+    // process all <script>-indicated sketches
+    var scripts = document.getElementsByTagName('script');
+    var s, source, instance;
+    for (s = 0; s < scripts.length; s++) {
+      var script = scripts[s];
+      if (!script.getAttribute) {
+        continue;
+      }
+
+      var type = script.getAttribute("type");
+      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
+        var target = script.getAttribute("data-target");
+        var canvas;
+        if (target) {
+          canvas = document.getElementById(target);
+        } else {
+          var nextSibling = script.nextSibling;
+          while (nextSibling && nextSibling.nodeType !== 1) {
+            nextSibling = nextSibling.nextSibling;
+          }
+          if (nextSibling.nodeName.toLowerCase() === "canvas") {
+            canvas = nextSibling;
+          }
+        }
+
+        if (canvas && canvas !== null) {
+          if (script.getAttribute("src")) {
+            filenames = script.getAttribute("src").split(/\s+/);
+            loadAndExecute(canvas, filenames);
+            continue;
+          }
+          source =  script.innerText || script.textContent;
+          instance = new Processing(canvas, source);
+        }
+        loadSketchFromSources(canvas[i], filenames);
+      }
+    }
+  };
+
+  /**
+   * Make loadSketchFromSources publically visible
+   */
+  Processing.loadSketchFromSources = loadSketchFromSources;
+
+  /**
+   * Disable the automatic loading of all sketches on the page
+   */
+  Processing.disableInit = function() {
+    if(isDOMPresent) {
+      document.removeEventListener('DOMContentLoaded', init, false);
     }
   };
 
   if(isDOMPresent) {
     window['Processing'] = Processing;
-
-    document.addEventListener('DOMContentLoaded', function() {
-      init();
-    }, false);
+    document.addEventListener('DOMContentLoaded', init, false);
   } else {
     // DOM is not found
     this.Processing = Processing;
