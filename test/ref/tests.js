@@ -51,7 +51,7 @@ var tests = [
   { path: "shininess_p5test.pde", tags: ["3D"] },
   { path: "specular_p5test.pde", tags: ["3D"]},
   { path: "spotLight_p5test.pde", tags: ["3D"]}, /* See ticket #1202 */
-  { path: "3d-ellipse-fill-noFill-stoke-noStroke.pde", tags: ["3D"], epsilonOverride: 0.10 },
+  { path: "3d-ellipse-fill-noFill-stoke-noStroke.pde", tags: ["3D"], epsilonOverride: 0.15 },
   { path: "createGraphics.pde", tags: ["3D"] }, /* See ticket #1075 */
   { path: "rect-directional-light.pde", tags: ["3D"] },
   { path: "createimage.pde", tags: ["2D"] },
