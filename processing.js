@@ -19437,20 +19437,21 @@
       }
     }
 
-    var canvas = document.getElementsByTagName('canvas');
-
-    for (var i = 0, l = canvas.length; i < l; i++) {
+    // process all <canvas>-indicated sketches
+    var canvasElements = document.getElementsByTagName('canvas');
+    var filenames;
+    for (var i = 0, l = canvasElements.length; i < l; i++) {
       // datasrc and data-src are deprecated.
-      var processingSources = canvas[i].getAttribute('data-processing-sources');
+      var processingSources = canvasElements[i].getAttribute('data-processing-sources');
       if (processingSources === null) {
         // Temporary fallback for datasrc and data-src
-        processingSources = canvas[i].getAttribute('data-src');
+        processingSources = canvasElements[i].getAttribute('data-src');
         if (processingSources === null) {
-          processingSources = canvas[i].getAttribute('datasrc');
+          processingSources = canvasElements[i].getAttribute('datasrc');
         }
       }
       if (processingSources) {
-        var filenames = processingSources.split(' ');
+        filenames = processingSources.split(' ');
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -19458,15 +19459,50 @@
             filenames.splice(j, 1);
           }
         }
+        loadAndExecute(canvasElements[i], filenames);
+      }
+    }
+    
+    // process all <script>-indicated sketches
+    var scripts = document.getElementsByTagName('script');
+    var s, source, instance;
+    for (s = 0; s < scripts.length; s++) {
+      var script = scripts[s];
+      if (!script.getAttribute) {
+        continue;
+      }
 
-        loadAndExecute(canvas[i], filenames);
+      var type = script.getAttribute("type");
+      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
+        var target = script.getAttribute("data-target");
+        var canvas;
+        if (target) {
+          canvas = document.getElementById(target);
+        } else {
+          var nextSibling = script.nextSibling;
+          while (nextSibling && nextSibling.nodeType !== 1) {
+            nextSibling = nextSibling.nextSibling;
+          }
+          if (nextSibling.nodeName.toLowerCase() === "canvas") {
+            canvas = nextSibling;
+          }
+        }
+
+        if (canvas && canvas !== null) {
+          if (script.getAttribute("src")) {
+            filenames = script.getAttribute("src").split(/\s+/);
+            loadAndExecute(canvas, filenames);
+            continue;
+          }
+          source =  script.innerText || script.textContent;
+          instance = new Processing(canvas, source);
+        }
       }
     }
   };
 
   if(isDOMPresent) {
     window['Processing'] = Processing;
-
     document.addEventListener('DOMContentLoaded', function() {
       init();
     }, false);
