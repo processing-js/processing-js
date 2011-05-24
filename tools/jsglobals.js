@@ -5,6 +5,7 @@
 var ignoreGlobalsWarnings = {
   extendClassChain: "Class extend helper",
   extendStaticMembers: "Class extend helper",
+  extendInterfaceMembers: "Class extend helper",
   addMethod: "Class add method helper",
   createJavaArray: "Create array helper",
   defineProperty: "Utility to define object properties (ECMAScript v5)",

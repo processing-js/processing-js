@@ -27,11 +27,11 @@ void draw() {
       // of the background in that spot
       color currColor = video.pixels[i];
       color bkgdColor = backgroundPixels[i];
-      // Extract the red, green, and blue components of the current pixel’s color
+      // Extract the red, green, and blue components of the current pixel's color
       int currR = (currColor >> 16) & 0xFF;
       int currG = (currColor >> 8) & 0xFF;
       int currB = currColor & 0xFF;
-      // Extract the red, green, and blue components of the background pixel’s color
+      // Extract the red, green, and blue components of the background pixel's color
       int bkgdR = (bkgdColor >> 16) & 0xFF;
       int bkgdG = (bkgdColor >> 8) & 0xFF;
       int bkgdB = bkgdColor & 0xFF;
@@ -52,7 +52,7 @@ void draw() {
 }
 
 // When a key is pressed, capture the background image into the backgroundPixels
-// buffer, by copying each of the current frame’s pixels into it.
+// buffer, by copying each of the current frame's pixels into it.
 void keyPressed() {
   video.loadPixels();
   arraycopy(video.pixels, backgroundPixels);
