@@ -524,22 +524,19 @@
         var it;
         if (typeof arg1 === "number") {
           if (arg1 < 0 || arg1 > array.length) {
-            throw("Index out of bounds for addAll: "+arg1+" greater or equal than "+array.length);
+            throw("Index out of bounds for addAll: " + arg1 + " greater or equal than " + array.length);
           }
-          it = arg2.iterator();
+          it = new ObjectIterator(arg2);
           while (it.hasNext()) {
             array.splice(arg1++, 0, it.next());
           }
         }
         // addAll(Collection)
-        else if (arg1.iterator) {
-          it = ObjectIterator(arg1);
+        else {
+          it = new ObjectIterator(arg1);
           while (it.hasNext()) {
             array.push(it.next());
           }
-        }
-        else {
-          throw("Incompatible argument for addAll: not a iterable collection");
         }
       };
       /**
