@@ -7,11 +7,11 @@ var __elem_func__ = function() { return elem };
 var navigator = { useragent: true };
 
 var canvas = {
-  setAttribute: __empty_func__,
   attachEvent: __empty_func__,
   addEventListener: __empty_func__,
   appendChild: __elem_func__,
   removeChild: __empty_func__,
+  childNodes: { length: 0 },
   toDataURL: __empty_func__,
   localName: "canvas",
   getContext:  function() {
@@ -565,6 +565,8 @@ function DOMParser() {
     return this.attributes.length > 0;
   };
 
+  Node.prototype.textContent = "";
+
   function Document() {
     var node = new Node();
     node.nodeType = Node.DOCUMENT_NODE;
@@ -590,6 +592,11 @@ function DOMParser() {
       text.appendData = function(arg) {
         this.nodeValue += arg;
       };
+
+      Object.defineProperty(text, "textContent", {
+        get: function() { return this.nodeValue; },
+        enumerable: true
+      });
       // TODO appendData, substringData, etc.
       return text;
     };
@@ -681,6 +688,18 @@ function DOMParser() {
         }
         return new NodeList(result);
       };
+
+      Object.defineProperty(element, "textContent", {
+        get: function() {
+          var result = "";
+          for (var i = 0; i < this.childNodes.length; ++i) {
+            result += this.childNodes[i].textContent;
+          }
+          return result;
+        },
+        enumerable: true
+      });
+
       return element;
     };
     node.createAttributeNS = function(namespaceURI, qualifiedName) {
@@ -729,6 +748,13 @@ function DOMParser() {
         }
       }
     };
+
+    Object.defineProperty(node, "textContent", {
+      get: function() {
+        return this.documentElement.textContent;
+      },
+      enumerable: true
+    });
     return node;
   }
 
@@ -773,5 +799,5 @@ function DOMParser() {
     document.normalize();
     return document;
   };
-}
 
+}
