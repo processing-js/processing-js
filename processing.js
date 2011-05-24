@@ -1,20 +1,14 @@
-/*
+/***
 
     P R O C E S S I N G . J S - @VERSION@
     a port of the Processing visualization language
 
-    License       : MIT
-    Developer     : John Resig: http://ejohn.org
-    Web Site      : http://processingjs.org
-    Java Version  : http://processing.org
-    Github Repo.  : http://github.com/jeresig/processing-js
-    Bug Tracking  : http://processing-js.lighthouseapp.com
-    Mozilla POW!  : http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
-    Maintained by : Seneca: http://zenit.senecac.on.ca/wiki/index.php/Processing.js
-                    Hyper-Metrix: http://hyper-metrix.com/#Processing
-                    BuildingSky: http://weare.buildingsky.net/pages/processing-js
+    Processing.js is licensed under the MIT License, see LICENSE.
+    For a list of copyright holders, please refer to AUTHORS.
 
- */
+    http://processingjs.org
+
+***/
 
 (function(window, document, Math, undef) {
 
