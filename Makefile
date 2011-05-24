@@ -17,9 +17,7 @@ TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 # Version number used in naming release files. Defaults to DEV_VERSION
 VERSION ?= DEV_VERSION
 
-# Override QUIET on the cmd line if you want more output:
-# $ make QUIET=
-QUIET ?= > /dev/null 2>&1
+QUIET := > /dev/null 2>&1
 
 EMPTY :=
 SRC_DIR :=.
@@ -53,10 +51,12 @@ compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3)
 %.js : %.pde
 	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
 
-all: check
+check: check-globals check-tests
 
 release-dir: clean
 	@@mkdir $(RELEASE_DIR)
+
+all: release
 
 release: release-files zipped examples
 	@@echo "Release Created, see $(RELEASE_DIR)"
@@ -68,7 +68,7 @@ zipped: release-files
 	@@gzip -9 -c $(PJS_RELEASE_MIN) > $(PJS_RELEASE_MIN).gz $(QUIET)
 	@@find $(RELEASE_DIR) -print | zip -j $(PJS_RELEASE_PREFIX).zip -@ $(QUIET)
 
-release-docs:
+release-docs: release-dir
 	@@echo "Copying project release docs..."
 	@@cp $(SRC_DIR)/AUTHORS $(RELEASE_DIR)
 	@@cat $(SRC_DIR)/README | sed -e 's/@VERSION@/$(VERSION)/' > $(RELEASE_DIR)/README
@@ -139,7 +139,7 @@ print-globals:
 	@@$(RUNJS) $(TOOLS_DIR)/jsglobals.js -e "printNames()" < $(PJS_SRC)
 
 closure: release-dir
-	@@$(call compile,$(PJS_SRC),$(PJS_RELEASE_MIN),$(EMPTY)) $(QUIET)
+	@@$(call compile,$(PJS_SRC),$(PJS_RELEASE_MIN),$(EMPTY))
 
 compile-sketch:
 	@@$(RUNJS) $(PJS_SRC) -f $(TOOLS_DIR)/jscompile.js < $(SKETCHINPUT) > $(SKETCHOUTPUT)
@@ -158,12 +158,7 @@ package-sketch:
 api-only: release-dir
 	@@echo "Creating processing.js API version..."
 	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js)
-	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY)) $(QUIET)
-
-# For testing: Run a simple web server so files that need http:// work
-server:
-	@@echo "Starting web server at http://localhost:9914/ (use ctrl+ c to stop)..."
-	@@python -m SimpleHTTPServer 9914
+	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
 
 clean:
 	@@rm -fr $(RELEASE_DIR)
