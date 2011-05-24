@@ -2201,6 +2201,8 @@
         this.code = chr.charCodeAt(0);
       } else if (typeof chr === 'number') {
         this.code = chr;
+      } else if (chr instanceof Char) {
+        this.code = chr;
       } else {
         this.code = NaN;
       }
