@@ -11746,7 +11746,7 @@
           line3D(lineVertArray, null, strokeVertArray);
         }
         if (doFill) {
-          fill3D(fillVertArray, null, colorVertArray); // fill isn't working in 3d curveVertex
+          fill3D(fillVertArray, null, colorVertArray);
         }
       }
       // bezierVertex
