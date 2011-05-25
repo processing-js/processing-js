@@ -1581,6 +1581,7 @@
         modelView,
         modelViewInv,
         userMatrixStack,
+        userReverseMatrixStack,
         inverseCopy,
         projection,
         manipulatingCamera = false,
@@ -5012,6 +5013,16 @@
         this.elements[2] = tx * this.elements[0] + ty * this.elements[1] + this.elements[2];
         this.elements[5] = tx * this.elements[3] + ty * this.elements[4] + this.elements[5];
       },
+      /**
+       * @member PMatrix2D
+       * The invTranslate() function translates this matrix by moving the current coordinates to the negative location specified by tx and ty.
+       *
+       * @param {float} tx  the x-axis coordinate to move to
+       * @param {float} ty  the y-axis coordinate to move to
+       */
+      invTranslate: function(tx, ty) {
+        this.translate(-tx, -ty);
+      },
        /**
        * @member PMatrix2D
        * The transpose() function is not used in processingjs.
@@ -5154,6 +5165,20 @@
           this.elements[4] *= sy;
         }
       },
+       /**
+        * @member PMatrix2D
+        * The invScale() function decreases or increases the size of a shape by contracting and expanding vertices. When only one parameter is specified scale will occur in all dimensions.
+        * This is equivalent to a two parameter call.
+        *
+        * @param {float} sx  the amount to scale on the x-axis
+        * @param {float} sy  the amount to scale on the y-axis
+        */
+      invScale: function(sx, sy) {
+        if (sx && !sy) {
+          sy = sx;
+        }
+        this.scale(1 / sx, 1 / sy);
+      },
       /**
        * @member PMatrix2D
        * The apply() function multiplies the current matrix by the one specified through the parameters. Note that either a PMatrix2D or a list of floats can be passed in.
@@ -5242,6 +5267,15 @@
        */
       rotateZ: function(angle) {
         this.rotate(angle);
+      },
+      /**
+       * @member PMatrix2D
+       * The invRotateZ() function rotates the matrix in opposite direction.
+       *
+       * @param {float} angle         the angle of rotation in radiants
+       */
+      invRotateZ: function(angle) {
+        this.rotateZ(angle - Math.PI);
       },
       /**
        * @member PMatrix2D
@@ -5350,7 +5384,7 @@
         this.elements[15] += tx * this.elements[12] + ty * this.elements[13] + tz * this.elements[14];
       },
       /**
-       * @member PMatrix2D
+       * @member PMatrix3D
        * The transpose() function transpose this matrix.
        */
       transpose: function() {
@@ -5547,7 +5581,7 @@
         }
       },
       /**
-       * @member PMatrix2D
+       * @member PMatrix3D
        * The invApply() function applies the inverted matrix to this matrix.
        *
        * @param {float} m00           the first element of the matrix
@@ -7033,6 +7067,8 @@
     * @see rotateZ
     */
     Drawing2D.prototype.translate = function(x, y) {
+      forwardTransform.translate(x, y);
+      reverseTransform.invTranslate(x, y);      
       curContext.translate(x, y);
     };
     
@@ -7066,6 +7102,8 @@
     * @see rotateZ
     */
     Drawing2D.prototype.scale = function(x, y) {
+      forwardTransform.scale(x, y);
+      reverseTransform.invScale(x, y);      
       curContext.scale(x, y || x);
     };
     
@@ -7091,11 +7129,14 @@
     * @see rotateZ
     */
     Drawing2D.prototype.pushMatrix = function() {
+      userMatrixStack.load(modelView);
+      userReverseMatrixStack.load(modelViewInv);      
       saveContext();
     };
     
     Drawing3D.prototype.pushMatrix = function() {
       userMatrixStack.load(modelView);
+      userReverseMatrixStack.load(modelViewInv);
     };
 
     /**
@@ -7110,11 +7151,14 @@
     * @see pushMatrix
     */
     Drawing2D.prototype.popMatrix = function() {
+      modelView.set(userMatrixStack.pop());
+      modelViewInv.set(userReverseMatrixStack.pop());      
       restoreContext();
     };
     
     Drawing3D.prototype.popMatrix = function() {
       modelView.set(userMatrixStack.pop());
+      modelViewInv.set(userReverseMatrixStack.pop());
     };
 
     /**
@@ -7128,6 +7172,8 @@
     * @see printMatrix
     */
     Drawing2D.prototype.resetMatrix = function() {
+      forwardTransform.reset();
+      reverseTransform.reset();
       curContext.setTransform(1,0,0,1,0,0);
     };
     
@@ -7217,6 +7263,10 @@
     p.rotateZ = function(angleInRadians) {
       forwardTransform.rotateZ(angleInRadians);
       reverseTransform.invRotateZ(angleInRadians);
+      if (p.use3DContext) {
+        return;
+      }
+      curContext.rotate(angleInRadians);
     };
 
     /**
@@ -7270,12 +7320,11 @@
     * @see pushMatrix
     */
     Drawing2D.prototype.rotate = function(angleInRadians) {
-      curContext.rotate(angleInRadians);
+      p.rotateZ(angleInRadians);
     };
     
     Drawing3D.prototype.rotate = function(angleInRadians) {
-      forwardTransform.rotateZ(angleInRadians);
-      reverseTransform.invRotateZ(angleInRadians);
+      p.rotateZ(angleInRadians);
     };
 
     /**
@@ -9414,7 +9463,11 @@
         // size() was called without p.init() default context, i.e. p.createGraphics()
         curContext = curElement.getContext("2d");
         userMatrixStack = new PMatrixStack();
-        modelView = new PMatrix2D();
+        userReverseMatrixStack = new PMatrixStack();
+        forwardTransform = new PMatrix2D();
+        reverseTransform = new PMatrix2D();
+        modelView = forwardTransform;
+        modelViewInv = reverseTransform;
       }
       
       DrawingShared.prototype.size.apply(this, arguments);
@@ -9546,8 +9599,6 @@
 
         cam = new PMatrix3D();
         cameraInv = new PMatrix3D();
-        forwardTransform = new PMatrix3D();
-        reverseTransform = new PMatrix3D();
         modelView = new PMatrix3D();
         modelViewInv = new PMatrix3D();
         projection = new PMatrix3D();
@@ -9557,6 +9608,7 @@
         reverseTransform = modelViewInv;
 
         userMatrixStack = new PMatrixStack();
+        userReverseMatrixStack = new PMatrixStack();
         // used by both curve and bezier, so just init here
         curveBasisMatrix = new PMatrix3D();
         curveToBezierMatrix = new PMatrix3D();
@@ -10742,7 +10794,7 @@
      *
      * @param {int | float} x 3D x coordinate to be mapped
      * @param {int | float} y 3D y coordinate to be mapped
-     * @param {int | float} z 3D z coordinate to be mapped
+     * @param {int | float} z 3D z optional coordinate to be mapped
      *
      * @returns {float}
      *
@@ -10751,20 +10803,25 @@
     */
     p.screenX = function( x, y, z ) {
       var mv = modelView.array();
-      var pj = projection.array();
+      if( mv.length === 16 )
+      {
+        var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+        var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+        var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+        var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
-      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
-      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
-      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+        var pj = projection.array();
 
-      var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
-      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+        var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
+        var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-      if ( ow !== 0 ){
-        ox /= ow;
+        if ( ow !== 0 ){
+          ox /= ow;
+        }
+        return p.width * ( 1 + ox ) / 2.0;
+      } else { // We assume that we're in 2D
+        return modelView.multX(x, y);
       }
-      return p.width * ( 1 + ox ) / 2.0;
     };
 
     /**
@@ -10773,29 +10830,34 @@
      *
      * @param {int | float} x 3D x coordinate to be mapped
      * @param {int | float} y 3D y coordinate to be mapped
-     * @param {int | float} z 3D z coordinate to be mapped
+     * @param {int | float} z 3D z optional coordinate to be mapped
      *
      * @returns {float}
      *
      * @see screenX
      * @see screenZ
     */
-    p.screenY = function( x, y, z ) {
+    p.screenY = function screenY( x, y, z ) {
       var mv = modelView.array();
-      var pj = projection.array();
+      if( mv.length === 16 )
+      {
+      	var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      	var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      	var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      	var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+      	
+      	var pj = projection.array();
 
-      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
-      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
-      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
-      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+      	var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
+      	var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-      var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
-      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
-
-      if ( ow !== 0 ){
-        oy /= ow;
+      	if ( ow !== 0 ){
+      		oy /= ow;
+      	}
+      	return p.height * ( 1 + oy ) / 2.0;
+      } else {  // We assume that we're in 2D
+       	return modelView.multY(x, y);
       }
-      return p.height * ( 1 + oy ) / 2.0;
     };
 
     /**
@@ -10811,8 +10873,11 @@
      * @see screenX
      * @see screenY
     */
-    p.screenZ = function( x, y, z ) {
+    p.screenZ = function screenZ( x, y, z ) {
       var mv = modelView.array();
+      if( mv.length !== 16 )
+      	return 0;
+ 
       var pj = projection.array();
 
       var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
