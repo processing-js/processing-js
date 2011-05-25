@@ -1,0 +1,45 @@
+<html>
+<head>
+ <title>pjs.instances test</title>
+ <script type="text/javascript" src="../../../processing.js"></script>
+ <script type="text/javascript">
+ // bind javascript to Processing instance
+ function bindJavascript() {
+  for(i=1;i<=6;i++) {
+    var pjs = Processing.getInstanceById("test" + i);
+    try { pjs.bindJavascript(this); }
+    catch(e) { setTimeout(bindJavascript, 250); }
+    }
+  }
+ bindJavascript();
+ </script>
+</head>
+<body>
+
+ <table><tr><td>
+  <p>sketch 1 (index 1)</p>
+  <canvas id="test1" style="border: 1px solid black;" data-processing-sources="keyevent.pde" tabindex="1"></canvas>
+ </td><td>
+  <p>sketch 2 (no index) </p>
+  <canvas id="test2" style="border: 1px solid black;" data-processing-sources="keyevent.pde"></canvas>
+ </td><td>
+  <p>sketch 3 (index 2)</p>
+  <canvas id="test3" style="border: 1px solid black;" data-processing-sources="keyevent.pde" tabindex="2"></canvas>
+ </td><td>
+  <p>sketch 4 (no index)</p>
+  <canvas id="test4" style="border: 1px solid black;" data-processing-sources="keyevent.pde"></canvas>
+ </td></tr></table>
+
+ <p>test controls: focus on a canvas, use 'w'/'s' to raise/lower the line for that canvas. Tab/focus order should be 1 → 3 → 2 → 4.</p>
+
+ <p>The following two sketches are loaded with the additional leading /* @pjs globalKeyEvents="true"; */ statement, and should receive all key events</p>
+ <table><tr><td>
+  <p>sketch 5 (index 3)</p>
+  <canvas id="test5" style="border: 1px solid black;" data-processing-sources="bypass.pde keyevent.pde" tabindex="3"></canvas>
+ </td><td>
+  <p>sketch 6 (no index) </p>
+  <canvas id="test6" style="border: 1px solid black;" data-processing-sources="bypass.pde keyevent.pde"></canvas>
+ </td></tr></table>
+
+</body>
+</html>

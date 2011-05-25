@@ -1,0 +1,106 @@
+<html>
+<head>
+  <title>keypress</title>
+  <script type="text/javascript" src="../../../processing.js"></script>
+</head>
+<body>
+
+  <table width="100%">
+    <tr width="50%">
+      <td>
+        <canvas id="test1" style="border: 1px solid black;" data-processing-sources="keypress.pde" tabindex="1"></canvas>
+      </td>
+      <td>
+        <canvas id="test1" style="border: 1px solid black;" data-processing-sources="keypress2.pde" tabindex="1"></canvas>
+      </td>
+    </tr>
+    <tr width="50%">
+      <td>
+<pre>
+  void setup() { size(200,200); noLoop(); }
+  void draw() { background(255); }
+  void keyPressed() { println("[" + key + "] "+int(key)+"/"+keyCode); }
+</pre>
+      </td>
+      <td>
+<pre>
+  void setup() { size(200,200); noLoop(); }
+  void draw() { background(255); }
+  void keyPressed() {
+     println(key);
+   }
+</pre>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        KeyPress should print:
+      </td>
+      <td>
+        KeyPress should print the actual letter that you press: (aA-zZ):
+      </td>
+    </tr>
+    <tr>
+      <td>
+<pre>
+NORMAL KEYCODES:
+
+  [ ] 9/9 // tab
+  [] 27/27  // esc, 'key' actually contains ascii ESCAPE code
+  [ ] 32/32 // space
+  [!] 33/49
+  ["] 34/222
+  [#] 35/51
+  [$] 36/52
+  [%] 37/53
+  [&] 38/55
+  ['] 39/222
+  [A] 65/65
+  [B] 66/66
+  [C] 67/67
+  [D] 68/68
+  [E] 69/69
+  [F] 70/70
+  [G] 71/71
+  [H] 72/72
+  [I] 73/73
+  [J] 74/74
+  [K] 75/75
+  [L] 76/76
+  [M] 77/77
+NUMERIC PAD, NO NUMLOCK:
+
+  [?] 65535/35  // end
+  [?] 65535/40  // down cursor
+  [?] 65535/34  // pgdn
+  [?] 65535/37  // left cursor
+  [?] 65535/12  // 5, no idea what that button maps to
+  [?] 65535/39  // right cursor
+  [?] 65535/36  // home
+  [?] 65535/38  // up cursor
+  [?] 65535/33  // pgup
+NUMERIC PAD, NUMLOCKED:
+
+  [0] 48/96
+  [1] 49/97
+  [2] 50/98
+  [3] 51/99
+  [4] 52/100
+  [5] 53/101
+  [6] 54/102
+  [7] 55/103
+  [8] 56/104
+  [9] 57/105
+  [.] 46/110
+  [
+  ] 10/10 // enter, 'key' actually contains \10 code
+  [+] 43/107
+  [-] 45/109
+  [*] 42/106
+  [/] 47/111
+</pre>
+
+  </td></tr></table>
+
+</body>
+</html>
