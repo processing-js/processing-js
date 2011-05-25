@@ -11769,6 +11769,16 @@
       }
       // End duplication
       
+      // curveVertex
+      if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
+        lineVertArray = fillVertArray;
+        if (doStroke) {
+          line3D(lineVertArray, null, strokeVertArray);
+        }
+        if (doFill) {
+          fill3D(fillVertArray, null, colorVertArray);
+        }
+      }
       // bezierVertex
       else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         lineVertArray = fillVertArray;
