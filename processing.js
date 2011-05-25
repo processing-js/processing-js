@@ -19413,73 +19413,80 @@
 //#endif
   };
 
-  // Automatic Initialization Method
-  var init = function() {
-    function loadAndExecute(canvas, sources) {
-      var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
+  /**
+   * aggregate all source code into a single file, then rewrite that
+   * source and bind to canvas via new Processing(canvas, sourcestring).
+   * @param {CANVAS} canvas The html canvas element to bind to
+   * @param {String[]} source The array of files that must be loaded
+   */
+  var loadSketchFromSources = function(canvas, sources) {
+    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
 
-      function ajaxAsync(url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            var error;
-            if (xhr.status !== 200 && xhr.status !== 0) {
-              error = "Invalid XHR status " + xhr.status;
-            } else if (xhr.responseText === "") {
-              error = "No content";
-            }
-            callback(xhr.responseText, error);
+    function ajaxAsync(url, callback) {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          var error;
+          if (xhr.status !== 200 && xhr.status !== 0) {
+            error = "Invalid XHR status " + xhr.status;
+          } else if (xhr.responseText === "") {
+            error = "No content";
           }
-        };
-        xhr.open("GET", url, true);
-        if (xhr.overrideMimeType) {
-          xhr.overrideMimeType("application/json");
+          callback(xhr.responseText, error);
         }
-        xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
-        xhr.send(null);
+      };
+      xhr.open("GET", url, true);
+      if (xhr.overrideMimeType) {
+        xhr.overrideMimeType("application/json");
       }
-
-      function loadBlock(index, filename) {
-        ajaxAsync(filename, function (block, error) {
-          code[index] = block;
-          ++loaded;
-          if (error) {
-            errors.push("  " + filename + " ==> " + error);
-          }
-          if (loaded === sourcesCount) {
-            if (errors.length === 0) {
-              try {
-                return new Processing(canvas, code.join("\n"));
-              } catch(e) {
-                Processing.logger.log("Unable to execute pjs sketch: " + e);
-              }
-            } else {
-              Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
-            }
-          }
-        });
-      }
-
-      for (var i = 0; i < sourcesCount; ++i) {
-        loadBlock(i, sources[i]);
-      }
+      xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
+      xhr.send(null);
     }
 
-    // process all <canvas>-indicated sketches
-    var canvasElements = document.getElementsByTagName('canvas');
-    var filenames;
-    for (var i = 0, l = canvasElements.length; i < l; i++) {
+    function loadBlock(index, filename) {
+      ajaxAsync(filename, function (block, error) {
+        code[index] = block;
+        ++loaded;
+        if (error) {
+          errors.push("  " + filename + " ==> " + error);
+        }
+        if (loaded === sourcesCount) {
+          if (errors.length === 0) {
+            try {
+              return new Processing(canvas, code.join("\n"));
+            } catch(e) {
+              Processing.logger.log("Unable to execute pjs sketch: " + e);
+            }
+          } else {
+            Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
+          }
+        }
+      });
+    }
+
+    for (var i = 0; i < sourcesCount; ++i) {
+      loadBlock(i, sources[i]);
+    }
+  };
+
+  /**
+   * Automatic initialization function.
+   */
+  var init = function() {
+    var canvas = document.getElementsByTagName('canvas');
+
+    for (var i = 0, l = canvas.length; i < l; i++) {
       // datasrc and data-src are deprecated.
-      var processingSources = canvasElements[i].getAttribute('data-processing-sources');
+      var processingSources = canvas[i].getAttribute('data-processing-sources');
       if (processingSources === null) {
         // Temporary fallback for datasrc and data-src
-        processingSources = canvasElements[i].getAttribute('data-src');
+        processingSources = canvas[i].getAttribute('data-src');
         if (processingSources === null) {
-          processingSources = canvasElements[i].getAttribute('datasrc');
+          processingSources = canvas[i].getAttribute('datasrc');
         }
       }
       if (processingSources) {
-        filenames = processingSources.split(' ');
+        var filenames = processingSources.split(' ');
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -19487,53 +19494,28 @@
             filenames.splice(j, 1);
           }
         }
-        loadAndExecute(canvasElements[i], filenames);
+        loadSketchFromSources(canvas[i], filenames);
       }
     }
-    
-    // process all <script>-indicated sketches
-    var scripts = document.getElementsByTagName('script');
-    var s, source, instance;
-    for (s = 0; s < scripts.length; s++) {
-      var script = scripts[s];
-      if (!script.getAttribute) {
-        continue;
-      }
+  };
 
-      var type = script.getAttribute("type");
-      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
-        var target = script.getAttribute("data-target");
-        var canvas;
-        if (target) {
-          canvas = document.getElementById(target);
-        } else {
-          var nextSibling = script.nextSibling;
-          while (nextSibling && nextSibling.nodeType !== 1) {
-            nextSibling = nextSibling.nextSibling;
-          }
-          if (nextSibling.nodeName.toLowerCase() === "canvas") {
-            canvas = nextSibling;
-          }
-        }
+  /**
+   * Make loadSketchFromSources publically visible
+   */
+  Processing.loadSketchFromSources = loadSketchFromSources;
 
-        if (canvas && canvas !== null) {
-          if (script.getAttribute("src")) {
-            filenames = script.getAttribute("src").split(/\s+/);
-            loadAndExecute(canvas, filenames);
-            continue;
-          }
-          source =  script.innerText || script.textContent;
-          instance = new Processing(canvas, source);
-        }
-      }
+  /**
+   * Disable the automatic loading of all sketches on the page
+   */
+  Processing.disableInit = function() {
+    if(isDOMPresent) {
+      document.removeEventListener('DOMContentLoaded', init, false);
     }
   };
 
   if(isDOMPresent) {
     window['Processing'] = Processing;
-    document.addEventListener('DOMContentLoaded', function() {
-      init();
-    }, false);
+    document.addEventListener('DOMContentLoaded', init, false);
   } else {
     // DOM is not found
     this.Processing = Processing;

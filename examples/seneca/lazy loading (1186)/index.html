@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
+<head>
+	<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>
+	<title>Lazy Loading example</title>
+	<script type="text/javascript" src="../../../processing.js"></script>
+	<script type="text/javascript" src="../../../extensions/processing-lazyload.js"></script>
+</head>
+<body>
+
+	<h1>Lazy loading test example</h1>
+	
+	<p>This page contains several sketches, each taking 400ms to load up. Scrolling the page will pause when a new sketch comes into view, loading it up. Normally a sketch will take nowhere near 400ms to load, most of the time will be in the downloading of the source code, during which time the browser will stay responsive. Actual sketch loading will pause the page - this is by design. You should be able to see the scrollbar area 'grow' as sketches are loaded, since each sketch will make the page longer.</p>
+	
+	<p>code used:</p>
+	
+<pre>void setup()
+{
+  size((int)random(100,400),(int)random(100,400));
+  text("",0,0);
+  takeTime();
+  noLoop();
+}
+
+void takeTime()
+{
+  // this will take roughly 400ms to complete
+  float stop = millis() + 400;
+  while(millis() &lt; stop) {
+    String s = "lalala";
+    textWidth(s); }
+}
+
+void draw()
+{
+  background(255,200,200);
+  fill(0);
+  String loadtext = "Sketch loaded as "+width+"/"+height;
+  text(loadtext, (width-textWidth(loadtext))/2, height/2);
+}
+</pre>
+
+	<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam sit amet sem eros. Nulla vulputate faucibus odio at pulvinar. Integer eu ante magna, at venenatis sem. Phasellus vulputate dignissim libero eu laoreet. Ut a arcu mauris, ac rutrum mi. Proin ornare justo ac mauris dictum dictum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed libero mi, sagittis a eleifend nec, venenatis vitae turpis. Etiam dictum ullamcorper sodales. Vivamus ante tortor, fermentum sit amet venenatis quis, faucibus ut nisi. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed semper urna nec tortor dapibus id lacinia sem dictum. In hac habitasse platea dictumst. Nam vehicula erat vel lorem cursus in tempor diam placerat. Integer mattis rutrum enim, eget condimentum augue consequat nec. Donec eget sem id ante viverra pharetra et vitae enim. Vivamus porttitor neque eu velit malesuada sagittis ac eget arcu.</p>
+
+	<canvas id="Lorem" data-processing-sources="lorem.pde"></canvas>
+
+	<p>Maecenas laoreet vehicula sagittis. Morbi faucibus, nunc id imperdiet dignissim, sem eros ultricies diam, eu rhoncus risus eros ut nisi. Integer nec elit massa. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean feugiat elit mi, nec auctor tortor. In metus tellus, vestibulum eu accumsan vitae, aliquam porta justo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras id mauris id mi scelerisque volutpat et et est. Proin faucibus lacus a lorem accumsan pellentesque. Maecenas a malesuada arcu. Suspendisse quis purus justo. Etiam placerat, odio id hendrerit laoreet, massa enim varius quam, ac volutpat massa nisi non nunc. Fusce euismod massa eget tortor vehicula faucibus. Donec suscipit nibh vitae libero facilisis et congue est iaculis. Pellentesque non justo nec sapien vehicula vehicula nec sed sapien. Sed ac elit eu dui placerat ornare. Curabitur at metus at eros suscipit iaculis.</p>
+
+	<canvas id="Maecenas" data-processing-sources="lorem.pde"></canvas>
+
+	<p>Aliquam aliquet posuere facilisis. Vivamus est ipsum, dignissim vel pulvinar eu, gravida sed lacus. Mauris a lacus et arcu rutrum elementum nec eu velit. Morbi elit metus, imperdiet et posuere a, bibendum ac diam. Integer mauris ipsum, ornare eu tincidunt et, ullamcorper dignissim massa. Maecenas sodales pretium dui. Sed libero ipsum, porta vel volutpat eget, porta varius diam. Vestibulum ac venenatis mi. Nulla a metus nec magna pulvinar mattis id non mi. Suspendisse ac tellus quis tellus blandit semper. Duis tempor laoreet tellus, vitae molestie dui sagittis non. Nam quis ligula arcu. Duis bibendum justo at purus imperdiet accumsan. Maecenas egestas pellentesque nibh, ut rutrum elit scelerisque ac. Praesent consequat lacus sit amet erat iaculis in pellentesque risus congue. Curabitur bibendum tortor quis nisl ultricies dapibus. Quisque sed sapien mauris, in aliquam tellus.</p>
+
+	<canvas id="Aliquam" data-processing-sources="lorem.pde"></canvas>
+
+	<p>Ut ante erat, porta posuere pulvinar vel, vulputate vitae lorem. Sed tristique rhoncus neque, vel fringilla eros rhoncus placerat. Aenean enim velit, fermentum a lacinia sed, volutpat vitae ipsum. Nam nec lacus nulla, non elementum ante. Nunc varius, libero imperdiet vulputate euismod, justo leo imperdiet purus, vitae varius lacus nisi at ante. Phasellus fringilla est feugiat purus convallis ultrices. Nulla consequat, neque in accumsan tincidunt, purus lectus facilisis eros, non ullamcorper dui est eget nisl. Nulla sit amet sodales massa. Praesent pretium, justo ut ullamcorper tincidunt, felis nunc bibendum massa, vitae egestas mauris velit at eros. Mauris pellentesque dapibus nibh eget sagittis. Curabitur rutrum risus eu nunc sodales scelerisque. Quisque sed nunc eget erat rutrum fringilla et vehicula mauris. Maecenas ligula arcu, aliquam sit amet mollis sit amet, laoreet at purus. Phasellus vulputate nisi non mauris consectetur dignissim. Praesent euismod dictum velit, eu consequat purus posuere nec. In scelerisque consequat ante, nec euismod elit pretium vitae. In quis tortor est.</p>
+
+	<canvas id="Ut" data-processing-sources="lorem.pde"></canvas>
+
+	<p>In hac habitasse platea dictumst. Curabitur dictum, quam a tristique rutrum, velit felis molestie elit, sit amet elementum justo enim ac dolor. Praesent lacinia tortor et odio mollis tristique. Ut tincidunt viverra quam vitae auctor. Sed nunc ligula, sagittis sed dictum vitae, consequat sed metus. Ut et ipsum vitae ligula placerat consequat. Suspendisse potenti. Quisque lacinia tincidunt erat et facilisis. Curabitur velit augue, mollis in posuere nec, egestas sit amet dolor. In blandit leo ac mauris ornare auctor. Ut pretium interdum porta. Quisque eu justo velit, ac ornare velit. Sed laoreet sollicitudin dolor ut ornare. Aenean non erat mi, posuere rutrum orci. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vivamus tincidunt lacus nec dolor facilisis vitae viverra lacus dapibus.</p>
+
+	<canvas id="In" data-processing-sources="lorem.pde"></canvas>
+
+	<p>Cras id posuere purus. Praesent ut egestas leo. Nullam augue ante, faucibus sit amet gravida sed, lacinia a nisi. Morbi semper, lorem et convallis vestibulum, enim nibh sollicitudin justo, vel imperdiet sapien lacus et lorem. Praesent cursus consectetur neque at tempus. Sed diam lorem, tempus et ultricies eu, elementum sed mauris. Suspendisse arcu nunc, ultrices in dapibus et, mollis eget turpis. Donec ac justo dolor. Suspendisse ullamcorper porttitor eros ac aliquam. Suspendisse eu venenatis orci. Suspendisse aliquet mi turpis. Nunc at consequat ipsum. Fusce et lacus nisl. In venenatis felis nec mauris faucibus quis pretium libero elementum. Fusce dignissim volutpat mattis. Ut in tortor sem, eu euismod nulla. Sed varius augue quis enim volutpat eget porta augue vehicula. Nullam hendrerit velit interdum leo rhoncus a interdum nulla condimentum. In tincidunt pretium neque, et pretium nulla accumsan ut.</p>
+
+	<canvas id="Cras" data-processing-sources="lorem.pde"></canvas>
+
+	<p>Suspendisse mollis placerat nisl nec volutpat. Mauris in pellentesque dui. Nam fringilla nibh velit, eu vehicula mi. Donec quis felis dui. Vivamus imperdiet venenatis orci hendrerit vestibulum. Nunc mi metus, iaculis quis tincidunt in, viverra cursus erat. Maecenas eu est sit amet metus gravida lobortis malesuada vitae ligula. Donec ultrices feugiat nunc, nec tempus sapien mattis vel. Suspendisse lectus urna, feugiat eget lacinia quis, ultricies sed quam. Nam scelerisque facilisis consectetur. Morbi eget est quis nibh elementum commodo in et velit. Proin vitae leo neque.</p>
+
+	<canvas id="Suspendisse" data-processing-sources="lorem.pde"></canvas>
+
+	<p>Integer mauris turpis, bibendum quis rutrum eu, euismod vitae quam. Vivamus congue fringilla leo sit amet porta. Nunc cursus sagittis sagittis. Etiam a arcu et erat vestibulum aliquam vel vulputate nibh. Ut mauris massa, fringilla eu hendrerit eu, cursus sit amet lorem. Sed scelerisque arcu at nulla varius molestie. Nullam et turpis odio, vitae consectetur odio. In ut mi augue. Nullam mollis viverra sapien, sit amet scelerisque dolor aliquam vitae. Donec quam nisl, euismod id ornare sit amet, euismod eu nibh. Integer pharetra lorem sit amet nisi dictum eleifend. Nam malesuada nisl eget diam congue tincidunt. In luctus, odio et hendrerit accumsan, sem est tempus sapien, vel suscipit massa ligula eu libero. Duis in ipsum sed nisl molestie tristique at vel nisl. Duis sagittis rutrum nisi, sed sodales nisl sodales sit amet. Vestibulum sit amet tortor orci, at commodo ante.</p>
+
+	<canvas id="Integer" data-processing-sources="lorem.pde"></canvas>
+
+</body>
+</html>
