@@ -16056,7 +16056,7 @@
           }
 
           // newline + return
-          yOffset += curTextSize;
+          yOffset += curTextLeading;
           lineWidth = 0;
           charPos = start - 1;
         }
