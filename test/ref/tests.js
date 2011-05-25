@@ -35,6 +35,7 @@ var tests = [
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
+  { path: "text-leading.pde", tags: ["2D"], epsilonOverride: 0.20 },
   { path: "point_3D_stroke.pde", tags: ["3D"] },
   { path: "point_3D_strokeWeight.pde", tags: ["3D"], epsilonOverride: 0.22 },
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.14 },
@@ -51,7 +52,8 @@ var tests = [
   { path: "shininess_p5test.pde", tags: ["3D"] },
   { path: "specular_p5test.pde", tags: ["3D"]},
   { path: "spotLight_p5test.pde", tags: ["3D"]}, /* See ticket #1202 */
-  { path: "createGraphics.pde", tags: ["3D"], knownFailureTicket: "1075" },
+  { path: "3d-ellipse-fill-noFill-stoke-noStroke.pde", tags: ["3D"], epsilonOverride: 0.15 },
+  { path: "createGraphics.pde", tags: ["3D"] }, /* See ticket #1075 */
   { path: "rect-directional-light.pde", tags: ["3D"] },
   { path: "createimage.pde", tags: ["2D"] },
   { path: "array.pde", tags: ["2D"] },
