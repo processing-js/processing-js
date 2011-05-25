@@ -14570,15 +14570,18 @@
         p.shared.blurRadius = radius;
         p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
         p.shared.blurKernel = new Float32Array(p.shared.blurKernelSize);
+        var sharedBlurKernal = p.shared.blurKernel;
+        var sharedBlurKernelSize = p.shared.blurKernelSize;
+        var sharedBlurRadius = p.shared.blurRadius;
         // init blurKernel
-        for (i = 0; i < p.shared.blurKernelSize; i++) {
-          p.shared.blurKernel[i] = 0;
+        for (i = 0; i < sharedBlurKernelSize; i++) {
+          sharedBlurKernal[i] = 0;
         }
-
-        for (i = 1, radiusi = radius - 1; i < radius; i++) {
-          p.shared.blurKernel[radius+i] = p.shared.blurKernel[radiusi] = radiusi * radiusi;
+        var radiusiSquared = (radius - 1) * (radius - 1);
+        for (i = 1; i < radius; i++) {
+          sharedBlurKernal[radius + i] = sharedBlurKernal[radiusi] = radiusiSquared;
         }
-        p.shared.blurKernel[radius] = radius * radius;
+        sharedBlurKernal[radius] = radius * radius;
       }
     };
 
@@ -14595,29 +14598,36 @@
 
       buildBlurKernel(r);
 
-      for (y = 0; y < aImg.height; y++) {
-        for (x = 0; x < aImg.width; x++) {
+      var aImgHeight = aImg.height;
+      var aImgWidth = aImg.width;
+      var sharedBlurKernelSize = p.shared.blurKernelSize;
+      var sharedBlurRadius = p.shared.blurRadius;
+      var sharedBlurKernal = p.shared.blurKernel;
+      var pix = aImg.imageData.data;
+
+      for (y = 0; y < aImgHeight; y++) {
+        for (x = 0; x < aImgWidth; x++) {
           cb = cg = cr = ca = sum = 0;
-          read = x - p.shared.blurRadius;
+          read = x - sharedBlurRadius;
           if (read<0) {
             bk0 = -read;
             read = 0;
           } else {
-            if (read >= aImg.width) {
+            if (read >= aImgWidth) {
               break;
             }
             bk0=0;
           }
-          for (i = bk0; i < p.shared.blurKernelSize; i++) {
-            if (read >= aImg.width) {
+          for (i = bk0; i < sharedBlurKernelSize; i++) {
+            if (read >= aImgWidth) {
               break;
             }
-            c = aImg.pixels.getPixel(read + yi);
-            m = p.shared.blurKernel[i];
-            ca += m * ((c & PConstants.ALPHA_MASK) >>> 24);
-            cr += m * ((c & PConstants.RED_MASK) >> 16);
-            cg += m * ((c & PConstants.GREEN_MASK) >> 8);
-            cb += m * (c & PConstants.BLUE_MASK);
+            var offset = (read + yi) *4;
+            m = sharedBlurKernal[i];
+            ca += m * pix[offset + 3];
+            cr += m * pix[offset];
+            cg += m * pix[offset + 1];
+            cb += m * pix[offset + 2];
             sum += m;
             read++;
           }
@@ -14627,44 +14637,48 @@
           g2[ri] = cg / sum;
           b2[ri] = cb / sum;
         }
-        yi += aImg.width;
+        yi += aImgWidth;
       }
 
       yi = 0;
-      ym = -p.shared.blurRadius;
-      ymi = ym*aImg.width;
+      ym = -sharedBlurRadius;
+      ymi = ym*aImgWidth;
 
-      for (y = 0; y < aImg.height; y++) {
-        for (x = 0; x < aImg.width; x++) {
+      for (y = 0; y < aImgHeight; y++) {
+        for (x = 0; x < aImgWidth; x++) {
           cb = cg = cr = ca = sum = 0;
           if (ym<0) {
             bk0 = ri = -ym;
             read = x;
           } else {
-            if (ym >= aImg.height) {
+            if (ym >= aImgHeight) {
               break;
             }
             bk0 = 0;
             ri = ym;
             read = x + ymi;
           }
-          for (i = bk0; i < p.shared.blurKernelSize; i++) {
-            if (ri >= aImg.height) {
+          for (i = bk0; i < sharedBlurKernelSize; i++) {
+            if (ri >= aImgHeight) {
               break;
             }
-            m = p.shared.blurKernel[i];
+            m = sharedBlurKernal[i];
             ca += m * a2[read];
             cr += m * r2[read];
             cg += m * g2[read];
             cb += m * b2[read];
             sum += m;
             ri++;
-            read += aImg.width;
+            read += aImgWidth;
           }
-          aImg.pixels.setPixel(x+yi, ((ca/sum)<<24 | (cr/sum)<<16 | (cg/sum)<<8 | (cb/sum)));
+          var offset = (x + yi) *4;
+          pix[offset] = cr / sum;
+          pix[offset + 1] = cg / sum;
+          pix[offset + 2] = cb / sum;
+          pix[offset + 3] = ca / sum;
         }
-        yi += aImg.width;
-        ymi += aImg.width;
+        yi += aImgWidth;
+        ymi += aImgWidth;
         ym++;
       }
     };
@@ -19496,6 +19510,20 @@
         }
         loadSketchFromSources(canvas[i], filenames);
       }
+    }
+  };
+
+  /**
+   * Make loadSketchFromSources publically visible
+   */
+  Processing.loadSketchFromSources = loadSketchFromSources;
+
+  /**
+   * Disable the automatic loading of all sketches on the page
+   */
+  Processing.disableInit = function() {
+    if(isDOMPresent) {
+      document.removeEventListener('DOMContentLoaded', init, false);
     }
   };
 
