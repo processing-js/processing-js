@@ -10774,7 +10774,7 @@
      * @see screenZ
     */
     p.screenY = function screenY( x, y, z ) {
-      var mv = forwardTransform.array();
+      var mv = modelView.array();
       if( mv.length === 16 )
       {
       	var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
@@ -10792,7 +10792,7 @@
       	}
       	return p.height * ( 1 + oy ) / 2.0;
       } else {  // We assume that we're in 2D
-       	return forwardTransform.multY(x, y);
+       	return modelView.multY(x, y);
       }
     };
 
@@ -10810,7 +10810,7 @@
      * @see screenY
     */
     p.screenZ = function screenZ( x, y, z ) {
-      var mv = forwardTransform.array();
+      var mv = modelView.array();
       if( mv.length !== 16 )
       	return 0;
  
