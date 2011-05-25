@@ -50,7 +50,7 @@ _checkEqual( strLiteralA.contains(strLiteralB + ","), true);
 
 _checkEqual( strLiteralA.contains(null), false);
 _checkEqual( strLiteralA.contains(2011), false);
-_checkEqual( strLiteralA.contains(" "), false);
+_checkEqual( strLiteralA.contains(" "), true);
 _checkEqual( strLiteralA.contains(strLiteralB + " "), false);
 _checkEqual( strLiteralB.contains(strLiteralA), false);
 String charsStr = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
