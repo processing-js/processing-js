@@ -10166,17 +10166,14 @@
 
       if (doFill) {
         curContext.useProgram(programObject3D);
-
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
-        uniformMatrix("view3d", programObject3D, "view", false, view.array());
-        
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());      
         // fix stitching problems. (lines get occluded by triangles
         // since they share the same depth values). This is not entirely
         // working, but it's a start for drawing the outline. So
         // developers can start playing around with styles.
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
-
         uniformf("color3d", programObject3D, "color", fillStyle);
 
         // Calculating the normal matrix can be expensive, so only
@@ -10205,7 +10202,6 @@
 
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
 
-
         // Turn off per vertex colors
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
@@ -10217,14 +10213,11 @@
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
         uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());   
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
         curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
       }
@@ -10442,8 +10435,7 @@
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
-        uniformMatrix("view3d", programObject3D, "view", false, view.array());
-        
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());       
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
 
         // Turn off per vertex colors
@@ -10455,9 +10447,7 @@
         // developers can start playing around with styles.
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
-
         uniformf("color3d", programObject3D, "color", fillStyle);
-
         curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
@@ -10465,14 +10455,11 @@
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
         uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());
-       
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());      
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-
         curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
       }
@@ -11124,10 +11111,8 @@
         // this will be replaced with the new bit shifting color code
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
         curContext.drawArrays(curContext.POINTS, 0, 1);
       }
     };
@@ -11250,14 +11235,11 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
-     
+      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());    
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
-
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
-
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
 
@@ -11291,16 +11273,12 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
-      
+      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());     
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
-
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
-
       curContext.lineWidth(lineWidth);
-
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
@@ -11336,16 +11314,12 @@
 
       curContext.useProgram( programObject3D );
       uniformMatrix("model3d", programObject3D, "model", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
-      uniformMatrix("view3d", programObject3D, "view", false, view.array() );
-      
+      uniformMatrix("view3d", programObject3D, "view", false, view.array() );    
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
-
       uniformf("color3d", programObject3D, "color", [-1,0,0,0]);
-
       vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
-
       vertexAttribPointer("aColor3d", programObject3D, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
@@ -13025,14 +12999,11 @@
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
         uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());       
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
         curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
       }
