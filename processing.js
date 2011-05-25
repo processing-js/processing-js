@@ -11740,9 +11740,9 @@
                 strokeVertArray.push(cachedVertArray[j]);
               }
             }
-            if (closeShape) {
+            if (doStroke && closeShape) {
               line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
-            } else {
+            } else if (doStroke && !closeShape) {
               line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
             }
 

@@ -35,6 +35,7 @@ var tests = [
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
+  { path: "3d-arc-4-combo.pde", tags: ["3D"] },
   { path: "point_3D_stroke.pde", tags: ["3D"], knownFailureTicket: "852" },
   { path: "point_3D_strokeWeight.pde", tags: ["3D"], knownFailureTicket: "852" },
   { path: "box.pde", tags: ["3D"], knownFailureTicket: "852" },
