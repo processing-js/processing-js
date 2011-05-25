@@ -1,18 +1,18 @@
 <html>
 <head>
-	<title>keypress</title>
-	<script type="text/javascript" src="../../../processing.js"></script>
+  <title>keypress</title>
+  <script type="text/javascript" src="../../../processing.js"></script>
 </head>
 <body>
 
-	<table width="100%">
+  <table width="100%">
     <tr width="50%">
       <td>
-		    <canvas id="test1" style="border: 1px solid black;" data-processing-sources="keypress.pde" tabindex="1"></canvas>
-	    </td>
+        <canvas id="test1" style="border: 1px solid black;" data-processing-sources="keypress.pde" tabindex="1"></canvas>
+      </td>
       <td>
-		    <canvas id="test1" style="border: 1px solid black;" data-processing-sources="keypress2.pde" tabindex="1"></canvas>
-	    </td>
+        <canvas id="test1" style="border: 1px solid black;" data-processing-sources="keypress2.pde" tabindex="1"></canvas>
+      </td>
     </tr>
     <tr width="50%">
       <td>
@@ -21,7 +21,7 @@
   void draw() { background(255); }
   void keyPressed() { println("[" + key + "] "+int(key)+"/"+keyCode); }
 </pre>
-	    </td>
+      </td>
       <td>
 <pre>
   void setup() { size(200,200); noLoop(); }
@@ -30,24 +30,24 @@
      println(key);
    }
 </pre>
-	    </td>
+      </td>
     </tr>
     <tr>
       <td>
-		    KeyPress should print:
+        KeyPress should print:
       </td>
       <td>
-		    KeyPress should print the actual letter that you press: (aA-zZ):
+        KeyPress should print the actual letter that you press: (aA-zZ):
       </td>
     </tr>
     <tr>
       <td>
 <pre>
-NORMAL KEYCODES:	
+NORMAL KEYCODES:
 
-  [	] 9/9	// tab
-  [] 27/27	// esc, 'key' actually contains ascii ESCAPE code
-  [ ] 32/32	// space
+  [ ] 9/9 // tab
+  [] 27/27  // esc, 'key' actually contains ascii ESCAPE code
+  [ ] 32/32 // space
   [!] 33/49
   ["] 34/222
   [#] 35/51
@@ -70,15 +70,15 @@ NORMAL KEYCODES:
   [M] 77/77
 NUMERIC PAD, NO NUMLOCK:
 
-  [?] 65535/35	// end
-  [?] 65535/40	// down cursor
-  [?] 65535/34	// pgdn
-  [?] 65535/37	// left cursor
-  [?] 65535/12	// 5, no idea what that button maps to
-  [?] 65535/39	// right cursor
-  [?] 65535/36	// home
-  [?] 65535/38	// up cursor
-  [?] 65535/33	// pgup
+  [?] 65535/35  // end
+  [?] 65535/40  // down cursor
+  [?] 65535/34  // pgdn
+  [?] 65535/37  // left cursor
+  [?] 65535/12  // 5, no idea what that button maps to
+  [?] 65535/39  // right cursor
+  [?] 65535/36  // home
+  [?] 65535/38  // up cursor
+  [?] 65535/33  // pgup
 NUMERIC PAD, NUMLOCKED:
 
   [0] 48/96
@@ -93,14 +93,14 @@ NUMERIC PAD, NUMLOCKED:
   [9] 57/105
   [.] 46/110
   [
-  ] 10/10	// enter, 'key' actually contains \10 code
+  ] 10/10 // enter, 'key' actually contains \10 code
   [+] 43/107
   [-] 45/109
   [*] 42/106
   [/] 47/111
 </pre>
-    
-	</td></tr></table>
+
+  </td></tr></table>
 
 </body>
-</html>  
+</html>
