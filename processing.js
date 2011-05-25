@@ -8210,8 +8210,7 @@
      */
     p.__contains = function (subject, subStr) {
       if (typeof subject !== "string") {
-        subject.shift();
-        return subject.contains.apply(subject, subStr);
+        return subject.contains.apply(subject, removeFirstArgument(arguments));
       }
       //Parameter is not null AND
       //The type of the parameter is the same as this object (string)
@@ -8221,8 +8220,8 @@
         (subStr !== null) &&
         (typeof subStr === "string") &&
         (subject.indexOf(subStr) > -1)
-      ) ;
-    } ;
+      );
+    };
     /**
      * The __replaceAll() function searches all matches between a substring (or regular expression) and a string,
      * and replaces the matched substring with a new substring
