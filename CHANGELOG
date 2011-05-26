@@ -3,12 +3,12 @@ May 26, 2011 - Release 1.2
   * Added Performance Tests
   * Added lazy loading sketch extension
   * Added XMLElement toString() function
-  * Added loadShape testing
+  * Added loadShape() testing
   * Added support for Java Generics
-  * Added ArrayList addAll
-  * Fixed stroke being applied in endShape
+  * Added ArrayList addAll()
+  * Fixed stroke being applied in endShape()
   * Fixed the key variable to hold the proper data type
-  * Fixed string functions split, contains
+  * Fixed string functions split(), contains()
   * Fixed background() when called with image different size from sketch
   * Fixed frameRate to be set immediately
   * Fixed IE9 loading issues
@@ -17,22 +17,22 @@ May 26, 2011 - Release 1.2
   * Fixed copy() to handle transparency
   * Fixed ellipse 3D to take noStroke and noFill values into account
   * Fixed regression in specular() defaults to be same as 1.1.0
-  * Fixed screenX
-  * Fixed arc 3D fill
+  * Fixed screenX()
+  * Fixed arc() 3D fill
   * Fixed endShape(CLOSE) so the shape doesn't disappear
   * Fix for 3D PGraphics always drawing below 2D shapes
   * Fixed noStroke() on P3D endShape()
   * Fixed 3D ref tests
   * Fixed rect() for 3D when used with lights
-  * Fixed param
+  * Fixed param()
   * Fixed leak of global typed array variables
   * Fixed rendering of println() so it's more usable
   * Fixed Scaling/Light problem in 3D
-  * Fixed reverseTransform
+  * Fixed reverseTransform()
   * Fixed line(x,y,x,y) so that it draws a point
   * Fixed Processing constructor to take a single argument
   * Fixed Iterator for Map's EntrySet to iterate through the entire set
-  * Fixed dir vector transforms in directionalLight and spotLight
+  * Fixed dir vector transforms in directionalLight() and spotLight()
   * Fixed arrayList remove() to take an object argument
   * Fixed light/shadowing failures in ref tests for 3D
   * Fixed strokeWeight to not get reset in draw()
@@ -40,26 +40,26 @@ May 26, 2011 - Release 1.2
   * Fixed parser bug with negative values
   * Fixed parser bug with static variables
   * Fixed textWidth to work with newlines
-  * Fixed beginShape and endShape to work with bezierVertex
-  * Fixed arc when covering 0 radians
+  * Fixed beginShape() and endShape() to work with bezierVertex()
+  * Fixed arc() when covering 0 radians
   * Fixed unit tests that caused UTF-8 errors in newer JSSHELL
   * Fixed linting errors
-  * Fixed arc regressions
+  * Fixed arc() regressions
   * Fixed XML API to be Processing 1.5 compatible
   * Fixed subset(array, offset) bug
   * Converted all XMLElement tests to unit tests
-  * Converted endShape ref tests to be part of the regular 2D/3D ref tests
-  * Documented Rotate() to explain direction
+  * Converted endShape() ref tests to be part of the regular 2D/3D ref tests
+  * Documented rotate() to explain direction
   * Documentation fixes and corrections on website
   * Improved minification
   * Improved the performance of arc()
-  * Improved the performance of blur
-  * Improve the performance of blend's ADD mode
-  * Implemented ArrayList IndexOf()
+  * Improved the performance of blur()
+  * Improve the performance of blend()'s ADD mode
+  * Implemented ArrayList indexOf()
   * Improve the performance and output of ref tests
   * Improved compatibility of WebGL context creation
   * Moved colors object out of Processing instances to save memory
-  * Reduced calls to uniformMatrix
+  * Reduced calls to uniformMatrix()
   * Removed test/unit/braces.js
   * Removed clear()
   * Removed transform matrix calculations if there are no lights
@@ -70,7 +70,7 @@ May 26, 2011 - Release 1.2
   * Removed unused tools and minifies
   * Removed uses of constructor.name
   * Renamed internal uses of int(), boolean(), etc. to parseInt(), parseBoolean(), etc
-  * Updated README, LICENSE, AUTHORS
+  * Updated README, LICENSE, AUTHORS, CHANGELOG
 
 March 29, 2011 - Release 1.1.1
 
