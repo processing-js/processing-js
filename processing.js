@@ -550,7 +550,7 @@
        * @member ArrayList
        * ArrayList.addAll(collection) appends all of the elements in the specified
        * Collection to the end of this list, in the order that they are returned by
-       * the specified Collection's Iterator. 
+       * the specified Collection's Iterator.
        *
        * When called as addAll(index, collection) the elements are inserted into
        * this list at the position indicated by index.
@@ -1912,9 +1912,9 @@
       "  if(color[0] == -1.0){" +
       "    col = aColor;" +
       "  }" +
-      
+
       // We use the sphere vertices as the normals when we create the sphere buffer.
-      // But this only works if the sphere vertices are unit length, so we 
+      // But this only works if the sphere vertices are unit length, so we
       // have to normalize the normals here. Since this is only required for spheres
       // we could consider placing this in a conditional later on.
       "  vec3 norm = normalize(vec3( normalTransform * vec4( Normal, 0.0 ) ));" +
@@ -2239,7 +2239,7 @@
     var Drawing2D = function() {};
     var Drawing3D = function() {};
     var DrawingPre = function() {};
-    
+
     // Setup the prototype chain
     Drawing2D.prototype = new DrawingShared();
     Drawing2D.prototype.constructor = Drawing2D;
@@ -2247,7 +2247,7 @@
     Drawing3D.prototype.constructor = Drawing3D;
     DrawingPre.prototype = new DrawingShared();
     DrawingPre.prototype.constructor = DrawingPre;
-    
+
     // A no-op function for when the user calls 3D functions from a 2D sketch
     // We can change this to a throw or console.error() later if we want
     DrawingShared.prototype.a3DOnlyFunction = function(){};
@@ -4303,11 +4303,11 @@
           xmlelement         = new XMLElement(elementpath.localName, elementpath.nodeName, "", "");
           xmlelement.parent  = parent;
         }
-        
+
         // if this is a text node, return a PCData element, instead of an XML element.
         if(elementpath.nodeType === 3 && elementpath.textContent !== "") {
           return this.createPCDataElement(elementpath.textContent);
-        }      
+        }
 
         // bind all attributes
         for (l = 0, m = elementpath.attributes.length; l < m; l++) {
@@ -4941,7 +4941,7 @@
       element.parse(xmlstring);
       return element;
     };
-    
+
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
     ////////////////////////////////////////////////////////////////////////////
@@ -5919,11 +5919,11 @@
       }
       this.matrixStack.push(tmpMatrix);
     };
-    
+
     Drawing2D.prototype.$newPMatrix = function() {
       return new PMatrix2D();
     };
-    
+
     Drawing3D.prototype.$newPMatrix = function() {
       return new PMatrix3D();
     };
@@ -7111,10 +7111,10 @@
     */
     Drawing2D.prototype.translate = function(x, y) {
       forwardTransform.translate(x, y);
-      reverseTransform.invTranslate(x, y);      
+      reverseTransform.invTranslate(x, y);
       curContext.translate(x, y);
     };
-    
+
     Drawing3D.prototype.translate = function(x, y, z) {
       forwardTransform.translate(x, y, z);
       reverseTransform.invTranslate(x, y, z);
@@ -7146,10 +7146,10 @@
     */
     Drawing2D.prototype.scale = function(x, y) {
       forwardTransform.scale(x, y);
-      reverseTransform.invScale(x, y);      
+      reverseTransform.invScale(x, y);
       curContext.scale(x, y || x);
     };
-    
+
     Drawing3D.prototype.scale = function(x, y, z) {
       forwardTransform.scale(x, y, z);
       reverseTransform.invScale(x, y, z);
@@ -7173,10 +7173,10 @@
     */
     Drawing2D.prototype.pushMatrix = function() {
       userMatrixStack.load(modelView);
-      userReverseMatrixStack.load(modelViewInv);      
+      userReverseMatrixStack.load(modelViewInv);
       saveContext();
     };
-    
+
     Drawing3D.prototype.pushMatrix = function() {
       userMatrixStack.load(modelView);
       userReverseMatrixStack.load(modelViewInv);
@@ -7195,10 +7195,10 @@
     */
     Drawing2D.prototype.popMatrix = function() {
       modelView.set(userMatrixStack.pop());
-      modelViewInv.set(userReverseMatrixStack.pop());      
+      modelViewInv.set(userReverseMatrixStack.pop());
       restoreContext();
     };
-    
+
     Drawing3D.prototype.popMatrix = function() {
       modelView.set(userMatrixStack.pop());
       modelViewInv.set(userReverseMatrixStack.pop());
@@ -7219,7 +7219,7 @@
       reverseTransform.reset();
       curContext.setTransform(1,0,0,1,0,0);
     };
-    
+
     Drawing3D.prototype.resetMatrix = function() {
       forwardTransform.reset();
       reverseTransform.reset();
@@ -7244,7 +7244,7 @@
       forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
       reverseTransform.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
     };
-    
+
     Drawing2D.prototype.applyMatrix = function() {
       var a = arguments;
       for (var cnt = a.length; cnt < 16; cnt++) {
@@ -7365,7 +7365,7 @@
     Drawing2D.prototype.rotate = function(angleInRadians) {
       p.rotateZ(angleInRadians);
     };
-    
+
     Drawing3D.prototype.rotate = function(angleInRadians) {
       p.rotateZ(angleInRadians);
     };
@@ -7590,25 +7590,25 @@
 
       p.frameCount++;
     };
-    
+
     Drawing2D.prototype.redraw = function() {
       DrawingShared.prototype.redraw.apply(this, arguments);
 
       curContext.lineWidth = lineWidth;
       inDraw = true;
-      
+
       saveContext();
       p.draw();
       restoreContext();
-      
+
       inDraw = false;
     };
-    
+
     Drawing3D.prototype.redraw = function() {
       DrawingShared.prototype.redraw.apply(this, arguments);
-      
+
       inDraw = true;
-      
+
       // even if the color buffer isn't cleared with background(),
       // the depth buffer needs to be cleared regardless.
       curContext.clear(curContext.DEPTH_BUFFER_BIT);
@@ -7623,7 +7623,7 @@
       p.emissive(0, 0, 0);
       p.camera();
       p.draw();
-      
+
       inDraw = false;
     };
 
@@ -8606,7 +8606,7 @@
     };
 
     /**
-     * Converts the passed parameter to the function to its byte value. 
+     * Converts the passed parameter to the function to its byte value.
      * A byte is a number between -128 and 127.
      * It will return an array of bytes if an array is passed in.
      *
@@ -8628,7 +8628,7 @@
     };
 
     /**
-     * Converts the passed parameter to the function to its char value. 
+     * Converts the passed parameter to the function to its char value.
      * It will return an array of chars if an array is passed in.
      *
      * @param {int, byte} key        the parameter to be conveted to char
@@ -8667,7 +8667,7 @@
     }
 
     /**
-     * Converts the passed parameter to the function to its float value. 
+     * Converts the passed parameter to the function to its float value.
      * It will return an array of floats if an array is passed in.
      *
      * @param {int, char, boolean, string} val            the parameter to be conveted to float
@@ -8701,7 +8701,7 @@
     }
 
     /**
-     * Converts the passed parameter to the function to its int value. 
+     * Converts the passed parameter to the function to its int value.
      * It will return an array of ints if an array is passed in.
      *
      * @param {string, char, boolean, float} val            the parameter to be conveted to int
@@ -9481,7 +9481,7 @@
     DrawingShared.prototype.size = function(aWidth, aHeight, aMode) {
       p.stroke(0);
       p.fill(255);
-      
+
       // The default 2d context has already been created in the p.init() stage if
       // a 3d context was not specified. This is so that a 2d context will be
       // available if size() was not called.
@@ -9519,13 +9519,13 @@
 
       // Externalize the context
       p.externals.context = curContext;
-      
+
       for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
         sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
         cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
       }
     };
-    
+
     Drawing2D.prototype.size = function(aWidth, aHeight, aMode) {
       if (curContext === undef) {
         // size() was called without p.init() default context, i.e. p.createGraphics()
@@ -9537,13 +9537,13 @@
         modelView = forwardTransform;
         modelViewInv = reverseTransform;
       }
-      
+
       DrawingShared.prototype.size.apply(this, arguments);
     };
-    
+
     Drawing3D.prototype.size = (function() {
       var size3DCalled = false;
-      
+
       return function size(aWidth, aHeight, aMode) {
         if (size3DCalled) {
           throw "Multiple calls to size() for 3D renders are not allowed.";
@@ -9687,7 +9687,7 @@
         bezierBasisInverse = new PMatrix3D();
         bezierBasisMatrix = new PMatrix3D();
         bezierBasisMatrix.set(-1, 3, -3, 1, 3, -6, 3, 0, -3, 3, 0, 0, 1, 0, 0, 0);
-        
+
         DrawingShared.prototype.size.apply(this, arguments);
       };
     }());
@@ -9722,7 +9722,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.ambientLight = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.ambientLight = function(r, g, b, x, y, z) {
       if (lightCount === PConstants.MAX_LIGHTS) {
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
@@ -9770,7 +9770,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.directionalLight = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.directionalLight = function(r, g, b, nx, ny, nz) {
       if (lightCount === PConstants.MAX_LIGHTS) {
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
@@ -9782,7 +9782,7 @@
       mvm.scale(1, -1, 1);
       mvm.apply(modelView.array());
       mvm = mvm.array();
-      
+
       // We need to multiply the direction by the model view matrix, but
       // the mult function checks the w component of the vector, if it isn't
       // present, it uses 1, so we manually multiply.
@@ -9826,7 +9826,7 @@
      * @see lightSpecular
     */
     Drawing2D.prototype.lightFalloff = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.lightFalloff = function(constant, linear, quadratic) {
       curContext.useProgram(programObject3D);
       uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
@@ -9852,7 +9852,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.lightSpecular = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.lightSpecular = function(r, g, b) {
       curContext.useProgram(programObject3D);
       uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
@@ -9906,7 +9906,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.pointLight = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.pointLight = function(r, g, b, x, y, z) {
       if (lightCount === PConstants.MAX_LIGHTS) {
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
@@ -9919,7 +9919,7 @@
       view.scale(1, -1, 1);
       view.apply(modelView.array());
       view.mult(pos, pos);
-      
+
       curContext.useProgram(programObject3D);
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
@@ -9938,7 +9938,7 @@
      * @see lights
     */
     Drawing2D.prototype.noLights = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.noLights = function() {
       lightCount = 0;
       curContext.useProgram(programObject3D);
@@ -9975,7 +9975,7 @@
      * @see pointLight
     */
     Drawing2D.prototype.spotLight = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.spotLight = function(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
       if (lightCount === PConstants.MAX_LIGHTS) {
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
@@ -10002,7 +10002,7 @@
           mvm[1] * nx + mvm[5] * ny + mvm[9] * nz,
           mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
-      
+
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", dir);
@@ -10265,7 +10265,7 @@
      * @param {int|float} d  dimension of the box in the z-dimension
      */
     Drawing2D.prototype.box = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.box = function(w, h, d) {
       // user can uniformly scale the box by
       // passing in only one argument.
@@ -10287,7 +10287,7 @@
       if (doFill) {
         curContext.useProgram(programObject3D);
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
-        uniformMatrix("view3d", programObject3D, "view", false, view.array());      
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());
         // fix stitching problems. (lines get occluded by triangles
         // since they share the same depth values). This is not entirely
         // working, but it's a start for drawing the outline. So
@@ -10333,7 +10333,7 @@
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
         uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());   
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
@@ -10507,7 +10507,7 @@
      * @param {int|float} r the radius of the sphere
      */
     Drawing2D.prototype.sphere = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.sphere = function() {
       var sRad = arguments[0];
 
@@ -10543,7 +10543,7 @@
           normalMatrix.set(v);
           normalMatrix.invert();
           normalMatrix.transpose();
-          
+
           uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
           vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
         }
@@ -10555,7 +10555,7 @@
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
-        uniformMatrix("view3d", programObject3D, "view", false, view.array());       
+        uniformMatrix("view3d", programObject3D, "view", false, view.array());
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
 
         // Turn off per vertex colors
@@ -10575,7 +10575,7 @@
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
         uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());      
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         uniformf("color2d", programObject2D, "color", strokeStyle);
@@ -10706,7 +10706,7 @@
      * @see shininess
     */
     Drawing2D.prototype.ambient = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.ambient = function() {
       // create an alias to shorten code
       var a = arguments;
@@ -10757,7 +10757,7 @@
      * @see shininess
     */
     Drawing2D.prototype.emissive = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.emissive = function() {
       // create an alias to shorten code
       var a = arguments;
@@ -10794,7 +10794,7 @@
      * @returns none
     */
     Drawing2D.prototype.shininess = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.shininess = function(shine) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
@@ -10838,7 +10838,7 @@
      * @see shininess
     */
     Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.specular = function() {
       var c = p.color.apply(this, arguments);
 
@@ -10992,12 +10992,12 @@
       doFill = true;
       currentFillColor = color;
     };
-    
+
     Drawing2D.prototype.fill = function() {
       DrawingShared.prototype.fill.apply(this, arguments);
       isFillDirty = true;
     };
-    
+
     Drawing3D.prototype.fill = function() {
       DrawingShared.prototype.fill.apply(this, arguments);
       fillStyle = p.color.toGLArray(currentFillColor);
@@ -11062,12 +11062,12 @@
       doStroke = true;
       currentStrokeColor = color;
     };
-    
+
     Drawing2D.prototype.stroke = function() {
       DrawingShared.prototype.stroke.apply(this, arguments);
       isStrokeDirty = true;
     };
-    
+
     Drawing3D.prototype.stroke = function() {
       DrawingShared.prototype.stroke.apply(this, arguments);
       strokeStyle = p.color.toGLArray(currentStrokeColor);
@@ -11102,12 +11102,12 @@
     DrawingShared.prototype.strokeWeight = function(w) {
       lineWidth = w;
     };
-    
+
     Drawing2D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
       curContext.lineWidth = w;
     };
-    
+
     Drawing3D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
       curContext.useProgram(programObject2D);
@@ -11149,7 +11149,7 @@
     DrawingShared.prototype.smooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
     };
-    
+
     Drawing2D.prototype.smooth = function() {
       DrawingShared.prototype.smooth.apply(this, arguments);
       if ("mozImageSmoothingEnabled" in curContext) {
@@ -11165,7 +11165,7 @@
     DrawingShared.prototype.noSmooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
     };
-    
+
     Drawing2D.prototype.noSmooth = function() {
       DrawingShared.prototype.noSmooth.apply(this, arguments);
       if ("mozImageSmoothingEnabled" in curContext) {
@@ -11223,7 +11223,7 @@
         }
       }
     };
-    
+
     Drawing3D.prototype.point = function(x, y, z) {
       var model = new PMatrix3D();
 
@@ -11239,7 +11239,7 @@
       curContext.useProgram(programObject2D);
       uniformMatrix("model2d", programObject2D, "model", false, model.array());
       uniformMatrix("view2d", programObject2D, "view", false, view.array());
-      
+
       if (lineWidth > 0 && doStroke) {
         // this will be replaced with the new bit shifting color code
         uniformf("color2d", programObject2D, "color", strokeStyle);
@@ -11315,23 +11315,23 @@
       }
 
       vert["isVert"] = true;
-      
-      return vert; 
+
+      return vert;
     };
-    
+
     Drawing2D.prototype.vertex = function() {
       var vert = DrawingShared.prototype.vertex.apply(this, arguments);
-      
+
       // fill and stroke color
       vert[5] = currentFillColor;
       vert[6] = currentStrokeColor;
-      
+
       vertArray.push(vert);
     };
-    
+
     Drawing3D.prototype.vertex = function() {
       var vert = DrawingShared.prototype.vertex.apply(this, arguments);
-      
+
       // fill rgba
       vert[5] = fillStyle[0];
       vert[6] = fillStyle[1];
@@ -11346,7 +11346,7 @@
       vert[13] = normalX;
       vert[14] = normalY;
       vert[15] = normalZ;
-      
+
       vertArray.push(vert);
     };
 
@@ -11368,7 +11368,7 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());    
+      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, fillColorBuffer);
@@ -11406,7 +11406,7 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());     
+      uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
@@ -11447,7 +11447,7 @@
 
       curContext.useProgram( programObject3D );
       uniformMatrix("model3d", programObject3D, "model", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
-      uniformMatrix("view3d", programObject3D, "view", false, view.array() );    
+      uniformMatrix("view3d", programObject3D, "view", false, view.array() );
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
       uniformf("color3d", programObject3D, "color", [-1,0,0,0]);
@@ -11560,7 +11560,7 @@
         texVertArray.push(vertArray[0][4]);
       }
       // End duplication
-      
+
       // curveVertex
       if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
         if (vertArrayLength > 3) {
@@ -11595,7 +11595,7 @@
           curContext.closePath();
         }
       }
-      
+
       // bezierVertex
       else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         curContext.beginPath();
@@ -11619,7 +11619,7 @@
         executeContextStroke();
         curContext.closePath();
       }
-      
+
       // render the vertices provided
       else {
         if (curShape === PConstants.POINTS) {
@@ -11789,14 +11789,14 @@
           curContext.closePath();
         }
       }
-      
+
       // Reset some settings
       isCurve = false;
       isBezier = false;
       curveVertArray = [];
       curveVertCount = 0;
     };
-    
+
     Drawing3D.prototype.endShape = function(mode) {
       // Duplicated in Drawing3D; too many variables used
       if (vertArray.length === 0) { return; }
@@ -11863,7 +11863,7 @@
         texVertArray.push(vertArray[0][4]);
       }
       // End duplication
-      
+
       // curveVertex
       if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
         lineVertArray = fillVertArray;
@@ -11886,7 +11886,7 @@
           fill3D(fillVertArray, "TRIANGLES", colorVertArray);
         }
       }
-      
+
       // render the vertices provided
       else {
         if (curShape === PConstants.POINTS) {       // if POINTS was the specified parameter in beginShape
@@ -12185,7 +12185,7 @@
         curContext.useProgram(programObject3D);
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
       }
-      
+
       // Reset some settings
       isCurve = false;
       isBezier = false;
@@ -12278,21 +12278,21 @@
       if (firstVert) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
       }
-      
+
       for (var i = 0; i < arguments.length; i++) {
         vert[i] = arguments[i];
       }
       vertArray.push(vert);
       vertArray[vertArray.length -1]["isVert"] = false;
     };
-    
+
     Drawing3D.prototype.bezierVertex = function() {
       isBezier = true;
       var vert = [];
       if (firstVert) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
       }
-      
+
       if (arguments.length === 9) {
         if (bezierDrawMatrix === undef) {
           bezierDrawMatrix = new PMatrix3D();
@@ -12504,13 +12504,13 @@
      */
     Drawing2D.prototype.curveVertex = function(x, y) {
       isCurve = true;
-      
+
       p.vertex(x, y);
     };
-    
+
     Drawing3D.prototype.curveVertex = function(x, y, z) {
       isCurve = true;
-      
+
       if (!curveInited) {
         curveInit();
       }
@@ -12576,7 +12576,7 @@
         p.endShape();
       }
     };
-    
+
     Drawing3D.prototype.curve = function() {
       if (arguments.length === 12) { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
         p.beginShape();
@@ -12799,7 +12799,7 @@
     */
     Drawing2D.prototype.line = function() {
       var x1, y1, x2, y2;
-      
+
       x1 = arguments[0];
       y1 = arguments[1];
       x2 = arguments[2];
@@ -12809,7 +12809,7 @@
       // If they are the same, we call point instead.
       if (x1===x2 && y1===y2) {
         p.point(x1,y1);
-      } 
+      }
 
       // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
       else if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
@@ -12836,10 +12836,10 @@
         curContext.closePath();
       }
     };
-    
+
     Drawing3D.prototype.line = function() {
       var x1, y1, z1, x2, y2, z2;
-      
+
       if (arguments.length === 6) {
         x1 = arguments[0];
         y1 = arguments[1];
@@ -12875,7 +12875,7 @@
 
         uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
         uniformMatrix("view2d", programObject2D, "view", false, view.array());
-       
+
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
 
@@ -12908,7 +12908,7 @@
       if (arguments.length !== 8) {
         throw("You must use 8 parameters for bezier() in 2D mode");
       }
-      
+
       p.beginShape();
       p.vertex( arguments[0], arguments[1] );
       p.bezierVertex( arguments[2], arguments[3],
@@ -12916,12 +12916,12 @@
                       arguments[6], arguments[7] );
       p.endShape();
     };
-    
+
     Drawing3D.prototype.bezier = function() {
       if (arguments.length !== 12) {
         throw("You must use 12 parameters for bezier() in 3D mode");
       }
-      
+
       p.beginShape();
       p.vertex( arguments[0], arguments[1], arguments[2] );
       p.bezierVertex( arguments[3], arguments[4], arguments[5],
@@ -13125,7 +13125,7 @@
 
       curContext.closePath();
     };
-    
+
     Drawing3D.prototype.rect = function(x, y, width, height) {
       // Modeling transformation
       var model = new PMatrix3D();
@@ -13143,7 +13143,7 @@
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
         uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());       
+        uniformMatrix("view2d", programObject2D, "view", false, view.array());
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
@@ -13156,7 +13156,7 @@
         curContext.useProgram(programObject3D);
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
         uniformMatrix("view3d", programObject3D, "view", false, view.array());
-       
+
         // fix stitching problems. (lines get occluded by triangles
         // since they share the same depth values). This is not entirely
         // working, but it's a start for drawing the outline. So
@@ -13186,7 +13186,7 @@
         else{
           disableVertexAttribPointer("normal3d", programObject3D, "Normal");
         }
-        
+
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
 
         curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
@@ -13228,22 +13228,22 @@
         x += width / 2;
         y += height / 2;
       }
-      
+
       return {'x':x, 'y':y, 'width':width, 'height':height};
     };
-    
+
     Drawing2D.prototype.ellipse = function(x, y, width, height) {
       var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
-      
+
       if (!params) {
         return;
       }
-      
+
       x = params['x'];
       y = params['y'];
       width = params['width'];
       height = params['height'];
-      
+
       // Shortcut for drawing a 2D circle
       if (width === height) {
         curContext.beginPath();
@@ -13257,7 +13257,7 @@
           C = 0.5522847498307933;
         var c_x = C * w,
           c_y = C * h;
-        
+
         p.beginShape();
         p.vertex(x + w, y);
         p.bezierVertex(x + w, y - c_y, x + c_x, y - h, x, y - h);
@@ -13267,25 +13267,25 @@
         p.endShape();
       }
     };
-    
+
     Drawing3D.prototype.ellipse = function(x, y, width, height) {
       var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
-      
+
       if (!params) {
         return;
       }
-      
+
       x = params['x'];
       y = params['y'];
       width = params['width'];
       height = params['height'];
-      
+
       var w = width / 2,
         h = height / 2,
         C = 0.5522847498307933;
       var c_x = C * w,
         c_y = C * h;
-      
+
       p.beginShape();
       p.vertex(x + w, y);
       p.bezierVertex(x + w, y - c_y, 0, x + c_x, y - h, 0, x, y - h, 0);
@@ -14344,7 +14344,7 @@
         if (!curSketch.options.isTransparent) {
           color = color | PConstants.ALPHA_MASK;
         }
-        
+
         lastBackgroundObj = color;
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
         img = arguments[0];
@@ -14354,7 +14354,7 @@
         } else if(img.width !== p.width || img.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
-        
+
         lastBackgroundObj = img;
       } else if (lastBackgroundObj === undefined) {
         color = p.color(204);
@@ -14363,14 +14363,14 @@
         if (!curSketch.options.isTransparent) {
           color = color | PConstants.ALPHA_MASK;
         }
-        
+
         lastBackgroundObj = color;
       }
     };
-    
+
     Drawing2D.prototype.background = function() {
       DrawingShared.prototype.background.apply(this, arguments);
-      
+
       if (typeof lastBackgroundObj === 'number') {
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
@@ -14389,14 +14389,14 @@
         restoreContext();
       }
     };
-    
+
     Drawing3D.prototype.background = function() {
       DrawingShared.prototype.background.apply(this, arguments);
-      
+
       var c = p.color.toGLArray(lastBackgroundObj);
       curContext.clearColor(c[0], c[1], c[2], c[3]);
       curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
-      
+
       // An image as a background in 3D is not implemented yet
     };
 
@@ -14428,7 +14428,7 @@
       if (img.width > 0) {
         var wid = w || img.width;
         var hgt = h || img.height;
-        
+
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
         var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
         if (fastImage) {
@@ -14465,12 +14465,12 @@
         }
       }
     };
-    
+
     Drawing3D.prototype.image = function(img, x, y, w, h) {
       if (img.width > 0) {
         var wid = w || img.width;
         var hgt = h || img.height;
-        
+
         p.beginShape(p.QUADS);
         p.texture(img.externals.canvas);
         p.vertex(x, y, 0, 0, 0);
@@ -15717,7 +15717,7 @@
       }
       return width;
     };
-    
+
     Drawing3D.prototype.textWidth = function(str) {
       var lines = toP5String(str).split(/\r?\n/g), width = 0;
       var i, linesCount = lines.length;
@@ -15727,7 +15727,7 @@
 
       var textContext = textcanvas.getContext("2d");
       textContext.font =  curTextSize + "px " + curTextFont.name;
-      
+
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, textContext.measureText(lines[i]).width);
       }
@@ -17060,11 +17060,11 @@
         if (shift) {
           switch (code) {
           case 59:
-            return 58; // :					
+            return 58; // :
           case 107:
             return 43; // +
           case 109:
-            return 95; // _					
+            return 95; // _
           case 219:
             return 123; // {
           case 221:
@@ -17072,20 +17072,20 @@
           case 222:
             return 34; // "
           case 188:
-            return 60; // <                         
+            return 60; // <
           case 190:
-            return 62; // >						
+            return 62; // >
           case 191:
-            return 63; // ?					  
+            return 63; // ?
           case 220:
-            return 124; // |						
+            return 124; // |
           }
         } else {
           switch (code) {
           case 59:
-            return 59; // ;	      
+            return 59; // ;
           case 107:
-            return 61; // =                        
+            return 61; // =
           case 188:
             return 44; // ,
           case 109:
@@ -17283,7 +17283,7 @@
       p.externals.sketch = curSketch;
 
       wireDimensionalFunctions();
-      
+
       if ("mozOpaque" in curElement) {
         curElement.mozOpaque = !curSketch.options.isTransparent;
       }
@@ -17323,7 +17323,7 @@
         p.__keyPressed = true;
         p.key = keyCodeMap(e.keyCode, e.shiftKey);
         if (p.key !== PConstants.CODED) {
-          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey)); 
+          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));
         }
         keyFunc(e, "keydown");
       });
@@ -17337,7 +17337,7 @@
         p.__keyPressed = false;
         p.key = keyCodeMap(e.keyCode, e.shiftKey);
         if (p.key !== PConstants.CODED) {
-          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey)); 
+          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));
         }
         keyFunc(e, "keyup");
       });
@@ -17452,7 +17452,7 @@
       "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint",
       "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
       "blit_resize", "blue", "box", "breakShape", "brightness",
-      "camera", "ceil", "Character", "color", "colorMode", 
+      "camera", "ceil", "Character", "color", "colorMode",
       "concat", "console", "constrain", "copy", "cos", "createFont",
       "createGraphics", "createImage", "cursor", "curve", "curveDetail",
       "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
