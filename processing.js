@@ -12694,8 +12694,8 @@
       var vr = height / 2;
       var centerX = x + hr;
       var centerY = y + vr;
-      var startLUT = Math.floor(-0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
-      var stopLUT  = Math.floor(0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
+      var startLUT = 0 | (-0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
+      var stopLUT  = 0 | (0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
       var i, j;
       if (doFill) {
         // shut off stroke for a minute
