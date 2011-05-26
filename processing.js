@@ -10,7 +10,17 @@
 
 ***/
 
-(function(window, document, Math, undef) {
+(function(window, document, Math, nop, undef) {
+
+  var debug = (function() {
+    if ("console" in window) {
+      return function(msg) {
+        window.console.log('Processing.js: ' + msg);
+      };
+    } else {
+      return nop();
+    }
+  }());
 
   var ajax = function(url) {
     var xhr = new XMLHttpRequest();
@@ -54,7 +64,9 @@
         if (obj instanceof Array) {
           return obj;
         } else if (typeof obj === "number") {
-          return new Array(obj);
+          var arr = [];
+          arr.length = obj;
+          return arr;
         }
       };
     }
@@ -411,6 +423,31 @@
       return obj === other;
     }
   }
+
+  /**
+  * A ObjectIterator is an iterator wrapper for objects. If passed object contains
+  * the iterator method, the object instance will be replaced by the result returned by
+  * this method call. If passed object is an array, the ObjectIterator instance iterates
+  * through its items.
+  *
+  * @param {Object} obj          The object to be iterated.
+  */
+  var ObjectIterator = function(obj) {
+    if (obj.iterator instanceof Function) {
+      return obj.iterator();
+    } else if (obj instanceof Array) {
+      // iterate through array items
+      var index = -1;
+      this.hasNext = function() {
+        return ++index < obj.length;
+      };
+      this.next = function() {
+        return obj[index];
+      };
+    } else {
+      throw "Unable to iterate: " + obj;
+    }
+  };
 
   /**
    * An ArrayList stores a variable number of objects.
@@ -1167,31 +1204,6 @@
     return PVector;
   }());
 
-  /**
-  * A ObjectIterator is an iterator wrapper for objects. If passed object contains
-  * the iterator method, the object instance will be replaced by the result returned by
-  * this method call. If passed object is an array, the ObjectIterator instance iterates
-  * through its items.
-  *
-  * @param {Object} obj          The object to be iterated.
-  */
-  var ObjectIterator = function(obj) {
-    if (obj.iterator instanceof Function) {
-      return obj.iterator();
-    } else if (obj instanceof Array) {
-      // iterate through array items
-      var index = -1;
-      this.hasNext = function() {
-        return ++index < obj.length;
-      };
-      this.next = function() {
-        return obj[index];
-      };
-    } else {
-      throw "Unable to iterate: " + obj;
-    }
-  };
-
   // Building defaultScope. Changing of the prototype protects
   // internal Processing code from the changes in defaultScope
   function DefaultScope() {}
@@ -1349,11 +1361,33 @@
     yellow:               "#ffff00",
     yellowgreen:          "#9acd32"
   };
-  
+
+  // Manage multiple Processing instances
+  var processingInstances = [];
+  var processingInstanceIds = {};
+
+  var removeInstance = function(id) {
+    processingInstances.splice(processingInstanceIds[id], 1);
+    delete processingInstanceIds[id];
+  };
+
+  var addInstance = function(processing) {
+    if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
+      processing.externals.canvas.id = "__processing" + processingInstances.length;
+    }
+    processingInstanceIds[processing.externals.canvas.id] = processingInstances.length;
+    processingInstances.push(processing);
+  };
+
+
   var Processing = this.Processing = function(curElement, aCode) {
     // Previously we allowed calling Processing as a func instead of ctor, but no longer.
     if (!(this instanceof Processing)) {
       throw("called Processing constructor as if it were a function: missing 'new'.");
+    }
+
+    function unimplemented(s) {
+      Processing.debug('Unimplemented - ' + s);
     }
 
     // When something new is added to "p." it must also be added to the "names" array.
@@ -3054,53 +3088,60 @@
      *
      * @return {PMatrix2D} a PMatrix2D
      */
-    PShapeSVG.prototype.parseMatrix = function(str) {
-      this.checkMatrix(2);
-      var pieces = [];
-      str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
-        // get a list of transform definitions
-        pieces.push(p.trim(all));
-      });
-      if (pieces.length === 0) {
-        //p.println("Transformation:" + str + " is empty");
-        return null;
-      }
-      for (var i = 0, j = pieces.length; i < j; i++) {
+    PShapeSVG.prototype.parseMatrix = (function() {
+      function getCoords(s) {
         var m = [];
-        pieces[i].replace(/\((.*?)\)/, (function() {
+        s.replace(/\((.*?)\)/, (function() {
           return function(all, params) {
             // get the coordinates that can be separated by spaces or a comma
             m = params.replace(/,+/g, " ").split(/\s+/);
           };
         }()));
-
-        if (pieces[i].indexOf("matrix") !== -1) {
-          this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
-        } else if (pieces[i].indexOf("translate") !== -1) {
-          var tx = m[0];
-          var ty = (m.length === 2) ? m[1] : 0;
-          this.matrix.translate(tx,ty);
-        } else if (pieces[i].indexOf("scale") !== -1) {
-          var sx = m[0];
-          var sy = (m.length === 2) ? m[1] : m[0];
-          this.matrix.scale(sx,sy);
-        } else if (pieces[i].indexOf("rotate") !== -1) {
-          var angle = m[0];
-          if (m.length === 1) {
-            this.matrix.rotate(p.radians(angle));
-          } else if (m.length === 3) {
-            this.matrix.translate(m[1], m[2]);
-            this.matrix.rotate(p.radians(m[0]));
-            this.matrix.translate(-m[1], -m[2]);
-          }
-        } else if (pieces[i].indexOf("skewX") !== -1) {
-          this.matrix.skewX(parseFloat(m[0]));
-        } else if (pieces[i].indexOf("skewY") !== -1) {
-          this.matrix.skewY(m[0]);
-        }
       }
-      return this.matrix;
-    };
+
+      return function(str) {
+        this.checkMatrix(2);
+        var pieces = [];
+        str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
+          // get a list of transform definitions
+          pieces.push(p.trim(all));
+        });
+        if (pieces.length === 0) {
+          return null;
+        }
+
+        for (var i = 0, j = pieces.length; i < j; i++) {
+          var m = getCoords(pieces[i]);
+
+          if (pieces[i].indexOf("matrix") !== -1) {
+            this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
+          } else if (pieces[i].indexOf("translate") !== -1) {
+            var tx = m[0];
+            var ty = (m.length === 2) ? m[1] : 0;
+            this.matrix.translate(tx,ty);
+          } else if (pieces[i].indexOf("scale") !== -1) {
+            var sx = m[0];
+            var sy = (m.length === 2) ? m[1] : m[0];
+            this.matrix.scale(sx,sy);
+          } else if (pieces[i].indexOf("rotate") !== -1) {
+            var angle = m[0];
+            if (m.length === 1) {
+              this.matrix.rotate(p.radians(angle));
+            } else if (m.length === 3) {
+              this.matrix.translate(m[1], m[2]);
+              this.matrix.rotate(p.radians(m[0]));
+              this.matrix.translate(-m[1], -m[2]);
+            }
+          } else if (pieces[i].indexOf("skewX") !== -1) {
+            this.matrix.skewX(parseFloat(m[0]));
+          } else if (pieces[i].indexOf("skewY") !== -1) {
+            this.matrix.skewY(m[0]);
+          }
+        }
+        return this.matrix;
+      };
+    }());
+
     /**
      * @member PShapeSVG
      * The parseChildren() function parses the specified XMLElement
@@ -3167,17 +3208,19 @@
         shape.parsePath();
       } else if (name === "radialGradient") {
         //return new RadialGradient(this, elem);
+        unimplemented('PShapeSVG.prototype.parseChild, name = radialGradient');
       } else if (name === "linearGradient") {
         //return new LinearGradient(this, elem);
+        unimplemented('PShapeSVG.prototype.parseChild, name = linearGradient');
       } else if (name === "text") {
-        //p.println("Text in SVG files is not currently supported " +
-        //          "convert text to outlines instead.");
+        unimplemented('PShapeSVG.prototype.parseChild, name = text');
       } else if (name === "filter") {
-        //p.println("Filters are not supported.");
+        unimplemented('PShapeSVG.prototype.parseChild, name = filter');
       } else if (name === "mask") {
-        //p.println("Masks are not supported.");
+        unimplemented('PShapeSVG.prototype.parseChild, name = mask');
       } else {
-        //p.println("Ignoring  <" + name + "> tag.");
+        // ignoring
+        nop();
       }
       return shape;
     };
@@ -3528,6 +3571,7 @@
             }
           } else if (valOf === 90) {
             //Z
+            nop();
           } else if (valOf === 122) { //z
             this.close = true;
           }
@@ -3639,8 +3683,7 @@
             this.vertices.push(verts);
           }
         } else {
-          //p.println("Error parsing polygon points: " +
-          //          "odd number of coordinates provided");
+          throw("Error parsing polygon points: odd number of coordinates provided");
         }
       }
     };
@@ -4861,7 +4904,7 @@
         if(this.type==="TEXT") { return this.content; }
 
         // real XMLElements
-        var tagstring = (this.namespace!=="" && this.namespace!=this.name? this.namespace + ":" : "") + this.name;
+        var tagstring = (this.namespace !== "" && this.namespace !== this.name ? this.namespace + ":" : "") + this.name;
         var xmlstring =  "<" + tagstring;
         var a,c;
 
@@ -4872,7 +4915,7 @@
         }
 
         // serialize all children to XML string
-        if (this.children.length==0) {
+        if (this.children.length === 0) {
           if (this.content==="") {
             xmlstring += "/>";
           } else {
@@ -8395,7 +8438,7 @@
       var pattern = new RegExp(regex);
 
       // If limit is not specified, use JavaScript's built-in String.split.
-      if ((limit == undef) || (limit < 1)) {
+      if ((limit === undef) || (limit < 1)) {
         return subject.split(pattern);
       }
 
@@ -8403,13 +8446,13 @@
       // different behaviour than Java's. A Java-compatible implementation is
       // provided here.
       var result = [], currSubject = subject, pos;
-      while (((pos = currSubject.search(pattern)) != -1)
+      while (((pos = currSubject.search(pattern)) !== -1)
           && (result.length < (limit - 1))) {
         var match = pattern.exec(currSubject).toString();
         result.push(currSubject.substring(0, pos));
         currSubject = currSubject.substring(pos + match.length);
       }
-      if ((pos != -1) || (currSubject != "")) {
+      if ((pos !== -1) || (currSubject !== "")) {
         result.push(currSubject);
       }
       return result;
@@ -9513,7 +9556,9 @@
 
           for (var i=0, l=ctxNames.length; i<l; i++) {
             gl = canvas.getContext(ctxNames[i]);
-            if (gl) break;
+            if (gl) {
+              break;
+            }
           }
 
           return gl;
@@ -10857,24 +10902,23 @@
     */
     p.screenY = function screenY( x, y, z ) {
       var mv = modelView.array();
-      if( mv.length === 16 )
-      {
-      	var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
-      	var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
-      	var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
-      	var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
-      	
-      	var pj = projection.array();
+      if( mv.length === 16 ) {
+        var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+        var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+        var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+        var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-      	var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
-      	var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+        var pj = projection.array();
 
-      	if ( ow !== 0 ){
-      		oy /= ow;
-      	}
-      	return p.height * ( 1 + oy ) / 2.0;
+        var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
+        var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+        if ( ow !== 0 ){
+          oy /= ow;
+        }
+        return p.height * ( 1 + oy ) / 2.0;
       } else {  // We assume that we're in 2D
-       	return modelView.multY(x, y);
+        return modelView.multY(x, y);
       }
     };
 
@@ -10893,9 +10937,10 @@
     */
     p.screenZ = function screenZ( x, y, z ) {
       var mv = modelView.array();
-      if( mv.length !== 16 )
-      	return 0;
- 
+      if( mv.length !== 16 ) {
+        return 0;
+      }
+
       var pj = projection.array();
 
       var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
@@ -13836,15 +13881,16 @@
       if (type) {
         file = file + "." + type;
       }
+      var pimg;
       // if image is in the preloader cache return a new PImage
       if (curSketch.imageCache.images[file]) {
-        var pimg = new PImage(curSketch.imageCache.images[file]);
+        pimg = new PImage(curSketch.imageCache.images[file]);
         pimg.loaded = true;
         return pimg;
       }
       // else async load it
       else {
-        var pimg = new PImage();
+        pimg = new PImage();
         var img = document.createElement('img');
 
         pimg.sourceImg = img;
@@ -14645,7 +14691,7 @@
       var b2 = new Float32Array(wh);
       var a2 = new Float32Array(wh);
       var yi = 0;
-      var x, y, i;
+      var x, y, i, offset;
 
       buildBlurKernel(r);
 
@@ -14673,7 +14719,7 @@
             if (read >= aImgWidth) {
               break;
             }
-            var offset = (read + yi) *4;
+            offset = (read + yi) *4;
             m = sharedBlurKernal[i];
             ca += m * pix[offset + 3];
             cr += m * pix[offset];
@@ -14722,7 +14768,7 @@
             ri++;
             read += aImgWidth;
           }
-          var offset = (x + yi) *4;
+          offset = (x + yi) *4;
           pix[offset] = cr / sum;
           pix[offset + 1] = cg / sum;
           pix[offset + 2] = cb / sum;
@@ -15632,6 +15678,23 @@
       }
     };
 
+    function toP5String(obj) {
+      if(obj instanceof String) {
+        return obj;
+      } else if(typeof obj === 'number') {
+        // check if an int
+        if(obj === (0 | obj)) {
+          return obj.toString();
+        } else {
+          return p.nf(obj, 0, 3);
+        }
+      } else if(obj === null || obj === undef) {
+        return "";
+      } else {
+        return obj.toString();
+      }
+    }
+
     /**
      * textWidth() Calculates and returns the width of any character or text string in pixels.
      *
@@ -15900,23 +15963,6 @@
         Processing.debug(e);
       }
     };
-
-    function toP5String(obj) {
-      if(obj instanceof String) {
-        return obj;
-      } else if(typeof obj === 'number') {
-        // check if an int
-        if(obj === (0 | obj)) {
-          return obj.toString();
-        } else {
-          return p.nf(obj, 0, 3);
-        }
-      } else if(obj === null || obj === undef) {
-        return "";
-      } else {
-        return obj.toString();
-      }
-    }
 
     // Print some text to the Canvas
     Drawing2D.prototype.text$line = function(str, x, y, z, align) {
@@ -16434,8 +16480,8 @@
     };
 
     /**
-     * Gets the sketch parameter value. The parameter can be defined as the canvas attribute with 
-     * the "data-processing-" prefix or provided in the pjs directive (e.g. /* @pjs param-test="52" ... ).
+     * Gets the sketch parameter value. The parameter can be defined as the canvas attribute with
+     * the "data-processing-" prefix or provided in the pjs directive (e.g. param-test="52").
      * The function tries the canvas attributes, then the pjs directive content.
      *
      * @param   {String}    name          The name of the param to read.
@@ -16493,7 +16539,7 @@
       return function() {
         wireDimensionalFunctions("2D");
         return drawing[name].apply(this, arguments);
-      }
+      };
     }
     DrawingPre.prototype.translate = createDrawingPreFunction("translate");
     DrawingPre.prototype.scale = createDrawingPreFunction("scale");
@@ -17213,9 +17259,6 @@
       }
     }
 
-    // Place-holder for debugging function
-    Processing.debug = function(e) {};
-
     // Send aCode Processing syntax to be converted to JavaScript
     if (!pgraphicsMode) {
       if (aCode instanceof Processing.Sketch) {
@@ -17392,6 +17435,9 @@
       };
     }
   }; // Processing() ends
+
+  // Place-holder for overridable debugging function
+  Processing.debug = debug;
 
   Processing.prototype = defaultScope;
 
@@ -17592,16 +17638,17 @@
     // removes generics
     var genericsWereRemoved;
     var codeWoGenerics = codeWoStrings;
+    var replaceFunc = function(all, before, types, after) {
+      if(!!before || !!after) {
+        return all;
+      }
+      genericsWereRemoved = true;
+      return "";
+    };
+
     do {
       genericsWereRemoved = false;
-      codeWoGenerics = codeWoGenerics.replace(/([\<]?)\<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*\>([=]?)/g,
-      function(all, before, types, after) {
-        if(!!before || !!after) {
-          return all;
-        }
-        genericsWereRemoved = true;
-        return "";
-      });
+      codeWoGenerics = codeWoGenerics.replace(/([<]?)<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*>([=]?)/g, replaceFunc);
     } while (genericsWereRemoved);
 
     var atoms = splitToAtoms(codeWoGenerics);
@@ -17752,7 +17799,7 @@
         }
       });
       // (int)??? -> __int_cast(???)
-      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~\<\>\=]+)/g, function(all, arg) {
+      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~<\>\=]+)/g, function(all, arg) {
         var trimmed = trimSpaces(arg);
         return trimmed.untrim("__int_cast(" + trimmed.middle + ")");
       });
@@ -19330,24 +19377,10 @@
 
   // Store Processing instances. Only Processing.instances,
   // Processing.getInstanceById are exposed.
-  Processing.instances = [];
-  var processingInstanceIds = {};
-
-  var removeInstance = function(id) {
-    Processing.instances.splice(processingInstanceIds[id], 1);
-    delete processingInstanceIds[id];
-  };
-
-  var addInstance = function(processing) {
-    if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
-      processing.externals.canvas.id = "__processing" + Processing.instances.length;
-    }
-    processingInstanceIds[processing.externals.canvas.id] = Processing.instances.length;
-    Processing.instances.push(processing);
-  };
+  Processing.instances = processingInstances;
 
   Processing.getInstanceById = function(name) {
-    return Processing.instances[processingInstanceIds[name]];
+    return processingInstances[processingInstanceIds[name]];
   };
 
   Processing.Sketch = function(attachFunction) {
@@ -19614,4 +19647,4 @@
     // DOM is not found
     this.Processing = Processing;
   }
-}(window, window.document, Math));
+}(window, window.document, Math, function(){}));
