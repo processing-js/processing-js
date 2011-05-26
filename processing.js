@@ -12725,7 +12725,7 @@
           p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         }
         // explicitly add the last vertex, for precision
-        j = stopLUT - PConstants.SINCOS_LENGTH;
+        j = stopLUT % PConstants.SINCOS_LENGTH;
         p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         p.endShape();
         doFill = savedFill;

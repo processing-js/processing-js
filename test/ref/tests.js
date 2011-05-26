@@ -23,6 +23,9 @@ var tests = [
   { path: "defaults-text.pde", tags: ["2D"], epsilonOverride: 0.07 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
   { path: "arc-tangent.pde",  tags: ["2D"] },
+  { path: "arc_ref1.pde",  tags: ["2D"] },
+  { path: "arc_ref2.pde",  tags: ["2D"] },
+  { path: "arc_ref3.pde",  tags: ["2D"] },
   { path: "bezier.pde", tags: ["2D"] },
   { path: "ellipse.pde", tags: ["2D"] },
   { path: "piechart.pde", tags: ["2D"] },
