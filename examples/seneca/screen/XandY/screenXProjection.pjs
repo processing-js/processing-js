@@ -1,0 +1,12 @@
+
+void setup() {
+  size(100,100);
+}
+
+void draw() {
+  pushMatrix();
+  translate(100,100);
+  String result = "" + screenX(5,6);
+  println(result);
+  popMatrix();
+}

@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+  <title>Processing.js test of copy(img, ....)</title>
+  <script type="text/javascript" src="../../../processing.js"></script>
+  <canvas data-processing-sources="imageCopy.pjs" width="200" height="200"></canvas>
+<body>
+  <h1> Source Code:</h1>
+  <pre>
+// @pjs preload must be used to preload the image
+/* @pjs preload="test.png"; */
+
+PImage img = loadImage("test.png");
+
+void setup() {
+  size(75, 75);
+  noLoop();
+}
+
+void draw() {
+  background(75, 120, 125, 250);
+  fill(20, 60, 125);
+  rect(40, 40, 30, 30);
+  copy(img, 0, 0, img.width, img.height, mouseX, mouseY, img.width, img.height);
+  noFill();
+}
+
+void mouseClicked(){
+  redraw();
+}
+  </pre>
+  <br />
+</body>
+</html>

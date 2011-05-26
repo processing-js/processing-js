@@ -10,7 +10,17 @@
 
 ***/
 
-(function(window, document, Math, undef) {
+(function(window, document, Math, nop, undef) {
+
+  var debug = (function() {
+    if ("console" in window) {
+      return function(msg) {
+        window.console.log('Processing.js: ' + msg);
+      };
+    } else {
+      return nop();
+    }
+  }());
 
   var ajax = function(url) {
     var xhr = new XMLHttpRequest();
@@ -54,7 +64,9 @@
         if (obj instanceof Array) {
           return obj;
         } else if (typeof obj === "number") {
-          return new Array(obj);
+          var arr = [];
+          arr.length = obj;
+          return arr;
         }
       };
     }
@@ -413,6 +425,31 @@
   }
 
   /**
+  * A ObjectIterator is an iterator wrapper for objects. If passed object contains
+  * the iterator method, the object instance will be replaced by the result returned by
+  * this method call. If passed object is an array, the ObjectIterator instance iterates
+  * through its items.
+  *
+  * @param {Object} obj          The object to be iterated.
+  */
+  var ObjectIterator = function(obj) {
+    if (obj.iterator instanceof Function) {
+      return obj.iterator();
+    } else if (obj instanceof Array) {
+      // iterate through array items
+      var index = -1;
+      this.hasNext = function() {
+        return ++index < obj.length;
+      };
+      this.next = function() {
+        return obj[index];
+      };
+    } else {
+      throw "Unable to iterate: " + obj;
+    }
+  };
+
+  /**
    * An ArrayList stores a variable number of objects.
    *
    * @param {int} initialCapacity optional defines the initial capacity of the list, it's empty by default
@@ -513,7 +550,7 @@
        * @member ArrayList
        * ArrayList.addAll(collection) appends all of the elements in the specified
        * Collection to the end of this list, in the order that they are returned by
-       * the specified Collection's Iterator. 
+       * the specified Collection's Iterator.
        *
        * When called as addAll(index, collection) the elements are inserted into
        * this list at the position indicated by index.
@@ -1167,31 +1204,6 @@
     return PVector;
   }());
 
-  /**
-  * A ObjectIterator is an iterator wrapper for objects. If passed object contains
-  * the iterator method, the object instance will be replaced by the result returned by
-  * this method call. If passed object is an array, the ObjectIterator instance iterates
-  * through its items.
-  *
-  * @param {Object} obj          The object to be iterated.
-  */
-  var ObjectIterator = function(obj) {
-    if (obj.iterator instanceof Function) {
-      return obj.iterator();
-    } else if (obj instanceof Array) {
-      // iterate through array items
-      var index = -1;
-      this.hasNext = function() {
-        return ++index < obj.length;
-      };
-      this.next = function() {
-        return obj[index];
-      };
-    } else {
-      throw "Unable to iterate: " + obj;
-    }
-  };
-
   // Building defaultScope. Changing of the prototype protects
   // internal Processing code from the changes in defaultScope
   function DefaultScope() {}
@@ -1349,11 +1361,33 @@
     yellow:               "#ffff00",
     yellowgreen:          "#9acd32"
   };
-  
+
+  // Manage multiple Processing instances
+  var processingInstances = [];
+  var processingInstanceIds = {};
+
+  var removeInstance = function(id) {
+    processingInstances.splice(processingInstanceIds[id], 1);
+    delete processingInstanceIds[id];
+  };
+
+  var addInstance = function(processing) {
+    if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
+      processing.externals.canvas.id = "__processing" + processingInstances.length;
+    }
+    processingInstanceIds[processing.externals.canvas.id] = processingInstances.length;
+    processingInstances.push(processing);
+  };
+
+
   var Processing = this.Processing = function(curElement, aCode) {
     // Previously we allowed calling Processing as a func instead of ctor, but no longer.
     if (!(this instanceof Processing)) {
       throw("called Processing constructor as if it were a function: missing 'new'.");
+    }
+
+    function unimplemented(s) {
+      Processing.debug('Unimplemented - ' + s);
     }
 
     // When something new is added to "p." it must also be added to the "names" array.
@@ -1581,6 +1615,7 @@
         modelView,
         modelViewInv,
         userMatrixStack,
+        userReverseMatrixStack,
         inverseCopy,
         projection,
         manipulatingCamera = false,
@@ -1877,9 +1912,9 @@
       "  if(color[0] == -1.0){" +
       "    col = aColor;" +
       "  }" +
-      
+
       // We use the sphere vertices as the normals when we create the sphere buffer.
-      // But this only works if the sphere vertices are unit length, so we 
+      // But this only works if the sphere vertices are unit length, so we
       // have to normalize the normals here. Since this is only required for spheres
       // we could consider placing this in a conditional later on.
       "  vec3 norm = normalize(vec3( normalTransform * vec4( Normal, 0.0 ) ));" +
@@ -2204,7 +2239,7 @@
     var Drawing2D = function() {};
     var Drawing3D = function() {};
     var DrawingPre = function() {};
-    
+
     // Setup the prototype chain
     Drawing2D.prototype = new DrawingShared();
     Drawing2D.prototype.constructor = Drawing2D;
@@ -2212,7 +2247,7 @@
     Drawing3D.prototype.constructor = Drawing3D;
     DrawingPre.prototype = new DrawingShared();
     DrawingPre.prototype.constructor = DrawingPre;
-    
+
     // A no-op function for when the user calls 3D functions from a 2D sketch
     // We can change this to a throw or console.error() later if we want
     DrawingShared.prototype.a3DOnlyFunction = function(){};
@@ -2225,6 +2260,10 @@
     var Char = p.Character = function(chr) {
       if (typeof chr === 'string' && chr.length === 1) {
         this.code = chr.charCodeAt(0);
+      } else if (typeof chr === 'number') {
+        this.code = chr;
+      } else if (chr instanceof Char) {
+        this.code = chr;
       } else {
         this.code = NaN;
       }
@@ -3049,53 +3088,60 @@
      *
      * @return {PMatrix2D} a PMatrix2D
      */
-    PShapeSVG.prototype.parseMatrix = function(str) {
-      this.checkMatrix(2);
-      var pieces = [];
-      str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
-        // get a list of transform definitions
-        pieces.push(p.trim(all));
-      });
-      if (pieces.length === 0) {
-        //p.println("Transformation:" + str + " is empty");
-        return null;
-      }
-      for (var i = 0, j = pieces.length; i < j; i++) {
+    PShapeSVG.prototype.parseMatrix = (function() {
+      function getCoords(s) {
         var m = [];
-        pieces[i].replace(/\((.*?)\)/, (function() {
+        s.replace(/\((.*?)\)/, (function() {
           return function(all, params) {
             // get the coordinates that can be separated by spaces or a comma
             m = params.replace(/,+/g, " ").split(/\s+/);
           };
         }()));
-
-        if (pieces[i].indexOf("matrix") !== -1) {
-          this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
-        } else if (pieces[i].indexOf("translate") !== -1) {
-          var tx = m[0];
-          var ty = (m.length === 2) ? m[1] : 0;
-          this.matrix.translate(tx,ty);
-        } else if (pieces[i].indexOf("scale") !== -1) {
-          var sx = m[0];
-          var sy = (m.length === 2) ? m[1] : m[0];
-          this.matrix.scale(sx,sy);
-        } else if (pieces[i].indexOf("rotate") !== -1) {
-          var angle = m[0];
-          if (m.length === 1) {
-            this.matrix.rotate(p.radians(angle));
-          } else if (m.length === 3) {
-            this.matrix.translate(m[1], m[2]);
-            this.matrix.rotate(p.radians(m[0]));
-            this.matrix.translate(-m[1], -m[2]);
-          }
-        } else if (pieces[i].indexOf("skewX") !== -1) {
-          this.matrix.skewX(parseFloat(m[0]));
-        } else if (pieces[i].indexOf("skewY") !== -1) {
-          this.matrix.skewY(m[0]);
-        }
       }
-      return this.matrix;
-    };
+
+      return function(str) {
+        this.checkMatrix(2);
+        var pieces = [];
+        str.replace(/\s*(\w+)\((.*?)\)/g, function(all) {
+          // get a list of transform definitions
+          pieces.push(p.trim(all));
+        });
+        if (pieces.length === 0) {
+          return null;
+        }
+
+        for (var i = 0, j = pieces.length; i < j; i++) {
+          var m = getCoords(pieces[i]);
+
+          if (pieces[i].indexOf("matrix") !== -1) {
+            this.matrix.set(m[0], m[2], m[4], m[1], m[3], m[5]);
+          } else if (pieces[i].indexOf("translate") !== -1) {
+            var tx = m[0];
+            var ty = (m.length === 2) ? m[1] : 0;
+            this.matrix.translate(tx,ty);
+          } else if (pieces[i].indexOf("scale") !== -1) {
+            var sx = m[0];
+            var sy = (m.length === 2) ? m[1] : m[0];
+            this.matrix.scale(sx,sy);
+          } else if (pieces[i].indexOf("rotate") !== -1) {
+            var angle = m[0];
+            if (m.length === 1) {
+              this.matrix.rotate(p.radians(angle));
+            } else if (m.length === 3) {
+              this.matrix.translate(m[1], m[2]);
+              this.matrix.rotate(p.radians(m[0]));
+              this.matrix.translate(-m[1], -m[2]);
+            }
+          } else if (pieces[i].indexOf("skewX") !== -1) {
+            this.matrix.skewX(parseFloat(m[0]));
+          } else if (pieces[i].indexOf("skewY") !== -1) {
+            this.matrix.skewY(m[0]);
+          }
+        }
+        return this.matrix;
+      };
+    }());
+
     /**
      * @member PShapeSVG
      * The parseChildren() function parses the specified XMLElement
@@ -3162,17 +3208,19 @@
         shape.parsePath();
       } else if (name === "radialGradient") {
         //return new RadialGradient(this, elem);
+        unimplemented('PShapeSVG.prototype.parseChild, name = radialGradient');
       } else if (name === "linearGradient") {
         //return new LinearGradient(this, elem);
+        unimplemented('PShapeSVG.prototype.parseChild, name = linearGradient');
       } else if (name === "text") {
-        //p.println("Text in SVG files is not currently supported " +
-        //          "convert text to outlines instead.");
+        unimplemented('PShapeSVG.prototype.parseChild, name = text');
       } else if (name === "filter") {
-        //p.println("Filters are not supported.");
+        unimplemented('PShapeSVG.prototype.parseChild, name = filter');
       } else if (name === "mask") {
-        //p.println("Masks are not supported.");
+        unimplemented('PShapeSVG.prototype.parseChild, name = mask');
       } else {
-        //p.println("Ignoring  <" + name + "> tag.");
+        // ignoring
+        nop();
       }
       return shape;
     };
@@ -3523,6 +3571,7 @@
             }
           } else if (valOf === 90) {
             //Z
+            nop();
           } else if (valOf === 122) { //z
             this.close = true;
           }
@@ -3634,8 +3683,7 @@
             this.vertices.push(verts);
           }
         } else {
-          //p.println("Error parsing polygon points: " +
-          //          "odd number of coordinates provided");
+          throw("Error parsing polygon points: odd number of coordinates provided");
         }
       }
     };
@@ -4255,11 +4303,11 @@
           xmlelement         = new XMLElement(elementpath.localName, elementpath.nodeName, "", "");
           xmlelement.parent  = parent;
         }
-        
+
         // if this is a text node, return a PCData element, instead of an XML element.
         if(elementpath.nodeType === 3 && elementpath.textContent !== "") {
           return this.createPCDataElement(elementpath.textContent);
-        }      
+        }
 
         // bind all attributes
         for (l = 0, m = elementpath.attributes.length; l < m; l++) {
@@ -4856,7 +4904,7 @@
         if(this.type==="TEXT") { return this.content; }
 
         // real XMLElements
-        var tagstring = (this.namespace!=="" && this.namespace!=this.name? this.namespace + ":" : "") + this.name;
+        var tagstring = (this.namespace !== "" && this.namespace !== this.name ? this.namespace + ":" : "") + this.name;
         var xmlstring =  "<" + tagstring;
         var a,c;
 
@@ -4867,7 +4915,7 @@
         }
 
         // serialize all children to XML string
-        if (this.children.length==0) {
+        if (this.children.length === 0) {
           if (this.content==="") {
             xmlstring += "/>";
           } else {
@@ -4893,7 +4941,7 @@
       element.parse(xmlstring);
       return element;
     };
-    
+
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
     ////////////////////////////////////////////////////////////////////////////
@@ -5007,6 +5055,16 @@
       translate: function(tx, ty) {
         this.elements[2] = tx * this.elements[0] + ty * this.elements[1] + this.elements[2];
         this.elements[5] = tx * this.elements[3] + ty * this.elements[4] + this.elements[5];
+      },
+      /**
+       * @member PMatrix2D
+       * The invTranslate() function translates this matrix by moving the current coordinates to the negative location specified by tx and ty.
+       *
+       * @param {float} tx  the x-axis coordinate to move to
+       * @param {float} ty  the y-axis coordinate to move to
+       */
+      invTranslate: function(tx, ty) {
+        this.translate(-tx, -ty);
       },
        /**
        * @member PMatrix2D
@@ -5150,6 +5208,20 @@
           this.elements[4] *= sy;
         }
       },
+       /**
+        * @member PMatrix2D
+        * The invScale() function decreases or increases the size of a shape by contracting and expanding vertices. When only one parameter is specified scale will occur in all dimensions.
+        * This is equivalent to a two parameter call.
+        *
+        * @param {float} sx  the amount to scale on the x-axis
+        * @param {float} sy  the amount to scale on the y-axis
+        */
+      invScale: function(sx, sy) {
+        if (sx && !sy) {
+          sy = sx;
+        }
+        this.scale(1 / sx, 1 / sy);
+      },
       /**
        * @member PMatrix2D
        * The apply() function multiplies the current matrix by the one specified through the parameters. Note that either a PMatrix2D or a list of floats can be passed in.
@@ -5238,6 +5310,15 @@
        */
       rotateZ: function(angle) {
         this.rotate(angle);
+      },
+      /**
+       * @member PMatrix2D
+       * The invRotateZ() function rotates the matrix in opposite direction.
+       *
+       * @param {float} angle         the angle of rotation in radiants
+       */
+      invRotateZ: function(angle) {
+        this.rotateZ(angle - Math.PI);
       },
       /**
        * @member PMatrix2D
@@ -5346,7 +5427,7 @@
         this.elements[15] += tx * this.elements[12] + ty * this.elements[13] + tz * this.elements[14];
       },
       /**
-       * @member PMatrix2D
+       * @member PMatrix3D
        * The transpose() function transpose this matrix.
        */
       transpose: function() {
@@ -5543,7 +5624,7 @@
         }
       },
       /**
-       * @member PMatrix2D
+       * @member PMatrix3D
        * The invApply() function applies the inverted matrix to this matrix.
        *
        * @param {float} m00           the first element of the matrix
@@ -5838,11 +5919,11 @@
       }
       this.matrixStack.push(tmpMatrix);
     };
-    
+
     Drawing2D.prototype.$newPMatrix = function() {
       return new PMatrix2D();
     };
-    
+
     Drawing3D.prototype.$newPMatrix = function() {
       return new PMatrix3D();
     };
@@ -7029,9 +7110,11 @@
     * @see rotateZ
     */
     Drawing2D.prototype.translate = function(x, y) {
+      forwardTransform.translate(x, y);
+      reverseTransform.invTranslate(x, y);
       curContext.translate(x, y);
     };
-    
+
     Drawing3D.prototype.translate = function(x, y, z) {
       forwardTransform.translate(x, y, z);
       reverseTransform.invTranslate(x, y, z);
@@ -7062,9 +7145,11 @@
     * @see rotateZ
     */
     Drawing2D.prototype.scale = function(x, y) {
+      forwardTransform.scale(x, y);
+      reverseTransform.invScale(x, y);
       curContext.scale(x, y || x);
     };
-    
+
     Drawing3D.prototype.scale = function(x, y, z) {
       forwardTransform.scale(x, y, z);
       reverseTransform.invScale(x, y, z);
@@ -7087,11 +7172,14 @@
     * @see rotateZ
     */
     Drawing2D.prototype.pushMatrix = function() {
+      userMatrixStack.load(modelView);
+      userReverseMatrixStack.load(modelViewInv);
       saveContext();
     };
-    
+
     Drawing3D.prototype.pushMatrix = function() {
       userMatrixStack.load(modelView);
+      userReverseMatrixStack.load(modelViewInv);
     };
 
     /**
@@ -7106,11 +7194,14 @@
     * @see pushMatrix
     */
     Drawing2D.prototype.popMatrix = function() {
+      modelView.set(userMatrixStack.pop());
+      modelViewInv.set(userReverseMatrixStack.pop());
       restoreContext();
     };
-    
+
     Drawing3D.prototype.popMatrix = function() {
       modelView.set(userMatrixStack.pop());
+      modelViewInv.set(userReverseMatrixStack.pop());
     };
 
     /**
@@ -7124,9 +7215,11 @@
     * @see printMatrix
     */
     Drawing2D.prototype.resetMatrix = function() {
+      forwardTransform.reset();
+      reverseTransform.reset();
       curContext.setTransform(1,0,0,1,0,0);
     };
-    
+
     Drawing3D.prototype.resetMatrix = function() {
       forwardTransform.reset();
       reverseTransform.reset();
@@ -7151,7 +7244,7 @@
       forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
       reverseTransform.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
     };
-    
+
     Drawing2D.prototype.applyMatrix = function() {
       var a = arguments;
       for (var cnt = a.length; cnt < 16; cnt++) {
@@ -7213,6 +7306,10 @@
     p.rotateZ = function(angleInRadians) {
       forwardTransform.rotateZ(angleInRadians);
       reverseTransform.invRotateZ(angleInRadians);
+      if (p.use3DContext) {
+        return;
+      }
+      curContext.rotate(angleInRadians);
     };
 
     /**
@@ -7266,12 +7363,11 @@
     * @see pushMatrix
     */
     Drawing2D.prototype.rotate = function(angleInRadians) {
-      curContext.rotate(angleInRadians);
+      p.rotateZ(angleInRadians);
     };
-    
+
     Drawing3D.prototype.rotate = function(angleInRadians) {
-      forwardTransform.rotateZ(angleInRadians);
-      reverseTransform.invRotateZ(angleInRadians);
+      p.rotateZ(angleInRadians);
     };
 
     /**
@@ -7494,25 +7590,25 @@
 
       p.frameCount++;
     };
-    
+
     Drawing2D.prototype.redraw = function() {
       DrawingShared.prototype.redraw.apply(this, arguments);
 
       curContext.lineWidth = lineWidth;
       inDraw = true;
-      
+
       saveContext();
       p.draw();
       restoreContext();
-      
+
       inDraw = false;
     };
-    
+
     Drawing3D.prototype.redraw = function() {
       DrawingShared.prototype.redraw.apply(this, arguments);
-      
+
       inDraw = true;
-      
+
       // even if the color buffer isn't cleared with background(),
       // the depth buffer needs to be cleared regardless.
       curContext.clear(curContext.DEPTH_BUFFER_BIT);
@@ -7527,7 +7623,7 @@
       p.emissive(0, 0, 0);
       p.camera();
       p.draw();
-      
+
       inDraw = false;
     };
 
@@ -8192,6 +8288,31 @@
       return results.length > 0 ? results : null;
     };
     /**
+     * The contains(string) function returns true if the string passed in the parameter
+     * is a substring of this string. It returns false if the string passed
+     * in the parameter is not a substring of this string.
+     *
+     * @param {String} The string to look for in the current string
+     *
+     * @return {boolean} returns true if this string contains
+     * the string passed as parameter. returns false, otherwise.
+     *
+     */
+    p.__contains = function (subject, subStr) {
+      if (typeof subject !== "string") {
+        return subject.contains.apply(subject, removeFirstArgument(arguments));
+      }
+      //Parameter is not null AND
+      //The type of the parameter is the same as this object (string)
+      //The javascript function that finds a substring returns 0 or higher
+      return (
+        (subject !== null) &&
+        (subStr !== null) &&
+        (typeof subStr === "string") &&
+        (subject.indexOf(subStr) > -1)
+      );
+    };
+    /**
      * The __replaceAll() function searches all matches between a substring (or regular expression) and a string,
      * and replaces the matched substring with a new substring
      *
@@ -8317,7 +8438,7 @@
       var pattern = new RegExp(regex);
 
       // If limit is not specified, use JavaScript's built-in String.split.
-      if ((limit == undef) || (limit < 1)) {
+      if ((limit === undef) || (limit < 1)) {
         return subject.split(pattern);
       }
 
@@ -8325,13 +8446,13 @@
       // different behaviour than Java's. A Java-compatible implementation is
       // provided here.
       var result = [], currSubject = subject, pos;
-      while (((pos = currSubject.search(pattern)) != -1)
+      while (((pos = currSubject.search(pattern)) !== -1)
           && (result.length < (limit - 1))) {
         var match = pattern.exec(currSubject).toString();
         result.push(currSubject.substring(0, pos));
         currSubject = currSubject.substring(pos + match.length);
       }
-      if ((pos != -1) || (currSubject != "")) {
+      if ((pos !== -1) || (currSubject !== "")) {
         result.push(currSubject);
       }
       return result;
@@ -8485,7 +8606,7 @@
     };
 
     /**
-     * Converts the passed parameter to the function to its byte value. 
+     * Converts the passed parameter to the function to its byte value.
      * A byte is a number between -128 and 127.
      * It will return an array of bytes if an array is passed in.
      *
@@ -8507,7 +8628,7 @@
     };
 
     /**
-     * Converts the passed parameter to the function to its char value. 
+     * Converts the passed parameter to the function to its char value.
      * It will return an array of chars if an array is passed in.
      *
      * @param {int, byte} key        the parameter to be conveted to char
@@ -8546,7 +8667,7 @@
     }
 
     /**
-     * Converts the passed parameter to the function to its float value. 
+     * Converts the passed parameter to the function to its float value.
      * It will return an array of floats if an array is passed in.
      *
      * @param {int, char, boolean, string} val            the parameter to be conveted to float
@@ -8580,7 +8701,7 @@
     }
 
     /**
-     * Converts the passed parameter to the function to its int value. 
+     * Converts the passed parameter to the function to its int value.
      * It will return an array of ints if an array is passed in.
      *
      * @param {string, char, boolean, float} val            the parameter to be conveted to int
@@ -9360,7 +9481,7 @@
     DrawingShared.prototype.size = function(aWidth, aHeight, aMode) {
       p.stroke(0);
       p.fill(255);
-      
+
       // The default 2d context has already been created in the p.init() stage if
       // a 3d context was not specified. This is so that a 2d context will be
       // available if size() was not called.
@@ -9398,22 +9519,31 @@
 
       // Externalize the context
       p.externals.context = curContext;
+
+      for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
+        sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
+        cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
+      }
     };
-    
+
     Drawing2D.prototype.size = function(aWidth, aHeight, aMode) {
       if (curContext === undef) {
         // size() was called without p.init() default context, i.e. p.createGraphics()
         curContext = curElement.getContext("2d");
         userMatrixStack = new PMatrixStack();
-        modelView = new PMatrix2D();
+        userReverseMatrixStack = new PMatrixStack();
+        forwardTransform = new PMatrix2D();
+        reverseTransform = new PMatrix2D();
+        modelView = forwardTransform;
+        modelViewInv = reverseTransform;
       }
-      
+
       DrawingShared.prototype.size.apply(this, arguments);
     };
-    
+
     Drawing3D.prototype.size = (function() {
       var size3DCalled = false;
-      
+
       return function size(aWidth, aHeight, aMode) {
         if (size3DCalled) {
           throw "Multiple calls to size() for 3D renders are not allowed.";
@@ -9426,7 +9556,9 @@
 
           for (var i=0, l=ctxNames.length; i<l; i++) {
             gl = canvas.getContext(ctxNames[i]);
-            if (gl) break;
+            if (gl) {
+              break;
+            }
           }
 
           return gl;
@@ -9452,11 +9584,6 @@
 
         if (!curContext) {
           throw "WebGL context is not supported on this browser.";
-        }
-        
-        for (var i = 0; i < PConstants.SINCOS_LENGTH; i++) {
-          sinLUT[i] = p.sin(i * (PConstants.PI / 180) * 0.5);
-          cosLUT[i] = p.cos(i * (PConstants.PI / 180) * 0.5);
         }
 
         // Set defaults
@@ -9542,8 +9669,6 @@
 
         cam = new PMatrix3D();
         cameraInv = new PMatrix3D();
-        forwardTransform = new PMatrix3D();
-        reverseTransform = new PMatrix3D();
         modelView = new PMatrix3D();
         modelViewInv = new PMatrix3D();
         projection = new PMatrix3D();
@@ -9553,6 +9678,7 @@
         reverseTransform = modelViewInv;
 
         userMatrixStack = new PMatrixStack();
+        userReverseMatrixStack = new PMatrixStack();
         // used by both curve and bezier, so just init here
         curveBasisMatrix = new PMatrix3D();
         curveToBezierMatrix = new PMatrix3D();
@@ -9561,7 +9687,7 @@
         bezierBasisInverse = new PMatrix3D();
         bezierBasisMatrix = new PMatrix3D();
         bezierBasisMatrix.set(-1, 3, -3, 1, 3, -6, 3, 0, -3, 3, 0, 0, 1, 0, 0, 0);
-        
+
         DrawingShared.prototype.size.apply(this, arguments);
       };
     }());
@@ -9596,7 +9722,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.ambientLight = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.ambientLight = function(r, g, b, x, y, z) {
       if (lightCount === PConstants.MAX_LIGHTS) {
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
@@ -9644,7 +9770,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.directionalLight = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.directionalLight = function(r, g, b, nx, ny, nz) {
       if (lightCount === PConstants.MAX_LIGHTS) {
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
@@ -9656,7 +9782,7 @@
       mvm.scale(1, -1, 1);
       mvm.apply(modelView.array());
       mvm = mvm.array();
-      
+
       // We need to multiply the direction by the model view matrix, but
       // the mult function checks the w component of the vector, if it isn't
       // present, it uses 1, so we manually multiply.
@@ -9700,7 +9826,7 @@
      * @see lightSpecular
     */
     Drawing2D.prototype.lightFalloff = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.lightFalloff = function(constant, linear, quadratic) {
       curContext.useProgram(programObject3D);
       uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
@@ -9726,7 +9852,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.lightSpecular = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.lightSpecular = function(r, g, b) {
       curContext.useProgram(programObject3D);
       uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
@@ -9780,7 +9906,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.pointLight = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.pointLight = function(r, g, b, x, y, z) {
       if (lightCount === PConstants.MAX_LIGHTS) {
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
@@ -9793,7 +9919,7 @@
       view.scale(1, -1, 1);
       view.apply(modelView.array());
       view.mult(pos, pos);
-      
+
       curContext.useProgram(programObject3D);
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
@@ -9812,7 +9938,7 @@
      * @see lights
     */
     Drawing2D.prototype.noLights = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.noLights = function() {
       lightCount = 0;
       curContext.useProgram(programObject3D);
@@ -9849,7 +9975,7 @@
      * @see pointLight
     */
     Drawing2D.prototype.spotLight = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.spotLight = function(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
       if (lightCount === PConstants.MAX_LIGHTS) {
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
@@ -9876,7 +10002,7 @@
           mvm[1] * nx + mvm[5] * ny + mvm[9] * nz,
           mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
-      
+
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", dir);
@@ -10057,6 +10183,15 @@
                      0, 0, (2 * near) / (top - bottom), (top + bottom) / (top - bottom),
                      0, 0, 0, -(far + near) / (far - near), -(2 * far * near) / (far - near),
                      0, 0, -1, 0);
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+      curContext.useProgram(programObject2D);
+      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+      curContext.useProgram(programObject3D);
+      uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+      curContext.useProgram(programObjectUnlitShape);
+      uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
     };
 
     /**
@@ -10094,6 +10229,15 @@
       projection = new PMatrix3D();
       projection.set(x, 0, 0, tx, 0, y, 0, ty, 0, 0, z, tz, 0, 0, 0, 1);
 
+      var proj = new PMatrix3D();
+      proj.set(projection);
+      proj.transpose();
+      curContext.useProgram(programObject2D);
+      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+      curContext.useProgram(programObject3D);
+      uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+      curContext.useProgram(programObjectUnlitShape);
+      uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
       frustumMode = false;
     };
     /**
@@ -10121,7 +10265,7 @@
      * @param {int|float} d  dimension of the box in the z-dimension
      */
     Drawing2D.prototype.box = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.box = function(w, h, d) {
       // user can uniformly scale the box by
       // passing in only one argument.
@@ -10140,24 +10284,16 @@
       view.apply(modelView.array());
       view.transpose();
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
-      proj.transpose();
-
       if (doFill) {
         curContext.useProgram(programObject3D);
-
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
         uniformMatrix("view3d", programObject3D, "view", false, view.array());
-        uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
-
         // fix stitching problems. (lines get occluded by triangles
         // since they share the same depth values). This is not entirely
         // working, but it's a start for drawing the outline. So
         // developers can start playing around with styles.
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
-
         uniformf("color3d", programObject3D, "color", fillStyle);
 
         // Calculating the normal matrix can be expensive, so only
@@ -10186,7 +10322,6 @@
 
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
 
-
         // Turn off per vertex colors
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
@@ -10199,14 +10334,10 @@
         curContext.useProgram(programObject2D);
         uniformMatrix("model2d", programObject2D, "model", false, model.array());
         uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
         curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
       }
@@ -10376,7 +10507,7 @@
      * @param {int|float} r the radius of the sphere
      */
     Drawing2D.prototype.sphere = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.sphere = function() {
       var sRad = arguments[0];
 
@@ -10395,10 +10526,6 @@
       view.apply(modelView.array());
       view.transpose();
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
-      proj.transpose();
-
       if (doFill) {
         // Calculating the normal matrix can be expensive, so only
         // do it if it's necessary
@@ -10416,7 +10543,7 @@
           normalMatrix.set(v);
           normalMatrix.invert();
           normalMatrix.transpose();
-          
+
           uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
           vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
         }
@@ -10429,8 +10556,6 @@
 
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
         uniformMatrix("view3d", programObject3D, "view", false, view.array());
-        uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
-
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
 
         // Turn off per vertex colors
@@ -10442,9 +10567,7 @@
         // developers can start playing around with styles.
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
-
         uniformf("color3d", programObject3D, "color", fillStyle);
-
         curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
@@ -10453,14 +10576,10 @@
         curContext.useProgram(programObject2D);
         uniformMatrix("model2d", programObject2D, "model", false, model.array());
         uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-
         curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
       }
@@ -10587,7 +10706,7 @@
      * @see shininess
     */
     Drawing2D.prototype.ambient = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.ambient = function() {
       // create an alias to shorten code
       var a = arguments;
@@ -10638,7 +10757,7 @@
      * @see shininess
     */
     Drawing2D.prototype.emissive = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.emissive = function() {
       // create an alias to shorten code
       var a = arguments;
@@ -10675,7 +10794,7 @@
      * @returns none
     */
     Drawing2D.prototype.shininess = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.shininess = function(shine) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
@@ -10719,7 +10838,7 @@
      * @see shininess
     */
     Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
-    
+
     Drawing3D.prototype.specular = function() {
       var c = p.color.apply(this, arguments);
 
@@ -10738,7 +10857,7 @@
      *
      * @param {int | float} x 3D x coordinate to be mapped
      * @param {int | float} y 3D y coordinate to be mapped
-     * @param {int | float} z 3D z coordinate to be mapped
+     * @param {int | float} z 3D z optional coordinate to be mapped
      *
      * @returns {float}
      *
@@ -10747,20 +10866,25 @@
     */
     p.screenX = function( x, y, z ) {
       var mv = modelView.array();
-      var pj = projection.array();
+      if( mv.length === 16 )
+      {
+        var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+        var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+        var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+        var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
-      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
-      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
-      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+        var pj = projection.array();
 
-      var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
-      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+        var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
+        var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-      if ( ow !== 0 ){
-        ox /= ow;
+        if ( ow !== 0 ){
+          ox /= ow;
+        }
+        return p.width * ( 1 + ox ) / 2.0;
+      } else { // We assume that we're in 2D
+        return modelView.multX(x, y);
       }
-      return p.width * ( 1 + ox ) / 2.0;
     };
 
     /**
@@ -10769,29 +10893,33 @@
      *
      * @param {int | float} x 3D x coordinate to be mapped
      * @param {int | float} y 3D y coordinate to be mapped
-     * @param {int | float} z 3D z coordinate to be mapped
+     * @param {int | float} z 3D z optional coordinate to be mapped
      *
      * @returns {float}
      *
      * @see screenX
      * @see screenZ
     */
-    p.screenY = function( x, y, z ) {
+    p.screenY = function screenY( x, y, z ) {
       var mv = modelView.array();
-      var pj = projection.array();
+      if( mv.length === 16 ) {
+        var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+        var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+        var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+        var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
-      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
-      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
-      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+        var pj = projection.array();
 
-      var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
-      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+        var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
+        var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-      if ( ow !== 0 ){
-        oy /= ow;
+        if ( ow !== 0 ){
+          oy /= ow;
+        }
+        return p.height * ( 1 + oy ) / 2.0;
+      } else {  // We assume that we're in 2D
+        return modelView.multY(x, y);
       }
-      return p.height * ( 1 + oy ) / 2.0;
     };
 
     /**
@@ -10807,8 +10935,12 @@
      * @see screenX
      * @see screenY
     */
-    p.screenZ = function( x, y, z ) {
+    p.screenZ = function screenZ( x, y, z ) {
       var mv = modelView.array();
+      if( mv.length !== 16 ) {
+        return 0;
+      }
+
       var pj = projection.array();
 
       var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
@@ -10860,12 +10992,12 @@
       doFill = true;
       currentFillColor = color;
     };
-    
+
     Drawing2D.prototype.fill = function() {
       DrawingShared.prototype.fill.apply(this, arguments);
       isFillDirty = true;
     };
-    
+
     Drawing3D.prototype.fill = function() {
       DrawingShared.prototype.fill.apply(this, arguments);
       fillStyle = p.color.toGLArray(currentFillColor);
@@ -10930,12 +11062,12 @@
       doStroke = true;
       currentStrokeColor = color;
     };
-    
+
     Drawing2D.prototype.stroke = function() {
       DrawingShared.prototype.stroke.apply(this, arguments);
       isStrokeDirty = true;
     };
-    
+
     Drawing3D.prototype.stroke = function() {
       DrawingShared.prototype.stroke.apply(this, arguments);
       strokeStyle = p.color.toGLArray(currentStrokeColor);
@@ -10970,12 +11102,12 @@
     DrawingShared.prototype.strokeWeight = function(w) {
       lineWidth = w;
     };
-    
+
     Drawing2D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
       curContext.lineWidth = w;
     };
-    
+
     Drawing3D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
       curContext.useProgram(programObject2D);
@@ -11017,7 +11149,7 @@
     DrawingShared.prototype.smooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
     };
-    
+
     Drawing2D.prototype.smooth = function() {
       DrawingShared.prototype.smooth.apply(this, arguments);
       if ("mozImageSmoothingEnabled" in curContext) {
@@ -11033,7 +11165,7 @@
     DrawingShared.prototype.noSmooth = function() {
       curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
     };
-    
+
     Drawing2D.prototype.noSmooth = function() {
       DrawingShared.prototype.noSmooth.apply(this, arguments);
       if ("mozImageSmoothingEnabled" in curContext) {
@@ -11091,7 +11223,7 @@
         }
       }
     };
-    
+
     Drawing3D.prototype.point = function(x, y, z) {
       var model = new PMatrix3D();
 
@@ -11104,23 +11236,16 @@
       view.apply(modelView.array());
       view.transpose();
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
-      proj.transpose();
-
       curContext.useProgram(programObject2D);
       uniformMatrix("model2d", programObject2D, "model", false, model.array());
       uniformMatrix("view2d", programObject2D, "view", false, view.array());
-      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
       if (lineWidth > 0 && doStroke) {
         // this will be replaced with the new bit shifting color code
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
         curContext.drawArrays(curContext.POINTS, 0, 1);
       }
     };
@@ -11190,23 +11315,23 @@
       }
 
       vert["isVert"] = true;
-      
-      return vert; 
+
+      return vert;
     };
-    
+
     Drawing2D.prototype.vertex = function() {
       var vert = DrawingShared.prototype.vertex.apply(this, arguments);
-      
+
       // fill and stroke color
       vert[5] = currentFillColor;
       vert[6] = currentStrokeColor;
-      
+
       vertArray.push(vert);
     };
-    
+
     Drawing3D.prototype.vertex = function() {
       var vert = DrawingShared.prototype.vertex.apply(this, arguments);
-      
+
       // fill rgba
       vert[5] = fillStyle[0];
       vert[6] = fillStyle[1];
@@ -11221,7 +11346,7 @@
       vert[13] = normalX;
       vert[14] = normalY;
       vert[15] = normalZ;
-      
+
       vertArray.push(vert);
     };
 
@@ -11242,20 +11367,12 @@
       view.apply(modelView.array());
       view.transpose();
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
-      proj.transpose();
-
       curContext.useProgram(programObjectUnlitShape);
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
-      uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
-
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
-
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
-
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
 
@@ -11288,22 +11405,13 @@
       view.apply(modelView.array());
       view.transpose();
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
-      proj.transpose();
-
       curContext.useProgram(programObjectUnlitShape);
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
-      uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
-
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, lineBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
-
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
-
       curContext.lineWidth(lineWidth);
-
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
@@ -11337,23 +11445,14 @@
       view.apply(modelView.array());
       view.transpose();
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
-      proj.transpose();
-
       curContext.useProgram( programObject3D );
       uniformMatrix("model3d", programObject3D, "model", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
       uniformMatrix("view3d", programObject3D, "view", false, view.array() );
-      uniformMatrix("projection3d", programObject3D, "projection", false, proj.array() );
-
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
-
       uniformf("color3d", programObject3D, "color", [-1,0,0,0]);
-
       vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
-
       vertexAttribPointer("aColor3d", programObject3D, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
@@ -11461,7 +11560,7 @@
         texVertArray.push(vertArray[0][4]);
       }
       // End duplication
-      
+
       // curveVertex
       if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
         if (vertArrayLength > 3) {
@@ -11496,7 +11595,7 @@
           curContext.closePath();
         }
       }
-      
+
       // bezierVertex
       else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         curContext.beginPath();
@@ -11520,7 +11619,7 @@
         executeContextStroke();
         curContext.closePath();
       }
-      
+
       // render the vertices provided
       else {
         if (curShape === PConstants.POINTS) {
@@ -11690,14 +11789,14 @@
           curContext.closePath();
         }
       }
-      
+
       // Reset some settings
       isCurve = false;
       isBezier = false;
       curveVertArray = [];
       curveVertCount = 0;
     };
-    
+
     Drawing3D.prototype.endShape = function(mode) {
       // Duplicated in Drawing3D; too many variables used
       if (vertArray.length === 0) { return; }
@@ -11764,7 +11863,17 @@
         texVertArray.push(vertArray[0][4]);
       }
       // End duplication
-      
+
+      // curveVertex
+      if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
+        lineVertArray = fillVertArray;
+        if (doStroke) {
+          line3D(lineVertArray, null, strokeVertArray);
+        }
+        if (doFill) {
+          fill3D(fillVertArray, null, colorVertArray);
+        }
+      }
       // bezierVertex
       else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
         lineVertArray = fillVertArray;
@@ -11777,7 +11886,7 @@
           fill3D(fillVertArray, "TRIANGLES", colorVertArray);
         }
       }
-      
+
       // render the vertices provided
       else {
         if (curShape === PConstants.POINTS) {       // if POINTS was the specified parameter in beginShape
@@ -12056,9 +12165,9 @@
                 strokeVertArray.push(cachedVertArray[j]);
               }
             }
-            if (closeShape) {
+            if (doStroke && closeShape) {
               line3D(lineVertArray, "LINE_LOOP", strokeVertArray);
-            } else if (doStroke) {
+            } else if (doStroke && !closeShape) {
               line3D(lineVertArray, "LINE_STRIP", strokeVertArray);
             }
 
@@ -12076,7 +12185,7 @@
         curContext.useProgram(programObject3D);
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
       }
-      
+
       // Reset some settings
       isCurve = false;
       isBezier = false;
@@ -12169,21 +12278,21 @@
       if (firstVert) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
       }
-      
+
       for (var i = 0; i < arguments.length; i++) {
         vert[i] = arguments[i];
       }
       vertArray.push(vert);
       vertArray[vertArray.length -1]["isVert"] = false;
     };
-    
+
     Drawing3D.prototype.bezierVertex = function() {
       isBezier = true;
       var vert = [];
       if (firstVert) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
       }
-      
+
       if (arguments.length === 9) {
         if (bezierDrawMatrix === undef) {
           bezierDrawMatrix = new PMatrix3D();
@@ -12395,13 +12504,13 @@
      */
     Drawing2D.prototype.curveVertex = function(x, y) {
       isCurve = true;
-      
+
       p.vertex(x, y);
     };
-    
+
     Drawing3D.prototype.curveVertex = function(x, y, z) {
       isCurve = true;
-      
+
       if (!curveInited) {
         curveInit();
       }
@@ -12467,7 +12576,7 @@
         p.endShape();
       }
     };
-    
+
     Drawing3D.prototype.curve = function() {
       if (arguments.length === 12) { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
         p.beginShape();
@@ -12630,19 +12739,20 @@
       var vr = height / 2;
       var centerX = x + hr;
       var centerY = y + vr;
-      var i, ii, startLUT, stopLUT;
+      var startLUT = 0 | (-0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
+      var stopLUT  = 0 | (0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
+      var i, j;
       if (doFill) {
         // shut off stroke for a minute
         var savedStroke = doStroke;
         doStroke = false;
-        startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
-        stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
         p.beginShape();
         p.vertex(centerX, centerY);
-        for (i = startLUT; i < stopLUT; i++) {
-          ii = i % PConstants.SINCOS_LENGTH;
-          if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
-          p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
+        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
+          if (j >= PConstants.SINCOS_LENGTH) {
+            j = j - PConstants.SINCOS_LENGTH;
+          }
+          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         }
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
@@ -12652,16 +12762,16 @@
         // and doesn't include the first (center) vertex.
         var savedFill = doFill;
         doFill = false;
-        startLUT = 0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
-        stopLUT  = 0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH;
         p.beginShape();
-        for (i = startLUT; i < stopLUT; i ++) {
-          ii = i % PConstants.SINCOS_LENGTH;
-          if (ii < 0) { ii += PConstants.SINCOS_LENGTH; }
-          p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
+        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
+          if (j >= PConstants.SINCOS_LENGTH) {
+            j = j - PConstants.SINCOS_LENGTH;
+          }
+          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         }
-        ii = stopLUT % PConstants.SINCOS_LENGTH;
-        p.vertex(centerX + Math.cos(ii * PConstants.DEG_TO_RAD * 0.5) * hr, centerY + Math.sin(ii * PConstants.DEG_TO_RAD * 0.5) * vr);
+        // explicitly add the last vertex, for precision
+        j = stopLUT % PConstants.SINCOS_LENGTH;
+        p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         p.endShape();
         doFill = savedFill;
       }
@@ -12689,7 +12799,7 @@
     */
     Drawing2D.prototype.line = function() {
       var x1, y1, x2, y2;
-      
+
       x1 = arguments[0];
       y1 = arguments[1];
       x2 = arguments[2];
@@ -12699,7 +12809,7 @@
       // If they are the same, we call point instead.
       if (x1===x2 && y1===y2) {
         p.point(x1,y1);
-      } 
+      }
 
       // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
       else if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
@@ -12726,10 +12836,10 @@
         curContext.closePath();
       }
     };
-    
+
     Drawing3D.prototype.line = function() {
       var x1, y1, z1, x2, y2, z2;
-      
+
       if (arguments.length === 6) {
         x1 = arguments[0];
         y1 = arguments[1];
@@ -12760,16 +12870,11 @@
       view.apply(modelView.array());
       view.transpose();
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
-      proj.transpose();
-
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
 
         uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
         uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
 
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
@@ -12803,7 +12908,7 @@
       if (arguments.length !== 8) {
         throw("You must use 8 parameters for bezier() in 2D mode");
       }
-      
+
       p.beginShape();
       p.vertex( arguments[0], arguments[1] );
       p.bezierVertex( arguments[2], arguments[3],
@@ -12811,12 +12916,12 @@
                       arguments[6], arguments[7] );
       p.endShape();
     };
-    
+
     Drawing3D.prototype.bezier = function() {
       if (arguments.length !== 12) {
         throw("You must use 12 parameters for bezier() in 3D mode");
       }
-      
+
       p.beginShape();
       p.vertex( arguments[0], arguments[1], arguments[2] );
       p.bezierVertex( arguments[3], arguments[4], arguments[5],
@@ -13020,7 +13125,7 @@
 
       curContext.closePath();
     };
-    
+
     Drawing3D.prototype.rect = function(x, y, width, height) {
       // Modeling transformation
       var model = new PMatrix3D();
@@ -13035,22 +13140,14 @@
       view.apply(modelView.array());
       view.transpose();
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
-      proj.transpose();
-
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
         uniformMatrix("model2d", programObject2D, "model", false, model.array());
         uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
-
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-
         curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
       }
@@ -13059,7 +13156,6 @@
         curContext.useProgram(programObject3D);
         uniformMatrix("model3d", programObject3D, "model", false, model.array());
         uniformMatrix("view3d", programObject3D, "view", false, view.array());
-        uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
 
         // fix stitching problems. (lines get occluded by triangles
         // since they share the same depth values). This is not entirely
@@ -13090,7 +13186,7 @@
         else{
           disableVertexAttribPointer("normal3d", programObject3D, "Normal");
         }
-        
+
         vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
 
         curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
@@ -13132,22 +13228,22 @@
         x += width / 2;
         y += height / 2;
       }
-      
+
       return {'x':x, 'y':y, 'width':width, 'height':height};
     };
-    
+
     Drawing2D.prototype.ellipse = function(x, y, width, height) {
       var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
-      
+
       if (!params) {
         return;
       }
-      
+
       x = params['x'];
       y = params['y'];
       width = params['width'];
       height = params['height'];
-      
+
       // Shortcut for drawing a 2D circle
       if (width === height) {
         curContext.beginPath();
@@ -13161,7 +13257,7 @@
           C = 0.5522847498307933;
         var c_x = C * w,
           c_y = C * h;
-        
+
         p.beginShape();
         p.vertex(x + w, y);
         p.bezierVertex(x + w, y - c_y, x + c_x, y - h, x, y - h);
@@ -13171,25 +13267,25 @@
         p.endShape();
       }
     };
-    
+
     Drawing3D.prototype.ellipse = function(x, y, width, height) {
       var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
-      
+
       if (!params) {
         return;
       }
-      
+
       x = params['x'];
       y = params['y'];
       width = params['width'];
       height = params['height'];
-      
+
       var w = width / 2,
         h = height / 2,
         C = 0.5522847498307933;
       var c_x = C * w,
         c_y = C * h;
-      
+
       p.beginShape();
       p.vertex(x + w, y);
       p.bezierVertex(x + w, y - c_y, 0, x + c_x, y - h, 0, x, y - h, 0);
@@ -13785,15 +13881,16 @@
       if (type) {
         file = file + "." + type;
       }
+      var pimg;
       // if image is in the preloader cache return a new PImage
       if (curSketch.imageCache.images[file]) {
-        var pimg = new PImage(curSketch.imageCache.images[file]);
+        pimg = new PImage(curSketch.imageCache.images[file]);
         pimg.loaded = true;
         return pimg;
       }
       // else async load it
       else {
-        var pimg = new PImage();
+        pimg = new PImage();
         var img = document.createElement('img');
 
         pimg.sourceImg = img;
@@ -14247,7 +14344,7 @@
         if (!curSketch.options.isTransparent) {
           color = color | PConstants.ALPHA_MASK;
         }
-        
+
         lastBackgroundObj = color;
       } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
         img = arguments[0];
@@ -14257,7 +14354,7 @@
         } else if(img.width !== p.width || img.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
-        
+
         lastBackgroundObj = img;
       } else if (lastBackgroundObj === undefined) {
         color = p.color(204);
@@ -14266,14 +14363,14 @@
         if (!curSketch.options.isTransparent) {
           color = color | PConstants.ALPHA_MASK;
         }
-        
+
         lastBackgroundObj = color;
       }
     };
-    
+
     Drawing2D.prototype.background = function() {
       DrawingShared.prototype.background.apply(this, arguments);
-      
+
       if (typeof lastBackgroundObj === 'number') {
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
@@ -14292,14 +14389,14 @@
         restoreContext();
       }
     };
-    
+
     Drawing3D.prototype.background = function() {
       DrawingShared.prototype.background.apply(this, arguments);
-      
+
       var c = p.color.toGLArray(lastBackgroundObj);
       curContext.clearColor(c[0], c[1], c[2], c[3]);
       curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
-      
+
       // An image as a background in 3D is not implemented yet
     };
 
@@ -14331,7 +14428,7 @@
       if (img.width > 0) {
         var wid = w || img.width;
         var hgt = h || img.height;
-        
+
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
         var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
         if (fastImage) {
@@ -14368,12 +14465,12 @@
         }
       }
     };
-    
+
     Drawing3D.prototype.image = function(img, x, y, w, h) {
       if (img.width > 0) {
         var wid = w || img.width;
         var hgt = h || img.height;
-        
+
         p.beginShape(p.QUADS);
         p.texture(img.externals.canvas);
         p.vertex(x, y, 0, 0, 0);
@@ -14570,15 +14667,18 @@
         p.shared.blurRadius = radius;
         p.shared.blurKernelSize = 1 + (p.shared.blurRadius<<1);
         p.shared.blurKernel = new Float32Array(p.shared.blurKernelSize);
+        var sharedBlurKernal = p.shared.blurKernel;
+        var sharedBlurKernelSize = p.shared.blurKernelSize;
+        var sharedBlurRadius = p.shared.blurRadius;
         // init blurKernel
-        for (i = 0; i < p.shared.blurKernelSize; i++) {
-          p.shared.blurKernel[i] = 0;
+        for (i = 0; i < sharedBlurKernelSize; i++) {
+          sharedBlurKernal[i] = 0;
         }
-
-        for (i = 1, radiusi = radius - 1; i < radius; i++) {
-          p.shared.blurKernel[radius+i] = p.shared.blurKernel[radiusi] = radiusi * radiusi;
+        var radiusiSquared = (radius - 1) * (radius - 1);
+        for (i = 1; i < radius; i++) {
+          sharedBlurKernal[radius + i] = sharedBlurKernal[radiusi] = radiusiSquared;
         }
-        p.shared.blurKernel[radius] = radius * radius;
+        sharedBlurKernal[radius] = radius * radius;
       }
     };
 
@@ -14591,33 +14691,40 @@
       var b2 = new Float32Array(wh);
       var a2 = new Float32Array(wh);
       var yi = 0;
-      var x, y, i;
+      var x, y, i, offset;
 
       buildBlurKernel(r);
 
-      for (y = 0; y < aImg.height; y++) {
-        for (x = 0; x < aImg.width; x++) {
+      var aImgHeight = aImg.height;
+      var aImgWidth = aImg.width;
+      var sharedBlurKernelSize = p.shared.blurKernelSize;
+      var sharedBlurRadius = p.shared.blurRadius;
+      var sharedBlurKernal = p.shared.blurKernel;
+      var pix = aImg.imageData.data;
+
+      for (y = 0; y < aImgHeight; y++) {
+        for (x = 0; x < aImgWidth; x++) {
           cb = cg = cr = ca = sum = 0;
-          read = x - p.shared.blurRadius;
+          read = x - sharedBlurRadius;
           if (read<0) {
             bk0 = -read;
             read = 0;
           } else {
-            if (read >= aImg.width) {
+            if (read >= aImgWidth) {
               break;
             }
             bk0=0;
           }
-          for (i = bk0; i < p.shared.blurKernelSize; i++) {
-            if (read >= aImg.width) {
+          for (i = bk0; i < sharedBlurKernelSize; i++) {
+            if (read >= aImgWidth) {
               break;
             }
-            c = aImg.pixels.getPixel(read + yi);
-            m = p.shared.blurKernel[i];
-            ca += m * ((c & PConstants.ALPHA_MASK) >>> 24);
-            cr += m * ((c & PConstants.RED_MASK) >> 16);
-            cg += m * ((c & PConstants.GREEN_MASK) >> 8);
-            cb += m * (c & PConstants.BLUE_MASK);
+            offset = (read + yi) *4;
+            m = sharedBlurKernal[i];
+            ca += m * pix[offset + 3];
+            cr += m * pix[offset];
+            cg += m * pix[offset + 1];
+            cb += m * pix[offset + 2];
             sum += m;
             read++;
           }
@@ -14627,44 +14734,48 @@
           g2[ri] = cg / sum;
           b2[ri] = cb / sum;
         }
-        yi += aImg.width;
+        yi += aImgWidth;
       }
 
       yi = 0;
-      ym = -p.shared.blurRadius;
-      ymi = ym*aImg.width;
+      ym = -sharedBlurRadius;
+      ymi = ym*aImgWidth;
 
-      for (y = 0; y < aImg.height; y++) {
-        for (x = 0; x < aImg.width; x++) {
+      for (y = 0; y < aImgHeight; y++) {
+        for (x = 0; x < aImgWidth; x++) {
           cb = cg = cr = ca = sum = 0;
           if (ym<0) {
             bk0 = ri = -ym;
             read = x;
           } else {
-            if (ym >= aImg.height) {
+            if (ym >= aImgHeight) {
               break;
             }
             bk0 = 0;
             ri = ym;
             read = x + ymi;
           }
-          for (i = bk0; i < p.shared.blurKernelSize; i++) {
-            if (ri >= aImg.height) {
+          for (i = bk0; i < sharedBlurKernelSize; i++) {
+            if (ri >= aImgHeight) {
               break;
             }
-            m = p.shared.blurKernel[i];
+            m = sharedBlurKernal[i];
             ca += m * a2[read];
             cr += m * r2[read];
             cg += m * g2[read];
             cb += m * b2[read];
             sum += m;
             ri++;
-            read += aImg.width;
+            read += aImgWidth;
           }
-          aImg.pixels.setPixel(x+yi, ((ca/sum)<<24 | (cr/sum)<<16 | (cg/sum)<<8 | (cb/sum)));
+          offset = (x + yi) *4;
+          pix[offset] = cr / sum;
+          pix[offset + 1] = cg / sum;
+          pix[offset + 2] = cb / sum;
+          pix[offset + 3] = ca / sum;
         }
-        yi += aImg.width;
-        ymi += aImg.width;
+        yi += aImgWidth;
+        ymi += aImgWidth;
         ym++;
       }
     };
@@ -15189,7 +15300,11 @@
                                         destPixels[((destOffset + x) * 4) + 1],
                                         destPixels[((destOffset + x) * 4) + 2],
                                         destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.filter_bilinear());
+              if (img.format !== PConstants.RGB && destPixels[(destOffset + x) * 4] !== 255) {
+                destColor = p.color.toArray(p.modes.blend(destColor, p.filter_bilinear()));
+              } else {
+                destColor = p.color.toArray(p.filter_bilinear());
+              }
               //destPixels[destOffset + x] = p.filter_bilinear();
               destPixels[(destOffset + x) * 4] = destColor[0];
               destPixels[(destOffset + x) * 4 + 1] = destColor[1];
@@ -15563,6 +15678,23 @@
       }
     };
 
+    function toP5String(obj) {
+      if(obj instanceof String) {
+        return obj;
+      } else if(typeof obj === 'number') {
+        // check if an int
+        if(obj === (0 | obj)) {
+          return obj.toString();
+        } else {
+          return p.nf(obj, 0, 3);
+        }
+      } else if(obj === null || obj === undef) {
+        return "";
+      } else {
+        return obj.toString();
+      }
+    }
+
     /**
      * textWidth() Calculates and returns the width of any character or text string in pixels.
      *
@@ -15585,7 +15717,7 @@
       }
       return width;
     };
-    
+
     Drawing3D.prototype.textWidth = function(str) {
       var lines = toP5String(str).split(/\r?\n/g), width = 0;
       var i, linesCount = lines.length;
@@ -15595,7 +15727,7 @@
 
       var textContext = textcanvas.getContext("2d");
       textContext.font =  curTextSize + "px " + curTextFont.name;
-      
+
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, textContext.measureText(lines[i]).width);
       }
@@ -15832,23 +15964,6 @@
       }
     };
 
-    function toP5String(obj) {
-      if(obj instanceof String) {
-        return obj;
-      } else if(typeof obj === 'number') {
-        // check if an int
-        if(obj === (0 | obj)) {
-          return obj.toString();
-        } else {
-          return p.nf(obj, 0, 3);
-        }
-      } else if(obj === null || obj === undef) {
-        return "";
-      } else {
-        return obj.toString();
-      }
-    }
-
     // Print some text to the Canvas
     Drawing2D.prototype.text$line = function(str, x, y, z, align) {
       var textWidth = 0, xOffset = 0;
@@ -15957,10 +16072,6 @@
       view.apply(modelView.array());
       view.transpose();
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
-      proj.transpose();
-
       curContext.useProgram(programObject2D);
       vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, textBuffer);
       vertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord", 2, textureBuffer);
@@ -15968,7 +16079,6 @@
       uniformi("picktype2d", programObject2D, "picktype", 1);
       uniformMatrix("model2d", programObject2D, "model", false,  model.array());
       uniformMatrix("view2d", programObject2D, "view", false, view.array());
-      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
       uniformf("color2d", programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
@@ -16056,7 +16166,7 @@
           }
 
           // newline + return
-          yOffset += curTextSize;
+          yOffset += curTextLeading;
           lineWidth = 0;
           charPos = start - 1;
         }
@@ -16370,8 +16480,8 @@
     };
 
     /**
-     * Gets the sketch parameter value. The parameter can be defined as the canvas attribute with 
-     * the "data-processing-" prefix or provided in the pjs directive (e.g. /* @pjs param-test="52" ... ).
+     * Gets the sketch parameter value. The parameter can be defined as the canvas attribute with
+     * the "data-processing-" prefix or provided in the pjs directive (e.g. param-test="52").
      * The function tries the canvas attributes, then the pjs directive content.
      *
      * @param   {String}    name          The name of the param to read.
@@ -16429,7 +16539,7 @@
       return function() {
         wireDimensionalFunctions("2D");
         return drawing[name].apply(this, arguments);
-      }
+      };
     }
     DrawingPre.prototype.translate = createDrawingPreFunction("translate");
     DrawingPre.prototype.scale = createDrawingPreFunction("scale");
@@ -16949,17 +17059,33 @@
       else {
         if (shift) {
           switch (code) {
+          case 59:
+            return 58; // :
           case 107:
             return 43; // +
+          case 109:
+            return 95; // _
           case 219:
             return 123; // {
           case 221:
             return 125; // }
           case 222:
             return 34; // "
+          case 188:
+            return 60; // <
+          case 190:
+            return 62; // >
+          case 191:
+            return 63; // ?
+          case 220:
+            return 124; // |
           }
         } else {
           switch (code) {
+          case 59:
+            return 59; // ;
+          case 107:
+            return 61; // =
           case 188:
             return 44; // ,
           case 109:
@@ -17101,7 +17227,7 @@
             p.keyCode = e.keyCode;
           }
           if (e.keyCode === 0) {
-            p.key = charCodeMap(e.charCode, e.shiftKey);  // dealing with Mozilla key strokes
+            p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));  // dealing with Google key strokes
             if (type === "keypress") {
               if (firstMKeyDown === true) {
                 firstMKeyDown = false;
@@ -17114,7 +17240,7 @@
               if (firstMKeyDown === false) { firstMKeyDown = true; }
             }
           } else {
-            p.key = charCodeMap(e.keyCode, e.shiftKey);  // dealing with Google key strokes
+            p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));  // dealing with Google key strokes
             if (type === "keydown") {
               if (firstGKeyDown === true) {
                 firstGKeyDown = false;
@@ -17132,9 +17258,6 @@
           break;
       }
     }
-
-    // Place-holder for debugging function
-    Processing.debug = function(e) {};
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (!pgraphicsMode) {
@@ -17160,7 +17283,7 @@
       p.externals.sketch = curSketch;
 
       wireDimensionalFunctions();
-      
+
       if ("mozOpaque" in curElement) {
         curElement.mozOpaque = !curSketch.options.isTransparent;
       }
@@ -17200,7 +17323,7 @@
         p.__keyPressed = true;
         p.key = keyCodeMap(e.keyCode, e.shiftKey);
         if (p.key !== PConstants.CODED) {
-          p.key = charCodeMap(e.keyCode, e.shiftKey);
+          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));
         }
         keyFunc(e, "keydown");
       });
@@ -17214,7 +17337,7 @@
         p.__keyPressed = false;
         p.key = keyCodeMap(e.keyCode, e.shiftKey);
         if (p.key !== PConstants.CODED) {
-          p.key = charCodeMap(e.keyCode, e.shiftKey);
+          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));
         }
         keyFunc(e, "keyup");
       });
@@ -17313,6 +17436,9 @@
     }
   }; // Processing() ends
 
+  // Place-holder for overridable debugging function
+  Processing.debug = debug;
+
   Processing.prototype = defaultScope;
 
 //#if PARSER
@@ -17326,7 +17452,7 @@
       "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint",
       "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
       "blit_resize", "blue", "box", "breakShape", "brightness",
-      "camera", "ceil", "Character", "color", "colorMode", 
+      "camera", "ceil", "Character", "color", "colorMode",
       "concat", "console", "constrain", "copy", "cos", "createFont",
       "createGraphics", "createImage", "cursor", "curve", "curveDetail",
       "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
@@ -17365,7 +17491,7 @@
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
-      "vertex", "width", "XMLElement", "year", "__equals", "__frameRate",
+      "vertex", "width", "XMLElement", "year", "__contains", "__equals", "__frameRate",
       "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
       "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
       "__toCharArray", "__split"];
@@ -17512,16 +17638,17 @@
     // removes generics
     var genericsWereRemoved;
     var codeWoGenerics = codeWoStrings;
+    var replaceFunc = function(all, before, types, after) {
+      if(!!before || !!after) {
+        return all;
+      }
+      genericsWereRemoved = true;
+      return "";
+    };
+
     do {
       genericsWereRemoved = false;
-      codeWoGenerics = codeWoGenerics.replace(/([\<]?)\<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*\>([=]?)/g,
-      function(all, before, types, after) {
-        if(!!before || !!after) {
-          return all;
-        }
-        genericsWereRemoved = true;
-        return "";
-      });
+      codeWoGenerics = codeWoGenerics.replace(/([<]?)<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*>([=]?)/g, replaceFunc);
     } while (genericsWereRemoved);
 
     var atoms = splitToAtoms(codeWoGenerics);
@@ -17672,7 +17799,7 @@
         }
       });
       // (int)??? -> __int_cast(???)
-      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~\<\>\=]+)/g, function(all, arg) {
+      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~<\>\=]+)/g, function(all, arg) {
         var trimmed = trimSpaces(arg);
         return trimmed.untrim("__int_cast(" + trimmed.middle + ")");
       });
@@ -17737,7 +17864,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|equals|hashCode|toCharArray|printStackTrace|split)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|hashCode|toCharArray|printStackTrace|split)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
@@ -19250,24 +19377,10 @@
 
   // Store Processing instances. Only Processing.instances,
   // Processing.getInstanceById are exposed.
-  Processing.instances = [];
-  var processingInstanceIds = {};
-
-  var removeInstance = function(id) {
-    Processing.instances.splice(processingInstanceIds[id], 1);
-    delete processingInstanceIds[id];
-  };
-
-  var addInstance = function(processing) {
-    if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
-      processing.externals.canvas.id = "__processing" + Processing.instances.length;
-    }
-    processingInstanceIds[processing.externals.canvas.id] = Processing.instances.length;
-    Processing.instances.push(processing);
-  };
+  Processing.instances = processingInstances;
 
   Processing.getInstanceById = function(name) {
-    return Processing.instances[processingInstanceIds[name]];
+    return processingInstances[processingInstanceIds[name]];
   };
 
   Processing.Sketch = function(attachFunction) {
@@ -19477,16 +19590,16 @@
 
     for (var i = 0, l = canvas.length; i < l; i++) {
       // datasrc and data-src are deprecated.
-      var processingSources = canvasElements[i].getAttribute('data-processing-sources');
+      var processingSources = canvas[i].getAttribute('data-processing-sources');
       if (processingSources === null) {
         // Temporary fallback for datasrc and data-src
-        processingSources = canvasElements[i].getAttribute('data-src');
+        processingSources = canvas[i].getAttribute('data-src');
         if (processingSources === null) {
-          processingSources = canvasElements[i].getAttribute('datasrc');
+          processingSources = canvas[i].getAttribute('datasrc');
         }
       }
       if (processingSources) {
-        filenames = processingSources.split(' ');
+        var filenames = processingSources.split(' ');
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -19494,46 +19607,36 @@
             filenames.splice(j, 1);
           }
         }
-        loadAndExecute(canvasElements[i], filenames);
-      }
-    }
-    
-    // process all <script>-indicated sketches
-    var scripts = document.getElementsByTagName('script');
-    var s, source, instance;
-    for (s = 0; s < scripts.length; s++) {
-      var script = scripts[s];
-      if (!script.getAttribute) {
-        continue;
-      }
-
-      var type = script.getAttribute("type");
-      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
-        var target = script.getAttribute("data-target");
-        var canvas;
-        if (target) {
-          canvas = document.getElementById(target);
-        } else {
-          var nextSibling = script.nextSibling;
-          while (nextSibling && nextSibling.nodeType !== 1) {
-            nextSibling = nextSibling.nextSibling;
-          }
-          if (nextSibling.nodeName.toLowerCase() === "canvas") {
-            canvas = nextSibling;
-          }
-        }
-
-        if (canvas && canvas !== null) {
-          if (script.getAttribute("src")) {
-            filenames = script.getAttribute("src").split(/\s+/);
-            loadAndExecute(canvas, filenames);
-            continue;
-          }
-          source =  script.innerText || script.textContent;
-          instance = new Processing(canvas, source);
-        }
         loadSketchFromSources(canvas[i], filenames);
       }
+    }
+  };
+
+  /**
+   * Make loadSketchFromSources publically visible
+   */
+  Processing.loadSketchFromSources = loadSketchFromSources;
+
+  /**
+   * Disable the automatic loading of all sketches on the page
+   */
+  Processing.disableInit = function() {
+    if(isDOMPresent) {
+      document.removeEventListener('DOMContentLoaded', init, false);
+    }
+  };
+
+  /**
+   * Make loadSketchFromSources publically visible
+   */
+  Processing.loadSketchFromSources = loadSketchFromSources;
+
+  /**
+   * Disable the automatic loading of all sketches on the page
+   */
+  Processing.disableInit = function() {
+    if(isDOMPresent) {
+      document.removeEventListener('DOMContentLoaded', init, false);
     }
   };
 
@@ -19558,4 +19661,4 @@
     // DOM is not found
     this.Processing = Processing;
   }
-}(window, window.document, Math));
+}(window, window.document, Math, function(){}));

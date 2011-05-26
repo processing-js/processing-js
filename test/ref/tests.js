@@ -23,6 +23,9 @@ var tests = [
   { path: "defaults-text.pde", tags: ["2D"], epsilonOverride: 0.07 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
   { path: "arc-tangent.pde",  tags: ["2D"] },
+  { path: "arc_ref1.pde",  tags: ["2D"] },
+  { path: "arc_ref2.pde",  tags: ["2D"] },
+  { path: "arc_ref3.pde",  tags: ["2D"] },
   { path: "bezier.pde", tags: ["2D"] },
   { path: "ellipse.pde", tags: ["2D"] },
   { path: "piechart.pde", tags: ["2D"] },
@@ -35,6 +38,8 @@ var tests = [
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
+  { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.07 },
+  { path: "text-leading.pde", tags: ["2D"], epsilonOverride: 0.20 },
   { path: "point_3D_stroke.pde", tags: ["3D"] },
   { path: "point_3D_strokeWeight.pde", tags: ["3D"], epsilonOverride: 0.22 },
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.14 },
