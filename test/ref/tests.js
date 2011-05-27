@@ -57,7 +57,7 @@ var tests = [
   { path: "specular_p5test.pde", tags: ["3D"]},
   { path: "spotLight_p5test.pde", tags: ["3D"], knownFailureTicket: "1239" }, /* See ticket #1202 */
   { path: "3d-ellipse-fill-noFill-stoke-noStroke.pde", tags: ["3D"], epsilonOverride: 0.15 },
-  { path: "createGraphics.pde", tags: ["3D"] }, /* See ticket #1075 */
+  { path: "createGraphics.pde", tags: ["3D"], epsilonOverride: 0.07 }, /* See ticket #1075 */
   { path: "rect-directional-light.pde", tags: ["3D"] },
   { path: "createimage.pde", tags: ["2D"] },
   { path: "array.pde", tags: ["2D"] },
@@ -74,7 +74,7 @@ var tests = [
   { path: "multiple-constructors.pde", tags: ["2D"], epsilonOverride: 0.06 },
   { path: "neighborhood.pde", tags: ["2D"], epsilonOverride: 0.08 },
   { path: "no-loop.pde", tags: ["2D"] },
-  { path: "reading.pde", tags: ["2D"] },
+  { path: "reading.pde", tags: ["2D"], knownFailureTicket: "1285" },
   { path: "relativity.pde", tags: ["2D"] },
   { path: "triangle-flower.pde", tags: ["2D"] },
   { path: "self-1-success.pde", tags: ["Calibration"] },
