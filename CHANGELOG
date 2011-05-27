@@ -1,5 +1,6 @@
 May 26, 2011 - Release 1.2
 
+  * Aligned default frameRate to match Processing (e.g., 60fps)
   * Added Performance Tests
   * Added lazy loading sketch extension
   * Added XMLElement toString() function
@@ -10,7 +11,6 @@ May 26, 2011 - Release 1.2
   * Fixed the key variable to hold the proper data type
   * Fixed string functions split(), contains()
   * Fixed background() when called with image different size from sketch
-  * Fixed frameRate to be set immediately
   * Fixed IE9 loading issues
   * Fixed mouseX/mouseY to be computed with canvas scaling taken into account
   * Fixed text string's height to not ignore textLeading()
