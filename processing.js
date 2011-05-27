@@ -17080,33 +17080,17 @@
       else {
         if (shift) {
           switch (code) {
-          case 59:
-            return 58; // :
           case 107:
             return 43; // +
-          case 109:
-            return 95; // _
           case 219:
             return 123; // {
           case 221:
             return 125; // }
           case 222:
             return 34; // "
-          case 188:
-            return 60; // <
-          case 190:
-            return 62; // >
-          case 191:
-            return 63; // ?
-          case 220:
-            return 124; // |
           }
         } else {
           switch (code) {
-          case 59:
-            return 59; // ;
-          case 107:
-            return 61; // =
           case 188:
             return 44; // ,
           case 109:
@@ -17248,7 +17232,7 @@
             p.keyCode = e.keyCode;
           }
           if (e.keyCode === 0) {
-            p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));  // dealing with Google key strokes
+            p.key = charCodeMap(e.charCode, e.shiftKey);  // dealing with Mozilla key strokes
             if (type === "keypress") {
               if (firstMKeyDown === true) {
                 firstMKeyDown = false;
@@ -17261,7 +17245,7 @@
               if (firstMKeyDown === false) { firstMKeyDown = true; }
             }
           } else {
-            p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));  // dealing with Google key strokes
+            p.key = charCodeMap(e.keyCode, e.shiftKey);  // dealing with Google key strokes
             if (type === "keydown") {
               if (firstGKeyDown === true) {
                 firstGKeyDown = false;
@@ -17344,7 +17328,7 @@
         p.__keyPressed = true;
         p.key = keyCodeMap(e.keyCode, e.shiftKey);
         if (p.key !== PConstants.CODED) {
-          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));
+          p.key = charCodeMap(e.keyCode, e.shiftKey);
         }
         keyFunc(e, "keydown");
       });
@@ -17358,7 +17342,7 @@
         p.__keyPressed = false;
         p.key = keyCodeMap(e.keyCode, e.shiftKey);
         if (p.key !== PConstants.CODED) {
-          p.key = new Char(charCodeMap(e.keyCode, e.shiftKey));
+          p.key = charCodeMap(e.keyCode, e.shiftKey);
         }
         keyFunc(e, "keyup");
       });
