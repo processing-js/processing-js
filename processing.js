@@ -4810,7 +4810,7 @@
         if (arguments.length === 3) {
           var index = arguments[0].indexOf(':');
           var name  = arguments[0].substring(index + 1);
-          attr      = this.findAttribute( name, arguments[1] );
+          attr      = this.findAttribute(name, arguments[1]);
           if (attr) {
             attr.setValue(arguments[2]);
           } else {
@@ -4826,6 +4826,27 @@
             this.attributes.push(attr);
           }
         }
+      },
+      /**
+       * Processing 1.5 XML API wrapper for the generic String
+       * attribute setter. This must take two arguments.
+       */
+      setString: function(attribute, value) {
+        this.setAttribute(attribute, value);
+      },
+      /**
+       * Processing 1.5 XML API wrapper for the generic int
+       * attribute setter. This must take two arguments.
+       */
+      setInt: function(attribute, value) {
+        this.setAttribute(attribute, value);
+      },
+      /**
+       * Processing 1.5 XML API wrapper for the generic float
+       * attribute setter. This must take two arguments.
+       */
+      setFloat: function(attribute, value) {
+        this.setAttribute(attribute, value);
       },
       /**
        * @member XMLElement
