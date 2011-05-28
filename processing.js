@@ -320,8 +320,6 @@
     UP:        38,
     RIGHT:     39,
     DOWN:      40,
-    INS:       45,
-    DEL:       46,
     F1:        112,
     F2:        113,
     F3:        114,
@@ -336,6 +334,7 @@
     F12:       123,
     NUMLK:     144,
     META:      157,
+    INSERT:    155,
 
     // Cursor types
     ARROW:    'default',
@@ -1583,7 +1582,7 @@
         lastPressedKeyCode = null,
         codedKeys = [ PConstants.SHIFT, PConstants.CONTROL, PConstants.ALT, PConstants.CAPSLK, PConstants.PGUP, PConstants.PGDN,
                       PConstants.END, PConstants.HOME, PConstants.LEFT, PConstants.UP, PConstants.RIGHT, PConstants.DOWN, PConstants.NUMLK,
-                      PConstants.INS, PConstants.F1, PConstants.F2, PConstants.F3, PConstants.F4, PConstants.F5, PConstants.F6, PConstants.F7,
+                      PConstants.INSERT, PConstants.F1, PConstants.F2, PConstants.F3, PConstants.F4, PConstants.F5, PConstants.F6, PConstants.F7,
                       PConstants.F8, PConstants.F9, PConstants.F10, PConstants.F11, PConstants.F12, PConstants.META ];
 
     // Get padding and border style widths for mouse offsets
@@ -17031,6 +17030,10 @@
           return 157;
         case 57392: // CONTROL (Op/Mac)
           return 17;
+        case 46: // DELETE
+          return 127;
+        case 45: // INSERT
+          return 155;
       }
       return code;
     }
@@ -17044,9 +17047,6 @@
           break;
         case 8:
           char = anyShiftPressed ? 127 : 8; // DELETE vs BACKSPACE (Mac)
-          break;
-        case 46:
-          char = 127; // DELETE
           break;
       }
       return new Char(char);
@@ -17072,26 +17072,38 @@
       p.__keyPressed = false;
     }
 
+    function resetKeyPressed() {
+      p.__keyPressed = false;
+      pressedKeysMap = [];
+      lastPressedKeyCode = null;
+    }
+
+    function simulateKeyTyped(code, char) {
+      pressedKeysMap[code] = char;
+      lastPressedKeyCode = null;
+      p.key = char;
+      p.keyCode = code;
+      p.keyPressed();
+      p.keyCode = 0;
+      p.keyTyped();
+      updateKeyPressed();
+    }
+
     function handleKeydown(e) {
       var code = getKeyCode(e);
+      if (code === PConstants.DELETE) {
+        simulateKeyTyped(code, new Char(127));
+        return;
+      }
       if (codedKeys.indexOf(code) < 0) {
         lastPressedKeyCode = code;
         return;
       }
-      var generateRelease = false;
-      if (code === PConstants.CAPSLK || code === PConstants.NUMLK) {
-        generateRelease = pressedKeysMap[code] !== undef;
-      }
       var char = new Char(PConstants.CODED);
       p.key = char;
       p.keyCode = code;
-      if (generateRelease) {
-        p.keyReleased();
-        delete pressedKeysMap[code];
-      } else {
-        pressedKeysMap[code] = char;
-        p.keyPressed();
-      }
+      pressedKeysMap[code] = char;
+      p.keyPressed();
       lastPressedKeyCode = null;
       updateKeyPressed();
       return suppressKeyEvent(e);
@@ -17101,15 +17113,8 @@
       if (lastPressedKeyCode === null) {
         return; // processed in handleKeydown
       }
-      var char = getKeyChar(e), code = lastPressedKeyCode;
-      pressedKeysMap[code] = char;
-      lastPressedKeyCode = null;
-      p.key = char;
-      p.keyCode = code;
-      p.keyPressed();
-      p.keyCode = 0;
-      p.keyTyped();
-      updateKeyPressed();
+      var code = lastPressedKeyCode, char = getKeyChar(e);
+      simulateKeyTyped(code, char);
       return suppressKeyEvent(e);
     }
 
@@ -17162,6 +17167,9 @@
 
       curElement.onblur = function() {
         p.focused = false;
+        if (!curSketch.options.globalKeyEvents) {
+          resetKeyPressed();
+        }
       };
 
       // 2) looping status is handled per page, based on the pauseOnBlur @pjs directive
@@ -17177,6 +17185,7 @@
             p.noLoop();
             doLoop = true; // make sure to keep this true after the noLoop call
           }
+          resetKeyPressed();
         });
       }
 
