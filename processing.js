@@ -17039,17 +17039,17 @@
     }
 
     function getKeyChar(e) {
-      var char = e.which || e.keyCode;
+      var c = e.which || e.keyCode;
       var anyShiftPressed = e.shiftKey || e.ctrlKey || e.altKey || e.metaKey;
-      switch (char) {
+      switch (c) {
         case 13:
-          char = anyShiftPressed ? 13 : 10; // RETURN vs ENTER (Mac)
+          c = anyShiftPressed ? 13 : 10; // RETURN vs ENTER (Mac)
           break;
         case 8:
-          char = anyShiftPressed ? 127 : 8; // DELETE vs BACKSPACE (Mac)
+          c = anyShiftPressed ? 127 : 8; // DELETE vs BACKSPACE (Mac)
           break;
       }
-      return new Char(char);
+      return new Char(c);
     }
 
     function suppressKeyEvent(e) {
@@ -17078,10 +17078,10 @@
       lastPressedKeyCode = null;
     }
 
-    function simulateKeyTyped(code, char) {
-      pressedKeysMap[code] = char;
+    function simulateKeyTyped(code, c) {
+      pressedKeysMap[code] = c;
       lastPressedKeyCode = null;
-      p.key = char;
+      p.key = c;
       p.keyCode = code;
       p.keyPressed();
       p.keyCode = 0;
@@ -17099,10 +17099,10 @@
         lastPressedKeyCode = code;
         return;
       }
-      var char = new Char(PConstants.CODED);
-      p.key = char;
+      var c = new Char(PConstants.CODED);
+      p.key = c;
       p.keyCode = code;
-      pressedKeysMap[code] = char;
+      pressedKeysMap[code] = c;
       p.keyPressed();
       lastPressedKeyCode = null;
       updateKeyPressed();
@@ -17113,17 +17113,17 @@
       if (lastPressedKeyCode === null) {
         return; // processed in handleKeydown
       }
-      var code = lastPressedKeyCode, char = getKeyChar(e);
-      simulateKeyTyped(code, char);
+      var code = lastPressedKeyCode, c = getKeyChar(e);
+      simulateKeyTyped(code, c);
       return suppressKeyEvent(e);
     }
 
     function handleKeyup(e) {
-      var code = getKeyCode(e), char = pressedKeysMap[code];
-      if (char === undef) {
+      var code = getKeyCode(e), c = pressedKeysMap[code];
+      if (c === undef) {
         return; // no keyPressed event was generated.
       }
-      p.key = char;
+      p.key = c;
       p.keyCode = code;
       p.keyReleased();
       delete pressedKeysMap[code];
