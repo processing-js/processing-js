@@ -51,7 +51,7 @@ compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3)
 %.js : %.pde
 	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
 
-check: check-globals check-tests
+check: check-lint check-globals check-summary
 
 release-dir: clean
 	@@mkdir $(RELEASE_DIR)
@@ -102,19 +102,22 @@ $(PJS_RELEASE_SRC): release-dir
 	@@cat $(PJS_RELEASE_SRC).tmp | sed -e 's/@VERSION@/$(VERSION)/' > $(PJS_RELEASE_SRC)
 	@@rm -f $(PJS_RELEASE_SRC).tmp
 
-check: check-globals check-tests
-
 check-tests:
 	$(RUNTESTS)
 
 check-release: closure
-	$(RUNTESTS) -l $(PJS_RELEASE_MIN)
+	$(RUNTESTS) -s -l $(PJS_RELEASE_MIN)
 
 check-summary:
 	$(RUNTESTS) -s
 
 check-lint:
-	$(TOOLS_DIR)/jslint.py $(JSSHELL) $(PJS_SRC)
+	@@echo "\nRunning jslint on processing.js:"
+	@@$(TOOLS_DIR)/jslint.py $(JSSHELL) $(PJS_SRC)
+
+check-closure:
+	@@echo "\nRunning closure compiler on processing.js:"
+	@@java -jar ./tools/closure/compiler.jar --compilation_level ADVANCED_OPTIMIZATIONS --jscomp_off=nonStandardJsDocs --warning_level=VERBOSE --js $(PJS_SRC) > /dev/null
 
 check-parser:
 	$(RUNTESTS) -p
@@ -133,6 +136,7 @@ check-coverage: add-coverage
 	@@$(RUNTESTS) -l $(RELEASE_DIR)/$(P5)-cv.js -c $(RELEASE_DIR)/codecoverage.txt
 
 check-globals:
+	@@echo "\nRunning jsglobals on processing.js:"
 	@@$(RUNJS) $(TOOLS_DIR)/jsglobals.js -e "findDifference()" < $(PJS_SRC)
 
 print-globals:
