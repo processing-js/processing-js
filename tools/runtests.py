@@ -60,6 +60,8 @@ class ProcessingTests(object):
       else:
         processing_js = os.path.join(self.toolsdir, '..', 'processing.js')
 
+      print "\nRunning processing.js Parser Tests:"
+
       for root, dirs, filenames in os.walk(parsertestdir):
           for filename in filenames:
               sys.stdout.flush()
@@ -85,22 +87,13 @@ class ProcessingTests(object):
 
                   if stderr:
                     # we failed to parse, and died in the js shell
-                    if summaryOnly:
-                      if self.isKnownFailure(fullpath):
-                        sys.stdout.write('K')
-                        self.testsFailedKnown += 1
-                      else:
-                        sys.stdout.write('F')
-                        self.testsFailed += 1
-                      sys.stdout.flush()
+                    if self.isKnownFailure(fullpath):
+                      print "KNOWN-FAILURE: " + fullpath
+                      self.testsFailedKnown += 1
                     else:
-                      if self.isKnownFailure(fullpath):
-                        print "KNOWN-FAILURE: " + fullpath
-                        self.testsFailedKnown += 1
-                      else:
-                        print "TEST-FAILED: " + fullpath
-                        print stderr
-                        self.testsFailed += 1
+                      print "TEST-FAILED: " + fullpath
+                      print stderr
+                      self.testsFailed += 1
                   elif stdout:
                     # TEST-SUMMARY: passed/failed
                     m = re.search('^TEST-SUMMARY: (\d+)/(\d+)', stdout, re.MULTILINE)
@@ -112,44 +105,26 @@ class ProcessingTests(object):
                         self.testsFailed += int(m.group(2))
 
                       if int(m.group(2)) > 0:
-                        if summaryOnly:
-                          if self.isKnownFailure(fullpath):
-                            sys.stdout.write('K')
-                          else:
-                            sys.stdout.write('F')
-                          sys.stdout.flush()
+                        if self.isKnownFailure(fullpath):
+                          print "KNOWN-FAILURE: " + fullpath
                         else:
-                          if self.isKnownFailure(fullpath):
-                            print "KNOWN-FAILURE: " + fullpath
-                          else:
-                            print "TEST-FAILED: " + fullpath
-                            print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)(\nLINES-CALLED: ([\d,]+))?\n?", "", stdout)
-                            print stderr
+                          print "TEST-FAILED: " + fullpath
+                          print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)(\nLINES-CALLED: ([\d,]+))?\n?", "", stdout)
+                          print stderr
                       else:
-                        if summaryOnly:
-                          if self.isKnownFailure(fullpath):
-                            # we should pass if we are expecting to fail!
-                            sys.stdout.write('!')
-                          else:
-                            sys.stdout.write('.')
-                          sys.stdout.flush()
+                        if self.isKnownFailure(fullpath):
+                          # we shouldn't pass if we are expecting to fail!
+                          print "TEST-FAILED (known failure passed!): " + fullpath
+                          self.testsPassed -= 1
+                          self.testsFailed += 1
                         else:
-                          if self.isKnownFailure(fullpath):
-                            # we shouldn't pass if we are expecting to fail!
-                            print "TEST-FAILED (known failure passed!): " + fullpath
-                            self.testsPassed -= 1
-                            self.testsFailed += 1
-                          else:
+                          if not summaryOnly:
                             print "TEST-PASSED: " + fullpath
                     else:
                       # Shouldn't happen!
                       self.testsFailed += 1
-                      if summaryOnly:
-                        sys.stdout.write('F')
-                        sys.stdout.flush()
-                      else:
-                        print "TEST-FAILED: " + fullpath + ". Test died:"
-                        print stdout
+                      print "TEST-FAILED: " + fullpath + ". Test died:"
+                      print stdout
                     m2 = re.search('^LINES-CALLED: ([\d,]+)', stdout, re.MULTILINE)
                     if m2 and m2.group:
                       for ln in m2.group(1).split(','):
@@ -165,6 +140,8 @@ class ProcessingTests(object):
         processing_js =os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep))
       else:
         processing_js = os.path.join(self.toolsdir, '..', 'processing.js')
+
+      print "\nRunning processing.js Unit Tests:"
 
       for root, dirs, filenames in os.walk(unittestdir):
           for filename in filenames:
@@ -214,53 +191,31 @@ class ProcessingTests(object):
                     self.testsFailed += int(m.group(2))
 
                   if int(m.group(2)) > 0:
-                    if summaryOnly:
-                      if self.isKnownFailure(fullpath):
-                        sys.stdout.write('K')
-                      else:
-                        sys.stdout.write('F')
-                      sys.stdout.flush()
+                    if self.isKnownFailure(fullpath):
+                      print "KNOWN-FAILURE: " + fullpath
                     else:
-                      if self.isKnownFailure(fullpath):
-                        print "KNOWN-FAILURE: " + fullpath
-                      else:
-                        print "TEST-FAILED: " + fullpath
-                        print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)(\nLINES-CALLED: ([\d,]+))?\n?", "", stdout)
-                        print stderr
+                      print "TEST-FAILED: " + fullpath
+                      print re.sub("\n?TEST-SUMMARY: (\d+)\/(\d+)(\nLINES-CALLED: ([\d,]+))?\n?", "", stdout)
+                      print stderr
                   else:
-                    if summaryOnly:
-                      if self.isKnownFailure(fullpath):
-                        # we should pass if we are expecting to fail!
-                        sys.stdout.write('!')
-                      else:
-                        sys.stdout.write('.')
-                      sys.stdout.flush()
+                    if self.isKnownFailure(fullpath):
+                      # we shouldn't pass if we are expecting to fail!
+                      print "TEST-FAILED (known failure passed!): " + fullpath
+                      self.testsPassed -= 1
+                      self.testsFailed += 1
                     else:
-                      if self.isKnownFailure(fullpath):
-                        # we shouldn't pass if we are expecting to fail!
-                        print "TEST-FAILED (known failure passed!): " + fullpath
-                        self.testsPassed -= 1
-                        self.testsFailed += 1
-                      else:
+                      if not summaryOnly:
                         print "TEST-PASSED: " + fullpath
                 else:
                   # Shouldn't happen!
                   self.testsFailed += 1
-                  if summaryOnly:
-                    sys.stdout.write('F')
-                    sys.stdout.flush()
-                  else:
-                    print "TEST-FAILED: " + fullpath + ". Test died:"
-                    print stdout
+                  print "TEST-FAILED: " + fullpath + ". Test died:"
+                  print stdout
               elif stderr:
                 # Shouldn't happen!
                 self.testsFailed += 1
-                if summaryOnly:
-                  sys.stdout.write('F')
-                  sys.stdout.flush()
-                else:
-                  print "TEST-FAILED: " + fullpath + ". Test exited early:"
-                  print stderr
+                print "TEST-FAILED: " + fullpath + ". Test exited early:"
+                print stderr
 
               m2 = re.search('^LINES-CALLED: ([\d,]+)', stdout, re.MULTILINE)
               if m2 and m2.group:
@@ -286,7 +241,7 @@ def main():
 
     parser.add_option("-s", "--summary-only",
                       action="store_true", dest="summaryOnly", default=False,
-                      help="only print test summary info.")
+                      help="only print failed tests info.")
     parser.add_option("-p", "--parser-only",
                       action="store_true", dest="parserOnly", default=False,
                       help="only run parser tests.")
@@ -314,12 +269,24 @@ def main():
     ptests.initCodeLines(options.processingPath)
 
     if options.parserOnly:
-        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly, processingPath=options.processingPath)
+        ptests.runParserTests(args[0],
+                              testPattern=options.testPattern,
+                              summaryOnly=options.summaryOnly,
+                              processingPath=options.processingPath)
     elif options.unitOnly:
-        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly, processingPath=options.processingPath)
+        ptests.runUnitTests(args[0],
+                            testPattern=options.testPattern,
+                            summaryOnly=options.summaryOnly,
+                            processingPath=options.processingPath)
     else:
-        ptests.runParserTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly, processingPath=options.processingPath)
-        ptests.runUnitTests(args[0], testPattern=options.testPattern, summaryOnly=options.summaryOnly, processingPath=options.processingPath)
+        ptests.runParserTests(args[0],
+                              testPattern=options.testPattern,
+                              summaryOnly=options.summaryOnly,
+                              processingPath=options.processingPath)
+        ptests.runUnitTests(args[0],
+                            testPattern=options.testPattern,
+                            summaryOnly=options.summaryOnly,
+                            processingPath=options.processingPath)
 
     print "\nTEST SUMMARY: %s passed, %s failed (%s known), %s total" % (ptests.testsPassed,
                                                                          ptests.testsFailed,
