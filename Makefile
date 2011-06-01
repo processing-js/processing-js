@@ -45,21 +45,19 @@ SKETCHOUTPUTSRC ?=$(SKETCHINPUT).src
 SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
 preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_SRC) >> $(1)
-compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3)
+compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
 	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
 
-check: check-lint check-globals check-summary
+release: release-files zipped examples
+	@@echo "Release Created, see $(RELEASE_DIR)"
+
+check: check-lint check-closure check-globals check-summary
 
 release-dir: clean
 	@@mkdir $(RELEASE_DIR)
-
-all: release
-
-release: release-files zipped examples
-	@@echo "Release Created, see $(RELEASE_DIR)"
 
 release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs
 
@@ -117,7 +115,7 @@ check-lint:
 
 check-closure:
 	@@echo "\nRunning closure compiler on processing.js:"
-	@@java -jar ./tools/closure/compiler.jar --compilation_level ADVANCED_OPTIMIZATIONS --jscomp_off=nonStandardJsDocs --warning_level=VERBOSE --js $(PJS_SRC) > /dev/null
+	@@$(call compile,$(PJS_SRC),/dev/null,$(EMPTY))
 
 check-parser:
 	$(RUNTESTS) -p
