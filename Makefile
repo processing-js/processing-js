@@ -25,6 +25,7 @@ P5 :=processing
 PJS :=$(P5).js
 PJS_SRC :=$(SRC_DIR)/$(PJS)
 PJS_VERSION :=$(P5)-$(VERSION)
+PJS_VERSION_FULL :=$(P5)-js-$(VERSION)
 
 RELEASE_DIR :=$(SRC_DIR)/release
 PJS_RELEASE_PREFIX :=$(RELEASE_DIR)/$(PJS_VERSION)
@@ -58,15 +59,15 @@ release-dir: clean
 
 all: release
 
-release: release-files zipped examples
+release: clean-invisibles release-files zipped examples
 	@@echo "Release Created, see $(RELEASE_DIR)"
 
-release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs
+release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensions
 
 zipped: release-files
 	@@echo "Creating zipped archives..."
-	@@gzip -9 -c $(PJS_RELEASE_MIN) > $(PJS_RELEASE_MIN).gz $(QUIET)
-	@@find $(RELEASE_DIR) -print | zip -j $(PJS_RELEASE_PREFIX).zip -@ $(QUIET)
+	@@gzip -9 -c $(PJS_RELEASE_MIN) > $(PJS_RELEASE_MIN).gz
+	@@cd $(RELEASE_DIR); find . -print | zip $(PJS_VERSION_FULL).zip -@ $(QUIET)
 
 release-docs: release-dir
 	@@echo "Copying project release docs..."
@@ -86,7 +87,7 @@ examples: $(PJS_RELEASE_SRC)
 	@@mkdir $(EXAMPLES_DIR)
 	@@cp $(PJS_RELEASE_SRC) $(EXAMPLES_DIR)/$(PJS)
 	@@cp -R $(SRC_DIR)/examples $(EXAMPLES_DIR) $(QUIET)
-	@@cd $(RELEASE_DIR); zip -r $(PJS_VERSION)-examples.zip $(PJS_VERSION)-examples $(QUIET)
+	@@cd $(RELEASE_DIR); zip -r $(PJS_VERSION_FULL)-examples.zip $(PJS_VERSION)-examples $(QUIET)
 	@@rm -fr $(EXAMPLES_DIR)
 
 pretty: $(PJS_RELEASE_SRC)
@@ -94,6 +95,10 @@ pretty: $(PJS_RELEASE_SRC)
 	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(PJS_RELEASE_SRC) > $(PJS_RELEASE_SRC).tmp
 	@@$(JSSHELL) -f $(FAKE_DOM) -f $(PJS_RELEASE_SRC).tmp
 	@@mv $(PJS_RELEASE_SRC).tmp $(PJS_RELEASE_SRC)
+
+extensions: release-dir
+	@@echo "Copying extensions..."
+	@@cp -R $(SRC_DIR)/extensions $(RELEASE_DIR) $(QUIET)
 
 $(PJS_RELEASE_SRC): release-dir
 	@@echo "Creating processing.js..."
@@ -158,7 +163,16 @@ package-sketch:
 api-only: release-dir
 	@@echo "Creating processing.js API version..."
 	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js)
+	@@cat $(PJS_RELEASE_PREFIX)-api.js | sed -e 's/@VERSION@/$(VERSION)/' > $(PJS_RELEASE_PREFIX)-api.js.tmp
+	@@mv $(PJS_RELEASE_PREFIX)-api.js.tmp $(PJS_RELEASE_PREFIX)-api.js
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
 
 clean:
 	@@rm -fr $(RELEASE_DIR)
+
+clean-invisibles:
+	@@echo "Cleaning invisible files..."
+	@@find . -iname '*.DS_Store' -type f -delete
+	@@find . -iname '._*' -type f -delete
+	@@find . -iname 'desktop.ini' -type f -delete
+	@@find . -iname 'Thumbs.db' -type f -delete
