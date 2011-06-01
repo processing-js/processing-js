@@ -14351,6 +14351,7 @@
      * @param {int|float} alpha   opacity of the background
      * @param {Color} color       any value of the color datatype
      * @param {int} hex           color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     * @param {PImage} image      an instance of a PImage to use as a background
      *
      * @see #stroke()
      * @see #fill()
@@ -14358,37 +14359,30 @@
      * @see #colorMode()
      */
     DrawingShared.prototype.background = function() {
-      var color, img;
-      // background params are either a color, a PImage or undefined which reapplies the lastBackgroundObj
-      if (arguments.length === 1 && typeof arguments[0] === 'number') {
-        color = p.color.apply(this, arguments);
+      var obj;
+      
+      if (arguments.length === 1 && arguments[0] instanceof PImage) {
+        obj = arguments[0];
 
-        // override alpha value, processing ignores the alpha for background color
-        if (!curSketch.options.isTransparent) {
-          color = color | PConstants.ALPHA_MASK;
-        }
-
-        lastBackgroundObj = color;
-      } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
-        img = arguments[0];
-
-        if (!img.loaded) {
+        if (!obj.loaded) {
           throw "Error using image in background(): PImage not loaded.";
-        } else if(img.width !== p.width || img.height !== p.height){
+        } else if(obj.width !== p.width || obj.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
-
-        lastBackgroundObj = img;
-      } else if (lastBackgroundObj === undefined) {
-        color = p.color(204);
-
+      } else {
+        if (arguments.length === 0) {
+          obj = p.color(204);
+        } else {
+          obj = p.color.apply(this, arguments);
+        }
+        
         // override alpha value, processing ignores the alpha for background color
         if (!curSketch.options.isTransparent) {
-          color = color | PConstants.ALPHA_MASK;
+          obj = obj | PConstants.ALPHA_MASK;
         }
-
-        lastBackgroundObj = color;
       }
+      
+      lastBackgroundObj = obj;
     };
 
     Drawing2D.prototype.background = function() {
