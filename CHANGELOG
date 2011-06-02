@@ -1,3 +1,9 @@
+June 2, 2011 - Release 1.2.1
+
+  * Fixed background() when called with 3 arguments
+  * Fixed use @pjs transparent directive
+  * Updates to build system for testing, release
+
 May 26, 2011 - Release 1.2
 
   * Aligned default frameRate to match Processing (e.g., 60fps). NOTE: if your
