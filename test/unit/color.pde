@@ -1,4 +1,4 @@
-color a, b, c, d, e, f, g, h, i, j;
+color a, b, c, d, e, f, g, h, i, j, k, l, m;
 
 // 1 Arg: Grayscale
 a = color(255);
