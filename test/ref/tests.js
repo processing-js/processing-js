@@ -11,6 +11,7 @@ var tests = [
   { path: "background-hex2.pde", tags: ["2D"] },
   { path: "background-hex-alpha.pde", tags: ["2D"] },
   { path: "background-image.pde", tags: ["2D"], knownFailureTicket: "1285" },
+  { path: "background-before-size.pde", tags: ["2D"] },
   { path: "background-gray-3d.pde", tags: ["3D"] },
   { path: "background-gray-alpha-3d.pde", tags: ["3D"] },
   { path: "background-3-arg-3d.pde", tags: ["3D"] },
