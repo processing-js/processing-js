@@ -45,21 +45,19 @@ SKETCHOUTPUTSRC ?=$(SKETCHINPUT).src
 SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
 preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_SRC) >> $(1)
-compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3)
+compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
 	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
 
-check: check-globals check-tests
+release: release-files zipped examples
+	@@echo "Release Created, see $(RELEASE_DIR)"
+
+check: check-lint check-closure check-globals check-summary
 
 release-dir: clean
 	@@mkdir $(RELEASE_DIR)
-
-all: release
-
-release: release-files zipped examples
-	@@echo "Release Created, see $(RELEASE_DIR)"
 
 release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs
 
@@ -102,19 +100,22 @@ $(PJS_RELEASE_SRC): release-dir
 	@@cat $(PJS_RELEASE_SRC).tmp | sed -e 's/@VERSION@/$(VERSION)/' > $(PJS_RELEASE_SRC)
 	@@rm -f $(PJS_RELEASE_SRC).tmp
 
-check: check-globals check-tests
-
 check-tests:
 	$(RUNTESTS)
 
 check-release: closure
-	$(RUNTESTS) -l $(PJS_RELEASE_MIN)
+	$(RUNTESTS) -s -l $(PJS_RELEASE_MIN)
 
 check-summary:
 	$(RUNTESTS) -s
 
 check-lint:
-	$(TOOLS_DIR)/jslint.py $(JSSHELL) $(PJS_SRC)
+	@@echo "\nRunning jslint on processing.js:"
+	@@$(TOOLS_DIR)/jslint.py $(JSSHELL) $(PJS_SRC)
+
+check-closure:
+	@@echo "\nRunning closure compiler on processing.js:"
+	@@$(call compile,$(PJS_SRC),/dev/null,$(EMPTY))
 
 check-parser:
 	$(RUNTESTS) -p
@@ -133,6 +134,7 @@ check-coverage: add-coverage
 	@@$(RUNTESTS) -l $(RELEASE_DIR)/$(P5)-cv.js -c $(RELEASE_DIR)/codecoverage.txt
 
 check-globals:
+	@@echo "\nRunning jsglobals on processing.js:"
 	@@$(RUNJS) $(TOOLS_DIR)/jsglobals.js -e "findDifference()" < $(PJS_SRC)
 
 print-globals:
