@@ -17,7 +17,8 @@ TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 # Version number used in naming release files. Defaults to DEV_VERSION
 VERSION ?= DEV_VERSION
 
-QUIET := > /dev/null 2>&1
+# TODO: get a Windows solution ... > /dev/null 2>&1
+QUIET :=
 
 EMPTY :=
 SRC_DIR :=.
@@ -125,7 +126,8 @@ check-lint:
 
 check-closure:
 	@@echo "\nRunning closure compiler on processing.js:"
-	@@$(call compile,$(PJS_SRC),/dev/null,$(EMPTY))
+	@@$(call compile,$(PJS_SRC),$(RELEASE_DIR)/closurecompile.out,$(EMPTY))
+	@@rm -f $(RELEASE_DIR)/closurecompile.out
 
 check-parser:
 	$(RUNTESTS) -p
