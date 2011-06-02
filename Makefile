@@ -25,6 +25,7 @@ P5 :=processing
 PJS :=$(P5).js
 PJS_SRC :=$(SRC_DIR)/$(PJS)
 PJS_VERSION :=$(P5)-$(VERSION)
+PJS_VERSION_FULL :=$(P5)-js-$(VERSION)
 
 RELEASE_DIR :=$(SRC_DIR)/release
 PJS_RELEASE_PREFIX :=$(RELEASE_DIR)/$(PJS_VERSION)
@@ -46,6 +47,9 @@ SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
 preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_SRC) >> $(1)
 compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
+copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && find $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
+                                                                           -iname 'desktop.ini' -o \
+                                                                           -iname 'Thumbs.db'      \) -delete
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
@@ -59,12 +63,14 @@ check: check-lint check-closure check-globals check-summary
 release-dir: clean
 	@@mkdir $(RELEASE_DIR)
 
-release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs
+all: release
+
+release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensions
 
 zipped: release-files
 	@@echo "Creating zipped archives..."
-	@@gzip -9 -c $(PJS_RELEASE_MIN) > $(PJS_RELEASE_MIN).gz $(QUIET)
-	@@find $(RELEASE_DIR) -print | zip -j $(PJS_RELEASE_PREFIX).zip -@ $(QUIET)
+	@@gzip -9 -c $(PJS_RELEASE_MIN) > $(PJS_RELEASE_MIN).gz
+	@@cd $(RELEASE_DIR); find . -print | zip $(PJS_VERSION_FULL).zip -@ $(QUIET)
 
 release-docs: release-dir
 	@@echo "Copying project release docs..."
@@ -83,8 +89,8 @@ examples: $(PJS_RELEASE_SRC)
 	@@echo "Copying examples..."
 	@@mkdir $(EXAMPLES_DIR)
 	@@cp $(PJS_RELEASE_SRC) $(EXAMPLES_DIR)/$(PJS)
-	@@cp -R $(SRC_DIR)/examples $(EXAMPLES_DIR) $(QUIET)
-	@@cd $(RELEASE_DIR); zip -r $(PJS_VERSION)-examples.zip $(PJS_VERSION)-examples $(QUIET)
+	@@$(call copydir,$(SRC_DIR)/examples,$(EXAMPLES_DIR))
+	@@cd $(RELEASE_DIR); zip -r $(PJS_VERSION_FULL)-examples.zip $(PJS_VERSION)-examples $(QUIET)
 	@@rm -fr $(EXAMPLES_DIR)
 
 pretty: $(PJS_RELEASE_SRC)
@@ -92,6 +98,10 @@ pretty: $(PJS_RELEASE_SRC)
 	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(PJS_RELEASE_SRC) > $(PJS_RELEASE_SRC).tmp
 	@@$(JSSHELL) -f $(FAKE_DOM) -f $(PJS_RELEASE_SRC).tmp
 	@@mv $(PJS_RELEASE_SRC).tmp $(PJS_RELEASE_SRC)
+
+extensions: release-dir
+	@@echo "Copying extensions..."
+	@@$(call copydir,$(SRC_DIR)/extensions,$(RELEASE_DIR))
 
 $(PJS_RELEASE_SRC): release-dir
 	@@echo "Creating processing.js..."
@@ -160,6 +170,8 @@ package-sketch:
 api-only: release-dir
 	@@echo "Creating processing.js API version..."
 	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js)
+	@@cat $(PJS_RELEASE_PREFIX)-api.js | sed -e 's/@VERSION@/$(VERSION)/' > $(PJS_RELEASE_PREFIX)-api.js.tmp
+	@@mv $(PJS_RELEASE_PREFIX)-api.js.tmp $(PJS_RELEASE_PREFIX)-api.js
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
 
 clean:
