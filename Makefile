@@ -47,6 +47,9 @@ SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
 preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_SRC) >> $(1)
 compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3)
+copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && find $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
+                                                                           -iname 'desktop.ini' -o \
+                                                                           -iname 'Thumbs.db'      \) -delete
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
@@ -59,7 +62,7 @@ release-dir: clean
 
 all: release
 
-release: clean-invisibles release-files zipped examples
+release: release-files zipped examples
 	@@echo "Release Created, see $(RELEASE_DIR)"
 
 release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensions
@@ -86,7 +89,7 @@ examples: $(PJS_RELEASE_SRC)
 	@@echo "Copying examples..."
 	@@mkdir $(EXAMPLES_DIR)
 	@@cp $(PJS_RELEASE_SRC) $(EXAMPLES_DIR)/$(PJS)
-	@@cp -R $(SRC_DIR)/examples $(EXAMPLES_DIR) $(QUIET)
+	@@$(call copydir,$(SRC_DIR)/examples,$(EXAMPLES_DIR))
 	@@cd $(RELEASE_DIR); zip -r $(PJS_VERSION_FULL)-examples.zip $(PJS_VERSION)-examples $(QUIET)
 	@@rm -fr $(EXAMPLES_DIR)
 
@@ -98,7 +101,7 @@ pretty: $(PJS_RELEASE_SRC)
 
 extensions: release-dir
 	@@echo "Copying extensions..."
-	@@cp -R $(SRC_DIR)/extensions $(RELEASE_DIR) $(QUIET)
+	@@$(call copydir,$(SRC_DIR)/extensions,$(RELEASE_DIR))
 
 $(PJS_RELEASE_SRC): release-dir
 	@@echo "Creating processing.js..."
@@ -169,10 +172,3 @@ api-only: release-dir
 
 clean:
 	@@rm -fr $(RELEASE_DIR)
-
-clean-invisibles:
-	@@echo "Cleaning invisible files..."
-	@@find . -iname '*.DS_Store' -type f -delete
-	@@find . -iname '._*' -type f -delete
-	@@find . -iname 'desktop.ini' -type f -delete
-	@@find . -iname 'Thumbs.db' -type f -delete
