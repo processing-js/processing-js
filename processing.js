@@ -1511,7 +1511,7 @@
         curTightness = 0,
         curveDet = 20,
         curveInited = false,
-        lastBackgroundObj,
+        backgroundObj = -3355444, // rgb(204, 204, 204) is the default gray background colour
         bezDetail = 20,
         colorModeA = 255,
         colorModeX = 255,
@@ -14351,6 +14351,7 @@
      * @param {int|float} alpha   opacity of the background
      * @param {Color} color       any value of the color datatype
      * @param {int} hex           color value in hexadecimal notation (i.e. #FFCC00 or 0xFFFFCC00)
+     * @param {PImage} image      an instance of a PImage to use as a background
      *
      * @see #stroke()
      * @see #fill()
@@ -14358,65 +14359,58 @@
      * @see #colorMode()
      */
     DrawingShared.prototype.background = function() {
-      var color, img;
-      // background params are either a color, a PImage or undefined which reapplies the lastBackgroundObj
-      if (arguments.length === 1 && typeof arguments[0] === 'number') {
-        color = p.color.apply(this, arguments);
+      var obj;
+      
+      if (arguments[0] instanceof PImage) {
+        obj = arguments[0];
 
-        // override alpha value, processing ignores the alpha for background color
-        if (!curSketch.options.isTransparent) {
-          color = color | PConstants.ALPHA_MASK;
-        }
-
-        lastBackgroundObj = color;
-      } else if (arguments.length === 1 && arguments[0] instanceof PImage) {
-        img = arguments[0];
-
-        if (!img.loaded) {
+        if (!obj.loaded) {
           throw "Error using image in background(): PImage not loaded.";
-        } else if(img.width !== p.width || img.height !== p.height){
+        } else if(obj.width !== p.width || obj.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
-
-        lastBackgroundObj = img;
-      } else if (lastBackgroundObj === undefined) {
-        color = p.color(204);
-
+      } else {
+        obj = p.color.apply(this, arguments);
+        
         // override alpha value, processing ignores the alpha for background color
         if (!curSketch.options.isTransparent) {
-          color = color | PConstants.ALPHA_MASK;
+          obj = obj | PConstants.ALPHA_MASK;
         }
-
-        lastBackgroundObj = color;
       }
+      
+      backgroundObj = obj;
     };
 
     Drawing2D.prototype.background = function() {
-      DrawingShared.prototype.background.apply(this, arguments);
+      if (arguments.length > 0) {
+        DrawingShared.prototype.background.apply(this, arguments);
+      }
 
-      if (typeof lastBackgroundObj === 'number') {
+      if (backgroundObj instanceof PImage) {
+        saveContext();
+        curContext.setTransform(1, 0, 0, 1, 0, 0);
+        p.image(backgroundObj, 0, 0);
+        restoreContext();
+      } else {
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
 
         if (curSketch.options.isTransparent) {
           curContext.clearRect(0,0, p.width, p.height);
         }
-        curContext.fillStyle = p.color.toString(lastBackgroundObj);
+        curContext.fillStyle = p.color.toString(backgroundObj);
         curContext.fillRect(0, 0, p.width, p.height);
         isFillDirty = true;
-        restoreContext();
-      } else {
-        saveContext();
-        curContext.setTransform(1, 0, 0, 1, 0, 0);
-        p.image(lastBackgroundObj, 0, 0);
         restoreContext();
       }
     };
 
     Drawing3D.prototype.background = function() {
-      DrawingShared.prototype.background.apply(this, arguments);
+      if (arguments.length > 0) {
+        DrawingShared.prototype.background.apply(this, arguments);
+      }
 
-      var c = p.color.toGLArray(lastBackgroundObj);
+      var c = p.color.toGLArray(backgroundObj);
       curContext.clearColor(c[0], c[1], c[2], c[3]);
       curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
 
