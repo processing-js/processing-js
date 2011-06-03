@@ -19501,4 +19501,4 @@
     // DOM is not found
     this.Processing = Processing;
   }
-}(window, window.document, Math, function(){}, function(expr) { return eval(expr); }));
+}(window, window.document, Math, function(){}, function(expr) { var fn = new Function("return (" + expr + ");"); return fn(); }));
