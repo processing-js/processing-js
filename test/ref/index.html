@@ -284,7 +284,7 @@
           result.appendChild(title);
           results.appendChild(result);
           var valueEpsilon = epsilon * 255;
-          if (test.epsilonOverride) {
+          if (test.epsilonOverride && test.epsilonOverride > epsilon) {
             valueEpsilon = test.epsilonOverride * 255;
           }
 
