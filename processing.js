@@ -19411,7 +19411,7 @@
     }
 
     function loadBlock(index, filename) {
-      ajaxAsync(filename, function (block, error) {
+      function callback(block, error) {
         code[index] = block;
         ++loaded;
         if (error) {
@@ -19428,7 +19428,18 @@
             Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
           }
         }
-      });
+      }
+      if (filename.charAt(0) === '#') {
+        // trying to get script from the element
+        var scriptElement = document.getElementById(filename.substring(1));
+        if (scriptElement) {
+          callback(scriptElement.text || scriptElement.textContent);
+        } else {
+          callback("", "Unable to load pjs sketch: element with id \'" + filename.substring(1) + "\' was not found");
+        }
+        return;
+      }
+      ajaxAsync(filename, callback);
     }
 
     for (var i = 0; i < sourcesCount; ++i) {
