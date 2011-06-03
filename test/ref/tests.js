@@ -38,6 +38,7 @@ var tests = [
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
+  { path: "svg_font_biotyp.pde", tags: ["2D"] },
   { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
   { path: "text-leading.pde", tags: ["2D"], epsilonOverride: 0.20 },
   { path: "point_3D_stroke.pde", tags: ["3D"] },
