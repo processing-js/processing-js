@@ -18838,7 +18838,14 @@
             queue.push(id);
             class_.weight = 0;
           } else {
-            var dependsOn = class_.inScope ? [class_.inScope] : [];
+            var dependsOn = [];
+            if (class_.inScope) {
+              for (scopeId in class_.inScope) {
+                if (class_.inScope.hasOwnProperty(scopeId)) {
+                  dependsOn.push(class_.inScope[scopeId]);
+                }
+              }
+            }
             if (class_.derived) {
               dependsOn = dependsOn.concat(class_.derived);
             }
