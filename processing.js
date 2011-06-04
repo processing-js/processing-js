@@ -8458,6 +8458,10 @@
      * @return {String[]} an array of tokens from the split string
      */
     p.__split = function(subject, regex, limit) {
+      if (typeof subject !== "string") {
+        return subject.split.apply(subject, removeFirstArgument(arguments));
+      }
+
       var pattern = new RegExp(regex);
 
       // If limit is not specified, use JavaScript's built-in String.split.
