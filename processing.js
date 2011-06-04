@@ -18823,7 +18823,7 @@
 
     function setWeight(ast) {
       var queue = [], tocheck = {};
-      var id, class_;
+      var id, scopeId, class_;
       // queue most inner and non-inherited
       for (id in declaredClasses) {
         if (declaredClasses.hasOwnProperty(id)) {
