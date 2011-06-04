@@ -19434,6 +19434,8 @@
    * Automatic initialization function.
    */
   var init = function() {
+    document.removeEventListener('DOMContentLoaded', init, false);
+
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
