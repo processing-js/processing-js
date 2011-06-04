@@ -19507,20 +19507,6 @@
     }
   };
 
-  /**
-   * Make loadSketchFromSources publically visible
-   */
-  Processing.loadSketchFromSources = loadSketchFromSources;
-
-  /**
-   * Disable the automatic loading of all sketches on the page
-   */
-  Processing.disableInit = function() {
-    if(isDOMPresent) {
-      document.removeEventListener('DOMContentLoaded', init, false);
-    }
-  };
-
   if(isDOMPresent) {
     window['Processing'] = Processing;
     document.addEventListener('DOMContentLoaded', init, false);
