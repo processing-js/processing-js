@@ -16322,9 +16322,18 @@
 
       var buildPath = function(d) {
         var c = regex("[A-Za-z][0-9\\- ]+|Z", d);
+        var beforePathDraw = function() {
+          saveContext();
+          return drawing.$ensureContext();
+        };
+        var afterPathDraw = function() {
+          executeContextFill();
+          executeContextStroke();
+          restoreContext();
+        };
 
         // Begin storing path object
-        path = "var path={draw:function(){saveContext();curContext.beginPath();";
+        path = "return {draw:function(){var curContext=beforePathDraw();curContext.beginPath();";
 
         x = 0;
         y = 0;
@@ -16407,12 +16416,11 @@
           lastCom = com[0];
         }
 
-        path += "executeContextFill();executeContextStroke();";
-        path += "restoreContext();";
+        path += "afterPathDraw();";
         path += "curContext.translate(" + horiz_adv_x + ",0);";
         path += "}}";
 
-        return path;
+        return ((new Function("beforePathDraw", "afterPathDraw", path))(beforePathDraw, afterPathDraw));
       };
 
       // Parse SVG font-file into block of Canvas commands
@@ -16442,7 +16450,6 @@
           // Split path commands in glpyh
           if (d !== undef) {
             path = buildPath(d);
-            eval(path);
             // Store glyph data to table object
             p.glyphTable[url][name] = {
               name: name,
