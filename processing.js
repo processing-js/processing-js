@@ -10,7 +10,7 @@
 
 ***/
 
-(function(window, document, Math, nop, undef) {
+(function(window, document, Math, nop, eval_, undef) {
 
   var debug = (function() {
     if ("console" in window) {
@@ -19369,7 +19369,7 @@
       if(typeof this.attachFunction === "function") {
         this.attachFunction(processing);
       } else if(this.sourceCode) {
-        var func = eval(this.sourceCode);
+        var func = eval_(this.sourceCode);
         func(processing);
         this.attachFunction = func;
       } else {
@@ -19521,4 +19521,4 @@
     // DOM is not found
     this.Processing = Processing;
   }
-}(window, window.document, Math, function(){}));
+}(window, window.document, Math, function(){}, function(expr) { return ((new Function("return (" + expr + ");"))()); }));
