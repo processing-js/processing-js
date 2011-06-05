@@ -8509,9 +8509,7 @@
       if (subject.hashCode instanceof Function) {
         return subject.hashCode.apply(subject, removeFirstArgument(arguments));
       }
-
-      // TODO use virtHashCode for HashMap here
-      return 0 | subject;
+      return virtHashCode(subject);
     };
     /**
      * The __printStackTrace() prints stack trace to the console.
