@@ -216,47 +216,43 @@
             total.innerHTML = info;
             
             // sort the tests into failed, known failures, and passed
-            var sortedDivs = [];
-            while (results.hasChildNodes()) {
-              sortedDivs.push(results.firstChild);
-              results.removeChild(results.firstChild);
-            }
-            
             var failedDiv = document.createElement('div');
             failedDiv.innerHTML = '<hr><h3>Failed ' + failedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
-            results.appendChild(failedDiv);
             
             var knownFailureDiv = document.createElement('div');
             knownFailureDiv.innerHTML = '<hr><h3>Known Failures ' + knownFailedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
-            results.appendChild(knownFailureDiv);
             
             var passDiv = document.createElement('div');
             passDiv.innerHTML = '<hr><h3>Passed ' + passedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
-            results.appendChild(passDiv);
             
-            for (var i = 0; i < sortedDivs.length; i++) {
-              if (sortedDivs[i].className === 'failed') {
-                failedDiv.appendChild(sortedDivs[i]);
-              } else if (sortedDivs[i].className === 'knownfailure') {
-                knownFailureDiv.appendChild(sortedDivs[i]);
+            while (results.hasChildNodes()) {
+              var childNode = results.removeChild(results.firstChild);
+              if (childNode.className === 'failed') {
+                failedDiv.appendChild(childNode);
+              } else if (childNode.className === 'knownfailure') {
+                knownFailureDiv.appendChild(childNode);
               } else {
-                passDiv.appendChild(sortedDivs[i]);
+                passDiv.appendChild(childNode);
               }
             }
             
-            if (failedDiv.childNodes.length <= 1) {
+            if (failedCount < 1) {
               var temp = document.createElement('p');
               temp.innerHTML = 'No failed tests';
               failedDiv.appendChild(temp);
-            } else if (knownFailureDiv.childNodes.length <= 1) {
+            } else if (knownFailedCount < 1) {
               var temp = document.createElement('p');
-              temp.innerHTML = 'No failed tests';
+              temp.innerHTML = 'No known failures';
               knownFailureDiv.appendChild(temp);
-            } else if (passDiv.childNodes.length <= 1) {
+            } else if (passedCount < 1) {
               var temp = document.createElement('p');
-              temp.innerHTML = 'No failed tests';
+              temp.innerHTML = 'No passed tests';
               passDiv.appendChild(temp);
             }
+            
+            results.appendChild(failedDiv);
+            results.appendChild(knownFailureDiv);
+            results.appendChild(passDiv);
           }
         }
 
