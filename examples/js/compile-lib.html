@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../../processing.js"></script>
+  <link rel="stylesheet" href="../style.css"/></head>
+<body><h1><a href="http://processingjs.org/">Processing.js</a></h1>
+<h2>Compiling Java code to be used as a library for the web page sketches.</h2>
+
+<p>Let's say we have the following library:</p>
+<p>
+<pre id="lib">
+public class TheLib {
+  public String greet() {
+    return "Hello, world";
+  }
+}</pre>
+
+<p>And the sketch to use it with:</p>
+<pre id="sketch">background(0);
+TheLib lib = new TheLib();
+String s = lib.greet();
+text(s,10,40);</pre>
+
+<p>Load the library code as a string and call the <code>Processing.compile</code> method. The returned object is a Processing.Sketch object. 
+Its <code>sourceCode</code> property returns the code for the "attach" function.</p>
+<pre>var attachCode = Processing.compile(libraryCode).sourceCode;</pre>
+
+<p>This code can be used to call in the form <code>attachFunction(Processing.prototype)</code>. 
+That will let all library classes and methods be registered with the default scope.</p>
+
+<p>So the library source code will look like:</p>
+<pre id="libSource"></pre>
+  
+<p>The code above that can be used as a stanalone js-file and be loaded in the &lt;head&gt; after the processing.js.</p>
+<p>The sketch execution results:</p>
+<p>
+<canvas id="canvas"></canvas></p>
+
+<script>
+var libraryCode = document.getElementById("lib").textContent;
+var attachCode = Processing.compile(libraryCode).sourceCode;
+
+var librarySource = "(" + attachCode + "(Processing.prototype));";
+document.getElementById("libSource").textContent = librarySource;
+
+eval(librarySource); // simulating the script file code loading and execution
+  
+var processingSketchCode = document.getElementById("sketch").textContent;
+var canvas = document.getElementById("canvas");
+var instance = new Processing(canvas, processingSketchCode);
+</script>
+
+</body></html>

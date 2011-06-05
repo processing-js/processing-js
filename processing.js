@@ -1218,6 +1218,110 @@
   //defaultScope.PShape    = PShape;     // TODO
   //defaultScope.PShapeSVG = PShapeSVG;  // TODO
 
+  ////////////////////////////////////////////////////////////////////////////
+  // Class inheritance helper methods
+  ////////////////////////////////////////////////////////////////////////////
+
+  defaultScope.defineProperty = function(obj, name, desc) {
+    if("defineProperty" in Object) {
+      Object.defineProperty(obj, name, desc);
+    } else {
+      if (desc.hasOwnProperty("get")) {
+        obj.__defineGetter__(name, desc.get);
+      }
+      if (desc.hasOwnProperty("set")) {
+        obj.__defineSetter__(name, desc.set);
+      }
+    }
+  };
+
+  function extendClass(subClass, baseClass) {
+    function extendGetterSetter(propertyName) {
+      defaultScope.defineProperty(subClass, propertyName, {
+        get: function() {
+          return baseClass[propertyName];
+        },
+        set: function(v) {
+          baseClass[propertyName]=v;
+        },
+        enumerable: true
+      });
+    }
+
+    var properties = [];
+    for (var propertyName in baseClass) {
+      if (typeof baseClass[propertyName] === 'function') {
+        // Overriding all non-overriden functions
+        if (!subClass.hasOwnProperty(propertyName)) {
+          subClass[propertyName] = baseClass[propertyName];
+        }
+      } else if(propertyName.charAt(0) !== "$" && !(propertyName in subClass)) {
+        // Delaying the properties extension due to the IE9 bug (see #918).
+        properties.push(propertyName);
+      }
+    }
+    while (properties.length > 0) {
+      extendGetterSetter(properties.shift());
+    }
+  }
+
+  defaultScope.extendClassChain = function(base) {
+    var path = [base];
+    for (var self = base.$upcast; self; self = self.$upcast) {
+      extendClass(self, base);
+      path.push(self);
+      base = self;
+    }
+    while (path.length > 0) {
+      path.pop().$self=base;
+    }
+  };
+
+  defaultScope.extendStaticMembers = function(derived, base) {
+    extendClass(derived, base);
+  };
+
+  defaultScope.extendInterfaceMembers = function(derived, base) {
+    extendClass(derived, base);
+  };
+
+  defaultScope.addMethod = function(object, name, fn, superAccessor) {
+    if (object[name]) {
+      var args = fn.length,
+        oldfn = object[name];
+
+      object[name] = function() {
+        if (arguments.length === args) {
+          return fn.apply(this, arguments);
+        } else {
+          return oldfn.apply(this, arguments);
+        }
+      };
+    } else {
+      object[name] = fn;
+    }
+  };
+
+  defaultScope.createJavaArray = function(type, bounds) {
+    var result = null;
+    if (typeof bounds[0] === 'number') {
+      var itemsCount = 0 | bounds[0];
+      if (bounds.length <= 1) {
+        result = [];
+        result.length = itemsCount;
+        for (var i = 0; i < itemsCount; ++i) {
+          result[i] = 0;
+        }
+      } else {
+        result = [];
+        var newBounds = bounds.slice(1);
+        for (var j = 0; j < itemsCount; ++j) {
+          result.push(defaultScope.createJavaArray(type, newBounds));
+        }
+      }
+    }
+    return result;
+  };
 
   var colors = {
     aliceblue:            "#f0f8ff",
@@ -1463,19 +1567,6 @@
     // The height/width of the canvas
     p.width           = 100;
     p.height          = 100;
-
-    p.defineProperty = function(obj, name, desc) {
-      if("defineProperty" in Object) {
-        Object.defineProperty(obj, name, desc);
-      } else {
-        if (desc.hasOwnProperty("get")) {
-          obj.__defineGetter__(name, desc.get);
-        }
-        if (desc.hasOwnProperty("set")) {
-          obj.__defineSetter__(name, desc.set);
-        }
-      }
-    };
 
     // "Private" variables used to maintain state
     var curContext,
@@ -16629,98 +16720,6 @@
 
     DrawingShared.prototype.$ensureContext = function() {
       return curContext;
-    };
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Class methods
-    ////////////////////////////////////////////////////////////////////////////
-
-    function extendClass(subClass, baseClass) {
-      function extendGetterSetter(propertyName) {
-        p.defineProperty(subClass, propertyName, {
-          get: function() {
-            return baseClass[propertyName];
-          },
-          set: function(v) {
-            baseClass[propertyName]=v;
-          },
-          enumerable: true
-        });
-      }
-
-      var properties = [];
-      for (var propertyName in baseClass) {
-        if (typeof baseClass[propertyName] === 'function') {
-          // Overriding all non-overriden functions
-          if (!subClass.hasOwnProperty(propertyName)) {
-            subClass[propertyName] = baseClass[propertyName];
-          }
-        } else if(propertyName.charAt(0) !== "$" && !(propertyName in subClass)) {
-          // Delaying the properties extension due to the IE9 bug (see #918).
-          properties.push(propertyName);
-        }
-      }
-      while (properties.length > 0) {
-        extendGetterSetter(properties.shift());
-      }
-    }
-
-    p.extendClassChain = function(base) {
-      var path = [base];
-      for (var self = base.$upcast; self; self = self.$upcast) {
-        extendClass(self, base);
-        path.push(self);
-        base = self;
-      }
-      while (path.length > 0) {
-        path.pop().$self=base;
-      }
-    };
-
-    p.extendStaticMembers = function(derived, base) {
-      extendClass(derived, base);
-    };
-
-    p.extendInterfaceMembers = function(derived, base) {
-      extendClass(derived, base);
-    };
-
-    p.addMethod = function(object, name, fn, superAccessor) {
-      if (object[name]) {
-        var args = fn.length,
-          oldfn = object[name];
-
-        object[name] = function() {
-          if (arguments.length === args) {
-            return fn.apply(this, arguments);
-          } else {
-            return oldfn.apply(this, arguments);
-          }
-        };
-      } else {
-        object[name] = fn;
-      }
-    };
-
-    p.createJavaArray = function(type, bounds) {
-      var result = null;
-      if (typeof bounds[0] === 'number') {
-        var itemsCount = 0 | bounds[0];
-        if (bounds.length <= 1) {
-          result = [];
-          result.length = itemsCount;
-          for (var i = 0; i < itemsCount; ++i) {
-            result[i] = 0;
-          }
-        } else {
-          result = [];
-          var newBounds = bounds.slice(1);
-          for (var j = 0; j < itemsCount; ++j) {
-            result.push(p.createJavaArray(type, newBounds));
-          }
-        }
-      }
-      return result;
     };
 
     //////////////////////////////////////////////////////////////////////////
