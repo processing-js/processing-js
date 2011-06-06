@@ -284,7 +284,7 @@
           result.appendChild(title);
           results.appendChild(result);
           var valueEpsilon = epsilon * 255;
-          if (test.epsilonOverride) {
+          if (test.epsilonOverride && test.epsilonOverride > epsilon) {
             valueEpsilon = test.epsilonOverride * 255;
           }
 
@@ -387,7 +387,7 @@
                   } else {
                     diffCtx.fillStyle = "rgb(0,255,0)";
                     diffCtx.fillRect (0, 0, diff.width, diff.height);
-                    if (test.epsilonOverride) {
+                    if (test.epsilonOverride && test.epsilonOverride > epsilon) {
                       title.innerHTML = titleText(i+1, tl, totalTime, test.name, false, "epsilonOverride = " + test.epsilonOverride);
                       result.className = "passed";
                     } else {
