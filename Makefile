@@ -119,7 +119,9 @@ check-release: closure
 
 check-submodules:
 	@@echo "\nChecking for git submodules"
-	@@git submodule status | awk '/^-/ { print $$2, "not found" } /^ / { print $$2, "included" }'
+	@@git submodule status | awk '/^-/ { print $$2, "not found"; printMsg=1 } \
+                                /^ / { print $$2, "included" } \
+                                END { if (printMsg==1) { print "To add these tests to your repository, run git submodule init && git submodule update" } }'
 
 check-summary:
 	$(RUNTESTS) -s
