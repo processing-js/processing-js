@@ -14,8 +14,8 @@ JSSHELL ?= $(error Specify a valid path to a js shell binary in ~/.profile: expo
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 
-# Version number used in naming release files. Defaults to DEV_VERSION
-VERSION ?= DEV_VERSION
+# Version number used in naming release files. Defaults to git commit sha.
+VERSION ?= $(shell git show --pretty=format:%h)
 
 # TODO: get a Windows solution ... > /dev/null 2>&1
 QUIET :=
@@ -40,17 +40,26 @@ FAKE_DOM :=$(TOOLS_DIR)/fake-dom.js
 CLOSUREJAR :=$(TOOLS_DIR)/closure/compiler.jar
 RUNTESTS :=@@$(TOOLS_DIR)/runtests.py $(JSSHELL)
 RUNJS :=@@$(JSSHELL) -f $(FAKE_DOM) -f
+REPLACE_VERSION := | sed -e 's/@VERSION@/$(VERSION)/' >
 
 SKETCHRUN :=runSketch
 SKETCHINPUT ?=$(error Specify an input filename in SKETCHINPUT when using package-sketch)
 SKETCHOUTPUTSRC ?=$(SKETCHINPUT).src
 SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
-preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_SRC) >> $(1)
+preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_RELEASE_SRC) >> $(1)
 compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
 copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && find $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
                                                                            -iname 'desktop.ini' -o \
                                                                            -iname 'Thumbs.db'      \) -delete
+addlicense = @@cat $(SRC_DIR)/LICENSE-HEADER $(REPLACE_VERSION) $(RELEASE_DIR)/addlicense.tmp && \
+             cat $(1) >> $(RELEASE_DIR)/addlicense.tmp && \
+             rm -f $(1) && \
+             mv $(RELEASE_DIR)/addlicense.tmp $(1)
+addversion = @@cp $(1) addversion.tmp && \
+             rm -f $(1) && \
+             cat addversion.tmp $(REPLACE_VERSION) $(1) && \
+             rm -f addversion.tmp
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
@@ -76,7 +85,8 @@ zipped: release-files
 release-docs: release-dir
 	@@echo "Copying project release docs..."
 	@@cp $(SRC_DIR)/AUTHORS $(RELEASE_DIR)
-	@@cat $(SRC_DIR)/README | sed -e 's/@VERSION@/$(VERSION)/' > $(RELEASE_DIR)/README
+	@@cp $(SRC_DIR)/README $(RELEASE_DIR)/README
+	@@$(call addversion,$(RELEASE_DIR)/README)
 	@@cp $(SRC_DIR)/LICENSE $(RELEASE_DIR) $(QUIET)
 	@@cp $(SRC_DIR)/CHANGELOG $(RELEASE_DIR) $(QUIET)
 
@@ -106,10 +116,10 @@ extensions: release-dir
 
 $(PJS_RELEASE_SRC): release-dir
 	@@echo "Creating processing.js..."
-	@@cp $(PJS_SRC) $(PJS_RELEASE_SRC).tmp
-	@@$(RUNJS) $(PJS_RELEASE_SRC).tmp
-	@@cat $(PJS_RELEASE_SRC).tmp | sed -e 's/@VERSION@/$(VERSION)/' > $(PJS_RELEASE_SRC)
-	@@rm -f $(PJS_RELEASE_SRC).tmp
+	@@cp $(PJS_SRC) $(PJS_RELEASE_SRC)
+	@@$(call addlicense,$(PJS_RELEASE_SRC))
+	@@$(call addversion,$(PJS_RELEASE_SRC))
+	@@$(RUNJS) $(PJS_RELEASE_SRC)
 
 check-tests:
 	$(RUNTESTS)
@@ -152,14 +162,18 @@ check-globals:
 print-globals:
 	@@$(RUNJS) $(TOOLS_DIR)/jsglobals.js -e "printNames()" < $(PJS_SRC)
 
-closure: release-dir
+closure: $(PJS_SRC) release-dir
+	@@echo "Compiling processing.js with closure..."
 	@@$(call compile,$(PJS_SRC),$(PJS_RELEASE_MIN),$(EMPTY))
+	@@$(call addlicense,$(PJS_RELEASE_MIN))
+	@@$(call addversion,$(PJS_RELEASE_MIN))
+	@@$(RUNJS) $(PJS_RELEASE_MIN)
 
 compile-sketch:
 	@@$(RUNJS) $(PJS_SRC) -f $(TOOLS_DIR)/jscompile.js < $(SKETCHINPUT) > $(SKETCHOUTPUT)
 	@@echo "Created $(SKETCHOUTPUT)"
 
-package-sketch:
+package-sketch: $(PJS_RELEASE_SRC)
 	@@echo "function $(SKETCHRUN)(canvas) {" > $(SKETCHOUTPUTSRC)
 	@@$(call preprocess,$(SKETCHOUTPUTSRC))
 	@@echo "return new Processing(canvas," >> $(SKETCHOUTPUTSRC)
@@ -169,12 +183,12 @@ package-sketch:
 	@@rm -f $(SKETCHOUTPUTSRC)
 	@@echo "Created $(SKETCHOUTPUT)"
 
-api-only: release-dir
+api-only: $(PJS_RELEASE_SRC)
 	@@echo "Creating processing.js API version..."
 	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js)
-	@@cat $(PJS_RELEASE_PREFIX)-api.js | sed -e 's/@VERSION@/$(VERSION)/' > $(PJS_RELEASE_PREFIX)-api.js.tmp
-	@@mv $(PJS_RELEASE_PREFIX)-api.js.tmp $(PJS_RELEASE_PREFIX)-api.js
+	@@$(call addversion,$(PJS_RELEASE_PREFIX)-api.js)
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
+	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.min.js)
 
 clean:
 	@@rm -fr $(RELEASE_DIR)
