@@ -59,7 +59,7 @@ copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && find $(RELEASE_DIR) -type f \( -inam
 release: release-files zipped examples
 	@@echo "Release Created, see $(RELEASE_DIR)"
 
-check: check-lint check-closure check-globals check-summary
+check: check-lint check-closure check-globals check-submodules check-summary
 
 release-dir: clean
 	@@mkdir $(RELEASE_DIR)
@@ -116,6 +116,12 @@ check-tests:
 
 check-release: closure
 	$(RUNTESTS) -s -l $(PJS_RELEASE_MIN)
+
+check-submodules:
+	@@echo "\nChecking for git submodules"
+	@@git submodule status | awk '/^-/ { print $$2, "not found"; printMsg=1 } \
+                                /^ / { print $$2, "included" } \
+                                END { if (printMsg==1) { print "To add these tests to your repository, run git submodule init && git submodule update" } }'
 
 check-summary:
 	$(RUNTESTS) -s
