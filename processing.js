@@ -19243,7 +19243,7 @@
   }());
   // end of tinylog lite JavaScript library
 
-  Processing.logger = tinylogLite;
+  Processing.logger = window.console || tinylogLite;
 
   Processing.version = "@VERSION@";
 
