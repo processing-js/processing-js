@@ -15,7 +15,7 @@ JSSHELL ?= $(error Specify a valid path to a js shell binary in ~/.profile: expo
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 
 # Version number used in naming release files. Defaults to git commit sha.
-VERSION ?= $(shell git show --pretty=format:%h)
+VERSION ?= $(shell git show -s --pretty=format:%h)
 
 # TODO: get a Windows solution ... > /dev/null 2>&1
 QUIET :=
