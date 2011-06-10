@@ -7,6 +7,7 @@
 #  java
 #  Unixy shell (use msys on Windows)
 #  $JSSHELL environment variable in .profile or .bashrc pointing to a SpiderMonkey binary
+#  If on Windows, $FIND environment variable in .profile or .bashrc for unixy find cmd
 #############################################################################################
 
 JSSHELL ?= $(error Specify a valid path to a js shell binary in ~/.profile: export JSSHELL=C:\path\js.exe or /path/js)
@@ -16,6 +17,9 @@ TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 
 # Version number used in naming release files. Defaults to git commit sha.
 VERSION ?= $(shell git show -s --pretty=format:%h)
+
+# On Windows?  You can specify a FIND value for your cygwin/msys find command
+FIND ?= /usr/bin/find
 
 # TODO: get a Windows solution ... > /dev/null 2>&1
 QUIET :=
@@ -49,9 +53,9 @@ SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
 preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_RELEASE_SRC) >> $(1)
 compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
-copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && find $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
-                                                                           -iname 'desktop.ini' -o \
-                                                                           -iname 'Thumbs.db'      \) -delete
+copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && $(FIND) $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
+                                                                             -iname 'desktop.ini' -o \
+                                                                             -iname 'Thumbs.db'      \) -delete
 addlicense = @@cat $(SRC_DIR)/LICENSE-HEADER $(REPLACE_VERSION) $(RELEASE_DIR)/addlicense.tmp && \
              cat $(1) >> $(RELEASE_DIR)/addlicense.tmp && \
              rm -f $(1) && \
@@ -80,7 +84,7 @@ release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensio
 zipped: release-files
 	@@echo "Creating zipped archives..."
 	@@gzip -9 -c $(PJS_RELEASE_MIN) > $(PJS_RELEASE_MIN).gz
-	@@cd $(RELEASE_DIR); find . -print | zip $(PJS_VERSION_FULL).zip -@ $(QUIET)
+	@@cd $(RELEASE_DIR); $(FIND) . -print | zip $(PJS_VERSION_FULL).zip -@ $(QUIET)
 
 release-docs: release-dir
 	@@echo "Copying project release docs..."
