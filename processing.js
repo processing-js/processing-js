@@ -19408,6 +19408,7 @@
 //#endif
   };
 
+//#if PARSER
   /**
    * aggregate all source code into a single file, then rewrite that
    * source and bind to canvas via new Processing(canvas, sourcestring).
@@ -19520,10 +19521,13 @@
       document.removeEventListener('DOMContentLoaded', init, false);
     }
   };
+//#endif
 
   if(isDOMPresent) {
     window['Processing'] = Processing;
+//#if PARSER
     document.addEventListener('DOMContentLoaded', init, false);
+//#endif
   } else {
     // DOM is not found
     this.Processing = Processing;
