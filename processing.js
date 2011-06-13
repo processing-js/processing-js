@@ -7820,6 +7820,26 @@
 
     var eventHandlers = [];
 
+    function attach(elem, type, fn) {
+      if (elem.addEventListener) {
+        elem.addEventListener(type, fn, false);
+      } else {
+        elem.attachEvent("on" + type, fn);
+      }
+      eventHandlers.push({elem: elem, type: type, fn: fn});
+    }
+
+    function detach(eventHandler) {
+      var elem = eventHandler.elem,
+          type = eventHandler.type,
+          fn   = eventHandler.fn;
+      if (elem.removeEventListener) {
+        elem.removeEventListener(type, fn, false);
+      } else if (elem.detachEvent) {
+        elem.detachEvent("on" + type, fn);
+      }
+    }
+
     /**
     * Quits/stops/exits the program. Programs without a draw() function exit automatically
     * after the last line has run, but programs with draw() run continuously until the
@@ -7843,16 +7863,9 @@
         }
       }
 
-      for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-        var elem = eventHandlers[i][0],
-            type = eventHandlers[i][1],
-            fn   = eventHandlers[i][2];
-
-        if (elem.removeEventListener) {
-          elem.removeEventListener(type, fn, false);
-        } else if (elem.detachEvent) {
-          elem.detachEvent("on" + type, fn);
-        }
+      var i = eventHandlers.length;
+      while (i--) {
+        detach(eventHandlers[i]);
       }
     };
 
@@ -7942,19 +7955,6 @@
       // Replace evil-eval method with a DOM <script> tag insert method that
       // binds new lib code to the Processing.lib names-space and the current
       // p context. -F1LT3R
-    };
-
-    var contextMenu = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    p.disableContextMenu = function() {
-      curElement.addEventListener('contextmenu', contextMenu, false);
-    };
-
-    p.enableContextMenu = function() {
-      curElement.removeEventListener('contextmenu', contextMenu, false);
     };
 
     /**
@@ -16733,25 +16733,8 @@
     };
 
     //////////////////////////////////////////////////////////////////////////
-    // Event handling
+    // Touch and Mouse event handling
     //////////////////////////////////////////////////////////////////////////
-
-    function attach(elem, type, fn) {
-      if (elem.addEventListener) {
-        elem.addEventListener(type, fn, false);
-      } else {
-        elem.attachEvent("on" + type, fn);
-      }
-      eventHandlers.push([elem, type, fn]);
-    }
-
-    function detach(elem, type, fn) {
-      if (elem.removeEventListener) {
-        elem.removeEventListener(type, fn, false);
-      } else if (elem.detachEvent) {
-        elem.detachEvent("on" + type, fn);
-      }
-    }
 
     function calculateOffset(curElement, event) {
       var element = curElement,
@@ -16823,10 +16806,6 @@
       return t;
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    // Touch event handling
-    //////////////////////////////////////////////////////////////////////////
-
     attach(curElement, "touchstart", function (t) {
       // Removes unwanted behaviour of the canvas when touching canvas
       curElement.setAttribute("style","-webkit-user-select: none");
@@ -16834,14 +16813,12 @@
       curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
       // Loop though eventHandlers and remove mouse listeners
       for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-        var elem = eventHandlers[i][0],
-            type = eventHandlers[i][1],
-            fn   = eventHandlers[i][2];
+        var type = eventHandlers[i].type;
         // Have this function remove itself from the eventHandlers list too
         if (type === "mouseout" ||  type === "mousemove" ||
             type === "mousedown" || type === "mouseup" ||
             type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
-          detach(elem, type, fn);
+          detach(eventHandlers[i]);
         }
       }
 
@@ -16924,9 +16901,29 @@
       curElement.dispatchEvent(t);
     });
 
-    //////////////////////////////////////////////////////////////////////////
-    // Mouse event handling
-    //////////////////////////////////////////////////////////////////////////
+    (function() {
+      var enabled = true,
+          contextMenu = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+          };
+
+      p.disableContextMenu = function() {
+        if (!enabled) {
+          return;
+        }
+        attach(curElement, 'contextmenu', contextMenu);
+        enabled = false;
+      };
+
+      p.enableContextMenu = function() {
+        if (enabled) {
+          return;
+        }
+        detach({elem: curElement, type: 'contextmenu', fn: contextMenu});
+        enabled = true;
+      };
+    }());
 
     attach(curElement, "mousemove", function(e) {
       updateMousePosition(curElement, e);
