@@ -21,8 +21,8 @@ VERSION ?= $(shell git show -s --pretty=format:%h)
 # On Windows?  You can specify a FIND value for your cygwin/msys find command
 FIND ?= /usr/bin/find
 
-# TODO: get a Windows solution ... > /dev/null 2>&1
-QUIET :=
+TMP := $(RELEASE_DIR)/.__tmp_file__
+QUIET := > $(TMP) ; rm -f $(TMP)
 
 EMPTY :=
 SRC_DIR :=.
