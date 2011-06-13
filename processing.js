@@ -7773,7 +7773,9 @@
 
       looping = window.setInterval(function() {
         try {
+          curSketch.onFrameStart();
           p.redraw();
+          curSketch.onFrameEnd();
         } catch(e_loop) {
           window.clearInterval(looping);
           throw e_loop;
@@ -7842,6 +7844,7 @@
           elem.detachEvent("on" + type, fn);
         }
       }
+      curSketch.onExit();
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -17204,6 +17207,7 @@
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           curSketch.attach(processing, defaultScope);
+          curSketch.onLoad();
 
           // Run void setup()
           if (processing.setup) {
@@ -17212,6 +17216,7 @@
             if (curContext && !p.use3DContext) {
               curContext.setTransform(1, 0, 0, 1, 0, 0);
             }
+            curSketch.onSetup();
           }
 
           // some pixels can be cached, flushing
@@ -19262,6 +19267,20 @@
       pauseOnBlur: false,
       globalKeyEvents: false
     };
+
+    /* Optional Sketch event hooks.
+     *   onLoad - parsing/preloading is done, before sketch starts
+     *   onSetup - setup() has been called, before first draw()
+     *   onFrameStart - draw() loop about to begin
+     *   onFrameEnd - draw() loop finished
+     *   onExit - exit() done being called
+     */
+    this.onLoad = nop;
+    this.onSetup = nop;
+    this.onFrameStart = nop;
+    this.onFrameEnd = nop;
+    this.onExit = nop;
+
     this.params = {};
     this.imageCache = {
       pending: 0,
