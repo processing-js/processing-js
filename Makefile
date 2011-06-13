@@ -89,8 +89,8 @@ zipped: release-files
 release-docs: release-dir
 	@@echo "Copying project release docs..."
 	@@cp $(SRC_DIR)/AUTHORS $(RELEASE_DIR)
-	@@cp $(SRC_DIR)/README $(RELEASE_DIR)/README
-	@@$(call addversion,$(RELEASE_DIR)/README)
+	@@cp $(SRC_DIR)/README.md $(RELEASE_DIR)/README.md
+	@@$(call addversion,$(RELEASE_DIR)/README.md)
 	@@cp $(SRC_DIR)/LICENSE $(RELEASE_DIR) $(QUIET)
 	@@cp $(SRC_DIR)/CHANGELOG $(RELEASE_DIR) $(QUIET)
 
