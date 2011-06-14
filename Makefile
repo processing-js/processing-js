@@ -69,7 +69,7 @@ addversion = @@cp $(1) addversion.tmp && \
 %.js : %.pde
 	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
 
-release: release-files zipped examples
+release: release-files zipped examples check-release
 	@@echo "Release Created, see $(RELEASE_DIR)"
 
 check: check-lint check-closure check-globals check-submodules check-summary
