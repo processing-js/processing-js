@@ -3099,6 +3099,7 @@
             m = params.replace(/,+/g, " ").split(/\s+/);
           };
         }()));
+        return m;
       }
 
       return function(str) {
