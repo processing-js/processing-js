@@ -7753,6 +7753,7 @@
       doLoop = false;
       loopStarted = false;
       clearInterval(looping);
+      curSketch.onPause();
     };
 
     /**
@@ -7783,6 +7784,7 @@
       }, curMsPerFrame);
       doLoop = true;
       loopStarted = true;
+      curSketch.onLoop();
     };
 
     /**
@@ -19268,15 +19270,19 @@
       globalKeyEvents: false
     };
 
-    /* Optional Sketch event hooks.
+    /* Optional Sketch event hooks:
      *   onLoad - parsing/preloading is done, before sketch starts
      *   onSetup - setup() has been called, before first draw()
+     *   onPause - noLoop() has been called, pausing draw loop
+     *   onLoop - loop() has been called, resuming draw loop
      *   onFrameStart - draw() loop about to begin
      *   onFrameEnd - draw() loop finished
      *   onExit - exit() done being called
      */
     this.onLoad = nop;
     this.onSetup = nop;
+    this.onPause = nop;
+    this.onLoop = nop;
     this.onFrameStart = nop;
     this.onFrameEnd = nop;
     this.onExit = nop;
