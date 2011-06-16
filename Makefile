@@ -97,8 +97,8 @@ release-docs: release-dir
 example: $(PJS_RELEASE_SRC)
 	@@echo "Creating example.html..."
 	@@echo "<script src=\"$(PJS_VERSION).js\"></script>" > $(EXAMPLE_HTML)
-	@@echo "<canvas datasrc=\"example.pjs\" width=\"200\" height=\"200\"></canvas>" >> $(EXAMPLE_HTML)
-	@@cp $(SRC_DIR)/example.pjs $(RELEASE_DIR)
+	@@echo "<canvas datasrc=\"example.pde\"></canvas>" >> $(EXAMPLE_HTML)
+	@@cp $(SRC_DIR)/example.pde $(RELEASE_DIR)
 
 examples: $(PJS_RELEASE_SRC)
 	@@echo "Copying examples..."
