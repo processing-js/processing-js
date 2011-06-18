@@ -1,7 +1,14 @@
 // These are the test files in this dir to be run.
 var tests = [
   { path: "loadShape.pde", tags: ["2D","SVG"] },
+  { path: "loadShape2.pde", tags: ["2D","SVG"] },
+  { path: "loadShape3.pde", tags: ["2D","SVG"] },
+  { path: "loadShape4.pde", tags: ["2D","SVG"] },
+  { path: "loadShape5.pde", tags: ["2D","SVG"] },
+  { path: "loadShape6.pde", tags: ["2D","SVG"] },
+  { path: "loadShape7.pde", tags: ["2D","SVG"] },
   { path: "loadShape9.pde", tags: ["2D","SVG"] },
+  { path: "loadShape10.pde", tags: ["2D","SVG"] },
   { path: "loadShape11.pde", tags: ["2D","SVG"] },
   { path: "loadShape12.pde", tags: ["2D","SVG"] },
   { path: "loadShape13.pde", tags: ["2D","SVG"] },
