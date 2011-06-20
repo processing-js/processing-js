@@ -6,8 +6,6 @@
     <style>
       canvas { width: 100px; height: 100px; border: 1px solid }
     </style>
-    <script src="../processing.js"></script>
-    <script src="jsbeautify.js"></script>
   </head>
   <body onload="document.getElementById('code').focus()">
     <h1>Processing Helper</h1>
@@ -15,10 +13,9 @@
 
     <h2>Processing Code</h2>
     <textarea rows="20" cols="80" id="code"></textarea>
-    <br>  <input onclick="helper.runSketch();" type="button" value="Run"></input>
-    &nbsp;<input onclick="helper.convertToJS();" type="button" value="Convert to JS"></input>
-    &nbsp;<input onclick="helper.generateDataURI();" type="button" value="Generate Data URI"></input>
-    &nbsp;<input onclick="helper.generateRefTest();" type="button" value="Generate Ref Test"></input>
+    <br>  <input onclick="runSketch();" type="button" value="Run"></input>
+    &nbsp;<input onclick="convertToJS();" type="button" value="Convert to JS"></input>
+    &nbsp;<input onclick="generateDataURI();" type="button" value="Generate Data URI"></input>
 
     <h2>Canvas</h2>
     <div id="sketch-container">
@@ -28,88 +25,8 @@
     <h2>Output</h2>
     <textarea rows="20" cols="80" id="output" readonly="readonly">None.</textarea>
 
-    <script>
-      function createCanvas() {
-        // Make a new canvas, in case we're switching from 2D to 3D contexts.
-        var container = document.getElementById('sketch-container');
-        var sketch = document.getElementById('sketch');
-        container.removeChild(sketch);
-
-        sketch = document.createElement('canvas');
-        sketch.id = 'sketch';
-        container.appendChild(sketch);
-
-        return sketch;
-      }
-
-      var helper = {
-        canvas: document.getElementById('sketch'),
-        code:   document.getElementById('code'),
-        output: document.getElementById('output'),
-        p:      null,
-
-        runSketch: function() {
-          try {
-            this.output.value = '';
-            this.canvas = createCanvas();
-            p = new Processing(this.canvas, this.code.value);
-            return true;
-          } catch (e) {
-            this.output.value = "Error! Error was:\n" + e.toString();
-            return false;
-          }
-        },
-
-        convertToJS: function() {
-          try {
-            this.output.value = js_beautify(
-                                  Processing.compile(this.code.value).sourceCode).replace(/\n\n\n+/g, '\n\n');
-            this.output.select();
-          } catch (e) {
-            this.output.value = "Parser Error! Error was:\n" + e.toString();
-          }
-        },
-
-        generateDataURI: function() {
-          // Run the sketch first, in case the user hasn't
-          this.runSketch();
-          this.output.value = this.canvas.toDataURL();
-          this.output.select();
-        },
-
-        generateRefTest: function() {
-          // Run the sketch first, in case the user hasn't
-          if (!this.runSketch()) {
-            return;
-          }
-
-          try {          
-            // if the test was 2d, we can just call getImageData
-            if (!p.use3DContext) {
-              var context = this.canvas.getContext('2d');
-              var imgData = context.getImageData(0,0,this.canvas.width,this.canvas.height).data;
-            // else, we'll need to call WebGL's readPixels.
-            } else {
-              // The order of the pixels go from bottom to top, left to right.
-              var context = this.canvas.getContext("experimental-webgl");
-              var imgData = new Uint8Array(this.canvas.width * this.canvas.height * 4);
-              context.readPixels(0, 0, this.canvas.width, this.canvas.height, context.RGBA, context.UNSIGNED_BYTE, imgData);
-            }
-
-            var pixels = [];
-            for(var i = 0, idl = imgData.length; i < idl; i++){
-              pixels[i] = imgData[i];
-            }
-
-            var dimensions = "[" + this.canvas.width + "," + this.canvas.height + "]";
-            // Opera doesn't have btoa() so this won't work there.
-            document.location.href= "data:text/plain;charset=utf-8;base64," + 
-                                     btoa('//' + dimensions + pixels + '\n' + this.code.value);
-          } catch (e) {
-            this.output.value = "Error creating ref test! Error was: " + e.toString();
-          }
-        }
-      };
-    </script>
+    <script src="../processing.js"></script>
+    <script src="jsbeautify.js"></script>
+    <script src="processing-helper.js"></script>
   </body>
 </html>

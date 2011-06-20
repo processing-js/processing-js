@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Ref Test Builder</title>
+    <style>
+      canvas { width: 100px; height: 100px; border: 1px solid }
+    </style>
+  </head>
+  <body onload="document.getElementById('code').focus()">
+    <h1>Ref Test Builder</h1>
+    <p>To build a ref test, put your code below, and place any images in test/ref/ so they can be preloaded by filename (e.g., preload="foo.jpg") with a relative path.  Click Run to test your sketch, Generate Ref Test to build the test.  Save the test to test/ref/ as well.  NOTE: if you are preloading an image, or have other code that requires the ref test to not get generated right away, use an explicit <b>exit()</b> call to signal when the test is done.</p>
+    <p>To run the ref tests, click <a href="index.html">here</a>.
+
+    <h2>Processing Code</h2>
+    <textarea rows="20" cols="80" id="code"></textarea>
+    <div>
+      <br>  <input onclick="runSketch();" type="button" value="Run"></input>
+      &nbsp;<input type="checkbox" id="expect-exit-callback">Wait for explicit exit()</input>
+      &nbsp;<input onclick="generateRefTest();" type="button" value="Generate Ref Test"></input>
+    </div>
+
+    <h2>Canvas</h2>
+    <div id="sketch-container">
+      <canvas id="sketch"></canvas>
+    </div>
+
+    <h2>Output</h2>
+    <textarea rows="20" cols="80" id="output" readonly="readonly">None.</textarea>
+
+    <script src="../../processing.js"></script>
+    <script src="../../tools/jsbeautify.js"></script>
+    <script src="../../tools/processing-helper.js"></script>
+  </body>
+</html>
