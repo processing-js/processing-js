@@ -7818,9 +7818,13 @@
       }
     };
 
+    ////////////////////////////////////////////////////////////////////////////
+    // JavaScript event binding and releasing
+    ////////////////////////////////////////////////////////////////////////////
+
     var eventHandlers = [];
 
-    function attach(elem, type, fn) {
+    function attachEventHandler(elem, type, fn) {
       if (elem.addEventListener) {
         elem.addEventListener(type, fn, false);
       } else {
@@ -7829,7 +7833,7 @@
       eventHandlers.push({elem: elem, type: type, fn: fn});
     }
 
-    function detach(eventHandler) {
+    function detachEventHandler(eventHandler) {
       var elem = eventHandler.elem,
           type = eventHandler.type,
           fn   = eventHandler.fn;
@@ -7865,7 +7869,7 @@
 
       var i = eventHandlers.length;
       while (i--) {
-        detach(eventHandlers[i]);
+        detachEventHandler(eventHandlers[i]);
       }
     };
 
@@ -16806,7 +16810,7 @@
       return t;
     }
 
-    attach(curElement, "touchstart", function (t) {
+    attachEventHandler(curElement, "touchstart", function (t) {
       // Removes unwanted behaviour of the canvas when touching canvas
       curElement.setAttribute("style","-webkit-user-select: none");
       curElement.setAttribute("onclick","void(0)");
@@ -16818,7 +16822,7 @@
         if (type === "mouseout" ||  type === "mousemove" ||
             type === "mousedown" || type === "mouseup" ||
             type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
-          detach(eventHandlers[i]);
+          detachEventHandler(eventHandlers[i]);
         }
       }
 
@@ -16826,14 +16830,14 @@
       // Otherwise, connect all of the emulated mouse events
       if (p.touchStart !== undef || p.touchMove !== undef ||
           p.touchEnd !== undef || p.touchCancel !== undef) {
-        attach(curElement, "touchstart", function(t) {
+        attachEventHandler(curElement, "touchstart", function(t) {
           if (p.touchStart !== undef) {
             t = addTouchEventOffset(t);
             p.touchStart(t);
           }
         });
 
-        attach(curElement, "touchmove", function(t) {
+        attachEventHandler(curElement, "touchmove", function(t) {
           if (p.touchMove !== undef) {
             t.preventDefault(); // Stop the viewport from scrolling
             t = addTouchEventOffset(t);
@@ -16841,14 +16845,14 @@
           }
         });
 
-        attach(curElement, "touchend", function(t) {
+        attachEventHandler(curElement, "touchend", function(t) {
           if (p.touchEnd !== undef) {
             t = addTouchEventOffset(t);
             p.touchEnd(t);
           }
         });
 
-        attach(curElement, "touchcancel", function(t) {
+        attachEventHandler(curElement, "touchcancel", function(t) {
           if (p.touchCancel !== undef) {
             t = addTouchEventOffset(t);
             p.touchCancel(t);
@@ -16857,7 +16861,7 @@
 
       } else {
         // Emulated touch start/mouse down event
-        attach(curElement, "touchstart", function(e) {
+        attachEventHandler(curElement, "touchstart", function(e) {
           updateMousePosition(curElement, e.touches[0]);
 
           p.__mousePressed = true;
@@ -16870,7 +16874,7 @@
         });
 
         // Emulated touch move/mouse move event
-        attach(curElement, "touchmove", function(e) {
+        attachEventHandler(curElement, "touchmove", function(e) {
           e.preventDefault();
           updateMousePosition(curElement, e.touches[0]);
 
@@ -16884,7 +16888,7 @@
         });
 
         // Emulated touch up/mouse up event
-        attach(curElement, "touchend", function(e) {
+        attachEventHandler(curElement, "touchend", function(e) {
           p.__mousePressed = false;
 
           if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
@@ -16912,7 +16916,7 @@
         if (!enabled) {
           return;
         }
-        attach(curElement, 'contextmenu', contextMenu);
+        attachEventHandler(curElement, 'contextmenu', contextMenu);
         enabled = false;
       };
 
@@ -16920,12 +16924,12 @@
         if (enabled) {
           return;
         }
-        detach({elem: curElement, type: 'contextmenu', fn: contextMenu});
+        detachEventHandler({elem: curElement, type: 'contextmenu', fn: contextMenu});
         enabled = true;
       };
     }());
 
-    attach(curElement, "mousemove", function(e) {
+    attachEventHandler(curElement, "mousemove", function(e) {
       updateMousePosition(curElement, e);
       if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
         p.mouseMoved();
@@ -16936,20 +16940,20 @@
       }
     });
 
-    attach(curElement, "mouseout", function(e) {
+    attachEventHandler(curElement, "mouseout", function(e) {
       if (typeof p.mouseOut === "function") {
         p.mouseOut();
       }
     });
 
-    attach(curElement, "mouseover", function(e) {
+    attachEventHandler(curElement, "mouseover", function(e) {
       updateMousePosition(curElement, e);
       if (typeof p.mouseOver === "function") {
         p.mouseOver();
       }
     });
 
-    attach(curElement, "mousedown", function(e) {
+    attachEventHandler(curElement, "mousedown", function(e) {
       p.__mousePressed = true;
       p.mouseDragging = false;
       switch (e.which) {
@@ -16969,7 +16973,7 @@
       }
     });
 
-    attach(curElement, "mouseup", function(e) {
+    attachEventHandler(curElement, "mouseup", function(e) {
       p.__mousePressed = false;
 
       if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
@@ -17001,8 +17005,8 @@
     };
 
     // Support Gecko and non-Gecko scroll events
-    attach(document, 'DOMMouseScroll', mouseWheelHandler);
-    attach(document, 'mousewheel', mouseWheelHandler);
+    attachEventHandler(document, 'DOMMouseScroll', mouseWheelHandler);
+    attachEventHandler(document, 'mousewheel', mouseWheelHandler);
 
     //////////////////////////////////////////////////////////////////////////
     // Keyboard Events
@@ -17174,13 +17178,13 @@
 
       // 2) looping status is handled per page, based on the pauseOnBlur @pjs directive
       if (curSketch.options.pauseOnBlur) {
-        attach(window, 'focus', function() {
+        attachEventHandler(window, 'focus', function() {
           if (doLoop) {
             p.loop();
           }
         });
 
-        attach(window, 'blur', function() {
+        attachEventHandler(window, 'blur', function() {
           if (doLoop && loopStarted) {
             p.noLoop();
             doLoop = true; // make sure to keep this true after the noLoop call
@@ -17192,9 +17196,9 @@
       // if keyboard events should be handled globally, the listeners should
       // be bound to the document window, rather than to the current canvas
       var keyTrigger = curSketch.options.globalKeyEvents ? window : curElement;
-      attach(keyTrigger, "keydown", handleKeydown);
-      attach(keyTrigger, "keypress", handleKeypress);
-      attach(keyTrigger, "keyup", handleKeyup);
+      attachEventHandler(keyTrigger, "keydown", handleKeydown);
+      attachEventHandler(keyTrigger, "keypress", handleKeypress);
+      attachEventHandler(keyTrigger, "keyup", handleKeyup);
 
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
