@@ -3930,11 +3930,10 @@
       } else if (fillText.indexOf("url(#") === 0) {
         this.fillName = fillText.substring(5, fillText.length - 1 );
       } else if (colors[fillText]) {
-          this.fill      = true;
-          this.fillColor = opacityMask |
-                           (parseInt(colors[fillText].substring(1), 16)) &
-                           0xFFFFFF;
-        }
+        this.fill      = true;
+        this.fillColor = opacityMask |
+                         (parseInt(colors[fillText].substring(1), 16)) &
+                         0xFFFFFF;
       }
     };
     /**
@@ -3978,11 +3977,10 @@
       } else if (strokeText.indexOf( "url(#" ) === 0) {
         this.strokeName = strokeText.substring(5, strokeText.length - 1);
       } else if (colors[strokeText]) {
-          this.stroke      = true;
-          this.strokeColor = opacityMask |
-                             (parseInt(colors[strokeText].substring(1), 16)) &
-                             0xFFFFFF;
-        }
+        this.stroke      = true;
+        this.strokeColor = opacityMask |
+                           (parseInt(colors[strokeText].substring(1), 16)) &
+                           0xFFFFFF;
       }
     };
     /**
