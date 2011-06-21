@@ -2,14 +2,9 @@
 /* @pjs preload="svg/girlDriving.svg"; */
 PShape s;
 
-void setup() {
-  size(100,100);
-  s = loadShape("svg/girlDriving.svg");
-  smooth();
-  noLoop();
-}
+size(100,100);
+s = loadShape("svg/girlDriving.svg");
+smooth();
 
-void draw() {
-  shape(s,0,0,100,100);
-}
+shape(s,0,0,100,100);
 // FAILS TO RENDER CORRECTLY IN P5 1.5

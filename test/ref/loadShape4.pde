@@ -3,13 +3,8 @@
 
 PShape s;
 
-void setup() {
-  size(100,100);
-  s = loadShape("svg/fabia.svg");
-  smooth();
-  noLoop();
-}
+size(100,100);
+s = loadShape("svg/fabia.svg");
+smooth();
 
-void draw() {
-  shape(s,0,0,100,100);
-}
+shape(s,0,0,100,100);
