@@ -40,19 +40,4 @@ for (int y = 1; y < img.height-1; y++) { // Skip top and bottom edges
 // State that there are changes to edgeImg.pixels[]
 edgeImg.updatePixels();
 image(edgeImg, 50, 0); // Draw the new image
-dump2d();
-}
-
-/** 2D sketch dump **/
-void dump2d()
-{
-  String s = "//[100,100]"; // The beginning of the ref test image
-  loadPixels(); // load the pixel data
-  for (int i = 0; i < pixels.length; i++) {
-    s = s + (int)red(pixels[i]) + "," + (int)green(pixels[i]) + "," + (int)blue(pixels[i]) + "," + (int)alpha(pixels[i]) + ",";
-  }
-  s = s.substring(0, s.length() - 1); // take away the last comma
-
-  String[] out = new String[]{ s };
-  saveStrings("out.txt", out);
 }
