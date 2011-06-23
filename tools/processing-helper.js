@@ -23,7 +23,6 @@
     if (!checkbox) {
       return false;
     }
-
     return checkbox.checked;
   }
 
