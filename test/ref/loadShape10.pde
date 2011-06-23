@@ -30,3 +30,4 @@ shape(bot2, 0,50, 45,45);
 // Draw right bot
 bot2.enableStyle();
 shape(bot2, 50,50, 45,45);
+exit();

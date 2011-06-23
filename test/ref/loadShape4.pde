@@ -8,3 +8,4 @@ s = loadShape("svg/fabia.svg");
 smooth();
 
 shape(s,0,0,100,100);
+exit();
