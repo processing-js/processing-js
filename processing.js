@@ -14451,11 +14451,11 @@
      * @see #tint()
      * @see #colorMode()
      */
-    DrawingShared.prototype.background = function() {
+    var backgroundHelper = function(arg1, arg2, arg3, arg4) {
       var obj;
       
-      if (arguments[0] instanceof PImage) {
-        obj = arguments[0];
+      if (arg1 instanceof PImage) {
+        obj = arg1;
 
         if (!obj.loaded) {
           throw "Error using image in background(): PImage not loaded.";
@@ -14463,20 +14463,15 @@
           throw "Background image must be the same dimensions as the canvas.";
         }
       } else {
-        obj = p.color.apply(this, arguments);
-        
-        // override alpha value, processing ignores the alpha for background color
-        if (!curSketch.options.isTransparent) {
-          obj = obj | PConstants.ALPHA_MASK;
-        }
+        obj = p.color(arg1, arg2, arg3, arg4);
       }
       
       backgroundObj = obj;
     };
 
-    Drawing2D.prototype.background = function() {
-      if (arguments.length > 0) {
-        DrawingShared.prototype.background.apply(this, arguments);
+    Drawing2D.prototype.background = function(arg1, arg2, arg3, arg4) {
+      if (arg1 !== undefined) {
+        backgroundHelper(arg1, arg2, arg3, arg4);
       }
 
       if (backgroundObj instanceof PImage) {
@@ -14488,7 +14483,8 @@
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
 
-        if (curSketch.options.isTransparent) {
+        // If the background is transparent
+        if (p.alpha(backgroundObj) !== colorModeA) {
           curContext.clearRect(0,0, p.width, p.height);
         }
         curContext.fillStyle = p.color.toString(backgroundObj);
@@ -14498,9 +14494,9 @@
       }
     };
 
-    Drawing3D.prototype.background = function() {
+    Drawing3D.prototype.background = function(arg1, arg2, arg3, arg4) {
       if (arguments.length > 0) {
-        DrawingShared.prototype.background.apply(this, arguments);
+        backgroundHelper(arg1, arg2, arg3, arg4);
       }
 
       var c = p.color.toGLArray(backgroundObj);
@@ -17154,10 +17150,6 @@
 
       wireDimensionalFunctions();
 
-      if ("mozOpaque" in curElement) {
-        curElement.mozOpaque = !curSketch.options.isTransparent;
-      }
-
       // the onfocus and onblur events are handled in two parts.
       // 1) the p.focused property is handled per sketch
       curElement.onfocus = function() {
@@ -17249,7 +17241,6 @@
       // No executable sketch was specified
       // or called via createGraphics
       curSketch = new Processing.Sketch();
-      curSketch.options.isTransparent = true;
 
       wireDimensionalFunctions();
 
@@ -18940,8 +18931,6 @@
               var imageName = clean(list[j]);
               sketch.imageCache.add(imageName);
             }
-          } else if (key === "transparent") {
-            sketch.options.isTransparent = value === "true";
           // fonts can be declared as a string containing a url,
           // or a JSON object, containing a font name, and a url
           } else if (key === "font") {
@@ -19267,7 +19256,6 @@
   Processing.Sketch = function(attachFunction) {
     this.attachFunction = attachFunction; // can be optional
     this.options = {
-      isTransparent: false,
       crispLines: false,
       pauseOnBlur: false,
       globalKeyEvents: false
