@@ -144,7 +144,7 @@ check-lint:
 	@@echo "\nRunning jslint on processing.js:"
 	@@$(TOOLS_DIR)/jslint.py $(JSSHELL) $(PJS_SRC)
 
-check-closure:
+check-closure: release-dir
 	@@echo "\nRunning closure compiler on processing.js:"
 	@@$(call compile,$(PJS_SRC),$(RELEASE_DIR)/closurecompile.out,$(EMPTY))
 	@@rm -f $(RELEASE_DIR)/closurecompile.out
