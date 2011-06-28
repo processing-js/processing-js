@@ -3783,6 +3783,9 @@
       this.params[1] = this.element.getFloatAttribute("y");
       this.params[2] = this.element.getFloatAttribute("width");
       this.params[3] = this.element.getFloatAttribute("height");
+      if (this.params[2] < 0 || this.params[3] < 0) {
+        throw("svg error: negative width or height found while parsing <rect>");
+      }
     };
     /**
      * @member PShapeSVG
@@ -3795,15 +3798,21 @@
       this.family = PConstants.PRIMITIVE;
       this.params = [];
 
-      this.params[0] = this.element.getFloatAttribute("cx");
-      this.params[1] = this.element.getFloatAttribute("cy");
+      this.params[0] = this.element.getFloatAttribute("cx") | 0 ;
+      this.params[1] = this.element.getFloatAttribute("cy") | 0;
 
       var rx, ry;
       if (val) {
         rx = ry = this.element.getFloatAttribute("r");
+        if (rx < 0) {
+          throw("svg error: negative radius found while parsing <circle>");
+        }
       } else {
         rx = this.element.getFloatAttribute("rx");
         ry = this.element.getFloatAttribute("ry");
+        if (rx < 0 || ry < 0) {
+          throw("svg error: negative x-axis radius or y-axis radius found while parsing <ellipse>");
+        }
       }
       this.params[0] -= rx;
       this.params[1] -= ry;
@@ -3908,6 +3917,10 @@
         this.fill = false;
       } else if (fillText.indexOf("#") === 0) {
         this.fill      = true;
+        if (fillText.length === 4) {
+          // convert #00F to #0000FF
+          fillText = fillText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
+        }
         this.fillColor = opacityMask |
                          (parseInt(fillText.substring(1), 16 )) &
                          0xFFFFFF;
@@ -3916,21 +3929,11 @@
         this.fillColor = opacityMask | this.parseRGB(fillText);
       } else if (fillText.indexOf("url(#") === 0) {
         this.fillName = fillText.substring(5, fillText.length - 1 );
-        /*Object fillObject = findChild(fillName);
-        if (fillObject instanceof Gradient) {
-          fill = true;
-          fillGradient = (Gradient) fillObject;
-          fillGradientPaint = calcGradientPaint(fillGradient); //, opacity);
-        } else {
-          System.err.println("url " + fillName + " refers to unexpected data");
-        }*/
-      } else {
-        if (colors[fillText]) {
-          this.fill      = true;
-          this.fillColor = opacityMask |
-                           (parseInt(colors[fillText].substring(1), 16)) &
-                           0xFFFFFF;
-        }
+      } else if (colors[fillText]) {
+        this.fill      = true;
+        this.fillColor = opacityMask |
+                         (parseInt(colors[fillText].substring(1), 16)) &
+                         0xFFFFFF;
       }
     };
     /**
@@ -3961,6 +3964,10 @@
         this.stroke = false;
       } else if (strokeText.charAt( 0 ) === "#") {
         this.stroke      = true;
+        if (strokeText.length === 4) {
+          // convert #00F to #0000FF
+          strokeText = strokeText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
+        }
         this.strokeColor = opacityMask |
                            (parseInt( strokeText.substring( 1 ), 16 )) &
                            0xFFFFFF;
@@ -3969,22 +3976,11 @@
         this.strokeColor = opacityMask | this.parseRGB(strokeText);
       } else if (strokeText.indexOf( "url(#" ) === 0) {
         this.strokeName = strokeText.substring(5, strokeText.length - 1);
-          //this.strokeObject = findChild(strokeName);
-        /*if (strokeObject instanceof Gradient) {
-          strokeGradient = (Gradient) strokeObject;
-          strokeGradientPaint = calcGradientPaint(strokeGradient);
-                                //, opacity);
-        } else {
-          System.err.println("url " + strokeName +
-                             " refers to unexpected data");
-        }*/
-      } else {
-        if (colors[strokeText]){
-          this.stroke      = true;
-          this.strokeColor = opacityMask |
-                             (parseInt(colors[strokeText].substring(1), 16)) &
-                             0xFFFFFF;
-        }
+      } else if (colors[strokeText]) {
+        this.stroke      = true;
+        this.strokeColor = opacityMask |
+                           (parseInt(colors[strokeText].substring(1), 16)) &
+                           0xFFFFFF;
       }
     };
     /**
