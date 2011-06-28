@@ -9,5 +9,5 @@
 	 width="281" height="285" viewBox="-0.826 -0.359 281 285" enable-background="new -0.826 -0.359 281 285" xml:space="preserve">
 <defs>
 </defs>
-<path fill-rule="evenodd" clip-rule="evenodd" fill="#010101" stroke="#FFFFFF" stroke-width="3" d="M100,200 C100,100 250,100 250,200 S400,300 400,200"/>
+<path fill-rule="evenodd" clip-rule="evenodd" fill="#010101" stroke="#FFFFFF" stroke-width="3" d="M0,100 C0,0 150,0 150,100 S300,200 300,100"/>
 </svg>
