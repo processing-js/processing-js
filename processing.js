@@ -1753,7 +1753,8 @@
 
     var rectNorms = new Float32Array([0,0,1, 0,0,1, 0,0,1, 0,0,1]);
 
-    // Vertex shader for points and lines
+
+    // Shader for points and lines in begin/endShape
     var vShaderSrcUnlitShape =
       "varying vec4 frontColor;" +
 
@@ -1762,9 +1763,11 @@
 
       "uniform mat4 uView;" +
       "uniform mat4 uProjection;" +
+      "uniform float pointSize;" +
 
       "void main(void) {" +
       "  frontColor = aColor;" +
+      "  gl_PointSize = pointSize;" +
       "  gl_Position = uProjection * uView * vec4(aVertex, 1.0);" +
       "}";
 
@@ -1779,7 +1782,7 @@
       "  gl_FragColor = frontColor;" +
       "}";
 
-    // Vertex shader for points and lines
+    // Shader for rect, text, box outlines, sphere outlines, point() and line()
     var vertexShaderSource2D =
       "varying vec4 frontColor;" +
 
@@ -1882,8 +1885,9 @@
       "  if(index == 4) return lights4;" +
       "  if(index == 5) return lights5;" +
       "  if(index == 6) return lights6;" +
-      // some cards complain that not all paths return if we have
-      // this last one in a conditional.
+      // Do not use a conditional for the last return statement
+      // because some video cards will fail and complain that
+      // "not all paths return"
       "  return lights7;" +
       "}" +
 
@@ -9709,15 +9713,14 @@
         // lighting calculations could be ommitted from that program object.
         programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
 
-        // set the defaults
-        curContext.useProgram(programObject2D);
-        p.strokeWeight(1.0);
-
-        programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
         programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
+
+        // Set the default point and line width for the 2D and unlit shapes.
+        p.strokeWeight(1.0);
 
         // Now that the programs have been compiled, we can set the default
         // states for the lights.
+        programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
         curContext.useProgram(programObject3D);
 
         // assume we aren't using textures by default
@@ -10450,7 +10453,6 @@
         uniformi("picktype2d", programObject2D, "picktype", 0);
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-        curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
       }
     };
@@ -10692,7 +10694,6 @@
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-        curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
       }
     };
@@ -11222,8 +11223,17 @@
 
     Drawing3D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
+      
+      // Processing groups the weight of points and lines under this one function,
+      // but for WebGL, we need to set a uniform for points and call a function for line.
+      
       curContext.useProgram(programObject2D);
       uniformf("pointSize2d", programObject2D, "pointSize", w);
+      
+      curContext.useProgram(programObjectUnlitShape);
+      uniformf("pointSizeUnlitShape", programObjectUnlitShape, "pointSize", w);
+      
+      curContext.lineWidth(w);
     };
 
     /**
@@ -11235,7 +11245,6 @@
      */
     p.strokeCap = function(value) {
       drawing.$ensureContext().lineCap = value;
-
     };
 
     /**
@@ -11480,11 +11489,15 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
+      
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
+
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
+
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
+
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
 
@@ -11523,7 +11536,6 @@
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
-      curContext.lineWidth(lineWidth);
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
@@ -12991,8 +13003,6 @@
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
 
-        curContext.lineWidth(lineWidth);
-
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, lineBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
@@ -13260,7 +13270,6 @@
         uniformi("picktype2d", programObject2D, "picktype", 0);
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-        curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
       }
 

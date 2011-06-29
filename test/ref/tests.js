@@ -145,7 +145,7 @@ var tests = [
   { path: "beginEndShape-3dnocloserectangle.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.18 },
   { path: "beginEndShape-3dnofilltriangle.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.15 },
   { path: "beginEndShape-3dnofillrectangle.pde", tags:["endShape3D", "3D"], knownFailureTicket: "1271" },
-  { path: "beginEndShape-3dpoints.pde", tags:["endShape3D", "3D"], knownFailureTicket: "1268" },
+  { path: "beginEndShape-3dpoints.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.11 },
   { path: "beginEndShape-3dpolygon.pde", tags:["endShape3D", "3D"], knownFailureTicket: "1286" },
   { path: "beginEndShape-3dquads.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.12, knownFailureTicket: "1271" },
   { path: "beginEndShape-3dquadstrip1.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.25 },
