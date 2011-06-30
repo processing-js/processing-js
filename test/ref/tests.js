@@ -26,6 +26,7 @@ var tests = [
   { path: "background-hex-alpha.pde", tags: ["2D"] },
   { path: "background-image.pde", tags: ["2D"], knownFailureTicket: "1285" },
   { path: "background-before-size.pde", tags: ["2D"] },
+  { path: "background-transparency.pde", tags: ["2D"] },
   { path: "background-color-1arg-2d.pde", tags: ["2D"] },
   { path: "background-color-1arg-alpha-2d.pde", tags: ["2D"] },
   { path: "background-hex-3RGB-alpha.pde", tags: ["2D"], knownFailureTicket: "1346" },
