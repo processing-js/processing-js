@@ -14470,7 +14470,7 @@
     };
 
     Drawing2D.prototype.background = function(arg1, arg2, arg3, arg4) {
-      if (arg1 !== undefined) {
+      if (arg1 !== undef) {
         backgroundHelper(arg1, arg2, arg3, arg4);
       }
 
