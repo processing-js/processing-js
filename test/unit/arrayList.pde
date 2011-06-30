@@ -15,3 +15,9 @@ list1.add("Kevin");
 ArrayList list1Clone = (ArrayList)list1.clone();
 
 _checkEqual(list1, list1Clone);
+
+list1Clone.remove(0);
+
+ArrayList list2 = new ArrayList(list1);
+
+_checkEqual(list1, list2);
