@@ -1081,7 +1081,7 @@
     PVector.prototype = {
       set: function(v, y, z) {
         if (arguments.length === 1) {
-          this.set(v.x || v[0], v.y || v[1], v.z || v[2]);
+          this.set(v.x || v[0] || 0, v.y || v[1] || 0, v.z || v[2] || 0);
         } else {
           this.x = v;
           this.y = y;
