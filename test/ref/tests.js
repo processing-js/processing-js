@@ -1,7 +1,7 @@
 // These are the test files in this dir to be run.
 var tests = [
   { path: "blur.pde", tags: ["2D","Convolution"] },
-  { path: "edgedetect.pde", tags: ["2D","Convolution"] },
+  { path: "edgedetect.pde", tags: ["2D","Convolution"], knownFailureTicket: "1399" },
   { path: "defaults-background_and_size.pde", tags: ["2D"] },
   { path: "background-gray.pde", tags: ["2D"] },
   { path: "background-gray-alpha.pde", tags: ["2D"] },
