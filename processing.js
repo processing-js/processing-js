@@ -19313,7 +19313,7 @@
         element.style.fontFamily = "serif";
         element.style.fontSize = "72px";
         element.style.visibility = "hidden";
-        element.innerHTML = "abcmmmmmmmmmmlll";
+        element.innerHTML = "This element is a text block for font loading";
         document.getElementsByTagName("body")[0].appendChild(element);
         return element;
       }()),
@@ -19376,7 +19376,7 @@
         preLoader.style.fontFamily = "'" + fontName + "', serif";
         preLoader.style.fontSize = "72px";
         preLoader.style.visibility = "hidden";
-        preLoader.innerHTML = "abcmmmmmmmmmmlll";
+        preLoader.innerHTML = "This element is a text block for font loading";
         document.getElementsByTagName("body")[0].appendChild(preLoader);
         this.fontList.push(preLoader);
       }
