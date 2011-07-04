@@ -7410,13 +7410,15 @@
     * @see popMatrix
     * @see pushMatrix
     */
-    p.rotateZ = function(angleInRadians) {
+    Drawing2D.prototype.rotateZ = function(angleInRadians) {
       forwardTransform.rotateZ(angleInRadians);
       reverseTransform.invRotateZ(angleInRadians);
-      if (p.use3DContext) {
-        return;
-      }
       curContext.rotate(angleInRadians);
+    };
+
+    Drawing3D.prototype.rotateZ = function(angleInRadians) {
+      forwardTransform.rotateZ(angleInRadians);
+      reverseTransform.invRotateZ(angleInRadians);
     };
 
     /**
@@ -16668,6 +16670,7 @@
     DrawingPre.prototype.resetMatrix = createDrawingPreFunction("resetMatrix");
     DrawingPre.prototype.applyMatrix = createDrawingPreFunction("applyMatrix");
     DrawingPre.prototype.rotate = createDrawingPreFunction("rotate");
+    DrawingPre.prototype.rotateZ = createDrawingPreFunction("rotateZ");
     DrawingPre.prototype.redraw = createDrawingPreFunction("redraw");
     DrawingPre.prototype.ambientLight = createDrawingPreFunction("ambientLight");
     DrawingPre.prototype.directionalLight = createDrawingPreFunction("directionalLight");
