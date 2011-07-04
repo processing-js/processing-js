@@ -1491,7 +1491,6 @@
     var pgraphicsMode = (arguments.length === 0);
     if (pgraphicsMode) {
       curElement = document.createElement("canvas");
-      p.canvas = curElement;
     }
 
     // PJS specific (non-p5) methods and properties to externalize
