@@ -8352,7 +8352,7 @@
     * @see saveStrings
     * @see saveBytes
     */
-    p.loadBytes = function(url, strings) {
+    p.loadBytes = function(url) {
       var string = ajax(url);
       var ret = [];
 
