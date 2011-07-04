@@ -9035,9 +9035,9 @@
     * @see dist
     */
     p.mag = function(a, b, c) {
-      if (arguments.length === 2) {
+      if (c === undef) {
         return Math.sqrt(a * a + b * b);
-      } else if (arguments.length === 3) {
+      } else {
         return Math.sqrt(a * a + b * b + c * c);
       }
     };
