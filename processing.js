@@ -6922,14 +6922,6 @@
       return  p.color.toHSB(colInt)[0];
     };
 
-    var verifyChannel = function(aColor) {
-      if (aColor.constructor === Array) {
-        return aColor;
-      } else {
-        return p.color(aColor);
-      }
-    };
-
     /**
     * Extracts the red value from a color, scaled to match current colorMode().
     * This value is always returned as a float so be careful not to assign it to an int value.
@@ -7046,26 +7038,6 @@
       var a = parseFloat(p.lerp(a1, a2, amt) * colorModeA);
 
       return p.color.toInt(r, g, b, a);
-    };
-
-    // Forced default color mode for #aaaaaa style
-    /**
-    * Convert 3 int values to a color in the default color mode RGB even if curColorMode is not set to RGB
-    *
-    * @param {int} aValue1              range for the red color
-    * @param {int} aValue2              range for the green color
-    * @param {int} aValue3              range for the blue color
-    *
-    * @returns {Color}
-    *
-    * @see color
-    */
-    p.defaultColor = function(aValue1, aValue2, aValue3) {
-      var tmpColorMode = curColorMode;
-      curColorMode = PConstants.RGB;
-      var c = p.color(aValue1 / 255 * colorModeX, aValue2 / 255 * colorModeY, aValue3 / 255 * colorModeZ);
-      curColorMode = tmpColorMode;
-      return c;
     };
 
     /**
@@ -17308,7 +17280,7 @@
       "concat", "console", "constrain", "copy", "cos", "createFont",
       "createGraphics", "createImage", "cursor", "curve", "curveDetail",
       "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
-      "defaultColor", "degrees", "directionalLight", "disableContextMenu",
+      "degrees", "directionalLight", "disableContextMenu",
       "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu",
       "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
       "fill", "filter", "filter_bilinear", "filter_new_scanline",
