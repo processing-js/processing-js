@@ -11423,6 +11423,7 @@
       var vert = [];
 
       if (firstVert) { firstVert = false; }
+      vert["isVert"] = true;
 
       vert[0] = x;
       vert[1] = y;
