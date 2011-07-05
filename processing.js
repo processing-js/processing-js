@@ -7946,10 +7946,9 @@
     };
 
     // PGraphics methods
-    // TODO: These functions are suppose to be called before any operations are called on the
-    //       PGraphics object. They currently do nothing.
-    p.beginDraw = function() {};
-    p.endDraw = function() {};
+    // These functions exist for compatibility with P5, nothing more
+    p.beginDraw = nop;
+    p.endDraw = nop;
 
     // Imports an external Processing.js library
     p.Import = function(lib) {
