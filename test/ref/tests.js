@@ -14,6 +14,8 @@ var tests = [
   { path: "loadShape13.pde", tags: ["2D","SVG"] },
   { path: "loadShape14.pde", tags: ["2D","SVG"] },
   { path: "loadShape15.pde", tags: ["2D","SVG"] },
+  { path: "blur.pde", tags: ["2D","Convolution"] },
+  { path: "edgedetect.pde", tags: ["2D","Convolution"], knownFailureTicket: "1399" },
   { path: "defaults-background_and_size.pde", tags: ["2D"] },
   { path: "background-gray.pde", tags: ["2D"] },
   { path: "background-gray-alpha.pde", tags: ["2D"] },
