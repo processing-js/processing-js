@@ -134,7 +134,7 @@
 
         function is3D(script) {
           // look for size(100,100,OPENGL) or size(100,100,P3D)
-          var match = script.match(/size\([\s]*[\d]+[\s]*\,[\s]*[\d]+[\s]*\,?([^\)]+)?\)/);
+          var match = script.match(/size\([\s]*[\d]+[\s]*\,[\s]*[\d]+[\s]*\,[\s]*([\w]+)[\s]*\);/);
           if (match && match[1]) {
             return match[1] == "OPENGL" || match[1] == "P3D";
           }
@@ -311,7 +311,7 @@
             var totalTime = (new Date).getTime() - startTime;
 
             function validateResult() {
-                var is3D = p.use3DContext;
+                var is3D = test.is3D;
 
                 // draw the original based on stored pixels
                 var origCtx = original.getContext('2d');
