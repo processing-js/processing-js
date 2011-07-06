@@ -23,3 +23,5 @@ for (int i = 0; i < width; i++) {
   x += dx;                  // Increment x
 }
 updatePixels();
+
+exit();

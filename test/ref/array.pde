@@ -23,3 +23,4 @@ for(int i=0; i<width; i++) {
   line(i, width/3*2, i, height);
 }
 
+exit();

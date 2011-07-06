@@ -19,4 +19,6 @@ void draw() {
     y = curvePoint(26, 24, 61, 65, t);
     ellipse(x, y+20, 4, 4);
   }
+  
+  exit();
 }

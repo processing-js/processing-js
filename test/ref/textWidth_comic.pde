@@ -22,3 +22,5 @@ void runTest(String a){
   line(0,x,textWidth(a),x);
   x += 20;
 }
+
+exit();

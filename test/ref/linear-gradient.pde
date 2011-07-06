@@ -22,6 +22,8 @@ void setup(){
   setGradient(100, 25, 75, 75, c3, c4, X_AXIS);
   setGradient(25, 100, 75, 75, c2, c5, X_AXIS);
   setGradient(50, 50, 75, 75, c4, c6, Y_AXIS);
+  
+  exit();
 }
 
 void setGradient(int x, int y, float w, float h, color c1, color c2, int axis ){

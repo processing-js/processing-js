@@ -37,3 +37,5 @@ a = loadImage("trees.jpg");
 // State that there are changes to edgeImg.pixels[]
 edgeImg.updatePixels();
 image(edgeImg, img.width/2, 0, width, height); // Draw the new image
+
+exit();

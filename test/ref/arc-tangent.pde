@@ -19,6 +19,8 @@ void setup()
   e1.display();
   e2.display();
   e3.display();
+  
+  exit();
 }
 
 class Eye 

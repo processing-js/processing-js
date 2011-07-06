@@ -5,3 +5,5 @@ background(255,255,255);
 stroke(0,0,0);
 
 line(10,10,90,90); // simple line
+
+exit();

@@ -28,3 +28,5 @@ class Spot {
     ellipse(x, y, radius*2, radius*2);
   }
 }
+
+exit();

@@ -17,3 +17,5 @@ line(a, f, b, g);
 line(b, e, b, g);
 line(b, e, d, c);
 line(a, e, d-e, c);
+
+exit();

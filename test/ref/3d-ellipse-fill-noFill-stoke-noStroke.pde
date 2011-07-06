@@ -10,3 +10,5 @@ noFill();
 ellipse(80, 30, 35, 35);
 stroke(1);
 ellipse(30, 80, 35, 35);
+
+exit();

@@ -14,3 +14,5 @@ sphere(20);
 translate(40, 0, 0); 
 shininess(5.0); 
 sphere(20);
+
+exit();

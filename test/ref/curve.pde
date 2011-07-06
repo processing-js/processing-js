@@ -18,6 +18,7 @@ void draw()
   drawCMcurve(100,75,  75,50, 50,75,  75,100);
   drawCMcurve( 25,100, 50,75, 25,50,   0,75);
   drawCMcurve(  0,25,  25,50, 50,25,  25,0);
+  exit();
 }
 
 void drawCMcurve(int cx1, int cy1, int x1, int y1, int x2, int y2, int cx2, int cy2)

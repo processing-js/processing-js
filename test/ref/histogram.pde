@@ -36,3 +36,5 @@ stroke(width);
 for (int i=0; i<width; i+=2) {
   line(i, height, i, height-hist[i]);
 }
+
+exit();

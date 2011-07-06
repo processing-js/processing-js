@@ -15,3 +15,5 @@ void setup(){
     }
   }
 }
+
+exit();

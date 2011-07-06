@@ -5,3 +5,5 @@ strokeWeight(2);
 for( i=0; i<width; i+=2 ) {
   line(i,0,width,height);
 }
+
+exit();

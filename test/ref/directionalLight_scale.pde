@@ -11,3 +11,5 @@ void setup(){
   scale(4);
   sphere(10);
 }
+
+exit();

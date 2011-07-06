@@ -25,3 +25,5 @@ for (int i=0; i<pts; i++) {
   angle+=rot;
 }
 endShape();
+
+exit();

@@ -5,3 +5,5 @@ background(0, 0);
 fill(0, 200, 255, 50);
 noStroke();
 rect(0, 0, width, height);
+
+exit();

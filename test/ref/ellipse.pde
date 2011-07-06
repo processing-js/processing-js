@@ -6,3 +6,5 @@ noStroke();
 fill(226);
 ellipse(40, 50, 40, 40);
 ellipse(80, 70, 30, 20);
+
+exit();

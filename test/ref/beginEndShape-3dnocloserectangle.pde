@@ -8,3 +8,5 @@ vertex(80, 20);
 vertex(80, 80);
 vertex(20, 80);
 endShape();
+
+exit();

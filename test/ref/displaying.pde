@@ -5,3 +5,5 @@ size(100, 100);
 PImage a = loadImage("arch.jpg");
 image(a, 0, 0, width, height);
 image(a, width/2, 0, width/2, height/2);
+
+exit();

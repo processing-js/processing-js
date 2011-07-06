@@ -19,3 +19,5 @@ for(int i=0; i<height; i+=2) {
     point(j, i);
   }
 }
+
+exit();

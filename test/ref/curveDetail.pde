@@ -13,6 +13,8 @@ void draw() {
   drawCurves(0);
   curveDetail(4);
   drawCurves(15);
+  exit();
+
 }
 
 void drawCurves(float y) {

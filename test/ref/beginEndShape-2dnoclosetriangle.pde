@@ -7,3 +7,5 @@ vertex(20, 20);
 vertex(80, 20);
 vertex(80, 80);
 endShape();
+
+exit();

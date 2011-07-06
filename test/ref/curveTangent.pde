@@ -18,4 +18,7 @@ void draw() {
     a -= PI/2.0;
     line(x, y, cos(a)*8 + x, sin(a)*8 + y);
   }
+  
+  exit();
+
 }

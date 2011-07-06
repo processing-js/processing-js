@@ -41,3 +41,5 @@ for (int y = 1; y < img.height-1; y++) { // Skip top and bottom edges
 edgeImg.updatePixels();
 image(edgeImg, 50, 0); // Draw the new image
 }
+
+exit();
