@@ -15,6 +15,8 @@ void setup(){
 
   runTest("A");
   runTest("AA");
+  
+  exit();
 }
 
 void runTest(String a){
@@ -22,5 +24,3 @@ void runTest(String a){
   line(0,x,textWidth(a),x);
   x += 20;
 }
-
-exit();
