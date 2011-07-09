@@ -1,4 +1,4 @@
-(function(window, document, Math, nop, eval_, undef) {
+(function(window, document, Math, nop, eval_, noXHR, undef) {
 
   var debug = (function() {
     if ("console" in window) {
@@ -19436,7 +19436,7 @@
           if (xhr.status !== 200 && xhr.status !== 0) {
             error = "Invalid XHR status " + xhr.status;
           } else if (xhr.responseText === "") {
-            error = "No content";
+            error = "File is empty";
           }
           callback(xhr.responseText, error);
         }
@@ -19453,8 +19453,8 @@
       function callback(block, error) {
         code[index] = block;
         ++loaded;
-        if (error) {
-          errors.push("  " + filename + " ==> " + error);
+        if (error) { 
+          errors.push(filename + " ==> " + error);
         }
         if (loaded === sourcesCount) {
           if (errors.length === 0) {
@@ -19464,7 +19464,7 @@
               Processing.logger.log("Unable to execute pjs sketch: " + e);
             }
           } else {
-            Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
+            Processing.logger.log("Unable to load pjs sketch files: " + errors.join("\n"));
           }
         }
       }
@@ -19478,7 +19478,12 @@
         }
         return;
       }
-      ajaxAsync(filename, callback);
+
+      if(noXHR) {
+        Processing.logger.log("Unable to load "+filename+" due to same-domain-origin policy violation. Try loading this page in another browser, or load it from http://localhost using a local webserver.");
+      } else {
+        ajaxAsync(filename, callback);
+      }
     }
 
     for (var i = 0; i < sourcesCount; ++i) {
@@ -19542,4 +19547,4 @@
     // DOM is not found
     this.Processing = Processing;
   }
-}(window, window.document, Math, function(){}, function(expr) { return ((new Function("return (" + expr + ");"))()); }));
+}(window, window.document, Math, function(){}, function(expr) { return ((new Function("return (" + expr + ");"))()); }, (("withCredentials" in new XMLHttpRequest()) && (new XMLHttpRequest()).withCredentials===false && window.location.protocol === "file:")));
