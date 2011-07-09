@@ -19550,7 +19550,7 @@
             continue;
           }
           source =  script.innerText || script.textContent;
-          var instance = new Processing(canvas, source);
+          instance = new Processing(canvas, source);
         }
       }
     }
