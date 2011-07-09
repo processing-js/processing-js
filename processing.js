@@ -19492,7 +19492,8 @@
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
 
-    var canvas = document.getElementsByTagName('canvas');
+    var canvas = document.getElementsByTagName('canvas'),
+      filenames;
 
     for (var i = 0, l = canvas.length; i < l; i++) {
       // datasrc and data-src are deprecated.
@@ -19505,7 +19506,7 @@
         }
       }
       if (processingSources) {
-        var filenames = processingSources.split(' ');
+        filenames = processingSources.split(' ');
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -19529,7 +19530,7 @@
       var type = script.getAttribute("type");
       if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
         var target = script.getAttribute("data-target");
-        var canvas = false;
+        canvas = undef;
         if (target) {
           canvas = document.getElementById(target);
         } else {
@@ -19542,14 +19543,14 @@
           }
         }
 
-        if (canvas !== false && canvas !== null) {
+        if (canvas) {
           if (script.getAttribute("src")) {
             filenames = script.getAttribute("src").split(/\s+/);
             loadSketchFromSources(canvas, filenames);
             continue;
           }
           source =  script.innerText || script.textContent;
-          new Processing(canvas, source);
+          var instance = new Processing(canvas, source);
         }
       }
     }
