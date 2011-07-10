@@ -465,7 +465,7 @@
       if (arguments.length === 0) {
         array = [];
       } else if (arguments.length > 0 && typeof arguments[0] !== 'number') {
-        array = arguments[0];
+        array = arguments[0].toArray();
       } else {
         array = [];
         array.length = 0 | arguments[0];
@@ -648,7 +648,7 @@
        * @returns {ArrayList} a clone of this ArrayList instance
        */
       this.clone = function() {
-        return new ArrayList(array.slice(0));
+        return new ArrayList(this);
       };
 
       /**
@@ -1081,7 +1081,7 @@
     PVector.prototype = {
       set: function(v, y, z) {
         if (arguments.length === 1) {
-          this.set(v.x || v[0], v.y || v[1], v.z || v[2]);
+          this.set(v.x || v[0] || 0, v.y || v[1] || 0, v.z || v[2] || 0);
         } else {
           this.x = v;
           this.y = y;
@@ -1753,7 +1753,8 @@
 
     var rectNorms = new Float32Array([0,0,1, 0,0,1, 0,0,1, 0,0,1]);
 
-    // Vertex shader for points and lines
+
+    // Shader for points and lines in begin/endShape
     var vShaderSrcUnlitShape =
       "varying vec4 frontColor;" +
 
@@ -1762,9 +1763,11 @@
 
       "uniform mat4 uView;" +
       "uniform mat4 uProjection;" +
+      "uniform float pointSize;" +
 
       "void main(void) {" +
       "  frontColor = aColor;" +
+      "  gl_PointSize = pointSize;" +
       "  gl_Position = uProjection * uView * vec4(aVertex, 1.0);" +
       "}";
 
@@ -1779,7 +1782,7 @@
       "  gl_FragColor = frontColor;" +
       "}";
 
-    // Vertex shader for points and lines
+    // Shader for rect, text, box outlines, sphere outlines, point() and line()
     var vertexShaderSource2D =
       "varying vec4 frontColor;" +
 
@@ -1882,8 +1885,9 @@
       "  if(index == 4) return lights4;" +
       "  if(index == 5) return lights5;" +
       "  if(index == 6) return lights6;" +
-      // some cards complain that not all paths return if we have
-      // this last one in a conditional.
+      // Do not use a conditional for the last return statement
+      // because some video cards will fail and complain that
+      // "not all paths return"
       "  return lights7;" +
       "}" +
 
@@ -3415,6 +3419,8 @@
           } else if (valOf === 109) {  // m - move to (relative)
             if (tmpArray.length >= 2 && tmpArray.length % 2 === 0) {
               // need one+ pairs of co-ordinates
+              cx += tmpArray[0];
+              cy += tmpArray[1];
               this.parsePathMoveto(cx,cy);
               if (tmpArray.length > 2) {
                 for (j = 2, k = tmpArray.length; j < k; j+=2) {
@@ -3781,6 +3787,9 @@
       this.params[1] = this.element.getFloatAttribute("y");
       this.params[2] = this.element.getFloatAttribute("width");
       this.params[3] = this.element.getFloatAttribute("height");
+      if (this.params[2] < 0 || this.params[3] < 0) {
+        throw("svg error: negative width or height found while parsing <rect>");
+      }
     };
     /**
      * @member PShapeSVG
@@ -3793,15 +3802,21 @@
       this.family = PConstants.PRIMITIVE;
       this.params = [];
 
-      this.params[0] = this.element.getFloatAttribute("cx");
-      this.params[1] = this.element.getFloatAttribute("cy");
+      this.params[0] = this.element.getFloatAttribute("cx") | 0 ;
+      this.params[1] = this.element.getFloatAttribute("cy") | 0;
 
       var rx, ry;
       if (val) {
         rx = ry = this.element.getFloatAttribute("r");
+        if (rx < 0) {
+          throw("svg error: negative radius found while parsing <circle>");
+        }
       } else {
         rx = this.element.getFloatAttribute("rx");
         ry = this.element.getFloatAttribute("ry");
+        if (rx < 0 || ry < 0) {
+          throw("svg error: negative x-axis radius or y-axis radius found while parsing <ellipse>");
+        }
       }
       this.params[0] -= rx;
       this.params[1] -= ry;
@@ -3906,6 +3921,10 @@
         this.fill = false;
       } else if (fillText.indexOf("#") === 0) {
         this.fill      = true;
+        if (fillText.length === 4) {
+          // convert #00F to #0000FF
+          fillText = fillText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
+        }
         this.fillColor = opacityMask |
                          (parseInt(fillText.substring(1), 16 )) &
                          0xFFFFFF;
@@ -3914,21 +3933,11 @@
         this.fillColor = opacityMask | this.parseRGB(fillText);
       } else if (fillText.indexOf("url(#") === 0) {
         this.fillName = fillText.substring(5, fillText.length - 1 );
-        /*Object fillObject = findChild(fillName);
-        if (fillObject instanceof Gradient) {
-          fill = true;
-          fillGradient = (Gradient) fillObject;
-          fillGradientPaint = calcGradientPaint(fillGradient); //, opacity);
-        } else {
-          System.err.println("url " + fillName + " refers to unexpected data");
-        }*/
-      } else {
-        if (colors[fillText]) {
-          this.fill      = true;
-          this.fillColor = opacityMask |
-                           (parseInt(colors[fillText].substring(1), 16)) &
-                           0xFFFFFF;
-        }
+      } else if (colors[fillText]) {
+        this.fill      = true;
+        this.fillColor = opacityMask |
+                         (parseInt(colors[fillText].substring(1), 16)) &
+                         0xFFFFFF;
       }
     };
     /**
@@ -3959,6 +3968,10 @@
         this.stroke = false;
       } else if (strokeText.charAt( 0 ) === "#") {
         this.stroke      = true;
+        if (strokeText.length === 4) {
+          // convert #00F to #0000FF
+          strokeText = strokeText.replace(/#(.)(.)(.)/,"#$1$1$2$2$3$3");
+        }
         this.strokeColor = opacityMask |
                            (parseInt( strokeText.substring( 1 ), 16 )) &
                            0xFFFFFF;
@@ -3967,22 +3980,11 @@
         this.strokeColor = opacityMask | this.parseRGB(strokeText);
       } else if (strokeText.indexOf( "url(#" ) === 0) {
         this.strokeName = strokeText.substring(5, strokeText.length - 1);
-          //this.strokeObject = findChild(strokeName);
-        /*if (strokeObject instanceof Gradient) {
-          strokeGradient = (Gradient) strokeObject;
-          strokeGradientPaint = calcGradientPaint(strokeGradient);
-                                //, opacity);
-        } else {
-          System.err.println("url " + strokeName +
-                             " refers to unexpected data");
-        }*/
-      } else {
-        if (colors[strokeText]){
-          this.stroke      = true;
-          this.strokeColor = opacityMask |
-                             (parseInt(colors[strokeText].substring(1), 16)) &
-                             0xFFFFFF;
-        }
+      } else if (colors[strokeText]) {
+        this.stroke      = true;
+        this.strokeColor = opacityMask |
+                           (parseInt(colors[strokeText].substring(1), 16)) &
+                           0xFFFFFF;
       }
     };
     /**
@@ -7753,6 +7755,7 @@
       doLoop = false;
       loopStarted = false;
       clearInterval(looping);
+      curSketch.onPause();
     };
 
     /**
@@ -7773,7 +7776,9 @@
 
       looping = window.setInterval(function() {
         try {
+          curSketch.onFrameStart();
           p.redraw();
+          curSketch.onFrameEnd();
         } catch(e_loop) {
           window.clearInterval(looping);
           throw e_loop;
@@ -7781,6 +7786,7 @@
       }, curMsPerFrame);
       doLoop = true;
       loopStarted = true;
+      curSketch.onLoop();
     };
 
     /**
@@ -7806,7 +7812,31 @@
       }
     };
 
+    ////////////////////////////////////////////////////////////////////////////
+    // JavaScript event binding and releasing
+    ////////////////////////////////////////////////////////////////////////////
+
     var eventHandlers = [];
+
+    function attachEventHandler(elem, type, fn) {
+      if (elem.addEventListener) {
+        elem.addEventListener(type, fn, false);
+      } else {
+        elem.attachEvent("on" + type, fn);
+      }
+      eventHandlers.push({elem: elem, type: type, fn: fn});
+    }
+
+    function detachEventHandler(eventHandler) {
+      var elem = eventHandler.elem,
+          type = eventHandler.type,
+          fn   = eventHandler.fn;
+      if (elem.removeEventListener) {
+        elem.removeEventListener(type, fn, false);
+      } else if (elem.detachEvent) {
+        elem.detachEvent("on" + type, fn);
+      }
+    }
 
     /**
     * Quits/stops/exits the program. Programs without a draw() function exit automatically
@@ -7831,17 +7861,11 @@
         }
       }
 
-      for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-        var elem = eventHandlers[i][0],
-            type = eventHandlers[i][1],
-            fn   = eventHandlers[i][2];
-
-        if (elem.removeEventListener) {
-          elem.removeEventListener(type, fn, false);
-        } else if (elem.detachEvent) {
-          elem.detachEvent("on" + type, fn);
-        }
+      var i = eventHandlers.length;
+      while (i--) {
+        detachEventHandler(eventHandlers[i]);
       }
+      curSketch.onExit();
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -7930,19 +7954,6 @@
       // Replace evil-eval method with a DOM <script> tag insert method that
       // binds new lib code to the Processing.lib names-space and the current
       // p context. -F1LT3R
-    };
-
-    var contextMenu = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    p.disableContextMenu = function() {
-      curElement.addEventListener('contextmenu', contextMenu, false);
-    };
-
-    p.enableContextMenu = function() {
-      curElement.removeEventListener('contextmenu', contextMenu, false);
     };
 
     /**
@@ -9702,15 +9713,14 @@
         // lighting calculations could be ommitted from that program object.
         programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
 
-        // set the defaults
-        curContext.useProgram(programObject2D);
-        p.strokeWeight(1.0);
-
-        programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
         programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
+
+        // Set the default point and line width for the 2D and unlit shapes.
+        p.strokeWeight(1.0);
 
         // Now that the programs have been compiled, we can set the default
         // states for the lights.
+        programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
         curContext.useProgram(programObject3D);
 
         // assume we aren't using textures by default
@@ -10443,7 +10453,6 @@
         uniformi("picktype2d", programObject2D, "picktype", 0);
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-        curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
       }
     };
@@ -10685,7 +10694,6 @@
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
-        curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
       }
     };
@@ -11215,8 +11223,17 @@
 
     Drawing3D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
+      
+      // Processing groups the weight of points and lines under this one function,
+      // but for WebGL, we need to set a uniform for points and call a function for line.
+      
       curContext.useProgram(programObject2D);
       uniformf("pointSize2d", programObject2D, "pointSize", w);
+      
+      curContext.useProgram(programObjectUnlitShape);
+      uniformf("pointSizeUnlitShape", programObjectUnlitShape, "pointSize", w);
+      
+      curContext.lineWidth(w);
     };
 
     /**
@@ -11228,7 +11245,6 @@
      */
     p.strokeCap = function(value) {
       drawing.$ensureContext().lineCap = value;
-
     };
 
     /**
@@ -11473,11 +11489,15 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
+      
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
+
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
+
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
+
       curContext.drawArrays(curContext.POINTS, 0, vArray.length/3);
     };
 
@@ -11516,7 +11536,6 @@
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
       vertexAttribPointer("aColorUS", programObjectUnlitShape, "aColor", 4, strokeColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
-      curContext.lineWidth(lineWidth);
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
@@ -12984,8 +13003,6 @@
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
 
-        curContext.lineWidth(lineWidth);
-
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, lineBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
@@ -13253,7 +13270,6 @@
         uniformi("picktype2d", programObject2D, "picktype", 0);
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-        curContext.lineWidth(lineWidth);
         curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
       }
 
@@ -14440,11 +14456,11 @@
      * @see #tint()
      * @see #colorMode()
      */
-    DrawingShared.prototype.background = function() {
+    var backgroundHelper = function(arg1, arg2, arg3, arg4) {
       var obj;
       
-      if (arguments[0] instanceof PImage) {
-        obj = arguments[0];
+      if (arg1 instanceof PImage) {
+        obj = arg1;
 
         if (!obj.loaded) {
           throw "Error using image in background(): PImage not loaded.";
@@ -14452,20 +14468,15 @@
           throw "Background image must be the same dimensions as the canvas.";
         }
       } else {
-        obj = p.color.apply(this, arguments);
-        
-        // override alpha value, processing ignores the alpha for background color
-        if (!curSketch.options.isTransparent) {
-          obj = obj | PConstants.ALPHA_MASK;
-        }
+        obj = p.color(arg1, arg2, arg3, arg4);
       }
       
       backgroundObj = obj;
     };
 
-    Drawing2D.prototype.background = function() {
-      if (arguments.length > 0) {
-        DrawingShared.prototype.background.apply(this, arguments);
+    Drawing2D.prototype.background = function(arg1, arg2, arg3, arg4) {
+      if (arg1 !== undef) {
+        backgroundHelper(arg1, arg2, arg3, arg4);
       }
 
       if (backgroundObj instanceof PImage) {
@@ -14477,7 +14488,8 @@
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
 
-        if (curSketch.options.isTransparent) {
+        // If the background is transparent
+        if (p.alpha(backgroundObj) !== colorModeA) {
           curContext.clearRect(0,0, p.width, p.height);
         }
         curContext.fillStyle = p.color.toString(backgroundObj);
@@ -14487,9 +14499,9 @@
       }
     };
 
-    Drawing3D.prototype.background = function() {
+    Drawing3D.prototype.background = function(arg1, arg2, arg3, arg4) {
       if (arguments.length > 0) {
-        DrawingShared.prototype.background.apply(this, arguments);
+        backgroundHelper(arg1, arg2, arg3, arg4);
       }
 
       var c = p.color.toGLArray(backgroundObj);
@@ -16721,25 +16733,8 @@
     };
 
     //////////////////////////////////////////////////////////////////////////
-    // Event handling
+    // Touch and Mouse event handling
     //////////////////////////////////////////////////////////////////////////
-
-    function attach(elem, type, fn) {
-      if (elem.addEventListener) {
-        elem.addEventListener(type, fn, false);
-      } else {
-        elem.attachEvent("on" + type, fn);
-      }
-      eventHandlers.push([elem, type, fn]);
-    }
-
-    function detach(elem, type, fn) {
-      if (elem.removeEventListener) {
-        elem.removeEventListener(type, fn, false);
-      } else if (elem.detachEvent) {
-        elem.detachEvent("on" + type, fn);
-      }
-    }
 
     function calculateOffset(curElement, event) {
       var element = curElement,
@@ -16811,25 +16806,19 @@
       return t;
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    // Touch event handling
-    //////////////////////////////////////////////////////////////////////////
-
-    attach(curElement, "touchstart", function (t) {
+    attachEventHandler(curElement, "touchstart", function (t) {
       // Removes unwanted behaviour of the canvas when touching canvas
       curElement.setAttribute("style","-webkit-user-select: none");
       curElement.setAttribute("onclick","void(0)");
       curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
       // Loop though eventHandlers and remove mouse listeners
       for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-        var elem = eventHandlers[i][0],
-            type = eventHandlers[i][1],
-            fn   = eventHandlers[i][2];
+        var type = eventHandlers[i].type;
         // Have this function remove itself from the eventHandlers list too
         if (type === "mouseout" ||  type === "mousemove" ||
             type === "mousedown" || type === "mouseup" ||
             type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
-          detach(elem, type, fn);
+          detachEventHandler(eventHandlers[i]);
         }
       }
 
@@ -16837,14 +16826,14 @@
       // Otherwise, connect all of the emulated mouse events
       if (p.touchStart !== undef || p.touchMove !== undef ||
           p.touchEnd !== undef || p.touchCancel !== undef) {
-        attach(curElement, "touchstart", function(t) {
+        attachEventHandler(curElement, "touchstart", function(t) {
           if (p.touchStart !== undef) {
             t = addTouchEventOffset(t);
             p.touchStart(t);
           }
         });
 
-        attach(curElement, "touchmove", function(t) {
+        attachEventHandler(curElement, "touchmove", function(t) {
           if (p.touchMove !== undef) {
             t.preventDefault(); // Stop the viewport from scrolling
             t = addTouchEventOffset(t);
@@ -16852,14 +16841,14 @@
           }
         });
 
-        attach(curElement, "touchend", function(t) {
+        attachEventHandler(curElement, "touchend", function(t) {
           if (p.touchEnd !== undef) {
             t = addTouchEventOffset(t);
             p.touchEnd(t);
           }
         });
 
-        attach(curElement, "touchcancel", function(t) {
+        attachEventHandler(curElement, "touchcancel", function(t) {
           if (p.touchCancel !== undef) {
             t = addTouchEventOffset(t);
             p.touchCancel(t);
@@ -16868,7 +16857,7 @@
 
       } else {
         // Emulated touch start/mouse down event
-        attach(curElement, "touchstart", function(e) {
+        attachEventHandler(curElement, "touchstart", function(e) {
           updateMousePosition(curElement, e.touches[0]);
 
           p.__mousePressed = true;
@@ -16881,7 +16870,7 @@
         });
 
         // Emulated touch move/mouse move event
-        attach(curElement, "touchmove", function(e) {
+        attachEventHandler(curElement, "touchmove", function(e) {
           e.preventDefault();
           updateMousePosition(curElement, e.touches[0]);
 
@@ -16895,7 +16884,7 @@
         });
 
         // Emulated touch up/mouse up event
-        attach(curElement, "touchend", function(e) {
+        attachEventHandler(curElement, "touchend", function(e) {
           p.__mousePressed = false;
 
           if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
@@ -16912,11 +16901,31 @@
       curElement.dispatchEvent(t);
     });
 
-    //////////////////////////////////////////////////////////////////////////
-    // Mouse event handling
-    //////////////////////////////////////////////////////////////////////////
+    (function() {
+      var enabled = true,
+          contextMenu = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+          };
 
-    attach(curElement, "mousemove", function(e) {
+      p.disableContextMenu = function() {
+        if (!enabled) {
+          return;
+        }
+        attachEventHandler(curElement, 'contextmenu', contextMenu);
+        enabled = false;
+      };
+
+      p.enableContextMenu = function() {
+        if (enabled) {
+          return;
+        }
+        detachEventHandler({elem: curElement, type: 'contextmenu', fn: contextMenu});
+        enabled = true;
+      };
+    }());
+
+    attachEventHandler(curElement, "mousemove", function(e) {
       updateMousePosition(curElement, e);
       if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
         p.mouseMoved();
@@ -16927,20 +16936,20 @@
       }
     });
 
-    attach(curElement, "mouseout", function(e) {
+    attachEventHandler(curElement, "mouseout", function(e) {
       if (typeof p.mouseOut === "function") {
         p.mouseOut();
       }
     });
 
-    attach(curElement, "mouseover", function(e) {
+    attachEventHandler(curElement, "mouseover", function(e) {
       updateMousePosition(curElement, e);
       if (typeof p.mouseOver === "function") {
         p.mouseOver();
       }
     });
 
-    attach(curElement, "mousedown", function(e) {
+    attachEventHandler(curElement, "mousedown", function(e) {
       p.__mousePressed = true;
       p.mouseDragging = false;
       switch (e.which) {
@@ -16960,7 +16969,7 @@
       }
     });
 
-    attach(curElement, "mouseup", function(e) {
+    attachEventHandler(curElement, "mouseup", function(e) {
       p.__mousePressed = false;
 
       if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
@@ -16992,8 +17001,8 @@
     };
 
     // Support Gecko and non-Gecko scroll events
-    attach(document, 'DOMMouseScroll', mouseWheelHandler);
-    attach(document, 'mousewheel', mouseWheelHandler);
+    attachEventHandler(document, 'DOMMouseScroll', mouseWheelHandler);
+    attachEventHandler(document, 'mousewheel', mouseWheelHandler);
 
     //////////////////////////////////////////////////////////////////////////
     // Keyboard Events
@@ -17146,10 +17155,6 @@
 
       wireDimensionalFunctions();
 
-      if ("mozOpaque" in curElement) {
-        curElement.mozOpaque = !curSketch.options.isTransparent;
-      }
-
       // the onfocus and onblur events are handled in two parts.
       // 1) the p.focused property is handled per sketch
       curElement.onfocus = function() {
@@ -17165,13 +17170,13 @@
 
       // 2) looping status is handled per page, based on the pauseOnBlur @pjs directive
       if (curSketch.options.pauseOnBlur) {
-        attach(window, 'focus', function() {
+        attachEventHandler(window, 'focus', function() {
           if (doLoop) {
             p.loop();
           }
         });
 
-        attach(window, 'blur', function() {
+        attachEventHandler(window, 'blur', function() {
           if (doLoop && loopStarted) {
             p.noLoop();
             doLoop = true; // make sure to keep this true after the noLoop call
@@ -17183,9 +17188,9 @@
       // if keyboard events should be handled globally, the listeners should
       // be bound to the document window, rather than to the current canvas
       var keyTrigger = curSketch.options.globalKeyEvents ? window : curElement;
-      attach(keyTrigger, "keydown", handleKeydown);
-      attach(keyTrigger, "keypress", handleKeypress);
-      attach(keyTrigger, "keyup", handleKeyup);
+      attachEventHandler(keyTrigger, "keydown", handleKeydown);
+      attachEventHandler(keyTrigger, "keypress", handleKeypress);
+      attachEventHandler(keyTrigger, "keyup", handleKeyup);
 
       // Step through the libraries that were attached at doc load...
       for (var i in Processing.lib) {
@@ -17204,6 +17209,7 @@
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           curSketch.attach(processing, defaultScope);
+          curSketch.onLoad();
 
           // Run void setup()
           if (processing.setup) {
@@ -17212,6 +17218,7 @@
             if (curContext && !p.use3DContext) {
               curContext.setTransform(1, 0, 0, 1, 0, 0);
             }
+            curSketch.onSetup();
           }
 
           // some pixels can be cached, flushing
@@ -17239,7 +17246,6 @@
       // No executable sketch was specified
       // or called via createGraphics
       curSketch = new Processing.Sketch();
-      curSketch.options.isTransparent = true;
 
       wireDimensionalFunctions();
 
@@ -18930,8 +18936,6 @@
               var imageName = clean(list[j]);
               sketch.imageCache.add(imageName);
             }
-          } else if (key === "transparent") {
-            sketch.options.isTransparent = value === "true";
           // fonts can be declared as a string containing a url,
           // or a JSON object, containing a font name, and a url
           } else if (key === "font") {
@@ -19231,7 +19235,7 @@
   }());
   // end of tinylog lite JavaScript library
 
-  Processing.logger = window.console || tinylogLite;
+  Processing.logger = tinylogLite;
 
   Processing.version = "@VERSION@";
 
@@ -19257,11 +19261,28 @@
   Processing.Sketch = function(attachFunction) {
     this.attachFunction = attachFunction; // can be optional
     this.options = {
-      isTransparent: false,
       crispLines: false,
       pauseOnBlur: false,
       globalKeyEvents: false
     };
+
+    /* Optional Sketch event hooks:
+     *   onLoad - parsing/preloading is done, before sketch starts
+     *   onSetup - setup() has been called, before first draw()
+     *   onPause - noLoop() has been called, pausing draw loop
+     *   onLoop - loop() has been called, resuming draw loop
+     *   onFrameStart - draw() loop about to begin
+     *   onFrameEnd - draw() loop finished
+     *   onExit - exit() done being called
+     */
+    this.onLoad = nop;
+    this.onSetup = nop;
+    this.onPause = nop;
+    this.onLoop = nop;
+    this.onFrameStart = nop;
+    this.onFrameEnd = nop;
+    this.onExit = nop;
+
     this.params = {};
     this.imageCache = {
       pending: 0,
@@ -19292,7 +19313,7 @@
         element.style.fontFamily = "serif";
         element.style.fontSize = "72px";
         element.style.visibility = "hidden";
-        element.innerHTML = "abcmmmmmmmmmmlll";
+        element.innerHTML = "This element is a text block for font loading";
         document.getElementsByTagName("body")[0].appendChild(element);
         return element;
       }()),
@@ -19355,7 +19376,7 @@
         preLoader.style.fontFamily = "'" + fontName + "', serif";
         preLoader.style.fontSize = "72px";
         preLoader.style.visibility = "hidden";
-        preLoader.innerHTML = "abcmmmmmmmmmmlll";
+        preLoader.innerHTML = "This element is a text block for font loading";
         document.getElementsByTagName("body")[0].appendChild(preLoader);
         this.fontList.push(preLoader);
       }

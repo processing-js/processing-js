@@ -23,13 +23,14 @@
 			<option value="endShape2D">endShape2D</option>
 			<option value="endShape3D">endShape3D</option>
 			<option value="Calibration">Calibration</option>
+			<option value="Convolution">Convolution</option>
 			<option value="SVG">SVG</option>
 		</select>
 		Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
 		Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
 		<input onclick="runTests(selectedTests);" type="button" value="Start"></input>
 		<span id="testCount"></span>
-	</div>
+	  </div>
 
     <h3>Results</h3>
     <div id="status" style="margin-bottom: 10px;"></div>

@@ -2,12 +2,8 @@
 /* @pjs preload="svg/b.svg"; */
 PShape s;
 
-void setup() {
-  size(100,100);
-  s = loadShape("svg/b.svg");
-  noLoop();
-}
+size(100,100);
+s = loadShape("svg/b.svg");
 
-void draw() {
-  shape(s,1,1,98,98);
-}
+shape(s,1,1,98,98);
+exit();

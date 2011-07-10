@@ -115,3 +115,10 @@ PVector v3 = PVector.mult(v1, v2);
 _checkEqual(v3.x, 4500.0);
 _checkEqual(v3.y, 97203.75);
 _checkEqual(v3.z, 250.0);
+
+// Zero out
+PVector v1 = new PVector(0, 1, 0);
+PVector v2 = new PVector();
+v2.set(v1);
+
+_checkEqual(v1.array(), v2.array());

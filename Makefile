@@ -21,8 +21,8 @@ VERSION ?= $(shell git show -s --pretty=format:%h)
 # On Windows?  You can specify a FIND value for your cygwin/msys find command
 FIND ?= /usr/bin/find
 
-# TODO: get a Windows solution ... > /dev/null 2>&1
-QUIET :=
+TMP := $(RELEASE_DIR)/.__tmp_file__
+QUIET := > $(TMP) ; rm -f $(TMP)
 
 EMPTY :=
 SRC_DIR :=.
@@ -31,6 +31,7 @@ PJS :=$(P5).js
 PJS_SRC :=$(SRC_DIR)/$(PJS)
 PJS_VERSION :=$(P5)-$(VERSION)
 PJS_VERSION_FULL :=$(P5)-js-$(VERSION)
+PJS_API_SUFFIX := -API
 
 RELEASE_DIR :=$(SRC_DIR)/release
 PJS_RELEASE_PREFIX :=$(RELEASE_DIR)/$(PJS_VERSION)
@@ -44,32 +45,31 @@ FAKE_DOM :=$(TOOLS_DIR)/fake-dom.js
 CLOSUREJAR :=$(TOOLS_DIR)/closure/compiler.jar
 RUNTESTS :=@@$(TOOLS_DIR)/runtests.py $(JSSHELL)
 RUNJS :=@@$(JSSHELL) -f $(FAKE_DOM) -f
-REPLACE_VERSION := | sed -e 's/@VERSION@/$(VERSION)/' >
 
 SKETCHRUN :=runSketch
 SKETCHINPUT ?=$(error Specify an input filename in SKETCHINPUT when using package-sketch)
 SKETCHOUTPUTSRC ?=$(SKETCHINPUT).src
 SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
-preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_RELEASE_SRC) >> $(1)
+preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(2) >> $(1)
 compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
 copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && $(FIND) $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
-                                                                             -iname 'desktop.ini' -o \
-                                                                             -iname 'Thumbs.db'      \) -delete
-addlicense = @@cat $(SRC_DIR)/LICENSE-HEADER $(REPLACE_VERSION) $(RELEASE_DIR)/addlicense.tmp && \
+                                                                              -iname 'desktop.ini' -o \
+                                                                              -iname 'Thumbs.db'      \) -delete
+addlicense = @@cat $(SRC_DIR)/LICENSE-HEADER | sed -e 's/@VERSION@/$(VERSION)$(2)/' > $(RELEASE_DIR)/addlicense.tmp && \
              cat $(1) >> $(RELEASE_DIR)/addlicense.tmp && \
              rm -f $(1) && \
              mv $(RELEASE_DIR)/addlicense.tmp $(1)
 addversion = @@cp $(1) addversion.tmp && \
              rm -f $(1) && \
-             cat addversion.tmp $(REPLACE_VERSION) $(1) && \
+             cat addversion.tmp | sed -e 's/@VERSION@/$(VERSION)$(2)/' > $(1) && \
              rm -f addversion.tmp
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
 	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
 
-release: release-files zipped examples
+release: release-files zipped examples check-release
 	@@echo "Release Created, see $(RELEASE_DIR)"
 
 check: check-lint check-closure check-globals check-submodules check-summary
@@ -89,16 +89,16 @@ zipped: release-files
 release-docs: release-dir
 	@@echo "Copying project release docs..."
 	@@cp $(SRC_DIR)/AUTHORS $(RELEASE_DIR)
-	@@cp $(SRC_DIR)/README $(RELEASE_DIR)/README
-	@@$(call addversion,$(RELEASE_DIR)/README)
+	@@cp $(SRC_DIR)/README.md $(RELEASE_DIR)/README.md
+	@@$(call addversion,$(RELEASE_DIR)/README.md,$(EMPTY))
 	@@cp $(SRC_DIR)/LICENSE $(RELEASE_DIR) $(QUIET)
 	@@cp $(SRC_DIR)/CHANGELOG $(RELEASE_DIR) $(QUIET)
 
 example: $(PJS_RELEASE_SRC)
 	@@echo "Creating example.html..."
 	@@echo "<script src=\"$(PJS_VERSION).js\"></script>" > $(EXAMPLE_HTML)
-	@@echo "<canvas datasrc=\"example.pjs\" width=\"200\" height=\"200\"></canvas>" >> $(EXAMPLE_HTML)
-	@@cp $(SRC_DIR)/example.pjs $(RELEASE_DIR)
+	@@echo "<canvas datasrc=\"example.pde\"></canvas>" >> $(EXAMPLE_HTML)
+	@@cp $(SRC_DIR)/example.pde $(RELEASE_DIR)
 
 examples: $(PJS_RELEASE_SRC)
 	@@echo "Copying examples..."
@@ -121,8 +121,8 @@ extensions: release-dir
 $(PJS_RELEASE_SRC): release-dir
 	@@echo "Creating processing.js..."
 	@@cp $(PJS_SRC) $(PJS_RELEASE_SRC)
-	@@$(call addlicense,$(PJS_RELEASE_SRC))
-	@@$(call addversion,$(PJS_RELEASE_SRC))
+	@@$(call addlicense,$(PJS_RELEASE_SRC),$(EMPTY))
+	@@$(call addversion,$(PJS_RELEASE_SRC),$(EMPTY))
 	@@$(RUNJS) $(PJS_RELEASE_SRC)
 
 check-tests:
@@ -144,7 +144,7 @@ check-lint:
 	@@echo "\nRunning jslint on processing.js:"
 	@@$(TOOLS_DIR)/jslint.py $(JSSHELL) $(PJS_SRC)
 
-check-closure:
+check-closure: release-dir
 	@@echo "\nRunning closure compiler on processing.js:"
 	@@$(call compile,$(PJS_SRC),$(RELEASE_DIR)/closurecompile.out,$(EMPTY))
 	@@rm -f $(RELEASE_DIR)/closurecompile.out
@@ -175,30 +175,33 @@ print-globals:
 closure: $(PJS_SRC) release-dir
 	@@echo "Compiling processing.js with closure..."
 	@@$(call compile,$(PJS_SRC),$(PJS_RELEASE_MIN),$(EMPTY))
-	@@$(call addlicense,$(PJS_RELEASE_MIN))
-	@@$(call addversion,$(PJS_RELEASE_MIN))
+	@@$(call addlicense,$(PJS_RELEASE_MIN),$(EMPTY))
+	@@$(call addversion,$(PJS_RELEASE_MIN),$(EMPTY))
 	@@$(RUNJS) $(PJS_RELEASE_MIN)
 
 compile-sketch:
 	@@$(RUNJS) $(PJS_SRC) -f $(TOOLS_DIR)/jscompile.js < $(SKETCHINPUT) > $(SKETCHOUTPUT)
 	@@echo "Created $(SKETCHOUTPUT)"
 
-package-sketch: $(PJS_RELEASE_SRC)
+package-sketch: $(PJS_SRC)
 	@@echo "function $(SKETCHRUN)(canvas) {" > $(SKETCHOUTPUTSRC)
-	@@$(call preprocess,$(SKETCHOUTPUTSRC))
+	@@$(call preprocess,$(SKETCHOUTPUTSRC),$(PJS_SRC))
 	@@echo "return new Processing(canvas," >> $(SKETCHOUTPUTSRC)
 	@@$(RUNJS) $(PJS_SRC) -f $(TOOLS_DIR)/jscompile.js < $(SKETCHINPUT) >> $(SKETCHOUTPUTSRC)
 	@@echo "); } window['$(SKETCHRUN)']=$(SKETCHRUN);" >> $(SKETCHOUTPUTSRC)
 	@@$(call compile,$(SKETCHOUTPUTSRC),$(SKETCHOUTPUT),--compilation_level ADVANCED_OPTIMIZATIONS)
+	@@$(call addlicense,$(SKETCHOUTPUT),-Packaged)
+	@@$(call addversion,$(SKETCHOUTPUT),-Packaged)
 	@@rm -f $(SKETCHOUTPUTSRC)
 	@@echo "Created $(SKETCHOUTPUT)"
 
 api-only: $(PJS_RELEASE_SRC)
 	@@echo "Creating processing.js API version..."
-	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js)
-	@@$(call addversion,$(PJS_RELEASE_PREFIX)-api.js)
+	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_SRC))
+	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
+	@@$(call addversion,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
-	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.min.js)
+	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.min.js,$(PJS_API_SUFFIX))
 
 clean:
 	@@rm -fr $(RELEASE_DIR)

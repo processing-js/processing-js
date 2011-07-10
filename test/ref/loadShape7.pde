@@ -2,14 +2,10 @@
 /* @pjs preload="svg/transform.svg"; */
 PShape s;
 
-void setup() {
-  background(255);
-  size(100,100);
-  s = loadShape("svg/transform.svg");
-  smooth();
-  noLoop();
-}
+background(255);
+size(100,100);
+s = loadShape("svg/transform.svg");
+smooth();
 
-void draw() {
-  shape(s,0,0,100,100);
-}
+shape(s,0,0,100,100);
+exit();
