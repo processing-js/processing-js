@@ -134,7 +134,7 @@
 
         function is3D(script) {
           // look for size(100,100,OPENGL) or size(100,100,P3D)
-          var match = script.match(/size\([\s]*[\d]+[\s]*\,[\s]*[\d]+[\s]*\,[\s]*([\w]+)[\s]*\);/);
+          var match = script.match(/size\(\s*\d+\s*\,\s*\d+\s*\,\s*(\w+)\s*\);/);
           if (match && match[1]) {
             return match[1] == "OPENGL" || match[1] == "P3D";
           }
