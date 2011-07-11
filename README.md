@@ -116,7 +116,7 @@ to, no longer allow this by default. Another option is to run your own localhost
 webserver so that you can test your page from http://localhost, thus avoiding
 file:/// URLs. If you do not have a webserver installed, you can use the simple
 webserver that is bundled with Processing.js. This requires Python to be installed,
-and can started by running the "httpd.py" script. This will set up a localhost
+and can be started by running the "httpd.py" script. This will set up a localhost
 webserver instance for as long as you keep it running, so that you can easily
 test your page in any browser of your choosing.
 
