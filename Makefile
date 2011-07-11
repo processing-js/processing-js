@@ -79,7 +79,11 @@ release-dir: clean
 
 all: release
 
-release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensions
+release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensions web-server
+
+web-server: release-dir
+	@@echo "Copying httpd.py to release..."
+	@@cp $(TOOLS_DIR)/httpd.py $(RELEASE_DIR)
 
 zipped: release-files
 	@@echo "Creating zipped archives..."

@@ -94,13 +94,21 @@ Here is an example of a Processing sketch:
       PFont fontA = loadFont("courier");
       textFont(fontA, 14);
     }
-    
+
     void draw() {
       text("Hello Web!", 20, 20);
       println("Hello Error Log!");
     }
 
-Many more examples are available on the Processing.js website.
+Some web browsers (e.g., Chrome) require secondary files to be loaded from a
+web server for security reasons.  This means loading a web page that references
+a Processing.js sketch in a file via a file:/// URL vs. http:// will fail.
+To get around this problem you can use a browser which does allow file:///
+access (e.g., Firefox), access your files from a web server, or run a local
+web server.  If you have Python installed, you can use the simple httpd.py
+web server we bundle with Processing.js.
+
+Many more examples are available on the Processing.js website, http://processingjs.org/.
 
 Learn More About Processing.js
 -------------------------------

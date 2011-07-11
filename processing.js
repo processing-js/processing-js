@@ -19426,10 +19426,7 @@
    * @param {String[]} source The array of files that must be loaded
    */
   var loadSketchFromSources = function(canvas, sources) {
-    var code = [], errors = [], sourcesCount = sources.length, loaded = 0,
-      noXHR = ( ("withCredentials" in new XMLHttpRequest()) &&
-                (new XMLHttpRequest()).withCredentials === false &&
-                window.location.protocol === "file:" );
+    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
 
     function ajaxAsync(url, callback) {
       var xhr = new XMLHttpRequest();
@@ -19439,8 +19436,16 @@
           if (xhr.status !== 200 && xhr.status !== 0) {
             error = "Invalid XHR status " + xhr.status;
           } else if (xhr.responseText === "") {
-            error = "File is empty";
+            // Give a hint when loading fails due to same-origin issues on file:/// urls
+            if ( ("withCredentials" in new XMLHttpRequest) &&
+                 (new XMLHttpRequest).withCredentials === false &&
+                 window.location.protocol === "file:" ) {
+              error = "XMLHttpRequest failure, perhaps due to an origin policy violation. Try loading this page in another browser, or load it from http://localhost using a local webserver.";
+            } else {
+              error = "File is empty.";
+            }
           }
+
           callback(xhr.responseText, error);
         }
       };
@@ -19482,11 +19487,7 @@
         return;
       }
 
-      if (noXHR) {
-        Processing.logger.log("Unable to load " + filename + " due to same-domain-origin policy violation. Try loading this page in another browser, or load it from http://localhost using a local webserver.");
-      } else {
-        ajaxAsync(filename, callback);
-      }
+      ajaxAsync(filename, callback);
     }
 
     for (var i = 0; i < sourcesCount; ++i) {
