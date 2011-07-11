@@ -94,13 +94,37 @@ Here is an example of a Processing sketch:
       PFont fontA = loadFont("courier");
       textFont(fontA, 14);
     }
-    
+
     void draw() {
       text("Hello Web!", 20, 20);
       println("Hello Error Log!");
     }
 
-Many more examples are available on the Processing.js website.
+Many more examples are available on the Processing.js website, http://processingjs.org/.
+
+Loading Processing.js Sketches Locally
+--------------------------------------
+Some web browsers (e.g., Chrome) require secondary files to be loaded from a
+web server for security reasons.  This means loading a web page that references
+a Processing.js sketch in a file via a file:/// URL vs. http:// will fail. You
+are particularly likely to run into this problem when you try to view your
+webpage directly from file, as this makes all relatively links file:/// links.
+
+There are several ways to get around this problem. You can use a browser which
+does allow file:/// access, although most current browsers either have, or plan
+to, no longer allow this by default. Another option is to run your own localhost
+webserver so that you can test your page from http://localhost, thus avoiding
+file:/// URLs. If you do not have a webserver installed, you can use the simple
+webserver that is bundled with Processing.js. This requires Python to be installed,
+and can be started by running the "httpd.py" script. This will set up a localhost
+webserver instance for as long as you keep it running, so that you can easily
+test your page in any browser of your choosing.
+
+Finally, most browsers can be told to turn off their same-origin policy
+restrictions, allowing you to test your page without running a localhost
+webserver.  However, we strongly advise against this as it will disable
+same-origin policy checking for any and all websites that you visit until
+you turn it back on. While "easy", this is unsafe.
 
 Learn More About Processing.js
 -------------------------------

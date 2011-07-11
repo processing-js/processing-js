@@ -19436,8 +19436,16 @@
           if (xhr.status !== 200 && xhr.status !== 0) {
             error = "Invalid XHR status " + xhr.status;
           } else if (xhr.responseText === "") {
-            error = "No content";
+            // Give a hint when loading fails due to same-origin issues on file:/// urls
+            if ( ("withCredentials" in new XMLHttpRequest()) &&
+                 (new XMLHttpRequest()).withCredentials === false &&
+                 window.location.protocol === "file:" ) {
+              error = "XMLHttpRequest failure, possibly due to a same-origin policy violation. You can try loading this page in another browser, or load it from http://localhost using a local webserver. See the Processing.js README for a more detailed explanation of this problem and solutions.";
+            } else {
+              error = "File is empty.";
+            }
           }
+
           callback(xhr.responseText, error);
         }
       };
@@ -19453,8 +19461,8 @@
       function callback(block, error) {
         code[index] = block;
         ++loaded;
-        if (error) {
-          errors.push("  " + filename + " ==> " + error);
+        if (error) { 
+          errors.push(filename + " ==> " + error);
         }
         if (loaded === sourcesCount) {
           if (errors.length === 0) {
@@ -19464,7 +19472,7 @@
               Processing.logger.log("Unable to execute pjs sketch: " + e);
             }
           } else {
-            Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
+            Processing.logger.log("Unable to load pjs sketch files: " + errors.join("\n"));
           }
         }
       }
@@ -19478,6 +19486,7 @@
         }
         return;
       }
+
       ajaxAsync(filename, callback);
     }
 
