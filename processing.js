@@ -1,4 +1,4 @@
-(function(window, document, Math, nop, eval_, noXHR, undef) {
+(function(window, document, Math, nop, eval_, undef) {
 
   var debug = (function() {
     if ("console" in window) {
@@ -19426,7 +19426,10 @@
    * @param {String[]} source The array of files that must be loaded
    */
   var loadSketchFromSources = function(canvas, sources) {
-    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
+    var code = [], errors = [], sourcesCount = sources.length, loaded = 0,
+      noXHR = ( ("withCredentials" in new XMLHttpRequest()) &&
+                (new XMLHttpRequest()).withCredentials === false &&
+                window.location.protocol === "file:" );
 
     function ajaxAsync(url, callback) {
       var xhr = new XMLHttpRequest();
@@ -19479,8 +19482,8 @@
         return;
       }
 
-      if(noXHR) {
-        Processing.logger.log("Unable to load "+filename+" due to same-domain-origin policy violation. Try loading this page in another browser, or load it from http://localhost using a local webserver.");
+      if (noXHR) {
+        Processing.logger.log("Unable to load " + filename + " due to same-domain-origin policy violation. Try loading this page in another browser, or load it from http://localhost using a local webserver.");
       } else {
         ajaxAsync(filename, callback);
       }
@@ -19547,4 +19550,4 @@
     // DOM is not found
     this.Processing = Processing;
   }
-}(window, window.document, Math, function(){}, function(expr) { return ((new Function("return (" + expr + ");"))()); }, (("withCredentials" in new XMLHttpRequest()) && (new XMLHttpRequest()).withCredentials===false && window.location.protocol === "file:")));
+}(window, window.document, Math, function(){}, function(expr) { return ((new Function("return (" + expr + ");"))()); }));
