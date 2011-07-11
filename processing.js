@@ -19492,7 +19492,8 @@
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
 
-    var canvas = document.getElementsByTagName('canvas');
+    var canvas = document.getElementsByTagName('canvas'),
+      filenames;
 
     for (var i = 0, l = canvas.length; i < l; i++) {
       // datasrc and data-src are deprecated.
@@ -19505,7 +19506,7 @@
         }
       }
       if (processingSources) {
-        var filenames = processingSources.split(' ');
+        filenames = processingSources.split(' ');
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -19514,6 +19515,43 @@
           }
         }
         loadSketchFromSources(canvas[i], filenames);
+      }
+    }
+
+    // also process all <script>-indicated sketches, if there are any
+    var scripts = document.getElementsByTagName('script');
+    var s, source, instance;
+    for (s = 0; s < scripts.length; s++) {
+      var script = scripts[s];
+      if (!script.getAttribute) {
+        continue;
+      }
+
+      var type = script.getAttribute("type");
+      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
+        var target = script.getAttribute("data-target");
+        canvas = undef;
+        if (target) {
+          canvas = document.getElementById(target);
+        } else {
+          var nextSibling = script.nextSibling;
+          while (nextSibling && nextSibling.nodeType !== 1) {
+            nextSibling = nextSibling.nextSibling;
+          }
+          if (nextSibling.nodeName.toLowerCase() === "canvas") {
+            canvas = nextSibling;
+          }
+        }
+
+        if (canvas) {
+          if (script.getAttribute("src")) {
+            filenames = script.getAttribute("src").split(/\s+/);
+            loadSketchFromSources(canvas, filenames);
+            continue;
+          }
+          source =  script.innerText || script.textContent;
+          instance = new Processing(canvas, source);
+        }
       }
     }
   };
