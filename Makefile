@@ -69,7 +69,7 @@ addversion = @@cp $(1) addversion.tmp && \
 %.js : %.pde
 	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
 
-release: release-files zipped examples check-release
+release: release-files zipped examples check-release ref-testing
 	@@echo "Release Created, see $(RELEASE_DIR)"
 
 check: check-lint check-closure check-globals check-submodules check-summary
@@ -203,9 +203,9 @@ api-only: $(PJS_RELEASE_SRC)
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
 	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.min.js,$(PJS_API_SUFFIX))
 
-ref-testing: release-dir
+ref-testing: closure
 	@@cp -R test release
-	@@$(call compile,$(PJS_SRC),$(RELEASE_DIR)/$(PJS_SRC),$(EMPTY))
+	@@cp $(PJS_RELEASE_MIN) $(RELEASE_DIR)/$(PJS)
 	@@echo "Created ref-testing distribution, see $(RELEASE_DIR)/test/ref/"
 
 clean:
