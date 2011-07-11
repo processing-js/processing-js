@@ -1,5 +1,6 @@
 // These are the test files in this dir to be run.
 var tests = [
+  { path: "box-rotating.pde", tags: ["3D"], knownFailureTicket: "1285" },
   { path: "loadShape.pde", tags: ["2D","SVG"] },
   { path: "loadShape2.pde", tags: ["2D","SVG"] },
   { path: "loadShape3.pde", tags: ["2D","SVG"], epsilonOverride: 0.07 },
