@@ -1,32 +1,31 @@
 (function(window, document, Math, undef) {
 
-  var nop = function(){},
+  var nop = function(){};
 
-    debug = (function() {
-      if ("console" in window) {
-        return function(msg) {
-          window.console.log('Processing.js: ' + msg);
-        };
-      } else {
-        return nop();
-      }
-    }()),
+  var debug = (function() {
+    if ("console" in window) {
+      return function(msg) {
+        window.console.log('Processing.js: ' + msg);
+      };
+    } else {
+      return nop();
+    }
+  }());
 
-    ajax = function(url) {
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url, false);
-      if (xhr.overrideMimeType) {
-        xhr.overrideMimeType("text/plain");
-      }
-      xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT");
-      xhr.send(null);
-      // failed request?
-      if (xhr.status !== 200 && xhr.status !== 0) { throw ("XMLHttpRequest failed, status code " + xhr.status); }
-      return xhr.responseText;
-    },
+  var ajax = function(url) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, false);
+    if (xhr.overrideMimeType) {
+      xhr.overrideMimeType("text/plain");
+    }
+    xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT");
+    xhr.send(null);
+    // failed request?
+    if (xhr.status !== 200 && xhr.status !== 0) { throw ("XMLHttpRequest failed, status code " + xhr.status); }
+    return xhr.responseText;
+  };
 
-    isDOMPresent = ("document" in this) && !("fake" in this.document)
-  ;
+  var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
   /* Browsers fixes start */
   (function fixOperaCreateImageData() {
