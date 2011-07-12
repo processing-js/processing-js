@@ -38,4 +38,6 @@ a = loadImage("trees.jpg");
 edgeImg.updatePixels();
 image(edgeImg, img.width/2, 0, width, height); // Draw the new image
 
-exit();
+void draw() {
+  exit();
+}
