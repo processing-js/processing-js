@@ -27,17 +27,6 @@
 
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
-  /* Browsers fixes start */
-  (function fixOperaCreateImageData() {
-    try {
-      if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
-        CanvasRenderingContext2D.prototype.createImageData = function (sw, sh) {
-          return new ImageData(sw, sh);
-        };
-      }
-    } catch(e) {}
-  }());
-
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
   function setupTypedArray(name, fallback) {
     // Check if TypedArray exists, and use if so.
