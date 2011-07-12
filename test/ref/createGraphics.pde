@@ -14,3 +14,5 @@ pg.ellipse(20, 20, 30, 30);
 pg.endDraw();
   
 image(pg, 30, 30);
+
+exit();

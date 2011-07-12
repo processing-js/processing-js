@@ -1,4 +1,6 @@
-(function(window, document, Math, nop, eval_, undef) {
+(function(window, document, Math, undef) {
+
+  var nop = function(){};
 
   var debug = (function() {
     if ("console" in window) {
@@ -19387,7 +19389,7 @@
       if(typeof this.attachFunction === "function") {
         this.attachFunction(processing);
       } else if(this.sourceCode) {
-        var func = eval_(this.sourceCode);
+        var func = ((new Function("return (" + this.sourceCode + ");"))());
         func(processing);
         this.attachFunction = func;
       } else {
@@ -19436,8 +19438,16 @@
           if (xhr.status !== 200 && xhr.status !== 0) {
             error = "Invalid XHR status " + xhr.status;
           } else if (xhr.responseText === "") {
-            error = "No content";
+            // Give a hint when loading fails due to same-origin issues on file:/// urls
+            if ( ("withCredentials" in new XMLHttpRequest()) &&
+                 (new XMLHttpRequest()).withCredentials === false &&
+                 window.location.protocol === "file:" ) {
+              error = "XMLHttpRequest failure, possibly due to a same-origin policy violation. You can try loading this page in another browser, or load it from http://localhost using a local webserver. See the Processing.js README for a more detailed explanation of this problem and solutions.";
+            } else {
+              error = "File is empty.";
+            }
           }
+
           callback(xhr.responseText, error);
         }
       };
@@ -19453,8 +19463,8 @@
       function callback(block, error) {
         code[index] = block;
         ++loaded;
-        if (error) {
-          errors.push("  " + filename + " ==> " + error);
+        if (error) { 
+          errors.push(filename + " ==> " + error);
         }
         if (loaded === sourcesCount) {
           if (errors.length === 0) {
@@ -19464,7 +19474,7 @@
               Processing.logger.log("Unable to execute pjs sketch: " + e);
             }
           } else {
-            Processing.logger.log("Unable to load pjs sketch files:\n" + errors.join("\n"));
+            Processing.logger.log("Unable to load pjs sketch files: " + errors.join("\n"));
           }
         }
       }
@@ -19478,6 +19488,7 @@
         }
         return;
       }
+
       ajaxAsync(filename, callback);
     }
 
@@ -19492,7 +19503,8 @@
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
 
-    var canvas = document.getElementsByTagName('canvas');
+    var canvas = document.getElementsByTagName('canvas'),
+      filenames;
 
     for (var i = 0, l = canvas.length; i < l; i++) {
       // datasrc and data-src are deprecated.
@@ -19505,7 +19517,7 @@
         }
       }
       if (processingSources) {
-        var filenames = processingSources.split(' ');
+        filenames = processingSources.split(' ');
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -19514,6 +19526,43 @@
           }
         }
         loadSketchFromSources(canvas[i], filenames);
+      }
+    }
+
+    // also process all <script>-indicated sketches, if there are any
+    var scripts = document.getElementsByTagName('script');
+    var s, source, instance;
+    for (s = 0; s < scripts.length; s++) {
+      var script = scripts[s];
+      if (!script.getAttribute) {
+        continue;
+      }
+
+      var type = script.getAttribute("type");
+      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
+        var target = script.getAttribute("data-target");
+        canvas = undef;
+        if (target) {
+          canvas = document.getElementById(target);
+        } else {
+          var nextSibling = script.nextSibling;
+          while (nextSibling && nextSibling.nodeType !== 1) {
+            nextSibling = nextSibling.nextSibling;
+          }
+          if (nextSibling.nodeName.toLowerCase() === "canvas") {
+            canvas = nextSibling;
+          }
+        }
+
+        if (canvas) {
+          if (script.getAttribute("src")) {
+            filenames = script.getAttribute("src").split(/\s+/);
+            loadSketchFromSources(canvas, filenames);
+            continue;
+          }
+          source =  script.innerText || script.textContent;
+          instance = new Processing(canvas, source);
+        }
       }
     }
   };
@@ -19542,4 +19591,4 @@
     // DOM is not found
     this.Processing = Processing;
   }
-}(window, window.document, Math, function(){}, function(expr) { return ((new Function("return (" + expr + ");"))()); }));
+}(window, window.document, Math));

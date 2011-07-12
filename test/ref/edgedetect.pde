@@ -3,7 +3,6 @@
 
 void setup() {
   size(100, 100); 
-  noLoop();
 }
 
 void draw() {
@@ -40,4 +39,6 @@ for (int y = 1; y < img.height-1; y++) { // Skip top and bottom edges
 // State that there are changes to edgeImg.pixels[]
 edgeImg.updatePixels();
 image(edgeImg, 50, 0); // Draw the new image
+
+exit();
 }

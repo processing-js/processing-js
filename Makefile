@@ -69,7 +69,7 @@ addversion = @@cp $(1) addversion.tmp && \
 %.js : %.pde
 	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
 
-release: release-files zipped examples check-release
+release: release-files zipped examples check-release ref-testing
 	@@echo "Release Created, see $(RELEASE_DIR)"
 
 check: check-lint check-closure check-globals check-submodules check-summary
@@ -79,7 +79,11 @@ release-dir: clean
 
 all: release
 
-release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensions
+release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensions web-server
+
+web-server: release-dir
+	@@echo "Copying httpd.py to release..."
+	@@cp $(TOOLS_DIR)/httpd.py $(RELEASE_DIR)
 
 zipped: release-files
 	@@echo "Creating zipped archives..."
@@ -96,8 +100,7 @@ release-docs: release-dir
 
 example: $(PJS_RELEASE_SRC)
 	@@echo "Creating example.html..."
-	@@echo "<script src=\"$(PJS_VERSION).js\"></script>" > $(EXAMPLE_HTML)
-	@@echo "<canvas datasrc=\"example.pde\"></canvas>" >> $(EXAMPLE_HTML)
+	@@cat $(SRC_DIR)/example.html | sed -e 's/src="processing.js"/src="$(PJS_VERSION).js"/' > $(EXAMPLE_HTML)
 	@@cp $(SRC_DIR)/example.pde $(RELEASE_DIR)
 
 examples: $(PJS_RELEASE_SRC)
@@ -202,6 +205,11 @@ api-only: $(PJS_RELEASE_SRC)
 	@@$(call addversion,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
 	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.min.js,$(PJS_API_SUFFIX))
+
+ref-testing: closure
+	@@cp -R test release
+	@@cp $(PJS_RELEASE_MIN) $(RELEASE_DIR)/$(PJS)
+	@@echo "Created ref-testing distribution, see $(RELEASE_DIR)/test/ref/"
 
 clean:
 	@@rm -fr $(RELEASE_DIR)

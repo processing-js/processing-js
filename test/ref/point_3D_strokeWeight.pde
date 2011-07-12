@@ -10,3 +10,5 @@ for(int i=0; i < 10; i++){
   strokeWeight(i);
   point(i* 10, 0, 0);
 }
+
+exit();

@@ -34,3 +34,5 @@ for(int i = 0; i < c.width*c.height; i++)
     yoff += pix;
   }
 }
+
+exit();

@@ -6,3 +6,5 @@ PImage bg;
 size(100,100,OPENGL);
 bg = loadImage("arch-100.jpg");
 background(bg);
+
+exit();

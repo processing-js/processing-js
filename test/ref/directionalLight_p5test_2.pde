@@ -5,3 +5,5 @@ noStroke();
 directionalLight(51, 102, 126, 0, -1, 0);
 translate(80, 50, 0);
 sphere(30);
+
+exit();

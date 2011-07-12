@@ -33,3 +33,5 @@ vertex(80, 60);
 vertex(60, 80);
 vertex(80, 80);
 endShape(CLOSE);
+
+exit();

@@ -18,3 +18,5 @@ void drawCircle(int x, int radius, int level)
 }
 
 drawCircle(50, 90, 6);
+
+exit();

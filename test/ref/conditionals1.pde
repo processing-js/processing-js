@@ -15,3 +15,5 @@ for(int i=10; i<width; i+=10) {
     line(i, 20, i, 180); 
   }
 }
+
+exit();

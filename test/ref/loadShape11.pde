@@ -6,4 +6,5 @@ size(100,100);
 s = loadShape("svg/b.svg");
 
 shape(s,1,1,98,98);
+
 exit();

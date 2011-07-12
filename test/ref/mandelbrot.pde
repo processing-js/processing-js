@@ -55,3 +55,5 @@ for(int j = 0; j < height; j++) {
   y += dy;
 }
 updatePixels();
+
+exit();

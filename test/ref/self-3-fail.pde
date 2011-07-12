@@ -5,3 +5,5 @@ background(255,255,255);
 stroke(0,0,0);
 
 line(15,10,85,90); // rotated
+
+exit();

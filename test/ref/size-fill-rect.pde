@@ -8,3 +8,5 @@ for(int i=0; i<height; i+=20) {
   fill(255);
   rect(i, 0, 10, height);
 }
+
+exit();

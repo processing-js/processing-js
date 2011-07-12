@@ -25,3 +25,7 @@ for (int i = 1; i < width; i += 2)
     line(width/2 , i, width-2, i);
   }
 }
+
+void draw() {
+  exit();
+}

@@ -27,3 +27,5 @@ for (int x = 0; x < img.width; x++) {
   }
 }
 updatePixels();
+
+exit();

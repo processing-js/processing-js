@@ -5,3 +5,5 @@ background(255,255,255);
 stroke(0,0,0);
 
 line(12,10,92,90); // wrong offset (+2,0)
+
+exit();
