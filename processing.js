@@ -7410,11 +7410,7 @@
     * @see popMatrix
     * @see pushMatrix
     */
-    Drawing2D.prototype.rotateZ = function(angleInRadians) {
-      forwardTransform.rotateZ(angleInRadians);
-      reverseTransform.invRotateZ(angleInRadians);
-      curContext.rotate(angleInRadians);
-    };
+    Drawing2D.prototype.rotateZ = nop;
 
     Drawing3D.prototype.rotateZ = function(angleInRadians) {
       forwardTransform.rotateZ(angleInRadians);
@@ -7472,7 +7468,9 @@
     * @see pushMatrix
     */
     Drawing2D.prototype.rotate = function(angleInRadians) {
-      p.rotateZ(angleInRadians);
+      forwardTransform.rotateZ(angleInRadians);
+      reverseTransform.invRotateZ(angleInRadians);
+      curContext.rotate(angleInRadians);
     };
 
     Drawing3D.prototype.rotate = function(angleInRadians) {
