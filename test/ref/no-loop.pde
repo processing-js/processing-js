@@ -14,4 +14,6 @@ void draw()
   y = y - 1; 
   if (y < 0) { y = height; } 
   line(0, y, width, y);  
+  
+  exit();
 }

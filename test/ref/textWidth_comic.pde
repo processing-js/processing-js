@@ -15,6 +15,8 @@ void setup(){
 
   runTest("A");
   runTest("AA");
+  
+  exit();
 }
 
 void runTest(String a){

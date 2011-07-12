@@ -4,3 +4,5 @@ arc(3, 5, 50, 50, 0, PI / 2.0); // lower quarter circle
 arc(60, 30, 50, 50, -PI, 0);  // upper half of circle
 arc(5, 50, 50, 50, -PI / 6, PI / 6); // 60 degrees
 arc(85, 65, 100, 50, PI / 2, 3 * PI / 2); // 180 degrees
+
+exit();

@@ -13,3 +13,5 @@ for (int i=0; i<angs.length; i++){
   arc(width/2, height/2, diameter, diameter, lastAng, lastAng+radians(angs[i]));
   lastAng += radians(angs[i]);  
 }
+
+exit();

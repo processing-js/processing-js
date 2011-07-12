@@ -10,3 +10,5 @@ for(int i=0; i < img.pixels.length; i++) {
 background(204);
 image(img, 33, 33);
 image(img, 15, 15);
+
+exit();

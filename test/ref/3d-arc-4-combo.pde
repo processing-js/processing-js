@@ -18,3 +18,5 @@ arc(75, 25, 35, 35, -PI, PI/2);
 // Bottom left
 stroke(1);
 arc(25, 75, 35, 35, -PI, PI/2);
+
+exit();

@@ -28,4 +28,5 @@ shape(tsmall, 0,50,45,45);
 // Draw right bot
 tsmall.enableStyle();
 shape(tsmall, 50,50,45,45);
+
 exit();

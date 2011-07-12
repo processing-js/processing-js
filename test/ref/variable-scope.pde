@@ -41,3 +41,5 @@ drawAnotherLine();
   
 // Make a call to the custom function setYetAnotherLine()
 drawYetAnotherLine();
+
+exit();

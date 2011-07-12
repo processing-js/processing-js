@@ -25,3 +25,4 @@ text("san", x, 60);
 fill(255);
 text("shi", x, 90);
 
+exit();

@@ -5,3 +5,5 @@ fill(128);
 noStroke();
 directionalLight(0, 0, 255, 0, 0, -1);
 rect(20,20,60,60);
+
+exit();

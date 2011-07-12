@@ -9,3 +9,5 @@ vertex(50, 90);
 vertex(10, 50); 
 vertex(50, 10); 
 endShape();
+
+exit();

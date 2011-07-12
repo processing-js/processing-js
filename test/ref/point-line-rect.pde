@@ -22,3 +22,5 @@ stroke(204);
 line(0, 73, width, 73);
 
 rect(50, 55, 40, 36);
+
+exit();

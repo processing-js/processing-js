@@ -15,4 +15,6 @@ for(int i=1; i<height/num; i++) {
   line(0, i*num, x, i*num);
   noStroke();
   rect(x, i*num-num/2, 8, num);
-} 
+}
+
+exit();

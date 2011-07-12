@@ -2,3 +2,5 @@
 size(100,100);
 color c = color(250, 200, 0);
 background(c);
+
+exit();

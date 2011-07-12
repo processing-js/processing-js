@@ -16,4 +16,6 @@ void setup()
   curveVertex(70, 90); // the last point of curve
   curveVertex(70, 90); // is also the last control point
   endShape();
+  
+  exit();
 }

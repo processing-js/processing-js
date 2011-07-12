@@ -12,3 +12,5 @@ textLeading(20);
 text(lines, 36, 15, 30, 100);
 textLeading(30);
 text(lines, 68, 15, 30, 100);
+
+exit();

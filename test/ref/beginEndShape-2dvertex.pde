@@ -32,3 +32,5 @@ void roundedCorners(int left, int top, int width, int height, int roundness)
               left + roundness, top);          
   endShape(CLOSE);
 }
+
+exit();

@@ -7,3 +7,5 @@ ambientLight(153, 102, 0);
 ambient(51, 26, 0);
 translate(70, 50, 0);
 sphere(30);
+
+exit();

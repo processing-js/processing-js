@@ -8,4 +8,5 @@ smooth();
 
 shape(s,0,0,100,100);
 // FAILS TO RENDER CORRECTLY IN P5 1.5
+
 exit();

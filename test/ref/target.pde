@@ -17,3 +17,5 @@ void draw_target(int xloc, int yloc, int size, int num)
 }
 
 draw_target(68, 34, 200, 10);
+
+exit();

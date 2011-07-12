@@ -24,6 +24,8 @@ void setup(){
   Roof roof2 = new Roof(Roof.GAMBREL);
   House house2 = new House(100, 60, door2, window2, roof2, House.LEFT_DOOR);
   house2.drawHouse(house1.x + house1.w, height-groundHeight-house2.h, true);
+  
+  exit();
 }
 
 class Door{
