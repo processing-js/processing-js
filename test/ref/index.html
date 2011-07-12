@@ -297,19 +297,6 @@
 
             var pixelsLen = test.pixels.length;
 
-            // draw the current version from code, timing it
-            var startTime = (new Date).getTime(), totalTime = 0;
-            var p;
-            try {
-              p = new Processing(current, test.code);
-            } catch (e) {
-              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
-              result.className = "failed";
-              failedCount++;
-              return nextTest(i+1);
-            }
-            var totalTime = (new Date).getTime() - startTime;
-
             function validateResult() {
                 var is3D = test.is3D;
 
@@ -402,17 +389,20 @@
                 nextTest(i+1);
             }
 
-            var validationDelay = 0;
-            if (/@pjs\s+preload\b/.test(test.code)) {
-              validationDelay = 100;
+            // draw the current version from code, timing it
+            var startTime = (new Date).getTime(), totalTime = 0;
+            var p, s;
+            try {
+              s = Processing.compile(test.code);
+              s.onExit = validateResult;
+              p = new Processing(current, s);
+            } catch (e) {
+              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
+              result.className = "failed";
+              failedCount++;
+              return nextTest(i+1);
             }
-
-            if (validationDelay > 0) {
-              totalTime = "-"; // we are not sure how long test was run
-              setTimeout(validateResult, validationDelay);
-              return; // exit without nextTest
-            }
-            validateResult();
+            var totalTime = (new Date).getTime() - startTime;
           } else {
             title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "invalid test");
             result.className = "failed";

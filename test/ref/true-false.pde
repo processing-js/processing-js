@@ -26,4 +26,6 @@ for (int i = 1; i < width; i += 2)
   }
 }
 
-exit();
+void draw() {
+  exit();
+}
