@@ -9035,11 +9035,11 @@
     * @see dist
     */
     p.mag = function(a, b, c) {
-      if (c === undef) {
-        return Math.sqrt(a * a + b * b);
-      } else {
+      if (c) {
         return Math.sqrt(a * a + b * b + c * c);
       }
+
+      return Math.sqrt(a * a + b * b);
     };
 
     /**
