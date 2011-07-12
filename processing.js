@@ -11218,16 +11218,16 @@
 
     Drawing3D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
-      
+
       // Processing groups the weight of points and lines under this one function,
       // but for WebGL, we need to set a uniform for points and call a function for line.
-      
+
       curContext.useProgram(programObject2D);
       uniformf("pointSize2d", programObject2D, "pointSize", w);
-      
+
       curContext.useProgram(programObjectUnlitShape);
       uniformf("pointSizeUnlitShape", programObjectUnlitShape, "pointSize", w);
-      
+
       curContext.lineWidth(w);
     };
 
@@ -11479,7 +11479,7 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      
+
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
 
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
@@ -13978,6 +13978,12 @@
       // if image is in the preloader cache return a new PImage
       if (curSketch.imageCache.images[file]) {
         pimg = new PImage(curSketch.imageCache.images[file]);
+        // Opera requires late removal of preloaded images, as they are
+        // still hidden in the DOM when they are loaded for real use.
+        if (opera) {
+          document.body.removeChild(curSketch.imageCache.operaCache.images[file]);
+          delete(curSketch.imageCache.operaCache.images[file]);
+        }
         pimg.loaded = true;
         return pimg;
       }
@@ -14430,7 +14436,7 @@
      */
     var backgroundHelper = function(arg1, arg2, arg3, arg4) {
       var obj;
-      
+
       if (arg1 instanceof PImage) {
         obj = arg1;
 
@@ -14442,7 +14448,7 @@
       } else {
         obj = p.color(arg1, arg2, arg3, arg4);
       }
-      
+
       backgroundObj = obj;
     };
 
@@ -19005,6 +19011,8 @@
     this.imageCache = {
       pending: 0,
       images: {},
+      // Opera requires special administration for preloading
+      operaCache: {},
       add: function(href) {
         if(isDOMPresent) {
           var img = new Image();
@@ -19016,6 +19024,18 @@
           this.pending++;
           this.images[href] = img;
           img.src = href;
+
+          // Opera will not load images until they are inserted into the DOM.
+          if (opera) {
+            // we can't use "display: none", since that makes it invisible, and thus not load
+            img.style.display = "absolute";
+            img.style.opacity = 0;
+            document.body.appendChild(img);
+            // force small non-zero dimensions to prevent scrollbars
+            img.style.width = "1px";
+            img.style.height = "1px";
+            this.operaCache[href] = img;
+          }
         } else {
           this.images[href] = null;
         }
@@ -19179,7 +19199,7 @@
       function callback(block, error) {
         code[index] = block;
         ++loaded;
-        if (error) { 
+        if (error) {
           errors.push(filename + " ==> " + error);
         }
         if (loaded === sourcesCount) {
