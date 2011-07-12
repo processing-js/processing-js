@@ -28,7 +28,7 @@
 		</select>
 		Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
 		Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
-		<input onclick="runTests(selectedTests);" type="button" value="Start"></input>
+		<input onclick="runTests(selectedTests);" type="button" value="Start">
 		<span id="testCount"></span>
 	  </div>
 
@@ -38,6 +38,23 @@
     <div id="total"></div>
 
     <script type="text/javascript">
+      var isWebGLBrowser = (function() {
+        var canvas = document.createElement('canvas'),
+          contextNames = ["webgl", "experimental-webgl", "moz-webgl", "webkit-3d"],
+          i = contextNames.length,
+          ctx;
+
+        while (i--) {
+          try {
+            ctx = canvas.getContext(contextNames[i]);
+            if (ctx) {
+              return true;
+            }
+          } catch(e) {}
+        }
+        return false;
+      })();
+
       var selectedTests = [];
       var total = document.getElementById('total');
       total.innerHTML = '';
@@ -389,20 +406,27 @@
                 nextTest(i+1);
             }
 
-            // draw the current version from code, timing it
-            var startTime = (new Date).getTime(), totalTime = 0;
-            var p, s;
-            try {
-              s = Processing.compile(test.code);
-              s.onExit = validateResult;
-              p = new Processing(current, s);
-            } catch (e) {
-              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
+            if (test.is3D && !isWebGLBrowser) {
+              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: WebGL context is not supported on this browser.");
               result.className = "failed";
               failedCount++;
               return nextTest(i+1);
+            } else {
+              // draw the current version from code, timing it
+              var startTime = (new Date).getTime(), totalTime = 0;
+              var p, s;
+              try {
+                s = Processing.compile(test.code);
+                s.onExit = validateResult;
+                p = new Processing(current, s);
+              } catch (e) {
+                title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
+                result.className = "failed";
+                failedCount++;
+                return nextTest(i+1);
+              }
+              var totalTime = (new Date).getTime() - startTime;
             }
-            var totalTime = (new Date).getTime() - startTime;
           } else {
             title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "invalid test");
             result.className = "failed";
