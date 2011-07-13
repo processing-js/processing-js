@@ -4,7 +4,7 @@ PShape t;
 PShape tsmall;
 
 size(100,100);
-t = loadShape("svg/T.svg");
+t = loadShape("svg/t.svg");
 tsmall = loadShape("svg/tsmall.svg");
 
 background(102);
