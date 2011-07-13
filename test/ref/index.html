@@ -67,36 +67,6 @@
       var epsilon = 0.05; // match accuracy ~5%
       document.getElementById('epsilon').value = epsilon;
       var kernel, kernelSize;
-      buildKernel();     
-
-      try {
-        // Opera createImageData fix
-        if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
-          CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); }
-        }
-      } catch(e) {}
-
-      function updateSelectedTests() {
-        var selectControl = document.getElementById('test-type');
-        var selectedTags = selectControl.value.split(',');
-        
-        selectedTests = new Array();
-        for(var i = 0; i < tests.length; ++i) {
-          var found = false;
-          // checking if any selected tags present in test tags
-          for(var j = 0; j < selectedTags.length && !found; ++j) {
-            for(var q = 0; q < tests[i].tags.length && !found; ++q) {
-              if(tests[i].tags[q] == selectedTags[j]) found = true;
-            }
-          }
-          if(found) {
-            selectedTests.push(tests[i]);
-          }
-        }
-
-        var testCount = document.getElementById('testCount');
-        testCount.innerHTML = '&nbsp;(' + selectedTests.length + ' tests)';
-      }
 
       function buildKernel() {
         var ss = sigma * sigma;
@@ -118,6 +88,30 @@
                 kernel[j].push(g);
             }
         }
+      }
+
+      buildKernel();
+
+      function updateSelectedTests() {
+        var selectControl = document.getElementById('test-type');
+        var selectedTags = selectControl.value.split(',');
+
+        selectedTests = new Array();
+        for(var i = 0; i < tests.length; ++i) {
+          var found = false;
+          // checking if any selected tags present in test tags
+          for(var j = 0; j < selectedTags.length && !found; ++j) {
+            for(var q = 0; q < tests[i].tags.length && !found; ++q) {
+              if(tests[i].tags[q] == selectedTags[j]) found = true;
+            }
+          }
+          if(found) {
+            selectedTests.push(tests[i]);
+          }
+        }
+
+        var testCount = document.getElementById('testCount');
+        testCount.innerHTML = '&nbsp;(' + selectedTests.length + ' tests)';
       }
 
       function updateTolerance() {
