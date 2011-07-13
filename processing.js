@@ -7946,7 +7946,7 @@
     };
 
     // PGraphics methods
-    // These functions exist for compatibility with P5, nothing more
+    // These functions exist only for compatibility with P5
     p.beginDraw = nop;
     p.endDraw = nop;
 
