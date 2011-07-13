@@ -7411,7 +7411,7 @@
     * @see pushMatrix
     */
     Drawing2D.prototype.rotateZ = function() {
-      throw "rotateZ() is not supported in 2D mode. Use rotate(float) instead."
+      throw "rotateZ() is not supported in 2D mode. Use rotate(float) instead.";
     };
 
     Drawing3D.prototype.rotateZ = function(angleInRadians) {
