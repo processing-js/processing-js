@@ -12885,14 +12885,7 @@
     * @see strokeCap
     * @see beginShape
     */
-    Drawing2D.prototype.line = function() {
-      var x1, y1, x2, y2;
-
-      x1 = arguments[0];
-      y1 = arguments[1];
-      x2 = arguments[2];
-      y2 = arguments[3];
-
+    Drawing2D.prototype.line = function(x1, y1, x2, y2) {
       // a line is only defined if it has different start and end coordinates.
       // If they are the same, we call point instead.
       if (x1===x2 && y1===y2) {
@@ -12925,23 +12918,12 @@
       }
     };
 
-    Drawing3D.prototype.line = function() {
-      var x1, y1, z1, x2, y2, z2;
-
-      if (arguments.length === 6) {
-        x1 = arguments[0];
-        y1 = arguments[1];
-        z1 = arguments[2];
-        x2 = arguments[3];
-        y2 = arguments[4];
-        z2 = arguments[5];
-      } else if (arguments.length === 4) {
-        x1 = arguments[0];
-        y1 = arguments[1];
-        z1 = 0;
-        x2 = arguments[2];
-        y2 = arguments[3];
+    Drawing3D.prototype.line = function(x1, y1, z1, x2, y2, z2) {
+      if (y2 === undef || z2 === undef) { // 2D line called in 3D context
         z2 = 0;
+        y2 = x2;
+        x2 = z1;
+        z1 = 0;
       }
 
       // a line is only defined if it has different start and end coordinates.
