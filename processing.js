@@ -8997,11 +8997,11 @@
     * @see dist
     */
     p.mag = function(a, b, c) {
-      if (arguments.length === 2) {
-        return Math.sqrt(a * a + b * b);
-      } else if (arguments.length === 3) {
+      if (c) {
         return Math.sqrt(a * a + b * b + c * c);
       }
+
+      return Math.sqrt(a * a + b * b);
     };
 
     /**
