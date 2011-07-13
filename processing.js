@@ -11379,32 +11379,18 @@
      * @see curveVertex
      * @see texture
      */
-    DrawingShared.prototype.vertex = function() {
+
+    Drawing2D.prototype.vertex = function(x, y, u, v) {
       var vert = [];
 
       if (firstVert) { firstVert = false; }
-
-      if (arguments.length === 4) { //x, y, u, v
-        vert[0] = arguments[0];
-        vert[1] = arguments[1];
-        vert[2] = 0;
-        vert[3] = arguments[2];
-        vert[4] = arguments[3];
-      } else { // x, y, z, u, v
-        vert[0] = arguments[0];
-        vert[1] = arguments[1];
-        vert[2] = arguments[2] || 0;
-        vert[3] = arguments[3] || 0;
-        vert[4] = arguments[4] || 0;
-      }
-
       vert["isVert"] = true;
 
-      return vert;
-    };
-
-    Drawing2D.prototype.vertex = function() {
-      var vert = DrawingShared.prototype.vertex.apply(this, arguments);
+      vert[0] = x;
+      vert[1] = y;
+      vert[2] = 0;
+      vert[3] = u;
+      vert[4] = v;
 
       // fill and stroke color
       vert[5] = currentFillColor;
@@ -11413,8 +11399,17 @@
       vertArray.push(vert);
     };
 
-    Drawing3D.prototype.vertex = function() {
-      var vert = DrawingShared.prototype.vertex.apply(this, arguments);
+    Drawing3D.prototype.vertex = function(x, y, z, u, v) {
+      var vert = [];
+
+      if (firstVert) { firstVert = false; }
+      vert["isVert"] = true;
+
+      vert[0] = x;
+      vert[1] = y;
+      vert[2] = z || 0;
+      vert[3] = u || 0;
+      vert[4] = v || 0;
 
       // fill rgba
       vert[5] = fillStyle[0];
