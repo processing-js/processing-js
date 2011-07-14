@@ -31,3 +31,4 @@ void triBlur() {
   }
 }
 
+exit();

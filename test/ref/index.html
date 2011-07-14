@@ -12,10 +12,25 @@
   </head>
   <body>
     <h1>Processing.js Ref Test Runner</h1>
-    <p>To start the tests click Start.  Each test is run in order (downloaded from the server).  The first canvas is the reference image, the second is a live sketch that has just been executed, the third is a visual diff.  The diff is calculated with a tolerance value (e.g., ~5%).  If the third canvas is green, the test passed.  If it is white with red pixels (or all red), it failed, and the red shows where the pixels differ. The calibrating must fail on some tests.  You can generate ref tests <a href="../../tools/processing-helper.html">here</a>.</p>
+    <p>To start the tests click Start.  Each test is run in order (downloaded from the server).  The first canvas is the reference image, the second is a live sketch that has just been executed, the third is a visual diff.  The diff is calculated with a tolerance value (e.g., ~5%).  If the third canvas is green, the test passed.  If it is white with red pixels (or all red), it failed, and the red shows where the pixels differ. The calibrating must fail on some tests.  You can generate ref tests <a href="ref-test-builder.html">here</a>.</p>
 
     <h3>Settings</h3>
-    <div>Run Tests: <select id="test-type" onchange="updateSelectedTests();"><option value="2D,3D" selected>2D and 3D</option><option value="2D">2D Only</option><option value="3D">3D Only</option><option value="endShape2D">endShape2D</option><option value="endShape3D">endShape3D</option><option value="Calibration">Calibration</option></select>&nbsp;Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">&nbsp;Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">&nbsp;<input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
+    <div>Run Tests:
+		<select id="test-type" onchange="updateSelectedTests();">
+			<option value="2D,3D" selected>2D and 3D</option>
+			<option value="2D">2D Only</option>
+			<option value="3D">3D Only</option>
+			<option value="endShape2D">endShape2D</option>
+			<option value="endShape3D">endShape3D</option>
+			<option value="Calibration">Calibration</option>
+			<option value="Convolution">Convolution</option>
+			<option value="SVG">SVG</option>
+		</select>
+		Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
+		Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
+		<input onclick="runTests(selectedTests);" type="button" value="Start">
+		<span id="testCount"></span>
+	  </div>
 
     <h3>Results</h3>
     <div id="status" style="margin-bottom: 10px;"></div>
@@ -23,6 +38,23 @@
     <div id="total"></div>
 
     <script type="text/javascript">
+      var isWebGLBrowser = (function() {
+        var canvas = document.createElement('canvas'),
+          contextNames = ["webgl", "experimental-webgl", "moz-webgl", "webkit-3d"],
+          i = contextNames.length,
+          ctx;
+
+        while (i--) {
+          try {
+            ctx = canvas.getContext(contextNames[i]);
+            if (ctx) {
+              return true;
+            }
+          } catch(e) {}
+        }
+        return false;
+      })();
+
       var selectedTests = [];
       var total = document.getElementById('total');
       total.innerHTML = '';
@@ -36,13 +68,6 @@
       document.getElementById('epsilon').value = epsilon;
       var kernel, kernelSize;
       buildKernel();     
-
-      try {
-        // Opera createImageData fix
-        if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
-          CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); }
-        }
-      } catch(e) {}
 
       function updateSelectedTests() {
         var selectControl = document.getElementById('test-type');
@@ -119,7 +144,7 @@
 
         function is3D(script) {
           // look for size(100,100,OPENGL) or size(100,100,P3D)
-          var match = script.match(/size\([\s]*[\d]+[\s]*\,[\s]*[\d]+[\s]*\,?([^\)]+)?\)/);
+          var match = script.match(/size\(\s*\d+\s*\,\s*\d+\s*\,\s*(\w+)\s*\);/);
           if (match && match[1]) {
             return match[1] == "OPENGL" || match[1] == "P3D";
           }
@@ -153,6 +178,7 @@
 
       function runTests(tests) {
         var results = document.getElementById('results');
+        results.innerHTML = '';
         var status = document.getElementById('status');
         status.innerHTML = 'Running... (this may take some time)';
         var total = document.getElementById('total');
@@ -216,60 +242,43 @@
             total.innerHTML = info;
             
             // sort the tests into failed, known failures, and passed
-            var sortedDivs = [];
-            while (results.hasChildNodes()) {
-              sortedDivs.push(results.lastChild);
-              results.removeChild(results.lastChild);
-            }
-            sortedDivs.sort(function(a, b) {
-              if (a.className === b.className) {
-                if (a.id < b.id) {
-                  return -1;
-                } else {
-                  return 1;
-                }
-              } else if (a.className < b.className) {
-                return -1;
-              } else {
-                return 1;
-              }
-            });
-            
             var failedDiv = document.createElement('div');
             failedDiv.innerHTML = '<hr><h3>Failed ' + failedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
-            results.appendChild(failedDiv);
             
             var knownFailureDiv = document.createElement('div');
             knownFailureDiv.innerHTML = '<hr><h3>Known Failures ' + knownFailedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
-            results.appendChild(knownFailureDiv);
             
             var passDiv = document.createElement('div');
             passDiv.innerHTML = '<hr><h3>Passed ' + passedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
-            results.appendChild(passDiv);
             
-            for (var i = 0; i < sortedDivs.length; i++) {
-              if (sortedDivs[i].className === 'failed') {
-                failedDiv.appendChild(sortedDivs[i]);
-              } else if (sortedDivs[i].className === 'knownfailure') {
-                knownFailureDiv.appendChild(sortedDivs[i]);
+            while (results.hasChildNodes()) {
+              var childNode = results.removeChild(results.firstChild);
+              if (childNode.className === 'failed') {
+                failedDiv.appendChild(childNode);
+              } else if (childNode.className === 'knownfailure') {
+                knownFailureDiv.appendChild(childNode);
               } else {
-                passDiv.appendChild(sortedDivs[i]);
+                passDiv.appendChild(childNode);
               }
             }
             
-            if (failedDiv.childNodes.length <= 1) {
+            if (failedCount < 1) {
               var temp = document.createElement('p');
               temp.innerHTML = 'No failed tests';
               failedDiv.appendChild(temp);
-            } else if (knownFailureDiv.childNodes.length <= 1) {
+            } else if (knownFailedCount < 1) {
               var temp = document.createElement('p');
-              temp.innerHTML = 'No failed tests';
+              temp.innerHTML = 'No known failures';
               knownFailureDiv.appendChild(temp);
-            } else if (passDiv.childNodes.length <= 1) {
+            } else if (passedCount < 1) {
               var temp = document.createElement('p');
-              temp.innerHTML = 'No failed tests';
+              temp.innerHTML = 'No passed tests';
               passDiv.appendChild(temp);
             }
+            
+            results.appendChild(failedDiv);
+            results.appendChild(knownFailureDiv);
+            results.appendChild(passDiv);
           }
         }
 
@@ -284,7 +293,7 @@
           result.appendChild(title);
           results.appendChild(result);
           var valueEpsilon = epsilon * 255;
-          if (test.epsilonOverride) {
+          if (test.epsilonOverride && test.epsilonOverride > epsilon) {
             valueEpsilon = test.epsilonOverride * 255;
           }
 
@@ -299,21 +308,9 @@
 
             var pixelsLen = test.pixels.length;
 
-            // draw the current version from code, timing it
-            var startTime = (new Date).getTime(), totalTime = 0;
-            var p;
-            try {
-              p = new Processing(current, test.code);
-            } catch (e) {
-              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
-              result.className = "failed";
-              failedCount++;
-              return nextTest(i+1);
-            }
-            var totalTime = (new Date).getTime() - startTime;
-
             function validateResult() {
-                var is3D = p.use3DContext;
+                var is3D = test.is3D;
+                totalTime = (new Date).getTime() - startTime;
 
                 // draw the original based on stored pixels
                 var origCtx = original.getContext('2d');
@@ -387,7 +384,7 @@
                   } else {
                     diffCtx.fillStyle = "rgb(0,255,0)";
                     diffCtx.fillRect (0, 0, diff.width, diff.height);
-                    if (test.epsilonOverride) {
+                    if (test.epsilonOverride && test.epsilonOverride > epsilon) {
                       title.innerHTML = titleText(i+1, tl, totalTime, test.name, false, "epsilonOverride = " + test.epsilonOverride);
                       result.className = "passed";
                     } else {
@@ -404,17 +401,26 @@
                 nextTest(i+1);
             }
 
-            var validationDelay = 0;
-            if (/@pjs\s+preload\b/.test(test.code)) {
-              validationDelay = 100;
+            if (test.is3D && !isWebGLBrowser) {
+              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: WebGL context is not supported on this browser.");
+              result.className = "failed";
+              failedCount++;
+              return nextTest(i+1);
+            } else {
+              // draw the current version from code, timing it
+              var startTime = (new Date).getTime(), totalTime = 0;
+              var p, s;
+              try {
+                s = Processing.compile(test.code);
+                s.onExit = validateResult;
+                p = new Processing(current, s);
+              } catch (e) {
+                title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
+                result.className = "failed";
+                failedCount++;
+                return nextTest(i+1);
+              }
             }
-
-            if (validationDelay > 0) {
-              totalTime = "-"; // we are not sure how long test was run
-              setTimeout(validateResult, validationDelay);
-              return; // exit without nextTest
-            }
-            validateResult();
           } else {
             title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "invalid test");
             result.className = "failed";

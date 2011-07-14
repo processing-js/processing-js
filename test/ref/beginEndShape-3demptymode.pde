@@ -21,4 +21,6 @@ void draw (){
       endShape();
     }
   }
+  
+  exit();
 }

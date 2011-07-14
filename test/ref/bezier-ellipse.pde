@@ -13,6 +13,8 @@ void setup(){
   smooth();
   setEllipse(pts, 35, 35);
   drawEllipse();
+  
+  exit();
 }
 
 // draw ellipse with anchor/control points

@@ -108,7 +108,9 @@ Processing.lib.MockExtensions = function() {
 
   this.FixedSpring     = __noop_func__;
   this.Spring2D        = __noop_func__;
-  this.Particle        = __noop_func__;
+  this.Particle        = function() {
+    this.lock = __noop_func__;
+  };
   this.ArrowParticle   = __noop_func__;
   this.LimitedParticle = __noop_func__;
   this.GenParticle = __noop_func__;
@@ -169,6 +171,85 @@ Processing.lib.MockExtensions = function() {
   this.SimpleMapModel = __noop_func__;
   this.Module = __noop_func__;
   this.Spin = __noop_func__;
+
+  // Nature of Code
+  this.Mover = __noop_func__;
+  this.Attractor = __noop_func__;
+  this.Liquid = __noop_func__;
+  this.Spaceship = __noop_func__;
+  this.Oscillator = __noop_func__;
+  this.Pendulum = __noop_func__;
+  this.Wave = __noop_func__;
+  this.ParticleSystem = __noop_func__;
+  this.PBox2D = function() {
+    this.createWorld = __noop_func__;
+    this.setGravity = __noop_func__;
+    this.listenForCollisions = __noop_func__;
+    this.world = {setContactListener: __noop_func__};
+  };
+  this.g = {gl: {setSwapInterval: __noop_func__}};
+  this.GL = __noop_func__;
+  this.VerletParticle2D = __noop_func__;
+  this.VerletPhysics2D = function() {
+    this.setWorldBounds = __noop_func__;
+    this.setDrag = __noop_func__;
+    this.addBehavior = __noop_func__;
+    this.clear = __noop_func__;
+    this.addParticle = __noop_func__;
+    this.addSpring = __noop_func__;
+  };
+  this.VerletSpring2D = __noop_func__;
+  this.Thing = __noop_func__;
+  this.Path = function() {
+    this.addPoint = __noop_func__;
+  };
+  this.Flock = function() {
+    this.addBoid = __noop_func__;
+  };
+  this.Vehicle = __noop_func__;
+  this.setupScrollbars = __noop_func__;
+  this.FlowField = __noop_func__;
+  this.CA = __noop_func__;
+  this.KochFractal = __noop_func__;
+  this.Rule = __noop_func__;
+  this.World = __noop_func__;
+  this.Population = __noop_func__;
+  this.Obstacle = __noop_func__;
+  this.Repeller = __noop_func__;
+  this.Emitter = __noop_func__;
+  this.Vec2D = __noop_func__;
+  this.Vec2 = function() {
+    this.normalize = __noop_func__;
+  };
+  this.Vec3D = __noop_func__;
+  this.Boid = __noop_func__;
+  this.LSystem = function() {
+    this.getSentence =  __noop_func__;
+  };
+  this.POV = __noop_func__;
+  this.Boundary = __noop_func__;
+  this.Bridge = __noop_func__;
+  this.Box = __noop_func__;
+  this.Windmill = __noop_func__;
+  this.Rect = __noop_func__;
+  this.GravityBehavior = __noop_func__;
+  this.Turtle = __noop_func__;
+  this.Surface = __noop_func__;
+  this.Blob = __noop_func__;
+  this.CustomListener = __noop_func__;
+  this.Cluster = function() {
+    this.connect = __noop_func__;
+  };
+  this.Images = __noop_func__;
+  this.Blanket = __noop_func__;
+  this.Cursor = __noop_func__;
+  this.Chain = __noop_func__;
+  this.Spring = function() {
+    this.bind = __noop_func__;
+  };
+  this.Bob = __noop_func__;
+  this.PGraphicsOpenGL = __noop_func__;
+  this.initGL = __noop_func__;
 };
 
 Processing.lib.MockExtensions.exports = [
@@ -179,13 +260,18 @@ Processing.lib.MockExtensions.exports = [
   "beginRecord", "endRecord",
   "AudioStream", "SineWave", "TriangleWave", "FadeIn", "FadeOut", "Envelope", "EPoint", "Ess", "AudioChannel", "Reverb", "Normalize", "FFT",
   "Capture",
-  "Table", "FloatTable", "WordMap", "Treemap", 
-  "FixedSpring", "Spring2D", "Particle", "ArrowParticle", "LimitedParticle", "GenParticle", "DragButton", "Button", "Check", "Radio", "Scrollbar", "SpinArm", "EggRing", "OverRect", "OverCircle", "SpinSpots", "ModuleA", "ModuleB", "Branch", "Segment", "Mass", "Spring", "Control", 
+  "Table", "FloatTable", "WordMap", "Treemap",
+  "FixedSpring", "Spring2D", "Particle", "ArrowParticle", "LimitedParticle", "GenParticle", "DragButton", "Button", "Check", "Radio", "Scrollbar", "SpinArm", "EggRing", "OverRect", "OverCircle", "SpinSpots", "ModuleA", "ModuleB", "Branch", "Segment", "Mass", "Spring", "Control",
   "SearchClient", "WebSearchRequest",
   "Integrator", "ColorIntegrator", "Place", "Slurper",
   "RankedLongArray", "BoundsIntegrator", "FolderItem", "FileItem", "SwingUtilities",
   "File", "Node", "Edge",
-  "SimpleMapItem", "SimpleMapModel", "Module", "Spin"
+  "SimpleMapItem", "SimpleMapModel", "Module", "Spin",
+  "Mover", "Attractor", "Liquid", "Spaceship", "Oscillator", "Pendulum", "Wave", "ParticleSystem", "PBox2D", "g", "GL",
+  "VerletParticle2D", "VerletPhysics2D", "VerletSpring2D", "Thing", "Path", "Flock", "Vehicle", "setupScrollbars", "FlowField", "CA",
+  "KochFractal", "Rule", "World", "Population", "Obstacle", "Repeller", "Emitter", "Vec2D", "Vec2", "Vec3D", "Boid", "LSystem",
+  "Boundary", "Bridge", "Box", "Windmill", "Rect", "GravityBehavior", "POV", "Surface", "Blob", "CustomListener", "Images", "Cluster",
+  "Blanket", "Cursor", "Turtle", "Chain", "Spring", "Bob", "PGraphicsOpenGL", "initGL"
 ];
 
 })();

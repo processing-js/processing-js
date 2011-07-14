@@ -5,3 +5,5 @@ background(255,255,255);
 stroke(0,255,0);  // wrong color
 
 line(12,10,92,90);
+
+exit();

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../../../processing.js"></script>
+<link rel="stylesheet" href="../../style.css"/></head>
+<body><h1>Inline Processing.js code</a></h1>
+
+<p>
+<script id="pdeCode" type="application/processing">
+void setup() {
+  size(100,100);
+  background(#00FF00);
+}
+</script>
+<canvas width="200" height="200" data-processing-sources="#pdeCode"></canvas></p>
+<div style="height:0px;width:0px;overflow:hidden;"></div>
+
+<pre>&lt;script id="pdeCode" type="application/processing"&gt;
+void setup() {
+  size(100,100);
+  background(#00FF00);
+}
+&lt;/script&gt;
+&lt;canvas width="200" height="200" data-processing-sources="#pdeCode"&gt;&lt;/canvas&gt;</pre>
+</body>
+</html>

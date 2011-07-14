@@ -3,12 +3,7 @@
   Requires: fake-dom.js
 */
 var ignoreGlobalsWarnings = {
-  extendClassChain: "Class extend helper",
-  extendStaticMembers: "Class extend helper",
-  extendInterfaceMembers: "Class extend helper",
-  addMethod: "Class add method helper",
-  createJavaArray: "Create array helper",
-  defineProperty: "Utility to define object properties (ECMAScript v5)",
+// e.g.  defineProperty: "Utility to define object properties (ECMAScript v5)",
   imageData: "Canvas imageData object"
 };
 

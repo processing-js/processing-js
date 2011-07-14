@@ -23,3 +23,5 @@ point(p2, p4);
 point(p3, p1); 
 point(p4, p2);
 point(p4, p4);
+
+exit();

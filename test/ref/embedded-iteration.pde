@@ -18,3 +18,5 @@ for(int i = margin; i < width-margin; i += box_space) {
   } 
   box_size = box_size - 0.6; 
 }
+
+exit();

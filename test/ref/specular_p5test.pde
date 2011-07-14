@@ -12,3 +12,5 @@ sphere(30);
 translate(60, 0, 0);
 specular(204, 102, 0);
 sphere(30);
+
+exit();

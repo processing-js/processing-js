@@ -7,6 +7,7 @@
 #  java
 #  Unixy shell (use msys on Windows)
 #  $JSSHELL environment variable in .profile or .bashrc pointing to a SpiderMonkey binary
+#  If on Windows, $FIND environment variable in .profile or .bashrc for unixy find cmd
 #############################################################################################
 
 JSSHELL ?= $(error Specify a valid path to a js shell binary in ~/.profile: export JSSHELL=C:\path\js.exe or /path/js)
@@ -14,11 +15,14 @@ JSSHELL ?= $(error Specify a valid path to a js shell binary in ~/.profile: expo
 # If you want to test just one file or dir, use |make check-one TEST=<file or dir>|
 TEST ?= $(error Specify a test filename/dir in TEST when using check-test)
 
-# Version number used in naming release files. Defaults to DEV_VERSION
-VERSION ?= DEV_VERSION
+# Version number used in naming release files. Defaults to git commit sha.
+VERSION ?= $(shell git show -s --pretty=format:%h)
 
-# TODO: get a Windows solution ... > /dev/null 2>&1
-QUIET :=
+# On Windows?  You can specify a FIND value for your cygwin/msys find command
+FIND ?= /usr/bin/find
+
+TMP := $(RELEASE_DIR)/.__tmp_file__
+QUIET := > $(TMP) ; rm -f $(TMP)
 
 EMPTY :=
 SRC_DIR :=.
@@ -27,6 +31,7 @@ PJS :=$(P5).js
 PJS_SRC :=$(SRC_DIR)/$(PJS)
 PJS_VERSION :=$(P5)-$(VERSION)
 PJS_VERSION_FULL :=$(P5)-js-$(VERSION)
+PJS_API_SUFFIX := -API
 
 RELEASE_DIR :=$(SRC_DIR)/release
 PJS_RELEASE_PREFIX :=$(RELEASE_DIR)/$(PJS_VERSION)
@@ -46,45 +51,57 @@ SKETCHINPUT ?=$(error Specify an input filename in SKETCHINPUT when using packag
 SKETCHOUTPUTSRC ?=$(SKETCHINPUT).src
 SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
-preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(PJS_SRC) >> $(1)
+preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(2) >> $(1)
 compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
-copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && find $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
-                                                                           -iname 'desktop.ini' -o \
-                                                                           -iname 'Thumbs.db'      \) -delete
+copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && $(FIND) $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
+                                                                              -iname 'desktop.ini' -o \
+                                                                              -iname 'Thumbs.db'      \) -delete
+addlicense = @@cat $(SRC_DIR)/LICENSE-HEADER | sed -e 's/@VERSION@/$(VERSION)$(2)/' > $(RELEASE_DIR)/addlicense.tmp && \
+             cat $(1) >> $(RELEASE_DIR)/addlicense.tmp && \
+             rm -f $(1) && \
+             mv $(RELEASE_DIR)/addlicense.tmp $(1)
+addversion = @@cp $(1) addversion.tmp && \
+             rm -f $(1) && \
+             cat addversion.tmp | sed -e 's/@VERSION@/$(VERSION)$(2)/' > $(1) && \
+             rm -f addversion.tmp
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
 	@@$(TOOLS_DIR)/pde2js.py $(JSSHELL) $?
 
-release: release-files zipped examples
+release: release-files zipped examples check-release ref-testing
 	@@echo "Release Created, see $(RELEASE_DIR)"
 
-check: check-lint check-closure check-globals check-summary
+check: check-lint check-closure check-globals check-submodules check-summary
 
 release-dir: clean
 	@@mkdir $(RELEASE_DIR)
 
 all: release
 
-release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensions
+release-files: $(PJS_RELEASE_SRC) closure api-only example release-docs extensions web-server
+
+web-server: release-dir
+	@@echo "Copying httpd.py to release..."
+	@@cp $(TOOLS_DIR)/httpd.py $(RELEASE_DIR)
 
 zipped: release-files
 	@@echo "Creating zipped archives..."
 	@@gzip -9 -c $(PJS_RELEASE_MIN) > $(PJS_RELEASE_MIN).gz
-	@@cd $(RELEASE_DIR); find . -print | zip $(PJS_VERSION_FULL).zip -@ $(QUIET)
+	@@cd $(RELEASE_DIR); $(FIND) . -print | zip $(PJS_VERSION_FULL).zip -@ $(QUIET)
 
 release-docs: release-dir
 	@@echo "Copying project release docs..."
 	@@cp $(SRC_DIR)/AUTHORS $(RELEASE_DIR)
-	@@cat $(SRC_DIR)/README | sed -e 's/@VERSION@/$(VERSION)/' > $(RELEASE_DIR)/README
+	@@cp $(SRC_DIR)/README.md $(RELEASE_DIR)/README.md
+	@@$(call addversion,$(RELEASE_DIR)/README.md,$(EMPTY))
 	@@cp $(SRC_DIR)/LICENSE $(RELEASE_DIR) $(QUIET)
 	@@cp $(SRC_DIR)/CHANGELOG $(RELEASE_DIR) $(QUIET)
 
 example: $(PJS_RELEASE_SRC)
 	@@echo "Creating example.html..."
-	@@echo "<script src=\"$(PJS_VERSION).js\"></script>" > $(EXAMPLE_HTML)
-	@@echo "<canvas datasrc=\"example.pjs\" width=\"200\" height=\"200\"></canvas>" >> $(EXAMPLE_HTML)
-	@@cp $(SRC_DIR)/example.pjs $(RELEASE_DIR)
+	@@cat $(SRC_DIR)/example.html | sed -e 's/src="processing.js"/src="$(PJS_VERSION).js"/' > $(EXAMPLE_HTML)
+	@@cp $(SRC_DIR)/example.pde $(RELEASE_DIR)
 
 examples: $(PJS_RELEASE_SRC)
 	@@echo "Copying examples..."
@@ -106,16 +123,22 @@ extensions: release-dir
 
 $(PJS_RELEASE_SRC): release-dir
 	@@echo "Creating processing.js..."
-	@@cp $(PJS_SRC) $(PJS_RELEASE_SRC).tmp
-	@@$(RUNJS) $(PJS_RELEASE_SRC).tmp
-	@@cat $(PJS_RELEASE_SRC).tmp | sed -e 's/@VERSION@/$(VERSION)/' > $(PJS_RELEASE_SRC)
-	@@rm -f $(PJS_RELEASE_SRC).tmp
+	@@cp $(PJS_SRC) $(PJS_RELEASE_SRC)
+	@@$(call addlicense,$(PJS_RELEASE_SRC),$(EMPTY))
+	@@$(call addversion,$(PJS_RELEASE_SRC),$(EMPTY))
+	@@$(RUNJS) $(PJS_RELEASE_SRC)
 
 check-tests:
 	$(RUNTESTS)
 
 check-release: closure
 	$(RUNTESTS) -s -l $(PJS_RELEASE_MIN)
+
+check-submodules:
+	@@echo "\nChecking for git submodules"
+	@@git submodule status | awk '/^-/ { print $$2, "not found"; printMsg=1 } \
+                                /^ / { print $$2, "included" } \
+                                END { if (printMsg==1) { print "To add these tests to your repository, run git submodule init && git submodule update" } }'
 
 check-summary:
 	$(RUNTESTS) -s
@@ -124,7 +147,7 @@ check-lint:
 	@@echo "\nRunning jslint on processing.js:"
 	@@$(TOOLS_DIR)/jslint.py $(JSSHELL) $(PJS_SRC)
 
-check-closure:
+check-closure: release-dir
 	@@echo "\nRunning closure compiler on processing.js:"
 	@@$(call compile,$(PJS_SRC),$(RELEASE_DIR)/closurecompile.out,$(EMPTY))
 	@@rm -f $(RELEASE_DIR)/closurecompile.out
@@ -152,29 +175,41 @@ check-globals:
 print-globals:
 	@@$(RUNJS) $(TOOLS_DIR)/jsglobals.js -e "printNames()" < $(PJS_SRC)
 
-closure: release-dir
+closure: $(PJS_SRC) release-dir
+	@@echo "Compiling processing.js with closure..."
 	@@$(call compile,$(PJS_SRC),$(PJS_RELEASE_MIN),$(EMPTY))
+	@@$(call addlicense,$(PJS_RELEASE_MIN),$(EMPTY))
+	@@$(call addversion,$(PJS_RELEASE_MIN),$(EMPTY))
+	@@$(RUNJS) $(PJS_RELEASE_MIN)
 
 compile-sketch:
 	@@$(RUNJS) $(PJS_SRC) -f $(TOOLS_DIR)/jscompile.js < $(SKETCHINPUT) > $(SKETCHOUTPUT)
 	@@echo "Created $(SKETCHOUTPUT)"
 
-package-sketch:
+package-sketch: $(PJS_SRC)
 	@@echo "function $(SKETCHRUN)(canvas) {" > $(SKETCHOUTPUTSRC)
-	@@$(call preprocess,$(SKETCHOUTPUTSRC))
+	@@$(call preprocess,$(SKETCHOUTPUTSRC),$(PJS_SRC))
 	@@echo "return new Processing(canvas," >> $(SKETCHOUTPUTSRC)
 	@@$(RUNJS) $(PJS_SRC) -f $(TOOLS_DIR)/jscompile.js < $(SKETCHINPUT) >> $(SKETCHOUTPUTSRC)
 	@@echo "); } window['$(SKETCHRUN)']=$(SKETCHRUN);" >> $(SKETCHOUTPUTSRC)
 	@@$(call compile,$(SKETCHOUTPUTSRC),$(SKETCHOUTPUT),--compilation_level ADVANCED_OPTIMIZATIONS)
+	@@$(call addlicense,$(SKETCHOUTPUT),-Packaged)
+	@@$(call addversion,$(SKETCHOUTPUT),-Packaged)
 	@@rm -f $(SKETCHOUTPUTSRC)
 	@@echo "Created $(SKETCHOUTPUT)"
 
-api-only: release-dir
+api-only: $(PJS_RELEASE_SRC)
 	@@echo "Creating processing.js API version..."
-	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js)
-	@@cat $(PJS_RELEASE_PREFIX)-api.js | sed -e 's/@VERSION@/$(VERSION)/' > $(PJS_RELEASE_PREFIX)-api.js.tmp
-	@@mv $(PJS_RELEASE_PREFIX)-api.js.tmp $(PJS_RELEASE_PREFIX)-api.js
+	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_SRC))
+	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
+	@@$(call addversion,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
+	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.min.js,$(PJS_API_SUFFIX))
+
+ref-testing: closure
+	@@cp -R test release
+	@@cp $(PJS_RELEASE_MIN) $(RELEASE_DIR)/$(PJS)
+	@@echo "Created ref-testing distribution, see $(RELEASE_DIR)/test/ref/"
 
 clean:
 	@@rm -fr $(RELEASE_DIR)

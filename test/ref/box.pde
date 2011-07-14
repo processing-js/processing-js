@@ -3,3 +3,5 @@ import processing.opengl.*;
 size(100,100,OPENGL);
 translate(58, 48, 0);
 box(40, 30, 50);
+
+exit();

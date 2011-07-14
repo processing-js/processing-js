@@ -7,4 +7,6 @@ void setup( )
   noFill();
   stroke(0);
   bezier(40, 75, 25, 25, 80, 25, 60, 75);
+  
+  exit();
 }

@@ -11,3 +11,5 @@ vertex(75, 45);
 vertex(95, 5);
 vertex(95, 45); 
 endShape();
+
+exit();

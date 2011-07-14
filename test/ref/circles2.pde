@@ -23,3 +23,5 @@ void drawCircle(float x, float y, int radius, int level)
 }
 
 drawCircle(50, 50, 80, 8);
+
+exit();

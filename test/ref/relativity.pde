@@ -22,3 +22,5 @@ void drawBand(color v, color w, color x, color y, color z, int ypos, int barWidt
     }
   }
 }
+
+exit();
