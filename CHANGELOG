@@ -1,4 +1,4 @@
-July 13, 2011 - Release 1.2.2
+July 14, 2011 - Release 1.2.3
 
   * Added a note to the test suite about Opera failing Cursor
   * Added httpd.py to the distribution in order to run a local http server for testing
@@ -7,6 +7,7 @@ July 13, 2011 - Release 1.2.2
   * Added both inline and external loading samples to the example.html example
   * Add JavaScript event hooks to Sketch
   * Changed Processing.logger back to tinyLogLite
+  * Changed the script attribute used to target a canvas from data-target to data-processing-target
   * Converted test suite #113 and #114 to ref tests
   * Converted README to README.md
   * Converted ref tests to have proper draw loops with exit() in them
