@@ -1,4 +1,4 @@
-July 13, 2011 - Release 1.2.2
+July 14, 2011 - Release 1.2.3
 
   * Added a note to the test suite about Opera failing Cursor
   * Added httpd.py to the distribution in order to run a local http server for testing
