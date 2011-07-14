@@ -1,81 +1,77 @@
 July 13, 2011 - Release 1.2.2
 
-  * Split rotateZ into 2D and 3D methods
-  * Delete unused variables and functions
-  * Investigate suitability of implementing A3D Renderer
-  * ArrayList's copy constructor does not work (1.1)
-  * Find dead code in processing.js
-  * Create curve* ref tests.
-  * Add "type of pjs" indicator to the PJS header
-  * Remove init and loadSketchFromSources from the api version of pjs
-  * Helper tool fails creating 3D test after 2D test
-  * Remove init.js from repo and /download
-  * 3D points ignores strokeWeight()
-  * Find out which releasable events are bound to sketches, so we can remove them in p.exit()
-  * Create more background ref tests
-  * split() can scope-conflict with objects that implement their own .split function
-  * Add note about Opera failing Cursor on test suite
-  * Investigate swapping eval("...") for new Function("...")
-  * Test suite blur does nothing
-  * Ref tests should be able to re-run without reloading the page
-  * At least one class in a sketch with deep class hierarchy does not get a $base
-  * Create makefile documentation
-  * Ref tests with epsilonOverride should use the global epsilon value if it's higher
-  * Four ref tests of which we need to decide what to do with (pixel diff fails)
-  * Convert test suite #113 and #114 to ref tests
-  * Add server.py to run a local http server
-  * Expand test suite configs
-  * Run make check-lint as part of make check
-  * Test-suite #56 alpha mask fails on IE9 beta and Opera no tags √ resolved
-  * Processing Helper doesn't work in Firefox 4 with image preload firefox
-  * Ref tests with text in them fail
-  * Explore importing Shiffman's "Nature of Code" into test suites
-  * processing.js is leaking event handlers
-  * Improve error message when local files cannot load
-  * Ref tests with images are not being diff'ed correctly
-  * The ref tests are sorted incorrectly when completed
-  * Use minified vs. full processing.js in test suite, ref tests
-  * Convert README to README.md
-  * Makefile needs to be made windows-friendly (1.2.1)
-  * Only first of multiple separate directives is working in 1.2.1
-  * Minified pjs lacks a header and a version number
-  * Remove impossible parser tests
-  * loadSketchFromSources and disableInit are duplicated in processing.js
-  * Remove eval() function from the parseSVGFont
-  * Move the utility functions (extendClassChain, defineProperty, ...) to defaultScope
-  * Add support for hash/bookmark url from sketch loading
-  * Show inline and external loading in our example.html example
-  * make release should trigger make check-release
-  * Implement __hashCode function via virtHashCode
-  * example.html specifies canvas size, use size()
-  * Add event hooks to Sketch
-  * Regression from #1363
-  * Remove nop and eval_ from the global closure arg list
-  * Create SVG ref tests
-  * SVG path "m" statement not working?
-  * lerp unit test only tests r/g/b
-  * Remove transparency directive
-  * Hidden font divs need a more indicate test string
-  * loadImage reference text mentions signing applets
-  * SVG code updates in 1.1.0+ were built on 0.9.7, not 1.0.0 - missing all the 1.0 SVG fixes
-  * loadShape broken in 1.2.1
-  * Makefile target check-closure dies via |make check|
-  * PVector.set is setting z to undefined (NaN)
-  * Convert ref tests to have proper draw loops with exit() in them
-  * Fix is3D regex in ref tester
-  * Restore feature to load inline sketches
-  * Change Processing.logger back to tinyLogLite
-  * Remove init.js from repo
-  * Not implemented fillStyle
-  * Remove delay() from Reference
-  * Typo in reference
-  * Remove fixOperaCreateImageData()
-  * Remove fixOperaCreateImageData() in ref test runner
-  * Rewrite mag to use function args
-  * Rewrite vertex() to use function args
-  * Rewrite line() to use function args
-  * Rewrite comment to reflect what beginDraw and endDraw exist for
-  * Fix case-sensitivity in ref/loadShape9.pde
+  * Added a note to the test suite about Opera failing Cursor
+  * Added httpd.py to the distribution in order to run a local http server for testing
+  * Added Shiffman's "Nature of Code" into parser test suite
+  * Added support for hash/bookmark url from sketch loading
+  * Added both inline and external loading samples to the example.html example
+  * Add JavaScript event hooks to Sketch
+  * Changed Processing.logger back to tinyLogLite
+  * Converted test suite #113 and #114 to ref tests
+  * Converted README to README.md
+  * Converted ref tests to have proper draw loops with exit() in them
+  * Created SVG ref tests
+  * Created curve* ref tests.
+  * Created more background() ref tests
+  * Created makefile documentation
+  * Deleted dead code in processing.js
+  * Deleted unused variables and functions
+  * Expanded test suite configurations for more OS/browser combos
+  * Expanded lerp unit test beyond r/g/b
+  * Fixed ArrayList's copy constructor
+  * Fixed processing.js header to include type of distribution
+  * Fixed processing-helper to work when creating 3D tests after 2D tests
+  * Fixed 3D points to take strokeWeight() into account
+  * Fixed exit() to properly release events that are bound to sketches
+  * Fixed split() so it doesn't scope-conflict with objects that implement their own split function
+  * Fixed Test suite blur test to properly load second image
+  * Fixed ref test runner so it can re-run without reloading the page
+  * Fixed parser so that all classes in a deep class hierarchy get a $base
+  * Fixed ref test runner to use epsilonOverride global value when higher than test-specified value
+  * Fixed failing ref tests due to pixel diff errors
+  * Fixed build system to run make check-lint as part of make check
+  * Fixed test suite #56 alpha mask on IE9 and Opera
+  * Fixed processing helper preloading in Firefox 4
+  * Fixed ref tests that use text
+  * Fixed event handler leaks processing.js
+  * Fixed error messages when local files cannot be loaded
+  * Fixed ref test runner to properly diff images
+  * Fixed ref test runner to properly sort completed tests
+  * Fixed test suite and ref test runner to use minified vs. full processing.js in test suite
+  * Fixed Makefile to be Windows-friendly
+  * Fixed @pjs directives to work when multiple directives are specified
+  * Fixed build system to add version number and header to minified processing.js
+  * Fixed build system so that release target triggers check-release automatically
+  * Fixed example.html to use size() instead of canvas width/height
+  * Fixed regression from #1363
+  * Fixed SVG path "m" statement regression
+  * Fixed loadImage() reference to not mention signing applets
+  * Fixed SVG regression from failed merge
+  * Fixed loadShape()
+  * Fixed Makefile so that check-closure does not die mid-way
+  * Fixed PVector.set to not set z to undefined (NaN)
+  * Fixed is3D regex in ref tester
+  * Fixed case-sensitivity in ref test SVG filenames and associated tests
+  * Implemented fillStyle
+  * Implemented __hashCode function via virtHashCode
+  * Investigated the suitability of implementing the A3D Renderer
+  * Moved the utility functions (extendClassChain, defineProperty, ...) to defaultScope
+  * Refactored rotateZ into 2D and 3D methods
+  * Refactored mag() to use function args
+  * Refactored vertex() to use function args
+  * Refactored line() to use function args
+  * Removed fixOperaCreateImageData()
+  * Removed fixOperaCreateImageData() in ref test runner
+  * Removed delay() from Reference
+  * Removed init and loadSketchFromSources from the api version of pjs
+  * Removed init.js from repo and /download
+  * Removed uses of eval("...")
+  * Removed impossible parser tests
+  * Removed duplicate loadSketchFromSources and disableInit
+  * Removed nop and eval_ from the global closure arg list
+  * Removed @pjs transparency directive
+  * Restored feature to load inline sketches after accidental deletion
+  * Rewrote beginDraw and endDraw comments to better explain their presence
 
 June 2, 2011 - Release 1.2.1
 
