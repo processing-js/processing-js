@@ -19479,7 +19479,7 @@
 
       var type = script.getAttribute("type");
       if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
-        var target = script.getAttribute("data-target");
+        var target = script.getAttribute("data-processing-target");
         canvas = undef;
         if (target) {
           canvas = document.getElementById(target);
