@@ -69,13 +69,6 @@
       var kernel, kernelSize;
       buildKernel();     
 
-      try {
-        // Opera createImageData fix
-        if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
-          CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); }
-        }
-      } catch(e) {}
-
       function updateSelectedTests() {
         var selectControl = document.getElementById('test-type');
         var selectedTags = selectControl.value.split(',');
