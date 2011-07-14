@@ -317,6 +317,7 @@
 
             function validateResult() {
                 var is3D = test.is3D;
+                totalTime = (new Date).getTime() - startTime;
 
                 // draw the original based on stored pixels
                 var origCtx = original.getContext('2d');
@@ -426,7 +427,6 @@
                 failedCount++;
                 return nextTest(i+1);
               }
-              var totalTime = (new Date).getTime() - startTime;
             }
           } else {
             title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "invalid test");
