@@ -279,6 +279,9 @@
                   // Mark this test run a success with time
                   tests[i].completed = true;
                   tests[i].time = diff;
+
+                  p.exit();
+                  p = null;
                 } catch (e) {
                   result.className = "failed";
                   title.innerHTML = titleText(i+1, tl, 0, test.name, iterCount, "Processing failed during execution: " + e.toString());
