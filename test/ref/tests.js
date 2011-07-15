@@ -88,6 +88,7 @@ var tests = [
   { path: "svg_font_biotyp.pde", tags: ["2D"] },
   { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
   { path: "text-leading.pde", tags: ["2D"], epsilonOverride: 0.20 },
+  { path: "line-3d.pde", tags: ["3D"] },
   { path: "point_3D_stroke.pde", tags: ["3D"] },
   { path: "point_3D_strokeWeight.pde", tags: ["3D"], epsilonOverride: 0.22 },
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.18 },
@@ -163,5 +164,6 @@ var tests = [
   { path: "beginEndShape-3dtriangles2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.15 },
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
-  { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35} /* See ticket #1172 */
+  { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35}, /* See ticket #1172 */
+  { path: "rotateZ.pde", tags: ["3D"] }
 ];
