@@ -4334,13 +4334,14 @@
        *
        * @see XMLElement#parseChildrenRecursive
        */
-      parse: function(filename) {
+      parse: function(textstring) {
         var xmlDoc;
         try {
-          if (filename.indexOf(".xml") > -1 || filename.indexOf(".svg") > -1) {
-            filename = ajax(filename);
+          var extension = textstring.substring(textstring.length-4);
+          if (extension === ".xml" || extension === ".svg") {
+            textstring = ajax(textstring);
           }
-          xmlDoc = new DOMParser().parseFromString(filename, "text/xml");
+          xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
           var elements = xmlDoc.documentElement;
           if (elements) {
             this.parseChildrenRecursive(null, elements);
