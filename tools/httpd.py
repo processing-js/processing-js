@@ -1,7 +1,7 @@
 #!/usr/bin/env python
  
 PORT = 9914
-SERVER = '0.0.0.0'
+SERVER = '127.0.0.1'
  
 import SimpleHTTPServer
 import BaseHTTPServer
