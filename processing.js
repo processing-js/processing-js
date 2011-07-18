@@ -11404,7 +11404,13 @@
 
       if (firstVert) { firstVert = false; }
       vert["isVert"] = true;
-
+      
+      if (!v) {
+        v = u;
+        u = z;
+        z = 0;
+      }
+      
       vert[0] = x;
       vert[1] = y;
       vert[2] = z || 0;
