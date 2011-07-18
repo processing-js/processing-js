@@ -15720,13 +15720,9 @@
      * @see #PFont
      * @see #text
      */
-    p.textAlign = function() {
-      if(arguments.length === 1) {
-        horizontalTextAlignment = arguments[0];
-      } else if(arguments.length === 2) {
-        horizontalTextAlignment = arguments[0];
-        verticalTextAlignment = arguments[1];
-      }
+    p.textAlign = function(xalign, yalign) {
+      horizontalTextAlignment = xalign;
+      verticalTextAlignment = yalign || PConstants.BASELINE;
     };
 
     function toP5String(obj) {

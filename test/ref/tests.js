@@ -62,6 +62,7 @@ var tests = [
   { path: "true-false.pde", tags: ["2D"] },
   { path: "variable-scope.pde", tags: ["2D"] },
   { path: "variables.pde", tags: ["2D"] },
+  { path: "text-align.pde", tags: ["2D"], epsilonOverride: 0.14 },
   { path: "words.pde", tags: ["2D"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "defaults-text.pde", tags: ["2D"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
