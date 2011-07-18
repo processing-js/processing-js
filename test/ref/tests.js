@@ -84,6 +84,10 @@ var tests = [
   { path: "text-width_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
   { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 }, /* See ticket #1172 */
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
+  { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"] },
+  { path: "text-valign-BASELINE.pde", tags: ["2D", "Text"] },
+  { path: "text-valign-CENTER.pde", tags: ["2D", "Text"] },
+  { path: "text-valign-TOP.pde", tags: ["2D", "Text"] }, 
   { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
@@ -111,6 +115,10 @@ var tests = [
   { path: "triangle.pde", tags: ["2D"] },
   { path: "svg_font_biotyp.pde", tags: ["2D"] },
   { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
+<<<<<<< HEAD
+=======
+  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
+>>>>>>> created four vertical align ref tests
   { path: "line-3d.pde", tags: ["3D"] },
   { path: "point_3D_stroke.pde", tags: ["3D"] },
   { path: "point_3D_strokeWeight.pde", tags: ["3D"], epsilonOverride: 0.22 },
@@ -187,6 +195,7 @@ var tests = [
   { path: "beginEndShape-3dtriangles2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.15 },
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
+<<<<<<< HEAD
   { path: "rotateZ.pde", tags: ["3D"] },
   { path: "blendcolor-add.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-difference.pde", tags: ["2D", "BLEND"] },
@@ -203,4 +212,8 @@ var tests = [
   { path: "blendcolor-hard_light.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-screen.pde", tags: ["2D", "BLEND"] },
   { path: "pixels-toarray.pde", tags: ["2D"] }
+=======
+  { path: "textWidth_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35}, /* See ticket #1172 */
+  { path: "rotateZ.pde", tags: ["3D"] }
+>>>>>>> created four vertical align ref tests
 ];
