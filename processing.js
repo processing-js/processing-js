@@ -15721,13 +15721,8 @@
      * @see #text
      */
     p.textAlign = function(xalign, yalign) {
-      if (yalign) {
-        horizontalTextAlignment = xalign;
-        verticalTextAlignment = yalign;
-      } else {
-        horizontalTextAlignment = xalign;
-        verticalTextAlignment = PConstants.BASELINE;
-      }
+      horizontalTextAlignment = xalign;
+      verticalTextAlignment = yalign || PConstants.BASELINE; // BASELINE is default vertical alignment
     };
 
     function toP5String(obj) {
