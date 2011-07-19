@@ -1445,6 +1445,14 @@
     yellowgreen:          "#9acd32"
   };
 
+  // screenWidth and screenHeight are shared by all instances.
+  // and return the width/height of the browser's viewport.
+  defaultScope.defineProperty(defaultScope, 'screenWidth',
+    { get: function() { return window.innerWidth; } });
+
+  defaultScope.defineProperty(defaultScope, 'screenHeight',
+    { get: function() { return window.innerHeight; } });
+
   // Manage multiple Processing instances
   var processingInstances = [];
   var processingInstanceIds = {};
