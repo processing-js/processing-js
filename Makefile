@@ -111,19 +111,14 @@ examples: $(PJS_RELEASE_SRC)
 	@@cd $(RELEASE_DIR); zip -r $(PJS_VERSION_FULL)-examples.zip $(PJS_VERSION)-examples $(QUIET)
 	@@rm -fr $(EXAMPLES_DIR)
 
-pretty: $(PJS_RELEASE_SRC)
-	@@echo "Creating beautified processing.js..."
-	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(PJS_RELEASE_SRC) > $(PJS_RELEASE_SRC).tmp
-	@@$(JSSHELL) -f $(FAKE_DOM) -f $(PJS_RELEASE_SRC).tmp
-	@@mv $(PJS_RELEASE_SRC).tmp $(PJS_RELEASE_SRC)
-
 extensions: release-dir
 	@@echo "Copying extensions..."
 	@@$(call copydir,$(SRC_DIR)/extensions,$(RELEASE_DIR))
 
 $(PJS_RELEASE_SRC): release-dir
-	@@echo "Creating processing.js..."
-	@@cp $(PJS_SRC) $(PJS_RELEASE_SRC)
+	@@echo "Creating $(PJS_RELEASE_SRC)..."
+	@@$(call compile,$(PJS_SRC),$(RELEASE_DIR)/closurecompile.out,--compilation_level WHITESPACE_ONLY)
+	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(RELEASE_DIR)/closurecompile.out > $(PJS_RELEASE_SRC)
 	@@$(call addlicense,$(PJS_RELEASE_SRC),$(EMPTY))
 	@@$(call addversion,$(PJS_RELEASE_SRC),$(EMPTY))
 	@@$(RUNJS) $(PJS_RELEASE_SRC)
