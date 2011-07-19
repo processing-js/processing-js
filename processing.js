@@ -361,7 +361,7 @@
    * @returns {int}               The object's hash code.
    */
   function virtHashCode(obj) {
-    if (obj.constructor === String) {
+    if (typeof(obj) === "string") {
       var hash = 0;
       for (var i = 0; i < obj.length; ++i) {
         hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
@@ -392,7 +392,7 @@
   function virtEquals(obj, other) {
     if (obj === null || other === null) {
       return (obj === null) && (other === null);
-    } else if (obj.constructor === String) {
+    } else if (typeof (obj) === "string") {
       return obj === other;
     } else if (typeof(obj) !== "object") {
       return obj === other;
@@ -681,7 +681,7 @@
     * @param {Map} m                        gives the new HashMap the same mappings as this Map
     */
     function HashMap() {
-      if (arguments.length === 1 && arguments[0].constructor === HashMap) {
+      if (arguments.length === 1 && arguments[0] instanceof HashMap) {
         return arguments[0].clone();
       }
 
@@ -922,7 +922,7 @@
         },
 
         function(pair) {
-          return pair.constructor === Entry && pair._isIn(hashMap);
+          return (pair instanceof Entry) && pair._isIn(hashMap);
         },
 
         function(pair) {
