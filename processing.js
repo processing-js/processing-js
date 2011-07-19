@@ -1047,14 +1047,6 @@
       this.z = z || 0;
     }
 
-    function createPVectorMethod(method) {
-      return function(v1, v2) {
-        var v = v1.get();
-        v[method](v2);
-        return v;
-      };
-    }
-
     PVector.dist = function(v1, v2) {
       return v1.dist(v2);
     };
@@ -1068,7 +1060,7 @@
     };
 
     PVector.angleBetween = function(v1, v2) {
-      return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
+      return Math.atan2(v2.y - v1.y, v2.x - v1.x);
     };
 
     // Common vector operations for PVector
@@ -1180,6 +1172,14 @@
         return [this.x, this.y, this.z];
       }
     };
+
+    function createPVectorMethod(method) {
+      return function(v1, v2) {
+        var v = v1.get();
+        v[method](v2);
+        return v;
+      };
+    }
 
     for (var method in PVector.prototype) {
       if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
