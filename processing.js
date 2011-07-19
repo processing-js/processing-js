@@ -17151,10 +17151,9 @@
           // Run void setup()
           if (processing.setup) {
             processing.setup();
-            // if any transforms were performed in setup reset to identify matrix so draw loop is unpolluted
-            if (curContext && !p.use3DContext) {
-              curContext.setTransform(1, 0, 0, 1, 0, 0);
-            }
+            // if any transforms were performed in setup reset to identity matrix
+            // so draw loop is unpolluted
+            processing.resetMatrix();
             curSketch.onSetup();
           }
 

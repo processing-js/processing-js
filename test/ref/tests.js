@@ -66,6 +66,8 @@ var tests = [
   { path: "words.pde", tags: ["2D"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "defaults-text.pde", tags: ["2D"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
+  { path: "box-rotating.pde", tags: ["3D"] },
+  { path: "translate-rect.pde", tags: ["2D"] },
   { path: "arc-tangent.pde",  tags: ["2D"] },
   { path: "arc_ref1.pde",  tags: ["2D"], epsilonOverride: 0.06 },
   { path: "arc_ref2.pde",  tags: ["2D"], epsilonOverride: 0.08 },
