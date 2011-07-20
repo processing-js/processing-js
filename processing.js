@@ -11188,16 +11188,16 @@
 
     Drawing3D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
-
+      
       // Processing groups the weight of points and lines under this one function,
       // but for WebGL, we need to set a uniform for points and call a function for line.
-
+      
       curContext.useProgram(programObject2D);
       uniformf("pointSize2d", programObject2D, "pointSize", w);
-
+      
       curContext.useProgram(programObjectUnlitShape);
       uniformf("pointSizeUnlitShape", programObjectUnlitShape, "pointSize", w);
-
+      
       curContext.lineWidth(w);
     };
 
@@ -11449,7 +11449,7 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-
+      
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
 
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
@@ -14400,7 +14400,7 @@
      */
     var backgroundHelper = function(arg1, arg2, arg3, arg4) {
       var obj;
-
+      
       if (arg1 instanceof PImage) {
         obj = arg1;
 
@@ -14412,7 +14412,7 @@
       } else {
         obj = p.color(arg1, arg2, arg3, arg4);
       }
-
+      
       backgroundObj = obj;
     };
 
@@ -15692,7 +15692,7 @@
         var curContext = drawing.$ensureContext();
         curContext.font = curTextSize + "px " + curTextFont.name;
       }
-      this.computeFontMetrics();
+      computeFontMetrics();
     };
 
     /**
@@ -15710,17 +15710,16 @@
         curTextSize = size;
         var curContext = drawing.$ensureContext();
         curContext.font = curTextSize + "px " + curTextFont.name;
-        this.computeFontMetrics();
+        computeFontMetrics();
       }
     };
-
 
     /**
      * [internal function] computeFontMetrics() calculates various metrics for text
      * placement. Currently this function computes the ascent, descent and leading
-     * values for the currently active font.
+     * (from "lead", used for vertical space) values for the currently active font.
      */
-    p.computeFontMetrics = function() {
+    var computeFontMetrics = function() {
       var canvas = document.createElement("canvas");
       canvas.width = 3 * curTextSize;
       canvas.height = 3 * curTextSize;
@@ -15728,39 +15727,40 @@
       var ctx = canvas.getContext("2d");
       ctx.font = curTextSize + "px '" + curTextFont.name + "'";
 
-      // size the canvas using a string with common max-ascent and max-descent letters
+      // Size the canvas using a string with common max-ascent and max-descent letters.
+      // Changing the canvas dimensions resets the context, so we must reset the font.
       var protrusions = "dbflkhyjqpg";
       canvas.width = ctx.measureText(protrusions).width;
-      // changing the width resets the context, so make sure to set the font again
       ctx.font = curTextSize + "px '" + curTextFont.name + "'";
-      var w = canvas.width;
-      var h = canvas.height;
-      var baseline = h/2;
 
-      // set all canvas pixeldata values to 255
+      var w = canvas.width,
+          h = canvas.height,
+          baseline = h/2;
+
+      // Set all canvas pixeldata values to 255, with all the content
+      // data being 0. This lets us scan for data[i] != 255.
       ctx.fillStyle = "white";
-      ctx.fillRect(0,0,w,h);
-
-      // set content to black, so that we can scan for data[i] != 255
+      ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = "black";
       ctx.fillText(protrusions, 0, baseline);
+      var pixelData = ctx.getImageData(0, 0, w, h).data;
 
-      // retrieve the pixel data
-      document.body.appendChild(canvas);
-      var pixelData = ctx.getImageData(0,0,w,h).data;
-      document.body.removeChild(canvas);
+      // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
+      // consecutive values in the array, rather than stored as 32 bit ints.
+      var i = 0,
+          w4 = w * 4,
+          len = pixelData.length;
 
-      // use a forward scanline to detect ascent
-      var i = 0, w4 = w*4, len = pixelData.length;
-      while (++i < len && pixelData[i] === 255) { }
-      ascent = Math.round(i/w4);
+      // Finding the ascent uses a normal, forward scanline
+      while (++i < len && pixelData[i] === 255);
+      var ascent = Math.round(i / w4);
 
-      // use a backward scanline to detect descent
+      // Finding the descent uses a reverse scanline
       i = len - 1;
-      while (--i > 0 && pixelData[i] === 255) { }
-      descent = Math.round(i/w4);
+      while (--i > 0 && pixelData[i] === 255);
+      var descent = Math.round(i / w4);
 
-      // update current font metrics
+      // Update current font metrics
       curTextAscent = baseline - ascent;
       curTextDescent = descent - baseline;
       curTextLeading = 1.2 * curTextSize;
@@ -19359,7 +19359,7 @@
       function callback(block, error) {
         code[index] = block;
         ++loaded;
-        if (error) {
+        if (error) { 
           errors.push(filename + " ==> " + error);
         }
         if (loaded === sourcesCount) {
