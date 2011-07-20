@@ -361,7 +361,7 @@
    * @returns {int}               The object's hash code.
    */
   function virtHashCode(obj) {
-    if (obj.constructor === String) {
+    if (typeof(obj) === "string") {
       var hash = 0;
       for (var i = 0; i < obj.length; ++i) {
         hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
@@ -392,7 +392,7 @@
   function virtEquals(obj, other) {
     if (obj === null || other === null) {
       return (obj === null) && (other === null);
-    } else if (obj.constructor === String) {
+    } else if (typeof (obj) === "string") {
       return obj === other;
     } else if (typeof(obj) !== "object") {
       return obj === other;
@@ -681,7 +681,7 @@
     * @param {Map} m                        gives the new HashMap the same mappings as this Map
     */
     function HashMap() {
-      if (arguments.length === 1 && arguments[0].constructor === HashMap) {
+      if (arguments.length === 1 && arguments[0] instanceof HashMap) {
         return arguments[0].clone();
       }
 
@@ -922,7 +922,7 @@
         },
 
         function(pair) {
-          return pair.constructor === Entry && pair._isIn(hashMap);
+          return (pair instanceof Entry) && pair._isIn(hashMap);
         },
 
         function(pair) {
@@ -15720,13 +15720,9 @@
      * @see #PFont
      * @see #text
      */
-    p.textAlign = function() {
-      if(arguments.length === 1) {
-        horizontalTextAlignment = arguments[0];
-      } else if(arguments.length === 2) {
-        horizontalTextAlignment = arguments[0];
-        verticalTextAlignment = arguments[1];
-      }
+    p.textAlign = function(xalign, yalign) {
+      horizontalTextAlignment = xalign;
+      verticalTextAlignment = yalign || PConstants.BASELINE;
     };
 
     function toP5String(obj) {
@@ -17155,10 +17151,9 @@
           // Run void setup()
           if (processing.setup) {
             processing.setup();
-            // if any transforms were performed in setup reset to identify matrix so draw loop is unpolluted
-            if (curContext && !p.use3DContext) {
-              curContext.setTransform(1, 0, 0, 1, 0, 0);
-            }
+            // if any transforms were performed in setup reset to identity matrix
+            // so draw loop is unpolluted
+            processing.resetMatrix();
             curSketch.onSetup();
           }
 

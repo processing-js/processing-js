@@ -62,9 +62,12 @@ var tests = [
   { path: "true-false.pde", tags: ["2D"] },
   { path: "variable-scope.pde", tags: ["2D"] },
   { path: "variables.pde", tags: ["2D"] },
+  { path: "text-align.pde", tags: ["2D"], epsilonOverride: 0.14 },
   { path: "words.pde", tags: ["2D"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "defaults-text.pde", tags: ["2D"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
+  { path: "box-rotating.pde", tags: ["3D"] },
+  { path: "translate-rect.pde", tags: ["2D"] },
   { path: "arc-tangent.pde",  tags: ["2D"] },
   { path: "arc_ref1.pde",  tags: ["2D"], epsilonOverride: 0.06 },
   { path: "arc_ref2.pde",  tags: ["2D"], epsilonOverride: 0.08 },
@@ -165,5 +168,19 @@ var tests = [
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35}, /* See ticket #1172 */
-  { path: "rotateZ.pde", tags: ["3D"] }
+  { path: "rotateZ.pde", tags: ["3D"] },
+  { path: "blendcolor-add.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-difference.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-lightest.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-soft_light.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-blend.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-dodge.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-multiply.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-subtract.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-burn.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-exclusion.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-overlay.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-darkest.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-hard_light.pde", tags: ["2D", "BLEND"] },
+  { path: "blendcolor-screen.pde", tags: ["2D", "BLEND"] }
 ];
