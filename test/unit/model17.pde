@@ -4,4 +4,4 @@
 size(100,100,OPENGL);
 camera();
 rotateX(3.14);
-_checkEqual( -1.0015913846440299, modelY(1,1,1) );
+_checkEqual( -1.0015913846440299, modelY(1,1,1), 0.00000000000001 );

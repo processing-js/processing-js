@@ -9588,9 +9588,6 @@
         }
       }
 
-      // Reset the text font/size
-      p.textSize(curTextSize);
-
       // Set the background to whatever it was called last as if background() was called before size()
       // If background() hasn't been called before, set background() to a light gray
       p.background();
@@ -15568,6 +15565,9 @@
 
     // Defines system (non-SVG) font.
     function PFont(name) {
+      if (name.indexOf(" ") > -1) {
+        name = "'" + name + "'";
+      }
       this.name = "sans-serif";
       if(name !== undef) {
         switch(name) {
@@ -15579,7 +15579,7 @@
             this.name = name;
             break;
           default:
-            this.name = "\"" + name + "\", sans-serif";
+            this.name = name;
             break;
         }
       }
@@ -15673,6 +15673,63 @@
       }
     };
 
+
+    /**
+     * [internal function] computeFontMetrics() calculates various metrics for text
+     * placement. Currently this function computes the ascent, descent and leading
+     * (from "lead", used for vertical space) values for the currently active font.
+     */
+    function computeFontMetrics() {
+      var canvas = document.createElement("canvas");
+      canvas.width = 3 * curTextSize;
+      canvas.height = 3 * curTextSize;
+      canvas.style.opacity = 0;
+      var ctx = canvas.getContext("2d");
+      ctx.font = curTextSize + "px " + curTextFont.name;
+
+      // Size the canvas using a string with common max-ascent and max-descent letters.
+      // Changing the canvas dimensions resets the context, so we must reset the font.
+      var protrusions = "dbflkhyjqpg";
+      canvas.width = ctx.measureText(protrusions).width;
+      ctx.font = curTextSize + "px " + curTextFont.name;
+
+      var w = canvas.width,
+          h = canvas.height,
+          baseline = h/2;
+
+      // Set all canvas pixeldata values to 255, with all the content
+      // data being 0. This lets us scan for data[i] != 255.
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "black";
+      ctx.fillText(protrusions, 0, baseline);
+      var pixelData = ctx.getImageData(0, 0, w, h).data;
+
+      // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
+      // consecutive values in the array, rather than stored as 32 bit ints.
+      var i = 0,
+          w4 = w * 4,
+          len = pixelData.length;
+
+      // Finding the ascent uses a normal, forward scanline
+      while (++i < len && pixelData[i] === 255) {
+        nop();
+      }
+      var ascent = Math.round(i / w4);
+
+      // Finding the descent uses a reverse scanline
+      i = len - 1;
+      while (--i > 0 && pixelData[i] === 255) {
+        nop();
+      }
+      var descent = Math.round(i / w4);
+
+      // Update current font metrics
+      curTextAscent = baseline - ascent;
+      curTextDescent = descent - baseline;
+      curTextLeading = 1.2 * curTextSize;
+    }
+
     /**
      * textFont() Sets the current font.
      *
@@ -15706,64 +15763,12 @@
      * @see #text
      */
     p.textSize = function(size) {
-      if (size) {
+      if (size !== curTextSize) {
         curTextSize = size;
         var curContext = drawing.$ensureContext();
         curContext.font = curTextSize + "px " + curTextFont.name;
         computeFontMetrics();
       }
-    };
-
-    /**
-     * [internal function] computeFontMetrics() calculates various metrics for text
-     * placement. Currently this function computes the ascent, descent and leading
-     * (from "lead", used for vertical space) values for the currently active font.
-     */
-    var computeFontMetrics = function() {
-      var canvas = document.createElement("canvas");
-      canvas.width = 3 * curTextSize;
-      canvas.height = 3 * curTextSize;
-      canvas.style.opacity = 0;
-      var ctx = canvas.getContext("2d");
-      ctx.font = curTextSize + "px '" + curTextFont.name + "'";
-
-      // Size the canvas using a string with common max-ascent and max-descent letters.
-      // Changing the canvas dimensions resets the context, so we must reset the font.
-      var protrusions = "dbflkhyjqpg";
-      canvas.width = ctx.measureText(protrusions).width;
-      ctx.font = curTextSize + "px '" + curTextFont.name + "'";
-
-      var w = canvas.width,
-          h = canvas.height,
-          baseline = h/2;
-
-      // Set all canvas pixeldata values to 255, with all the content
-      // data being 0. This lets us scan for data[i] != 255.
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "black";
-      ctx.fillText(protrusions, 0, baseline);
-      var pixelData = ctx.getImageData(0, 0, w, h).data;
-
-      // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
-      // consecutive values in the array, rather than stored as 32 bit ints.
-      var i = 0,
-          w4 = w * 4,
-          len = pixelData.length;
-
-      // Finding the ascent uses a normal, forward scanline
-      while (++i < len && pixelData[i] === 255);
-      var ascent = Math.round(i / w4);
-
-      // Finding the descent uses a reverse scanline
-      i = len - 1;
-      while (--i > 0 && pixelData[i] === 255);
-      var descent = Math.round(i / w4);
-
-      // Update current font metrics
-      curTextAscent = baseline - ascent;
-      curTextDescent = descent - baseline;
-      curTextLeading = 1.2 * curTextSize;
     };
 
     /**
