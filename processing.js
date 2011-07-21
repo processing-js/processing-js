@@ -11405,7 +11405,7 @@
       if (firstVert) { firstVert = false; }
       vert["isVert"] = true;
       
-      if (v === undef) {
+      if (v === undef && usingTexture) {
         v = u;
         u = z;
         z = 0;
