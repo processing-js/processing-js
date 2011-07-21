@@ -1452,6 +1452,30 @@
     yellowgreen:          "#9acd32"
   };
 
+  // Unsupported Processing File and I/O operations.
+  (function(Processing) {
+    var unsupportedP5 = ("open() createOutput() createInput() BufferedReader selectFolder() " +
+                         "dataPath() createWriter() selectOutput() saveStream() beginRecord() " +
+                         "saveStream() endRecord() selectInput() saveBytes() createReader() " +
+                         "beginRaw() endRaw() PrintWriter").split(" "),
+        count = unsupportedP5.length,
+        prettyName,
+        p5Name;
+
+    function createUnsupportedFunc(n) {
+      return function() {
+        throw "Processing.js does not support " + n + ".";
+      };
+    }
+
+    while (count--) {
+      prettyName = unsupportedP5[count];
+      p5Name = prettyName.replace("()", "");
+
+      Processing[p5Name] = createUnsupportedFunc(prettyName);
+    }
+  }(defaultScope));
+
   // Manage multiple Processing instances
   var processingInstances = [];
   var processingInstanceIds = {};
