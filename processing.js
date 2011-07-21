@@ -15565,11 +15565,11 @@
 
     // Defines system (non-SVG) font.
     function PFont(name) {
-      if (name.indexOf(" ") > -1) {
-        name = "'" + name + "'";
-      }
       this.name = "sans-serif";
       if(name !== undef) {
+        if (name.indexOf(" ") > -1) {
+          name = "'" + name + "'";
+        }
         switch(name) {
           case "sans-serif":
           case "serif":
