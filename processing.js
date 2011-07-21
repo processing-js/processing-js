@@ -1528,9 +1528,9 @@
     p.touchCancel     = undef;
     p.key             = undef;
     p.keyCode         = undef;
-    p.keyPressed      = function(){};  // needed to remove function checks
-    p.keyReleased     = function(){};
-    p.keyTyped        = function(){};
+    p.keyPressed      = nop; // needed to remove function checks
+    p.keyReleased     = nop;
+    p.keyTyped        = nop;
     p.draw            = undef;
     p.setup           = undef;
 
@@ -2310,10 +2310,10 @@
     // 2D/3D drawing handling
     ////////////////////////////////////////////////////////////////////////////
     // Objects for shared, 2D and 3D contexts
-    var DrawingShared = function() {};
-    var Drawing2D = function() {};
-    var Drawing3D = function() {};
-    var DrawingPre = function() {};
+    var DrawingShared = function(){};
+    var Drawing2D = function(){};
+    var Drawing3D = function(){};
+    var DrawingPre = function(){};
 
     // Setup the prototype chain
     Drawing2D.prototype = new DrawingShared();
@@ -2325,7 +2325,7 @@
 
     // A no-op function for when the user calls 3D functions from a 2D sketch
     // We can change this to a throw or console.error() later if we want
-    DrawingShared.prototype.a3DOnlyFunction = function(){};
+    DrawingShared.prototype.a3DOnlyFunction = nop;
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
@@ -13805,7 +13805,7 @@
       * and after changes have been made, call updatePixels(). Even if the renderer may not seem to use
       * this function in the current Processing release, this will always be subject to change.
       */
-      this.loadPixels = function() {};
+      this.loadPixels = nop;
 
       /**
       * @member PImage
@@ -13817,7 +13817,7 @@
       * function in the current Processing release, this will always be subject to change.
       * Currently, none of the renderers use the additional parameters to updatePixels().
       */
-      this.updatePixels = function() {};
+      this.updatePixels = nop;
 
       this.toImageData = function() {
         if (this.isRemote) { // Remote images cannot access imageData, send source image instead
@@ -16644,7 +16644,8 @@
       p.size(aWidth, aHeight, aMode);
     };
 
-    DrawingPre.prototype.$init = function() {};
+    DrawingPre.prototype.$init = nop;
+
     Drawing2D.prototype.$init = function() {
       // Setup default 2d canvas context.
       // Moving this here removes the number of times we need to check the 3D variable
