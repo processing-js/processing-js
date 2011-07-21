@@ -70,3 +70,24 @@ _checkEqual(resultCopy.contains(result) , true);
 _checkEqual(result.contains(resultCopy) , true);
 
 
+// startsWith and endsWith
+String first = "First";
+String second = "Second";
+String firstString = "First string";
+String emptyString = "";
+
+_checkTrue( firstString.startsWith(emptyString) );
+_checkTrue( firstString.endsWith(emptyString) );
+
+_checkFalse( firstString.startsWith(null) );
+_checkFalse( firstString.endsWith(null) );
+
+_checkTrue( firstString.startsWith(first) );
+
+_checkTrue( firstString.startsWith(firstString) );
+_checkTrue( firstString.endsWith(firstString) );
+
+_checkFalse( firstString.startsWith(second) );
+_checkFalse( firstString.endsWith(second) );
+
+_checkTrue( firstString.startsWith("irs", 1) );
