@@ -1452,10 +1452,10 @@
                          "saveStream() endRecord() selectInput() saveBytes() createReader() " +
                          "beginRaw() endRaw() PrintWriter").split(" "),
         count = unsupportedP5.length,
-        name,
-        prettyName;
+        prettyName,
+        p5Name;
 
-    function createFunc(n) {
+    function createUnsupportedFunc(n) {
       return function() {
         throw "Processing.js does not support " + n + ".";
       };
@@ -1463,9 +1463,9 @@
 
     while (count--) {
       prettyName = unsupportedP5[count];
-      name = prettyName.replace("()", "");
+      p5Name = prettyName.replace("()", "");
 
-      Processing[name] = createFunc(prettyName);
+      Processing[p5Name] = createUnsupportedFunc(prettyName);
     }
   }(defaultScope));
 
