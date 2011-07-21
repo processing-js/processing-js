@@ -8547,6 +8547,24 @@
       return result;
     };
     /**
+     * The codePointAt() function returns the unicode value of the character at a given index of a string.
+     *
+     * @param  {int} idx         the index of the character
+     *
+     * @return {String} code     the String containing the unicode value of the character
+     */
+    p.__codePointAt = function(subject, idx) {
+      var code = subject.charCodeAt(idx),
+          hi,
+          low;
+      if (0xD800 <= code && code <= 0xDBFF) {
+        hi = code;
+        low = subject.charCodeAt(idx + 1);
+        return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+      }
+      return code;
+    };
+    /**
      * The match() function matches a string with a regular expression, and returns the match as an
      * array. The first index is the matching expression, and array elements
      * [1] and higher represent each of the groups (sequences found in parens).
@@ -17289,7 +17307,7 @@
       "vertex", "width", "XMLElement", "year", "__contains", "__equals", "__frameRate",
       "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
       "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
-      "__toCharArray", "__split"];
+      "__toCharArray", "__split", "__codePointAt"];
 
     var members = {};
     var i, l;
@@ -17659,7 +17677,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|hashCode|toCharArray|printStackTrace|split)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|hashCode|toCharArray|printStackTrace|split|codePointAt)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
