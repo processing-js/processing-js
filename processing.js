@@ -2058,12 +2058,16 @@
 
       "uniform sampler2D sampler;" +
       "uniform bool usingTexture;" +
+      "uniform bool usingTint;" +
       "varying vec2 vTexture;" +
 
       // In Processing, when a texture is used, the fill color is ignored
       "void main(void){" +
       "  if(usingTexture){" +
       "    gl_FragColor =  vec4(texture2D(sampler, vTexture.xy));" +
+      "    if(usingTint){" +
+      "      gl_FragColor =  gl_FragColor*frontColor;" +
+      "    }"+
       "  }"+
       "  else{" +
       "    gl_FragColor = frontColor;" +
@@ -9688,6 +9692,8 @@
 
         // assume we aren't using textures by default
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
+        // assume that we arn't tinting by default
+        uniformi("usingTint3d", programObject3D, "usingTint", false);
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
         p.ambient(255, 255, 255);
@@ -11541,6 +11547,14 @@
       uniformf("color3d", programObject3D, "color", [-1,0,0,0]);
       vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
+
+      // if we are using a texture and a tint, then overwrite the 
+      // contents of the color buffer with the current tint
+      if(usingTexture && curTint !== null){
+        curTint3d(cArray);
+        uniformi("usingTint3d", programObject3D, "usingTint", true);
+      }
+
       vertexAttribPointer("aColor3d", programObject3D, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
@@ -14565,7 +14579,6 @@
       var g = p.green(tintColor) / colorModeY;
       var b = p.blue(tintColor) / colorModeZ;
       var a = p.alpha(tintColor) / colorModeA;
-
       curTint = function(obj) {
         var data = obj.data,
             length = 4 * obj.width * obj.height;
@@ -14574,6 +14587,15 @@
           data[i++] *= g;
           data[i++] *= b;
           data[i++] *= a;
+        }
+      };
+      // for overriding the color buffer when 3d rendering
+      curTint3d = function(data){
+        for(var i=0; i<data.length;){
+          data[i++] = r;
+          data[i++] = g;
+          data[i++] = b;
+          data[i++] = a;
         }
       };
     };
@@ -14586,6 +14608,7 @@
      */
     p.noTint = function() {
       curTint = null;
+      curTint3d = null;
     };
 
     /**
