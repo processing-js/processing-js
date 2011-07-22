@@ -196,6 +196,6 @@ var tests = [
   { path: "blendcolor-overlay.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-darkest.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-hard_light.pde", tags: ["2D", "BLEND"] },
-  { path: "blendcolor-screen.pde", tags: ["2D", "BLEND"] }
+  { path: "blendcolor-screen.pde", tags: ["2D", "BLEND"] },
   { path: "pixels-toarray.pde", tags: ["2D"] }
 ];
