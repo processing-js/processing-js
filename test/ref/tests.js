@@ -53,7 +53,6 @@ var tests = [
   { path: "distance-2d.pde", tags: ["2D"] },
   { path: "embedded-iteration.pde", tags: ["2D"] },
   { path: "iteration.pde", tags: ["2D"] },
-  { path: "letters.pde", tags: ["2D"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "logical-operators.pde", tags: ["2D"] },
   { path: "point-line-rect.pde", tags: ["2D"] },
   { path: "sine-wave.pde", tags: ["2D"] },
@@ -63,11 +62,12 @@ var tests = [
   { path: "variable-scope.pde", tags: ["2D"] },
   { path: "variables.pde", tags: ["2D"] },
   { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
-  { path: "text-ascent-descent.pde", tags: ["2D", "Text"] },
-  { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 },
+  { path: "text-ascent-descent.pde", tags: ["2D", "Text"], epsilonOverride: 0.09}, /* See ticket #1172 */
+  { path: "text-align.pde", tags: ["2D", "Text"] }, /* See ticket #1172 */
   { path: "text-width_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35}, /* See ticket #1172 */
-  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
-  { path: "words.pde", tags: ["2D"], epsilonOverride: 0.25 }, /* See ticket #1172 */
+  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 }, /* See ticket #1172 */
+  { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
+  { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
   { path: "box-rotating.pde", tags: ["3D"] },
   { path: "translate-rect.pde", tags: ["2D"] },
