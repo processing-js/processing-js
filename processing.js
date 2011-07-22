@@ -1455,7 +1455,7 @@
   // Unsupported Processing File and I/O operations.
   (function(Processing) {
     var unsupportedP5 = ("open() createOutput() createInput() BufferedReader selectFolder() " +
-                         "dataPath() createWriter() selectOutput() saveStream() beginRecord() " +
+                         "dataPath() createWriter() selectOutput() beginRecord() " +
                          "saveStream() endRecord() selectInput() saveBytes() createReader() " +
                          "beginRaw() endRaw() PrintWriter").split(" "),
         count = unsupportedP5.length,
