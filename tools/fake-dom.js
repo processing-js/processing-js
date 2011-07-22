@@ -108,6 +108,11 @@ var document = {
       cursor: {}
     }
   },
+  defaultView: {
+    getComputedStyle: function() {
+      return { getPropertyValue: function() { return ""; } };
+    }
+  },
   appendChild: __elem_func__,
   removeChild: __empty_func__,
   getElementById: __empty_func__,
