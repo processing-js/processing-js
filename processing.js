@@ -16930,9 +16930,9 @@
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           // the opera preload cache can only be cleared once we start
           if (window.opera) {
-            var link;
+            var link, element;
             for (link in curSketch.imageCache.operaCache) {
-              var element = curSketch.imageCache.operaCache[link];
+              element = curSketch.imageCache.operaCache[link];
               if (element !== null) {
                 document.body.removeChild(element); }
               delete(curSketch.imageCache.operaCache[link])
