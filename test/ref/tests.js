@@ -165,5 +165,6 @@ var tests = [
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35}, /* See ticket #1172 */
-  { path: "rotateZ.pde", tags: ["3D"] }
+  { path: "rotateZ.pde", tags: ["3D"] },
+  { path: "pixels-toarray.pde", tags: ["2D"] }
 ];

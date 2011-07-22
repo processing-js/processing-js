@@ -13784,6 +13784,20 @@
             };
           }
         }(this)),
+        toArray: (function(aImg) {
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot get pixels.";
+          } else {
+            return function() {
+              var arr = [], length = aImg.width * aImg.height;
+              for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+                arr.push(p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
+                                       aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]));
+              }
+              return arr;
+            };
+          }
+        }(this)),
         set: function(arr) {
           if (this.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot set pixels.";
@@ -14260,18 +14274,28 @@
     p.pixels = {
       getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
       getPixel: function(i) {
-        var offset = i*4;
-        return (p.imageData.data[offset+3] << 24) & 0xff000000 |
-               (p.imageData.data[offset+0] << 16) & 0x00ff0000 |
-               (p.imageData.data[offset+1] << 8) & 0x0000ff00 |
-               p.imageData.data[offset+2] & 0x000000ff;
+        var offset = i*4, data = p.imageData.data;
+        return (data[offset+3] << 24) & 0xff000000 |
+               (data[offset+0] << 16) & 0x00ff0000 |
+               (data[offset+1] << 8) & 0x0000ff00 |
+               data[offset+2] & 0x000000ff;
       },
       setPixel: function(i,c) {
-        var offset = i*4;
-        p.imageData.data[offset+0] = (c & 0x00ff0000) >>> 16; // RED_MASK
-        p.imageData.data[offset+1] = (c & 0x0000ff00) >>> 8;  // GREEN_MASK
-        p.imageData.data[offset+2] = (c & 0x000000ff);        // BLUE_MASK
-        p.imageData.data[offset+3] = (c & 0xff000000) >>> 24; // ALPHA_MASK
+        var offset = i*4, data = p.imageData.data;
+        data[offset+0] = (c & 0x00ff0000) >>> 16; // RED_MASK
+        data[offset+1] = (c & 0x0000ff00) >>> 8;  // GREEN_MASK
+        data[offset+2] = (c & 0x000000ff);        // BLUE_MASK
+        data[offset+3] = (c & 0xff000000) >>> 24; // ALPHA_MASK
+      },
+      toArray: function() {
+        var arr = [], length = p.imageData.width * p.imageData.height, data = p.imageData.data;
+        for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+          arr.push((data[offset+3] << 24) & 0xff000000 |
+                   (data[offset+0] << 16) & 0x00ff0000 |
+                   (data[offset+1] << 8) & 0x0000ff00 |
+                   data[offset+2] & 0x000000ff);
+        }
+        return arr;
       },
       set: function(arr) {
         for (var i = 0, aL = arr.length; i < aL; i++) {
