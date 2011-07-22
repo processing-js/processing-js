@@ -340,7 +340,7 @@
     HINT_COUNT:                  10,
 
     // PJS defined constants
-    SINCOS_LENGTH:      parseInt(360 / 0.5, 10),
+    SINCOS_LENGTH:      720, // every half degree
     PRECISIONB:         15, // fixed point precision is limited to 15 bits!!
     PRECISIONF:         1 << 15,
     PREC_MAXVAL:        (1 << 15) - 1,
@@ -7021,10 +7021,10 @@
       var a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      var r = parseInt(p.lerp(r1, r2, amt), 10);
-      var g = parseInt(p.lerp(g1, g2, amt), 10);
-      var b = parseInt(p.lerp(b1, b2, amt), 10);
-      var a = parseFloat(p.lerp(a1, a2, amt) * colorModeA);
+      var r = p.lerp(r1, r2, amt) | 0;
+      var g = p.lerp(g1, g2, amt) | 0;
+      var b = p.lerp(b1, b2, amt) | 0;
+      var a = p.lerp(a1, a2, amt) * colorModeA;
 
       return p.color.toInt(r, g, b, a);
     };
@@ -10454,41 +10454,41 @@
         voff += sphereDetailU;
         v2 = voff;
         for (var j = 0; j < sphereDetailU; j++) {
-          sphereVerts.push(parseFloat(sphereX[v1]));
-          sphereVerts.push(parseFloat(sphereY[v1]));
-          sphereVerts.push(parseFloat(sphereZ[v1++]));
-          sphereVerts.push(parseFloat(sphereX[v2]));
-          sphereVerts.push(parseFloat(sphereY[v2]));
-          sphereVerts.push(parseFloat(sphereZ[v2++]));
+          sphereVerts.push(sphereX[v1]);
+          sphereVerts.push(sphereY[v1]);
+          sphereVerts.push(sphereZ[v1++]);
+          sphereVerts.push(sphereX[v2]);
+          sphereVerts.push(sphereY[v2]);
+          sphereVerts.push(sphereZ[v2++]);
         }
 
         // close each ring
         v1 = v11;
         v2 = voff;
 
-        sphereVerts.push(parseFloat(sphereX[v1]));
-        sphereVerts.push(parseFloat(sphereY[v1]));
-        sphereVerts.push(parseFloat(sphereZ[v1]));
-        sphereVerts.push(parseFloat(sphereX[v2]));
-        sphereVerts.push(parseFloat(sphereY[v2]));
-        sphereVerts.push(parseFloat(sphereZ[v2]));
+        sphereVerts.push(sphereX[v1]);
+        sphereVerts.push(sphereY[v1]);
+        sphereVerts.push(sphereZ[v1]);
+        sphereVerts.push(sphereX[v2]);
+        sphereVerts.push(sphereY[v2]);
+        sphereVerts.push(sphereZ[v2]);
       }
 
       // add the northern cap
       for (i = 0; i < sphereDetailU; i++) {
         v2 = voff + i;
 
-        sphereVerts.push(parseFloat(sphereX[v2]));
-        sphereVerts.push(parseFloat(sphereY[v2]));
-        sphereVerts.push(parseFloat(sphereZ[v2]));
+        sphereVerts.push(sphereX[v2]);
+        sphereVerts.push(sphereY[v2]);
+        sphereVerts.push(sphereZ[v2]);
         sphereVerts.push(0);
         sphereVerts.push(1);
         sphereVerts.push(0);
       }
 
-      sphereVerts.push(parseFloat(sphereX[voff]));
-      sphereVerts.push(parseFloat(sphereY[voff]));
-      sphereVerts.push(parseFloat(sphereZ[voff]));
+      sphereVerts.push(sphereX[voff]);
+      sphereVerts.push(sphereY[voff]);
+      sphereVerts.push(sphereZ[voff]);
       sphereVerts.push(0);
       sphereVerts.push(1);
       sphereVerts.push(0);
@@ -10542,8 +10542,8 @@
       var cz = new Float32Array(ures);
       // calc unit circle in XZ plane
       for (i = 0; i < ures; i++) {
-        cx[i] = cosLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
-        cz[i] = sinLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
+        cx[i] = cosLUT[((i * delta) % PConstants.SINCOS_LENGTH) | 0];
+        cz[i] = sinLUT[((i * delta) % PConstants.SINCOS_LENGTH) | 0];
       }
 
       // computing vertexlist
@@ -10561,8 +10561,8 @@
 
       // step along Y axis
       for (i = 1; i < vres; i++) {
-        var curradius = sinLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
-        var currY = -cosLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
+        var curradius = sinLUT[(angle % PConstants.SINCOS_LENGTH) | 0];
+        var currY = -cosLUT[(angle % PConstants.SINCOS_LENGTH) | 0];
         for (var j = 0; j < ures; j++) {
           sphereX[currVert] = cx[j] * curradius;
           sphereY[currVert] = currY;
