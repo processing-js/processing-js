@@ -3678,10 +3678,7 @@
                 cy = endY;
               }
             }
-          } else if (valOf === 90) {
-            //Z
-            nop();
-          } else if (valOf === 122) { //z
+          } else if (valOf === 90 || valOf === 122) { // Z or z (these do the same thing)
             this.close = true;
           }
           lastInstruction = command.toString();
@@ -11664,6 +11661,12 @@
       if (vertArray.length === 0) { return; }
 
       var closeShape = mode === PConstants.CLOSE;
+      
+      // if the shape is closed, the first element is also the last element
+      if (closeShape) {
+        vertArray.push(vertArray[0]);
+      }        
+      
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
@@ -11707,25 +11710,6 @@
         texVertArray.push(cachedVertArray[4]);
       }
 
-      // if shape is closed, push the first point into the last point (including colours)
-      if (closeShape) {
-        fillVertArray.push(vertArray[0][0]);
-        fillVertArray.push(vertArray[0][1]);
-        fillVertArray.push(vertArray[0][2]);
-
-        for (i = 5; i < 9; i++) {
-          colorVertArray.push(vertArray[0][i]);
-        }
-
-       for (i = 9; i < 13; i++) {
-          strokeVertArray.push(vertArray[0][i]);
-        }
-
-        texVertArray.push(vertArray[0][3]);
-        texVertArray.push(vertArray[0][4]);
-      }
-      // End duplication
-
       // curveVertex
       if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
         if (vertArrayLength > 3) {
@@ -11751,10 +11735,6 @@
             b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
             curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
           }
-          // close the shape
-          if (closeShape) {
-            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-          }
           executeContextFill();
           executeContextStroke();
           curContext.closePath();
@@ -11775,10 +11755,6 @@
           } else { //otherwise continue drawing bezier
             curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
           }
-        }
-        // close the shape
-        if (closeShape) {
-          curContext.lineTo(vertArray[0][0], vertArray[0][1]);
         }
         executeContextFill();
         executeContextStroke();
@@ -11945,9 +11921,6 @@
                 curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
               }
             }
-          }
-          if (closeShape) {
-            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
           }
           executeContextFill();
           executeContextStroke();
