@@ -340,7 +340,7 @@
     HINT_COUNT:                  10,
 
     // PJS defined constants
-    SINCOS_LENGTH:      parseInt(360 / 0.5, 10),
+    SINCOS_LENGTH:      720, // every half degree
     PRECISIONB:         15, // fixed point precision is limited to 15 bits!!
     PRECISIONF:         1 << 15,
     PREC_MAXVAL:        (1 << 15) - 1,
@@ -1047,22 +1047,17 @@
       this.z = z || 0;
     }
 
-    function createPVectorMethod(method) {
-      return function(v1, v2) {
-        var v = v1.get();
-        v[method](v2);
-        return v;
-      };
-    }
+    PVector.dist = function(v1, v2) {
+      return v1.dist(v2);
+    };
 
-    function createSimplePVectorMethod(method) {
-      return function(v1, v2) {
-        return v1[method](v2);
-      };
-    }
+    PVector.dot = function(v1, v2) {
+      return v1.dot(v2);
+    };
 
-    var simplePVMethods = "dist dot cross".split(" ");
-    var method = simplePVMethods.length;
+    PVector.cross = function(v1, v2) {
+      return v1.cross(v2);
+    };
 
     PVector.angleBetween = function(v1, v2) {
       return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
@@ -1072,7 +1067,9 @@
     PVector.prototype = {
       set: function(v, y, z) {
         if (arguments.length === 1) {
-          this.set(v.x || v[0] || 0, v.y || v[1] || 0, v.z || v[2] || 0);
+          this.set(v.x || v[0] || 0,
+                   v.y || v[1] || 0,
+                   v.z || v[2] || 0);
         } else {
           this.x = v;
           this.y = y;
@@ -1083,28 +1080,31 @@
         return new PVector(this.x, this.y, this.z);
       },
       mag: function() {
-        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+        var x = this.x,
+            y = this.y,
+            z = this.z;
+        return Math.sqrt(x * x + y * y + z * z);
       },
       add: function(v, y, z) {
-        if (arguments.length === 3) {
-          this.x += v;
-          this.y += y;
-          this.z += z;
-        } else if (arguments.length === 1) {
+        if (arguments.length === 1) {
           this.x += v.x;
           this.y += v.y;
           this.z += v.z;
+        } else {
+          this.x += v;
+          this.y += y;
+          this.z += z;
         }
       },
       sub: function(v, y, z) {
-        if (arguments.length === 3) {
-          this.x -= v;
-          this.y -= y;
-          this.z -= z;
-        } else if (arguments.length === 1) {
+        if (arguments.length === 1) {
           this.x -= v.x;
           this.y -= v.y;
           this.z -= v.z;
+        } else {
+          this.x -= v;
+          this.y -= y;
+          this.z -= z;
         }
       },
       mult: function(v) {
@@ -1112,7 +1112,7 @@
           this.x *= v;
           this.y *= v;
           this.z *= v;
-        } else if (typeof v === 'object') {
+        } else {
           this.x *= v.x;
           this.y *= v.y;
           this.z *= v.z;
@@ -1123,7 +1123,7 @@
           this.x /= v;
           this.y /= v;
           this.z /= v;
-        } else if (typeof v === 'object') {
+        } else {
           this.x /= v.x;
           this.y /= v.y;
           this.z /= v.z;
@@ -1136,16 +1136,19 @@
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
       },
       dot: function(v, y, z) {
-        if (arguments.length === 3) {
-          return (this.x * v + this.y * y + this.z * z);
-        } else if (arguments.length === 1) {
+        if (arguments.length === 1) {
           return (this.x * v.x + this.y * v.y + this.z * v.z);
+        } else {
+          return (this.x * v + this.y * y + this.z * z);
         }
       },
       cross: function(v) {
-        return new PVector(this.y * v.z - v.y * this.z,
-                           this.z * v.x - v.z * this.x,
-                           this.x * v.y - v.x * this.y);
+        var x = this.x,
+            y = this.y,
+            z = this.z;
+        return new PVector(y * v.z - v.y * z,
+                           z * v.x - v.z * x,
+                           x * v.y - v.x * y);
       },
       normalize: function() {
         var m = this.mag();
@@ -1170,11 +1173,15 @@
       }
     };
 
-    while (method--) {
-      PVector[simplePVMethods[method]] = createSimplePVectorMethod(simplePVMethods[method]);
+    function createPVectorMethod(method) {
+      return function(v1, v2) {
+        var v = v1.get();
+        v[method](v2);
+        return v;
+      };
     }
 
-    for (method in PVector.prototype) {
+    for (var method in PVector.prototype) {
       if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
         PVector[method] = createPVectorMethod(method);
       }
@@ -1445,6 +1452,30 @@
     yellowgreen:          "#9acd32"
   };
 
+  // Unsupported Processing File and I/O operations.
+  (function(Processing) {
+    var unsupportedP5 = ("open() createOutput() createInput() BufferedReader selectFolder() " +
+                         "dataPath() createWriter() selectOutput() saveStream() beginRecord() " +
+                         "saveStream() endRecord() selectInput() saveBytes() createReader() " +
+                         "beginRaw() endRaw() PrintWriter").split(" "),
+        count = unsupportedP5.length,
+        prettyName,
+        p5Name;
+
+    function createUnsupportedFunc(n) {
+      return function() {
+        throw "Processing.js does not support " + n + ".";
+      };
+    }
+
+    while (count--) {
+      prettyName = unsupportedP5[count];
+      p5Name = prettyName.replace("()", "");
+
+      Processing[p5Name] = createUnsupportedFunc(prettyName);
+    }
+  }(defaultScope));
+
   // Manage multiple Processing instances
   var processingInstances = [];
   var processingInstanceIds = {};
@@ -1528,9 +1559,9 @@
     p.touchCancel     = undef;
     p.key             = undef;
     p.keyCode         = undef;
-    p.keyPressed      = function(){};  // needed to remove function checks
-    p.keyReleased     = function(){};
-    p.keyTyped        = function(){};
+    p.keyPressed      = nop; // needed to remove function checks
+    p.keyReleased     = nop;
+    p.keyTyped        = nop;
     p.draw            = undef;
     p.setup           = undef;
 
@@ -2310,10 +2341,10 @@
     // 2D/3D drawing handling
     ////////////////////////////////////////////////////////////////////////////
     // Objects for shared, 2D and 3D contexts
-    var DrawingShared = function() {};
-    var Drawing2D = function() {};
-    var Drawing3D = function() {};
-    var DrawingPre = function() {};
+    var DrawingShared = function(){};
+    var Drawing2D = function(){};
+    var Drawing3D = function(){};
+    var DrawingPre = function(){};
 
     // Setup the prototype chain
     Drawing2D.prototype = new DrawingShared();
@@ -2325,7 +2356,7 @@
 
     // A no-op function for when the user calls 3D functions from a 2D sketch
     // We can change this to a throw or console.error() later if we want
-    DrawingShared.prototype.a3DOnlyFunction = function(){};
+    DrawingShared.prototype.a3DOnlyFunction = nop;
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
@@ -4334,13 +4365,14 @@
        *
        * @see XMLElement#parseChildrenRecursive
        */
-      parse: function(filename) {
+      parse: function(textstring) {
         var xmlDoc;
         try {
-          if (filename.indexOf(".xml") > -1 || filename.indexOf(".svg") > -1) {
-            filename = ajax(filename);
+          var extension = textstring.substring(textstring.length-4);
+          if (extension === ".xml" || extension === ".svg") {
+            textstring = ajax(textstring);
           }
-          xmlDoc = new DOMParser().parseFromString(filename, "text/xml");
+          xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
           var elements = xmlDoc.documentElement;
           if (elements) {
             this.parseChildrenRecursive(null, elements);
@@ -7021,10 +7053,10 @@
       var a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      var r = parseInt(p.lerp(r1, r2, amt), 10);
-      var g = parseInt(p.lerp(g1, g2, amt), 10);
-      var b = parseInt(p.lerp(b1, b2, amt), 10);
-      var a = parseFloat(p.lerp(a1, a2, amt) * colorModeA);
+      var r = p.lerp(r1, r2, amt) | 0;
+      var g = p.lerp(g1, g2, amt) | 0;
+      var b = p.lerp(b1, b2, amt) | 0;
+      var a = p.lerp(a1, a2, amt) * colorModeA;
 
       return p.color.toInt(r, g, b, a);
     };
@@ -10454,41 +10486,41 @@
         voff += sphereDetailU;
         v2 = voff;
         for (var j = 0; j < sphereDetailU; j++) {
-          sphereVerts.push(parseFloat(sphereX[v1]));
-          sphereVerts.push(parseFloat(sphereY[v1]));
-          sphereVerts.push(parseFloat(sphereZ[v1++]));
-          sphereVerts.push(parseFloat(sphereX[v2]));
-          sphereVerts.push(parseFloat(sphereY[v2]));
-          sphereVerts.push(parseFloat(sphereZ[v2++]));
+          sphereVerts.push(sphereX[v1]);
+          sphereVerts.push(sphereY[v1]);
+          sphereVerts.push(sphereZ[v1++]);
+          sphereVerts.push(sphereX[v2]);
+          sphereVerts.push(sphereY[v2]);
+          sphereVerts.push(sphereZ[v2++]);
         }
 
         // close each ring
         v1 = v11;
         v2 = voff;
 
-        sphereVerts.push(parseFloat(sphereX[v1]));
-        sphereVerts.push(parseFloat(sphereY[v1]));
-        sphereVerts.push(parseFloat(sphereZ[v1]));
-        sphereVerts.push(parseFloat(sphereX[v2]));
-        sphereVerts.push(parseFloat(sphereY[v2]));
-        sphereVerts.push(parseFloat(sphereZ[v2]));
+        sphereVerts.push(sphereX[v1]);
+        sphereVerts.push(sphereY[v1]);
+        sphereVerts.push(sphereZ[v1]);
+        sphereVerts.push(sphereX[v2]);
+        sphereVerts.push(sphereY[v2]);
+        sphereVerts.push(sphereZ[v2]);
       }
 
       // add the northern cap
       for (i = 0; i < sphereDetailU; i++) {
         v2 = voff + i;
 
-        sphereVerts.push(parseFloat(sphereX[v2]));
-        sphereVerts.push(parseFloat(sphereY[v2]));
-        sphereVerts.push(parseFloat(sphereZ[v2]));
+        sphereVerts.push(sphereX[v2]);
+        sphereVerts.push(sphereY[v2]);
+        sphereVerts.push(sphereZ[v2]);
         sphereVerts.push(0);
         sphereVerts.push(1);
         sphereVerts.push(0);
       }
 
-      sphereVerts.push(parseFloat(sphereX[voff]));
-      sphereVerts.push(parseFloat(sphereY[voff]));
-      sphereVerts.push(parseFloat(sphereZ[voff]));
+      sphereVerts.push(sphereX[voff]);
+      sphereVerts.push(sphereY[voff]);
+      sphereVerts.push(sphereZ[voff]);
       sphereVerts.push(0);
       sphereVerts.push(1);
       sphereVerts.push(0);
@@ -10542,8 +10574,8 @@
       var cz = new Float32Array(ures);
       // calc unit circle in XZ plane
       for (i = 0; i < ures; i++) {
-        cx[i] = cosLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
-        cz[i] = sinLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
+        cx[i] = cosLUT[((i * delta) % PConstants.SINCOS_LENGTH) | 0];
+        cz[i] = sinLUT[((i * delta) % PConstants.SINCOS_LENGTH) | 0];
       }
 
       // computing vertexlist
@@ -10561,8 +10593,8 @@
 
       // step along Y axis
       for (i = 1; i < vres; i++) {
-        var curradius = sinLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
-        var currY = -cosLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
+        var curradius = sinLUT[(angle % PConstants.SINCOS_LENGTH) | 0];
+        var currY = -cosLUT[(angle % PConstants.SINCOS_LENGTH) | 0];
         for (var j = 0; j < ures; j++) {
           sphereX[currVert] = cx[j] * curradius;
           sphereY[currVert] = currY;
@@ -13784,6 +13816,20 @@
             };
           }
         }(this)),
+        toArray: (function(aImg) {
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot get pixels.";
+          } else {
+            return function() {
+              var arr = [], length = aImg.width * aImg.height;
+              for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+                arr.push(p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
+                                       aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]));
+              }
+              return arr;
+            };
+          }
+        }(this)),
         set: function(arr) {
           if (this.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot set pixels.";
@@ -13805,7 +13851,7 @@
       * and after changes have been made, call updatePixels(). Even if the renderer may not seem to use
       * this function in the current Processing release, this will always be subject to change.
       */
-      this.loadPixels = function() {};
+      this.loadPixels = nop;
 
       /**
       * @member PImage
@@ -13817,7 +13863,7 @@
       * function in the current Processing release, this will always be subject to change.
       * Currently, none of the renderers use the additional parameters to updatePixels().
       */
-      this.updatePixels = function() {};
+      this.updatePixels = nop;
 
       this.toImageData = function() {
         if (this.isRemote) { // Remote images cannot access imageData, send source image instead
@@ -14260,18 +14306,28 @@
     p.pixels = {
       getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
       getPixel: function(i) {
-        var offset = i*4;
-        return (p.imageData.data[offset+3] << 24) & 0xff000000 |
-               (p.imageData.data[offset+0] << 16) & 0x00ff0000 |
-               (p.imageData.data[offset+1] << 8) & 0x0000ff00 |
-               p.imageData.data[offset+2] & 0x000000ff;
+        var offset = i*4, data = p.imageData.data;
+        return (data[offset+3] << 24) & 0xff000000 |
+               (data[offset+0] << 16) & 0x00ff0000 |
+               (data[offset+1] << 8) & 0x0000ff00 |
+               data[offset+2] & 0x000000ff;
       },
       setPixel: function(i,c) {
-        var offset = i*4;
-        p.imageData.data[offset+0] = (c & 0x00ff0000) >>> 16; // RED_MASK
-        p.imageData.data[offset+1] = (c & 0x0000ff00) >>> 8;  // GREEN_MASK
-        p.imageData.data[offset+2] = (c & 0x000000ff);        // BLUE_MASK
-        p.imageData.data[offset+3] = (c & 0xff000000) >>> 24; // ALPHA_MASK
+        var offset = i*4, data = p.imageData.data;
+        data[offset+0] = (c & 0x00ff0000) >>> 16; // RED_MASK
+        data[offset+1] = (c & 0x0000ff00) >>> 8;  // GREEN_MASK
+        data[offset+2] = (c & 0x000000ff);        // BLUE_MASK
+        data[offset+3] = (c & 0xff000000) >>> 24; // ALPHA_MASK
+      },
+      toArray: function() {
+        var arr = [], length = p.imageData.width * p.imageData.height, data = p.imageData.data;
+        for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+          arr.push((data[offset+3] << 24) & 0xff000000 |
+                   (data[offset+0] << 16) & 0x00ff0000 |
+                   (data[offset+1] << 8) & 0x0000ff00 |
+                   data[offset+2] & 0x000000ff);
+        }
+        return arr;
       },
       set: function(arr) {
         for (var i = 0, aL = arr.length; i < aL; i++) {
@@ -15140,54 +15196,26 @@
       return ! (dw <= 0 || dh <= 0);
     };
 
-    p.filter_new_scanline = function() {
-      p.shared.sX = p.shared.srcXOffset;
-      p.shared.fracV = p.shared.srcYOffset & PConstants.PREC_MAXVAL;
-      p.shared.ifV = PConstants.PREC_MAXVAL - p.shared.fracV;
-      p.shared.v1 = (p.shared.srcYOffset >> PConstants.PRECISIONB) * p.shared.iw;
-      p.shared.v2 = Math.min((p.shared.srcYOffset >> PConstants.PRECISIONB) + 1, p.shared.ih1) * p.shared.iw;
-    };
-
-    p.filter_bilinear = function() {
-      p.shared.fracU = p.shared.sX & PConstants.PREC_MAXVAL;
-      p.shared.ifU = PConstants.PREC_MAXVAL - p.shared.fracU;
-      p.shared.ul = (p.shared.ifU * p.shared.ifV) >> PConstants.PRECISIONB;
-      p.shared.ll = (p.shared.ifU * p.shared.fracV) >> PConstants.PRECISIONB;
-      p.shared.ur = (p.shared.fracU * p.shared.ifV) >> PConstants.PRECISIONB;
-      p.shared.lr = (p.shared.fracU * p.shared.fracV) >> PConstants.PRECISIONB;
-      p.shared.u1 = (p.shared.sX >> PConstants.PRECISIONB);
-      p.shared.u2 = Math.min(p.shared.u1 + 1, p.shared.iw1);
-      // get color values of the 4 neighbouring texels
-      // changed for 0.9
-      var cULoffset = (p.shared.v1 + p.shared.u1) * 4;
-      var cURoffset = (p.shared.v1 + p.shared.u2) * 4;
-      var cLLoffset = (p.shared.v2 + p.shared.u1) * 4;
-      var cLRoffset = (p.shared.v2 + p.shared.u2) * 4;
-      p.shared.cUL = p.color.toInt(p.shared.srcBuffer[cULoffset], p.shared.srcBuffer[cULoffset+1],
-                     p.shared.srcBuffer[cULoffset+2], p.shared.srcBuffer[cULoffset+3]);
-      p.shared.cUR = p.color.toInt(p.shared.srcBuffer[cURoffset], p.shared.srcBuffer[cURoffset+1],
-                     p.shared.srcBuffer[cURoffset+2], p.shared.srcBuffer[cURoffset+3]);
-      p.shared.cLL = p.color.toInt(p.shared.srcBuffer[cLLoffset], p.shared.srcBuffer[cLLoffset+1],
-                     p.shared.srcBuffer[cLLoffset+2], p.shared.srcBuffer[cLLoffset+3]);
-      p.shared.cLR = p.color.toInt(p.shared.srcBuffer[cLRoffset], p.shared.srcBuffer[cLRoffset+1],
-                     p.shared.srcBuffer[cLRoffset+2], p.shared.srcBuffer[cLRoffset+3]);
-      p.shared.r = ((p.shared.ul * ((p.shared.cUL & PConstants.RED_MASK) >> 16) + p.shared.ll *
-                   ((p.shared.cLL & PConstants.RED_MASK) >> 16) + p.shared.ur * ((p.shared.cUR & PConstants.RED_MASK) >> 16) +
-                   p.shared.lr * ((p.shared.cLR & PConstants.RED_MASK) >> 16)) << PConstants.PREC_RED_SHIFT) & PConstants.RED_MASK;
-      p.shared.g = ((p.shared.ul * (p.shared.cUL & PConstants.GREEN_MASK) + p.shared.ll * (p.shared.cLL & PConstants.GREEN_MASK) +
-                   p.shared.ur * (p.shared.cUR & PConstants.GREEN_MASK) + p.shared.lr *
-                   (p.shared.cLR & PConstants.GREEN_MASK)) >>> PConstants.PRECISIONB) & PConstants.GREEN_MASK;
-      p.shared.b = (p.shared.ul * (p.shared.cUL & PConstants.BLUE_MASK) + p.shared.ll * (p.shared.cLL & PConstants.BLUE_MASK) +
-                   p.shared.ur * (p.shared.cUR & PConstants.BLUE_MASK) + p.shared.lr * (p.shared.cLR & PConstants.BLUE_MASK)) >>> PConstants.PRECISIONB;
-      p.shared.a = ((p.shared.ul * ((p.shared.cUL & PConstants.ALPHA_MASK) >>> 24) + p.shared.ll *
-                   ((p.shared.cLL & PConstants.ALPHA_MASK) >>> 24) + p.shared.ur * ((p.shared.cUR & PConstants.ALPHA_MASK) >>> 24) +
-                   p.shared.lr * ((p.shared.cLR & PConstants.ALPHA_MASK) >>> 24)) << PConstants.PREC_ALPHA_SHIFT) & PConstants.ALPHA_MASK;
-      return p.shared.a | p.shared.r | p.shared.g | p.shared.b;
-    };
+    var blendFuncs = {};
+    blendFuncs[PConstants.BLEND] = p.modes.blend;
+    blendFuncs[PConstants.ADD] = p.modes.add;
+    blendFuncs[PConstants.SUBTRACT] = p.modes.subtract;
+    blendFuncs[PConstants.LIGHTEST] = p.modes.lightest;
+    blendFuncs[PConstants.DARKEST] = p.modes.darkest;
+    blendFuncs[PConstants.REPLACE] = p.modes.replace;
+    blendFuncs[PConstants.DIFFERENCE] = p.modes.difference;
+    blendFuncs[PConstants.EXCLUSION] = p.modes.exclusion;
+    blendFuncs[PConstants.MULTIPLY] = p.modes.multiply;
+    blendFuncs[PConstants.SCREEN] = p.modes.screen;
+    blendFuncs[PConstants.OVERLAY] = p.modes.overlay;
+    blendFuncs[PConstants.HARD_LIGHT] = p.modes.hard_light;
+    blendFuncs[PConstants.SOFT_LIGHT] = p.modes.soft_light;
+    blendFuncs[PConstants.DODGE] = p.modes.dodge;
+    blendFuncs[PConstants.BURN] = p.modes.burn;
 
     p.blit_resize = function(img, srcX1, srcY1, srcX2, srcY2, destPixels,
-                              screenW, screenH, destX1, destY1, destX2, destY2, mode) {
-      var x, y; // iterator vars
+                             screenW, screenH, destX1, destY1, destX2, destY2, mode) {
+      var x, y;
       if (srcX1 < 0) {
         srcX1 = 0;
       }
@@ -15204,19 +15232,19 @@
       var srcH = srcY2 - srcY1;
       var destW = destX2 - destX1;
       var destH = destY2 - destY1;
-      var smooth = true; // may as well go with the smoothing these days
-      if (!smooth) {
-        srcW++;
-        srcH++;
-      }
+
       if (destW <= 0 || destH <= 0 || srcW <= 0 || srcH <= 0 || destX1 >= screenW ||
           destY1 >= screenH || srcX1 >= img.width || srcY1 >= img.height) {
         return;
       }
+
       var dx = Math.floor(srcW / destW * PConstants.PRECISIONF);
       var dy = Math.floor(srcH / destH * PConstants.PRECISIONF);
-      p.shared.srcXOffset = Math.floor(destX1 < 0 ? -destX1 * dx : srcX1 * PConstants.PRECISIONF);
-      p.shared.srcYOffset = Math.floor(destY1 < 0 ? -destY1 * dy : srcY1 * PConstants.PRECISIONF);
+
+      var pshared = p.shared;
+
+      pshared.srcXOffset = Math.floor(destX1 < 0 ? -destX1 * dx : srcX1 * PConstants.PRECISIONF);
+      pshared.srcYOffset = Math.floor(destY1 < 0 ? -destY1 * dy : srcY1 * PConstants.PRECISIONF);
       if (destX1 < 0) {
         destW += destX1;
         destX1 = 0;
@@ -15227,336 +15255,114 @@
       }
       destW = Math.min(destW, screenW - destX1);
       destH = Math.min(destH, screenH - destY1);
-      // changed in 0.9, TODO
+
       var destOffset = destY1 * screenW + destX1;
       var destColor;
-      p.shared.srcBuffer = img.imageData.data;
-      if (smooth) {
-        // use bilinear filtering
-        p.shared.iw = img.width;
-        p.shared.iw1 = img.width - 1;
-        p.shared.ih1 = img.height - 1;
-        switch (mode) {
-        case PConstants.BLEND:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.blend(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.blend(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.ADD:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.add(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.SUBTRACT:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.subtract(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.subtract(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.LIGHTEST:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.lightest(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.lightest(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.DARKEST:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.darkest(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.darkest(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.REPLACE:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              if (img.format !== PConstants.RGB && destPixels[(destOffset + x) * 4] !== 255) {
-                destColor = p.color.toArray(p.modes.blend(destColor, p.filter_bilinear()));
-              } else {
-                destColor = p.color.toArray(p.filter_bilinear());
-              }
-              //destPixels[destOffset + x] = p.filter_bilinear();
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.DIFFERENCE:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.difference(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.difference(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.EXCLUSION:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.exclusion(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.exclusion(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.MULTIPLY:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.multiply(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.multiply(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.SCREEN:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.screen(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.screen(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.OVERLAY:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.overlay(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.overlay(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.HARD_LIGHT:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.hard_light(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.hard_light(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.SOFT_LIGHT:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.soft_light(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.soft_light(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.DODGE:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.dodge(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.dodge(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.BURN:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.burn(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.burn(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
+
+      pshared.srcBuffer = img.imageData.data;
+      pshared.iw = img.width;
+      pshared.iw1 = img.width - 1;
+      pshared.ih1 = img.height - 1;
+
+      // cache for speed
+      var filterBilinear = p.filter_bilinear,
+        filterNewScanline = p.filter_new_scanline,
+        blendFunc = blendFuncs[mode],
+        blendedColor,
+        idx,
+        cULoffset,
+        cURoffset,
+        cLLoffset,
+        cLRoffset,
+        ALPHA_MASK = PConstants.ALPHA_MASK,
+        RED_MASK = PConstants.RED_MASK,
+        GREEN_MASK = PConstants.GREEN_MASK,
+        BLUE_MASK = PConstants.BLUE_MASK,
+        PREC_MAXVAL = PConstants.PREC_MAXVAL,
+        PRECISIONB = PConstants.PRECISIONB,
+        PREC_RED_SHIFT = PConstants.PREC_RED_SHIFT,
+        PREC_ALPHA_SHIFT = PConstants.PREC_ALPHA_SHIFT,
+        srcBuffer = pshared.srcBuffer,
+        min = Math.min;
+
+      for (y = 0; y < destH; y++) {
+
+        pshared.sX = pshared.srcXOffset;
+        pshared.fracV = pshared.srcYOffset & PREC_MAXVAL;
+        pshared.ifV = PREC_MAXVAL - pshared.fracV;
+        pshared.v1 = (pshared.srcYOffset >> PRECISIONB) * pshared.iw;
+        pshared.v2 = min((pshared.srcYOffset >> PRECISIONB) + 1, pshared.ih1) * pshared.iw;
+
+        for (x = 0; x < destW; x++) {
+          idx = (destOffset + x) * 4;
+
+          destColor = (destPixels[idx + 3] << 24) &
+                      ALPHA_MASK | (destPixels[idx] << 16) &
+                      RED_MASK   | (destPixels[idx + 1] << 8) &
+                      GREEN_MASK |  destPixels[idx + 2] & BLUE_MASK;
+
+          pshared.fracU = pshared.sX & PREC_MAXVAL;
+          pshared.ifU = PREC_MAXVAL - pshared.fracU;
+          pshared.ul = (pshared.ifU * pshared.ifV) >> PRECISIONB;
+          pshared.ll = (pshared.ifU * pshared.fracV) >> PRECISIONB;
+          pshared.ur = (pshared.fracU * pshared.ifV) >> PRECISIONB;
+          pshared.lr = (pshared.fracU * pshared.fracV) >> PRECISIONB;
+          pshared.u1 = (pshared.sX >> PRECISIONB);
+          pshared.u2 = min(pshared.u1 + 1, pshared.iw1);
+
+          cULoffset = (pshared.v1 + pshared.u1) * 4;
+          cURoffset = (pshared.v1 + pshared.u2) * 4;
+          cLLoffset = (pshared.v2 + pshared.u1) * 4;
+          cLRoffset = (pshared.v2 + pshared.u2) * 4;
+
+          pshared.cUL = (srcBuffer[cULoffset + 3] << 24) &
+                        ALPHA_MASK | (srcBuffer[cULoffset] << 16) &
+                        RED_MASK   | (srcBuffer[cULoffset + 1] << 8) &
+                        GREEN_MASK |  srcBuffer[cULoffset + 2] & BLUE_MASK;
+
+          pshared.cUR = (srcBuffer[cURoffset + 3] << 24) &
+                        ALPHA_MASK | (srcBuffer[cURoffset] << 16) &
+                        RED_MASK   | (srcBuffer[cURoffset + 1] << 8) &
+                        GREEN_MASK |  srcBuffer[cURoffset + 2] & BLUE_MASK;
+
+          pshared.cLL = (srcBuffer[cLLoffset + 3] << 24) &
+                        ALPHA_MASK | (srcBuffer[cLLoffset] << 16) &
+                        RED_MASK   | (srcBuffer[cLLoffset + 1] << 8) &
+                        GREEN_MASK |  srcBuffer[cLLoffset + 2] & BLUE_MASK;
+
+          pshared.cLR = (srcBuffer[cLRoffset + 3] << 24) &
+                        ALPHA_MASK | (srcBuffer[cLRoffset] << 16) &
+                        RED_MASK   | (srcBuffer[cLRoffset + 1] << 8) &
+                        GREEN_MASK |  srcBuffer[cLRoffset + 2] & BLUE_MASK;
+
+          pshared.r = ((pshared.ul * ((pshared.cUL & RED_MASK) >> 16) +
+                       pshared.ll * ((pshared.cLL & RED_MASK) >> 16) +
+                       pshared.ur * ((pshared.cUR & RED_MASK) >> 16) +
+                       pshared.lr * ((pshared.cLR & RED_MASK) >> 16)) << PREC_RED_SHIFT) & RED_MASK;
+          pshared.g = ((pshared.ul * (pshared.cUL & GREEN_MASK) +
+                       pshared.ll * (pshared.cLL & GREEN_MASK) +
+                       pshared.ur * (pshared.cUR & GREEN_MASK) +
+                       pshared.lr * (pshared.cLR & GREEN_MASK)) >>> PRECISIONB) & GREEN_MASK;
+          pshared.b = (pshared.ul * (pshared.cUL & BLUE_MASK) +
+                       pshared.ll * (pshared.cLL & BLUE_MASK) +
+                       pshared.ur * (pshared.cUR & BLUE_MASK) +
+                       pshared.lr * (pshared.cLR & BLUE_MASK)) >>> PRECISIONB;
+          pshared.a = ((pshared.ul * ((pshared.cUL & ALPHA_MASK) >>> 24) +
+                       pshared.ll * ((pshared.cLL & ALPHA_MASK) >>> 24) +
+                       pshared.ur * ((pshared.cUR & ALPHA_MASK) >>> 24) +
+                       pshared.lr * ((pshared.cLR & ALPHA_MASK) >>> 24)) << PREC_ALPHA_SHIFT) & ALPHA_MASK;
+
+          blendedColor = blendFunc(destColor, (pshared.a | pshared.r | pshared.g | pshared.b));
+
+          destPixels[idx]     = (blendedColor & RED_MASK) >>> 16;
+          destPixels[idx + 1] = (blendedColor & GREEN_MASK) >>> 8;
+          destPixels[idx + 2] = (blendedColor & BLUE_MASK);
+          destPixels[idx + 3] = (blendedColor & ALPHA_MASK) >>> 24;
+
+          pshared.sX += dx;
         }
+        destOffset += screenW;
+        pshared.srcYOffset += dy;
       }
     };
 
@@ -16644,7 +16450,8 @@
       p.size(aWidth, aHeight, aMode);
     };
 
-    DrawingPre.prototype.$init = function() {};
+    DrawingPre.prototype.$init = nop;
+
     Drawing2D.prototype.$init = function() {
       // Setup default 2d canvas context.
       // Moving this here removes the number of times we need to check the 3D variable
@@ -17246,10 +17053,9 @@
       "degrees", "directionalLight", "disableContextMenu",
       "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu",
       "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
-      "fill", "filter", "filter_bilinear", "filter_new_scanline",
-      "floor", "focused", "frameCount", "frameRate", "frustum", "get",
-      "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour", "hue",
-      "image", "imageMode", "Import", "intersect", "join", "key",
+      "fill", "filter", "floor", "focused", "frameCount", "frameRate", "frustum",
+      "get", "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour",
+      "hue", "image", "imageMode", "Import", "intersect", "join", "key",
       "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
       "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
       "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape",

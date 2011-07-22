@@ -1,5 +1,19 @@
 // These are the test files in this dir to be run.
 var tests = [
+  { path: "blend-add.pde", tags: ["2D","BLEND"], epsilonOverride: 0.16 },
+  { path: "blend-blend.pde", tags: ["2D","BLEND"], epsilonOverride: 0.09 },
+  { path: "blend-burn.pde", tags: ["2D","BLEND"], epsilonOverride: 0.21 },
+  { path: "blend-darkest.pde", tags: ["2D","BLEND"], epsilonOverride: 0.09 },
+  { path: "blend-difference.pde", tags: ["2D","BLEND"], epsilonOverride: 0.09 },
+  { path: "blend-dodge.pde", tags: ["2D","BLEND"], epsilonOverride: 0.24 },
+  { path: "blend-exclusion.pde", tags: ["2D","BLEND"], epsilonOverride: 0.13 },
+  { path: "blend-hard_light.pde", tags: ["2D","BLEND"], epsilonOverride: 0.14 },
+  { path: "blend-lightest.pde", tags: ["2D","BLEND"], epsilonOverride: 0.09 },
+  { path: "blend-multiply.pde", tags: ["2D","BLEND"], epsilonOverride: 0.09 },
+  { path: "blend-overlay.pde", tags: ["2D","BLEND"], epsilonOverride: 0.15 },
+  { path: "blend-screen.pde", tags: ["2D","BLEND"], epsilonOverride: 0.14 },
+  { path: "blend-soft_light.pde", tags: ["2D","BLEND"], epsilonOverride: 0.11 },
+  { path: "blend-subtract.pde", tags: ["2D","BLEND"], epsilonOverride: 0.09 },
   { path: "loadShape.pde", tags: ["2D","SVG"] },
   { path: "loadShape2.pde", tags: ["2D","SVG"] },
   { path: "loadShape3.pde", tags: ["2D","SVG"], epsilonOverride: 0.07 },
@@ -182,5 +196,6 @@ var tests = [
   { path: "blendcolor-overlay.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-darkest.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-hard_light.pde", tags: ["2D", "BLEND"] },
-  { path: "blendcolor-screen.pde", tags: ["2D", "BLEND"] }
+  { path: "blendcolor-screen.pde", tags: ["2D", "BLEND"] },
+  { path: "pixels-toarray.pde", tags: ["2D"] }
 ];
