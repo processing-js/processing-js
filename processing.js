@@ -8561,6 +8561,10 @@
      * @return {boolean} true if the subject String starts with the prefix.
      */
     p.__startsWith = function(subject, prefix, toffset) {
+      if (typeof subject !== "string") {
+        return subject.startsWith.apply(subject, removeFirstArgument(arguments));
+      }
+
       toffset = toffset || 0;
       if (toffset < 0 || toffset > subject.length) {
         return false;
@@ -8576,6 +8580,10 @@
      * @return {boolean} true if the subject String starts with the prefix.
      */
     p.__endsWith = function(subject, suffix) {
+      if (typeof subject !== "string") {
+        return subject.endsWith.apply(subject, removeFirstArgument(arguments));
+      }
+
       var suffixLen = suffix ? suffix.length : 0;
       return (suffix === '' || suffix === subject) ? true :
         (subject.indexOf(suffix) === subject.length - suffixLen);
