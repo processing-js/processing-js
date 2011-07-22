@@ -13978,12 +13978,6 @@
       // if image is in the preloader cache return a new PImage
       if (curSketch.imageCache.images[file]) {
         pimg = new PImage(curSketch.imageCache.images[file]);
-        // Opera requires late removal of preloaded images, as they are
-        // still hidden in the DOM when they are loaded for real use.
-        if (opera) {
-          document.body.removeChild(curSketch.imageCache.operaCache.images[file]);
-          delete(curSketch.imageCache.operaCache.images[file]);
-        }
         pimg.loaded = true;
         return pimg;
       }
@@ -16934,6 +16928,17 @@
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
+          // the opera preload cache can only be cleared once we start
+          if (window.opera) {
+            var link;
+            for (link in curSketch.imageCache.operaCache) {
+              var element = curSketch.imageCache.operaCache[link];
+              if (element !== null) {
+                document.body.removeChild(element); }
+              delete(curSketch.imageCache.operaCache[link])
+            }
+          }
+
           curSketch.attach(processing, defaultScope);
           curSketch.onLoad();
 
@@ -19026,15 +19031,18 @@
           img.src = href;
 
           // Opera will not load images until they are inserted into the DOM.
-          if (opera) {
+          if (window.opera) {
+            var div = document.createElement("div");
+            div.appendChild(img);
             // we can't use "display: none", since that makes it invisible, and thus not load
-            img.style.display = "absolute";
-            img.style.opacity = 0;
-            document.body.appendChild(img);
-            // force small non-zero dimensions to prevent scrollbars
-            img.style.width = "1px";
-            img.style.height = "1px";
-            this.operaCache[href] = img;
+            div.style.position = "absolute";
+            div.style.opacity = 0;
+            div.style.width = "1px";
+            div.style.height= "1px";
+            if (!this.operaCache[href]) {
+              document.body.appendChild(div);
+              this.operaCache[href] = div;
+            }
           }
         } else {
           this.images[href] = null;
