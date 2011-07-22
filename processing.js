@@ -15686,12 +15686,21 @@
       canvas.style.opacity = 0;
       var ctx = canvas.getContext("2d");
       ctx.font = curTextSize + "px " + curTextFont.name;
-
+      
       // Size the canvas using a string with common max-ascent and max-descent letters.
       // Changing the canvas dimensions resets the context, so we must reset the font.
       var protrusions = "dbflkhyjqpg";
       canvas.width = ctx.measureText(protrusions).width;
       ctx.font = curTextSize + "px " + curTextFont.name;
+
+      // for text lead values, we meaure a multiline text container.
+      var leadDiv = document.createElement("leadDiv");
+      leadDiv.style.position = "absolute";
+      leadDiv.style.opacity = 0;
+      leadDiv.style.fontFamily = curTextFont.name;
+      leadDiv.style.fontSize = curTextSize + "px";
+      leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
+      document.body.appendChild(leadDiv);
 
       var w = canvas.width,
           h = canvas.height,
@@ -15727,7 +15736,19 @@
       // Update current font metrics
       curTextAscent = baseline - ascent;
       curTextDescent = descent - baseline;
+      
+      // For leading, we first set a "safe" value, using TeX's leading ratio
       curTextLeading = 1.2 * curTextSize;
+      
+      // Then we try to get the real value from the browser
+      if (document.defaultView.getComputedStyle) {
+        var leadDivHeight = document.defaultView.getComputedStyle(leadDiv).getPropertyValue("height");
+        leadDivHeight = leadDivHeight.replace("px","");
+        if (leadDivHeight >= curTextSize * 2) {
+          curTextLeading = Math.round(leadDivHeight/2);
+        }
+      }
+      document.body.removeChild(leadDiv);
     }
 
     /**
