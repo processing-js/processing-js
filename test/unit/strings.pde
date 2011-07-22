@@ -91,3 +91,17 @@ _checkFalse( firstString.startsWith(second) );
 _checkFalse( firstString.endsWith(second) );
 
 _checkTrue( firstString.startsWith("irs", 1) );
+
+class ClassWithStringMethods{
+  bool startsWith(String prefix, int toffset) {
+    return prefix == "testingStartsWith";
+  }
+
+  bool endsWith(String suffix) {
+    return suffix == "testingEndsWith";
+  }
+}
+
+ClassWithStringMethods cwsm = new ClassWithStringMethods();
+_checkTrue( cwsm.startsWith("testingStartsWith") );
+_checkTrue( cwsm.endsWith("testingEndsWith") );
