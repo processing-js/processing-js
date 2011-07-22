@@ -1,6 +1,6 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
 "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="300px" height="450px" viewBox="0 0 300px 450px"
+<svg width="300px" height="450px" viewBox="0 0 300 450"
 xmlns="http://www.w3.org/2000/svg" version="1.1"> 
 <title>Processing.js vector drawing</title> 
 <g transform="rotate(45, 150, 225)">

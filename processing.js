@@ -11218,16 +11218,16 @@
 
     Drawing3D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
-      
+
       // Processing groups the weight of points and lines under this one function,
       // but for WebGL, we need to set a uniform for points and call a function for line.
-      
+
       curContext.useProgram(programObject2D);
       uniformf("pointSize2d", programObject2D, "pointSize", w);
-      
+
       curContext.useProgram(programObjectUnlitShape);
       uniformf("pointSizeUnlitShape", programObjectUnlitShape, "pointSize", w);
-      
+
       curContext.lineWidth(w);
     };
 
@@ -11479,7 +11479,7 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      
+
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
 
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
@@ -14454,7 +14454,7 @@
      */
     var backgroundHelper = function(arg1, arg2, arg3, arg4) {
       var obj;
-      
+
       if (arg1 instanceof PImage) {
         obj = arg1;
 
@@ -14466,7 +14466,7 @@
       } else {
         obj = p.color(arg1, arg2, arg3, arg4);
       }
-      
+
       backgroundObj = obj;
     };
 
@@ -16952,6 +16952,22 @@
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
+          // the opera preload cache can only be cleared once we start
+          if (window.opera) {
+            var link,
+                element,
+                operaCache=curSketch.imageCache.operaCache;
+            for (link in operaCache) {
+              if(operaCache.hasOwnProperty(link)) {
+                element = operaCache[link];
+                if (element !== null) {
+                  document.body.removeChild(element);
+                }
+                delete(operaCache[link]);
+              }
+            }
+          }
+
           curSketch.attach(processing, defaultScope);
           curSketch.onLoad();
 
@@ -19029,6 +19045,8 @@
     this.imageCache = {
       pending: 0,
       images: {},
+      // Opera requires special administration for preloading
+      operaCache: {},
       add: function(href) {
         if(isDOMPresent) {
           var img = new Image();
@@ -19040,6 +19058,21 @@
           this.pending++;
           this.images[href] = img;
           img.src = href;
+
+          // Opera will not load images until they are inserted into the DOM.
+          if (window.opera) {
+            var div = document.createElement("div");
+            div.appendChild(img);
+            // we can't use "display: none", since that makes it invisible, and thus not load
+            div.style.position = "absolute";
+            div.style.opacity = 0;
+            div.style.width = "1px";
+            div.style.height= "1px";
+            if (!this.operaCache[href]) {
+              document.body.appendChild(div);
+              this.operaCache[href] = div;
+            }
+          }
         } else {
           this.images[href] = null;
         }
@@ -19203,7 +19236,7 @@
       function callback(block, error) {
         code[index] = block;
         ++loaded;
-        if (error) { 
+        if (error) {
           errors.push(filename + " ==> " + error);
         }
         if (loaded === sourcesCount) {
