@@ -340,7 +340,7 @@
     HINT_COUNT:                  10,
 
     // PJS defined constants
-    SINCOS_LENGTH:      parseInt(360 / 0.5, 10),
+    SINCOS_LENGTH:      720, // every half degree
     PRECISIONB:         15, // fixed point precision is limited to 15 bits!!
     PRECISIONF:         1 << 15,
     PREC_MAXVAL:        (1 << 15) - 1,
@@ -7053,10 +7053,10 @@
       var a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      var r = parseInt(p.lerp(r1, r2, amt), 10);
-      var g = parseInt(p.lerp(g1, g2, amt), 10);
-      var b = parseInt(p.lerp(b1, b2, amt), 10);
-      var a = parseFloat(p.lerp(a1, a2, amt) * colorModeA);
+      var r = p.lerp(r1, r2, amt) | 0;
+      var g = p.lerp(g1, g2, amt) | 0;
+      var b = p.lerp(b1, b2, amt) | 0;
+      var a = p.lerp(a1, a2, amt) * colorModeA;
 
       return p.color.toInt(r, g, b, a);
     };
@@ -10486,41 +10486,41 @@
         voff += sphereDetailU;
         v2 = voff;
         for (var j = 0; j < sphereDetailU; j++) {
-          sphereVerts.push(parseFloat(sphereX[v1]));
-          sphereVerts.push(parseFloat(sphereY[v1]));
-          sphereVerts.push(parseFloat(sphereZ[v1++]));
-          sphereVerts.push(parseFloat(sphereX[v2]));
-          sphereVerts.push(parseFloat(sphereY[v2]));
-          sphereVerts.push(parseFloat(sphereZ[v2++]));
+          sphereVerts.push(sphereX[v1]);
+          sphereVerts.push(sphereY[v1]);
+          sphereVerts.push(sphereZ[v1++]);
+          sphereVerts.push(sphereX[v2]);
+          sphereVerts.push(sphereY[v2]);
+          sphereVerts.push(sphereZ[v2++]);
         }
 
         // close each ring
         v1 = v11;
         v2 = voff;
 
-        sphereVerts.push(parseFloat(sphereX[v1]));
-        sphereVerts.push(parseFloat(sphereY[v1]));
-        sphereVerts.push(parseFloat(sphereZ[v1]));
-        sphereVerts.push(parseFloat(sphereX[v2]));
-        sphereVerts.push(parseFloat(sphereY[v2]));
-        sphereVerts.push(parseFloat(sphereZ[v2]));
+        sphereVerts.push(sphereX[v1]);
+        sphereVerts.push(sphereY[v1]);
+        sphereVerts.push(sphereZ[v1]);
+        sphereVerts.push(sphereX[v2]);
+        sphereVerts.push(sphereY[v2]);
+        sphereVerts.push(sphereZ[v2]);
       }
 
       // add the northern cap
       for (i = 0; i < sphereDetailU; i++) {
         v2 = voff + i;
 
-        sphereVerts.push(parseFloat(sphereX[v2]));
-        sphereVerts.push(parseFloat(sphereY[v2]));
-        sphereVerts.push(parseFloat(sphereZ[v2]));
+        sphereVerts.push(sphereX[v2]);
+        sphereVerts.push(sphereY[v2]);
+        sphereVerts.push(sphereZ[v2]);
         sphereVerts.push(0);
         sphereVerts.push(1);
         sphereVerts.push(0);
       }
 
-      sphereVerts.push(parseFloat(sphereX[voff]));
-      sphereVerts.push(parseFloat(sphereY[voff]));
-      sphereVerts.push(parseFloat(sphereZ[voff]));
+      sphereVerts.push(sphereX[voff]);
+      sphereVerts.push(sphereY[voff]);
+      sphereVerts.push(sphereZ[voff]);
       sphereVerts.push(0);
       sphereVerts.push(1);
       sphereVerts.push(0);
@@ -10574,8 +10574,8 @@
       var cz = new Float32Array(ures);
       // calc unit circle in XZ plane
       for (i = 0; i < ures; i++) {
-        cx[i] = cosLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
-        cz[i] = sinLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
+        cx[i] = cosLUT[((i * delta) % PConstants.SINCOS_LENGTH) | 0];
+        cz[i] = sinLUT[((i * delta) % PConstants.SINCOS_LENGTH) | 0];
       }
 
       // computing vertexlist
@@ -10593,8 +10593,8 @@
 
       // step along Y axis
       for (i = 1; i < vres; i++) {
-        var curradius = sinLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
-        var currY = -cosLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
+        var curradius = sinLUT[(angle % PConstants.SINCOS_LENGTH) | 0];
+        var currY = -cosLUT[(angle % PConstants.SINCOS_LENGTH) | 0];
         for (var j = 0; j < ures; j++) {
           sphereX[currVert] = cx[j] * curradius;
           sphereY[currVert] = currY;
@@ -13816,6 +13816,20 @@
             };
           }
         }(this)),
+        toArray: (function(aImg) {
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot get pixels.";
+          } else {
+            return function() {
+              var arr = [], length = aImg.width * aImg.height;
+              for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+                arr.push(p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
+                                       aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]));
+              }
+              return arr;
+            };
+          }
+        }(this)),
         set: function(arr) {
           if (this.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot set pixels.";
@@ -14292,18 +14306,28 @@
     p.pixels = {
       getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
       getPixel: function(i) {
-        var offset = i*4;
-        return (p.imageData.data[offset+3] << 24) & 0xff000000 |
-               (p.imageData.data[offset+0] << 16) & 0x00ff0000 |
-               (p.imageData.data[offset+1] << 8) & 0x0000ff00 |
-               p.imageData.data[offset+2] & 0x000000ff;
+        var offset = i*4, data = p.imageData.data;
+        return (data[offset+3] << 24) & 0xff000000 |
+               (data[offset+0] << 16) & 0x00ff0000 |
+               (data[offset+1] << 8) & 0x0000ff00 |
+               data[offset+2] & 0x000000ff;
       },
       setPixel: function(i,c) {
-        var offset = i*4;
-        p.imageData.data[offset+0] = (c & 0x00ff0000) >>> 16; // RED_MASK
-        p.imageData.data[offset+1] = (c & 0x0000ff00) >>> 8;  // GREEN_MASK
-        p.imageData.data[offset+2] = (c & 0x000000ff);        // BLUE_MASK
-        p.imageData.data[offset+3] = (c & 0xff000000) >>> 24; // ALPHA_MASK
+        var offset = i*4, data = p.imageData.data;
+        data[offset+0] = (c & 0x00ff0000) >>> 16; // RED_MASK
+        data[offset+1] = (c & 0x0000ff00) >>> 8;  // GREEN_MASK
+        data[offset+2] = (c & 0x000000ff);        // BLUE_MASK
+        data[offset+3] = (c & 0xff000000) >>> 24; // ALPHA_MASK
+      },
+      toArray: function() {
+        var arr = [], length = p.imageData.width * p.imageData.height, data = p.imageData.data;
+        for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+          arr.push((data[offset+3] << 24) & 0xff000000 |
+                   (data[offset+0] << 16) & 0x00ff0000 |
+                   (data[offset+1] << 8) & 0x0000ff00 |
+                   data[offset+2] & 0x000000ff);
+        }
+        return arr;
       },
       set: function(arr) {
         for (var i = 0, aL = arr.length; i < aL; i++) {
