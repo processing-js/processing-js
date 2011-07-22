@@ -6704,19 +6704,19 @@
           var cr = 0;
           if (br !== 0) {
             cr = ((255 - ar) << 8) / br;
-            cr = 255 - (cr < 0) ? 0 : ((cr > 255) ? 255 : cr);
+            cr = 255 - ((cr < 0) ? 0 : ((cr > 255) ? 255 : cr));
           }
 
           var cg = 0;
           if (bg !== 0) {
             cg = ((255 - ag) << 8) / bg;
-            cg = 255 - (cg < 0) ? 0 : ((cg > 255) ? 255 : cg);
+            cg = 255 - ((cg < 0) ? 0 : ((cg > 255) ? 255 : cg));
           }
 
           var cb = 0;
           if (bb !== 0) {
             cb = ((255 - ab) << 8) / bb;
-            cb = 255 - (cb < 0) ? 0 : ((cb > 255) ? 255 : cb);
+            cb = 255 - ((cb < 0) ? 0 : ((cb > 255) ? 255 : cb));
           }
 
           return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
