@@ -16930,12 +16930,17 @@
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           // the opera preload cache can only be cleared once we start
           if (window.opera) {
-            var link, element;
-            for (link in curSketch.imageCache.operaCache) {
-              element = curSketch.imageCache.operaCache[link];
-              if (element !== null) {
-                document.body.removeChild(element); }
-              delete(curSketch.imageCache.operaCache[link])
+            var link,
+                element,
+                operaCache=curSketch.imageCache.operaCache;
+            for (link in operaCache) {
+              if(operaCache.hasOwnProperty(link)) {
+                element = operaCache[link];
+                if (element !== null) {
+                  document.body.removeChild(element);
+                }
+                delete(operaCache[link]);
+              }
             }
           }
 
