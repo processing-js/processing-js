@@ -102,6 +102,8 @@ var document = {
   fake: true,
   attachEvent: __empty_func__,
   body: {
+    appendChild: __elem_func__,
+    removeChild: __empty_func__,
     style: {
       cursor: {}
     }
