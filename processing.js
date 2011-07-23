@@ -11647,6 +11647,19 @@
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
+
+    /**
+     * this series of three operations is used a lot in Drawing2D.prototype.endShape
+     * and has been split off as its own function, to tighten the code and allow for
+     * fewer bugs.
+     */
+    function fillStrokeClose()
+    {
+      executeContextFill();
+      executeContextStroke();
+      curContext.closePath();
+    }
+
     /**
      * The endShape() function is the companion to beginShape() and may only be called after beginShape().
      * When endshape() is called, all of image data defined since the previous call to beginShape() is written
@@ -11661,12 +11674,12 @@
       if (vertArray.length === 0) { return; }
 
       var closeShape = mode === PConstants.CLOSE;
-      
+
       // if the shape is closed, the first element is also the last element
       if (closeShape) {
         vertArray.push(vertArray[0]);
-      }        
-      
+      }
+
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
@@ -11735,9 +11748,7 @@
             b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
             curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
           }
-          executeContextFill();
-          executeContextStroke();
-          curContext.closePath();
+          fillStrokeClose();
         }
       }
 
@@ -11756,9 +11767,7 @@
             curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
           }
         }
-        executeContextFill();
-        executeContextStroke();
-        curContext.closePath();
+        fillStrokeClose();
       }
 
       // render the vertices provided
@@ -11822,9 +11831,7 @@
                 p.fill(vertArray[i+2][5]);
               }
             }
-            executeContextFill();
-            executeContextStroke();
-            curContext.closePath();
+            fillStrokeClose();
           }
         } else if (curShape === PConstants.TRIANGLE_FAN) {
           if (vertArrayLength > 2) {
@@ -11904,9 +11911,7 @@
                 curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
                 curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               }
-              executeContextFill();
-              executeContextStroke();
-              curContext.closePath();
+              fillStrokeClose();
             }
           }
         } else {
@@ -11922,9 +11927,7 @@
               }
             }
           }
-          executeContextFill();
-          executeContextStroke();
-          curContext.closePath();
+          fillStrokeClose();
         }
       }
 
@@ -11933,6 +11936,13 @@
       isBezier = false;
       curveVertArray = [];
       curveVertCount = 0;
+
+      // If the shape is closed, the first element was added as last element.
+      // We must remove it again to prevent the list of vertices from growing
+      // over successive calls to endShape(CLOSE)
+      if (closeShape) {
+        vertArray.pop();
+      }
     };
 
     Drawing3D.prototype.endShape = function(mode) {
