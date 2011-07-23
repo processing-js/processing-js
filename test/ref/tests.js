@@ -57,7 +57,7 @@ var tests = [
   { path: "background-hex-alpha-3d.pde", tags: ["3D"] },
   { path: "background-color-1arg-3d.pde", tags: ["3D"] },
   { path: "background-color-1arg-alpha-3d.pde", tags: ["3D"] },
-  { path: "background-hex-3RGB-alpha-3d.pde", tags: ["3D"], knownFailureTicket: "1346" },  
+  { path: "background-hex-3RGB-alpha-3d.pde", tags: ["3D"], knownFailureTicket: "1346" },
   { path: "background-image-3d.pde", tags: ["3D"], knownFailureTicket: "1323" },
   { path: "circles.pde", tags: ["2D"] },
   { path: "circles2.pde", tags: ["2D"] },
@@ -67,7 +67,6 @@ var tests = [
   { path: "distance-2d.pde", tags: ["2D"] },
   { path: "embedded-iteration.pde", tags: ["2D"] },
   { path: "iteration.pde", tags: ["2D"] },
-  { path: "letters.pde", tags: ["2D"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "logical-operators.pde", tags: ["2D"] },
   { path: "point-line-rect.pde", tags: ["2D"] },
   { path: "sine-wave.pde", tags: ["2D"] },
@@ -76,9 +75,13 @@ var tests = [
   { path: "true-false.pde", tags: ["2D"] },
   { path: "variable-scope.pde", tags: ["2D"] },
   { path: "variables.pde", tags: ["2D"] },
-  { path: "text-align.pde", tags: ["2D"], epsilonOverride: 0.14 },
-  { path: "words.pde", tags: ["2D"], epsilonOverride: 0.25 }, /* See ticket #1172 */
-  { path: "defaults-text.pde", tags: ["2D"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-ascent-descent.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
+  { path: "text-width_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
+  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 }, /* See ticket #1172 */
+  { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
+  { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
   { path: "box-rotating.pde", tags: ["3D"] },
   { path: "translate-rect.pde", tags: ["2D"] },
@@ -104,18 +107,17 @@ var tests = [
   { path: "triangle.pde", tags: ["2D"] },
   { path: "svg_font_biotyp.pde", tags: ["2D"] },
   { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
-  { path: "text-leading.pde", tags: ["2D"], epsilonOverride: 0.20 },
   { path: "line-3d.pde", tags: ["3D"] },
   { path: "point_3D_stroke.pde", tags: ["3D"] },
   { path: "point_3D_strokeWeight.pde", tags: ["3D"], epsilonOverride: 0.22 },
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "ambientLight_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_1.pde", tags: ["3D"] },
-  { path: "ambientLight_p5test_2.pde", tags: ["3D"], epsilonOverride: 0.10 }, 
+  { path: "ambientLight_p5test_2.pde", tags: ["3D"], epsilonOverride: 0.10 },
   { path: "ambient_p5test.pde", tags: ["3D"] },
   { path: "directionalLight_p5test_1.pde", tags: ["3D"] },
   { path: "directionalLight_p5test_2.pde", tags: ["3D"] },
-  { path: "directionalLight_scale.pde", tags: ["3D"] },  
+  { path: "directionalLight_scale.pde", tags: ["3D"] },
   { path: "emissive_p5test.pde", tags: ["3D"] },
   { path: "lightSpecular_p5test.pde", tags: ["3D"], epsilonOverride: 0.07 },
   { path: "pointLight_p5test.pde", tags: ["3D"] },
@@ -181,7 +183,6 @@ var tests = [
   { path: "beginEndShape-3dtriangles2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.15 },
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
-  { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35}, /* See ticket #1172 */
   { path: "rotateZ.pde", tags: ["3D"] },
   { path: "blendcolor-add.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-difference.pde", tags: ["2D", "BLEND"] },

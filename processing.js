@@ -1624,6 +1624,8 @@
         curTextSize = 12,
         curTextFont = {name: "\"Arial\", sans-serif", origName: "Arial"},
         curTextLeading = 14,
+        curTextAscent = 9,
+        curTextDescent = 2,
         getLoaded = false,
         start = new Date().getTime(),
         timeSinceLastFPS = start,
@@ -9669,9 +9671,6 @@
         }
       }
 
-      // Reset the text font/size
-      p.textSize(curTextSize);
-
       // Set the background to whatever it was called last as if background() was called before size()
       // If background() hasn't been called before, set background() to a light gray
       p.background();
@@ -15425,6 +15424,9 @@
     function PFont(name) {
       this.name = "sans-serif";
       if(name !== undef) {
+        if (name.indexOf(" ") > -1) {
+          name = "'" + name + "'";
+        }
         switch(name) {
           case "sans-serif":
           case "serif":
@@ -15434,7 +15436,7 @@
             this.name = name;
             break;
           default:
-            this.name = "\"" + name + "\", sans-serif";
+            this.name = name;
             break;
         }
       }
@@ -15528,6 +15530,84 @@
       }
     };
 
+
+    /**
+     * [internal function] computeFontMetrics() calculates various metrics for text
+     * placement. Currently this function computes the ascent, descent and leading
+     * (from "lead", used for vertical space) values for the currently active font.
+     */
+    function computeFontMetrics() {
+      var canvas = document.createElement("canvas");
+      canvas.width = 3 * curTextSize;
+      canvas.height = 3 * curTextSize;
+      canvas.style.opacity = 0;
+      var ctx = canvas.getContext("2d");
+      ctx.font = curTextSize + "px " + curTextFont.name;
+
+      // Size the canvas using a string with common max-ascent and max-descent letters.
+      // Changing the canvas dimensions resets the context, so we must reset the font.
+      var protrusions = "dbflkhyjqpg";
+      canvas.width = ctx.measureText(protrusions).width;
+      ctx.font = curTextSize + "px " + curTextFont.name;
+
+      // for text lead values, we meaure a multiline text container.
+      var leadDiv = document.createElement("leadDiv");
+      leadDiv.style.position = "absolute";
+      leadDiv.style.opacity = 0;
+      leadDiv.style.fontFamily = curTextFont.name;
+      leadDiv.style.fontSize = curTextSize + "px";
+      leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
+      document.body.appendChild(leadDiv);
+
+      var w = canvas.width,
+          h = canvas.height,
+          baseline = h/2;
+
+      // Set all canvas pixeldata values to 255, with all the content
+      // data being 0. This lets us scan for data[i] != 255.
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "black";
+      ctx.fillText(protrusions, 0, baseline);
+      var pixelData = ctx.getImageData(0, 0, w, h).data;
+
+      // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
+      // consecutive values in the array, rather than stored as 32 bit ints.
+      var i = 0,
+          w4 = w * 4,
+          len = pixelData.length;
+
+      // Finding the ascent uses a normal, forward scanline
+      while (++i < len && pixelData[i] === 255) {
+        nop();
+      }
+      var ascent = Math.round(i / w4);
+
+      // Finding the descent uses a reverse scanline
+      i = len - 1;
+      while (--i > 0 && pixelData[i] === 255) {
+        nop();
+      }
+      var descent = Math.round(i / w4);
+
+      // Update current font metrics
+      curTextAscent = baseline - ascent;
+      curTextDescent = descent - baseline;
+
+      // For leading, we first set a "safe" value, using TeX's leading ratio
+      curTextLeading = 1.2 * curTextSize;
+
+      // Then we try to get the real value from the browser
+      if (document.defaultView.getComputedStyle) {
+        var leadDivHeight = document.defaultView.getComputedStyle(leadDiv).getPropertyValue("height");
+        leadDivHeight = leadDivHeight.replace("px","");
+        if (leadDivHeight >= curTextSize * 2) {
+          curTextLeading = Math.round(leadDivHeight/2);
+        }
+      }
+      document.body.removeChild(leadDiv);
+    }
+
     /**
      * textFont() Sets the current font.
      *
@@ -15547,6 +15627,7 @@
         var curContext = drawing.$ensureContext();
         curContext.font = curTextSize + "px " + curTextFont.name;
       }
+      computeFontMetrics();
     };
 
     /**
@@ -15560,11 +15641,49 @@
      * @see #text
      */
     p.textSize = function(size) {
-      if (size) {
+      if (size !== curTextSize) {
         curTextSize = size;
         var curContext = drawing.$ensureContext();
         curContext.font = curTextSize + "px " + curTextFont.name;
+        computeFontMetrics();
       }
+    };
+
+    /**
+     * textAscent() returns the maximum height a character extends above the baseline of the
+     * current font at its current size, in pixels.
+     *
+     * @returns {float} height of the current font above the baseline, at its current size, in pixels
+     *
+     * @see #textDescent
+     */
+    p.textAscent = function() {
+      return curTextAscent;
+    };
+
+    /**
+     * textDescent() returns the maximum depth a character will protrude below the baseline of
+     * the current font at its current size, in pixels.
+     *
+     * @returns {float} depth of the current font below the baseline, at its current size, in pixels
+     *
+     * @see #textAscent
+     */
+    p.textDescent = function() {
+      return curTextDescent;
+    };
+
+    /**
+     * textLeading() Sets the current font's leading, which is the distance
+     * from baseline to baseline over consecutive lines, with additional vertical
+     * spacing taking into account. Usually this value is 1.2 or 1.25 times the
+     * textsize, but this value can be changed to effect vertically compressed
+     * or stretched text.
+     *
+     * @param {int|float} the desired baseline-to-baseline size in pixels
+     */
+    p.textLeading = function(leading) {
+      curTextLeading = leading;
     };
 
     /**
@@ -15637,137 +15756,6 @@
       }
       return width;
     };
-
-    p.textLeading = function(leading) {
-      curTextLeading = leading;
-    };
-
-    function MeasureTextCanvas(fontFace, fontSize, baseLine, text) {
-      this.canvas = document.createElement('canvas');
-      this.canvas.setAttribute('width', fontSize + "px");
-      this.canvas.setAttribute('height', fontSize + "px");
-      this.ctx = this.canvas.getContext("2d");
-      this.ctx.font = fontSize + "pt " + fontFace;
-      this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, fontSize, fontSize);
-      this.ctx.fillStyle = "white";
-      this.ctx.fillText(text, 0, baseLine);
-      this.imageData = this.ctx.getImageData(0, 0, fontSize, fontSize);
-
-      this.get = function(x, y) {
-        return this.imageData.data[((y*(this.imageData.width*4)) + (x*4))];
-      };
-    }
-
-    /**
-     * textAscent() height of the font above the baseline of the current font at its current size, in pixels.
-     *
-     * @returns {float} height of the font above the baseline of the current font at its current size, in pixels
-     *
-     * @see #textDescent
-     */
-    p.textAscent = (function() {
-      var oldTextSize = undef,
-          oldTextFont = undef,
-          ascent      = undef,
-          graphics    = undef;
-      return function textAscent() {
-        // if text size or font has changed, recalculate ascent value
-        if (oldTextFont !== curTextFont || oldTextSize !== curTextSize) {
-          // store current size and font
-          oldTextFont = curTextFont;
-          oldTextSize = curTextSize;
-
-          var found       = false,
-              character   = "k",
-              colour      = p.color(0),
-              top         = 0,
-              bottom      = curTextSize,
-              yLoc        = curTextSize/2;
-
-          // setup off screen image to write and measure text from
-          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
-
-          // binary search for highest pixel
-          while(yLoc !== bottom) {
-            for (var xLoc = 0; xLoc < curTextSize; xLoc++) {
-              if (graphics.get(xLoc, yLoc) !== colour) {
-                found = true;
-                xLoc = curTextSize;
-              }
-            }
-            if (found) {
-              // y--
-              bottom = yLoc;
-              found = false;
-            } else {
-              // y++
-              top = yLoc;
-            }
-            yLoc = Math.ceil((bottom + top)/2);
-          }
-          ascent = ((curTextSize-1) - yLoc) + 1;
-          return ascent;
-        } else { // text size and font have not changed since last time
-          return ascent;
-        }
-      };
-    }());
-
-    /**
-     * textDescent() height of the font below the baseline of the current font at its current size, in pixels.
-     *
-     * @returns {float} height of the font below the baseline of the current font at its current size, in pixels
-     *
-     * @see #textAscent
-     */
-    p.textDescent = (function() {
-      var oldTextSize = undef,
-          oldTextFont = undef,
-          descent     = undef,
-          graphics    = undef;
-      return function textDescent() {
-        // if text size or font has changed, recalculate descent value
-        if (oldTextFont !== curTextFont || oldTextSize !== curTextSize) {
-          // store current size and font
-          oldTextFont = curTextFont;
-          oldTextSize = curTextSize;
-
-          var found       = false,
-              character   = "p",
-              colour      = p.color(0),
-              top         = 0,
-              bottom      = curTextSize,
-              yLoc        = curTextSize/2;
-
-          // setup off screen image to write and measure text from
-          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, 0, character);
-
-          // binary search for lowest pixel
-          while(yLoc !== bottom) {
-            for (var xLoc = 0; xLoc < curTextSize; xLoc++) {
-              if (graphics.get(xLoc, yLoc) !== colour) {
-                found = true;
-                xLoc = curTextSize;
-              }
-            }
-            if (found) {
-              // y++
-              top = yLoc;
-              found = false;
-            } else {
-              // y--
-              bottom = yLoc;
-            }
-            yLoc = Math.ceil((bottom + top)/2);
-          }
-          descent = yLoc + 1;
-          return descent;
-        } else { // text size and font have not changed since last time
-          return descent;
-        }
-      };
-    }());
 
     // A lookup table for characters that can not be referenced by Object
     p.glyphLook = function(font, chr) {
