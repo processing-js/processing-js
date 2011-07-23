@@ -15686,7 +15686,7 @@
       canvas.style.opacity = 0;
       var ctx = canvas.getContext("2d");
       ctx.font = curTextSize + "px " + curTextFont.name;
-      
+
       // Size the canvas using a string with common max-ascent and max-descent letters.
       // Changing the canvas dimensions resets the context, so we must reset the font.
       var protrusions = "dbflkhyjqpg";
@@ -15736,10 +15736,10 @@
       // Update current font metrics
       curTextAscent = baseline - ascent;
       curTextDescent = descent - baseline;
-      
+
       // For leading, we first set a "safe" value, using TeX's leading ratio
       curTextLeading = 1.2 * curTextSize;
-      
+
       // Then we try to get the real value from the browser
       if (document.defaultView.getComputedStyle) {
         var leadDivHeight = document.defaultView.getComputedStyle(leadDiv).getPropertyValue("height");
