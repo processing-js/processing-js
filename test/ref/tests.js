@@ -85,9 +85,13 @@ var tests = [
   { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 }, /* See ticket #1172 */
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"] },
-  { path: "text-valign-BASELINE.pde", tags: ["2D", "Text"] },
-  { path: "text-valign-CENTER.pde", tags: ["2D", "Text"] },
+  { path: "text-valign-BASELINE.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-valign-CENTER.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "text-valign-TOP.pde", tags: ["2D", "Text"] },
+  { path: "text-valign-BOTTOM-m.pde", tags: ["2D", "Text"] },
+  { path: "text-valign-BASELINE-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-valign-CENTER-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.06 }, /* See ticket #1172 */
+  { path: "text-valign-TOP-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.06 }, /* See ticket #1172 */
   { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
@@ -207,5 +211,4 @@ var tests = [
   { path: "blendcolor-hard_light.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-screen.pde", tags: ["2D", "BLEND"] },
   { path: "pixels-toarray.pde", tags: ["2D"] }
-  { path: "blendcolor-screen.pde", tags: ["2D", "BLEND"] }
 ];
