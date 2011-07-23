@@ -11647,14 +11647,12 @@
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
 
-
     /**
      * this series of three operations is used a lot in Drawing2D.prototype.endShape
      * and has been split off as its own function, to tighten the code and allow for
      * fewer bugs.
      */
-    function fillStrokeClose()
-    {
+    function fillStrokeClose() {
       executeContextFill();
       executeContextStroke();
       curContext.closePath();
