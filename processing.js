@@ -6489,208 +6489,240 @@
     * @see BlendColor
     * @see Blend
     */
-    p.modes = {
-      replace: function(c1, c2) {
-        return c2;
-      },
-      blend: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                p.mix(c1 & PConstants.RED_MASK, c2 & PConstants.RED_MASK, f) & PConstants.RED_MASK |
-                p.mix(c1 & PConstants.GREEN_MASK, c2 & PConstants.GREEN_MASK, f) & PConstants.GREEN_MASK |
-                p.mix(c1 & PConstants.BLUE_MASK, c2 & PConstants.BLUE_MASK, f));
-      },
-      add: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                Math.min(((c1 & PConstants.RED_MASK) + ((c2 & PConstants.RED_MASK) >> 8) * f), PConstants.RED_MASK) & PConstants.RED_MASK |
-                Math.min(((c1 & PConstants.GREEN_MASK) + ((c2 & PConstants.GREEN_MASK) >> 8) * f), PConstants.GREEN_MASK) & PConstants.GREEN_MASK |
-                Math.min((c1 & PConstants.BLUE_MASK) + (((c2 & PConstants.BLUE_MASK) * f) >> 8), PConstants.BLUE_MASK));
-      },
-      subtract: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                Math.max(((c1 & PConstants.RED_MASK) - ((c2 & PConstants.RED_MASK) >> 8) * f), PConstants.GREEN_MASK) & PConstants.RED_MASK |
-                Math.max(((c1 & PConstants.GREEN_MASK) - ((c2 & PConstants.GREEN_MASK) >> 8) * f), PConstants.BLUE_MASK) & PConstants.GREEN_MASK |
-                Math.max((c1 & PConstants.BLUE_MASK) - (((c2 & PConstants.BLUE_MASK) * f) >> 8), 0));
-      },
-      lightest: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                Math.max(c1 & PConstants.RED_MASK, ((c2 & PConstants.RED_MASK) >> 8) * f) & PConstants.RED_MASK |
-                Math.max(c1 & PConstants.GREEN_MASK, ((c2 & PConstants.GREEN_MASK) >> 8) * f) & PConstants.GREEN_MASK |
-                Math.max(c1 & PConstants.BLUE_MASK, ((c2 & PConstants.BLUE_MASK) * f) >> 8));
-      },
-      darkest: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                p.mix(c1 & PConstants.RED_MASK, Math.min(c1 & PConstants.RED_MASK, ((c2 & PConstants.RED_MASK) >> 8) * f), f) & PConstants.RED_MASK |
-                p.mix(c1 & PConstants.GREEN_MASK, Math.min(c1 & PConstants.GREEN_MASK, ((c2 & PConstants.GREEN_MASK) >> 8) * f), f) & PConstants.GREEN_MASK |
-                p.mix(c1 & PConstants.BLUE_MASK, Math.min(c1 & PConstants.BLUE_MASK, ((c2 & PConstants.BLUE_MASK) * f) >> 8), f));
-      },
-      difference: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (ar > br) ? (ar - br) : (br - ar);
-        var cg = (ag > bg) ? (ag - bg) : (bg - ag);
-        var cb = (ab > bb) ? (ab - bb) : (bb - ab);
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      exclusion: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = ar + br - ((ar * br) >> 7);
-        var cg = ag + bg - ((ag * bg) >> 7);
-        var cb = ab + bb - ((ab * bb) >> 7);
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      multiply: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (ar * br) >> 8;
-        var cg = (ag * bg) >> 8;
-        var cb = (ab * bb) >> 8;
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      screen: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = 255 - (((255 - ar) * (255 - br)) >> 8);
-        var cg = 255 - (((255 - ag) * (255 - bg)) >> 8);
-        var cb = 255 - (((255 - ab) * (255 - bb)) >> 8);
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      hard_light: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (br < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7));
-        var cg = (bg < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7));
-        var cb = (bb < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      soft_light: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = ((ar * br) >> 7) + ((ar * ar) >> 8) - ((ar * ar * br) >> 15);
-        var cg = ((ag * bg) >> 7) + ((ag * ag) >> 8) - ((ag * ag * bg) >> 15);
-        var cb = ((ab * bb) >> 7) + ((ab * ab) >> 8) - ((ab * ab * bb) >> 15);
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      overlay: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (ar < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7));
-        var cg = (ag < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7));
-        var cb = (ab < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      dodge: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (br === 255) ? 255 : p.peg((ar << 8) / (255 - br)); // division requires pre-peg()-ing
-        var cg = (bg === 255) ? 255 : p.peg((ag << 8) / (255 - bg)); // "
-        var cb = (bb === 255) ? 255 : p.peg((ab << 8) / (255 - bb)); // "
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      burn: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (br === 0) ? 0 : 255 - p.peg(((255 - ar) << 8) / br); // division requires pre-peg()-ing
-        var cg = (bg === 0) ? 0 : 255 - p.peg(((255 - ag) << 8) / bg); // "
-        var cb = (bb === 0) ? 0 : 255 - p.peg(((255 - ab) << 8) / bb); // "
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
+    p.modes = (function() {
+      var ALPHA_MASK = PConstants.ALPHA_MASK,
+        RED_MASK = PConstants.RED_MASK,
+        GREEN_MASK = PConstants.GREEN_MASK,
+        BLUE_MASK = PConstants.BLUE_MASK,
+        min = Math.min,
+        max = Math.max;
+
+      function applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb) {
+        var a = min(((c1 & 0xff000000) >>> 24) + f, 0xff) << 24;
+
+        var r = (ar + (((cr - ar) * f) >> 8));
+        r = ((r < 0) ? 0 : ((r > 255) ? 255 : r)) << 16;
+
+        var g = (ag + (((cg - ag) * f) >> 8));
+        g = ((g < 0) ? 0 : ((g > 255) ? 255 : g)) << 8;
+
+        var b = ab + (((cb - ab) * f) >> 8);
+        b = (b < 0) ? 0 : ((b > 255) ? 255 : b);
+
+        return (a | r | g | b);
       }
-    };
+
+      return {
+        replace: function(c1, c2) {
+          return c2;
+        },
+        blend: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK),
+            ag = (c1 & GREEN_MASK),
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK),
+            bg = (c2 & GREEN_MASK),
+            bb = (c2 & BLUE_MASK);
+
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  (ar + (((br - ar) * f) >> 8)) & RED_MASK |
+                  (ag + (((bg - ag) * f) >> 8)) & GREEN_MASK |
+                  (ab + (((bb - ab) * f) >> 8)) & BLUE_MASK);
+        },
+        add: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24;
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  min(((c1 & RED_MASK) + ((c2 & RED_MASK) >> 8) * f), RED_MASK) & RED_MASK |
+                  min(((c1 & GREEN_MASK) + ((c2 & GREEN_MASK) >> 8) * f), GREEN_MASK) & GREEN_MASK |
+                  min((c1 & BLUE_MASK) + (((c2 & BLUE_MASK) * f) >> 8), BLUE_MASK));
+        },
+        subtract: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24;
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  max(((c1 & RED_MASK) - ((c2 & RED_MASK) >> 8) * f), GREEN_MASK) & RED_MASK |
+                  max(((c1 & GREEN_MASK) - ((c2 & GREEN_MASK) >> 8) * f), BLUE_MASK) & GREEN_MASK |
+                  max((c1 & BLUE_MASK) - (((c2 & BLUE_MASK) * f) >> 8), 0));
+        },
+        lightest: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24;
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  max(c1 & RED_MASK, ((c2 & RED_MASK) >> 8) * f) & RED_MASK |
+                  max(c1 & GREEN_MASK, ((c2 & GREEN_MASK) >> 8) * f) & GREEN_MASK |
+                  max(c1 & BLUE_MASK, ((c2 & BLUE_MASK) * f) >> 8));
+        },
+        darkest: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK),
+            ag = (c1 & GREEN_MASK),
+            ab = (c1 & BLUE_MASK),
+            br = min(c1 & RED_MASK, ((c2 & RED_MASK) >> 8) * f),
+            bg = min(c1 & GREEN_MASK, ((c2 & GREEN_MASK) >> 8) * f),
+            bb = min(c1 & BLUE_MASK, ((c2 & BLUE_MASK) * f) >> 8);
+
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  (ar + (((br - ar) * f) >> 8)) & RED_MASK |
+                  (ag + (((bg - ag) * f) >> 8)) & GREEN_MASK |
+                  (ab + (((bb - ab) * f) >> 8)) & BLUE_MASK);
+        },
+        difference: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = (ar > br) ? (ar - br) : (br - ar),
+            cg = (ag > bg) ? (ag - bg) : (bg - ag),
+            cb = (ab > bb) ? (ab - bb) : (bb - ab);
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        exclusion: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = ar + br - ((ar * br) >> 7),
+            cg = ag + bg - ((ag * bg) >> 7),
+            cb = ab + bb - ((ab * bb) >> 7);
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        multiply: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = (ar * br) >> 8,
+            cg = (ag * bg) >> 8,
+            cb = (ab * bb) >> 8;
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        screen: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = 255 - (((255 - ar) * (255 - br)) >> 8),
+            cg = 255 - (((255 - ag) * (255 - bg)) >> 8),
+            cb = 255 - (((255 - ab) * (255 - bb)) >> 8);
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        hard_light: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = (br < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7)),
+            cg = (bg < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7)),
+            cb = (bb < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        soft_light: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = ((ar * br) >> 7) + ((ar * ar) >> 8) - ((ar * ar * br) >> 15),
+            cg = ((ag * bg) >> 7) + ((ag * ag) >> 8) - ((ag * ag * bg) >> 15),
+            cb = ((ab * bb) >> 7) + ((ab * ab) >> 8) - ((ab * ab * bb) >> 15);
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        overlay: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = (ar < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7)),
+            cg = (ag < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7)),
+            cb = (ab < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        dodge: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK);
+
+          var cr = 255;
+          if (br !== 255) {
+            cr = (ar << 8) / (255 - br);
+            cr = (cr < 0) ? 0 : ((cr > 255) ? 255 : cr);
+          }
+
+          var cg = 255;
+          if (bg !== 255) {
+            cg = (ag << 8) / (255 - bg);
+            cg = (cg < 0) ? 0 : ((cg > 255) ? 255 : cg);
+          }
+
+          var cb = 255;
+          if (bb !== 255) {
+            cb = (ab << 8) / (255 - bb);
+            cb = (cb < 0) ? 0 : ((cb > 255) ? 255 : cb);
+          }
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        burn: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK);
+
+          var cr = 0;
+          if (br !== 0) {
+            cr = ((255 - ar) << 8) / br;
+            cr = 255 - ((cr < 0) ? 0 : ((cr > 255) ? 255 : cr));
+          }
+
+          var cg = 0;
+          if (bg !== 0) {
+            cg = ((255 - ag) << 8) / bg;
+            cg = 255 - ((cg < 0) ? 0 : ((cg > 255) ? 255 : cg));
+          }
+
+          var cb = 0;
+          if (bb !== 0) {
+            cb = ((255 - ab) << 8) / bb;
+            cb = 255 - ((cb < 0) ? 0 : ((cb > 255) ? 255 : cb));
+          }
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        }
+      };
+    }());
 
     function color$4(aValue1, aValue2, aValue3, aValue4) {
       var r, g, b, a;
@@ -7106,55 +7138,37 @@
     * @see color
     */
     p.blendColor = function(c1, c2, mode) {
-      var color = 0;
-      switch (mode) {
-      case PConstants.REPLACE:
-        color = p.modes.replace(c1, c2);
-        break;
-      case PConstants.BLEND:
-        color = p.modes.blend(c1, c2);
-        break;
-      case PConstants.ADD:
-        color = p.modes.add(c1, c2);
-        break;
-      case PConstants.SUBTRACT:
-        color = p.modes.subtract(c1, c2);
-        break;
-      case PConstants.LIGHTEST:
-        color = p.modes.lightest(c1, c2);
-        break;
-      case PConstants.DARKEST:
-        color = p.modes.darkest(c1, c2);
-        break;
-      case PConstants.DIFFERENCE:
-        color = p.modes.difference(c1, c2);
-        break;
-      case PConstants.EXCLUSION:
-        color = p.modes.exclusion(c1, c2);
-        break;
-      case PConstants.MULTIPLY:
-        color = p.modes.multiply(c1, c2);
-        break;
-      case PConstants.SCREEN:
-        color = p.modes.screen(c1, c2);
-        break;
-      case PConstants.HARD_LIGHT:
-        color = p.modes.hard_light(c1, c2);
-        break;
-      case PConstants.SOFT_LIGHT:
-        color = p.modes.soft_light(c1, c2);
-        break;
-      case PConstants.OVERLAY:
-        color = p.modes.overlay(c1, c2);
-        break;
-      case PConstants.DODGE:
-        color = p.modes.dodge(c1, c2);
-        break;
-      case PConstants.BURN:
-        color = p.modes.burn(c1, c2);
-        break;
+      if (mode === PConstants.REPLACE) {
+        return p.modes.replace(c1, c2);
+      } else if (mode === PConstants.BLEND) {
+        return p.modes.blend(c1, c2);
+      } else if (mode === PConstants.ADD) {
+        return p.modes.add(c1, c2);
+      } else if (mode === PConstants.SUBTRACT) {
+        return p.modes.subtract(c1, c2);
+      } else if (mode === PConstants.LIGHTEST) {
+        return p.modes.lightest(c1, c2);
+      } else if (mode === PConstants.DARKEST) {
+        return p.modes.darkest(c1, c2);
+      } else if (mode === PConstants.DIFFERENCE) {
+        return p.modes.difference(c1, c2);
+      } else if (mode === PConstants.EXCLUSION) {
+        return p.modes.exclusion(c1, c2);
+      } else if (mode === PConstants.MULTIPLY) {
+        return p.modes.multiply(c1, c2);
+      } else if (mode === PConstants.SCREEN) {
+        return p.modes.screen(c1, c2);
+      } else if (mode === PConstants.HARD_LIGHT) {
+        return p.modes.hard_light(c1, c2);
+      } else if (mode === PConstants.SOFT_LIGHT) {
+        return p.modes.soft_light(c1, c2);
+      } else if (mode === PConstants.OVERLAY) {
+        return p.modes.overlay(c1, c2);
+      } else if (mode === PConstants.DODGE) {
+        return p.modes.dodge(c1, c2);
+      } else if (mode === PConstants.BURN) {
+        return p.modes.burn(c1, c2);
       }
-      return color;
     };
 
     ////////////////////////////////////////////////////////////////////////////
