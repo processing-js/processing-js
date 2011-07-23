@@ -19326,6 +19326,11 @@
    */
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
+    
+    // before running through init, clear the instances list, to prevent
+    // sketch duplication when page content is dynamically swapped without
+    // swapping out processing.js
+    processingInstances = [];
 
     var canvas = document.getElementsByTagName('canvas'),
       filenames;
