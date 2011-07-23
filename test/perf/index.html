@@ -145,11 +145,12 @@
       function drawResultsChart() {
         var dataTable = new google.visualization.DataTable();
         dataTable.addColumn('string', 'Test');
-        dataTable.addColumn('number', 'Time (ms)');
+        dataTable.addColumn('number', 'Time per Frame (ms)');
         var test, i;
         for (i=0; i<tests.length; i++) {
           test = tests[i];
-          dataTable.addRow([test.path, test.time]);
+          dataTable.addRow([test.path,
+                            test.time / (test.iterationOverride || iterationCount)]);
         }
 
         var chart = new google.visualization.BarChart(document.getElementById('results-chart'));
@@ -159,7 +160,7 @@
                      height: 600,
                      legend: 'none',
                      vAxis: {title: 'Test', textPosition: 'none'},
-                     hAxis: {title: 'Duration (ms)'}
+                     hAxis: {title: 'Time per Frame (ms)'}
                    });
       }
 
@@ -168,6 +169,8 @@
         results.innerHTML = '';
         var total = document.getElementById('total');
         total.innerHTML = '';
+        var chart = document.getElementById('results-chart');
+        chart.innerHTML = '';
 
         document.getElementById('report').style.display = "none";
         finishedTests = null;
