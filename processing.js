@@ -8583,6 +8583,43 @@
     p.match = function(str, regexp) {
       return str.match(regexp);
     };
+    /**
+     * The startsWith() function tests if a string starts with the specified prefix.  If the prefix
+     * is the empty String or equal to the subject String, startsWith() will also return true.
+     *
+     * @param {String} prefix   the String used to compare against the start of the subject String.
+     * @param {int}    toffset  (optional) an offset into the subject String where searching should begin.
+     *
+     * @return {boolean} true if the subject String starts with the prefix.
+     */
+    p.__startsWith = function(subject, prefix, toffset) {
+      if (typeof subject !== "string") {
+        return subject.startsWith.apply(subject, removeFirstArgument(arguments));
+      }
+
+      toffset = toffset || 0;
+      if (toffset < 0 || toffset > subject.length) {
+        return false;
+      }
+      return (prefix === '' || prefix === subject) ? true : (subject.indexOf(prefix) === toffset);
+    };
+    /**
+     * The endsWith() function tests if a string ends with the specified suffix.  If the suffix
+     * is the empty String, endsWith() will also return true.
+     *
+     * @param {String} suffix   the String used to compare against the end of the subject String.
+     *
+     * @return {boolean} true if the subject String starts with the prefix.
+     */
+    p.__endsWith = function(subject, suffix) {
+      if (typeof subject !== "string") {
+        return subject.endsWith.apply(subject, removeFirstArgument(arguments));
+      }
+
+      var suffixLen = suffix ? suffix.length : 0;
+      return (suffix === '' || suffix === subject) ? true :
+        (subject.indexOf(suffix) === subject.length - suffixLen);
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Other java specific functions
@@ -17103,7 +17140,7 @@
       "vertex", "width", "XMLElement", "year", "__contains", "__equals", "__frameRate",
       "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
       "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
-      "__toCharArray", "__split"];
+      "__toCharArray", "__split", "__startsWith", "__endsWith"];
 
     var members = {};
     var i, l;
@@ -17473,7 +17510,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|hashCode|toCharArray|printStackTrace|split)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
