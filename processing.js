@@ -8089,6 +8089,23 @@
       }
     };
 
+    /**
+    * Number-to-String formatting function. Prepends "plus" or "minus" depending
+    * on whether the value is positive or negative, respectively, after padding
+    * the value with zeroes on the left and right, the number of zeroes used dictated
+    * by the values 'leftDigits' and 'rightDigits'. 'value' cannot be an array.
+    *
+    * @param {int|float} value                 the number to format
+    * @param {String} plus                     the prefix for positive numbers
+    * @param {String} minus                    the prefix for negative numbers
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfCore
+    */
     function nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group) {
       var sign = (value < 0) ? minus : plus;
       var autoDetectDecimals = rightDigits === 0;
@@ -8141,6 +8158,25 @@
       }
     }
 
+    /**
+    * Number-to-String formatting function. Prepends "plus" or "minus" depending
+    * on whether the value is positive or negative, respectively, after padding
+    * the value with zeroes on the left and right, the number of zeroes used dictated
+    * by the values 'leftDigits' and 'rightDigits'. 'value' can be an array;
+    * if the input is an array, each value in it is formatted separately, and
+    * an array with formatted values is returned.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {String} plus                     the prefix for positive numbers
+    * @param {String} minus                    the prefix for negative numbers
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfCoreScalar
+    */
     function nfCore(value, plus, minus, leftDigits, rightDigits, group) {
       if (value instanceof Array) {
         var arr = [];
@@ -8171,7 +8207,7 @@
     * @see nfp
     * @see nfc
     */
-    p.nf  = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
+    p.nf = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
 
     /**
     * Utility function for formatting numbers into strings. Similar to nf()  but leaves a blank space in front
@@ -15701,6 +15737,14 @@
       verticalTextAlignment = yalign || PConstants.BASELINE;
     };
 
+    /**
+     * toP5String converts things with arbitrary data type into
+     * string values, for text rendering.
+     *
+     * @param {any} any object that can be converted into a string
+     *
+     * @return {String} the string representation of the input
+     */
     function toP5String(obj) {
       if(obj instanceof String) {
         return obj;
