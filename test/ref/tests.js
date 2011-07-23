@@ -87,7 +87,7 @@ var tests = [
   { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"] },
   { path: "text-valign-BASELINE.pde", tags: ["2D", "Text"] },
   { path: "text-valign-CENTER.pde", tags: ["2D", "Text"] },
-  { path: "text-valign-TOP.pde", tags: ["2D", "Text"] }, 
+  { path: "text-valign-TOP.pde", tags: ["2D", "Text"] },
   { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
