@@ -9,7 +9,7 @@ Map.Entry[] ar1 = hm.entrySet().toArray();
 // key set array
 Object[] ar2 = hm.keySet().toArray(); 
 // values array
-Object[] ar3 = hm.values();
+Object[] ar3 = hm.values().toArray();
 
 _checkEqual(ar1 instanceof Array, true);
 _checkEqual(ar1.length, 3);

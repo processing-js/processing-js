@@ -964,6 +964,22 @@
         });
       };
 
+      this.values = function() {
+        return new Set(
+
+        function(pair) {
+          return pair.value;
+        },
+
+        function(value) {
+          return hashMap.containsValue(value);
+        },
+
+        function(value) {
+          return hashMap.removeByValue(value);
+        });
+      };
+
       this.put = function(key, value) {
         var index = getBucketIndex(key);
         var bucket = buckets[index];
@@ -1022,18 +1038,25 @@
         return null;
       };
 
+      this.removeByValue = function(value) {
+        var bucket, i, ilen, pair;
+        for (bucket in buckets) {
+          if (!isNaN(bucket)) {
+            for (i = 0, ilen = buckets[bucket].length; i < ilen; i++) {
+              pair = buckets[bucket][i];
+              // removal on values is based on identity, not equality
+              if (pair.value === value) {
+                buckets[bucket].splice(i, 1);
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      };      
+
       this.size = function() {
         return count;
-      };
-
-      this.values = function() {
-        var result = [];
-        var it = this.entrySet().iterator();
-        while (it.hasNext()) {
-          var entry = it.next();
-          result.push(entry.getValue());
-        }
-        return result;
       };
     }
 
