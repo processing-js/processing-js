@@ -48,3 +48,27 @@ interB = lerpColor(from, to, .66);
 
 _checkEqual(color.toArray(interA), [136, 102, 50, 144]);
 _checkEqual(color.toArray(interB), [69, 102, 100, 108]);
+
+
+// HSB
+
+colorMode(HSB, 255);
+  
+from = color(204, 102, 0);
+to = color(0, 102, 153);
+interA = lerpColor(from, to, .33);
+interB = lerpColor(from, to, .66);
+
+_checkEqual(color.toArray(interA), [50, 44, 44, 255]);
+_checkEqual(color.toArray(interB), [101, 74, 74, 255]);
+
+// HSB with alpha
+
+from = color(70, 102, 80, 145);
+to = color(200, 10, 58, 28);
+interA = lerpColor(from, to, .33);
+interB = lerpColor(from, to, .66);
+
+_checkEqual(color.toArray(interA), [52, 73, 65, 106]);
+_checkEqual(color.toArray(interB), [54, 58, 65, 67]);
+
