@@ -7,16 +7,11 @@
 test/parser/Fry-Visualizing-Data/ch05-salaryper/step_08b_web/step_08b_web.pde
 # createWriter (see #166)
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_08c_graphviz/step_08c_graphviz.pde
-# startsWith and endsWith String functions
-test/parser/Processing-Book-001/Units 00-17/12 Data 3/_10/_10.pde
 # test harness issue: Background image must be the same dimensions as the canvas.
 test/parser/Processing-Book-001/Units 31-42/40 Image 5/_11/_11.pde
 # createWriter (see #166)
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_04/_04.pde
 # createWriter (see #166)
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
-# startsWith and endsWith String functions
-test/parser/Processing-Book-001/Units 43-51/46 Input 6/_07/_07.pde
 # Known issue with overloaded methods
 test/unit/overloadedMethodCall.pde
-

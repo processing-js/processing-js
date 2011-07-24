@@ -1,22 +1,21 @@
 #!/usr/bin/env python
-
+ 
 PORT = 9914
+SERVER = '127.0.0.1'
+ 
+import SimpleHTTPServer
+import BaseHTTPServer
+import SocketServer
+
+Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+
+class Server(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
+    pass
+
+httpd = Server((SERVER, PORT), Handler)
+print "Web Server listening on http://%s:%s/ (stop with ctrl+c)..." % (SERVER, PORT)
 
 try:
-  try:
-    import SimpleHTTPServer
-    import SocketServer
-
-    Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-    httpd = SocketServer.TCPServer(("localhost", PORT), Handler)
-    print "Web Server listening on http://localhost:%s/ (stop with ctrl+c)..." % PORT
-    httpd.serve_forever()
-
-  except ImportError:
-    from http.server import HTTPServer, SimpleHTTPRequestHandler
-
-    httpd = HTTPServer(('localhost', 9914), SimpleHTTPRequestHandler)
-    print "Web Server listening on http://localhost:%s/ (stop with ctrl+c)..." % PORT
     httpd.serve_forever()
 except KeyboardInterrupt:
-  pass
+    print "Going down..."
