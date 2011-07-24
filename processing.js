@@ -1041,7 +1041,7 @@
       this.removeByValue = function(value) {
         var bucket, i, ilen, pair;
         for (bucket in buckets) {
-          if (!isNaN(bucket)) {
+          if (buckets.hasOwnProperty(bucket)) {
             for (i = 0, ilen = buckets[bucket].length; i < ilen; i++) {
               pair = buckets[bucket][i];
               // removal on values is based on identity, not equality
