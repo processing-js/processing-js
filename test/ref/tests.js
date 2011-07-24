@@ -24,6 +24,8 @@ var tests = [
   { path: "loadShape9.pde", tags: ["2D","SVG"], epsilonOverride: 0.21 },
   { path: "loadShape10.pde", tags: ["2D","SVG"], epsilonOverride: 0.12 },
   { path: "loadShape11.pde", tags: ["2D","SVG"], epsilonOverride: 0.14 },
+  { path: "loadShape16.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
+  { path: "loadShape17.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
   { path: "loadShape12.pde", tags: ["2D","SVG"] },
   { path: "loadShape13.pde", tags: ["2D","SVG"] },
   { path: "loadShape14.pde", tags: ["2D","SVG"] },
