@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../../processing.js"></script>
+  <link rel="stylesheet" href="../style.css"/></head>
+<body><h1><a href="http://processingjs.org/">Processing.js</a></h1>
+<h2>Adding existing images to a Sketch's ImageCache</h2>
+
+<canvas id="canvas"></canvas>
+
+<script>
+/**
+ * This sketch demonstrates how to load images via JS or the DOM separate to
+ * processing.js, and then pass these fully loaded images into a sketch's
+ * image cache, to be used by functions like loadImage().  Normally the image
+ * cache assumes that images need to be downloaded (e.g., only a URL is provided).
+ * However, an optional img argument (e.g., an Image) can be passed in too.
+ */
+var logo = new Image(),
+    canvas = document.getElementById('canvas'),
+    sketch,
+    p;
+
+// Start the sketch only after the image is fully loaded via pure JS
+logo.onload = function() {
+  sketch = new Processing.Sketch(function(p) {
+    var pimg;
+    p.setup = function() {
+      p.size(200,200);
+      pimg = p.loadImage("pjs.png");
+    };
+
+    p.draw = function() {
+      p.background('#ffffff');
+      p.image(pimg, 0, 0);
+    };
+  });
+
+  sketch.imageCache.add("pjs.png", logo);
+
+  p = new Processing(canvas, sketch);
+};
+
+// Load the image
+logo.src = "pjs.png";
+</script>
+
+</body>
+</html>
