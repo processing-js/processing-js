@@ -23,7 +23,7 @@
     if (!checkbox) {
       return false;
     }
-    return checkbox.checked;
+    return checkbox.checked || checkbox.value;
   }
 
   global.runSketch = function(callback) {
@@ -34,6 +34,9 @@
       var sketch = Processing.compile(code.value);
 
       if (waitForExit()) {
+        if (!/exit\(\);/.test(code.value)) {
+          throw "exit() not found in sketch. Add the exit() command, and re-run the sketch.";
+        }
         sketch.onExit = callback;
         instance = new Processing(canvas, sketch);
       } else {
