@@ -9766,7 +9766,7 @@
 
       // Then we try to get the real value from the browser
       if (document.defaultView.getComputedStyle) {
-        var leadDivHeight = document.defaultView.getComputedStyle(leadDiv).getPropertyValue("height");
+        var leadDivHeight = document.defaultView.getComputedStyle(leadDiv,null).getPropertyValue("height");
         leadDivHeight = leadDivHeight.replace("px","");
         if (leadDivHeight >= curTextSize * 2) {
           curTextLeading = correctionFactor * Math.round(leadDivHeight/2);
