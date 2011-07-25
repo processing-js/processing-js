@@ -8,7 +8,7 @@
 
 <canvas id="canvas"></canvas>
 
-<script>
+<script id="script1">
 /**
  * This sketch demonstrates how to load images via JS or the DOM separate to
  * processing.js, and then pass these fully loaded images into a sketch's
@@ -43,6 +43,11 @@ logo.onload = function() {
 
 // Load the image
 logo.src = "pjs.png";
+</script>
+
+<pre id="code1"></pre>
+<script>
+document.getElementById("code1").textContent = document.getElementById("script1").text;
 </script>
 
 </body>
