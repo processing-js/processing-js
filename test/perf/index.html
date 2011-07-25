@@ -3,6 +3,10 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>Processing.js Performance Tests</title>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>
+      google.load('visualization', '1', {'packages':['corechart']});
+    </script>
     <script src="../../processing.js"></script>
     <script src="tests.js"></script>
     <style>
@@ -19,6 +23,7 @@
       <option value="2D,3D" selected="selected">2D and 3D</option>
       <option value="2D">2D Only</option>
       <option value="3D">3D Only</option>
+      <option value="Blend">Blend Only</option>
       <option value="PImage">PImage Only</option>
       <option value="PVector">PVector Only</option>
       <option value="Calibration">Calibration</option>
@@ -28,6 +33,7 @@
 
     <h3>Results [total time for all tests: <span id="totalTime">0</span>ms] <button id="report" style="display:none" onclick="report();">Generate Report</button></h3>
     <div id="status" style="margin-bottom: 10px; display: none;">Running... (this may take some time)</div>
+    <div id="results-chart"></div>
     <div id="results" style="margin: 5px; padding-top: 10px;"></div>
     <div id="total"></div>
 
@@ -137,11 +143,35 @@
         return test;
       }
 
+      function drawResultsChart() {
+        var dataTable = new google.visualization.DataTable();
+        dataTable.addColumn('string', 'Test');
+        dataTable.addColumn('number', 'Time per Frame (ms)');
+        var test, i;
+        for (i=0; i<tests.length; i++) {
+          test = tests[i];
+          dataTable.addRow([test.path,
+                            test.time / (test.iterationOverride || iterationCount)]);
+        }
+
+        var chart = new google.visualization.BarChart(document.getElementById('results-chart'));
+        chart.draw(dataTable,
+                   { title: 'Performance Test Results',
+                     width: 800,
+                     height: 600,
+                     legend: 'none',
+                     vAxis: {title: 'Test', textPosition: 'none'},
+                     hAxis: {title: 'Time per Frame (ms)'}
+                   });
+      }
+
       function runTests(tests) {
         var results = document.getElementById('results');
         results.innerHTML = '';
         var total = document.getElementById('total');
         total.innerHTML = '';
+        var chart = document.getElementById('results-chart');
+        chart.innerHTML = '';
 
         document.getElementById('report').style.display = "none";
         finishedTests = null;
@@ -177,10 +207,10 @@
             document.getElementById('status').innerHTML = info;
             total.innerHTML = info;
             finishedTests = tests;
-            
+
             document.getElementById('status').style.display = "none";
             document.getElementById('report').style.display = "inline";
-            
+
             // sort the tests into failed and passed
             var sortedDivs = [];
             while (results.hasChildNodes()) {
@@ -196,15 +226,15 @@
                 return 1;
               }
             });*/
-            
+
             var failedDiv = document.createElement('div');
             failedDiv.innerHTML = '<hr><h3>Failed ' + failedTests + ' of ' + (passed + failedTests) + '</h3>';
             results.appendChild(failedDiv);
-            
+
             var passDiv = document.createElement('div');
             passDiv.innerHTML = '<hr><h3>Passed ' + passed + ' of ' + (passed + failedTests) + '</h3>';
             results.appendChild(passDiv);
-            
+
             for (var i = 0; i < sortedDivs.length; i++) {
               if (sortedDivs[i].className === 'failed') {
                 failedDiv.appendChild(sortedDivs[i]);
@@ -212,12 +242,14 @@
                 passDiv.appendChild(sortedDivs[i]);
               }
             }
-            
+
             if (failedDiv.childNodes.length === 0) {
               var temp = document.createElement('p');
               temp.innerHTML = 'No failed tests';
               failedDiv.appendChild(temp);
             }
+
+            drawResultsChart();
           }
         }
 
