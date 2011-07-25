@@ -9,8 +9,8 @@ String sites2 =  "<?xml version='1.0'?>\n"+
                 "  <site id='0' url='processing.org'>Processing</site>\n"+
                 "</websites>";
 
-XMLElement xml1 = new XMLElement(sites1);
-XMLElement xml2 = new XMLElement(sites2);
+XMLElement xml1 = XMLElement.parse(sites1);
+XMLElement xml2 = XMLElement.parse(sites2);
 
 xml1.removeChildAtIndex(1);
 _checkTrue(xml1.equals(xml2));

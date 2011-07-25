@@ -16,7 +16,7 @@ String menu =   "<?xml version='1.0'?>\n"+
                 "  </breakfast-menu> \n"+
                 "</menu>";
 
-XMLElement xml = new XMLElement(menu);
+XMLElement xml = XMLElement.parse(menu);
 XMLElement[] children = xml.getChildren("breakfast-menu/food");
 for (int i=0; i<children.length; i++) {
   String name = children[i].getName();
