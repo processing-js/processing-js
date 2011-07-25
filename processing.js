@@ -8564,6 +8564,23 @@
       return subject.valueOf() === other.valueOf();
     };
     /**
+     * The __equalsIgnoreCase() function compares two strings to see if they are the same.
+     * Returns true if the strings are the same, either when forced to all lower case or 
+     * all upper case.
+     *
+     * @param {String} subject  a string used for comparison
+     * @param {String} other  a string used for comparison with
+     *
+     * @return {boolean} true is the strings are the same, ignoring case. false otherwise
+     */
+    p.__equalsIgnoreCase = function(subject, other) {
+      if (typeof subject !== "string") {
+        return subject.equalsIgnoreCase.apply(subject, removeFirstArgument(arguments));
+      }
+
+      return subject.match(new RegExp(other, "i"))[0] === subject;
+    };
+    /**
      * The __toCharArray() function splits the string into a char array.
      *
      * @param {String} subject The string
@@ -17182,10 +17199,11 @@
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
-      "vertex", "width", "XMLElement", "year", "__contains", "__equals", "__frameRate",
-      "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
-      "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
-      "__toCharArray", "__split", "__codePointAt", "__startsWith", "__endsWith"];
+      "vertex", "width", "XMLElement", "year", "__contains", "__equals",
+      "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
+      "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
+      "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
+      "__codePointAt", "__startsWith", "__endsWith"];
 
     var members = {};
     var i, l;
@@ -17555,7 +17573,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
