@@ -950,18 +950,36 @@
 
       this.keySet = function() {
         return new Set(
+          // get key from pair
+          function(pair) {
+            return pair.key;
+          },
+          // is-in test
+          function(key) {
+            return hashMap.containsKey(key);
+          },
+          // remove from hashmap by key
+          function(key) {
+            return hashMap.remove(key);
+          }
+        );
+      };
 
-        function(pair) {
-          return pair.key;
-        },
-
-        function(key) {
-          return hashMap.containsKey(key);
-        },
-
-        function(key) {
-          return hashMap.remove(key);
-        });
+      this.values = function() {
+        return new Set(
+          // get value from pair
+          function(pair) {
+            return pair.value;
+          },
+          // is-in test
+          function(value) {
+            return hashMap.containsValue(value);
+          },
+          // remove from hashmap by value
+          function(value) {
+            return hashMap.removeByValue(value);
+          }
+        );
       };
 
       this.put = function(key, value) {
@@ -1022,18 +1040,25 @@
         return null;
       };
 
+      this.removeByValue = function(value) {
+        var bucket, i, ilen, pair;
+        for (bucket in buckets) {
+          if (buckets.hasOwnProperty(bucket)) {
+            for (i = 0, ilen = buckets[bucket].length; i < ilen; i++) {
+              pair = buckets[bucket][i];
+              // removal on values is based on identity, not equality
+              if (pair.value === value) {
+                buckets[bucket].splice(i, 1);
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      };      
+
       this.size = function() {
         return count;
-      };
-
-      this.values = function() {
-        var result = [];
-        var it = this.entrySet().iterator();
-        while (it.hasNext()) {
-          var entry = it.next();
-          result.push(entry.getValue());
-        }
-        return result;
       };
     }
 
