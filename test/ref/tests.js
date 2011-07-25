@@ -83,6 +83,7 @@ var tests = [
   { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
   { path: "text-width_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
   { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 }, /* See ticket #1172 */
+  { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
   { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
