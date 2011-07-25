@@ -950,34 +950,36 @@
 
       this.keySet = function() {
         return new Set(
-
-        function(pair) {
-          return pair.key;
-        },
-
-        function(key) {
-          return hashMap.containsKey(key);
-        },
-
-        function(key) {
-          return hashMap.remove(key);
-        });
+          // get key from pair
+          function(pair) {
+            return pair.key;
+          },
+          // is-in test
+          function(key) {
+            return hashMap.containsKey(key);
+          },
+          // remove from hashmap by key
+          function(key) {
+            return hashMap.remove(key);
+          }
+        );
       };
 
       this.values = function() {
         return new Set(
-
-        function(pair) {
-          return pair.value;
-        },
-
-        function(value) {
-          return hashMap.containsValue(value);
-        },
-
-        function(value) {
-          return hashMap.removeByValue(value);
-        });
+          // get value from pair
+          function(pair) {
+            return pair.value;
+          },
+          // is-in test
+          function(value) {
+            return hashMap.containsValue(value);
+          },
+          // remove from hashmap by value
+          function(value) {
+            return hashMap.removeByValue(value);
+          }
+        );
       };
 
       this.put = function(key, value) {
