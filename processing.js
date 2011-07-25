@@ -9685,25 +9685,27 @@
      * (from "lead", used for vertical space) values for the currently active font.
      */
     function computeFontMetrics() {
+      var emQuad = 250;
+      var correctionFactor = curTextSize / emQuad;
       var canvas = document.createElement("canvas");
-      canvas.width = 3 * curTextSize;
-      canvas.height = 3 * curTextSize;
+      canvas.width = 2*emQuad;
+      canvas.height = 2*emQuad;
       canvas.style.opacity = 0;
       var ctx = canvas.getContext("2d");
-      ctx.font = curTextSize + "px " + curTextFont.name;
+      ctx.font = emQuad + "px " + curTextFont.name;
 
       // Size the canvas using a string with common max-ascent and max-descent letters.
       // Changing the canvas dimensions resets the context, so we must reset the font.
       var protrusions = "dbflkhyjqpg";
       canvas.width = ctx.measureText(protrusions).width;
-      ctx.font = curTextSize + "px " + curTextFont.name;
+      ctx.font = emQuad + "px " + curTextFont.name;
 
       // for text lead values, we meaure a multiline text container.
       var leadDiv = document.createElement("leadDiv");
       leadDiv.style.position = "absolute";
       leadDiv.style.opacity = 0;
       leadDiv.style.fontFamily = curTextFont.name;
-      leadDiv.style.fontSize = curTextSize + "px";
+      leadDiv.style.fontSize = emQuad + "px";
       leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
       document.body.appendChild(leadDiv);
 
@@ -9739,8 +9741,8 @@
       var descent = Math.round(i / w4);
 
       // Update current font metrics
-      curTextAscent = baseline - ascent;
-      curTextDescent = descent - baseline;
+      curTextAscent = correctionFactor * (baseline - ascent);
+      curTextDescent = correctionFactor * (descent - baseline);
 
       // For leading, we first set a "safe" value, using TeX's leading ratio
       curTextLeading = 1.2 * curTextSize;
@@ -9750,7 +9752,7 @@
         var leadDivHeight = document.defaultView.getComputedStyle(leadDiv).getPropertyValue("height");
         leadDivHeight = leadDivHeight.replace("px","");
         if (leadDivHeight >= curTextSize * 2) {
-          curTextLeading = Math.round(leadDivHeight/2);
+          curTextLeading = correctionFactor * Math.round(leadDivHeight/2);
         }
       }
       document.body.removeChild(leadDiv);
