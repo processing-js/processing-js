@@ -9696,7 +9696,83 @@
       noiseProfile.generator = undef;
     };
 
-    // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
+    /**
+     * [internal function] computeFontMetrics() calculates various metrics for text
+     * placement. Currently this function computes the ascent, descent and leading
+     * (from "lead", used for vertical space) values for the currently active font.
+     */
+    function computeFontMetrics() {
+      var canvas = document.createElement("canvas");
+      canvas.width = 3 * curTextSize;
+      canvas.height = 3 * curTextSize;
+      canvas.style.opacity = 0;
+      var ctx = canvas.getContext("2d");
+      ctx.font = curTextSize + "px " + curTextFont.name;
+
+      // Size the canvas using a string with common max-ascent and max-descent letters.
+      // Changing the canvas dimensions resets the context, so we must reset the font.
+      var protrusions = "dbflkhyjqpg";
+      canvas.width = ctx.measureText(protrusions).width;
+      ctx.font = curTextSize + "px " + curTextFont.name;
+
+      // for text lead values, we meaure a multiline text container.
+      var leadDiv = document.createElement("leadDiv");
+      leadDiv.style.position = "absolute";
+      leadDiv.style.opacity = 0;
+      leadDiv.style.fontFamily = curTextFont.name;
+      leadDiv.style.fontSize = curTextSize + "px";
+      leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
+      document.body.appendChild(leadDiv);
+
+      var w = canvas.width,
+          h = canvas.height,
+          baseline = h/2;
+
+      // Set all canvas pixeldata values to 255, with all the content
+      // data being 0. This lets us scan for data[i] != 255.
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "black";
+      ctx.fillText(protrusions, 0, baseline);
+      var pixelData = ctx.getImageData(0, 0, w, h).data;
+
+      // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
+      // consecutive values in the array, rather than stored as 32 bit ints.
+      var i = 0,
+          w4 = w * 4,
+          len = pixelData.length;
+
+      // Finding the ascent uses a normal, forward scanline
+      while (++i < len && pixelData[i] === 255) {
+        nop();
+      }
+      var ascent = Math.round(i / w4);
+
+      // Finding the descent uses a reverse scanline
+      i = len - 1;
+      while (--i > 0 && pixelData[i] === 255) {
+        nop();
+      }
+      var descent = Math.round(i / w4);
+
+      // Update current font metrics
+      curTextAscent = baseline - ascent;
+      curTextDescent = descent - baseline;
+
+      // For leading, we first set a "safe" value, using TeX's leading ratio
+      curTextLeading = 1.2 * curTextSize;
+
+      // Then we try to get the real value from the browser
+      if (document.defaultView.getComputedStyle) {
+        var leadDivHeight = document.defaultView.getComputedStyle(leadDiv).getPropertyValue("height");
+        leadDivHeight = leadDivHeight.replace("px","");
+        if (leadDivHeight >= curTextSize * 2) {
+          curTextLeading = Math.round(leadDivHeight/2);
+        }
+      }
+      document.body.removeChild(leadDiv);
+    }
+
     /**
     * Defines the dimension of the display window in units of pixels. The size() function must
     * be the first line in setup(). If size() is not called, the default size of the window is
@@ -15589,84 +15665,6 @@
         throw("incorrent number of parameters for createFont");
       }
     };
-
-
-    /**
-     * [internal function] computeFontMetrics() calculates various metrics for text
-     * placement. Currently this function computes the ascent, descent and leading
-     * (from "lead", used for vertical space) values for the currently active font.
-     */
-    function computeFontMetrics() {
-      var canvas = document.createElement("canvas");
-      canvas.width = 3 * curTextSize;
-      canvas.height = 3 * curTextSize;
-      canvas.style.opacity = 0;
-      var ctx = canvas.getContext("2d");
-      ctx.font = curTextSize + "px " + curTextFont.name;
-
-      // Size the canvas using a string with common max-ascent and max-descent letters.
-      // Changing the canvas dimensions resets the context, so we must reset the font.
-      var protrusions = "dbflkhyjqpg";
-      canvas.width = ctx.measureText(protrusions).width;
-      ctx.font = curTextSize + "px " + curTextFont.name;
-
-      // for text lead values, we meaure a multiline text container.
-      var leadDiv = document.createElement("leadDiv");
-      leadDiv.style.position = "absolute";
-      leadDiv.style.opacity = 0;
-      leadDiv.style.fontFamily = curTextFont.name;
-      leadDiv.style.fontSize = curTextSize + "px";
-      leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
-      document.body.appendChild(leadDiv);
-
-      var w = canvas.width,
-          h = canvas.height,
-          baseline = h/2;
-
-      // Set all canvas pixeldata values to 255, with all the content
-      // data being 0. This lets us scan for data[i] != 255.
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "black";
-      ctx.fillText(protrusions, 0, baseline);
-      var pixelData = ctx.getImageData(0, 0, w, h).data;
-
-      // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
-      // consecutive values in the array, rather than stored as 32 bit ints.
-      var i = 0,
-          w4 = w * 4,
-          len = pixelData.length;
-
-      // Finding the ascent uses a normal, forward scanline
-      while (++i < len && pixelData[i] === 255) {
-        nop();
-      }
-      var ascent = Math.round(i / w4);
-
-      // Finding the descent uses a reverse scanline
-      i = len - 1;
-      while (--i > 0 && pixelData[i] === 255) {
-        nop();
-      }
-      var descent = Math.round(i / w4);
-
-      // Update current font metrics
-      curTextAscent = baseline - ascent;
-      curTextDescent = descent - baseline;
-
-      // For leading, we first set a "safe" value, using TeX's leading ratio
-      curTextLeading = 1.2 * curTextSize;
-
-      // Then we try to get the real value from the browser
-      if (document.defaultView.getComputedStyle) {
-        var leadDivHeight = document.defaultView.getComputedStyle(leadDiv).getPropertyValue("height");
-        leadDivHeight = leadDivHeight.replace("px","");
-        if (leadDivHeight >= curTextSize * 2) {
-          curTextLeading = Math.round(leadDivHeight/2);
-        }
-      }
-      document.body.removeChild(leadDiv);
-    }
 
     /**
      * textFont() Sets the current font.
