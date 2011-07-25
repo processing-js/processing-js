@@ -1622,7 +1622,7 @@
         curColorMode = PConstants.RGB,
         curTint = null,
         curTextSize = 12,
-        curTextFont = {name: "\"Arial\", sans-serif", origName: "Arial"},
+        curTextFont = {name: "Arial, sans-serif", origName: "Arial"},
         curTextLeading = 14,
         curTextAscent = 9,
         curTextDescent = 2,
@@ -9722,6 +9722,10 @@
         }
       }
 
+      // Ensure that the correct font is set after size()
+      curContext.font = curTextSize + "px " + curTextFont.name;
+      computeFontMetrics();
+
       // Set the background to whatever it was called last as if background() was called before size()
       // If background() hasn't been called before, set background() to a light gray
       p.background();
@@ -15459,8 +15463,10 @@
     function PFont(name) {
       this.name = "sans-serif";
       if(name !== undef) {
-        if (name.indexOf(" ") > -1) {
-          name = "'" + name + "'";
+        // If there are spaces in the font name, or we're loading the
+        // font from a file, the name needs quotation marks around it
+        if (name.indexOf(" ") > -1 || name.indexOf(".") > -1) {
+          name = '"' + name + '"';
         }
         switch(name) {
           case "sans-serif":
@@ -15471,7 +15477,9 @@
             this.name = name;
             break;
           default:
-            this.name = name;
+            // If we're not loading one of the predefined fonts,
+            // a CSS fallback font is required.
+            this.name = name + ", sans-serif";
             break;
         }
       }
