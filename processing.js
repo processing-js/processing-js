@@ -9702,9 +9702,9 @@
      * (from "lead", used for vertical space) values for the currently active font.
      */
     function computeFontMetrics() {
-      var emQuad = 250;
-      var correctionFactor = curTextSize / emQuad;
-      var canvas = document.createElement("canvas");
+      var emQuad = 250,
+          correctionFactor = curTextSize / emQuad,
+          canvas = document.createElement("canvas");
       canvas.width = 2*emQuad;
       canvas.height = 2*emQuad;
       canvas.style.opacity = 0;
