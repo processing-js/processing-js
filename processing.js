@@ -19088,6 +19088,13 @@
       // Specify an optional img arg if the image is already loaded in the DOM,
       // otherwise href will get loaded.
       add: function(href, img) {
+        // Prevent muliple loads for an image, in case it gets
+        // preloaded more than once, or is added via JS and then preloaded.
+        if (this.images[href]) {
+          console.log('bailing, image already cached');
+          return;
+        }
+
         if (!isDOMPresent) {
           this.images[href] = null;
         }
