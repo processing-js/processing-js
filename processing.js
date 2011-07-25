@@ -15558,11 +15558,6 @@
     function PFont(name) {
       this.name = "sans-serif";
       if(name !== undef) {
-        // If there are spaces in the font name, or we're loading the
-        // font from a file, the name needs quotation marks around it
-        if (name.indexOf(" ") > -1 || name.indexOf(".") > -1) {
-          name = '"' + name + '"';
-        }
         switch(name) {
           case "sans-serif":
           case "serif":
@@ -15572,9 +15567,7 @@
             this.name = name;
             break;
           default:
-            // If we're not loading one of the predefined fonts,
-            // a CSS fallback font is required.
-            this.name = name + ", sans-serif";
+            this.name = '"' + name + '", sans-serif';
             break;
         }
       }
