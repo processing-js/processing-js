@@ -19433,7 +19433,7 @@
             loadSketchFromSources(canvas, filenames);
             continue;
           }
-          source =  script.innerText || script.textContent;
+          source =  script.textContent || script.text;
           instance = new Processing(canvas, source);
         }
       }
