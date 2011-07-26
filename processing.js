@@ -2761,6 +2761,7 @@
           for(i = 0, j = this.nameTable.length; i < j || found; i++) {
             if(this.nameTable[i].getName === child) {
               found = this.nameTable[i];
+              break;
             }
           }
           if (found) { return found; }
@@ -4424,7 +4425,7 @@
       createElement: function () {
         if (arguments.length === 2) {
           return new XMLElement(arguments[0], arguments[1], null, null);
-        } 
+        }
         return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
       },
       /**
@@ -4510,8 +4511,9 @@
         if (this.type === "TEXT") {
           return this.content; 
         }
-        if (this.children.length === 1 && this.children[0].type === "TEXT") {
-          return this.children[0].content;
+        var children = this.children;
+        if (children.length === 1 && children[0].type === "TEXT") {
+          return children[0].content;
         }
         return null;
       },
@@ -4564,7 +4566,7 @@
         } 
         if (arguments.length === 2){
           return this.getAttribute(arguments[0], arguments[1]);
-        } 
+        }
         return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
@@ -4983,7 +4985,7 @@
        * The getAttributeCount() function returns the number of attributes for the node
        * that this XMLElement represents.
        *
-       * @return {int} the number of attributes in this XMLelement
+       * @return {int} the number of attributes in this XMLElement
        */
       getAttributeCount: function() {
         return this.attributes.length;
@@ -6289,12 +6291,8 @@
     * @see splice
     */
     p.subset = function(array, offset, length) {
-      if (arguments.length === 2) {
-        return array.slice(offset, array.length);
-      } 
-      if (arguments.length === 3) {
-        return array.slice(offset, offset + length);
-      }
+      var end = length ? offset + length : array.length; 
+      return array.slice(offset, end);
     };
 
     /**
@@ -6357,17 +6355,11 @@
     * @see contract
     */
     p.expand = function(ary, newSize) {
-      var temp = ary.slice(0);
-      if (arguments.length === 1) {
-        // double size of array
-        temp.length = ary.length * 2;
-        return temp;
-      } 
-      if (arguments.length === 2) {
-        // size is newSize
-        temp.length = newSize;
-        return temp;
-      }
+      var temp = ary.slice(0),
+          newSize = newSize || ary.length * 2;
+      temp.length = ary.length * 2;
+      temp.length = newSize;
+      return temp;
     };
 
     /**
@@ -8020,7 +8012,7 @@
         }
         return values;
       } 
-      if (isNaN(binaryString)) {
+      if (binaryString !== binaryString) {
         throw "NaN_Err";
       }
       if (arguments.length === 1 || binaryString.length === 8) {
@@ -15621,6 +15613,7 @@
 
     /**
      * createFont() Loads a font into a variable of type PFont.
+     * Smooth and charset are ignored in Processing.js.
      *
      * @param {String}    name    filename of the font to load
      * @param {int|float} size    font size in pixels
@@ -15635,21 +15628,8 @@
      * @see #loadFont
      */
     p.createFont = function(name, size, smooth, charset) {
-      if (arguments.length === 2) {
-        p.textSize(size);
-        return p.loadFont(name);
-      } 
-      if (arguments.length === 3) {
-        // smooth: true for an antialiased font, false for aliased
-        p.textSize(size);
-        return p.loadFont(name);
-      } 
-      if (arguments.length === 4) {
-        // charset: char array containing characters to be generated
-        p.textSize(size);
-        return p.loadFont(name);
-      }
-      throw("incorrent number of parameters for createFont");
+      p.textSize(size);
+      return p.loadFont(name);
     };
 
     /**
