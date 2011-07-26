@@ -19117,7 +19117,7 @@
   }());
   // end of tinylog lite JavaScript library
 
-  Processing.logger = window.console || tinylogLite;
+  Processing.logger = tinylogLite;
 
   Processing.version = "@VERSION@";
 
@@ -19368,10 +19368,10 @@
             try {
               return new Processing(canvas, code.join("\n"));
             } catch(e) {
-              Processing.logger.log("Unable to execute pjs sketch: " + e);
+              throw "Processing.js: Unable to execute pjs sketch: " + e;
             }
           } else {
-            Processing.logger.log("Unable to load pjs sketch files: " + errors.join("\n"));
+            throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }
         }
       }
