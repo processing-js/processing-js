@@ -13997,7 +13997,7 @@
       this.updatePixels = function() {
         var canvas = this.sourceImg;
         if (canvas && canvas instanceof HTMLCanvasElement && imageDataIsDirty) {
-          canvas.getContext('2d').putImageData(this.imageData, 0, 0, canvas.width, canvas.height);
+          canvas.getContext('2d').putImageData(this.imageData, 0, 0);
         }
         imageDataIsDirty = false;
       };
