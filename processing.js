@@ -2062,11 +2062,12 @@
       "varying vec2 vTexture;" +
 
       // In Processing, when a texture is used, the fill color is ignored
+      // vec4(1.0,1.0,1.0,0.5)
       "void main(void){" +
       "  if(usingTexture){" +
-      "    gl_FragColor =  vec4(texture2D(sampler, vTexture.xy));" +
+      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy));" +
       "    if(usingTint){" +
-      "      gl_FragColor =  gl_FragColor*frontColor;" +
+      "      gl_FragColor = gl_FragColor*frontColor;" +
       "    }"+
       "  }"+
       "  else{" +
@@ -14591,7 +14592,7 @@
       };
       // for overriding the color buffer when 3d rendering
       curTint3d = function(data){
-        for(var i=0; i<data.length;){
+        for (var i = 0; i < data.length;) {
           data[i++] = r;
           data[i++] = g;
           data[i++] = b;

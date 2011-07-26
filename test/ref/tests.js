@@ -171,6 +171,7 @@ var tests = [
   { path: "texture_transparent.pde", tags: ["3D"], epsilonOverride: 0.13  },
   { path: "texture_npot.pde", tags: ["3D"] },
   { path: "texture_tint.pde", tags: ["3D"] },
+  { path: "texture_tint_white.pde", tags: ["3D"] },
   { path: "texture_vertex_no_z.pde", tags: ["3D"], epsilonOverride: 0.07 },
   { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35}, /* See ticket #1172 */
   { path: "rotateZ.pde", tags: ["3D"] }
