@@ -6354,9 +6354,9 @@
     *
     * @see contract
     */
-    p.expand = function(ary, newSize) {
+    p.expand = function(ary, targetSize) {
       var temp = ary.slice(0),
-          newSize = newSize || ary.length * 2;
+          newSize = targetSize || ary.length * 2;
       temp.length = ary.length * 2;
       temp.length = newSize;
       return temp;
@@ -8012,7 +8012,7 @@
         }
         return values;
       } 
-      if (binaryString !== binaryString) {
+      if (isNaN(binaryString)) {
         throw "NaN_Err";
       }
       if (arguments.length === 1 || binaryString.length === 8) {
