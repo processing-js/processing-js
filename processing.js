@@ -13714,6 +13714,7 @@
       */
       this.set = function(x, y, c) {
         p.set(x, y, c, this);
+        imageDataIsDirty = true;
       };
 
       /**
@@ -13935,11 +13936,13 @@
             throw "Image is loaded remotely. Cannot set pixel.";
           } else {
             return function(i,c) {
-              var offset = i*4;
-              aImg.imageData.data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
-              aImg.imageData.data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
-              aImg.imageData.data[offset+2] = (c & PConstants.BLUE_MASK);
-              aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
+              var offset = i*4,
+                  data = aImg.imageData.data;
+              data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
+              data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
+              data[offset+2] = (c & PConstants.BLUE_MASK);
+              data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
+              imageDataIsDirty = true;
             };
           }
         }(this)),
@@ -13964,6 +13967,7 @@
             for (var i = 0, aL = arr.length; i < aL; i++) {
               this.setPixel(i, arr[i]);
             }
+            imageDataIsDirty = true;
           }
         }
       };
@@ -13990,7 +13994,13 @@
       * function in the current Processing release, this will always be subject to change.
       * Currently, none of the renderers use the additional parameters to updatePixels().
       */
-      this.updatePixels = nop;
+      this.updatePixels = function() {
+        var canvas = this.sourceImg;
+        if (canvas && canvas instanceof HTMLCanvasElement && imageDataIsDirty) {
+          canvas.getContext('2d').putImageData(this.imageData, 0, 0, canvas.width, canvas.height);
+        }
+        imageDataIsDirty = false;
+      };
 
       this.toImageData = function() {
         if (this.isRemote) { // Remote images cannot access imageData, send source image instead
@@ -14034,13 +14044,24 @@
         this.sourceImg = htmlImg;
       };
 
+      var imageDataIsDirty = false;
+      this._isDirty = function () {
+        return imageDataIsDirty;
+      };
+
       if (arguments.length === 1) {
         // convert an <img> to a PImage
         this.fromHTMLImageData(arguments[0]);
       } else if (arguments.length === 2 || arguments.length === 3) {
         this.width = aWidth || 1;
         this.height = aHeight || 1;
-        this.imageData = utilityContext2d.createImageData(this.width, this.height);
+
+        // Stuff a canvas into sourceImg so image() calls can use drawImage like an <img>
+        var canvas = this.sourceImg = document.createElement("canvas");
+        canvas.width = this.width;
+        canvas.height = this.height;
+
+        var imageData = this.imageData = canvas.getContext('2d').createImageData(this.width, this.height);
         this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
         if (this.format === PConstants.RGB) {
           // Set the alpha channel of an RGB image to opaque.
@@ -14048,6 +14069,9 @@
             data[i] = 255;
           }
         }
+
+        imageDataIsDirty = true;
+        this.updatePixels();
       } else {
         this.width = 0;
         this.height = 0;
@@ -14667,6 +14691,9 @@
         var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
         if (fastImage) {
           var htmlElement = img.sourceImg;
+          if (img._isDirty()) {
+            img.updatePixels();
+          }
           // Using HTML element's width and height in case if the image was resized.
           curContext.drawImage(htmlElement, 0, 0,
             htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
