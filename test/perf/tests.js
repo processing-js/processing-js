@@ -49,6 +49,8 @@ var tests = [
   { path: "pimage-blend-softlight.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
   { path: "pimage-blend-dodge.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
   { path: "pimage-blend-burn.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
+  { path: "createImage.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
+  { path: "loadImage.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
   { path: "rainbow-spirograph.pde", tags: ["2D"] },
   { path: "pvector-ctor.pde", tags: ["2D", "PVector"] },
   { path: "pvector-get.pde", tags: ["2D", "PVector"] },
