@@ -10,7 +10,7 @@ class Beautifier(object):
   def run(self, jsshell, filename):
     cmd = [jsshell,
            '-f', os.path.join(self.toolsdir, 'jsbeautify.js'),
-           '-e', "var input = snarf('%s'); print(js_beautify(input, {indent_size: 2}));" % os.path.relpath(filename)]
+           '-e', "var input = snarf('%s'); print(js_beautify(input, {indent_size: 2}));" % filename]
 
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
