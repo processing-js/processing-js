@@ -20,7 +20,7 @@ var canvas = {
                    attachEvent: __empty_func__,
                    fillRect: __empty_func__,
                    fillText: __empty_func__,
-                   measureText: function() { return 1; },
+                   measureText: function() { return {width:1}; },
                    clearRect: __empty_func__,
                    beginPath: __empty_func__,
                    moveTo: __empty_func__,
@@ -68,8 +68,8 @@ var canvas = {
                    uniform2i: __empty_func__,
                    uniform3i: __empty_func__,
                    uniform4i: __empty_func__,
-                   getImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
-                   createImageData: function() { return {width:1, height: 1, data:[1,2,3,4]}; },
+                   getImageData: function() { return {width:1, height:1, data:[1,2,3,4]}; },
+                   createImageData: function() { return {width:1, height:1, data:[1,2,3,4]}; },
                    drawImage: __empty_func__,
                    drawElements: __empty_func__,
                    putImageData: __empty_func__,
@@ -103,8 +103,15 @@ var document = {
   fake: true,
   attachEvent: __empty_func__,
   body: {
+    appendChild: __elem_func__,
+    removeChild: __empty_func__,
     style: {
       cursor: {}
+    }
+  },
+  defaultView: {
+    getComputedStyle: function() {
+      return { getPropertyValue: function() { return ""; } };
     }
   },
   appendChild: __elem_func__,

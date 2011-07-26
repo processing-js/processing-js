@@ -7,7 +7,7 @@ String xml =  "<?xml version='1.0'?>\n"+
 String[] urls = ["processing.org", "mobile.processing.org"];
 String[] sites = ["Processing", "Processing Mobile"];
 
-XMLElement root = new XMLElement(sites);
+XMLElement root = XMLElement.parse(xml);
 int numSites = root.getChildCount();
 for (int i = 0; i < numSites; i++) {
   XMLElement child = root.getChild(i);

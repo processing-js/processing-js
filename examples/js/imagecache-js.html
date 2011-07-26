@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../../processing.js"></script>
+  <link rel="stylesheet" href="../style.css"/></head>
+<body><h1><a href="http://processingjs.org/">Processing.js</a></h1>
+<h2>Adding existing images to a Sketch's ImageCache</h2>
+
+<div style="margin:20px;">
+<h3>Example 1. Loading an image from the DOM</h3>
+<p>Sometimes a developer wants to share images between a Processing sketch and the web page in which it lives.  This might happen in a complex page where images are loaded at different times, and a sketch runs after the images are loaded by the web page itself.  In such cases, it is helpful to be able to pass a preloaded image into the sketch's image cache, so it won't get loaded a second time before the sketch starts.  The following example demonstrates this, by loading an image into the DOM by means of the img element, and then creating a Processing Sketch object in JavaScript that uses this image, without doing any other preloading.</p>
+<h4>Image Element</h4><div><img id="pjs-logo" src="pjs.png" onload="loadDOMExample();"></div>
+<h4>Processing Sketch in Canvas</h4><div><canvas id="canvas1"></canvas></div>
+<script id="script1">
+/**
+ * This sketch starts after an img element in the DOM finishes loading.
+ * The img element's onload attribute is used to let Processing know when
+ * it is safe to start the sketch.
+ */
+function loadDOMExample() {
+  var canvas1 = document.getElementById('canvas1'),
+    sketch = new Processing.Sketch(function(p) {
+      var pimg;
+      p.setup = function() {
+        p.size(200,200);
+        pimg = p.loadImage("pjs.png");
+      };
+
+      p.draw = function() {
+        p.background('#ffffff');
+        p.image(pimg, 0, 0);
+      };
+    });
+
+  sketch.imageCache.add("pjs.png", document.getElementById('pjs-logo'));
+
+  return new Processing(canvas1, sketch);
+}
+</script>
+
+<pre id="code1"></pre>
+<script>
+document.getElementById("code1").textContent = document.getElementById("script1").text;
+</script>
+</div>
+
+<div style="margin:20px;">
+<h3>Example 2. Loading an image using only JavaScript</h3>
+<p>This example is similar to Example 1, but bypasses the DOM altogether and creates an image using JavaScript.  This technique is useful when you want to background load images, but not display them yet.</p>
+<canvas id="canvas2"></canvas>
+<script id="script2">
+/**
+ * This sketch demonstrates how to load images via JS or the DOM separate to
+ * processing.js, and then pass these fully loaded images into a sketch's
+ * image cache, to be used by functions like loadImage().  Normally the image
+ * cache assumes that images need to be downloaded (e.g., only a URL is provided).
+ * However, an optional img argument (e.g., an Image) can be passed in too.
+ */
+var logo = new Image(),
+    canvas2 = document.getElementById('canvas2'),
+    sketch,
+    p;
+
+// Start the sketch only after the image is fully loaded via pure JS
+logo.onload = function() {
+  sketch = new Processing.Sketch(function(p) {
+    var pimg;
+    p.setup = function() {
+      p.size(200,200);
+      pimg = p.loadImage("pjs.png");
+    };
+
+    p.draw = function() {
+      p.background('#ffffff');
+      p.image(pimg, 0, 0);
+    };
+  });
+
+  sketch.imageCache.add("pjs.png", logo);
+
+  p = new Processing(canvas2, sketch);
+};
+
+// Load the image
+logo.src = "pjs.png";
+</script>
+
+<pre id="code2"></pre>
+<script>
+document.getElementById("code2").textContent = document.getElementById("script2").text;
+</script>
+</div>
+</body>
+</html>

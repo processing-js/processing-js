@@ -340,7 +340,7 @@
     HINT_COUNT:                  10,
 
     // PJS defined constants
-    SINCOS_LENGTH:      parseInt(360 / 0.5, 10),
+    SINCOS_LENGTH:      720, // every half degree
     PRECISIONB:         15, // fixed point precision is limited to 15 bits!!
     PRECISIONF:         1 << 15,
     PREC_MAXVAL:        (1 << 15) - 1,
@@ -361,7 +361,7 @@
    * @returns {int}               The object's hash code.
    */
   function virtHashCode(obj) {
-    if (obj.constructor === String) {
+    if (typeof(obj) === "string") {
       var hash = 0;
       for (var i = 0; i < obj.length; ++i) {
         hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
@@ -393,8 +393,8 @@
   function virtEquals(obj, other) {
     if (obj === null || other === null) {
       return (obj === null) && (other === null);
-    }
-    if (obj.constructor === String) {
+    } 
+    if (typeof (obj) === "string") {
       return obj === other;
     }
     if (typeof(obj) !== "object") {
@@ -684,7 +684,7 @@
     * @param {Map} m                        gives the new HashMap the same mappings as this Map
     */
     function HashMap() {
-      if (arguments.length === 1 && arguments[0].constructor === HashMap) {
+      if (arguments.length === 1 && arguments[0] instanceof HashMap) {
         return arguments[0].clone();
       }
 
@@ -925,7 +925,7 @@
         },
 
         function(pair) {
-          return pair.constructor === Entry && pair._isIn(hashMap);
+          return (pair instanceof Entry) && pair._isIn(hashMap);
         },
 
         function(pair) {
@@ -953,18 +953,36 @@
 
       this.keySet = function() {
         return new Set(
+          // get key from pair
+          function(pair) {
+            return pair.key;
+          },
+          // is-in test
+          function(key) {
+            return hashMap.containsKey(key);
+          },
+          // remove from hashmap by key
+          function(key) {
+            return hashMap.remove(key);
+          }
+        );
+      };
 
-        function(pair) {
-          return pair.key;
-        },
-
-        function(key) {
-          return hashMap.containsKey(key);
-        },
-
-        function(key) {
-          return hashMap.remove(key);
-        });
+      this.values = function() {
+        return new Set(
+          // get value from pair
+          function(pair) {
+            return pair.value;
+          },
+          // is-in test
+          function(value) {
+            return hashMap.containsValue(value);
+          },
+          // remove from hashmap by value
+          function(value) {
+            return hashMap.removeByValue(value);
+          }
+        );
       };
 
       this.put = function(key, value) {
@@ -1025,18 +1043,25 @@
         return null;
       };
 
-      this.size = function() {
-        return count;
+      this.removeByValue = function(value) {
+        var bucket, i, ilen, pair;
+        for (bucket in buckets) {
+          if (buckets.hasOwnProperty(bucket)) {
+            for (i = 0, ilen = buckets[bucket].length; i < ilen; i++) {
+              pair = buckets[bucket][i];
+              // removal on values is based on identity, not equality
+              if (pair.value === value) {
+                buckets[bucket].splice(i, 1);
+                return true;
+              }
+            }
+          }
+        }
+        return false;
       };
 
-      this.values = function() {
-        var result = [];
-        var it = this.entrySet().iterator();
-        while (it.hasNext()) {
-          var entry = it.next();
-          result.push(entry.getValue());
-        }
-        return result;
+      this.size = function() {
+        return count;
       };
     }
 
@@ -1050,22 +1075,17 @@
       this.z = z || 0;
     }
 
-    function createPVectorMethod(method) {
-      return function(v1, v2) {
-        var v = v1.get();
-        v[method](v2);
-        return v;
-      };
-    }
+    PVector.dist = function(v1, v2) {
+      return v1.dist(v2);
+    };
 
-    function createSimplePVectorMethod(method) {
-      return function(v1, v2) {
-        return v1[method](v2);
-      };
-    }
+    PVector.dot = function(v1, v2) {
+      return v1.dot(v2);
+    };
 
-    var simplePVMethods = "dist dot cross".split(" ");
-    var method = simplePVMethods.length;
+    PVector.cross = function(v1, v2) {
+      return v1.cross(v2);
+    };
 
     PVector.angleBetween = function(v1, v2) {
       return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
@@ -1075,7 +1095,9 @@
     PVector.prototype = {
       set: function(v, y, z) {
         if (arguments.length === 1) {
-          this.set(v.x || v[0] || 0, v.y || v[1] || 0, v.z || v[2] || 0);
+          this.set(v.x || v[0] || 0,
+                   v.y || v[1] || 0,
+                   v.z || v[2] || 0);
         } else {
           this.x = v;
           this.y = y;
@@ -1086,28 +1108,31 @@
         return new PVector(this.x, this.y, this.z);
       },
       mag: function() {
-        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+        var x = this.x,
+            y = this.y,
+            z = this.z;
+        return Math.sqrt(x * x + y * y + z * z);
       },
       add: function(v, y, z) {
-        if (arguments.length === 3) {
-          this.x += v;
-          this.y += y;
-          this.z += z;
-        } else if (arguments.length === 1) {
+        if (arguments.length === 1) {
           this.x += v.x;
           this.y += v.y;
           this.z += v.z;
+        } else {
+          this.x += v;
+          this.y += y;
+          this.z += z;
         }
       },
       sub: function(v, y, z) {
-        if (arguments.length === 3) {
-          this.x -= v;
-          this.y -= y;
-          this.z -= z;
-        } else if (arguments.length === 1) {
+        if (arguments.length === 1) {
           this.x -= v.x;
           this.y -= v.y;
           this.z -= v.z;
+        } else {
+          this.x -= v;
+          this.y -= y;
+          this.z -= z;
         }
       },
       mult: function(v) {
@@ -1115,7 +1140,7 @@
           this.x *= v;
           this.y *= v;
           this.z *= v;
-        } else if (typeof v === 'object') {
+        } else {
           this.x *= v.x;
           this.y *= v.y;
           this.z *= v.z;
@@ -1126,7 +1151,7 @@
           this.x /= v;
           this.y /= v;
           this.z /= v;
-        } else if (typeof v === 'object') {
+        } else {
           this.x /= v.x;
           this.y /= v.y;
           this.z /= v.z;
@@ -1139,17 +1164,18 @@
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
       },
       dot: function(v, y, z) {
-        if (arguments.length === 3) {
-          return (this.x * v + this.y * y + this.z * z);
-        } 
         if (arguments.length === 1) {
           return (this.x * v.x + this.y * v.y + this.z * v.z);
-        }
+        } 
+        return (this.x * v + this.y * y + this.z * z);
       },
       cross: function(v) {
-        return new PVector(this.y * v.z - v.y * this.z,
-                           this.z * v.x - v.z * this.x,
-                           this.x * v.y - v.x * this.y);
+        var x = this.x,
+            y = this.y,
+            z = this.z;
+        return new PVector(y * v.z - v.y * z,
+                           z * v.x - v.z * x,
+                           x * v.y - v.x * y);
       },
       normalize: function() {
         var m = this.mag();
@@ -1174,11 +1200,15 @@
       }
     };
 
-    while (method--) {
-      PVector[simplePVMethods[method]] = createSimplePVectorMethod(simplePVMethods[method]);
+    function createPVectorMethod(method) {
+      return function(v1, v2) {
+        var v = v1.get();
+        v[method](v2);
+        return v;
+      };
     }
 
-    for (method in PVector.prototype) {
+    for (var method in PVector.prototype) {
       if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
         PVector[method] = createPVectorMethod(method);
       }
@@ -1448,6 +1478,30 @@
     yellowgreen:          "#9acd32"
   };
 
+  // Unsupported Processing File and I/O operations.
+  (function(Processing) {
+    var unsupportedP5 = ("open() createOutput() createInput() BufferedReader selectFolder() " +
+                         "dataPath() createWriter() selectOutput() beginRecord() " +
+                         "saveStream() endRecord() selectInput() saveBytes() createReader() " +
+                         "beginRaw() endRaw() PrintWriter").split(" "),
+        count = unsupportedP5.length,
+        prettyName,
+        p5Name;
+
+    function createUnsupportedFunc(n) {
+      return function() {
+        throw "Processing.js does not support " + n + ".";
+      };
+    }
+
+    while (count--) {
+      prettyName = unsupportedP5[count];
+      p5Name = prettyName.replace("()", "");
+
+      Processing[p5Name] = createUnsupportedFunc(prettyName);
+    }
+  }(defaultScope));
+
   // Manage multiple Processing instances
   var processingInstances = [];
   var processingInstanceIds = {};
@@ -1531,9 +1585,9 @@
     p.touchCancel     = undef;
     p.key             = undef;
     p.keyCode         = undef;
-    p.keyPressed      = function(){};  // needed to remove function checks
-    p.keyReleased     = function(){};
-    p.keyTyped        = function(){};
+    p.keyPressed      = nop; // needed to remove function checks
+    p.keyReleased     = nop;
+    p.keyTyped        = nop;
     p.draw            = undef;
     p.setup           = undef;
 
@@ -1594,8 +1648,10 @@
         curColorMode = PConstants.RGB,
         curTint = null,
         curTextSize = 12,
-        curTextFont = {name: "\"Arial\", sans-serif", origName: "Arial"},
+        curTextFont = {name: "Arial, sans-serif", origName: "Arial"},
         curTextLeading = 14,
+        curTextAscent = 9,
+        curTextDescent = 2,
         getLoaded = false,
         start = new Date().getTime(),
         timeSinceLastFPS = start,
@@ -2313,10 +2369,10 @@
     // 2D/3D drawing handling
     ////////////////////////////////////////////////////////////////////////////
     // Objects for shared, 2D and 3D contexts
-    var DrawingShared = function() {};
-    var Drawing2D = function() {};
-    var Drawing3D = function() {};
-    var DrawingPre = function() {};
+    var DrawingShared = function(){};
+    var Drawing2D = function(){};
+    var Drawing3D = function(){};
+    var DrawingPre = function(){};
 
     // Setup the prototype chain
     Drawing2D.prototype = new DrawingShared();
@@ -2328,7 +2384,7 @@
 
     // A no-op function for when the user calls 3D functions from a 2D sketch
     // We can change this to a throw or console.error() later if we want
-    DrawingShared.prototype.a3DOnlyFunction = function(){};
+    DrawingShared.prototype.a3DOnlyFunction = nop;
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
@@ -3649,10 +3705,7 @@
                 cy = endY;
               }
             }
-          } else if (valOf === 90) {
-            //Z
-            nop();
-          } else if (valOf === 122) { //z
+          } else if (valOf === 90 || valOf === 122) { // Z or z (these do the same thing)
             this.close = true;
           }
           lastInstruction = command.toString();
@@ -4340,13 +4393,14 @@
        *
        * @see XMLElement#parseChildrenRecursive
        */
-      parse: function(filename) {
+      parse: function(textstring) {
         var xmlDoc;
         try {
-          if (filename.indexOf(".xml") > -1 || filename.indexOf(".svg") > -1) {
-            filename = ajax(filename);
+          var extension = textstring.substring(textstring.length-4);
+          if (extension === ".xml" || extension === ".svg") {
+            textstring = ajax(textstring);
           }
-          xmlDoc = new DOMParser().parseFromString(filename, "text/xml");
+          xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
           var elements = xmlDoc.documentElement;
           if (elements) {
             this.parseChildrenRecursive(null, elements);
@@ -6449,208 +6503,240 @@
     * @see BlendColor
     * @see Blend
     */
-    p.modes = {
-      replace: function(c1, c2) {
-        return c2;
-      },
-      blend: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                p.mix(c1 & PConstants.RED_MASK, c2 & PConstants.RED_MASK, f) & PConstants.RED_MASK |
-                p.mix(c1 & PConstants.GREEN_MASK, c2 & PConstants.GREEN_MASK, f) & PConstants.GREEN_MASK |
-                p.mix(c1 & PConstants.BLUE_MASK, c2 & PConstants.BLUE_MASK, f));
-      },
-      add: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                Math.min(((c1 & PConstants.RED_MASK) + ((c2 & PConstants.RED_MASK) >> 8) * f), PConstants.RED_MASK) & PConstants.RED_MASK |
-                Math.min(((c1 & PConstants.GREEN_MASK) + ((c2 & PConstants.GREEN_MASK) >> 8) * f), PConstants.GREEN_MASK) & PConstants.GREEN_MASK |
-                Math.min((c1 & PConstants.BLUE_MASK) + (((c2 & PConstants.BLUE_MASK) * f) >> 8), PConstants.BLUE_MASK));
-      },
-      subtract: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                Math.max(((c1 & PConstants.RED_MASK) - ((c2 & PConstants.RED_MASK) >> 8) * f), PConstants.GREEN_MASK) & PConstants.RED_MASK |
-                Math.max(((c1 & PConstants.GREEN_MASK) - ((c2 & PConstants.GREEN_MASK) >> 8) * f), PConstants.BLUE_MASK) & PConstants.GREEN_MASK |
-                Math.max((c1 & PConstants.BLUE_MASK) - (((c2 & PConstants.BLUE_MASK) * f) >> 8), 0));
-      },
-      lightest: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                Math.max(c1 & PConstants.RED_MASK, ((c2 & PConstants.RED_MASK) >> 8) * f) & PConstants.RED_MASK |
-                Math.max(c1 & PConstants.GREEN_MASK, ((c2 & PConstants.GREEN_MASK) >> 8) * f) & PConstants.GREEN_MASK |
-                Math.max(c1 & PConstants.BLUE_MASK, ((c2 & PConstants.BLUE_MASK) * f) >> 8));
-      },
-      darkest: function(c1, c2) {
-        var f = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                p.mix(c1 & PConstants.RED_MASK, Math.min(c1 & PConstants.RED_MASK, ((c2 & PConstants.RED_MASK) >> 8) * f), f) & PConstants.RED_MASK |
-                p.mix(c1 & PConstants.GREEN_MASK, Math.min(c1 & PConstants.GREEN_MASK, ((c2 & PConstants.GREEN_MASK) >> 8) * f), f) & PConstants.GREEN_MASK |
-                p.mix(c1 & PConstants.BLUE_MASK, Math.min(c1 & PConstants.BLUE_MASK, ((c2 & PConstants.BLUE_MASK) * f) >> 8), f));
-      },
-      difference: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (ar > br) ? (ar - br) : (br - ar);
-        var cg = (ag > bg) ? (ag - bg) : (bg - ag);
-        var cb = (ab > bb) ? (ab - bb) : (bb - ab);
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      exclusion: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = ar + br - ((ar * br) >> 7);
-        var cg = ag + bg - ((ag * bg) >> 7);
-        var cb = ab + bb - ((ab * bb) >> 7);
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      multiply: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (ar * br) >> 8;
-        var cg = (ag * bg) >> 8;
-        var cb = (ab * bb) >> 8;
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      screen: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = 255 - (((255 - ar) * (255 - br)) >> 8);
-        var cg = 255 - (((255 - ag) * (255 - bg)) >> 8);
-        var cb = 255 - (((255 - ab) * (255 - bb)) >> 8);
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      hard_light: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (br < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7));
-        var cg = (bg < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7));
-        var cb = (bb < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      soft_light: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = ((ar * br) >> 7) + ((ar * ar) >> 8) - ((ar * ar * br) >> 15);
-        var cg = ((ag * bg) >> 7) + ((ag * ag) >> 8) - ((ag * ag * bg) >> 15);
-        var cb = ((ab * bb) >> 7) + ((ab * ab) >> 8) - ((ab * ab * bb) >> 15);
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      overlay: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (ar < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7));
-        var cg = (ag < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7));
-        var cb = (ab < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      dodge: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (br === 255) ? 255 : p.peg((ar << 8) / (255 - br)); // division requires pre-peg()-ing
-        var cg = (bg === 255) ? 255 : p.peg((ag << 8) / (255 - bg)); // "
-        var cb = (bb === 255) ? 255 : p.peg((ab << 8) / (255 - bb)); // "
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
-      },
-      burn: function(c1, c2) {
-        var f  = (c2 & PConstants.ALPHA_MASK) >>> 24;
-        var ar = (c1 & PConstants.RED_MASK) >> 16;
-        var ag = (c1 & PConstants.GREEN_MASK) >> 8;
-        var ab = (c1 & PConstants.BLUE_MASK);
-        var br = (c2 & PConstants.RED_MASK) >> 16;
-        var bg = (c2 & PConstants.GREEN_MASK) >> 8;
-        var bb = (c2 & PConstants.BLUE_MASK);
-        // formula:
-        var cr = (br === 0) ? 0 : 255 - p.peg(((255 - ar) << 8) / br); // division requires pre-peg()-ing
-        var cg = (bg === 0) ? 0 : 255 - p.peg(((255 - ag) << 8) / bg); // "
-        var cb = (bb === 0) ? 0 : 255 - p.peg(((255 - ab) << 8) / bb); // "
-        // alpha blend (this portion will always be the same)
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                (p.peg(ar + (((cr - ar) * f) >> 8)) << 16) |
-                (p.peg(ag + (((cg - ag) * f) >> 8)) << 8) |
-                (p.peg(ab + (((cb - ab) * f) >> 8))));
+    p.modes = (function() {
+      var ALPHA_MASK = PConstants.ALPHA_MASK,
+        RED_MASK = PConstants.RED_MASK,
+        GREEN_MASK = PConstants.GREEN_MASK,
+        BLUE_MASK = PConstants.BLUE_MASK,
+        min = Math.min,
+        max = Math.max;
+
+      function applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb) {
+        var a = min(((c1 & 0xff000000) >>> 24) + f, 0xff) << 24;
+
+        var r = (ar + (((cr - ar) * f) >> 8));
+        r = ((r < 0) ? 0 : ((r > 255) ? 255 : r)) << 16;
+
+        var g = (ag + (((cg - ag) * f) >> 8));
+        g = ((g < 0) ? 0 : ((g > 255) ? 255 : g)) << 8;
+
+        var b = ab + (((cb - ab) * f) >> 8);
+        b = (b < 0) ? 0 : ((b > 255) ? 255 : b);
+
+        return (a | r | g | b);
       }
-    };
+
+      return {
+        replace: function(c1, c2) {
+          return c2;
+        },
+        blend: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK),
+            ag = (c1 & GREEN_MASK),
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK),
+            bg = (c2 & GREEN_MASK),
+            bb = (c2 & BLUE_MASK);
+
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  (ar + (((br - ar) * f) >> 8)) & RED_MASK |
+                  (ag + (((bg - ag) * f) >> 8)) & GREEN_MASK |
+                  (ab + (((bb - ab) * f) >> 8)) & BLUE_MASK);
+        },
+        add: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24;
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  min(((c1 & RED_MASK) + ((c2 & RED_MASK) >> 8) * f), RED_MASK) & RED_MASK |
+                  min(((c1 & GREEN_MASK) + ((c2 & GREEN_MASK) >> 8) * f), GREEN_MASK) & GREEN_MASK |
+                  min((c1 & BLUE_MASK) + (((c2 & BLUE_MASK) * f) >> 8), BLUE_MASK));
+        },
+        subtract: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24;
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  max(((c1 & RED_MASK) - ((c2 & RED_MASK) >> 8) * f), GREEN_MASK) & RED_MASK |
+                  max(((c1 & GREEN_MASK) - ((c2 & GREEN_MASK) >> 8) * f), BLUE_MASK) & GREEN_MASK |
+                  max((c1 & BLUE_MASK) - (((c2 & BLUE_MASK) * f) >> 8), 0));
+        },
+        lightest: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24;
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  max(c1 & RED_MASK, ((c2 & RED_MASK) >> 8) * f) & RED_MASK |
+                  max(c1 & GREEN_MASK, ((c2 & GREEN_MASK) >> 8) * f) & GREEN_MASK |
+                  max(c1 & BLUE_MASK, ((c2 & BLUE_MASK) * f) >> 8));
+        },
+        darkest: function(c1, c2) {
+          var f = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK),
+            ag = (c1 & GREEN_MASK),
+            ab = (c1 & BLUE_MASK),
+            br = min(c1 & RED_MASK, ((c2 & RED_MASK) >> 8) * f),
+            bg = min(c1 & GREEN_MASK, ((c2 & GREEN_MASK) >> 8) * f),
+            bb = min(c1 & BLUE_MASK, ((c2 & BLUE_MASK) * f) >> 8);
+
+          return (min(((c1 & ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
+                  (ar + (((br - ar) * f) >> 8)) & RED_MASK |
+                  (ag + (((bg - ag) * f) >> 8)) & GREEN_MASK |
+                  (ab + (((bb - ab) * f) >> 8)) & BLUE_MASK);
+        },
+        difference: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = (ar > br) ? (ar - br) : (br - ar),
+            cg = (ag > bg) ? (ag - bg) : (bg - ag),
+            cb = (ab > bb) ? (ab - bb) : (bb - ab);
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        exclusion: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = ar + br - ((ar * br) >> 7),
+            cg = ag + bg - ((ag * bg) >> 7),
+            cb = ab + bb - ((ab * bb) >> 7);
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        multiply: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = (ar * br) >> 8,
+            cg = (ag * bg) >> 8,
+            cb = (ab * bb) >> 8;
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        screen: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = 255 - (((255 - ar) * (255 - br)) >> 8),
+            cg = 255 - (((255 - ag) * (255 - bg)) >> 8),
+            cb = 255 - (((255 - ab) * (255 - bb)) >> 8);
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        hard_light: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = (br < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7)),
+            cg = (bg < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7)),
+            cb = (bb < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        soft_light: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = ((ar * br) >> 7) + ((ar * ar) >> 8) - ((ar * ar * br) >> 15),
+            cg = ((ag * bg) >> 7) + ((ag * ag) >> 8) - ((ag * ag * bg) >> 15),
+            cb = ((ab * bb) >> 7) + ((ab * ab) >> 8) - ((ab * ab * bb) >> 15);
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        overlay: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK),
+            cr = (ar < 128) ? ((ar * br) >> 7) : (255 - (((255 - ar) * (255 - br)) >> 7)),
+            cg = (ag < 128) ? ((ag * bg) >> 7) : (255 - (((255 - ag) * (255 - bg)) >> 7)),
+            cb = (ab < 128) ? ((ab * bb) >> 7) : (255 - (((255 - ab) * (255 - bb)) >> 7));
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        dodge: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK);
+
+          var cr = 255;
+          if (br !== 255) {
+            cr = (ar << 8) / (255 - br);
+            cr = (cr < 0) ? 0 : ((cr > 255) ? 255 : cr);
+          }
+
+          var cg = 255;
+          if (bg !== 255) {
+            cg = (ag << 8) / (255 - bg);
+            cg = (cg < 0) ? 0 : ((cg > 255) ? 255 : cg);
+          }
+
+          var cb = 255;
+          if (bb !== 255) {
+            cb = (ab << 8) / (255 - bb);
+            cb = (cb < 0) ? 0 : ((cb > 255) ? 255 : cb);
+          }
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        },
+        burn: function(c1, c2) {
+          var f  = (c2 & ALPHA_MASK) >>> 24,
+            ar = (c1 & RED_MASK) >> 16,
+            ag = (c1 & GREEN_MASK) >> 8,
+            ab = (c1 & BLUE_MASK),
+            br = (c2 & RED_MASK) >> 16,
+            bg = (c2 & GREEN_MASK) >> 8,
+            bb = (c2 & BLUE_MASK);
+
+          var cr = 0;
+          if (br !== 0) {
+            cr = ((255 - ar) << 8) / br;
+            cr = 255 - ((cr < 0) ? 0 : ((cr > 255) ? 255 : cr));
+          }
+
+          var cg = 0;
+          if (bg !== 0) {
+            cg = ((255 - ag) << 8) / bg;
+            cg = 255 - ((cg < 0) ? 0 : ((cg > 255) ? 255 : cg));
+          }
+
+          var cb = 0;
+          if (bb !== 0) {
+            cb = ((255 - ab) << 8) / bb;
+            cb = 255 - ((cb < 0) ? 0 : ((cb > 255) ? 255 : cb));
+          }
+
+          return applyMode(c1, f, ar, ag, ab, br, bg, bb, cr, cg, cb);
+        }
+      };
+    }());
 
     function color$4(aValue1, aValue2, aValue3, aValue4) {
       var r, g, b, a;
@@ -7011,10 +7097,10 @@
       var a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      var r = parseInt(p.lerp(r1, r2, amt), 10);
-      var g = parseInt(p.lerp(g1, g2, amt), 10);
-      var b = parseInt(p.lerp(b1, b2, amt), 10);
-      var a = parseFloat(p.lerp(a1, a2, amt) * colorModeA);
+      var r = p.lerp(r1, r2, amt) | 0;
+      var g = p.lerp(g1, g2, amt) | 0;
+      var b = p.lerp(b1, b2, amt) | 0;
+      var a = p.lerp(a1, a2, amt) * colorModeA;
 
       return p.color.toInt(r, g, b, a);
     };
@@ -7064,55 +7150,37 @@
     * @see color
     */
     p.blendColor = function(c1, c2, mode) {
-      var color = 0;
-      switch (mode) {
-      case PConstants.REPLACE:
-        color = p.modes.replace(c1, c2);
-        break;
-      case PConstants.BLEND:
-        color = p.modes.blend(c1, c2);
-        break;
-      case PConstants.ADD:
-        color = p.modes.add(c1, c2);
-        break;
-      case PConstants.SUBTRACT:
-        color = p.modes.subtract(c1, c2);
-        break;
-      case PConstants.LIGHTEST:
-        color = p.modes.lightest(c1, c2);
-        break;
-      case PConstants.DARKEST:
-        color = p.modes.darkest(c1, c2);
-        break;
-      case PConstants.DIFFERENCE:
-        color = p.modes.difference(c1, c2);
-        break;
-      case PConstants.EXCLUSION:
-        color = p.modes.exclusion(c1, c2);
-        break;
-      case PConstants.MULTIPLY:
-        color = p.modes.multiply(c1, c2);
-        break;
-      case PConstants.SCREEN:
-        color = p.modes.screen(c1, c2);
-        break;
-      case PConstants.HARD_LIGHT:
-        color = p.modes.hard_light(c1, c2);
-        break;
-      case PConstants.SOFT_LIGHT:
-        color = p.modes.soft_light(c1, c2);
-        break;
-      case PConstants.OVERLAY:
-        color = p.modes.overlay(c1, c2);
-        break;
-      case PConstants.DODGE:
-        color = p.modes.dodge(c1, c2);
-        break;
-      case PConstants.BURN:
-        color = p.modes.burn(c1, c2);
-        break;
+      if (mode === PConstants.REPLACE) {
+        return p.modes.replace(c1, c2);
+      } else if (mode === PConstants.BLEND) {
+        return p.modes.blend(c1, c2);
+      } else if (mode === PConstants.ADD) {
+        return p.modes.add(c1, c2);
+      } else if (mode === PConstants.SUBTRACT) {
+        return p.modes.subtract(c1, c2);
+      } else if (mode === PConstants.LIGHTEST) {
+        return p.modes.lightest(c1, c2);
+      } else if (mode === PConstants.DARKEST) {
+        return p.modes.darkest(c1, c2);
+      } else if (mode === PConstants.DIFFERENCE) {
+        return p.modes.difference(c1, c2);
+      } else if (mode === PConstants.EXCLUSION) {
+        return p.modes.exclusion(c1, c2);
+      } else if (mode === PConstants.MULTIPLY) {
+        return p.modes.multiply(c1, c2);
+      } else if (mode === PConstants.SCREEN) {
+        return p.modes.screen(c1, c2);
+      } else if (mode === PConstants.HARD_LIGHT) {
+        return p.modes.hard_light(c1, c2);
+      } else if (mode === PConstants.SOFT_LIGHT) {
+        return p.modes.soft_light(c1, c2);
+      } else if (mode === PConstants.OVERLAY) {
+        return p.modes.overlay(c1, c2);
+      } else if (mode === PConstants.DODGE) {
+        return p.modes.dodge(c1, c2);
+      } else if (mode === PConstants.BURN) {
+        return p.modes.burn(c1, c2);
       }
-      return color;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -8027,6 +8095,23 @@
       throw "longErr";
     };
 
+    /**
+    * Number-to-String formatting function. Prepends "plus" or "minus" depending
+    * on whether the value is positive or negative, respectively, after padding
+    * the value with zeroes on the left and right, the number of zeroes used dictated
+    * by the values 'leftDigits' and 'rightDigits'. 'value' cannot be an array.
+    *
+    * @param {int|float} value                 the number to format
+    * @param {String} plus                     the prefix for positive numbers
+    * @param {String} minus                    the prefix for negative numbers
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfCore
+    */
     function nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group) {
       var sign = (value < 0) ? minus : plus;
       var autoDetectDecimals = rightDigits === 0;
@@ -8078,6 +8163,25 @@
       return sign + buffer;
     }
 
+    /**
+    * Number-to-String formatting function. Prepends "plus" or "minus" depending
+    * on whether the value is positive or negative, respectively, after padding
+    * the value with zeroes on the left and right, the number of zeroes used dictated
+    * by the values 'leftDigits' and 'rightDigits'. 'value' can be an array;
+    * if the input is an array, each value in it is formatted separately, and
+    * an array with formatted values is returned.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {String} plus                     the prefix for positive numbers
+    * @param {String} minus                    the prefix for negative numbers
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfCoreScalar
+    */
     function nfCore(value, plus, minus, leftDigits, rightDigits, group) {
       if (value instanceof Array) {
         var arr = [];
@@ -8107,7 +8211,7 @@
     * @see nfp
     * @see nfc
     */
-    p.nf  = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
+    p.nf = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
 
     /**
     * Utility function for formatting numbers into strings. Similar to nf()  but leaves a blank space in front
@@ -8466,6 +8570,23 @@
       return subject.valueOf() === other.valueOf();
     };
     /**
+     * The __equalsIgnoreCase() function compares two strings to see if they are the same.
+     * Returns true if the strings are the same, either when forced to all lower case or
+     * all upper case.
+     *
+     * @param {String} subject  a string used for comparison
+     * @param {String} other  a string used for comparison with
+     *
+     * @return {boolean} true is the strings are the same, ignoring case. false otherwise
+     */
+    p.__equalsIgnoreCase = function(subject, other) {
+      if (typeof subject !== "string") {
+        return subject.equalsIgnoreCase.apply(subject, removeFirstArgument(arguments));
+      }
+
+      return subject.toLowerCase() === other.toLowerCase();
+    };
+    /**
      * The __toCharArray() function splits the string into a char array.
      *
      * @param {String} subject The string
@@ -8522,6 +8643,24 @@
       return result;
     };
     /**
+     * The codePointAt() function returns the unicode value of the character at a given index of a string.
+     *
+     * @param  {int} idx         the index of the character
+     *
+     * @return {String} code     the String containing the unicode value of the character
+     */
+    p.__codePointAt = function(subject, idx) {
+      var code = subject.charCodeAt(idx),
+          hi,
+          low;
+      if (0xD800 <= code && code <= 0xDBFF) {
+        hi = code;
+        low = subject.charCodeAt(idx + 1);
+        return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+      }
+      return code;
+    };
+    /**
      * The match() function matches a string with a regular expression, and returns the match as an
      * array. The first index is the matching expression, and array elements
      * [1] and higher represent each of the groups (sequences found in parens).
@@ -8533,6 +8672,43 @@
      */
     p.match = function(str, regexp) {
       return str.match(regexp);
+    };
+    /**
+     * The startsWith() function tests if a string starts with the specified prefix.  If the prefix
+     * is the empty String or equal to the subject String, startsWith() will also return true.
+     *
+     * @param {String} prefix   the String used to compare against the start of the subject String.
+     * @param {int}    toffset  (optional) an offset into the subject String where searching should begin.
+     *
+     * @return {boolean} true if the subject String starts with the prefix.
+     */
+    p.__startsWith = function(subject, prefix, toffset) {
+      if (typeof subject !== "string") {
+        return subject.startsWith.apply(subject, removeFirstArgument(arguments));
+      }
+
+      toffset = toffset || 0;
+      if (toffset < 0 || toffset > subject.length) {
+        return false;
+      }
+      return (prefix === '' || prefix === subject) ? true : (subject.indexOf(prefix) === toffset);
+    };
+    /**
+     * The endsWith() function tests if a string ends with the specified suffix.  If the suffix
+     * is the empty String, endsWith() will also return true.
+     *
+     * @param {String} suffix   the String used to compare against the end of the subject String.
+     *
+     * @return {boolean} true if the subject String starts with the prefix.
+     */
+    p.__endsWith = function(subject, suffix) {
+      if (typeof subject !== "string") {
+        return subject.endsWith.apply(subject, removeFirstArgument(arguments));
+      }
+
+      var suffixLen = suffix ? suffix.length : 0;
+      return (suffix === '' || suffix === subject) ? true :
+        (subject.indexOf(suffix) === subject.length - suffixLen);
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -9527,7 +9703,85 @@
       noiseProfile.generator = undef;
     };
 
-    // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
+    /**
+     * [internal function] computeFontMetrics() calculates various metrics for text
+     * placement. Currently this function computes the ascent, descent and leading
+     * (from "lead", used for vertical space) values for the currently active font.
+     */
+    function computeFontMetrics() {
+      var emQuad = 250,
+          correctionFactor = curTextSize / emQuad,
+          canvas = document.createElement("canvas");
+      canvas.width = 2*emQuad;
+      canvas.height = 2*emQuad;
+      canvas.style.opacity = 0;
+      var ctx = canvas.getContext("2d");
+      ctx.font = emQuad + "px " + curTextFont.name;
+
+      // Size the canvas using a string with common max-ascent and max-descent letters.
+      // Changing the canvas dimensions resets the context, so we must reset the font.
+      var protrusions = "dbflkhyjqpg";
+      canvas.width = ctx.measureText(protrusions).width;
+      ctx.font = emQuad + "px " + curTextFont.name;
+
+      // for text lead values, we meaure a multiline text container.
+      var leadDiv = document.createElement("leadDiv");
+      leadDiv.style.position = "absolute";
+      leadDiv.style.opacity = 0;
+      leadDiv.style.fontFamily = curTextFont.name;
+      leadDiv.style.fontSize = emQuad + "px";
+      leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
+      document.body.appendChild(leadDiv);
+
+      var w = canvas.width,
+          h = canvas.height,
+          baseline = h/2;
+
+      // Set all canvas pixeldata values to 255, with all the content
+      // data being 0. This lets us scan for data[i] != 255.
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "black";
+      ctx.fillText(protrusions, 0, baseline);
+      var pixelData = ctx.getImageData(0, 0, w, h).data;
+
+      // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
+      // consecutive values in the array, rather than stored as 32 bit ints.
+      var i = 0,
+          w4 = w * 4,
+          len = pixelData.length;
+
+      // Finding the ascent uses a normal, forward scanline
+      while (++i < len && pixelData[i] === 255) {
+        nop();
+      }
+      var ascent = Math.round(i / w4);
+
+      // Finding the descent uses a reverse scanline
+      i = len - 1;
+      while (--i > 0 && pixelData[i] === 255) {
+        nop();
+      }
+      var descent = Math.round(i / w4);
+
+      // Update current font metrics
+      curTextAscent = correctionFactor * (baseline - ascent);
+      curTextDescent = correctionFactor * (descent - baseline);
+
+      // For leading, we first set a "safe" value, using TeX's leading ratio
+      curTextLeading = 1.2 * curTextSize;
+
+      // Then we try to get the real value from the browser
+      if (document.defaultView.getComputedStyle) {
+        var leadDivHeight = document.defaultView.getComputedStyle(leadDiv,null).getPropertyValue("height");
+        leadDivHeight = leadDivHeight.replace("px","");
+        if (leadDivHeight >= curTextSize * 2) {
+          curTextLeading = correctionFactor * Math.round(leadDivHeight/2);
+        }
+      }
+      document.body.removeChild(leadDiv);
+    }
+
     /**
     * Defines the dimension of the display window in units of pixels. The size() function must
     * be the first line in setup(). If size() is not called, the default size of the window is
@@ -9570,8 +9824,9 @@
         }
       }
 
-      // Reset the text font/size
-      p.textSize(curTextSize);
+      // Ensure that the correct font is set after size()
+      curContext.font = curTextSize + "px " + curTextFont.name;
+      computeFontMetrics();
 
       // Set the background to whatever it was called last as if background() was called before size()
       // If background() hasn't been called before, set background() to a light gray
@@ -10436,41 +10691,41 @@
         voff += sphereDetailU;
         v2 = voff;
         for (var j = 0; j < sphereDetailU; j++) {
-          sphereVerts.push(parseFloat(sphereX[v1]));
-          sphereVerts.push(parseFloat(sphereY[v1]));
-          sphereVerts.push(parseFloat(sphereZ[v1++]));
-          sphereVerts.push(parseFloat(sphereX[v2]));
-          sphereVerts.push(parseFloat(sphereY[v2]));
-          sphereVerts.push(parseFloat(sphereZ[v2++]));
+          sphereVerts.push(sphereX[v1]);
+          sphereVerts.push(sphereY[v1]);
+          sphereVerts.push(sphereZ[v1++]);
+          sphereVerts.push(sphereX[v2]);
+          sphereVerts.push(sphereY[v2]);
+          sphereVerts.push(sphereZ[v2++]);
         }
 
         // close each ring
         v1 = v11;
         v2 = voff;
 
-        sphereVerts.push(parseFloat(sphereX[v1]));
-        sphereVerts.push(parseFloat(sphereY[v1]));
-        sphereVerts.push(parseFloat(sphereZ[v1]));
-        sphereVerts.push(parseFloat(sphereX[v2]));
-        sphereVerts.push(parseFloat(sphereY[v2]));
-        sphereVerts.push(parseFloat(sphereZ[v2]));
+        sphereVerts.push(sphereX[v1]);
+        sphereVerts.push(sphereY[v1]);
+        sphereVerts.push(sphereZ[v1]);
+        sphereVerts.push(sphereX[v2]);
+        sphereVerts.push(sphereY[v2]);
+        sphereVerts.push(sphereZ[v2]);
       }
 
       // add the northern cap
       for (i = 0; i < sphereDetailU; i++) {
         v2 = voff + i;
 
-        sphereVerts.push(parseFloat(sphereX[v2]));
-        sphereVerts.push(parseFloat(sphereY[v2]));
-        sphereVerts.push(parseFloat(sphereZ[v2]));
+        sphereVerts.push(sphereX[v2]);
+        sphereVerts.push(sphereY[v2]);
+        sphereVerts.push(sphereZ[v2]);
         sphereVerts.push(0);
         sphereVerts.push(1);
         sphereVerts.push(0);
       }
 
-      sphereVerts.push(parseFloat(sphereX[voff]));
-      sphereVerts.push(parseFloat(sphereY[voff]));
-      sphereVerts.push(parseFloat(sphereZ[voff]));
+      sphereVerts.push(sphereX[voff]);
+      sphereVerts.push(sphereY[voff]);
+      sphereVerts.push(sphereZ[voff]);
       sphereVerts.push(0);
       sphereVerts.push(1);
       sphereVerts.push(0);
@@ -10524,8 +10779,8 @@
       var cz = new Float32Array(ures);
       // calc unit circle in XZ plane
       for (i = 0; i < ures; i++) {
-        cx[i] = cosLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
-        cz[i] = sinLUT[parseInt((i * delta) % PConstants.SINCOS_LENGTH, 10)];
+        cx[i] = cosLUT[((i * delta) % PConstants.SINCOS_LENGTH) | 0];
+        cz[i] = sinLUT[((i * delta) % PConstants.SINCOS_LENGTH) | 0];
       }
 
       // computing vertexlist
@@ -10543,8 +10798,8 @@
 
       // step along Y axis
       for (i = 1; i < vres; i++) {
-        var curradius = sinLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
-        var currY = -cosLUT[parseInt(angle % PConstants.SINCOS_LENGTH, 10)];
+        var curradius = sinLUT[(angle % PConstants.SINCOS_LENGTH) | 0];
+        var currY = -cosLUT[(angle % PConstants.SINCOS_LENGTH) | 0];
         for (var j = 0; j < ures; j++) {
           sphereX[currVert] = cx[j] * curradius;
           sphereY[currVert] = currY;
@@ -11168,16 +11423,16 @@
 
     Drawing3D.prototype.strokeWeight = function(w) {
       DrawingShared.prototype.strokeWeight.apply(this, arguments);
-      
+
       // Processing groups the weight of points and lines under this one function,
       // but for WebGL, we need to set a uniform for points and call a function for line.
-      
+
       curContext.useProgram(programObject2D);
       uniformf("pointSize2d", programObject2D, "pointSize", w);
-      
+
       curContext.useProgram(programObjectUnlitShape);
       uniformf("pointSizeUnlitShape", programObjectUnlitShape, "pointSize", w);
-      
+
       curContext.lineWidth(w);
     };
 
@@ -11429,7 +11684,7 @@
       view.transpose();
 
       curContext.useProgram(programObjectUnlitShape);
-      
+
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
 
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
@@ -11550,6 +11805,17 @@
     };
 
     /**
+     * this series of three operations is used a lot in Drawing2D.prototype.endShape
+     * and has been split off as its own function, to tighten the code and allow for
+     * fewer bugs.
+     */
+    function fillStrokeClose() {
+      executeContextFill();
+      executeContextStroke();
+      curContext.closePath();
+    }
+
+    /**
      * The endShape() function is the companion to beginShape() and may only be called after beginShape().
      * When endshape() is called, all of image data defined since the previous call to beginShape() is written
      * into the image buffer.
@@ -11563,6 +11829,12 @@
       if (vertArray.length === 0) { return; }
 
       var closeShape = mode === PConstants.CLOSE;
+
+      // if the shape is closed, the first element is also the last element
+      if (closeShape) {
+        vertArray.push(vertArray[0]);
+      }
+
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
@@ -11606,25 +11878,6 @@
         texVertArray.push(cachedVertArray[4]);
       }
 
-      // if shape is closed, push the first point into the last point (including colours)
-      if (closeShape) {
-        fillVertArray.push(vertArray[0][0]);
-        fillVertArray.push(vertArray[0][1]);
-        fillVertArray.push(vertArray[0][2]);
-
-        for (i = 5; i < 9; i++) {
-          colorVertArray.push(vertArray[0][i]);
-        }
-
-       for (i = 9; i < 13; i++) {
-          strokeVertArray.push(vertArray[0][i]);
-        }
-
-        texVertArray.push(vertArray[0][3]);
-        texVertArray.push(vertArray[0][4]);
-      }
-      // End duplication
-
       // curveVertex
       if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
         if (vertArrayLength > 3) {
@@ -11650,13 +11903,7 @@
             b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
             curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
           }
-          // close the shape
-          if (closeShape) {
-            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-          }
-          executeContextFill();
-          executeContextStroke();
-          curContext.closePath();
+          fillStrokeClose();
         }
       }
 
@@ -11675,13 +11922,7 @@
             curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
           }
         }
-        // close the shape
-        if (closeShape) {
-          curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-        }
-        executeContextFill();
-        executeContextStroke();
-        curContext.closePath();
+        fillStrokeClose();
       }
 
       // render the vertices provided
@@ -11745,9 +11986,7 @@
                 p.fill(vertArray[i+2][5]);
               }
             }
-            executeContextFill();
-            executeContextStroke();
-            curContext.closePath();
+            fillStrokeClose();
           }
         } else if (curShape === PConstants.TRIANGLE_FAN) {
           if (vertArrayLength > 2) {
@@ -11827,9 +12066,7 @@
                 curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
                 curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               }
-              executeContextFill();
-              executeContextStroke();
-              curContext.closePath();
+              fillStrokeClose();
             }
           }
         } else {
@@ -11845,12 +12082,7 @@
               }
             }
           }
-          if (closeShape) {
-            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-          }
-          executeContextFill();
-          executeContextStroke();
-          curContext.closePath();
+          fillStrokeClose();
         }
       }
 
@@ -11859,6 +12091,13 @@
       isBezier = false;
       curveVertArray = [];
       curveVertCount = 0;
+
+      // If the shape is closed, the first element was added as last element.
+      // We must remove it again to prevent the list of vertices from growing
+      // over successive calls to endShape(CLOSE)
+      if (closeShape) {
+        vertArray.pop();
+      }
     };
 
     Drawing3D.prototype.endShape = function(mode) {
@@ -13763,6 +14002,20 @@
             aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
           };
         }(this)),
+        toArray: (function(aImg) {
+          if (aImg.isRemote) { // Remote images cannot access imageData
+            throw "Image is loaded remotely. Cannot get pixels.";
+          } else {
+            return function() {
+              var arr = [], length = aImg.width * aImg.height;
+              for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+                arr.push(p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
+                                       aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]));
+              }
+              return arr;
+            };
+          }
+        }(this)),
         set: function(arr) {
           if (this.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot set pixels.";
@@ -13783,7 +14036,7 @@
       * and after changes have been made, call updatePixels(). Even if the renderer may not seem to use
       * this function in the current Processing release, this will always be subject to change.
       */
-      this.loadPixels = function() {};
+      this.loadPixels = nop;
 
       /**
       * @member PImage
@@ -13795,7 +14048,7 @@
       * function in the current Processing release, this will always be subject to change.
       * Currently, none of the renderers use the additional parameters to updatePixels().
       */
-      this.updatePixels = function() {};
+      this.updatePixels = nop;
 
       this.toImageData = function() {
         if (this.isRemote) { // Remote images cannot access imageData, send source image instead
@@ -14235,18 +14488,28 @@
     p.pixels = {
       getLength: function() { return p.imageData.data.length ? p.imageData.data.length/4 : 0; },
       getPixel: function(i) {
-        var offset = i*4;
-        return (p.imageData.data[offset+3] << 24) & 0xff000000 |
-               (p.imageData.data[offset+0] << 16) & 0x00ff0000 |
-               (p.imageData.data[offset+1] << 8) & 0x0000ff00 |
-               p.imageData.data[offset+2] & 0x000000ff;
+        var offset = i*4, data = p.imageData.data;
+        return (data[offset+3] << 24) & 0xff000000 |
+               (data[offset+0] << 16) & 0x00ff0000 |
+               (data[offset+1] << 8) & 0x0000ff00 |
+               data[offset+2] & 0x000000ff;
       },
       setPixel: function(i,c) {
-        var offset = i*4;
-        p.imageData.data[offset+0] = (c & 0x00ff0000) >>> 16; // RED_MASK
-        p.imageData.data[offset+1] = (c & 0x0000ff00) >>> 8;  // GREEN_MASK
-        p.imageData.data[offset+2] = (c & 0x000000ff);        // BLUE_MASK
-        p.imageData.data[offset+3] = (c & 0xff000000) >>> 24; // ALPHA_MASK
+        var offset = i*4, data = p.imageData.data;
+        data[offset+0] = (c & 0x00ff0000) >>> 16; // RED_MASK
+        data[offset+1] = (c & 0x0000ff00) >>> 8;  // GREEN_MASK
+        data[offset+2] = (c & 0x000000ff);        // BLUE_MASK
+        data[offset+3] = (c & 0xff000000) >>> 24; // ALPHA_MASK
+      },
+      toArray: function() {
+        var arr = [], length = p.imageData.width * p.imageData.height, data = p.imageData.data;
+        for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+          arr.push((data[offset+3] << 24) & 0xff000000 |
+                   (data[offset+0] << 16) & 0x00ff0000 |
+                   (data[offset+1] << 8) & 0x0000ff00 |
+                   data[offset+2] & 0x000000ff);
+        }
+        return arr;
       },
       set: function(arr) {
         for (var i = 0, aL = arr.length; i < aL; i++) {
@@ -14373,7 +14636,7 @@
      */
     var backgroundHelper = function(arg1, arg2, arg3, arg4) {
       var obj;
-      
+
       if (arg1 instanceof PImage) {
         obj = arg1;
 
@@ -14386,7 +14649,7 @@
       } else {
         obj = p.color(arg1, arg2, arg3, arg4);
       }
-      
+
       backgroundObj = obj;
     };
 
@@ -15114,54 +15377,26 @@
       return ! (dw <= 0 || dh <= 0);
     };
 
-    p.filter_new_scanline = function() {
-      p.shared.sX = p.shared.srcXOffset;
-      p.shared.fracV = p.shared.srcYOffset & PConstants.PREC_MAXVAL;
-      p.shared.ifV = PConstants.PREC_MAXVAL - p.shared.fracV;
-      p.shared.v1 = (p.shared.srcYOffset >> PConstants.PRECISIONB) * p.shared.iw;
-      p.shared.v2 = Math.min((p.shared.srcYOffset >> PConstants.PRECISIONB) + 1, p.shared.ih1) * p.shared.iw;
-    };
-
-    p.filter_bilinear = function() {
-      p.shared.fracU = p.shared.sX & PConstants.PREC_MAXVAL;
-      p.shared.ifU = PConstants.PREC_MAXVAL - p.shared.fracU;
-      p.shared.ul = (p.shared.ifU * p.shared.ifV) >> PConstants.PRECISIONB;
-      p.shared.ll = (p.shared.ifU * p.shared.fracV) >> PConstants.PRECISIONB;
-      p.shared.ur = (p.shared.fracU * p.shared.ifV) >> PConstants.PRECISIONB;
-      p.shared.lr = (p.shared.fracU * p.shared.fracV) >> PConstants.PRECISIONB;
-      p.shared.u1 = (p.shared.sX >> PConstants.PRECISIONB);
-      p.shared.u2 = Math.min(p.shared.u1 + 1, p.shared.iw1);
-      // get color values of the 4 neighbouring texels
-      // changed for 0.9
-      var cULoffset = (p.shared.v1 + p.shared.u1) * 4;
-      var cURoffset = (p.shared.v1 + p.shared.u2) * 4;
-      var cLLoffset = (p.shared.v2 + p.shared.u1) * 4;
-      var cLRoffset = (p.shared.v2 + p.shared.u2) * 4;
-      p.shared.cUL = p.color.toInt(p.shared.srcBuffer[cULoffset], p.shared.srcBuffer[cULoffset+1],
-                     p.shared.srcBuffer[cULoffset+2], p.shared.srcBuffer[cULoffset+3]);
-      p.shared.cUR = p.color.toInt(p.shared.srcBuffer[cURoffset], p.shared.srcBuffer[cURoffset+1],
-                     p.shared.srcBuffer[cURoffset+2], p.shared.srcBuffer[cURoffset+3]);
-      p.shared.cLL = p.color.toInt(p.shared.srcBuffer[cLLoffset], p.shared.srcBuffer[cLLoffset+1],
-                     p.shared.srcBuffer[cLLoffset+2], p.shared.srcBuffer[cLLoffset+3]);
-      p.shared.cLR = p.color.toInt(p.shared.srcBuffer[cLRoffset], p.shared.srcBuffer[cLRoffset+1],
-                     p.shared.srcBuffer[cLRoffset+2], p.shared.srcBuffer[cLRoffset+3]);
-      p.shared.r = ((p.shared.ul * ((p.shared.cUL & PConstants.RED_MASK) >> 16) + p.shared.ll *
-                   ((p.shared.cLL & PConstants.RED_MASK) >> 16) + p.shared.ur * ((p.shared.cUR & PConstants.RED_MASK) >> 16) +
-                   p.shared.lr * ((p.shared.cLR & PConstants.RED_MASK) >> 16)) << PConstants.PREC_RED_SHIFT) & PConstants.RED_MASK;
-      p.shared.g = ((p.shared.ul * (p.shared.cUL & PConstants.GREEN_MASK) + p.shared.ll * (p.shared.cLL & PConstants.GREEN_MASK) +
-                   p.shared.ur * (p.shared.cUR & PConstants.GREEN_MASK) + p.shared.lr *
-                   (p.shared.cLR & PConstants.GREEN_MASK)) >>> PConstants.PRECISIONB) & PConstants.GREEN_MASK;
-      p.shared.b = (p.shared.ul * (p.shared.cUL & PConstants.BLUE_MASK) + p.shared.ll * (p.shared.cLL & PConstants.BLUE_MASK) +
-                   p.shared.ur * (p.shared.cUR & PConstants.BLUE_MASK) + p.shared.lr * (p.shared.cLR & PConstants.BLUE_MASK)) >>> PConstants.PRECISIONB;
-      p.shared.a = ((p.shared.ul * ((p.shared.cUL & PConstants.ALPHA_MASK) >>> 24) + p.shared.ll *
-                   ((p.shared.cLL & PConstants.ALPHA_MASK) >>> 24) + p.shared.ur * ((p.shared.cUR & PConstants.ALPHA_MASK) >>> 24) +
-                   p.shared.lr * ((p.shared.cLR & PConstants.ALPHA_MASK) >>> 24)) << PConstants.PREC_ALPHA_SHIFT) & PConstants.ALPHA_MASK;
-      return p.shared.a | p.shared.r | p.shared.g | p.shared.b;
-    };
+    var blendFuncs = {};
+    blendFuncs[PConstants.BLEND] = p.modes.blend;
+    blendFuncs[PConstants.ADD] = p.modes.add;
+    blendFuncs[PConstants.SUBTRACT] = p.modes.subtract;
+    blendFuncs[PConstants.LIGHTEST] = p.modes.lightest;
+    blendFuncs[PConstants.DARKEST] = p.modes.darkest;
+    blendFuncs[PConstants.REPLACE] = p.modes.replace;
+    blendFuncs[PConstants.DIFFERENCE] = p.modes.difference;
+    blendFuncs[PConstants.EXCLUSION] = p.modes.exclusion;
+    blendFuncs[PConstants.MULTIPLY] = p.modes.multiply;
+    blendFuncs[PConstants.SCREEN] = p.modes.screen;
+    blendFuncs[PConstants.OVERLAY] = p.modes.overlay;
+    blendFuncs[PConstants.HARD_LIGHT] = p.modes.hard_light;
+    blendFuncs[PConstants.SOFT_LIGHT] = p.modes.soft_light;
+    blendFuncs[PConstants.DODGE] = p.modes.dodge;
+    blendFuncs[PConstants.BURN] = p.modes.burn;
 
     p.blit_resize = function(img, srcX1, srcY1, srcX2, srcY2, destPixels,
-                              screenW, screenH, destX1, destY1, destX2, destY2, mode) {
-      var x, y; // iterator vars
+                             screenW, screenH, destX1, destY1, destX2, destY2, mode) {
+      var x, y;
       if (srcX1 < 0) {
         srcX1 = 0;
       }
@@ -15178,19 +15413,19 @@
       var srcH = srcY2 - srcY1;
       var destW = destX2 - destX1;
       var destH = destY2 - destY1;
-      var smooth = true; // may as well go with the smoothing these days
-      if (!smooth) {
-        srcW++;
-        srcH++;
-      }
+
       if (destW <= 0 || destH <= 0 || srcW <= 0 || srcH <= 0 || destX1 >= screenW ||
           destY1 >= screenH || srcX1 >= img.width || srcY1 >= img.height) {
         return;
       }
+
       var dx = Math.floor(srcW / destW * PConstants.PRECISIONF);
       var dy = Math.floor(srcH / destH * PConstants.PRECISIONF);
-      p.shared.srcXOffset = Math.floor(destX1 < 0 ? -destX1 * dx : srcX1 * PConstants.PRECISIONF);
-      p.shared.srcYOffset = Math.floor(destY1 < 0 ? -destY1 * dy : srcY1 * PConstants.PRECISIONF);
+
+      var pshared = p.shared;
+
+      pshared.srcXOffset = Math.floor(destX1 < 0 ? -destX1 * dx : srcX1 * PConstants.PRECISIONF);
+      pshared.srcYOffset = Math.floor(destY1 < 0 ? -destY1 * dy : srcY1 * PConstants.PRECISIONF);
       if (destX1 < 0) {
         destW += destX1;
         destX1 = 0;
@@ -15201,336 +15436,114 @@
       }
       destW = Math.min(destW, screenW - destX1);
       destH = Math.min(destH, screenH - destY1);
-      // changed in 0.9, TODO
+
       var destOffset = destY1 * screenW + destX1;
       var destColor;
-      p.shared.srcBuffer = img.imageData.data;
-      if (smooth) {
-        // use bilinear filtering
-        p.shared.iw = img.width;
-        p.shared.iw1 = img.width - 1;
-        p.shared.ih1 = img.height - 1;
-        switch (mode) {
-        case PConstants.BLEND:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.blend(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.blend(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.ADD:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.add(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.add(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.SUBTRACT:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.subtract(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.subtract(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.LIGHTEST:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.lightest(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.lightest(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.DARKEST:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.darkest(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.darkest(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.REPLACE:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              if (img.format !== PConstants.RGB && destPixels[(destOffset + x) * 4] !== 255) {
-                destColor = p.color.toArray(p.modes.blend(destColor, p.filter_bilinear()));
-              } else {
-                destColor = p.color.toArray(p.filter_bilinear());
-              }
-              //destPixels[destOffset + x] = p.filter_bilinear();
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.DIFFERENCE:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.difference(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.difference(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.EXCLUSION:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.exclusion(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.exclusion(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.MULTIPLY:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.multiply(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.multiply(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.SCREEN:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.screen(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.screen(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.OVERLAY:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.overlay(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.overlay(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.HARD_LIGHT:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.hard_light(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.hard_light(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.SOFT_LIGHT:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.soft_light(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.soft_light(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.DODGE:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.dodge(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.dodge(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
-        case PConstants.BURN:
-          for (y = 0; y < destH; y++) {
-            p.filter_new_scanline();
-            for (x = 0; x < destW; x++) {
-              // changed for 0.9
-              destColor = p.color.toInt(destPixels[(destOffset + x) * 4],
-                                        destPixels[((destOffset + x) * 4) + 1],
-                                        destPixels[((destOffset + x) * 4) + 2],
-                                        destPixels[((destOffset + x) * 4) + 3]);
-              destColor = p.color.toArray(p.modes.burn(destColor, p.filter_bilinear()));
-              //destPixels[destOffset + x] = p.modes.burn(destPixels[destOffset + x], p.filter_bilinear());
-              destPixels[(destOffset + x) * 4] = destColor[0];
-              destPixels[(destOffset + x) * 4 + 1] = destColor[1];
-              destPixels[(destOffset + x) * 4 + 2] = destColor[2];
-              destPixels[(destOffset + x) * 4 + 3] = destColor[3];
-              p.shared.sX += dx;
-            }
-            destOffset += screenW;
-            p.shared.srcYOffset += dy;
-          }
-          break;
+
+      pshared.srcBuffer = img.imageData.data;
+      pshared.iw = img.width;
+      pshared.iw1 = img.width - 1;
+      pshared.ih1 = img.height - 1;
+
+      // cache for speed
+      var filterBilinear = p.filter_bilinear,
+        filterNewScanline = p.filter_new_scanline,
+        blendFunc = blendFuncs[mode],
+        blendedColor,
+        idx,
+        cULoffset,
+        cURoffset,
+        cLLoffset,
+        cLRoffset,
+        ALPHA_MASK = PConstants.ALPHA_MASK,
+        RED_MASK = PConstants.RED_MASK,
+        GREEN_MASK = PConstants.GREEN_MASK,
+        BLUE_MASK = PConstants.BLUE_MASK,
+        PREC_MAXVAL = PConstants.PREC_MAXVAL,
+        PRECISIONB = PConstants.PRECISIONB,
+        PREC_RED_SHIFT = PConstants.PREC_RED_SHIFT,
+        PREC_ALPHA_SHIFT = PConstants.PREC_ALPHA_SHIFT,
+        srcBuffer = pshared.srcBuffer,
+        min = Math.min;
+
+      for (y = 0; y < destH; y++) {
+
+        pshared.sX = pshared.srcXOffset;
+        pshared.fracV = pshared.srcYOffset & PREC_MAXVAL;
+        pshared.ifV = PREC_MAXVAL - pshared.fracV;
+        pshared.v1 = (pshared.srcYOffset >> PRECISIONB) * pshared.iw;
+        pshared.v2 = min((pshared.srcYOffset >> PRECISIONB) + 1, pshared.ih1) * pshared.iw;
+
+        for (x = 0; x < destW; x++) {
+          idx = (destOffset + x) * 4;
+
+          destColor = (destPixels[idx + 3] << 24) &
+                      ALPHA_MASK | (destPixels[idx] << 16) &
+                      RED_MASK   | (destPixels[idx + 1] << 8) &
+                      GREEN_MASK |  destPixels[idx + 2] & BLUE_MASK;
+
+          pshared.fracU = pshared.sX & PREC_MAXVAL;
+          pshared.ifU = PREC_MAXVAL - pshared.fracU;
+          pshared.ul = (pshared.ifU * pshared.ifV) >> PRECISIONB;
+          pshared.ll = (pshared.ifU * pshared.fracV) >> PRECISIONB;
+          pshared.ur = (pshared.fracU * pshared.ifV) >> PRECISIONB;
+          pshared.lr = (pshared.fracU * pshared.fracV) >> PRECISIONB;
+          pshared.u1 = (pshared.sX >> PRECISIONB);
+          pshared.u2 = min(pshared.u1 + 1, pshared.iw1);
+
+          cULoffset = (pshared.v1 + pshared.u1) * 4;
+          cURoffset = (pshared.v1 + pshared.u2) * 4;
+          cLLoffset = (pshared.v2 + pshared.u1) * 4;
+          cLRoffset = (pshared.v2 + pshared.u2) * 4;
+
+          pshared.cUL = (srcBuffer[cULoffset + 3] << 24) &
+                        ALPHA_MASK | (srcBuffer[cULoffset] << 16) &
+                        RED_MASK   | (srcBuffer[cULoffset + 1] << 8) &
+                        GREEN_MASK |  srcBuffer[cULoffset + 2] & BLUE_MASK;
+
+          pshared.cUR = (srcBuffer[cURoffset + 3] << 24) &
+                        ALPHA_MASK | (srcBuffer[cURoffset] << 16) &
+                        RED_MASK   | (srcBuffer[cURoffset + 1] << 8) &
+                        GREEN_MASK |  srcBuffer[cURoffset + 2] & BLUE_MASK;
+
+          pshared.cLL = (srcBuffer[cLLoffset + 3] << 24) &
+                        ALPHA_MASK | (srcBuffer[cLLoffset] << 16) &
+                        RED_MASK   | (srcBuffer[cLLoffset + 1] << 8) &
+                        GREEN_MASK |  srcBuffer[cLLoffset + 2] & BLUE_MASK;
+
+          pshared.cLR = (srcBuffer[cLRoffset + 3] << 24) &
+                        ALPHA_MASK | (srcBuffer[cLRoffset] << 16) &
+                        RED_MASK   | (srcBuffer[cLRoffset + 1] << 8) &
+                        GREEN_MASK |  srcBuffer[cLRoffset + 2] & BLUE_MASK;
+
+          pshared.r = ((pshared.ul * ((pshared.cUL & RED_MASK) >> 16) +
+                       pshared.ll * ((pshared.cLL & RED_MASK) >> 16) +
+                       pshared.ur * ((pshared.cUR & RED_MASK) >> 16) +
+                       pshared.lr * ((pshared.cLR & RED_MASK) >> 16)) << PREC_RED_SHIFT) & RED_MASK;
+          pshared.g = ((pshared.ul * (pshared.cUL & GREEN_MASK) +
+                       pshared.ll * (pshared.cLL & GREEN_MASK) +
+                       pshared.ur * (pshared.cUR & GREEN_MASK) +
+                       pshared.lr * (pshared.cLR & GREEN_MASK)) >>> PRECISIONB) & GREEN_MASK;
+          pshared.b = (pshared.ul * (pshared.cUL & BLUE_MASK) +
+                       pshared.ll * (pshared.cLL & BLUE_MASK) +
+                       pshared.ur * (pshared.cUR & BLUE_MASK) +
+                       pshared.lr * (pshared.cLR & BLUE_MASK)) >>> PRECISIONB;
+          pshared.a = ((pshared.ul * ((pshared.cUL & ALPHA_MASK) >>> 24) +
+                       pshared.ll * ((pshared.cLL & ALPHA_MASK) >>> 24) +
+                       pshared.ur * ((pshared.cUR & ALPHA_MASK) >>> 24) +
+                       pshared.lr * ((pshared.cLR & ALPHA_MASK) >>> 24)) << PREC_ALPHA_SHIFT) & ALPHA_MASK;
+
+          blendedColor = blendFunc(destColor, (pshared.a | pshared.r | pshared.g | pshared.b));
+
+          destPixels[idx]     = (blendedColor & RED_MASK) >>> 16;
+          destPixels[idx + 1] = (blendedColor & GREEN_MASK) >>> 8;
+          destPixels[idx + 2] = (blendedColor & BLUE_MASK);
+          destPixels[idx + 3] = (blendedColor & ALPHA_MASK) >>> 24;
+
+          pshared.sX += dx;
         }
+        destOffset += screenW;
+        pshared.srcYOffset += dy;
       }
     };
 
@@ -15551,7 +15564,7 @@
             this.name = name;
             break;
           default:
-            this.name = "\"" + name + "\", sans-serif";
+            this.name = '"' + name + '", sans-serif';
             break;
         }
       }
@@ -15651,6 +15664,7 @@
         var curContext = drawing.$ensureContext();
         curContext.font = curTextSize + "px " + curTextFont.name;
       }
+      computeFontMetrics();
     };
 
     /**
@@ -15664,11 +15678,49 @@
      * @see #text
      */
     p.textSize = function(size) {
-      if (size) {
+      if (size !== curTextSize) {
         curTextSize = size;
         var curContext = drawing.$ensureContext();
         curContext.font = curTextSize + "px " + curTextFont.name;
+        computeFontMetrics();
       }
+    };
+
+    /**
+     * textAscent() returns the maximum height a character extends above the baseline of the
+     * current font at its current size, in pixels.
+     *
+     * @returns {float} height of the current font above the baseline, at its current size, in pixels
+     *
+     * @see #textDescent
+     */
+    p.textAscent = function() {
+      return curTextAscent;
+    };
+
+    /**
+     * textDescent() returns the maximum depth a character will protrude below the baseline of
+     * the current font at its current size, in pixels.
+     *
+     * @returns {float} depth of the current font below the baseline, at its current size, in pixels
+     *
+     * @see #textAscent
+     */
+    p.textDescent = function() {
+      return curTextDescent;
+    };
+
+    /**
+     * textLeading() Sets the current font's leading, which is the distance
+     * from baseline to baseline over consecutive lines, with additional vertical
+     * spacing taking into account. Usually this value is 1.2 or 1.25 times the
+     * textsize, but this value can be changed to effect vertically compressed
+     * or stretched text.
+     *
+     * @param {int|float} the desired baseline-to-baseline size in pixels
+     */
+    p.textLeading = function(leading) {
+      curTextLeading = leading;
     };
 
     /**
@@ -15681,15 +15733,19 @@
      * @see #PFont
      * @see #text
      */
-    p.textAlign = function() {
-      if(arguments.length === 1) {
-        horizontalTextAlignment = arguments[0];
-      } else if(arguments.length === 2) {
-        horizontalTextAlignment = arguments[0];
-        verticalTextAlignment = arguments[1];
-      }
+    p.textAlign = function(xalign, yalign) {
+      horizontalTextAlignment = xalign;
+      verticalTextAlignment = yalign || PConstants.BASELINE;
     };
 
+    /**
+     * toP5String converts things with arbitrary data type into
+     * string values, for text rendering.
+     *
+     * @param {any} any object that can be converted into a string
+     *
+     * @return {String} the string representation of the input
+     */
     function toP5String(obj) {
       if(obj instanceof String) {
         return obj;
@@ -15745,137 +15801,6 @@
       }
       return width;
     };
-
-    p.textLeading = function(leading) {
-      curTextLeading = leading;
-    };
-
-    function MeasureTextCanvas(fontFace, fontSize, baseLine, text) {
-      this.canvas = document.createElement('canvas');
-      this.canvas.setAttribute('width', fontSize + "px");
-      this.canvas.setAttribute('height', fontSize + "px");
-      this.ctx = this.canvas.getContext("2d");
-      this.ctx.font = fontSize + "pt " + fontFace;
-      this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, fontSize, fontSize);
-      this.ctx.fillStyle = "white";
-      this.ctx.fillText(text, 0, baseLine);
-      this.imageData = this.ctx.getImageData(0, 0, fontSize, fontSize);
-
-      this.get = function(x, y) {
-        return this.imageData.data[((y*(this.imageData.width*4)) + (x*4))];
-      };
-    }
-
-    /**
-     * textAscent() height of the font above the baseline of the current font at its current size, in pixels.
-     *
-     * @returns {float} height of the font above the baseline of the current font at its current size, in pixels
-     *
-     * @see #textDescent
-     */
-    p.textAscent = (function() {
-      var oldTextSize = undef,
-          oldTextFont = undef,
-          ascent      = undef,
-          graphics    = undef;
-      return function textAscent() {
-        // if text size or font has changed, recalculate ascent value
-        if (oldTextFont !== curTextFont || oldTextSize !== curTextSize) {
-          // store current size and font
-          oldTextFont = curTextFont;
-          oldTextSize = curTextSize;
-
-          var found       = false,
-              character   = "k",
-              colour      = p.color(0),
-              top         = 0,
-              bottom      = curTextSize,
-              yLoc        = curTextSize/2;
-
-          // setup off screen image to write and measure text from
-          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
-
-          // binary search for highest pixel
-          while(yLoc !== bottom) {
-            for (var xLoc = 0; xLoc < curTextSize; xLoc++) {
-              if (graphics.get(xLoc, yLoc) !== colour) {
-                found = true;
-                xLoc = curTextSize;
-              }
-            }
-            if (found) {
-              // y--
-              bottom = yLoc;
-              found = false;
-            } else {
-              // y++
-              top = yLoc;
-            }
-            yLoc = Math.ceil((bottom + top)/2);
-          }
-          ascent = ((curTextSize-1) - yLoc) + 1;
-          return ascent;
-        }
-        // text size and font have not changed since last time
-        return ascent;
-      };
-    }());
-
-    /**
-     * textDescent() height of the font below the baseline of the current font at its current size, in pixels.
-     *
-     * @returns {float} height of the font below the baseline of the current font at its current size, in pixels
-     *
-     * @see #textAscent
-     */
-    p.textDescent = (function() {
-      var oldTextSize = undef,
-          oldTextFont = undef,
-          descent     = undef,
-          graphics    = undef;
-      return function textDescent() {
-        // if text size or font has changed, recalculate descent value
-        if (oldTextFont !== curTextFont || oldTextSize !== curTextSize) {
-          // store current size and font
-          oldTextFont = curTextFont;
-          oldTextSize = curTextSize;
-
-          var found       = false,
-              character   = "p",
-              colour      = p.color(0),
-              top         = 0,
-              bottom      = curTextSize,
-              yLoc        = curTextSize/2;
-
-          // setup off screen image to write and measure text from
-          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, 0, character);
-
-          // binary search for lowest pixel
-          while(yLoc !== bottom) {
-            for (var xLoc = 0; xLoc < curTextSize; xLoc++) {
-              if (graphics.get(xLoc, yLoc) !== colour) {
-                found = true;
-                xLoc = curTextSize;
-              }
-            }
-            if (found) {
-              // y++
-              top = yLoc;
-              found = false;
-            } else {
-              // y--
-              bottom = yLoc;
-            }
-            yLoc = Math.ceil((bottom + top)/2);
-          }
-          descent = yLoc + 1;
-          return descent;
-        } 
-        // text size and font have not changed since last time
-        return descent;
-      };
-    }());
 
     // A lookup table for characters that can not be referenced by Object
     p.glyphLook = function(font, chr) {
@@ -16107,16 +16032,15 @@
       }
       // handle text line-by-line
 
-      var yOffset;
+      var yOffset = 0;
       if(verticalTextAlignment === PConstants.TOP) {
-        yOffset = (1-baselineOffset) * curTextLeading;
+        yOffset = curTextAscent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        yOffset = (1-baselineOffset - linesCount/2) * curTextLeading;
+        yOffset = curTextAscent/2 - (linesCount-1)*curTextLeading/2;
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
-        yOffset = (1-baselineOffset - linesCount) * curTextLeading;
-      } else { //  if(verticalTextAlignment === PConstants.BASELINE) {
-        yOffset = 0;
+        yOffset = -(curTextDescent + (linesCount-1)*curTextLeading);
       }
+
       for(var i=0;i<linesCount;++i) {
         var line = lines[i];
         drawing.text$line(line, x, y + yOffset, z, horizontalTextAlignment);
@@ -16609,7 +16533,8 @@
       p.size(aWidth, aHeight, aMode);
     };
 
-    DrawingPre.prototype.$init = function() {};
+    DrawingPre.prototype.$init = nop;
+
     Drawing2D.prototype.$init = function() {
       // Setup default 2d canvas context.
       // Moving this here removes the number of times we need to check the 3D variable
@@ -17110,16 +17035,31 @@
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
         if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
+          // the opera preload cache can only be cleared once we start
+          if (window.opera) {
+            var link,
+                element,
+                operaCache=curSketch.imageCache.operaCache;
+            for (link in operaCache) {
+              if(operaCache.hasOwnProperty(link)) {
+                element = operaCache[link];
+                if (element !== null) {
+                  document.body.removeChild(element);
+                }
+                delete(operaCache[link]);
+              }
+            }
+          }
+
           curSketch.attach(processing, defaultScope);
           curSketch.onLoad();
 
           // Run void setup()
           if (processing.setup) {
             processing.setup();
-            // if any transforms were performed in setup reset to identify matrix so draw loop is unpolluted
-            if (curContext && !p.use3DContext) {
-              curContext.setTransform(1, 0, 0, 1, 0, 0);
-            }
+            // if any transforms were performed in setup reset to identity matrix
+            // so draw loop is unpolluted
+            processing.resetMatrix();
             curSketch.onSetup();
           }
 
@@ -17212,10 +17152,9 @@
       "degrees", "directionalLight", "disableContextMenu",
       "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu",
       "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
-      "fill", "filter", "filter_bilinear", "filter_new_scanline",
-      "floor", "focused", "frameCount", "frameRate", "frustum", "get",
-      "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour", "hue",
-      "image", "imageMode", "Import", "intersect", "join", "key",
+      "fill", "filter", "floor", "focused", "frameCount", "frameRate", "frustum",
+      "get", "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour",
+      "hue", "image", "imageMode", "Import", "intersect", "join", "key",
       "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
       "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
       "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape",
@@ -17244,10 +17183,11 @@
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
-      "vertex", "width", "XMLElement", "year", "__contains", "__equals", "__frameRate",
-      "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
-      "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
-      "__toCharArray", "__split"];
+      "vertex", "width", "XMLElement", "year", "__contains", "__equals",
+      "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
+      "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
+      "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
+      "__codePointAt", "__startsWith", "__endsWith"];
 
     var members = {};
     var i, l;
@@ -17614,7 +17554,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|hashCode|toCharArray|printStackTrace|split)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
@@ -19187,19 +19127,48 @@
     this.imageCache = {
       pending: 0,
       images: {},
-      add: function(href) {
-        if(isDOMPresent) {
-          var img = new Image();
+      // Opera requires special administration for preloading
+      operaCache: {},
+      // Specify an optional img arg if the image is already loaded in the DOM,
+      // otherwise href will get loaded.
+      add: function(href, img) {
+        // Prevent muliple loads for an image, in case it gets
+        // preloaded more than once, or is added via JS and then preloaded.
+        if (this.images[href]) {
+          return;
+        }
+
+        if (!isDOMPresent) {
+          this.images[href] = null;
+        }
+
+        // No image in the DOM, kick-off a background load
+        if (!img) {
+          img = new Image();
           img.onload = (function(owner) {
             return function() {
               owner.pending--;
             };
           }(this));
           this.pending++;
-          this.images[href] = img;
           img.src = href;
-        } else {
-          this.images[href] = null;
+        }
+
+        this.images[href] = img;
+
+        // Opera will not load images until they are inserted into the DOM.
+        if (window.opera) {
+          var div = document.createElement("div");
+          div.appendChild(img);
+          // we can't use "display: none", since that makes it invisible, and thus not load
+          div.style.position = "absolute";
+          div.style.opacity = 0;
+          div.style.width = "1px";
+          div.style.height= "1px";
+          if (!this.operaCache[href]) {
+            document.body.appendChild(div);
+            this.operaCache[href] = div;
+          }
         }
       }
     };
@@ -19361,7 +19330,7 @@
       function callback(block, error) {
         code[index] = block;
         ++loaded;
-        if (error) { 
+        if (error) {
           errors.push(filename + " ==> " + error);
         }
         if (loaded === sourcesCount) {
@@ -19458,7 +19427,7 @@
             loadSketchFromSources(canvas, filenames);
             continue;
           }
-          source =  script.innerText || script.textContent;
+          source =  script.textContent || script.text;
           instance = new Processing(canvas, source);
         }
       }
