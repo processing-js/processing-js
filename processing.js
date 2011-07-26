@@ -8603,7 +8603,7 @@
         return subject.equalsIgnoreCase.apply(subject, removeFirstArgument(arguments));
       }
 
-      return subject.toLowerCase()===other.toLowerCase();
+      return subject.toLowerCase() === other.toLowerCase();
     };
     /**
      * The __toCharArray() function splits the string into a char array.
