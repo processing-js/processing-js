@@ -16073,16 +16073,15 @@
       }
       // handle text line-by-line
 
-      var yOffset;
+      var yOffset = 0;
       if(verticalTextAlignment === PConstants.TOP) {
-        yOffset = (1-baselineOffset) * curTextLeading;
+        yOffset = curTextAscent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        yOffset = (1-baselineOffset - linesCount/2) * curTextLeading;
+        yOffset = curTextAscent/2 - (linesCount-1)*curTextLeading/2;
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
-        yOffset = (1-baselineOffset - linesCount) * curTextLeading;
-      } else { //  if(verticalTextAlignment === PConstants.BASELINE) {
-        yOffset = 0;
+        yOffset = -(curTextDescent + (linesCount-1)*curTextLeading);
       }
+
       for(var i=0;i<linesCount;++i) {
         var line = lines[i];
         drawing.text$line(line, x, y + yOffset, z, horizontalTextAlignment);
