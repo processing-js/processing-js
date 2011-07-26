@@ -86,8 +86,8 @@ var tests = [
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
-  { path: "text-valign-BASELINE-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
-  { path: "text-valign-BASELINE.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-valign-BASELINE.pde", tags: ["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
+  { path: "text-valign-BASELINE-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-valign-CENTER.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
   { path: "text-valign-CENTER-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
   { path: "text-valign-TOP.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
