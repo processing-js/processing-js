@@ -19091,7 +19091,6 @@
         // Prevent muliple loads for an image, in case it gets
         // preloaded more than once, or is added via JS and then preloaded.
         if (this.images[href]) {
-          console.log('bailing, image already cached');
           return;
         }
 
