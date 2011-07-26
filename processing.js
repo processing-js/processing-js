@@ -8758,7 +8758,6 @@
 
     var logBuffer = [];
 
-    p.console = window.console || Processing.logger;
     /**
      * The println() function writes to the console area of the Processing environment.
      * Each call to this function creates a new line of output. Individual elements can be separated with quotes ("") and joined with the string concatenation operator (+).
@@ -19118,7 +19117,7 @@
   }());
   // end of tinylog lite JavaScript library
 
-  Processing.logger = tinylogLite;
+  Processing.logger = window.console || tinylogLite;
 
   Processing.version = "@VERSION@";
 
