@@ -1055,7 +1055,7 @@
           }
         }
         return false;
-      };      
+      };
 
       this.size = function() {
         return count;
@@ -8590,7 +8590,7 @@
     };
     /**
      * The __equalsIgnoreCase() function compares two strings to see if they are the same.
-     * Returns true if the strings are the same, either when forced to all lower case or 
+     * Returns true if the strings are the same, either when forced to all lower case or
      * all upper case.
      *
      * @param {String} subject  a string used for comparison
@@ -8603,7 +8603,7 @@
         return subject.equalsIgnoreCase.apply(subject, removeFirstArgument(arguments));
       }
 
-      return subject.match(new RegExp(other, "i"))[0] === subject;
+      return subject.toLowerCase() === other.toLowerCase();
     };
     /**
      * The __toCharArray() function splits the string into a char array.
