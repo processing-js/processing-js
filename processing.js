@@ -1662,13 +1662,6 @@
         bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
-        // Keys and Keystrokes
-        firstCodedDown = true,    // first coded key stroke
-        firstEDGKeyDown = true,   // first Enter - Delete Google key stroke
-        firstEDMKeyDown = true,   // first Enter - Delete Mozilla key stroke
-        firstMKeyDown = true,     // first Mozilla key stroke
-        firstGKeyDown = true,     // first Google key stroke
-        gRefire = false,          // Google refire
         curContextCache = { attributes: {}, locations: {} },
         // Shaders
         programObject3D,
