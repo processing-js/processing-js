@@ -14,7 +14,7 @@ var createElement = function(tag) {
   };
 };
 
-// HTML canavs element
+// HTML canvas element
 var createCanvas = function() {
   return {
     attachEvent: __empty_func__,
@@ -129,7 +129,7 @@ var document = {
   appendChild: __elem_func__,
   removeChild: __empty_func__,
   getElementById: __empty_func__,
-  getElementsByTagName: function() { return [createCanvas()]; },
+  getElementsByTagName: function() { return [canvas]; },
   createElement: function (tag) {
     if (tag === "canvas") return createCanvas();
     return createElement(tag);
