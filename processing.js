@@ -1652,7 +1652,7 @@
         curTextAscent = 9,
         curTextDescent = 2,
         getLoaded = false,
-        start = new Date().getTime(),
+        start = Date.now(),
         timeSinceLastFPS = start,
         framesSinceLastFPS = 0,
         textcanvas,
@@ -7698,7 +7698,7 @@
     * @see year
     */
     p.millis = function() {
-      return new Date().getTime() - start;
+      return Date.now() - start;
     };
 
     /**
@@ -7716,13 +7716,13 @@
     * @see loop
     */
     DrawingShared.prototype.redraw = function() {
-      var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
+      var sec = (Date.now() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
 
       // recalculate FPS every half second for better accuracy.
       if (sec > 0.5) {
-        timeSinceLastFPS = new Date().getTime();
+        timeSinceLastFPS = Date.now();
         framesSinceLastFPS = 0;
         p.__frameRate = fps;
       }
@@ -7805,7 +7805,7 @@
         return;
       }
 
-      timeSinceLastFPS = new Date().getTime();
+      timeSinceLastFPS = Date.now();
       framesSinceLastFPS = 0;
 
       looping = window.setInterval(function() {
