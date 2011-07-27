@@ -1,4 +1,20 @@
-color a, b, c, d, e, f, g, h, i, j, k, l, m;
+
+color a,
+      aa,
+      b,
+      bb,
+      c,
+      cc,
+      d,
+      e,
+      f,
+      g,
+      h,
+      i,
+      j,
+      k,
+      l,
+      m;
 
 // 1 Arg: Grayscale
 a = color(255);
@@ -19,8 +35,11 @@ _checkEqual(color.toString(d), "rgba(0,0,0,1)");
 
 // 1 Arg: Hex
 a = color(#FF00FF);
+aa = color(255,000,255);
 b = color(#000000);
+bb = color(000,000,000);
 c = color(#884422);
+cc = color(136,68,34);
 
 _checkEqual(color.toArray(a), [255, 0, 255, 255]);
 _checkEqual(color.toArray(b), [0, 0, 0, 255]);
@@ -30,6 +49,9 @@ _checkEqual(color.toString(a), "rgba(255,0,255,1)");
 _checkEqual(color.toString(b), "rgba(0,0,0,1)");
 _checkEqual(color.toString(c), "rgba(136,68,34,1)");
 
+_checkEqual(a, aa);
+_checkEqual(b, bb);
+_checkEqual(c, cc);
 
 // 2 Args: Grayscale, Alpha
 a = color(255, 100);
