@@ -11,7 +11,8 @@ function runJslint(input) {
           Uint8Array: true,
           DOMParser: true,
           window: true,
-          localStorage: true
+          localStorage: true,
+          HTMLCanvasElement: true
         },
         evil: true,
         undef: true,

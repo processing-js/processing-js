@@ -13685,6 +13685,9 @@
     * @see createImage
     */
     var PImage = function(aWidth, aHeight, aFormat) {
+      // Keep track of whether or not the cached imageData has been touched.
+      var imageDataIsDirty = false;
+
       this.get = function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
@@ -14044,7 +14047,6 @@
         this.sourceImg = htmlImg;
       };
 
-      var imageDataIsDirty = false;
       this._isDirty = function () {
         return imageDataIsDirty;
       };
