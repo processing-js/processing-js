@@ -6,96 +6,109 @@ var __elem_func__ = function() { return elem };
 
 var navigator = { useragent: true };
 
-var canvas = {
-  attachEvent: __empty_func__,
-  addEventListener: __empty_func__,
-  appendChild: __elem_func__,
-  removeChild: __empty_func__,
-  childNodes: { length: 0 },
-  toDataURL: __empty_func__,
-  localName: "canvas",
-  getContext:  function() {
-                 return {
-                   translate: __empty_func__,
-                   attachEvent: __empty_func__,
-                   fillRect: __empty_func__,
-                   fillText: __empty_func__,
-                   measureText: function() { return {width:1}; },
-                   clearRect: __empty_func__,
-                   beginPath: __empty_func__,
-                   moveTo: __empty_func__,
-                   lineTo: __empty_func__,
-                   rect: __empty_func__,
-                   save: __empty_func__,
-                   stroke: __empty_func__,
-                   fill: __empty_func__,
-                   rotate: __empty_func__,
-                   closePath: __empty_func__,
-                   arc: __empty_func__,
-                   scale: __empty_func__,
-                   restore: __empty_func__,
-                   bezierCurveTo: __empty_func__,
-                   viewport: __empty_func__,
-                   clearColor: __empty_func__,
-                   clear: __empty_func__,
-                   enable: __empty_func__,
-                   createShader: __empty_func__,
-                   shaderSource: __empty_func__,
-                   compileShader: __empty_func__,
-                   getShaderParameter: function() { return true; },
-                   getShaderInfoLog: __empty_func__,
-                   createProgram: __empty_func__,
-                   attachShader: __empty_func__,
-                   linkProgram: __empty_func__,
-                   getProgramParameter: function() { return true; },
-                   useProgram: __empty_func__,
-                   createBuffer: __empty_func__,
-                   bindBuffer: __empty_func__,
-                   bufferData: __empty_func__,
-                   blendFunc: __empty_func__,
-                   getAttribLocation: __empty_func__,
-                   vertexAttribPointer: __empty_func__,
-                   enableVertexAttribArray: __empty_func__,
-                   getUniformLocation: __empty_func__,
-                   uniform1f: __empty_func__,
-                   uniform2f: __empty_func__,
-                   uniform3f: __empty_func__,
-                   uniform4f: __empty_func__,
-                   uniformfv: __empty_func__,
-                   uniform2fv: __empty_func__,
-                   uniform3fv: __empty_func__,
-                   uniform1i: __empty_func__,
-                   uniform2i: __empty_func__,
-                   uniform3i: __empty_func__,
-                   uniform4i: __empty_func__,
-                   getImageData: function() { return {width:1, height:1, data:[1,2,3,4]}; },
-                   createImageData: function() { return {width:1, height:1, data:[1,2,3,4]}; },
-                   drawImage: __empty_func__,
-                   putImageData: __empty_func__,
-                   lineWidth: __empty_func__,
-                   disable: __empty_func__,
-                   drawArrays: __empty_func__,
-                   polygonOffset: __empty_func__,
-                   createTexture: __empty_func__,
-                   texImage2D: __empty_func__,
-                   texParameteri: __empty_func__,
-                   generateMipmap: __empty_func__,
-                   uniformMatrix4fv: __empty_func__,
-                   uniform4fv: __empty_func__,
-                   disableVertexAttribArray: __empty_func__,
-                   bindTexture: __empty_func__,
-                   setTransform: __empty_func__
-                 };
-  },
-  style: {
-    setProperty: __empty_func__
-  },
-  __attributes : { "data-processing-sources" : "test.pjs" },
-  hasAttribute : function(name) { return this.__attributes.hasOwnProperty(name.toLowerCase()); },
-  getAttribute : function(name) { return this.__attributes[name.toLowerCase()]; },
-  setAttribute : function(name, value) { this.__attributes[name.toLowerCase()] = value; }
+// generic HTML element
+var createElement = function(tag) {
+  return {
+    localName: tag,
+    style: {}
+  };
 };
- 
+
+// HTML canvas element
+var createCanvas = function() {
+  return {
+    attachEvent: __empty_func__,
+    addEventListener: __empty_func__,
+    appendChild: __elem_func__,
+    removeChild: __empty_func__,
+    childNodes: { length: 0 },
+    toDataURL: __empty_func__,
+    localName: "canvas",
+    getContext:  function() {
+                   return {
+                     translate: __empty_func__,
+                     attachEvent: __empty_func__,
+                     fillRect: __empty_func__,
+                     fillText: __empty_func__,
+                     measureText: function() { return {width:1}; },
+                     clearRect: __empty_func__,
+                     beginPath: __empty_func__,
+                     moveTo: __empty_func__,
+                     lineTo: __empty_func__,
+                     rect: __empty_func__,
+                     save: __empty_func__,
+                     stroke: __empty_func__,
+                     fill: __empty_func__,
+                     rotate: __empty_func__,
+                     closePath: __empty_func__,
+                     arc: __empty_func__,
+                     scale: __empty_func__,
+                     restore: __empty_func__,
+                     bezierCurveTo: __empty_func__,
+                     viewport: __empty_func__,
+                     clearColor: __empty_func__,
+                     clear: __empty_func__,
+                     enable: __empty_func__,
+                     createShader: __empty_func__,
+                     shaderSource: __empty_func__,
+                     compileShader: __empty_func__,
+                     getShaderParameter: function() { return true; },
+                     getShaderInfoLog: __empty_func__,
+                     createProgram: __empty_func__,
+                     attachShader: __empty_func__,
+                     linkProgram: __empty_func__,
+                     getProgramParameter: function() { return true; },
+                     useProgram: __empty_func__,
+                     createBuffer: __empty_func__,
+                     bindBuffer: __empty_func__,
+                     bufferData: __empty_func__,
+                     blendFunc: __empty_func__,
+                     getAttribLocation: __empty_func__,
+                     vertexAttribPointer: __empty_func__,
+                     enableVertexAttribArray: __empty_func__,
+                     getUniformLocation: __empty_func__,
+                     uniform1f: __empty_func__,
+                     uniform2f: __empty_func__,
+                     uniform3f: __empty_func__,
+                     uniform4f: __empty_func__,
+                     uniformfv: __empty_func__,
+                     uniform2fv: __empty_func__,
+                     uniform3fv: __empty_func__,
+                     uniform1i: __empty_func__,
+                     uniform2i: __empty_func__,
+                     uniform3i: __empty_func__,
+                     uniform4i: __empty_func__,
+                     getImageData: function() { return {width:1, height:1, data:[1,2,3,4]}; },
+                     createImageData: function() { return {width:1, height:1, data:[1,2,3,4]}; },
+                     drawImage: __empty_func__,
+                     putImageData: __empty_func__,
+                     lineWidth: __empty_func__,
+                     disable: __empty_func__,
+                     drawArrays: __empty_func__,
+                     polygonOffset: __empty_func__,
+                     createTexture: __empty_func__,
+                     texImage2D: __empty_func__,
+                     texParameteri: __empty_func__,
+                     generateMipmap: __empty_func__,
+                     uniformMatrix4fv: __empty_func__,
+                     uniform4fv: __empty_func__,
+                     disableVertexAttribArray: __empty_func__,
+                     bindTexture: __empty_func__,
+                     setTransform: __empty_func__
+                   };
+    },
+    style: {
+      setProperty: __empty_func__
+    },
+    __attributes : { "data-processing-sources" : "test.pjs" },
+    hasAttribute : function(name) { return this.__attributes.hasOwnProperty(name.toLowerCase()); },
+    getAttribute : function(name) { return this.__attributes[name.toLowerCase()]; },
+    setAttribute : function(name, value) { this.__attributes[name.toLowerCase()] = value; }
+  };
+};
+
+var canvas = createCanvas();
+
 var HTMLImageElement = __empty_func__;
 
 var document = {
@@ -117,7 +130,10 @@ var document = {
   removeChild: __empty_func__,
   getElementById: __empty_func__,
   getElementsByTagName: function() { return [canvas]; },
-  createElement: function () { return canvas; },
+  createElement: function (tag) {
+    if (tag === "canvas") return createCanvas();
+    return createElement(tag);
+  },
   addEventListener: __empty_func__,
   documentElement: {
     appendChild: __elem_func__,
@@ -135,12 +151,12 @@ var elem = {
   removeChild: __empty_func__,
   style: {}
 };
- 
+
 var addEventListener = __empty_func__;
 var XMLHttpRequest = __empty_func__;
 var setInterval = __empty_func__;
 var clearInterval = __empty_func__;
- 
+
 var window = {
   appendChild: __elem_func__,
   removeChild: __empty_func__,
@@ -167,7 +183,7 @@ var Image = __empty_func__;
 
 var localStorage = __empty_func__;
 
-// The XML parser is designed only for parsing of 
+// The XML parser is designed only for parsing of
 // simple XML documents (for unit testing purpose).
 function DOMParser() {
   // parser
@@ -241,7 +257,7 @@ function DOMParser() {
       }
       name = s.substring(start, pos);
       skipWs();
-      while (pos < s.length && s.charAt(pos) !== ">" && 
+      while (pos < s.length && s.charAt(pos) !== ">" &&
              s.charAt(pos) !== "/" && s.charAt(pos) !== "?") {
         skipWs();
         var attrName = "", attrValue = "";
@@ -271,7 +287,7 @@ function DOMParser() {
         ++j;
         var ch2 = s.charAt(j), q, name;
         switch (ch2) {
-        case "/": 
+        case "/":
           ++j;
           q = s.indexOf(">", j); if(q < 0) { throw "Unexpected EOF[1]"; }
           name = getName(s.substring(j,q), true);
@@ -370,13 +386,13 @@ function DOMParser() {
   function NamedNodeMap(owner) {
     var nodes = [];
     nodes.item = function(index) { return nodes[index]; };
-    nodes.getNamedItem = function(name) { 
+    nodes.getNamedItem = function(name) {
       for (var i = 0; i < nodes.length; ++i) {
         if (nodes[i].name === name) return nodes[i];
       }
       return null;
     };
-    nodes.setNamedItem = function(arg) { 
+    nodes.setNamedItem = function(arg) {
       for (var i = 0; i < nodes.length; ++i) {
         if (nodes[i].name === arg.name) {
           var old = nodes[i];
@@ -389,7 +405,7 @@ function DOMParser() {
       nodes.push(arg);
       return null;
     };
-    nodes.removeNamedItem = function(name) { 
+    nodes.removeNamedItem = function(name) {
       for (var i = 0; i < nodes.length; ++i) {
         if (nodes[i].name === name) {
           var old = nodes[i];
@@ -400,16 +416,16 @@ function DOMParser() {
       }
       return null;
     };
-    nodes.getNamedItemNS = function(namespaceURI, localName) { 
+    nodes.getNamedItemNS = function(namespaceURI, localName) {
       for (var i = 0; i < nodes.length; ++i) {
-        if (nodes[i].localName === localName && 
+        if (nodes[i].localName === localName &&
             nodes[i].namespaceURI === namespaceURI) return nodes[i];
       }
       return null;
     };
-    nodes.setNamedItemNS = function(arg) { 
+    nodes.setNamedItemNS = function(arg) {
       for (var i = 0; i < nodes.length; ++i) {
-        if (nodes[i].localName === arg.localName && 
+        if (nodes[i].localName === arg.localName &&
             nodes[i].namespaceURI === arg.namespaceURI) {
           var old = nodes[i];
           nodes[i] = arg;
@@ -421,9 +437,9 @@ function DOMParser() {
       nodes.push(arg);
       return null;
     };
-    nodes.removeNamedItemNS = function(namespaceURI, localName) { 
+    nodes.removeNamedItemNS = function(namespaceURI, localName) {
       for (var i = 0; i < nodes.length; ++i) {
-        if (nodes[i].localName === localName && 
+        if (nodes[i].localName === localName &&
             nodes[i].namespaceURI === namespaceURI) {
           var old = nodes[i];
           nodes.splice(i, 1);
@@ -521,7 +537,7 @@ function DOMParser() {
     return oldChild;
   };
   Node.prototype.appendChild = function(newChild) {
-    newChild.parentNode = this;  
+    newChild.parentNode = this;
     var lastChild = this.lastChild;
     if (lastChild) {
       newChild.nextSibling = lastChild.nextSibling;
@@ -550,7 +566,7 @@ function DOMParser() {
       if (this.childNodes[i].nodeType == Node.ELEMENT_NODE) {
         this.childNodes[i].normalize();
       }
-      if (this.childNodes[i].nodeType == Node.TEXT_NODE) {        
+      if (this.childNodes[i].nodeType == Node.TEXT_NODE) {
         if (lastWasText) {
           this.childNodes[i - 1].appendData(this.childNodes[i].data);
           this.removeChild(this.childNodes[i]);
@@ -674,7 +690,7 @@ function DOMParser() {
       }
       element.hasAttributeNS = function(namespaceURI, localName) {
         return this.attributes.getNamedItemNS(namespaceURI, localName) != null;
-      }      
+      }
       element.getElementsByTagName = function(name) {
         return this.getElementsByTagNameNS("", name);
       };
@@ -773,7 +789,7 @@ function DOMParser() {
     var document = new Document();
     var elementsStack = [], currentElement = document;
     parseXml(s, {
-      beginElement: function(name, attrs, isEmpty) { 
+      beginElement: function(name, attrs, isEmpty) {
          var parent = currentElement;
          elementsStack.push(parent);
          currentElement = document.createElementNS(name.namespace, buildQualifiedName(name));
@@ -788,10 +804,10 @@ function DOMParser() {
            currentElement = elementsStack.pop();
          }
       },
-      endElement: function(name) { 
-        currentElement = elementsStack.pop(); 
+      endElement: function(name) {
+        currentElement = elementsStack.pop();
       },
-      text: function(text, isWhitespace) { 
+      text: function(text, isWhitespace) {
         var node = document.createTextNode(text);
         currentElement.appendChild(node);
       },
