@@ -8758,7 +8758,6 @@
 
     var logBuffer = [];
 
-    p.console = window.console || Processing.logger;
     /**
      * The println() function writes to the console area of the Processing environment.
      * Each call to this function creates a new line of output. Individual elements can be separated with quotes ("") and joined with the string concatenation operator (+).
@@ -17187,7 +17186,7 @@
       "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
       "blit_resize", "blue", "box", "breakShape", "brightness",
       "camera", "ceil", "Character", "color", "colorMode",
-      "concat", "console", "constrain", "copy", "cos", "createFont",
+      "concat", "constrain", "copy", "cos", "createFont",
       "createGraphics", "createImage", "cursor", "curve", "curveDetail",
       "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
       "degrees", "directionalLight", "disableContextMenu",
@@ -19381,10 +19380,10 @@
             try {
               return new Processing(canvas, code.join("\n"));
             } catch(e) {
-              Processing.logger.log("Unable to execute pjs sketch: " + e);
+              throw "Processing.js: Unable to execute pjs sketch: " + e;
             }
           } else {
-            Processing.logger.log("Unable to load pjs sketch files: " + errors.join("\n"));
+            throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }
         }
       }
