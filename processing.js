@@ -373,7 +373,7 @@
     }
     if (obj.hashCode instanceof Function) {
       return obj.hashCode();
-    } 
+    }
     if (obj.$id === undef) {
         obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
     }
@@ -393,7 +393,7 @@
   function virtEquals(obj, other) {
     if (obj === null || other === null) {
       return (obj === null) && (other === null);
-    } 
+    }
     if (typeof (obj) === "string") {
       return obj === other;
     }
@@ -417,7 +417,7 @@
   var ObjectIterator = function(obj) {
     if (obj.iterator instanceof Function) {
       return obj.iterator();
-    } 
+    }
     if (obj instanceof Array) {
       // iterate through array items
       var index = -1;
@@ -616,7 +616,7 @@
       this.remove = function(item) {
         if (typeof item === 'number') {
           return array.splice(item, 1)[0];
-        } 
+        }
         item = this.indexOf(item);
         if (item > -1) {
           array.splice(item, 1);
@@ -1166,7 +1166,7 @@
       dot: function(v, y, z) {
         if (arguments.length === 1) {
           return (this.x * v.x + this.y * v.y + this.z * v.z);
-        } 
+        }
         return (this.x * v + this.y * y + this.z * z);
       },
       cross: function(v) {
@@ -1306,7 +1306,7 @@
       object[name] = function() {
         if (arguments.length === args) {
           return fn.apply(this, arguments);
-        } 
+        }
         return oldfn.apply(this, arguments);
       };
     } else {
@@ -2808,7 +2808,7 @@
         var i, j;
         if (typeof child === 'number') {
           return this.children[child];
-        } 
+        }
         var found;
         if(child === "" || this.name === child){
           return this;
@@ -4126,22 +4126,22 @@
       if (len < 0) { return text; }
       if (text.indexOf("pt") === len) {
         return parseFloat(text.substring(0, len)) * 1.25;
-      } 
+      }
       if (text.indexOf("pc") === len) {
         return parseFloat( text.substring( 0, len)) * 15;
-      } 
+      }
       if (text.indexOf("mm") === len) {
         return parseFloat( text.substring(0, len)) * 3.543307;
-      } 
+      }
       if (text.indexOf("cm") === len) {
         return parseFloat(text.substring(0, len)) * 35.43307;
-      } 
+      }
       if (text.indexOf("in") === len) {
         return parseFloat(text.substring(0, len)) * 90;
-      } 
+      }
       if (text.indexOf("px") === len) {
         return parseFloat(text.substring(0, len));
-      } 
+      }
       return parseFloat(text);
     };
     /**
@@ -4511,7 +4511,7 @@
       hasAttribute: function () {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]) !== null;
-        } 
+        }
         if (arguments.length === 2) {
           return this.getAttribute(arguments[0],arguments[1]) !== null;
         }
@@ -4552,7 +4552,7 @@
             if (!child1.equals(child2)) { return false; }
           }
           return true;
-        } 
+        }
         return (this.content === other.content);
       },
       /**
@@ -4563,7 +4563,7 @@
        */
       getContent: function(){
         if (this.type === "TEXT") {
-          return this.content; 
+          return this.content;
         }
         var children = this.children;
         if (children.length === 1 && children[0].type === "TEXT") {
@@ -4587,7 +4587,7 @@
           attribute = this.findAttribute(arguments[0]);
           if (attribute) {
             return attribute.getValue();
-          } 
+          }
           return arguments[1];
         } else if (arguments.length === 1) {
           attribute = this.findAttribute(arguments[0]);
@@ -4599,7 +4599,7 @@
           attribute = this.findAttribute(arguments[0],arguments[1]);
           if (attribute) {
             return attribute.getValue();
-          } 
+          }
           return arguments[2];
         }
       },
@@ -4617,7 +4617,7 @@
       getStringAttribute: function() {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]);
-        } 
+        }
         if (arguments.length === 2){
           return this.getAttribute(arguments[0], arguments[1]);
         }
@@ -4644,10 +4644,10 @@
       getFloatAttribute: function() {
         if (arguments.length === 1 ) {
           return parseFloat(this.getAttribute(arguments[0], 0));
-        } 
+        }
         if (arguments.length === 2 ){
           return this.getAttribute(arguments[0], arguments[1]);
-        } 
+        }
         return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
@@ -4742,14 +4742,14 @@
         }
         if (arguments[0].indexOf('/') !== -1) { // path was given
           this.getChildRecursive(arguments[0].split("/"), 0);
-        } else {
-          var kid, kidName;
-          for (var i = 0, j = this.getChildCount(); i < j; i++) {
-            kid = this.getChild(i);
-            kidName = kid.getName();
-            if (kidName !== null && kidName === arguments[0]) {
-                return kid;
-            }
+          return null;
+        }
+        var kid, kidName;
+        for (var i = 0, j = this.getChildCount(); i < j; i++) {
+          kid = this.getChild(i);
+          kidName = kid.getName();
+          if (kidName !== null && kidName === arguments[0]) {
+              return kid;
           }
         }
         return null;
@@ -4771,10 +4771,10 @@
         if (arguments.length === 1) {
           if (typeof arguments[0]  === "number") {
             return this.getChild( arguments[0]);
-          } 
+          }
           if (arguments[0].indexOf('/') !== -1) { // path was given
             return this.getChildrenRecursive( arguments[0].split("/"), 0);
-          } 
+          }
           var matches = [];
           var kid, kidName;
           for (var i = 0, j = this.getChildCount(); i < j; i++) {
@@ -4817,7 +4817,7 @@
             if (kidName !== null && kidName === items[offset]) {
               if (offset === items.length-1) {
                 return kid;
-              } 
+              }
               offset += 1;
               return kid.getChildRecursive(items, offset);
             }
@@ -5900,31 +5900,31 @@
       multX: function(x, y, z, w) {
         if (!z) {
           return this.elements[0] * x + this.elements[1] * y + this.elements[3];
-        } 
+        }
         if (!w) {
           return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
-        } 
+        }
         return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
       },
       multY: function(x, y, z, w) {
         if (!z) {
           return this.elements[4] * x + this.elements[5] * y + this.elements[7];
-        } 
+        }
         if (!w) {
           return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
-        } 
+        }
         return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
       },
       multZ: function(x, y, z, w) {
         if (!w) {
           return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
-        } 
+        }
         return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
       },
       multW: function(x, y, z, w) {
         if (!w) {
           return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15];
-        } 
+        }
         return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
       },
       /**
@@ -6345,7 +6345,7 @@
     * @see splice
     */
     p.subset = function(array, offset, length) {
-      var end = length ? offset + length : array.length; 
+      var end = (length !== undef) ? offset + length : array.length;
       return array.slice(offset, end);
     };
 
@@ -6411,7 +6411,6 @@
     p.expand = function(ary, targetSize) {
       var temp = ary.slice(0),
           newSize = targetSize || ary.length * 2;
-      temp.length = ary.length * 2;
       temp.length = newSize;
       return temp;
     };
@@ -6777,7 +6776,7 @@
       // Grayscale and alpha
       if (curColorMode === PConstants.RGB) {
         return color$4(aValue1, aValue1, aValue1, aValue2);
-      } 
+      }
       if (curColorMode === PConstants.HSB) {
         return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
       }
@@ -6788,7 +6787,7 @@
       if (aValue1 <= colorModeX && aValue1 >= 0) {
           if (curColorMode === PConstants.RGB) {
             return color$4(aValue1, aValue1, aValue1, colorModeA);
-          } 
+          }
           if (curColorMode === PConstants.HSB) {
             return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA);
           }
@@ -6880,7 +6879,7 @@
 
       if (s === 0) { // Grayscale
         return [br, br, br];
-      } 
+      }
       var hue = h % 360;
       var f = hue % 60;
       var p = Math.round((b * (100 - s)) / 10000 * 255);
@@ -6915,7 +6914,7 @@
 
       if (min === max) {
         return [0, 0, max];
-      } 
+      }
       saturation = (max - min) / max;
 
       if (red === max) {
@@ -8079,7 +8078,7 @@
           values[i] = p.unbinary(binaryString[i]);
         }
         return values;
-      } 
+      }
       if (isNaN(binaryString)) {
         throw "NaN_Err";
       }
@@ -8091,7 +8090,7 @@
           return addUp + "";
         }
         throw "notBinary: the value passed into unbinary was not an 8 bit binary number";
-      } 
+      }
       throw "longErr";
     };
 
@@ -8189,7 +8188,7 @@
           arr.push(nfCoreScalar(value[i], plus, minus, leftDigits, rightDigits, group));
         }
         return arr;
-      } 
+      }
       return nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
     }
 
@@ -8338,7 +8337,7 @@
           arr.push(unhexScalar(hex[i]));
         }
         return arr;
-      } 
+      }
       return unhexScalar(hex);
     };
 
@@ -8782,7 +8781,7 @@
           arr.push(val[i].toString() + "");
         }
         return arr;
-      } 
+      }
       return (val.toString() + "");
     };
     /**
@@ -8802,7 +8801,7 @@
           arr.push(str[i].replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, ''));
         }
         return arr;
-      } 
+      }
       return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
     };
 
@@ -8810,13 +8809,13 @@
     function booleanScalar(val) {
       if (typeof val === 'number') {
         return val !== 0;
-      } 
+      }
       if (typeof val === 'boolean') {
         return val;
       }
       if (typeof val === 'string') {
         return val.toLowerCase() === 'true';
-      } 
+      }
       if (val instanceof Char) {
         // 1, T or t
         return val.code === 49 || val.code === 84 || val.code === 116;
@@ -8839,7 +8838,7 @@
           ret.push(booleanScalar(val[i]));
         }
         return ret;
-      } 
+      }
       return booleanScalar(val);
     };
 
@@ -8860,7 +8859,7 @@
           bytes.push((0 - (what[i] & 0x80)) | (what[i] & 0x7F));
         }
         return bytes;
-      } 
+      }
       return (0 - (what & 0x80)) | (what & 0x7F);
     };
 
@@ -8876,7 +8875,7 @@
     p.parseChar = function(key) {
       if (typeof key === "number") {
         return new Char(String.fromCharCode(key & 0xFFFF));
-      } 
+      }
       if (key instanceof Array) {
         var ret = [];
         for (var i = 0; i < key.length; i++) {
@@ -8894,13 +8893,13 @@
     function floatScalar(val) {
       if (typeof val === 'number') {
         return val;
-      } 
+      }
       if (typeof val === 'boolean') {
         return val ? 1 : 0;
       }
       if (typeof val === 'string') {
         return parseFloat(val);
-      } 
+      }
       if (val instanceof Char) {
         return val.code;
       }
@@ -8922,14 +8921,14 @@
           ret.push(floatScalar(val[i]));
         }
         return ret;
-      } 
+      }
       return floatScalar(val);
     };
 
     function intScalar(val, radix) {
       if (typeof val === 'number') {
         return val & 0xFFFFFFFF;
-      } 
+      }
       if (typeof val === 'boolean') {
         return val ? 1 : 0;
       }
@@ -8963,7 +8962,7 @@
           }
         }
         return ret;
-      } 
+      }
       return intScalar(val, radix);
     };
 
@@ -9085,7 +9084,7 @@
         dx = arguments[0] - arguments[2];
         dy = arguments[1] - arguments[3];
         return Math.sqrt(dx * dx + dy * dy);
-      } 
+      }
       if (arguments.length === 6) {
         dx = arguments[0] - arguments[3];
         dy = arguments[1] - arguments[4];
@@ -9201,7 +9200,7 @@
     p.max = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
-      } 
+      }
       var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
       if (! ("length" in numbers && numbers.length > 0)) {
         throw "Non-empty array is expected";
@@ -9231,7 +9230,7 @@
     p.min = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
-      } 
+      }
       var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
       if (! ("length" in numbers && numbers.length > 0)) {
         throw "Non-empty array is expected";
@@ -9469,7 +9468,7 @@
     p.random = function() {
       if(arguments.length === 0) {
         return currentRandom();
-      } 
+      }
       if(arguments.length === 1) {
         return currentRandom() * arguments[0];
       }
@@ -9522,7 +9521,7 @@
         if (haveNextNextGaussian) {
           haveNextNextGaussian = false;
           return nextNextGaussian;
-        } 
+        }
         var v1, v2, s;
         do {
           v1 = 2 * random() - 1; // between -1.0 and 1.0
@@ -10356,7 +10355,7 @@
     p.beginCamera = function() {
       if (manipulatingCamera) {
         throw ("You cannot call beginCamera() again before calling endCamera()");
-      } 
+      }
       manipulatingCamera = true;
       forwardTransform = cameraInv;
       reverseTransform = cam;
@@ -11195,7 +11194,7 @@
           ox /= ow;
         }
         return p.width * ( 1 + ox ) / 2.0;
-      } 
+      }
       // We assume that we're in 2D
       return modelView.multX(x, y);
     };
@@ -11230,7 +11229,7 @@
           oy /= ow;
         }
         return p.height * ( 1 + oy ) / 2.0;
-      } 
+      }
       // We assume that we're in 2D
       return modelView.multY(x, y);
     };
@@ -13672,7 +13671,7 @@
       // may implement this differently in later release
       if (img !== undef) {
         return window.open(img.toDataURL(),"_blank");
-      } 
+      }
       return window.open(p.externals.canvas.toDataURL(),"_blank");
     };
 
@@ -13749,7 +13748,7 @@
       this.get = function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
-        } 
+        }
         if (arguments.length === 2) {
           return p.get(x, y, this);
         }
@@ -13915,7 +13914,7 @@
       this.resize = function(w, h) {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot resize.";
-        } 
+        }
         if (this.width !== 0 || this.height !== 0) {
           // make aspect ratio if w or h is 0
           if (w === 0 && h !== 0) {
@@ -13975,7 +13974,7 @@
         getLength: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot get length.";
-          } 
+          }
           return function() {
             return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
           };
@@ -13983,7 +13982,7 @@
         getPixel: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot get pixels.";
-          } 
+          }
           return function(i) {
             var offset = i*4;
             return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
@@ -13993,7 +13992,7 @@
         setPixel: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot set pixel.";
-          } 
+          }
           return function(i,c) {
             var offset = i*4;
             aImg.imageData.data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
@@ -14053,7 +14052,7 @@
       this.toImageData = function() {
         if (this.isRemote) { // Remote images cannot access imageData, send source image instead
           return this.sourceImg;
-        } 
+        }
         var canvasData = getCanvasData(this.imageData);
         return canvasData.context.getImageData(0, 0, this.width, this.height);
       };
@@ -14244,7 +14243,7 @@
         data = curContext.getImageData(0|x, 0|y, 1, 1).data;
         // changed for 0.9
         return p.color.toInt(data[0], data[1], data[2], data[3]);
-      } 
+      }
       // x,y is outside image return transparent black
       return 0;
     }
@@ -14269,7 +14268,7 @@
     function get$5(x, y, w, h, img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot get x,y,w,h.";
-      } 
+      }
       // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
       // changed for 0.9, offset start point needs to be *4
       var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data,
@@ -14318,19 +14317,19 @@
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
       if (arguments.length === 2) {
         return get$2(x, y);
-      } 
+      }
       if (arguments.length === 0) {
         return get$0();
-      } 
+      }
       if (arguments.length === 5) {
         return get$5(x, y, w, h, img);
-      } 
+      }
       if (arguments.length === 4) {
         return get$4(x, y, w, h);
-      } 
+      }
       if (arguments.length === 3) {
         return get$3(x, y, w);
-      } 
+      }
       if (arguments.length === 1) {
         // PImage.get() was called, return the PImage
         return x;
@@ -14419,7 +14418,7 @@
     function set$4(x, y, obj, img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot set x,y.";
-      } 
+      }
       var c = p.color.toArray(obj);
       var offset = y * img.width * 4 + (x*4);
       var data = img.imageData.data;
@@ -14642,7 +14641,7 @@
 
         if (!obj.loaded) {
           throw "Error using image in background(): PImage not loaded.";
-        } 
+        }
         if(obj.width !== p.width || obj.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
@@ -14923,7 +14922,7 @@
       var dest;
       if (src.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot blend image.";
-      } 
+      }
       // check if pimgdest is there and pixels, if so this was a call from pimg.blend
       if (arguments.length === 10 || arguments.length === 9) {
         p.loadPixels();
@@ -15573,7 +15572,7 @@
     PFont.prototype.width = function(str) {
       if ("measureText" in curContext) {
         return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
-      } 
+      }
       return 0;
     };
     // Lists all standard fonts
@@ -15597,7 +15596,7 @@
     p.loadFont = function(name) {
       if (name === undef || name.indexOf(".svg") === -1) {
         return new PFont(name);
-      } 
+      }
       // If the font is a glyph, calculate by SVG table
       var font = p.loadGlyphs(name);
 
@@ -15749,17 +15748,17 @@
     function toP5String(obj) {
       if(obj instanceof String) {
         return obj;
-      } 
+      }
       if(typeof obj === 'number') {
         // check if an int
         if(obj === (0 | obj)) {
           return obj.toString();
-        } 
+        }
         return p.nf(obj, 0, 3);
       }
       if(obj === null || obj === undef) {
         return "";
-      } 
+      }
       return obj.toString();
     }
 
@@ -16187,7 +16186,7 @@
       if (tMode === PConstants.SHAPE) {
         // TODO: requires beginRaw function
         return;
-      } 
+      }
       if (arguments.length === 3) { // for text( str, x, y)
         text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
       } else if (arguments.length === 4) { // for text( str, x, y, z)
@@ -17265,7 +17264,7 @@
         var val = strings[index];
         if(val.charAt(0) === "/") {
           return val;
-        } 
+        }
         return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
       });
     }
@@ -17319,11 +17318,11 @@
       if(quoted || aposed) { // replace strings
         index = strings.length; strings.push(all);
         return "'" + index + "'";
-      } 
+      }
       if(regexCtx) { // replace RegExps
         index = strings.length; strings.push(regex);
         return prefix + "'" + index + "'";
-      } 
+      }
       // kill comments
       return comment !== "" ? " " : "\n";
     });
@@ -17396,7 +17395,7 @@
       var result = code.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
         if(name !== className) {
           return all;
-        } 
+        }
         return addAtom(all, 'G');
       });
       return result;
@@ -17528,17 +17527,17 @@
             if(equalsPart) {
               return "pixels.setPixel" + addAtom("(" +atom.substring(1, atom.length - 1) +
                 "," + rightSide + ")", 'B');
-            } 
+            }
             return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
               ")", 'B');
-          } 
+          }
           if(indexOrLength) {
             // length
             return "pixels.getLength" + addAtom("()", 'B');
           }
           if(equalsPart) {
             return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
-          } 
+          }
           return "pixels.toArray" + addAtom("()", 'B');
         });
       // Java method replacements for: replace, replaceAll, replaceFirst, equals, hashCode, etc.
@@ -17657,7 +17656,7 @@
     function expandExpression(expr) {
       if(expr.charAt(0) === '(' || expr.charAt(0) === '[') {
         return expr.charAt(0) + expandExpression(expr.substring(1, expr.length - 1)) + expr.charAt(expr.length - 1);
-      } 
+      }
       if(expr.charAt(0) === '{') {
         if(/^\{\s*(?:[A-Za-z_$][\w$]*|'\d+')\s*:/.test(expr)) {
           return "{" + addAtom(expr.substring(1, expr.length - 1), 'I') + "}";
@@ -17677,7 +17676,7 @@
         function(all, memberAccessSign, identifier, suffix, subMember, callSign) {
           if(memberAccessSign) {
             return all;
-          } 
+          }
           var subject = { name: identifier, member: subMember, callSign: !!callSign };
           return replaceContext(subject) + (suffix === undef ? "" : suffix);
         });
@@ -17742,7 +17741,7 @@
     function getDefaultValueForType(type) {
         if(type === "int" || type === "float") {
           return "0";
-        } 
+        }
         if(type === "boolean") {
           return "false";
         }
@@ -17782,7 +17781,7 @@
           definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
         }
         return new AstVar(definitions, attrAndType[2]);
-      } 
+      }
       return new AstStatement(transformExpression(statement));
     }
 
@@ -17829,7 +17828,7 @@
         content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
         return new AstForInExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
-      } 
+      }
       if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
         content = expr.substring(1, expr.length - 1).split(":");
         return new AstForEachExpression( transformStatement(trim(content[0])),
@@ -17936,7 +17935,7 @@
           staticDeclarations.push(declaration);
         }
         return staticDeclarations.join("");
-      } 
+      }
       return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
     };
 
@@ -18166,13 +18165,13 @@
           // returns "$this_N.$self" pointer instead of "this" in cases:
           // "this()", "this.XXX()", "this", but not for "this.XXX"
           return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
-        } 
+        }
         if(thisClassFields.hasOwnProperty(name)) {
           return thisClassFields[name].isStatic ? className + "." + name : selfId + "." + name;
         }
         if(thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
-        } 
+        }
         if(thisClassMethods.hasOwnProperty(name)) {
           return thisClassMethods[name].isStatic ? className + "." + name : selfId + ".$self." + name;
         }
@@ -18567,7 +18566,7 @@
         var name = subject.name;
         if(localNames.hasOwnProperty(name)) {
           return name;
-        } 
+        }
         if(globalMembers.hasOwnProperty(name) ||
            PConstants.hasOwnProperty(name) ||
            defaultScope.hasOwnProperty(name)) {
