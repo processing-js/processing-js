@@ -54,7 +54,7 @@
 
       function generateReport(tests) {
         var report = {
-                       testDate: new Date().toString(),
+                       testDate: Date.now(),
                        userAgent: window.navigator.userAgent,
                        data: []
                      };
@@ -109,7 +109,7 @@
 
       function download(file) {
         var req = new XMLHttpRequest();
-        req.open('GET', file + "?t=" + new Date().getTime(), false);
+        req.open('GET', file + "?t=" + Date.now(), false);
         if (req.overrideMimeType) {
           req.overrideMimeType('text/plain');
         }
@@ -282,11 +282,11 @@
 
               function runBenchmark() {
                 try {
-                  var startTime = (new Date).getTime(),
+                  var startTime = Date.now(),
                       failed = false;
 
                   for (var iters = 0; iters < iterCount; iters++) {
-                    if ( (new Date()).getTime() - startTime > MAX_TEST_TIME ) {
+                    if ( Date.now() - startTime > MAX_TEST_TIME ) {
                       // Exceeded allowable test run time, fail and bail
                       failed = true;
                       failedTests++;
@@ -295,7 +295,7 @@
                     p.redraw();
                   }
 
-                  var endTime = (new Date).getTime();
+                  var endTime = Date.now();
                   var diff = endTime - startTime;
                   totalTime += diff;
 
@@ -340,6 +340,8 @@
                 return;
               }
               runBenchmark();
+              p.exit();
+              p = null;
             } catch (e) {
               result.className = "failed";
               title.innerHTML = titleText(i+1, tl, 0, test.name, iterCount, "Processing failed: " + e.toString());

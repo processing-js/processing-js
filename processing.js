@@ -1653,7 +1653,7 @@
         curTextAscent = 9,
         curTextDescent = 2,
         getLoaded = false,
-        start = new Date().getTime(),
+        start = Date.now(),
         timeSinceLastFPS = start,
         framesSinceLastFPS = 0,
         textcanvas,
@@ -1663,13 +1663,6 @@
         bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
-        // Keys and Keystrokes
-        firstCodedDown = true,    // first coded key stroke
-        firstEDGKeyDown = true,   // first Enter - Delete Google key stroke
-        firstEDMKeyDown = true,   // first Enter - Delete Mozilla key stroke
-        firstMKeyDown = true,     // first Mozilla key stroke
-        firstGKeyDown = true,     // first Google key stroke
-        gRefire = false,          // Google refire
         curContextCache = { attributes: {}, locations: {} },
         // Shaders
         programObject3D,
@@ -7685,7 +7678,7 @@
     * @see year
     */
     p.millis = function() {
-      return new Date().getTime() - start;
+      return Date.now() - start;
     };
 
     /**
@@ -7703,13 +7696,13 @@
     * @see loop
     */
     DrawingShared.prototype.redraw = function() {
-      var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
+      var sec = (Date.now() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
 
       // recalculate FPS every half second for better accuracy.
       if (sec > 0.5) {
-        timeSinceLastFPS = new Date().getTime();
+        timeSinceLastFPS = Date.now();
         framesSinceLastFPS = 0;
         p.__frameRate = fps;
       }
@@ -7792,7 +7785,7 @@
         return;
       }
 
-      timeSinceLastFPS = new Date().getTime();
+      timeSinceLastFPS = Date.now();
       framesSinceLastFPS = 0;
 
       looping = window.setInterval(function() {
@@ -8738,7 +8731,6 @@
 
     var logBuffer = [];
 
-    p.console = window.console || Processing.logger;
     /**
      * The println() function writes to the console area of the Processing environment.
      * Each call to this function creates a new line of output. Individual elements can be separated with quotes ("") and joined with the string concatenation operator (+).
@@ -17145,7 +17137,7 @@
       "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
       "blit_resize", "blue", "box", "breakShape", "brightness",
       "camera", "ceil", "Character", "color", "colorMode",
-      "concat", "console", "constrain", "copy", "cos", "createFont",
+      "concat", "constrain", "copy", "cos", "createFont",
       "createGraphics", "createImage", "cursor", "curve", "curveDetail",
       "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
       "degrees", "directionalLight", "disableContextMenu",
@@ -19337,10 +19329,10 @@
             try {
               return new Processing(canvas, code.join("\n"));
             } catch(e) {
-              Processing.logger.log("Unable to execute pjs sketch: " + e);
+              throw "Processing.js: Unable to execute pjs sketch: " + e;
             }
           } else {
-            Processing.logger.log("Unable to load pjs sketch files: " + errors.join("\n"));
+            throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }
         }
       }

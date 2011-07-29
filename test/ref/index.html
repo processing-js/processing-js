@@ -312,7 +312,7 @@
 
             function validateResult() {
                 var is3D = test.is3D;
-                totalTime = (new Date).getTime() - startTime;
+                totalTime = Date.now() - startTime;
 
                 // draw the original based on stored pixels
                 var origCtx = original.getContext('2d');
@@ -410,7 +410,7 @@
               return nextTest(i+1);
             } else {
               // draw the current version from code, timing it
-              var startTime = (new Date).getTime(), totalTime = 0;
+              var startTime = Date.now(), totalTime = 0;
               var p, s;
               try {
                 s = Processing.compile(test.code);
