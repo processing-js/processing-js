@@ -19248,16 +19248,48 @@
       }
     };
     this.fonts = {
+      // the text string used for testing
+      // indicates whether or not the reference tiny font has been loaded
+      initialized: false,
+      // load the reference tiny font via a css @font-face rule
+      initialize: function() {
+        var generateTinyFont = function() {
+          var encoded = "#E3KAI2wAgT1MvMg7Eo3VmNtYX7ABi3CxnbH" +
+                        "lm7Abw3kaGVhZ7ACs3OGhoZWE7A53CRobXR4" +
+                        "7AY3AGbG9jYQ7G03Bm1heH7ABC3CBuYW1l7A" +
+                        "e3AgcG9zd7AI3AE#B3AQ2kgTY18PPPUACwAg" +
+                        "3ALSRoo3#yld0xg32QAB77#E777773B#E3C#" +
+                        "I#Q77732Q3E#Q7777777772CMAIw7AB77732" +
+                        "B#M#Q3wAB#g3B#E#E2BB//82BB////w#B7#g" +
+                        "AEg3E77x2B32B#E#Q#MTcBAQ32gAe#M#QQJ#" +
+                        "E32M#QQJ#I#g32Q77#";
+          var expand = function(input) {
+                         return "AAAAAAAA".substr(~~input ? 7-input : 6);
+                       };
+          return encoded.replace(/[#237]/g, expand);
+        };
+        var fontface = document.createElement("style");
+        fontface.setAttribute("type","text/css");
+        fontface.innerHTML =  "@font-face {\n  font-family: 'PjsEmptyFont';\n";
+        fontface.innerHTML += "  src: url('data:application/x-font-ttf;base64,"+generateTinyFont()+"') ";
+        fontface.innerHTML += "format('truetype');\n}";
+        document.getElementsByTagName("head")[0].appendChild(fontface);
+        this.initialized = true;
+      },
       // template element used to compare font sizes
       template: (function() {
         if(!isDOMPresent) {
           return null;
         }
-        var element = document.createElement('p');
-        element.style.fontFamily = "serif";
-        element.style.fontSize = "72px";
-        element.style.visibility = "hidden";
-        element.innerHTML = "This element is a text block for font loading";
+        var element = document.createElement("div");
+        element.style.fontFamily = "PjsEmptyFont";
+        element.position = "absolute";
+        element.top = 0;
+        element.left = 0;
+        element.opacity = 0;
+        element.style.width = "0px";
+        element.style.marginRight = "auto";
+        element.innerHTML = "AAAAAAAA";
         document.getElementsByTagName("body")[0].appendChild(element);
         return element;
       }()),
@@ -19267,10 +19299,13 @@
       // true if number of attempts hits the limit,
       // false otherwise
       pending: function() {
-        var r = true;
+        var r = true,
+            cvfFont,
+            cvfRef = document.defaultView.getComputedStyle(this.template,null);
         for (var i = 0; i < this.fontList.length; i++) {
-          // compares size of text in pixels, if equal, custom font is not yet loaded
-          if (this.fontList[i].offsetWidth === this.template.offsetWidth && this.fontList[i].offsetHeight === this.template.offsetHeight) {
+          // compares size of text in pixels. if equal, custom font is not yet loaded
+          cvfFont = document.defaultView.getComputedStyle(this.fontList[i],null);
+          if (cvfRef.getPropertyValue("width") === cvfFont.getPropertyValue("width")) {
             r = false;
             this.attempt++;
           } else {
@@ -19305,24 +19340,31 @@
       // creates an element using the font, to start loading the font,
       // and compare against a default font to see if the custom font is loaded
       add: function(fontSrc) {
-        // fontSrc can be a string or a JSON object
-        // string contains a url to a font
-        // JSON object would contain a name and a url
-        // acceptable fonts are .ttf, .otf, and a data uri
+        if (!this.initialised) {
+         this.initialize();
+        }
+        // fontSrc can be a string or a javascript object
+        // acceptable fonts are .ttf, .otf, and data uri
         var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
             fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
+
         // creating the @font-face style
         this.fontFamily += "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
         this.style.innerHTML = this.fontFamily;
         document.getElementsByTagName("head")[0].appendChild(this.style);
+
         // creating the element to load, and compare the new font
-        var preLoader = document.createElement('p');
-        preLoader.style.fontFamily = "'" + fontName + "', serif";
-        preLoader.style.fontSize = "72px";
-        preLoader.style.visibility = "hidden";
-        preLoader.innerHTML = "This element is a text block for font loading";
-        document.getElementsByTagName("body")[0].appendChild(preLoader);
-        this.fontList.push(preLoader);
+        var element = document.createElement("div");
+        element.position = "absolute";
+        element.top = 0;
+        element.left = 0;
+        element.opacity = 0;
+        element.style.width = "0px";
+        element.style.marginRight = "auto";
+        element.style.fontFamily = '"' + fontName + '", PjsEmptyFont';
+        element.innerHTML = "AAAAAAAA";
+        document.getElementsByTagName("body")[0].appendChild(element);
+        this.fontList.push(element);
       }
     };
     this.sourceCode = undefined;
