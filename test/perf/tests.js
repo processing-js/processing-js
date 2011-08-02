@@ -65,5 +65,6 @@ var tests = [
   { path: "pvector-mag.pde", tags: ["2D", "PVector"] },
   { path: "pvector-mult.pde", tags: ["2D", "PVector"] },
   { path: "pvector-normalize.pde", tags: ["2D", "PVector"] },
-  { path: "plants.pde", tags: ["2D"] }
+  { path: "plants.pde", tags: ["2D"] },
+  { path: "alpha-transparency-mask.pde", tags: ["2D"], iterationOverride: 100 }
 ];
