@@ -6806,6 +6806,10 @@
       }
       // Color int
       else if (aValue1) {
+        if (aValue1 > 2147483647) {
+          // Java Overflow
+          aValue1 -= 4294967296;
+        }
         return aValue1;
       }
     }
