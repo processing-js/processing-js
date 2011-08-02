@@ -4,14 +4,11 @@ PClient c;
 // status information and data from the server
 PRequest request;
 int counter;
-PFont font;
 PImage img;
 String version;
 String error;
 
 void setup() {
-  font = loadFont(); // Load and set the default font for drawing text
-  textFont(font);
   fill(0);
 // Create a new network connection to connect to the Mobile Processing website
   c = new PClient(this, "mobile.processing.org");

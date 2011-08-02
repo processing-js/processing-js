@@ -1527,6 +1527,198 @@
   };
 
 
+  ////////////////////////////////////////////////////////////////////////////
+  // PFONT.JS START
+  ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * [internal function] computeFontMetrics() calculates various metrics for text
+   * placement. Currently this function computes the ascent, descent and leading
+   * (from "lead", used for vertical space) values for the currently active font.
+   */
+  function computeFontMetrics(pfont) {
+    var emQuad = 250,
+        correctionFactor = pfont.size / emQuad,
+        canvas = document.createElement("canvas");
+    canvas.width = 2*emQuad;
+    canvas.height = 2*emQuad;
+    canvas.style.opacity = 0;
+    var cfmFont = pfont.getCSSDefinition(emQuad+"px", "normal"),
+        ctx = canvas.getContext("2d");
+    ctx.font = cfmFont;
+
+    // Size the canvas using a string with common max-ascent and max-descent letters.
+    // Changing the canvas dimensions resets the context, so we must reset the font.
+    var protrusions = "dbflkhyjqpg";
+    canvas.width = ctx.measureText(protrusions).width;
+    ctx.font = cfmFont;
+
+    // for text lead values, we meaure a multiline text container.
+    var leadDiv = document.createElement("div");
+    leadDiv.style.position = "absolute";
+    leadDiv.style.opacity = 0;
+    leadDiv.style.fontFamily = pfont.name;
+    leadDiv.style.fontSize = emQuad + "px";
+    leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
+    document.body.appendChild(leadDiv);
+
+    var w = canvas.width,
+        h = canvas.height,
+        baseline = h/2;
+
+    // Set all canvas pixeldata values to 255, with all the content
+    // data being 0. This lets us scan for data[i] != 255.
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "black";
+    ctx.fillText(protrusions, 0, baseline);
+    var pixelData = ctx.getImageData(0, 0, w, h).data;
+
+    // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
+    // consecutive values in the array, rather than stored as 32 bit ints.
+    var i = 0,
+        w4 = w * 4,
+        len = pixelData.length;
+
+    // Finding the ascent uses a normal, forward scanline
+    while (++i < len && pixelData[i] === 255) {
+      nop();
+    }
+    var ascent = Math.round(i / w4);
+
+    // Finding the descent uses a reverse scanline
+    i = len - 1;
+    while (--i > 0 && pixelData[i] === 255) {
+      nop();
+    }
+    var descent = Math.round(i / w4);
+
+    // set font metrics
+    pfont.ascent = correctionFactor * (baseline - ascent);
+    pfont.descent = correctionFactor * (descent - baseline);
+
+    // Then we try to get the real value from the browser
+    if (document.defaultView.getComputedStyle) {
+      var leadDivHeight = document.defaultView.getComputedStyle(leadDiv,null).getPropertyValue("height");
+      leadDivHeight = leadDivHeight.replace("px","");
+      if (leadDivHeight >= pfont.size * 2) {
+        pfont.leading = correctionFactor * Math.round(leadDivHeight/2);
+      }
+    }
+    document.body.removeChild(leadDiv);
+  }
+
+  // Defines system (non-SVG) font.
+  function PFont(name, size) {
+    // according to the P5 API, new PFont() is legal (albeit completely useless)
+    if (name === undef) {
+      name = "";
+    }
+    this.name = name;
+    if (size === undef) {
+      size = 0;
+    }
+    this.size = size;
+    this.ascent = 0;
+    this.descent = 0;
+    // For leading, the "safe" value uses the standard TeX ratio
+    this.leading = 1.2 * size;
+
+    // Note that an italic, bold font must used "... Bold Italic"
+    // in P5. "... Italic Bold" is treated as normal/normal.
+    var illegalIndicator = name.indexOf(" Italic Bold");
+    if (illegalIndicator !== -1) {
+      name = name.substring(0, illegalIndicator);
+    }
+
+    // determine font style
+    this.style = "normal";
+    var italicsIndicator = name.indexOf(" Italic");
+    if (italicsIndicator !== -1) {
+      name = name.substring(0, italicsIndicator);
+      this.style = "italic";
+    }
+
+    // determine font weight
+    this.weight = "normal";
+    var boldIndicator = name.indexOf(" Bold");
+    if (boldIndicator !== -1) {
+      name = name.substring(0, boldIndicator);
+      this.weight = "bold";
+    }
+
+    // determine font-family name
+    this.family = "sans-serif";
+    if (name !== undef) {
+      switch(name) {
+        case "sans-serif":
+        case "serif":
+        case "monospace":
+        case "fantasy":
+        case "cursive":
+          this.family = name;
+          break;
+        default:
+          this.family = '"' + name + '", sans-serif';
+          break;
+      }
+    }
+    // Calculate the ascent/descent/leading value based on
+    // how the browser renders this font.
+    computeFontMetrics(this);
+    this.css = this.getCSSDefinition();
+  }
+
+  /**
+  * This function generates the CSS "font" string for this PFont
+  */
+  PFont.prototype.getCSSDefinition = function(fontSize, lineHeight) {
+    if(fontSize===undef) {
+      fontSize = this.size + "px";
+    }
+    if(lineHeight===undef) {
+      lineHeight = this.leading + "px";
+    }
+    // CSS "font" definition: font-style font-variant font-weight font-size/line-height font-family
+    var components = [this.style, "normal", this.weight, fontSize + "/" + lineHeight, this.family];
+    return components.join(" ");
+  };
+
+  /**
+  * Global "loaded fonts" list, internal to PFont
+  */
+  PFont.PFontCache = {};
+
+  /**
+  * This function acts as single access point for getting and caching
+  * fonts across all sketches handled by an instance of Processing.js
+  */
+  PFont.get = function(fontName, fontSize) {
+    var cache = PFont.PFontCache;
+    var idx = fontName+"/"+fontSize;
+    if (!cache[idx]) {
+      cache[idx] = new PFont(fontName, fontSize);
+    }
+    return cache[idx];
+  };
+
+  /**
+  * Lists all standard fonts. Due to browser limitations, this list is
+  * not the system font list, like in P5, but the CSS "genre" list.
+  */
+  PFont.list = function() {
+    return ["sans-serif", "serif", "monospace", "fantasy", "cursive"];
+  };
+
+  // add to the default scope
+  defaultScope.PFont = PFont;
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // PFONT.JS END
+  ////////////////////////////////////////////////////////////////////////////
+
+
   var Processing = this.Processing = function(curElement, aCode) {
     // Previously we allowed calling Processing as a func instead of ctor, but no longer.
     if (!(this instanceof Processing)) {
@@ -1654,11 +1846,6 @@
         mouseDragging = false,
         curColorMode = PConstants.RGB,
         curTint = null,
-        curTextSize = 12,
-        curTextFont = {name: "Arial, sans-serif", origName: "Arial"},
-        curTextLeading = 14,
-        curTextAscent = 9,
-        curTextDescent = 2,
         getLoaded = false,
         start = Date.now(),
         timeSinceLastFPS = start,
@@ -1698,8 +1885,14 @@
         // Text alignment
         horizontalTextAlignment = PConstants.LEFT,
         verticalTextAlignment = PConstants.BASELINE,
-        baselineOffset = 0.2, // percent
         tMode = PConstants.MODEL,
+        // Font state
+        curFontName = "Arial",
+        curTextSize = 12,
+        curTextAscent = 9,
+        curTextDescent = 2,
+        curTextLeading = 14,
+        curTextFont = PFont.get(curFontName, curTextSize),
         // Pixels cache
         originalContext,
         proxyContext = null,
@@ -7547,7 +7740,11 @@
         'colorModeY': colorModeY,
         'colorModeA': colorModeA,
         'curTextFont': curTextFont,
-        'curTextSize': curTextSize
+        'curFontName': curFontName,
+        'curTextSize': curTextSize,
+        'curTextAscent': curTextAscent,
+        'curTextDescent': curTextDescent,
+        'curTextLeading': curTextLeading
       };
 
       styleArray.push(newState);
@@ -7583,7 +7780,11 @@
         colorModeY = oldState.colorModeY;
         colorModeA = oldState.colorModeA;
         curTextFont = oldState.curTextFont;
+        curFontName = oldState.curFontName;
         curTextSize = oldState.curTextSize;
+        curTextAscent = oldState.curTextAscent;
+        curTextDescent = oldState.curTextDescent;
+        curTextLeading = oldState.curTextLeading;
       } else {
         throw "Too many popStyle() without enough pushStyle()";
       }
@@ -9684,85 +9885,6 @@
     };
 
     /**
-     * [internal function] computeFontMetrics() calculates various metrics for text
-     * placement. Currently this function computes the ascent, descent and leading
-     * (from "lead", used for vertical space) values for the currently active font.
-     */
-    function computeFontMetrics() {
-      var emQuad = 250,
-          correctionFactor = curTextSize / emQuad,
-          canvas = document.createElement("canvas");
-      canvas.width = 2*emQuad;
-      canvas.height = 2*emQuad;
-      canvas.style.opacity = 0;
-      var ctx = canvas.getContext("2d");
-      ctx.font = emQuad + "px " + curTextFont.name;
-
-      // Size the canvas using a string with common max-ascent and max-descent letters.
-      // Changing the canvas dimensions resets the context, so we must reset the font.
-      var protrusions = "dbflkhyjqpg";
-      canvas.width = ctx.measureText(protrusions).width;
-      ctx.font = emQuad + "px " + curTextFont.name;
-
-      // for text lead values, we meaure a multiline text container.
-      var leadDiv = document.createElement("leadDiv");
-      leadDiv.style.position = "absolute";
-      leadDiv.style.opacity = 0;
-      leadDiv.style.fontFamily = curTextFont.name;
-      leadDiv.style.fontSize = emQuad + "px";
-      leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
-      document.body.appendChild(leadDiv);
-
-      var w = canvas.width,
-          h = canvas.height,
-          baseline = h/2;
-
-      // Set all canvas pixeldata values to 255, with all the content
-      // data being 0. This lets us scan for data[i] != 255.
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "black";
-      ctx.fillText(protrusions, 0, baseline);
-      var pixelData = ctx.getImageData(0, 0, w, h).data;
-
-      // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
-      // consecutive values in the array, rather than stored as 32 bit ints.
-      var i = 0,
-          w4 = w * 4,
-          len = pixelData.length;
-
-      // Finding the ascent uses a normal, forward scanline
-      while (++i < len && pixelData[i] === 255) {
-        nop();
-      }
-      var ascent = Math.round(i / w4);
-
-      // Finding the descent uses a reverse scanline
-      i = len - 1;
-      while (--i > 0 && pixelData[i] === 255) {
-        nop();
-      }
-      var descent = Math.round(i / w4);
-
-      // Update current font metrics
-      curTextAscent = correctionFactor * (baseline - ascent);
-      curTextDescent = correctionFactor * (descent - baseline);
-
-      // For leading, we first set a "safe" value, using TeX's leading ratio
-      curTextLeading = 1.2 * curTextSize;
-
-      // Then we try to get the real value from the browser
-      if (document.defaultView.getComputedStyle) {
-        var leadDivHeight = document.defaultView.getComputedStyle(leadDiv,null).getPropertyValue("height");
-        leadDivHeight = leadDivHeight.replace("px","");
-        if (leadDivHeight >= curTextSize * 2) {
-          curTextLeading = correctionFactor * Math.round(leadDivHeight/2);
-        }
-      }
-      document.body.removeChild(leadDiv);
-    }
-
-    /**
     * Defines the dimension of the display window in units of pixels. The size() function must
     * be the first line in setup(). If size() is not called, the default size of the window is
     * 100x100 pixels. The system variables width and height are set by the parameters passed to
@@ -9804,9 +9926,8 @@
         }
       }
 
-      // Ensure that the correct font is set after size()
-      curContext.font = curTextSize + "px " + curTextFont.name;
-      computeFontMetrics();
+      // make sure to set the default font the first time round.
+      p.textFont(curTextFont);
 
       // Set the background to whatever it was called last as if background() was called before size()
       // If background() hasn't been called before, set background() to a light gray
@@ -15541,42 +15662,11 @@
     // Font handling
     ////////////////////////////////////////////////////////////////////////////
 
-    // Defines system (non-SVG) font.
-    function PFont(name) {
-      this.name = "sans-serif";
-      if(name !== undef) {
-        switch(name) {
-          case "sans-serif":
-          case "serif":
-          case "monospace":
-          case "fantasy":
-          case "cursive":
-            this.name = name;
-            break;
-          default:
-            this.name = '"' + name + '", sans-serif';
-            break;
-        }
-      }
-      this.origName = name;
-    }
-    PFont.prototype.width = function(str) {
-      if ("measureText" in curContext) {
-        return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
-      } else {
-        return 0;
-      }
-    };
-    // Lists all standard fonts
-    PFont.list = function() {
-      return ["sans-serif", "serif", "monospace", "fantasy", "cursive"];
-    };
-    p.PFont = PFont;
-
     /**
      * loadFont() Loads a font into a variable of type PFont.
      *
      * @param {String} name filename of the font to load
+     * @param {int|float} size option font size (used internally)
      *
      * @returns {PFont} new PFont object
      *
@@ -15585,35 +15675,39 @@
      * @see #text
      * @see #createFont
      */
-    p.loadFont = function(name) {
-      if (name === undef || name.indexOf(".svg") === -1) {
-        return new PFont(name);
-      } else {
-        // If the font is a glyph, calculate by SVG table
-        var font = p.loadGlyphs(name);
-
-        return {
-          name: name,
-          glyph: true,
-          units_per_em: font.units_per_em,
-          horiz_adv_x: 1 / font.units_per_em * font.horiz_adv_x,
-          ascent: font.ascent,
-          descent: font.descent,
-          width: function(str) {
-            var width = 0;
-            var len = str.length;
-            for (var i = 0; i < len; i++) {
-              try {
-                width += parseFloat(p.glyphLook(p.glyphTable[name], str[i]).horiz_adv_x);
-              }
-              catch(e) {
-                Processing.debug(e);
-              }
-            }
-            return width / p.glyphTable[name].units_per_em;
-          }
-        };
+    p.loadFont = function(name, size) {
+      if (name === undef) {
+        throw("font name required in loadFont.");
       }
+      if (name.indexOf(".svg") === -1) {
+        if (size === undef) {
+          size = curTextFont.size;
+        }
+        return PFont.get(name, size);
+      }
+      // If the font is a glyph, calculate by SVG table
+      var font = p.loadGlyphs(name);
+      return {
+        name: name,
+        glyph: true,
+        units_per_em: font.units_per_em,
+        horiz_adv_x: 1 / font.units_per_em * font.horiz_adv_x,
+        ascent: font.ascent,
+        descent: font.descent,
+        width: function(str) {
+          var width = 0;
+          var len = str.length;
+          for (var i = 0; i < len; i++) {
+            try {
+              width += parseFloat(p.glyphLook(p.glyphTable[name], str[i]).horiz_adv_x);
+            }
+            catch(e) {
+              Processing.debug(e);
+            }
+          }
+          return width / p.glyphTable[name].units_per_em;
+        }
+      };
     };
 
     /**
@@ -15621,8 +15715,8 @@
      *
      * @param {String}    name    filename of the font to load
      * @param {int|float} size    font size in pixels
-     * @param {boolean}   smooth  optional true for an antialiased font, false for aliased
-     * @param {char[]}    charset optional array containing characters to be generated
+     * @param {boolean}   smooth  not used in Processing.js
+     * @param {char[]}    charset not used in Processing.js
      *
      * @returns {PFont} new PFont object
      *
@@ -15631,27 +15725,16 @@
      * @see #text
      * @see #loadFont
      */
-    p.createFont = function(name, size, smooth, charset) {
-      if (arguments.length === 2) {
-        p.textSize(size);
-        return p.loadFont(name);
-      } else if (arguments.length === 3) {
-        // smooth: true for an antialiased font, false for aliased
-        p.textSize(size);
-        return p.loadFont(name);
-      } else if (arguments.length === 4) {
-        // charset: char array containing characters to be generated
-        p.textSize(size);
-        return p.loadFont(name);
-      } else {
-        throw("incorrent number of parameters for createFont");
-      }
+    p.createFont = function(name, size) {
+      // because Processing.js only deals with real fonts,
+      // createFont is simply a wrapper for loadFont/2
+      return p.loadFont(name, size);
     };
 
     /**
      * textFont() Sets the current font.
      *
-     * @param {PFont}     name filename of the font to load
+     * @param {PFont}     pfont the PFont to load as current text font
      * @param {int|float} size optional font size in pixels
      *
      * @see #createFont
@@ -15659,15 +15742,18 @@
      * @see #PFont
      * @see #text
      */
-    p.textFont = function(font, size) {
-      curTextFont = font;
-      if (size) {
-        p.textSize(size);
-      } else {
-        var curContext = drawing.$ensureContext();
-        curContext.font = curTextSize + "px " + curTextFont.name;
+    p.textFont = function(pfont, size) {
+      if (size !== undef) {
+        pfont = PFont.get(pfont.name, size);
+        curTextSize = size;
       }
-      computeFontMetrics();
+      curTextFont = pfont;
+      curFontName = curTextFont.name;
+      curTextAscent = curTextFont.ascent;
+      curTextDescent = curTextFont.descent;
+      curTextLeading = curTextFont.leading;
+      var curContext = drawing.$ensureContext();
+      curContext.font = curTextFont.css;
     };
 
     /**
@@ -15682,10 +15768,10 @@
      */
     p.textSize = function(size) {
       if (size !== curTextSize) {
+        curTextFont = PFont.get(curFontName, size);
         curTextSize = size;
         var curContext = drawing.$ensureContext();
-        curContext.font = curTextSize + "px " + curTextFont.name;
-        computeFontMetrics();
+        curContext.font = curTextFont.css;
       }
     };
 
@@ -15782,7 +15868,7 @@
       var lines = toP5String(str).split(/\r?\n/g), width = 0;
       var i, linesCount = lines.length;
 
-      curContext.font =  curTextSize + "px " + curTextFont.name;
+      curContext.font =  curTextFont.css;
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, curContext.measureText(lines[i]).width);
       }
@@ -15797,7 +15883,7 @@
       }
 
       var textContext = textcanvas.getContext("2d");
-      textContext.font =  curTextSize + "px " + curTextFont.name;
+      textContext.font =  curTextFont.css;
 
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, textContext.measureText(lines[i]).width);
@@ -15930,7 +16016,7 @@
         }
       } else {
         // If the font is a Batik SVG font...
-        var font = p.glyphTable[curTextFont.name];
+        var font = p.glyphTable[curFontName];
         saveContext();
         curContext.translate(x, y + curTextSize);
 
@@ -15969,12 +16055,12 @@
       }
       var oldContext = curContext;
       curContext = textcanvas.getContext("2d");
-      curContext.font = curTextSize + "px " + curTextFont.name;
+      curContext.font = curTextFont.css;
       var textWidth = curContext.measureText(str).width;
       textcanvas.width = textWidth;
       textcanvas.height = curTextSize;
       curContext = textcanvas.getContext("2d"); // refreshes curContext
-      curContext.font = curTextSize + "px " + curTextFont.name;
+      curContext.font = curTextFont.css;
       curContext.textBaseline="top";
 
       // paint on 2D canvas
@@ -16066,7 +16152,6 @@
       var lineWidth = 0;
       var textboxWidth = width;
       var yOffset = 0;
-      curContext.font = curTextSize + "px " + curTextFont.name;
       var drawCommands = [];
 
       // run through text, character-by-character
@@ -16126,7 +16211,7 @@
       }
 
       // offsets for alignment
-      var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
+      var boxYOffset1 = curTextSize, boxYOffset2 = 0;
       if(verticalTextAlignment === PConstants.BOTTOM) {
         boxYOffset2 = height - (drawCommands.length * curTextLeading);
       } else if(verticalTextAlignment === PConstants.CENTER) {
@@ -16169,7 +16254,7 @@
         var des = p.textDescent();
         var tWidth = p.textWidth(arguments[0]);
         var tHeight = asc + des;
-        var font = p.loadFont(curTextFont.origName);
+        var font = curTextFont;
         var hud = p.createGraphics(tWidth, tHeight);
         hud.beginDraw();
         hud.fill(currentFillColor);
@@ -17168,9 +17253,9 @@
       "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
-      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat", "parseInt",
-      "peg", "perspective", "PFont", "PImage", "pixels",
-      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
+      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
+      "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
+      "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
