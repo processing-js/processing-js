@@ -26,13 +26,3 @@ printMatrix();
 _checkEqual(" 2.0000  0.0000  0.0000\n 0.0000  2.0000  0.0000\n\n", msg);
 popMatrix();
 
-// There are some differences here between P5 and PJS in the way they
-// add negative zeros.
-// This one doesn't seem to pass
-// ROTATE
-/*size(100, 100);
-pushMatrix();
-rotate(PI);
-printMatrix();
-_checkEqual(" -1.0000 -0.0000  0.0000\n 0.0000 -1.0000  0.0000\n\n", msg);
-popMatrix();*/
