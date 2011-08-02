@@ -8011,23 +8011,6 @@
     // Binary Functions
     ////////////////////////////////////////////////////////////////////////////
 
-    function decToBin(value, numBitsInValue) {
-      var mask = 1;
-      mask = mask << (numBitsInValue - 1);
-
-      var str = "";
-      for (var i = 0; i < numBitsInValue; i++) {
-        str += (mask & value) ? "1" : "0";
-        mask = mask >>> 1;
-      }
-      return str;
-    }
-
-    /*
-      This function does not always work when trying to convert
-      colors and bytes to binary values because the types passed in
-      cannot be determined.
-    */
     /**
     * Converts a byte, char, int, or color to a String containing the equivalent binary
     * notation. For example color(0, 102, 153, 255) will convert to the String
@@ -8044,33 +8027,24 @@
     * @see unbinary
     */
     p.binary = function(num, numBits) {
-      var numBitsInValue = 32;
-
-      // color, int, byte
-      if (typeof num === "number") {
-        if(numBits){
-          numBitsInValue = numBits;
-        }
-        return decToBin(num, numBitsInValue);
-      }
-
-      // char
-      if (num instanceof Char) {
-        num = num.toString().charCodeAt(0);
-        if (numBits) {
-          numBitsInValue = 32;
-        } else {
-          numBitsInValue = 16;
+      var bit;
+      if (numBits > 0) {
+        bit = numBits;
+      } else if(num instanceof Char) {
+        bit = 16;
+        num |= 0; // making it int
+      } else {
+        // autodetect, skipping zeros
+        bit = 32;
+        while (bit > 1 && !((num >>> (bit - 1)) & 1)) {
+          bit--;
         }
       }
-
-      var str = decToBin(num, numBitsInValue);
-
-      // trim string if user wanted less chars
-      if (numBits) {
-        str = str.substr(-numBits);
+      var result = "";
+      while (bit > 0) {
+        result += ((num >>> (--bit)) & 1) ? "1" : "0";
       }
-      return str;
+      return result;
     };
 
     /**
@@ -8086,34 +8060,18 @@
     * @see unbinary
     */
     p.unbinary = function(binaryString) {
-      var binaryPattern = new RegExp("^[0|1]{8}$");
-      var addUp = 0;
-      var i;
-
-      if (binaryString instanceof Array) {
-        var values = [];
-        for (i = 0; i < binaryString.length; i++) {
-          values[i] = p.unbinary(binaryString[i]);
+      var i = binaryString.length - 1, mask = 1, result = 0;
+      while (i >= 0) {
+        var ch = binaryString[i--];
+        if (ch !== '0' && ch !== '1') {
+          throw "the value passed into unbinary was not an 8 bit binary number";
         }
-        return values;
-      } else {
-        if (isNaN(binaryString)) {
-          throw "NaN_Err";
-        } else {
-          if (arguments.length === 1 || binaryString.length === 8) {
-            if (binaryPattern.test(binaryString)) {
-              for (i = 0; i < 8; i++) {
-                addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
-              }
-              return addUp + "";
-            } else {
-              throw "notBinary: the value passed into unbinary was not an 8 bit binary number";
-            }
-          } else {
-            throw "longErr";
-          }
+        if (ch === '1') {
+          result += mask;
         }
+        mask <<= 1;
       }
+      return result;
     };
 
     /**
