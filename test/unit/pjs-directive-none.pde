@@ -4,5 +4,4 @@ _checkNotEqual(externals.sketch.options, undefined);
 _checkNotEqual(externals.sketch.imageCache, null);
 _checkNotEqual(externals.sketch.imageCache, undefined);
 _checkEqual(externals.sketch.imageCache.pending, 0);
-_checkEqual(externals.sketch.fonts.fontFamily, "");
 _checkEqual(externals.sketch.fonts.fontList.length, 0);

@@ -17108,7 +17108,7 @@
       }
 
       // sketch execute test interval, used to reschedule
-      // an execute when preloads have no yet finished.
+      // an execute when preloads have not yet finished.
       var retryInterval = 100;
 
       var executeSketch = function(processing) {
