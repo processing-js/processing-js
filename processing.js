@@ -1699,7 +1699,7 @@
         horizontalTextAlignment = PConstants.LEFT,
         verticalTextAlignment = PConstants.BASELINE,
         baselineOffset = 0.2, // percent
-        tMode = PConstants.MODEL,
+        textMode = PConstants.MODEL,
         // Pixels cache
         originalContext,
         proxyContext = null,
@@ -7547,7 +7547,10 @@
         'colorModeY': colorModeY,
         'colorModeA': colorModeA,
         'curTextFont': curTextFont,
-        'curTextSize': curTextSize
+        'curTextSize': curTextSize,
+        'horizontalTextAlignment': horizontalTextAlignment,
+        'verticalTextAlignment': verticalTextAlignment,
+        'textMode': textMode
       };
 
       styleArray.push(newState);
@@ -7584,6 +7587,10 @@
         colorModeA = oldState.colorModeA;
         curTextFont = oldState.curTextFont;
         curTextSize = oldState.curTextSize;
+        horizontalTextAlignment = oldState.horizontalTextAlignment;
+        verticalTextAlignment = oldState.verticalTextAlignment;
+        textMode = oldState.textMode;
+
       } else {
         throw "Too many popStyle() without enough pushStyle()";
       }
@@ -16162,7 +16169,7 @@
      * @see #textFont
      */
     p.text = function() {
-      if (tMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
+      if (textMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
         p.pushMatrix();
         p.resetMatrix();
         var asc = p.textAscent();
@@ -16186,7 +16193,7 @@
         }
         p.popMatrix();
       }
-      else if (tMode === PConstants.SHAPE) {
+      else if (textMode === PConstants.SHAPE) {
         // TODO: requires beginRaw function
         return;
       } else {
@@ -16221,7 +16228,7 @@
      * @see createFont
      */
     p.textMode = function(mode){
-      tMode = mode;
+      textMode = mode;
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
