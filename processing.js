@@ -14750,7 +14750,7 @@
         var hgt = h || img.height;
 
         p.beginShape(p.QUADS);
-        p.texture(img.externals.canvas);
+        p.texture(img);
         p.vertex(x, y, 0, 0, 0);
         p.vertex(x, y+hgt, 0, 0, hgt);
         p.vertex(x+wid, y+hgt, 0, wid, hgt);

@@ -196,6 +196,7 @@ var tests = [
   { path: "beginEndShape-3dtriangles2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.15 },
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
+  { path: "image-3d.pde", tags: ["3D"], epsilonOverride: 0.07 },
   { path: "rotateZ.pde", tags: ["3D"] },
   { path: "blendcolor-add.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-difference.pde", tags: ["2D", "BLEND"] },
