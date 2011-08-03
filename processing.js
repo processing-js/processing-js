@@ -1619,6 +1619,7 @@
       size = 0;
     }
     this.size = size;
+    this.glyph = false;
     this.ascent = 0;
     this.descent = 0;
     // For leading, the "safe" value uses the standard TeX ratio
@@ -15744,7 +15745,10 @@
      */
     p.textFont = function(pfont, size) {
       if (size !== undef) {
-        pfont = PFont.get(pfont.name, size);
+        // If we're using an SVG glyph font, don't load from cache
+        if (!pfont.glyph) {
+          pfont = PFont.get(pfont.name, size);
+        }
         curTextSize = size;
       }
       curTextFont = pfont;

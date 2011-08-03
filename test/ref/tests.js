@@ -119,7 +119,7 @@ var tests = [
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
-  { path: "svg_font_biotyp.pde", tags: ["2D"] },
+  { path: "svg_font_biotyp.pde", tags: ["2D", "Text"] },
   { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
   { path: "line-3d.pde", tags: ["3D"] },
   { path: "point_3D_stroke.pde", tags: ["3D"] },
