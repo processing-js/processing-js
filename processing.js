@@ -19287,7 +19287,7 @@
           return null;
         }
         var element = document.createElement("span");
-        element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 1; font-family: 'PjsEmptyFont';";
+        element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0; font-family: 'PjsEmptyFont';";
         element.innerHTML = "AAAAAAAA";
         document.body.appendChild(element);
         return element;
@@ -19351,7 +19351,7 @@
 
         // creating the element to load, and compare the new font
         var element = document.createElement("span");
-        element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 1;";
+        element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0;";
         element.style.fontFamily = '"' + fontName + '", PjsEmptyFont';
         element.innerHTML = "AAAAAAAA";
         document.body.appendChild(element);
