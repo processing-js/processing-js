@@ -82,7 +82,7 @@ var tests = [
   { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "text-ascent-descent.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
   { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
-  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 }, /* See ticket #1172 */
+  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
