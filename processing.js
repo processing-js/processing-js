@@ -16190,7 +16190,9 @@
             start = charPos + 1;
           } else {
             // current is not a newline, which means the line doesn't fit in box. push text.
-            drawCommands.push({text:str.substring(start, spaceMark), width: lineWidth});
+            // In Processing 1.5.1, the space is also pushed, so we push up to spaceMark+1,
+            // rather than up to spaceMark, as was the case for Processing 1.5 and earlier.
+            drawCommands.push({text:str.substring(start, spaceMark+1), width: lineWidth});
             start = spaceMark + 1;
           }
 
@@ -16207,7 +16209,7 @@
 
       // resolve horizontal alignment
       var xOffset = 0,
-          yOffset = 0;
+          yOffset = curTextAscent;
       if (horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width/2;
       } else if (horizontalTextAlignment === PConstants.RIGHT) {
@@ -16219,9 +16221,9 @@
       if(verticalTextAlignment === PConstants.TOP) {
         yOffset = curTextAscent + curTextDescent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        yOffset = curTextLeading;
+        yOffset = curTextLeading + curTextDescent;
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
-        yOffset = curTextDescent - 1 + curTextLeading;
+        yOffset = curTextDescent + curTextLeading;
       }
 
       var command,
@@ -19310,7 +19312,7 @@
           return null;
         }
         var element = document.createElement("span");
-        element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0; font-family: 'PjsEmptyFont';";
+        element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0; font-family: PjsEmptyFont, fantasy;";
         element.innerHTML = "AAAAAAAA";
         document.body.appendChild(element);
         return element;
@@ -19375,7 +19377,7 @@
         // creating the element to load, and compare the new font
         var element = document.createElement("span");
         element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0;";
-        element.style.fontFamily = '"' + fontName + '", PjsEmptyFont';
+        element.style.fontFamily = '"' + fontName + '", PjsEmptyFont, fantasy';
         element.innerHTML = "AAAAAAAA";
         document.body.appendChild(element);
         this.fontList.push(element);

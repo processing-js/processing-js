@@ -82,18 +82,18 @@ var tests = [
   { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
   { path: "text-width_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
   { path: "text-boxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
-  { path: "text-boxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
   { path: "text-boxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
-  { path: "text-boxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
-  { path: "text-boxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
-  { path: "text-boxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
-  { path: "text-boxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
-  { path: "text-boxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
-  { path: "text-boxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
+  { path: "text-boxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
+  { path: "text-boxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
+  { path: "text-boxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
+  { path: "text-boxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
+  { path: "text-boxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
   { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "text-ascent-descent.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
   { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
-  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
+  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
