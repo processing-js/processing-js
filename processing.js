@@ -1547,6 +1547,7 @@
     var cfmFont = pfont.getCSSDefinition(emQuad+"px", "normal"),
         ctx = canvas.getContext("2d");
     ctx.font = cfmFont;
+    pfont.context2d = ctx;
 
     // Size the canvas using a string with common max-ascent and max-descent letters.
     // Changing the canvas dimensions resets the context, so we must reset the font.
@@ -1601,9 +1602,9 @@
     // Then we try to get the real value from the browser
     if (document.defaultView.getComputedStyle) {
       var leadDivHeight = document.defaultView.getComputedStyle(leadDiv,null).getPropertyValue("height");
-      leadDivHeight = leadDivHeight.replace("px","");
+      leadDivHeight = correctionFactor * leadDivHeight.replace("px","");
       if (leadDivHeight >= pfont.size * 2) {
-        pfont.leading = correctionFactor * Math.round(leadDivHeight/2);
+        pfont.leading = Math.round(leadDivHeight/2);
       }
     }
     document.body.removeChild(leadDiv);
@@ -1667,8 +1668,10 @@
     }
     // Calculate the ascent/descent/leading value based on
     // how the browser renders this font.
+    this.context2d = null;
     computeFontMetrics(this);
     this.css = this.getCSSDefinition();
+    this.context2d.font = this.css;
   }
 
   /**
@@ -1684,6 +1687,15 @@
     // CSS "font" definition: font-style font-variant font-weight font-size/line-height font-family
     var components = [this.style, "normal", this.weight, fontSize + "/" + lineHeight, this.family];
     return components.join(" ");
+  };
+
+  /**
+  * We cannot rely on there being a 2d context available,
+  * because we support OPENGL sketches, and canvas3d has
+  * no "measureText" function in the API.
+  */
+  PFont.prototype.measureTextWidth = function(string) {
+    return this.context2d.measureText(string).width;
   };
 
   /**
@@ -15857,7 +15869,7 @@
 
       curContext.font =  curTextFont.css;
       for (i = 0; i < linesCount; ++i) {
-        width = Math.max(width, curContext.measureText(lines[i]).width);
+        width = Math.max(width, curTextFont.measureTextWidth(lines[i]));
       }
       return width;
     };
@@ -15990,7 +16002,7 @@
 
           // horizontal offset/alignment
           if(align === PConstants.RIGHT || align === PConstants.CENTER) {
-            textWidth = curContext.measureText(str).width;
+            textWidth = curTextFont.measureTextWidth(str);
 
             if(align === PConstants.RIGHT) {
               xOffset = -textWidth;
@@ -16043,7 +16055,7 @@
       var oldContext = curContext;
       curContext = textcanvas.getContext("2d");
       curContext.font = curTextFont.css;
-      var textWidth = curContext.measureText(str).width;
+      var textWidth = curTextFont.measureTextWidth(str);
       textcanvas.width = textWidth;
       textcanvas.height = curTextSize;
       curContext = textcanvas.getContext("2d"); // refreshes curContext
@@ -16097,6 +16109,10 @@
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
     };
 
+
+    /**
+    * unbounded text function (z is an optional argument)
+    */
     function text$4(str, x, y, z) {
       var lines, linesCount;
       if(str.indexOf('\n') < 0) {
@@ -16110,7 +16126,7 @@
 
       var yOffset = 0;
       if(verticalTextAlignment === PConstants.TOP) {
-        yOffset = curTextAscent;
+        yOffset = curTextAscent + curTextDescent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
         yOffset = curTextAscent/2 - (linesCount-1)*curTextLeading/2;
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
@@ -16124,6 +16140,10 @@
       }
     }
 
+
+    /**
+    * box-bounded text function (z is an optional argument)
+    */
     function text$6(str, x, y, width, height, z) {
       // 'fail' on 0-valued dimensions
       if (str.length === 0 || width === 0 || height === 0) {
@@ -16137,8 +16157,6 @@
       var spaceMark = -1;
       var start = 0;
       var lineWidth = 0;
-      var textboxWidth = width;
-      var yOffset = 0;
       var drawCommands = [];
 
       // run through text, character-by-character
@@ -16146,10 +16164,10 @@
       {
         var currentChar = str[charPos];
         var spaceChar = (currentChar === " ");
-        var letterWidth = curContext.measureText(currentChar).width;
+        var letterWidth = curTextFont.measureTextWidth(currentChar);
 
         // if we aren't looking at a newline, and the text still fits, keep processing
-        if (currentChar !== "\n" && (lineWidth + letterWidth < textboxWidth)) {
+        if (currentChar !== "\n" && (lineWidth + letterWidth <= width)) {
           if (spaceChar) { spaceMark = charPos; }
           lineWidth += letterWidth;
         }
@@ -16168,16 +16186,15 @@
           }
 
           if (currentChar === "\n") {
-            drawCommands.push({text:str.substring(start, charPos), width: lineWidth, offset: yOffset});
+            drawCommands.push({text:str.substring(start, charPos), width: lineWidth});
             start = charPos + 1;
           } else {
             // current is not a newline, which means the line doesn't fit in box. push text.
-            drawCommands.push({text:str.substring(start, spaceMark), width: lineWidth, offset: yOffset});
+            drawCommands.push({text:str.substring(start, spaceMark), width: lineWidth});
             start = spaceMark + 1;
           }
 
           // newline + return
-          yOffset += curTextLeading;
           lineWidth = 0;
           charPos = start - 1;
         }
@@ -16185,34 +16202,40 @@
 
       // push the remaining text
       if (start < len) {
-        drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
-        yOffset += curTextSize;
+        drawCommands.push({text:str.substring(start), width: lineWidth});
       }
 
-      // determine which function to use for drawing text
-      var xOffset = 0;
-      if(horizontalTextAlignment === PConstants.CENTER) {
-        xOffset = width / 2;
-      } else if(horizontalTextAlignment === PConstants.RIGHT) {
+      // resolve horizontal alignment
+      var xOffset = 0,
+          yOffset = 0;
+      if (horizontalTextAlignment === PConstants.CENTER) {
+        xOffset = width/2;
+      } else if (horizontalTextAlignment === PConstants.RIGHT) {
         xOffset = width;
       }
 
-      // offsets for alignment
-      var boxYOffset1 = curTextSize, boxYOffset2 = 0;
-      if(verticalTextAlignment === PConstants.BOTTOM) {
-        boxYOffset2 = height - (drawCommands.length * curTextLeading);
+      // resolve vertical alignment
+      var lines = Math.floor(height/curTextLeading);
+      if(verticalTextAlignment === PConstants.TOP) {
+        yOffset = curTextAscent + curTextDescent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        boxYOffset2 = (height - (drawCommands.length * curTextLeading)) / 2;
+        yOffset = curTextLeading;
+      } else if(verticalTextAlignment === PConstants.BOTTOM) {
+        yOffset = curTextDescent - 1 + curTextLeading;
       }
 
-      for (var command=0, end=drawCommands.length; command<end; command++) {
-        var drawCommand = drawCommands[command];
-        // skip if not inside box yet
-        if (drawCommand.offset + boxYOffset2 < 0) { continue; }
-        // stop if no enough space for one more line draw
-        if (drawCommand.offset + boxYOffset2 + curTextSize > height) { break; }
-        // finally, draw text on canvas
-        drawing.text$line(drawCommand.text, x + xOffset, y + drawCommand.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
+      var command,
+          drawCommand,
+          linesCount = drawCommands.length,
+          leading;
+      for (command = 0; command < linesCount; command++) {
+        leading = command * curTextLeading;
+        // stop if not enough space for one more line draw
+        if (yOffset + leading > height - curTextDescent) {
+          break;
+        }
+        drawCommand = drawCommands[command];
+        drawing.text$line(drawCommand.text, x + xOffset, y + yOffset + leading, z, horizontalTextAlignment);
       }
     }
 
@@ -19275,7 +19298,7 @@
         fontface.setAttribute("type","text/css");
         fontface.innerHTML =  "@font-face {\n" +
                               "  font-family: 'PjsEmptyFont';\n" +
-                              "  src: url('data:application/x-font-ttf;base64,"+generateTinyFont()+"')\n" + 
+                              "  src: url('data:application/x-font-ttf;base64,"+generateTinyFont()+"')\n" +
                               "       format('truetype');\n" +
                               "}";
         document.head.appendChild(fontface);

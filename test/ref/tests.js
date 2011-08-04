@@ -79,6 +79,17 @@ var tests = [
   { path: "variables.pde", tags: ["2D"] },
   { path: "string-codepointat.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
   { path: "string-equalsignorecase.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
+  { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
+  { path: "text-width_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
+  { path: "text-boxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-boxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
   { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "text-ascent-descent.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
   { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
@@ -95,8 +106,6 @@ var tests = [
   { path: "text-pfont.pde", tags: ["2D", "Text"], epsilonOverride: 0.30 }, /* See ticket #1172 */
   { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
-  { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
-  { path: "text-width_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
   { path: "simple.pde", tags: ["2D"] },
   { path: "box-rotating.pde", tags: ["3D"] },
   { path: "translate-rect.pde", tags: ["2D"] },
