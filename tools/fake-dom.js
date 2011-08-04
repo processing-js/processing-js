@@ -81,6 +81,7 @@ var createCanvas = function() {
                      getImageData: function() { return {width:1, height:1, data:[1,2,3,4]}; },
                      createImageData: function() { return {width:1, height:1, data:[1,2,3,4]}; },
                      drawImage: __empty_func__,
+                     drawElements: __empty_func__,
                      putImageData: __empty_func__,
                      lineWidth: __empty_func__,
                      disable: __empty_func__,

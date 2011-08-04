@@ -7,9 +7,8 @@
       return function(msg) {
         window.console.log('Processing.js: ' + msg);
       };
-    } else {
-      return nop();
     }
+    return nop();
   }());
 
   var ajax = function(url) {
@@ -37,18 +36,19 @@
     // Check if WebGLArray exists
     if (typeof window[fallback] === "function") {
       return window[fallback];
-    } else {
-      // Use Native JS array
-      return function(obj) {
-        if (obj instanceof Array) {
-          return obj;
-        } else if (typeof obj === "number") {
-          var arr = [];
-          arr.length = obj;
-          return arr;
-        }
-      };
     }
+
+    // Use Native JS array
+    return function(obj) {
+      if (obj instanceof Array) {
+        return obj;
+      }
+      if (typeof obj === "number") {
+        var arr = [];
+        arr.length = obj;
+        return arr;
+      }
+    };
   }
 
   var Float32Array = setupTypedArray("Float32Array", "WebGLFloatArray"),
@@ -367,16 +367,17 @@
         hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
       }
       return hash;
-    } else if (typeof(obj) !== "object") {
-      return obj & 0xFFFFFFFF;
-    } else if (obj.hashCode instanceof Function) {
-      return obj.hashCode();
-    } else {
-      if (obj.$id === undef) {
-        obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
-      }
-      return obj.$id;
     }
+    if (typeof(obj) !== "object") {
+      return obj & 0xFFFFFFFF;
+    }
+    if (obj.hashCode instanceof Function) {
+      return obj.hashCode();
+    }
+    if (obj.$id === undef) {
+        obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+    }
+    return obj.$id;
   }
 
   /**
@@ -392,15 +393,17 @@
   function virtEquals(obj, other) {
     if (obj === null || other === null) {
       return (obj === null) && (other === null);
-    } else if (typeof (obj) === "string") {
-      return obj === other;
-    } else if (typeof(obj) !== "object") {
-      return obj === other;
-    } else if (obj.equals instanceof Function) {
-      return obj.equals(other);
-    } else {
+    }
+    if (typeof (obj) === "string") {
       return obj === other;
     }
+    if (typeof(obj) !== "object") {
+      return obj === other;
+    }
+    if (obj.equals instanceof Function) {
+      return obj.equals(other);
+    }
+    return obj === other;
   }
 
   /**
@@ -414,7 +417,8 @@
   var ObjectIterator = function(obj) {
     if (obj.iterator instanceof Function) {
       return obj.iterator();
-    } else if (obj instanceof Array) {
+    }
+    if (obj instanceof Array) {
       // iterate through array items
       var index = -1;
       this.hasNext = function() {
@@ -612,14 +616,13 @@
       this.remove = function(item) {
         if (typeof item === 'number') {
           return array.splice(item, 1)[0];
-        } else {
-          item = this.indexOf(item);
-          if (item > -1) {
-            array.splice(item, 1);
-            return true;
-          }
-          return false;
         }
+        item = this.indexOf(item);
+        if (item > -1) {
+          array.splice(item, 1);
+          return true;
+        }
+        return false;
       };
 
       /**
@@ -1163,9 +1166,8 @@
       dot: function(v, y, z) {
         if (arguments.length === 1) {
           return (this.x * v.x + this.y * v.y + this.z * v.z);
-        } else {
-          return (this.x * v + this.y * y + this.z * z);
         }
+        return (this.x * v + this.y * y + this.z * z);
       },
       cross: function(v) {
         var x = this.x,
@@ -1304,9 +1306,8 @@
       object[name] = function() {
         if (arguments.length === args) {
           return fn.apply(this, arguments);
-        } else {
-          return oldfn.apply(this, arguments);
         }
+        return oldfn.apply(this, arguments);
       };
     } else {
       object[name] = fn;
@@ -3002,26 +3003,25 @@
         var i, j;
         if (typeof child === 'number') {
           return this.children[child];
-        } else {
-          var found;
-          if(child === "" || this.name === child){
-            return this;
-          } else {
-            if(this.nameTable.length > 0) {
-              for(i = 0, j = this.nameTable.length; i < j || found; i++) {
-                if(this.nameTable[i].getName === child) {
-                  found = this.nameTable[i];
-                }
-              }
-              if (found) { return found; }
-            }
-            for(i = 0, j = this.children.length; i < j; i++) {
-              found = this.children[i].getChild(child);
-              if(found) { return found; }
+        }
+        var found;
+        if(child === "" || this.name === child){
+          return this;
+        }
+        if(this.nameTable.length > 0) {
+          for(i = 0, j = this.nameTable.length; i < j || found; i++) {
+            if(this.nameTable[i].getName === child) {
+              found = this.nameTable[i];
+              break;
             }
           }
-          return null;
+          if (found) { return found; }
         }
+        for(i = 0, j = this.children.length; i < j; i++) {
+          found = this.children[i].getChild(child);
+          if(found) { return found; }
+        }
+        return null;
       },
       /**
        * @member PShape
@@ -4321,19 +4321,23 @@
       if (len < 0) { return text; }
       if (text.indexOf("pt") === len) {
         return parseFloat(text.substring(0, len)) * 1.25;
-      } else if (text.indexOf("pc") === len) {
-        return parseFloat( text.substring( 0, len)) * 15;
-      } else if (text.indexOf("mm") === len) {
-        return parseFloat( text.substring(0, len)) * 3.543307;
-      } else if (text.indexOf("cm") === len) {
-        return parseFloat(text.substring(0, len)) * 35.43307;
-      } else if (text.indexOf("in") === len) {
-        return parseFloat(text.substring(0, len)) * 90;
-      } else if (text.indexOf("px") === len) {
-        return parseFloat(text.substring(0, len));
-      } else {
-        return parseFloat(text);
       }
+      if (text.indexOf("pc") === len) {
+        return parseFloat( text.substring( 0, len)) * 15;
+      }
+      if (text.indexOf("mm") === len) {
+        return parseFloat( text.substring(0, len)) * 3.543307;
+      }
+      if (text.indexOf("cm") === len) {
+        return parseFloat(text.substring(0, len)) * 35.43307;
+      }
+      if (text.indexOf("in") === len) {
+        return parseFloat(text.substring(0, len)) * 90;
+      }
+      if (text.indexOf("px") === len) {
+        return parseFloat(text.substring(0, len));
+      }
+      return parseFloat(text);
     };
     /**
      * The shape() function displays shapes to the screen.
@@ -4670,9 +4674,8 @@
       createElement: function () {
         if (arguments.length === 2) {
           return new XMLElement(arguments[0], arguments[1], null, null);
-        } else {
-          return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
+        return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
       },
       /**
        * @member XMLElement
@@ -4703,7 +4706,8 @@
       hasAttribute: function () {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]) !== null;
-        } else if (arguments.length === 2) {
+        }
+        if (arguments.length === 2) {
           return this.getAttribute(arguments[0],arguments[1]) !== null;
         }
       },
@@ -4743,9 +4747,8 @@
             if (!child1.equals(child2)) { return false; }
           }
           return true;
-        } else {
-          return (this.content === other.content);
         }
+        return (this.content === other.content);
       },
       /**
        * @member XMLElement
@@ -4755,9 +4758,11 @@
        */
       getContent: function(){
         if (this.type === "TEXT") {
-          return this.content; }
-        else if (this.children.length === 1 && this.children[0].type === "TEXT") {
-          return this.children[0].content;
+          return this.content;
+        }
+        var children = this.children;
+        if (children.length === 1 && children[0].type === "TEXT") {
+          return children[0].content;
         }
         return null;
       },
@@ -4777,23 +4782,20 @@
           attribute = this.findAttribute(arguments[0]);
           if (attribute) {
             return attribute.getValue();
-          } else {
-            return arguments[1];
           }
+          return arguments[1];
         } else if (arguments.length === 1) {
           attribute = this.findAttribute(arguments[0]);
           if (attribute) {
             return attribute.getValue();
-          } else {
-            return null;
           }
+          return null;
         } else if (arguments.length === 3) {
           attribute = this.findAttribute(arguments[0],arguments[1]);
           if (attribute) {
             return attribute.getValue();
-          } else {
-            return arguments[2];
           }
+          return arguments[2];
         }
       },
       /**
@@ -4810,11 +4812,11 @@
       getStringAttribute: function() {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]);
-        } else if (arguments.length === 2){
-          return this.getAttribute(arguments[0], arguments[1]);
-        } else {
-          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+        if (arguments.length === 2){
+          return this.getAttribute(arguments[0], arguments[1]);
+        }
+        return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
        * Processing 1.5 XML API wrapper for the generic String
@@ -4837,11 +4839,11 @@
       getFloatAttribute: function() {
         if (arguments.length === 1 ) {
           return parseFloat(this.getAttribute(arguments[0], 0));
-        } else if (arguments.length === 2 ){
-          return this.getAttribute(arguments[0], arguments[1]);
-        } else {
-          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+        if (arguments.length === 2 ){
+          return this.getAttribute(arguments[0], arguments[1]);
+        }
+        return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
        * Processing 1.5 XML API wrapper for the generic float
@@ -4864,11 +4866,11 @@
       getIntAttribute: function () {
         if (arguments.length === 1) {
           return this.getAttribute( arguments[0], 0 );
-        } else if (arguments.length === 2) {
-          return this.getAttribute(arguments[0], arguments[1]);
-        } else {
-          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+        if (arguments.length === 2) {
+          return this.getAttribute(arguments[0], arguments[1]);
+        }
+        return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
        * Processing 1.5 XML API wrapper for the generic int
@@ -4933,19 +4935,19 @@
         if (typeof arguments[0]  === "number") {
           return this.children[arguments[0]];
         }
-        else if (arguments[0].indexOf('/') !== -1) { // path was given
+        if (arguments[0].indexOf('/') !== -1) { // path was given
           this.getChildRecursive(arguments[0].split("/"), 0);
-        } else {
-          var kid, kidName;
-          for (var i = 0, j = this.getChildCount(); i < j; i++) {
-            kid = this.getChild(i);
-            kidName = kid.getName();
-            if (kidName !== null && kidName === arguments[0]) {
-                return kid;
-            }
-          }
           return null;
         }
+        var kid, kidName;
+        for (var i = 0, j = this.getChildCount(); i < j; i++) {
+          kid = this.getChild(i);
+          kidName = kid.getName();
+          if (kidName !== null && kidName === arguments[0]) {
+              return kid;
+          }
+        }
+        return null;
       },
       /**
        * @member XMLElement
@@ -4964,23 +4966,22 @@
         if (arguments.length === 1) {
           if (typeof arguments[0]  === "number") {
             return this.getChild( arguments[0]);
-          } else if (arguments[0].indexOf('/') !== -1) { // path was given
-            return this.getChildrenRecursive( arguments[0].split("/"), 0);
-          } else {
-            var matches = [];
-            var kid, kidName;
-            for (var i = 0, j = this.getChildCount(); i < j; i++) {
-              kid = this.getChild(i);
-              kidName = kid.getName();
-              if (kidName !== null && kidName === arguments[0]) {
-                matches.push(kid);
-              }
-            }
-            return matches;
           }
-        }else {
-          return this.children;
+          if (arguments[0].indexOf('/') !== -1) { // path was given
+            return this.getChildrenRecursive( arguments[0].split("/"), 0);
+          }
+          var matches = [];
+          var kid, kidName;
+          for (var i = 0, j = this.getChildCount(); i < j; i++) {
+            kid = this.getChild(i);
+            kidName = kid.getName();
+            if (kidName !== null && kidName === arguments[0]) {
+              matches.push(kid);
+            }
+          }
+          return matches;
         }
+        return this.children;
       },
       /**
        * @member XMLElement
@@ -5011,10 +5012,9 @@
             if (kidName !== null && kidName === items[offset]) {
               if (offset === items.length-1) {
                 return kid;
-              } else {
-                offset += 1;
-                return kid.getChildRecursive(items, offset);
               }
+              offset += 1;
+              return kid.getChildRecursive(items, offset);
             }
         }
         return null;
@@ -5234,7 +5234,7 @@
        * The getAttributeCount() function returns the number of attributes for the node
        * that this XMLElement represents.
        *
-       * @return {int} the number of attributes in this XMLelement
+       * @return {int} the number of attributes in this XMLElement
        */
       getAttributeCount: function() {
         return this.attributes.length;
@@ -6095,34 +6095,32 @@
       multX: function(x, y, z, w) {
         if (!z) {
           return this.elements[0] * x + this.elements[1] * y + this.elements[3];
-        } else if (!w) {
-          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
-        } else {
-          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
         }
+        if (!w) {
+          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
+        }
+        return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
       },
       multY: function(x, y, z, w) {
         if (!z) {
           return this.elements[4] * x + this.elements[5] * y + this.elements[7];
-        } else if (!w) {
-          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
-        } else {
-          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
         }
+        if (!w) {
+          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
+        }
+        return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
       },
       multZ: function(x, y, z, w) {
         if (!w) {
           return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
-        } else {
-          return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
         }
+        return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
       },
       multW: function(x, y, z, w) {
         if (!w) {
           return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15];
-        } else {
-          return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
         }
+        return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
       },
       /**
        * @member PMatrix3D
@@ -6542,11 +6540,8 @@
     * @see splice
     */
     p.subset = function(array, offset, length) {
-      if (arguments.length === 2) {
-        return array.slice(offset, array.length);
-      } else if (arguments.length === 3) {
-        return array.slice(offset, offset + length);
-      }
+      var end = (length !== undef) ? offset + length : array.length;
+      return array.slice(offset, end);
     };
 
     /**
@@ -6608,17 +6603,11 @@
     *
     * @see contract
     */
-    p.expand = function(ary, newSize) {
-      var temp = ary.slice(0);
-      if (arguments.length === 1) {
-        // double size of array
-        temp.length = ary.length * 2;
-        return temp;
-      } else if (arguments.length === 2) {
-        // size is newSize
-        temp.length = newSize;
-        return temp;
-      }
+    p.expand = function(ary, targetSize) {
+      var temp = ary.slice(0),
+          newSize = targetSize || ary.length * 2;
+      temp.length = newSize;
+      return temp;
     };
 
     /**
@@ -6980,12 +6969,11 @@
         return aValue1 - (aValue1 & PConstants.ALPHA_MASK) + ((a << 24) & PConstants.ALPHA_MASK);
       }
       // Grayscale and alpha
-      else {
-        if (curColorMode === PConstants.RGB) {
-          return color$4(aValue1, aValue1, aValue1, aValue2);
-        } else if (curColorMode === PConstants.HSB) {
-          return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
-        }
+      if (curColorMode === PConstants.RGB) {
+        return color$4(aValue1, aValue1, aValue1, aValue2);
+      }
+      if (curColorMode === PConstants.HSB) {
+        return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
       }
     }
 
@@ -6994,12 +6982,13 @@
       if (aValue1 <= colorModeX && aValue1 >= 0) {
           if (curColorMode === PConstants.RGB) {
             return color$4(aValue1, aValue1, aValue1, colorModeA);
-          } else if (curColorMode === PConstants.HSB) {
+          }
+          if (curColorMode === PConstants.HSB) {
             return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA);
           }
       }
       // Color int
-      else if (aValue1) {
+      if (aValue1) {
         if (aValue1 > 2147483647) {
           // Java Overflow
           aValue1 -= 4294967296;
@@ -7089,26 +7078,25 @@
 
       if (s === 0) { // Grayscale
         return [br, br, br];
-      } else {
-        var hue = h % 360;
-        var f = hue % 60;
-        var p = Math.round((b * (100 - s)) / 10000 * 255);
-        var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
-        var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
-        switch (Math.floor(hue / 60)) {
-        case 0:
-          return [br, t, p];
-        case 1:
-          return [q, br, p];
-        case 2:
-          return [p, br, t];
-        case 3:
-          return [p, q, br];
-        case 4:
-          return [t, p, br];
-        case 5:
-          return [br, p, q];
-        }
+      }
+      var hue = h % 360;
+      var f = hue % 60;
+      var p = Math.round((b * (100 - s)) / 10000 * 255);
+      var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
+      var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
+      switch (Math.floor(hue / 60)) {
+      case 0:
+        return [br, t, p];
+      case 1:
+        return [q, br, p];
+      case 2:
+        return [p, br, t];
+      case 3:
+        return [p, q, br];
+      case 4:
+        return [t, p, br];
+      case 5:
+        return [br, p, q];
       }
     };
 
@@ -7125,24 +7113,23 @@
 
       if (min === max) {
         return [0, 0, max];
+      }
+      saturation = (max - min) / max;
+
+      if (red === max) {
+        hue = (green - blue) / (max - min);
+      } else if (green === max) {
+        hue = 2 + ((blue - red) / (max - min));
       } else {
-        saturation = (max - min) / max;
+        hue = 4 + ((red - green) / (max - min));
+      }
 
-        if (red === max) {
-          hue = (green - blue) / (max - min);
-        } else if (green === max) {
-          hue = 2 + ((blue - red) / (max - min));
-        } else {
-          hue = 4 + ((red - green) / (max - min));
-        }
+      hue /= 6;
 
-        hue /= 6;
-
-        if (hue < 0) {
-          hue += 1;
-        } else if (hue > 1) {
-          hue -= 1;
-        }
+      if (hue < 0) {
+        hue += 1;
+      } else if (hue > 1) {
+        hue -= 1;
       }
       return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
     };
@@ -8346,9 +8333,8 @@
       if (rightDigitsOfDefault > 0) {
         return sign + buffer.substring(0, buffer.length - rightDigitsOfDefault) +
                "." + buffer.substring(buffer.length - rightDigitsOfDefault, buffer.length);
-      } else {
-         return sign + buffer;
       }
+      return sign + buffer;
     }
 
     /**
@@ -8377,9 +8363,8 @@
           arr.push(nfCoreScalar(value[i], plus, minus, leftDigits, rightDigits, group));
         }
         return arr;
-      } else {
-        return nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
       }
+      return nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
     }
 
     /**
@@ -8527,9 +8512,8 @@
           arr.push(unhexScalar(hex[i]));
         }
         return arr;
-      } else {
-        return unhexScalar(hex);
       }
+      return unhexScalar(hex);
     };
 
     // Load a file or URL into strings
@@ -8971,9 +8955,8 @@
           arr.push(val[i].toString() + "");
         }
         return arr;
-      } else {
-        return (val.toString() + "");
       }
+      return (val.toString() + "");
     };
     /**
      * Remove whitespace characters from the beginning and ending
@@ -8992,20 +8975,22 @@
           arr.push(str[i].replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, ''));
         }
         return arr;
-      } else {
-        return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
       }
+      return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
     };
 
     // Conversion
     function booleanScalar(val) {
       if (typeof val === 'number') {
         return val !== 0;
-      } else if (typeof val === 'boolean') {
+      }
+      if (typeof val === 'boolean') {
         return val;
-      } else if (typeof val === 'string') {
+      }
+      if (typeof val === 'string') {
         return val.toLowerCase() === 'true';
-      } else if (val instanceof Char) {
+      }
+      if (val instanceof Char) {
         // 1, T or t
         return val.code === 49 || val.code === 84 || val.code === 116;
       }
@@ -9027,9 +9012,8 @@
           ret.push(booleanScalar(val[i]));
         }
         return ret;
-      } else {
-        return booleanScalar(val);
       }
+      return booleanScalar(val);
     };
 
     /**
@@ -9049,9 +9033,8 @@
           bytes.push((0 - (what[i] & 0x80)) | (what[i] & 0x7F));
         }
         return bytes;
-      } else {
-        return (0 - (what & 0x80)) | (what & 0x7F);
       }
+      return (0 - (what & 0x80)) | (what & 0x7F);
     };
 
     /**
@@ -9066,15 +9049,15 @@
     p.parseChar = function(key) {
       if (typeof key === "number") {
         return new Char(String.fromCharCode(key & 0xFFFF));
-      } else if (key instanceof Array) {
+      }
+      if (key instanceof Array) {
         var ret = [];
         for (var i = 0; i < key.length; i++) {
           ret.push(new Char(String.fromCharCode(key[i] & 0xFFFF)));
         }
         return ret;
-      } else {
-        throw "char() may receive only one argument of type int, byte, int[], or byte[].";
       }
+      throw "char() may receive only one argument of type int, byte, int[], or byte[].";
     };
 
     // Processing doc claims good argument types are: int, char, byte, boolean,
@@ -9084,11 +9067,14 @@
     function floatScalar(val) {
       if (typeof val === 'number') {
         return val;
-      } else if (typeof val === 'boolean') {
+      }
+      if (typeof val === 'boolean') {
         return val ? 1 : 0;
-      } else if (typeof val === 'string') {
+      }
+      if (typeof val === 'string') {
         return parseFloat(val);
-      } else if (val instanceof Char) {
+      }
+      if (val instanceof Char) {
         return val.code;
       }
     }
@@ -9109,20 +9095,22 @@
           ret.push(floatScalar(val[i]));
         }
         return ret;
-      } else {
-        return floatScalar(val);
       }
+      return floatScalar(val);
     };
 
     function intScalar(val, radix) {
       if (typeof val === 'number') {
         return val & 0xFFFFFFFF;
-      } else if (typeof val === 'boolean') {
+      }
+      if (typeof val === 'boolean') {
         return val ? 1 : 0;
-      } else if (typeof val === 'string') {
+      }
+      if (typeof val === 'string') {
         var number = parseInt(val, radix || 10); // Default to decimal radix.
         return number & 0xFFFFFFFF;
-      } else if (val instanceof Char) {
+      }
+      if (val instanceof Char) {
         return val.code;
       }
     }
@@ -9148,9 +9136,8 @@
           }
         }
         return ret;
-      } else {
-        return intScalar(val, radix);
       }
+      return intScalar(val, radix);
     };
 
     p.__int_cast = function(val) {
@@ -9271,7 +9258,8 @@
         dx = arguments[0] - arguments[2];
         dy = arguments[1] - arguments[3];
         return Math.sqrt(dx * dx + dy * dy);
-      } else if (arguments.length === 6) {
+      }
+      if (arguments.length === 6) {
         dx = arguments[0] - arguments[3];
         dy = arguments[1] - arguments[4];
         dz = arguments[2] - arguments[5];
@@ -9386,20 +9374,19 @@
     p.max = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
-      } else {
-        var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-        if (! ("length" in numbers && numbers.length > 0)) {
-          throw "Non-empty array is expected";
-        }
-        var max = numbers[0],
-          count = numbers.length;
-        for (var i = 1; i < count; ++i) {
-          if (max < numbers[i]) {
-            max = numbers[i];
-          }
-        }
-        return max;
       }
+      var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+      if (! ("length" in numbers && numbers.length > 0)) {
+        throw "Non-empty array is expected";
+      }
+      var max = numbers[0],
+        count = numbers.length;
+      for (var i = 1; i < count; ++i) {
+        if (max < numbers[i]) {
+          max = numbers[i];
+        }
+      }
+      return max;
     };
 
     /**
@@ -9417,20 +9404,19 @@
     p.min = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
-      } else {
-        var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-        if (! ("length" in numbers && numbers.length > 0)) {
-          throw "Non-empty array is expected";
-        }
-        var min = numbers[0],
-          count = numbers.length;
-        for (var i = 1; i < count; ++i) {
-          if (min > numbers[i]) {
-            min = numbers[i];
-          }
-        }
-        return min;
       }
+      var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+      if (! ("length" in numbers && numbers.length > 0)) {
+        throw "Non-empty array is expected";
+      }
+      var min = numbers[0],
+        count = numbers.length;
+      for (var i = 1; i < count; ++i) {
+        if (min > numbers[i]) {
+          min = numbers[i];
+        }
+      }
+      return min;
     };
 
     /**
@@ -9656,12 +9642,12 @@
     p.random = function() {
       if(arguments.length === 0) {
         return currentRandom();
-      } else if(arguments.length === 1) {
-        return currentRandom() * arguments[0];
-      } else {
-        var aMin = arguments[0], aMax = arguments[1];
-        return currentRandom() * (aMax - aMin) + aMin;
       }
+      if(arguments.length === 1) {
+        return currentRandom() * arguments[0];
+      }
+      var aMin = arguments[0], aMax = arguments[1];
+      return currentRandom() * (aMax - aMin) + aMin;
     };
 
     // Pseudo-random generator
@@ -9709,21 +9695,20 @@
         if (haveNextNextGaussian) {
           haveNextNextGaussian = false;
           return nextNextGaussian;
-        } else {
-          var v1, v2, s;
-          do {
-            v1 = 2 * random() - 1; // between -1.0 and 1.0
-            v2 = 2 * random() - 1; // between -1.0 and 1.0
-            s = v1 * v1 + v2 * v2;
-          }
-          while (s >= 1 || s === 0);
-
-          var multiplier = Math.sqrt(-2 * Math.log(s) / s);
-          nextNextGaussian = v2 * multiplier;
-          haveNextNextGaussian = true;
-
-          return v1 * multiplier;
         }
+        var v1, v2, s;
+        do {
+          v1 = 2 * random() - 1; // between -1.0 and 1.0
+          v2 = 2 * random() - 1; // between -1.0 and 1.0
+          s = v1 * v1 + v2 * v2;
+        }
+        while (s >= 1 || s === 0);
+
+        var multiplier = Math.sqrt(-2 * Math.log(s) / s);
+        nextNextGaussian = v2 * multiplier;
+        haveNextNextGaussian = true;
+
+        return v1 * multiplier;
       };
 
       // by default use standard random, otherwise seeded
@@ -10464,11 +10449,10 @@
     p.beginCamera = function() {
       if (manipulatingCamera) {
         throw ("You cannot call beginCamera() again before calling endCamera()");
-      } else {
-        manipulatingCamera = true;
-        forwardTransform = cameraInv;
-        reverseTransform = cam;
       }
+      manipulatingCamera = true;
+      forwardTransform = cameraInv;
+      reverseTransform = cam;
     };
 
     /**
@@ -10480,13 +10464,12 @@
     p.endCamera = function() {
       if (!manipulatingCamera) {
         throw ("You cannot call endCamera() before calling beginCamera()");
-      } else {
-        modelView.set(cam);
-        modelViewInv.set(cameraInv);
-        forwardTransform = modelView;
-        reverseTransform = modelViewInv;
-        manipulatingCamera = false;
       }
+      modelView.set(cam);
+      modelViewInv.set(cameraInv);
+      forwardTransform = modelView;
+      reverseTransform = modelViewInv;
+      manipulatingCamera = false;
     };
 
     /**
@@ -11305,9 +11288,9 @@
           ox /= ow;
         }
         return p.width * ( 1 + ox ) / 2.0;
-      } else { // We assume that we're in 2D
-        return modelView.multX(x, y);
       }
+      // We assume that we're in 2D
+      return modelView.multX(x, y);
     };
 
     /**
@@ -11340,9 +11323,9 @@
           oy /= ow;
         }
         return p.height * ( 1 + oy ) / 2.0;
-      } else {  // We assume that we're in 2D
-        return modelView.multY(x, y);
       }
+      // We assume that we're in 2D
+      return modelView.multY(x, y);
     };
 
     /**
@@ -13782,9 +13765,8 @@
       // may implement this differently in later release
       if (img !== undef) {
         return window.open(img.toDataURL(),"_blank");
-      } else {
-        return window.open(p.externals.canvas.toDataURL(),"_blank");
       }
+      return window.open(p.externals.canvas.toDataURL(),"_blank");
     };
 
     var saveNumber = 0;
@@ -13860,9 +13842,11 @@
       this.get = function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
-        } else if (arguments.length === 2) {
+        }
+        if (arguments.length === 2) {
           return p.get(x, y, this);
-        } else if (arguments.length === 4) {
+        }
+        if (arguments.length === 4) {
           return p.get(x, y, w, h, this);
         }
       };
@@ -14024,21 +14008,20 @@
       this.resize = function(w, h) {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot resize.";
-        } else {
-          if (this.width !== 0 || this.height !== 0) {
-            // make aspect ratio if w or h is 0
-            if (w === 0 && h !== 0) {
-              w = Math.floor(this.width / this.height * h);
-            } else if (h === 0 && w !== 0) {
-              h = Math.floor(this.height / this.width * w);
-            }
-            // put 'this.imageData' into a new canvas
-            var canvas = getCanvasData(this.imageData).canvas;
-            // pull imageData object out of canvas into ImageData object
-            var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
-            // set this as new pimage
-            this.fromImageData(imageData);
+        }
+        if (this.width !== 0 || this.height !== 0) {
+          // make aspect ratio if w or h is 0
+          if (w === 0 && h !== 0) {
+            w = Math.floor(this.width / this.height * h);
+          } else if (h === 0 && w !== 0) {
+            h = Math.floor(this.height / this.width * w);
           }
+          // put 'this.imageData' into a new canvas
+          var canvas = getCanvasData(this.imageData).canvas;
+          // pull imageData object out of canvas into ImageData object
+          var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
+          // set this as new pimage
+          this.fromImageData(imageData);
         }
       };
 
@@ -14085,35 +14068,32 @@
         getLength: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot get length.";
-          } else {
-            return function() {
-              return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
-            };
           }
+          return function() {
+            return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
+          };
         }(this)),
         getPixel: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot get pixels.";
-          } else {
-            return function(i) {
-              var offset = i*4;
-              return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
-                                   aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
-            };
           }
+          return function(i) {
+            var offset = i*4;
+            return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
+                                 aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
+          };
         }(this)),
         setPixel: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot set pixel.";
-          } else {
-            return function(i,c) {
-              var offset = i*4;
-              aImg.imageData.data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
-              aImg.imageData.data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
-              aImg.imageData.data[offset+2] = (c & PConstants.BLUE_MASK);
-              aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
-            };
           }
+          return function(i,c) {
+            var offset = i*4;
+            aImg.imageData.data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
+            aImg.imageData.data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
+            aImg.imageData.data[offset+2] = (c & PConstants.BLUE_MASK);
+            aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
+          };
         }(this)),
         toArray: (function(aImg) {
           if (aImg.isRemote) { // Remote images cannot access imageData
@@ -14132,10 +14112,9 @@
         set: function(arr) {
           if (this.isRemote) { // Remote images cannot access imageData
             throw "Image is loaded remotely. Cannot set pixels.";
-          } else {
-            for (var i = 0, aL = arr.length; i < aL; i++) {
-              this.setPixel(i, arr[i]);
-            }
+          }
+          for (var i = 0, aL = arr.length; i < aL; i++) {
+            this.setPixel(i, arr[i]);
           }
         }
       };
@@ -14167,19 +14146,17 @@
       this.toImageData = function() {
         if (this.isRemote) { // Remote images cannot access imageData, send source image instead
           return this.sourceImg;
-        } else {
-          var canvasData = getCanvasData(this.imageData);
-          return canvasData.context.getImageData(0, 0, this.width, this.height);
         }
+        var canvasData = getCanvasData(this.imageData);
+        return canvasData.context.getImageData(0, 0, this.width, this.height);
       };
 
       this.toDataURL = function() {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot create dataURI.";
-        } else {
-          var canvasData = getCanvasData(this.imageData);
-          return canvasData.canvas.toDataURL();
         }
+        var canvasData = getCanvasData(this.imageData);
+        return canvasData.canvas.toDataURL();
       };
 
       this.fromImageData = function(canvasImg) {
@@ -14295,29 +14272,27 @@
         return pimg;
       }
       // else async load it
-      else {
-        pimg = new PImage();
-        var img = document.createElement('img');
+      pimg = new PImage();
+      var img = document.createElement('img');
 
-        pimg.sourceImg = img;
+      pimg.sourceImg = img;
 
-        img.onload = (function(aImage, aPImage, aCallback) {
-          var image = aImage;
-          var pimg = aPImage;
-          var callback = aCallback;
-          return function() {
-            // change the <img> object into a PImage now that its loaded
-            pimg.fromHTMLImageData(image);
-            pimg.loaded = true;
-            if (callback) {
-              callback();
-            }
-          };
-        }(img, pimg, callback));
+      img.onload = (function(aImage, aPImage, aCallback) {
+        var image = aImage;
+        var pimg = aPImage;
+        var callback = aCallback;
+        return function() {
+          // change the <img> object into a PImage now that its loaded
+          pimg.fromHTMLImageData(image);
+          pimg.loaded = true;
+          if (callback) {
+            callback();
+          }
+        };
+      }(img, pimg, callback));
 
-        img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
-        return pimg;
-      }
+      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
+      return pimg;
     };
 
     // async loading of large images, same functionality as loadImage above
@@ -14362,23 +14337,21 @@
         data = curContext.getImageData(0|x, 0|y, 1, 1).data;
         // changed for 0.9
         return p.color.toInt(data[0], data[1], data[2], data[3]);
-      } else {
-        // x,y is outside image return transparent black
-        return 0;
       }
+      // x,y is outside image return transparent black
+      return 0;
     }
     function get$3(x,y,img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot get x,y.";
-      } else {
-        // PImage.get(x,y) was called, return the color (int) at x,y of img
-        // changed in 0.9
-        var offset = y * img.width * 4 + (x * 4);
-        return p.color.toInt(img.imageData.data[offset],
-                           img.imageData.data[offset + 1],
-                           img.imageData.data[offset + 2],
-                           img.imageData.data[offset + 3]);
       }
+      // PImage.get(x,y) was called, return the color (int) at x,y of img
+      // changed in 0.9
+      var offset = y * img.width * 4 + (x * 4);
+      return p.color.toInt(img.imageData.data[offset],
+                         img.imageData.data[offset + 1],
+                         img.imageData.data[offset + 2],
+                         img.imageData.data[offset + 3]);
     }
     function get$4(x, y, w, h) {
       // return a PImage of w and h from cood x,y of curContext
@@ -14389,26 +14362,25 @@
     function get$5(x, y, w, h, img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot get x,y,w,h.";
-      } else {
-        // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
-        // changed for 0.9, offset start point needs to be *4
-        var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data,
-          imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
-        // Don't need to copy pixels from the image outside ranges.
-        var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
-          stopRow = Math.min(h, imgHeight - y), stopColumn = Math.min(w, imgWidth - x);
-        for (var i = startRow; i < stopRow; ++i) {
-          var sourceOffset = ((y + i) * imgWidth + (x + startColumn)) * 4;
-          var targetOffset = (i * w + startColumn) * 4;
-          for (var j = startColumn; j < stopColumn; ++j) {
-            cData[targetOffset++] = imgData[sourceOffset++];
-            cData[targetOffset++] = imgData[sourceOffset++];
-            cData[targetOffset++] = imgData[sourceOffset++];
-            cData[targetOffset++] = imgData[sourceOffset++];
-          }
-        }
-        return c;
       }
+      // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+      // changed for 0.9, offset start point needs to be *4
+      var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data,
+        imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
+      // Don't need to copy pixels from the image outside ranges.
+      var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
+        stopRow = Math.min(h, imgHeight - y), stopColumn = Math.min(w, imgWidth - x);
+      for (var i = startRow; i < stopRow; ++i) {
+        var sourceOffset = ((y + i) * imgWidth + (x + startColumn)) * 4;
+        var targetOffset = (i * w + startColumn) * 4;
+        for (var j = startColumn; j < stopColumn; ++j) {
+          cData[targetOffset++] = imgData[sourceOffset++];
+          cData[targetOffset++] = imgData[sourceOffset++];
+          cData[targetOffset++] = imgData[sourceOffset++];
+          cData[targetOffset++] = imgData[sourceOffset++];
+        }
+      }
+      return c;
     }
 
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
@@ -14439,15 +14411,20 @@
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
       if (arguments.length === 2) {
         return get$2(x, y);
-      } else if (arguments.length === 0) {
+      }
+      if (arguments.length === 0) {
         return get$0();
-      } else if (arguments.length === 5) {
+      }
+      if (arguments.length === 5) {
         return get$5(x, y, w, h, img);
-      } else if (arguments.length === 4) {
+      }
+      if (arguments.length === 4) {
         return get$4(x, y, w, h);
-      } else if (arguments.length === 3) {
+      }
+      if (arguments.length === 3) {
         return get$3(x, y, w);
-      } else if (arguments.length === 1) {
+      }
+      if (arguments.length === 1) {
         // PImage.get() was called, return the PImage
         return x;
       }
@@ -14535,15 +14512,14 @@
     function set$4(x, y, obj, img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot set x,y.";
-      } else {
-        var c = p.color.toArray(obj);
-        var offset = y * img.width * 4 + (x*4);
-        var data = img.imageData.data;
-        data[offset] = c[0];
-        data[offset+1] = c[1];
-        data[offset+2] = c[2];
-        data[offset+3] = c[3];
       }
+      var c = p.color.toArray(obj);
+      var offset = y * img.width * 4 + (x*4);
+      var data = img.imageData.data;
+      data[offset] = c[0];
+      data[offset+1] = c[1];
+      data[offset+2] = c[2];
+      data[offset+3] = c[3];
     }
 
     // Paints a pixel array into the canvas
@@ -14759,7 +14735,8 @@
 
         if (!obj.loaded) {
           throw "Error using image in background(): PImage not loaded.";
-        } else if(obj.width !== p.width || obj.height !== p.height){
+        }
+        if(obj.width !== p.width || obj.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
       } else {
@@ -15039,29 +15016,28 @@
       var dest;
       if (src.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot blend image.";
-      } else {
-        // check if pimgdest is there and pixels, if so this was a call from pimg.blend
-        if (arguments.length === 10 || arguments.length === 9) {
-          p.loadPixels();
-          dest = p;
-        } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
-          dest = pimgdest;
-        }
-        if (src === p) {
-          if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
-            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
-                          dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-          } else {
-            // same as below, except skip the loadPixels() because it'd be redundant
-            p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-          }
+      }
+      // check if pimgdest is there and pixels, if so this was a call from pimg.blend
+      if (arguments.length === 10 || arguments.length === 9) {
+        p.loadPixels();
+        dest = p;
+      } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
+        dest = pimgdest;
+      }
+      if (src === p) {
+        if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
+          p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
+                        dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
         } else {
-          src.loadPixels();
+          // same as below, except skip the loadPixels() because it'd be redundant
           p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
         }
-        if (arguments.length === 10) {
-          p.updatePixels();
-        }
+      } else {
+        src.loadPixels();
+        p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+      }
+      if (arguments.length === 10) {
+        p.updatePixels();
       }
     };
 
@@ -15343,89 +15319,88 @@
       }
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot filter image.";
-      } else {
-        // begin filter process
-        var imglen = img.pixels.getLength();
-        switch (kind) {
-          case PConstants.BLUR:
-            var radius = param || 1; // if no param specified, use 1 (default for p5)
-            blurARGB(radius, img);
-            break;
+      }
+      // begin filter process
+      var imglen = img.pixels.getLength();
+      switch (kind) {
+        case PConstants.BLUR:
+          var radius = param || 1; // if no param specified, use 1 (default for p5)
+          blurARGB(radius, img);
+          break;
 
-          case PConstants.GRAY:
-            if (img.format === PConstants.ALPHA) { //trouble
-              // for an alpha image, convert it to an opaque grayscale
-              for (i = 0; i < imglen; i++) {
-                col = 255 - img.pixels.getPixel(i);
-                img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
-              }
-              img.format = PConstants.RGB; //trouble
-            } else {
-              for (i = 0; i < imglen; i++) {
-                col = img.pixels.getPixel(i);
-                lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
-                img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
-              }
-            }
-            break;
-
-          case PConstants.INVERT:
+        case PConstants.GRAY:
+          if (img.format === PConstants.ALPHA) { //trouble
+            // for an alpha image, convert it to an opaque grayscale
             for (i = 0; i < imglen; i++) {
-              img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
-            }
-            break;
-
-          case PConstants.POSTERIZE:
-            if (param === null) {
-              throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
-            }
-            var levels = p.floor(param);
-            if ((levels < 2) || (levels > 255)) {
-              throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
-            }
-            var levels1 = levels - 1;
-            for (i = 0; i < imglen; i++) {
-              var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
-              var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
-              var blevel = img.pixels.getPixel(i) & 0xff;
-              rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
-              glevel = (((glevel * levels) >> 8) * 255) / levels1;
-              blevel = (((blevel * levels) >> 8) * 255) / levels1;
-              img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
-            }
-            break;
-
-          case PConstants.OPAQUE:
-            for (i = 0; i < imglen; i++) {
-              img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
+              col = 255 - img.pixels.getPixel(i);
+              img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
             }
             img.format = PConstants.RGB; //trouble
-            break;
-
-          case PConstants.THRESHOLD:
-            if (param === null) {
-              param = 0.5;
-            }
-            if ((param < 0) || (param > 1)) {
-              throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
-            }
-            var thresh = p.floor(param * 255);
+          } else {
             for (i = 0; i < imglen; i++) {
-              var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16, p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8, (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
-              img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) | ((max < thresh) ? 0x000000 : 0xffffff)));
+              col = img.pixels.getPixel(i);
+              lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
+              img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
             }
-            break;
+          }
+          break;
 
-          case PConstants.ERODE:
-            dilate(true, img);
-            break;
+        case PConstants.INVERT:
+          for (i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
+          }
+          break;
 
-          case PConstants.DILATE:
-            dilate(false, img);
-            break;
-        }
-        img.updatePixels();
+        case PConstants.POSTERIZE:
+          if (param === null) {
+            throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
+          }
+          var levels = p.floor(param);
+          if ((levels < 2) || (levels > 255)) {
+            throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
+          }
+          var levels1 = levels - 1;
+          for (i = 0; i < imglen; i++) {
+            var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
+            var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
+            var blevel = img.pixels.getPixel(i) & 0xff;
+            rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
+            glevel = (((glevel * levels) >> 8) * 255) / levels1;
+            blevel = (((blevel * levels) >> 8) * 255) / levels1;
+            img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
+          }
+          break;
+
+        case PConstants.OPAQUE:
+          for (i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
+          }
+          img.format = PConstants.RGB; //trouble
+          break;
+
+        case PConstants.THRESHOLD:
+          if (param === null) {
+            param = 0.5;
+          }
+          if ((param < 0) || (param > 1)) {
+            throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
+          }
+          var thresh = p.floor(param * 255);
+          for (i = 0; i < imglen; i++) {
+            var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16, p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8, (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
+            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) | ((max < thresh) ? 0x000000 : 0xffffff)));
+          }
+          break;
+
+        case PConstants.ERODE:
+          dilate(true, img);
+          break;
+
+        case PConstants.DILATE:
+          dilate(false, img);
+          break;
       }
+      img.updatePixels();
     };
 
 
@@ -15694,6 +15669,7 @@
       }
       // If the font is a glyph, calculate by SVG table
       var font = p.loadGlyphs(name);
+
       return {
         name: name,
         glyph: true,
@@ -15719,6 +15695,7 @@
 
     /**
      * createFont() Loads a font into a variable of type PFont.
+     * Smooth and charset are ignored in Processing.js.
      *
      * @param {String}    name    filename of the font to load
      * @param {int|float} size    font size in pixels
@@ -15848,18 +15825,18 @@
     function toP5String(obj) {
       if(obj instanceof String) {
         return obj;
-      } else if(typeof obj === 'number') {
+      }
+      if(typeof obj === 'number') {
         // check if an int
         if(obj === (0 | obj)) {
           return obj.toString();
-        } else {
-          return p.nf(obj, 0, 3);
         }
-      } else if(obj === null || obj === undef) {
-        return "";
-      } else {
-        return obj.toString();
+        return p.nf(obj, 0, 3);
       }
+      if(obj === null || obj === undef) {
+        return "";
+      }
+      return obj.toString();
     }
 
     /**
@@ -16280,20 +16257,20 @@
           p.image(hud, arguments[1], arguments[2]-asc);
         }
         p.popMatrix();
+        return;
       }
-      else if (textMode === PConstants.SHAPE) {
+      if (textMode === PConstants.SHAPE) {
         // TODO: requires beginRaw function
         return;
-      } else {
-        if (arguments.length === 3) { // for text( str, x, y)
-          text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
-        } else if (arguments.length === 4) { // for text( str, x, y, z)
-          text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
-        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
-        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
-          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
-        }
+      }
+      if (arguments.length === 3) { // for text( str, x, y)
+        text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
+      } else if (arguments.length === 4) { // for text( str, x, y, z)
+        text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
+      } else if (arguments.length === 5) { // for text( str, x, y , width, height)
+        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
+      } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
       }
     };
 
@@ -17363,9 +17340,8 @@
         var val = strings[index];
         if(val.charAt(0) === "/") {
           return val;
-        } else {
-          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
         }
+        return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
       });
     }
 
@@ -17418,12 +17394,13 @@
       if(quoted || aposed) { // replace strings
         index = strings.length; strings.push(all);
         return "'" + index + "'";
-      } else if(regexCtx) { // replace RegExps
+      }
+      if(regexCtx) { // replace RegExps
         index = strings.length; strings.push(regex);
         return prefix + "'" + index + "'";
-      } else { // kill comments
-        return comment !== "" ? " " : "\n";
       }
+      // kill comments
+      return comment !== "" ? " " : "\n";
     });
 
     // removes generics
@@ -17494,9 +17471,8 @@
       var result = code.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
         if(name !== className) {
           return all;
-        } else {
-          return addAtom(all, 'G');
         }
+        return addAtom(all, 'G');
       });
       return result;
     }
@@ -17576,18 +17552,18 @@
         var atom = atoms[index];
         if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
           return all;
-        } else if(/^\(\s*int\s*\)$/.test(atom)) {
-          return "(int)" + next;
-        } else {
-          var indexParts = atom.split(/"C(\d+)"/g);
-          if(indexParts.length > 1) {
-            // even items contains atom numbers, can check only first
-            if(! /^\[\s*\]$/.test(atoms[indexParts[1]])) {
-              return all; // fallback - not a cast
-            }
-          }
-          return "" + next;
         }
+        if(/^\(\s*int\s*\)$/.test(atom)) {
+          return "(int)" + next;
+        }
+        var indexParts = atom.split(/"C(\d+)"/g);
+        if(indexParts.length > 1) {
+          // even items contains atom numbers, can check only first
+          if(! /^\[\s*\]$/.test(atoms[indexParts[1]])) {
+            return all; // fallback - not a cast
+          }
+        }
+        return "" + next;
       });
       // (int)??? -> __int_cast(???)
       s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~<\>\=]+)/g, function(all, arg) {
@@ -17627,20 +17603,18 @@
             if(equalsPart) {
               return "pixels.setPixel" + addAtom("(" +atom.substring(1, atom.length - 1) +
                 "," + rightSide + ")", 'B');
-            } else {
-              return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
-                ")", 'B');
             }
-          } else if(indexOrLength) {
+            return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
+              ")", 'B');
+          }
+          if(indexOrLength) {
             // length
             return "pixels.getLength" + addAtom("()", 'B');
-          } else {
-            if(equalsPart) {
-              return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
-            } else {
-              return "pixels.toArray" + addAtom("()", 'B');
-            }
           }
+          if(equalsPart) {
+            return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
+          }
+          return "pixels.toArray" + addAtom("()", 'B');
         });
       // Java method replacements for: replace, replaceAll, replaceFirst, equals, hashCode, etc.
       //   xxx.replace(yyy) -> __replace(xxx, yyy)
@@ -17758,20 +17732,19 @@
     function expandExpression(expr) {
       if(expr.charAt(0) === '(' || expr.charAt(0) === '[') {
         return expr.charAt(0) + expandExpression(expr.substring(1, expr.length - 1)) + expr.charAt(expr.length - 1);
-      } else if(expr.charAt(0) === '{') {
+      }
+      if(expr.charAt(0) === '{') {
         if(/^\{\s*(?:[A-Za-z_$][\w$]*|'\d+')\s*:/.test(expr)) {
           return "{" + addAtom(expr.substring(1, expr.length - 1), 'I') + "}";
-        } else {
-          return "[" + expandExpression(expr.substring(1, expr.length - 1)) + "]";
         }
-      } else {
-        var trimmed = trimSpaces(expr);
-        var result = preExpressionTransform(trimmed.middle);
-        result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
-          return expandExpression(atoms[index]);
-        });
-        return trimmed.untrim(result);
+        return "[" + expandExpression(expr.substring(1, expr.length - 1)) + "]";
       }
+      var trimmed = trimSpaces(expr);
+      var result = preExpressionTransform(trimmed.middle);
+      result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
+        return expandExpression(atoms[index]);
+      });
+      return trimmed.untrim(result);
     }
 
     function replaceContextInVars(expr) {
@@ -17779,10 +17752,9 @@
         function(all, memberAccessSign, identifier, suffix, subMember, callSign) {
           if(memberAccessSign) {
             return all;
-          } else {
-            var subject = { name: identifier, member: subMember, callSign: !!callSign };
-            return replaceContext(subject) + (suffix === undef ? "" : suffix);
           }
+          var subject = { name: identifier, member: subMember, callSign: !!callSign };
+          return replaceContext(subject) + (suffix === undef ? "" : suffix);
         });
     }
 
@@ -17845,13 +17817,14 @@
     function getDefaultValueForType(type) {
         if(type === "int" || type === "float") {
           return "0";
-        } else if(type === "boolean") {
-          return "false";
-        } else if(type === "color") {
-          return "0x00000000";
-        } else {
-          return "null";
         }
+        if(type === "boolean") {
+          return "false";
+        }
+        if(type === "color") {
+          return "0x00000000";
+        }
+        return "null";
     }
 
     function AstVar(definitions, varType) {
@@ -17884,9 +17857,8 @@
           definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
         }
         return new AstVar(definitions, attrAndType[2]);
-      } else {
-        return new AstStatement(transformExpression(statement));
       }
+      return new AstStatement(transformExpression(statement));
     }
 
     function AstForExpression(initStatement, condition, step) {
@@ -17932,15 +17904,15 @@
         content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
         return new AstForInExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
-      } else if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
+      }
+      if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
         content = expr.substring(1, expr.length - 1).split(":");
         return new AstForEachExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
-      } else {
-        content = expr.substring(1, expr.length - 1).split(";");
-        return new AstForExpression( transformStatement(trim(content[0])),
-          transformExpression(content[1]), transformExpression(content[2]));
       }
+      content = expr.substring(1, expr.length - 1).split(";");
+      return new AstForExpression( transformStatement(trim(content[0])),
+        transformExpression(content[1]), transformExpression(content[2]));
     }
 
     function sortByWeight(array) {
@@ -18039,9 +18011,8 @@
           staticDeclarations.push(declaration);
         }
         return staticDeclarations.join("");
-      } else {
-        return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
       }
+      return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
     };
 
     function transformClassField(statement) {
@@ -18270,11 +18241,14 @@
           // returns "$this_N.$self" pointer instead of "this" in cases:
           // "this()", "this.XXX()", "this", but not for "this.XXX"
           return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
-        } else if(thisClassFields.hasOwnProperty(name)) {
+        }
+        if(thisClassFields.hasOwnProperty(name)) {
           return thisClassFields[name].isStatic ? className + "." + name : selfId + "." + name;
-        } else if(thisClassInners.hasOwnProperty(name)) {
+        }
+        if(thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
-        } else if(thisClassMethods.hasOwnProperty(name)) {
+        }
+        if(thisClassMethods.hasOwnProperty(name)) {
           return thisClassMethods[name].isStatic ? className + "." + name : selfId + ".$self." + name;
         }
         return oldContext(subject);
@@ -18668,9 +18642,10 @@
         var name = subject.name;
         if(localNames.hasOwnProperty(name)) {
           return name;
-        } else if(globalMembers.hasOwnProperty(name) ||
-                  PConstants.hasOwnProperty(name) ||
-                  defaultScope.hasOwnProperty(name)) {
+        }
+        if(globalMembers.hasOwnProperty(name) ||
+           PConstants.hasOwnProperty(name) ||
+           defaultScope.hasOwnProperty(name)) {
           return "$p." + name;
         }
         return name;
