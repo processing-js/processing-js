@@ -1,17 +1,17 @@
 /*
-This book is here to help you get your job done. In general, you may use the 
-code in this book in your programs and documentation. You do not need to contact 
-us for permission unless you’re reproducing a significant portion of the code. 
-For example, writing a program that uses several chunks of code from this book 
-does not require permission. Selling or distributing a CD-ROM of examples from 
-O’Reilly books does require permission. Answering a question by citing this book 
+This book is here to help you get your job done. In general, you may use the
+code in this book in your programs and documentation. You do not need to contact
+us for permission unless you're reproducing a significant portion of the code.
+For example, writing a program that uses several chunks of code from this book
+does not require permission. Selling or distributing a CD-ROM of examples from
+O'Reilly books does require permission. Answering a question by citing this book
 and quoting example code does not require permission. Incorporating a significant
-amount of example code from this book into your product’s documentation does 
+amount of example code from this book into your product's documentation does
 require permission.
 
 We appreciate, but do not require, attribution. An attribution usually includes
-the title, author, publisher, and ISBN. For example: “Visualizing Data, First 
-Edition by Ben Fry. Copyright 2008 Ben Fry, 9780596514556.”
+the title, author, publisher, and ISBN. For example: "Visualizing Data, First
+Edition by Ben Fry. Copyright 2008 Ben Fry, 9780596514556."
 
 If you feel your use of code examples falls outside fair use or the permission
 given above, feel free to contact us at permissions@oreilly.com.
@@ -19,10 +19,10 @@ given above, feel free to contact us at permissions@oreilly.com.
 import java.util.regex.*;
 
 int teamCount = 30;
-String[] teamNames; 
+String[] teamNames;
 String[] teamCodes;
 HashMap teamIndices;
-  
+
 static final int ROW_HEIGHT = 23;
 static final float HALF_ROW_HEIGHT = ROW_HEIGHT / 2.0f;
 
@@ -31,7 +31,7 @@ static final int TOP_PADDING = 40;
 
 SalaryList salaries;
 StandingsList standings;
-  
+
 StandingsList[] season;
 Integrator[] standingsPosition;
 
@@ -41,9 +41,9 @@ float logoHeight;
 
 PFont font;
 
-  
+
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-  
+
 
 String firstDateStamp = "20070401";
 String lastDateStamp = "20070930";
@@ -51,12 +51,12 @@ String todayDateStamp;
 
 static final long MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
 
-// The number of days in the entire season. 
+// The number of days in the entire season.
 int dateCount;
 // The current date being shown.
 int dateIndex;
-// Don't show the first 10 days, they're too erratic. 
-int minDateIndex = 10;  
+// Don't show the first 10 days, they're too erratic.
+int minDateIndex = 10;
 // The last day of the season, or yesterday, if the season is ongoing.
 // This is the maximum date that can be viewed.
 int maxDateIndex;
@@ -78,27 +78,27 @@ void setupDates() {
     Date lastDate = stampFormat.parse(lastDateStamp);
     long lastDateMillis = lastDate.getTime();
 
-    // Calculate number of days by dividing the total milliseconds 
+    // Calculate number of days by dividing the total milliseconds
     // between the first and last dates by the number of milliseconds per day
-    dateCount = (int) 
-      ((lastDateMillis - firstDateMillis) / MILLIS_PER_DAY) + 1;      
+    dateCount = (int)
+      ((lastDateMillis - firstDateMillis) / MILLIS_PER_DAY) + 1;
     maxDateIndex = dateCount;
     dateStamp = new String[dateCount];
     datePretty = new String[dateCount];
 
     todayDateStamp = year() + nf(month(), 2) + nf(day(), 2);
     // Another option to do this, but more code
-    //Date today = new Date(); 
+    //Date today = new Date();
     //String todayDateStamp = stampFormat.format(today);
-      
+
     for (int i = 0; i < dateCount; i++) {
       Date date = new Date(firstDateMillis + MILLIS_PER_DAY*i);
       datePretty[i] = prettyFormat.format(date);
       dateStamp[i] = stampFormat.format(date);
-      // If this value for 'date' is equal to today, then set the previous 
-      // day as the maximum viewable date, because it means the season is 
-      // still ongoing. The previous day is used because unless it is late 
-      // in the evening, the updated numbers for the day will be unavailable 
+      // If this value for 'date' is equal to today, then set the previous
+      // day as the maximum viewable date, because it means the season is
+      // still ongoing. The previous day is used because unless it is late
+      // in the evening, the updated numbers for the day will be unavailable
       // or incomplete.
       if (dateStamp[i].equals(todayDateStamp)) {
         maxDateIndex = i-1;
@@ -107,7 +107,7 @@ void setupDates() {
   } catch (ParseException e) {
     die("Problem while setting up dates", e);
   }
-}  
+}
 
 
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -115,16 +115,16 @@ void setupDates() {
 
 public void setup() {
   size(480, 750);
-    
+
   setupTeams();
   setupDates();
   setupSalaries();
-  // Load the standings after the salaries, because salary 
+  // Load the standings after the salaries, because salary
   // will be used as the tie-breaker when sorting.
   setupStandings();
   setupRanking();
   setupLogos();
-    
+
   font = createFont("Georgia", 12);
   textFont(font);
 
@@ -132,16 +132,16 @@ public void setup() {
   // Use today as the current day
   setDate(maxDateIndex);
 }
-  
+
 
 void setupTeams() {
   String[] lines = loadStrings("teams.tsv");
-    
+
   teamCount = lines.length;
   teamCodes = new String[teamCount];
   teamNames = new String[teamCount];
   teamIndices = new HashMap();
-    
+
   for (int i = 0; i < teamCount; i++) {
     String[] pieces = split(lines[i], TAB);
     teamCodes[i] = pieces[0];
@@ -149,8 +149,8 @@ void setupTeams() {
     teamIndices.put(teamCodes[i], new Integer(i));
   }
 }
-  
-  
+
+
 int teamIndex(String teamCode) {
   Integer index = (Integer) teamIndices.get(teamCode);
   return index.intValue();
@@ -172,7 +172,7 @@ void setupStandings() {
   }
 }
 */
-  
+
 
 void setupStandings() {
   String[] lines = loadStrings("http://benfry.com/writing/salaryper/mlb.cgi");
@@ -189,7 +189,7 @@ void setupStandings() {
     season[i+minDateIndex] = new StandingsList(portion);
   }
 }
-  
+
 
 void setupRanking() {
   standingsPosition = new Integrator[teamCount];
@@ -197,7 +197,7 @@ void setupRanking() {
     standingsPosition[i] = new Integrator(i);
   }
 }
-  
+
 
 void setupLogos() {
   logos = new PImage[teamCount];
@@ -207,8 +207,8 @@ void setupLogos() {
   logoWidth = logos[0].width / 2.0f;
   logoHeight = logos[0].height / 2.0f;
 }
-  
-  
+
+
 public void draw() {
   background(255);
   smooth();
@@ -216,7 +216,7 @@ public void draw() {
   drawDateSelector();
 
   translate(SIDE_PADDING, TOP_PADDING);
-  
+
   boolean updated = false;
   for (int i = 0; i < teamCount; i++) {
     if (standingsPosition[i].update()) {
@@ -232,7 +232,7 @@ public void draw() {
     float standingsY = standingsPosition[i].value * ROW_HEIGHT + HALF_ROW_HEIGHT;
 
     image(logos[i], 0, standingsY - logoHeight/2, logoWidth, logoHeight);
-      
+
     textAlign(LEFT, CENTER);
     text(teamNames[i], 28, standingsY);
 
@@ -240,18 +240,18 @@ public void draw() {
     fill(128);
     text(standings.getTitle(i), 150, standingsY);
 
-    float weight = map(salaries.getValue(i), 
-                       salaries.getMinValue(), salaries.getMaxValue(), 
+    float weight = map(salaries.getValue(i),
+                       salaries.getMinValue(), salaries.getMaxValue(),
                        0.25f, 6);
     strokeWeight(weight);
-      
+
     float salaryY = salaries.getRank(i)*ROW_HEIGHT + HALF_ROW_HEIGHT;
     if (salaryY >= standingsY) {
       stroke(33, 85, 156);  // Blue for positive (or equal) difference.
     } else {
       stroke(206, 0, 82);   // Red for wasting money.
     }
-      
+
     line(160, standingsY, 325, salaryY);
 
     fill(128);
@@ -260,7 +260,7 @@ public void draw() {
   }
 }
 
-  
+
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
@@ -310,11 +310,11 @@ void setDate(int index) {
 void mousePressed() {
   handleMouse();
 }
-  
+
 void mouseDragged() {
   handleMouse();
 }
-  
+
 void handleMouse() {
   if (mouseY < dateSelectorY) {
     int date = (mouseX - dateSelectorX) / 2;
@@ -347,7 +347,7 @@ String[] acquireStandings(String stamp) {
   int day = int(stamp.substring(6, 8));
   return acquireStandings(year, month, day);
 }
-  
+
 
 String[] acquireStandings(int year, int month, int day) {
   String filename = year + nf(month, 2) + nf(day, 2) + ".tsv";
@@ -357,7 +357,7 @@ String[] acquireStandings(int year, int month, int day) {
     println("Downloading standings file " + filename);
     PrintWriter writer = createWriter(path);
 
-    String base = "http://mlb.mlb.com/components/game" + 
+    String base = "http://mlb.mlb.com/components/game" +
       "/year_" + year + "/month_" + nf(month, 2) + "/day_" + nf(day, 2) + "/";
 
     // American League (AL)
@@ -376,7 +376,7 @@ String[] acquireStandings(int year, int month, int day) {
   return loadStrings(filename);
 }
 
-  
+
 void parseWinLoss(String filename, PrintWriter writer) {
   String[] lines = loadStrings(filename);
   Pattern p = Pattern.compile("\\s+([\\w\\d]+):\\s'(.*)',?");
@@ -411,25 +411,25 @@ void parseWinLoss(String filename, PrintWriter writer) {
   }
 }
 */
-  
-  
+
+
 //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  
+
 class SalaryList extends RankedList {
-    
+
   SalaryList(String[] lines) {
     super(teamCount, false);
-    
+
     for (int i = 0; i < teamCount; i++) {
       String pieces[] = split(lines[i], TAB);
-        
+
       // First column is the team 2-3 digit team code.
       int index = teamIndex(pieces[0]);
-        
-      // Second column is the salary as a number. 
+
+      // Second column is the salary as a number.
       value[index] = parseInt(pieces[1]);
-        
+
       // Make the title in the format $NN,NNN,NNN
       int salary = (int) value[index];
       title[index] = "$" + nfc(salary);
@@ -438,21 +438,21 @@ class SalaryList extends RankedList {
   }
 }
 
-  
+
 // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
 class StandingsList extends RankedList {
-    
+
   StandingsList(String[] lines) {
     super(teamCount, false);
-      
+
     for (int i = 0; i < teamCount; i++) {
       String[] pieces = split(lines[i], TAB);
       int index = teamIndex(pieces[0]);
       int wins = parseInt(pieces[1]);
       int losses = parseInt(pieces[2]);
-        
+
       value[index] = (float) wins / (float) (wins+losses);
       title[index] = wins + "\u2013" + losses;
     }
@@ -465,7 +465,7 @@ class StandingsList extends RankedList {
     // If the record is not identical, return the difference
     if (amt != 0) return amt;
 
-    // If records are equal, use salary as tie-breaker. 
+    // If records are equal, use salary as tie-breaker.
     // In this case, a and b are switched, because a higher
     // salary is a negative thing, unlike the values above.
     return salaries.compare(a, b);

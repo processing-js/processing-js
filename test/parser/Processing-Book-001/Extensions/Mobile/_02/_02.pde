@@ -1,8 +1,5 @@
 String s;
-PFont font;
 void setup() {
-  font = loadFont(); // Load and set the default font for drawing text
-  textFont(font);
   softkey("Input"); // Create a softkey called Input
   s = "No input"; // Initialize s with an initial message
 }
