@@ -1,4 +1,5 @@
 var tests = [
+  { path: "smooth.pde", tags: ["2D"], epsilonOverride: 0.15 },
   { path: "crispy.pde", tags: ["2D", "Crisp"] },
   { path: "crisp-point.pde", tags: ["2D", "Crisp"] },
   { path: "crisp-line.pde", tags: ["2D", "Crisp"] },
