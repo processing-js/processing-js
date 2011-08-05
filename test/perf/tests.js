@@ -66,5 +66,6 @@ var tests = [
   { path: "pvector-mult.pde", tags: ["2D", "PVector"] },
   { path: "pvector-normalize.pde", tags: ["2D", "PVector"] },
   { path: "plants.pde", tags: ["2D"] },
-  { path: "alpha-transparency-mask.pde", tags: ["2D"], iterationOverride: 100 }
+  { path: "alpha-transparency-mask.pde", tags: ["2D"], iterationOverride: 100 },
+  { path: "tint.pde", tags: ["2D"], iterationOverride: 100 }
 ];
