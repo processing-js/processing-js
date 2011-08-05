@@ -49,6 +49,8 @@ var tests = [
   { path: "pimage-blend-softlight.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
   { path: "pimage-blend-dodge.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
   { path: "pimage-blend-burn.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
+  { path: "image-fractional-coords.pde", tags: ["2D", "PImage"] },
+  { path: "image-whole-coords.pde", tags: ["2D", "PImage"] },
   { path: "rainbow-spirograph.pde", tags: ["2D"] },
   { path: "pvector-ctor.pde", tags: ["2D", "PVector"] },
   { path: "pvector-get.pde", tags: ["2D", "PVector"] },

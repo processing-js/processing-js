@@ -14808,6 +14808,10 @@
     * @see alpha
     */
     Drawing2D.prototype.image = function(img, x, y, w, h) {
+      // Fix fractional positions
+      x = Math.round(x);
+      y = Math.round(y);
+
       if (img.width > 0) {
         var wid = w || img.width;
         var hgt = h || img.height;
@@ -14851,15 +14855,18 @@
 
     Drawing3D.prototype.image = function(img, x, y, w, h) {
       if (img.width > 0) {
-        var wid = w || img.width;
-        var hgt = h || img.height;
+        // Fix fractional positions
+        x = Math.round(x);
+        y = Math.round(y);
+        w = w || img.width;
+        h = h || img.height;
 
         p.beginShape(p.QUADS);
         p.texture(img);
         p.vertex(x, y, 0, 0, 0);
-        p.vertex(x, y+hgt, 0, 0, hgt);
-        p.vertex(x+wid, y+hgt, 0, wid, hgt);
-        p.vertex(x+wid, y, 0, wid, 0);
+        p.vertex(x, y+h, 0, 0, h);
+        p.vertex(x+w, y+h, 0, w, h);
+        p.vertex(x+w, y, 0, w, 0);
         p.endShape();
       }
     };
