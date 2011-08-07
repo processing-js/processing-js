@@ -10,7 +10,8 @@ var navigator = { useragent: true };
 var createElement = function(tag) {
   return {
     localName: tag,
-    style: {}
+    style: {},
+    setAttribute: __empty_func__
   };
 };
 
@@ -115,6 +116,10 @@ var HTMLImageElement = __empty_func__;
 var document = {
   fake: true,
   attachEvent: __empty_func__,
+  head: {
+    appendChild: __elem_func__,
+    removeChild: __empty_func__
+  },
   body: {
     appendChild: __elem_func__,
     removeChild: __empty_func__,

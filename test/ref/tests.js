@@ -98,6 +98,7 @@ var tests = [
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
   { path: "text-width_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
+  { path: "svg_font_biotyp.pde", tags: ["2D", "Text"] },
   { path: "simple.pde", tags: ["2D"] },
   { path: "box-rotating.pde", tags: ["3D"] },
   { path: "translate-rect.pde", tags: ["2D"] },
@@ -121,7 +122,6 @@ var tests = [
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
-  { path: "svg_font_biotyp.pde", tags: ["2D", "Text"] },
   { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
   { path: "line-3d.pde", tags: ["3D"] },
   { path: "point_3D_stroke.pde", tags: ["3D"] },
