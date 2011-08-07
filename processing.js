@@ -1661,7 +1661,7 @@
           this.family = name;
           break;
         default:
-          this.family = '"' + name + '", "PjsEmptyFont"';
+          this.family = '"' + name + '", sans-serif';
           break;
       }
     }
@@ -1785,6 +1785,7 @@
       // Remove the template element from the dom when we're done.
       if (this.fontList.length === 0) {
         document.body.removeChild(this.template);
+        this.initialized = false;
         return false;
       }
       // We should have already returned before getting here.
