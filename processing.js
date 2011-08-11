@@ -13666,6 +13666,103 @@
     }
 
     /**
+     * Handle the sketch code for pixels[] and pixels.length
+     * parser code converts pixels[] to getPixels()
+     * or setPixels(), .length becomes getLength()
+     */
+    function buildPixelsObject(pImage) {
+      return {
+
+        getLength: (function(aImg) {
+          return function() {
+            if (aImg.isRemote) {
+              throw "Image is loaded remotely. Cannot get length.";
+            } else {
+              return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
+            }
+          };
+        }(pImage)),
+
+        getPixel: (function(aImg) {
+          return function(i) {
+            var offset = i*4,
+              data = aImg.imageData.data;
+
+            if (aImg.isRemote) {
+              throw "Image is loaded remotely. Cannot get pixels.";
+            }
+
+            return (data[offset+3] << 24) & PConstants.ALPHA_MASK |
+                   (data[offset] << 16) & PConstants.RED_MASK |
+                   (data[offset+1] << 8) & PConstants.GREEN_MASK |
+                   data[offset+2] & PConstants.BLUE_MASK;
+          };
+        }(pImage)),
+
+        setPixel: (function(aImg) {
+          return function(i, c) {
+            var offset = i*4,
+              data = aImg.imageData.data;
+
+            if (aImg.isRemote) {
+              throw "Image is loaded remotely. Cannot set pixel.";
+            }
+
+            data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
+            data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
+            data[offset+2] = (c & PConstants.BLUE_MASK);
+            data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
+            aImg.__isDirty = true;
+          };
+        }(pImage)),
+
+        toArray: (function(aImg) {
+          return function() {
+            var arr = [],
+              data = aImg.imageData.data,
+              length = aImg.width * aImg.height;
+
+            if (aImg.isRemote) {
+              throw "Image is loaded remotely. Cannot get pixels.";
+            }
+
+            for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+              arr.push( (data[offset+3] << 24) & PConstants.ALPHA_MASK |
+                        (data[offset] << 16) & PConstants.RED_MASK |
+                        (data[offset+1] << 8) & PConstants.GREEN_MASK |
+                        data[offset+2] & PConstants.BLUE_MASK );
+            }
+            return arr;
+          };
+        }(pImage)),
+
+        set: (function(aImg) {
+          return function(arr) {
+            var offset,
+              data,
+              c;
+            if (this.isRemote) {
+              throw "Image is loaded remotely. Cannot set pixels.";
+            }
+
+            data = aImg.imageData.data;
+            for (var i = 0, aL = arr.length; i < aL; i++) {
+              c = arr[i];
+              offset = i*4;
+
+              data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
+              data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
+              data[offset+2] = (c & PConstants.BLUE_MASK);
+              data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
+            }
+            aImg.__isDirty = true;
+          };
+        }(pImage))
+
+      };
+    }
+
+    /**
     * Datatype for storing images. Processing can display .gif, .jpg, .tga, and .png images. Images may be
     * displayed in 2D and 3D space. Before an image is used, it must be loaded with the loadImage() function.
     * The PImage object contains fields for the width and height of the image, as well as an array called
@@ -13685,10 +13782,79 @@
     * @see createImage
     */
     var PImage = function(aWidth, aHeight, aFormat) {
-      // Keep track of whether or not the cached imageData has been touched.
-      var imageDataIsDirty = false;
 
-      this.get = function(x, y, w, h) {
+      // Keep track of whether or not the cached imageData has been touched.
+      this.__isDirty = false;
+
+      if (aWidth instanceof HTMLImageElement) {
+        // convert an <img> to a PImage
+        this.fromHTMLImageData(aWidth);
+      } else if (aHeight || aFormat) {
+        this.width = aWidth || 1;
+        this.height = aHeight || 1;
+
+        // Stuff a canvas into sourceImg so image() calls can use drawImage like an <img>
+        var canvas = this.sourceImg = document.createElement("canvas");
+        canvas.width = this.width;
+        canvas.height = this.height;
+
+        var imageData = this.imageData = canvas.getContext('2d').createImageData(this.width, this.height);
+        this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
+        if (this.format === PConstants.RGB) {
+          // Set the alpha channel of an RGB image to opaque.
+          for (var i = 3, data = this.imageData.data, len = data.length; i < len; i += 4) {
+            data[i] = 255;
+          }
+        }
+
+        this.__isDirty = true;
+        this.updatePixels();
+      } else {
+        this.width = 0;
+        this.height = 0;
+        this.imageData = utilityContext2d.createImageData(1, 1);
+        this.format = PConstants.ARGB;
+      }
+
+      this.pixels = buildPixelsObject(this);
+    };
+    PImage.prototype = {
+
+      /**
+      * @member PImage
+      * Updates the image with the data in its pixels[] array. Use in conjunction with loadPixels(). If
+      * you're only reading pixels from the array, there's no need to call updatePixels().
+      * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the rule
+      * is that any time you want to manipulate the pixels[] array, you must first call loadPixels(), and
+      * after changes have been made, call updatePixels(). Even if the renderer may not seem to use this
+      * function in the current Processing release, this will always be subject to change.
+      * Currently, none of the renderers use the additional parameters to updatePixels().
+      */
+      updatePixels: function() {
+        var canvas = this.sourceImg;
+        if (canvas && canvas instanceof HTMLCanvasElement && this.__isDirty) {
+          canvas.getContext('2d').putImageData(this.imageData, 0, 0);
+        }
+        this.__isDirty = false;
+      },
+
+      fromHTMLImageData: function(htmlImg) {
+        // convert an <img> to a PImage
+        var canvasData = getCanvasData(htmlImg);
+        try {
+          var imageData = canvasData.context.getImageData(0, 0, htmlImg.width, htmlImg.height);
+          this.fromImageData(imageData);
+        } catch(e) {
+          if (htmlImg.width && htmlImg.height) {
+            this.isRemote = true;
+            this.width = htmlImg.width;
+            this.height = htmlImg.height;
+          }
+        }
+        this.sourceImg = htmlImg;
+      },
+
+      'get': function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
         } else if (arguments.length === 2) {
@@ -13696,7 +13862,7 @@
         } else if (arguments.length === 4) {
           return p.get(x, y, w, h, this);
         }
-      };
+      },
 
       /**
       * @member PImage
@@ -13715,10 +13881,10 @@
       * @see pixels[]
       * @see copy
       */
-      this.set = function(x, y, c) {
+      'set': function(x, y, c) {
         p.set(x, y, c, this);
-        imageDataIsDirty = true;
-      };
+        this.__isDirty = true;
+      },
 
       /**
       * @member PImage
@@ -13759,14 +13925,14 @@
       * @see alpha
       * @see copy
       */
-      this.blend = function(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE) {
+      blend: function(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE) {
         if (arguments.length === 9) {
           p.blend(this, srcImg, x, y, width, height, dx, dy, dwidth, dheight, this);
         } else if (arguments.length === 10) {
           p.blend(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE, this);
         }
         delete this.sourceImg;
-      };
+      },
 
       /**
       * @member PImage
@@ -13788,14 +13954,14 @@
       * @see alpha
       * @see blend
       */
-      this.copy = function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
+      copy: function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
         if (arguments.length === 8) {
           p.blend(this, srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, PConstants.REPLACE, this);
         } else if (arguments.length === 9) {
           p.blend(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight, PConstants.REPLACE, this);
         }
         delete this.sourceImg;
-      };
+      },
 
       /**
       * @member PImage
@@ -13815,7 +13981,7 @@
       * @param {MODE} MODE        Either THRESHOLD, GRAY, INVERT, POSTERIZE, BLUR, OPAQUE, ERODE, or DILATE
       * @param {int|float} param  in the range from 0 to 1
       */
-      this.filter = function(mode, param) {
+      filter: function(mode, param) {
         if (arguments.length === 2) {
           p.filter(mode, param, this);
         } else if (arguments.length === 1) {
@@ -13823,7 +13989,7 @@
           p.filter(mode, null, this);
         }
         delete this.sourceImg;
-      };
+      },
 
       /**
       * @member PImage
@@ -13839,9 +14005,9 @@
       *
       * @param {String} filename        a sequence of letters and numbers
       */
-      this.save = function(file){
+      save: function(file){
         p.save(file,this);
-      };
+      },
 
       /**
       * @member PImage
@@ -13853,7 +14019,7 @@
       *
       * @see get
       */
-      this.resize = function(w, h) {
+      resize: function(w, h) {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot resize.";
         } else {
@@ -13872,7 +14038,7 @@
             this.fromImageData(imageData);
           }
         }
-      };
+      },
 
       /**
       * @member PImage
@@ -13889,7 +14055,7 @@
       * @param {int[]} maskArray        any array of Integer numbers used as the alpha channel, needs to be same
       *                                 length as the image's pixel array
       */
-      this.mask = function(mask) {
+      mask: function(mask) {
         this.__mask = undef;
 
         if (mask instanceof PImage) {
@@ -13908,72 +14074,7 @@
             throw "mask array must be the same length as PImage pixels array.";
           }
         }
-      };
-
-      // handle the sketch code for pixels[] and pixels.length
-      // parser code converts pixels[] to getPixels()
-      // or setPixels(), .length becomes getLength()
-      this.pixels = {
-        getLength: (function(aImg) {
-          if (aImg.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot get length.";
-          } else {
-            return function() {
-              return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
-            };
-          }
-        }(this)),
-        getPixel: (function(aImg) {
-          if (aImg.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot get pixels.";
-          } else {
-            return function(i) {
-              var offset = i*4;
-              return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
-                                   aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
-            };
-          }
-        }(this)),
-        setPixel: (function(aImg) {
-          if (aImg.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot set pixel.";
-          } else {
-            return function(i,c) {
-              var offset = i*4,
-                  data = aImg.imageData.data;
-              data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
-              data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
-              data[offset+2] = (c & PConstants.BLUE_MASK);
-              data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
-              imageDataIsDirty = true;
-            };
-          }
-        }(this)),
-        toArray: (function(aImg) {
-          if (aImg.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot get pixels.";
-          } else {
-            return function() {
-              var arr = [], length = aImg.width * aImg.height;
-              for (var i = 0, offset = 0; i < length; i++, offset += 4) {
-                arr.push(p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
-                                       aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]));
-              }
-              return arr;
-            };
-          }
-        }(this)),
-        set: function(arr) {
-          if (this.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot set pixels.";
-          } else {
-            for (var i = 0, aL = arr.length; i < aL; i++) {
-              this.setPixel(i, arr[i]);
-            }
-            imageDataIsDirty = true;
-          }
-        }
-      };
+      },
 
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
       /**
@@ -13985,99 +14086,31 @@
       * and after changes have been made, call updatePixels(). Even if the renderer may not seem to use
       * this function in the current Processing release, this will always be subject to change.
       */
-      this.loadPixels = nop;
+      loadPixels: nop,
 
-      /**
-      * @member PImage
-      * Updates the image with the data in its pixels[] array. Use in conjunction with loadPixels(). If
-      * you're only reading pixels from the array, there's no need to call updatePixels().
-      * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the rule
-      * is that any time you want to manipulate the pixels[] array, you must first call loadPixels(), and
-      * after changes have been made, call updatePixels(). Even if the renderer may not seem to use this
-      * function in the current Processing release, this will always be subject to change.
-      * Currently, none of the renderers use the additional parameters to updatePixels().
-      */
-      this.updatePixels = function() {
-        var canvas = this.sourceImg;
-        if (canvas && canvas instanceof HTMLCanvasElement && imageDataIsDirty) {
-          canvas.getContext('2d').putImageData(this.imageData, 0, 0);
-        }
-        imageDataIsDirty = false;
-      };
-
-      this.toImageData = function() {
+      toImageData: function() {
         if (this.isRemote) { // Remote images cannot access imageData, send source image instead
           return this.sourceImg;
         } else {
           var canvasData = getCanvasData(this.imageData);
           return canvasData.context.getImageData(0, 0, this.width, this.height);
         }
-      };
+      },
 
-      this.toDataURL = function() {
+      toDataURL: function() {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot create dataURI.";
         } else {
           var canvasData = getCanvasData(this.imageData);
           return canvasData.canvas.toDataURL();
         }
-      };
+      },
 
-      this.fromImageData = function(canvasImg) {
+      fromImageData: function(canvasImg) {
         this.width = canvasImg.width;
         this.height = canvasImg.height;
         this.imageData = canvasImg;
         // changed for 0.9
-        this.format = PConstants.ARGB;
-      };
-
-      this.fromHTMLImageData = function(htmlImg) {
-        // convert an <img> to a PImage
-        var canvasData = getCanvasData(htmlImg);
-        try {
-          var imageData = canvasData.context.getImageData(0, 0, htmlImg.width, htmlImg.height);
-          this.fromImageData(imageData);
-        } catch(e) {
-          if (htmlImg.width && htmlImg.height) {
-            this.isRemote = true;
-            this.width = htmlImg.width;
-            this.height = htmlImg.height;
-          }
-        }
-        this.sourceImg = htmlImg;
-      };
-
-      this._isDirty = function () {
-        return imageDataIsDirty;
-      };
-
-      if (arguments.length === 1) {
-        // convert an <img> to a PImage
-        this.fromHTMLImageData(arguments[0]);
-      } else if (arguments.length === 2 || arguments.length === 3) {
-        this.width = aWidth || 1;
-        this.height = aHeight || 1;
-
-        // Stuff a canvas into sourceImg so image() calls can use drawImage like an <img>
-        var canvas = this.sourceImg = document.createElement("canvas");
-        canvas.width = this.width;
-        canvas.height = this.height;
-
-        var imageData = this.imageData = canvas.getContext('2d').createImageData(this.width, this.height);
-        this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
-        if (this.format === PConstants.RGB) {
-          // Set the alpha channel of an RGB image to opaque.
-          for (var i = 3, data = this.imageData.data, len = data.length; i < len; i += 4) {
-            data[i] = 255;
-          }
-        }
-
-        imageDataIsDirty = true;
-        this.updatePixels();
-      } else {
-        this.width = 0;
-        this.height = 0;
-        this.imageData = utilityContext2d.createImageData(1, 1);
         this.format = PConstants.ARGB;
       }
     };
@@ -14693,7 +14726,7 @@
         var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
         if (fastImage) {
           var htmlElement = img.sourceImg;
-          if (img._isDirty()) {
+          if (img.__isDirty) {
             img.updatePixels();
           }
           // Using HTML element's width and height in case if the image was resized.
