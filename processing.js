@@ -6837,7 +6837,7 @@
           hue, saturation;
 
       if (min === max) {
-        return [0, 0, max];
+        return [0, 0, max*colorModeZ];
       } else {
         saturation = (max - min) / max;
 
