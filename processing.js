@@ -1623,7 +1623,7 @@
     this.glyph = false;
     this.ascent = 0;
     this.descent = 0;
-    // For leading, the "safe" value uses the standard TeX ratio
+    // For leading, the "safe" value uses the standard TEX ratio
     this.leading = 1.2 * size;
 
     // Note that an italic, bold font must used "... Bold Italic"
@@ -1711,6 +1711,117 @@
   PFont.list = function() {
     return ["sans-serif", "serif", "monospace", "fantasy", "cursive"];
   };
+
+  /**
+  * Loading external fonts through @font-face rules is handled by PFont,
+  * to ensure fonts loaded in this way are globally available.
+  */
+  PFont.preloading = {
+    // template element used to compare font sizes
+    template: {},
+    // indicates whether or not the reference tiny font has been loaded
+    initialized: false,
+    // load the reference tiny font via a css @font-face rule
+    initialize: function() {
+      var generateTinyFont = function() {
+        var encoded = "#E3KAI2wAgT1MvMg7Eo3VmNtYX7ABi3CxnbHlm" +
+                      "7Abw3kaGVhZ7ACs3OGhoZWE7A53CRobXR47AY3" +
+                      "AGbG9jYQ7G03Bm1heH7ABC3CBuYW1l7Ae3AgcG" +
+                      "9zd7AI3AE#B3AQ2kgTY18PPPUACwAg3ALSRoo3" +
+                      "#yld0xg32QAB77#E777773B#E3C#I#Q77773E#" +
+                      "Q7777777772CMAIw7AB77732B#M#Q3wAB#g3B#" +
+                      "E#E2BB//82BB////w#B7#gAEg3E77x2B32B#E#" +
+                      "Q#MTcBAQ32gAe#M#QQJ#E32M#QQJ#I#g32Q77#";
+        var expand = function(input) {
+                       return "AAAAAAAA".substr(~~input ? 7-input : 6);
+                     };
+        return encoded.replace(/[#237]/g, expand);
+      };
+      var fontface = document.createElement("style");
+      fontface.setAttribute("type","text/css");
+      fontface.innerHTML =  "@font-face {\n" +
+                            '  font-family: "PjsEmptyFont";' + "\n" +
+                            "  src: url('data:application/x-font-ttf;base64,"+generateTinyFont()+"')\n" +
+                            "       format('truetype');\n" +
+                            "}";
+      document.head.appendChild(fontface);
+
+      // set up the template element
+      var element = document.createElement("span");
+      element.style.cssText = 'position: absolute; top: 0; left: 0; opacity: 0; font-family: "PjsEmptyFont", fantasy;';
+      element.innerHTML = "AAAAAAAA";
+      document.body.appendChild(element);
+      this.template = element;
+
+      this.initialized = true;
+    },
+    // Shorthand function to get the computed width for an element.
+    getElementWidth: function(element) {
+      return document.defaultView.getComputedStyle(element,"").getPropertyValue("width");
+    },
+    // time taken so far in attempting to load a font
+    timeAttempted: 0,
+    // returns false if no fonts are pending load, or true otherwise.
+    pending: function(intervallength) {
+      if (!this.initialized) {
+        this.initialize();
+      }
+      var element,
+          computedWidthFont,
+          computedWidthRef = this.getElementWidth(this.template);
+      for (var i = 0; i < this.fontList.length; i++) {
+        // compares size of text in pixels. if equal, custom font is not yet loaded
+        element = this.fontList[i];
+        computedWidthFont = this.getElementWidth(element);
+        if (this.timeAttempted < 4000 && computedWidthFont === computedWidthRef) {
+          this.timeAttempted += intervallength;
+          return true;
+        } else {
+          document.body.removeChild(element);
+          this.fontList.splice(i--, 1);
+          this.timeAttempted = 0;
+        }
+      }
+      // Remove the template element from the dom when we're done.
+      if (this.fontList.length === 0) {
+        document.body.removeChild(this.template);
+        this.initialized = false;
+        return false;
+      }
+      // We should have already returned before getting here.
+      // But, if we do get here, length!=0 so fonts are pending.
+      return true;
+    },
+    // fontList contains elements to compare font sizes against a template
+    fontList: [],
+    // adds a font to the font cache
+    // creates an element using the font, to start loading the font,
+    // and compare against a default font to see if the custom font is loaded
+    add: function(fontSrc) {
+      if (!this.initialized) {
+       this.initialize();
+      }
+      // fontSrc can be a string or a javascript object
+      // acceptable fonts are .ttf, .otf, and data uri
+      var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
+          fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
+
+      // creating the @font-face style
+      var style = document.createElement("style");
+      style.setAttribute("type","text/css");
+      style.innerHTML = "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
+      document.head.appendChild(style);
+
+      // creating the element to load, and compare the new font
+      var element = document.createElement("span");
+      element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0;";
+      element.style.fontFamily = '"' + fontName + '", "PjsEmptyFont", fantasy';
+      element.innerHTML = "AAAAAAAA";
+      document.body.appendChild(element);
+      this.fontList.push(element);
+    }
+  };
+
 
   // add to the default scope
   defaultScope.PFont = PFont;
@@ -17081,7 +17192,7 @@
 
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
-        if (!curSketch.imageCache.pending && curSketch.fonts.pending(retryInterval)) {
+        if (!(curSketch.imageCache.pending || PFont.preloading.pending(retryInterval))) {
           // the opera preload cache can only be cleared once we start
           if (window.opera) {
             var link,
@@ -18831,7 +18942,7 @@
               var fontName = clean(list[x]),
                   index = /^\{(\d*?)\}$/.exec(fontName);
               // if index is not null, send JSON, otherwise, send string
-              sketch.fonts.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
+              PFont.preloading.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
             }
           } else if (key === "pauseOnBlur") {
             sketch.options.pauseOnBlur = value === "true";
@@ -19214,113 +19325,6 @@
             this.operaCache[href] = div;
           }
         }
-      }
-    };
-    this.fonts = {
-      // the text string used for testing
-      // indicates whether or not the reference tiny font has been loaded
-      initialized: false,
-      // load the reference tiny font via a css @font-face rule
-      initialize: function() {
-        var generateTinyFont = function() {
-          var encoded = "#E3KAI2wAgT1MvMg7Eo3VmNtYX7ABi3CxnbHlm" +
-                        "7Abw3kaGVhZ7ACs3OGhoZWE7A53CRobXR47AY3" +
-                        "AGbG9jYQ7G03Bm1heH7ABC3CBuYW1l7Ae3AgcG" +
-                        "9zd7AI3AE#B3AQ2kgTY18PPPUACwAg3ALSRoo3" +
-                        "#yld0xg32QAB77#E777773B#E3C#I#Q77773E#" +
-                        "Q7777777772CMAIw7AB77732B#M#Q3wAB#g3B#" +
-                        "E#E2BB//82BB////w#B7#gAEg3E77x2B32B#E#" +
-                        "Q#MTcBAQ32gAe#M#QQJ#E32M#QQJ#I#g32Q77#";
-          var expand = function(input) {
-                         return "AAAAAAAA".substr(~~input ? 7-input : 6);
-                       };
-          return encoded.replace(/[#237]/g, expand);
-        };
-        var fontface = document.createElement("style");
-        fontface.setAttribute("type","text/css");
-        fontface.innerHTML =  "@font-face {\n" +
-                              "  font-family: 'PjsEmptyFont';\n" +
-                              "  src: url('data:application/x-font-ttf;base64,"+generateTinyFont()+"')\n" + 
-                              "       format('truetype');\n" +
-                              "}";
-        document.head.appendChild(fontface);
-        this.initialized = true;
-      },
-      // template element used to compare font sizes
-      template: (function() {
-        if(!isDOMPresent) {
-          return null;
-        }
-        var element = document.createElement("span");
-        element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0; font-family: 'PjsEmptyFont';";
-        element.innerHTML = "AAAAAAAA";
-        document.body.appendChild(element);
-        return element;
-      }()),
-      // time taken so far in attempting to load a font
-      timeAttempted: 0,
-      // returns true is fonts are all loaded,
-      // true if number of attempts hits the limit,
-      // false otherwise
-      pending: function(intervallength) {
-        var r = true,
-            cvfFont,
-            cvfRef = document.defaultView.getComputedStyle(this.template,"").getPropertyValue("width");
-        for (var i = 0; i < this.fontList.length; i++) {
-          // compares size of text in pixels. if equal, custom font is not yet loaded
-          cvfFont = document.defaultView.getComputedStyle(this.fontList[i],"").getPropertyValue("width");
-          if (cvfRef === cvfFont) {
-            r = false;
-            this.timeAttempted += intervallength;
-          } else {
-            // removes loaded font from the array and dom, so we don't compare it again
-            document.body.removeChild(this.fontList[i]);
-            this.fontList.splice(i--, 1);
-            this.timeAttempted = 0;
-          }
-        }
-        // give up loading after max milliseconds (4000)
-        if (this.timeAttempted >= 4000) {
-          r = true;
-          // remove remaining elements from the dom and array
-          for (var j = 0; j < this.fontList.length; j++) {
-            document.body.removeChild(this.fontList[j]);
-            this.fontList.splice(j--, 1);
-          }
-        }
-        // Remove the template element from the dom once done comparing
-        if (r) {
-          document.body.removeChild(this.template);
-        }
-        return r;
-      },
-      // fontList contains elements to compare font sizes against a template
-      fontList: [],
-      // adds a font to the font cache
-      // creates an element using the font, to start loading the font,
-      // and compare against a default font to see if the custom font is loaded
-      add: function(fontSrc) {
-        if (!this.initialised) {
-         this.initialize();
-        }
-        // fontSrc can be a string or a javascript object
-        // acceptable fonts are .ttf, .otf, and data uri
-        var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
-            fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
-
-        // creating the @font-face style
-        var style = document.createElement("style");
-        style.setAttribute("type","text/css");
-        style.innerHTML = "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
-        document.head.appendChild(style);
-
-        // creating the element to load, and compare the new font
-        var element = document.createElement("span");
-        element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0;";
-        element.style.fontFamily = '"' + fontName + '", PjsEmptyFont';
-        element.innerHTML = "AAAAAAAA";
-        document.body.appendChild(element);
-        this.fontList.push(element);
       }
     };
     this.sourceCode = undefined;
