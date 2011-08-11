@@ -1930,7 +1930,7 @@
         isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
-        doSmooth = false,
+        renderSmooth = false,
         doLoop = true,
         looping = 0,
         curRectMode = PConstants.CORNER,
@@ -11674,7 +11674,7 @@
      */
 
     Drawing2D.prototype.smooth = function() {
-      doSmooth = true;
+      renderSmooth = true;
       var style = curElement.style;
       style.setProperty("image-rendering", "optimizeQuality", "important");
       style.setProperty("-ms-interpolation-mode", "bicubic", "important");
@@ -11692,7 +11692,7 @@
      */
 
     Drawing2D.prototype.noSmooth = function() {
-      doSmooth = false;
+      renderSmooth = false;
       var style = curElement.style;
       style.setProperty("image-rendering", "optimizeSpeed", "important");
       style.setProperty("image-rendering", "-moz-crisp-edges", "important");
