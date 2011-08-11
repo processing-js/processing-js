@@ -29,6 +29,7 @@ var createCanvas = function() {
                      translate: __empty_func__,
                      attachEvent: __empty_func__,
                      fillRect: __empty_func__,
+                     strokeRect: __empty_func__,
                      fillText: __empty_func__,
                      measureText: function() { return {width:1}; },
                      clearRect: __empty_func__,

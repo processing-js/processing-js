@@ -11614,27 +11614,19 @@
      * @see #beginShape()
      */
     Drawing2D.prototype.point = function(x, y) {
-      if (doStroke) {
-        // TODO if strokeWeight > 1, do circle
+      if (!doStroke) {
+        return;
+      }
 
-        if (curSketch.options.crispLines) {
-          var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
-          var c = p.get(x, y);
-          p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
-        } else {
-          if (lineWidth > 1) {
-            curContext.fillStyle = p.color.toString(currentStrokeColor);
-            isFillDirty = true;
-            curContext.beginPath();
-            curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
-            curContext.fill();
-            curContext.closePath();
-          } else {
-            curContext.fillStyle = p.color.toString(currentStrokeColor);
-            curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-            isFillDirty = true;
-          }
-        }
+      curContext.fillStyle = p.color.toString(currentStrokeColor);
+      isFillDirty = true;
+      // Draw a circle for any point larger than 1px
+      if (lineWidth > 1) {
+        curContext.beginPath();
+        curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
+        curContext.fill();
+      } else {
+        curContext.fillRect(x, y, 1, 1);
       }
     };
 
@@ -13194,36 +13186,23 @@
     * @see beginShape
     */
     Drawing2D.prototype.line = function(x1, y1, x2, y2) {
-      // a line is only defined if it has different start and end coordinates.
-      // If they are the same, we call point instead.
-      if (x1===x2 && y1===y2) {
-        p.point(x1,y1);
+      if (!doStroke) {
+        return;
       }
-
-      // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
-      else if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
-        var temp;
-        if (x1 === x2) {
-          if (y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
-          for (var y=y1;y<=y2;++y) {
-            p.set(x1, y, currentStrokeColor);
-          }
-        } else {
-          if (x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
-          for (var x=x1;x<=x2;++x) {
-            p.set(x, y1, currentStrokeColor);
-          }
-        }
+      // A line is only defined if it has different start and end coordinates.
+      // If they are the same, we call point instead.
+      if (x1 === x2 && y1 === y2) {
+        p.point(x1, y1);
         return;
       }
 
-      else if (doStroke) {
-        curContext.beginPath();
-        curContext.moveTo(x1 || 0, y1 || 0);
-        curContext.lineTo(x2 || 0, y2 || 0);
-        executeContextStroke();
-        curContext.closePath();
-      }
+      // Translate the line by (0.5, 0.5) to draw a crisp line
+      curContext.translate(0.5, 0.5);
+      curContext.beginPath();
+      curContext.moveTo(Math.round(x1) || 0, Math.round(y1) || 0);
+      curContext.lineTo(Math.round(x2) || 0, Math.round(y2) || 0);
+      executeContextStroke();
+      curContext.translate(-0.5, -0.5);
     };
 
     Drawing3D.prototype.line = function(x1, y1, z1, x2, y2, z2) {
@@ -13459,47 +13438,34 @@
         return;
       }
 
-      // if only stroke is enabled, do it "crisp"
-      if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
-        var i, x2 = x + width - 1, y2 = y + height - 1;
-        for (i=0;i<width;++i) {
-          p.set(x + i, y, currentStrokeColor);
-          p.set(x + i, y2, currentStrokeColor);
-        }
-        for (i=0;i<height;++i) {
-          p.set(x, y + i, currentStrokeColor);
-          p.set(x2, y + i, currentStrokeColor);
-        }
-        return;
-      }
-
-      curContext.beginPath();
-
-      var offsetStart = 0;
-      var offsetEnd = 0;
-
       if (curRectMode === PConstants.CORNERS) {
         width -= x;
         height -= y;
-      }
-
-      if (curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-
-      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
         x -= width / 2;
         y -= height / 2;
       }
 
-      curContext.rect(
-      Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
-
-      executeContextFill();
-      executeContextStroke();
-
-      curContext.closePath();
+      x = Math.round(x);
+      y = Math.round(y);
+      width = Math.round(width);
+      height = Math.round(height);
+      if (doFill) {
+        curContext.fillStyle = p.color.toString(currentFillColor);
+        isFillDirty = true;
+        curContext.fillRect(x, y, width, height);
+      }
+      // Translate the line by (0.5, 0.5) to draw a crisp rectangle border
+      if (doStroke) {
+        curContext.translate(0.5, 0.5);
+        curContext.strokeStyle = p.color.toString(currentStrokeColor);
+        isStrokeDirty = true;
+        curContext.strokeRect(x, y, width, height);
+        curContext.translate(-0.5, -0.5);
+      }
     };
 
     Drawing3D.prototype.rect = function(x, y, width, height) {
@@ -16626,10 +16592,6 @@
       // Moving this here removes the number of times we need to check the 3D variable
       p.size(p.width, p.height);
 
-      // Canvas has trouble rendering single pixel stuff on whole-pixel
-      // counts, so we slightly offset it (this is super lame).
-      curContext.translate(0.5, 0.5);
-
       curContext.lineCap = 'round';
 
       // Set default stroke and fill color
@@ -18876,8 +18838,6 @@
               // if index is not null, send JSON, otherwise, send string
               sketch.fonts.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
             }
-          } else if (key === "crisp") {
-            sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
             sketch.options.pauseOnBlur = value === "true";
           } else if (key === "globalKeyEvents") {
@@ -19191,7 +19151,6 @@
   Processing.Sketch = function(attachFunction) {
     this.attachFunction = attachFunction; // can be optional
     this.options = {
-      crispLines: false,
       pauseOnBlur: false,
       globalKeyEvents: false
     };

@@ -69,5 +69,12 @@ var tests = [
   { path: "pvector-normalize.pde", tags: ["2D", "PVector"] },
   { path: "plants.pde", tags: ["2D"] },
   { path: "alpha-transparency-mask.pde", tags: ["2D"], iterationOverride: 100 },
-  { path: "tint.pde", tags: ["2D"], iterationOverride: 100 }
+  { path: "tint.pde", tags: ["2D"], iterationOverride: 100 },
+  { path: "point-notcrisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "point-crisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "point-arc.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "rect-notcrisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "rect-crisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "line-notcrisp.pde", tags: ["2D", "Crisp"] },
+  { path: "line-crisp.pde", tags: ["2D", "Crisp"] }
 ];
