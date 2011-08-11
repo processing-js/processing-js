@@ -11726,7 +11726,13 @@
 
       if (firstVert) { firstVert = false; }
       vert["isVert"] = true;
-
+      
+      if (v === undef && usingTexture) {
+        v = u;
+        u = z;
+        z = 0;
+      }
+      
       vert[0] = x;
       vert[1] = y;
       vert[2] = z || 0;
@@ -12787,22 +12793,11 @@
           cvs.height = pot;
         }
 
-        var ctx = cvs.getContext('2d');
-        var textureImage = ctx.createImageData(cvs.width, cvs.height);
+        pimage.resize(cvs.width, cvs.height);
 
-        var imgData = pimage.toImageData();
+        var cvsTextureCtx = cvs.getContext('2d');
+        cvsTextureCtx.putImageData(pimage.imageData, 0, 0);
 
-        for (var i = 0; i < cvs.width; i += 1) {
-          for (var j = 0; j < cvs.height; j += 1) {
-          var index = (j * cvs.width + i) * 4;
-            textureImage.data[index + 0] = imgData.data[index + 0];
-            textureImage.data[index + 1] = imgData.data[index + 1];
-            textureImage.data[index + 2] = imgData.data[index + 2];
-            textureImage.data[index + 3] = 255;
-          }
-        }
-
-        ctx.putImageData(textureImage, 0, 0);
         pimage.__cvs = cvs;
 
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
