@@ -13638,7 +13638,11 @@
       executeContextStroke();
     }
 
-    Drawing3D.prototype.rect = function(x, y, width, height) {
+    Drawing3D.prototype.rect = function(x, y, width, height, tl, tr, br, bl) {
+      if (tl !== undef) {
+        throw "rect() with rounded corners is not supported in 3D mode";
+      }
+
       // Modeling transformation
       var model = new PMatrix3D();
       model.translate(x, y, 0);
