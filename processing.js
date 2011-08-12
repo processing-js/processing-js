@@ -14327,7 +14327,7 @@
         }
         var canvasData = getCanvasData(this.imageData);
         return canvasData.canvas.toDataURL();
-      };
+      },
 
       fromImageData: function(canvasImg) {
         this.width = canvasImg.width;
