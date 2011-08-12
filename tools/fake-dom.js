@@ -114,6 +114,8 @@ var canvas = createCanvas();
 
 var HTMLImageElement = __empty_func__;
 
+var HTMLCanvasElement = __empty_func__;
+
 var document = {
   fake: true,
   attachEvent: __empty_func__,
