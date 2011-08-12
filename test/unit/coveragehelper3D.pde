@@ -1,5 +1,5 @@
 // unit test for 3D code coverage tool to bring coverage percent up
-size(500,500);
+size(500,500,OPENGL);
 
 ambientLight(51, 102, 126);
 translate(20, 50, 0);
