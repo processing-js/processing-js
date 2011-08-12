@@ -78,5 +78,7 @@ var tests = [
   { path: "rect-notcrisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
   { path: "rect-crisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
   { path: "line-notcrisp.pde", tags: ["2D", "Crisp"] },
-  { path: "line-crisp.pde", tags: ["2D", "Crisp"] }
+  { path: "line-crisp.pde", tags: ["2D", "Crisp"] },
+  { path: "lerpcolor-rgb.pde", tags: ["2D", "lerpColor"] },
+  { path: "lerpcolor-hsb.pde", tags: ["2D", "lerpColor"] }
 ];

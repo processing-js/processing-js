@@ -7391,27 +7391,55 @@
     * @see color
     */
     p.lerpColor = function(c1, c2, amt) {
-      // Get RGBA values for Color 1 to floats
+      var r, g, b, a, r1, g1, b1, a1, r2, g2, b2, a2;
+      var hsb1, hsb2, rgb, h, s;
       var colorBits1 = p.color(c1);
-      var r1 = (colorBits1 & PConstants.RED_MASK) >>> 16;
-      var g1 = (colorBits1 & PConstants.GREEN_MASK) >>> 8;
-      var b1 = (colorBits1 & PConstants.BLUE_MASK);
-      var a1 = ((colorBits1 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
+      var colorBits2 = p.color(c2);
+
+      if (curColorMode === PConstants.HSB) {
+        // Special processing for HSB mode.
+        // Get HSB and Alpha values for Color 1 and 2
+        hsb1 = p.color.toHSB(colorBits1);
+        a1 = ((colorBits1 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
+        hsb2 = p.color.toHSB(colorBits2);
+        a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
+
+        // Return lerp value for each channel, for HSB components
+        h = p.lerp(hsb1[0], hsb2[0], amt);
+        s = p.lerp(hsb1[1], hsb2[1], amt);
+        b = p.lerp(hsb1[2], hsb2[2], amt);
+        rgb = p.color.toRGB(h, s, b);
+        // ... and for Alpha-range
+        a = p.lerp(a1, a2, amt) * colorModeA;
+
+        return (a << 24) & PConstants.ALPHA_MASK |
+               (rgb[0] << 16) & PConstants.RED_MASK |
+               (rgb[1] << 8) & PConstants.GREEN_MASK |
+               rgb[2] & PConstants.BLUE_MASK;
+      }
+
+      // Get RGBA values for Color 1 to floats
+      r1 = (colorBits1 & PConstants.RED_MASK) >>> 16;
+      g1 = (colorBits1 & PConstants.GREEN_MASK) >>> 8;
+      b1 = (colorBits1 & PConstants.BLUE_MASK);
+      a1 = ((colorBits1 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Get RGBA values for Color 2 to floats
-      var colorBits2 = p.color(c2);
-      var r2 = (colorBits2 & PConstants.RED_MASK) >>> 16;
-      var g2 = (colorBits2 & PConstants.GREEN_MASK) >>> 8;
-      var b2 = (colorBits2 & PConstants.BLUE_MASK);
-      var a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
+      r2 = (colorBits2 & PConstants.RED_MASK) >>> 16;
+      g2 = (colorBits2 & PConstants.GREEN_MASK) >>> 8;
+      b2 = (colorBits2 & PConstants.BLUE_MASK);
+      a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      var r = p.lerp(r1, r2, amt) | 0;
-      var g = p.lerp(g1, g2, amt) | 0;
-      var b = p.lerp(b1, b2, amt) | 0;
-      var a = p.lerp(a1, a2, amt) * colorModeA;
+      r = p.lerp(r1, r2, amt) | 0;
+      g = p.lerp(g1, g2, amt) | 0;
+      b = p.lerp(b1, b2, amt) | 0;
+      a = p.lerp(a1, a2, amt) * colorModeA;
 
-      return p.color.toInt(r, g, b, a);
+      return (a << 24) & PConstants.ALPHA_MASK |
+             (r << 16) & PConstants.RED_MASK |
+             (g << 8) & PConstants.GREEN_MASK |
+             b & PConstants.BLUE_MASK;
     };
 
     /**
