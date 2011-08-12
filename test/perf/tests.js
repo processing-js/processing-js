@@ -65,5 +65,7 @@ var tests = [
   { path: "pvector-mag.pde", tags: ["2D", "PVector"] },
   { path: "pvector-mult.pde", tags: ["2D", "PVector"] },
   { path: "pvector-normalize.pde", tags: ["2D", "PVector"] },
+  { path: "lerpcolor-rgb.pde", tags: ["2D", "lerpColor"] },
+  { path: "lerpcolor-hsb.pde", tags: ["2D", "lerpColor"] },
   { path: "plants.pde", tags: ["2D"] }
 ];

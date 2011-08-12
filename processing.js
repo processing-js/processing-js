@@ -7090,7 +7090,10 @@
         // ... and for Alpha-range
         a = p.lerp(a1, a2, amt) * colorModeA;
 
-        return p.color.toInt(rgb[0], rgb[1], rgb[2], a);
+        return (a << 24) & PConstants.ALPHA_MASK |
+               (rgb[0] << 16) & PConstants.RED_MASK |
+               (rgb[1] << 8) & PConstants.GREEN_MASK |
+               rgb[2] & PConstants.BLUE_MASK;
       }
 
       // Get RGBA values for Color 1 to floats
@@ -7111,7 +7114,10 @@
       b = p.lerp(b1, b2, amt) | 0;
       a = p.lerp(a1, a2, amt) * colorModeA;
 
-      return p.color.toInt(r, g, b, a);
+      return (a << 24) & PConstants.ALPHA_MASK |
+             (r << 16) & PConstants.RED_MASK |
+             (g << 8) & PConstants.GREEN_MASK |
+             b & PConstants.BLUE_MASK;
     };
 
     /**
