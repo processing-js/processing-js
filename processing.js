@@ -16374,31 +16374,6 @@
      * @see #textFont
      */
     p.text = function() {
-      if (textMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
-        p.pushMatrix();
-        p.resetMatrix();
-        var asc = p.textAscent();
-        var des = p.textDescent();
-        var tWidth = p.textWidth(arguments[0]);
-        var tHeight = asc + des;
-        var font = curTextFont;
-        var hud = p.createGraphics(tWidth, tHeight);
-        hud.beginDraw();
-        hud.fill(currentFillColor);
-        hud.opaque = false;
-        hud.background(0, 0, 0, 0);
-        hud.textFont(font);
-        hud.textSize(curTextSize);
-        hud.text(arguments[0], 0, asc);
-        hud.endDraw();
-        if (arguments.length === 5 || arguments.length === 6) {
-          p.image(hud, arguments[1], arguments[2]-asc, arguments[3], arguments[4]);
-        } else {
-          p.image(hud, arguments[1], arguments[2]-asc);
-        }
-        p.popMatrix();
-        return;
-      }
       if (textMode === PConstants.SHAPE) {
         // TODO: requires beginRaw function
         return;
