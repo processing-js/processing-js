@@ -14319,6 +14319,8 @@
         if (this.isRemote) { // Remote images cannot access imageData, send source image instead
           return this.sourceImg;
         }
+        var canvasData = getCanvasData(this.imageData);
+        return canvasData.context.getImageData(0, 0, this.width, this.height);
       },
 
       toDataURL: function() {
