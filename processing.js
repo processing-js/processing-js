@@ -58,6 +58,10 @@
 
   /* Browsers fixes end */
 
+  /**
+   * NOTE: keep this in sync with tools/rewrite-pconstants.js.  Also, use full
+   * symbolic names (PConstants.X vs. 0) in code below, since we rewrite on release.
+   */
   var PConstants = {
     X: 0,
     Y: 1,
