@@ -11356,8 +11356,8 @@
     */
     Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.specular = function() {
-      var c = p.color.apply(this, arguments);
+    Drawing3D.prototype.specular = function(a1, a2, a3) {
+      var c = p.color(a1, a2, a3);
 
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
@@ -14975,8 +14975,8 @@
      * @see #noTint()
      * @see #image()
      */
-    p.tint = function() {
-      var tintColor = p.color.apply(this, arguments);
+    p.tint = function(a1, a2, a3) {
+      var tintColor = p.color(a1, a2, a3);
       var r = p.red(tintColor) / colorModeX;
       var g = p.green(tintColor) / colorModeY;
       var b = p.blue(tintColor) / colorModeZ;
