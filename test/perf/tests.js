@@ -51,6 +51,8 @@ var tests = [
   { path: "pimage-blend-burn.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
   { path: "createImage.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
   { path: "loadImage.pde", tags: ["2D", "PImage"], iterationOverride: 100 },
+  { path: "image-fractional-coords.pde", tags: ["2D", "PImage"] },
+  { path: "image-whole-coords.pde", tags: ["2D", "PImage"] },
   { path: "rainbow-spirograph.pde", tags: ["2D"] },
   { path: "pvector-ctor.pde", tags: ["2D", "PVector"] },
   { path: "pvector-get.pde", tags: ["2D", "PVector"] },
@@ -67,5 +69,14 @@ var tests = [
   { path: "pvector-mag.pde", tags: ["2D", "PVector"] },
   { path: "pvector-mult.pde", tags: ["2D", "PVector"] },
   { path: "pvector-normalize.pde", tags: ["2D", "PVector"] },
-  { path: "plants.pde", tags: ["2D"] }
+  { path: "plants.pde", tags: ["2D"] },
+  { path: "alpha-transparency-mask.pde", tags: ["2D"], iterationOverride: 100 },
+  { path: "tint.pde", tags: ["2D"], iterationOverride: 100 },
+  { path: "point-notcrisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "point-crisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "point-arc.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "rect-notcrisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "rect-crisp.pde", tags: ["2D", "Crisp"], iterationOverride: 10 },
+  { path: "line-notcrisp.pde", tags: ["2D", "Crisp"] },
+  { path: "line-crisp.pde", tags: ["2D", "Crisp"] }
 ];

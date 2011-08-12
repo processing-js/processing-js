@@ -1,5 +1,8 @@
-// These are the test files in this dir to be run.
 var tests = [
+  { path: "crispy.pde", tags: ["2D", "Crisp"] },
+  { path: "crisp-point.pde", tags: ["2D", "Crisp"] },
+  { path: "crisp-line.pde", tags: ["2D", "Crisp"] },
+  { path: "crisp-rect.pde", tags: ["2D", "Crisp"] },
   { path: "blend-add.pde", tags: ["2D","BLEND"], epsilonOverride: 0.17 },
   { path: "blend-blend.pde", tags: ["2D","BLEND"], epsilonOverride: 0.10 },
   { path: "blend-burn.pde", tags: ["2D","BLEND"], epsilonOverride: 0.21 },
@@ -20,7 +23,7 @@ var tests = [
   { path: "loadShape4.pde", tags: ["2D","SVG"] },
   { path: "loadShape5.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
   { path: "loadShape6.pde", tags: ["2D","SVG"], knownFailureTicket: "1401" },
-  { path: "loadShape7.pde", tags: ["2D","SVG"] },
+  { path: "loadShape7.pde", tags: ["2D","SVG", "Crisp"] },
   { path: "loadShape9.pde", tags: ["2D","SVG"], epsilonOverride: 0.21 },
   { path: "loadShape10.pde", tags: ["2D","SVG"], epsilonOverride: 0.12 },
   { path: "loadShape11.pde", tags: ["2D","SVG"], epsilonOverride: 0.14 },
@@ -28,7 +31,7 @@ var tests = [
   { path: "loadShape17.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
   { path: "loadShape12.pde", tags: ["2D","SVG"] },
   { path: "loadShape13.pde", tags: ["2D","SVG"] },
-  { path: "loadShape14.pde", tags: ["2D","SVG"] },
+  { path: "loadShape14.pde", tags: ["2D","SVG", "Crisp"] },
   { path: "loadShape15.pde", tags: ["2D","SVG"] },
   { path: "blur.pde", tags: ["2D","Convolution"], epsilonOverride: 0.08 },
   { path: "edgedetect.pde", tags: ["2D","Convolution"], knownFailureTicket: "1399" },
@@ -63,40 +66,54 @@ var tests = [
   { path: "background-image-3d.pde", tags: ["3D"], knownFailureTicket: "1323" },
   { path: "circles.pde", tags: ["2D"] },
   { path: "circles2.pde", tags: ["2D"] },
-  { path: "conditionals1.pde", tags: ["2D"] },
-  { path: "conditionals2.pde", tags: ["2D"] },
-  { path: "datatype-conversion.pde", tags: ["2D"] },
+  { path: "conditionals1.pde", tags: ["2D", "Crisp"] },
+  { path: "conditionals2.pde", tags: ["2D", "Crisp"] },
+  { path: "datatype-conversion.pde", tags: ["2D", "Crisp"] },
   { path: "distance-2d.pde", tags: ["2D"] },
-  { path: "embedded-iteration.pde", tags: ["2D"] },
-  { path: "iteration.pde", tags: ["2D"] },
-  { path: "logical-operators.pde", tags: ["2D"] },
-  { path: "point-line-rect.pde", tags: ["2D"] },
+  { path: "embedded-iteration.pde", tags: ["2D", "Crisp"] },
+  { path: "iteration.pde", tags: ["2D", "Crisp"] },
+  { path: "logical-operators.pde", tags: ["2D", "Crisp"] },
+  { path: "point-line-rect.pde", tags: ["2D", "Crisp"] },
   { path: "sine-wave.pde", tags: ["2D"] },
   { path: "target.pde", tags: ["2D"] },
   { path: "triangle-strip.pde", tags: ["2D"], epsilonOverride: 0.08 },
-  { path: "true-false.pde", tags: ["2D"] },
-  { path: "variable-scope.pde", tags: ["2D"] },
-  { path: "variables.pde", tags: ["2D"] },
+  { path: "true-false.pde", tags: ["2D", "Crisp"] },
+  { path: "variable-scope.pde", tags: ["2D", "Crisp"] },
+  { path: "variables.pde", tags: ["2D", "Crisp"] },
   { path: "string-codepointat.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
+  { path: "string-equalsignorecase.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
   { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
-  { path: "text-ascent-descent.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-ascent-descent.pde", tags: ["2D", "Text", "Crisp"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-size-recache.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
-  { path: "text-width_comic.pde", tags:["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
-  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 }, /* See ticket #1172 */
+  { path: "text-width_comic.pde", tags:["2D", "Text", "Crisp"], epsilonOverride: 0.35 }, /* See ticket #1172 */
+  { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
+  { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
+  { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-valign-BOTTOM-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
+  { path: "text-valign-BASELINE.pde", tags: ["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
+  { path: "text-valign-BASELINE-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
+  { path: "text-valign-CENTER.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
+  { path: "text-valign-CENTER-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-valign-TOP.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-valign-TOP-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-pfont.pde", tags: ["2D", "Text"], epsilonOverride: 0.30 }, /* See ticket #1172 */
   { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
-  { path: "simple.pde", tags: ["2D"] },
+  { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
+  { path: "svg_font_biotyp.pde", tags: ["2D", "Text"] },
   { path: "box-rotating.pde", tags: ["3D"] },
-  { path: "translate-rect.pde", tags: ["2D"] },
+  { path: "translate-rect.pde", tags: ["2D", "Crisp"] },
   { path: "arc-tangent.pde",  tags: ["2D"] },
-  { path: "arc_ref1.pde",  tags: ["2D"], epsilonOverride: 0.06 },
-  { path: "arc_ref2.pde",  tags: ["2D"], epsilonOverride: 0.08 },
-  { path: "arc_ref3.pde",  tags: ["2D"], epsilonOverride: 0.08 },
+  { path: "arc_ref1.pde",  tags: ["2D", "Crisp"] },
+  { path: "arc_ref2.pde",  tags: ["2D", "Crisp"], epsilonOverride: 0.06 },
+  { path: "arc_ref3.pde",  tags: ["2D", "Crisp"] },
   { path: "bezier.pde", tags: ["2D"], epsilonOverride: 0.08 },
   { path: "ellipse.pde", tags: ["2D"] },
+  { path: "ellipse-mode.pde", tags: ["2D"], epsilonOverride: 0.08 },
   { path: "piechart.pde", tags: ["2D"] },
-  { path: "point-stroke-array-2d.pde", tags: ["2D"] },
-  { path: "bezier-ellipse.pde", tags: ["2D"] },
+  { path: "point-stroke-array-2d.pde", tags: ["2D", "Crisp"] },
+  { path: "bezier-ellipse.pde", tags: ["2D", "Crisp"] },
   { path: "curves.pde", tags: ["2D"], epsilonOverride: 0.07 },
   { path: "curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
   { path: "curveDetail.pde", tags: ["3D"], knownFailureTicket: "1416" },
@@ -104,16 +121,22 @@ var tests = [
   { path: "curveTangent.pde", tags: ["2D"], knownFailureTicket: "1417" },
   { path: "curveTightness.pde", tags: ["2D"], epsilonOverride: 0.11 },
   { path: "continuous-curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
-  { path: "points-lines.pde", tags: ["2D"] },
+  { path: "points-lines.pde", tags: ["2D", "Crisp"] },
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
-  { path: "svg_font_biotyp.pde", tags: ["2D"] },
   { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
   { path: "line-3d.pde", tags: ["3D"] },
+  { path: "3D_frustum.pde", tags: ["3D"], knownFailureTicket: "1513" },
+  { path: "3D_beginendcam.pde", tags: ["3D"] },
+  { path: "3D_perspective.pde", tags: ["3D"] },
+  { path: "3D_ortho.pde", tags: ["3D"], knownFailureTicket: "1200" },
   { path: "point_3D_stroke.pde", tags: ["3D"] },
   { path: "point_3D_strokeWeight.pde", tags: ["3D"], epsilonOverride: 0.22 },
+  { path: "point_3D_z.pde", tags: ["3D"] },
+  { path: "point_3D_noz.pde", tags: ["3D"], epsilonOverride: 0.13 },
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.18 },
+  { path: "box_scale_3D.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "ambientLight_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_2.pde", tags: ["3D"], epsilonOverride: 0.10 },
@@ -131,19 +154,19 @@ var tests = [
   { path: "createGraphics.pde", tags: ["3D"], epsilonOverride: 0.07 }, /* See ticket #1075 */
   { path: "rect-directional-light.pde", tags: ["3D"] },
   { path: "createimage.pde", tags: ["2D"] },
-  { path: "array.pde", tags: ["2D"] },
+  { path: "array.pde", tags: ["2D", "Crisp"] },
   { path: "brightness-2.pde", tags: ["2D"] },
   { path: "create-image.pde", tags: ["2D"] },
   { path: "creating.pde", tags: ["2D"] },
   { path: "displaying.pde", tags: ["2D"], epsilonOverride: 0.06 },
   { path: "graphing-2d.pde", tags: ["2D"] },
-  { path: "histogram.pde", tags: ["2D"], knownFailureTicket: "1174" },
+  { path: "histogram.pde", tags: ["2D", "Crisp"], knownFailureTicket: "1174" },
   { path: "linear-gradient.pde", tags: ["2D"] },
   { path: "mandelbrot.pde", tags: ["2D"], knownFailureTicket: "1174" },
-  { path: "modulo.pde", tags: ["2D"] },
+  { path: "modulo.pde", tags: ["2D", "Crisp"] },
   { path: "multiple-constructors.pde", tags: ["2D"], epsilonOverride: 0.06 },
-  { path: "neighborhood.pde", tags: ["2D"], epsilonOverride: 0.08 },
-  { path: "no-loop.pde", tags: ["2D"] },
+  { path: "neighborhood.pde", tags: ["2D", "Crisp"], epsilonOverride: 0.08 },
+  { path: "no-loop.pde", tags: ["2D", "Crisp"] },
   { path: "reading.pde", tags: ["2D"] },
   { path: "relativity.pde", tags: ["2D"] },
   { path: "triangle-flower.pde", tags: ["2D"] },
@@ -186,7 +209,7 @@ var tests = [
   { path: "beginEndShape-3dtriangles2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.15 },
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
-  { path: "rotateZ.pde", tags: ["3D"] },
+  { path: "image-3d.pde", tags: ["3D"], epsilonOverride: 0.07 },
   { path: "blendcolor-add.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-difference.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-lightest.pde", tags: ["2D", "BLEND"] },
@@ -201,5 +224,16 @@ var tests = [
   { path: "blendcolor-darkest.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-hard_light.pde", tags: ["2D", "BLEND"] },
   { path: "blendcolor-screen.pde", tags: ["2D", "BLEND"] },
-  { path: "pixels-toarray.pde", tags: ["2D"] }
+  { path: "pixels-toarray.pde", tags: ["2D"] },
+  { path: "tint.pde", tags: ["2D"] },
+  { path: "quad_3D.pde", tags:["3D"] },
+  { path: "textured_box_3D.pde", tags:["3D"], epsilonOverride: 0.1  },
+  { path: "texture_noShape.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "texture_triangles.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "texture_norm.pde", tags: ["3D"], epsilonOverride: 0.12 },
+  { path: "texture_ambient.pde", tags: ["3D"], knownFailureTicket: "1503" },  
+  { path: "texture_transparent.pde", tags: ["3D"], epsilonOverride: 0.13  },
+  { path: "texture_npot.pde", tags: ["3D"] },
+  { path: "texture_vertex_no_z.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "rotateZ.pde", tags: ["3D"] }
 ];

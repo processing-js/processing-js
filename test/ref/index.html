@@ -27,6 +27,7 @@
 			<option value="Convolution">Convolution</option>
 			<option value="SVG">SVG</option>
 			<option value="Text">Text</option>
+			<option value="Crisp">Crisp</option>
 		</select>
 		Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
 		Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
@@ -312,7 +313,7 @@
 
             function validateResult() {
                 var is3D = test.is3D;
-                totalTime = (new Date).getTime() - startTime;
+                totalTime = Date.now() - startTime;
 
                 // draw the original based on stored pixels
                 var origCtx = original.getContext('2d');
@@ -410,7 +411,7 @@
               return nextTest(i+1);
             } else {
               // draw the current version from code, timing it
-              var startTime = (new Date).getTime(), totalTime = 0;
+              var startTime = Date.now(), totalTime = 0;
               var p, s;
               try {
                 s = Processing.compile(test.code);

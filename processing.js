@@ -7,9 +7,8 @@
       return function(msg) {
         window.console.log('Processing.js: ' + msg);
       };
-    } else {
-      return nop();
     }
+    return nop();
   }());
 
   var ajax = function(url) {
@@ -37,18 +36,19 @@
     // Check if WebGLArray exists
     if (typeof window[fallback] === "function") {
       return window[fallback];
-    } else {
-      // Use Native JS array
-      return function(obj) {
-        if (obj instanceof Array) {
-          return obj;
-        } else if (typeof obj === "number") {
-          var arr = [];
-          arr.length = obj;
-          return arr;
-        }
-      };
     }
+
+    // Use Native JS array
+    return function(obj) {
+      if (obj instanceof Array) {
+        return obj;
+      }
+      if (typeof obj === "number") {
+        var arr = [];
+        arr.length = obj;
+        return arr;
+      }
+    };
   }
 
   var Float32Array = setupTypedArray("Float32Array", "WebGLFloatArray"),
@@ -367,16 +367,17 @@
         hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
       }
       return hash;
-    } else if (typeof(obj) !== "object") {
-      return obj & 0xFFFFFFFF;
-    } else if (obj.hashCode instanceof Function) {
-      return obj.hashCode();
-    } else {
-      if (obj.$id === undef) {
-        obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
-      }
-      return obj.$id;
     }
+    if (typeof(obj) !== "object") {
+      return obj & 0xFFFFFFFF;
+    }
+    if (obj.hashCode instanceof Function) {
+      return obj.hashCode();
+    }
+    if (obj.$id === undef) {
+        obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+    }
+    return obj.$id;
   }
 
   /**
@@ -392,15 +393,17 @@
   function virtEquals(obj, other) {
     if (obj === null || other === null) {
       return (obj === null) && (other === null);
-    } else if (typeof (obj) === "string") {
-      return obj === other;
-    } else if (typeof(obj) !== "object") {
-      return obj === other;
-    } else if (obj.equals instanceof Function) {
-      return obj.equals(other);
-    } else {
+    }
+    if (typeof (obj) === "string") {
       return obj === other;
     }
+    if (typeof(obj) !== "object") {
+      return obj === other;
+    }
+    if (obj.equals instanceof Function) {
+      return obj.equals(other);
+    }
+    return obj === other;
   }
 
   /**
@@ -414,7 +417,8 @@
   var ObjectIterator = function(obj) {
     if (obj.iterator instanceof Function) {
       return obj.iterator();
-    } else if (obj instanceof Array) {
+    }
+    if (obj instanceof Array) {
       // iterate through array items
       var index = -1;
       this.hasNext = function() {
@@ -612,14 +616,13 @@
       this.remove = function(item) {
         if (typeof item === 'number') {
           return array.splice(item, 1)[0];
-        } else {
-          item = this.indexOf(item);
-          if (item > -1) {
-            array.splice(item, 1);
-            return true;
-          }
-          return false;
         }
+        item = this.indexOf(item);
+        if (item > -1) {
+          array.splice(item, 1);
+          return true;
+        }
+        return false;
       };
 
       /**
@@ -1055,7 +1058,7 @@
           }
         }
         return false;
-      };      
+      };
 
       this.size = function() {
         return count;
@@ -1163,9 +1166,8 @@
       dot: function(v, y, z) {
         if (arguments.length === 1) {
           return (this.x * v.x + this.y * v.y + this.z * v.z);
-        } else {
-          return (this.x * v + this.y * y + this.z * z);
         }
+        return (this.x * v + this.y * y + this.z * z);
       },
       cross: function(v) {
         var x = this.x,
@@ -1304,9 +1306,8 @@
       object[name] = function() {
         if (arguments.length === args) {
           return fn.apply(this, arguments);
-        } else {
-          return oldfn.apply(this, arguments);
         }
+        return oldfn.apply(this, arguments);
       };
     } else {
       object[name] = fn;
@@ -1501,6 +1502,14 @@
     }
   }(defaultScope));
 
+  // screenWidth and screenHeight are shared by all instances.
+  // and return the width/height of the browser's viewport.
+  defaultScope.defineProperty(defaultScope, 'screenWidth',
+    { get: function() { return window.innerWidth; } });
+
+  defaultScope.defineProperty(defaultScope, 'screenHeight',
+    { get: function() { return window.innerHeight; } });
+
   // Manage multiple Processing instances
   var processingInstances = [];
   var processingInstanceIds = {};
@@ -1517,6 +1526,310 @@
     processingInstanceIds[processing.externals.canvas.id] = processingInstances.length;
     processingInstances.push(processing);
   };
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // PFONT.JS START
+  ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * [internal function] computeFontMetrics() calculates various metrics for text
+   * placement. Currently this function computes the ascent, descent and leading
+   * (from "lead", used for vertical space) values for the currently active font.
+   */
+  function computeFontMetrics(pfont) {
+    var emQuad = 250,
+        correctionFactor = pfont.size / emQuad,
+        canvas = document.createElement("canvas");
+    canvas.width = 2*emQuad;
+    canvas.height = 2*emQuad;
+    canvas.style.opacity = 0;
+    var cfmFont = pfont.getCSSDefinition(emQuad+"px", "normal"),
+        ctx = canvas.getContext("2d");
+    ctx.font = cfmFont;
+
+    // Size the canvas using a string with common max-ascent and max-descent letters.
+    // Changing the canvas dimensions resets the context, so we must reset the font.
+    var protrusions = "dbflkhyjqpg";
+    canvas.width = ctx.measureText(protrusions).width;
+    ctx.font = cfmFont;
+
+    // for text lead values, we meaure a multiline text container.
+    var leadDiv = document.createElement("div");
+    leadDiv.style.position = "absolute";
+    leadDiv.style.opacity = 0;
+    leadDiv.style.fontFamily = pfont.name;
+    leadDiv.style.fontSize = emQuad + "px";
+    leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
+    document.body.appendChild(leadDiv);
+
+    var w = canvas.width,
+        h = canvas.height,
+        baseline = h/2;
+
+    // Set all canvas pixeldata values to 255, with all the content
+    // data being 0. This lets us scan for data[i] != 255.
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "black";
+    ctx.fillText(protrusions, 0, baseline);
+    var pixelData = ctx.getImageData(0, 0, w, h).data;
+
+    // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
+    // consecutive values in the array, rather than stored as 32 bit ints.
+    var i = 0,
+        w4 = w * 4,
+        len = pixelData.length;
+
+    // Finding the ascent uses a normal, forward scanline
+    while (++i < len && pixelData[i] === 255) {
+      nop();
+    }
+    var ascent = Math.round(i / w4);
+
+    // Finding the descent uses a reverse scanline
+    i = len - 1;
+    while (--i > 0 && pixelData[i] === 255) {
+      nop();
+    }
+    var descent = Math.round(i / w4);
+
+    // set font metrics
+    pfont.ascent = correctionFactor * (baseline - ascent);
+    pfont.descent = correctionFactor * (descent - baseline);
+
+    // Then we try to get the real value from the browser
+    if (document.defaultView.getComputedStyle) {
+      var leadDivHeight = document.defaultView.getComputedStyle(leadDiv,null).getPropertyValue("height");
+      leadDivHeight = leadDivHeight.replace("px","");
+      if (leadDivHeight >= pfont.size * 2) {
+        pfont.leading = correctionFactor * Math.round(leadDivHeight/2);
+      }
+    }
+    document.body.removeChild(leadDiv);
+  }
+
+  // Defines system (non-SVG) font.
+  function PFont(name, size) {
+    // according to the P5 API, new PFont() is legal (albeit completely useless)
+    if (name === undef) {
+      name = "";
+    }
+    this.name = name;
+    if (size === undef) {
+      size = 0;
+    }
+    this.size = size;
+    this.glyph = false;
+    this.ascent = 0;
+    this.descent = 0;
+    // For leading, the "safe" value uses the standard TEX ratio
+    this.leading = 1.2 * size;
+
+    // Note that an italic, bold font must used "... Bold Italic"
+    // in P5. "... Italic Bold" is treated as normal/normal.
+    var illegalIndicator = name.indexOf(" Italic Bold");
+    if (illegalIndicator !== -1) {
+      name = name.substring(0, illegalIndicator);
+    }
+
+    // determine font style
+    this.style = "normal";
+    var italicsIndicator = name.indexOf(" Italic");
+    if (italicsIndicator !== -1) {
+      name = name.substring(0, italicsIndicator);
+      this.style = "italic";
+    }
+
+    // determine font weight
+    this.weight = "normal";
+    var boldIndicator = name.indexOf(" Bold");
+    if (boldIndicator !== -1) {
+      name = name.substring(0, boldIndicator);
+      this.weight = "bold";
+    }
+
+    // determine font-family name
+    this.family = "sans-serif";
+    if (name !== undef) {
+      switch(name) {
+        case "sans-serif":
+        case "serif":
+        case "monospace":
+        case "fantasy":
+        case "cursive":
+          this.family = name;
+          break;
+        default:
+          this.family = '"' + name + '", sans-serif';
+          break;
+      }
+    }
+    // Calculate the ascent/descent/leading value based on
+    // how the browser renders this font.
+    computeFontMetrics(this);
+    this.css = this.getCSSDefinition();
+  }
+
+  /**
+  * This function generates the CSS "font" string for this PFont
+  */
+  PFont.prototype.getCSSDefinition = function(fontSize, lineHeight) {
+    if(fontSize===undef) {
+      fontSize = this.size + "px";
+    }
+    if(lineHeight===undef) {
+      lineHeight = this.leading + "px";
+    }
+    // CSS "font" definition: font-style font-variant font-weight font-size/line-height font-family
+    var components = [this.style, "normal", this.weight, fontSize + "/" + lineHeight, this.family];
+    return components.join(" ");
+  };
+
+  /**
+  * Global "loaded fonts" list, internal to PFont
+  */
+  PFont.PFontCache = {};
+
+  /**
+  * This function acts as single access point for getting and caching
+  * fonts across all sketches handled by an instance of Processing.js
+  */
+  PFont.get = function(fontName, fontSize) {
+    var cache = PFont.PFontCache;
+    var idx = fontName+"/"+fontSize;
+    if (!cache[idx]) {
+      cache[idx] = new PFont(fontName, fontSize);
+    }
+    return cache[idx];
+  };
+
+  /**
+  * Lists all standard fonts. Due to browser limitations, this list is
+  * not the system font list, like in P5, but the CSS "genre" list.
+  */
+  PFont.list = function() {
+    return ["sans-serif", "serif", "monospace", "fantasy", "cursive"];
+  };
+
+  /**
+  * Loading external fonts through @font-face rules is handled by PFont,
+  * to ensure fonts loaded in this way are globally available.
+  */
+  PFont.preloading = {
+    // template element used to compare font sizes
+    template: {},
+    // indicates whether or not the reference tiny font has been loaded
+    initialized: false,
+    // load the reference tiny font via a css @font-face rule
+    initialize: function() {
+      var generateTinyFont = function() {
+        var encoded = "#E3KAI2wAgT1MvMg7Eo3VmNtYX7ABi3CxnbHlm" +
+                      "7Abw3kaGVhZ7ACs3OGhoZWE7A53CRobXR47AY3" +
+                      "AGbG9jYQ7G03Bm1heH7ABC3CBuYW1l7Ae3AgcG" +
+                      "9zd7AI3AE#B3AQ2kgTY18PPPUACwAg3ALSRoo3" +
+                      "#yld0xg32QAB77#E777773B#E3C#I#Q77773E#" +
+                      "Q7777777772CMAIw7AB77732B#M#Q3wAB#g3B#" +
+                      "E#E2BB//82BB////w#B7#gAEg3E77x2B32B#E#" +
+                      "Q#MTcBAQ32gAe#M#QQJ#E32M#QQJ#I#g32Q77#";
+        var expand = function(input) {
+                       return "AAAAAAAA".substr(~~input ? 7-input : 6);
+                     };
+        return encoded.replace(/[#237]/g, expand);
+      };
+      var fontface = document.createElement("style");
+      fontface.setAttribute("type","text/css");
+      fontface.innerHTML =  "@font-face {\n" +
+                            '  font-family: "PjsEmptyFont";' + "\n" +
+                            "  src: url('data:application/x-font-ttf;base64,"+generateTinyFont()+"')\n" +
+                            "       format('truetype');\n" +
+                            "}";
+      document.head.appendChild(fontface);
+
+      // set up the template element
+      var element = document.createElement("span");
+      element.style.cssText = 'position: absolute; top: 0; left: 0; opacity: 0; font-family: "PjsEmptyFont", fantasy;';
+      element.innerHTML = "AAAAAAAA";
+      document.body.appendChild(element);
+      this.template = element;
+
+      this.initialized = true;
+    },
+    // Shorthand function to get the computed width for an element.
+    getElementWidth: function(element) {
+      return document.defaultView.getComputedStyle(element,"").getPropertyValue("width");
+    },
+    // time taken so far in attempting to load a font
+    timeAttempted: 0,
+    // returns false if no fonts are pending load, or true otherwise.
+    pending: function(intervallength) {
+      if (!this.initialized) {
+        this.initialize();
+      }
+      var element,
+          computedWidthFont,
+          computedWidthRef = this.getElementWidth(this.template);
+      for (var i = 0; i < this.fontList.length; i++) {
+        // compares size of text in pixels. if equal, custom font is not yet loaded
+        element = this.fontList[i];
+        computedWidthFont = this.getElementWidth(element);
+        if (this.timeAttempted < 4000 && computedWidthFont === computedWidthRef) {
+          this.timeAttempted += intervallength;
+          return true;
+        } else {
+          document.body.removeChild(element);
+          this.fontList.splice(i--, 1);
+          this.timeAttempted = 0;
+        }
+      }
+      // Remove the template element from the dom when we're done.
+      if (this.fontList.length === 0) {
+        document.body.removeChild(this.template);
+        this.initialized = false;
+        return false;
+      }
+      // We should have already returned before getting here.
+      // But, if we do get here, length!=0 so fonts are pending.
+      return true;
+    },
+    // fontList contains elements to compare font sizes against a template
+    fontList: [],
+    // adds a font to the font cache
+    // creates an element using the font, to start loading the font,
+    // and compare against a default font to see if the custom font is loaded
+    add: function(fontSrc) {
+      if (!this.initialized) {
+       this.initialize();
+      }
+      // fontSrc can be a string or a javascript object
+      // acceptable fonts are .ttf, .otf, and data uri
+      var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
+          fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
+
+      // creating the @font-face style
+      var style = document.createElement("style");
+      style.setAttribute("type","text/css");
+      style.innerHTML = "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
+      document.head.appendChild(style);
+
+      // creating the element to load, and compare the new font
+      var element = document.createElement("span");
+      element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0;";
+      element.style.fontFamily = '"' + fontName + '", "PjsEmptyFont", fantasy';
+      element.innerHTML = "AAAAAAAA";
+      document.body.appendChild(element);
+      this.fontList.push(element);
+    }
+  };
+
+
+  // add to the default scope
+  defaultScope.PFont = PFont;
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // PFONT.JS END
+  ////////////////////////////////////////////////////////////////////////////
 
 
   var Processing = this.Processing = function(curElement, aCode) {
@@ -1646,13 +1959,8 @@
         mouseDragging = false,
         curColorMode = PConstants.RGB,
         curTint = null,
-        curTextSize = 12,
-        curTextFont = {name: "\"Arial\", sans-serif", origName: "Arial"},
-        curTextLeading = 14,
-        curTextAscent = 9,
-        curTextDescent = 2,
         getLoaded = false,
-        start = new Date().getTime(),
+        start = Date.now(),
         timeSinceLastFPS = start,
         framesSinceLastFPS = 0,
         textcanvas,
@@ -1662,13 +1970,6 @@
         bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
-        // Keys and Keystrokes
-        firstCodedDown = true,    // first coded key stroke
-        firstEDGKeyDown = true,   // first Enter - Delete Google key stroke
-        firstEDMKeyDown = true,   // first Enter - Delete Mozilla key stroke
-        firstMKeyDown = true,     // first Mozilla key stroke
-        firstGKeyDown = true,     // first Google key stroke
-        gRefire = false,          // Google refire
         curContextCache = { attributes: {}, locations: {} },
         // Shaders
         programObject3D,
@@ -1697,8 +1998,14 @@
         // Text alignment
         horizontalTextAlignment = PConstants.LEFT,
         verticalTextAlignment = PConstants.BASELINE,
-        baselineOffset = 0.2, // percent
-        tMode = PConstants.MODEL,
+        textMode = PConstants.MODEL,
+        // Font state
+        curFontName = "Arial",
+        curTextSize = 12,
+        curTextAscent = 9,
+        curTextDescent = 2,
+        curTextLeading = 14,
+        curTextFont = PFont.get(curFontName, curTextSize),
         // Pixels cache
         originalContext,
         proxyContext = null,
@@ -2807,26 +3114,25 @@
         var i, j;
         if (typeof child === 'number') {
           return this.children[child];
-        } else {
-          var found;
-          if(child === "" || this.name === child){
-            return this;
-          } else {
-            if(this.nameTable.length > 0) {
-              for(i = 0, j = this.nameTable.length; i < j || found; i++) {
-                if(this.nameTable[i].getName === child) {
-                  found = this.nameTable[i];
-                }
-              }
-              if (found) { return found; }
-            }
-            for(i = 0, j = this.children.length; i < j; i++) {
-              found = this.children[i].getChild(child);
-              if(found) { return found; }
+        }
+        var found;
+        if(child === "" || this.name === child){
+          return this;
+        }
+        if(this.nameTable.length > 0) {
+          for(i = 0, j = this.nameTable.length; i < j || found; i++) {
+            if(this.nameTable[i].getName === child) {
+              found = this.nameTable[i];
+              break;
             }
           }
-          return null;
+          if (found) { return found; }
         }
+        for(i = 0, j = this.children.length; i < j; i++) {
+          found = this.children[i].getChild(child);
+          if(found) { return found; }
+        }
+        return null;
       },
       /**
        * @member PShape
@@ -4126,19 +4432,23 @@
       if (len < 0) { return text; }
       if (text.indexOf("pt") === len) {
         return parseFloat(text.substring(0, len)) * 1.25;
-      } else if (text.indexOf("pc") === len) {
-        return parseFloat( text.substring( 0, len)) * 15;
-      } else if (text.indexOf("mm") === len) {
-        return parseFloat( text.substring(0, len)) * 3.543307;
-      } else if (text.indexOf("cm") === len) {
-        return parseFloat(text.substring(0, len)) * 35.43307;
-      } else if (text.indexOf("in") === len) {
-        return parseFloat(text.substring(0, len)) * 90;
-      } else if (text.indexOf("px") === len) {
-        return parseFloat(text.substring(0, len));
-      } else {
-        return parseFloat(text);
       }
+      if (text.indexOf("pc") === len) {
+        return parseFloat( text.substring( 0, len)) * 15;
+      }
+      if (text.indexOf("mm") === len) {
+        return parseFloat( text.substring(0, len)) * 3.543307;
+      }
+      if (text.indexOf("cm") === len) {
+        return parseFloat(text.substring(0, len)) * 35.43307;
+      }
+      if (text.indexOf("in") === len) {
+        return parseFloat(text.substring(0, len)) * 90;
+      }
+      if (text.indexOf("px") === len) {
+        return parseFloat(text.substring(0, len));
+      }
+      return parseFloat(text);
     };
     /**
      * The shape() function displays shapes to the screen.
@@ -4475,9 +4785,8 @@
       createElement: function () {
         if (arguments.length === 2) {
           return new XMLElement(arguments[0], arguments[1], null, null);
-        } else {
-          return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
+        return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
       },
       /**
        * @member XMLElement
@@ -4508,7 +4817,8 @@
       hasAttribute: function () {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]) !== null;
-        } else if (arguments.length === 2) {
+        }
+        if (arguments.length === 2) {
           return this.getAttribute(arguments[0],arguments[1]) !== null;
         }
       },
@@ -4548,9 +4858,8 @@
             if (!child1.equals(child2)) { return false; }
           }
           return true;
-        } else {
-          return (this.content === other.content);
         }
+        return (this.content === other.content);
       },
       /**
        * @member XMLElement
@@ -4560,9 +4869,11 @@
        */
       getContent: function(){
         if (this.type === "TEXT") {
-          return this.content; }
-        else if (this.children.length === 1 && this.children[0].type === "TEXT") {
-          return this.children[0].content;
+          return this.content;
+        }
+        var children = this.children;
+        if (children.length === 1 && children[0].type === "TEXT") {
+          return children[0].content;
         }
         return null;
       },
@@ -4582,23 +4893,20 @@
           attribute = this.findAttribute(arguments[0]);
           if (attribute) {
             return attribute.getValue();
-          } else {
-            return arguments[1];
           }
+          return arguments[1];
         } else if (arguments.length === 1) {
           attribute = this.findAttribute(arguments[0]);
           if (attribute) {
             return attribute.getValue();
-          } else {
-            return null;
           }
+          return null;
         } else if (arguments.length === 3) {
           attribute = this.findAttribute(arguments[0],arguments[1]);
           if (attribute) {
             return attribute.getValue();
-          } else {
-            return arguments[2];
           }
+          return arguments[2];
         }
       },
       /**
@@ -4615,11 +4923,11 @@
       getStringAttribute: function() {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]);
-        } else if (arguments.length === 2){
-          return this.getAttribute(arguments[0], arguments[1]);
-        } else {
-          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+        if (arguments.length === 2){
+          return this.getAttribute(arguments[0], arguments[1]);
+        }
+        return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
        * Processing 1.5 XML API wrapper for the generic String
@@ -4642,11 +4950,11 @@
       getFloatAttribute: function() {
         if (arguments.length === 1 ) {
           return parseFloat(this.getAttribute(arguments[0], 0));
-        } else if (arguments.length === 2 ){
-          return this.getAttribute(arguments[0], arguments[1]);
-        } else {
-          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+        if (arguments.length === 2 ){
+          return this.getAttribute(arguments[0], arguments[1]);
+        }
+        return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
        * Processing 1.5 XML API wrapper for the generic float
@@ -4669,11 +4977,11 @@
       getIntAttribute: function () {
         if (arguments.length === 1) {
           return this.getAttribute( arguments[0], 0 );
-        } else if (arguments.length === 2) {
-          return this.getAttribute(arguments[0], arguments[1]);
-        } else {
-          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+        if (arguments.length === 2) {
+          return this.getAttribute(arguments[0], arguments[1]);
+        }
+        return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
        * Processing 1.5 XML API wrapper for the generic int
@@ -4738,19 +5046,19 @@
         if (typeof arguments[0]  === "number") {
           return this.children[arguments[0]];
         }
-        else if (arguments[0].indexOf('/') !== -1) { // path was given
+        if (arguments[0].indexOf('/') !== -1) { // path was given
           this.getChildRecursive(arguments[0].split("/"), 0);
-        } else {
-          var kid, kidName;
-          for (var i = 0, j = this.getChildCount(); i < j; i++) {
-            kid = this.getChild(i);
-            kidName = kid.getName();
-            if (kidName !== null && kidName === arguments[0]) {
-                return kid;
-            }
-          }
           return null;
         }
+        var kid, kidName;
+        for (var i = 0, j = this.getChildCount(); i < j; i++) {
+          kid = this.getChild(i);
+          kidName = kid.getName();
+          if (kidName !== null && kidName === arguments[0]) {
+              return kid;
+          }
+        }
+        return null;
       },
       /**
        * @member XMLElement
@@ -4769,23 +5077,22 @@
         if (arguments.length === 1) {
           if (typeof arguments[0]  === "number") {
             return this.getChild( arguments[0]);
-          } else if (arguments[0].indexOf('/') !== -1) { // path was given
-            return this.getChildrenRecursive( arguments[0].split("/"), 0);
-          } else {
-            var matches = [];
-            var kid, kidName;
-            for (var i = 0, j = this.getChildCount(); i < j; i++) {
-              kid = this.getChild(i);
-              kidName = kid.getName();
-              if (kidName !== null && kidName === arguments[0]) {
-                matches.push(kid);
-              }
-            }
-            return matches;
           }
-        }else {
-          return this.children;
+          if (arguments[0].indexOf('/') !== -1) { // path was given
+            return this.getChildrenRecursive( arguments[0].split("/"), 0);
+          }
+          var matches = [];
+          var kid, kidName;
+          for (var i = 0, j = this.getChildCount(); i < j; i++) {
+            kid = this.getChild(i);
+            kidName = kid.getName();
+            if (kidName !== null && kidName === arguments[0]) {
+              matches.push(kid);
+            }
+          }
+          return matches;
         }
+        return this.children;
       },
       /**
        * @member XMLElement
@@ -4816,10 +5123,9 @@
             if (kidName !== null && kidName === items[offset]) {
               if (offset === items.length-1) {
                 return kid;
-              } else {
-                offset += 1;
-                return kid.getChildRecursive(items, offset);
               }
+              offset += 1;
+              return kid.getChildRecursive(items, offset);
             }
         }
         return null;
@@ -5039,7 +5345,7 @@
        * The getAttributeCount() function returns the number of attributes for the node
        * that this XMLElement represents.
        *
-       * @return {int} the number of attributes in this XMLelement
+       * @return {int} the number of attributes in this XMLElement
        */
       getAttributeCount: function() {
         return this.attributes.length;
@@ -5900,34 +6206,32 @@
       multX: function(x, y, z, w) {
         if (!z) {
           return this.elements[0] * x + this.elements[1] * y + this.elements[3];
-        } else if (!w) {
-          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
-        } else {
-          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
         }
+        if (!w) {
+          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
+        }
+        return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
       },
       multY: function(x, y, z, w) {
         if (!z) {
           return this.elements[4] * x + this.elements[5] * y + this.elements[7];
-        } else if (!w) {
-          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
-        } else {
-          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
         }
+        if (!w) {
+          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
+        }
+        return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
       },
       multZ: function(x, y, z, w) {
         if (!w) {
           return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
-        } else {
-          return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
         }
+        return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
       },
       multW: function(x, y, z, w) {
         if (!w) {
           return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15];
-        } else {
-          return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
         }
+        return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
       },
       /**
        * @member PMatrix3D
@@ -6347,11 +6651,8 @@
     * @see splice
     */
     p.subset = function(array, offset, length) {
-      if (arguments.length === 2) {
-        return array.slice(offset, array.length);
-      } else if (arguments.length === 3) {
-        return array.slice(offset, offset + length);
-      }
+      var end = (length !== undef) ? offset + length : array.length;
+      return array.slice(offset, end);
     };
 
     /**
@@ -6413,17 +6714,11 @@
     *
     * @see contract
     */
-    p.expand = function(ary, newSize) {
-      var temp = ary.slice(0);
-      if (arguments.length === 1) {
-        // double size of array
-        temp.length = ary.length * 2;
-        return temp;
-      } else if (arguments.length === 2) {
-        // size is newSize
-        temp.length = newSize;
-        return temp;
-      }
+    p.expand = function(ary, targetSize) {
+      var temp = ary.slice(0),
+          newSize = targetSize || ary.length * 2;
+      temp.length = newSize;
+      return temp;
     };
 
     /**
@@ -6785,12 +7080,11 @@
         return aValue1 - (aValue1 & PConstants.ALPHA_MASK) + ((a << 24) & PConstants.ALPHA_MASK);
       }
       // Grayscale and alpha
-      else {
-        if (curColorMode === PConstants.RGB) {
-          return color$4(aValue1, aValue1, aValue1, aValue2);
-        } else if (curColorMode === PConstants.HSB) {
-          return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
-        }
+      if (curColorMode === PConstants.RGB) {
+        return color$4(aValue1, aValue1, aValue1, aValue2);
+      }
+      if (curColorMode === PConstants.HSB) {
+        return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
       }
     }
 
@@ -6799,12 +7093,17 @@
       if (aValue1 <= colorModeX && aValue1 >= 0) {
           if (curColorMode === PConstants.RGB) {
             return color$4(aValue1, aValue1, aValue1, colorModeA);
-          } else if (curColorMode === PConstants.HSB) {
+          }
+          if (curColorMode === PConstants.HSB) {
             return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA);
           }
       }
       // Color int
-      else if (aValue1) {
+      if (aValue1) {
+        if (aValue1 > 2147483647) {
+          // Java Overflow
+          aValue1 -= 4294967296;
+        }
         return aValue1;
       }
     }
@@ -6890,26 +7189,25 @@
 
       if (s === 0) { // Grayscale
         return [br, br, br];
-      } else {
-        var hue = h % 360;
-        var f = hue % 60;
-        var p = Math.round((b * (100 - s)) / 10000 * 255);
-        var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
-        var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
-        switch (Math.floor(hue / 60)) {
-        case 0:
-          return [br, t, p];
-        case 1:
-          return [q, br, p];
-        case 2:
-          return [p, br, t];
-        case 3:
-          return [p, q, br];
-        case 4:
-          return [t, p, br];
-        case 5:
-          return [br, p, q];
-        }
+      }
+      var hue = h % 360;
+      var f = hue % 60;
+      var p = Math.round((b * (100 - s)) / 10000 * 255);
+      var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
+      var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
+      switch (Math.floor(hue / 60)) {
+      case 0:
+        return [br, t, p];
+      case 1:
+        return [q, br, p];
+      case 2:
+        return [p, br, t];
+      case 3:
+        return [p, q, br];
+      case 4:
+        return [t, p, br];
+      case 5:
+        return [br, p, q];
       }
     };
 
@@ -6926,24 +7224,23 @@
 
       if (min === max) {
         return [0, 0, max];
+      }
+      saturation = (max - min) / max;
+
+      if (red === max) {
+        hue = (green - blue) / (max - min);
+      } else if (green === max) {
+        hue = 2 + ((blue - red) / (max - min));
       } else {
-        saturation = (max - min) / max;
+        hue = 4 + ((red - green) / (max - min));
+      }
 
-        if (red === max) {
-          hue = (green - blue) / (max - min);
-        } else if (green === max) {
-          hue = 2 + ((blue - red) / (max - min));
-        } else {
-          hue = 4 + ((red - green) / (max - min));
-        }
+      hue /= 6;
 
-        hue /= 6;
-
-        if (hue < 0) {
-          hue += 1;
-        } else if (hue > 1) {
-          hue -= 1;
-        }
+      if (hue < 0) {
+        hue += 1;
+      } else if (hue > 1) {
+        hue -= 1;
       }
       return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
     };
@@ -7542,7 +7839,14 @@
         'colorModeY': colorModeY,
         'colorModeA': colorModeA,
         'curTextFont': curTextFont,
-        'curTextSize': curTextSize
+        'horizontalTextAlignment': horizontalTextAlignment,
+        'verticalTextAlignment': verticalTextAlignment,
+        'textMode': textMode,
+        'curFontName': curFontName,
+        'curTextSize': curTextSize,
+        'curTextAscent': curTextAscent,
+        'curTextDescent': curTextDescent,
+        'curTextLeading': curTextLeading
       };
 
       styleArray.push(newState);
@@ -7578,7 +7882,14 @@
         colorModeY = oldState.colorModeY;
         colorModeA = oldState.colorModeA;
         curTextFont = oldState.curTextFont;
+        curFontName = oldState.curFontName;
         curTextSize = oldState.curTextSize;
+        horizontalTextAlignment = oldState.horizontalTextAlignment;
+        verticalTextAlignment = oldState.verticalTextAlignment;
+        textMode = oldState.textMode;
+        curTextAscent = oldState.curTextAscent;
+        curTextDescent = oldState.curTextDescent;
+        curTextLeading = oldState.curTextLeading;
       } else {
         throw "Too many popStyle() without enough pushStyle()";
       }
@@ -7698,7 +8009,7 @@
     * @see year
     */
     p.millis = function() {
-      return new Date().getTime() - start;
+      return Date.now() - start;
     };
 
     /**
@@ -7716,13 +8027,13 @@
     * @see loop
     */
     DrawingShared.prototype.redraw = function() {
-      var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
+      var sec = (Date.now() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
 
       // recalculate FPS every half second for better accuracy.
       if (sec > 0.5) {
-        timeSinceLastFPS = new Date().getTime();
+        timeSinceLastFPS = Date.now();
         framesSinceLastFPS = 0;
         p.__frameRate = fps;
       }
@@ -7805,7 +8116,7 @@
         return;
       }
 
-      timeSinceLastFPS = new Date().getTime();
+      timeSinceLastFPS = Date.now();
       framesSinceLastFPS = 0;
 
       looping = window.setInterval(function() {
@@ -8006,23 +8317,6 @@
     // Binary Functions
     ////////////////////////////////////////////////////////////////////////////
 
-    function decToBin(value, numBitsInValue) {
-      var mask = 1;
-      mask = mask << (numBitsInValue - 1);
-
-      var str = "";
-      for (var i = 0; i < numBitsInValue; i++) {
-        str += (mask & value) ? "1" : "0";
-        mask = mask >>> 1;
-      }
-      return str;
-    }
-
-    /*
-      This function does not always work when trying to convert
-      colors and bytes to binary values because the types passed in
-      cannot be determined.
-    */
     /**
     * Converts a byte, char, int, or color to a String containing the equivalent binary
     * notation. For example color(0, 102, 153, 255) will convert to the String
@@ -8039,33 +8333,24 @@
     * @see unbinary
     */
     p.binary = function(num, numBits) {
-      var numBitsInValue = 32;
-
-      // color, int, byte
-      if (typeof num === "number") {
-        if(numBits){
-          numBitsInValue = numBits;
-        }
-        return decToBin(num, numBitsInValue);
-      }
-
-      // char
-      if (num instanceof Char) {
-        num = num.toString().charCodeAt(0);
-        if (numBits) {
-          numBitsInValue = 32;
-        } else {
-          numBitsInValue = 16;
+      var bit;
+      if (numBits > 0) {
+        bit = numBits;
+      } else if(num instanceof Char) {
+        bit = 16;
+        num |= 0; // making it int
+      } else {
+        // autodetect, skipping zeros
+        bit = 32;
+        while (bit > 1 && !((num >>> (bit - 1)) & 1)) {
+          bit--;
         }
       }
-
-      var str = decToBin(num, numBitsInValue);
-
-      // trim string if user wanted less chars
-      if (numBits) {
-        str = str.substr(-numBits);
+      var result = "";
+      while (bit > 0) {
+        result += ((num >>> (--bit)) & 1) ? "1" : "0";
       }
-      return str;
+      return result;
     };
 
     /**
@@ -8081,34 +8366,18 @@
     * @see unbinary
     */
     p.unbinary = function(binaryString) {
-      var binaryPattern = new RegExp("^[0|1]{8}$");
-      var addUp = 0;
-      var i;
-
-      if (binaryString instanceof Array) {
-        var values = [];
-        for (i = 0; i < binaryString.length; i++) {
-          values[i] = p.unbinary(binaryString[i]);
+      var i = binaryString.length - 1, mask = 1, result = 0;
+      while (i >= 0) {
+        var ch = binaryString[i--];
+        if (ch !== '0' && ch !== '1') {
+          throw "the value passed into unbinary was not an 8 bit binary number";
         }
-        return values;
-      } else {
-        if (isNaN(binaryString)) {
-          throw "NaN_Err";
-        } else {
-          if (arguments.length === 1 || binaryString.length === 8) {
-            if (binaryPattern.test(binaryString)) {
-              for (i = 0; i < 8; i++) {
-                addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
-              }
-              return addUp + "";
-            } else {
-              throw "notBinary: the value passed into unbinary was not an 8 bit binary number";
-            }
-          } else {
-            throw "longErr";
-          }
+        if (ch === '1') {
+          result += mask;
         }
+        mask <<= 1;
       }
+      return result;
     };
 
     /**
@@ -8175,9 +8444,8 @@
       if (rightDigitsOfDefault > 0) {
         return sign + buffer.substring(0, buffer.length - rightDigitsOfDefault) +
                "." + buffer.substring(buffer.length - rightDigitsOfDefault, buffer.length);
-      } else {
-         return sign + buffer;
       }
+      return sign + buffer;
     }
 
     /**
@@ -8206,9 +8474,8 @@
           arr.push(nfCoreScalar(value[i], plus, minus, leftDigits, rightDigits, group));
         }
         return arr;
-      } else {
-        return nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
       }
+      return nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
     }
 
     /**
@@ -8356,9 +8623,8 @@
           arr.push(unhexScalar(hex[i]));
         }
         return arr;
-      } else {
-        return unhexScalar(hex);
       }
+      return unhexScalar(hex);
     };
 
     // Load a file or URL into strings
@@ -8590,7 +8856,7 @@
     };
     /**
      * The __equalsIgnoreCase() function compares two strings to see if they are the same.
-     * Returns true if the strings are the same, either when forced to all lower case or 
+     * Returns true if the strings are the same, either when forced to all lower case or
      * all upper case.
      *
      * @param {String} subject  a string used for comparison
@@ -8603,7 +8869,7 @@
         return subject.equalsIgnoreCase.apply(subject, removeFirstArgument(arguments));
       }
 
-      return subject.match(new RegExp(other, "i"))[0] === subject;
+      return subject.toLowerCase() === other.toLowerCase();
     };
     /**
      * The __toCharArray() function splits the string into a char array.
@@ -8758,7 +9024,6 @@
 
     var logBuffer = [];
 
-    p.console = window.console || Processing.logger;
     /**
      * The println() function writes to the console area of the Processing environment.
      * Each call to this function creates a new line of output. Individual elements can be separated with quotes ("") and joined with the string concatenation operator (+).
@@ -8801,9 +9066,8 @@
           arr.push(val[i].toString() + "");
         }
         return arr;
-      } else {
-        return (val.toString() + "");
       }
+      return (val.toString() + "");
     };
     /**
      * Remove whitespace characters from the beginning and ending
@@ -8822,20 +9086,22 @@
           arr.push(str[i].replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, ''));
         }
         return arr;
-      } else {
-        return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
       }
+      return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
     };
 
     // Conversion
     function booleanScalar(val) {
       if (typeof val === 'number') {
         return val !== 0;
-      } else if (typeof val === 'boolean') {
+      }
+      if (typeof val === 'boolean') {
         return val;
-      } else if (typeof val === 'string') {
+      }
+      if (typeof val === 'string') {
         return val.toLowerCase() === 'true';
-      } else if (val instanceof Char) {
+      }
+      if (val instanceof Char) {
         // 1, T or t
         return val.code === 49 || val.code === 84 || val.code === 116;
       }
@@ -8857,9 +9123,8 @@
           ret.push(booleanScalar(val[i]));
         }
         return ret;
-      } else {
-        return booleanScalar(val);
       }
+      return booleanScalar(val);
     };
 
     /**
@@ -8879,9 +9144,8 @@
           bytes.push((0 - (what[i] & 0x80)) | (what[i] & 0x7F));
         }
         return bytes;
-      } else {
-        return (0 - (what & 0x80)) | (what & 0x7F);
       }
+      return (0 - (what & 0x80)) | (what & 0x7F);
     };
 
     /**
@@ -8896,15 +9160,15 @@
     p.parseChar = function(key) {
       if (typeof key === "number") {
         return new Char(String.fromCharCode(key & 0xFFFF));
-      } else if (key instanceof Array) {
+      }
+      if (key instanceof Array) {
         var ret = [];
         for (var i = 0; i < key.length; i++) {
           ret.push(new Char(String.fromCharCode(key[i] & 0xFFFF)));
         }
         return ret;
-      } else {
-        throw "char() may receive only one argument of type int, byte, int[], or byte[].";
       }
+      throw "char() may receive only one argument of type int, byte, int[], or byte[].";
     };
 
     // Processing doc claims good argument types are: int, char, byte, boolean,
@@ -8914,11 +9178,14 @@
     function floatScalar(val) {
       if (typeof val === 'number') {
         return val;
-      } else if (typeof val === 'boolean') {
+      }
+      if (typeof val === 'boolean') {
         return val ? 1 : 0;
-      } else if (typeof val === 'string') {
+      }
+      if (typeof val === 'string') {
         return parseFloat(val);
-      } else if (val instanceof Char) {
+      }
+      if (val instanceof Char) {
         return val.code;
       }
     }
@@ -8939,20 +9206,22 @@
           ret.push(floatScalar(val[i]));
         }
         return ret;
-      } else {
-        return floatScalar(val);
       }
+      return floatScalar(val);
     };
 
     function intScalar(val, radix) {
       if (typeof val === 'number') {
         return val & 0xFFFFFFFF;
-      } else if (typeof val === 'boolean') {
+      }
+      if (typeof val === 'boolean') {
         return val ? 1 : 0;
-      } else if (typeof val === 'string') {
+      }
+      if (typeof val === 'string') {
         var number = parseInt(val, radix || 10); // Default to decimal radix.
         return number & 0xFFFFFFFF;
-      } else if (val instanceof Char) {
+      }
+      if (val instanceof Char) {
         return val.code;
       }
     }
@@ -8978,9 +9247,8 @@
           }
         }
         return ret;
-      } else {
-        return intScalar(val, radix);
       }
+      return intScalar(val, radix);
     };
 
     p.__int_cast = function(val) {
@@ -9101,7 +9369,8 @@
         dx = arguments[0] - arguments[2];
         dy = arguments[1] - arguments[3];
         return Math.sqrt(dx * dx + dy * dy);
-      } else if (arguments.length === 6) {
+      }
+      if (arguments.length === 6) {
         dx = arguments[0] - arguments[3];
         dy = arguments[1] - arguments[4];
         dz = arguments[2] - arguments[5];
@@ -9216,20 +9485,19 @@
     p.max = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
-      } else {
-        var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-        if (! ("length" in numbers && numbers.length > 0)) {
-          throw "Non-empty array is expected";
-        }
-        var max = numbers[0],
-          count = numbers.length;
-        for (var i = 1; i < count; ++i) {
-          if (max < numbers[i]) {
-            max = numbers[i];
-          }
-        }
-        return max;
       }
+      var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+      if (! ("length" in numbers && numbers.length > 0)) {
+        throw "Non-empty array is expected";
+      }
+      var max = numbers[0],
+        count = numbers.length;
+      for (var i = 1; i < count; ++i) {
+        if (max < numbers[i]) {
+          max = numbers[i];
+        }
+      }
+      return max;
     };
 
     /**
@@ -9247,20 +9515,19 @@
     p.min = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
-      } else {
-        var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-        if (! ("length" in numbers && numbers.length > 0)) {
-          throw "Non-empty array is expected";
-        }
-        var min = numbers[0],
-          count = numbers.length;
-        for (var i = 1; i < count; ++i) {
-          if (min > numbers[i]) {
-            min = numbers[i];
-          }
-        }
-        return min;
       }
+      var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+      if (! ("length" in numbers && numbers.length > 0)) {
+        throw "Non-empty array is expected";
+      }
+      var min = numbers[0],
+        count = numbers.length;
+      for (var i = 1; i < count; ++i) {
+        if (min > numbers[i]) {
+          min = numbers[i];
+        }
+      }
+      return min;
     };
 
     /**
@@ -9486,12 +9753,12 @@
     p.random = function() {
       if(arguments.length === 0) {
         return currentRandom();
-      } else if(arguments.length === 1) {
-        return currentRandom() * arguments[0];
-      } else {
-        var aMin = arguments[0], aMax = arguments[1];
-        return currentRandom() * (aMax - aMin) + aMin;
       }
+      if(arguments.length === 1) {
+        return currentRandom() * arguments[0];
+      }
+      var aMin = arguments[0], aMax = arguments[1];
+      return currentRandom() * (aMax - aMin) + aMin;
     };
 
     // Pseudo-random generator
@@ -9539,21 +9806,20 @@
         if (haveNextNextGaussian) {
           haveNextNextGaussian = false;
           return nextNextGaussian;
-        } else {
-          var v1, v2, s;
-          do {
-            v1 = 2 * random() - 1; // between -1.0 and 1.0
-            v2 = 2 * random() - 1; // between -1.0 and 1.0
-            s = v1 * v1 + v2 * v2;
-          }
-          while (s >= 1 || s === 0);
-
-          var multiplier = Math.sqrt(-2 * Math.log(s) / s);
-          nextNextGaussian = v2 * multiplier;
-          haveNextNextGaussian = true;
-
-          return v1 * multiplier;
         }
+        var v1, v2, s;
+        do {
+          v1 = 2 * random() - 1; // between -1.0 and 1.0
+          v2 = 2 * random() - 1; // between -1.0 and 1.0
+          s = v1 * v1 + v2 * v2;
+        }
+        while (s >= 1 || s === 0);
+
+        var multiplier = Math.sqrt(-2 * Math.log(s) / s);
+        nextNextGaussian = v2 * multiplier;
+        haveNextNextGaussian = true;
+
+        return v1 * multiplier;
       };
 
       // by default use standard random, otherwise seeded
@@ -9721,7 +9987,6 @@
       noiseProfile.generator = undef;
     };
 
-    // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     /**
     * Defines the dimension of the display window in units of pixels. The size() function must
     * be the first line in setup(). If size() is not called, the default size of the window is
@@ -9763,6 +10028,9 @@
           curContext[prop] = savedProperties[prop];
         }
       }
+
+      // make sure to set the default font the first time round.
+      p.textFont(curTextFont);
 
       // Set the background to whatever it was called last as if background() was called before size()
       // If background() hasn't been called before, set background() to a light gray
@@ -10292,11 +10560,10 @@
     p.beginCamera = function() {
       if (manipulatingCamera) {
         throw ("You cannot call beginCamera() again before calling endCamera()");
-      } else {
-        manipulatingCamera = true;
-        forwardTransform = cameraInv;
-        reverseTransform = cam;
       }
+      manipulatingCamera = true;
+      forwardTransform = cameraInv;
+      reverseTransform = cam;
     };
 
     /**
@@ -10308,13 +10575,12 @@
     p.endCamera = function() {
       if (!manipulatingCamera) {
         throw ("You cannot call endCamera() before calling beginCamera()");
-      } else {
-        modelView.set(cam);
-        modelViewInv.set(cameraInv);
-        forwardTransform = modelView;
-        reverseTransform = modelViewInv;
-        manipulatingCamera = false;
       }
+      modelView.set(cam);
+      modelViewInv.set(cameraInv);
+      forwardTransform = modelView;
+      reverseTransform = modelViewInv;
+      manipulatingCamera = false;
     };
 
     /**
@@ -11090,8 +11356,8 @@
     */
     Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.specular = function() {
-      var c = p.color.apply(this, arguments);
+    Drawing3D.prototype.specular = function(a1, a2, a3) {
+      var c = p.color(a1, a2, a3);
 
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
@@ -11133,9 +11399,9 @@
           ox /= ow;
         }
         return p.width * ( 1 + ox ) / 2.0;
-      } else { // We assume that we're in 2D
-        return modelView.multX(x, y);
       }
+      // We assume that we're in 2D
+      return modelView.multX(x, y);
     };
 
     /**
@@ -11168,9 +11434,9 @@
           oy /= ow;
         }
         return p.height * ( 1 + oy ) / 2.0;
-      } else {  // We assume that we're in 2D
-        return modelView.multY(x, y);
       }
+      // We assume that we're in 2D
+      return modelView.multY(x, y);
     };
 
     /**
@@ -11459,27 +11725,19 @@
      * @see #beginShape()
      */
     Drawing2D.prototype.point = function(x, y) {
-      if (doStroke) {
-        // TODO if strokeWeight > 1, do circle
+      if (!doStroke) {
+        return;
+      }
 
-        if (curSketch.options.crispLines) {
-          var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
-          var c = p.get(x, y);
-          p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
-        } else {
-          if (lineWidth > 1) {
-            curContext.fillStyle = p.color.toString(currentStrokeColor);
-            isFillDirty = true;
-            curContext.beginPath();
-            curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
-            curContext.fill();
-            curContext.closePath();
-          } else {
-            curContext.fillStyle = p.color.toString(currentStrokeColor);
-            curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-            isFillDirty = true;
-          }
-        }
+      curContext.fillStyle = p.color.toString(currentStrokeColor);
+      isFillDirty = true;
+      // Draw a circle for any point larger than 1px
+      if (lineWidth > 1) {
+        curContext.beginPath();
+        curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
+        curContext.fill();
+      } else {
+        curContext.fillRect(x, y, 1, 1);
       }
     };
 
@@ -11579,7 +11837,13 @@
 
       if (firstVert) { firstVert = false; }
       vert["isVert"] = true;
-
+      
+      if (v === undef && usingTexture) {
+        v = u;
+        u = z;
+        z = 0;
+      }
+      
       vert[0] = x;
       vert[1] = y;
       vert[2] = z || 0;
@@ -12640,22 +12904,11 @@
           cvs.height = pot;
         }
 
-        var ctx = cvs.getContext('2d');
-        var textureImage = ctx.createImageData(cvs.width, cvs.height);
+        pimage.resize(cvs.width, cvs.height);
 
-        var imgData = pimage.toImageData();
+        var cvsTextureCtx = cvs.getContext('2d');
+        cvsTextureCtx.putImageData(pimage.imageData, 0, 0);
 
-        for (var i = 0; i < cvs.width; i += 1) {
-          for (var j = 0; j < cvs.height; j += 1) {
-          var index = (j * cvs.width + i) * 4;
-            textureImage.data[index + 0] = imgData.data[index + 0];
-            textureImage.data[index + 1] = imgData.data[index + 1];
-            textureImage.data[index + 2] = imgData.data[index + 2];
-            textureImage.data[index + 3] = 255;
-          }
-        }
-
-        ctx.putImageData(textureImage, 0, 0);
         pimage.__cvs = cvs;
 
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
@@ -13039,36 +13292,23 @@
     * @see beginShape
     */
     Drawing2D.prototype.line = function(x1, y1, x2, y2) {
-      // a line is only defined if it has different start and end coordinates.
-      // If they are the same, we call point instead.
-      if (x1===x2 && y1===y2) {
-        p.point(x1,y1);
+      if (!doStroke) {
+        return;
       }
-
-      // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
-      else if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
-        var temp;
-        if (x1 === x2) {
-          if (y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
-          for (var y=y1;y<=y2;++y) {
-            p.set(x1, y, currentStrokeColor);
-          }
-        } else {
-          if (x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
-          for (var x=x1;x<=x2;++x) {
-            p.set(x, y1, currentStrokeColor);
-          }
-        }
+      // A line is only defined if it has different start and end coordinates.
+      // If they are the same, we call point instead.
+      if (x1 === x2 && y1 === y2) {
+        p.point(x1, y1);
         return;
       }
 
-      else if (doStroke) {
-        curContext.beginPath();
-        curContext.moveTo(x1 || 0, y1 || 0);
-        curContext.lineTo(x2 || 0, y2 || 0);
-        executeContextStroke();
-        curContext.closePath();
-      }
+      // Translate the line by (0.5, 0.5) to draw a crisp line
+      curContext.translate(0.5, 0.5);
+      curContext.beginPath();
+      curContext.moveTo(Math.round(x1) || 0, Math.round(y1) || 0);
+      curContext.lineTo(Math.round(x2) || 0, Math.round(y2) || 0);
+      executeContextStroke();
+      curContext.translate(-0.5, -0.5);
     };
 
     Drawing3D.prototype.line = function(x1, y1, z1, x2, y2, z2) {
@@ -13304,47 +13544,34 @@
         return;
       }
 
-      // if only stroke is enabled, do it "crisp"
-      if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
-        var i, x2 = x + width - 1, y2 = y + height - 1;
-        for (i=0;i<width;++i) {
-          p.set(x + i, y, currentStrokeColor);
-          p.set(x + i, y2, currentStrokeColor);
-        }
-        for (i=0;i<height;++i) {
-          p.set(x, y + i, currentStrokeColor);
-          p.set(x2, y + i, currentStrokeColor);
-        }
-        return;
-      }
-
-      curContext.beginPath();
-
-      var offsetStart = 0;
-      var offsetEnd = 0;
-
       if (curRectMode === PConstants.CORNERS) {
         width -= x;
         height -= y;
-      }
-
-      if (curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-
-      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
         x -= width / 2;
         y -= height / 2;
       }
 
-      curContext.rect(
-      Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
-
-      executeContextFill();
-      executeContextStroke();
-
-      curContext.closePath();
+      x = Math.round(x);
+      y = Math.round(y);
+      width = Math.round(width);
+      height = Math.round(height);
+      if (doFill) {
+        curContext.fillStyle = p.color.toString(currentFillColor);
+        isFillDirty = true;
+        curContext.fillRect(x, y, width, height);
+      }
+      // Translate the line by (0.5, 0.5) to draw a crisp rectangle border
+      if (doStroke) {
+        curContext.translate(0.5, 0.5);
+        curContext.strokeStyle = p.color.toString(currentStrokeColor);
+        isStrokeDirty = true;
+        curContext.strokeRect(x, y, width, height);
+        curContext.translate(-0.5, -0.5);
+      }
     };
 
     Drawing3D.prototype.rect = function(x, y, width, height) {
@@ -13610,9 +13837,8 @@
       // may implement this differently in later release
       if (img !== undef) {
         return window.open(img.toDataURL(),"_blank");
-      } else {
-        return window.open(p.externals.canvas.toDataURL(),"_blank");
       }
+      return window.open(p.externals.canvas.toDataURL(),"_blank");
     };
 
     var saveNumber = 0;
@@ -13857,9 +14083,11 @@
       'get': function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
-        } else if (arguments.length === 2) {
+        }
+        if (arguments.length === 2) {
           return p.get(x, y, this);
-        } else if (arguments.length === 4) {
+        }
+        if (arguments.length === 4) {
           return p.get(x, y, w, h, this);
         }
       },
@@ -14022,21 +14250,20 @@
       resize: function(w, h) {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot resize.";
-        } else {
-          if (this.width !== 0 || this.height !== 0) {
-            // make aspect ratio if w or h is 0
-            if (w === 0 && h !== 0) {
-              w = Math.floor(this.width / this.height * h);
-            } else if (h === 0 && w !== 0) {
-              h = Math.floor(this.height / this.width * w);
-            }
-            // put 'this.imageData' into a new canvas
-            var canvas = getCanvasData(this.imageData).canvas;
-            // pull imageData object out of canvas into ImageData object
-            var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
-            // set this as new pimage
-            this.fromImageData(imageData);
+        }
+        if (this.width !== 0 || this.height !== 0) {
+          // make aspect ratio if w or h is 0
+          if (w === 0 && h !== 0) {
+            w = Math.floor(this.width / this.height * h);
+          } else if (h === 0 && w !== 0) {
+            h = Math.floor(this.height / this.width * w);
           }
+          // put 'this.imageData' into a new canvas
+          var canvas = getCanvasData(this.imageData).canvas;
+          // pull imageData object out of canvas into ImageData object
+          var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
+          // set this as new pimage
+          this.fromImageData(imageData);
         }
       },
 
@@ -14091,20 +14318,16 @@
       toImageData: function() {
         if (this.isRemote) { // Remote images cannot access imageData, send source image instead
           return this.sourceImg;
-        } else {
-          var canvasData = getCanvasData(this.imageData);
-          return canvasData.context.getImageData(0, 0, this.width, this.height);
         }
       },
 
       toDataURL: function() {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot create dataURI.";
-        } else {
-          var canvasData = getCanvasData(this.imageData);
-          return canvasData.canvas.toDataURL();
         }
-      },
+        var canvasData = getCanvasData(this.imageData);
+        return canvasData.canvas.toDataURL();
+      };
 
       fromImageData: function(canvasImg) {
         this.width = canvasImg.width;
@@ -14182,29 +14405,27 @@
         return pimg;
       }
       // else async load it
-      else {
-        pimg = new PImage();
-        var img = document.createElement('img');
+      pimg = new PImage();
+      var img = document.createElement('img');
 
-        pimg.sourceImg = img;
+      pimg.sourceImg = img;
 
-        img.onload = (function(aImage, aPImage, aCallback) {
-          var image = aImage;
-          var pimg = aPImage;
-          var callback = aCallback;
-          return function() {
-            // change the <img> object into a PImage now that its loaded
-            pimg.fromHTMLImageData(image);
-            pimg.loaded = true;
-            if (callback) {
-              callback();
-            }
-          };
-        }(img, pimg, callback));
+      img.onload = (function(aImage, aPImage, aCallback) {
+        var image = aImage;
+        var pimg = aPImage;
+        var callback = aCallback;
+        return function() {
+          // change the <img> object into a PImage now that its loaded
+          pimg.fromHTMLImageData(image);
+          pimg.loaded = true;
+          if (callback) {
+            callback();
+          }
+        };
+      }(img, pimg, callback));
 
-        img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
-        return pimg;
-      }
+      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
+      return pimg;
     };
 
     // async loading of large images, same functionality as loadImage above
@@ -14249,23 +14470,21 @@
         data = curContext.getImageData(0|x, 0|y, 1, 1).data;
         // changed for 0.9
         return p.color.toInt(data[0], data[1], data[2], data[3]);
-      } else {
-        // x,y is outside image return transparent black
-        return 0;
       }
+      // x,y is outside image return transparent black
+      return 0;
     }
     function get$3(x,y,img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot get x,y.";
-      } else {
-        // PImage.get(x,y) was called, return the color (int) at x,y of img
-        // changed in 0.9
-        var offset = y * img.width * 4 + (x * 4);
-        return p.color.toInt(img.imageData.data[offset],
-                           img.imageData.data[offset + 1],
-                           img.imageData.data[offset + 2],
-                           img.imageData.data[offset + 3]);
       }
+      // PImage.get(x,y) was called, return the color (int) at x,y of img
+      // changed in 0.9
+      var offset = y * img.width * 4 + (x * 4);
+      return p.color.toInt(img.imageData.data[offset],
+                         img.imageData.data[offset + 1],
+                         img.imageData.data[offset + 2],
+                         img.imageData.data[offset + 3]);
     }
     function get$4(x, y, w, h) {
       // return a PImage of w and h from cood x,y of curContext
@@ -14276,26 +14495,25 @@
     function get$5(x, y, w, h, img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot get x,y,w,h.";
-      } else {
-        // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
-        // changed for 0.9, offset start point needs to be *4
-        var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data,
-          imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
-        // Don't need to copy pixels from the image outside ranges.
-        var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
-          stopRow = Math.min(h, imgHeight - y), stopColumn = Math.min(w, imgWidth - x);
-        for (var i = startRow; i < stopRow; ++i) {
-          var sourceOffset = ((y + i) * imgWidth + (x + startColumn)) * 4;
-          var targetOffset = (i * w + startColumn) * 4;
-          for (var j = startColumn; j < stopColumn; ++j) {
-            cData[targetOffset++] = imgData[sourceOffset++];
-            cData[targetOffset++] = imgData[sourceOffset++];
-            cData[targetOffset++] = imgData[sourceOffset++];
-            cData[targetOffset++] = imgData[sourceOffset++];
-          }
-        }
-        return c;
       }
+      // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+      // changed for 0.9, offset start point needs to be *4
+      var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data,
+        imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
+      // Don't need to copy pixels from the image outside ranges.
+      var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
+        stopRow = Math.min(h, imgHeight - y), stopColumn = Math.min(w, imgWidth - x);
+      for (var i = startRow; i < stopRow; ++i) {
+        var sourceOffset = ((y + i) * imgWidth + (x + startColumn)) * 4;
+        var targetOffset = (i * w + startColumn) * 4;
+        for (var j = startColumn; j < stopColumn; ++j) {
+          cData[targetOffset++] = imgData[sourceOffset++];
+          cData[targetOffset++] = imgData[sourceOffset++];
+          cData[targetOffset++] = imgData[sourceOffset++];
+          cData[targetOffset++] = imgData[sourceOffset++];
+        }
+      }
+      return c;
     }
 
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
@@ -14326,15 +14544,20 @@
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
       if (arguments.length === 2) {
         return get$2(x, y);
-      } else if (arguments.length === 0) {
+      }
+      if (arguments.length === 0) {
         return get$0();
-      } else if (arguments.length === 5) {
+      }
+      if (arguments.length === 5) {
         return get$5(x, y, w, h, img);
-      } else if (arguments.length === 4) {
+      }
+      if (arguments.length === 4) {
         return get$4(x, y, w, h);
-      } else if (arguments.length === 3) {
+      }
+      if (arguments.length === 3) {
         return get$3(x, y, w);
-      } else if (arguments.length === 1) {
+      }
+      if (arguments.length === 1) {
         // PImage.get() was called, return the PImage
         return x;
       }
@@ -14422,15 +14645,14 @@
     function set$4(x, y, obj, img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot set x,y.";
-      } else {
-        var c = p.color.toArray(obj);
-        var offset = y * img.width * 4 + (x*4);
-        var data = img.imageData.data;
-        data[offset] = c[0];
-        data[offset+1] = c[1];
-        data[offset+2] = c[2];
-        data[offset+3] = c[3];
       }
+      var c = p.color.toArray(obj);
+      var offset = y * img.width * 4 + (x*4);
+      var data = img.imageData.data;
+      data[offset] = c[0];
+      data[offset+1] = c[1];
+      data[offset+2] = c[2];
+      data[offset+3] = c[3];
     }
 
     // Paints a pixel array into the canvas
@@ -14646,7 +14868,8 @@
 
         if (!obj.loaded) {
           throw "Error using image in background(): PImage not loaded.";
-        } else if(obj.width !== p.width || obj.height !== p.height){
+        }
+        if(obj.width !== p.width || obj.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
       } else {
@@ -14718,6 +14941,10 @@
     * @see alpha
     */
     Drawing2D.prototype.image = function(img, x, y, w, h) {
+      // Fix fractional positions
+      x = Math.round(x);
+      y = Math.round(y);
+
       if (img.width > 0) {
         var wid = w || img.width;
         var hgt = h || img.height;
@@ -14764,15 +14991,18 @@
 
     Drawing3D.prototype.image = function(img, x, y, w, h) {
       if (img.width > 0) {
-        var wid = w || img.width;
-        var hgt = h || img.height;
+        // Fix fractional positions
+        x = Math.round(x);
+        y = Math.round(y);
+        w = w || img.width;
+        h = h || img.height;
 
         p.beginShape(p.QUADS);
-        p.texture(img.externals.canvas);
+        p.texture(img);
         p.vertex(x, y, 0, 0, 0);
-        p.vertex(x, y+hgt, 0, 0, hgt);
-        p.vertex(x+wid, y+hgt, 0, wid, hgt);
-        p.vertex(x+wid, y, 0, wid, 0);
+        p.vertex(x, y+h, 0, 0, h);
+        p.vertex(x+w, y+h, 0, w, h);
+        p.vertex(x+w, y, 0, w, 0);
         p.endShape();
       }
     };
@@ -14809,8 +15039,8 @@
      * @see #noTint()
      * @see #image()
      */
-    p.tint = function() {
-      var tintColor = p.color.apply(this, arguments);
+    p.tint = function(a1, a2, a3) {
+      var tintColor = p.color(a1, a2, a3);
       var r = p.red(tintColor) / colorModeX;
       var g = p.green(tintColor) / colorModeY;
       var b = p.blue(tintColor) / colorModeZ;
@@ -14929,29 +15159,28 @@
       var dest;
       if (src.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot blend image.";
-      } else {
-        // check if pimgdest is there and pixels, if so this was a call from pimg.blend
-        if (arguments.length === 10 || arguments.length === 9) {
-          p.loadPixels();
-          dest = p;
-        } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
-          dest = pimgdest;
-        }
-        if (src === p) {
-          if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
-            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
-                          dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-          } else {
-            // same as below, except skip the loadPixels() because it'd be redundant
-            p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-          }
+      }
+      // check if pimgdest is there and pixels, if so this was a call from pimg.blend
+      if (arguments.length === 10 || arguments.length === 9) {
+        p.loadPixels();
+        dest = p;
+      } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
+        dest = pimgdest;
+      }
+      if (src === p) {
+        if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
+          p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
+                        dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
         } else {
-          src.loadPixels();
+          // same as below, except skip the loadPixels() because it'd be redundant
           p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
         }
-        if (arguments.length === 10) {
-          p.updatePixels();
-        }
+      } else {
+        src.loadPixels();
+        p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+      }
+      if (arguments.length === 10) {
+        p.updatePixels();
       }
     };
 
@@ -15233,89 +15462,88 @@
       }
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot filter image.";
-      } else {
-        // begin filter process
-        var imglen = img.pixels.getLength();
-        switch (kind) {
-          case PConstants.BLUR:
-            var radius = param || 1; // if no param specified, use 1 (default for p5)
-            blurARGB(radius, img);
-            break;
+      }
+      // begin filter process
+      var imglen = img.pixels.getLength();
+      switch (kind) {
+        case PConstants.BLUR:
+          var radius = param || 1; // if no param specified, use 1 (default for p5)
+          blurARGB(radius, img);
+          break;
 
-          case PConstants.GRAY:
-            if (img.format === PConstants.ALPHA) { //trouble
-              // for an alpha image, convert it to an opaque grayscale
-              for (i = 0; i < imglen; i++) {
-                col = 255 - img.pixels.getPixel(i);
-                img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
-              }
-              img.format = PConstants.RGB; //trouble
-            } else {
-              for (i = 0; i < imglen; i++) {
-                col = img.pixels.getPixel(i);
-                lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
-                img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
-              }
-            }
-            break;
-
-          case PConstants.INVERT:
+        case PConstants.GRAY:
+          if (img.format === PConstants.ALPHA) { //trouble
+            // for an alpha image, convert it to an opaque grayscale
             for (i = 0; i < imglen; i++) {
-              img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
-            }
-            break;
-
-          case PConstants.POSTERIZE:
-            if (param === null) {
-              throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
-            }
-            var levels = p.floor(param);
-            if ((levels < 2) || (levels > 255)) {
-              throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
-            }
-            var levels1 = levels - 1;
-            for (i = 0; i < imglen; i++) {
-              var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
-              var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
-              var blevel = img.pixels.getPixel(i) & 0xff;
-              rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
-              glevel = (((glevel * levels) >> 8) * 255) / levels1;
-              blevel = (((blevel * levels) >> 8) * 255) / levels1;
-              img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
-            }
-            break;
-
-          case PConstants.OPAQUE:
-            for (i = 0; i < imglen; i++) {
-              img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
+              col = 255 - img.pixels.getPixel(i);
+              img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
             }
             img.format = PConstants.RGB; //trouble
-            break;
-
-          case PConstants.THRESHOLD:
-            if (param === null) {
-              param = 0.5;
-            }
-            if ((param < 0) || (param > 1)) {
-              throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
-            }
-            var thresh = p.floor(param * 255);
+          } else {
             for (i = 0; i < imglen; i++) {
-              var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16, p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8, (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
-              img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) | ((max < thresh) ? 0x000000 : 0xffffff)));
+              col = img.pixels.getPixel(i);
+              lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
+              img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
             }
-            break;
+          }
+          break;
 
-          case PConstants.ERODE:
-            dilate(true, img);
-            break;
+        case PConstants.INVERT:
+          for (i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
+          }
+          break;
 
-          case PConstants.DILATE:
-            dilate(false, img);
-            break;
-        }
-        img.updatePixels();
+        case PConstants.POSTERIZE:
+          if (param === null) {
+            throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
+          }
+          var levels = p.floor(param);
+          if ((levels < 2) || (levels > 255)) {
+            throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
+          }
+          var levels1 = levels - 1;
+          for (i = 0; i < imglen; i++) {
+            var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
+            var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
+            var blevel = img.pixels.getPixel(i) & 0xff;
+            rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
+            glevel = (((glevel * levels) >> 8) * 255) / levels1;
+            blevel = (((blevel * levels) >> 8) * 255) / levels1;
+            img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
+          }
+          break;
+
+        case PConstants.OPAQUE:
+          for (i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
+          }
+          img.format = PConstants.RGB; //trouble
+          break;
+
+        case PConstants.THRESHOLD:
+          if (param === null) {
+            param = 0.5;
+          }
+          if ((param < 0) || (param > 1)) {
+            throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
+          }
+          var thresh = p.floor(param * 255);
+          for (i = 0; i < imglen; i++) {
+            var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16, p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8, (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
+            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) | ((max < thresh) ? 0x000000 : 0xffffff)));
+          }
+          break;
+
+        case PConstants.ERODE:
+          dilate(true, img);
+          break;
+
+        case PConstants.DILATE:
+          dilate(false, img);
+          break;
       }
+      img.updatePixels();
     };
 
 
@@ -15559,45 +15787,11 @@
     // Font handling
     ////////////////////////////////////////////////////////////////////////////
 
-    // Defines system (non-SVG) font.
-    function PFont(name) {
-      this.name = "sans-serif";
-      if(name !== undef) {
-        if (name.indexOf(" ") > -1) {
-          name = "'" + name + "'";
-        }
-        switch(name) {
-          case "sans-serif":
-          case "serif":
-          case "monospace":
-          case "fantasy":
-          case "cursive":
-            this.name = name;
-            break;
-          default:
-            this.name = name;
-            break;
-        }
-      }
-      this.origName = name;
-    }
-    PFont.prototype.width = function(str) {
-      if ("measureText" in curContext) {
-        return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
-      } else {
-        return 0;
-      }
-    };
-    // Lists all standard fonts
-    PFont.list = function() {
-      return ["sans-serif", "serif", "monospace", "fantasy", "cursive"];
-    };
-    p.PFont = PFont;
-
     /**
      * loadFont() Loads a font into a variable of type PFont.
      *
      * @param {String} name filename of the font to load
+     * @param {int|float} size option font size (used internally)
      *
      * @returns {PFont} new PFont object
      *
@@ -15606,44 +15800,50 @@
      * @see #text
      * @see #createFont
      */
-    p.loadFont = function(name) {
-      if (name === undef || name.indexOf(".svg") === -1) {
-        return new PFont(name);
-      } else {
-        // If the font is a glyph, calculate by SVG table
-        var font = p.loadGlyphs(name);
-
-        return {
-          name: name,
-          glyph: true,
-          units_per_em: font.units_per_em,
-          horiz_adv_x: 1 / font.units_per_em * font.horiz_adv_x,
-          ascent: font.ascent,
-          descent: font.descent,
-          width: function(str) {
-            var width = 0;
-            var len = str.length;
-            for (var i = 0; i < len; i++) {
-              try {
-                width += parseFloat(p.glyphLook(p.glyphTable[name], str[i]).horiz_adv_x);
-              }
-              catch(e) {
-                Processing.debug(e);
-              }
-            }
-            return width / p.glyphTable[name].units_per_em;
-          }
-        };
+    p.loadFont = function(name, size) {
+      if (name === undef) {
+        throw("font name required in loadFont.");
       }
+      if (name.indexOf(".svg") === -1) {
+        if (size === undef) {
+          size = curTextFont.size;
+        }
+        return PFont.get(name, size);
+      }
+      // If the font is a glyph, calculate by SVG table
+      var font = p.loadGlyphs(name);
+
+      return {
+        name: name,
+        glyph: true,
+        units_per_em: font.units_per_em,
+        horiz_adv_x: 1 / font.units_per_em * font.horiz_adv_x,
+        ascent: font.ascent,
+        descent: font.descent,
+        width: function(str) {
+          var width = 0;
+          var len = str.length;
+          for (var i = 0; i < len; i++) {
+            try {
+              width += parseFloat(p.glyphLook(p.glyphTable[name], str[i]).horiz_adv_x);
+            }
+            catch(e) {
+              Processing.debug(e);
+            }
+          }
+          return width / p.glyphTable[name].units_per_em;
+        }
+      };
     };
 
     /**
      * createFont() Loads a font into a variable of type PFont.
+     * Smooth and charset are ignored in Processing.js.
      *
      * @param {String}    name    filename of the font to load
      * @param {int|float} size    font size in pixels
-     * @param {boolean}   smooth  optional true for an antialiased font, false for aliased
-     * @param {char[]}    charset optional array containing characters to be generated
+     * @param {boolean}   smooth  not used in Processing.js
+     * @param {char[]}    charset not used in Processing.js
      *
      * @returns {PFont} new PFont object
      *
@@ -15652,105 +15852,16 @@
      * @see #text
      * @see #loadFont
      */
-    p.createFont = function(name, size, smooth, charset) {
-      if (arguments.length === 2) {
-        p.textSize(size);
-        return p.loadFont(name);
-      } else if (arguments.length === 3) {
-        // smooth: true for an antialiased font, false for aliased
-        p.textSize(size);
-        return p.loadFont(name);
-      } else if (arguments.length === 4) {
-        // charset: char array containing characters to be generated
-        p.textSize(size);
-        return p.loadFont(name);
-      } else {
-        throw("incorrent number of parameters for createFont");
-      }
+    p.createFont = function(name, size) {
+      // because Processing.js only deals with real fonts,
+      // createFont is simply a wrapper for loadFont/2
+      return p.loadFont(name, size);
     };
-
-
-    /**
-     * [internal function] computeFontMetrics() calculates various metrics for text
-     * placement. Currently this function computes the ascent, descent and leading
-     * (from "lead", used for vertical space) values for the currently active font.
-     */
-    function computeFontMetrics() {
-      var canvas = document.createElement("canvas");
-      canvas.width = 3 * curTextSize;
-      canvas.height = 3 * curTextSize;
-      canvas.style.opacity = 0;
-      var ctx = canvas.getContext("2d");
-      ctx.font = curTextSize + "px " + curTextFont.name;
-
-      // Size the canvas using a string with common max-ascent and max-descent letters.
-      // Changing the canvas dimensions resets the context, so we must reset the font.
-      var protrusions = "dbflkhyjqpg";
-      canvas.width = ctx.measureText(protrusions).width;
-      ctx.font = curTextSize + "px " + curTextFont.name;
-
-      // for text lead values, we meaure a multiline text container.
-      var leadDiv = document.createElement("leadDiv");
-      leadDiv.style.position = "absolute";
-      leadDiv.style.opacity = 0;
-      leadDiv.style.fontFamily = curTextFont.name;
-      leadDiv.style.fontSize = curTextSize + "px";
-      leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
-      document.body.appendChild(leadDiv);
-
-      var w = canvas.width,
-          h = canvas.height,
-          baseline = h/2;
-
-      // Set all canvas pixeldata values to 255, with all the content
-      // data being 0. This lets us scan for data[i] != 255.
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "black";
-      ctx.fillText(protrusions, 0, baseline);
-      var pixelData = ctx.getImageData(0, 0, w, h).data;
-
-      // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
-      // consecutive values in the array, rather than stored as 32 bit ints.
-      var i = 0,
-          w4 = w * 4,
-          len = pixelData.length;
-
-      // Finding the ascent uses a normal, forward scanline
-      while (++i < len && pixelData[i] === 255) {
-        nop();
-      }
-      var ascent = Math.round(i / w4);
-
-      // Finding the descent uses a reverse scanline
-      i = len - 1;
-      while (--i > 0 && pixelData[i] === 255) {
-        nop();
-      }
-      var descent = Math.round(i / w4);
-
-      // Update current font metrics
-      curTextAscent = baseline - ascent;
-      curTextDescent = descent - baseline;
-
-      // For leading, we first set a "safe" value, using TeX's leading ratio
-      curTextLeading = 1.2 * curTextSize;
-
-      // Then we try to get the real value from the browser
-      if (document.defaultView.getComputedStyle) {
-        var leadDivHeight = document.defaultView.getComputedStyle(leadDiv).getPropertyValue("height");
-        leadDivHeight = leadDivHeight.replace("px","");
-        if (leadDivHeight >= curTextSize * 2) {
-          curTextLeading = Math.round(leadDivHeight/2);
-        }
-      }
-      document.body.removeChild(leadDiv);
-    }
 
     /**
      * textFont() Sets the current font.
      *
-     * @param {PFont}     name filename of the font to load
+     * @param {PFont}     pfont the PFont to load as current text font
      * @param {int|float} size optional font size in pixels
      *
      * @see #createFont
@@ -15758,15 +15869,21 @@
      * @see #PFont
      * @see #text
      */
-    p.textFont = function(font, size) {
-      curTextFont = font;
-      if (size) {
-        p.textSize(size);
-      } else {
-        var curContext = drawing.$ensureContext();
-        curContext.font = curTextSize + "px " + curTextFont.name;
+    p.textFont = function(pfont, size) {
+      if (size !== undef) {
+        // If we're using an SVG glyph font, don't load from cache
+        if (!pfont.glyph) {
+          pfont = PFont.get(pfont.name, size);
+        }
+        curTextSize = size;
       }
-      computeFontMetrics();
+      curTextFont = pfont;
+      curFontName = curTextFont.name;
+      curTextAscent = curTextFont.ascent;
+      curTextDescent = curTextFont.descent;
+      curTextLeading = curTextFont.leading;
+      var curContext = drawing.$ensureContext();
+      curContext.font = curTextFont.css;
     };
 
     /**
@@ -15781,10 +15898,14 @@
      */
     p.textSize = function(size) {
       if (size !== curTextSize) {
+        curTextFont = PFont.get(curFontName, size);
         curTextSize = size;
+        // recache metrics
+        curTextAscent = curTextFont.ascent;
+        curTextDescent = curTextFont.descent;
+        curTextLeading = curTextFont.leading;
         var curContext = drawing.$ensureContext();
-        curContext.font = curTextSize + "px " + curTextFont.name;
-        computeFontMetrics();
+        curContext.font = curTextFont.css;
       }
     };
 
@@ -15851,18 +15972,18 @@
     function toP5String(obj) {
       if(obj instanceof String) {
         return obj;
-      } else if(typeof obj === 'number') {
+      }
+      if(typeof obj === 'number') {
         // check if an int
         if(obj === (0 | obj)) {
           return obj.toString();
-        } else {
-          return p.nf(obj, 0, 3);
         }
-      } else if(obj === null || obj === undef) {
-        return "";
-      } else {
-        return obj.toString();
+        return p.nf(obj, 0, 3);
       }
+      if(obj === null || obj === undef) {
+        return "";
+      }
+      return obj.toString();
     }
 
     /**
@@ -15881,7 +16002,7 @@
       var lines = toP5String(str).split(/\r?\n/g), width = 0;
       var i, linesCount = lines.length;
 
-      curContext.font =  curTextSize + "px " + curTextFont.name;
+      curContext.font =  curTextFont.css;
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, curContext.measureText(lines[i]).width);
       }
@@ -15896,7 +16017,7 @@
       }
 
       var textContext = textcanvas.getContext("2d");
-      textContext.font =  curTextSize + "px " + curTextFont.name;
+      textContext.font =  curTextFont.css;
 
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, textContext.measureText(lines[i]).width);
@@ -16029,7 +16150,7 @@
         }
       } else {
         // If the font is a Batik SVG font...
-        var font = p.glyphTable[curTextFont.name];
+        var font = p.glyphTable[curFontName];
         saveContext();
         curContext.translate(x, y + curTextSize);
 
@@ -16068,12 +16189,12 @@
       }
       var oldContext = curContext;
       curContext = textcanvas.getContext("2d");
-      curContext.font = curTextSize + "px " + curTextFont.name;
+      curContext.font = curTextFont.css;
       var textWidth = curContext.measureText(str).width;
       textcanvas.width = textWidth;
       textcanvas.height = curTextSize;
       curContext = textcanvas.getContext("2d"); // refreshes curContext
-      curContext.font = curTextSize + "px " + curTextFont.name;
+      curContext.font = curTextFont.css;
       curContext.textBaseline="top";
 
       // paint on 2D canvas
@@ -16134,16 +16255,15 @@
       }
       // handle text line-by-line
 
-      var yOffset;
+      var yOffset = 0;
       if(verticalTextAlignment === PConstants.TOP) {
-        yOffset = (1-baselineOffset) * curTextLeading;
+        yOffset = curTextAscent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        yOffset = (1-baselineOffset - linesCount/2) * curTextLeading;
+        yOffset = curTextAscent/2 - (linesCount-1)*curTextLeading/2;
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
-        yOffset = (1-baselineOffset - linesCount) * curTextLeading;
-      } else { //  if(verticalTextAlignment === PConstants.BASELINE) {
-        yOffset = 0;
+        yOffset = -(curTextDescent + (linesCount-1)*curTextLeading);
       }
+
       for(var i=0;i<linesCount;++i) {
         var line = lines[i];
         drawing.text$line(line, x, y + yOffset, z, horizontalTextAlignment);
@@ -16166,7 +16286,6 @@
       var lineWidth = 0;
       var textboxWidth = width;
       var yOffset = 0;
-      curContext.font = curTextSize + "px " + curTextFont.name;
       var drawCommands = [];
 
       // run through text, character-by-character
@@ -16226,7 +16345,7 @@
       }
 
       // offsets for alignment
-      var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
+      var boxYOffset1 = curTextSize, boxYOffset2 = 0;
       if(verticalTextAlignment === PConstants.BOTTOM) {
         boxYOffset2 = height - (drawCommands.length * curTextLeading);
       } else if(verticalTextAlignment === PConstants.CENTER) {
@@ -16262,14 +16381,14 @@
      * @see #textFont
      */
     p.text = function() {
-      if (tMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
+      if (textMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
         p.pushMatrix();
         p.resetMatrix();
         var asc = p.textAscent();
         var des = p.textDescent();
         var tWidth = p.textWidth(arguments[0]);
         var tHeight = asc + des;
-        var font = p.loadFont(curTextFont.origName);
+        var font = curTextFont;
         var hud = p.createGraphics(tWidth, tHeight);
         hud.beginDraw();
         hud.fill(currentFillColor);
@@ -16285,20 +16404,20 @@
           p.image(hud, arguments[1], arguments[2]-asc);
         }
         p.popMatrix();
+        return;
       }
-      else if (tMode === PConstants.SHAPE) {
+      if (textMode === PConstants.SHAPE) {
         // TODO: requires beginRaw function
         return;
-      } else {
-        if (arguments.length === 3) { // for text( str, x, y)
-          text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
-        } else if (arguments.length === 4) { // for text( str, x, y, z)
-          text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
-        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
-        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
-          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
-        }
+      }
+      if (arguments.length === 3) { // for text( str, x, y)
+        text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
+      } else if (arguments.length === 4) { // for text( str, x, y, z)
+        text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
+      } else if (arguments.length === 5) { // for text( str, x, y , width, height)
+        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
+      } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
       }
     };
 
@@ -16321,7 +16440,7 @@
      * @see createFont
      */
     p.textMode = function(mode){
-      tMode = mode;
+      textMode = mode;
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
@@ -16642,10 +16761,6 @@
       // Setup default 2d canvas context.
       // Moving this here removes the number of times we need to check the 3D variable
       p.size(p.width, p.height);
-
-      // Canvas has trouble rendering single pixel stuff on whole-pixel
-      // counts, so we slightly offset it (this is super lame).
-      curContext.translate(0.5, 0.5);
 
       curContext.lineCap = 'round';
 
@@ -17135,9 +17250,13 @@
         }
       }
 
+      // sketch execute test interval, used to reschedule
+      // an execute when preloads have not yet finished.
+      var retryInterval = 100;
+
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
-        if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
+        if (!(curSketch.imageCache.pending || PFont.preloading.pending(retryInterval))) {
           // the opera preload cache can only be cleared once we start
           if (window.opera) {
             var link,
@@ -17177,7 +17296,7 @@
             }
           }
         } else {
-          window.setTimeout(function() { executeSketch(processing); }, 10);
+          window.setTimeout(function() { executeSketch(processing); }, retryInterval);
         }
       };
 
@@ -17249,7 +17368,7 @@
       "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
       "blit_resize", "blue", "box", "breakShape", "brightness",
       "camera", "ceil", "Character", "color", "colorMode",
-      "concat", "console", "constrain", "copy", "cos", "createFont",
+      "concat", "constrain", "copy", "cos", "createFont",
       "createGraphics", "createImage", "cursor", "curve", "curveDetail",
       "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
       "degrees", "directionalLight", "disableContextMenu",
@@ -17268,9 +17387,9 @@
       "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
-      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat", "parseInt",
-      "peg", "perspective", "PFont", "PImage", "pixels",
-      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
+      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
+      "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
+      "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
@@ -17368,9 +17487,8 @@
         var val = strings[index];
         if(val.charAt(0) === "/") {
           return val;
-        } else {
-          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
         }
+        return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
       });
     }
 
@@ -17423,12 +17541,13 @@
       if(quoted || aposed) { // replace strings
         index = strings.length; strings.push(all);
         return "'" + index + "'";
-      } else if(regexCtx) { // replace RegExps
+      }
+      if(regexCtx) { // replace RegExps
         index = strings.length; strings.push(regex);
         return prefix + "'" + index + "'";
-      } else { // kill comments
-        return comment !== "" ? " " : "\n";
       }
+      // kill comments
+      return comment !== "" ? " " : "\n";
     });
 
     // removes generics
@@ -17499,9 +17618,8 @@
       var result = code.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
         if(name !== className) {
           return all;
-        } else {
-          return addAtom(all, 'G');
         }
+        return addAtom(all, 'G');
       });
       return result;
     }
@@ -17581,18 +17699,18 @@
         var atom = atoms[index];
         if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
           return all;
-        } else if(/^\(\s*int\s*\)$/.test(atom)) {
-          return "(int)" + next;
-        } else {
-          var indexParts = atom.split(/"C(\d+)"/g);
-          if(indexParts.length > 1) {
-            // even items contains atom numbers, can check only first
-            if(! /^\[\s*\]$/.test(atoms[indexParts[1]])) {
-              return all; // fallback - not a cast
-            }
-          }
-          return "" + next;
         }
+        if(/^\(\s*int\s*\)$/.test(atom)) {
+          return "(int)" + next;
+        }
+        var indexParts = atom.split(/"C(\d+)"/g);
+        if(indexParts.length > 1) {
+          // even items contains atom numbers, can check only first
+          if(! /^\[\s*\]$/.test(atoms[indexParts[1]])) {
+            return all; // fallback - not a cast
+          }
+        }
+        return "" + next;
       });
       // (int)??? -> __int_cast(???)
       s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~<\>\=]+)/g, function(all, arg) {
@@ -17632,20 +17750,18 @@
             if(equalsPart) {
               return "pixels.setPixel" + addAtom("(" +atom.substring(1, atom.length - 1) +
                 "," + rightSide + ")", 'B');
-            } else {
-              return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
-                ")", 'B');
             }
-          } else if(indexOrLength) {
+            return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
+              ")", 'B');
+          }
+          if(indexOrLength) {
             // length
             return "pixels.getLength" + addAtom("()", 'B');
-          } else {
-            if(equalsPart) {
-              return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
-            } else {
-              return "pixels.toArray" + addAtom("()", 'B');
-            }
           }
+          if(equalsPart) {
+            return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
+          }
+          return "pixels.toArray" + addAtom("()", 'B');
         });
       // Java method replacements for: replace, replaceAll, replaceFirst, equals, hashCode, etc.
       //   xxx.replace(yyy) -> __replace(xxx, yyy)
@@ -17763,20 +17879,19 @@
     function expandExpression(expr) {
       if(expr.charAt(0) === '(' || expr.charAt(0) === '[') {
         return expr.charAt(0) + expandExpression(expr.substring(1, expr.length - 1)) + expr.charAt(expr.length - 1);
-      } else if(expr.charAt(0) === '{') {
+      }
+      if(expr.charAt(0) === '{') {
         if(/^\{\s*(?:[A-Za-z_$][\w$]*|'\d+')\s*:/.test(expr)) {
           return "{" + addAtom(expr.substring(1, expr.length - 1), 'I') + "}";
-        } else {
-          return "[" + expandExpression(expr.substring(1, expr.length - 1)) + "]";
         }
-      } else {
-        var trimmed = trimSpaces(expr);
-        var result = preExpressionTransform(trimmed.middle);
-        result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
-          return expandExpression(atoms[index]);
-        });
-        return trimmed.untrim(result);
+        return "[" + expandExpression(expr.substring(1, expr.length - 1)) + "]";
       }
+      var trimmed = trimSpaces(expr);
+      var result = preExpressionTransform(trimmed.middle);
+      result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
+        return expandExpression(atoms[index]);
+      });
+      return trimmed.untrim(result);
     }
 
     function replaceContextInVars(expr) {
@@ -17784,10 +17899,9 @@
         function(all, memberAccessSign, identifier, suffix, subMember, callSign) {
           if(memberAccessSign) {
             return all;
-          } else {
-            var subject = { name: identifier, member: subMember, callSign: !!callSign };
-            return replaceContext(subject) + (suffix === undef ? "" : suffix);
           }
+          var subject = { name: identifier, member: subMember, callSign: !!callSign };
+          return replaceContext(subject) + (suffix === undef ? "" : suffix);
         });
     }
 
@@ -17850,13 +17964,14 @@
     function getDefaultValueForType(type) {
         if(type === "int" || type === "float") {
           return "0";
-        } else if(type === "boolean") {
-          return "false";
-        } else if(type === "color") {
-          return "0x00000000";
-        } else {
-          return "null";
         }
+        if(type === "boolean") {
+          return "false";
+        }
+        if(type === "color") {
+          return "0x00000000";
+        }
+        return "null";
     }
 
     function AstVar(definitions, varType) {
@@ -17889,9 +18004,8 @@
           definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
         }
         return new AstVar(definitions, attrAndType[2]);
-      } else {
-        return new AstStatement(transformExpression(statement));
       }
+      return new AstStatement(transformExpression(statement));
     }
 
     function AstForExpression(initStatement, condition, step) {
@@ -17937,15 +18051,15 @@
         content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
         return new AstForInExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
-      } else if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
+      }
+      if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
         content = expr.substring(1, expr.length - 1).split(":");
         return new AstForEachExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
-      } else {
-        content = expr.substring(1, expr.length - 1).split(";");
-        return new AstForExpression( transformStatement(trim(content[0])),
-          transformExpression(content[1]), transformExpression(content[2]));
       }
+      content = expr.substring(1, expr.length - 1).split(";");
+      return new AstForExpression( transformStatement(trim(content[0])),
+        transformExpression(content[1]), transformExpression(content[2]));
     }
 
     function sortByWeight(array) {
@@ -18044,9 +18158,8 @@
           staticDeclarations.push(declaration);
         }
         return staticDeclarations.join("");
-      } else {
-        return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
       }
+      return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
     };
 
     function transformClassField(statement) {
@@ -18275,11 +18388,14 @@
           // returns "$this_N.$self" pointer instead of "this" in cases:
           // "this()", "this.XXX()", "this", but not for "this.XXX"
           return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
-        } else if(thisClassFields.hasOwnProperty(name)) {
+        }
+        if(thisClassFields.hasOwnProperty(name)) {
           return thisClassFields[name].isStatic ? className + "." + name : selfId + "." + name;
-        } else if(thisClassInners.hasOwnProperty(name)) {
+        }
+        if(thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
-        } else if(thisClassMethods.hasOwnProperty(name)) {
+        }
+        if(thisClassMethods.hasOwnProperty(name)) {
           return thisClassMethods[name].isStatic ? className + "." + name : selfId + ".$self." + name;
         }
         return oldContext(subject);
@@ -18673,9 +18789,10 @@
         var name = subject.name;
         if(localNames.hasOwnProperty(name)) {
           return name;
-        } else if(globalMembers.hasOwnProperty(name) ||
-                  PConstants.hasOwnProperty(name) ||
-                  defaultScope.hasOwnProperty(name)) {
+        }
+        if(globalMembers.hasOwnProperty(name) ||
+           PConstants.hasOwnProperty(name) ||
+           defaultScope.hasOwnProperty(name)) {
           return "$p." + name;
         }
         return name;
@@ -18889,10 +19006,8 @@
               var fontName = clean(list[x]),
                   index = /^\{(\d*?)\}$/.exec(fontName);
               // if index is not null, send JSON, otherwise, send string
-              sketch.fonts.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
+              PFont.preloading.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
             }
-          } else if (key === "crisp") {
-            sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
             sketch.options.pauseOnBlur = value === "true";
           } else if (key === "globalKeyEvents") {
@@ -19206,7 +19321,6 @@
   Processing.Sketch = function(attachFunction) {
     this.attachFunction = attachFunction; // can be optional
     this.options = {
-      crispLines: false,
       pauseOnBlur: false,
       globalKeyEvents: false
     };
@@ -19234,113 +19348,47 @@
       images: {},
       // Opera requires special administration for preloading
       operaCache: {},
-      add: function(href) {
-        if(isDOMPresent) {
-          var img = new Image();
+      // Specify an optional img arg if the image is already loaded in the DOM,
+      // otherwise href will get loaded.
+      add: function(href, img) {
+        // Prevent muliple loads for an image, in case it gets
+        // preloaded more than once, or is added via JS and then preloaded.
+        if (this.images[href]) {
+          return;
+        }
+
+        if (!isDOMPresent) {
+          this.images[href] = null;
+        }
+
+        // No image in the DOM, kick-off a background load
+        if (!img) {
+          img = new Image();
           img.onload = (function(owner) {
             return function() {
               owner.pending--;
             };
           }(this));
           this.pending++;
-          this.images[href] = img;
           img.src = href;
+        }
 
-          // Opera will not load images until they are inserted into the DOM.
-          if (window.opera) {
-            var div = document.createElement("div");
-            div.appendChild(img);
-            // we can't use "display: none", since that makes it invisible, and thus not load
-            div.style.position = "absolute";
-            div.style.opacity = 0;
-            div.style.width = "1px";
-            div.style.height= "1px";
-            if (!this.operaCache[href]) {
-              document.body.appendChild(div);
-              this.operaCache[href] = div;
-            }
-          }
-        } else {
-          this.images[href] = null;
-        }
-      }
-    };
-    this.fonts = {
-      // template element used to compare font sizes
-      template: (function() {
-        if(!isDOMPresent) {
-          return null;
-        }
-        var element = document.createElement('p');
-        element.style.fontFamily = "serif";
-        element.style.fontSize = "72px";
-        element.style.visibility = "hidden";
-        element.innerHTML = "This element is a text block for font loading";
-        document.getElementsByTagName("body")[0].appendChild(element);
-        return element;
-      }()),
-      // number of attempts to load a font
-      attempt: 0,
-      // returns true is fonts are all loaded,
-      // true if number of attempts hits the limit,
-      // false otherwise
-      pending: function() {
-        var r = true;
-        for (var i = 0; i < this.fontList.length; i++) {
-          // compares size of text in pixels, if equal, custom font is not yet loaded
-          if (this.fontList[i].offsetWidth === this.template.offsetWidth && this.fontList[i].offsetHeight === this.template.offsetHeight) {
-            r = false;
-            this.attempt++;
-          } else {
-            // removes loaded font from the array and dom, so we don't compare it again
-            document.getElementsByTagName("body")[0].removeChild(this.fontList[i]);
-            this.fontList.splice(i--, 1);
-            this.attempt = 0;
+        this.images[href] = img;
+
+        // Opera will not load images until they are inserted into the DOM.
+        if (window.opera) {
+          var div = document.createElement("div");
+          div.appendChild(img);
+          // we can't use "display: none", since that makes it invisible, and thus not load
+          div.style.position = "absolute";
+          div.style.opacity = 0;
+          div.style.width = "1px";
+          div.style.height= "1px";
+          if (!this.operaCache[href]) {
+            document.body.appendChild(div);
+            this.operaCache[href] = div;
           }
         }
-        // give up loading after max attempts have been reached
-        if (this.attempt >= 30) {
-          r = true;
-          // remove remaining elements from the dom and array
-          for (var j = 0; j < this.fontList.length; j++) {
-            document.getElementsByTagName("body")[0].removeChild(this.fontList[j]);
-            this.fontList.splice(j--, 1);
-          }
-        }
-        // Remove the template element from the dom once done comparing
-        if (r) {
-          document.getElementsByTagName("body")[0].removeChild(this.template);
-        }
-        return r;
-      },
-      // fontList contains elements to compare font sizes against a template
-      fontList: [],
-      // string containing a css @font-face list of custom fonts
-      fontFamily: "",
-      // style element to hold the @font-face string
-      style: (isDOMPresent ? document.createElement('style') : null),
-      // adds a font to the font cache
-      // creates an element using the font, to start loading the font,
-      // and compare against a default font to see if the custom font is loaded
-      add: function(fontSrc) {
-        // fontSrc can be a string or a JSON object
-        // string contains a url to a font
-        // JSON object would contain a name and a url
-        // acceptable fonts are .ttf, .otf, and a data uri
-        var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
-            fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
-        // creating the @font-face style
-        this.fontFamily += "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
-        this.style.innerHTML = this.fontFamily;
-        document.getElementsByTagName("head")[0].appendChild(this.style);
-        // creating the element to load, and compare the new font
-        var preLoader = document.createElement('p');
-        preLoader.style.fontFamily = "'" + fontName + "', serif";
-        preLoader.style.fontSize = "72px";
-        preLoader.style.visibility = "hidden";
-        preLoader.innerHTML = "This element is a text block for font loading";
-        document.getElementsByTagName("body")[0].appendChild(preLoader);
-        this.fontList.push(preLoader);
       }
     };
     this.sourceCode = undefined;
@@ -19431,10 +19479,10 @@
             try {
               return new Processing(canvas, code.join("\n"));
             } catch(e) {
-              Processing.logger.log("Unable to execute pjs sketch: " + e);
+              throw "Processing.js: Unable to execute pjs sketch: " + e;
             }
           } else {
-            Processing.logger.log("Unable to load pjs sketch files: " + errors.join("\n"));
+            throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }
         }
       }
@@ -19520,7 +19568,7 @@
             loadSketchFromSources(canvas, filenames);
             continue;
           }
-          source =  script.innerText || script.textContent;
+          source =  script.textContent || script.text;
           instance = new Processing(canvas, source);
         }
       }
