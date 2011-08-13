@@ -152,8 +152,14 @@ _checkEqual(hue(c),0);
 _checkEqual(saturation(c),126);
 _checkEqual(brightness(c),255);
 
+// Test colorMode limiting
+colorMode(RGB, 100);
+color h1 = color(100);
+h1 = color.toHSB(h1);
+_checkEqual(h1, [0, 0, 100]);
+
 // Test color.toHSB
-colorMode(RGB);
+colorMode(RGB, 255);
 color c1 = color(204, 153, 0);
 color c2 = #FFCC00;
 _checkEqual(color.toHSB(c1), [31.875, 255,204], 0.001);
