@@ -1558,7 +1558,7 @@
     var leadDiv = document.createElement("div");
     leadDiv.style.position = "absolute";
     leadDiv.style.opacity = 0;
-    leadDiv.style.fontFamily = pfont.name;
+    leadDiv.style.fontFamily = '"' + pfont.name + '"';
     leadDiv.style.fontSize = emQuad + "px";
     leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
     document.body.appendChild(leadDiv);
