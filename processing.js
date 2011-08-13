@@ -6825,7 +6825,7 @@
       }
     };
 
-    p.color.toHSB = function( colorInt ) {
+    var toHSB = function( colorInt ) {
       var red, green, blue;
 
       red   = ((colorInt & PConstants.RED_MASK) >>> 16) / 255;
@@ -6874,7 +6874,7 @@
     * @see saturation
     */
     p.brightness = function(colInt){
-      return  p.color.toHSB(colInt)[2];
+      return toHSB(colInt)[2];
     };
 
     /**
@@ -6891,7 +6891,7 @@
     * @see brightness
     */
     p.saturation = function(colInt){
-      return  p.color.toHSB(colInt)[1];
+      return toHSB(colInt)[1];
     };
 
     /**
@@ -6908,7 +6908,7 @@
     * @see brightness
     */
     p.hue = function(colInt){
-      return  p.color.toHSB(colInt)[0];
+      return toHSB(colInt)[0];
     };
 
     /**
