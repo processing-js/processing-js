@@ -4,6 +4,7 @@ var tests = [
   { path: "crisp-point.pde", tags: ["2D", "Crisp"] },
   { path: "crisp-line.pde", tags: ["2D", "Crisp"] },
   { path: "crisp-rect.pde", tags: ["2D", "Crisp"] },
+  { path: "rounded-rect.pde", tags: ["2D", "Crisp"] },
   { path: "blend-add.pde", tags: ["2D","BLEND"], epsilonOverride: 0.17 },
   { path: "blend-blend.pde", tags: ["2D","BLEND"], epsilonOverride: 0.10 },
   { path: "blend-burn.pde", tags: ["2D","BLEND"], epsilonOverride: 0.21 },
