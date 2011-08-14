@@ -1930,6 +1930,7 @@
         isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
+        renderSmooth = false,
         doLoop = true,
         looping = 0,
         curRectMode = PConstants.CORNER,
@@ -11707,32 +11708,39 @@
      * @see #hint()
      * @see #size()
      */
-    DrawingShared.prototype.smooth = function() {
-      curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-    };
 
     Drawing2D.prototype.smooth = function() {
-      DrawingShared.prototype.smooth.apply(this, arguments);
-      if ("mozImageSmoothingEnabled" in curContext) {
+      renderSmooth = true;
+      var style = curElement.style;
+      style.setProperty("image-rendering", "optimizeQuality", "important");
+      style.setProperty("-ms-interpolation-mode", "bicubic", "important");
+      if (curContext.hasOwnProperty("mozImageSmoothingEnabled")) {
         curContext.mozImageSmoothingEnabled = true;
       }
     };
+
+    Drawing3D.prototype.smooth = nop;
 
     /**
      * The noSmooth() function draws all geometry with jagged (aliased) edges.
      *
      * @see #smooth()
      */
-    DrawingShared.prototype.noSmooth = function() {
-      curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-    };
 
     Drawing2D.prototype.noSmooth = function() {
-      DrawingShared.prototype.noSmooth.apply(this, arguments);
-      if ("mozImageSmoothingEnabled" in curContext) {
+      renderSmooth = false;
+      var style = curElement.style;
+      style.setProperty("image-rendering", "optimizeSpeed", "important");
+      style.setProperty("image-rendering", "-moz-crisp-edges", "important");
+      style.setProperty("image-rendering", "-webkit-optimize-contrast", "important");
+      style.setProperty("image-rendering", "optimize-contrast", "important");
+      style.setProperty("-ms-interpolation-mode", "nearest-neighbor", "important");
+      if (curContext.hasOwnProperty("mozImageSmoothingEnabled")) {
         curContext.mozImageSmoothingEnabled = false;
       }
     };
+
+    Drawing3D.prototype.noSmooth = nop;
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
