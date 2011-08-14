@@ -15861,6 +15861,7 @@
 
       return {
         name: name,
+        css: '12px sans-serif',
         glyph: true,
         units_per_em: font.units_per_em,
         horiz_adv_x: 1 / font.units_per_em * font.horiz_adv_x,
