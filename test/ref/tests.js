@@ -228,12 +228,14 @@ var tests = [
   { path: "tint.pde", tags: ["2D"] },
   { path: "quad_3D.pde", tags:["3D"] },
   { path: "textured_box_3D.pde", tags:["3D"], epsilonOverride: 0.1  },
-  { path: "texture_noShape.pde", tags: ["3D"], epsilonOverride: 0.11 },
-  { path: "texture_triangles.pde", tags: ["3D"], epsilonOverride: 0.11 },
-  { path: "texture_norm.pde", tags: ["3D"], epsilonOverride: 0.12 },
+  { path: "texture_noShape.pde", tags: ["3D"], epsilonOverride: 0.15 },
+  { path: "texture_triangles.pde", tags: ["3D"], epsilonOverride: 0.15 },
+  { path: "texture_norm.pde", tags: ["3D"], epsilonOverride: 0.17 },
   { path: "texture_ambient.pde", tags: ["3D"], knownFailureTicket: "1503" },  
   { path: "texture_transparent.pde", tags: ["3D"], epsilonOverride: 0.13  },
   { path: "texture_npot.pde", tags: ["3D"] },
-  { path: "texture_vertex_no_z.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "texture_vertex_no_z.pde", tags: ["3D"], epsilonOverride: 0.15 },
+  { path: "texture_tint.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "texture_tint_white.pde", tags: ["3D"], epsilonOverride: 0.11 },
   { path: "rotateZ.pde", tags: ["3D"] }
 ];
