@@ -13545,6 +13545,47 @@
       p.endShape();
     };
 
+    var roundedRect$2d = function(x, y, width, height, tl, tr, br, bl) {
+      if (bl === undef) {
+        tr = tl;
+        br = tl;
+        bl = tl;
+      }
+      var halfWidth = width / 2, 
+          halfHeight = height / 2;
+      if (tl > halfWidth || tl > halfHeight) {
+        tl = Math.min(halfWidth, halfHeight);
+      }
+      if (tr > halfWidth || tr > halfHeight) {
+        tr = Math.min(halfWidth, halfHeight);
+      }
+      if (br > halfWidth || br > halfHeight) {
+        br = Math.min(halfWidth, halfHeight);
+      }
+      if (bl > halfWidth || bl > halfHeight) {
+        bl = Math.min(halfWidth, halfHeight);
+      }
+      // Translate the stroke by (0.5, 0.5) to draw a crisp border
+      if (!doFill || doStroke) {
+        curContext.translate(0.5, 0.5);
+      }
+      curContext.beginPath();
+      curContext.moveTo(x + tl, y);
+      curContext.lineTo(x + width - tr, y);
+      curContext.quadraticCurveTo(x + width, y, x + width, y + tr);
+      curContext.lineTo(x + width, y + height - br);
+      curContext.quadraticCurveTo(x + width, y + height, x + width - br, y + height);
+      curContext.lineTo(x + bl, y + height);
+      curContext.quadraticCurveTo(x, y + height, x, y + height - bl);
+      curContext.lineTo(x, y + tl);
+      curContext.quadraticCurveTo(x, y, x + tl, y);
+      if (!doFill || doStroke) {
+        curContext.translate(-0.5, -0.5);
+      }
+      executeContextFill();
+      executeContextStroke();
+    };
+
     /**
     * Draws a rectangle to the screen. A rectangle is a four-sided shape with every angle at ninety
     * degrees. The first two parameters set the location, the third sets the width, and the fourth
@@ -13596,47 +13637,6 @@
         curContext.translate(-0.5, -0.5);
       }
     };
-
-    var roundedRect$2d = function(x, y, width, height, tl, tr, br, bl) {
-      if (bl === undef) {
-        tr = tl;
-        br = tl;
-        bl = tl;
-      }
-      var halfWidth = width / 2, 
-          halfHeight = height / 2;
-      if (tl > halfWidth || tl > halfHeight) {
-        tl = Math.min(halfWidth, halfHeight);
-      }
-      if (tr > halfWidth || tr > halfHeight) {
-        tr = Math.min(halfWidth, halfHeight);
-      }
-      if (br > halfWidth || br > halfHeight) {
-        br = Math.min(halfWidth, halfHeight);
-      }
-      if (bl > halfWidth || bl > halfHeight) {
-        bl = Math.min(halfWidth, halfHeight);
-      }
-      // Translate the stroke by (0.5, 0.5) to draw a crisp border
-      if (!doFill || doStroke) {
-        curContext.translate(0.5, 0.5);
-      }
-      curContext.beginPath();
-      curContext.moveTo(x + tl, y);
-      curContext.lineTo(x + width - tr, y);
-      curContext.quadraticCurveTo(x + width, y, x + width, y + tr);
-      curContext.lineTo(x + width, y + height - br);
-      curContext.quadraticCurveTo(x + width, y + height, x + width - br, y + height);
-      curContext.lineTo(x + bl, y + height);
-      curContext.quadraticCurveTo(x, y + height, x, y + height - bl);
-      curContext.lineTo(x, y + tl);
-      curContext.quadraticCurveTo(x, y, x + tl, y);
-      if (!doFill || doStroke) {
-        curContext.translate(-0.5, -0.5);
-      }
-      executeContextFill();
-      executeContextStroke();
-    }
 
     Drawing3D.prototype.rect = function(x, y, width, height, tl, tr, br, bl) {
       if (tl !== undef) {
