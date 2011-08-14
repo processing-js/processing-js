@@ -1782,10 +1782,8 @@
           this.timeAttempted = 0;
         }
       }
-      // Remove the template element from the dom when we're done.
+      // if there are no more fonts to load, pending is false
       if (this.fontList.length === 0) {
-        document.body.removeChild(this.template);
-        this.initialized = false;
         return false;
       }
       // We should have already returned before getting here.
@@ -1794,6 +1792,8 @@
     },
     // fontList contains elements to compare font sizes against a template
     fontList: [],
+    // addedList contains the fontnames of all the fonts loaded via @font-face
+    addedList: [],
     // adds a font to the font cache
     // creates an element using the font, to start loading the font,
     // and compare against a default font to see if the custom font is loaded
@@ -1805,14 +1805,20 @@
       // acceptable fonts are .ttf, .otf, and data uri
       var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
           fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
-
-      // creating the @font-face style
+      
+      // check whether we already created the @font-face rule for this font
+      if (this.addedList.indexOf(fontName) > -1) {
+        return;
+      }
+      
+      // if we didn't, create the @font-face rule
       var style = document.createElement("style");
       style.setAttribute("type","text/css");
       style.innerHTML = "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
       document.head.appendChild(style);
+      this.addedList.push(fontName);
 
-      // creating the element to load, and compare the new font
+      // also create the element to load and compare the new font
       var element = document.createElement("span");
       element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0;";
       element.style.fontFamily = '"' + fontName + '", "PjsEmptyFont", fantasy';
