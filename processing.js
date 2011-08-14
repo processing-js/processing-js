@@ -1793,7 +1793,7 @@
     // fontList contains elements to compare font sizes against a template
     fontList: [],
     // addedList contains the fontnames of all the fonts loaded via @font-face
-    addedList: [],
+    addedList: {},
     // adds a font to the font cache
     // creates an element using the font, to start loading the font,
     // and compare against a default font to see if the custom font is loaded
@@ -1807,7 +1807,7 @@
           fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
 
       // check whether we already created the @font-face rule for this font
-      if (this.addedList.indexOf(fontName) > -1) {
+      if (this.addedList[fontName] !== undef) {
         return;
       }
 
