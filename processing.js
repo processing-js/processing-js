@@ -6825,7 +6825,7 @@
       }
     };
 
-    var toHSB = function( colorInt ) {
+    var toHSB = function(colorInt) {
       var red, green, blue;
 
       red   = ((colorInt & PConstants.RED_MASK) >>> 16) / 255;
