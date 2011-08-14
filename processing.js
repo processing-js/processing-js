@@ -15871,7 +15871,7 @@
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, curTextFont.measureTextWidth(lines[i]));
       }
-      return width;
+      return width.toFixed(1);
     };
 
     Drawing3D.prototype.textWidth = function(str) {
