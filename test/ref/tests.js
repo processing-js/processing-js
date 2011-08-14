@@ -162,7 +162,7 @@ var tests = [
   { path: "graphing-2d.pde", tags: ["2D"] },
   { path: "histogram.pde", tags: ["2D", "Crisp"], knownFailureTicket: "1174" },
   { path: "linear-gradient.pde", tags: ["2D"] },
-  { path: "mandelbrot.pde", tags: ["2D"], knownFailureTicket: "1174" },
+  { path: "mandelbrot.pde", tags: ["2D"] },
   { path: "modulo.pde", tags: ["2D", "Crisp"] },
   { path: "multiple-constructors.pde", tags: ["2D"], epsilonOverride: 0.06 },
   { path: "neighborhood.pde", tags: ["2D", "Crisp"], epsilonOverride: 0.08 },
