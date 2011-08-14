@@ -1805,12 +1805,12 @@
       // acceptable fonts are .ttf, .otf, and data uri
       var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
           fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
-      
+
       // check whether we already created the @font-face rule for this font
       if (this.addedList.indexOf(fontName) > -1) {
         return;
       }
-      
+
       // if we didn't, create the @font-face rule
       var style = document.createElement("style");
       style.setAttribute("type","text/css");
@@ -11870,13 +11870,13 @@
 
       if (firstVert) { firstVert = false; }
       vert["isVert"] = true;
-      
+
       if (v === undef && usingTexture) {
         v = u;
         u = z;
         z = 0;
       }
-      
+
       vert[0] = x;
       vert[1] = y;
       vert[2] = z || 0;
@@ -12008,7 +12008,7 @@
       vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
-      // if we are using a texture and a tint, then overwrite the 
+      // if we are using a texture and a tint, then overwrite the
       // contents of the color buffer with the current tint
       if(usingTexture && curTint !== null){
         curTint3d(cArray);
