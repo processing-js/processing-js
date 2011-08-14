@@ -10593,7 +10593,11 @@
      * @see rotate
      * @see scale
      */
-    p.beginCamera = function() {
+    Drawing2D.prototype.beginCamera = function() {
+      throw ("beginCamera() is not available in 2D mode");
+    };
+
+    Drawing3D.prototype.beginCamera = function() {
       if (manipulatingCamera) {
         throw ("You cannot call beginCamera() again before calling endCamera()");
       }
@@ -10608,7 +10612,11 @@
      *
      * @see beginCamera
      */
-    p.endCamera = function() {
+    Drawing2D.prototype.endCamera = function() {
+      throw ("endCamera() is not available in 2D mode");
+    };
+
+    Drawing3D.prototype.endCamera = function() {
       if (!manipulatingCamera) {
         throw ("You cannot call endCamera() before calling beginCamera()");
       }
@@ -16743,6 +16751,8 @@
     DrawingPre.prototype.pointLight = createDrawingPreFunction("pointLight");
     DrawingPre.prototype.noLights = createDrawingPreFunction("noLights");
     DrawingPre.prototype.spotLight = createDrawingPreFunction("spotLight");
+    DrawingPre.prototype.beginCamera = createDrawingPreFunction("beginCamera");
+    DrawingPre.prototype.endCamera = createDrawingPreFunction("endCamera");
     DrawingPre.prototype.box = createDrawingPreFunction("box");
     DrawingPre.prototype.sphere = createDrawingPreFunction("sphere");
     DrawingPre.prototype.ambient = createDrawingPreFunction("ambient");
