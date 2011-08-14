@@ -1807,7 +1807,7 @@
           fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
 
       // check whether we already created the @font-face rule for this font
-      if (this.addedList[fontName] !== undef) {
+      if (this.addedList[fontName]) {
         return;
       }
 
