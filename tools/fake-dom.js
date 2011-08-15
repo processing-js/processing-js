@@ -25,6 +25,8 @@ var createCanvas = function() {
     childNodes: { length: 0 },
     toDataURL: __empty_func__,
     localName: "canvas",
+    width: 100,
+    height: 100,
     getContext:  function() {
                    return {
                      translate: __empty_func__,
