@@ -16152,7 +16152,7 @@
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, textContext.measureText(lines[i]).width);
       }
-      return width;
+      return width.toFixed(1);
     };
 
     // A lookup table for characters that can not be referenced by Object
