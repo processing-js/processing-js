@@ -59,8 +59,8 @@
   /* Browsers fixes end */
 
   /**
-   * NOTE: keep this in sync with tools/rewrite-pconstants.js.  Also, use full
-   * symbolic names (PConstants.X vs. 0) in code below, since we rewrite on release.
+   * NOTE: in releases we replace symbolic PConstants.* names with their values.
+   * Using PConstants.* in code below is fine.  See tools/rewrite-pconstants.js.
    */
   var PConstants = {
     X: 0,
@@ -1231,6 +1231,7 @@
   defaultScope.HashMap     = HashMap;
   defaultScope.PVector     = PVector;
   defaultScope.ObjectIterator = ObjectIterator;
+  defaultScope.PConstants  = PConstants;
   //defaultScope.PImage    = PImage;     // TODO
   //defaultScope.PShape    = PShape;     // TODO
   //defaultScope.PShapeSVG = PShapeSVG;  // TODO
