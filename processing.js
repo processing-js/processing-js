@@ -1816,7 +1816,7 @@
       style.setAttribute("type","text/css");
       style.innerHTML = "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
       document.head.appendChild(style);
-      this.addedList.push(fontName);
+      this.addedList[fontName] = true;
 
       // also create the element to load and compare the new font
       var element = document.createElement("span");
