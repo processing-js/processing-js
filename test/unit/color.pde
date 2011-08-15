@@ -107,6 +107,12 @@ _checkEqual(color.toString(b), "rgba(100,255,100,1)");
 _checkEqual(color.toString(c), "rgba(57,128,255,0)");
 _checkEqual(color.toString(d), "rgba(0,0,0,0)");
 
+// Test limits under 0 and over 255
+a = color(255, 0, 0, -30);
+b = color(-1, 200, 100);
+
+_checkEqual(color.toArray(a), [255, 0, 0, 0]);
+_checkEqual(color.toArray(b), [0, 200, 100, 255]);
 
 // Test colorMode
 colorMode(RGB, 100);
