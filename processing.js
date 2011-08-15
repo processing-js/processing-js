@@ -1782,10 +1782,8 @@
           this.timeAttempted = 0;
         }
       }
-      // Remove the template element from the dom when we're done.
+      // if there are no more fonts to load, pending is false
       if (this.fontList.length === 0) {
-        document.body.removeChild(this.template);
-        this.initialized = false;
         return false;
       }
       // We should have already returned before getting here.
@@ -1794,6 +1792,8 @@
     },
     // fontList contains elements to compare font sizes against a template
     fontList: [],
+    // addedList contains the fontnames of all the fonts loaded via @font-face
+    addedList: {},
     // adds a font to the font cache
     // creates an element using the font, to start loading the font,
     // and compare against a default font to see if the custom font is loaded
@@ -1806,13 +1806,19 @@
       var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
           fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
 
-      // creating the @font-face style
+      // check whether we already created the @font-face rule for this font
+      if (this.addedList[fontName]) {
+        return;
+      }
+
+      // if we didn't, create the @font-face rule
       var style = document.createElement("style");
       style.setAttribute("type","text/css");
       style.innerHTML = "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
       document.head.appendChild(style);
+      this.addedList[fontName] = true;
 
-      // creating the element to load, and compare the new font
+      // also create the element to load and compare the new font
       var element = document.createElement("span");
       element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0;";
       element.style.fontFamily = '"' + fontName + '", "PjsEmptyFont", fantasy';
@@ -11872,13 +11878,13 @@
 
       if (firstVert) { firstVert = false; }
       vert["isVert"] = true;
-      
+
       if (v === undef && usingTexture) {
         v = u;
         u = z;
         z = 0;
       }
-      
+
       vert[0] = x;
       vert[1] = y;
       vert[2] = z || 0;
@@ -12010,7 +12016,7 @@
       vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
 
-      // if we are using a texture and a tint, then overwrite the 
+      // if we are using a texture and a tint, then overwrite the
       // contents of the color buffer with the current tint
       if(usingTexture && curTint !== null){
         curTint3d(cArray);
