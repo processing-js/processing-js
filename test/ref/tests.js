@@ -160,7 +160,7 @@ var tests = [
   { path: "creating.pde", tags: ["2D"] },
   { path: "displaying.pde", tags: ["2D"], epsilonOverride: 0.06 },
   { path: "graphing-2d.pde", tags: ["2D"] },
-  { path: "histogram.pde", tags: ["2D", "Crisp"], knownFailureTicket: "1174" },
+  { path: "histogram.pde", tags: ["2D", "Crisp"] },
   { path: "linear-gradient.pde", tags: ["2D"] },
   { path: "mandelbrot.pde", tags: ["2D"] },
   { path: "modulo.pde", tags: ["2D", "Crisp"] },
