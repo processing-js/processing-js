@@ -14456,11 +14456,21 @@
       },
 
       fromImageData: function(canvasImg) {
-        this.width = canvasImg.width;
-        this.height = canvasImg.height;
-        this.imageData = canvasImg;
+        var w = canvasImg.width,
+          h = canvasImg.height,
+          canvas = document.createElement('canvas'),
+          ctx = canvas.getContext('2d');
+
+        this.width = canvas.width = w;
+        this.height = canvas.height = h;
+
+        ctx.putImageData(canvasImg, 0, 0);
+
         // changed for 0.9
         this.format = PConstants.ARGB;
+
+        this.imageData = canvasImg;
+        this.sourceImg = canvas;
       }
     };
 
