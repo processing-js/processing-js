@@ -86,7 +86,7 @@ var tests = [
   { path: "text-ascent-descent.pde", tags: ["2D", "Text", "Crisp"], epsilonOverride: 0.09 }, /* See ticket #1172 */
   { path: "text-size-recache.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
-  { path: "text-width.pde", tags:["2D", "Text", "Crisp"], epsilonOverride: 0.12 }, /* See ticket #1172 */
+  { path: "text-width.pde", tags:["2D", "Text", "Crisp"], epsilonOverride: 0.20 }, /* See ticket #1172 */
   { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
