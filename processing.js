@@ -7236,7 +7236,7 @@
       }
     };
 
-    p.color.toHSB = function( colorInt ) {
+    function colorToHSB(colorInt) {
       var red, green, blue;
 
       red   = ((colorInt & PConstants.RED_MASK) >>> 16) / 255;
@@ -7248,7 +7248,7 @@
           hue, saturation;
 
       if (min === max) {
-        return [0, 0, max];
+        return [0, 0, max*colorModeZ];
       }
       saturation = (max - min) / max;
 
@@ -7268,7 +7268,7 @@
         hue -= 1;
       }
       return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
-    };
+    }
 
     /**
     * Extracts the brightness value from a color.
@@ -7284,7 +7284,7 @@
     * @see saturation
     */
     p.brightness = function(colInt){
-      return  p.color.toHSB(colInt)[2];
+      return colorToHSB(colInt)[2];
     };
 
     /**
@@ -7301,7 +7301,7 @@
     * @see brightness
     */
     p.saturation = function(colInt){
-      return  p.color.toHSB(colInt)[1];
+      return colorToHSB(colInt)[1];
     };
 
     /**
@@ -7318,7 +7318,7 @@
     * @see brightness
     */
     p.hue = function(colInt){
-      return  p.color.toHSB(colInt)[0];
+      return colorToHSB(colInt)[0];
     };
 
     /**
@@ -7424,9 +7424,9 @@
       if (curColorMode === PConstants.HSB) {
         // Special processing for HSB mode.
         // Get HSB and Alpha values for Color 1 and 2
-        hsb1 = p.color.toHSB(colorBits1);
+        hsb1 = colorToHSB(colorBits1);
         a1 = ((colorBits1 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
-        hsb2 = p.color.toHSB(colorBits2);
+        hsb2 = colorToHSB(colorBits2);
         a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
         // Return lerp value for each channel, for HSB components
