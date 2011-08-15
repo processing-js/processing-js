@@ -1,4 +1,5 @@
 var tests = [
+  { path: "pimage-get.pde", tags: ["2D"] },
   { path: "pimage-fromImageData.pde", tags: ["2D"] },
   { path: "smooth.pde", tags: ["2D"], epsilonOverride: 0.18 },
   { path: "crispy.pde", tags: ["2D", "Crisp"] },

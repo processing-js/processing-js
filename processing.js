@@ -14649,6 +14649,7 @@
           cData[targetOffset++] = imgData[sourceOffset++];
         }
       }
+      c.__isDirty = true;
       return c;
     }
 
