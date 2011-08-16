@@ -10,10 +10,10 @@ void setup() {
   button = sprite.get(4,4,40,40);
   hover = sprite.get(54,4,40,40);
 }
-     
+
 void draw() {
   image(sprite,0,55);
   image(button, 5,5);
   image(hover,55,5);
   exit();
-} 
+}
