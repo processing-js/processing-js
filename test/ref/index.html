@@ -182,8 +182,6 @@
       function runTests(tests) {
         var results = document.getElementById('results');
         results.innerHTML = '';
-        var status = document.getElementById('status');
-        status.innerHTML = 'Running... (this may take some time)';
         var total = document.getElementById('total');
         total.innerHTML = '';
 
@@ -286,6 +284,9 @@
         }
 
         var runOne = function(i) {
+          var status = document.getElementById('status');
+          status.innerHTML = "Running Test " + i + "/" + (tests.length-1);
+
           var test = getTest(tests[i].path);
           test.knownFailureTicket = tests[i].knownFailureTicket;
           test.epsilonOverride = tests[i].epsilonOverride
@@ -395,6 +396,8 @@
                       result.className = "passed";
                     }
                     passedCount++;
+                    result.parentNode.removeChild(result);
+                    result = null;
                   }
                 } else {
                   title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "size mismatch");
