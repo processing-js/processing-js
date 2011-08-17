@@ -115,10 +115,16 @@ extensions: release-dir
 	@@echo "Copying extensions..."
 	@@$(call copydir,$(SRC_DIR)/extensions,$(RELEASE_DIR))
 
-$(PJS_RELEASE_SRC): release-dir
+$(PJS_RELEASE_SRC): $(PJS_SRC) release-dir
 	@@echo "Creating $(PJS_RELEASE_SRC)..."
 	@@$(call compile,$(PJS_SRC),$(RELEASE_DIR)/closurecompile.out,--compilation_level WHITESPACE_ONLY)
-	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(RELEASE_DIR)/closurecompile.out > $(PJS_RELEASE_SRC)
+	@@$(JSSHELL) -f $(TOOLS_DIR)/fake-dom.js \
+               -f $(PJS_SRC) \
+               $(TOOLS_DIR)/rewrite-pconstants.js < $(RELEASE_DIR)/closurecompile.out > \
+               $(RELEASE_DIR)/processing.js-no-pconstants
+	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(RELEASE_DIR)/processing.js-no-pconstants > $(PJS_RELEASE_SRC)
+	@@rm -f $(RELEASE_DIR)/closurecompile.out
+	@@rm -f $(RELEASE_DIR)/processing.js-no-pconstants
 	@@$(call addlicense,$(PJS_RELEASE_SRC),$(EMPTY))
 	@@$(call addversion,$(PJS_RELEASE_SRC),$(EMPTY))
 	@@$(RUNJS) $(PJS_RELEASE_SRC)
@@ -170,9 +176,9 @@ check-globals:
 print-globals:
 	@@$(RUNJS) $(TOOLS_DIR)/jsglobals.js -e "printNames()" < $(PJS_SRC)
 
-closure: $(PJS_SRC) release-dir
+closure: $(PJS_RELEASE_SRC) release-dir
 	@@echo "Compiling processing.js with closure..."
-	@@$(call compile,$(PJS_SRC),$(PJS_RELEASE_MIN),$(EMPTY))
+	@@$(call compile,$(PJS_RELEASE_SRC),$(PJS_RELEASE_MIN),$(EMPTY))
 	@@$(call addlicense,$(PJS_RELEASE_MIN),$(EMPTY))
 	@@$(call addversion,$(PJS_RELEASE_MIN),$(EMPTY))
 	@@$(RUNJS) $(PJS_RELEASE_MIN)
@@ -195,7 +201,7 @@ package-sketch: $(PJS_SRC)
 
 api-only: $(PJS_RELEASE_SRC)
 	@@echo "Creating processing.js API version..."
-	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_SRC))
+	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_SRC))
 	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
 	@@$(call addversion,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
