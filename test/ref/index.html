@@ -32,6 +32,7 @@
 		</select>
 		Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
 		Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
+    Remove Passed Tests: <input id="remove-passed" type="checkbox">
 		<input onclick="runTests(selectedTests);" type="button" value="Start">
 		<span id="testCount"></span>
 	  </div>
@@ -62,6 +63,7 @@
       var selectedTests = [];
       var total = document.getElementById('total');
       total.innerHTML = '';
+      var removePassed;
 
       updateSelectedTests();
 
@@ -183,10 +185,10 @@
       function runTests(tests) {
         var results = document.getElementById('results');
         results.innerHTML = '';
-        var status = document.getElementById('status');
-        status.innerHTML = 'Running... (this may take some time)';
         var total = document.getElementById('total');
         total.innerHTML = '';
+
+        removePassed = document.getElementById('remove-passed').checked;
 
         var buildCanvas = function(id, w, h) {
           var c = document.createElement('canvas');
@@ -287,6 +289,9 @@
         }
 
         var runOne = function(i) {
+          var status = document.getElementById('status');
+          status.innerHTML = "Running Test " + i + "/" + (tests.length-1);
+
           var test = getTest(tests[i].path);
           test.knownFailureTicket = tests[i].knownFailureTicket;
           test.epsilonOverride = tests[i].epsilonOverride
@@ -396,6 +401,10 @@
                       result.className = "passed";
                     }
                     passedCount++;
+                    if (removePassed) {
+                      result.parentNode.removeChild(result);
+                      result = null;
+                    }
                   }
                 } else {
                   title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "size mismatch");
