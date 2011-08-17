@@ -31,6 +31,7 @@
 		</select>
 		Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
 		Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
+    Remove Passed Tests: <input id="remove-passed" type="checkbox">
 		<input onclick="runTests(selectedTests);" type="button" value="Start">
 		<span id="testCount"></span>
 	  </div>
@@ -61,6 +62,7 @@
       var selectedTests = [];
       var total = document.getElementById('total');
       total.innerHTML = '';
+      var removePassed;
 
       updateSelectedTests();
 
@@ -184,6 +186,8 @@
         results.innerHTML = '';
         var total = document.getElementById('total');
         total.innerHTML = '';
+
+        removePassed = document.getElementById('remove-passed').checked;
 
         var buildCanvas = function(id, w, h) {
           var c = document.createElement('canvas');
@@ -396,8 +400,10 @@
                       result.className = "passed";
                     }
                     passedCount++;
-                    result.parentNode.removeChild(result);
-                    result = null;
+                    if (removePassed) {
+                      result.parentNode.removeChild(result);
+                      result = null;
+                    }
                   }
                 } else {
                   title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "size mismatch");
