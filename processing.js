@@ -2071,8 +2071,6 @@
     // Camera defaults and settings
     var cam,
         cameraInv,
-        forwardTransform,
-        reverseTransform,
         modelView,
         modelViewInv,
         userMatrixStack,
@@ -7608,14 +7606,14 @@
     * @see rotateZ
     */
     Drawing2D.prototype.translate = function(x, y) {
-      forwardTransform.translate(x, y);
-      reverseTransform.invTranslate(x, y);
+      modelView.translate(x, y);
+      modelViewInv.invTranslate(x, y);
       curContext.translate(x, y);
     };
 
     Drawing3D.prototype.translate = function(x, y, z) {
-      forwardTransform.translate(x, y, z);
-      reverseTransform.invTranslate(x, y, z);
+      modelView.translate(x, y, z);
+      modelViewInv.invTranslate(x, y, z);
     };
 
     /**
@@ -7643,14 +7641,14 @@
     * @see rotateZ
     */
     Drawing2D.prototype.scale = function(x, y) {
-      forwardTransform.scale(x, y);
-      reverseTransform.invScale(x, y);
+      modelView.scale(x, y);
+      modelViewInv.invScale(x, y);
       curContext.scale(x, y || x);
     };
 
     Drawing3D.prototype.scale = function(x, y, z) {
-      forwardTransform.scale(x, y, z);
-      reverseTransform.invScale(x, y, z);
+      modelView.scale(x, y, z);
+      modelViewInv.invScale(x, y, z);
     };
 
     /**
@@ -7713,14 +7711,14 @@
     * @see printMatrix
     */
     Drawing2D.prototype.resetMatrix = function() {
-      forwardTransform.reset();
-      reverseTransform.reset();
+      modelView.reset();
+      modelViewInv.reset();
       curContext.setTransform(1,0,0,1,0,0);
     };
 
     Drawing3D.prototype.resetMatrix = function() {
-      forwardTransform.reset();
-      reverseTransform.reset();
+      modelView.reset();
+      modelViewInv.reset();
     };
 
     /**
@@ -7739,8 +7737,8 @@
     */
     DrawingShared.prototype.applyMatrix = function() {
       var a = arguments;
-      forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
-      reverseTransform.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
+      modelView.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
+      modelViewInv.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
     };
 
     Drawing2D.prototype.applyMatrix = function() {
@@ -7775,8 +7773,8 @@
     * @see pushMatrix
     */
     p.rotateX = function(angleInRadians) {
-      forwardTransform.rotateX(angleInRadians);
-      reverseTransform.invRotateX(angleInRadians);
+      modelView.rotateX(angleInRadians);
+      modelViewInv.invRotateX(angleInRadians);
     };
 
     /**
@@ -7806,8 +7804,8 @@
     };
 
     Drawing3D.prototype.rotateZ = function(angleInRadians) {
-      forwardTransform.rotateZ(angleInRadians);
-      reverseTransform.invRotateZ(angleInRadians);
+      modelView.rotateZ(angleInRadians);
+      modelViewInv.invRotateZ(angleInRadians);
     };
 
     /**
@@ -7833,8 +7831,8 @@
     * @see pushMatrix
     */
     p.rotateY = function(angleInRadians) {
-      forwardTransform.rotateY(angleInRadians);
-      reverseTransform.invRotateY(angleInRadians);
+      modelView.rotateY(angleInRadians);
+      modelViewInv.invRotateY(angleInRadians);
     };
 
     /**
@@ -7861,8 +7859,8 @@
     * @see pushMatrix
     */
     Drawing2D.prototype.rotate = function(angleInRadians) {
-      forwardTransform.rotateZ(angleInRadians);
-      reverseTransform.invRotateZ(angleInRadians);
+      modelView.rotateZ(angleInRadians);
+      modelViewInv.invRotateZ(angleInRadians);
       curContext.rotate(angleInRadians);
     };
 
@@ -10118,10 +10116,8 @@
         curContext = curElement.getContext("2d");
         userMatrixStack = new PMatrixStack();
         userReverseMatrixStack = new PMatrixStack();
-        forwardTransform = new PMatrix2D();
-        reverseTransform = new PMatrix2D();
-        modelView = forwardTransform;
-        modelViewInv = reverseTransform;
+        modelView = new PMatrix2D();
+        modelViewInv = new PMatrix2D();
       }
 
       DrawingShared.prototype.size.apply(this, arguments);
@@ -10261,8 +10257,6 @@
         projection = new PMatrix3D();
         p.camera();
         p.perspective();
-        forwardTransform = modelView;
-        reverseTransform = modelViewInv;
 
         userMatrixStack = new PMatrixStack();
         userReverseMatrixStack = new PMatrixStack();
@@ -10632,8 +10626,8 @@
         throw ("You cannot call beginCamera() again before calling endCamera()");
       }
       manipulatingCamera = true;
-      forwardTransform = cameraInv;
-      reverseTransform = cam;
+      modelView = cameraInv;
+      modelViewInv = cam;
     };
 
     /**
@@ -10652,8 +10646,6 @@
       }
       modelView.set(cam);
       modelViewInv.set(cameraInv);
-      forwardTransform = modelView;
-      reverseTransform = modelViewInv;
       manipulatingCamera = false;
     };
 
