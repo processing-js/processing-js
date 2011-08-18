@@ -11793,6 +11793,8 @@
         return;
       }
 
+      x = Math.round(x);
+      y = Math.round(y);
       curContext.fillStyle = p.color.toString(currentStrokeColor);
       isFillDirty = true;
       // Draw a circle for any point larger than 1px
@@ -13367,6 +13369,10 @@
       if (!doStroke) {
         return;
       }
+      x1 = Math.round(x1);
+      x2 = Math.round(x2);
+      y1 = Math.round(y1);
+      y2 = Math.round(y2);
       // A line is only defined if it has different start and end coordinates.
       // If they are the same, we call point instead.
       if (x1 === x2 && y1 === y2) {
@@ -13374,13 +13380,46 @@
         return;
       }
 
+      var swap = undef,
+          lineCap = undef;
       // Translate the line by (0.5, 0.5) to draw a crisp line
-      curContext.translate(0.5, 0.5);
+      if (x1 === x2) {
+        if (y1 > y2) {
+          swap = y1;
+          y1 = y2;
+          y2 = swap;
+        }
+        y2++;
+        if (lineWidth % 2 === 1) {
+          curContext.translate(0.5, 0.0);
+        }
+      } else if (y1 === y2) {
+        if (x1 > x2) {
+          swap = x1;
+          x1 = x2;
+          x2 = swap;
+        }
+        x2++;
+        if (lineWidth % 2 === 1) {
+          curContext.translate(0.0, 0.5);
+        }
+      }
+      if (lineWidth === 1) {
+        lineCap = curContext.lineCap;
+        curContext.lineCap = 'butt';
+      }
       curContext.beginPath();
-      curContext.moveTo(Math.round(x1) || 0, Math.round(y1) || 0);
-      curContext.lineTo(Math.round(x2) || 0, Math.round(y2) || 0);
+      curContext.moveTo(x1 || 0, y1 || 0);
+      curContext.lineTo(x2 || 0, y2 || 0);
       executeContextStroke();
-      curContext.translate(-0.5, -0.5);
+      if (x1 === x2 && lineWidth % 2 === 1) {
+        curContext.translate(-0.5, 0.0);
+      } else if (y1 === y2 && lineWidth % 2 === 1) {
+        curContext.translate(0.0, -0.5);
+      }
+      if (lineWidth === 1) {
+        curContext.lineCap = lineCap;
+      }
     };
 
     Drawing3D.prototype.line = function(x1, y1, z1, x2, y2, z2) {
@@ -13676,17 +13715,16 @@
         roundedRect$2d(x, y, width, height, tl, tr, br, bl);
         return;
       }
-      if (doFill) {
-        curContext.fillStyle = p.color.toString(currentFillColor);
-        isFillDirty = true;
-        curContext.fillRect(x, y, width, height);
-      }
+
       // Translate the line by (0.5, 0.5) to draw a crisp rectangle border
-      if (doStroke) {
+      if (doStroke && lineWidth % 2 === 1) {
         curContext.translate(0.5, 0.5);
-        curContext.strokeStyle = p.color.toString(currentStrokeColor);
-        isStrokeDirty = true;
-        curContext.strokeRect(x, y, width, height);
+      }
+      curContext.beginPath();
+      curContext.rect(x, y, width, height);
+      executeContextFill();
+      executeContextStroke();
+      if (doStroke && lineWidth % 2 === 1) {
         curContext.translate(-0.5, -0.5);
       }
     };
