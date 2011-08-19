@@ -228,7 +228,7 @@ var tests = [
   { path: "mandelbrot.pde", tags: ["2D"] },
   { path: "modulo.pde", tags: ["2D", "Crisp"] },
   { path: "multiple-constructors.pde", tags: ["2D"], epsilonOverride: 0.06 },
-  { path: "neighborhood.pde", tags: ["2D", "Crisp"], epsilonOverride: 0.12 },
+  { path: "neighborhood.pde", tags: ["2D", "Crisp"], epsilonOverride: 0.16 },
   { path: "no-loop.pde", tags: ["2D", "Crisp"] },
   { path: "reading.pde", tags: ["2D"] },
   { path: "relativity.pde", tags: ["2D"] },
