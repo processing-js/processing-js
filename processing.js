@@ -11793,10 +11793,8 @@
         return;
       }
 
-      if (!renderSmooth) {
-        x = Math.round(x);
-        y = Math.round(y);
-      }
+      x = Math.round(x);
+      y = Math.round(y);
       curContext.fillStyle = p.color.toString(currentStrokeColor);
       isFillDirty = true;
       // Draw a circle for any point larger than 1px
@@ -13371,12 +13369,10 @@
       if (!doStroke) {
         return;
       }
-      if (!renderSmooth) {
-        x1 = Math.round(x1);
-        x2 = Math.round(x2);
-        y1 = Math.round(y1);
-        y2 = Math.round(y2);
-      }
+      x1 = Math.round(x1);
+      x2 = Math.round(x2);
+      y1 = Math.round(y1);
+      y2 = Math.round(y2);
       // A line is only defined if it has different start and end coordinates.
       // If they are the same, we call point instead.
       if (x1 === x2 && y1 === y2) {
@@ -13385,44 +13381,63 @@
       }
 
       var swap = undef,
-          lineCap = undef;
-      // Translate the line by (0.5, 0.5) to draw a crisp line
-      if (x1 === x2) {
-        if (y1 > y2) {
-          swap = y1;
-          y1 = y2;
-          y2 = swap;
-        }
-        y2++;
-        if (lineWidth % 2 === 1) {
-          curContext.translate(0.5, 0.0);
-        }
-      } else if (y1 === y2) {
-        if (x1 > x2) {
-          swap = x1;
-          x1 = x2;
-          x2 = swap;
-        }
-        x2++;
-        if (lineWidth % 2 === 1) {
-          curContext.translate(0.0, 0.5);
-        }
+          lineCap = undef,
+          drawCrisp = true,
+          currentModelView = modelView.array(),
+          identityMatrix = [1, 0, 0, 0, 1, 0];
+      // Test if any transformations have been applied to the sketch
+      for (var i = 0; i < 6 && drawCrisp; i++) {
+        drawCrisp = currentModelView[i] === identityMatrix[i];
       }
-      if (lineWidth === 1) {
-        lineCap = curContext.lineCap;
-        curContext.lineCap = 'butt';
+      /* Draw crisp lines if the line is vertical or horizontal with the following method
+       * If any transformations have been applied to the sketch, don't make the line crisp
+       * If the line is directed up or to the left, reverse it by swapping x1/x2 or y1/y2
+       * Make the line 1 pixel longer to work around cross-platform canvas implementations
+       * If the lineWidth is odd, translate the line by 0.5 in the perpendicular direction
+       * Even lineWidths do not need to be translated because the canvas will draw them on pixel boundaries
+       * Change the cap to butt-end to work around cross-platform canvas implementations
+       * Reverse the translate and lineCap canvas state changes after drawing the line
+       */
+      if (drawCrisp) {
+        if (x1 === x2) {
+          if (y1 > y2) {
+            swap = y1;
+            y1 = y2;
+            y2 = swap;
+          }
+          y2++;
+          if (lineWidth % 2 === 1) {
+            curContext.translate(0.5, 0.0);
+          }
+        } else if (y1 === y2) {
+          if (x1 > x2) {
+            swap = x1;
+            x1 = x2;
+            x2 = swap;
+          }
+          x2++;
+          if (lineWidth % 2 === 1) {
+            curContext.translate(0.0, 0.5);
+          }
+        }
+        if (lineWidth === 1) {
+          lineCap = curContext.lineCap;
+          curContext.lineCap = 'butt';
+        }
       }
       curContext.beginPath();
       curContext.moveTo(x1 || 0, y1 || 0);
       curContext.lineTo(x2 || 0, y2 || 0);
       executeContextStroke();
-      if (x1 === x2 && lineWidth % 2 === 1) {
-        curContext.translate(-0.5, 0.0);
-      } else if (y1 === y2 && lineWidth % 2 === 1) {
-        curContext.translate(0.0, -0.5);
-      }
-      if (lineWidth === 1) {
-        curContext.lineCap = lineCap;
+      if (drawCrisp) {
+        if (x1 === x2 && lineWidth % 2 === 1) {
+          curContext.translate(-0.5, 0.0);
+        } else if (y1 === y2 && lineWidth % 2 === 1) {
+          curContext.translate(0.0, -0.5);
+        }
+        if (lineWidth === 1) {
+          curContext.lineCap = lineCap;
+        }
       }
     };
 
@@ -13713,12 +13728,10 @@
         y -= height / 2;
       }
 
-      if (!renderSmooth) {
-        x = Math.round(x);
-        y = Math.round(y);
-        width = Math.round(width);
-        height = Math.round(height);
-      }
+      x = Math.round(x);
+      y = Math.round(y);
+      width = Math.round(width);
+      height = Math.round(height);
       if (tl !== undef) {
         roundedRect$2d(x, y, width, height, tl, tr, br, bl);
         return;
