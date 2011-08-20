@@ -43,6 +43,7 @@ EXAMPLES_DIR :=$(PJS_RELEASE_PREFIX)-examples
 TOOLS_DIR :=$(SRC_DIR)/tools
 FAKE_DOM :=$(TOOLS_DIR)/fake-dom.js
 CLOSUREJAR :=$(TOOLS_DIR)/closure/compiler.jar
+YUIJAR :=$(TOOLS_DIR)/yui/yuicompressor-2.4.6.jar
 RUNTESTS :=@@$(TOOLS_DIR)/runtests.py $(JSSHELL)
 RUNJS :=@@$(JSSHELL) -f $(FAKE_DOM) -f
 
@@ -52,7 +53,12 @@ SKETCHOUTPUTSRC ?=$(SKETCHINPUT).src
 SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
 preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(2) >> $(1)
-compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
+
+# Both Google Closure and YUI are in our tree.  Switch compile below to whichever.
+compile_closure =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
+compile_yui =@@java -jar $(YUIJAR) -o "$(2)" "$(1)"
+compile=$(compile_yui)
+
 copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && $(FIND) $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
                                                                               -iname 'desktop.ini' -o \
                                                                               -iname 'Thumbs.db'      \) -delete
