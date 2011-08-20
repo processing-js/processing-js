@@ -1,4 +1,5 @@
 var tests = [
+  { path: "rounding.pde", tags: ["2D", "Crisp"] },
   { path: "pimage-get.pde", tags: ["2D", "Color Profile"] },
   { path: "pimage-fromImageData.pde", tags: ["2D"] },
   { path: "smooth.pde", tags: ["2D"], epsilonOverride: 0.18 },
@@ -227,7 +228,7 @@ var tests = [
   { path: "mandelbrot.pde", tags: ["2D"] },
   { path: "modulo.pde", tags: ["2D", "Crisp"] },
   { path: "multiple-constructors.pde", tags: ["2D"], epsilonOverride: 0.06 },
-  { path: "neighborhood.pde", tags: ["2D", "Crisp"], epsilonOverride: 0.09 },
+  { path: "neighborhood.pde", tags: ["2D", "Crisp"], epsilonOverride: 0.16 },
   { path: "no-loop.pde", tags: ["2D", "Crisp"] },
   { path: "reading.pde", tags: ["2D"] },
   { path: "relativity.pde", tags: ["2D"] },
