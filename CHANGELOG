@@ -21,7 +21,7 @@ August 24, 2011 - Release 1.3.0
   * Changed function(){} to the Processing local variable 'nop'
   * Changed obj.constructor type-checking to typeof(obj)
   * Changed perf tests to use exit()
-  * Changed Processing.js errors to throw instead of printing to tinylog
+  * Changed Processing.js errors to throw instead of print to tinylog
   * Converted animated test suite tests to ref tests
   * Converted XMLElement unit tests to use XMLElement.parse(string) instead of XMLElement(string)
   * Fixed crisp not working properly when any transformations were applied to the sketch
@@ -33,7 +33,7 @@ August 24, 2011 - Release 1.3.0
   * Fixed font preloading not checking whether a @font-face rule already exists
   * Fixed font preloading to use tinyfont
   * Fixed font quoting bug in computeFontMetrics
-  * Fixed HashMap.values() to return an ArrayList
+  * Fixed HashMap.values() so that it returns an ArrayList
   * Fixed hex literal #FFFFFF not being converted to an int properly
   * Fixed HSB functions ignoring colorMode range in grayscale
   * Fixed httpd.py webserver to be multi-threaded and MSIE compatible
@@ -64,7 +64,7 @@ August 24, 2011 - Release 1.3.0
   * Improved the performance of blend()
   * Improved the performance of images created with createImage()
   * Improved the performance of PVector
-  * Reduced the number of canvas objects the ref test runner creates so that tests passes on Chrome for Windows
+  * Reduced the number of canvas objects the ref test runner creates so that tests pass on Chrome in Windows
   * Refactored forwardTransform and reverseTransform into modelView and modelViewInverse
   * Refactored PFont
   * Refactored point(), line(), and rect() to draw crisp lines
@@ -72,7 +72,7 @@ August 24, 2011 - Release 1.3.0
   * Refactored unbinary()
   * Removed @pjs crisp directive
   * Removed color profiles from all images used in our ref test suite
-  * Removed comments from the released version of Processing.js
+  * Removed comments from the release version of Processing.js
   * Removed reliance on use3DContext variable
   * Removed textMode(SCREEN)
   * Removed unused 'Keys and Keystrokes' variables
