@@ -4,4 +4,3 @@ String s3 = "00000100";
 _checkEqual(unbinary(s1), 16);
 _checkEqual(unbinary(s2), 8);
 _checkEqual(unbinary(s3), 4);
-_checkEqual(unbinary([s1, s2, s3]), [16,8,4]);

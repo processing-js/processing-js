@@ -1,6 +1,4 @@
 import processing.sound.*;
-PFont font = loadFont();
-textFont(font);
 background(255);
 fill(0);
 

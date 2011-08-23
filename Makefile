@@ -21,7 +21,7 @@ VERSION ?= $(shell git show -s --pretty=format:%h)
 # On Windows?  You can specify a FIND value for your cygwin/msys find command
 FIND ?= /usr/bin/find
 
-TMP := $(RELEASE_DIR)/.__tmp_file__
+TMP := .__tmp_file__
 QUIET := > $(TMP) ; rm -f $(TMP)
 
 EMPTY :=
@@ -43,6 +43,7 @@ EXAMPLES_DIR :=$(PJS_RELEASE_PREFIX)-examples
 TOOLS_DIR :=$(SRC_DIR)/tools
 FAKE_DOM :=$(TOOLS_DIR)/fake-dom.js
 CLOSUREJAR :=$(TOOLS_DIR)/closure/compiler.jar
+YUIJAR :=$(TOOLS_DIR)/yui/yuicompressor-2.4.6.jar
 RUNTESTS :=@@$(TOOLS_DIR)/runtests.py $(JSSHELL)
 RUNJS :=@@$(JSSHELL) -f $(FAKE_DOM) -f
 
@@ -52,7 +53,12 @@ SKETCHOUTPUTSRC ?=$(SKETCHINPUT).src
 SKETCHOUTPUT ?=$(SKETCHINPUT).js
 
 preprocess =@@$(JSSHELL) -f $(TOOLS_DIR)/jspreprocess.js -e "PARSER=false;preprocess();" < $(2) >> $(1)
-compile =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
+
+# Both Google Closure and YUI are in our tree.  Switch compile below to whichever.
+compile_closure =@@java -jar $(CLOSUREJAR) --js="$(1)" --js_output_file="$(2)" $(3) --jscomp_off=nonStandardJsDocs
+compile_yui =@@java -jar $(YUIJAR) -o "$(2)" "$(1)"
+compile=$(compile_yui)
+
 copydir = @@cp -R "$(1)" "$(2)" $(QUIET) && $(FIND) $(RELEASE_DIR) -type f \( -iname '*.DS_Store'  -o \
                                                                               -iname 'desktop.ini' -o \
                                                                               -iname 'Thumbs.db'      \) -delete
@@ -111,19 +117,20 @@ examples: $(PJS_RELEASE_SRC)
 	@@cd $(RELEASE_DIR); zip -r $(PJS_VERSION_FULL)-examples.zip $(PJS_VERSION)-examples $(QUIET)
 	@@rm -fr $(EXAMPLES_DIR)
 
-pretty: $(PJS_RELEASE_SRC)
-	@@echo "Creating beautified processing.js..."
-	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(PJS_RELEASE_SRC) > $(PJS_RELEASE_SRC).tmp
-	@@$(JSSHELL) -f $(FAKE_DOM) -f $(PJS_RELEASE_SRC).tmp
-	@@mv $(PJS_RELEASE_SRC).tmp $(PJS_RELEASE_SRC)
-
 extensions: release-dir
 	@@echo "Copying extensions..."
 	@@$(call copydir,$(SRC_DIR)/extensions,$(RELEASE_DIR))
 
-$(PJS_RELEASE_SRC): release-dir
-	@@echo "Creating processing.js..."
-	@@cp $(PJS_SRC) $(PJS_RELEASE_SRC)
+$(PJS_RELEASE_SRC): $(PJS_SRC) release-dir
+	@@echo "Creating $(PJS_RELEASE_SRC)..."
+	@@$(call compile,$(PJS_SRC),$(RELEASE_DIR)/closurecompile.out,--compilation_level WHITESPACE_ONLY)
+	@@$(JSSHELL) -f $(TOOLS_DIR)/fake-dom.js \
+               -f $(PJS_SRC) \
+               $(TOOLS_DIR)/rewrite-pconstants.js < $(RELEASE_DIR)/closurecompile.out > \
+               $(RELEASE_DIR)/processing.js-no-pconstants
+	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(RELEASE_DIR)/processing.js-no-pconstants > $(PJS_RELEASE_SRC)
+	@@rm -f $(RELEASE_DIR)/closurecompile.out
+	@@rm -f $(RELEASE_DIR)/processing.js-no-pconstants
 	@@$(call addlicense,$(PJS_RELEASE_SRC),$(EMPTY))
 	@@$(call addversion,$(PJS_RELEASE_SRC),$(EMPTY))
 	@@$(RUNJS) $(PJS_RELEASE_SRC)
@@ -175,9 +182,9 @@ check-globals:
 print-globals:
 	@@$(RUNJS) $(TOOLS_DIR)/jsglobals.js -e "printNames()" < $(PJS_SRC)
 
-closure: $(PJS_SRC) release-dir
+closure: $(PJS_RELEASE_SRC) release-dir
 	@@echo "Compiling processing.js with closure..."
-	@@$(call compile,$(PJS_SRC),$(PJS_RELEASE_MIN),$(EMPTY))
+	@@$(call compile,$(PJS_RELEASE_SRC),$(PJS_RELEASE_MIN),$(EMPTY))
 	@@$(call addlicense,$(PJS_RELEASE_MIN),$(EMPTY))
 	@@$(call addversion,$(PJS_RELEASE_MIN),$(EMPTY))
 	@@$(RUNJS) $(PJS_RELEASE_MIN)
@@ -200,7 +207,7 @@ package-sketch: $(PJS_SRC)
 
 api-only: $(PJS_RELEASE_SRC)
 	@@echo "Creating processing.js API version..."
-	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_SRC))
+	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_SRC))
 	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
 	@@$(call addversion,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))

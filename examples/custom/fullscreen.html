@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Full Screen Sketch with screenWidth and screenHeight</title>
+  <script src="../../processing.js"></script>
+  <style>
+    body { margin: 0; padding 0; }
+  </style>
+<body>
+<script type="application/processing" data-processing-target="canvas">
+void setup() {
+  size(screenWidth, screenHeight);
+}
+
+void draw() {
+  line(0, 0, screenWidth, screenHeight);
+}
+</script>
+<canvas id="canvas"></canvas>
+</body>
+</html>

@@ -20,14 +20,20 @@
 			<option value="2D,3D" selected>2D and 3D</option>
 			<option value="2D">2D Only</option>
 			<option value="3D">3D Only</option>
+			<option value="BLEND">Blend Only</option>
+			<option value="Color Profile">Color Profile</option>
 			<option value="endShape2D">endShape2D</option>
 			<option value="endShape3D">endShape3D</option>
 			<option value="Calibration">Calibration</option>
 			<option value="Convolution">Convolution</option>
 			<option value="SVG">SVG</option>
+			<option value="Text">Text</option>
+			<option value="Crisp">Crisp</option>
+			<option value="Test Suite">Test Suite</option>
 		</select>
 		Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
 		Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
+    Remove Passed Tests: <input id="remove-passed" type="checkbox">
 		<input onclick="runTests(selectedTests);" type="button" value="Start">
 		<span id="testCount"></span>
 	  </div>
@@ -58,6 +64,7 @@
       var selectedTests = [];
       var total = document.getElementById('total');
       total.innerHTML = '';
+      var removePassed;
 
       updateSelectedTests();
 
@@ -179,10 +186,10 @@
       function runTests(tests) {
         var results = document.getElementById('results');
         results.innerHTML = '';
-        var status = document.getElementById('status');
-        status.innerHTML = 'Running... (this may take some time)';
         var total = document.getElementById('total');
         total.innerHTML = '';
+
+        removePassed = document.getElementById('remove-passed').checked;
 
         var buildCanvas = function(id, w, h) {
           var c = document.createElement('canvas');
@@ -283,6 +290,9 @@
         }
 
         var runOne = function(i) {
+          var status = document.getElementById('status');
+          status.innerHTML = "Running Test " + i + "/" + (tests.length-1);
+
           var test = getTest(tests[i].path);
           test.knownFailureTicket = tests[i].knownFailureTicket;
           test.epsilonOverride = tests[i].epsilonOverride
@@ -310,7 +320,7 @@
 
             function validateResult() {
                 var is3D = test.is3D;
-                totalTime = (new Date).getTime() - startTime;
+                totalTime = Date.now() - startTime;
 
                 // draw the original based on stored pixels
                 var origCtx = original.getContext('2d');
@@ -392,6 +402,10 @@
                       result.className = "passed";
                     }
                     passedCount++;
+                    if (removePassed) {
+                      result.parentNode.removeChild(result);
+                      result = null;
+                    }
                   }
                 } else {
                   title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "size mismatch");
@@ -408,7 +422,7 @@
               return nextTest(i+1);
             } else {
               // draw the current version from code, timing it
-              var startTime = (new Date).getTime(), totalTime = 0;
+              var startTime = Date.now(), totalTime = 0;
               var p, s;
               try {
                 s = Processing.compile(test.code);
