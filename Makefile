@@ -123,7 +123,7 @@ extensions: release-dir
 
 $(PJS_RELEASE_SRC): $(PJS_SRC) release-dir
 	@@echo "Creating $(PJS_RELEASE_SRC)..."
-	@@$(call compile,$(PJS_SRC),$(RELEASE_DIR)/closurecompile.out,--compilation_level WHITESPACE_ONLY)
+	@@$(call compile_closure,$(PJS_SRC),$(RELEASE_DIR)/closurecompile.out,--compilation_level WHITESPACE_ONLY)
 	@@$(JSSHELL) -f $(TOOLS_DIR)/fake-dom.js \
                -f $(PJS_SRC) \
                $(TOOLS_DIR)/rewrite-pconstants.js < $(RELEASE_DIR)/closurecompile.out > \
@@ -199,7 +199,7 @@ package-sketch: $(PJS_SRC)
 	@@echo "return new Processing(canvas," >> $(SKETCHOUTPUTSRC)
 	@@$(RUNJS) $(PJS_SRC) -f $(TOOLS_DIR)/jscompile.js < $(SKETCHINPUT) >> $(SKETCHOUTPUTSRC)
 	@@echo "); } window['$(SKETCHRUN)']=$(SKETCHRUN);" >> $(SKETCHOUTPUTSRC)
-	@@$(call compile,$(SKETCHOUTPUTSRC),$(SKETCHOUTPUT),--compilation_level ADVANCED_OPTIMIZATIONS)
+	@@$(call compile_closure,$(SKETCHOUTPUTSRC),$(SKETCHOUTPUT),--compilation_level ADVANCED_OPTIMIZATIONS)
 	@@$(call addlicense,$(SKETCHOUTPUT),-Packaged)
 	@@$(call addversion,$(SKETCHOUTPUT),-Packaged)
 	@@rm -f $(SKETCHOUTPUTSRC)
