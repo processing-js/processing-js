@@ -16209,7 +16209,7 @@
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, curTextFont.measureTextWidth(lines[i]));
       }
-      return width.toFixed(1);
+      return Math.floor(width * 10) / 10;
     };
 
     Drawing3D.prototype.textWidth = function(str) {
@@ -16225,7 +16225,7 @@
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, textContext.measureText(lines[i]).width);
       }
-      return width.toFixed(1);
+      return Math.floor(width * 10) / 10;
     };
 
     // A lookup table for characters that can not be referenced by Object
