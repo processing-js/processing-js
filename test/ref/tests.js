@@ -1,6 +1,7 @@
 var tests = [
   { path: "rounding.pde", tags: ["2D", "Crisp"] },
   { path: "pimage-get.pde", tags: ["2D", "Color Profile"] },
+  { path: "pimage-get0.pde", tags: ["2D", "Color Profile"] },
   { path: "pimage-fromImageData.pde", tags: ["2D"] },
   { path: "smooth.pde", tags: ["2D"], epsilonOverride: 0.18 },
   { path: "crispy.pde", tags: ["2D", "Crisp"] },

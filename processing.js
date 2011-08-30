@@ -14751,8 +14751,8 @@
         return get$3(x, y, w);
       }
       if (arguments.length === 1) {
-        // PImage.get() was called, return the PImage
-        return x;
+        // PImage.get(this) was called, return a new PImage from 0,0 to width,height
+        return get$5(0, 0, x.width, x.height, x);
       }
     };
 
