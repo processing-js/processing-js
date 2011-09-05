@@ -8355,13 +8355,6 @@
     p.beginDraw = nop;
     p.endDraw = nop;
 
-    // Imports an external Processing.js library
-    p.Import = function(lib) {
-      // Replace evil-eval method with a DOM <script> tag insert method that
-      // binds new lib code to the Processing.lib names-space and the current
-      // p context. -F1LT3R
-    };
-
     /**
     * Displays message in the browser's status area. This is the text area in the lower
     * left corner of the browser. The status() function will only work when the
@@ -17569,7 +17562,7 @@
       "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
       "fill", "filter", "floor", "focused", "frameCount", "frameRate", "frustum",
       "get", "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour",
-      "hue", "image", "imageMode", "Import", "intersect", "join", "key",
+      "hue", "image", "imageMode", "intersect", "join", "key",
       "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
       "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
       "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape",
