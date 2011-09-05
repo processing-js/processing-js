@@ -15290,7 +15290,7 @@
     * @see get
     */
     p.copy = function(src, sx, sy, sw, sh, dx, dy, dw, dh) {
-      if (arguments.length === 8) {
+      if (dh === undef) {
         // shift everything, and introduce p
         dh = dw;
         dw = dy;
@@ -15340,7 +15340,11 @@
     * @see filter
     */
     p.blend = function(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
-      if (arguments.length === 9) {
+      if (src.isRemote) {
+        throw "Image is loaded remotely. Cannot blend image.";
+      }
+
+      if (mode === undef) {
         // shift everything, and introduce p
         mode = dh;
         dh = dw;
@@ -15354,34 +15358,27 @@
         src = p;
       }
 
-      var sx2 = sx + sw;
-      var sy2 = sy + sh;
-      var dx2 = dx + dw;
-      var dy2 = dy + dh;
-      var dest;
-      if (src.isRemote) { // Remote images cannot access imageData
-        throw "Image is loaded remotely. Cannot blend image.";
-      }
+      var sx2 = sx + sw,
+        sy2 = sy + sh,
+        dx2 = dx + dw,
+        dy2 = dy + dh,
+        dest = pimgdest || p;
+
       // check if pimgdest is there and pixels, if so this was a call from pimg.blend
-      if (arguments.length === 10 || arguments.length === 9) {
+      if (pimgdest === undef || mode === undef) {
         p.loadPixels();
-        dest = p;
-      } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
-        dest = pimgdest;
       }
-      if (src === p) {
-        if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
-          p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
-                        dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-        } else {
-          // same as below, except skip the loadPixels() because it'd be redundant
-          p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-        }
+
+      src.loadPixels();
+
+      if (src === p && p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
+        p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
+                      dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
       } else {
-        src.loadPixels();
         p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
       }
-      if (arguments.length === 10) {
+
+      if (pimgdest === undef) {
         p.updatePixels();
       }
     };
