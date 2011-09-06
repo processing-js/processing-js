@@ -8347,6 +8347,29 @@
     p.beginDraw = nop;
     p.endDraw = nop;
 
+    /**
+     * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
+     *
+     * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
+     *
+     * @see PImage
+     */
+    Drawing2D.prototype.toImageData = function(x, y, w, h) {
+      return curContext.getImageData(x, y, w, h);
+    };
+
+    Drawing3D.prototype.toImageData = function(x, y, w, h) {
+      var c = document.createElement("canvas"),
+          ctx = c.getContext("2d"),
+          obj = ctx.createImageData(w, h),
+          uBuff = new Uint8Array(w * h * 4);
+      curContext.readPixels(x, y, w, h, curContext.RGBA, curContext.UNSIGNED_BYTE, uBuff);
+      for (var i=0, ul=uBuff.length, obj_data=obj.data; i < ul; i++) {
+        obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
+      }
+      return obj;
+    };
+
     // Imports an external Processing.js library
     p.Import = function(lib) {
       // Replace evil-eval method with a DOM <script> tag insert method that
@@ -14633,37 +14656,31 @@
     */
     p.requestImage = p.loadImage;
 
-    function get$0() {
-      //return a PImage of curContext
-      var c = new PImage(p.width, p.height, PConstants.RGB);
-      c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
-      return c;
-    }
     function get$2(x,y) {
       var data;
       // return the color at x,y (int) of curContext
-      // create a PImage object of size 1x1 and return the int of the pixels array element 0
-      if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
-        if(isContextReplaced) {
-          var offset = ((0|x) + p.width * (0|y))*4;
-          data = p.imageData.data;
-          return p.color.toInt(data[offset], data[offset+1],
-                           data[offset+2], data[offset+3]);
-        }
-        // x,y is inside canvas space
-        data = curContext.getImageData(0|x, 0|y, 1, 1).data;
-        // changed for 0.9
-        return p.color.toInt(data[0], data[1], data[2], data[3]);
+      if (x >= p.width || x < 0 || y < 0 || y >= p.height) {
+        // x,y is outside image return transparent black
+        return 0;
       }
-      // x,y is outside image return transparent black
-      return 0;
+
+      // loadPixels() has been called
+      if (isContextReplaced) {
+        var offset = (0|x) + p.width * (0|y) * 4;
+        data = p.imageData.data;
+        return p.color.toInt(data[offset], data[offset+1],
+                         data[offset+2], data[offset+3]);
+      }
+
+      // x,y is inside canvas space
+      data = p.toImageData(0|x, 0|y, 1, 1).data;
+      return p.color.toInt(data[0], data[1], data[2], data[3]);
     }
     function get$3(x,y,img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot get x,y.";
       }
       // PImage.get(x,y) was called, return the color (int) at x,y of img
-      // changed in 0.9
       var offset = y * img.width * 4 + (x * 4);
       return p.color.toInt(img.imageData.data[offset],
                          img.imageData.data[offset + 1],
@@ -14672,8 +14689,8 @@
     }
     function get$4(x, y, w, h) {
       // return a PImage of w and h from cood x,y of curContext
-      var c = new PImage(w, h, PConstants.RGB);
-      c.fromImageData(curContext.getImageData(x, y, w, h));
+      var c = new PImage(w, h, PConstants.ARGB);
+      c.fromImageData(p.toImageData(x, y, w, h));
       return c;
     }
     function get$5(x, y, w, h, img) {
@@ -14681,8 +14698,8 @@
         throw "Image is loaded remotely. Cannot get x,y,w,h.";
       }
       // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
-      // changed for 0.9, offset start point needs to be *4
-      var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data,
+      // offset start point needs to be *4
+      var c = new PImage(w, h, PConstants.ARGB), cData = c.imageData.data,
         imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
       // Don't need to copy pixels from the image outside ranges.
       var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
@@ -14727,25 +14744,24 @@
     */
     p.get = function(x, y, w, h, img) {
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
-      if (arguments.length === 2) {
-        return get$2(x, y);
-      }
-      if (arguments.length === 0) {
-        return get$0();
-      }
-      if (arguments.length === 5) {
+      if (img !== undefined) {
         return get$5(x, y, w, h, img);
       }
-      if (arguments.length === 4) {
+      if (h !== undefined) {
         return get$4(x, y, w, h);
       }
-      if (arguments.length === 3) {
+      if (w !== undefined) {
         return get$3(x, y, w);
       }
-      if (arguments.length === 1) {
+      if (y !== undefined) {
+        return get$2(x, y);
+      }
+      if (x !== undefined) {
         // PImage.get() was called, return the PImage
         return x;
       }
+
+      return get$4(0, 0, p.width, p.height);
     };
 
     /**
@@ -16895,6 +16911,7 @@
     DrawingPre.prototype.rotate = createDrawingPreFunction("rotate");
     DrawingPre.prototype.rotateZ = createDrawingPreFunction("rotateZ");
     DrawingPre.prototype.redraw = createDrawingPreFunction("redraw");
+    DrawingPre.prototype.toImageData = createDrawingPreFunction("toImageData");
     DrawingPre.prototype.ambientLight = createDrawingPreFunction("ambientLight");
     DrawingPre.prototype.directionalLight = createDrawingPreFunction("directionalLight");
     DrawingPre.prototype.lightFalloff = createDrawingPreFunction("lightFalloff");
@@ -17503,31 +17520,6 @@
           wireDimensionalFunctions('2D');
         }
 
-        /**
-        * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
-        *
-        * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
-        *
-        * @see PImage
-        */
-        if (render === PConstants.WEBGL) {
-          p.toImageData = function() { // 3D
-            var c = document.createElement("canvas");
-            var ctx = c.getContext("2d");
-            var obj = ctx.createImageData(this.width, this.height);
-            var uBuff = new Uint8Array(this.width * this.height * 4);
-            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-            for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
-              obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
-            }
-            return obj;
-          };
-        } else {
-          p.toImageData = function() { // 2D
-            return curContext.getImageData(0, 0, this.width, this.height);
-          };
-        }
-
         p.size(w, h, render);
       };
     }
@@ -17584,7 +17576,7 @@
       "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
       "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
       "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
-      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
+      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", "toImageData",
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
       "vertex", "width", "XMLElement", "year", "__contains", "__equals",
