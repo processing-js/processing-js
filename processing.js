@@ -1981,6 +1981,8 @@
         colorModeZ = 255,
         pathOpen = false,
         mouseDragging = false,
+        pmouseXLastFrame = 0,
+        pmouseYLastFrame = 0,
         curColorMode = PConstants.RGB,
         curTint = null,
         curTint3d = null,
@@ -8108,11 +8110,19 @@
 
       curContext.lineWidth = lineWidth;
       inDraw = true;
+      var pmouseXLastEvent = p.pmouseX,
+          pmouseYLastEvent = p.pmouseY;
+      p.pmouseX = pmouseXLastFrame;
+      p.pmouseY = pmouseYLastFrame;
 
       saveContext();
       p.draw();
       restoreContext();
 
+      pmouseXLastFrame = p.mouseX;
+      pmouseYLastFrame = p.mouseY;
+      p.pmouseX = pmouseXLastEvent;
+      p.pmouseY = pmouseYLastEvent;
       inDraw = false;
     };
 
