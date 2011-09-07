@@ -16560,7 +16560,7 @@
       if(verticalTextAlignment === PConstants.TOP) {
         yOffset = curTextAscent + curTextDescent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        yOffset = (height/2) - curTextLeading * (visibleLines/2) + curTextLeading;
+        yOffset = (height/2) - curTextLeading * (visibleLines/2 - 1);
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
         yOffset = curTextDescent + curTextLeading;
       }
