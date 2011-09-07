@@ -16555,18 +16555,18 @@
       }
 
       // resolve vertical alignment
-      var lines = Math.floor(height/curTextLeading);
+      var linesCount = drawCommands.length,
+          visibleLines = Math.min(linesCount, Math.floor(height/curTextLeading));
       if(verticalTextAlignment === PConstants.TOP) {
         yOffset = curTextAscent + curTextDescent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        yOffset = curTextLeading + curTextDescent;
+        yOffset = (height/2) - curTextLeading * (visibleLines/2) + curTextLeading;
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
         yOffset = curTextDescent + curTextLeading;
       }
 
       var command,
           drawCommand,
-          linesCount = drawCommands.length,
           leading;
       for (command = 0; command < linesCount; command++) {
         leading = command * curTextLeading;
