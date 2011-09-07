@@ -15232,8 +15232,8 @@
      * @see #noTint()
      * @see #image()
      */
-    p.tint = function(a1, a2, a3) {
-      var tintColor = p.color(a1, a2, a3);
+    p.tint = function(a1, a2, a3, a4) {
+      var tintColor = p.color(a1, a2, a3, a4);
       var r = p.red(tintColor) / colorModeX;
       var g = p.green(tintColor) / colorModeY;
       var b = p.blue(tintColor) / colorModeZ;
