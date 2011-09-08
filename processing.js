@@ -14463,6 +14463,7 @@
       *                                 length as the image's pixel array
       */
       mask: function(mask) {
+        console.log(mask instanceof PImage);
         var obj = this.toImageData();
 
         if (mask instanceof PImage) {
@@ -14651,7 +14652,9 @@
     function get$0() {
       //return a PImage of curContext
       var c = new PImage(p.width, p.height, PConstants.ARGB);
+      console.log(c instanceof PImage);
       c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
+      console.log(c instanceof PImage);
       return c;
     }
     function get$2(x,y) {
@@ -14746,7 +14749,9 @@
         return get$2(x, y);
       }
       if (arguments.length === 0) {
-        return get$0();
+        var c = get$0();
+        console.log(c instanceof PImage);
+        return c;
       }
       if (arguments.length === 5) {
         return get$5(x, y, w, h, img);
