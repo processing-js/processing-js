@@ -1962,7 +1962,6 @@
         normalY = 0,
         normalZ = 0,
         normalMode = PConstants.NORMAL_MODE_AUTO,
-        inDraw = false,
         curFrameRate = 60,
         curMsPerFrame = 1000/curFrameRate,
         curCursor = PConstants.ARROW,
@@ -8107,19 +8106,14 @@
       DrawingShared.prototype.redraw.apply(this, arguments);
 
       curContext.lineWidth = lineWidth;
-      inDraw = true;
 
       saveContext();
       p.draw();
       restoreContext();
-
-      inDraw = false;
     };
 
     Drawing3D.prototype.redraw = function() {
       DrawingShared.prototype.redraw.apply(this, arguments);
-
-      inDraw = true;
 
       // even if the color buffer isn't cleared with background(),
       // the depth buffer needs to be cleared regardless.
@@ -8135,8 +8129,6 @@
       p.emissive(0, 0, 0);
       p.camera();
       p.draw();
-
-      inDraw = false;
     };
 
     /**
