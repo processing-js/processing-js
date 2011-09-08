@@ -205,13 +205,21 @@ package-sketch: $(PJS_SRC)
 	@@rm -f $(SKETCHOUTPUTSRC)
 	@@echo "Created $(SKETCHOUTPUT)"
 
-api-only: $(PJS_RELEASE_SRC)
+api-only: $(PJS_SRC) release-dir
 	@@echo "Creating processing.js API version..."
-	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_SRC))
-	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
-	@@$(call addversion,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_API_SUFFIX))
+	@@$(call preprocess,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_SRC))
+	@@$(JSSHELL) -f $(TOOLS_DIR)/fake-dom.js \
+               -f $(PJS_SRC) \
+               $(TOOLS_DIR)/rewrite-pconstants.js < $(PJS_RELEASE_PREFIX)-api.js > \
+               $(RELEASE_DIR)/processing.js-no-pconstants
+	@@$(call compile_closure,$(RELEASE_DIR)/processing.js-no-pconstants,$(PJS_RELEASE_PREFIX)-api.tmp.js,--compilation_level WHITESPACE_ONLY)
+	@@$(TOOLS_DIR)/jsbeautify.py $(JSSHELL) $(PJS_RELEASE_PREFIX)-api.tmp.js > $(PJS_RELEASE_PREFIX)-api.js
+	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.js,-API)
+	@@$(call addversion,$(PJS_RELEASE_PREFIX)-api.js,-API)
 	@@$(call compile,$(PJS_RELEASE_PREFIX)-api.js,$(PJS_RELEASE_PREFIX)-api.min.js,$(EMPTY))
 	@@$(call addlicense,$(PJS_RELEASE_PREFIX)-api.min.js,$(PJS_API_SUFFIX))
+	@@rm -f $(PJS_RELEASE_PREFIX)-api.tmp.js
+	@@rm -f $(RELEASE_DIR)/processing.js-no-pconstants
 
 ref-testing: closure
 	@@cp -R test release
