@@ -19575,6 +19575,9 @@
     };
     this.sourceCode = undefined;
     this.attach = function(processing) {
+      // stash a reference to the instance on the sketch. Will be available in sketch.onLoad.
+      this.processingInstance = processing;
+
       // either attachFunction or sourceCode must be present on attach
       if(typeof this.attachFunction === "function") {
         this.attachFunction(processing);
