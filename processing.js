@@ -16202,11 +16202,11 @@
       var lines = toP5String(str).split(/\r?\n/g), width = 0;
       var i, linesCount = lines.length;
 
-      curContext.font =  curTextFont.css;
+      curContext.font = curTextFont.css;
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, curTextFont.measureTextWidth(lines[i]));
       }
-      return Math.floor(width * 10) / 10;
+      return width;
     };
 
     Drawing3D.prototype.textWidth = function(str) {
@@ -16217,12 +16217,12 @@
       }
 
       var textContext = textcanvas.getContext("2d");
-      textContext.font =  curTextFont.css;
+      textContext.font = curTextFont.css;
 
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, textContext.measureText(lines[i]).width);
       }
-      return Math.floor(width * 10) / 10;
+      return width;
     };
 
     // A lookup table for characters that can not be referenced by Object
