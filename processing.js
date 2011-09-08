@@ -8355,10 +8355,18 @@
      * @see PImage
      */
     Drawing2D.prototype.toImageData = function(x, y, w, h) {
+      x = x !== undef ? x : 0;
+      y = y !== undef ? y : 0;
+      w = w !== undef ? w : p.width;
+      h = h !== undef ? h : p.height;
       return curContext.getImageData(x, y, w, h);
     };
 
     Drawing3D.prototype.toImageData = function(x, y, w, h) {
+      x = x !== undef ? x : 0;
+      y = y !== undef ? y : 0;
+      w = w !== undef ? w : p.width;
+      h = h !== undef ? h : p.height;
       var c = document.createElement("canvas"),
           ctx = c.getContext("2d"),
           obj = ctx.createImageData(w, h),
