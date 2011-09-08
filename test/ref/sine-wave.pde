@@ -12,12 +12,15 @@ float[] yvalues;          // Using an array to store height values for the wave 
 
 void setup(){
   size(100,100);
+  frameRate(1000);
   colorMode(RGB,255,255,255,100);
   smooth();
   w = width+16;
   dx = (TWO_PI / period) * xspacing;
   yvalues = new float[w/xspacing];
+}
 
+void draw() {
   background(0);
   calcWave();
   renderWave();
