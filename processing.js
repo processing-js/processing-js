@@ -14227,6 +14227,12 @@
     PImage.prototype = {
 
       /**
+       * Temporary hack to deal with cross-Processing-instance created PImage.  See
+       * tickets #1623 and #1644.
+       */
+      __isPImage: true,
+
+      /**
       * @member PImage
       * Updates the image with the data in its pixels[] array. Use in conjunction with loadPixels(). If
       * you're only reading pixels from the array, there's no need to call updatePixels().
@@ -14463,10 +14469,9 @@
       *                                 length as the image's pixel array
       */
       mask: function(mask) {
-        console.log(mask instanceof PImage);
         var obj = this.toImageData();
 
-        if (mask instanceof PImage) {
+        if (mask instanceof PImage || mask.__isPImage) {
           if (mask.width === this.width && mask.height === this.height) {
             mask = mask.toImageData();
 
@@ -14652,9 +14657,7 @@
     function get$0() {
       //return a PImage of curContext
       var c = new PImage(p.width, p.height, PConstants.ARGB);
-      console.log(c instanceof PImage);
       c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
-      console.log(c instanceof PImage);
       return c;
     }
     function get$2(x,y) {
@@ -14750,7 +14753,6 @@
       }
       if (arguments.length === 0) {
         var c = get$0();
-        console.log(c instanceof PImage);
         return c;
       }
       if (arguments.length === 5) {
@@ -14886,7 +14888,7 @@
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number") {
           set$3(x, y, obj);
-        } else if (obj instanceof PImage) {
+        } else if (obj instanceof PImage || obj.__isPImage) {
           p.image(obj, x, y);
         }
       } else if (arguments.length === 4) {
@@ -15068,7 +15070,7 @@
     var backgroundHelper = function(arg1, arg2, arg3, arg4) {
       var obj;
 
-      if (arg1 instanceof PImage) {
+      if (arg1 instanceof PImage || arg1.__isPImage) {
         obj = arg1;
 
         if (!obj.loaded) {
@@ -15089,7 +15091,7 @@
         backgroundHelper(arg1, arg2, arg3, arg4);
       }
 
-      if (backgroundObj instanceof PImage) {
+      if (backgroundObj instanceof PImage || backgroundObj.__isPImage) {
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
         p.image(backgroundObj, 0, 0);
