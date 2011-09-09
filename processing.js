@@ -1,3 +1,4 @@
+
 (function(window, document, Math, undef) {
 
   var nop = function(){};
@@ -1855,10 +1856,17 @@
   ////////////////////////////////////////////////////////////////////////////
 
 
-  var Processing = this.Processing = function(curElement, aCode) {
+  var Processing = this.Processing = function(aCanvas, aCode) {
     // Previously we allowed calling Processing as a func instead of ctor, but no longer.
     if (!(this instanceof Processing)) {
       throw("called Processing constructor as if it were a function: missing 'new'.");
+    }
+
+    // We'll take a canvas element or a string for a canvas element's id
+    var curElement = typeof aCanvas === "string" ? document.getElementById(aCanvas) : aCanvas;
+
+    if (!(curElement instanceof HTMLCanvasElement)) {
+      throw("called Processing constructor without passing canvas element reference or id.");
     }
 
     function unimplemented(s) {
