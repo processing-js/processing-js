@@ -14469,13 +14469,15 @@
       *                                 length as the image's pixel array
       */
       mask: function(mask) {
-        var obj = this.toImageData();
+        var obj = this.toImageData(),
+            i,
+            size;
 
         if (mask instanceof PImage || mask.__isPImage) {
           if (mask.width === this.width && mask.height === this.height) {
             mask = mask.toImageData();
 
-            for (var i = 2, size = this.width * this.height * 4 ; i < size; i += 4) {
+            for (i = 2, size = this.width * this.height * 4; i < size; i += 4) {
               // using it as an alpha channel
               obj.data[i + 1] = mask.data[i];
               // but only the blue color channel
@@ -14484,9 +14486,9 @@
             throw "mask must have the same dimensions as PImage.";
           }
         } else if (mask instanceof Array) {
-          if (this.pixels.length === mask.length) {
-            for (var i = 0, size = mask.length; i < size; ++i) {
-              obj.data[(i << 2) + 3] = mask[j];
+          if (this.width * this.height === mask.length) {
+            for (i = 0, size = mask.length; i < size; ++i) {
+              obj.data[i * 4 + 3] = mask[i];
             }
           } else {
             throw "mask array must be the same length as PImage pixels array.";
