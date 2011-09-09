@@ -15,19 +15,20 @@ var createElement = function(tag) {
   };
 };
 
+var HTMLCanvasElement = function() {};
+
 // HTML canvas element
-var createCanvas = function() {
-  return {
-    attachEvent: __empty_func__,
-    addEventListener: __empty_func__,
-    appendChild: __elem_func__,
-    removeChild: __empty_func__,
-    childNodes: { length: 0 },
-    toDataURL: __empty_func__,
-    localName: "canvas",
-    width: 100,
-    height: 100,
-    getContext:  function() {
+var Canvas = function() {
+  this.attachEvent = __empty_func__;
+  this.addEventListener = __empty_func__;
+  this.appendChild = __elem_func__;
+  this.removeChild = __empty_func__;
+  this.childNodes = { length: 0 };
+  this.toDataURL = __empty_func__;
+  this.localName = "canvas";
+  this.width = 100;
+  this.height = 100;
+  this.getContext = function() {
                    return {
                      translate: __empty_func__,
                      attachEvent: __empty_func__,
@@ -101,22 +102,20 @@ var createCanvas = function() {
                      bindTexture: __empty_func__,
                      setTransform: __empty_func__
                    };
-    },
-    style: {
-      setProperty: __empty_func__
-    },
-    __attributes : { "data-processing-sources" : "test.pjs" },
-    hasAttribute : function(name) { return this.__attributes.hasOwnProperty(name.toLowerCase()); },
-    getAttribute : function(name) { return this.__attributes[name.toLowerCase()]; },
-    setAttribute : function(name, value) { this.__attributes[name.toLowerCase()] = value; }
   };
+  this.style = {
+    setProperty: __empty_func__
+  };
+  this.__attributes = { "data-processing-sources" : "test.pjs" };
+  this.hasAttribute = function(name) { return this.__attributes.hasOwnProperty(name.toLowerCase()); };
+  this.getAttribute = function(name) { return this.__attributes[name.toLowerCase()]; };
+  this.setAttribute = function(name, value) { this.__attributes[name.toLowerCase()] = value; };
 };
+Canvas.prototype = new HTMLCanvasElement();
 
-var canvas = createCanvas();
+var canvas = new Canvas();
 
 var HTMLImageElement = __empty_func__;
-
-var HTMLCanvasElement = __empty_func__;
 
 var document = {
   fake: true,
@@ -142,7 +141,7 @@ var document = {
   getElementById: __empty_func__,
   getElementsByTagName: function() { return [canvas]; },
   createElement: function (tag) {
-    if (tag === "canvas") return createCanvas();
+    if (tag === "canvas") return new Canvas();
     return createElement(tag);
   },
   addEventListener: __empty_func__,
