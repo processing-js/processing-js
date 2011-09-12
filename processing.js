@@ -14674,7 +14674,7 @@
 
       // loadPixels() has been called
       if (isContextReplaced) {
-        var offset = (0|x) + p.width * (0|y) * 4;
+        var offset = ((0|x) + p.width * (0|y)) * 4;
         data = p.imageData.data;
         return p.color.toInt(data[offset], data[offset+1],
                          data[offset+2], data[offset+3]);
