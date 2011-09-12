@@ -2492,7 +2492,7 @@
         curContextCache.locations[cacheId] = varLocation;
       }
       // the variable won't be found if it was optimized out.
-      if (varLocation !== -1) {
+      if (varLocation !== null) {
         if (varValue.length === 4) {
           curContext.uniform4fv(varLocation, varValue);
         } else if (varValue.length === 3) {
@@ -2531,7 +2531,7 @@
         curContextCache.locations[cacheId] = varLocation;
       }
       // the variable won't be found if it was optimized out.
-      if (varLocation !== -1) {
+      if (varLocation !== null) {
         if (varValue.length === 4) {
           curContext.uniform4iv(varLocation, varValue);
         } else if (varValue.length === 3) {
@@ -2540,6 +2540,45 @@
           curContext.uniform2iv(varLocation, varValue);
         } else {
           curContext.uniform1i(varLocation, varValue);
+        }
+      }
+    }
+
+    /**
+     * Sets the value of a uniform matrix variable in a program
+     * object. Before calling this function, ensure the correct
+     * program object has been installed as part of the current
+     * rendering state.
+     *
+     * On some systems, if the variable exists in the shader but
+     * isn't used, the compiler will optimize it out and this
+     * function will fail.
+     *
+     * @param {WebGLProgram} programObj program object returned from
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {boolean} transpose must be false
+     * @param {Array} matrix an array of 4, 9 or 16 values
+     *
+     * @returns none
+     *
+     * @see uniformi
+     * @see uniformf
+    */
+    function uniformMatrix(cacheId, programObj, varName, transpose, matrix) {
+      var varLocation = curContextCache.locations[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getUniformLocation(programObj, varName);
+        curContextCache.locations[cacheId] = varLocation;
+      }
+      // the variable won't be found if it was optimized out.
+      if (varLocation !== -1) {
+        if (matrix.length === 16) {
+          curContext.uniformMatrix4fv(varLocation, transpose, matrix);
+        } else if (matrix.length === 9) {
+          curContext.uniformMatrix3fv(varLocation, transpose, matrix);
+        } else {
+          curContext.uniformMatrix2fv(varLocation, transpose, matrix);
         }
       }
     }
@@ -2598,73 +2637,6 @@
     }
 
     /**
-     * Sets the value of a uniform matrix variable in a program
-     * object. Before calling this function, ensure the correct
-     * program object has been installed as part of the current
-     * rendering state.
-     *
-     * On some systems, if the variable exists in the shader but
-     * isn't used, the compiler will optimize it out and this
-     * function will fail.
-     *
-     * @param {WebGLProgram} programObj program object returned from
-     * createProgramObject
-     * @param {String} varName the name of the variable in the shader
-     * @param {boolean} transpose must be false
-     * @param {Array} matrix an array of 4, 9 or 16 values
-     *
-     * @returns none
-     *
-     * @see uniformi
-     * @see uniformf
-    */
-    function uniformMatrix(cacheId, programObj, varName, transpose, matrix) {
-      var varLocation = curContextCache.locations[cacheId];
-      if(varLocation === undef) {
-        varLocation = curContext.getUniformLocation(programObj, varName);
-        curContextCache.locations[cacheId] = varLocation;
-      }
-      // the variable won't be found if it was optimized out.
-      if (varLocation !== -1) {
-        if (matrix.length === 16) {
-          curContext.uniformMatrix4fv(varLocation, transpose, matrix);
-        } else if (matrix.length === 9) {
-          curContext.uniformMatrix3fv(varLocation, transpose, matrix);
-        } else {
-          curContext.uniformMatrix2fv(varLocation, transpose, matrix);
-        }
-      }
-    }
-
-    var imageModeCorner = function(x, y, w, h, whAreSizes) {
-      return {
-        x: x,
-        y: y,
-        w: w,
-        h: h
-      };
-    };
-    var imageModeConvert = imageModeCorner;
-
-    var imageModeCorners = function(x, y, w, h, whAreSizes) {
-      return {
-        x: x,
-        y: y,
-        w: whAreSizes ? w : w - x,
-        h: whAreSizes ? h : h - y
-      };
-    };
-
-    var imageModeCenter = function(x, y, w, h, whAreSizes) {
-      return {
-        x: x - w / 2,
-        y: y - h / 2,
-        w: w,
-        h: h
-      };
-    };
-
-    /**
      * Creates a WebGL program object.
      *
      * @param {String} vetexShaderSource
@@ -2701,6 +2673,34 @@
     ////////////////////////////////////////////////////////////////////////////
     // 2D/3D drawing handling
     ////////////////////////////////////////////////////////////////////////////
+    var imageModeCorner = function(x, y, w, h, whAreSizes) {
+      return {
+        x: x,
+        y: y,
+        w: w,
+        h: h
+      };
+    };
+    var imageModeConvert = imageModeCorner;
+
+    var imageModeCorners = function(x, y, w, h, whAreSizes) {
+      return {
+        x: x,
+        y: y,
+        w: whAreSizes ? w : w - x,
+        h: whAreSizes ? h : h - y
+      };
+    };
+
+    var imageModeCenter = function(x, y, w, h, whAreSizes) {
+      return {
+        x: x - w / 2,
+        y: y - h / 2,
+        w: w,
+        h: h
+      };
+    };
+
     // Objects for shared, 2D and 3D contexts
     var DrawingShared = function(){};
     var Drawing2D = function(){};
