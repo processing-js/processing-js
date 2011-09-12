@@ -80,5 +80,23 @@ var tests = [
   { path: "line-notcrisp.pde", tags: ["2D", "Crisp"] },
   { path: "line-crisp.pde", tags: ["2D", "Crisp"] },
   { path: "lerpcolor-rgb.pde", tags: ["2D", "lerpColor"] },
-  { path: "lerpcolor-hsb.pde", tags: ["2D", "lerpColor"] }
+  { path: "lerpcolor-hsb.pde", tags: ["2D", "lerpColor"] },
+
+  // 3D
+  { path: "box-3D.pde", tags: ["3D"] },
+  { path: "sphere-3D.pde", tags: ["3D"] },
+  { path: "triangle-3D.pde", tags: ["3D"] },
+  { path: "shape-3D.pde", tags: ["3D"] },
+  { path: "line-3D.pde", tags: ["3D"] },
+
+  // PMatrix3D
+  { path: "PMatrix3D-translate.pde", tags: ["3D"] },
+  { path: "PMatrix3D-transpose.pde", tags: ["3D"] },
+  { path: "PMatrix3D-scale.pde", tags: ["3D"] },
+  { path: "PMatrix3D-invert.pde", tags: ["3D"] },
+  { path: "PMatrix3D-rotateY.pde", tags: ["3D"] },
+  { path: "PMatrix3D-rotateX.pde", tags: ["3D"] },
+  { path: "PMatrix3D-rotateZ.pde", tags: ["3D"] },
+  { path: "PMatrix3D-multX.pde", tags: ["3D"] },
+  { path: "PMatrix3D-reset.pde", tags: ["3D"] }
 ];
