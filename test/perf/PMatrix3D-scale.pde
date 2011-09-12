@@ -5,7 +5,7 @@ void setup(){
 }
 
 void draw() {
-  for(var i = 0; i < 1000; i++){
-    mat.scale(1,2,3);
+  for(int i = 0; i < 1000; i++){
+    mat.scale(1, 2, 3);
   }
 }
