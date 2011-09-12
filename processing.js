@@ -16546,11 +16546,9 @@
       }
 
       // resolve horizontal alignment
-      var xOffset = 0,
+      var xOffset = 1,
           yOffset = curTextAscent;
-      if (horizontalTextAlignment === PConstants.LEFT) {
-        xOffset = 1;
-      } else if (horizontalTextAlignment === PConstants.CENTER) {
+      if (horizontalTextAlignment === PConstants.CENTER) {
         xOffset = width/2;
       } else if (horizontalTextAlignment === PConstants.RIGHT) {
         xOffset = width;
