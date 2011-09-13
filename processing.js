@@ -14677,9 +14677,9 @@
         var offset = ((0|x) + p.width * (0|y)) * 4;
         data = p.imageData.data;
         return (data[offset + 3] << 24) & PConstants.ALPHA_MASK |
-             (data[offset] << 16) & PConstants.RED_MASK |
-             (data[offset + 1] << 8) & PConstants.GREEN_MASK |
-             data[offset + 2] & PConstants.BLUE_MASK;
+               (data[offset] << 16) & PConstants.RED_MASK |
+               (data[offset + 1] << 8) & PConstants.GREEN_MASK |
+               data[offset + 2] & PConstants.BLUE_MASK;
       }
 
       // x,y is inside canvas space
