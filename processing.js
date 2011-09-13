@@ -5880,7 +5880,7 @@
        * The reset() function sets this PMatrix3D to the identity matrix.
        */
       reset: function() {
-        this.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+        this.elements = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
       },
       /**
        * @member PMatrix3D
@@ -6104,7 +6104,8 @@
                      (t * v0 * v2) - (s * v1),
                      (t * v1 * v2) + (s * v0),
                      (t * v2 * v2) + c,
-                     0, 0, 0, 0, 1);
+                     0,
+                     0, 0, 0, 1);
         }
       },
       /**
