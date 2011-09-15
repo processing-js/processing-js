@@ -10667,8 +10667,8 @@
     p.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
       if (arguments.length === 0) {
         //in case canvas is resized
-        cameraX = curElement.width / 2;
-        cameraY = curElement.height / 2;
+        cameraX = p.width / 2;
+        cameraY = p.height / 2;
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         eyeX = cameraX;
         eyeY = cameraY;
@@ -10723,7 +10723,7 @@
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         cameraNear = cameraZ / 10;
         cameraFar = cameraZ * 10;
-        cameraAspect = curElement.width / curElement.height;
+        cameraAspect = p.width / p.height;
         fov = cameraFOV;
         aspect = cameraAspect;
         near = cameraNear;
