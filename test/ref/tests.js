@@ -200,6 +200,7 @@ var tests = [
   { path: "continuous-curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
   { path: "points-lines.pde", tags: ["2D", "Crisp"] },
   { path: "rectMode.pde", tags: ["2D", "Crisp"] },
+  { path: "rectMode-3d.pde", tags: ["3D"] },
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
