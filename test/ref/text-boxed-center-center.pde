@@ -12,7 +12,6 @@ void setup() {
 }
 
 void draw() {
-  translate(0.5,0.5);
   background(204);
   fill(30,25);
   rect(15,20,70,70);
