@@ -14499,9 +14499,14 @@
       loadPixels: nop,
 
       toImageData: function() {
-        if (this.isRemote) { // Remote images cannot access imageData, send source image instead
+        if (this.isRemote) {
           return this.sourceImg;
         }
+
+        if (!this.__isDirty) {
+          return this.imageData;
+        }
+
         var canvasData = getCanvasData(this.imageData);
         return canvasData.context.getImageData(0, 0, this.width, this.height);
       },
