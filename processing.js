@@ -14250,6 +14250,12 @@
     PImage.prototype = {
 
       /**
+       * Temporary hack to deal with cross-Processing-instance created PImage.  See
+       * tickets #1623 and #1644.
+       */
+      __isPImage: true,
+
+      /**
       * @member PImage
       * Updates the image with the data in its pixels[] array. Use in conjunction with loadPixels(). If
       * you're only reading pixels from the array, there's no need to call updatePixels().
@@ -14486,24 +14492,33 @@
       *                                 length as the image's pixel array
       */
       mask: function(mask) {
-        this.__mask = undef;
+        var obj = this.toImageData(),
+            i,
+            size;
 
-        if (mask instanceof PImage) {
+        if (mask instanceof PImage || mask.__isPImage) {
           if (mask.width === this.width && mask.height === this.height) {
-            this.__mask = mask;
+            mask = mask.toImageData();
+
+            for (i = 2, size = this.width * this.height * 4; i < size; i += 4) {
+              // using it as an alpha channel
+              obj.data[i + 1] = mask.data[i];
+              // but only the blue color channel
+            }
           } else {
             throw "mask must have the same dimensions as PImage.";
           }
-        } else if (mask instanceof Array) { // this is a pixel array
-          // mask pixel array needs to be the same length as this.pixels
-          // how do we update this for 0.9 this.imageData holding pixels ^^
-          // mask.constructor ? and this.pixels.length = this.imageData.data.length instead ?
-          if (this.pixels.length === mask.length) {
-            this.__mask = mask;
+        } else if (mask instanceof Array) {
+          if (this.width * this.height === mask.length) {
+            for (i = 0, size = mask.length; i < size; ++i) {
+              obj.data[i * 4 + 3] = mask[i];
+            }
           } else {
             throw "mask array must be the same length as PImage pixels array.";
           }
         }
+
+        this.fromImageData(obj);
       },
 
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
@@ -14671,7 +14686,7 @@
 
     function get$0() {
       //return a PImage of curContext
-      var c = new PImage(p.width, p.height, PConstants.RGB);
+      var c = new PImage(p.width, p.height, PConstants.ARGB);
       c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
       return c;
     }
@@ -14708,7 +14723,7 @@
     }
     function get$4(x, y, w, h) {
       // return a PImage of w and h from cood x,y of curContext
-      var c = new PImage(w, h, PConstants.RGB);
+      var c = new PImage(w, h, PConstants.ARGB);
       c.fromImageData(curContext.getImageData(x, y, w, h));
       return c;
     }
@@ -14718,7 +14733,7 @@
       }
       // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
       // changed for 0.9, offset start point needs to be *4
-      var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data,
+      var c = new PImage(w, h, PConstants.ARGB), cData = c.imageData.data,
         imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
       // Don't need to copy pixels from the image outside ranges.
       var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
@@ -14767,7 +14782,8 @@
         return get$2(x, y);
       }
       if (arguments.length === 0) {
-        return get$0();
+        var c = get$0();
+        return c;
       }
       if (arguments.length === 5) {
         return get$5(x, y, w, h, img);
@@ -14902,7 +14918,7 @@
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number") {
           set$3(x, y, obj);
-        } else if (obj instanceof PImage) {
+        } else if (obj instanceof PImage || obj.__isPImage) {
           p.image(obj, x, y);
         }
       } else if (arguments.length === 4) {
@@ -15084,7 +15100,7 @@
     var backgroundHelper = function(arg1, arg2, arg3, arg4) {
       var obj;
 
-      if (arg1 instanceof PImage) {
+      if (arg1 instanceof PImage || arg1.__isPImage) {
         obj = arg1;
 
         if (!obj.loaded) {
@@ -15105,7 +15121,7 @@
         backgroundHelper(arg1, arg2, arg3, arg4);
       }
 
-      if (backgroundObj instanceof PImage) {
+      if (backgroundObj instanceof PImage || backgroundObj.__isPImage) {
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
         p.image(backgroundObj, 0, 0);
@@ -15171,7 +15187,7 @@
         var hgt = h || img.height;
 
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-        var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
+        var fastImage = !!img.sourceImg && curTint === null;
         if (fastImage) {
           var htmlElement = img.sourceImg;
           if (img.__isDirty) {
@@ -15182,22 +15198,6 @@
             htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
         } else {
           var obj = img.toImageData();
-
-          if (img.__mask) {
-            var j, size;
-            if (img.__mask instanceof PImage) {
-              var objMask = img.__mask.toImageData();
-              for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
-                // using it as an alpha channel
-                obj.data[j + 1] = objMask.data[j];
-                // but only the blue color channel
-              }
-            } else {
-              for (j = 0, size = img.__mask.length; j < size; ++j) {
-                obj.data[(j << 2) + 3] = img.__mask[j];
-              }
-            }
-          }
 
           // Tint the image
           if (curTint !== null) {
