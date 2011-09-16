@@ -81,6 +81,8 @@ var tests = [
   { path: "line-crisp.pde", tags: ["2D", "Crisp"] },
   { path: "lerpcolor-rgb.pde", tags: ["2D", "lerpColor"] },
   { path: "lerpcolor-hsb.pde", tags: ["2D", "lerpColor"] },
+  { path: "get.pde", tags: ["2D"], iterationOverride: 10 },
+  { path: "get-3d.pde", tags: ["3D"], iterationOverride: 10 },
 
   // 3D
   { path: "box-3D.pde", tags: ["3D"] },

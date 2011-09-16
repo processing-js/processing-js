@@ -1,5 +1,6 @@
 var tests = [
   { path: "copy-no-source.pde", tags: ["2D", "BLEND"] },
+  { path: "pgraphics-get-3d.pde", tags: ["3D"] },
   { path: "rounding.pde", tags: ["2D", "Crisp"] },
   { path: "pimage-get.pde", tags: ["2D", "Color Profile"] },
   { path: "pimage-get0.pde", tags: ["2D", "Color Profile"] },
