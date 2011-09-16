@@ -17456,7 +17456,9 @@
           }
 
           curSketch.attach(processing, defaultScope);
-          curSketch.onLoad();
+
+          // pass a reference to the p instance for this sketch.
+          curSketch.onLoad(processing);
 
           // Run void setup()
           if (processing.setup) {
@@ -19575,9 +19577,6 @@
     };
     this.sourceCode = undefined;
     this.attach = function(processing) {
-      // stash a reference to the instance on the sketch. Will be available in sketch.onLoad.
-      this.processingInstance = processing;
-
       // either attachFunction or sourceCode must be present on attach
       if(typeof this.attachFunction === "function") {
         this.attachFunction(processing);
