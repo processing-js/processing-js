@@ -1990,6 +1990,8 @@
         colorModeZ = 255,
         pathOpen = false,
         mouseDragging = false,
+        pmouseXLastFrame = 0,
+        pmouseYLastFrame = 0,
         curColorMode = PConstants.RGB,
         curTint = null,
         curTint3d = null,
@@ -8098,7 +8100,7 @@
     * @see noLoop
     * @see loop
     */
-    DrawingShared.prototype.redraw = function() {
+    function redrawHelper() {
       var sec = (Date.now() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
@@ -8111,21 +8113,34 @@
       }
 
       p.frameCount++;
-    };
+    }
 
     Drawing2D.prototype.redraw = function() {
-      DrawingShared.prototype.redraw.apply(this, arguments);
+      redrawHelper();
 
       curContext.lineWidth = lineWidth;
+      var pmouseXLastEvent = p.pmouseX,
+          pmouseYLastEvent = p.pmouseY;
+      p.pmouseX = pmouseXLastFrame;
+      p.pmouseY = pmouseYLastFrame;
 
       saveContext();
       p.draw();
       restoreContext();
+
+      pmouseXLastFrame = p.mouseX;
+      pmouseYLastFrame = p.mouseY;
+      p.pmouseX = pmouseXLastEvent;
+      p.pmouseY = pmouseYLastEvent;
     };
 
     Drawing3D.prototype.redraw = function() {
-      DrawingShared.prototype.redraw.apply(this, arguments);
+      redrawHelper();
 
+      var pmouseXLastEvent = p.pmouseX,
+          pmouseYLastEvent = p.pmouseY;
+      p.pmouseX = pmouseXLastFrame;
+      p.pmouseY = pmouseYLastFrame;
       // even if the color buffer isn't cleared with background(),
       // the depth buffer needs to be cleared regardless.
       curContext.clear(curContext.DEPTH_BUFFER_BIT);
@@ -8140,6 +8155,11 @@
       p.emissive(0, 0, 0);
       p.camera();
       p.draw();
+
+      pmouseXLastFrame = p.mouseX;
+      pmouseYLastFrame = p.mouseY;
+      p.pmouseX = pmouseXLastEvent;
+      p.pmouseY = pmouseYLastEvent;
     };
 
     /**
