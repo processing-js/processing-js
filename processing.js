@@ -1,3 +1,4 @@
+
 (function(window, document, Math, undef) {
 
   var nop = function(){};
@@ -1855,10 +1856,24 @@
   ////////////////////////////////////////////////////////////////////////////
 
 
-  var Processing = this.Processing = function(curElement, aCode) {
+  var Processing = this.Processing = function(aCanvas, aCode) {
     // Previously we allowed calling Processing as a func instead of ctor, but no longer.
     if (!(this instanceof Processing)) {
       throw("called Processing constructor as if it were a function: missing 'new'.");
+    }
+
+    var curElement,
+      pgraphicsMode = (aCanvas === undef && aCode === undef);
+
+    if (pgraphicsMode) {
+      curElement = document.createElement("canvas");
+    } else {
+      // We'll take a canvas element or a string for a canvas element's id
+      curElement = typeof aCanvas === "string" ? document.getElementById(aCanvas) : aCanvas;
+    }
+
+    if (!(curElement instanceof HTMLCanvasElement)) {
+      throw("called Processing constructor without passing canvas element reference or id.");
     }
 
     function unimplemented(s) {
@@ -1868,11 +1883,6 @@
     // When something new is added to "p." it must also be added to the "names" array.
     // The names array contains the names of everything that is inside "p."
     var p = this;
-
-    var pgraphicsMode = (arguments.length === 0);
-    if (pgraphicsMode) {
-      curElement = document.createElement("canvas");
-    }
 
     // PJS specific (non-p5) methods and properties to externalize
     p.externals = {
