@@ -223,6 +223,8 @@ var tests = [
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "box_scale_3D.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "applyMatrix.pde", tags: ["3D"] },
+  { path: "sphereDetail-30-3.pde", tags: ["3D"] },
+  { path: "sphereDetail-3-30.pde", tags: ["3D"] },
   { path: "ambientLight_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_2.pde", tags: ["3D"], epsilonOverride: 0.10 },

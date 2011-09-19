@@ -6,6 +6,6 @@ void setup(){
 
 void draw() {
   for(int i = 0; i < 1000; i++){
-    mat.reset();
+    mat.set([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
   }
 }

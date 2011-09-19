@@ -5892,7 +5892,10 @@
        * The reset() function sets this PMatrix3D to the identity matrix.
        */
       reset: function() {
-        this.elements = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+        this.elements = [1,0,0,0,
+                         0,1,0,0,
+                         0,0,1,0,
+                         0,0,0,1];
       },
       /**
        * @member PMatrix3D
@@ -5927,23 +5930,29 @@
        * The transpose() function transpose this matrix.
        */
       transpose: function() {
-        var temp = this.elements.slice();
-        this.elements[0]  = temp[0];
-        this.elements[1]  = temp[4];
-        this.elements[2]  = temp[8];
-        this.elements[3]  = temp[12];
-        this.elements[4]  = temp[1];
-        this.elements[5]  = temp[5];
-        this.elements[6]  = temp[9];
-        this.elements[7]  = temp[13];
-        this.elements[8]  = temp[2];
-        this.elements[9]  = temp[6];
-        this.elements[10] = temp[10];
-        this.elements[11] = temp[14];
-        this.elements[12] = temp[3];
-        this.elements[13] = temp[7];
-        this.elements[14] = temp[11];
-        this.elements[15] = temp[15];
+        var temp = this.elements[4];
+        this.elements[4] = this.elements[1];
+        this.elements[1] = temp;
+
+        temp = this.elements[8];
+        this.elements[8] = this.elements[2];
+        this.elements[2] = temp;
+
+        temp = this.elements[6];
+        this.elements[6] = this.elements[9];
+        this.elements[9] = temp;
+
+        temp = this.elements[3];
+        this.elements[3] = this.elements[12];
+        this.elements[12] = temp;
+
+        temp = this.elements[7];
+        this.elements[7] = this.elements[13];
+        this.elements[13] = temp;
+
+        temp = this.elements[11];
+        this.elements[11] = this.elements[14];
+        this.elements[14] = temp;
       },
       /**
        * @member PMatrix3D

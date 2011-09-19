@@ -1,7 +1,9 @@
 void setup(){
   size(100, 100, P3D);
+  sphereDetail(100);
+  noFill();
 }
 
 void draw() {
-  box(20);
+  sphere(50);
 }
