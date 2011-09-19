@@ -17515,7 +17515,9 @@
           }
 
           curSketch.attach(processing, defaultScope);
-          curSketch.onLoad();
+
+          // pass a reference to the p instance for this sketch.
+          curSketch.onLoad(processing);
 
           // Run void setup()
           if (processing.setup) {
