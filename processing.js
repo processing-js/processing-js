@@ -10728,7 +10728,7 @@
      * @see frustum
      */
     p.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
-      if (arguments.length === 0) {
+      if (eyeX === undef) {
         //in case canvas is resized
         cameraX = p.width / 2;
         cameraY = p.height / 2;
@@ -10746,19 +10746,30 @@
 
       var z = new PVector(eyeX - centerX, eyeY - centerY, eyeZ - centerZ);
       var y = new PVector(upX, upY, upZ);
-      var transX, transY, transZ;
       z.normalize();
       var x = PVector.cross(y, z);
       y = PVector.cross(z, x);
       x.normalize();
       y.normalize();
 
-      cam.set(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+      var xX = x.x,
+          xY = x.y,
+          xZ = x.z;
+          
+      var yX = y.x,
+          yY = y.y,
+          yZ = y.z;
+          
+      var zX = z.x,
+          zY = z.y,
+          zZ = z.z;
+      
+      cam.set(xX, xY, xZ, 0, yX, yY, yZ, 0, zX, zY, zZ, 0, 0, 0, 0, 1);
 
       cam.translate(-eyeX, -eyeY, -eyeZ);
 
       cameraInv.reset();
-      cameraInv.invApply(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+      cameraInv.invApply(xX, xY, xZ, 0, yX, yY, yZ, 0, zX, zY, zZ, 0, 0, 0, 0, 1);
 
       cameraInv.translate(eyeX, eyeY, eyeZ);
 
