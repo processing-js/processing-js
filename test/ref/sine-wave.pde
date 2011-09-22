@@ -10,16 +10,22 @@ float period = 500.0;    // How many pixels before the wave repeats
 float dx;                 // Value for incrementing X, to be calculated as a function of period and xspacing
 float[] yvalues;          // Using an array to store height values for the wave (not entirely necessary)
 
+void setup(){
   size(100,100);
+  frameRate(1000);
   colorMode(RGB,255,255,255,100);
   smooth();
   w = width+16;
   dx = (TWO_PI / period) * xspacing;
   yvalues = new float[w/xspacing];
+}
 
+void draw() {
   background(0);
   calcWave();
   renderWave();
+  exit();
+}
 
 void calcWave() {
   // Increment theta (try different values for 'angular velocity' here
@@ -42,5 +48,3 @@ void renderWave() {
     ellipse(x*xspacing,width/2+yvalues[x],16,16);
   }
 }
-
-exit();
