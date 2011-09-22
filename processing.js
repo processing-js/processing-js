@@ -2464,10 +2464,7 @@
       // vec4(1.0,1.0,1.0,0.5)
       "void main(void){" +
       "  if(usingTexture){" +
-      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy));" +
-      "    if(usingTint){" +
-      "      gl_FragColor = gl_FragColor*frontColor;" +
-      "    }"+
+      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy)) * frontColor;" +
       "  }"+
       "  else{" +
       "    gl_FragColor = frontColor;" +

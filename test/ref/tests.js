@@ -322,7 +322,7 @@ var tests = [
   { path: "texture_noShape.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_triangles.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_norm.pde", tags: ["3D", "Color Profile"] },
-  { path: "texture_ambient.pde", tags: ["3D", "Color Profile"], knownFailureTicket: "1503" },
+  { path: "texture_ambient.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_transparent.pde", tags: ["3D", "Color Profile"]  },
   { path: "texture_npot.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_vertex_no_z.pde", tags: ["3D", "Color Profile"] },
