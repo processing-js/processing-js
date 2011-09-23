@@ -11966,6 +11966,18 @@
         z = 0;
       }
 
+      // Convert u and v to normalized co-ordinates
+      if (u !== undef && v !== undef) {
+        if (curTextureMode === PConstants.IMAGE) {
+          u /= curTexture.originalWidth;
+          v /= curTexture.originalHeight;
+        }
+        u = u > 1 ? 1 : u;
+        u = u < 0 ? 0 : u;
+        v = v > 1 ? 1 : v;
+        v = v < 0 ? 0 : v;
+      }
+
       vert[0] = x;
       vert[1] = y;
       vert[2] = z || 0;
@@ -12112,21 +12124,7 @@
 
       var i;
 
-      if(usingTexture){
-        if(curTextureMode === PConstants.IMAGE){
-          for(i = 0; i < tArray.length; i += 2){
-            tArray[i] = tArray[i]/curTexture.width;
-            tArray[i+1] /= curTexture.height;
-          }
-        }
-
-        // hack to handle when users specifies values
-        // greater than 1.0 for texture coords.
-        for(i = 0; i < tArray.length; i += 2){
-          if( tArray[i+0] > 1.0 ){ tArray[i+0] -= (tArray[i+0] - 1.0);}
-          if( tArray[i+1] > 1.0 ){ tArray[i+1] -= (tArray[i+1] - 1.0);}
-        }
-
+      if (usingTexture) {
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
         vertexAttribPointer("aTexture3d", programObject3D, "aTexture", 2, shapeTexVBO);
         curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW);
@@ -13034,6 +13032,8 @@
           cvs.height = pot;
         }
 
+        curTexture.originalWidth = pimage.width;
+        curTexture.originalHeight = pimage.height;
         pimage.resize(cvs.width, cvs.height);
 
         var cvsTextureCtx = cvs.getContext('2d');
