@@ -12085,13 +12085,11 @@
      */
     var fill3D = function(vArray, mode, cArray, tArray){
       var ctxMode;
-      if(mode === "TRIANGLES"){
+      if (mode === "TRIANGLES") {
         ctxMode = curContext.TRIANGLES;
-      }
-      else if(mode === "TRIANGLE_FAN"){
+      } else if(mode === "TRIANGLE_FAN") {
         ctxMode = curContext.TRIANGLE_FAN;
-      }
-      else{
+      } else {
         ctxMode = curContext.TRIANGLE_STRIP;
       }
 
@@ -12111,7 +12109,7 @@
 
       // if we are using a texture and a tint, then overwrite the
       // contents of the color buffer with the current tint
-      if(usingTexture && curTint !== null){
+      if (usingTexture && curTint !== null){
         curTint3d(cArray);
         uniformi("usingTint3d", programObject3D, "usingTint", true);
       }
@@ -12121,8 +12119,6 @@
 
       // No support for lights....yet
       disableVertexAttribPointer("normal3d", programObject3D, "Normal");
-
-      var i;
 
       if (usingTexture) {
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
