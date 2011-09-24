@@ -2457,7 +2457,6 @@
 
       "uniform sampler2D sampler;" +
       "uniform bool usingTexture;" +
-      "uniform bool usingTint;" +
       "varying vec2 vTexture;" +
 
       // In Processing, when a texture is used, the fill color is ignored
@@ -10245,7 +10244,6 @@
         // assume we aren't using textures by default
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
         // assume that we arn't tinting by default
-        uniformi("usingTint3d", programObject3D, "usingTint", false);
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
         p.ambient(255, 255, 255);
@@ -12098,7 +12096,6 @@
       // contents of the color buffer with the current tint
       if(usingTexture && curTint !== null){
         curTint3d(cArray);
-        uniformi("usingTint3d", programObject3D, "usingTint", true);
       }
 
       vertexAttribPointer("aColor3d", programObject3D, "aColor", 4, fillColorBuffer);
