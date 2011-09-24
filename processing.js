@@ -27,6 +27,9 @@
 
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
+  // document.head polyfill for the benefit of Firefox 3.6
+  document.head = document.head || document.getElementsByTagName('head')[0];
+
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
   function setupTypedArray(name, fallback) {
     // Check if TypedArray exists, and use if so.
