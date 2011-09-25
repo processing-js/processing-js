@@ -10371,8 +10371,12 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
+      // Use p.color to handle HSB/RGB colorMode.
+      var col = p.color(r, g, b);
+      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+
       curContext.useProgram(programObject3D);
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 0);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
@@ -10429,7 +10433,11 @@
         mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      // Use p.color to handle HSB/RGB colorMode.
+      var col = p.color(r, g, b);
+      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", dir);
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
@@ -10491,8 +10499,13 @@
     Drawing2D.prototype.lightSpecular = DrawingShared.prototype.a3DOnlyFunction;
 
     Drawing3D.prototype.lightSpecular = function(r, g, b) {
+
+      // Use p.color to handle HSB/RGB colorMode.
+      var col = p.color(r, g, b);
+      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+
       curContext.useProgram(programObject3D);
-      uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
+      uniformf("specular3d", programObject3D, "specular", normalizedCol);
     };
 
     /**
@@ -10549,7 +10562,7 @@
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
 
-      // place the point in view space once instead of once per vertex
+      // Place the point in view space once instead of once per vertex
       // in the shader.
       var pos = new PVector(x, y, z);
       var view = new PMatrix3D();
@@ -10557,8 +10570,12 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
+      // Use p.color to handle HSB/RGB colorMode.
+      var col = p.color(r, g, b);
+      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+
       curContext.useProgram(programObject3D);
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 2);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
@@ -10628,7 +10645,7 @@
       mvm.apply(modelView.array());
       mvm.mult(pos, pos);
 
-      // convert to array since we need to directly access the elements
+      // Convert to array since we need to directly access the elements.
       mvm = mvm.array();
 
       // We need to multiply the direction by the model view matrix, but
@@ -10640,7 +10657,11 @@
           mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      // Use p.color to handle HSB/RGB colorMode.
+      var col = p.color(r, g, b);
+      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", dir);
       uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
@@ -11346,29 +11367,11 @@
     */
     Drawing2D.prototype.ambient = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.ambient = function() {
-      // create an alias to shorten code
-      var a = arguments;
-
-      // either a shade of gray or a 'color' object.
+    Drawing3D.prototype.ambient = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-
-      if (a.length === 1) {
-        // color object was passed in
-        if (typeof a[0] === "string") {
-          var c = a[0].slice(5, -1).split(",");
-          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
-        }
-        // else a single number was passed in for gray shade
-        else {
-          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
-        }
-      }
-      // Otherwise three values were provided (r,g,b)
-      else {
-        uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
-      }
+      var col = p.color(v1, v2, v3);
+      uniformf("mat_ambient3d", programObject3D, "mat_ambient", p.color.toGLArray(col).slice(0, 3));
     };
 
     /**
@@ -11397,30 +11400,11 @@
     */
     Drawing2D.prototype.emissive = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.emissive = function() {
-      // create an alias to shorten code
-      var a = arguments;
-
+    Drawing3D.prototype.emissive = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-
-      // If only one argument was provided, the user either gave us a
-      // shade of gray or a 'color' object.
-      if (a.length === 1) {
-        // color object was passed in
-        if (typeof a[0] === "string") {
-          var c = a[0].slice(5, -1).split(",");
-          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
-        }
-        // else a regular number was passed in for gray shade
-        else {
-          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
-        }
-      }
-      // Otherwise three values were provided (r,g,b)
-      else {
-        uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
-      }
+      var col = p.color(v1, v2, v3);
+      uniformf("mat_emissive3d", programObject3D, "mat_emissive", p.color.toGLArray(col).slice(0, 3));
     };
 
     /**
@@ -11479,11 +11463,10 @@
     Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
 
     Drawing3D.prototype.specular = function(a1, a2, a3) {
-      var c = p.color(a1, a2, a3);
-
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-      uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
+      var col = p.color(a1, a2, a3);
+      uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(col).slice(0, 3));
     };
 
     ////////////////////////////////////////////////////////////////////////////
