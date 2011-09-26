@@ -323,7 +323,7 @@ var tests = [
   { path: "texture_triangles.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_norm.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_ambient.pde", tags: ["3D", "Color Profile"] },
-  { path: "texture_transparent.pde", tags: ["3D", "Color Profile"], epsilonOverride: 0.25  },
+  { path: "texture_transparent.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_npot.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_vertex_no_z.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_tint.pde", tags: ["3D", "Color Profile"] },
