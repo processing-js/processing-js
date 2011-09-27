@@ -10371,7 +10371,7 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
-      // Intead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to 
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
@@ -10436,7 +10436,7 @@
         mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      // Intead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to 
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
@@ -10506,7 +10506,7 @@
 
     Drawing3D.prototype.lightSpecular = function(r, g, b) {
 
-      // Intead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to 
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
@@ -10579,7 +10579,7 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
-      // Intead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to 
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
@@ -10669,7 +10669,7 @@
           mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      // Intead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to 
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
