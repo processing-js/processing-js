@@ -10347,9 +10347,9 @@
      * @param {int | float} g green or hue value
      * @param {int | float} b blue or hue value
      *
-     * @param {int | float} x
-     * @param {int | float} y
-     * @param {int | float} z
+     * @param {int | float} x x position of light (used for falloff)
+     * @param {int | float} y y position of light (used for falloff)
+     * @param {int | float} z z position of light (used for falloff)
      *
      * @returns none
      *
@@ -10371,9 +10371,12 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
-      // Use p.color to handle HSB/RGB colorMode.
-      var col = p.color(r, g, b);
-      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+      // Intead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
 
       curContext.useProgram(programObject3D);
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
@@ -10433,9 +10436,12 @@
         mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      // Use p.color to handle HSB/RGB colorMode.
-      var col = p.color(r, g, b);
-      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+      // Intead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
 
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", dir);
@@ -10500,9 +10506,12 @@
 
     Drawing3D.prototype.lightSpecular = function(r, g, b) {
 
-      // Use p.color to handle HSB/RGB colorMode.
-      var col = p.color(r, g, b);
-      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+      // Intead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
 
       curContext.useProgram(programObject3D);
       uniformf("specular3d", programObject3D, "specular", normalizedCol);
@@ -10570,9 +10579,12 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
-      // Use p.color to handle HSB/RGB colorMode.
-      var col = p.color(r, g, b);
-      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+      // Intead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
 
       curContext.useProgram(programObject3D);
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
@@ -10657,9 +10669,12 @@
           mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      // Use p.color to handle HSB/RGB colorMode.
-      var col = p.color(r, g, b);
-      var normalizedCol = p.color.toGLArray(col).slice(0, 3);
+      // Intead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
 
       uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
@@ -11462,10 +11477,10 @@
     */
     Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.specular = function(a1, a2, a3) {
+    Drawing3D.prototype.specular = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-      var col = p.color(a1, a2, a3);
+      var col = p.color(v1, v2, v3);
       uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(col).slice(0, 3));
     };
 

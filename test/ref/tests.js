@@ -350,4 +350,12 @@ var tests = [
   { path: "rgb-255-emissive-3d-sphere.pde", tags: ["3D"] },
   { path: "rgb-255-point-3d-sphere.pde", tags: ["3D"] },
   { path: "rgb-255-spot-3d-sphere.pde", tags: ["3D"] },
+  { path: "material-amb-grey-1.pde", tags: ["3D"] },
+  { path: "material-amb-grey-3vals.pde", tags: ["3D"] },
+  { path: "material-amb-pcolor.pde", tags: ["3D"] },
+
+  // Falloff
+  { path: "falloff-amb-1.pde", tags: ["3D"] },
+  { path: "falloff-amb-2.pde", tags: ["3D"] },
+  { path: "falloff-amb-3.pde", tags: ["3D"], knownFailureTicket: "1678" }
 ];
