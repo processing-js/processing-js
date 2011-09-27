@@ -11966,7 +11966,7 @@
         z = 0;
       }
 
-      // Convert u and v to normalized co-ordinates
+      // Convert u and v to normalized coordinates
       if (u !== undef && v !== undef) {
         if (curTextureMode === PConstants.IMAGE) {
           u /= curTexture.originalWidth;
