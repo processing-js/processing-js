@@ -329,5 +329,34 @@ var tests = [
   { path: "texture_vertex_no_z.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_tint.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_tint_white.pde", tags: ["3D", "Color Profile"] },
-  { path: "rotateZ.pde", tags: ["3D"], knownFailureTicket: "1271" }
+  { path: "rotateZ.pde", tags: ["3D"], knownFailureTicket: "1271" },
+
+  // ColorMode light and material
+  { path: "hsb-1-ambient-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-1-dir-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-1-point-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-1-spot-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-255-ambient-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-255-dir-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-255-point-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-255-spot-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-ambient-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-dir-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-emissive-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-point-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-spec-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-spot-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-ambient-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-dir-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-emissive-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-point-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-spot-3d-sphere.pde", tags: ["3D"] },
+  { path: "material-amb-grey-1.pde", tags: ["3D"] },
+  { path: "material-amb-grey-3vals.pde", tags: ["3D"] },
+  { path: "material-amb-pcolor.pde", tags: ["3D"] },
+
+  // Falloff
+  { path: "falloff-amb-1.pde", tags: ["3D"] },
+  { path: "falloff-amb-2.pde", tags: ["3D"] },
+  { path: "falloff-amb-3.pde", tags: ["3D"], knownFailureTicket: "1678" }
 ];
