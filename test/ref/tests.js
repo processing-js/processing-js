@@ -319,6 +319,7 @@ var tests = [
   { path: "tint-alpha.pde", tags: ["2D", "Color Profile"] },
   { path: "quad_3D.pde", tags:["3D"], knownFailureTicket: "1271" },
   { path: "textured_box_3D.pde", tags:["3D", "Color Profile"], knownFailureTicket: "1271" },
+  { path: "texture-uv-clamping.pde", tags: ["3D"], epsilonOverride: 0.09 },
   { path: "texture_noShape.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_triangles.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_norm.pde", tags: ["3D", "Color Profile"] },
