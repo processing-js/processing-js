@@ -3,11 +3,11 @@ void setup() {
  size(100,100);
  noFill();
  noLoop();
- smooth(); 
+ smooth();
 }
 
 void draw() {
-  curve(5, 26, 73, 24, 73, 61, 15, 65); 
+  curve(5, 26, 73, 24, 73, 61, 15, 65);
   int steps = 6;
   for (int i = 0; i <= steps; i++) {
     float t = i / float(steps);
@@ -19,7 +19,7 @@ void draw() {
     a -= PI/2.0;
     line(x, y, cos(a)*8 + x, sin(a)*8 + y);
   }
-  
+
   exit();
 
 }

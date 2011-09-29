@@ -1961,8 +1961,8 @@
         currentFillColor = 0xFFFFFFFF,
         isFillDirty = true,
         doStroke = true,
-        strokeStyle = [0.8, 0.8, 0.8, 1.0],
-        currentStrokeColor = 0xFFFDFDFD,
+        sstrokeStyle = [0.0, 0.0, 0.0, 1.0],
+        currentStrokeColor = 0xFF000000,
         isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
@@ -10122,11 +10122,11 @@
     * @see screen
     */
     DrawingShared.prototype.size = function(aWidth, aHeight, aMode) {
-      if (doStroke){
+      if (doStroke) {
         p.stroke(0);
       }
 
-      if (doFill){
+      if (doFill) {
         p.fill(255);
       }
 

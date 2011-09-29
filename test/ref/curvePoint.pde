@@ -3,12 +3,12 @@ void setup() {
  size(100,100);
  noFill();
  noLoop();
- smooth(); 
+ smooth();
 }
 
 void draw() {
   curve(5, 26, 5, 26, 73, 24, 73, 61);
-  curve(5, 26, 73, 24, 73, 61, 15, 65); 
+  curve(5, 26, 73, 24, 73, 61, 15, 65);
   ellipseMode(CENTER);
   int steps = 6;
   for (int i = 0; i <= steps; i++) {
@@ -20,6 +20,6 @@ void draw() {
     y = curvePoint(26, 24, 61, 65, t);
     ellipse(x, y+20, 4, 4);
   }
-  
+
   exit();
 }
