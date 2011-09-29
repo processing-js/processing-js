@@ -1961,7 +1961,7 @@
         currentFillColor = 0xFFFFFFFF,
         isFillDirty = true,
         doStroke = true,
-        sstrokeStyle = [0.0, 0.0, 0.0, 1.0],
+        strokeStyle = [0.0, 0.0, 0.0, 1.0],
         currentStrokeColor = 0xFF000000,
         isStrokeDirty = true,
         lineWidth = 1,
