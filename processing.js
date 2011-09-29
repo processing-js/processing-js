@@ -10729,9 +10729,9 @@
      */
     p.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
       if (eyeX === undef) {
-        //in case canvas is resized
-        cameraX = p.width / 2;
-        cameraY = p.height / 2;
+        // Workaround if createGraphics is used. 
+        cameraX = curElement.width === p.width ? p.width/2 : curElement.width/2;
+        cameraY = curElement.height === p.height ? p.height/2 : curElement.height/2;
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         eyeX = cameraX;
         eyeY = cameraY;
@@ -10755,15 +10755,15 @@
       var xX = x.x,
           xY = x.y,
           xZ = x.z;
-          
+
       var yX = y.x,
           yY = y.y,
           yZ = y.z;
-          
+
       var zX = z.x,
           zY = z.y,
           zZ = z.z;
-      
+
       cam.set(xX, xY, xZ, 0, yX, yY, yZ, 0, zX, zY, zZ, 0, 0, 0, 0, 1);
 
       cam.translate(-eyeX, -eyeY, -eyeZ);
