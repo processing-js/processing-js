@@ -200,7 +200,7 @@ var tests = [
   { path: "curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
   { path: "curve-3D.pde", tags: ["3D"] },
   { path: "curveDetail.pde", tags: ["3D"], knownFailureTicket: "1416" },
-  { path: "curvePoint.pde", tags: ["2D"], knownFailureTicket: "1417" },
+  { path: "curvePoint.pde", tags: ["2D"], epsilonOverride: 0.11 , knownFailureTicket: "1417" },
   { path: "curveTangent.pde", tags: ["2D"], knownFailureTicket: "1417" },
   { path: "curveTightness.pde", tags: ["2D"], epsilonOverride: 0.11 },
   { path: "continuous-curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
