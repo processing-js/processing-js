@@ -182,6 +182,7 @@ var tests = [
   { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
+  { path: "setup-noFill-noStroke.pde", tags: ["2D"]}, /* See ticket #1417 */
   { path: "svg_font_biotyp.pde", tags: ["2D", "Text"] },
   { path: "box-rotating.pde", tags: ["3D"], epsilonOverride: 0.10 },
   { path: "translate-rect.pde", tags: ["2D", "Crisp"] },

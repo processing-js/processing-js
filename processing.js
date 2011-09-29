@@ -10122,13 +10122,13 @@
     * @see screen
     */
     DrawingShared.prototype.size = function(aWidth, aHeight, aMode) {
-      if(doStroke){
-	    p.stroke(0);
-  	  }
+      if (doStroke){
+        p.stroke(0);
+      }
 
-	  if(doFill){
-	    p.fill(255);
-	  }
+      if (doFill){
+        p.fill(255);
+      }
 
       // The default 2d context has already been created in the p.init() stage if
       // a 3d context was not specified. This is so that a 2d context will be
