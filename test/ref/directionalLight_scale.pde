@@ -10,4 +10,6 @@ void setup(){
   directionalLight(200, 200, 200, 0, 0, -1);
   scale(4);
   sphere(10);
+  
+  exit();
 }

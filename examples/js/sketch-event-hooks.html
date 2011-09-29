@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../../processing.js"></script>
+  <link rel="stylesheet" href="../style.css"/></head>
+<body><h1><a href="http://processingjs.org/">Processing.js</a></h1>
+<h2>Sketch Event Hooks via JavaScript</h2>
+
+<p>Clock</p>
+
+<p>
+<canvas id="canvas1"></canvas>
+</p>
+<div style="margin:10px">
+  <button onclick="start();">Start</button>
+  <button onclick="p.noLoop();">noLoop()</button>
+  <button onclick="p.loop();">loop()</button>
+  <button onclick="p.exit();">Exit</button>
+</div>
+<div id="log" style="margin:10px">Sketch Events:<br></div>
+
+<script id="script1" type="text/javascript">
+
+// Simple way to attach js code to the canvas is by using a function
+function sketchProc(processing) {
+  processing.setup = function() {
+    processing.size(100,100);
+    processing.background(224);
+  };
+
+  // Override draw function, by default it will be called 60 times per second
+  processing.draw = function() {
+    // determine center and max clock arm length
+    var centerX = processing.width / 2, centerY = processing.height / 2;
+    var maxArmLength = Math.min(centerX, centerY);
+
+    function drawArm(position, lengthScale, weight) {
+      processing.strokeWeight(weight);
+      processing.line(centerX, centerY,
+        centerX + Math.sin(position * 2 * Math.PI) * lengthScale * maxArmLength,
+        centerY - Math.cos(position * 2 * Math.PI) * lengthScale * maxArmLength);
+    }
+
+    // erase background
+    processing.background(224);
+
+    var now = new Date();
+
+    // Moving hours arm by small increments
+    var hoursPosition = (now.getHours() % 12 + now.getMinutes() / 60) / 12;
+    drawArm(hoursPosition, 0.5, 5);
+
+    // Moving minutes arm by small increments
+    var minutesPosition = (now.getMinutes() + now.getSeconds() / 60) / 60;
+    drawArm(minutesPosition, 0.80, 3);
+
+    // Moving hour arm by second increments
+    var secondsPosition = now.getSeconds() / 60;
+    drawArm(secondsPosition, 0.90, 1);
+  };
+}
+
+function start() {
+  var log = document.getElementById('log');
+  log.innerHTML = '';
+
+  // Wire up custom event handlers for the sketch
+  var sketch = new Processing.Sketch(sketchProc);
+  sketch.onLoad = function() { log.innerHTML += 'sketch.onLoad fired.<br>'; }
+  sketch.onSetup = function() { log.innerHTML += 'sketch.onSetup fired.<br>'; }
+  sketch.onPause = function() { log.innerHTML += '<br><br>sketch.onPause fired.<br>'; }
+  sketch.onLoop = function() { log.innerHTML += '<br>sketch.onLoop fired.<br>'; }
+  sketch.onExit = function() { log.innerHTML += '<br>sketch.onExit fired.<br>'; }
+  sketch.onFrameStart = function() { log.innerHTML += 'sketch.onFrameStart fired. '; }
+  sketch.onFrameEnd = function() { log.innerHTML += 'sketch.onFrameEnd fired. '; }
+
+  var canvas = document.getElementById("canvas1");
+  this.p = new Processing(canvas, sketch);
+}
+</script>
+
+<pre id="code1"></pre>
+<script>
+document.getElementById("code1").textContent = document.getElementById("script1").text;
+</script>
+</body>
+</html>

@@ -6,3 +6,5 @@ noStroke();
 fill(226);
 triangle(2, 2, 10, 30, 45, 30);
 triangle(60, 10, 95, 90, 60, 90);
+
+exit();

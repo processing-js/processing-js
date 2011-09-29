@@ -1,8 +1,4 @@
-PFont font;
-
 void setup() {
-  font = loadFont();
-  textFont(font);
   softkey("Delete"); // Use softkey to to delete characters from the multitap buffer
   multitap(); // Turn on multitap key input
 }

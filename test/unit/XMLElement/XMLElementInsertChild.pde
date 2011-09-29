@@ -5,8 +5,8 @@ String sites =  "<?xml version='1.0'?>\n"+
                 "</websites>";
 String site = "<site id='3' url='processingjs.org'>Processing JavaScript</site>\n";
 
-XMLElement xml = new XMLElement(sites);
-XMLElement child = new XMLElement(site);
+XMLElement xml = XMLElement.parse(sites);
+XMLElement child = XMLElement.parse(site);
 
 // verify correct number of children
 int numSites = xml.getChildCount();

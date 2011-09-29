@@ -9,3 +9,5 @@ rotateY(PI/5);
 box(40);
 translate(60, 0, 0);
 sphere(30);
+
+exit();

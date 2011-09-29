@@ -3,7 +3,7 @@ String sites =  "";
 sites = "<?xml version='1.0'?>\n"+
         "<a></a>";
 
-XMLElement xml = new XMLElement(sites);
+XMLElement xml = XMLElement.parse(sites);
 int numSites = xml.getChildCount();
 _checkEqual(numSites,0);
 

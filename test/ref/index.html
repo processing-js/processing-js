@@ -12,10 +12,31 @@
   </head>
   <body>
     <h1>Processing.js Ref Test Runner</h1>
-    <p>To start the tests click Start.  Each test is run in order (downloaded from the server).  The first canvas is the reference image, the second is a live sketch that has just been executed, the third is a visual diff.  The diff is calculated with a tolerance value (e.g., ~5%).  If the third canvas is green, the test passed.  If it is white with red pixels (or all red), it failed, and the red shows where the pixels differ. The calibrating must fail on some tests.  You can generate ref tests <a href="../../tools/processing-helper.html">here</a>.</p>
+    <p>To start the tests click Start.  Each test is run in order (downloaded from the server).  The first canvas is the reference image, the second is a live sketch that has just been executed, the third is a visual diff.  The diff is calculated with a tolerance value (e.g., ~5%).  If the third canvas is green, the test passed.  If it is white with red pixels (or all red), it failed, and the red shows where the pixels differ. The calibrating must fail on some tests.  You can generate ref tests <a href="ref-test-builder.html">here</a>.</p>
 
     <h3>Settings</h3>
-    <div>Run Tests: <select id="test-type" onchange="updateSelectedTests();"><option value="2D,3D" selected>2D and 3D</option><option value="2D">2D Only</option><option value="3D">3D Only</option><option value="endShape2D">endShape2D</option><option value="endShape3D">endShape3D</option><option value="Calibration">Calibration</option></select>&nbsp;Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">&nbsp;Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">&nbsp;<input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
+    <div>Run Tests:
+		<select id="test-type" onchange="updateSelectedTests();">
+			<option value="2D,3D" selected>2D and 3D</option>
+			<option value="2D">2D Only</option>
+			<option value="3D">3D Only</option>
+			<option value="BLEND">Blend Only</option>
+			<option value="Color Profile">Color Profile</option>
+			<option value="endShape2D">endShape2D</option>
+			<option value="endShape3D">endShape3D</option>
+			<option value="Calibration">Calibration</option>
+			<option value="Convolution">Convolution</option>
+			<option value="SVG">SVG</option>
+			<option value="Text">Text</option>
+			<option value="Crisp">Crisp</option>
+			<option value="Test Suite">Test Suite</option>
+		</select>
+		Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
+		Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
+    Remove Passed Tests: <input id="remove-passed" type="checkbox">
+		<input onclick="runTests(selectedTests);" type="button" value="Start">
+		<span id="testCount"></span>
+	  </div>
 
     <h3>Results</h3>
     <div id="status" style="margin-bottom: 10px;"></div>
@@ -23,9 +44,27 @@
     <div id="total"></div>
 
     <script type="text/javascript">
+      var isWebGLBrowser = (function() {
+        var canvas = document.createElement('canvas'),
+          contextNames = ["webgl", "experimental-webgl", "moz-webgl", "webkit-3d"],
+          i = contextNames.length,
+          ctx;
+
+        while (i--) {
+          try {
+            ctx = canvas.getContext(contextNames[i]);
+            if (ctx) {
+              return true;
+            }
+          } catch(e) {}
+        }
+        return false;
+      })();
+
       var selectedTests = [];
       var total = document.getElementById('total');
       total.innerHTML = '';
+      var removePassed;
 
       updateSelectedTests();
 
@@ -36,13 +75,6 @@
       document.getElementById('epsilon').value = epsilon;
       var kernel, kernelSize;
       buildKernel();     
-
-      try {
-        // Opera createImageData fix
-        if (!("createImageData" in CanvasRenderingContext2D.prototype)) {
-          CanvasRenderingContext2D.prototype.createImageData = function(sw,sh) { return this.getImageData(0,0,sw,sh); }
-        }
-      } catch(e) {}
 
       function updateSelectedTests() {
         var selectControl = document.getElementById('test-type');
@@ -119,7 +151,7 @@
 
         function is3D(script) {
           // look for size(100,100,OPENGL) or size(100,100,P3D)
-          var match = script.match(/size\([\s]*[\d]+[\s]*\,[\s]*[\d]+[\s]*\,?([^\)]+)?\)/);
+          var match = script.match(/size\(\s*\d+\s*\,\s*\d+\s*\,\s*(\w+)\s*\);/);
           if (match && match[1]) {
             return match[1] == "OPENGL" || match[1] == "P3D";
           }
@@ -153,10 +185,11 @@
 
       function runTests(tests) {
         var results = document.getElementById('results');
-        var status = document.getElementById('status');
-        status.innerHTML = 'Running... (this may take some time)';
+        results.innerHTML = '';
         var total = document.getElementById('total');
         total.innerHTML = '';
+
+        removePassed = document.getElementById('remove-passed').checked;
 
         var buildCanvas = function(id, w, h) {
           var c = document.createElement('canvas');
@@ -257,6 +290,9 @@
         }
 
         var runOne = function(i) {
+          var status = document.getElementById('status');
+          status.innerHTML = "Running Test " + i + "/" + (tests.length-1);
+
           var test = getTest(tests[i].path);
           test.knownFailureTicket = tests[i].knownFailureTicket;
           test.epsilonOverride = tests[i].epsilonOverride
@@ -282,21 +318,9 @@
 
             var pixelsLen = test.pixels.length;
 
-            // draw the current version from code, timing it
-            var startTime = (new Date).getTime(), totalTime = 0;
-            var p;
-            try {
-              p = new Processing(current, test.code);
-            } catch (e) {
-              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
-              result.className = "failed";
-              failedCount++;
-              return nextTest(i+1);
-            }
-            var totalTime = (new Date).getTime() - startTime;
-
             function validateResult() {
-                var is3D = p.use3DContext;
+                var is3D = test.is3D;
+                totalTime = Date.now() - startTime;
 
                 // draw the original based on stored pixels
                 var origCtx = original.getContext('2d');
@@ -378,6 +402,10 @@
                       result.className = "passed";
                     }
                     passedCount++;
+                    if (removePassed) {
+                      result.parentNode.removeChild(result);
+                      result = null;
+                    }
                   }
                 } else {
                   title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "size mismatch");
@@ -387,17 +415,26 @@
                 nextTest(i+1);
             }
 
-            var validationDelay = 0;
-            if (/@pjs\s+preload\b/.test(test.code)) {
-              validationDelay = 100;
+            if (test.is3D && !isWebGLBrowser) {
+              title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: WebGL context is not supported on this browser.");
+              result.className = "failed";
+              failedCount++;
+              return nextTest(i+1);
+            } else {
+              // draw the current version from code, timing it
+              var startTime = Date.now(), totalTime = 0;
+              var p, s;
+              try {
+                s = Processing.compile(test.code);
+                s.onExit = validateResult;
+                p = new Processing(current, s);
+              } catch (e) {
+                title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
+                result.className = "failed";
+                failedCount++;
+                return nextTest(i+1);
+              }
             }
-
-            if (validationDelay > 0) {
-              totalTime = "-"; // we are not sure how long test was run
-              setTimeout(validateResult, validationDelay);
-              return; // exit without nextTest
-            }
-            validateResult();
           } else {
             title.innerHTML = titleText(i+1, tl, totalTime, test.name, true, "invalid test");
             result.className = "failed";

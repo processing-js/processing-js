@@ -5,3 +5,5 @@ PFont fontA = loadFont("biotyp.svg");
 textFont(fontA, 20);
 fill(0);
 text("Working!", 10, 40);
+
+exit();

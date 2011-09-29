@@ -1,4 +1,20 @@
-color a, b, c, d, e, f, g, h, i, j, k, l, m;
+
+color a,
+      aa,
+      b,
+      bb,
+      c,
+      cc,
+      d,
+      e,
+      f,
+      g,
+      h,
+      i,
+      j,
+      k,
+      l,
+      m;
 
 // 1 Arg: Grayscale
 a = color(255);
@@ -19,8 +35,11 @@ _checkEqual(color.toString(d), "rgba(0,0,0,1)");
 
 // 1 Arg: Hex
 a = color(#FF00FF);
+aa = color(255,000,255);
 b = color(#000000);
+bb = color(000,000,000);
 c = color(#884422);
+cc = color(136,68,34);
 
 _checkEqual(color.toArray(a), [255, 0, 255, 255]);
 _checkEqual(color.toArray(b), [0, 0, 0, 255]);
@@ -30,6 +49,9 @@ _checkEqual(color.toString(a), "rgba(255,0,255,1)");
 _checkEqual(color.toString(b), "rgba(0,0,0,1)");
 _checkEqual(color.toString(c), "rgba(136,68,34,1)");
 
+_checkEqual(a, aa);
+_checkEqual(b, bb);
+_checkEqual(c, cc);
 
 // 2 Args: Grayscale, Alpha
 a = color(255, 100);
@@ -85,6 +107,12 @@ _checkEqual(color.toString(b), "rgba(100,255,100,1)");
 _checkEqual(color.toString(c), "rgba(57,128,255,0)");
 _checkEqual(color.toString(d), "rgba(0,0,0,0)");
 
+// Test limits under 0 and over 255
+a = color(255, 0, 0, -30);
+b = color(-1, 200, 100);
+
+_checkEqual(color.toArray(a), [255, 0, 0, 0]);
+_checkEqual(color.toArray(b), [0, 200, 100, 255]);
 
 // Test colorMode
 colorMode(RGB, 100);
@@ -152,9 +180,44 @@ _checkEqual(hue(c),0);
 _checkEqual(saturation(c),126);
 _checkEqual(brightness(c),255);
 
-// Test color.toHSB
-colorMode(RGB);
+// Test HSB colorMode limiting
+colorMode(RGB, 100);
+color h1 = color(100);
+_checkEqual([hue(h1), saturation(h1), brightness(h1)], [0, 0, 100]);
+
+// Test HSB color
+colorMode(RGB, 255);
 color c1 = color(204, 153, 0);
 color c2 = #FFCC00;
-_checkEqual(color.toHSB(c1), [31.875, 255,204], 0.001);
-_checkEqual(color.toHSB(c2), [34, 255,255], 0.001);
+_checkEqual([hue(c1), saturation(c1), brightness(c1)], [31.875, 255,204], 0.001);
+_checkEqual([hue(c2), saturation(c2), brightness(c2)], [34, 255,255], 0.001);
+
+color w2 = color(255, 255, 255);
+_checkEqual(red(w2), 255);
+_checkEqual(green(w2), 255);
+_checkEqual(blue(w2), 255);
+_checkEqual(alpha(w2), 255);
+
+color w3 = color(0xFFFFFFFF);
+_checkEqual(red(w3), 255);
+_checkEqual(green(w3), 255);
+_checkEqual(blue(w3), 255);
+_checkEqual(alpha(w3), 255);
+
+color w4 = color(#FFFFFF);
+_checkEqual(red(w4), 255);
+_checkEqual(green(w4), 255);
+_checkEqual(blue(w4), 255);
+_checkEqual(alpha(w4), 255);
+
+color w5 = color(255);
+_checkEqual(red(w5), 255);
+_checkEqual(green(w5), 255);
+_checkEqual(blue(w5), 255);
+_checkEqual(alpha(w5), 255);
+
+color w6 = color(255, 255);
+_checkEqual(red(w6), 255);
+_checkEqual(green(w6), 255);
+_checkEqual(blue(w6), 255);
+_checkEqual(alpha(w6), 255);

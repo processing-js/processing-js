@@ -2,3 +2,5 @@
 size(100,100);
 background(255,128,64);
 // checked colors in all color channels
+
+exit();

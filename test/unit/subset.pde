@@ -35,4 +35,4 @@ _checkEqual(subset(ee1, 1, 1), ee3);
 _checkEqual(subset(ff1, 1), ff2);
 _checkEqual(subset(ff1, 0, 3), ff3);
 _checkEqual(subset(subset(aa1, 1), 1, 3), aa3);
-
+_checkEqual(subset(aa1, 1, 0), {});

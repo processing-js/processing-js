@@ -39,6 +39,8 @@ void setup() {
    vertex(i, squared((float)i/width)*height);
   }
   endShape();
+  
+  exit();
 }
 
 float singraph(float sa) {

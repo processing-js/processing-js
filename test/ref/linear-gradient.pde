@@ -8,6 +8,7 @@ void setup(){
 
   // create some gradients
   // background
+  loadPixels();
   color b1 = color(190, 190, 190);
   color b2 = color(20, 20, 20);
   setGradient(0, 0, width, height, b1, b2, Y_AXIS);
@@ -22,6 +23,9 @@ void setup(){
   setGradient(100, 25, 75, 75, c3, c4, X_AXIS);
   setGradient(25, 100, 75, 75, c2, c5, X_AXIS);
   setGradient(50, 50, 75, 75, c4, c6, Y_AXIS);
+  updatePixels();
+  
+  exit();
 }
 
 void setGradient(int x, int y, float w, float h, color c1, color c2, int axis ){

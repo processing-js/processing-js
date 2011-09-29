@@ -6,9 +6,12 @@ from subprocess import Popen, PIPE, STDOUT
 
 # Uses jsshell https://developer.mozilla.org/en/Introduction_to_the_JavaScript_shell
 
+def safePath(path):
+  return path.replace("\\","/");
+
 class ProcessingTests(object):
-  testharnessdir = os.path.dirname(os.path.abspath(__file__))
-  toolsdir = os.path.dirname(os.path.abspath(__file__))
+  testharnessdir = safePath(os.path.dirname(os.path.abspath(__file__)));
+  toolsdir = safePath(os.path.dirname(os.path.abspath(__file__)));
   testsPassed = 0
   testsFailed = 0
   testsFailedKnown = 0
@@ -17,7 +20,7 @@ class ProcessingTests(object):
 
   def __init__(self):
       self.knownFailures = set()
-      f = open(os.path.join(self.toolsdir, '..', 'test', 'KNOWN-FAILURES'), 'r')
+      f = open(safePath(os.path.join(self.toolsdir, '..', 'test', 'KNOWN-FAILURES')), 'r')
       for line in f.readlines():
           if line.startswith('#') or line.lstrip().rstrip() == '':
               continue
@@ -26,9 +29,8 @@ class ProcessingTests(object):
       f.close()
 
   def isKnownFailure(self, testpath):
-      # Assumes abs path for testpath, and normalize for Unix path
-      pos = testpath.find(os.sep + 'test' + os.sep)
-      testpath = testpath.replace('\\', '/')
+      # Assumes abs path for testpath (path already Unix format)
+      pos = testpath.find("/test/")
       if pos > -1 and testpath[pos+1:] in self.knownFailures:
         return True
       else:
@@ -52,13 +54,13 @@ class ProcessingTests(object):
 
   def runParserTests(self, jsshell, testPattern=None, summaryOnly=False, processingPath=None):
       """Get all .pjs in test/parser/ files as JSON, and run through the test harness, faking a DOM"""
-      jsshell = os.path.abspath(jsshell)
-      parsertestdir = os.path.join(self.toolsdir, '..', 'test', 'parser')
+      jsshell = safePath(os.path.abspath(jsshell))
+      parsertestdir = safePath(os.path.join(self.toolsdir, '..', 'test', 'parser'))
       processing_js = None
       if processingPath:
-        processing_js =os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep))
+        processing_js = safePath(os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep)))
       else:
-        processing_js = os.path.join(self.toolsdir, '..', 'processing.js')
+        processing_js = safePath(os.path.join(self.toolsdir, '..', 'processing.js'))
 
       print "\nRunning processing.js Parser Tests:"
 
@@ -68,20 +70,20 @@ class ProcessingTests(object):
               sys.stderr.flush()
 
               # If a single test file name is given, only test that file
-              fullpath = os.path.abspath(os.path.join(root, filename))
+              fullpath = safePath(os.path.abspath(os.path.join(root, filename)))
               if testPattern and self.shouldSkipTest(testPattern, fullpath):
                 continue
 
               if filename.endswith('.pde'):
-                  one_test = 'var parserTest = {name:"%s", body: snarf("%s")};\n' % (fullpath, 
-                             os.path.relpath(fullpath).replace('\\', '/'))
+                  one_test = 'var parserTest = {name:"%s", body: snarf("%s")};\n' % (fullpath,
+                             safePath(os.path.relpath(fullpath)))
 
                   testCmd = [jsshell,
-                             '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
+                             '-f', safePath(os.path.join(self.toolsdir, 'fake-dom.js')),
                              '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
                              '-e', one_test,
-                             '-f', os.path.join(self.toolsdir, 'fake-extensions.js'),
-                             '-f', os.path.join(self.toolsdir, 'test-harness.js')]
+                             '-f', safePath(os.path.join(self.toolsdir, 'fake-extensions.js')),
+                             '-f', safePath(os.path.join(self.toolsdir, 'test-harness.js'))]
                   proc = Popen(testCmd, stdout=PIPE, stderr=PIPE)
                   stdout, stderr = proc.communicate()
 
@@ -133,13 +135,13 @@ class ProcessingTests(object):
   def runUnitTests(self, jsshell, testPattern=None, summaryOnly=False, processingPath=None):
       """Run all .js unit tests in test/unit through the test harness."""
       # TODO: add support for doing .pjs unit tests.
-      unittestdir = os.path.join(self.toolsdir, '..', 'test', 'unit')
-      jsshell = os.path.abspath(jsshell)
+      unittestdir = safePath(os.path.join(self.toolsdir, '..', 'test', 'unit'))
+      jsshell = safePath(os.path.abspath(jsshell))
       processing_js = None
       if processingPath:
-        processing_js =os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep))
+        processing_js = safePath(os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep)))
       else:
-        processing_js = os.path.join(self.toolsdir, '..', 'processing.js')
+        processing_js = safePath(os.path.join(self.toolsdir, '..', 'processing.js'))
 
       print "\nRunning processing.js Unit Tests:"
 
@@ -149,7 +151,7 @@ class ProcessingTests(object):
               sys.stderr.flush()
 
               # If a single test file name is given, only test that file
-              fullpath = os.path.abspath(os.path.join(root, filename))
+              fullpath = safePath(os.path.abspath(os.path.join(root, filename)))
               if testPattern and self.shouldSkipTest(testPattern, fullpath):
                 continue
 
@@ -164,15 +166,15 @@ class ProcessingTests(object):
                   wrapper = "function _testWrapper(ctx) { with (ctx) { %s \n _runTest(); }}\n" % testFile
 
                   testCmd = [jsshell, '-e', 'var _testName = "%s"; %s;' % (fullpath, wrapper),
-                             '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
+                             '-f', safePath(os.path.join(self.toolsdir, 'fake-dom.js')),
                              '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
-                             '-f', os.path.join(self.toolsdir, 'test-harness.js')]
+                             '-f', safePath(os.path.join(self.toolsdir, 'test-harness.js'))]
               elif filename.endswith('.pde'):
-                  execTest = 'eval(new Processing(canvas, \'UnitTests();\' + snarf("%s") + \'\\n_printTestSummary();\'));' % os.path.relpath(fullpath).replace('\\', '/')
+                  execTest = 'eval(new Processing(canvas, \'UnitTests();\' + snarf("%s") + \'\\n_printTestSummary();\'));' % safePath(os.path.relpath(fullpath))
                   testCmd = [jsshell,
-                             '-f', os.path.join(self.toolsdir, 'fake-dom.js'),
+                             '-f', safePath(os.path.join(self.toolsdir, 'fake-dom.js')),
                              '-f', processing_js, #os.path.join(self.toolsdir, '..', 'processing.js'),
-                             '-f', os.path.join(self.toolsdir, 'test-harness-lib.js'),
+                             '-f', safePath(os.path.join(self.toolsdir, 'test-harness-lib.js')),
                              '-e', execTest]
               else:
                 continue
@@ -224,9 +226,9 @@ class ProcessingTests(object):
 
   def initCodeLines(self, processingPath):
       if processingPath:
-        processing_js =os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep))
+        processing_js = safePath(os.path.join(self.toolsdir, '..', processingPath.replace('/', os.sep)))
       else:
-        processing_js = os.path.join(self.toolsdir, '..', 'processing.js')
+        processing_js = safePath(os.path.join(self.toolsdir, '..', 'processing.js'))
 
       f = open(processing_js, 'r')
       for line in f.readlines():

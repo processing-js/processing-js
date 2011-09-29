@@ -18,3 +18,5 @@ for (int i = 0; i < pi.width; i++) {
   c = white;
 }
 image(pi,0,0);
+
+exit();
