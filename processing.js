@@ -13802,6 +13802,19 @@
         throw "rect() with rounded corners is not supported in 3D mode";
       }
 
+      if (curRectMode === PConstants.CORNERS) {
+        width -= x;
+        height -= y;
+      }
+      if (curRectMode === PConstants.RADIUS) {
+        width *= 2;
+        height *= 2;
+      }
+      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      }
+
       // Modeling transformation
       var model = new PMatrix3D();
       model.translate(x, y, 0);
