@@ -182,6 +182,7 @@ var tests = [
   { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
+  { path: "setup-noFill-noStroke.pde", tags: ["2D"]}, /* See ticket #1417 */
   { path: "svg_font_biotyp.pde", tags: ["2D", "Text"] },
   { path: "box-rotating.pde", tags: ["3D"], epsilonOverride: 0.10 },
   { path: "translate-rect.pde", tags: ["2D", "Crisp"] },
@@ -199,8 +200,8 @@ var tests = [
   { path: "curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
   { path: "curve-3D.pde", tags: ["3D"] },
   { path: "curveDetail.pde", tags: ["3D"], knownFailureTicket: "1416" },
-  { path: "curvePoint.pde", tags: ["2D"], knownFailureTicket: "1417" },
-  { path: "curveTangent.pde", tags: ["2D"], knownFailureTicket: "1417" },
+  { path: "curvePoint.pde", tags: ["2D"], epsilonOverride: 0.11 },
+  { path: "curveTangent.pde", tags: ["2D"] },
   { path: "curveTightness.pde", tags: ["2D"], epsilonOverride: 0.11 },
   { path: "continuous-curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
   { path: "points-lines.pde", tags: ["2D", "Crisp"] },
