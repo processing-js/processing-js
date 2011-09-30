@@ -11965,8 +11965,8 @@
       // Convert u and v to normalized coordinates
       if (u !== undef && v !== undef) {
         if (curTextureMode === PConstants.IMAGE) {
-          u /= curTexture.originalWidth;
-          v /= curTexture.originalHeight;
+          u /= curTexture.width;
+          v /= curTexture.height;
         }
         u = u > 1 ? 1 : u;
         u = u < 0 ? 0 : u;
@@ -12950,25 +12950,6 @@
       }
     };
 
-    // texImage2D function changed http://www.khronos.org/webgl/public-mailing-list/archives/1007/msg00034.html
-    // This method tries the new argument pattern first and falls back to the old version
-    var executeTexImage2D = function () {
-      var canvas2d = document.createElement('canvas');
-
-      try { // new way.
-        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, canvas2d);
-        executeTexImage2D = function(texture) {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, texture);
-        };
-      } catch (e) {
-        executeTexImage2D = function(texture) {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, texture, false);
-        };
-      }
-
-      executeTexImage2D.apply(this, arguments);
-    };
-
     /**
      * Sets a texture to be applied to vertex points. The <b>texture()</b> function
      * must be called between <b>beginShape()</b> and <b>endShape()</b> and before
@@ -12988,19 +12969,22 @@
     */
     p.texture = function(pimage) {
       var curContext = drawing.$ensureContext();
-      if (pimage.localName === "canvas") {
+
+      if (pimage.__texture) {
+        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+      } else if (pimage.localName === "canvas") {
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
-        executeTexImage2D(pimage);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
         curContext.generateMipmap(curContext.TEXTURE_2D);
-      } else if (!pimage.__texture) {
-        var texture = curContext.createTexture();
-        pimage.__texture = texture;
-
-        var cvs = document.createElement('canvas');
-
-        var pot;
+        curTexture.width = pimage.width;
+        curTexture.height = pimage.height;
+      } else {
+        var texture = curContext.createTexture(),
+            cvs = document.createElement('canvas'),
+            cvsTextureCtx = cvs.getContext('2d'),
+            pot;
 
         // WebGL requires power of two textures
         if (pimage.width & (pimage.width-1) === 0) {
@@ -13023,28 +13007,21 @@
           cvs.height = pot;
         }
 
-        curTexture.originalWidth = pimage.width;
-        curTexture.originalHeight = pimage.height;
-        pimage.resize(cvs.width, cvs.height);
+        cvsTextureCtx.drawImage(pimage.sourceImg, 0, 0, pimage.width, pimage.height, 0, 0, cvs.width, cvs.height);
 
-        var cvsTextureCtx = cvs.getContext('2d');
-        cvsTextureCtx.putImageData(pimage.imageData, 0, 0);
-
-        pimage.__cvs = cvs;
-
-        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+        curContext.bindTexture(curContext.TEXTURE_2D, texture);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
-        executeTexImage2D(pimage.__cvs);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, cvs);
         curContext.generateMipmap(curContext.TEXTURE_2D);
-      } else {
-        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+
+        pimage.__texture = texture;
+        curTexture.width = pimage.width;
+        curTexture.height = pimage.height;
       }
 
-      curTexture.width = pimage.width;
-      curTexture.height = pimage.height;
       usingTexture = true;
       curContext.useProgram(programObject3D);
       uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
@@ -16455,7 +16432,7 @@
       curContext = oldContext;
 
       curContext.bindTexture(curContext.TEXTURE_2D, textTex);
-      executeTexImage2D(textcanvas);
+      curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
