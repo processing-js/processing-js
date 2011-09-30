@@ -329,6 +329,7 @@ var tests = [
   { path: "texture_vertex_no_z.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_tint.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_tint_white.pde", tags: ["3D", "Color Profile"] },
+  { path: "texture-image.pde", tags: ["3D"] },
   { path: "rotateZ.pde", tags: ["3D"], knownFailureTicket: "1271" },
 
   // ColorMode light and material
