@@ -13346,13 +13346,11 @@
       if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
-
       } else if (curEllipseMode === PConstants.RADIUS) {
         x = x - width;
         y = y - height;
         width = width * 2;
         height = height * 2;
-
       } else if (curEllipseMode === PConstants.CENTER) {
         x = x - width/2;
         y = y - height/2;

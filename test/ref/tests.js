@@ -205,6 +205,8 @@ var tests = [
   { path: "ellipse.pde", tags: ["2D"] },
   { path: "ellipseMode.pde", tags: ["2D"] },
   { path: "ellipseMode-3d.pde", tags: ["3D"] },
+  { path: "ellipseMode-arc.pde", tags: ["2D"] },
+  { path: "ellipseMode-arc-3d.pde", tags: ["3D"] },
   { path: "piechart.pde", tags: ["2D"] },
   { path: "point-stroke-array-2d.pde", tags: ["2D", "Crisp"] },
   { path: "bezier-ellipse.pde", tags: ["2D", "Crisp"], epsilonOverride: 0.06 },
