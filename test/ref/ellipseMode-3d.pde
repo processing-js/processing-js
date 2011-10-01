@@ -3,11 +3,12 @@
 
 void setup() {
   size(100, 100, OPENGL);
-  background(255);
   colorMode(HSB);
 }
 
 void draw() {
+  background(255);
+
   // Default mode is CORNER
   fill(127, 200, 75);
   ellipse(25, 25, 20, 20);
