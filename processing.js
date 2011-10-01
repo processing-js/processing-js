@@ -13781,12 +13781,12 @@
       if (curRectMode === PConstants.CORNERS) {
         width -= x;
         height -= y;
-      }
-      if (curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      } else if (curRectMode === PConstants.CENTER) {
         x -= width / 2;
         y -= height / 2;
       }
@@ -13821,12 +13821,12 @@
       if (curRectMode === PConstants.CORNERS) {
         width -= x;
         height -= y;
-      }
-      if (curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      } else if (curRectMode === PConstants.CENTER) {
         x -= width / 2;
         y -= height / 2;
       }
