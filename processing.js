@@ -10767,10 +10767,10 @@
      * @see frustum
      */
     p.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
-      if (arguments.length === 0) {
-        //in case canvas is resized
-        cameraX = curElement.width / 2;
-        cameraY = curElement.height / 2;
+      if (eyeX === undef) {
+        // Workaround if createGraphics is used. 
+        cameraX = curElement.width === p.width ? p.width/2 : curElement.width/2;
+        cameraY = curElement.height === p.height ? p.height/2 : curElement.height/2;
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         eyeX = cameraX;
         eyeY = cameraY;
@@ -10785,19 +10785,30 @@
 
       var z = new PVector(eyeX - centerX, eyeY - centerY, eyeZ - centerZ);
       var y = new PVector(upX, upY, upZ);
-      var transX, transY, transZ;
       z.normalize();
       var x = PVector.cross(y, z);
       y = PVector.cross(z, x);
       x.normalize();
       y.normalize();
 
-      cam.set(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+      var xX = x.x,
+          xY = x.y,
+          xZ = x.z;
+
+      var yX = y.x,
+          yY = y.y,
+          yZ = y.z;
+
+      var zX = z.x,
+          zY = z.y,
+          zZ = z.z;
+
+      cam.set(xX, xY, xZ, 0, yX, yY, yZ, 0, zX, zY, zZ, 0, 0, 0, 0, 1);
 
       cam.translate(-eyeX, -eyeY, -eyeZ);
 
       cameraInv.reset();
-      cameraInv.invApply(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+      cameraInv.invApply(xX, xY, xZ, 0, yX, yY, yZ, 0, zX, zY, zZ, 0, 0, 0, 0, 1);
 
       cameraInv.translate(eyeX, eyeY, eyeZ);
 
@@ -10825,7 +10836,7 @@
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         cameraNear = cameraZ / 10;
         cameraFar = cameraZ * 10;
-        cameraAspect = curElement.width / curElement.height;
+        cameraAspect = p.width / p.height;
         fov = cameraFOV;
         aspect = cameraAspect;
         near = cameraNear;

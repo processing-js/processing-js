@@ -155,16 +155,27 @@ var tests = [
   { path: "text-boxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
   { path: "text-boxed-vcenter.pde", tags:["2D", "Text"], epsilonOverride: 0.16 }, /* See ticket #1172 */
   { path: "text-unboxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" }, 
   { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-defaults-3D.pde", tags: ["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-ascent-descent.pde", tags: ["2D", "Text", "Crisp"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-ascent-descent-3D.pde", tags: ["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-size-recache.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
   { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
@@ -198,7 +209,7 @@ var tests = [
   { path: "bezier-ellipse.pde", tags: ["2D", "Crisp"], epsilonOverride: 0.06 },
   { path: "curves.pde", tags: ["2D"], epsilonOverride: 0.07 },
   { path: "curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
-  { path: "curve-3D.pde", tags: ["3D"] },
+  { path: "curve-3D.pde", tags: ["3D"],  epsilonOverride: 0.11 },
   { path: "curveDetail.pde", tags: ["3D"], knownFailureTicket: "1416" },
   { path: "curvePoint.pde", tags: ["2D"], epsilonOverride: 0.11 },
   { path: "curveTangent.pde", tags: ["2D"] },
@@ -212,8 +223,8 @@ var tests = [
   { path: "triangle.pde", tags: ["2D"] },
   { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
   { path: "line-3d.pde", tags: ["3D"], epsilonOverride: 0.08 },
-  { path: "default_perspective.pde", tags: ["3D"]},
-  { path: "default_perspective_2.pde", tags: ["3D"]},
+  { path: "default_perspective.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "default_perspective_2.pde", tags: ["3D"], epsilonOverride: 0.11 },
   { path: "3D_frustum.pde", tags: ["3D"], knownFailureTicket: "1513" },
   { path: "3D_beginendcam.pde", tags: ["3D"], epsilonOverride: 0.09 },
   { path: "3D_perspective.pde", tags: ["3D"], epsilonOverride: 0.11 },
@@ -225,8 +236,10 @@ var tests = [
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "box_scale_3D.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "applyMatrix.pde", tags: ["3D"] },
-  { path: "sphereDetail-30-3.pde", tags: ["3D"] },
-  { path: "sphereDetail-3-30.pde", tags: ["3D"] },
+  { path: "sphere-detail10.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "sphere-detail200.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "sphereDetail-30-3.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "sphereDetail-3-30.pde", tags: ["3D"], epsilonOverride: 0.11 },
   { path: "ambientLight_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_2.pde", tags: ["3D"], epsilonOverride: 0.10 },
@@ -243,7 +256,7 @@ var tests = [
   { path: "3d-ellipse-fill-noFill-stoke-noStroke.pde", tags: ["3D"], epsilonOverride: 0.15 },
   { path: "createGraphics.pde", tags: ["3D"], epsilonOverride: 0.07 }, /* See ticket #1075 */
   { path: "rect-directional-light.pde", tags: ["3D"] },
-  { path: "hint_depth.pde", tags: ["3D"] },
+  { path: "hint_depth.pde", tags: ["3D"],  epsilonOverride: 0.11 },
   { path: "createimage.pde", tags: ["2D"] },
   { path: "array.pde", tags: ["2D", "Crisp"] },
   { path: "brightness-2.pde", tags: ["2D"] },
