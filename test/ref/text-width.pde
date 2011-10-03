@@ -21,7 +21,7 @@ void setup(){
 }
 
 void runTest(String a){
-  text(a + "(" +floor(textWidth(a)) + ")",0,x);
+  text(a + "(" +textWidth(a) + ")",0,x);
   line(0,x,int(textWidth(a)),x);
   x += 20;
 }
