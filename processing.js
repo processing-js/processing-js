@@ -10857,7 +10857,7 @@
      * @see perspective
      */
     Drawing2D.prototype.frustum = function() {
-      throw("frustum() is not supported in 2D mode");
+      throw("Processing.js: frustum() is not supported in 2D mode");
     };
 
     Drawing3D.prototype.frustum = function(left, right, bottom, top, near, far) {
