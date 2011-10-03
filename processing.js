@@ -10867,7 +10867,11 @@
      * @see endCamera
      * @see perspective
      */
-    p.frustum = function(left, right, bottom, top, near, far) {
+    Drawing2D.prototype.frustum = function() {
+      throw("Processing.js: frustum() is not supported in 2D mode");
+    };
+
+    Drawing3D.prototype.frustum = function(left, right, bottom, top, near, far) {
       frustumMode = true;
       projection = new PMatrix3D();
       projection.set((2 * near) / (right - left), 0, (right + left) / (right - left),
@@ -16969,6 +16973,7 @@
     DrawingPre.prototype.spotLight = createDrawingPreFunction("spotLight");
     DrawingPre.prototype.beginCamera = createDrawingPreFunction("beginCamera");
     DrawingPre.prototype.endCamera = createDrawingPreFunction("endCamera");
+    DrawingPre.prototype.frustum = createDrawingPreFunction("frustum");
     DrawingPre.prototype.box = createDrawingPreFunction("box");
     DrawingPre.prototype.sphere = createDrawingPreFunction("sphere");
     DrawingPre.prototype.ambient = createDrawingPreFunction("ambient");
