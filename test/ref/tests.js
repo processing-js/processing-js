@@ -147,9 +147,9 @@ var tests = [
   { path: "text-boxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.19 }, /* See ticket #1172 */
   { path: "text-boxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.19 }, /* See ticket #1172 */
   { path: "text-boxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.19 }, /* See ticket #1172 */
-  { path: "text-boxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
-  { path: "text-boxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
-  { path: "text-boxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
+  { path: "text-boxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.18 }, /* See ticket #1172 */
+  { path: "text-boxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.18 }, /* See ticket #1172 */
+  { path: "text-boxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.18 }, /* See ticket #1172 */
   { path: "text-boxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
   { path: "text-boxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
   { path: "text-boxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
@@ -160,11 +160,11 @@ var tests = [
   { path: "text-unboxed-left-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "text-unboxed-left-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-unboxed-center-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
   { path: "text-unboxed-center-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" }, 
-  { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-unboxed-center-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
   { path: "text-unboxed-right-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
@@ -181,12 +181,12 @@ var tests = [
   { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* repeated, to test reuse of font-face loaded fonts*/
-  { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
   { path: "text-valign-BASELINE.pde", tags: ["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-valign-BASELINE-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-valign-CENTER.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
-  { path: "text-valign-CENTER-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-valign-CENTER-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
   { path: "text-valign-TOP.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-valign-TOP-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-pfont.pde", tags: ["2D", "Text"], epsilonOverride: 0.30 }, /* See ticket #1172 */
