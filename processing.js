@@ -10197,7 +10197,7 @@
               gl;
 
           for (var i=0, l=ctxNames.length; i<l; i++) {
-            gl = canvas.getContext(ctxNames[i]);
+            gl = canvas.getContext(ctxNames[i], {antialias: false});
             if (gl) {
               break;
             }
