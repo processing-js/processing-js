@@ -13327,13 +13327,11 @@
       if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
-
       } else if (curEllipseMode === PConstants.RADIUS) {
         x = x - width;
         y = y - height;
         width = width * 2;
         height = height * 2;
-
       } else if (curEllipseMode === PConstants.CENTER) {
         x = x - width/2;
         y = y - height/2;
@@ -13762,12 +13760,12 @@
       if (curRectMode === PConstants.CORNERS) {
         width -= x;
         height -= y;
-      }
-      if (curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      } else if (curRectMode === PConstants.CENTER) {
         x -= width / 2;
         y -= height / 2;
       }
@@ -13802,12 +13800,12 @@
       if (curRectMode === PConstants.CORNERS) {
         width -= x;
         height -= y;
-      }
-      if (curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      } else if (curRectMode === PConstants.CENTER) {
         x -= width / 2;
         y -= height / 2;
       }
@@ -13890,7 +13888,7 @@
      *
      * @see ellipseMode
      */
-    DrawingShared.prototype.ellipse = function(x, y, width, height) {
+    Drawing2D.prototype.ellipse = function(x, y, width, height) {
       x = x || 0;
       y = y || 0;
 
@@ -13901,46 +13899,28 @@
       if (curEllipseMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-
-      if (curEllipseMode === PConstants.CORNERS) {
+      } else if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
-      }
-
-      if (curEllipseMode === PConstants.CORNER || curEllipseMode === PConstants.CORNERS) {
+        x += width / 2;
+        y += height / 2;
+      } else if (curEllipseMode === PConstants.CORNER) {
         x += width / 2;
         y += height / 2;
       }
 
-      return {'x':x, 'y':y, 'width':width, 'height':height};
-    };
-
-    Drawing2D.prototype.ellipse = function(x, y, width, height) {
-      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
-
-      if (!params) {
-        return;
-      }
-
-      x = params['x'];
-      y = params['y'];
-      width = params['width'];
-      height = params['height'];
-
       // Shortcut for drawing a 2D circle
       if (width === height) {
         curContext.beginPath();
-        curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, PConstants.TWO_PI, false);
+        curContext.arc(x, y, width / 2, 0, PConstants.TWO_PI, false);
         executeContextFill();
         executeContextStroke();
-        curContext.closePath();
       } else {
         var w = width / 2,
-          h = height / 2,
-          C = 0.5522847498307933;
-        var c_x = C * w,
-          c_y = C * h;
+            h = height / 2,
+            C = 0.5522847498307933,
+            c_x = C * w,
+            c_y = C * h;
 
         p.beginShape();
         p.vertex(x + w, y);
@@ -13953,22 +13933,31 @@
     };
 
     Drawing3D.prototype.ellipse = function(x, y, width, height) {
-      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
+      x = x || 0;
+      y = y || 0;
 
-      if (!params) {
+      if (width <= 0 && height <= 0) {
         return;
       }
 
-      x = params['x'];
-      y = params['y'];
-      width = params['width'];
-      height = params['height'];
+      if (curEllipseMode === PConstants.RADIUS) {
+        width *= 2;
+        height *= 2;
+      } else if (curEllipseMode === PConstants.CORNERS) {
+        width = width - x;
+        height = height - y;
+        x += width / 2;
+        y += height / 2;
+      } else if (curEllipseMode === PConstants.CORNER) {
+        x += width / 2;
+        y += height / 2;
+      }
 
       var w = width / 2,
-        h = height / 2,
-        C = 0.5522847498307933;
-      var c_x = C * w,
-        c_y = C * h;
+          h = height / 2,
+          C = 0.5522847498307933,
+          c_x = C * w,
+          c_y = C * h;
 
       p.beginShape();
       p.vertex(x + w, y);
