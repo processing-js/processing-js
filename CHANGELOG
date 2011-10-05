@@ -23,6 +23,7 @@ October 5, 2011 - Release 1.3.5
   * Fixed texture UV coordinates not normalized and clamped with NPOT textures [#1669]
   * Fixed texture() modifying a NPOT PImage passed to it [#1664]
   * Fixed tint() ignoring alpha parameter [#1625]
+  * Fixed tint() not marking a PImage as dirty [#1707]
   * Fixed using p as a class member identifier [#1618]
   * Fixed vertical align in textAlign() [#1628]
   * Optimized use of curRectMode and curEllipseMode [#1676]

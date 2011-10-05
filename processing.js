@@ -15223,6 +15223,7 @@
           // Tint the image
           if (curTint !== null) {
             curTint(obj);
+            img.__isDirty = true;
           }
 
           curContext.drawImage(getCanvasData(obj).canvas, 0, 0,
