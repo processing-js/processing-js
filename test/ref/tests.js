@@ -143,34 +143,34 @@ var tests = [
   { path: "string-codepointat.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
   { path: "string-equalsignorecase.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
   { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
-  { path: "text-width.pde", tags:["2D", "Text"], epsilonOverride: 0.20 }, /* See ticket #1172 */
+  { path: "text-width.pde", tags:["2D", "Text"], epsilonOverride: 0.20, knownFailureTicket: "1705" }, /* See ticket #1172 */
   { path: "text-boxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.19 }, /* See ticket #1172 */
-  { path: "text-boxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.19 }, /* See ticket #1172 */
+  { path: "text-boxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
   { path: "text-boxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.19 }, /* See ticket #1172 */
   { path: "text-boxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.18 }, /* See ticket #1172 */
   { path: "text-boxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.18 }, /* See ticket #1172 */
   { path: "text-boxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.18 }, /* See ticket #1172 */
   { path: "text-boxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
-  { path: "text-boxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
+  { path: "text-boxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.23 }, /* See ticket #1172 */
   { path: "text-boxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
   { path: "text-boxed-vcenter.pde", tags:["2D", "Text"], epsilonOverride: 0.16 }, /* See ticket #1172 */
-  { path: "text-unboxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
   { path: "text-unboxed-left-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.11, knownFailureTicket: "1684" }, /* See ticket #1172 */
   { path: "text-unboxed-left-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
   { path: "text-unboxed-left-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-unboxed-center-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.12, knownFailureTicket: "1684" }, /* See ticket #1172 */
   { path: "text-unboxed-center-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" }, 
-  { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-unboxed-center-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
   { path: "text-unboxed-right-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.13, knownFailureTicket: "1684" }, /* See ticket #1172 */
   { path: "text-unboxed-right-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
   { path: "text-unboxed-right-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "text-defaults-3D.pde", tags: ["3D", "Text"], knownFailureTicket: "750" },
@@ -200,7 +200,7 @@ var tests = [
   { path: "arc-tangent.pde",  tags: ["2D"] },
   { path: "arc_ref1.pde",  tags: ["2D", "Crisp"], epsilonOverride: 0.10 },
   { path: "arc_ref2.pde",  tags: ["2D", "Crisp"], epsilonOverride: 0.13 },
-  { path: "arc_ref3.pde",  tags: ["2D", "Crisp"], epsilonOverride: 0.11 },
+  { path: "arc_ref3.pde",  tags: ["2D", "Crisp"], epsilonOverride: 0.13 },
   { path: "bezier.pde", tags: ["2D"], epsilonOverride: 0.08 },
   { path: "ellipse.pde", tags: ["2D"] },
   { path: "ellipseMode.pde", tags: ["2D"] },
@@ -215,7 +215,7 @@ var tests = [
   { path: "curve-3D.pde", tags: ["3D"], epsilonOverride: 0.11, knownFailureTicket: "1700" },
   { path: "curveDetail.pde", tags: ["3D"], knownFailureTicket: "1416" },
   { path: "curvePoint.pde", tags: ["2D"], epsilonOverride: 0.11 },
-  { path: "curveTangent.pde", tags: ["2D"] },
+  { path: "curveTangent.pde", tags: ["2D"], epsilonOverride: 0.10 },
   { path: "curveTightness.pde", tags: ["2D"], epsilonOverride: 0.11 },
   { path: "continuous-curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
   { path: "points-lines.pde", tags: ["2D", "Crisp"] },
@@ -354,22 +354,22 @@ var tests = [
   { path: "hsb-1-ambient-3d-sphere.pde", tags: ["3D"] },
   { path: "hsb-1-dir-3d-sphere.pde", tags: ["3D"] },
   { path: "hsb-1-point-3d-sphere.pde", tags: ["3D"] },
-  { path: "hsb-1-spot-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-1-spot-3d-sphere.pde", tags: ["3D"], knownFailureTicket: "1239" },
   { path: "hsb-255-ambient-3d-sphere.pde", tags: ["3D"] },
   { path: "hsb-255-dir-3d-sphere.pde", tags: ["3D"] },
   { path: "hsb-255-point-3d-sphere.pde", tags: ["3D"] },
-  { path: "hsb-255-spot-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-255-spot-3d-sphere.pde", tags: ["3D"], knownFailureTicket: "1239" },
   { path: "rgb-1-ambient-3d-sphere.pde", tags: ["3D"] },
   { path: "rgb-1-dir-3d-sphere.pde", tags: ["3D"] },
   { path: "rgb-1-emissive-3d-sphere.pde", tags: ["3D"] },
   { path: "rgb-1-point-3d-sphere.pde", tags: ["3D"] },
   { path: "rgb-1-spec-3d-sphere.pde", tags: ["3D"] },
-  { path: "rgb-1-spot-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-spot-3d-sphere.pde", tags: ["3D"], knownFailureTicket: "1239" },
   { path: "rgb-255-ambient-3d-sphere.pde", tags: ["3D"] },
   { path: "rgb-255-dir-3d-sphere.pde", tags: ["3D"] },
   { path: "rgb-255-emissive-3d-sphere.pde", tags: ["3D"] },
   { path: "rgb-255-point-3d-sphere.pde", tags: ["3D"] },
-  { path: "rgb-255-spot-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-spot-3d-sphere.pde", tags: ["3D"], knownFailureTicket: "1239" },
   { path: "material-amb-grey-1.pde", tags: ["3D"] },
   { path: "material-amb-grey-3vals.pde", tags: ["3D"] },
   { path: "material-amb-pcolor.pde", tags: ["3D"] },
