@@ -154,23 +154,23 @@ var tests = [
   { path: "text-boxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.23 }, /* See ticket #1172 */
   { path: "text-boxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
   { path: "text-boxed-vcenter.pde", tags:["2D", "Text"], epsilonOverride: 0.16 }, /* See ticket #1172 */
-  { path: "text-unboxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
   { path: "text-unboxed-left-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.11, knownFailureTicket: "1684" }, /* See ticket #1172 */
   { path: "text-unboxed-left-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
   { path: "text-unboxed-left-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-unboxed-center-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.12, knownFailureTicket: "1684" }, /* See ticket #1172 */
   { path: "text-unboxed-center-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" }, 
-  { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-unboxed-center-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
   { path: "text-unboxed-right-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.13, knownFailureTicket: "1684" }, /* See ticket #1172 */
   { path: "text-unboxed-right-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
-  { path: "text-unboxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
   { path: "text-unboxed-right-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
   { path: "text-defaults-3D.pde", tags: ["3D", "Text"], knownFailureTicket: "750" },
