@@ -49,9 +49,8 @@ function sketchProc(processing) {
   
 }
 
-var canvas = document.getElementById("canvas1");
 // attaching the sketchProc function to the canvas
-var p = new Processing(canvas, sketchProc);
+var p = new Processing("canvas1", sketchProc);
 // p.exit(); to detach it
 </script>
 

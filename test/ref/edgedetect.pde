@@ -33,6 +33,7 @@ for (int y = 1; y < img.height-1; y++) { // Skip top and bottom edges
     }
     // For this pixel in the new image, set the gray value
     // based on the sum from the kernel
+    sum = constrain(sum, 0, 255);
     edgeImg.pixels[y*img.width + x] = color(sum);
   }
 }
