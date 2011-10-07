@@ -1,4 +1,11 @@
 var tests = [
+  { path: "explode.pde", tags: ["3D"] },
+  { path: "multiple-particle-systems.pde", tags: ["2D"] },
+  { path: "pattern.pde", tags: ["2D"] },
+  { path: "pixelarray.pde", tags: ["2D"] },
+  { path: "pulses.pde", tags: ["2D"] },
+  { path: "smoke-particle-system.pde", tags: ["2D"] },
+  { path: "zoom.pde", tags: ["3D"] },
   { path: "tint-isImageDirty.pde", tags: ["2D"] },
   { path: "copy-no-source.pde", tags: ["2D", "BLEND"] },
   { path: "pgraphics-get-3d.pde", tags: ["3D"] },
