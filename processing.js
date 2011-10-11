@@ -13349,8 +13349,8 @@
       var vr = height / 2;
       var centerX = x + hr;
       var centerY = y + vr;
-      var startLUT = 0 | (-0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
-      var stopLUT  = 0 | (0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
+      var startLUT = 0 | (-0.5 + start * p.RAD_TO_DEG * 2);
+      var stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2);
       var i, j;
       if (doFill) {
         // shut off stroke for a minute
@@ -13358,11 +13358,9 @@
         doStroke = false;
         p.beginShape();
         p.vertex(centerX, centerY);
-        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
-          if (j >= PConstants.SINCOS_LENGTH) {
-            j = j - PConstants.SINCOS_LENGTH;
-          }
-          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
+        for (i = startLUT; i <= stopLUT; i++) {
+          j = i % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
@@ -13373,15 +13371,10 @@
         var savedFill = doFill;
         doFill = false;
         p.beginShape();
-        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
-          if (j >= PConstants.SINCOS_LENGTH) {
-            j = j - PConstants.SINCOS_LENGTH;
-          }
-          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
+        for (i = startLUT; i <= stopLUT; i++) {
+          j = i % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
-        // explicitly add the last vertex, for precision
-        j = stopLUT % PConstants.SINCOS_LENGTH;
-        p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         p.endShape();
         doFill = savedFill;
       }
