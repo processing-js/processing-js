@@ -1,5 +1,5 @@
 var tests = [
-  { path: "arc-fill-crisp.pde", tags: ["2D"] },
+  { path: "arc-fill-crisp.pde", tags: ["2D"], epsilonOverride: 0.07 },
   { path: "tint-isImageDirty.pde", tags: ["2D"] },
   { path: "copy-no-source.pde", tags: ["2D", "BLEND"] },
   { path: "pgraphics-get-3d.pde", tags: ["3D"] },
