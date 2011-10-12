@@ -10213,10 +10213,8 @@
           // 3D sketches, browsers will either not render or render the
           // scene incorrectly. To fix this, we need to adjust the
           // width and height attributes of the canvas.
-          if (curElement.width !== aWidth || curElement.height !== aHeight) {
-            curElement.setAttribute("width", aWidth);
-            curElement.setAttribute("height", aHeight);
-          }
+          curElement.width = p.width = aWidth || 100;
+          curElement.height = p.height = aHeight || 100;
           curContext = getGLContext(curElement);
           canTex = curContext.createTexture(); // texture
           textTex = curContext.createTexture(); // texture
@@ -10769,8 +10767,8 @@
     p.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
       if (eyeX === undef) {
         // Workaround if createGraphics is used. 
-        cameraX = curElement.width === p.width ? p.width/2 : curElement.width/2;
-        cameraY = curElement.height === p.height ? p.height/2 : curElement.height/2;
+        cameraX = p.width / 2;
+        cameraY = p.height / 2;
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         eyeX = cameraX;
         eyeY = cameraY;
