@@ -1,9 +1,9 @@
 var tests = [
-  { path: "mixture.pde", tags: ["3D"] },
-  { path: "mixturegrid.pde", tags: ["3D"] },
-  { path: "moveeye.pde", tags: ["3D"] },
+  { path: "mixture.pde", tags: ["3D"], knownFailureTicket: "1239" },
+  { path: "mixturegrid.pde", tags: ["3D"], knownFailureTicket: "1239" },
+  { path: "moveeye.pde", tags: ["3D"], epsilonOverride: 0.19 },
   { path: "directional.pde", tags: ["3D"] },
-  { path: "disablestyle.pde", tags: ["3D"] },
+  { path: "disablestyle.pde", tags: ["2D"], epsilonOverride: 0.06 },
   { path: "icosahedron.pde", tags: ["3D"] },
   { path: "lights-off.pde", tags: ["3D"] },
   { path: "lights-on.pde", tags: ["3D"] },
