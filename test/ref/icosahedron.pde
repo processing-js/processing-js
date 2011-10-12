@@ -47,11 +47,11 @@ void draw(){
   ico3.create();
   popMatrix();
 
+  iterations++;
+
   if (iterations == 25) {
     exit();
   }
-
-  iterations++;
 }
 
 

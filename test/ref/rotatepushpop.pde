@@ -37,9 +37,9 @@ void draw()
     popMatrix();
   }
 
+  iterations++;
+
   if (iterations == 60) {
     exit();
   }
-
-  iterations++;
 }

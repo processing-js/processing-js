@@ -34,9 +34,9 @@ void draw() {
   fill(0);
   rect(-rSize, -rSize, rSize*2, rSize*2);
 
+  iterations++;
+
   if (iterations == 100) {
     exit();
   }
-
-  iterations++;
 }
