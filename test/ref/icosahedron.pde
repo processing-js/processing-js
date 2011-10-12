@@ -17,12 +17,6 @@ void setup(){
 iterations = 0;
 
 void draw(){
-  if (iterations == 25) {
-    exit();
-  }
-
-  iterations++;
-
   background(0);
   lights();
   translate(width/2, height/2);
@@ -52,6 +46,12 @@ void draw(){
   fill(0, 0, 185);
   ico3.create();
   popMatrix();
+
+  if (iterations == 25) {
+    exit();
+  }
+
+  iterations++;
 }
 
 

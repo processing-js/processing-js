@@ -24,12 +24,6 @@ int iterations = 0;
 
 void draw() 
 {
-  if (iterations == 60) {
-    exit();
-  }
-
-  iterations++;
-
   background(0, 0, 26);
   translate(width/2, height/2);
   a += 0.01;   
@@ -42,4 +36,10 @@ void draw()
     box(50);
     popMatrix();
   }
+
+  if (iterations == 60) {
+    exit();
+  }
+
+  iterations++;
 }

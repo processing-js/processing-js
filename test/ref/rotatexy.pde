@@ -15,12 +15,6 @@ void setup() {
 iterations = 0;
 
 void draw() {  
-  if (iterations == 100) {
-    exit();
-  }
-
-  iterations++;
-
   background(126);
   
   a += 0.005;
@@ -39,4 +33,10 @@ void draw() {
   rotateY(a * 2.002);
   fill(0);
   rect(-rSize, -rSize, rSize*2, rSize*2);
+
+  if (iterations == 100) {
+    exit();
+  }
+
+  iterations++;
 }
