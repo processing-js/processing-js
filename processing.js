@@ -1492,7 +1492,7 @@
     var unsupportedP5 = ("open() createOutput() createInput() BufferedReader selectFolder() " +
                          "dataPath() createWriter() selectOutput() beginRecord() " +
                          "saveStream() endRecord() selectInput() saveBytes() createReader() " +
-                         "beginRaw() endRaw() PrintWriter").split(" "),
+                         "beginRaw() endRaw() PrintWriter delay()").split(" "),
         count = unsupportedP5.length,
         prettyName,
         p5Name;
