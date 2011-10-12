@@ -91,7 +91,7 @@ var tests = [
   { path: "loadShape15.pde", tags: ["2D","SVG"] },
   { path: "loadShape16.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
   { path: "loadShape17.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
-  { path: "loadShape18.pde", tags: ["2D","SVG"], epsilonOverride: 0.16 },
+  { path: "loadShape18.pde", tags: ["2D","SVG"], epsilonOverride: 0.17 },
   { path: "blur.pde", tags: ["2D","Convolution"] },
   { path: "edgedetect.pde", tags: ["2D","Convolution"] },
   { path: "size-3D.pde", tags: ["3D"] },
