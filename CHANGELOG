@@ -1,3 +1,9 @@
+October 13, 2011 - Release 1.3.6
+
+  * Fixed arc() not filling the last half degree [#1717]
+  * Fixed camera() call order regression in 1.3.5 [#1714]
+  * Fixed delay() to throw an unsupported function error [#1724]
+
 October 5, 2011 - Release 1.3.5
 
   * Added check for canvas in Processing ctor [#1646]
