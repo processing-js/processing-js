@@ -19748,9 +19748,18 @@
     }
 
     // also process all <script>-indicated sketches, if there are any
-    var scripts = document.getElementsByTagName('script');
-    var s, source, instance;
-    for (s = 0; s < scripts.length; s++) {
+    var s, last, source, instance,
+        nodelist = document.getElementsByTagName('script'),
+        scripts=[];
+
+    // snapshoot the DOM, as the nodelist is only a DOM view, and
+    // always up to date
+    for (var s = nodelist.length - 1; s >= 0; s--) {
+        scripts.push(nodelist[s]);
+    }
+
+    // iterate over all script elements to see if they contain Processing code
+    for (s = 0, last = scripts.length; s < last; s++) {
       var script = scripts[s];
       if (!script.getAttribute) {
         continue;
