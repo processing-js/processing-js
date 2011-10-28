@@ -12571,18 +12571,20 @@
           curContext.lineTo(next.x, next.y);
           curContext.lineTo(nextOver.x, nextOver.y);
           curContext.lineTo(current.x, current.y);
+          setFillStroke(doFill, doStroke, nextOver);
 
           for (i = 3; i < vertArrayLength; i++) {
+            fillStrokeClose();
+
             current = next;
             next = nextOver;
             nextOver = vertArray[i];
 
-            setFillStroke(doFill, doStroke, nextOver);
-            fillStrokeClose();
             curContext.beginPath();
             curContext.moveTo(next.x, next.y);
             curContext.lineTo(nextOver.x, nextOver.y);
             curContext.lineTo(current.x, current.y);
+            setFillStroke(doFill, doStroke, nextOver);
           }
         }
       }
