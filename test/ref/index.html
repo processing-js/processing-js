@@ -16,29 +16,29 @@
 
     <h3>Settings</h3>
     <div>Run Tests:
-		<select id="test-type" onchange="updateSelectedTests();">
-			<option value="2D,3D" selected>2D and 3D</option>
-			<option value="2D">2D Only</option>
-			<option value="3D">3D Only</option>
-			<option value="BLEND">Blend Only</option>
-			<option value="Color Profile">Color Profile</option>
-			<option value="endShape2D">endShape2D</option>
-			<option value="endShape3D">endShape3D</option>
-			<option value="Calibration">Calibration</option>
-			<option value="Convolution">Convolution</option>
-			<option value="SVG">SVG</option>
-			<option value="Text">Text</option>
-			<option value="Crisp">Crisp</option>
-			<option value="Test Suite">Test Suite</option>
-		</select>
-		Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
-		Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
+        <select id="test-type" onchange="updateSelectedTests();">
+            <option value="2D,3D" selected>2D and 3D</option>
+            <option value="2D">2D Only</option>
+            <option value="3D">3D Only</option>
+            <option value="BLEND">Blend Only</option>
+            <option value="Color Profile">Color Profile</option>
+            <option value="endShape2D">endShape2D</option>
+            <option value="endShape3D">endShape3D</option>
+            <option value="Calibration">Calibration</option>
+            <option value="Convolution">Convolution</option>
+            <option value="SVG">SVG</option>
+            <option value="Text">Text</option>
+            <option value="Crisp">Crisp</option>
+            <option value="Test Suite">Test Suite</option>
+        </select>
+        Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">
+        Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">
         Remove Passed Tests: <input id="remove-passed" type="checkbox">
         Stop on First Fail: <input id="stop-on-fail" type="checkbox">
-		<input id="testStart" onclick="runTests(selectedTests);" type="button" value="Start">
-		<input id="testStop" onclick="endTests();" type="button" value="Stop" style="display:none">
-		<span id="testCount"></span>
-	  </div>
+        <input id="testStart" onclick="runTests(selectedTests);" type="button" value="Start">
+        <input id="testStop" onclick="endTests();" type="button" value="Stop" style="display:none">
+        <span id="testCount"></span>
+    </div>
 
     <h3>Results</h3>
     <div id="status" style="margin-bottom: 10px;"></div>
@@ -67,7 +67,7 @@
       var total = document.getElementById('total');
       total.innerHTML = '';
       var removePassed;
-	  var stopTests;
+      var stopTests;
 
       updateSelectedTests();
 
@@ -187,13 +187,13 @@
       }
 
       function endTests(){
-	    document.getElementById('testStart').style.display="inline";
-		document.getElementById('testStop').style.display="none";
-		stopTests = true;
+        document.getElementById('testStart').style.display="inline";
+        document.getElementById('testStop').style.display="none";
+        stopTests = true;
       }
 
       function runTests(tests) {
-		stopTests = false;
+     	stopTests = false;
 		document.getElementById('testStart').style.display="none";
 		document.getElementById('testStop').style.display="inline";
         var results = document.getElementById('results');
@@ -254,13 +254,13 @@
         var passedCount = 0, failedCount = 0, knownFailedCount = 0, tl = tests.length;
         function nextTest(testNum) {
           if (document.getElementById('stop-on-fail').checked && failedCount){
-            endTests();	
+            endTests();
           }
 
           if (!stopTests && testNum < tl) {
             window.setTimeout(function() { runOne(testNum); }, 10);
           } else {
-			endTests();
+            endTests();
             var info = "Tests Completed - " + failedCount + " failed, " + knownFailedCount + " known failures, " + passedCount + " passed, " + (failedCount + passedCount + knownFailedCount) + " total.";
             document.getElementById('status').innerHTML = info;
             total.innerHTML = info;
@@ -268,7 +268,7 @@
             // sort the tests into failed, known failures, and passed
             var failedDiv = document.createElement('div');
             failedDiv.innerHTML = '<hr><h3>Failed ' + failedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
-            
+            	
             var knownFailureDiv = document.createElement('div');
             knownFailureDiv.innerHTML = '<hr><h3>Known Failures ' + knownFailedCount + ' of ' + (passedCount + failedCount + knownFailedCount) + '</h3>';
             
