@@ -1755,17 +1755,17 @@
         PFont.prototype.measureTextWidth = PFont.prototype.measureTextWidthFallback;
         PFont.prototype.caching = false;
         // clear contexts stored for each cached font
-        var attr;
-        for (attr in cache) {
-          if (attr !== "length") {
-            cache[attr].context2d = null;
+        var entry;
+        for (entry in cache) {
+          if (entry !== "length") {
+            cache[entry].context2d = null;
           }
         }
         return new PFont(fontName, fontSize);
       }
 
       // FALLBACK FUNCTIONALITY 2:
-      // If the cache has become too large switch off font caching entirely.
+      // If the cache has become too large, switch off font caching entirely.
       if (cache.length === 400) {
         PFont.PFontCache = {};
         PFont.get = PFont.getFallback;
