@@ -19752,10 +19752,10 @@
         nodelist = document.getElementsByTagName('script'),
         scripts=[];
 
-    // snapshoot the DOM, as the nodelist is only a DOM view, and
-    // always up to date
+    // snapshot the DOM, as the nodelist is only a DOM view, and is
+    // updated instantly when a script element is added or removed.
     for (var s = nodelist.length - 1; s >= 0; s--) {
-        scripts.push(nodelist[s]);
+      scripts.push(nodelist[s]);
     }
 
     // iterate over all script elements to see if they contain Processing code
