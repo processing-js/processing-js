@@ -17286,11 +17286,6 @@
     // Keyboard Events
     //////////////////////////////////////////////////////////////////////////
 
-    // Get the DOM element if string was passed
-    if (typeof curElement === "string") {
-      curElement = document.getElementById(curElement);
-    }
-
     // In order to catch key events in a canvas, it needs to be "specially focusable",
     // by assigning it a tabindex. If no tabindex is specified on-page, set this to 0.
     if (!curElement.getAttribute("tabindex")) {
