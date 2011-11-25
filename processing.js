@@ -3614,6 +3614,10 @@
             this.matrix.skewX(parseFloat(m[0]));
           } else if (pieces[i].indexOf("skewY") !== -1) {
             this.matrix.skewY(m[0]);
+          } else if (pieces[i].indexOf("shearX") !== -1) {
+            this.matrix.shearX(m[0]);
+          } else if (pieces[i].indexOf("shearY") !== -1) {
+            this.matrix.shearY(m[0]);
           }
         }
         return this.matrix;
@@ -5649,6 +5653,26 @@
        */
       skewY: function(angle) {
         this.apply(1, 0, 1,  0, angle, 0);
+      },
+      /**
+       * @member PMatrix2D
+       * The shearX() function shears the matrix along the x-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
+      shearX: function(angle) {
+        this.apply(1, 0, 1, Math.tan(angle) , 0, 0);
+      },
+      /**
+       * @member PMatrix2D
+       * The shearY() function shears the matrix along the y-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
+      shearY: function(angle) {
+        this.apply(1, 0, 1,  0, Math.tan(angle), 0);
       },
       /**
        * @member PMatrix2D
@@ -7886,6 +7910,62 @@
 
     Drawing3D.prototype.rotate = function(angleInRadians) {
       p.rotateZ(angleInRadians);
+    };
+
+    /**
+    * Shears a shape around the x-axis the amount specified by the angle parameter. 
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to radians 
+    * with the radians() function. Objects are always sheared around their relative position 
+    * to the origin and positive numbers shear objects in a clockwise direction. Transformations 
+    * apply to everything that happens after and subsequent calls to the function accumulates the
+    * effect. For example, calling shearX(PI/2) and then shearX(PI/2) is the same as shearX(PI)
+    *
+    * @param {int|float} angleInRadians     angle of rotation specified in radians
+    *
+    * @returns none
+    *
+    * @see rotateX
+    * @see rotateY
+    * @see rotateZ
+    * @see rotate
+    * @see translate
+    * @see scale
+    * @see popMatrix
+    * @see pushMatrix
+    */
+	
+    p.shearX = function(angleInRadians) {
+      modelView.shearX(angleInRadians);
+      curContext.transform(1, 0,angleInRadians,1,0,0);
+    };
+
+    /**
+    * Shears a shape around the y-axis the amount specified by the angle parameter. 
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to 
+    * radians with the radians() function. Objects are always sheared around their 
+    * relative position to the origin and positive numbers shear objects in a 
+    * clockwise direction. Transformations apply to everything that happens after
+    * and subsequent calls to the function accumulates the effect. For example, 
+    * calling shearY(PI/2) and then shearY(PI/2) is the same as shearY(PI).
+    *
+    * @param {int|float} angleInRadians     angle of rotation specified in radians
+    *
+    * @returns none
+    *
+    * @see rotateX
+    * @see rotateY
+    * @see rotateZ
+    * @see rotate
+    * @see translate
+    * @see scale
+    * @see popMatrix
+    * @see pushMatrix
+    * @see shearX
+    */
+	
+    p.shearY = function(angleInRadians) {
+      modelView.shearY(angleInRadians);
+      curContext.transform(1, angleInRadians,0,1,0,0);
     };
 
     /**
@@ -17602,7 +17682,7 @@
       "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ",
       "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
       "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
-      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth",
+      "shapeMode", "shared", "shearX", "shearY", "shininess", "shorten", "sin", "size", "smooth",
       "sort", "specular", "sphere", "sphereDetail", "splice", "split",
       "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
       "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
