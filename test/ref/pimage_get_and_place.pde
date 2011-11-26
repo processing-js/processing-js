@@ -53,12 +53,5 @@ void draw() {
   testGet1arg = get(50,25,50,20);
   image(testGet1arg, 0,25);
   
-  println("createImage() makes the green square, blue square, and the red square inside the green square.");
-  println("image() places the green red and blue squares.");
-  println("getRedSquare is created by calling get(x,y,w,h) on the coordinates of where redSquare was placed");
-  println("image() places getRedSquare inside blue.  no green pixels are copied");
-  println(testGet3arg + " is returned from PImage.get(40,0) should be -16711936 (green)");
-  println(testGet2arg + " is returned from get(150,45) should be -65536 (red)");
-  
   exit();
 }
