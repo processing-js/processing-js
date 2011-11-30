@@ -7933,11 +7933,15 @@
     * @see popMatrix
     * @see pushMatrix
     */
-	
+
     p.shearX = function(angleInRadians) {
       modelView.shearX(angleInRadians);
       curContext.transform(1, 0,angleInRadians,1,0,0);
     };
+
+    Drawing3D.prototype.shearX = function(angleInRadians) {
+      throw("Processing.js: shearX(angleInRadians) is not supported in 3D mode");
+    }
 
     /**
     * Shears a shape around the y-axis the amount specified by the angle parameter. 
@@ -7962,11 +7966,15 @@
     * @see pushMatrix
     * @see shearX
     */
-	
+
     p.shearY = function(angleInRadians) {
       modelView.shearY(angleInRadians);
       curContext.transform(1, angleInRadians,0,1,0,0);
     };
+
+    Drawing3D.prototype.shearY = function(angleInRadians) {
+      throw("Processing.js: shearY(angleInRadians) is not supported in 3D mode");
+    }
 
     /**
     * The pushStyle() function saves the current style settings and popStyle()  restores the prior settings.
@@ -17023,6 +17031,8 @@
     DrawingPre.prototype.applyMatrix = createDrawingPreFunction("applyMatrix");
     DrawingPre.prototype.rotate = createDrawingPreFunction("rotate");
     DrawingPre.prototype.rotateZ = createDrawingPreFunction("rotateZ");
+    DrawingPre.prototype.shearX = createDrawingPreFunction("shearX");
+    DrawingPre.prototype.shearX = createDrawingPreFunction("shearY");
     DrawingPre.prototype.redraw = createDrawingPreFunction("redraw");
     DrawingPre.prototype.toImageData = createDrawingPreFunction("toImageData");
     DrawingPre.prototype.ambientLight = createDrawingPreFunction("ambientLight");
