@@ -10372,7 +10372,7 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
-      // Instead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
@@ -10437,7 +10437,7 @@
         mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      // Instead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
@@ -10507,7 +10507,7 @@
 
     Drawing3D.prototype.lightSpecular = function(r, g, b) {
 
-      // Instead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
@@ -10580,7 +10580,7 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
-      // Instead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
@@ -10670,7 +10670,7 @@
           mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      // Instead of calling p.color, we do the calculations ourselves to 
+      // Instead of calling p.color, we do the calculations ourselves to
       // reduce property lookups.
       var col = color$4(r, g, b, 0);
       var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
@@ -10766,7 +10766,7 @@
      */
     p.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
       if (eyeX === undef) {
-        // Workaround if createGraphics is used. 
+        // Workaround if createGraphics is used.
         cameraX = p.width / 2;
         cameraY = p.height / 2;
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
@@ -13695,7 +13695,7 @@
         br = tl;
         bl = tl;
       }
-      var halfWidth = width / 2, 
+      var halfWidth = width / 2,
           halfHeight = height / 2;
       if (tl > halfWidth || tl > halfHeight) {
         tl = Math.min(halfWidth, halfHeight);
@@ -19743,9 +19743,18 @@
     }
 
     // also process all <script>-indicated sketches, if there are any
-    var scripts = document.getElementsByTagName('script');
-    var s, source, instance;
-    for (s = 0; s < scripts.length; s++) {
+    var s, last, source, instance,
+        nodelist = document.getElementsByTagName('script'),
+        scripts=[];
+
+    // snapshot the DOM, as the nodelist is only a DOM view, and is
+    // updated instantly when a script element is added or removed.
+    for (s = nodelist.length - 1; s >= 0; s--) {
+      scripts.push(nodelist[s]);
+    }
+
+    // iterate over all script elements to see if they contain Processing code
+    for (s = 0, last = scripts.length; s < last; s++) {
       var script = scripts[s];
       if (!script.getAttribute) {
         continue;
