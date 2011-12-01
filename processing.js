@@ -1883,6 +1883,13 @@
       Processing.debug('Unimplemented - ' + s);
     }
 
+    // Set the canvas properties that determine outline and select selection (we disable both)
+    var style = curElement.getAttribute("style");
+    if(!style) { style =""; }
+    style += " -webkit-user-select: none; outline: none; cursor: arrow; ";
+    curElement.setAttribute("style",style);
+    curElement.onmousedown = function () { return false; };
+
     // When something new is added to "p." it must also be added to the "names" array.
     // The names array contains the names of everything that is inside "p."
     var p = this;
