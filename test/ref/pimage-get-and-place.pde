@@ -13,7 +13,6 @@ void draw() {
     greenSquare.pixels[i] = color(0,255,0);
   }
   
-  println(color(0,255,0));
   image(greenSquare, 0, 0);
   
   PImage blueSquare = createImage(50, 50, ARGB);
