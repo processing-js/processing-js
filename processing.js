@@ -12452,7 +12452,7 @@
       var previous,  // vertArray[i-1]
           current,   // vertArray[i]
           next,      // vertArray[i+1]
-          nextOver;  // vertArray[i+2]    
+          nextOver;  // vertArray[i+2]
 
       // first, we find all curve vertices that we
       // must deal with in this run
@@ -12496,14 +12496,14 @@
      * This function deals with rendering specific shapes.
      *
      * @param curShape integer constant; either POINTS, LINES, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS or QUAD_STRIP
-     */ 
+     */
     function endShapeSpecific(curShape, vertArray, vertArrayLength) {
       var i,j,
           start = vertArray[0],
           previous,  // vertArray[i-1]
           current,   // vertArray[i]
           next,      // vertArray[i+1]
-          nextOver;  // vertArray[i+2]    
+          nextOver;  // vertArray[i+2]
 
       if (curShape === PConstants.POINTS) {
         var lastcolor = 0;
@@ -12543,7 +12543,7 @@
       }
 
       else if (curShape === PConstants.TRIANGLES) {
-        if (vertArrayLength > 2) {        
+        if (vertArrayLength > 2) {
           for (i = 0; (i + 2) < vertArrayLength; i+=3) {
             current  = vertArray[i];
             next     = vertArray[i+1];
@@ -12563,17 +12563,11 @@
 
       else if (curShape === PConstants.TRIANGLE_STRIP) {
         if (vertArrayLength > 2) {
-          current  = vertArray[0];
-          next     = vertArray[1];
-          nextOver = vertArray[2];
-
-          curContext.moveTo(current.x, current.y);
-          curContext.lineTo(next.x, next.y);
-          curContext.lineTo(nextOver.x, nextOver.y);
-          curContext.lineTo(current.x, current.y);
-          setFillStroke(doFill, doStroke, nextOver);
-
-          for (i = 3; i < vertArrayLength; i++) {
+          // ensure that the first iteration ends up as
+          // {current=0/next=1/nextover=2}
+          next     = vertArray[0];
+          nextOver = vertArray[1];
+          for (i = 2; i < vertArrayLength; i++) {
             fillStrokeClose();
 
             current = next;
@@ -12581,29 +12575,19 @@
             nextOver = vertArray[i];
 
             curContext.beginPath();
-            curContext.moveTo(next.x, next.y);
+            curContext.moveTo(current.x, current.y);
+            curContext.lineTo(next.x, next.y);
             curContext.lineTo(nextOver.x, nextOver.y);
             curContext.lineTo(current.x, current.y);
             setFillStroke(doFill, doStroke, nextOver);
           }
         }
       }
-      
+
       else if (curShape === PConstants.TRIANGLE_FAN) {
         if (vertArrayLength > 2) {
-          start    = vertArray[0];
-          next     = vertArray[1];
-          nextOver = vertArray[2];
-
-          curContext.beginPath();
-          curContext.moveTo(start.x, start.y);
-          curContext.lineTo(next.x, next.y);
-          curContext.lineTo(nextOver.x, nextOver.y);
-
-          setFillStroke(doFill, doStroke, nextOver);
-          fillStrokeClose();
-
-          for (i = 3; i < vertArrayLength; i++) {
+          start = vertArray[0];
+          for (i = 2; i < vertArrayLength; i++) {
             previous = vertArray[i-1];
             current  = vertArray[i];
 
@@ -12617,7 +12601,7 @@
           }
         }
       }
-      
+
       else if (curShape === PConstants.QUADS) {
         if (vertArrayLength > 3) {
           for (i = 0; (i + 3) < vertArrayLength; i+=4) {
@@ -12636,25 +12620,14 @@
           }
         }
       }
-      
+
       else if (curShape === PConstants.QUAD_STRIP) {
         if (vertArrayLength > 3) {
-          start    = vertArray[0];
-          current  = vertArray[1];
-          next     = vertArray[3];
-          nextOver = vertArray[2];
-
-          curContext.beginPath();
-          curContext.moveTo(start.x, start.y);
-          curContext.lineTo(current.x, current.y);
-          curContext.lineTo(next.x, next.y);
-          curContext.lineTo(nextOver.x, nextOver.y);
-          curContext.lineTo(start.x, start.y);
-
-          setFillStroke(doFill, doStroke, next);
-          fillStrokeClose();
-
-          for (i = 4; (i+1) < vertArrayLength; i+=2) {
+          // ensure that the first iteration ends up as
+          // {start=0/current=1/next=3/nextover=2}
+          next     = vertArray[1];
+          nextOver = vertArray[0];
+          for (i = 2; (i+1) < vertArrayLength; i+=2) {
             start    = nextOver;
             current  = next;
             next     = vertArray[i+1];
@@ -12662,9 +12635,10 @@
 
             curContext.beginPath();
             curContext.moveTo(start.x, start.y);
-            curContext.lineTo(nextOver.x, nextOver.y);
-            curContext.lineTo(next.x, next.y);
             curContext.lineTo(current.x, current.y);
+            curContext.lineTo(next.x, next.y);
+            curContext.lineTo(nextOver.x, nextOver.y);
+            curContext.lineTo(start.x, start.y);
 
             setFillStroke(doFill, doStroke, next);
             fillStrokeClose();
@@ -12689,7 +12663,7 @@
           start = vertArray[0],
           current,   // vertArray[i]
           next,      // vertArray[i+1]
-          nextOver,  // vertArray[i+2]          
+          nextOver,  // vertArray[i+2]
           closeShape = (mode === PConstants.CLOSE);
 
       if (!renderSmooth) {

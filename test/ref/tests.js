@@ -199,7 +199,7 @@ var tests = [
   { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-unboxed-center-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.12, knownFailureTicket: "1684" }, /* See ticket #1172 */
-  { path: "text-unboxed-center-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" }, 
+  { path: "text-unboxed-center-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-unboxed-center-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
@@ -326,6 +326,14 @@ var tests = [
   { path: "self-4-fail.pde", tags: ["Calibration"] },
   { path: "self-5-success.pde", tags: ["Calibration"] },
   { path: "triangle-3d.pde", tags: ["3D"]},
+
+  { path: "endShape2d-points-color.pde", tags:["endShape2D", "2D"] },
+  { path: "endShape2d-trianglefan-color.pde", tags:["endShape2D", "2D"] },
+  { path: "endShape2d-trianglestrip-color.pde", tags:["endShape2D", "2D"] },
+  { path: "endShape2d-trianglestrip-stroke-color.pde", tags:["endShape2D", "2D"] },
+  { path: "endShape2d-quadstrip-color.pde", tags:["endShape2D", "2D"] },
+  { path: "endShape2d-quadstrip-stroke-color.pde", tags:["endShape2D", "2D"] },
+
   { path: "beginEndShape-2dlines.pde", tags:["endShape2D", "2D"] },
   { path: "beginEndShape-2dnocloseline.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.06  },
   { path: "beginEndShape-2dnoclosetriangle.pde", tags:["endShape2D", "2D"] },
