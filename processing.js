@@ -19790,6 +19790,27 @@
   };
 
   /**
+   * Make Processing run through init after already having
+   * been set up for a page. This function exists mostly for pages
+   * that swap content in/out without reloading a page.
+   */
+  var reload = Processing.reload = function() {
+    if (processingInstances.length > 0) {
+      // unload sketches
+      for (var i = processingInstances.length - 1; i >= 0; i--) {
+        if (processingInstances[i]) {
+          processingInstances[i].exit();
+        }
+      }
+      // empty the sketch instance lists
+      processingInstances = [];
+      Processing.instances = processingInstances;
+    }
+    // rerun init() to scan the DOM for sketches
+    init();
+  };
+
+  /**
    * Make loadSketchFromSources publically visible
    */
   Processing.loadSketchFromSources = loadSketchFromSources;
