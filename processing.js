@@ -3457,7 +3457,7 @@
       else if (arguments.length === 2) {
         if (typeof arguments[1] === 'string') {
           if (arguments[1].indexOf(".svg") > -1) { //its a filename
-            this.element = new p.XMLElement(null, arguments[1]);
+            this.element = new p.XMLElement(p, arguments[1]);
             // set values to their defaults according to the SVG spec
             this.vertexCodes         = [];
             this.vertices            = [];
@@ -4684,7 +4684,7 @@
      * @param {String} systemID  the system ID of the XML data where the element starts
      * @param {Integer }lineNr   the line in the XML data where the element starts
      */
-    var XMLElement = p.XMLElement = function() {
+    var XMLElement = p.XMLElement = function(selector, uri, sysid, line) {
       this.attributes = [];
       this.children   = [];
       this.fullName   = null;
@@ -4696,27 +4696,22 @@
       this.systemID   = "";
       this.type = "ELEMENT";
 
-      if (arguments.length === 4) {
-        this.fullName   = arguments[0] || "";
-        if (arguments[1]) {
-          this.name = arguments[1];
-        } else {
-          var index = this.fullName.indexOf(':');
-          if (index >= 0) {
-            this.name = this.fullName.substring(index + 1);
+      if (selector) {
+        if (typeof selector === "string") {
+          if (uri === undef && selector.indexOf("<")>-1) {
+            // load XML from text string
+            this.parse(selector);
           } else {
-            this.name = this.fullName;
+            // XMLElement(fullname, namespace, sysid, line) format
+            this.fullName = selector;
+            this.namespace = uri;
+            this.systemId = sysid;
+            this.lineNr = line;
           }
+        } else {
+          // XMLElement(this,file) format
+          this.parse(uri);
         }
-        this.namespace = arguments[1];
-        this.lineNr    = arguments[3];
-        this.systemID  = arguments[2];
-      }
-      else if ((arguments.length === 2 && arguments[1].indexOf(".") > -1) ) {
-        // filename or svg xml element
-        this.parse(arguments[arguments.length -1]);
-      } else if (arguments.length === 1 && typeof arguments[0] === "string"){
-        this.parse(arguments[0]);
       }
     };
     /**
@@ -4767,7 +4762,7 @@
        *
        * @return {XMLElement} the new element and its children elements
        */
-      parseChildrenRecursive: function (parent , elementpath){
+      parseChildrenRecursive: function (parent, elementpath){
         var xmlelement,
           xmlattribute,
           tmpattrib,
@@ -4778,7 +4773,7 @@
           this.name     = elementpath.nodeName;
           xmlelement    = this;
         } else { // this element has a parent
-          xmlelement         = new XMLElement(elementpath.localName, elementpath.nodeName, "", "");
+          xmlelement         = new XMLElement(elementpath.nodeName);
           xmlelement.parent  = parent;
         }
 
@@ -4820,11 +4815,11 @@
        * @param {String} systemID   the system ID of the XML data where the element starts
        * @param {int} lineNr    the line in the XML data where the element starts
        */
-      createElement: function () {
-        if (arguments.length === 2) {
-          return new XMLElement(arguments[0], arguments[1], null, null);
+      createElement: function (fullname, namespaceuri, sysid, line) {
+        if (sysid === undef) {
+          return new XMLElement(fullname, namespaceuri);
         }
-        return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
+        return new XMLElement(fullname, namespaceuri, sysid, line);
       },
       /**
        * @member XMLElement
@@ -4873,7 +4868,7 @@
           return false;
         }
         var i, j;
-        if (this.name !== other.getLocalName()) { return false; }
+        if (this.fullName !== other.fullName) { return false; }
         if (this.attributes.length !== other.getAttributeCount()) { return false; }
         // attributes may be ordered differently
         if (this.attributes.length !== other.attributes.length) { return false; }
@@ -5080,19 +5075,19 @@
        *
        * @return {XMLElement} the element
        */
-      getChild: function (){
-        if (typeof arguments[0]  === "number") {
-          return this.children[arguments[0]];
+      getChild: function (selector) {
+        if (typeof selector  === "number") {
+          return this.children[selector];
         }
-        if (arguments[0].indexOf('/') !== -1) { // path was given
-          this.getChildRecursive(arguments[0].split("/"), 0);
-          return null;
+        if (selector.indexOf('/') !== -1) {
+          // path traversal is required
+          return this.getChildRecursive(selector.split("/"), 0);
         }
         var kid, kidName;
         for (var i = 0, j = this.getChildCount(); i < j; i++) {
           kid = this.getChild(i);
           kidName = kid.getName();
-          if (kidName !== null && kidName === arguments[0]) {
+          if (kidName !== null && kidName === selector) {
               return kid;
           }
         }
@@ -5154,16 +5149,17 @@
        * @return {XMLElement} matching element or null if no match
        */
       getChildRecursive: function (items, offset) {
-        var kid, kidName;
+        // terminating clause: we are the requested candidate
+        if (offset === items.length) {
+          return this;
+        }
+        // continuation clause
+        var kid, kidName, matchName = items[offset];
         for(var i = 0, j = this.getChildCount(); i < j; i++) {
             kid = this.getChild(i);
             kidName = kid.getName();
-            if (kidName !== null && kidName === items[offset]) {
-              if (offset === items.length-1) {
-                return kid;
-              }
-              offset += 1;
-              return kid.getChildRecursive(items, offset);
+            if (kidName !== null && kidName === matchName) {
+              return kid.getChildRecursive(items, offset+1);
             }
         }
         return null;
@@ -5399,7 +5395,7 @@
         if(this.type==="TEXT") { return this.content; }
 
         // real XMLElements
-        var tagstring = (this.namespace !== "" && this.namespace !== this.name ? this.namespace + ":" : "") + this.name;
+        var tagstring = this.fullName;
         var xmlstring =  "<" + tagstring;
         var a,c;
 
