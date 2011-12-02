@@ -12710,7 +12710,7 @@
       }
 
       if (closeShape) {
-        curContext.lineTo(start.x, start.y);
+        curContext.closePath();
       }
 
       fillStrokeClose();
