@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>fontcache</title>
+    <script type="text/javascript" src="../../../processing.js"></script>
+    <script type="text/javascript">
+      var sketch = null;
+      (function getSketch() {
+        sketch = Processing.getInstanceById('sketch');
+        if(!sketch) { setTimeout(getSketch, 500); }
+        else {
+         // ...
+        }}());
+    </script>
+  </head>
+  <body>
+
+    <h1>Font cache testing</h1>
+
+    <canvas id="sketch" data-processing-sources="fontcache.pde"></canvas>
+
+    <p>This test makes sure that even though a large number of
+    distinct font objects will be used, Processing.js switches
+    over from full font object caching to initial-metrics-only
+    caching when 50 fonts have been cached, turning off caching
+    entirely once the metrics-only font cache hits 400 fonts.</p>
+    
+    <p>The test is performed by having a sketch use a textSize(random(10,60)),
+    which allows for 501 distinct font name/size pairs to be cached, due to
+    font sizes being rounded to a single decimal value. As such even though
+    one font is used, its possible size values 10.0, 10.1, ... , 59.9, 60.0 
+    leads to 501 possible pairs.</p>
+
+    <div>caching: <span id="cache"></span></div>
+
+    <div>cache size: <span id="log"></span></div>
+  </body>
+</html>
