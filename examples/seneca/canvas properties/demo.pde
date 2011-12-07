@@ -1,3 +1,4 @@
+cursor(CROSS);
 void setup() { size(100,100); noLoop(); }
 void draw() { background(0,0,200); }
 void mousePressed()  { println("mouse pressed");  }
