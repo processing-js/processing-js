@@ -5076,7 +5076,7 @@
        * @return {XMLElement} the element
        */
       getChild: function (selector) {
-        if (typeof selector  === "number") {
+        if (typeof selector === "number") {
           return this.children[selector];
         }
         if (selector.indexOf('/') !== -1) {
@@ -5108,7 +5108,7 @@
        */
       getChildren: function(){
         if (arguments.length === 1) {
-          if (typeof arguments[0]  === "number") {
+          if (typeof arguments[0] === "number") {
             return this.getChild( arguments[0]);
           }
           if (arguments[0].indexOf('/') !== -1) { // path was given
