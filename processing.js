@@ -19802,10 +19802,6 @@
           processingInstances[i].exit();
         }
       }
-      // empty the sketch instance lists
-      processingInstances = [];
-      processingInstanceIds = [];
-      Processing.instances = processingInstances;
     }
     // rerun init() to scan the DOM for sketches
     init();
