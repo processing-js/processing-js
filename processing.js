@@ -17739,6 +17739,16 @@
       return atoms;
     }
 
+    function injectDollarSign(code) {
+      return code.replace(/(__D__)+/g, function( all ) {
+        if (all.length === 5) {
+          return "$";
+        } else {
+          return all
+        }
+      });
+    }
+
     // replaces strings and regexs keyed by index with an array of strings
     function injectStrings(code, strings) {
       return code.replace(/'(\d+)'/g, function(all, index) {
@@ -17808,9 +17818,18 @@
       return comment !== "" ? " " : "\n";
     });
 
+    // protect against namespace collision
+    var codeWoDollars = codeWoStrings.replace( /(__D__)+/g, function( all ) {
+
+      return all + "__D__";
+    });
+
+    // protect dollar signs
+    codeWoDollars = codeWoDollars.replace( /\$/g, "__D__" );
+
     // removes generics
     var genericsWereRemoved;
-    var codeWoGenerics = codeWoStrings;
+    var codeWoGenerics = codeWoDollars;
     var replaceFunc = function(all, before, types, after) {
       if(!!before || !!after) {
         return all;
@@ -19220,7 +19239,7 @@
     // remove empty extra lines with space
     redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
 
-    return injectStrings(redendered, strings);
+    return injectStrings(injectDollarSign(redendered), strings);
   }// Parser ends
 
   function preprocessCode(aCode, sketch) {
