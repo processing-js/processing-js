@@ -17744,7 +17744,7 @@
         if (all.length === 5) {
           return "$";
         } else {
-          return all
+          return all.replace("__D__", "");
         }
       });
     }
