@@ -7934,7 +7934,7 @@
     * @see pushMatrix
     */
 
-    p.shearX = function(angleInRadians) {
+    Drawing2D.prototype.shearX = function(angleInRadians) {
       modelView.shearX(angleInRadians);
       curContext.transform(1, 0,angleInRadians,1,0,0);
     };
@@ -7967,7 +7967,7 @@
     * @see shearX
     */
 
-    p.shearY = function(angleInRadians) {
+   Drawing2D.prototype.shearY = function(angleInRadians) {
       modelView.shearY(angleInRadians);
       curContext.transform(1, angleInRadians,0,1,0,0);
     };
@@ -17032,7 +17032,7 @@
     DrawingPre.prototype.rotate = createDrawingPreFunction("rotate");
     DrawingPre.prototype.rotateZ = createDrawingPreFunction("rotateZ");
     DrawingPre.prototype.shearX = createDrawingPreFunction("shearX");
-    DrawingPre.prototype.shearX = createDrawingPreFunction("shearY");
+    DrawingPre.prototype.shearY = createDrawingPreFunction("shearY");
     DrawingPre.prototype.redraw = createDrawingPreFunction("redraw");
     DrawingPre.prototype.toImageData = createDrawingPreFunction("toImageData");
     DrawingPre.prototype.ambientLight = createDrawingPreFunction("ambientLight");
