@@ -17739,16 +17739,6 @@
       return atoms;
     }
 
-    function injectDollarSign(code) {
-      return code.replace(/(__D__)+/g, function( all ) {
-        if (all.length === 5) {
-          return "$";
-        } else {
-          return all.replace("__D__", "");
-        }
-      });
-    }
-
     // replaces strings and regexs keyed by index with an array of strings
     function injectStrings(code, strings) {
       return code.replace(/'(\d+)'/g, function(all, index) {
@@ -17818,18 +17808,22 @@
       return comment !== "" ? " " : "\n";
     });
 
-    // protect against namespace collision
-    var codeWoDollars = codeWoStrings.replace( /(__D__)+/g, function( all ) {
+    // protect character codes from namespace collision
+    codeWoStrings = codeWoStrings.replace( /__x([0-9A-F]{4})/g, function( all, hexCode ) {
 
-      return all + "__D__";
+      // $ = __x0024
+      // _ = __x005F
+      // this protects existing character codes from conversion
+      // __x0024 = __x005F_x0024
+      return "__x005F_x" + hexCode;
     });
 
-    // protect dollar signs
-    codeWoDollars = codeWoDollars.replace( /\$/g, "__D__" );
+    // convert dollar sign to character code
+    codeWoStrings = codeWoStrings.replace( /\$/g, "__x0024" );
 
     // removes generics
     var genericsWereRemoved;
-    var codeWoGenerics = codeWoDollars;
+    var codeWoGenerics = codeWoStrings;
     var replaceFunc = function(all, before, types, after) {
       if(!!before || !!after) {
         return all;
@@ -19239,7 +19233,15 @@
     // remove empty extra lines with space
     redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
 
-    return injectStrings(injectDollarSign(redendered), strings);
+    // convert character codes to characters
+    redendered = redendered.replace( /__x([0-9A-F]{4})/g, function( all, hexCode ) {
+
+      return String.fromCharCode(parseInt(hexCode,16));
+    });
+
+    console.log(injectStrings(redendered, strings));
+
+    return injectStrings(redendered, strings);
   }// Parser ends
 
   function preprocessCode(aCode, sketch) {
