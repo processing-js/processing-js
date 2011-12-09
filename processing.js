@@ -19239,8 +19239,6 @@
       return String.fromCharCode(parseInt(hexCode,16));
     });
 
-    console.log(injectStrings(redendered, strings));
-
     return injectStrings(redendered, strings);
   }// Parser ends
 
