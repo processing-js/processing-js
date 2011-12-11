@@ -14,7 +14,7 @@ var tests = [
   { path: "rotatepushpop.pde", tags: ["3D"] },
   { path: "rotatexy.pde", tags: ["3D"] },
   { path: "shearx.pde", tags: ["3D", "Test Suite"] },
-  { path: "sheary.pde", tags: ["2D", "Test Suite"] },
+  { path: "sheary.pde", tags: ["3D", "Test Suite"] },
   { path: "hue.pde", tags: ["2D"] },
   { path: "saturation.pde", tags: ["2D"] },
   { path: "brightness.pde", tags: ["2D"] },
