@@ -17809,8 +17809,7 @@
     });
 
     // protect character codes from namespace collision
-    codeWoStrings = codeWoStrings.replace( /__x([0-9A-F]{4})/g, function( all, hexCode ) {
-
+    codeWoStrings = codeWoStrings.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
       // $ = __x0024
       // _ = __x005F
       // this protects existing character codes from conversion
@@ -17819,7 +17818,7 @@
     });
 
     // convert dollar sign to character code
-    codeWoStrings = codeWoStrings.replace( /\$/g, "__x0024" );
+    codeWoStrings = codeWoStrings.replace(/\$/g, "__x0024");
 
     // removes generics
     var genericsWereRemoved;
@@ -19234,8 +19233,7 @@
     redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
 
     // convert character codes to characters
-    redendered = redendered.replace( /__x([0-9A-F]{4})/g, function( all, hexCode ) {
-
+    redendered = redendered.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
       return String.fromCharCode(parseInt(hexCode,16));
     });
 
