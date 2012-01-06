@@ -429,9 +429,15 @@
                 s.onExit = validateResult;
                 p = new Processing(current, s);
               } catch (e) {
-                title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
-                result.className = "failed";
-                failedCount++;
+                if (test.knownFailureTicket) {
+                  title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString() + ". Known failure. See <a href='https://processing-js.lighthouseapp.com/projects/41284/tickets/" + test.knownFailureTicket + "'>ticket #" + test.knownFailureTicket + "</a>");
+                  result.className = "knownfailure";
+                  knownFailedCount++;
+                } else {
+                  title.innerHTML = titleText(i+1, tl, 0, test.name, true, "Processing failed: " + e.toString());
+                  result.className = "failed";
+                  failedCount++;
+                }
                 return nextTest(i+1);
               }
             }

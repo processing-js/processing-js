@@ -1,4 +1,31 @@
 var tests = [
+  { path: "stretch.pde", tags: ["3D"] },
+  { path: "arc-fill-crisp.pde", tags: ["2D"], epsilonOverride: 0.07 },
+  { path: "mixture.pde", tags: ["3D"], knownFailureTicket: "1239" },
+  { path: "mixturegrid.pde", tags: ["3D"], knownFailureTicket: "1239" },
+  { path: "moveeye.pde", tags: ["3D"], epsilonOverride: 0.06 },
+  { path: "directional.pde", tags: ["3D"] },
+  { path: "disablestyle.pde", tags: ["2D"], epsilonOverride: 0.19 },
+  { path: "icosahedron.pde", tags: ["3D"] },
+  { path: "lights-off.pde", tags: ["3D"] },
+  { path: "lights-on.pde", tags: ["3D"] },
+  { path: "reflection.pde", tags: ["3D"] },
+  { path: "perspective.pde", tags: ["3D"] },
+  { path: "rotatepushpop.pde", tags: ["3D"] },
+  { path: "rotatexy.pde", tags: ["3D"] },
+  { path: "hue.pde", tags: ["2D"] },
+  { path: "saturation.pde", tags: ["2D"] },
+  { path: "brightness.pde", tags: ["2D"] },
+  { path: "radialgradient.pde", tags: ["2D"] },
+  { path: "wavegradient.pde", tags: ["2D"] },
+  { path: "explode.pde", tags: ["3D"] },
+  { path: "multiple-particle-systems.pde", tags: ["2D"] },
+  { path: "pattern.pde", tags: ["2D"] },
+  { path: "pixelarray.pde", tags: ["2D"] },
+  { path: "pulses.pde", tags: ["2D"] },
+  { path: "smoke-particle-system.pde", tags: ["2D"] },
+  { path: "zoom.pde", tags: ["3D"], epsilonOverride: 0.07 },
+  { path: "tint-isImageDirty.pde", tags: ["2D"] },
   { path: "copy-no-source.pde", tags: ["2D", "BLEND"] },
   { path: "pgraphics-get-3d.pde", tags: ["3D"] },
   { path: "rounding.pde", tags: ["2D", "Crisp"] },
@@ -39,7 +66,7 @@ var tests = [
   { path: "bouncy-bubbles.pde", tags: ["2D", "Test Suite"] },
   { path: "brownian.pde", tags: ["2D", "Test Suite"], epsilonOverride: 0.07 },
   { path: "circle-collision.pde", tags: ["2D", "Test Suite"] },
-  { path: "color-wheel.pde", tags: ["2D", "Test Suite"] },
+  { path: "color-wheel.pde", tags: ["2D", "Test Suite"], knownFailureTicket: "1700" },
   { path: "composite-objects.pde", tags: ["2D", "Test Suite"] },
   { path: "conway.pde", tags: ["2D", "Test Suite"] },
   { path: "double-random.pde", tags: ["2D", "Test Suite"] },
@@ -72,7 +99,7 @@ var tests = [
   { path: "sine.pde", tags: ["2D", "Test Suite"] },
   { path: "spore1.pde", tags: ["2D", "Test Suite"] },
   { path: "translate.pde", tags: ["2D", "Test Suite"] },
-  { path: "vertices.pde", tags: ["2D", "Test Suite"] },
+  { path: "vertices.pde", tags: ["2D", "Test Suite"], knownFailureTicket: "1700" },
   { path: "wolfram.pde", tags: ["2D", "Test Suite"] },
   { path: "loadShape.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
   { path: "loadShape2.pde", tags: ["2D","SVG"], epsilonOverride: 0.08 },
@@ -84,12 +111,13 @@ var tests = [
   { path: "loadShape9.pde", tags: ["2D","SVG"], epsilonOverride: 0.21 },
   { path: "loadShape10.pde", tags: ["2D","SVG"], epsilonOverride: 0.12 },
   { path: "loadShape11.pde", tags: ["2D","SVG"], epsilonOverride: 0.14 },
-  { path: "loadShape16.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
-  { path: "loadShape17.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
   { path: "loadShape12.pde", tags: ["2D","SVG"] },
   { path: "loadShape13.pde", tags: ["2D","SVG"] },
   { path: "loadShape14.pde", tags: ["2D","SVG", "Crisp"] },
   { path: "loadShape15.pde", tags: ["2D","SVG"] },
+  { path: "loadShape16.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
+  { path: "loadShape17.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
+  { path: "loadShape18.pde", tags: ["2D","SVG"], epsilonOverride: 0.17 },
   { path: "blur.pde", tags: ["2D","Convolution"] },
   { path: "edgedetect.pde", tags: ["2D","Convolution"] },
   { path: "size-3D.pde", tags: ["3D"] },
@@ -143,75 +171,91 @@ var tests = [
   { path: "string-codepointat.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
   { path: "string-equalsignorecase.pde", tags: ["2D", "Text"], epsilonOverride: 0.20 },
   { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
-  { path: "text-width.pde", tags:["2D", "Text"], epsilonOverride: 0.20 }, /* See ticket #1172 */
+  { path: "text-width.pde", tags:["2D", "Text"], epsilonOverride: 0.20, knownFailureTicket: "1705" }, /* See ticket #1172 */
   { path: "text-boxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.19 }, /* See ticket #1172 */
-  { path: "text-boxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.19 }, /* See ticket #1172 */
+  { path: "text-boxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
   { path: "text-boxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.19 }, /* See ticket #1172 */
-  { path: "text-boxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
-  { path: "text-boxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
-  { path: "text-boxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
+  { path: "text-boxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.18 }, /* See ticket #1172 */
+  { path: "text-boxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.18 }, /* See ticket #1172 */
+  { path: "text-boxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.18 }, /* See ticket #1172 */
   { path: "text-boxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
-  { path: "text-boxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
+  { path: "text-boxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.23 }, /* See ticket #1172 */
   { path: "text-boxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.21 }, /* See ticket #1172 */
   { path: "text-boxed-vcenter.pde", tags:["2D", "Text"], epsilonOverride: 0.16 }, /* See ticket #1172 */
-  { path: "text-unboxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
-  { path: "text-unboxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
-  { path: "text-unboxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
-  { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
-  { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
-  { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
-  { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
-  { path: "text-unboxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
-  { path: "text-unboxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-top.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
+  { path: "text-unboxed-left-center.pde", tags:["2D", "Text"], epsilonOverride: 0.11, knownFailureTicket: "1684" }, /* See ticket #1172 */
+  { path: "text-unboxed-left-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
+  { path: "text-unboxed-left-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
+  { path: "text-unboxed-left-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
+  { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
+  { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.12, knownFailureTicket: "1684" }, /* See ticket #1172 */
+  { path: "text-unboxed-center-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" }, 
+  { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
+  { path: "text-unboxed-center-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
+  { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
+  { path: "text-unboxed-right-center.pde", tags:["2D", "Text"], epsilonOverride: 0.13, knownFailureTicket: "1684" }, /* See ticket #1172 */
+  { path: "text-unboxed-right-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
+  { path: "text-unboxed-right-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
+  { path: "text-unboxed-right-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-defaults.pde", tags: ["2D", "Text"], epsilonOverride: 0.10 }, /* See ticket #1172 */
+  { path: "text-defaults-3D.pde", tags: ["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-ascent-descent.pde", tags: ["2D", "Text", "Crisp"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-ascent-descent-3D.pde", tags: ["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-size-recache.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-align.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
   { path: "text-leading.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* See ticket #1172 */
   { path: "text-font-fromfile.pde", tags: ["2D", "Text"], epsilonOverride: 0.22 }, /* repeated, to test reuse of font-face loaded fonts*/
-  { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
+  { path: "text-valign-BOTTOM.pde", tags: ["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
   { path: "text-valign-BOTTOM-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.13 }, /* See ticket #1172 */
   { path: "text-valign-BASELINE.pde", tags: ["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-valign-BASELINE-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-valign-CENTER.pde", tags: ["2D", "Text"], epsilonOverride: 0.14 }, /* See ticket #1172 */
-  { path: "text-valign-CENTER-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.09 }, /* See ticket #1172 */
+  { path: "text-valign-CENTER-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.12 }, /* See ticket #1172 */
   { path: "text-valign-TOP.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-valign-TOP-m.pde", tags: ["2D", "Text"], epsilonOverride: 0.11 }, /* See ticket #1172 */
   { path: "text-pfont.pde", tags: ["2D", "Text"], epsilonOverride: 0.30 }, /* See ticket #1172 */
   { path: "letters.pde", tags: ["2D", "Text"], epsilonOverride: 0.45 }, /* See ticket #1172 */
   { path: "words.pde", tags: ["2D", "Text"], epsilonOverride: 0.25 }, /* See ticket #1172 */
   { path: "text-pushpopstyle.pde", tags: ["2D", "Text"], epsilonOverride: 0.35 }, /* See ticket #1172 */
+  { path: "setup-noFill-noStroke.pde", tags: ["2D"]}, /* See ticket #1417 */
   { path: "svg_font_biotyp.pde", tags: ["2D", "Text"] },
   { path: "box-rotating.pde", tags: ["3D"], epsilonOverride: 0.10 },
   { path: "translate-rect.pde", tags: ["2D", "Crisp"] },
   { path: "arc-tangent.pde",  tags: ["2D"] },
   { path: "arc_ref1.pde",  tags: ["2D", "Crisp"], epsilonOverride: 0.10 },
   { path: "arc_ref2.pde",  tags: ["2D", "Crisp"], epsilonOverride: 0.13 },
-  { path: "arc_ref3.pde",  tags: ["2D", "Crisp"], epsilonOverride: 0.11 },
+  { path: "arc_ref3.pde",  tags: ["2D", "Crisp"], epsilonOverride: 0.13 },
   { path: "bezier.pde", tags: ["2D"], epsilonOverride: 0.08 },
   { path: "ellipse.pde", tags: ["2D"] },
-  { path: "ellipse-mode.pde", tags: ["2D"], epsilonOverride: 0.10 },
+  { path: "ellipseMode.pde", tags: ["2D"] },
+  { path: "ellipseMode-3d.pde", tags: ["3D"], epsilonOverride: 0.13 },
+  { path: "ellipseMode-arc.pde", tags: ["2D"], epsilonOverride: 0.18 },
+  { path: "ellipseMode-arc-3d.pde", tags: ["3D"], epsilonOverride: 0.13 },
   { path: "piechart.pde", tags: ["2D"] },
   { path: "point-stroke-array-2d.pde", tags: ["2D", "Crisp"] },
   { path: "bezier-ellipse.pde", tags: ["2D", "Crisp"], epsilonOverride: 0.06 },
   { path: "curves.pde", tags: ["2D"], epsilonOverride: 0.07 },
   { path: "curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
-  { path: "curve-3D.pde", tags: ["3D"] },
+  { path: "curve-3D.pde", tags: ["3D"], epsilonOverride: 0.11, knownFailureTicket: "1700" },
   { path: "curveDetail.pde", tags: ["3D"], knownFailureTicket: "1416" },
-  { path: "curvePoint.pde", tags: ["2D"], knownFailureTicket: "1417" },
-  { path: "curveTangent.pde", tags: ["2D"], knownFailureTicket: "1417" },
+  { path: "curvePoint.pde", tags: ["2D"], epsilonOverride: 0.11 },
+  { path: "curveTangent.pde", tags: ["2D"], epsilonOverride: 0.10 },
   { path: "curveTightness.pde", tags: ["2D"], epsilonOverride: 0.11 },
   { path: "continuous-curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
   { path: "points-lines.pde", tags: ["2D", "Crisp"] },
   { path: "rectMode.pde", tags: ["2D", "Crisp"] },
+  { path: "rectMode-3d.pde", tags: ["3D"], knownFailureTicket: "1271" },
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
-  { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
+  { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13, knownFailureTicket: "1700" },
   { path: "line-3d.pde", tags: ["3D"], epsilonOverride: 0.08 },
-  { path: "default_perspective.pde", tags: ["3D"]},
-  { path: "default_perspective_2.pde", tags: ["3D"]},
+  { path: "default_perspective.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "default_perspective_2.pde", tags: ["3D"], epsilonOverride: 0.11 },
   { path: "3D_frustum.pde", tags: ["3D"], knownFailureTicket: "1513" },
   { path: "3D_beginendcam.pde", tags: ["3D"], epsilonOverride: 0.09 },
   { path: "3D_perspective.pde", tags: ["3D"], epsilonOverride: 0.11 },
@@ -223,8 +267,10 @@ var tests = [
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "box_scale_3D.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "applyMatrix.pde", tags: ["3D"] },
-  { path: "sphereDetail-30-3.pde", tags: ["3D"] },
-  { path: "sphereDetail-3-30.pde", tags: ["3D"] },
+  { path: "sphere-detail10.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "sphere-detail200.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "sphereDetail-30-3.pde", tags: ["3D"], epsilonOverride: 0.11 },
+  { path: "sphereDetail-3-30.pde", tags: ["3D"], epsilonOverride: 0.11 },
   { path: "ambientLight_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_1.pde", tags: ["3D"] },
   { path: "ambientLight_p5test_2.pde", tags: ["3D"], epsilonOverride: 0.10 },
@@ -238,10 +284,10 @@ var tests = [
   { path: "shininess_p5test.pde", tags: ["3D"] },
   { path: "specular_p5test.pde", tags: ["3D"]},
   { path: "spotLight_p5test.pde", tags: ["3D"], knownFailureTicket: "1239" }, /* See ticket #1202 */
-  { path: "3d-ellipse-fill-noFill-stoke-noStroke.pde", tags: ["3D"], epsilonOverride: 0.15 },
+  { path: "3d-ellipse-fill-noFill-stoke-noStroke.pde", tags: ["3D"], epsilonOverride: 0.15, knownFailureTicket: "1700" },
   { path: "createGraphics.pde", tags: ["3D"], epsilonOverride: 0.07 }, /* See ticket #1075 */
   { path: "rect-directional-light.pde", tags: ["3D"] },
-  { path: "hint_depth.pde", tags: ["3D"] },
+  { path: "hint_depth.pde", tags: ["3D"],  epsilonOverride: 0.11 },
   { path: "createimage.pde", tags: ["2D"] },
   { path: "array.pde", tags: ["2D", "Crisp"] },
   { path: "brightness-2.pde", tags: ["2D"] },
@@ -319,14 +365,45 @@ var tests = [
   { path: "tint-alpha.pde", tags: ["2D", "Color Profile"] },
   { path: "quad_3D.pde", tags:["3D"], knownFailureTicket: "1271" },
   { path: "textured_box_3D.pde", tags:["3D", "Color Profile"], knownFailureTicket: "1271" },
+  { path: "texture-uv-clamping.pde", tags: ["3D"], epsilonOverride: 0.09 },
   { path: "texture_noShape.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_triangles.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_norm.pde", tags: ["3D", "Color Profile"] },
-  { path: "texture_ambient.pde", tags: ["3D", "Color Profile"], knownFailureTicket: "1503" },
-  { path: "texture_transparent.pde", tags: ["3D", "Color Profile"]  },
+  { path: "texture_ambient.pde", tags: ["3D", "Color Profile"] },
+  { path: "texture_transparent.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_npot.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_vertex_no_z.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_tint.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_tint_white.pde", tags: ["3D", "Color Profile"] },
-  { path: "rotateZ.pde", tags: ["3D"], knownFailureTicket: "1271" }
+  { path: "texture-image.pde", tags: ["3D"] },
+  { path: "rotateZ.pde", tags: ["3D"], knownFailureTicket: "1271" },
+
+  // ColorMode light and material
+  { path: "hsb-1-ambient-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-1-dir-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-1-point-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-1-spot-3d-sphere.pde", tags: ["3D"], knownFailureTicket: "1239" },
+  { path: "hsb-255-ambient-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-255-dir-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-255-point-3d-sphere.pde", tags: ["3D"] },
+  { path: "hsb-255-spot-3d-sphere.pde", tags: ["3D"], knownFailureTicket: "1239" },
+  { path: "rgb-1-ambient-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-dir-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-emissive-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-point-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-spec-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-1-spot-3d-sphere.pde", tags: ["3D"], knownFailureTicket: "1239" },
+  { path: "rgb-255-ambient-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-dir-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-emissive-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-point-3d-sphere.pde", tags: ["3D"] },
+  { path: "rgb-255-spot-3d-sphere.pde", tags: ["3D"], knownFailureTicket: "1239" },
+  { path: "material-amb-grey-1.pde", tags: ["3D"] },
+  { path: "material-amb-grey-3vals.pde", tags: ["3D"] },
+  { path: "material-amb-pcolor.pde", tags: ["3D"] },
+
+  // Falloff
+  { path: "falloff-amb-1.pde", tags: ["3D"], knownFailureTicket: "1678" },
+  { path: "falloff-amb-2.pde", tags: ["3D"], knownFailureTicket: "1678" },
+  { path: "falloff-amb-3.pde", tags: ["3D"], knownFailureTicket: "1678" }
 ];

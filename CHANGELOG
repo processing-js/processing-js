@@ -1,3 +1,41 @@
+October 13, 2011 - Release 1.3.6
+
+  * Fixed arc() not filling the last half degree [#1717]
+  * Fixed camera() call order regression in 1.3.5 [#1714]
+  * Fixed delay() to throw an unsupported function error [#1724]
+
+October 5, 2011 - Release 1.3.5
+
+  * Added check for canvas in Processing ctor [#1646]
+  * Added document.head compatibility for Firefox 3.6 [#1660]
+  * Added reference to p instance in onLoad() [#1643]
+  * Added text(string, x, y, z) ref tests [#1642]
+  * Disabled WebGL anti-aliasing [#1701]
+  * Fixed PImage.mask() when passed a PImage created from a PGraphics [#1623]
+  * Fixed PImage.toImageData not using cache [#1647]
+  * Fixed colorMode not working in 3D [#1670]
+  * Fixed copy() without a source argument [#1631]
+  * Fixed frustum() not throwing an error in 2D mode [#1693]
+  * Fixed get() not returning a copy of a PImage [#1622]
+  * Fixed get(x,y) when called on 3D PGraphics [#1630]
+  * Fixed getUniformLocation checking for null [#1650]
+  * Fixed lights not being applied to textures [#1503]
+  * Fixed modelX/Y/Z() failing if camera() was not called first [#1103]
+  * Fixed noFill()/noStroke() not working if called before size() [#1417]
+  * Fixed pixels not allowed as a variable name in classes [#1674]
+  * Fixed pmouseX/Y values during draw() [#1635]
+  * Fixed rectMode() not working in 3D [#1656]
+  * Fixed textWidth() returning a string instead of a number [#1624]
+  * Fixed texture UV coordinates not normalized and clamped with NPOT textures [#1669]
+  * Fixed texture() modifying a NPOT PImage passed to it [#1664]
+  * Fixed tint() ignoring alpha parameter [#1625]
+  * Fixed tint() not marking a PImage as dirty [#1707]
+  * Fixed using p as a class member identifier [#1618]
+  * Fixed vertical align in textAlign() [#1628]
+  * Optimized use of curRectMode and curEllipseMode [#1676]
+  * Removed p.Import [#1632]
+  * Removed unused inDraw variable [#1641]
+
 August 24, 2011 - Release 1.3.0
 
   * Added a chart to the perf test suite

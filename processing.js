@@ -27,6 +27,9 @@
 
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
+  // document.head polyfill for the benefit of Firefox 3.6
+  document.head = document.head || document.getElementsByTagName('head')[0];
+
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
   function setupTypedArray(name, fallback) {
     // Check if TypedArray exists, and use if so.
@@ -1489,7 +1492,7 @@
     var unsupportedP5 = ("open() createOutput() createInput() BufferedReader selectFolder() " +
                          "dataPath() createWriter() selectOutput() beginRecord() " +
                          "saveStream() endRecord() selectInput() saveBytes() createReader() " +
-                         "beginRaw() endRaw() PrintWriter").split(" "),
+                         "beginRaw() endRaw() PrintWriter delay()").split(" "),
         count = unsupportedP5.length,
         prettyName,
         p5Name;
@@ -1958,8 +1961,8 @@
         currentFillColor = 0xFFFFFFFF,
         isFillDirty = true,
         doStroke = true,
-        strokeStyle = [0.8, 0.8, 0.8, 1.0],
-        currentStrokeColor = 0xFFFDFDFD,
+        strokeStyle = [0.0, 0.0, 0.0, 1.0],
+        currentStrokeColor = 0xFF000000,
         isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
@@ -2457,17 +2460,13 @@
 
       "uniform sampler2D sampler;" +
       "uniform bool usingTexture;" +
-      "uniform bool usingTint;" +
       "varying vec2 vTexture;" +
 
       // In Processing, when a texture is used, the fill color is ignored
       // vec4(1.0,1.0,1.0,0.5)
       "void main(void){" +
       "  if(usingTexture){" +
-      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy));" +
-      "    if(usingTint){" +
-      "      gl_FragColor = gl_FragColor*frontColor;" +
-      "    }"+
+      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy)) * frontColor;" +
       "  }"+
       "  else{" +
       "    gl_FragColor = frontColor;" +
@@ -10119,8 +10118,13 @@
     * @see screen
     */
     DrawingShared.prototype.size = function(aWidth, aHeight, aMode) {
-      p.stroke(0);
-      p.fill(255);
+      if (doStroke) {
+        p.stroke(0);
+      }
+
+      if (doFill) {
+        p.fill(255);
+      }
 
       // The default 2d context has already been created in the p.init() stage if
       // a 3d context was not specified. This is so that a 2d context will be
@@ -10193,7 +10197,7 @@
               gl;
 
           for (var i=0, l=ctxNames.length; i<l; i++) {
-            gl = canvas.getContext(ctxNames[i]);
+            gl = canvas.getContext(ctxNames[i], {antialias: false});
             if (gl) {
               break;
             }
@@ -10209,10 +10213,8 @@
           // 3D sketches, browsers will either not render or render the
           // scene incorrectly. To fix this, we need to adjust the
           // width and height attributes of the canvas.
-          if (curElement.width !== aWidth || curElement.height !== aHeight) {
-            curElement.setAttribute("width", aWidth);
-            curElement.setAttribute("height", aHeight);
-          }
+          curElement.width = p.width = aWidth || 100;
+          curElement.height = p.height = aHeight || 100;
           curContext = getGLContext(curElement);
           canTex = curContext.createTexture(); // texture
           textTex = curContext.createTexture(); // texture
@@ -10248,7 +10250,6 @@
         // assume we aren't using textures by default
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
         // assume that we arn't tinting by default
-        uniformi("usingTint3d", programObject3D, "usingTint", false);
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
         p.ambient(255, 255, 255);
@@ -10347,9 +10348,9 @@
      * @param {int | float} g green or hue value
      * @param {int | float} b blue or hue value
      *
-     * @param {int | float} x
-     * @param {int | float} y
-     * @param {int | float} z
+     * @param {int | float} x x position of light (used for falloff)
+     * @param {int | float} y y position of light (used for falloff)
+     * @param {int | float} z z position of light (used for falloff)
      *
      * @returns none
      *
@@ -10371,8 +10372,15 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
+      // Instead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
       curContext.useProgram(programObject3D);
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 0);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
@@ -10429,7 +10437,14 @@
         mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      // Instead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", dir);
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
@@ -10491,8 +10506,16 @@
     Drawing2D.prototype.lightSpecular = DrawingShared.prototype.a3DOnlyFunction;
 
     Drawing3D.prototype.lightSpecular = function(r, g, b) {
+
+      // Instead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
       curContext.useProgram(programObject3D);
-      uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
+      uniformf("specular3d", programObject3D, "specular", normalizedCol);
     };
 
     /**
@@ -10549,7 +10572,7 @@
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
 
-      // place the point in view space once instead of once per vertex
+      // Place the point in view space once instead of once per vertex
       // in the shader.
       var pos = new PVector(x, y, z);
       var view = new PMatrix3D();
@@ -10557,8 +10580,15 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
+      // Instead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
       curContext.useProgram(programObject3D);
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 2);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
@@ -10628,7 +10658,7 @@
       mvm.apply(modelView.array());
       mvm.mult(pos, pos);
 
-      // convert to array since we need to directly access the elements
+      // Convert to array since we need to directly access the elements.
       mvm = mvm.array();
 
       // We need to multiply the direction by the model view matrix, but
@@ -10640,7 +10670,14 @@
           mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      // Instead of calling p.color, we do the calculations ourselves to 
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", dir);
       uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
@@ -10728,10 +10765,10 @@
      * @see frustum
      */
     p.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
-      if (arguments.length === 0) {
-        //in case canvas is resized
-        cameraX = curElement.width / 2;
-        cameraY = curElement.height / 2;
+      if (eyeX === undef) {
+        // Workaround if createGraphics is used. 
+        cameraX = p.width / 2;
+        cameraY = p.height / 2;
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         eyeX = cameraX;
         eyeY = cameraY;
@@ -10746,19 +10783,30 @@
 
       var z = new PVector(eyeX - centerX, eyeY - centerY, eyeZ - centerZ);
       var y = new PVector(upX, upY, upZ);
-      var transX, transY, transZ;
       z.normalize();
       var x = PVector.cross(y, z);
       y = PVector.cross(z, x);
       x.normalize();
       y.normalize();
 
-      cam.set(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+      var xX = x.x,
+          xY = x.y,
+          xZ = x.z;
+
+      var yX = y.x,
+          yY = y.y,
+          yZ = y.z;
+
+      var zX = z.x,
+          zY = z.y,
+          zZ = z.z;
+
+      cam.set(xX, xY, xZ, 0, yX, yY, yZ, 0, zX, zY, zZ, 0, 0, 0, 0, 1);
 
       cam.translate(-eyeX, -eyeY, -eyeZ);
 
       cameraInv.reset();
-      cameraInv.invApply(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+      cameraInv.invApply(xX, xY, xZ, 0, yX, yY, yZ, 0, zX, zY, zZ, 0, 0, 0, 0, 1);
 
       cameraInv.translate(eyeX, eyeY, eyeZ);
 
@@ -10786,7 +10834,7 @@
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         cameraNear = cameraZ / 10;
         cameraFar = cameraZ * 10;
-        cameraAspect = curElement.width / curElement.height;
+        cameraAspect = p.width / p.height;
         fov = cameraFOV;
         aspect = cameraAspect;
         near = cameraNear;
@@ -10817,7 +10865,11 @@
      * @see endCamera
      * @see perspective
      */
-    p.frustum = function(left, right, bottom, top, near, far) {
+    Drawing2D.prototype.frustum = function() {
+      throw("Processing.js: frustum() is not supported in 2D mode");
+    };
+
+    Drawing3D.prototype.frustum = function(left, right, bottom, top, near, far) {
       frustumMode = true;
       projection = new PMatrix3D();
       projection.set((2 * near) / (right - left), 0, (right + left) / (right - left),
@@ -11346,29 +11398,11 @@
     */
     Drawing2D.prototype.ambient = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.ambient = function() {
-      // create an alias to shorten code
-      var a = arguments;
-
-      // either a shade of gray or a 'color' object.
+    Drawing3D.prototype.ambient = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-
-      if (a.length === 1) {
-        // color object was passed in
-        if (typeof a[0] === "string") {
-          var c = a[0].slice(5, -1).split(",");
-          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
-        }
-        // else a single number was passed in for gray shade
-        else {
-          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
-        }
-      }
-      // Otherwise three values were provided (r,g,b)
-      else {
-        uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
-      }
+      var col = p.color(v1, v2, v3);
+      uniformf("mat_ambient3d", programObject3D, "mat_ambient", p.color.toGLArray(col).slice(0, 3));
     };
 
     /**
@@ -11397,30 +11431,11 @@
     */
     Drawing2D.prototype.emissive = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.emissive = function() {
-      // create an alias to shorten code
-      var a = arguments;
-
+    Drawing3D.prototype.emissive = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-
-      // If only one argument was provided, the user either gave us a
-      // shade of gray or a 'color' object.
-      if (a.length === 1) {
-        // color object was passed in
-        if (typeof a[0] === "string") {
-          var c = a[0].slice(5, -1).split(",");
-          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
-        }
-        // else a regular number was passed in for gray shade
-        else {
-          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
-        }
-      }
-      // Otherwise three values were provided (r,g,b)
-      else {
-        uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
-      }
+      var col = p.color(v1, v2, v3);
+      uniformf("mat_emissive3d", programObject3D, "mat_emissive", p.color.toGLArray(col).slice(0, 3));
     };
 
     /**
@@ -11478,12 +11493,11 @@
     */
     Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.specular = function(a1, a2, a3) {
-      var c = p.color(a1, a2, a3);
-
+    Drawing3D.prototype.specular = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-      uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
+      var col = p.color(v1, v2, v3);
+      uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(col).slice(0, 3));
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -11966,6 +11980,18 @@
         z = 0;
       }
 
+      // Convert u and v to normalized coordinates
+      if (u !== undef && v !== undef) {
+        if (curTextureMode === PConstants.IMAGE) {
+          u /= curTexture.width;
+          v /= curTexture.height;
+        }
+        u = u > 1 ? 1 : u;
+        u = u < 0 ? 0 : u;
+        v = v > 1 ? 1 : v;
+        v = v < 0 ? 0 : v;
+      }
+
       vert[0] = x;
       vert[1] = y;
       vert[2] = z || 0;
@@ -12073,13 +12099,11 @@
      */
     var fill3D = function(vArray, mode, cArray, tArray){
       var ctxMode;
-      if(mode === "TRIANGLES"){
+      if (mode === "TRIANGLES") {
         ctxMode = curContext.TRIANGLES;
-      }
-      else if(mode === "TRIANGLE_FAN"){
+      } else if(mode === "TRIANGLE_FAN") {
         ctxMode = curContext.TRIANGLE_FAN;
-      }
-      else{
+      } else {
         ctxMode = curContext.TRIANGLE_STRIP;
       }
 
@@ -12099,9 +12123,8 @@
 
       // if we are using a texture and a tint, then overwrite the
       // contents of the color buffer with the current tint
-      if(usingTexture && curTint !== null){
+      if (usingTexture && curTint !== null){
         curTint3d(cArray);
-        uniformi("usingTint3d", programObject3D, "usingTint", true);
       }
 
       vertexAttribPointer("aColor3d", programObject3D, "aColor", 4, fillColorBuffer);
@@ -12110,23 +12133,7 @@
       // No support for lights....yet
       disableVertexAttribPointer("normal3d", programObject3D, "Normal");
 
-      var i;
-
-      if(usingTexture){
-        if(curTextureMode === PConstants.IMAGE){
-          for(i = 0; i < tArray.length; i += 2){
-            tArray[i] = tArray[i]/curTexture.width;
-            tArray[i+1] /= curTexture.height;
-          }
-        }
-
-        // hack to handle when users specifies values
-        // greater than 1.0 for texture coords.
-        for(i = 0; i < tArray.length; i += 2){
-          if( tArray[i+0] > 1.0 ){ tArray[i+0] -= (tArray[i+0] - 1.0);}
-          if( tArray[i+1] > 1.0 ){ tArray[i+1] -= (tArray[i+1] - 1.0);}
-        }
-
+      if (usingTexture) {
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
         vertexAttribPointer("aTexture3d", programObject3D, "aTexture", 2, shapeTexVBO);
         curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW);
@@ -12961,25 +12968,6 @@
       }
     };
 
-    // texImage2D function changed http://www.khronos.org/webgl/public-mailing-list/archives/1007/msg00034.html
-    // This method tries the new argument pattern first and falls back to the old version
-    var executeTexImage2D = function () {
-      var canvas2d = document.createElement('canvas');
-
-      try { // new way.
-        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, canvas2d);
-        executeTexImage2D = function(texture) {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, texture);
-        };
-      } catch (e) {
-        executeTexImage2D = function(texture) {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, texture, false);
-        };
-      }
-
-      executeTexImage2D.apply(this, arguments);
-    };
-
     /**
      * Sets a texture to be applied to vertex points. The <b>texture()</b> function
      * must be called between <b>beginShape()</b> and <b>endShape()</b> and before
@@ -12999,19 +12987,22 @@
     */
     p.texture = function(pimage) {
       var curContext = drawing.$ensureContext();
-      if (pimage.localName === "canvas") {
+
+      if (pimage.__texture) {
+        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+      } else if (pimage.localName === "canvas") {
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
-        executeTexImage2D(pimage);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
         curContext.generateMipmap(curContext.TEXTURE_2D);
-      } else if (!pimage.__texture) {
-        var texture = curContext.createTexture();
-        pimage.__texture = texture;
-
-        var cvs = document.createElement('canvas');
-
-        var pot;
+        curTexture.width = pimage.width;
+        curTexture.height = pimage.height;
+      } else {
+        var texture = curContext.createTexture(),
+            cvs = document.createElement('canvas'),
+            cvsTextureCtx = cvs.getContext('2d'),
+            pot;
 
         // WebGL requires power of two textures
         if (pimage.width & (pimage.width-1) === 0) {
@@ -13034,26 +13025,21 @@
           cvs.height = pot;
         }
 
-        pimage.resize(cvs.width, cvs.height);
+        cvsTextureCtx.drawImage(pimage.sourceImg, 0, 0, pimage.width, pimage.height, 0, 0, cvs.width, cvs.height);
 
-        var cvsTextureCtx = cvs.getContext('2d');
-        cvsTextureCtx.putImageData(pimage.imageData, 0, 0);
-
-        pimage.__cvs = cvs;
-
-        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+        curContext.bindTexture(curContext.TEXTURE_2D, texture);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
-        executeTexImage2D(pimage.__cvs);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, cvs);
         curContext.generateMipmap(curContext.TEXTURE_2D);
-      } else {
-        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+
+        pimage.__texture = texture;
+        curTexture.width = pimage.width;
+        curTexture.height = pimage.height;
       }
 
-      curTexture.width = pimage.width;
-      curTexture.height = pimage.height;
       usingTexture = true;
       curContext.useProgram(programObject3D);
       uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
@@ -13339,13 +13325,11 @@
       if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
-
       } else if (curEllipseMode === PConstants.RADIUS) {
         x = x - width;
         y = y - height;
         width = width * 2;
         height = height * 2;
-
       } else if (curEllipseMode === PConstants.CENTER) {
         x = x - width/2;
         y = y - height/2;
@@ -13363,8 +13347,8 @@
       var vr = height / 2;
       var centerX = x + hr;
       var centerY = y + vr;
-      var startLUT = 0 | (-0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
-      var stopLUT  = 0 | (0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
+      var startLUT = 0 | (-0.5 + start * p.RAD_TO_DEG * 2);
+      var stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2);
       var i, j;
       if (doFill) {
         // shut off stroke for a minute
@@ -13372,11 +13356,9 @@
         doStroke = false;
         p.beginShape();
         p.vertex(centerX, centerY);
-        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
-          if (j >= PConstants.SINCOS_LENGTH) {
-            j = j - PConstants.SINCOS_LENGTH;
-          }
-          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
+        for (i = startLUT; i <= stopLUT; i++) {
+          j = i % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
@@ -13387,15 +13369,10 @@
         var savedFill = doFill;
         doFill = false;
         p.beginShape();
-        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
-          if (j >= PConstants.SINCOS_LENGTH) {
-            j = j - PConstants.SINCOS_LENGTH;
-          }
-          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
+        for (i = startLUT; i <= stopLUT; i++) {
+          j = i % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
-        // explicitly add the last vertex, for precision
-        j = stopLUT % PConstants.SINCOS_LENGTH;
-        p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         p.endShape();
         doFill = savedFill;
       }
@@ -13774,12 +13751,12 @@
       if (curRectMode === PConstants.CORNERS) {
         width -= x;
         height -= y;
-      }
-      if (curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      } else if (curRectMode === PConstants.CENTER) {
         x -= width / 2;
         y -= height / 2;
       }
@@ -13809,6 +13786,19 @@
     Drawing3D.prototype.rect = function(x, y, width, height, tl, tr, br, bl) {
       if (tl !== undef) {
         throw "rect() with rounded corners is not supported in 3D mode";
+      }
+
+      if (curRectMode === PConstants.CORNERS) {
+        width -= x;
+        height -= y;
+      } else if (curRectMode === PConstants.RADIUS) {
+        width *= 2;
+        height *= 2;
+        x -= width / 2;
+        y -= height / 2;
+      } else if (curRectMode === PConstants.CENTER) {
+        x -= width / 2;
+        y -= height / 2;
       }
 
       // Modeling transformation
@@ -13889,7 +13879,7 @@
      *
      * @see ellipseMode
      */
-    DrawingShared.prototype.ellipse = function(x, y, width, height) {
+    Drawing2D.prototype.ellipse = function(x, y, width, height) {
       x = x || 0;
       y = y || 0;
 
@@ -13900,46 +13890,28 @@
       if (curEllipseMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-
-      if (curEllipseMode === PConstants.CORNERS) {
+      } else if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
-      }
-
-      if (curEllipseMode === PConstants.CORNER || curEllipseMode === PConstants.CORNERS) {
+        x += width / 2;
+        y += height / 2;
+      } else if (curEllipseMode === PConstants.CORNER) {
         x += width / 2;
         y += height / 2;
       }
 
-      return {'x':x, 'y':y, 'width':width, 'height':height};
-    };
-
-    Drawing2D.prototype.ellipse = function(x, y, width, height) {
-      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
-
-      if (!params) {
-        return;
-      }
-
-      x = params['x'];
-      y = params['y'];
-      width = params['width'];
-      height = params['height'];
-
       // Shortcut for drawing a 2D circle
       if (width === height) {
         curContext.beginPath();
-        curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, PConstants.TWO_PI, false);
+        curContext.arc(x, y, width / 2, 0, PConstants.TWO_PI, false);
         executeContextFill();
         executeContextStroke();
-        curContext.closePath();
       } else {
         var w = width / 2,
-          h = height / 2,
-          C = 0.5522847498307933;
-        var c_x = C * w,
-          c_y = C * h;
+            h = height / 2,
+            C = 0.5522847498307933,
+            c_x = C * w,
+            c_y = C * h;
 
         p.beginShape();
         p.vertex(x + w, y);
@@ -13952,22 +13924,31 @@
     };
 
     Drawing3D.prototype.ellipse = function(x, y, width, height) {
-      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
+      x = x || 0;
+      y = y || 0;
 
-      if (!params) {
+      if (width <= 0 && height <= 0) {
         return;
       }
 
-      x = params['x'];
-      y = params['y'];
-      width = params['width'];
-      height = params['height'];
+      if (curEllipseMode === PConstants.RADIUS) {
+        width *= 2;
+        height *= 2;
+      } else if (curEllipseMode === PConstants.CORNERS) {
+        width = width - x;
+        height = height - y;
+        x += width / 2;
+        y += height / 2;
+      } else if (curEllipseMode === PConstants.CORNER) {
+        x += width / 2;
+        y += height / 2;
+      }
 
       var w = width / 2,
-        h = height / 2,
-        C = 0.5522847498307933;
-      var c_x = C * w,
-        c_y = C * h;
+          h = height / 2,
+          C = 0.5522847498307933,
+          c_x = C * w,
+          c_y = C * h;
 
       p.beginShape();
       p.vertex(x + w, y);
@@ -15233,6 +15214,7 @@
           // Tint the image
           if (curTint !== null) {
             curTint(obj);
+            img.__isDirty = true;
           }
 
           curContext.drawImage(getCanvasData(obj).canvas, 0, 0,
@@ -16265,7 +16247,7 @@
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, curTextFont.measureTextWidth(lines[i]));
       }
-      return width;
+      return width | 0;
     };
 
     Drawing3D.prototype.textWidth = function(str) {
@@ -16281,7 +16263,7 @@
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, textContext.measureText(lines[i]).width);
       }
-      return width;
+      return width | 0;
     };
 
     // A lookup table for characters that can not be referenced by Object
@@ -16464,7 +16446,7 @@
       curContext = oldContext;
 
       curContext.bindTexture(curContext.TEXTURE_2D, textTex);
-      executeTexImage2D(textcanvas);
+      curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
@@ -16972,6 +16954,7 @@
     DrawingPre.prototype.spotLight = createDrawingPreFunction("spotLight");
     DrawingPre.prototype.beginCamera = createDrawingPreFunction("beginCamera");
     DrawingPre.prototype.endCamera = createDrawingPreFunction("endCamera");
+    DrawingPre.prototype.frustum = createDrawingPreFunction("frustum");
     DrawingPre.prototype.box = createDrawingPreFunction("box");
     DrawingPre.prototype.sphere = createDrawingPreFunction("sphere");
     DrawingPre.prototype.ambient = createDrawingPreFunction("ambient");
@@ -17970,7 +17953,7 @@
       //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
       //   pixels.length => pixels.getLength()
       //   pixels = ar => pixels.set(ar) | pixels => pixels.toArray()
-      s = s.replace(/\bpixels\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}]+))?/g,
+      s = s.replace(/\bpixels\b\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}]+))?/g,
         function(all, indexOrLength, index, atomIndex, equalsPart, rightSide) {
           if(index) {
             var atom = atoms[atomIndex];
