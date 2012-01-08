@@ -13248,6 +13248,13 @@
         p.curveVertex(arguments[6], arguments[7], arguments[8]);
         p.curveVertex(arguments[9], arguments[10], arguments[11]);
         p.endShape();
+      }else if (arguments.length === 8){
+        p.beginShape();
+        p.curveVertex(arguments[0], arguments[1]);
+        p.curveVertex(arguments[2], arguments[3]);
+        p.curveVertex(arguments[4], arguments[5]);
+        p.curveVertex(arguments[6], arguments[7]);
+        p.endShape();
       }
     };
 
