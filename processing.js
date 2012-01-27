@@ -19309,7 +19309,7 @@
 //#endif
 
   // tinylog lite JavaScript library
-  // http://purl.eligrey.com/tinylog/lite
+  // https://github.com/eligrey/tinylog
   /*global tinylog,print*/
   var tinylogLite = (function() {
     "use strict";
