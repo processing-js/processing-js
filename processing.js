@@ -9,7 +9,7 @@
         window.console.log('Processing.js: ' + msg);
       };
     }
-    return nop();
+    return nop;
   }());
 
   var ajax = function(url) {
