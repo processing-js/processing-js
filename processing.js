@@ -17808,6 +17808,18 @@
       return comment !== "" ? " " : "\n";
     });
 
+    // protect character codes from namespace collision
+    codeWoStrings = codeWoStrings.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
+      // $ = __x0024
+      // _ = __x005F
+      // this protects existing character codes from conversion
+      // __x0024 = __x005F_x0024
+      return "__x005F_x" + hexCode;
+    });
+
+    // convert dollar sign to character code
+    codeWoStrings = codeWoStrings.replace(/\$/g, "__x0024");
+
     // removes generics
     var genericsWereRemoved;
     var codeWoGenerics = codeWoStrings;
@@ -19219,6 +19231,11 @@
 
     // remove empty extra lines with space
     redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
+
+    // convert character codes to characters
+    redendered = redendered.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
+      return String.fromCharCode(parseInt(hexCode,16));
+    });
 
     return injectStrings(redendered, strings);
   }// Parser ends
