@@ -1883,9 +1883,6 @@
       Processing.debug('Unimplemented - ' + s);
     }
 
-    // Disable broswer default handling for click-drag of a canvas.
-    curElement.onmousedown = function () { return false; };
-
     // When something new is added to "p." it must also be added to the "names" array.
     // The names array contains the names of everything that is inside "p."
     var p = this;
@@ -17229,6 +17226,9 @@
         p.mouseOver();
       }
     });
+
+    // Disable browser's default handling for click-drag of a canvas.
+    curElement.onmousedown = function () { return false; };
 
     attachEventHandler(curElement, "mousedown", function(e) {
       p.__mousePressed = true;
