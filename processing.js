@@ -8010,7 +8010,7 @@
         doStroke = oldState.doStroke;
         currentStrokeColor = oldState.currentStrokeColor;
         curTint = oldState.curTint;
-        curRectMode = oldState.curRectmode;
+        curRectMode = oldState.curRectMode;
         curColorMode = oldState.curColorMode;
         colorModeX = oldState.colorModeX;
         colorModeZ = oldState.colorModeZ;

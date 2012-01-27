@@ -13,6 +13,7 @@ var tests = [
   { path: "perspective.pde", tags: ["3D"] },
   { path: "rotatepushpop.pde", tags: ["3D"] },
   { path: "rotatexy.pde", tags: ["3D"] },
+  { path: "curRectMode.pde", tags: ["2D"] },
   { path: "hue.pde", tags: ["2D"] },
   { path: "saturation.pde", tags: ["2D"] },
   { path: "brightness.pde", tags: ["2D"] },
