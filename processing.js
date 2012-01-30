@@ -4839,21 +4839,28 @@
           return this.createPCDataElement(elementpath.textContent);
         }
 
-        // bind all attributes
-        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
-          tmpattrib    = elementpath.attributes[l];
-          xmlattribute = new XMLAttribute(tmpattrib.getname,
-                                          tmpattrib.nodeName,
-                                          tmpattrib.namespaceURI,
-                                          tmpattrib.nodeValue,
-                                          tmpattrib.nodeType);
-          xmlelement.attributes.push(xmlattribute);
+        // if this is a CDATA node, return a PCData element, with the data made safe
+        if(elementpath.nodeType === 4) {
+         return this.createPCDataElement(elementpath.textContent.replace('<',"&lt;").replace('>',"&gt;"));
         }
 
-        // bind all children
-        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
-          var node = elementpath.childNodes[l];
-          if (node.nodeType === 1 || node.nodeType === 3) { // ELEMENT_NODE or TEXT_NODE
+        // bind all attributes, if there are any
+        if (elementpath.attributes) {
+          for (l = 0, m = elementpath.attributes.length; l < m; l++) {
+            tmpattrib    = elementpath.attributes[l];
+            xmlattribute = new XMLAttribute(tmpattrib.getname,
+                                            tmpattrib.nodeName,
+                                            tmpattrib.namespaceURI,
+                                            tmpattrib.nodeValue,
+                                            tmpattrib.nodeType);
+            xmlelement.attributes.push(xmlattribute);
+          }
+        }
+
+        // bind all children, if there are any
+        if (elementpath.childNodes) {
+          for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
+            var node = elementpath.childNodes[l];
             child = xmlelement.parseChildrenRecursive(xmlelement, node);
             if (child !== null) {
               xmlelement.children.push(child);
