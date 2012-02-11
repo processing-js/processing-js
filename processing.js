@@ -1519,6 +1519,9 @@
   defaultScope.defineProperty(defaultScope, 'screenHeight',
     { get: function() { return window.innerHeight; } });
 
+  defaultScope.defineProperty(defaultScope, 'online',
+    { get: function() { return true; } });
+
   // Manage multiple Processing instances
   var processingInstances = [];
   var processingInstanceIds = {};
@@ -17057,6 +17060,7 @@
     Drawing3D.prototype.$init = function() {
       // For ref/perf test compatibility until those are fixed
       p.use3DContext = true;
+      p.disableContextMenu();
     };
 
     DrawingShared.prototype.$ensureContext = function() {
