@@ -6573,36 +6573,30 @@
     * @see trim
     */
     p.splitTokens = function(str, tokens) {
-      if (arguments.length === 1) {
-        tokens = "\n\t\r\f ";
+      if (tokens === undef) {
+        return str.split(/\s+/g);
       }
 
-      tokens = "[" + tokens + "]";
+      var chars = tokens.split(/()/g),
+          buffer = "",
+          len = str.length,
+          i, c,
+          tokenized = [];
 
-      var ary = [];
-      var index = 0;
-      var pos = str.search(tokens);
-
-      while (pos >= 0) {
-        if (pos === 0) {
-          str = str.substring(1);
+      for (i = 0; i < len; i++) {
+        c = str[i];
+        if (chars.indexOf(c) > -1) {
+          if (buffer !== "") {
+            tokenized.push(buffer);
+          }
+          buffer = "";
         } else {
-          ary[index] = str.substring(0, pos);
-          index++;
-          str = str.substring(pos);
+          buffer += c;
         }
-        pos = str.search(tokens);
       }
+      tokenized.push(buffer);
 
-      if (str.length > 0) {
-        ary[index] = str;
-      }
-
-      if (ary.length === 0) {
-        ary = undef;
-      }
-
-      return ary;
+      return tokenized;
     };
 
     /**
