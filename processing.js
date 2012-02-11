@@ -6594,7 +6594,10 @@
           buffer += c;
         }
       }
-      tokenized.push(buffer);
+
+      if (buffer !== "") {
+        tokenized.push(buffer);
+      }
 
       return tokenized;
     };
