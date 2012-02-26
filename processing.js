@@ -13396,13 +13396,13 @@
         start = 0;
         stop = PConstants.TWO_PI;
       }
-      var hr = width / 2;
-      var vr = height / 2;
-      var centerX = x + hr;
-      var centerY = y + vr;
-      var startLUT = 0 | (-0.5 + start * p.RAD_TO_DEG * 2);
-      var stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2);
-      var i, j;
+      var hr = width / 2,
+          vr = height / 2,
+          centerX = x + hr,
+          centerY = y + vr,
+          startLUT = 0 | (0.5 + start * p.RAD_TO_DEG * 2),
+          stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2),
+          i, j;
       if (doFill) {
         // shut off stroke for a minute
         var savedStroke = doStroke;
