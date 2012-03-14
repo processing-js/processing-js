@@ -1519,6 +1519,9 @@
   defaultScope.defineProperty(defaultScope, 'screenHeight',
     { get: function() { return window.innerHeight; } });
 
+  defaultScope.defineProperty(defaultScope, 'online',
+    { get: function() { return true; } });
+
   // Manage multiple Processing instances
   var processingInstances = [];
   var processingInstanceIds = {};
@@ -6570,36 +6573,33 @@
     * @see trim
     */
     p.splitTokens = function(str, tokens) {
-      if (arguments.length === 1) {
-        tokens = "\n\t\r\f ";
+      if (tokens === undef) {
+        return str.split(/\s+/g);
       }
 
-      tokens = "[" + tokens + "]";
+      var chars = tokens.split(/()/g),
+          buffer = "",
+          len = str.length,
+          i, c,
+          tokenized = [];
 
-      var ary = [];
-      var index = 0;
-      var pos = str.search(tokens);
-
-      while (pos >= 0) {
-        if (pos === 0) {
-          str = str.substring(1);
+      for (i = 0; i < len; i++) {
+        c = str[i];
+        if (chars.indexOf(c) > -1) {
+          if (buffer !== "") {
+            tokenized.push(buffer);
+          }
+          buffer = "";
         } else {
-          ary[index] = str.substring(0, pos);
-          index++;
-          str = str.substring(pos);
+          buffer += c;
         }
-        pos = str.search(tokens);
       }
 
-      if (str.length > 0) {
-        ary[index] = str;
+      if (buffer !== "") {
+        tokenized.push(buffer);
       }
 
-      if (ary.length === 0) {
-        ary = undef;
-      }
-
-      return ary;
+      return tokenized;
     };
 
     /**
@@ -8010,7 +8010,7 @@
         doStroke = oldState.doStroke;
         currentStrokeColor = oldState.currentStrokeColor;
         curTint = oldState.curTint;
-        curRectMode = oldState.curRectmode;
+        curRectMode = oldState.curRectMode;
         curColorMode = oldState.curColorMode;
         colorModeX = oldState.colorModeX;
         colorModeZ = oldState.colorModeZ;
@@ -13396,13 +13396,13 @@
         start = 0;
         stop = PConstants.TWO_PI;
       }
-      var hr = width / 2;
-      var vr = height / 2;
-      var centerX = x + hr;
-      var centerY = y + vr;
-      var startLUT = 0 | (-0.5 + start * p.RAD_TO_DEG * 2);
-      var stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2);
-      var i, j;
+      var hr = width / 2,
+          vr = height / 2,
+          centerX = x + hr,
+          centerY = y + vr,
+          startLUT = 0 | (0.5 + start * p.RAD_TO_DEG * 2),
+          stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2),
+          i, j;
       if (doFill) {
         // shut off stroke for a minute
         var savedStroke = doStroke;
@@ -17057,6 +17057,7 @@
     Drawing3D.prototype.$init = function() {
       // For ref/perf test compatibility until those are fixed
       p.use3DContext = true;
+      p.disableContextMenu();
     };
 
     DrawingShared.prototype.$ensureContext = function() {
@@ -17807,6 +17808,18 @@
       // kill comments
       return comment !== "" ? " " : "\n";
     });
+
+    // protect character codes from namespace collision
+    codeWoStrings = codeWoStrings.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
+      // $ = __x0024
+      // _ = __x005F
+      // this protects existing character codes from conversion
+      // __x0024 = __x005F_x0024
+      return "__x005F_x" + hexCode;
+    });
+
+    // convert dollar sign to character code
+    codeWoStrings = codeWoStrings.replace(/\$/g, "__x0024");
 
     // removes generics
     var genericsWereRemoved;
@@ -19220,6 +19233,11 @@
     // remove empty extra lines with space
     redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
 
+    // convert character codes to characters
+    redendered = redendered.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
+      return String.fromCharCode(parseInt(hexCode,16));
+    });
+
     return injectStrings(redendered, strings);
   }// Parser ends
 
@@ -19292,7 +19310,7 @@
 //#endif
 
   // tinylog lite JavaScript library
-  // http://purl.eligrey.com/tinylog/lite
+  // https://github.com/eligrey/tinylog
   /*global tinylog,print*/
   var tinylogLite = (function() {
     "use strict";

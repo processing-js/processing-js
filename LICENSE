@@ -1,3 +1,4 @@
+Processing.js
 Copyright (C) 2008 John Resig
 Copyright (C) 2009-2011; see the AUTHORS file for authors and
 copyright holders.
@@ -20,3 +21,8 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+tinylog lite JavaScript library
+Copyright (C) 2010 Eli Grey
+https://github.com/eligrey/tinylog
