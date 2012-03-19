@@ -19816,7 +19816,7 @@
         }
       }
       if (processingSources) {
-        filenames = processingSources.split(' ');
+        filenames = processingSources.split(/\s+/g);
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -19857,7 +19857,7 @@
           while (nextSibling && nextSibling.nodeType !== 1) {
             nextSibling = nextSibling.nextSibling;
           }
-          if (nextSibling.nodeName.toLowerCase() === "canvas") {
+          if (nextSibling && nextSibling.nodeName.toLowerCase() === "canvas") {
             canvas = nextSibling;
           }
         }
