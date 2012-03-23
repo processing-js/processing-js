@@ -1323,15 +1323,30 @@
     }
   };
 
+  function isNumericalJavaType(type) {
+    if (typeof type !== "string") {
+      return false;
+    }
+    return ["byte", "int", "char", "color", "float", "long", "double"].indexOf(type) !== -1;
+  }
+
   defaultScope.createJavaArray = function(type, bounds) {
-    var result = null;
+    var result = null,
+        defaultValue = null;
+    if (typeof type === "string") {
+      if (type === "boolean") {
+        defaultValue = false;
+      } else if (isNumericalJavaType(type)) {
+        defaultValue = 0;
+      }
+    }
     if (typeof bounds[0] === 'number') {
       var itemsCount = 0 | bounds[0];
       if (bounds.length <= 1) {
         result = [];
         result.length = itemsCount;
         for (var i = 0; i < itemsCount; ++i) {
-          result[i] = 0;
+          result[i] = defaultValue;
         }
       } else {
         result = [];
@@ -19801,7 +19816,7 @@
         }
       }
       if (processingSources) {
-        filenames = processingSources.split(' ');
+        filenames = processingSources.split(/\s+/g);
         for (var j = 0; j < filenames.length;) {
           if (filenames[j]) {
             j++;
@@ -19842,7 +19857,7 @@
           while (nextSibling && nextSibling.nodeType !== 1) {
             nextSibling = nextSibling.nextSibling;
           }
-          if (nextSibling.nodeName.toLowerCase() === "canvas") {
+          if (nextSibling && nextSibling.nodeName.toLowerCase() === "canvas") {
             canvas = nextSibling;
           }
         }
