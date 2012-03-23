@@ -2229,8 +2229,15 @@
       "#endif\n" +
 
       "varying vec4 frontColor;" +
+      "uniform bool uSmooth;" +
 
       "void main(void){" +
+      "  if(uSmooth == true){" +
+      "    float dist = distance(gl_PointCoord, vec2(0.5));" +
+      "    if(dist > 0.5){" +
+      "      discard;" +
+      "    }" +
+      "  }" +
       "  gl_FragColor = frontColor;" +
       "}";
 
@@ -2265,8 +2272,18 @@
 
       "uniform sampler2D uSampler;"+
       "uniform int picktype;"+
+      "uniform bool uSmooth;" +
 
       "void main(void){" +
+      
+      // WebGL does not support POINT_SMOOTH, so we do it ourselves
+      "if(uSmooth == true){" +
+      "  float dist = distance(gl_PointCoord, vec2(0.5));" +
+      "  if(dist > 0.5){" +
+      "    discard;" +
+      "  }" +
+      "}" +
+      
       "  if(picktype == 0){"+
       "    gl_FragColor = frontColor;" +
       "  }" +
@@ -11855,7 +11872,8 @@
      * The smooth() function draws all geometry with smooth (anti-aliased) edges. This will slow down the frame rate of the application,
      * but will enhance the visual refinement. <br/><br/>
      * Note that smooth() will also improve image quality of resized images, and noSmooth() will disable image (and font) smoothing altogether.
-     *
+     * When working with a 3D sketch, smooth will draw points as circles rather than squares.
+     * 
      * @see #noSmooth()
      * @see #hint()
      * @see #size()
@@ -11871,7 +11889,9 @@
       }
     };
 
-    Drawing3D.prototype.smooth = nop;
+    Drawing3D.prototype.smooth = function(){
+      renderSmooth = true;
+    }
 
     /**
      * The noSmooth() function draws all geometry with jagged (aliased) edges.
@@ -11892,7 +11912,9 @@
       }
     };
 
-    Drawing3D.prototype.noSmooth = nop;
+    Drawing3D.prototype.noSmooth = function(){
+      renderSmooth = false;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
@@ -11950,6 +11972,7 @@
         // this will be replaced with the new bit shifting color code
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
+        uniformi("uSmooth2d", programObject2D, "uSmooth", renderSmooth);
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         curContext.drawArrays(curContext.POINTS, 0, 1);
@@ -12089,6 +12112,7 @@
       curContext.useProgram(programObjectUnlitShape);
 
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
+      uniformi("uSmoothUS", programObjectUnlitShape, "uSmooth", renderSmooth);
 
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
@@ -15129,6 +15153,13 @@
       else if (which === PConstants.ENABLE_DEPTH_TEST) {
          curContext.enable(curContext.DEPTH_TEST);
          curContext.depthMask(true);
+      }
+      else if (which === PConstants.ENABLE_OPENGL_2X_SMOOTH ||
+               which === PConstants.ENABLE_OPENGL_4X_SMOOTH){
+        renderSmooth = true;
+      }
+      else if (which === PConstants.DISABLE_OPENGL_2X_SMOOTH){
+        renderSmooth = false;
       }
     };
 

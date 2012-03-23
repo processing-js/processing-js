@@ -262,10 +262,17 @@ var tests = [
   { path: "3D_beginendcam.pde", tags: ["3D"], epsilonOverride: 0.09 },
   { path: "3D_perspective.pde", tags: ["3D"], epsilonOverride: 0.11 },
   { path: "3D_ortho.pde", tags: ["3D"], knownFailureTicket: "1200" },
+
+  // 3D Points
   { path: "point_3D_stroke.pde", tags: ["3D"] },
   { path: "point_3D_strokeWeight.pde", tags: ["3D"], epsilonOverride: 0.22 },
   { path: "point_3D_z.pde", tags: ["3D"], epsilonOverride: 0.14 },
   { path: "point_3D_noz.pde", tags: ["3D"], epsilonOverride: 0.14 },
+  { path: "point_3D_smooth.pde", tags: ["3D"], epsilonOverride: 0.14 },
+  { path: "point_3D_smooth_beginShape.pde", tags: ["3D"], epsilonOverride: 0.14 },
+  { path: "point_3D_smooth_stroke.pde", tags: ["3D"], epsilonOverride: 0.14 },
+  { path: "point_3D_smooth_hint_off.pde", tags: ["3D"], epsilonOverride: 0.14 },
+  
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "box_scale_3D.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "applyMatrix.pde", tags: ["3D"] },
