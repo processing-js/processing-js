@@ -130,7 +130,7 @@ var tests = [
   { path: "edgedetect.pde", tags: ["2D","Convolution"] },
   { path: "size-3D.pde", tags: ["3D"] },
   { path: "empty-draw-2D.pde", tags: ["2D"] },
-  { path: "empty-draw-3D.pde", tags: ["3D"], knownFailureTicket: "1651" },
+  { path: "empty-draw-3D.pde", tags: ["3D"] },
   { path: "defaults-background_and_size.pde", tags: ["2D"] },
   { path: "background-gray.pde", tags: ["2D"] },
   { path: "background-gray-alpha.pde", tags: ["2D"] },
