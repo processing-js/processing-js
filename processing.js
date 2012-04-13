@@ -641,9 +641,9 @@
 
        /**
        * @member ArrayList
-       * ArrayList.removeAll Removes from this List all of the elements from 
+       * ArrayList.removeAll Removes from this List all of the elements from
        * the current ArrayList which are present in the passed in paramater ArrayList 'c'.
-       * Shifts any succeeding elements to the left (reduces their index). 
+       * Shifts any succeeding elements to the left (reduces their index).
        *
        * @param {ArrayList} the ArrayList to compare to the current ArrayList
        *
@@ -664,7 +664,7 @@
         }
         if (this.size() < newList.size()) {
           return true;
-        } 
+        }
         return false;
       };
 
@@ -1742,10 +1742,10 @@
       this.context2d.font = this.css;
     }
   }
-  
+
   /**
    * regulates whether or not we're caching the canvas
-   * 2d context for quick text width computation. 
+   * 2d context for quick text width computation.
    */
   PFont.prototype.caching = true;
 
@@ -1794,7 +1794,7 @@
    */
   PFont.get = function(fontName, fontSize) {
     // round fontSize to one decimal point
-    fontSize = ((fontSize*10)+0.5|0)/10; 
+    fontSize = ((fontSize*10)+0.5|0)/10;
     var cache = PFont.PFontCache,
         idx = fontName+"/"+fontSize;
     if (!cache[idx]) {
@@ -1827,7 +1827,7 @@
     }
     return cache[idx];
   };
-  
+
   /**
    * FALLBACK FUNCTION -- replaces PFont.get when the font cache
    * becomes too large. This function bypasses font caching entirely.
@@ -2411,7 +2411,7 @@
       "}" +
 
       "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
-      // Get the vector from the light to the vertex and 
+      // Get the vector from the light to the vertex and
       // get the distance from the current vector to the light position.
       "  float d = length( light.position - ecPos );" +
       "  float attenuation = 1.0 / ( uFalloff[0] + ( uFalloff[1] * d ) + ( uFalloff[2] * d * d ));" +
@@ -2545,7 +2545,7 @@
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value.
       "  if( uLightCount == 0 ) {" +
-      "    vFrontColor = col + vec4(uMaterialSpecular, 1.0);" +
+      "    vFrontColor = col + vec4(uMaterialSpecular, 0.0);" +
       "  }" +
       "  else {" +
            // WebGL forces us to iterate over a constant value
@@ -2607,10 +2607,13 @@
       "varying vec2 vTexture;" +
 
       // In Processing, when a texture is used, the fill color is ignored
-      // vec4(1.0,1.0,1.0,0.5)
       "void main(void){" +
+      "  vec4 col = vFrontColor;" +
+
       "  if( uUsingTexture ){" +
-      "    gl_FragColor = vec4(texture2D(uSampler, vTexture.xy)) * vFrontColor;" +
+      // When using a texture, we'll need to multiply the transparency by 1.0
+      "    col.a = 1.0;" +
+      "    gl_FragColor = vec4(texture2D(uSampler, vTexture.xy)) * col;" +
       "  }"+
       "  else{" +
       "    gl_FragColor = vFrontColor;" +
@@ -8085,10 +8088,10 @@
     };
 
     /**
-    * Shears a shape around the x-axis the amount specified by the angle parameter. 
-    * Angles should be specified in radians (values from 0 to PI*2) or converted to radians 
-    * with the radians() function. Objects are always sheared around their relative position 
-    * to the origin and positive numbers shear objects in a clockwise direction. Transformations 
+    * Shears a shape around the x-axis the amount specified by the angle parameter.
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to radians
+    * with the radians() function. Objects are always sheared around their relative position
+    * to the origin and positive numbers shear objects in a clockwise direction. Transformations
     * apply to everything that happens after and subsequent calls to the function accumulates the
     * effect. For example, calling shearX(PI/2) and then shearX(PI/2) is the same as shearX(PI)
     *
@@ -8116,12 +8119,12 @@
     };
 
     /**
-    * Shears a shape around the y-axis the amount specified by the angle parameter. 
-    * Angles should be specified in radians (values from 0 to PI*2) or converted to 
-    * radians with the radians() function. Objects are always sheared around their 
-    * relative position to the origin and positive numbers shear objects in a 
+    * Shears a shape around the y-axis the amount specified by the angle parameter.
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to
+    * radians with the radians() function. Objects are always sheared around their
+    * relative position to the origin and positive numbers shear objects in a
     * clockwise direction. Transformations apply to everything that happens after
-    * and subsequent calls to the function accumulates the effect. For example, 
+    * and subsequent calls to the function accumulates the effect. For example,
     * calling shearY(PI/2) and then shearY(PI/2) is the same as shearY(PI).
     *
     * @param {int|float} angleInRadians     angle of rotation specified in radians
@@ -10459,7 +10462,7 @@
               gl;
 
           for (var i=0, l=ctxNames.length; i<l; i++) {
-            gl = canvas.getContext(ctxNames[i], {antialias: false});
+            gl = canvas.getContext(ctxNames[i], {antialias: false, preserveDrawingBuffer: true});
             if (gl) {
               break;
             }
@@ -10493,6 +10496,11 @@
         curContext.enable(curContext.DEPTH_TEST);
         curContext.enable(curContext.BLEND);
         curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
+        curContext.blendEquation(curContext.FUNC_ADD);
+
+        // The canvas element gets blended with the DOM. If this isn't black, the
+        // colors will look washed out.
+        p.externals.canvas.style.backgroundColor = "#000";
 
         // Create the program objects to render 2D (points, lines) and
         // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
@@ -10511,7 +10519,7 @@
 
         // Assume we aren't using textures by default.
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
- 
+
         // Set some defaults.
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
@@ -11223,6 +11231,11 @@
     Drawing2D.prototype.box = DrawingShared.prototype.a3DOnlyFunction;
 
     Drawing3D.prototype.box = function(w, h, d) {
+
+      curContext.cullFace(curContext.BACK);
+      curContext.frontFace(curContext.CW);
+      curContext.enable(curContext.CULL_FACE);
+
       // user can uniformly scale the box by
       // passing in only one argument.
       if (!h || !d) {
@@ -11250,6 +11263,13 @@
         // developers can start playing around with styles.
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
+
+        // Turn on blending if the box isn't completely opaque.
+        if(fillStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
+
         uniformf("color3d", programObject3D, "uColor", fillStyle);
 
         // Calculating the normal matrix can be expensive, so only
@@ -11284,6 +11304,11 @@
 
         curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
+
+        if(fillStyle[3] < 1){
+          curContext.enable(curContext.DEPTH_TEST);
+          curContext.disable(curContext.BLEND);
+        }
       }
 
       // Draw the box outline.
@@ -11297,6 +11322,8 @@
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
       }
+
+      curContext.disable(curContext.CULL_FACE);
     };
 
     /**
@@ -11467,6 +11494,10 @@
     Drawing3D.prototype.sphere = function() {
       var sRad = arguments[0];
 
+      curContext.cullFace(curContext.BACK);
+      curContext.frontFace(curContext.CW);
+      curContext.enable(curContext.CULL_FACE);
+
       if ((sphereDetailU < 3) || (sphereDetailV < 2)) {
         p.sphereDetail(30);
       }
@@ -11483,6 +11514,13 @@
       view.transpose();
 
       if (doFill) {
+
+        // Turn on blending if the sphere isn't completely opaque.
+        if(fillStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
+
         // Calculating the normal matrix can be expensive, so only
         // do it if it's necessary.
         if(lightCount > 0){
@@ -11539,6 +11577,8 @@
         uniformi("uIsDrawingText", programObject2D, "uIsDrawingText", false);
         curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
       }
+
+      curContext.disable(curContext.CULL_FACE);
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -12068,7 +12108,7 @@
      * but will enhance the visual refinement. <br/><br/>
      * Note that smooth() will also improve image quality of resized images, and noSmooth() will disable image (and font) smoothing altogether.
      * When working with a 3D sketch, smooth will draw points as circles rather than squares.
-     * 
+     *
      * @see #noSmooth()
      * @see #hint()
      * @see #size()
@@ -12164,6 +12204,12 @@
       uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
 
       if (lineWidth > 0 && doStroke) {
+        // Turn on blending if the point isn't completely opaque.
+        if(strokeStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
+
         // this will be replaced with the new bit shifting color code
         uniformf("uColor2d", programObject2D, "uColor", strokeStyle);
         uniformi("uIsDrawingText2d", programObject2D, "uIsDrawingText", false);
@@ -12171,6 +12217,11 @@
         vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 3, pointBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         curContext.drawArrays(curContext.POINTS, 0, 1);
+
+        if(strokeStyle[3] < 1){
+          curContext.enable(curContext.DEPTH_TEST);
+          curContext.disable(curContext.BLEND);
+        }
       }
     };
 
@@ -13776,6 +13827,12 @@
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
 
+        // Turn on blending if the line isn't completely opaque.
+        if(strokeStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
+
         uniformMatrix("uModel2d", programObject2D, "uModel", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
         uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
 
@@ -13787,6 +13844,11 @@
 
         curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
         curContext.drawArrays(curContext.LINES, 0, 2);
+
+        if(strokeStyle[3] < 1){
+          curContext.enable(curContext.DEPTH_TEST);
+          curContext.disable(curContext.BLEND);
+        }
       }
     };
 
@@ -14114,6 +14176,12 @@
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
 
+        // Turn on blending if the rectanble isn't completely opaque.
+        if(fillStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
+
         uniformf("color3d", programObject3D, "uColor", fillStyle);
 
         if(lightCount > 0){
@@ -14141,6 +14209,13 @@
 
         curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
+
+        // Undo the blending/depth test operations performed above since
+        // we don't know what we're drawing next.
+        if(fillStyle[3] < 1){
+          curContext.enable(curContext.DEPTH_TEST);
+          curContext.disable(curContext.BLEND);
+        }
       }
     };
 
@@ -20022,7 +20097,7 @@
    */
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
-    
+
     // before running through init, clear the instances list, to prevent
     // sketch duplication when page content is dynamically swapped without
     // swapping out processing.js

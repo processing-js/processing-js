@@ -10,7 +10,7 @@ var tests = [
   { path: "lights-off.pde", tags: ["3D"] },
   { path: "lights-on.pde", tags: ["3D"] },
   { path: "reflection.pde", tags: ["3D"] },
-  { path: "perspective.pde", tags: ["3D"] },
+  { path: "perspective.pde", tags: ["3D"], epsilonOverride: 0.19 },
   { path: "rotatepushpop.pde", tags: ["3D"] },
   { path: "rotatexy.pde", tags: ["3D"] },
   { path: "curRectMode.pde", tags: ["2D"] },
@@ -19,6 +19,7 @@ var tests = [
   { path: "hue.pde", tags: ["2D"] },
   { path: "saturation.pde", tags: ["2D"] },
   { path: "brightness.pde", tags: ["2D"] },
+  { path: "brightness-3D.pde", tags: ["3D"] },
   { path: "radialgradient.pde", tags: ["2D"] },
   { path: "wavegradient.pde", tags: ["2D"] },
   { path: "explode.pde", tags: ["3D"] },
@@ -416,9 +417,28 @@ var tests = [
   { path: "material-amb-grey-1.pde", tags: ["3D"] },
   { path: "material-amb-grey-3vals.pde", tags: ["3D"] },
   { path: "material-amb-pcolor.pde", tags: ["3D"] },
-
+  
   // Falloff
   { path: "falloff-amb-1.pde", tags: ["3D"], knownFailureTicket: "1678" },
   { path: "falloff-amb-2.pde", tags: ["3D"], knownFailureTicket: "1678" },
-  { path: "falloff-amb-3.pde", tags: ["3D"], knownFailureTicket: "1678" }
+  { path: "falloff-amb-3.pde", tags: ["3D"], knownFailureTicket: "1678" },
+  
+  // 3D Transparency tests
+  { path: "transp-rect-1.pde", tags: ["3D"] },
+  { path: "transp-rect-2.pde", tags: ["3D"] },
+  { path: "transp-rect-3.pde", tags: ["3D"] },
+  { path: "transp-point-1.pde", tags: ["3D"] },
+  { path: "transp-point-2.pde", tags: ["3D"] },
+  { path: "transp-point-3.pde", tags: ["3D"] },
+  { path: "transp-box-1.pde", tags: ["3D"] },
+  { path: "transp-box-2.pde", tags: ["3D"] },
+  { path: "transp-box-3.pde", tags: ["3D"] },
+  { path: "transp-box-4.pde", tags: ["3D"] },
+  { path: "transp-box-5.pde", tags: ["3D"] },
+  { path: "transp-box-6.pde", tags: ["3D"] },
+  { path: "transp-line-1.pde", tags: ["3D"], knownFailureTicket: "1838" },
+  { path: "transp-line-2.pde", tags: ["3D"], knownFailureTicket: "1838" },
+  { path: "transp-sphere-1.pde", tags: ["3D"] },
+  { path: "transp-sphere-2.pde", tags: ["3D"] },
+  { path: "transp-sphere-3.pde", tags: ["3D"] }  
 ];

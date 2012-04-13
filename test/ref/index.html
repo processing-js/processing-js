@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -6,7 +6,8 @@
     <script src="../../processing.js"></script>
     <script src="tests.js"></script>
     <style>
-      .test  { border: solid 1px; margin: 5px; }
+      .test  { border: solid 1px; margin: 5px;}
+      .diff  { border: solid 1px; margin: 5px;}
       .title { margin-left: 5px; }
     </style>
   </head>
@@ -329,6 +330,8 @@
             var current  = buildCanvas(test.name + '-current', test.width, test.height);
             var diff     = buildCanvas(test.name + '-diff', test.width, test.height);
 
+            diff.className = 'diff';
+
             result.appendChild(original);
             result.appendChild(current);
             result.appendChild(diff);
@@ -351,6 +354,14 @@
                     origData.data[l] = test.pixels[l];
                   }
                 }
+                
+                // We need to override the alpha component of the pixel data to 255
+                // because the colors we saved when we generated the ref test already
+                // contains the blended value.
+                for(var alphaCounter = 3; alphaCounter < pixelsLen; alphaCounter += 4){
+                  origData.data[alphaCounter] = 255;
+                }
+                
                 origCtx.putImageData(origData, 0, 0);
 
                 // Blur pixels for diff
