@@ -415,6 +415,11 @@ var tests = [
   { path: "transp-rect-3.pde", tags: ["3D"] },
   { path: "transp-point-1.pde", tags: ["3D"] },
   { path: "transp-point-2.pde", tags: ["3D"] },
+  
   { path: "transp-box-1.pde", tags: ["3D"] },
-  { path: "transp-line-1.pde", tags: ["3D"] }
+  { path: "transp-box-2.pde", tags: ["3D"] },
+  { path: "transp-box-3.pde", tags: ["3D"] },
+
+  { path: "transp-line-1.pde", tags: ["3D"] },
+  { path: "transp-line-2.pde", tags: ["3D"] }
 ];
