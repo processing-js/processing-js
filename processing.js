@@ -2462,7 +2462,7 @@
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
       "  if( lightCount == 0 ) {" +
-      "    frontColor = col + vec4(mat_specular,1.0);" +
+      "    frontColor = col + vec4(mat_specular, 0.0);" +
       "  }" +
       "  else {" +
            // WebGL forces us to iterate over a constant value
@@ -2523,7 +2523,6 @@
       "varying vec2 vTexture;" +
 
       // In Processing, when a texture is used, the fill color is ignored
-      // vec4(1.0,1.0,1.0,0.5)
       "void main(void){" +
       "  if(usingTexture){" +
       "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy)) * frontColor;" +
@@ -10284,6 +10283,11 @@
         curContext.enable(curContext.DEPTH_TEST);
         curContext.enable(curContext.BLEND);
         curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
+        curContext.blendEquation(curContext.FUNC_ADD);
+        
+        // The canvas element gets blended with the DOM. If this isn't black, the
+        // colors will look washed out.
+        p.externals.canvas.style.backgroundColor = "#000";
 
         // Create the program objects to render 2D (points, lines) and
         // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
@@ -11013,6 +11017,11 @@
     Drawing2D.prototype.box = DrawingShared.prototype.a3DOnlyFunction;
 
     Drawing3D.prototype.box = function(w, h, d) {
+    
+      curContext.cullFace(curContext.BACK);
+      curContext.frontFace(curContext.CW);
+      curContext.enable(curContext.CULL_FACE);
+
       // user can uniformly scale the box by
       // passing in only one argument.
       if (!h || !d) {
@@ -11040,6 +11049,13 @@
         // developers can start playing around with styles.
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
+
+        // Turn on blending if the box isn't completely opaque.
+        if(fillStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
+
         uniformf("color3d", programObject3D, "color", fillStyle);
 
         // Calculating the normal matrix can be expensive, so only
@@ -11071,9 +11087,14 @@
         // Turn off per vertex colors
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
-
+        
         curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
+        
+        if(fillStyle[3] < 1){
+          curContext.enable(curContext.DEPTH_TEST);
+          curContext.disable(curContext.BLEND);
+        }
       }
 
       if (lineWidth > 0 && doStroke) {
@@ -11086,6 +11107,8 @@
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
       }
+      
+      curContext.disable(curContext.CULL_FACE);
     };
 
     /**
@@ -11947,12 +11970,23 @@
       uniformMatrix("view2d", programObject2D, "view", false, view.array());
 
       if (lineWidth > 0 && doStroke) {
+        // Turn on blending if the point isn't completely opaque.
+        if(strokeStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
+      
         // this will be replaced with the new bit shifting color code
         uniformf("color2d", programObject2D, "color", strokeStyle);
         uniformi("picktype2d", programObject2D, "picktype", 0);
         vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         curContext.drawArrays(curContext.POINTS, 0, 1);
+        
+        if(strokeStyle[3] < 1){
+          curContext.enable(curContext.DEPTH_TEST);
+          curContext.disable(curContext.BLEND);
+        }
       }
     };
 
@@ -13552,6 +13586,12 @@
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
 
+        // Turn on blending if the line isn't completely opaque.
+        if(strokeStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
+
         uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
         uniformMatrix("view2d", programObject2D, "view", false, view.array());
 
@@ -13563,6 +13603,11 @@
 
         curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
         curContext.drawArrays(curContext.LINES, 0, 2);
+        
+        if(strokeStyle[3] < 1){
+          curContext.enable(curContext.DEPTH_TEST);
+          curContext.disable(curContext.BLEND);
+        }
       }
     };
 
@@ -13889,6 +13934,12 @@
         // developers can start playing around with styles.
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
+        
+        // Turn on blending if the rectanble isn't completely opaque.
+        if(fillStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
 
         uniformf("color3d", programObject3D, "color", fillStyle);
 
@@ -13917,6 +13968,13 @@
 
         curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
+        
+        // Undo the blending/depth test operations performed above since
+        // we don't know what we're drawing next.
+        if(fillStyle[3] < 1){
+          curContext.enable(curContext.DEPTH_TEST);
+          curContext.disable(curContext.BLEND);
+        }
       }
     };
 

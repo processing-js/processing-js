@@ -1,4 +1,4 @@
-var tests = [
+var tests = [    
   { path: "stretch.pde", tags: ["3D"] },
   { path: "arc-fill-crisp.pde", tags: ["2D"], epsilonOverride: 0.08 },
   { path: "mixture.pde", tags: ["3D"], knownFailureTicket: "1239" },
@@ -10,7 +10,7 @@ var tests = [
   { path: "lights-off.pde", tags: ["3D"] },
   { path: "lights-on.pde", tags: ["3D"] },
   { path: "reflection.pde", tags: ["3D"] },
-  { path: "perspective.pde", tags: ["3D"] },
+  { path: "perspective.pde", tags: ["3D"], epsilonOverride: 0.19 },
   { path: "rotatepushpop.pde", tags: ["3D"] },
   { path: "rotatexy.pde", tags: ["3D"] },
   { path: "curRectMode.pde", tags: ["2D"] },
@@ -372,7 +372,7 @@ var tests = [
   { path: "texture_triangles.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_norm.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_ambient.pde", tags: ["3D", "Color Profile"] },
-  { path: "texture_transparent.pde", tags: ["3D", "Color Profile"] },
+  { path: "texture_transparent.pde", tags: ["3D", "Color Profile"], epsilonOverride: 0.25 },
   { path: "texture_npot.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_vertex_no_z.pde", tags: ["3D", "Color Profile"] },
   { path: "texture_tint.pde", tags: ["3D", "Color Profile"] },
@@ -403,9 +403,18 @@ var tests = [
   { path: "material-amb-grey-1.pde", tags: ["3D"] },
   { path: "material-amb-grey-3vals.pde", tags: ["3D"] },
   { path: "material-amb-pcolor.pde", tags: ["3D"] },
-
+  
   // Falloff
   { path: "falloff-amb-1.pde", tags: ["3D"], knownFailureTicket: "1678" },
   { path: "falloff-amb-2.pde", tags: ["3D"], knownFailureTicket: "1678" },
-  { path: "falloff-amb-3.pde", tags: ["3D"], knownFailureTicket: "1678" }
+  { path: "falloff-amb-3.pde", tags: ["3D"], knownFailureTicket: "1678" },
+  
+  // Transparency
+  { path: "transp-rect-1.pde", tags: ["3D"] },
+  { path: "transp-rect-2.pde", tags: ["3D"] },
+  { path: "transp-rect-3.pde", tags: ["3D"] },
+  { path: "transp-point-1.pde", tags: ["3D"] },
+  { path: "transp-point-2.pde", tags: ["3D"] },
+  { path: "transp-box-1.pde", tags: ["3D"] },
+  { path: "transp-line-1.pde", tags: ["3D"] }
 ];
