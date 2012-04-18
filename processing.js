@@ -2539,8 +2539,12 @@
 
       // In Processing, when a texture is used, the fill color is ignored
       "void main(void){" +
+      "  vec4 col = frontColor;" +
+      
       "  if(usingTexture){" +
-      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy)) * frontColor;" +
+      // When using a texture, we'll need to multiply the transparency by 1.0
+      "    col.a = 1.0;" +
+      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy)) * col;" +
       "  }"+
       "  else{" +
       "    gl_FragColor = frontColor;" +

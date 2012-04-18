@@ -6,7 +6,8 @@
     <script src="../../processing.js"></script>
     <script src="tests.js"></script>
     <style>
-      .test  { border: solid 1px; margin: 5px; background: #777 }
+      .test  { border: solid 1px; margin: 5px; background: #777;}
+      .diff  { border: solid 1px; margin: 5px; background: #FFF;}
       .title { margin-left: 5px; }
     </style>
   </head>
@@ -328,6 +329,8 @@
             var original = buildCanvas(test.name + '-original', test.width, test.height);
             var current  = buildCanvas(test.name + '-current', test.width, test.height);
             var diff     = buildCanvas(test.name + '-diff', test.width, test.height);
+
+            diff.className = 'diff';
 
             result.appendChild(original);
             result.appendChild(current);
