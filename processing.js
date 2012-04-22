@@ -463,15 +463,16 @@
       };
     }
 
-    function ArrayList() {
+    function ArrayList(a) {
       var array;
-      if (arguments.length === 0) {
-        array = [];
-      } else if (arguments.length > 0 && typeof arguments[0] !== 'number') {
-        array = arguments[0].toArray();
+
+      if (a instanceof ArrayList) {
+        array = a.toArray();
       } else {
         array = [];
-        array.length = 0 | arguments[0];
+        if (typeof a === "number") {
+          array.length = a > 0 ? a : 0;
+        }
       }
 
       /**
