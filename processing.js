@@ -3145,26 +3145,33 @@
                  this.params[6], this.params[7]);
         } else if (this.kind === PConstants.RECT) {
           if (this.image !== null) {
+            var imMode = imageModeConvert;
             p.imageMode(PConstants.CORNER);
             p.image(this.image,
                     this.params[0],
                     this.params[1],
                     this.params[2],
                     this.params[3]);
+            imageModeConvert = imMode;
           } else {
+            var rcMode = curRectMode;
             p.rectMode(PConstants.CORNER);
             p.rect(this.params[0],
                    this.params[1],
                    this.params[2],
                    this.params[3]);
+            curRectMode = rcMode;
           }
         } else if (this.kind === PConstants.ELLIPSE) {
+          var elMode = curEllipseMode;
           p.ellipseMode(PConstants.CORNER);
           p.ellipse(this.params[0],
                     this.params[1],
                     this.params[2],
                     this.params[3]);
+          curEllipseMode = elMode;
         } else if (this.kind === PConstants.ARC) {
+          var eMode = curEllipseMode;
           p.ellipseMode(PConstants.CORNER);
           p.arc(this.params[0],
                 this.params[1],
@@ -3172,6 +3179,7 @@
                 this.params[3],
                 this.params[4],
                 this.params[5]);
+          curEllipseMode = eMode;
         } else if (this.kind === PConstants.BOX) {
           if (this.params.length === 1) {
             p.box(this.params[0]);

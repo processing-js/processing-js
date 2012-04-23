@@ -103,6 +103,8 @@ var tests = [
   { path: "translate.pde", tags: ["2D", "Test Suite"] },
   { path: "vertices.pde", tags: ["2D", "Test Suite"] },
   { path: "wolfram.pde", tags: ["2D", "Test Suite"] },
+  { path: "pshape_ellipseMode.pde", tags: ["2D","SVG"] },
+  { path: "pshape_svg.pde", tags: ["2D","SVG"] },
   { path: "loadShape.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
   { path: "loadShape2.pde", tags: ["2D","SVG"], epsilonOverride: 0.08 },
   { path: "loadShape3.pde", tags: ["2D","SVG"], epsilonOverride: 0.07 },
