@@ -9,7 +9,7 @@
         window.console.log('Processing.js: ' + msg);
       };
     }
-    return nop();
+    return nop;
   }());
 
   var ajax = function(url) {
@@ -463,15 +463,16 @@
       };
     }
 
-    function ArrayList() {
+    function ArrayList(a) {
       var array;
-      if (arguments.length === 0) {
-        array = [];
-      } else if (arguments.length > 0 && typeof arguments[0] !== 'number') {
-        array = arguments[0].toArray();
+
+      if (a instanceof ArrayList) {
+        array = a.toArray();
       } else {
         array = [];
-        array.length = 0 | arguments[0];
+        if (typeof a === "number") {
+          array.length = a > 0 ? a : 0;
+        }
       }
 
       /**
@@ -2189,8 +2190,10 @@
     // Stores states for pushStyle() and popStyle().
     var styleArray = [];
 
-    // Vertices are specified in a counter-clockwise order
-    // triangles are in this order: back, front, right, bottom, left, top
+    // The vertices for the box cannot be specified using a triangle strip since each
+    // side of the cube must have its own set of normals.
+    // Vertices are specified in a counter-clockwise order.
+    // Triangles are in this order: back, front, right, bottom, left, top.
     var boxVerts = new Float32Array([
        0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,
        0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,
@@ -2215,113 +2218,128 @@
       -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0,
        0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0]);
 
-    // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP
+    // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP.
     var rectVerts = new Float32Array([0,0,0, 0,1,0, 1,1,0, 1,0,0]);
 
     var rectNorms = new Float32Array([0,0,1, 0,0,1, 0,0,1, 0,0,1]);
 
-
-    // Shader for points and lines in begin/endShape
-    var vShaderSrcUnlitShape =
-      "varying vec4 frontColor;" +
+    // Shader for points and lines in begin/endShape.
+    var vertexShaderSrcUnlitShape =
+      "varying vec4 vFrontColor;" +
 
       "attribute vec3 aVertex;" +
       "attribute vec4 aColor;" +
 
       "uniform mat4 uView;" +
       "uniform mat4 uProjection;" +
-      "uniform float pointSize;" +
+      "uniform float uPointSize;" +
 
       "void main(void) {" +
-      "  frontColor = aColor;" +
-      "  gl_PointSize = pointSize;" +
+      "  vFrontColor = aColor;" +
+      "  gl_PointSize = uPointSize;" +
       "  gl_Position = uProjection * uView * vec4(aVertex, 1.0);" +
       "}";
 
-    var fShaderSrcUnlitShape =
+    var fragmentShaderSrcUnlitShape =
       "#ifdef GL_ES\n" +
       "precision highp float;\n" +
       "#endif\n" +
 
-      "varying vec4 frontColor;" +
+      "varying vec4 vFrontColor;" +
+      "uniform bool uSmooth;" +
 
       "void main(void){" +
-      "  gl_FragColor = frontColor;" +
+      "  if(uSmooth == true){" +
+      "    float dist = distance(gl_PointCoord, vec2(0.5));" +
+      "    if(dist > 0.5){" +
+      "      discard;" +
+      "    }" +
+      "  }" +
+      "  gl_FragColor = vFrontColor;" +
       "}";
 
-    // Shader for rect, text, box outlines, sphere outlines, point() and line()
-    var vertexShaderSource2D =
-      "varying vec4 frontColor;" +
+    // Shader for rect, text, box outlines, sphere outlines, point() and line().
+    var vertexShaderSrc2D =
+      "varying vec4 vFrontColor;" +
 
-      "attribute vec3 Vertex;" +
+      "attribute vec3 aVertex;" +
       "attribute vec2 aTextureCoord;" +
-      "uniform vec4 color;" +
+      "uniform vec4 uColor;" +
 
-      "uniform mat4 model;" +
-      "uniform mat4 view;" +
-      "uniform mat4 projection;" +
-      "uniform float pointSize;" +
+      "uniform mat4 uModel;" +
+      "uniform mat4 uView;" +
+      "uniform mat4 uProjection;" +
+      "uniform float uPointSize;" +
       "varying vec2 vTextureCoord;"+
 
       "void main(void) {" +
-      "  gl_PointSize = pointSize;" +
-      "  frontColor = color;" +
-      "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
+      "  gl_PointSize = uPointSize;" +
+      "  vFrontColor = uColor;" +
+      "  gl_Position = uProjection * uView * uModel * vec4(aVertex, 1.0);" +
       "  vTextureCoord = aTextureCoord;" +
       "}";
 
-    var fragmentShaderSource2D =
+    var fragmentShaderSrc2D =
       "#ifdef GL_ES\n" +
       "precision highp float;\n" +
       "#endif\n" +
 
-      "varying vec4 frontColor;" +
+      "varying vec4 vFrontColor;" +
       "varying vec2 vTextureCoord;"+
 
       "uniform sampler2D uSampler;"+
-      "uniform int picktype;"+
+      "uniform int uIsDrawingText;"+
+      "uniform bool uSmooth;" +
 
       "void main(void){" +
-      "  if(picktype == 0){"+
-      "    gl_FragColor = frontColor;" +
+      // WebGL does not support POINT_SMOOTH, so we do it ourselves
+      "  if(uSmooth == true){" +
+      "    float dist = distance(gl_PointCoord, vec2(0.5));" +
+      "    if(dist > 0.5){" +
+      "      discard;" +
+      "    }" +
       "  }" +
-      "  else if(picktype == 1){"+
+
+      "  if(uIsDrawingText == 1){" +
       "    float alpha = texture2D(uSampler, vTextureCoord).a;"+
-      "    gl_FragColor = vec4(frontColor.rgb*alpha, alpha);\n"+
-      "  }"+
+      "    gl_FragColor = vec4(vFrontColor.rgb * alpha, alpha);"+
+      "  }" +
+      "  else{" +
+      "    gl_FragColor = vFrontColor;" +
+      "  }" +
       "}";
 
     var webglMaxTempsWorkaround = /Windows/.test(navigator.userAgent);
 
-    // Vertex shader for boxes and spheres
-    var vertexShaderSource3D =
-      "varying vec4 frontColor;" +
+    // Vertex shader for boxes and spheres.
+    var vertexShaderSrc3D =
+      "varying vec4 vFrontColor;" +
 
-      "attribute vec3 Vertex;" +
-      "attribute vec3 Normal;" +
+      "attribute vec3 aVertex;" +
+      "attribute vec3 aNormal;" +
       "attribute vec4 aColor;" +
       "attribute vec2 aTexture;" +
       "varying   vec2 vTexture;" +
 
-      "uniform vec4 color;" +
+      "uniform vec4 uColor;" +
 
-      "uniform bool usingMat;" +
-      "uniform vec3 specular;" +
-      "uniform vec3 mat_emissive;" +
-      "uniform vec3 mat_ambient;" +
-      "uniform vec3 mat_specular;" +
-      "uniform float shininess;" +
+      "uniform bool uUsingMat;" +
+      "uniform vec3 uSpecular;" +
+      "uniform vec3 uMaterialEmissive;" +
+      "uniform vec3 uMaterialAmbient;" +
+      "uniform vec3 uMaterialSpecular;" +
+      "uniform float uShininess;" +
 
-      "uniform mat4 model;" +
-      "uniform mat4 view;" +
-      "uniform mat4 projection;" +
-      "uniform mat4 normalTransform;" +
+      "uniform mat4 uModel;" +
+      "uniform mat4 uView;" +
+      "uniform mat4 uProjection;" +
+      "uniform mat4 uNormalTransform;" +
 
-      "uniform int lightCount;" +
-      "uniform vec3 falloff;" +
+      "uniform int uLightCount;" +
+      "uniform vec3 uFalloff;" +
 
-      // careful changing the order of these fields. Some cards
-      // have issues with memory alignment
+      // Careful changing the order of these fields. Some cards
+      // have issues with memory alignment.
       "struct Light {" +
       "  int type;" +
       "  vec3 color;" +
@@ -2333,101 +2351,120 @@
       "};" +
 
       // nVidia cards have issues with arrays of structures
-      // so instead we create 8 instances of Light
-      "uniform Light lights0;" +
-      "uniform Light lights1;" +
-      "uniform Light lights2;" +
-      "uniform Light lights3;" +
-      "uniform Light lights4;" +
-      "uniform Light lights5;" +
-      "uniform Light lights6;" +
-      "uniform Light lights7;" +
+      // so instead we create 8 instances of Light.
+      "uniform Light uLights0;" +
+      "uniform Light uLights1;" +
+      "uniform Light uLights2;" +
+      "uniform Light uLights3;" +
+      "uniform Light uLights4;" +
+      "uniform Light uLights5;" +
+      "uniform Light uLights6;" +
+      "uniform Light uLights7;" +
 
-     // GLSL does not support switch
+     // GLSL does not support switch.
       "Light getLight(int index){" +
-      "  if(index == 0) return lights0;" +
-      "  if(index == 1) return lights1;" +
-      "  if(index == 2) return lights2;" +
-      "  if(index == 3) return lights3;" +
-      "  if(index == 4) return lights4;" +
-      "  if(index == 5) return lights5;" +
-      "  if(index == 6) return lights6;" +
+      "  if(index == 0) return uLights0;" +
+      "  if(index == 1) return uLights1;" +
+      "  if(index == 2) return uLights2;" +
+      "  if(index == 3) return uLights3;" +
+      "  if(index == 4) return uLights4;" +
+      "  if(index == 5) return uLights5;" +
+      "  if(index == 6) return uLights6;" +
       // Do not use a conditional for the last return statement
       // because some video cards will fail and complain that
-      // "not all paths return"
-      "  return lights7;" +
+      // "not all paths return".
+      "  return uLights7;" +
       "}" +
 
       "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
-      // Get the vector from the light to the vertex
-      // Get the distance from the current vector to the light position
+      // Get the vector from the light to the vertex and 
+      // get the distance from the current vector to the light position.
       "  float d = length( light.position - ecPos );" +
-      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
+      "  float attenuation = 1.0 / ( uFalloff[0] + ( uFalloff[1] * d ) + ( uFalloff[2] * d * d ));" +
       "  totalAmbient += light.color * attenuation;" +
       "}" +
 
+      /*
+        col - accumulated color
+        spec - accumulated specular highlight
+        vertNormal - Normal of the vertex
+        ecPos - eye coordinate position
+        light - light structure
+      */
       "void DirectionalLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
-      "  float powerfactor = 0.0;" +
+      "  float powerFactor = 0.0;" +
       "  float nDotVP = max(0.0, dot( vertNormal, normalize(-light.position) ));" +
       "  float nDotVH = max(0.0, dot( vertNormal, normalize(-light.position-normalize(ecPos) )));" +
 
       "  if( nDotVP != 0.0 ){" +
-      "    powerfactor = pow( nDotVH, shininess );" +
+      "    powerFactor = pow( nDotVH, uShininess );" +
       "  }" +
 
       "  col += light.color * nDotVP;" +
-      "  spec += specular * powerfactor;" +
+      "  spec += uSpecular * powerFactor;" +
       "}" +
 
+      /*
+        col - accumulated color
+        spec - accumulated specular highlight
+        vertNormal - Normal of the vertex
+        ecPos - eye coordinate position
+        light - light structure
+      */
       "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
-      "  float powerfactor;" +
+      "  float powerFactor;" +
 
-      // Get the vector from the light to the vertex
+      // Get the vector from the light to the vertex.
       "   vec3 VP = light.position - ecPos;" +
 
-      // Get the distance from the current vector to the light position
+      // Get the distance from the current vector to the light position.
       "  float d = length( VP ); " +
 
       // Normalize the light ray so it can be used in the dot product operation.
       "  VP = normalize( VP );" +
 
-      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
+      "  float attenuation = 1.0 / ( uFalloff[0] + ( uFalloff[1] * d ) + ( uFalloff[2] * d * d ));" +
 
       "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
       "  vec3 halfVector = normalize( VP - normalize(ecPos) );" +
       "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 
-      "  if( nDotVP == 0.0) {" +
-      "    powerfactor = 0.0;" +
+      "  if( nDotVP == 0.0 ) {" +
+      "    powerFactor = 0.0;" +
       "  }" +
-      "  else{" +
-      "    powerfactor = pow( nDotHV, shininess );" +
+      "  else {" +
+      "    powerFactor = pow( nDotHV, uShininess );" +
       "  }" +
 
-      "  spec += specular * powerfactor * attenuation;" +
+      "  spec += uSpecular * powerFactor * attenuation;" +
       "  col += light.color * nDotVP * attenuation;" +
       "}" +
 
       /*
+        col - accumulated color
+        spec - accumulated specular highlight
+        vertNormal - Normal of the vertex
+        ecPos - eye coordinate position
+        light - light structure
       */
       "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in Light light ) {" +
       "  float spotAttenuation;" +
-      "  float powerfactor;" +
+      "  float powerFactor = 0.0;" +
 
-      // calculate the vector from the current vertex to the light.
-      "  vec3 VP = light.position - ecPos; " +
+      // Calculate the vector from the current vertex to the light.
+      "  vec3 VP = light.position - ecPos;" +
       "  vec3 ldir = normalize( -light.direction );" +
 
-      // get the distance from the spotlight and the vertex
+      // Get the distance from the spotlight and the vertex
       "  float d = length( VP );" +
       "  VP = normalize( VP );" +
 
-      "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ) );" +
+      "  float attenuation = 1.0 / ( uFalloff[0] + ( uFalloff[1] * d ) + ( uFalloff[2] * d * d ) );" +
 
-      // dot product of the vector from vertex to light and light direction.
+      // Dot product of the vector from vertex to light and light direction.
       "  float spotDot = dot( VP, ldir );" +
 
-      // if the vertex falls inside the cone
+      // If the vertex falls inside the cone
       (webglMaxTempsWorkaround ? // Windows reports max temps error if light.angle is used
       "  spotAttenuation = 1.0; " :
       "  if( spotDot > cos( light.angle ) ) {" +
@@ -2439,29 +2476,26 @@
       "  attenuation *= spotAttenuation;" +
       "") +
 
-      "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
+      "  float nDotVP = max( 0.0, dot( vertNormal, VP ) );" +
       "  vec3 halfVector = normalize( VP - normalize(ecPos) );" +
-      "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
+      "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ) );" +
 
-      "  if( nDotVP == 0.0 ) {" +
-      "    powerfactor = 0.0;" +
-      "  }" +
-      "  else {" +
-      "    powerfactor = pow( nDotHV, shininess );" +
+      "  if( nDotVP != 0.0 ) {" +
+      "    powerFactor = pow( nDotHV, uShininess );" +
       "  }" +
 
-      "  spec += specular * powerfactor * attenuation;" +
+      "  spec += uSpecular * powerFactor * attenuation;" +
       "  col += light.color * nDotVP * attenuation;" +
       "}" +
 
       "void main(void) {" +
-      "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" +
-      "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" +
-      "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
+      "  vec3 finalAmbient = vec3( 0.0 );" +
+      "  vec3 finalDiffuse = vec3( 0.0 );" +
+      "  vec3 finalSpecular = vec3( 0.0 );" +
 
-      "  vec4 col = color;" +
+      "  vec4 col = uColor;" +
 
-      "  if(color[0] == -1.0){" +
+      "  if ( uColor[0] == -1.0 ){" +
       "    col = aColor;" +
       "  }" +
 
@@ -2469,25 +2503,26 @@
       // But this only works if the sphere vertices are unit length, so we
       // have to normalize the normals here. Since this is only required for spheres
       // we could consider placing this in a conditional later on.
-      "  vec3 norm = normalize(vec3( normalTransform * vec4( Normal, 0.0 ) ));" +
+      "  vec3 norm = normalize(vec3( uNormalTransform * vec4( aNormal, 0.0 ) ));" +
 
-      "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
+      "  vec4 ecPos4 = uView * uModel * vec4(aVertex, 1.0);" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
 
       // If there were no lights this draw call, just use the
-      // assigned fill color of the shape and the specular value
-      "  if( lightCount == 0 ) {" +
-      "    frontColor = col + vec4(mat_specular, 0.0);" +
+      // assigned fill color of the shape and the specular value.
+      "  if( uLightCount == 0 ) {" +
+      "    vFrontColor = col + vec4(uMaterialSpecular, 0.0);" +
       "  }" +
       "  else {" +
            // WebGL forces us to iterate over a constant value
-           // so we can't iterate using lightCount
+           // so we can't iterate using lightCount.
       "    for( int i = 0; i < 8; i++ ) {" +
       "      Light l = getLight(i);" +
 
       // We can stop iterating if we know we have gone past
-      // the number of lights which are on
-      "      if( i >= lightCount ){" +
+      // the number of lights which are actually on. This gives us a
+      // significant performance increase with high vertex counts.
+      "      if( i >= uLightCount ){" +
       "        break;" +
       "      }" +
 
@@ -2505,49 +2540,49 @@
       "      }" +
       "    }" +
 
-      "   if( usingMat == false ) {" +
-      "     frontColor = vec4(" +
-      "       vec3(col) * finalAmbient +" +
-      "       vec3(col) * finalDiffuse +" +
-      "       vec3(col) * finalSpecular," +
+      "   if( uUsingMat == false ) {" +
+      "     vFrontColor = vec4(" +
+      "       vec3( col ) * finalAmbient +" +
+      "       vec3( col ) * finalDiffuse +" +
+      "       vec3( col ) * finalSpecular," +
       "       col[3] );" +
       "   }" +
       "   else{" +
-      "     frontColor = vec4( " +
-      "       mat_emissive + " +
-      "       (vec3(col) * mat_ambient * finalAmbient) + " +
+      "     vFrontColor = vec4( " +
+      "       uMaterialEmissive + " +
+      "       (vec3(col) * uMaterialAmbient * finalAmbient ) + " +
       "       (vec3(col) * finalDiffuse) + " +
-      "       (mat_specular * finalSpecular), " +
+      "       (uMaterialSpecular * finalSpecular), " +
       "       col[3] );" +
       "    }" +
       "  }" +
 
       "  vTexture.xy = aTexture.xy;" +
-      "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
+      "  gl_Position = uProjection * uView * uModel * vec4( aVertex, 1.0 );" +
       "}";
 
-    var fragmentShaderSource3D =
+    var fragmentShaderSrc3D =
       "#ifdef GL_ES\n" +
       "precision highp float;\n" +
       "#endif\n" +
 
-      "varying vec4 frontColor;" +
+      "varying vec4 vFrontColor;" +
 
-      "uniform sampler2D sampler;" +
-      "uniform bool usingTexture;" +
+      "uniform sampler2D uSampler;" +
+      "uniform bool uUsingTexture;" +
       "varying vec2 vTexture;" +
 
       // In Processing, when a texture is used, the fill color is ignored
       "void main(void){" +
-      "  vec4 col = frontColor;" +
+      "  vec4 col = vFrontColor;" +
       
-      "  if(usingTexture){" +
+      "  if(uUsingTexture){" +
       // When using a texture, we'll need to multiply the transparency by 1.0
       "    col.a = 1.0;" +
-      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy)) * col;" +
+      "    gl_FragColor = vec4(texture2D(uSampler, vTexture.xy)) * col;" +
       "  }"+
       "  else{" +
-      "    gl_FragColor = frontColor;" +
+      "    gl_FragColor = vFrontColor;" +
       "  }" +
       "}";
 
@@ -2564,6 +2599,7 @@
      * On some systems, if the variable exists in the shader but isn't used,
      * the compiler will optimize it out and this function will fail.
      *
+     * @param {String} cacheId
      * @param {WebGLProgram} programObj program object returned from
      * createProgramObject
      * @param {String} varName the name of the variable in the shader
@@ -2603,6 +2639,7 @@
      * On some systems, if the variable exists in the shader but isn't used,
      * the compiler will optimize it out and this function will fail.
      *
+     * @param {String} cacheId
      * @param {WebGLProgram} programObj program object returned from
      * createProgramObject
      * @param {String} varName the name of the variable in the shader
@@ -2643,6 +2680,7 @@
      * isn't used, the compiler will optimize it out and this
      * function will fail.
      *
+     * @param {String} cacheId
      * @param {WebGLProgram} programObj program object returned from
      * createProgramObject
      * @param {String} varName the name of the variable in the shader
@@ -2660,7 +2698,7 @@
         varLocation = curContext.getUniformLocation(programObj, varName);
         curContextCache.locations[cacheId] = varLocation;
       }
-      // the variable won't be found if it was optimized out.
+      // The variable won't be found if it was optimized out.
       if (varLocation !== -1) {
         if (matrix.length === 16) {
           curContext.uniformMatrix4fv(varLocation, transpose, matrix);
@@ -2680,6 +2718,7 @@
      * isn't used, the compiler will optimize it out and this
      * function will fail.
      *
+     * @param {String} cacheId
      * @param {WebGLProgram} programObj program object returned from
      * createProgramObject
      * @param {String} varName the name of the variable in the shader
@@ -2706,6 +2745,7 @@
     /**
      * Disables a program object attribute from being sent to WebGL.
      *
+     * @param {String} cacheId
      * @param {WebGLProgram} programObj program object returned from
      * createProgramObject
      * @param {String} varName name of the attribute
@@ -3125,26 +3165,33 @@
                  this.params[6], this.params[7]);
         } else if (this.kind === PConstants.RECT) {
           if (this.image !== null) {
+            var imMode = imageModeConvert;
             p.imageMode(PConstants.CORNER);
             p.image(this.image,
                     this.params[0],
                     this.params[1],
                     this.params[2],
                     this.params[3]);
+            imageModeConvert = imMode;
           } else {
+            var rcMode = curRectMode;
             p.rectMode(PConstants.CORNER);
             p.rect(this.params[0],
                    this.params[1],
                    this.params[2],
                    this.params[3]);
+            curRectMode = rcMode;
           }
         } else if (this.kind === PConstants.ELLIPSE) {
+          var elMode = curEllipseMode;
           p.ellipseMode(PConstants.CORNER);
           p.ellipse(this.params[0],
                     this.params[1],
                     this.params[2],
                     this.params[3]);
+          curEllipseMode = elMode;
         } else if (this.kind === PConstants.ARC) {
+          var eMode = curEllipseMode;
           p.ellipseMode(PConstants.CORNER);
           p.arc(this.params[0],
                 this.params[1],
@@ -3152,6 +3199,7 @@
                 this.params[3],
                 this.params[4],
                 this.params[5]);
+          curEllipseMode = eMode;
         } else if (this.kind === PConstants.BOX) {
           if (this.params.length === 1) {
             p.box(this.params[0]);
@@ -10277,7 +10325,7 @@
           return gl;
         }
 
-        // get the 3D rendering context
+        // Get the 3D rendering context.
         try {
           // If the HTML <canvas> dimensions differ from the
           // dimensions specified in the size() call in the sketch, for
@@ -10287,8 +10335,8 @@
           curElement.width = p.width = aWidth || 100;
           curElement.height = p.height = aHeight || 100;
           curContext = getGLContext(curElement);
-          canTex = curContext.createTexture(); // texture
-          textTex = curContext.createTexture(); // texture
+          canTex = curContext.createTexture();
+          textTex = curContext.createTexture();
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -10310,22 +10358,23 @@
 
         // Create the program objects to render 2D (points, lines) and
         // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
-        // lighting calculations could be ommitted from that program object.
-        programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
+        // lighting calculations are ommitted from this program object.
+        programObject2D = createProgramObject(curContext, vertexShaderSrc2D, fragmentShaderSrc2D);
 
-        programObjectUnlitShape = createProgramObject(curContext, vShaderSrcUnlitShape, fShaderSrcUnlitShape);
+        programObjectUnlitShape = createProgramObject(curContext, vertexShaderSrcUnlitShape, fragmentShaderSrcUnlitShape);
 
         // Set the default point and line width for the 2D and unlit shapes.
-        p.strokeWeight(1.0);
+        p.strokeWeight(1);
 
         // Now that the programs have been compiled, we can set the default
         // states for the lights.
-        programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
+        programObject3D = createProgramObject(curContext, vertexShaderSrc3D, fragmentShaderSrc3D);
         curContext.useProgram(programObject3D);
 
-        // assume we aren't using textures by default
+        // Assume we aren't using textures by default.
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
-        // assume that we arn't tinting by default
+ 
+        // Set some defaults.
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
         p.ambient(255, 255, 255);
@@ -10456,10 +10505,10 @@
                              (col & PConstants.BLUE_MASK) / 255 ];
 
       curContext.useProgram(programObject3D);
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
-      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 0);
-      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+      uniformf("uLights.color.3d." + lightCount, programObject3D, "uLights" + lightCount + ".color", normalizedCol);
+      uniformf("uLights.position.3d." + lightCount, programObject3D, "uLights" + lightCount + ".position", pos.array());
+      uniformi("uLights.type.3d." + lightCount, programObject3D, "uLights" + lightCount + ".type", 0);
+      uniformi("uLightCount3d", programObject3D, "uLightCount", ++lightCount);
     };
 
     /**
@@ -10520,10 +10569,10 @@
                             ((col & PConstants.GREEN_MASK) >>> 8) / 255,
                              (col & PConstants.BLUE_MASK) / 255 ];
 
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
-      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", dir);
-      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
-      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+      uniformf("uLights.color.3d." + lightCount, programObject3D, "uLights" + lightCount + ".color", normalizedCol);
+      uniformf("uLights.position.3d." + lightCount, programObject3D, "uLights" + lightCount + ".position", dir);
+      uniformi("uLights.type.3d." + lightCount, programObject3D, "uLights" + lightCount + ".type", 1);
+      uniformi("uLightCount3d", programObject3D, "uLightCount", ++lightCount);
     };
 
     /**
@@ -10557,7 +10606,7 @@
 
     Drawing3D.prototype.lightFalloff = function(constant, linear, quadratic) {
       curContext.useProgram(programObject3D);
-      uniformf("falloff3d", programObject3D, "falloff", [constant, linear, quadratic]);
+      uniformf("uFalloff3d", programObject3D, "uFalloff", [constant, linear, quadratic]);
     };
 
     /**
@@ -10591,7 +10640,7 @@
                              (col & PConstants.BLUE_MASK) / 255 ];
 
       curContext.useProgram(programObject3D);
-      uniformf("specular3d", programObject3D, "specular", normalizedCol);
+      uniformf("uSpecular3d", programObject3D, "uSpecular", normalizedCol);
     };
 
     /**
@@ -10664,10 +10713,10 @@
                              (col & PConstants.BLUE_MASK) / 255 ];
 
       curContext.useProgram(programObject3D);
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
-      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 2);
-      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+      uniformf("uLights.color.3d." + lightCount, programObject3D, "uLights" + lightCount + ".color", normalizedCol);
+      uniformf("uLights.position.3d." + lightCount, programObject3D, "uLights" + lightCount + ".position", pos.array());
+      uniformi("uLights.type.3d." + lightCount, programObject3D, "uLights" + lightCount + ".type", 2);
+      uniformi("uLightCount3d", programObject3D, "uLightCount", ++lightCount);
     };
 
     /**
@@ -10685,7 +10734,7 @@
     Drawing3D.prototype.noLights = function() {
       lightCount = 0;
       curContext.useProgram(programObject3D);
-      uniformi("lightCount3d", programObject3D, "lightCount", lightCount);
+      uniformi("uLightCount3d", programObject3D, "uLightCount", lightCount);
     };
 
     /**
@@ -10753,13 +10802,13 @@
                             ((col & PConstants.GREEN_MASK) >>> 8) / 255,
                              (col & PConstants.BLUE_MASK) / 255 ];
 
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
-      uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
-      uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", dir);
-      uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
-      uniformf("lights.angle.3d." + lightCount, programObject3D, "lights" + lightCount + ".angle", angle);
-      uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 3);
-      uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
+      uniformf("uLights.color.3d." + lightCount, programObject3D, "uLights" + lightCount + ".color", normalizedCol);
+      uniformf("uLights.position.3d." + lightCount, programObject3D, "uLights" + lightCount + ".position", pos.array());
+      uniformf("uLights.direction.3d." + lightCount, programObject3D, "uLights" + lightCount + ".direction", dir);
+      uniformf("uLights.concentration.3d." + lightCount, programObject3D, "uLights" + lightCount + ".concentration", concentration);
+      uniformf("uLights.angle.3d." + lightCount, programObject3D, "uLights" + lightCount + ".angle", angle);
+      uniformi("uLights.type.3d." + lightCount, programObject3D, "uLights" + lightCount + ".type", 3);
+      uniformi("uLightCount3d", programObject3D, "uLightCount", ++lightCount);
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -10956,9 +11005,9 @@
       proj.set(projection);
       proj.transpose();
       curContext.useProgram(programObject2D);
-      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+      uniformMatrix("projection2d", programObject2D, "uProjection", false, proj.array());
       curContext.useProgram(programObject3D);
-      uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+      uniformMatrix("projection3d", programObject3D, "uProjection", false, proj.array());
       curContext.useProgram(programObjectUnlitShape);
       uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
     };
@@ -11002,9 +11051,9 @@
       proj.set(projection);
       proj.transpose();
       curContext.useProgram(programObject2D);
-      uniformMatrix("projection2d", programObject2D, "projection", false, proj.array());
+      uniformMatrix("projection2d", programObject2D, "uProjection", false, proj.array());
       curContext.useProgram(programObject3D);
-      uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
+      uniformMatrix("projection3d", programObject3D, "uProjection", false, proj.array());
       curContext.useProgram(programObjectUnlitShape);
       uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
       frustumMode = false;
@@ -11051,7 +11100,7 @@
       var model = new PMatrix3D();
       model.scale(w, h, d);
 
-      // viewing transformation needs to have Y flipped
+      // Viewing transformation needs to have Y flipped
       // becuase that's what Processing does.
       var view = new PMatrix3D();
       view.scale(1, -1, 1);
@@ -11060,9 +11109,9 @@
 
       if (doFill) {
         curContext.useProgram(programObject3D);
-        uniformMatrix("model3d", programObject3D, "model", false, model.array());
-        uniformMatrix("view3d", programObject3D, "view", false, view.array());
-        // fix stitching problems. (lines get occluded by triangles
+        uniformMatrix("model3d", programObject3D, "uModel", false, model.array());
+        uniformMatrix("view3d", programObject3D, "uView", false, view.array());
+        // Fix stitching problems. (lines get occluded by triangles
         // since they share the same depth values). This is not entirely
         // working, but it's a start for drawing the outline. So
         // developers can start playing around with styles.
@@ -11075,12 +11124,12 @@
           curContext.enable(curContext.BLEND);
         }
 
-        uniformf("color3d", programObject3D, "color", fillStyle);
+        uniformf("color3d", programObject3D, "uColor", fillStyle);
 
         // Calculating the normal matrix can be expensive, so only
-        // do it if it's necessary
+        // do it if it's necessary.
         if(lightCount > 0){
-          // Create the normal transformation matrix
+          // Create the normal transformation matrix.
           var v = new PMatrix3D();
           v.set(view);
 
@@ -11094,16 +11143,16 @@
           normalMatrix.invert();
           normalMatrix.transpose();
 
-          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
-          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, boxNormBuffer);
+          uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMatrix.array());
+          vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 3, boxNormBuffer);
         }
         else{
-          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+          disableVertexAttribPointer("aNormal3d", programObject3D, "aNormal");
         }
 
-        vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, boxBuffer);
+        vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 3, boxBuffer);
 
-        // Turn off per vertex colors
+        // Turn off per vertex colors.
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
         
@@ -11116,13 +11165,14 @@
         }
       }
 
+      // Draw the box outline.
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
-        uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        uniformf("color2d", programObject2D, "color", strokeStyle);
-        uniformi("picktype2d", programObject2D, "picktype", 0);
-        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, boxOutlineBuffer);
+        uniformMatrix("uModel2d", programObject2D, "uModel", false, model.array());
+        uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
+        uniformf("uColor2d", programObject2D, "uColor", strokeStyle);
+        uniformi("uIsDrawingText2d", programObject2D, "uIsDrawingText", false);
+        vertexAttribPointer("vertex2d", programObject2D, "aVertex", 3, boxOutlineBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length / 3);
       }
@@ -11302,7 +11352,7 @@
         p.sphereDetail(30);
       }
 
-      // Modeling transformation
+      // Modeling transformation.
       var model = new PMatrix3D();
       model.scale(sRad, sRad, sRad);
 
@@ -11315,9 +11365,9 @@
 
       if (doFill) {
         // Calculating the normal matrix can be expensive, so only
-        // do it if it's necessary
+        // do it if it's necessary.
         if(lightCount > 0){
-          // Create a normal transformation matrix
+          // Create a normal transformation matrix.
           var v = new PMatrix3D();
           v.set(view);
 
@@ -11331,21 +11381,21 @@
           normalMatrix.invert();
           normalMatrix.transpose();
 
-          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
-          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, sphereBuffer);
+          uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMatrix.array());
+          vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 3, sphereBuffer);
         }
         else{
-          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+          disableVertexAttribPointer("aNormal3d", programObject3D, "aNormal");
         }
 
         curContext.useProgram(programObject3D);
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-        uniformMatrix("model3d", programObject3D, "model", false, model.array());
-        uniformMatrix("view3d", programObject3D, "view", false, view.array());
-        vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
+        uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
+        uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
+        vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 3, sphereBuffer);
 
-        // Turn off per vertex colors
+        // Turn off per vertex colors.
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
 
         // fix stitching problems. (lines get occluded by triangles
@@ -11354,19 +11404,20 @@
         // developers can start playing around with styles.
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
-        uniformf("color3d", programObject3D, "color", fillStyle);
+        uniformf("uColor3d", programObject3D, "uColor", fillStyle);
         curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
 
+      // Draw the sphere outline.
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
-        uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, sphereBuffer);
+        uniformMatrix("uModel2d", programObject2D, "uModel", false, model.array());
+        uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
+        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 3, sphereBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-        uniformf("color2d", programObject2D, "color", strokeStyle);
-        uniformi("picktype2d", programObject2D, "picktype", 0);
+        uniformf("uColor2d", programObject2D, "uColor", strokeStyle);
+        uniformi("uIsDrawingText", programObject2D, "uIsDrawingText", false);
         curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
       }
     };
@@ -11495,9 +11546,9 @@
 
     Drawing3D.prototype.ambient = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
-      uniformi("usingMat3d", programObject3D, "usingMat", true);
+      uniformi("uUsingMat3d", programObject3D, "uUsingMat", true);
       var col = p.color(v1, v2, v3);
-      uniformf("mat_ambient3d", programObject3D, "mat_ambient", p.color.toGLArray(col).slice(0, 3));
+      uniformf("uMaterialAmbient3d", programObject3D, "uMaterialAmbient", p.color.toGLArray(col).slice(0, 3));
     };
 
     /**
@@ -11528,9 +11579,9 @@
 
     Drawing3D.prototype.emissive = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
-      uniformi("usingMat3d", programObject3D, "usingMat", true);
+      uniformi("uUsingMat3d", programObject3D, "uUsingMat", true);
       var col = p.color(v1, v2, v3);
-      uniformf("mat_emissive3d", programObject3D, "mat_emissive", p.color.toGLArray(col).slice(0, 3));
+      uniformf("uMaterialEmissive3d", programObject3D, "uMaterialEmissive", p.color.toGLArray(col).slice(0, 3));
     };
 
     /**
@@ -11546,8 +11597,8 @@
 
     Drawing3D.prototype.shininess = function(shine) {
       curContext.useProgram(programObject3D);
-      uniformi("usingMat3d", programObject3D, "usingMat", true);
-      uniformf("shininess3d", programObject3D, "shininess", shine);
+      uniformi("uUsingMat3d", programObject3D, "uUsingMat", true);
+      uniformf("uShininess3d", programObject3D, "uShininess", shine);
     };
 
     /**
@@ -11590,9 +11641,9 @@
 
     Drawing3D.prototype.specular = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
-      uniformi("usingMat3d", programObject3D, "usingMat", true);
+      uniformi("uUsingMat3d", programObject3D, "uUsingMat", true);
       var col = p.color(v1, v2, v3);
-      uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(col).slice(0, 3));
+      uniformf("uMaterialSpecular3d", programObject3D, "uMaterialSpecular", p.color.toGLArray(col).slice(0, 3));
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -11863,10 +11914,10 @@
       // but for WebGL, we need to set a uniform for points and call a function for line.
 
       curContext.useProgram(programObject2D);
-      uniformf("pointSize2d", programObject2D, "pointSize", w);
+      uniformf("pointSize2d", programObject2D, "uPointSize", w);
 
       curContext.useProgram(programObjectUnlitShape);
-      uniformf("pointSizeUnlitShape", programObjectUnlitShape, "pointSize", w);
+      uniformf("pointSizeUnlitShape", programObjectUnlitShape, "uPointSize", w);
 
       curContext.lineWidth(w);
     };
@@ -11897,7 +11948,8 @@
      * The smooth() function draws all geometry with smooth (anti-aliased) edges. This will slow down the frame rate of the application,
      * but will enhance the visual refinement. <br/><br/>
      * Note that smooth() will also improve image quality of resized images, and noSmooth() will disable image (and font) smoothing altogether.
-     *
+     * When working with a 3D sketch, smooth will draw points as circles rather than squares.
+     * 
      * @see #noSmooth()
      * @see #hint()
      * @see #size()
@@ -11913,7 +11965,9 @@
       }
     };
 
-    Drawing3D.prototype.smooth = nop;
+    Drawing3D.prototype.smooth = function(){
+      renderSmooth = true;
+    };
 
     /**
      * The noSmooth() function draws all geometry with jagged (aliased) edges.
@@ -11934,7 +11988,9 @@
       }
     };
 
-    Drawing3D.prototype.noSmooth = nop;
+    Drawing3D.prototype.noSmooth = function(){
+      renderSmooth = false;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
@@ -11985,8 +12041,8 @@
       view.transpose();
 
       curContext.useProgram(programObject2D);
-      uniformMatrix("model2d", programObject2D, "model", false, model.array());
-      uniformMatrix("view2d", programObject2D, "view", false, view.array());
+      uniformMatrix("uModel2d", programObject2D, "uModel", false, model.array());
+      uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
 
       if (lineWidth > 0 && doStroke) {
         // Turn on blending if the point isn't completely opaque.
@@ -11996,9 +12052,10 @@
         }
       
         // this will be replaced with the new bit shifting color code
-        uniformf("color2d", programObject2D, "color", strokeStyle);
-        uniformi("picktype2d", programObject2D, "picktype", 0);
-        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, pointBuffer);
+        uniformf("uColor2d", programObject2D, "uColor", strokeStyle);
+        uniformi("uIsDrawingText2d", programObject2D, "uIsDrawingText", false);
+        uniformi("uSmooth2d", programObject2D, "uSmooth", renderSmooth);
+        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 3, pointBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         curContext.drawArrays(curContext.POINTS, 0, 1);
         
@@ -12142,6 +12199,7 @@
       curContext.useProgram(programObjectUnlitShape);
 
       uniformMatrix("uViewUS", programObjectUnlitShape, "uView", false, view.array());
+      uniformi("uSmoothUS", programObjectUnlitShape, "uSmooth", renderSmooth);
 
       vertexAttribPointer("aVertexUS", programObjectUnlitShape, "aVertex", 3, pointBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
@@ -12214,35 +12272,35 @@
       }
 
       var view = new PMatrix3D();
-      view.scale(1, -1, 1);
-      view.apply(modelView.array());
+      view.scale( 1, -1, 1 );
+      view.apply( modelView.array() );
       view.transpose();
 
       curContext.useProgram( programObject3D );
-      uniformMatrix("model3d", programObject3D, "model", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
-      uniformMatrix("view3d", programObject3D, "view", false, view.array() );
+      uniformMatrix( "model3d", programObject3D, "uModel", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
+      uniformMatrix( "view3d", programObject3D, "uView", false, view.array() );
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
-      uniformf("color3d", programObject3D, "color", [-1,0,0,0]);
-      vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, fillBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
+      uniformf( "color3d", programObject3D, "uColor", [-1,0,0,0] );
+      vertexAttribPointer( "vertex3d", programObject3D, "aVertex", 3, fillBuffer );
+      curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW );
 
       // if we are using a texture and a tint, then overwrite the
       // contents of the color buffer with the current tint
-      if (usingTexture && curTint !== null){
-        curTint3d(cArray);
+      if ( usingTexture && curTint !== null ){
+        curTint3d( cArray );
       }
 
-      vertexAttribPointer("aColor3d", programObject3D, "aColor", 4, fillColorBuffer);
-      curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
+      vertexAttribPointer( "aColor3d", programObject3D, "aColor", 4, fillColorBuffer );
+      curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW );
 
       // No support for lights....yet
-      disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+      disableVertexAttribPointer( "aNormal3d", programObject3D, "aNormal" );
 
-      if (usingTexture) {
-        uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
-        vertexAttribPointer("aTexture3d", programObject3D, "aTexture", 2, shapeTexVBO);
-        curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW);
+      if ( usingTexture ) {
+        uniformi( "uUsingTexture3d", programObject3D, "uUsingTexture", usingTexture );
+        vertexAttribPointer( "aTexture3d", programObject3D, "aTexture", 2, shapeTexVBO );
+        curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW );
       }
 
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
@@ -12931,7 +12989,7 @@
         // with a color.
         usingTexture = false;
         curContext.useProgram(programObject3D);
-        uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
+        uniformi("usingTexture3d", programObject3D, "uUsingTexture", usingTexture);
       }
 
       // Reset some settings
@@ -13148,7 +13206,7 @@
 
       usingTexture = true;
       curContext.useProgram(programObject3D);
-      uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
+      uniformi("usingTexture3d", programObject3D, "uUsingTexture", usingTexture);
     };
 
     /**
@@ -13611,13 +13669,13 @@
           curContext.enable(curContext.BLEND);
         }
 
-        uniformMatrix("model2d", programObject2D, "model", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());
+        uniformMatrix("uModel2d", programObject2D, "uModel", false, [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+        uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
 
-        uniformf("color2d", programObject2D, "color", strokeStyle);
-        uniformi("picktype2d", programObject2D, "picktype", 0);
+        uniformf("uColor2d", programObject2D, "uColor", strokeStyle);
+        uniformi("uIsDrawingText", programObject2D, "uIsDrawingText", false);
 
-        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, lineBuffer);
+        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 3, lineBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
 
         curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(lineVerts), curContext.STREAM_DRAW);
@@ -13933,19 +13991,19 @@
 
       if (lineWidth > 0 && doStroke) {
         curContext.useProgram(programObject2D);
-        uniformMatrix("model2d", programObject2D, "model", false, model.array());
-        uniformMatrix("view2d", programObject2D, "view", false, view.array());
-        uniformf("color2d", programObject2D, "color", strokeStyle);
-        uniformi("picktype2d", programObject2D, "picktype", 0);
-        vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, rectBuffer);
+        uniformMatrix("uModel2d", programObject2D, "uModel", false, model.array());
+        uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
+        uniformf("uColor2d", programObject2D, "uColor", strokeStyle);
+        uniformi("uIsDrawingText2d", programObject2D, "uIsDrawingText", false);
+        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 3, rectBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
       }
 
       if (doFill) {
         curContext.useProgram(programObject3D);
-        uniformMatrix("model3d", programObject3D, "model", false, model.array());
-        uniformMatrix("view3d", programObject3D, "view", false, view.array());
+        uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
+        uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
 
         // fix stitching problems. (lines get occluded by triangles
         // since they share the same depth values). This is not entirely
@@ -13960,7 +14018,7 @@
           curContext.enable(curContext.BLEND);
         }
 
-        uniformf("color3d", programObject3D, "color", fillStyle);
+        uniformf("cColor3d", programObject3D, "uColor", fillStyle);
 
         if(lightCount > 0){
           var v = new PMatrix3D();
@@ -13976,14 +14034,14 @@
           normalMatrix.invert();
           normalMatrix.transpose();
 
-          uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
-          vertexAttribPointer("normal3d", programObject3D, "Normal", 3, rectNormBuffer);
+          uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMatrix.array());
+          vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 3, rectNormBuffer);
         }
         else{
-          disableVertexAttribPointer("normal3d", programObject3D, "Normal");
+          disableVertexAttribPointer("normal3d", programObject3D, "aNormal");
         }
 
-        vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, rectBuffer);
+        vertexAttribPointer("vertex3d", programObject3D, "aVertex", 3, rectBuffer);
 
         curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -15207,6 +15265,13 @@
          curContext.enable(curContext.DEPTH_TEST);
          curContext.depthMask(true);
       }
+      else if (which === PConstants.ENABLE_OPENGL_2X_SMOOTH ||
+               which === PConstants.ENABLE_OPENGL_4X_SMOOTH){
+        renderSmooth = true;
+      }
+      else if (which === PConstants.DISABLE_OPENGL_2X_SMOOTH){
+        renderSmooth = false;
+      }
     };
 
     /**
@@ -16268,16 +16333,14 @@
      * @see #text
      */
     p.textSize = function(size) {
-      if (size !== curTextSize) {
-        curTextFont = PFont.get(curFontName, size);
-        curTextSize = size;
-        // recache metrics
-        curTextAscent = curTextFont.ascent;
-        curTextDescent = curTextFont.descent;
-        curTextLeading = curTextFont.leading;
-        var curContext = drawing.$ensureContext();
-        curContext.font = curTextFont.css;
-      }
+      curTextFont = PFont.get(curFontName, size);
+      curTextSize = size;
+      // recache metrics
+      curTextAscent = curTextFont.ascent;
+      curTextDescent = curTextFont.descent;
+      curTextLeading = curTextFont.leading;
+      var curContext = drawing.$ensureContext();
+      curContext.font = curTextFont.css;
     };
 
     /**
@@ -16604,13 +16667,15 @@
       view.transpose();
 
       curContext.useProgram(programObject2D);
-      vertexAttribPointer("vertex2d", programObject2D, "Vertex", 3, textBuffer);
+      vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 3, textBuffer);
       vertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord", 2, textureBuffer);
       uniformi("uSampler2d", programObject2D, "uSampler", [0]);
-      uniformi("picktype2d", programObject2D, "picktype", 1);
-      uniformMatrix("model2d", programObject2D, "model", false,  model.array());
-      uniformMatrix("view2d", programObject2D, "view", false, view.array());
-      uniformf("color2d", programObject2D, "color", fillStyle);
+
+      uniformi("uIsDrawingText2d", programObject2D, "uIsDrawingText", true);
+
+      uniformMatrix("uModel2d", programObject2D, "uModel", false,  model.array());
+      uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
+      uniformf("uColor2d", programObject2D, "uColor", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
     };
@@ -17911,7 +17976,7 @@
 
     do {
       genericsWereRemoved = false;
-      codeWoGenerics = codeWoGenerics.replace(/([<]?)<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*>([=]?)/g, replaceFunc);
+      codeWoGenerics = codeWoGenerics.replace(/([<]?)<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\[\])*(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\[\])*(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*>([=]?)/g, replaceFunc);
     } while (genericsWereRemoved);
 
     var atoms = splitToAtoms(codeWoGenerics);

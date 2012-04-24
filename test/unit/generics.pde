@@ -61,3 +61,30 @@ if(j<<q>0) { i = 22; } _checkEqual(i, 22);
 // if(0<j>>q) { i = 33; } _checkEqual(i, 33);
 // void func1(boolean a, boolean b) {} func1(0<j,q> 0);
 
+
+// test array notation
+String[] strarr = {"a","b","c"};
+HashMap<String, String[]> hms1 = new HashMap<String, String[]>();
+hms1.put("a",strarr);
+_checkEqual(hms1.get("a"), strarr);
+
+HashMap<String[], String> hms2 = new HashMap<String[], String>();
+hms2.put(strarr,"a");
+_checkEqual(hms2.get(strarr),"a");
+
+HashMap<String[], String[]> hms3 = new HashMap<String[], String[]>();
+hms3.put(strarr,strarr);
+_checkEqual(hms3.get(strarr),strarr);
+
+String[][] strarr2 = {{"a","b","c"}};
+HashMap<String, String[][]> hms4 = new HashMap<String, String[][]>();
+hms4.put("a",strarr2);
+_checkEqual(hms4.get("a"), strarr2);
+
+HashMap<String[][], String> hms5 = new HashMap<String[][], String>();
+hms5.put(strarr2,"a");
+_checkEqual(hms5.get(strarr2),"a");
+
+HashMap<String[][], String[][]> hms6 = new HashMap<String[][], String[][]>();
+hms5.put(strarr2,strarr2);
+_checkEqual(hms5.get(strarr2),strarr2);
