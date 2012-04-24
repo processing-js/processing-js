@@ -409,7 +409,7 @@ var tests = [
   { path: "falloff-amb-2.pde", tags: ["3D"], knownFailureTicket: "1678" },
   { path: "falloff-amb-3.pde", tags: ["3D"], knownFailureTicket: "1678" },
   
-  // Transparency
+  // 3D Transparency tests
   { path: "transp-rect-1.pde", tags: ["3D"] },
   { path: "transp-rect-2.pde", tags: ["3D"] },
   { path: "transp-rect-3.pde", tags: ["3D"] },
@@ -419,6 +419,8 @@ var tests = [
   { path: "transp-box-1.pde", tags: ["3D"] },
   { path: "transp-box-2.pde", tags: ["3D"] },
   { path: "transp-box-3.pde", tags: ["3D"] },
+  { path: "transp-box-4.pde", tags: ["3D"] },
+  { path: "transp-box-5.pde", tags: ["3D"] },
 
   { path: "transp-line-1.pde", tags: ["3D"] },
   { path: "transp-line-2.pde", tags: ["3D"] }
