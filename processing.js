@@ -12195,6 +12195,15 @@
     };
 
     /**
+     * The breakShape() function is used inside a beginShape()/endShape() section
+     * to effect 'cutouts' in multi-vertex shapes. This function is available in
+     * Processing, but is undocumented.
+     */
+    p.breakShape = function() {
+      pathStart = true; 
+    };
+
+    /**
      * All shapes are constructed by connecting a series of vertices. <b>vertex()</b> is used to specify the vertex
      * coordinates for points, lines, triangles, quads, and polygons and is used exclusively within the <b>beginShape()</b>
      * and <b>endShape()</b> function. <br /><br />Drawing a vertex in 3D using the <b>z</b> parameter requires the P3D or
@@ -12413,7 +12422,13 @@
     };
 
     /**
-     * HELPER FUNCTION
+     * Drawing2d.prototype.endShape() helper function
+     * for setting the fill and stroke color for sections
+     * of a shape
+     *
+     * @param {boolean} doFill indicates whether or not to use a fill color
+     * @param {boolean} doStroke indicates whether or not to use a stroke color
+     * @param {object} colordata an object {fillColor,strokeColor} indicating the colors to use
      */
     function setFillStroke(doFill, doStroke, colordata) {
         if (doFill) {
@@ -12721,10 +12736,14 @@
     };
 
     /**
-     * EXPERIMENTAL FUNCTION
+     * The endShape() function is the companion to beginShape() and may only be called after beginShape().
+     * When endshape() is called, all of image data defined since the previous call to beginShape() is written
+     * into the image buffer.
+     *
+     * @param {int} MODE Use CLOSE to close the shape
+     *
+     * @see beginShape
      */
-    p.breakShape = function() { pathStart = true; };
-
     Drawing3D.prototype.endShape = function(mode) {
       // Duplicated in Drawing3D; too many variables used
       if (vertArray.length === 0) { return; }
