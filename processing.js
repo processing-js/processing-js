@@ -19799,7 +19799,7 @@
    * been set up for a page. This function exists mostly for pages
    * that swap content in/out without reloading a page.
    */
-  var reload = Processing.reload = function() {
+  Processing.reload = function() {
     if (processingInstances.length > 0) {
       // unload sketches
       for (var i = processingInstances.length - 1; i >= 0; i--) {
