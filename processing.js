@@ -8306,7 +8306,6 @@
         detachEventHandler(eventHandlers[i]);
       }
       curSketch.onExit();
-      
     };
 
     ////////////////////////////////////////////////////////////////////////////
