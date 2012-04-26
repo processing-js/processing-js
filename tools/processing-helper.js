@@ -23,22 +23,23 @@
     if (!checkbox) {
       return false;
     }
-    return checkbox.checked;
+    return checkbox.checked || checkbox.value;
   }
 
   global.runSketch = function(callback) {
-    callback = callback || function(){};
     try {
       output.value = '';
       canvas = createCanvas();
       var sketch = Processing.compile(code.value);
 
-      if (waitForExit()) {
+      if (callback) {
+        if (!/exit\(\);/.test(code.value)) {
+          throw "exit() not found in sketch. Add the exit() command, and re-run the sketch.";
+        }
         sketch.onExit = callback;
         instance = new Processing(canvas, sketch);
       } else {
         instance = new Processing(canvas, sketch);
-        callback();
       }
     } catch (e) {
       output.value = "Error! Error was:\n" + e.toString();

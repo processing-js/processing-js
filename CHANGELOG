@@ -1,3 +1,125 @@
+October 13, 2011 - Release 1.3.6
+
+  * Fixed arc() not filling the last half degree [#1717]
+  * Fixed camera() call order regression in 1.3.5 [#1714]
+  * Fixed delay() to throw an unsupported function error [#1724]
+
+October 5, 2011 - Release 1.3.5
+
+  * Added check for canvas in Processing ctor [#1646]
+  * Added document.head compatibility for Firefox 3.6 [#1660]
+  * Added reference to p instance in onLoad() [#1643]
+  * Added text(string, x, y, z) ref tests [#1642]
+  * Disabled WebGL anti-aliasing [#1701]
+  * Fixed PImage.mask() when passed a PImage created from a PGraphics [#1623]
+  * Fixed PImage.toImageData not using cache [#1647]
+  * Fixed colorMode not working in 3D [#1670]
+  * Fixed copy() without a source argument [#1631]
+  * Fixed frustum() not throwing an error in 2D mode [#1693]
+  * Fixed get() not returning a copy of a PImage [#1622]
+  * Fixed get(x,y) when called on 3D PGraphics [#1630]
+  * Fixed getUniformLocation checking for null [#1650]
+  * Fixed lights not being applied to textures [#1503]
+  * Fixed modelX/Y/Z() failing if camera() was not called first [#1103]
+  * Fixed noFill()/noStroke() not working if called before size() [#1417]
+  * Fixed pixels not allowed as a variable name in classes [#1674]
+  * Fixed pmouseX/Y values during draw() [#1635]
+  * Fixed rectMode() not working in 3D [#1656]
+  * Fixed textWidth() returning a string instead of a number [#1624]
+  * Fixed texture UV coordinates not normalized and clamped with NPOT textures [#1669]
+  * Fixed texture() modifying a NPOT PImage passed to it [#1664]
+  * Fixed tint() ignoring alpha parameter [#1625]
+  * Fixed tint() not marking a PImage as dirty [#1707]
+  * Fixed using p as a class member identifier [#1618]
+  * Fixed vertical align in textAlign() [#1628]
+  * Optimized use of curRectMode and curEllipseMode [#1676]
+  * Removed p.Import [#1632]
+  * Removed unused inDraw variable [#1641]
+
+August 24, 2011 - Release 1.3.0
+
+  * Added a chart to the perf test suite
+  * Added an error message to the ref test builder if 'exit()' is not found in the sketch
+  * Added blendColor ref tests
+  * Added codePointAt to the String object
+  * Added documentation to toP5String function
+  * Added equalsIgnoresCase to String object
+  * Added error messages to beginCamera and endCamera when used in 2D mode
+  * Added error messages to Processing file and I/O functions that are unsupported by Processing.js
+  * Added printMatrix unit tests
+  * Added resetMatrix unit tests
+  * Added rounded rect
+  * Added screenWidth and screenHeight variables to match Processing v2.0
+  * Added script to build process to replace PConstants.* with their numerical values
+  * Added startsWith and endsWith to the String object
+  * Added support for external javascript code to add images to the imageCache
+  * Added tint perf and ref tests
+  * Added toArray() to the Array object
+  * Added transparency perf test
+  * Changed function(){} to the Processing local variable 'nop'
+  * Changed obj.constructor type-checking to typeof(obj)
+  * Changed perf tests to use exit()
+  * Changed Processing.js errors to throw instead of print to tinylog
+  * Converted animated test suite tests to ref tests
+  * Converted XMLElement unit tests to use XMLElement.parse(string) instead of XMLElement(string)
+  * Fixed crisp not working properly when any transformations were applied to the sketch
+  * Fixed CSS font declaration when using SVG fonts
+  * Fixed default vertical align in textMode(halign, valign) to BASELINE
+  * Fixed equalsIgnoreCase to use toLowerCase rather than RegEx(//i)
+  * Fixed fake-dom.js returning the same canvas every time createElement is called
+  * Fixed font metrics (textAscent, textDescent, etc.)
+  * Fixed font preloading not checking whether a @font-face rule already exists
+  * Fixed font preloading to use tinyfont
+  * Fixed font quoting bug in computeFontMetrics
+  * Fixed HashMap.values() so that it returns an ArrayList
+  * Fixed hex literal #FFFFFF not being converted to an int properly
+  * Fixed HSB functions ignoring colorMode range in grayscale
+  * Fixed httpd.py webserver to be multi-threaded and MSIE compatible
+  * Fixed image() not working in 3D mode
+  * Fixed lerpColor generating incorrect values in HSB color mode
+  * Fixed make release-files creating the temporary file in the wrong directory
+  * Fixed mandelbrot.pde and histogram.pde ref tests
+  * Fixed MSIE crash when loading from a <script> element
+  * Fixed negative color and opacity values returning incorrect results
+  * Fixed performance loss when drawing images at fractional co-ordinates
+  * Fixed PImage.get not returning valid data
+  * Fixed rectMode() regressions caused by @pjs crisp removal
+  * Fixed runtests.py to use Unix paths only
+  * Fixed screenXYZ.pde unit test
+  * Fixed sketch starting before font preloading is done
+  * Fixed smooth() and noSmooth() to use new image-rendering modes
+  * Fixed SVG loading in Opera
+  * Fixed SVG path handling for 'z' and 'Z'
+  * Fixed text-width.pde ref test to use the correct font
+  * Fixed text$4 and text$6 font alignment
+  * Fixed textAlign and textMode not getting saved in pushStyle() and popStyle()
+  * Fixed textSize not caching textAscent, textDescent, and textLeading
+  * Fixed tint() to work with texture()
+  * Fixed vertex() not working with optional parameters
+  * Fixed vertical align behaviour
+  * Fixed XMLElement.parse when parsing a string with '.svg' or '.xml'
+  * Improved the performance of blend modes
+  * Improved the performance of blend()
+  * Improved the performance of images created with createImage()
+  * Improved the performance of PVector
+  * Reduced the number of canvas objects the ref test runner creates so that tests pass on Chrome in Windows
+  * Refactored forwardTransform and reverseTransform into modelView and modelViewInverse
+  * Refactored PFont
+  * Refactored point(), line(), and rect() to draw crisp lines
+  * Refactored Processing.js to have no else after return or throw
+  * Refactored unbinary()
+  * Removed @pjs crisp directive
+  * Removed color profiles from all images used in our ref test suite
+  * Removed comments from the release version of Processing.js
+  * Removed reliance on use3DContext variable
+  * Removed textMode(SCREEN)
+  * Removed unused 'Keys and Keystrokes' variables
+  * Removed unused function colorBlendWithAlpha
+  * Removed use of .apply(this, arguments)
+  * Removed use of parseFloat and parseInt as cast operators
+  * Replaced 'new Date().getTime()' with 'Date.now()'
+  * Switched back to YUI compressor for this release, as Google Closure was producing buggy code
+
 July 14, 2011 - Release 1.2.3
 
   * Added a note to the test suite about Opera failing Cursor

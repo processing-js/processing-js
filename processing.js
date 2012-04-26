@@ -1,3 +1,4 @@
+
 (function(window, document, Math, undef) {
 
   var nop = function(){};
@@ -7,9 +8,8 @@
       return function(msg) {
         window.console.log('Processing.js: ' + msg);
       };
-    } else {
-      return nop();
     }
+    return nop();
   }());
 
   var ajax = function(url) {
@@ -27,6 +27,9 @@
 
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
+  // document.head polyfill for the benefit of Firefox 3.6
+  document.head = document.head || document.getElementsByTagName('head')[0];
+
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
   function setupTypedArray(name, fallback) {
     // Check if TypedArray exists, and use if so.
@@ -37,18 +40,19 @@
     // Check if WebGLArray exists
     if (typeof window[fallback] === "function") {
       return window[fallback];
-    } else {
-      // Use Native JS array
-      return function(obj) {
-        if (obj instanceof Array) {
-          return obj;
-        } else if (typeof obj === "number") {
-          var arr = [];
-          arr.length = obj;
-          return arr;
-        }
-      };
     }
+
+    // Use Native JS array
+    return function(obj) {
+      if (obj instanceof Array) {
+        return obj;
+      }
+      if (typeof obj === "number") {
+        var arr = [];
+        arr.length = obj;
+        return arr;
+      }
+    };
   }
 
   var Float32Array = setupTypedArray("Float32Array", "WebGLFloatArray"),
@@ -58,6 +62,10 @@
 
   /* Browsers fixes end */
 
+  /**
+   * NOTE: in releases we replace symbolic PConstants.* names with their values.
+   * Using PConstants.* in code below is fine.  See tools/rewrite-pconstants.js.
+   */
   var PConstants = {
     X: 0,
     Y: 1,
@@ -367,16 +375,17 @@
         hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
       }
       return hash;
-    } else if (typeof(obj) !== "object") {
-      return obj & 0xFFFFFFFF;
-    } else if (obj.hashCode instanceof Function) {
-      return obj.hashCode();
-    } else {
-      if (obj.$id === undef) {
-        obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
-      }
-      return obj.$id;
     }
+    if (typeof(obj) !== "object") {
+      return obj & 0xFFFFFFFF;
+    }
+    if (obj.hashCode instanceof Function) {
+      return obj.hashCode();
+    }
+    if (obj.$id === undef) {
+        obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+    }
+    return obj.$id;
   }
 
   /**
@@ -392,15 +401,17 @@
   function virtEquals(obj, other) {
     if (obj === null || other === null) {
       return (obj === null) && (other === null);
-    } else if (typeof (obj) === "string") {
-      return obj === other;
-    } else if (typeof(obj) !== "object") {
-      return obj === other;
-    } else if (obj.equals instanceof Function) {
-      return obj.equals(other);
-    } else {
+    }
+    if (typeof (obj) === "string") {
       return obj === other;
     }
+    if (typeof(obj) !== "object") {
+      return obj === other;
+    }
+    if (obj.equals instanceof Function) {
+      return obj.equals(other);
+    }
+    return obj === other;
   }
 
   /**
@@ -414,7 +425,8 @@
   var ObjectIterator = function(obj) {
     if (obj.iterator instanceof Function) {
       return obj.iterator();
-    } else if (obj instanceof Array) {
+    }
+    if (obj instanceof Array) {
       // iterate through array items
       var index = -1;
       this.hasNext = function() {
@@ -612,14 +624,13 @@
       this.remove = function(item) {
         if (typeof item === 'number') {
           return array.splice(item, 1)[0];
-        } else {
-          item = this.indexOf(item);
-          if (item > -1) {
-            array.splice(item, 1);
-            return true;
-          }
-          return false;
         }
+        item = this.indexOf(item);
+        if (item > -1) {
+          array.splice(item, 1);
+          return true;
+        }
+        return false;
       };
 
       /**
@@ -950,18 +961,36 @@
 
       this.keySet = function() {
         return new Set(
+          // get key from pair
+          function(pair) {
+            return pair.key;
+          },
+          // is-in test
+          function(key) {
+            return hashMap.containsKey(key);
+          },
+          // remove from hashmap by key
+          function(key) {
+            return hashMap.remove(key);
+          }
+        );
+      };
 
-        function(pair) {
-          return pair.key;
-        },
-
-        function(key) {
-          return hashMap.containsKey(key);
-        },
-
-        function(key) {
-          return hashMap.remove(key);
-        });
+      this.values = function() {
+        return new Set(
+          // get value from pair
+          function(pair) {
+            return pair.value;
+          },
+          // is-in test
+          function(value) {
+            return hashMap.containsValue(value);
+          },
+          // remove from hashmap by value
+          function(value) {
+            return hashMap.removeByValue(value);
+          }
+        );
       };
 
       this.put = function(key, value) {
@@ -1022,18 +1051,25 @@
         return null;
       };
 
-      this.size = function() {
-        return count;
+      this.removeByValue = function(value) {
+        var bucket, i, ilen, pair;
+        for (bucket in buckets) {
+          if (buckets.hasOwnProperty(bucket)) {
+            for (i = 0, ilen = buckets[bucket].length; i < ilen; i++) {
+              pair = buckets[bucket][i];
+              // removal on values is based on identity, not equality
+              if (pair.value === value) {
+                buckets[bucket].splice(i, 1);
+                return true;
+              }
+            }
+          }
+        }
+        return false;
       };
 
-      this.values = function() {
-        var result = [];
-        var it = this.entrySet().iterator();
-        while (it.hasNext()) {
-          var entry = it.next();
-          result.push(entry.getValue());
-        }
-        return result;
+      this.size = function() {
+        return count;
       };
     }
 
@@ -1138,9 +1174,8 @@
       dot: function(v, y, z) {
         if (arguments.length === 1) {
           return (this.x * v.x + this.y * v.y + this.z * v.z);
-        } else {
-          return (this.x * v + this.y * y + this.z * z);
         }
+        return (this.x * v + this.y * y + this.z * z);
       },
       cross: function(v) {
         var x = this.x,
@@ -1200,6 +1235,7 @@
   defaultScope.HashMap     = HashMap;
   defaultScope.PVector     = PVector;
   defaultScope.ObjectIterator = ObjectIterator;
+  defaultScope.PConstants  = PConstants;
   //defaultScope.PImage    = PImage;     // TODO
   //defaultScope.PShape    = PShape;     // TODO
   //defaultScope.PShapeSVG = PShapeSVG;  // TODO
@@ -1279,9 +1315,8 @@
       object[name] = function() {
         if (arguments.length === args) {
           return fn.apply(this, arguments);
-        } else {
-          return oldfn.apply(this, arguments);
         }
+        return oldfn.apply(this, arguments);
       };
     } else {
       object[name] = fn;
@@ -1457,7 +1492,7 @@
     var unsupportedP5 = ("open() createOutput() createInput() BufferedReader selectFolder() " +
                          "dataPath() createWriter() selectOutput() beginRecord() " +
                          "saveStream() endRecord() selectInput() saveBytes() createReader() " +
-                         "beginRaw() endRaw() PrintWriter").split(" "),
+                         "beginRaw() endRaw() PrintWriter delay()").split(" "),
         count = unsupportedP5.length,
         prettyName,
         p5Name;
@@ -1475,6 +1510,14 @@
       Processing[p5Name] = createUnsupportedFunc(prettyName);
     }
   }(defaultScope));
+
+  // screenWidth and screenHeight are shared by all instances.
+  // and return the width/height of the browser's viewport.
+  defaultScope.defineProperty(defaultScope, 'screenWidth',
+    { get: function() { return window.innerWidth; } });
+
+  defaultScope.defineProperty(defaultScope, 'screenHeight',
+    { get: function() { return window.innerHeight; } });
 
   // Manage multiple Processing instances
   var processingInstances = [];
@@ -1494,10 +1537,346 @@
   };
 
 
-  var Processing = this.Processing = function(curElement, aCode) {
+  ////////////////////////////////////////////////////////////////////////////
+  // PFONT.JS START
+  ////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * [internal function] computeFontMetrics() calculates various metrics for text
+   * placement. Currently this function computes the ascent, descent and leading
+   * (from "lead", used for vertical space) values for the currently active font.
+   */
+  function computeFontMetrics(pfont) {
+    var emQuad = 250,
+        correctionFactor = pfont.size / emQuad,
+        canvas = document.createElement("canvas");
+    canvas.width = 2*emQuad;
+    canvas.height = 2*emQuad;
+    canvas.style.opacity = 0;
+    var cfmFont = pfont.getCSSDefinition(emQuad+"px", "normal"),
+        ctx = canvas.getContext("2d");
+    ctx.font = cfmFont;
+    pfont.context2d = ctx;
+
+    // Size the canvas using a string with common max-ascent and max-descent letters.
+    // Changing the canvas dimensions resets the context, so we must reset the font.
+    var protrusions = "dbflkhyjqpg";
+    canvas.width = ctx.measureText(protrusions).width;
+    ctx.font = cfmFont;
+
+    // for text lead values, we meaure a multiline text container.
+    var leadDiv = document.createElement("div");
+    leadDiv.style.position = "absolute";
+    leadDiv.style.opacity = 0;
+    leadDiv.style.fontFamily = '"' + pfont.name + '"';
+    leadDiv.style.fontSize = emQuad + "px";
+    leadDiv.innerHTML = protrusions + "<br/>" + protrusions;
+    document.body.appendChild(leadDiv);
+
+    var w = canvas.width,
+        h = canvas.height,
+        baseline = h/2;
+
+    // Set all canvas pixeldata values to 255, with all the content
+    // data being 0. This lets us scan for data[i] != 255.
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "black";
+    ctx.fillText(protrusions, 0, baseline);
+    var pixelData = ctx.getImageData(0, 0, w, h).data;
+
+    // canvas pixel data is w*4 by h*4, because R, G, B and A are separate,
+    // consecutive values in the array, rather than stored as 32 bit ints.
+    var i = 0,
+        w4 = w * 4,
+        len = pixelData.length;
+
+    // Finding the ascent uses a normal, forward scanline
+    while (++i < len && pixelData[i] === 255) {
+      nop();
+    }
+    var ascent = Math.round(i / w4);
+
+    // Finding the descent uses a reverse scanline
+    i = len - 1;
+    while (--i > 0 && pixelData[i] === 255) {
+      nop();
+    }
+    var descent = Math.round(i / w4);
+
+    // set font metrics
+    pfont.ascent = correctionFactor * (baseline - ascent);
+    pfont.descent = correctionFactor * (descent - baseline);
+
+    // Then we try to get the real value from the browser
+    if (document.defaultView.getComputedStyle) {
+      var leadDivHeight = document.defaultView.getComputedStyle(leadDiv,null).getPropertyValue("height");
+      leadDivHeight = correctionFactor * leadDivHeight.replace("px","");
+      if (leadDivHeight >= pfont.size * 2) {
+        pfont.leading = Math.round(leadDivHeight/2);
+      }
+    }
+    document.body.removeChild(leadDiv);
+  }
+
+  // Defines system (non-SVG) font.
+  function PFont(name, size) {
+    // according to the P5 API, new PFont() is legal (albeit completely useless)
+    if (name === undef) {
+      name = "";
+    }
+    this.name = name;
+    if (size === undef) {
+      size = 0;
+    }
+    this.size = size;
+    this.glyph = false;
+    this.ascent = 0;
+    this.descent = 0;
+    // For leading, the "safe" value uses the standard TEX ratio
+    this.leading = 1.2 * size;
+
+    // Note that an italic, bold font must used "... Bold Italic"
+    // in P5. "... Italic Bold" is treated as normal/normal.
+    var illegalIndicator = name.indexOf(" Italic Bold");
+    if (illegalIndicator !== -1) {
+      name = name.substring(0, illegalIndicator);
+    }
+
+    // determine font style
+    this.style = "normal";
+    var italicsIndicator = name.indexOf(" Italic");
+    if (italicsIndicator !== -1) {
+      name = name.substring(0, italicsIndicator);
+      this.style = "italic";
+    }
+
+    // determine font weight
+    this.weight = "normal";
+    var boldIndicator = name.indexOf(" Bold");
+    if (boldIndicator !== -1) {
+      name = name.substring(0, boldIndicator);
+      this.weight = "bold";
+    }
+
+    // determine font-family name
+    this.family = "sans-serif";
+    if (name !== undef) {
+      switch(name) {
+        case "sans-serif":
+        case "serif":
+        case "monospace":
+        case "fantasy":
+        case "cursive":
+          this.family = name;
+          break;
+        default:
+          this.family = '"' + name + '", sans-serif';
+          break;
+      }
+    }
+    // Calculate the ascent/descent/leading value based on
+    // how the browser renders this font.
+    this.context2d = null;
+    computeFontMetrics(this);
+    this.css = this.getCSSDefinition();
+    this.context2d.font = this.css;
+  }
+
+  /**
+  * This function generates the CSS "font" string for this PFont
+  */
+  PFont.prototype.getCSSDefinition = function(fontSize, lineHeight) {
+    if(fontSize===undef) {
+      fontSize = this.size + "px";
+    }
+    if(lineHeight===undef) {
+      lineHeight = this.leading + "px";
+    }
+    // CSS "font" definition: font-style font-variant font-weight font-size/line-height font-family
+    var components = [this.style, "normal", this.weight, fontSize + "/" + lineHeight, this.family];
+    return components.join(" ");
+  };
+
+  /**
+  * We cannot rely on there being a 2d context available,
+  * because we support OPENGL sketches, and canvas3d has
+  * no "measureText" function in the API.
+  */
+  PFont.prototype.measureTextWidth = function(string) {
+    return this.context2d.measureText(string).width;
+  };
+
+  /**
+  * Global "loaded fonts" list, internal to PFont
+  */
+  PFont.PFontCache = {};
+
+  /**
+  * This function acts as single access point for getting and caching
+  * fonts across all sketches handled by an instance of Processing.js
+  */
+  PFont.get = function(fontName, fontSize) {
+    var cache = PFont.PFontCache;
+    var idx = fontName+"/"+fontSize;
+    if (!cache[idx]) {
+      cache[idx] = new PFont(fontName, fontSize);
+    }
+    return cache[idx];
+  };
+
+  /**
+  * Lists all standard fonts. Due to browser limitations, this list is
+  * not the system font list, like in P5, but the CSS "genre" list.
+  */
+  PFont.list = function() {
+    return ["sans-serif", "serif", "monospace", "fantasy", "cursive"];
+  };
+
+  /**
+  * Loading external fonts through @font-face rules is handled by PFont,
+  * to ensure fonts loaded in this way are globally available.
+  */
+  PFont.preloading = {
+    // template element used to compare font sizes
+    template: {},
+    // indicates whether or not the reference tiny font has been loaded
+    initialized: false,
+    // load the reference tiny font via a css @font-face rule
+    initialize: function() {
+      var generateTinyFont = function() {
+        var encoded = "#E3KAI2wAgT1MvMg7Eo3VmNtYX7ABi3CxnbHlm" +
+                      "7Abw3kaGVhZ7ACs3OGhoZWE7A53CRobXR47AY3" +
+                      "AGbG9jYQ7G03Bm1heH7ABC3CBuYW1l7Ae3AgcG" +
+                      "9zd7AI3AE#B3AQ2kgTY18PPPUACwAg3ALSRoo3" +
+                      "#yld0xg32QAB77#E777773B#E3C#I#Q77773E#" +
+                      "Q7777777772CMAIw7AB77732B#M#Q3wAB#g3B#" +
+                      "E#E2BB//82BB////w#B7#gAEg3E77x2B32B#E#" +
+                      "Q#MTcBAQ32gAe#M#QQJ#E32M#QQJ#I#g32Q77#";
+        var expand = function(input) {
+                       return "AAAAAAAA".substr(~~input ? 7-input : 6);
+                     };
+        return encoded.replace(/[#237]/g, expand);
+      };
+      var fontface = document.createElement("style");
+      fontface.setAttribute("type","text/css");
+      fontface.innerHTML =  "@font-face {\n" +
+                            '  font-family: "PjsEmptyFont";' + "\n" +
+                            "  src: url('data:application/x-font-ttf;base64,"+generateTinyFont()+"')\n" +
+                            "       format('truetype');\n" +
+                            "}";
+      document.head.appendChild(fontface);
+
+      // set up the template element
+      var element = document.createElement("span");
+      element.style.cssText = 'position: absolute; top: 0; left: 0; opacity: 0; font-family: "PjsEmptyFont", fantasy;';
+      element.innerHTML = "AAAAAAAA";
+      document.body.appendChild(element);
+      this.template = element;
+
+      this.initialized = true;
+    },
+    // Shorthand function to get the computed width for an element.
+    getElementWidth: function(element) {
+      return document.defaultView.getComputedStyle(element,"").getPropertyValue("width");
+    },
+    // time taken so far in attempting to load a font
+    timeAttempted: 0,
+    // returns false if no fonts are pending load, or true otherwise.
+    pending: function(intervallength) {
+      if (!this.initialized) {
+        this.initialize();
+      }
+      var element,
+          computedWidthFont,
+          computedWidthRef = this.getElementWidth(this.template);
+      for (var i = 0; i < this.fontList.length; i++) {
+        // compares size of text in pixels. if equal, custom font is not yet loaded
+        element = this.fontList[i];
+        computedWidthFont = this.getElementWidth(element);
+        if (this.timeAttempted < 4000 && computedWidthFont === computedWidthRef) {
+          this.timeAttempted += intervallength;
+          return true;
+        } else {
+          document.body.removeChild(element);
+          this.fontList.splice(i--, 1);
+          this.timeAttempted = 0;
+        }
+      }
+      // if there are no more fonts to load, pending is false
+      if (this.fontList.length === 0) {
+        return false;
+      }
+      // We should have already returned before getting here.
+      // But, if we do get here, length!=0 so fonts are pending.
+      return true;
+    },
+    // fontList contains elements to compare font sizes against a template
+    fontList: [],
+    // addedList contains the fontnames of all the fonts loaded via @font-face
+    addedList: {},
+    // adds a font to the font cache
+    // creates an element using the font, to start loading the font,
+    // and compare against a default font to see if the custom font is loaded
+    add: function(fontSrc) {
+      if (!this.initialized) {
+       this.initialize();
+      }
+      // fontSrc can be a string or a javascript object
+      // acceptable fonts are .ttf, .otf, and data uri
+      var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
+          fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
+
+      // check whether we already created the @font-face rule for this font
+      if (this.addedList[fontName]) {
+        return;
+      }
+
+      // if we didn't, create the @font-face rule
+      var style = document.createElement("style");
+      style.setAttribute("type","text/css");
+      style.innerHTML = "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
+      document.head.appendChild(style);
+      this.addedList[fontName] = true;
+
+      // also create the element to load and compare the new font
+      var element = document.createElement("span");
+      element.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0;";
+      element.style.fontFamily = '"' + fontName + '", "PjsEmptyFont", fantasy';
+      element.innerHTML = "AAAAAAAA";
+      document.body.appendChild(element);
+      this.fontList.push(element);
+    }
+  };
+
+
+  // add to the default scope
+  defaultScope.PFont = PFont;
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // PFONT.JS END
+  ////////////////////////////////////////////////////////////////////////////
+
+
+  var Processing = this.Processing = function(aCanvas, aCode) {
     // Previously we allowed calling Processing as a func instead of ctor, but no longer.
     if (!(this instanceof Processing)) {
       throw("called Processing constructor as if it were a function: missing 'new'.");
+    }
+
+    var curElement,
+      pgraphicsMode = (aCanvas === undef && aCode === undef);
+
+    if (pgraphicsMode) {
+      curElement = document.createElement("canvas");
+    } else {
+      // We'll take a canvas element or a string for a canvas element's id
+      curElement = typeof aCanvas === "string" ? document.getElementById(aCanvas) : aCanvas;
+    }
+
+    if (!(curElement instanceof HTMLCanvasElement)) {
+      throw("called Processing constructor without passing canvas element reference or id.");
     }
 
     function unimplemented(s) {
@@ -1507,11 +1886,6 @@
     // When something new is added to "p." it must also be added to the "names" array.
     // The names array contains the names of everything that is inside "p."
     var p = this;
-
-    var pgraphicsMode = (arguments.length === 0);
-    if (pgraphicsMode) {
-      curElement = document.createElement("canvas");
-    }
 
     // PJS specific (non-p5) methods and properties to externalize
     p.externals = {
@@ -1587,11 +1961,12 @@
         currentFillColor = 0xFFFFFFFF,
         isFillDirty = true,
         doStroke = true,
-        strokeStyle = [0.8, 0.8, 0.8, 1.0],
-        currentStrokeColor = 0xFFFDFDFD,
+        strokeStyle = [0.0, 0.0, 0.0, 1.0],
+        currentStrokeColor = 0xFF000000,
         isStrokeDirty = true,
         lineWidth = 1,
         loopStarted = false,
+        renderSmooth = false,
         doLoop = true,
         looping = 0,
         curRectMode = PConstants.CORNER,
@@ -1600,7 +1975,6 @@
         normalY = 0,
         normalZ = 0,
         normalMode = PConstants.NORMAL_MODE_AUTO,
-        inDraw = false,
         curFrameRate = 60,
         curMsPerFrame = 1000/curFrameRate,
         curCursor = PConstants.ARROW,
@@ -1619,13 +1993,13 @@
         colorModeZ = 255,
         pathOpen = false,
         mouseDragging = false,
+        pmouseXLastFrame = 0,
+        pmouseYLastFrame = 0,
         curColorMode = PConstants.RGB,
         curTint = null,
-        curTextSize = 12,
-        curTextFont = {name: "\"Arial\", sans-serif", origName: "Arial"},
-        curTextLeading = 14,
+        curTint3d = null,
         getLoaded = false,
-        start = new Date().getTime(),
+        start = Date.now(),
         timeSinceLastFPS = start,
         framesSinceLastFPS = 0,
         textcanvas,
@@ -1635,13 +2009,6 @@
         bezierDrawMatrix,
         bezierBasisInverse,
         bezierBasisMatrix,
-        // Keys and Keystrokes
-        firstCodedDown = true,    // first coded key stroke
-        firstEDGKeyDown = true,   // first Enter - Delete Google key stroke
-        firstEDMKeyDown = true,   // first Enter - Delete Mozilla key stroke
-        firstMKeyDown = true,     // first Mozilla key stroke
-        firstGKeyDown = true,     // first Google key stroke
-        gRefire = false,          // Google refire
         curContextCache = { attributes: {}, locations: {} },
         // Shaders
         programObject3D,
@@ -1670,8 +2037,14 @@
         // Text alignment
         horizontalTextAlignment = PConstants.LEFT,
         verticalTextAlignment = PConstants.BASELINE,
-        baselineOffset = 0.2, // percent
-        tMode = PConstants.MODEL,
+        textMode = PConstants.MODEL,
+        // Font state
+        curFontName = "Arial",
+        curTextSize = 12,
+        curTextAscent = 9,
+        curTextDescent = 2,
+        curTextLeading = 14,
+        curTextFont = PFont.get(curFontName, curTextSize),
         // Pixels cache
         originalContext,
         proxyContext = null,
@@ -1712,8 +2085,6 @@
     // Camera defaults and settings
     var cam,
         cameraInv,
-        forwardTransform,
-        reverseTransform,
         modelView,
         modelViewInv,
         userMatrixStack,
@@ -2092,9 +2463,10 @@
       "varying vec2 vTexture;" +
 
       // In Processing, when a texture is used, the fill color is ignored
+      // vec4(1.0,1.0,1.0,0.5)
       "void main(void){" +
       "  if(usingTexture){" +
-      "    gl_FragColor =  vec4(texture2D(sampler, vTexture.xy));" +
+      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy)) * frontColor;" +
       "  }"+
       "  else{" +
       "    gl_FragColor = frontColor;" +
@@ -2131,7 +2503,7 @@
         curContextCache.locations[cacheId] = varLocation;
       }
       // the variable won't be found if it was optimized out.
-      if (varLocation !== -1) {
+      if (varLocation !== null) {
         if (varValue.length === 4) {
           curContext.uniform4fv(varLocation, varValue);
         } else if (varValue.length === 3) {
@@ -2170,7 +2542,7 @@
         curContextCache.locations[cacheId] = varLocation;
       }
       // the variable won't be found if it was optimized out.
-      if (varLocation !== -1) {
+      if (varLocation !== null) {
         if (varValue.length === 4) {
           curContext.uniform4iv(varLocation, varValue);
         } else if (varValue.length === 3) {
@@ -2179,6 +2551,45 @@
           curContext.uniform2iv(varLocation, varValue);
         } else {
           curContext.uniform1i(varLocation, varValue);
+        }
+      }
+    }
+
+    /**
+     * Sets the value of a uniform matrix variable in a program
+     * object. Before calling this function, ensure the correct
+     * program object has been installed as part of the current
+     * rendering state.
+     *
+     * On some systems, if the variable exists in the shader but
+     * isn't used, the compiler will optimize it out and this
+     * function will fail.
+     *
+     * @param {WebGLProgram} programObj program object returned from
+     * createProgramObject
+     * @param {String} varName the name of the variable in the shader
+     * @param {boolean} transpose must be false
+     * @param {Array} matrix an array of 4, 9 or 16 values
+     *
+     * @returns none
+     *
+     * @see uniformi
+     * @see uniformf
+    */
+    function uniformMatrix(cacheId, programObj, varName, transpose, matrix) {
+      var varLocation = curContextCache.locations[cacheId];
+      if(varLocation === undef) {
+        varLocation = curContext.getUniformLocation(programObj, varName);
+        curContextCache.locations[cacheId] = varLocation;
+      }
+      // the variable won't be found if it was optimized out.
+      if (varLocation !== -1) {
+        if (matrix.length === 16) {
+          curContext.uniformMatrix4fv(varLocation, transpose, matrix);
+        } else if (matrix.length === 9) {
+          curContext.uniformMatrix3fv(varLocation, transpose, matrix);
+        } else {
+          curContext.uniformMatrix2fv(varLocation, transpose, matrix);
         }
       }
     }
@@ -2237,73 +2648,6 @@
     }
 
     /**
-     * Sets the value of a uniform matrix variable in a program
-     * object. Before calling this function, ensure the correct
-     * program object has been installed as part of the current
-     * rendering state.
-     *
-     * On some systems, if the variable exists in the shader but
-     * isn't used, the compiler will optimize it out and this
-     * function will fail.
-     *
-     * @param {WebGLProgram} programObj program object returned from
-     * createProgramObject
-     * @param {String} varName the name of the variable in the shader
-     * @param {boolean} transpose must be false
-     * @param {Array} matrix an array of 4, 9 or 16 values
-     *
-     * @returns none
-     *
-     * @see uniformi
-     * @see uniformf
-    */
-    function uniformMatrix(cacheId, programObj, varName, transpose, matrix) {
-      var varLocation = curContextCache.locations[cacheId];
-      if(varLocation === undef) {
-        varLocation = curContext.getUniformLocation(programObj, varName);
-        curContextCache.locations[cacheId] = varLocation;
-      }
-      // the variable won't be found if it was optimized out.
-      if (varLocation !== -1) {
-        if (matrix.length === 16) {
-          curContext.uniformMatrix4fv(varLocation, transpose, matrix);
-        } else if (matrix.length === 9) {
-          curContext.uniformMatrix3fv(varLocation, transpose, matrix);
-        } else {
-          curContext.uniformMatrix2fv(varLocation, transpose, matrix);
-        }
-      }
-    }
-
-    var imageModeCorner = function(x, y, w, h, whAreSizes) {
-      return {
-        x: x,
-        y: y,
-        w: w,
-        h: h
-      };
-    };
-    var imageModeConvert = imageModeCorner;
-
-    var imageModeCorners = function(x, y, w, h, whAreSizes) {
-      return {
-        x: x,
-        y: y,
-        w: whAreSizes ? w : w - x,
-        h: whAreSizes ? h : h - y
-      };
-    };
-
-    var imageModeCenter = function(x, y, w, h, whAreSizes) {
-      return {
-        x: x - w / 2,
-        y: y - h / 2,
-        w: w,
-        h: h
-      };
-    };
-
-    /**
      * Creates a WebGL program object.
      *
      * @param {String} vetexShaderSource
@@ -2340,6 +2684,34 @@
     ////////////////////////////////////////////////////////////////////////////
     // 2D/3D drawing handling
     ////////////////////////////////////////////////////////////////////////////
+    var imageModeCorner = function(x, y, w, h, whAreSizes) {
+      return {
+        x: x,
+        y: y,
+        w: w,
+        h: h
+      };
+    };
+    var imageModeConvert = imageModeCorner;
+
+    var imageModeCorners = function(x, y, w, h, whAreSizes) {
+      return {
+        x: x,
+        y: y,
+        w: whAreSizes ? w : w - x,
+        h: whAreSizes ? h : h - y
+      };
+    };
+
+    var imageModeCenter = function(x, y, w, h, whAreSizes) {
+      return {
+        x: x - w / 2,
+        y: y - h / 2,
+        w: w,
+        h: h
+      };
+    };
+
     // Objects for shared, 2D and 3D contexts
     var DrawingShared = function(){};
     var Drawing2D = function(){};
@@ -2780,26 +3152,25 @@
         var i, j;
         if (typeof child === 'number') {
           return this.children[child];
-        } else {
-          var found;
-          if(child === "" || this.name === child){
-            return this;
-          } else {
-            if(this.nameTable.length > 0) {
-              for(i = 0, j = this.nameTable.length; i < j || found; i++) {
-                if(this.nameTable[i].getName === child) {
-                  found = this.nameTable[i];
-                }
-              }
-              if (found) { return found; }
-            }
-            for(i = 0, j = this.children.length; i < j; i++) {
-              found = this.children[i].getChild(child);
-              if(found) { return found; }
+        }
+        var found;
+        if(child === "" || this.name === child){
+          return this;
+        }
+        if(this.nameTable.length > 0) {
+          for(i = 0, j = this.nameTable.length; i < j || found; i++) {
+            if(this.nameTable[i].getName === child) {
+              found = this.nameTable[i];
+              break;
             }
           }
-          return null;
+          if (found) { return found; }
         }
+        for(i = 0, j = this.children.length; i < j; i++) {
+          found = this.children[i].getChild(child);
+          if(found) { return found; }
+        }
+        return null;
       },
       /**
        * @member PShape
@@ -3678,10 +4049,7 @@
                 cy = endY;
               }
             }
-          } else if (valOf === 90) {
-            //Z
-            nop();
-          } else if (valOf === 122) { //z
+          } else if (valOf === 90 || valOf === 122) { // Z or z (these do the same thing)
             this.close = true;
           }
           lastInstruction = command.toString();
@@ -4102,19 +4470,23 @@
       if (len < 0) { return text; }
       if (text.indexOf("pt") === len) {
         return parseFloat(text.substring(0, len)) * 1.25;
-      } else if (text.indexOf("pc") === len) {
-        return parseFloat( text.substring( 0, len)) * 15;
-      } else if (text.indexOf("mm") === len) {
-        return parseFloat( text.substring(0, len)) * 3.543307;
-      } else if (text.indexOf("cm") === len) {
-        return parseFloat(text.substring(0, len)) * 35.43307;
-      } else if (text.indexOf("in") === len) {
-        return parseFloat(text.substring(0, len)) * 90;
-      } else if (text.indexOf("px") === len) {
-        return parseFloat(text.substring(0, len));
-      } else {
-        return parseFloat(text);
       }
+      if (text.indexOf("pc") === len) {
+        return parseFloat( text.substring( 0, len)) * 15;
+      }
+      if (text.indexOf("mm") === len) {
+        return parseFloat( text.substring(0, len)) * 3.543307;
+      }
+      if (text.indexOf("cm") === len) {
+        return parseFloat(text.substring(0, len)) * 35.43307;
+      }
+      if (text.indexOf("in") === len) {
+        return parseFloat(text.substring(0, len)) * 90;
+      }
+      if (text.indexOf("px") === len) {
+        return parseFloat(text.substring(0, len));
+      }
+      return parseFloat(text);
     };
     /**
      * The shape() function displays shapes to the screen.
@@ -4451,9 +4823,8 @@
       createElement: function () {
         if (arguments.length === 2) {
           return new XMLElement(arguments[0], arguments[1], null, null);
-        } else {
-          return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
         }
+        return new XMLElement(arguments[0], arguments[1], arguments[2], arguments[3]);
       },
       /**
        * @member XMLElement
@@ -4484,7 +4855,8 @@
       hasAttribute: function () {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]) !== null;
-        } else if (arguments.length === 2) {
+        }
+        if (arguments.length === 2) {
           return this.getAttribute(arguments[0],arguments[1]) !== null;
         }
       },
@@ -4524,9 +4896,8 @@
             if (!child1.equals(child2)) { return false; }
           }
           return true;
-        } else {
-          return (this.content === other.content);
         }
+        return (this.content === other.content);
       },
       /**
        * @member XMLElement
@@ -4536,9 +4907,11 @@
        */
       getContent: function(){
         if (this.type === "TEXT") {
-          return this.content; }
-        else if (this.children.length === 1 && this.children[0].type === "TEXT") {
-          return this.children[0].content;
+          return this.content;
+        }
+        var children = this.children;
+        if (children.length === 1 && children[0].type === "TEXT") {
+          return children[0].content;
         }
         return null;
       },
@@ -4558,23 +4931,20 @@
           attribute = this.findAttribute(arguments[0]);
           if (attribute) {
             return attribute.getValue();
-          } else {
-            return arguments[1];
           }
+          return arguments[1];
         } else if (arguments.length === 1) {
           attribute = this.findAttribute(arguments[0]);
           if (attribute) {
             return attribute.getValue();
-          } else {
-            return null;
           }
+          return null;
         } else if (arguments.length === 3) {
           attribute = this.findAttribute(arguments[0],arguments[1]);
           if (attribute) {
             return attribute.getValue();
-          } else {
-            return arguments[2];
           }
+          return arguments[2];
         }
       },
       /**
@@ -4591,11 +4961,11 @@
       getStringAttribute: function() {
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]);
-        } else if (arguments.length === 2){
-          return this.getAttribute(arguments[0], arguments[1]);
-        } else {
-          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+        if (arguments.length === 2){
+          return this.getAttribute(arguments[0], arguments[1]);
+        }
+        return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
        * Processing 1.5 XML API wrapper for the generic String
@@ -4618,11 +4988,11 @@
       getFloatAttribute: function() {
         if (arguments.length === 1 ) {
           return parseFloat(this.getAttribute(arguments[0], 0));
-        } else if (arguments.length === 2 ){
-          return this.getAttribute(arguments[0], arguments[1]);
-        } else {
-          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+        if (arguments.length === 2 ){
+          return this.getAttribute(arguments[0], arguments[1]);
+        }
+        return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
        * Processing 1.5 XML API wrapper for the generic float
@@ -4645,11 +5015,11 @@
       getIntAttribute: function () {
         if (arguments.length === 1) {
           return this.getAttribute( arguments[0], 0 );
-        } else if (arguments.length === 2) {
-          return this.getAttribute(arguments[0], arguments[1]);
-        } else {
-          return this.getAttribute(arguments[0], arguments[1],arguments[2]);
         }
+        if (arguments.length === 2) {
+          return this.getAttribute(arguments[0], arguments[1]);
+        }
+        return this.getAttribute(arguments[0], arguments[1],arguments[2]);
       },
       /**
        * Processing 1.5 XML API wrapper for the generic int
@@ -4714,19 +5084,19 @@
         if (typeof arguments[0]  === "number") {
           return this.children[arguments[0]];
         }
-        else if (arguments[0].indexOf('/') !== -1) { // path was given
+        if (arguments[0].indexOf('/') !== -1) { // path was given
           this.getChildRecursive(arguments[0].split("/"), 0);
-        } else {
-          var kid, kidName;
-          for (var i = 0, j = this.getChildCount(); i < j; i++) {
-            kid = this.getChild(i);
-            kidName = kid.getName();
-            if (kidName !== null && kidName === arguments[0]) {
-                return kid;
-            }
-          }
           return null;
         }
+        var kid, kidName;
+        for (var i = 0, j = this.getChildCount(); i < j; i++) {
+          kid = this.getChild(i);
+          kidName = kid.getName();
+          if (kidName !== null && kidName === arguments[0]) {
+              return kid;
+          }
+        }
+        return null;
       },
       /**
        * @member XMLElement
@@ -4745,23 +5115,22 @@
         if (arguments.length === 1) {
           if (typeof arguments[0]  === "number") {
             return this.getChild( arguments[0]);
-          } else if (arguments[0].indexOf('/') !== -1) { // path was given
-            return this.getChildrenRecursive( arguments[0].split("/"), 0);
-          } else {
-            var matches = [];
-            var kid, kidName;
-            for (var i = 0, j = this.getChildCount(); i < j; i++) {
-              kid = this.getChild(i);
-              kidName = kid.getName();
-              if (kidName !== null && kidName === arguments[0]) {
-                matches.push(kid);
-              }
-            }
-            return matches;
           }
-        }else {
-          return this.children;
+          if (arguments[0].indexOf('/') !== -1) { // path was given
+            return this.getChildrenRecursive( arguments[0].split("/"), 0);
+          }
+          var matches = [];
+          var kid, kidName;
+          for (var i = 0, j = this.getChildCount(); i < j; i++) {
+            kid = this.getChild(i);
+            kidName = kid.getName();
+            if (kidName !== null && kidName === arguments[0]) {
+              matches.push(kid);
+            }
+          }
+          return matches;
         }
+        return this.children;
       },
       /**
        * @member XMLElement
@@ -4792,10 +5161,9 @@
             if (kidName !== null && kidName === items[offset]) {
               if (offset === items.length-1) {
                 return kid;
-              } else {
-                offset += 1;
-                return kid.getChildRecursive(items, offset);
               }
+              offset += 1;
+              return kid.getChildRecursive(items, offset);
             }
         }
         return null;
@@ -5015,7 +5383,7 @@
        * The getAttributeCount() function returns the number of attributes for the node
        * that this XMLElement represents.
        *
-       * @return {int} the number of attributes in this XMLelement
+       * @return {int} the number of attributes in this XMLElement
        */
       getAttributeCount: function() {
         return this.attributes.length;
@@ -5523,7 +5891,10 @@
        * The reset() function sets this PMatrix3D to the identity matrix.
        */
       reset: function() {
-        this.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+        this.elements = [1,0,0,0,
+                         0,1,0,0,
+                         0,0,1,0,
+                         0,0,0,1];
       },
       /**
        * @member PMatrix3D
@@ -5558,23 +5929,29 @@
        * The transpose() function transpose this matrix.
        */
       transpose: function() {
-        var temp = this.elements.slice();
-        this.elements[0]  = temp[0];
-        this.elements[1]  = temp[4];
-        this.elements[2]  = temp[8];
-        this.elements[3]  = temp[12];
-        this.elements[4]  = temp[1];
-        this.elements[5]  = temp[5];
-        this.elements[6]  = temp[9];
-        this.elements[7]  = temp[13];
-        this.elements[8]  = temp[2];
-        this.elements[9]  = temp[6];
-        this.elements[10] = temp[10];
-        this.elements[11] = temp[14];
-        this.elements[12] = temp[3];
-        this.elements[13] = temp[7];
-        this.elements[14] = temp[11];
-        this.elements[15] = temp[15];
+        var temp = this.elements[4];
+        this.elements[4] = this.elements[1];
+        this.elements[1] = temp;
+
+        temp = this.elements[8];
+        this.elements[8] = this.elements[2];
+        this.elements[2] = temp;
+
+        temp = this.elements[6];
+        this.elements[6] = this.elements[9];
+        this.elements[9] = temp;
+
+        temp = this.elements[3];
+        this.elements[3] = this.elements[12];
+        this.elements[12] = temp;
+
+        temp = this.elements[7];
+        this.elements[7] = this.elements[13];
+        this.elements[13] = temp;
+
+        temp = this.elements[11];
+        this.elements[11] = this.elements[14];
+        this.elements[14] = temp;
       },
       /**
        * @member PMatrix3D
@@ -5747,7 +6124,8 @@
                      (t * v0 * v2) - (s * v1),
                      (t * v1 * v2) + (s * v0),
                      (t * v2 * v2) + c,
-                     0, 0, 0, 0, 1);
+                     0,
+                     0, 0, 0, 1);
         }
       },
       /**
@@ -5876,34 +6254,32 @@
       multX: function(x, y, z, w) {
         if (!z) {
           return this.elements[0] * x + this.elements[1] * y + this.elements[3];
-        } else if (!w) {
-          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
-        } else {
-          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
         }
+        if (!w) {
+          return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3];
+        }
+        return this.elements[0] * x + this.elements[1] * y + this.elements[2] * z + this.elements[3] * w;
       },
       multY: function(x, y, z, w) {
         if (!z) {
           return this.elements[4] * x + this.elements[5] * y + this.elements[7];
-        } else if (!w) {
-          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
-        } else {
-          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
         }
+        if (!w) {
+          return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7];
+        }
+        return this.elements[4] * x + this.elements[5] * y + this.elements[6] * z + this.elements[7] * w;
       },
       multZ: function(x, y, z, w) {
         if (!w) {
           return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
-        } else {
-          return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
         }
+        return this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11] * w;
       },
       multW: function(x, y, z, w) {
         if (!w) {
           return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15];
-        } else {
-          return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
         }
+        return this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
       },
       /**
        * @member PMatrix3D
@@ -6323,11 +6699,8 @@
     * @see splice
     */
     p.subset = function(array, offset, length) {
-      if (arguments.length === 2) {
-        return array.slice(offset, array.length);
-      } else if (arguments.length === 3) {
-        return array.slice(offset, offset + length);
-      }
+      var end = (length !== undef) ? offset + length : array.length;
+      return array.slice(offset, end);
     };
 
     /**
@@ -6389,17 +6762,11 @@
     *
     * @see contract
     */
-    p.expand = function(ary, newSize) {
-      var temp = ary.slice(0);
-      if (arguments.length === 1) {
-        // double size of array
-        temp.length = ary.length * 2;
-        return temp;
-      } else if (arguments.length === 2) {
-        // size is newSize
-        temp.length = newSize;
-        return temp;
-      }
+    p.expand = function(ary, targetSize) {
+      var temp = ary.slice(0),
+          newSize = targetSize || ary.length * 2;
+      temp.length = newSize;
+      return temp;
     };
 
     /**
@@ -6740,7 +7107,11 @@
 
       a = Math.round(255 * (aValue4 / colorModeA));
 
-      // Limit values greater than 255
+      // Limit values less than 0 and greater than 255
+      r = (r < 0) ? 0 : r;
+      g = (g < 0) ? 0 : g;
+      b = (b < 0) ? 0 : b;
+      a = (a < 0) ? 0 : a;
       r = (r > 255) ? 255 : r;
       g = (g > 255) ? 255 : g;
       b = (b > 255) ? 255 : b;
@@ -6756,17 +7127,18 @@
       // Color int and alpha
       if (aValue1 & PConstants.ALPHA_MASK) {
         a = Math.round(255 * (aValue2 / colorModeA));
+        // Limit values less than 0 and greater than 255
         a = (a > 255) ? 255 : a;
+        a = (a < 0) ? 0 : a;
 
         return aValue1 - (aValue1 & PConstants.ALPHA_MASK) + ((a << 24) & PConstants.ALPHA_MASK);
       }
       // Grayscale and alpha
-      else {
-        if (curColorMode === PConstants.RGB) {
-          return color$4(aValue1, aValue1, aValue1, aValue2);
-        } else if (curColorMode === PConstants.HSB) {
-          return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
-        }
+      if (curColorMode === PConstants.RGB) {
+        return color$4(aValue1, aValue1, aValue1, aValue2);
+      }
+      if (curColorMode === PConstants.HSB) {
+        return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2);
       }
     }
 
@@ -6775,12 +7147,17 @@
       if (aValue1 <= colorModeX && aValue1 >= 0) {
           if (curColorMode === PConstants.RGB) {
             return color$4(aValue1, aValue1, aValue1, colorModeA);
-          } else if (curColorMode === PConstants.HSB) {
+          }
+          if (curColorMode === PConstants.HSB) {
             return color$4(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA);
           }
       }
       // Color int
-      else if (aValue1) {
+      if (aValue1) {
+        if (aValue1 > 2147483647) {
+          // Java Overflow
+          aValue1 -= 4294967296;
+        }
         return aValue1;
       }
     }
@@ -6866,30 +7243,29 @@
 
       if (s === 0) { // Grayscale
         return [br, br, br];
-      } else {
-        var hue = h % 360;
-        var f = hue % 60;
-        var p = Math.round((b * (100 - s)) / 10000 * 255);
-        var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
-        var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
-        switch (Math.floor(hue / 60)) {
-        case 0:
-          return [br, t, p];
-        case 1:
-          return [q, br, p];
-        case 2:
-          return [p, br, t];
-        case 3:
-          return [p, q, br];
-        case 4:
-          return [t, p, br];
-        case 5:
-          return [br, p, q];
-        }
+      }
+      var hue = h % 360;
+      var f = hue % 60;
+      var p = Math.round((b * (100 - s)) / 10000 * 255);
+      var q = Math.round((b * (6000 - s * f)) / 600000 * 255);
+      var t = Math.round((b * (6000 - s * (60 - f))) / 600000 * 255);
+      switch (Math.floor(hue / 60)) {
+      case 0:
+        return [br, t, p];
+      case 1:
+        return [q, br, p];
+      case 2:
+        return [p, br, t];
+      case 3:
+        return [p, q, br];
+      case 4:
+        return [t, p, br];
+      case 5:
+        return [br, p, q];
       }
     };
 
-    p.color.toHSB = function( colorInt ) {
+    function colorToHSB(colorInt) {
       var red, green, blue;
 
       red   = ((colorInt & PConstants.RED_MASK) >>> 16) / 255;
@@ -6901,28 +7277,27 @@
           hue, saturation;
 
       if (min === max) {
-        return [0, 0, max];
+        return [0, 0, max*colorModeZ];
+      }
+      saturation = (max - min) / max;
+
+      if (red === max) {
+        hue = (green - blue) / (max - min);
+      } else if (green === max) {
+        hue = 2 + ((blue - red) / (max - min));
       } else {
-        saturation = (max - min) / max;
+        hue = 4 + ((red - green) / (max - min));
+      }
 
-        if (red === max) {
-          hue = (green - blue) / (max - min);
-        } else if (green === max) {
-          hue = 2 + ((blue - red) / (max - min));
-        } else {
-          hue = 4 + ((red - green) / (max - min));
-        }
+      hue /= 6;
 
-        hue /= 6;
-
-        if (hue < 0) {
-          hue += 1;
-        } else if (hue > 1) {
-          hue -= 1;
-        }
+      if (hue < 0) {
+        hue += 1;
+      } else if (hue > 1) {
+        hue -= 1;
       }
       return [hue*colorModeX, saturation*colorModeY, max*colorModeZ];
-    };
+    }
 
     /**
     * Extracts the brightness value from a color.
@@ -6938,7 +7313,7 @@
     * @see saturation
     */
     p.brightness = function(colInt){
-      return  p.color.toHSB(colInt)[2];
+      return colorToHSB(colInt)[2];
     };
 
     /**
@@ -6955,7 +7330,7 @@
     * @see brightness
     */
     p.saturation = function(colInt){
-      return  p.color.toHSB(colInt)[1];
+      return colorToHSB(colInt)[1];
     };
 
     /**
@@ -6972,7 +7347,7 @@
     * @see brightness
     */
     p.hue = function(colInt){
-      return  p.color.toHSB(colInt)[0];
+      return colorToHSB(colInt)[0];
     };
 
     /**
@@ -7070,27 +7445,55 @@
     * @see color
     */
     p.lerpColor = function(c1, c2, amt) {
-      // Get RGBA values for Color 1 to floats
+      var r, g, b, a, r1, g1, b1, a1, r2, g2, b2, a2;
+      var hsb1, hsb2, rgb, h, s;
       var colorBits1 = p.color(c1);
-      var r1 = (colorBits1 & PConstants.RED_MASK) >>> 16;
-      var g1 = (colorBits1 & PConstants.GREEN_MASK) >>> 8;
-      var b1 = (colorBits1 & PConstants.BLUE_MASK);
-      var a1 = ((colorBits1 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
+      var colorBits2 = p.color(c2);
+
+      if (curColorMode === PConstants.HSB) {
+        // Special processing for HSB mode.
+        // Get HSB and Alpha values for Color 1 and 2
+        hsb1 = colorToHSB(colorBits1);
+        a1 = ((colorBits1 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
+        hsb2 = colorToHSB(colorBits2);
+        a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
+
+        // Return lerp value for each channel, for HSB components
+        h = p.lerp(hsb1[0], hsb2[0], amt);
+        s = p.lerp(hsb1[1], hsb2[1], amt);
+        b = p.lerp(hsb1[2], hsb2[2], amt);
+        rgb = p.color.toRGB(h, s, b);
+        // ... and for Alpha-range
+        a = p.lerp(a1, a2, amt) * colorModeA;
+
+        return (a << 24) & PConstants.ALPHA_MASK |
+               (rgb[0] << 16) & PConstants.RED_MASK |
+               (rgb[1] << 8) & PConstants.GREEN_MASK |
+               rgb[2] & PConstants.BLUE_MASK;
+      }
+
+      // Get RGBA values for Color 1 to floats
+      r1 = (colorBits1 & PConstants.RED_MASK) >>> 16;
+      g1 = (colorBits1 & PConstants.GREEN_MASK) >>> 8;
+      b1 = (colorBits1 & PConstants.BLUE_MASK);
+      a1 = ((colorBits1 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Get RGBA values for Color 2 to floats
-      var colorBits2 = p.color(c2);
-      var r2 = (colorBits2 & PConstants.RED_MASK) >>> 16;
-      var g2 = (colorBits2 & PConstants.GREEN_MASK) >>> 8;
-      var b2 = (colorBits2 & PConstants.BLUE_MASK);
-      var a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
+      r2 = (colorBits2 & PConstants.RED_MASK) >>> 16;
+      g2 = (colorBits2 & PConstants.GREEN_MASK) >>> 8;
+      b2 = (colorBits2 & PConstants.BLUE_MASK);
+      a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      var r = p.lerp(r1, r2, amt) | 0;
-      var g = p.lerp(g1, g2, amt) | 0;
-      var b = p.lerp(b1, b2, amt) | 0;
-      var a = p.lerp(a1, a2, amt) * colorModeA;
+      r = p.lerp(r1, r2, amt) | 0;
+      g = p.lerp(g1, g2, amt) | 0;
+      b = p.lerp(b1, b2, amt) | 0;
+      a = p.lerp(a1, a2, amt) * colorModeA;
 
-      return p.color.toInt(r, g, b, a);
+      return (a << 24) & PConstants.ALPHA_MASK |
+             (r << 16) & PConstants.RED_MASK |
+             (g << 8) & PConstants.GREEN_MASK |
+             b & PConstants.BLUE_MASK;
     };
 
     /**
@@ -7223,14 +7626,14 @@
     * @see rotateZ
     */
     Drawing2D.prototype.translate = function(x, y) {
-      forwardTransform.translate(x, y);
-      reverseTransform.invTranslate(x, y);
+      modelView.translate(x, y);
+      modelViewInv.invTranslate(x, y);
       curContext.translate(x, y);
     };
 
     Drawing3D.prototype.translate = function(x, y, z) {
-      forwardTransform.translate(x, y, z);
-      reverseTransform.invTranslate(x, y, z);
+      modelView.translate(x, y, z);
+      modelViewInv.invTranslate(x, y, z);
     };
 
     /**
@@ -7258,14 +7661,14 @@
     * @see rotateZ
     */
     Drawing2D.prototype.scale = function(x, y) {
-      forwardTransform.scale(x, y);
-      reverseTransform.invScale(x, y);
+      modelView.scale(x, y);
+      modelViewInv.invScale(x, y);
       curContext.scale(x, y || x);
     };
 
     Drawing3D.prototype.scale = function(x, y, z) {
-      forwardTransform.scale(x, y, z);
-      reverseTransform.invScale(x, y, z);
+      modelView.scale(x, y, z);
+      modelViewInv.invScale(x, y, z);
     };
 
     /**
@@ -7328,14 +7731,14 @@
     * @see printMatrix
     */
     Drawing2D.prototype.resetMatrix = function() {
-      forwardTransform.reset();
-      reverseTransform.reset();
+      modelView.reset();
+      modelViewInv.reset();
       curContext.setTransform(1,0,0,1,0,0);
     };
 
     Drawing3D.prototype.resetMatrix = function() {
-      forwardTransform.reset();
-      reverseTransform.reset();
+      modelView.reset();
+      modelViewInv.reset();
     };
 
     /**
@@ -7354,8 +7757,8 @@
     */
     DrawingShared.prototype.applyMatrix = function() {
       var a = arguments;
-      forwardTransform.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
-      reverseTransform.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
+      modelView.apply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
+      modelViewInv.invApply(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
     };
 
     Drawing2D.prototype.applyMatrix = function() {
@@ -7390,8 +7793,8 @@
     * @see pushMatrix
     */
     p.rotateX = function(angleInRadians) {
-      forwardTransform.rotateX(angleInRadians);
-      reverseTransform.invRotateX(angleInRadians);
+      modelView.rotateX(angleInRadians);
+      modelViewInv.invRotateX(angleInRadians);
     };
 
     /**
@@ -7421,8 +7824,8 @@
     };
 
     Drawing3D.prototype.rotateZ = function(angleInRadians) {
-      forwardTransform.rotateZ(angleInRadians);
-      reverseTransform.invRotateZ(angleInRadians);
+      modelView.rotateZ(angleInRadians);
+      modelViewInv.invRotateZ(angleInRadians);
     };
 
     /**
@@ -7448,8 +7851,8 @@
     * @see pushMatrix
     */
     p.rotateY = function(angleInRadians) {
-      forwardTransform.rotateY(angleInRadians);
-      reverseTransform.invRotateY(angleInRadians);
+      modelView.rotateY(angleInRadians);
+      modelViewInv.invRotateY(angleInRadians);
     };
 
     /**
@@ -7476,8 +7879,8 @@
     * @see pushMatrix
     */
     Drawing2D.prototype.rotate = function(angleInRadians) {
-      forwardTransform.rotateZ(angleInRadians);
-      reverseTransform.invRotateZ(angleInRadians);
+      modelView.rotateZ(angleInRadians);
+      modelViewInv.invRotateZ(angleInRadians);
       curContext.rotate(angleInRadians);
     };
 
@@ -7518,7 +7921,14 @@
         'colorModeY': colorModeY,
         'colorModeA': colorModeA,
         'curTextFont': curTextFont,
-        'curTextSize': curTextSize
+        'horizontalTextAlignment': horizontalTextAlignment,
+        'verticalTextAlignment': verticalTextAlignment,
+        'textMode': textMode,
+        'curFontName': curFontName,
+        'curTextSize': curTextSize,
+        'curTextAscent': curTextAscent,
+        'curTextDescent': curTextDescent,
+        'curTextLeading': curTextLeading
       };
 
       styleArray.push(newState);
@@ -7554,7 +7964,14 @@
         colorModeY = oldState.colorModeY;
         colorModeA = oldState.colorModeA;
         curTextFont = oldState.curTextFont;
+        curFontName = oldState.curFontName;
         curTextSize = oldState.curTextSize;
+        horizontalTextAlignment = oldState.horizontalTextAlignment;
+        verticalTextAlignment = oldState.verticalTextAlignment;
+        textMode = oldState.textMode;
+        curTextAscent = oldState.curTextAscent;
+        curTextDescent = oldState.curTextDescent;
+        curTextLeading = oldState.curTextLeading;
       } else {
         throw "Too many popStyle() without enough pushStyle()";
       }
@@ -7674,7 +8091,7 @@
     * @see year
     */
     p.millis = function() {
-      return new Date().getTime() - start;
+      return Date.now() - start;
     };
 
     /**
@@ -7691,39 +8108,47 @@
     * @see noLoop
     * @see loop
     */
-    DrawingShared.prototype.redraw = function() {
-      var sec = (new Date().getTime() - timeSinceLastFPS) / 1000;
+    function redrawHelper() {
+      var sec = (Date.now() - timeSinceLastFPS) / 1000;
       framesSinceLastFPS++;
       var fps = framesSinceLastFPS / sec;
 
       // recalculate FPS every half second for better accuracy.
       if (sec > 0.5) {
-        timeSinceLastFPS = new Date().getTime();
+        timeSinceLastFPS = Date.now();
         framesSinceLastFPS = 0;
         p.__frameRate = fps;
       }
 
       p.frameCount++;
-    };
+    }
 
     Drawing2D.prototype.redraw = function() {
-      DrawingShared.prototype.redraw.apply(this, arguments);
+      redrawHelper();
 
       curContext.lineWidth = lineWidth;
-      inDraw = true;
+      var pmouseXLastEvent = p.pmouseX,
+          pmouseYLastEvent = p.pmouseY;
+      p.pmouseX = pmouseXLastFrame;
+      p.pmouseY = pmouseYLastFrame;
 
       saveContext();
       p.draw();
       restoreContext();
 
-      inDraw = false;
+      pmouseXLastFrame = p.mouseX;
+      pmouseYLastFrame = p.mouseY;
+      p.pmouseX = pmouseXLastEvent;
+      p.pmouseY = pmouseYLastEvent;
     };
 
     Drawing3D.prototype.redraw = function() {
-      DrawingShared.prototype.redraw.apply(this, arguments);
+      redrawHelper();
 
-      inDraw = true;
-
+      var pmouseXLastEvent = p.pmouseX,
+          pmouseYLastEvent = p.pmouseY;
+      p.pmouseX = pmouseXLastFrame;
+      p.pmouseY = pmouseYLastFrame;
       // even if the color buffer isn't cleared with background(),
       // the depth buffer needs to be cleared regardless.
       curContext.clear(curContext.DEPTH_BUFFER_BIT);
@@ -7739,7 +8164,10 @@
       p.camera();
       p.draw();
 
-      inDraw = false;
+      pmouseXLastFrame = p.mouseX;
+      pmouseYLastFrame = p.mouseY;
+      p.pmouseX = pmouseXLastEvent;
+      p.pmouseY = pmouseYLastEvent;
     };
 
     /**
@@ -7781,7 +8209,7 @@
         return;
       }
 
-      timeSinceLastFPS = new Date().getTime();
+      timeSinceLastFPS = Date.now();
       framesSinceLastFPS = 0;
 
       looping = window.setInterval(function() {
@@ -7958,11 +8386,35 @@
     p.beginDraw = nop;
     p.endDraw = nop;
 
-    // Imports an external Processing.js library
-    p.Import = function(lib) {
-      // Replace evil-eval method with a DOM <script> tag insert method that
-      // binds new lib code to the Processing.lib names-space and the current
-      // p context. -F1LT3R
+    /**
+     * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
+     *
+     * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
+     *
+     * @see PImage
+     */
+    Drawing2D.prototype.toImageData = function(x, y, w, h) {
+      x = x !== undef ? x : 0;
+      y = y !== undef ? y : 0;
+      w = w !== undef ? w : p.width;
+      h = h !== undef ? h : p.height;
+      return curContext.getImageData(x, y, w, h);
+    };
+
+    Drawing3D.prototype.toImageData = function(x, y, w, h) {
+      x = x !== undef ? x : 0;
+      y = y !== undef ? y : 0;
+      w = w !== undef ? w : p.width;
+      h = h !== undef ? h : p.height;
+      var c = document.createElement("canvas"),
+          ctx = c.getContext("2d"),
+          obj = ctx.createImageData(w, h),
+          uBuff = new Uint8Array(w * h * 4);
+      curContext.readPixels(x, y, w, h, curContext.RGBA, curContext.UNSIGNED_BYTE, uBuff);
+      for (var i=0, ul=uBuff.length, obj_data=obj.data; i < ul; i++) {
+        obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
+      }
+      return obj;
     };
 
     /**
@@ -7982,23 +8434,6 @@
     // Binary Functions
     ////////////////////////////////////////////////////////////////////////////
 
-    function decToBin(value, numBitsInValue) {
-      var mask = 1;
-      mask = mask << (numBitsInValue - 1);
-
-      var str = "";
-      for (var i = 0; i < numBitsInValue; i++) {
-        str += (mask & value) ? "1" : "0";
-        mask = mask >>> 1;
-      }
-      return str;
-    }
-
-    /*
-      This function does not always work when trying to convert
-      colors and bytes to binary values because the types passed in
-      cannot be determined.
-    */
     /**
     * Converts a byte, char, int, or color to a String containing the equivalent binary
     * notation. For example color(0, 102, 153, 255) will convert to the String
@@ -8015,33 +8450,24 @@
     * @see unbinary
     */
     p.binary = function(num, numBits) {
-      var numBitsInValue = 32;
-
-      // color, int, byte
-      if (typeof num === "number") {
-        if(numBits){
-          numBitsInValue = numBits;
-        }
-        return decToBin(num, numBitsInValue);
-      }
-
-      // char
-      if (num instanceof Char) {
-        num = num.toString().charCodeAt(0);
-        if (numBits) {
-          numBitsInValue = 32;
-        } else {
-          numBitsInValue = 16;
+      var bit;
+      if (numBits > 0) {
+        bit = numBits;
+      } else if(num instanceof Char) {
+        bit = 16;
+        num |= 0; // making it int
+      } else {
+        // autodetect, skipping zeros
+        bit = 32;
+        while (bit > 1 && !((num >>> (bit - 1)) & 1)) {
+          bit--;
         }
       }
-
-      var str = decToBin(num, numBitsInValue);
-
-      // trim string if user wanted less chars
-      if (numBits) {
-        str = str.substr(-numBits);
+      var result = "";
+      while (bit > 0) {
+        result += ((num >>> (--bit)) & 1) ? "1" : "0";
       }
-      return str;
+      return result;
     };
 
     /**
@@ -8057,36 +8483,37 @@
     * @see unbinary
     */
     p.unbinary = function(binaryString) {
-      var binaryPattern = new RegExp("^[0|1]{8}$");
-      var addUp = 0;
-      var i;
-
-      if (binaryString instanceof Array) {
-        var values = [];
-        for (i = 0; i < binaryString.length; i++) {
-          values[i] = p.unbinary(binaryString[i]);
+      var i = binaryString.length - 1, mask = 1, result = 0;
+      while (i >= 0) {
+        var ch = binaryString[i--];
+        if (ch !== '0' && ch !== '1') {
+          throw "the value passed into unbinary was not an 8 bit binary number";
         }
-        return values;
-      } else {
-        if (isNaN(binaryString)) {
-          throw "NaN_Err";
-        } else {
-          if (arguments.length === 1 || binaryString.length === 8) {
-            if (binaryPattern.test(binaryString)) {
-              for (i = 0; i < 8; i++) {
-                addUp += (Math.pow(2, i) * parseInt(binaryString.charAt(7 - i), 10));
-              }
-              return addUp + "";
-            } else {
-              throw "notBinary: the value passed into unbinary was not an 8 bit binary number";
-            }
-          } else {
-            throw "longErr";
-          }
+        if (ch === '1') {
+          result += mask;
         }
+        mask <<= 1;
       }
+      return result;
     };
 
+    /**
+    * Number-to-String formatting function. Prepends "plus" or "minus" depending
+    * on whether the value is positive or negative, respectively, after padding
+    * the value with zeroes on the left and right, the number of zeroes used dictated
+    * by the values 'leftDigits' and 'rightDigits'. 'value' cannot be an array.
+    *
+    * @param {int|float} value                 the number to format
+    * @param {String} plus                     the prefix for positive numbers
+    * @param {String} minus                    the prefix for negative numbers
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfCore
+    */
     function nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group) {
       var sign = (value < 0) ? minus : plus;
       var autoDetectDecimals = rightDigits === 0;
@@ -8134,11 +8561,29 @@
       if (rightDigitsOfDefault > 0) {
         return sign + buffer.substring(0, buffer.length - rightDigitsOfDefault) +
                "." + buffer.substring(buffer.length - rightDigitsOfDefault, buffer.length);
-      } else {
-         return sign + buffer;
       }
+      return sign + buffer;
     }
 
+    /**
+    * Number-to-String formatting function. Prepends "plus" or "minus" depending
+    * on whether the value is positive or negative, respectively, after padding
+    * the value with zeroes on the left and right, the number of zeroes used dictated
+    * by the values 'leftDigits' and 'rightDigits'. 'value' can be an array;
+    * if the input is an array, each value in it is formatted separately, and
+    * an array with formatted values is returned.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {String} plus                     the prefix for positive numbers
+    * @param {String} minus                    the prefix for negative numbers
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfCoreScalar
+    */
     function nfCore(value, plus, minus, leftDigits, rightDigits, group) {
       if (value instanceof Array) {
         var arr = [];
@@ -8146,9 +8591,8 @@
           arr.push(nfCoreScalar(value[i], plus, minus, leftDigits, rightDigits, group));
         }
         return arr;
-      } else {
-        return nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
       }
+      return nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
     }
 
     /**
@@ -8169,7 +8613,7 @@
     * @see nfp
     * @see nfc
     */
-    p.nf  = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
+    p.nf = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits); };
 
     /**
     * Utility function for formatting numbers into strings. Similar to nf()  but leaves a blank space in front
@@ -8296,9 +8740,8 @@
           arr.push(unhexScalar(hex[i]));
         }
         return arr;
-      } else {
-        return unhexScalar(hex);
       }
+      return unhexScalar(hex);
     };
 
     // Load a file or URL into strings
@@ -8529,6 +8972,23 @@
       return subject.valueOf() === other.valueOf();
     };
     /**
+     * The __equalsIgnoreCase() function compares two strings to see if they are the same.
+     * Returns true if the strings are the same, either when forced to all lower case or
+     * all upper case.
+     *
+     * @param {String} subject  a string used for comparison
+     * @param {String} other  a string used for comparison with
+     *
+     * @return {boolean} true is the strings are the same, ignoring case. false otherwise
+     */
+    p.__equalsIgnoreCase = function(subject, other) {
+      if (typeof subject !== "string") {
+        return subject.equalsIgnoreCase.apply(subject, removeFirstArgument(arguments));
+      }
+
+      return subject.toLowerCase() === other.toLowerCase();
+    };
+    /**
      * The __toCharArray() function splits the string into a char array.
      *
      * @param {String} subject The string
@@ -8583,6 +9043,24 @@
         result.push(currSubject);
       }
       return result;
+    };
+    /**
+     * The codePointAt() function returns the unicode value of the character at a given index of a string.
+     *
+     * @param  {int} idx         the index of the character
+     *
+     * @return {String} code     the String containing the unicode value of the character
+     */
+    p.__codePointAt = function(subject, idx) {
+      var code = subject.charCodeAt(idx),
+          hi,
+          low;
+      if (0xD800 <= code && code <= 0xDBFF) {
+        hi = code;
+        low = subject.charCodeAt(idx + 1);
+        return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+      }
+      return code;
     };
     /**
      * The match() function matches a string with a regular expression, and returns the match as an
@@ -8663,7 +9141,6 @@
 
     var logBuffer = [];
 
-    p.console = window.console || Processing.logger;
     /**
      * The println() function writes to the console area of the Processing environment.
      * Each call to this function creates a new line of output. Individual elements can be separated with quotes ("") and joined with the string concatenation operator (+).
@@ -8706,9 +9183,8 @@
           arr.push(val[i].toString() + "");
         }
         return arr;
-      } else {
-        return (val.toString() + "");
       }
+      return (val.toString() + "");
     };
     /**
      * Remove whitespace characters from the beginning and ending
@@ -8727,20 +9203,22 @@
           arr.push(str[i].replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, ''));
         }
         return arr;
-      } else {
-        return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
       }
+      return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
     };
 
     // Conversion
     function booleanScalar(val) {
       if (typeof val === 'number') {
         return val !== 0;
-      } else if (typeof val === 'boolean') {
+      }
+      if (typeof val === 'boolean') {
         return val;
-      } else if (typeof val === 'string') {
+      }
+      if (typeof val === 'string') {
         return val.toLowerCase() === 'true';
-      } else if (val instanceof Char) {
+      }
+      if (val instanceof Char) {
         // 1, T or t
         return val.code === 49 || val.code === 84 || val.code === 116;
       }
@@ -8762,9 +9240,8 @@
           ret.push(booleanScalar(val[i]));
         }
         return ret;
-      } else {
-        return booleanScalar(val);
       }
+      return booleanScalar(val);
     };
 
     /**
@@ -8784,9 +9261,8 @@
           bytes.push((0 - (what[i] & 0x80)) | (what[i] & 0x7F));
         }
         return bytes;
-      } else {
-        return (0 - (what & 0x80)) | (what & 0x7F);
       }
+      return (0 - (what & 0x80)) | (what & 0x7F);
     };
 
     /**
@@ -8801,15 +9277,15 @@
     p.parseChar = function(key) {
       if (typeof key === "number") {
         return new Char(String.fromCharCode(key & 0xFFFF));
-      } else if (key instanceof Array) {
+      }
+      if (key instanceof Array) {
         var ret = [];
         for (var i = 0; i < key.length; i++) {
           ret.push(new Char(String.fromCharCode(key[i] & 0xFFFF)));
         }
         return ret;
-      } else {
-        throw "char() may receive only one argument of type int, byte, int[], or byte[].";
       }
+      throw "char() may receive only one argument of type int, byte, int[], or byte[].";
     };
 
     // Processing doc claims good argument types are: int, char, byte, boolean,
@@ -8819,11 +9295,14 @@
     function floatScalar(val) {
       if (typeof val === 'number') {
         return val;
-      } else if (typeof val === 'boolean') {
+      }
+      if (typeof val === 'boolean') {
         return val ? 1 : 0;
-      } else if (typeof val === 'string') {
+      }
+      if (typeof val === 'string') {
         return parseFloat(val);
-      } else if (val instanceof Char) {
+      }
+      if (val instanceof Char) {
         return val.code;
       }
     }
@@ -8844,20 +9323,22 @@
           ret.push(floatScalar(val[i]));
         }
         return ret;
-      } else {
-        return floatScalar(val);
       }
+      return floatScalar(val);
     };
 
     function intScalar(val, radix) {
       if (typeof val === 'number') {
         return val & 0xFFFFFFFF;
-      } else if (typeof val === 'boolean') {
+      }
+      if (typeof val === 'boolean') {
         return val ? 1 : 0;
-      } else if (typeof val === 'string') {
+      }
+      if (typeof val === 'string') {
         var number = parseInt(val, radix || 10); // Default to decimal radix.
         return number & 0xFFFFFFFF;
-      } else if (val instanceof Char) {
+      }
+      if (val instanceof Char) {
         return val.code;
       }
     }
@@ -8883,9 +9364,8 @@
           }
         }
         return ret;
-      } else {
-        return intScalar(val, radix);
       }
+      return intScalar(val, radix);
     };
 
     p.__int_cast = function(val) {
@@ -9006,7 +9486,8 @@
         dx = arguments[0] - arguments[2];
         dy = arguments[1] - arguments[3];
         return Math.sqrt(dx * dx + dy * dy);
-      } else if (arguments.length === 6) {
+      }
+      if (arguments.length === 6) {
         dx = arguments[0] - arguments[3];
         dy = arguments[1] - arguments[4];
         dz = arguments[2] - arguments[5];
@@ -9121,20 +9602,19 @@
     p.max = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
-      } else {
-        var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-        if (! ("length" in numbers && numbers.length > 0)) {
-          throw "Non-empty array is expected";
-        }
-        var max = numbers[0],
-          count = numbers.length;
-        for (var i = 1; i < count; ++i) {
-          if (max < numbers[i]) {
-            max = numbers[i];
-          }
-        }
-        return max;
       }
+      var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+      if (! ("length" in numbers && numbers.length > 0)) {
+        throw "Non-empty array is expected";
+      }
+      var max = numbers[0],
+        count = numbers.length;
+      for (var i = 1; i < count; ++i) {
+        if (max < numbers[i]) {
+          max = numbers[i];
+        }
+      }
+      return max;
     };
 
     /**
@@ -9152,20 +9632,19 @@
     p.min = function() {
       if (arguments.length === 2) {
         return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
-      } else {
-        var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-        if (! ("length" in numbers && numbers.length > 0)) {
-          throw "Non-empty array is expected";
-        }
-        var min = numbers[0],
-          count = numbers.length;
-        for (var i = 1; i < count; ++i) {
-          if (min > numbers[i]) {
-            min = numbers[i];
-          }
-        }
-        return min;
       }
+      var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+      if (! ("length" in numbers && numbers.length > 0)) {
+        throw "Non-empty array is expected";
+      }
+      var min = numbers[0],
+        count = numbers.length;
+      for (var i = 1; i < count; ++i) {
+        if (min > numbers[i]) {
+          min = numbers[i];
+        }
+      }
+      return min;
     };
 
     /**
@@ -9391,12 +9870,12 @@
     p.random = function() {
       if(arguments.length === 0) {
         return currentRandom();
-      } else if(arguments.length === 1) {
-        return currentRandom() * arguments[0];
-      } else {
-        var aMin = arguments[0], aMax = arguments[1];
-        return currentRandom() * (aMax - aMin) + aMin;
       }
+      if(arguments.length === 1) {
+        return currentRandom() * arguments[0];
+      }
+      var aMin = arguments[0], aMax = arguments[1];
+      return currentRandom() * (aMax - aMin) + aMin;
     };
 
     // Pseudo-random generator
@@ -9444,21 +9923,20 @@
         if (haveNextNextGaussian) {
           haveNextNextGaussian = false;
           return nextNextGaussian;
-        } else {
-          var v1, v2, s;
-          do {
-            v1 = 2 * random() - 1; // between -1.0 and 1.0
-            v2 = 2 * random() - 1; // between -1.0 and 1.0
-            s = v1 * v1 + v2 * v2;
-          }
-          while (s >= 1 || s === 0);
-
-          var multiplier = Math.sqrt(-2 * Math.log(s) / s);
-          nextNextGaussian = v2 * multiplier;
-          haveNextNextGaussian = true;
-
-          return v1 * multiplier;
         }
+        var v1, v2, s;
+        do {
+          v1 = 2 * random() - 1; // between -1.0 and 1.0
+          v2 = 2 * random() - 1; // between -1.0 and 1.0
+          s = v1 * v1 + v2 * v2;
+        }
+        while (s >= 1 || s === 0);
+
+        var multiplier = Math.sqrt(-2 * Math.log(s) / s);
+        nextNextGaussian = v2 * multiplier;
+        haveNextNextGaussian = true;
+
+        return v1 * multiplier;
       };
 
       // by default use standard random, otherwise seeded
@@ -9626,7 +10104,6 @@
       noiseProfile.generator = undef;
     };
 
-    // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     /**
     * Defines the dimension of the display window in units of pixels. The size() function must
     * be the first line in setup(). If size() is not called, the default size of the window is
@@ -9641,8 +10118,13 @@
     * @see screen
     */
     DrawingShared.prototype.size = function(aWidth, aHeight, aMode) {
-      p.stroke(0);
-      p.fill(255);
+      if (doStroke) {
+        p.stroke(0);
+      }
+
+      if (doFill) {
+        p.fill(255);
+      }
 
       // The default 2d context has already been created in the p.init() stage if
       // a 3d context was not specified. This is so that a 2d context will be
@@ -9669,8 +10151,8 @@
         }
       }
 
-      // Reset the text font/size
-      p.textSize(curTextSize);
+      // make sure to set the default font the first time round.
+      p.textFont(curTextFont);
 
       // Set the background to whatever it was called last as if background() was called before size()
       // If background() hasn't been called before, set background() to a light gray
@@ -9694,10 +10176,8 @@
         curContext = curElement.getContext("2d");
         userMatrixStack = new PMatrixStack();
         userReverseMatrixStack = new PMatrixStack();
-        forwardTransform = new PMatrix2D();
-        reverseTransform = new PMatrix2D();
-        modelView = forwardTransform;
-        modelViewInv = reverseTransform;
+        modelView = new PMatrix2D();
+        modelViewInv = new PMatrix2D();
       }
 
       DrawingShared.prototype.size.apply(this, arguments);
@@ -9717,7 +10197,7 @@
               gl;
 
           for (var i=0, l=ctxNames.length; i<l; i++) {
-            gl = canvas.getContext(ctxNames[i]);
+            gl = canvas.getContext(ctxNames[i], {antialias: false});
             if (gl) {
               break;
             }
@@ -9733,10 +10213,8 @@
           // 3D sketches, browsers will either not render or render the
           // scene incorrectly. To fix this, we need to adjust the
           // width and height attributes of the canvas.
-          if (curElement.width !== aWidth || curElement.height !== aHeight) {
-            curElement.setAttribute("width", aWidth);
-            curElement.setAttribute("height", aHeight);
-          }
+          curElement.width = p.width = aWidth || 100;
+          curElement.height = p.height = aHeight || 100;
           curContext = getGLContext(curElement);
           canTex = curContext.createTexture(); // texture
           textTex = curContext.createTexture(); // texture
@@ -9771,6 +10249,7 @@
 
         // assume we aren't using textures by default
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
+        // assume that we arn't tinting by default
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
         p.ambient(255, 255, 255);
@@ -9835,8 +10314,6 @@
         projection = new PMatrix3D();
         p.camera();
         p.perspective();
-        forwardTransform = modelView;
-        reverseTransform = modelViewInv;
 
         userMatrixStack = new PMatrixStack();
         userReverseMatrixStack = new PMatrixStack();
@@ -9871,9 +10348,9 @@
      * @param {int | float} g green or hue value
      * @param {int | float} b blue or hue value
      *
-     * @param {int | float} x
-     * @param {int | float} y
-     * @param {int | float} z
+     * @param {int | float} x x position of light (used for falloff)
+     * @param {int | float} y y position of light (used for falloff)
+     * @param {int | float} z z position of light (used for falloff)
      *
      * @returns none
      *
@@ -9895,8 +10372,15 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
+      // Instead of calling p.color, we do the calculations ourselves to
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
       curContext.useProgram(programObject3D);
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 0);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
@@ -9953,7 +10437,14 @@
         mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r/255, g/255, b/255]);
+      // Instead of calling p.color, we do the calculations ourselves to
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", dir);
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 1);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
@@ -10015,8 +10506,16 @@
     Drawing2D.prototype.lightSpecular = DrawingShared.prototype.a3DOnlyFunction;
 
     Drawing3D.prototype.lightSpecular = function(r, g, b) {
+
+      // Instead of calling p.color, we do the calculations ourselves to
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
       curContext.useProgram(programObject3D);
-      uniformf("specular3d", programObject3D, "specular", [r / 255, g / 255, b / 255]);
+      uniformf("specular3d", programObject3D, "specular", normalizedCol);
     };
 
     /**
@@ -10073,7 +10572,7 @@
         throw "can only create " + PConstants.MAX_LIGHTS + " lights";
       }
 
-      // place the point in view space once instead of once per vertex
+      // Place the point in view space once instead of once per vertex
       // in the shader.
       var pos = new PVector(x, y, z);
       var view = new PMatrix3D();
@@ -10081,8 +10580,15 @@
       view.apply(modelView.array());
       view.mult(pos, pos);
 
+      // Instead of calling p.color, we do the calculations ourselves to
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
       curContext.useProgram(programObject3D);
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformi("lights.type.3d." + lightCount, programObject3D, "lights" + lightCount + ".type", 2);
       uniformi("lightCount3d", programObject3D, "lightCount", ++lightCount);
@@ -10152,7 +10658,7 @@
       mvm.apply(modelView.array());
       mvm.mult(pos, pos);
 
-      // convert to array since we need to directly access the elements
+      // Convert to array since we need to directly access the elements.
       mvm = mvm.array();
 
       // We need to multiply the direction by the model view matrix, but
@@ -10164,7 +10670,14 @@
           mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
-      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", [r / 255, g / 255, b / 255]);
+      // Instead of calling p.color, we do the calculations ourselves to
+      // reduce property lookups.
+      var col = color$4(r, g, b, 0);
+      var normalizedCol = [ ((col & PConstants.RED_MASK) >>> 16) / 255,
+                            ((col & PConstants.GREEN_MASK) >>> 8) / 255,
+                             (col & PConstants.BLUE_MASK) / 255 ];
+
+      uniformf("lights.color.3d." + lightCount, programObject3D, "lights" + lightCount + ".color", normalizedCol);
       uniformf("lights.position.3d." + lightCount, programObject3D, "lights" + lightCount + ".position", pos.array());
       uniformf("lights.direction.3d." + lightCount, programObject3D, "lights" + lightCount + ".direction", dir);
       uniformf("lights.concentration.3d." + lightCount, programObject3D, "lights" + lightCount + ".concentration", concentration);
@@ -10197,14 +10710,17 @@
      * @see rotate
      * @see scale
      */
-    p.beginCamera = function() {
+    Drawing2D.prototype.beginCamera = function() {
+      throw ("beginCamera() is not available in 2D mode");
+    };
+
+    Drawing3D.prototype.beginCamera = function() {
       if (manipulatingCamera) {
         throw ("You cannot call beginCamera() again before calling endCamera()");
-      } else {
-        manipulatingCamera = true;
-        forwardTransform = cameraInv;
-        reverseTransform = cam;
       }
+      manipulatingCamera = true;
+      modelView = cameraInv;
+      modelViewInv = cam;
     };
 
     /**
@@ -10213,16 +10729,17 @@
      *
      * @see beginCamera
      */
-    p.endCamera = function() {
+    Drawing2D.prototype.endCamera = function() {
+      throw ("endCamera() is not available in 2D mode");
+    };
+
+    Drawing3D.prototype.endCamera = function() {
       if (!manipulatingCamera) {
         throw ("You cannot call endCamera() before calling beginCamera()");
-      } else {
-        modelView.set(cam);
-        modelViewInv.set(cameraInv);
-        forwardTransform = modelView;
-        reverseTransform = modelViewInv;
-        manipulatingCamera = false;
       }
+      modelView.set(cam);
+      modelViewInv.set(cameraInv);
+      manipulatingCamera = false;
     };
 
     /**
@@ -10248,10 +10765,10 @@
      * @see frustum
      */
     p.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
-      if (arguments.length === 0) {
-        //in case canvas is resized
-        cameraX = curElement.width / 2;
-        cameraY = curElement.height / 2;
+      if (eyeX === undef) {
+        // Workaround if createGraphics is used.
+        cameraX = p.width / 2;
+        cameraY = p.height / 2;
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         eyeX = cameraX;
         eyeY = cameraY;
@@ -10266,19 +10783,30 @@
 
       var z = new PVector(eyeX - centerX, eyeY - centerY, eyeZ - centerZ);
       var y = new PVector(upX, upY, upZ);
-      var transX, transY, transZ;
       z.normalize();
       var x = PVector.cross(y, z);
       y = PVector.cross(z, x);
       x.normalize();
       y.normalize();
 
-      cam.set(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+      var xX = x.x,
+          xY = x.y,
+          xZ = x.z;
+
+      var yX = y.x,
+          yY = y.y,
+          yZ = y.z;
+
+      var zX = z.x,
+          zY = z.y,
+          zZ = z.z;
+
+      cam.set(xX, xY, xZ, 0, yX, yY, yZ, 0, zX, zY, zZ, 0, 0, 0, 0, 1);
 
       cam.translate(-eyeX, -eyeY, -eyeZ);
 
       cameraInv.reset();
-      cameraInv.invApply(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+      cameraInv.invApply(xX, xY, xZ, 0, yX, yY, yZ, 0, zX, zY, zZ, 0, 0, 0, 0, 1);
 
       cameraInv.translate(eyeX, eyeY, eyeZ);
 
@@ -10306,7 +10834,7 @@
         cameraZ = cameraY / Math.tan(cameraFOV / 2);
         cameraNear = cameraZ / 10;
         cameraFar = cameraZ * 10;
-        cameraAspect = curElement.width / curElement.height;
+        cameraAspect = p.width / p.height;
         fov = cameraFOV;
         aspect = cameraAspect;
         near = cameraNear;
@@ -10337,7 +10865,11 @@
      * @see endCamera
      * @see perspective
      */
-    p.frustum = function(left, right, bottom, top, near, far) {
+    Drawing2D.prototype.frustum = function() {
+      throw("Processing.js: frustum() is not supported in 2D mode");
+    };
+
+    Drawing3D.prototype.frustum = function(left, right, bottom, top, near, far) {
       frustumMode = true;
       projection = new PMatrix3D();
       projection.set((2 * near) / (right - left), 0, (right + left) / (right - left),
@@ -10866,29 +11398,11 @@
     */
     Drawing2D.prototype.ambient = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.ambient = function() {
-      // create an alias to shorten code
-      var a = arguments;
-
-      // either a shade of gray or a 'color' object.
+    Drawing3D.prototype.ambient = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-
-      if (a.length === 1) {
-        // color object was passed in
-        if (typeof a[0] === "string") {
-          var c = a[0].slice(5, -1).split(",");
-          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [c[0] / 255, c[1] / 255, c[2] / 255]);
-        }
-        // else a single number was passed in for gray shade
-        else {
-          uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
-        }
-      }
-      // Otherwise three values were provided (r,g,b)
-      else {
-        uniformf("mat_ambient3d", programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
-      }
+      var col = p.color(v1, v2, v3);
+      uniformf("mat_ambient3d", programObject3D, "mat_ambient", p.color.toGLArray(col).slice(0, 3));
     };
 
     /**
@@ -10917,30 +11431,11 @@
     */
     Drawing2D.prototype.emissive = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.emissive = function() {
-      // create an alias to shorten code
-      var a = arguments;
-
+    Drawing3D.prototype.emissive = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-
-      // If only one argument was provided, the user either gave us a
-      // shade of gray or a 'color' object.
-      if (a.length === 1) {
-        // color object was passed in
-        if (typeof a[0] === "string") {
-          var c = a[0].slice(5, -1).split(",");
-          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [c[0] / 255, c[1] / 255, c[2] / 255]);
-        }
-        // else a regular number was passed in for gray shade
-        else {
-          uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[0] / 255, a[0] / 255]);
-        }
-      }
-      // Otherwise three values were provided (r,g,b)
-      else {
-        uniformf("mat_emissive3d", programObject3D, "mat_emissive", [a[0] / 255, a[1] / 255, a[2] / 255]);
-      }
+      var col = p.color(v1, v2, v3);
+      uniformf("mat_emissive3d", programObject3D, "mat_emissive", p.color.toGLArray(col).slice(0, 3));
     };
 
     /**
@@ -10998,12 +11493,11 @@
     */
     Drawing2D.prototype.specular = DrawingShared.prototype.a3DOnlyFunction;
 
-    Drawing3D.prototype.specular = function() {
-      var c = p.color.apply(this, arguments);
-
+    Drawing3D.prototype.specular = function(v1, v2, v3) {
       curContext.useProgram(programObject3D);
       uniformi("usingMat3d", programObject3D, "usingMat", true);
-      uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(c).slice(0, 3));
+      var col = p.color(v1, v2, v3);
+      uniformf("mat_specular3d", programObject3D, "mat_specular", p.color.toGLArray(col).slice(0, 3));
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -11041,9 +11535,9 @@
           ox /= ow;
         }
         return p.width * ( 1 + ox ) / 2.0;
-      } else { // We assume that we're in 2D
-        return modelView.multX(x, y);
       }
+      // We assume that we're in 2D
+      return modelView.multX(x, y);
     };
 
     /**
@@ -11076,9 +11570,9 @@
           oy /= ow;
         }
         return p.height * ( 1 + oy ) / 2.0;
-      } else {  // We assume that we're in 2D
-        return modelView.multY(x, y);
       }
+      // We assume that we're in 2D
+      return modelView.multY(x, y);
     };
 
     /**
@@ -11313,45 +11807,43 @@
      * @see #hint()
      * @see #size()
      */
-    DrawingShared.prototype.smooth = function() {
-      curElement.style.setProperty("image-rendering", "optimizeQuality", "important");
-    };
 
     Drawing2D.prototype.smooth = function() {
-      DrawingShared.prototype.smooth.apply(this, arguments);
-      if ("mozImageSmoothingEnabled" in curContext) {
+      renderSmooth = true;
+      var style = curElement.style;
+      style.setProperty("image-rendering", "optimizeQuality", "important");
+      style.setProperty("-ms-interpolation-mode", "bicubic", "important");
+      if (curContext.hasOwnProperty("mozImageSmoothingEnabled")) {
         curContext.mozImageSmoothingEnabled = true;
       }
     };
+
+    Drawing3D.prototype.smooth = nop;
 
     /**
      * The noSmooth() function draws all geometry with jagged (aliased) edges.
      *
      * @see #smooth()
      */
-    DrawingShared.prototype.noSmooth = function() {
-      curElement.style.setProperty("image-rendering", "optimizeSpeed", "important");
-    };
 
     Drawing2D.prototype.noSmooth = function() {
-      DrawingShared.prototype.noSmooth.apply(this, arguments);
-      if ("mozImageSmoothingEnabled" in curContext) {
+      renderSmooth = false;
+      var style = curElement.style;
+      style.setProperty("image-rendering", "optimizeSpeed", "important");
+      style.setProperty("image-rendering", "-moz-crisp-edges", "important");
+      style.setProperty("image-rendering", "-webkit-optimize-contrast", "important");
+      style.setProperty("image-rendering", "optimize-contrast", "important");
+      style.setProperty("-ms-interpolation-mode", "nearest-neighbor", "important");
+      if (curContext.hasOwnProperty("mozImageSmoothingEnabled")) {
         curContext.mozImageSmoothingEnabled = false;
       }
     };
 
+    Drawing3D.prototype.noSmooth = nop;
+
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
     ////////////////////////////////////////////////////////////////////////////
-
-    function colorBlendWithAlpha(c1, c2, k) {
-        var f = 0|(k * ((c2 & PConstants.ALPHA_MASK) >>> 24));
-        return (Math.min(((c1 & PConstants.ALPHA_MASK) >>> 24) + f, 0xff) << 24 |
-                p.mix(c1 & PConstants.RED_MASK, c2 & PConstants.RED_MASK, f) & PConstants.RED_MASK |
-                p.mix(c1 & PConstants.GREEN_MASK, c2 & PConstants.GREEN_MASK, f) & PConstants.GREEN_MASK |
-                p.mix(c1 & PConstants.BLUE_MASK, c2 & PConstants.BLUE_MASK, f));
-    }
-
     /**
      * The point() function draws a point, a coordinate in space at the dimension of one pixel.
      * The first parameter is the horizontal value for the point, the second
@@ -11367,27 +11859,21 @@
      * @see #beginShape()
      */
     Drawing2D.prototype.point = function(x, y) {
-      if (doStroke) {
-        // TODO if strokeWeight > 1, do circle
+      if (!doStroke) {
+        return;
+      }
 
-        if (curSketch.options.crispLines) {
-          var alphaOfPointWeight = Math.PI / 4;  // TODO dependency of strokeWeight
-          var c = p.get(x, y);
-          p.set(x, y, colorBlendWithAlpha(c, currentStrokeColor, alphaOfPointWeight));
-        } else {
-          if (lineWidth > 1) {
-            curContext.fillStyle = p.color.toString(currentStrokeColor);
-            isFillDirty = true;
-            curContext.beginPath();
-            curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
-            curContext.fill();
-            curContext.closePath();
-          } else {
-            curContext.fillStyle = p.color.toString(currentStrokeColor);
-            curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-            isFillDirty = true;
-          }
-        }
+      x = Math.round(x);
+      y = Math.round(y);
+      curContext.fillStyle = p.color.toString(currentStrokeColor);
+      isFillDirty = true;
+      // Draw a circle for any point larger than 1px
+      if (lineWidth > 1) {
+        curContext.beginPath();
+        curContext.arc(x, y, lineWidth / 2, 0, PConstants.TWO_PI, false);
+        curContext.fill();
+      } else {
+        curContext.fillRect(x, y, 1, 1);
       }
     };
 
@@ -11487,6 +11973,24 @@
 
       if (firstVert) { firstVert = false; }
       vert["isVert"] = true;
+
+      if (v === undef && usingTexture) {
+        v = u;
+        u = z;
+        z = 0;
+      }
+
+      // Convert u and v to normalized coordinates
+      if (u !== undef && v !== undef) {
+        if (curTextureMode === PConstants.IMAGE) {
+          u /= curTexture.width;
+          v /= curTexture.height;
+        }
+        u = u > 1 ? 1 : u;
+        u = u < 0 ? 0 : u;
+        v = v > 1 ? 1 : v;
+        v = v < 0 ? 0 : v;
+      }
 
       vert[0] = x;
       vert[1] = y;
@@ -11595,13 +12099,11 @@
      */
     var fill3D = function(vArray, mode, cArray, tArray){
       var ctxMode;
-      if(mode === "TRIANGLES"){
+      if (mode === "TRIANGLES") {
         ctxMode = curContext.TRIANGLES;
-      }
-      else if(mode === "TRIANGLE_FAN"){
+      } else if(mode === "TRIANGLE_FAN") {
         ctxMode = curContext.TRIANGLE_FAN;
-      }
-      else{
+      } else {
         ctxMode = curContext.TRIANGLE_STRIP;
       }
 
@@ -11618,29 +12120,20 @@
       uniformf("color3d", programObject3D, "color", [-1,0,0,0]);
       vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW);
+
+      // if we are using a texture and a tint, then overwrite the
+      // contents of the color buffer with the current tint
+      if (usingTexture && curTint !== null){
+        curTint3d(cArray);
+      }
+
       vertexAttribPointer("aColor3d", programObject3D, "aColor", 4, fillColorBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW);
 
       // No support for lights....yet
       disableVertexAttribPointer("normal3d", programObject3D, "Normal");
 
-      var i;
-
-      if(usingTexture){
-        if(curTextureMode === PConstants.IMAGE){
-          for(i = 0; i < tArray.length; i += 2){
-            tArray[i] = tArray[i]/curTexture.width;
-            tArray[i+1] /= curTexture.height;
-          }
-        }
-
-        // hack to handle when users specifies values
-        // greater than 1.0 for texture coords.
-        for(i = 0; i < tArray.length; i += 2){
-          if( tArray[i+0] > 1.0 ){ tArray[i+0] -= (tArray[i+0] - 1.0);}
-          if( tArray[i+1] > 1.0 ){ tArray[i+1] -= (tArray[i+1] - 1.0);}
-        }
-
+      if (usingTexture) {
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
         vertexAttribPointer("aTexture3d", programObject3D, "aTexture", 2, shapeTexVBO);
         curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW);
@@ -11649,6 +12142,17 @@
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
     };
+
+    /**
+     * this series of three operations is used a lot in Drawing2D.prototype.endShape
+     * and has been split off as its own function, to tighten the code and allow for
+     * fewer bugs.
+     */
+    function fillStrokeClose() {
+      executeContextFill();
+      executeContextStroke();
+      curContext.closePath();
+    }
 
     /**
      * The endShape() function is the companion to beginShape() and may only be called after beginShape().
@@ -11664,6 +12168,12 @@
       if (vertArray.length === 0) { return; }
 
       var closeShape = mode === PConstants.CLOSE;
+
+      // if the shape is closed, the first element is also the last element
+      if (closeShape) {
+        vertArray.push(vertArray[0]);
+      }
+
       var lineVertArray = [];
       var fillVertArray = [];
       var colorVertArray = [];
@@ -11707,25 +12217,6 @@
         texVertArray.push(cachedVertArray[4]);
       }
 
-      // if shape is closed, push the first point into the last point (including colours)
-      if (closeShape) {
-        fillVertArray.push(vertArray[0][0]);
-        fillVertArray.push(vertArray[0][1]);
-        fillVertArray.push(vertArray[0][2]);
-
-        for (i = 5; i < 9; i++) {
-          colorVertArray.push(vertArray[0][i]);
-        }
-
-       for (i = 9; i < 13; i++) {
-          strokeVertArray.push(vertArray[0][i]);
-        }
-
-        texVertArray.push(vertArray[0][3]);
-        texVertArray.push(vertArray[0][4]);
-      }
-      // End duplication
-
       // curveVertex
       if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
         if (vertArrayLength > 3) {
@@ -11751,13 +12242,7 @@
             b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
             curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
           }
-          // close the shape
-          if (closeShape) {
-            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-          }
-          executeContextFill();
-          executeContextStroke();
-          curContext.closePath();
+          fillStrokeClose();
         }
       }
 
@@ -11776,13 +12261,7 @@
             curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
           }
         }
-        // close the shape
-        if (closeShape) {
-          curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-        }
-        executeContextFill();
-        executeContextStroke();
-        curContext.closePath();
+        fillStrokeClose();
       }
 
       // render the vertices provided
@@ -11846,9 +12325,7 @@
                 p.fill(vertArray[i+2][5]);
               }
             }
-            executeContextFill();
-            executeContextStroke();
-            curContext.closePath();
+            fillStrokeClose();
           }
         } else if (curShape === PConstants.TRIANGLE_FAN) {
           if (vertArrayLength > 2) {
@@ -11928,9 +12405,7 @@
                 curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
                 curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
               }
-              executeContextFill();
-              executeContextStroke();
-              curContext.closePath();
+              fillStrokeClose();
             }
           }
         } else {
@@ -11946,12 +12421,7 @@
               }
             }
           }
-          if (closeShape) {
-            curContext.lineTo(vertArray[0][0], vertArray[0][1]);
-          }
-          executeContextFill();
-          executeContextStroke();
-          curContext.closePath();
+          fillStrokeClose();
         }
       }
 
@@ -11960,6 +12430,13 @@
       isBezier = false;
       curveVertArray = [];
       curveVertCount = 0;
+
+      // If the shape is closed, the first element was added as last element.
+      // We must remove it again to prevent the list of vertices from growing
+      // over successive calls to endShape(CLOSE)
+      if (closeShape) {
+        vertArray.pop();
+      }
     };
 
     Drawing3D.prototype.endShape = function(mode) {
@@ -12491,25 +12968,6 @@
       }
     };
 
-    // texImage2D function changed http://www.khronos.org/webgl/public-mailing-list/archives/1007/msg00034.html
-    // This method tries the new argument pattern first and falls back to the old version
-    var executeTexImage2D = function () {
-      var canvas2d = document.createElement('canvas');
-
-      try { // new way.
-        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, canvas2d);
-        executeTexImage2D = function(texture) {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, texture);
-        };
-      } catch (e) {
-        executeTexImage2D = function(texture) {
-          curContext.texImage2D(curContext.TEXTURE_2D, 0, texture, false);
-        };
-      }
-
-      executeTexImage2D.apply(this, arguments);
-    };
-
     /**
      * Sets a texture to be applied to vertex points. The <b>texture()</b> function
      * must be called between <b>beginShape()</b> and <b>endShape()</b> and before
@@ -12529,19 +12987,22 @@
     */
     p.texture = function(pimage) {
       var curContext = drawing.$ensureContext();
-      if (pimage.localName === "canvas") {
+
+      if (pimage.__texture) {
+        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+      } else if (pimage.localName === "canvas") {
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
-        executeTexImage2D(pimage);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
         curContext.generateMipmap(curContext.TEXTURE_2D);
-      } else if (!pimage.__texture) {
-        var texture = curContext.createTexture();
-        pimage.__texture = texture;
-
-        var cvs = document.createElement('canvas');
-
-        var pot;
+        curTexture.width = pimage.width;
+        curTexture.height = pimage.height;
+      } else {
+        var texture = curContext.createTexture(),
+            cvs = document.createElement('canvas'),
+            cvsTextureCtx = cvs.getContext('2d'),
+            pot;
 
         // WebGL requires power of two textures
         if (pimage.width & (pimage.width-1) === 0) {
@@ -12564,37 +13025,21 @@
           cvs.height = pot;
         }
 
-        var ctx = cvs.getContext('2d');
-        var textureImage = ctx.createImageData(cvs.width, cvs.height);
+        cvsTextureCtx.drawImage(pimage.sourceImg, 0, 0, pimage.width, pimage.height, 0, 0, cvs.width, cvs.height);
 
-        var imgData = pimage.toImageData();
-
-        for (var i = 0; i < cvs.width; i += 1) {
-          for (var j = 0; j < cvs.height; j += 1) {
-          var index = (j * cvs.width + i) * 4;
-            textureImage.data[index + 0] = imgData.data[index + 0];
-            textureImage.data[index + 1] = imgData.data[index + 1];
-            textureImage.data[index + 2] = imgData.data[index + 2];
-            textureImage.data[index + 3] = 255;
-          }
-        }
-
-        ctx.putImageData(textureImage, 0, 0);
-        pimage.__cvs = cvs;
-
-        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+        curContext.bindTexture(curContext.TEXTURE_2D, texture);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
-        executeTexImage2D(pimage.__cvs);
+        curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, cvs);
         curContext.generateMipmap(curContext.TEXTURE_2D);
-      } else {
-        curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
+
+        pimage.__texture = texture;
+        curTexture.width = pimage.width;
+        curTexture.height = pimage.height;
       }
 
-      curTexture.width = pimage.width;
-      curTexture.height = pimage.height;
       usingTexture = true;
       curContext.useProgram(programObject3D);
       uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
@@ -12880,13 +13325,11 @@
       if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
-
       } else if (curEllipseMode === PConstants.RADIUS) {
         x = x - width;
         y = y - height;
         width = width * 2;
         height = height * 2;
-
       } else if (curEllipseMode === PConstants.CENTER) {
         x = x - width/2;
         y = y - height/2;
@@ -12904,8 +13347,8 @@
       var vr = height / 2;
       var centerX = x + hr;
       var centerY = y + vr;
-      var startLUT = 0 | (-0.5 + (start / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
-      var stopLUT  = 0 | (0.5 + (stop / PConstants.TWO_PI) * PConstants.SINCOS_LENGTH);
+      var startLUT = 0 | (-0.5 + start * p.RAD_TO_DEG * 2);
+      var stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2);
       var i, j;
       if (doFill) {
         // shut off stroke for a minute
@@ -12913,11 +13356,9 @@
         doStroke = false;
         p.beginShape();
         p.vertex(centerX, centerY);
-        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
-          if (j >= PConstants.SINCOS_LENGTH) {
-            j = j - PConstants.SINCOS_LENGTH;
-          }
-          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
+        for (i = startLUT; i <= stopLUT; i++) {
+          j = i % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
@@ -12928,15 +13369,10 @@
         var savedFill = doFill;
         doFill = false;
         p.beginShape();
-        for (i = startLUT, j = startLUT; i < stopLUT; i++, j++) {
-          if (j >= PConstants.SINCOS_LENGTH) {
-            j = j - PConstants.SINCOS_LENGTH;
-          }
-          p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
+        for (i = startLUT; i <= stopLUT; i++) {
+          j = i % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
-        // explicitly add the last vertex, for precision
-        j = stopLUT % PConstants.SINCOS_LENGTH;
-        p.vertex(centerX + cosLUT[j] * hr,centerY + sinLUT[j] * vr);
         p.endShape();
         doFill = savedFill;
       }
@@ -12963,35 +13399,78 @@
     * @see beginShape
     */
     Drawing2D.prototype.line = function(x1, y1, x2, y2) {
-      // a line is only defined if it has different start and end coordinates.
-      // If they are the same, we call point instead.
-      if (x1===x2 && y1===y2) {
-        p.point(x1,y1);
+      if (!doStroke) {
+        return;
       }
-
-      // if line is parallel to axis and lineWidth is less than 1px, trying to do it "crisp"
-      else if ((x1 === x2 || y1 === y2) && lineWidth <= 1.0 && doStroke && curSketch.options.crispLines) {
-        var temp;
-        if (x1 === x2) {
-          if (y1 > y2) { temp = y1; y1 = y2; y2 = temp; }
-          for (var y=y1;y<=y2;++y) {
-            p.set(x1, y, currentStrokeColor);
-          }
-        } else {
-          if (x1 > x2) { temp = x1; x1 = x2; x2 = temp; }
-          for (var x=x1;x<=x2;++x) {
-            p.set(x, y1, currentStrokeColor);
-          }
-        }
+      x1 = Math.round(x1);
+      x2 = Math.round(x2);
+      y1 = Math.round(y1);
+      y2 = Math.round(y2);
+      // A line is only defined if it has different start and end coordinates.
+      // If they are the same, we call point instead.
+      if (x1 === x2 && y1 === y2) {
+        p.point(x1, y1);
         return;
       }
 
-      else if (doStroke) {
-        curContext.beginPath();
-        curContext.moveTo(x1 || 0, y1 || 0);
-        curContext.lineTo(x2 || 0, y2 || 0);
-        executeContextStroke();
-        curContext.closePath();
+      var swap = undef,
+          lineCap = undef,
+          drawCrisp = true,
+          currentModelView = modelView.array(),
+          identityMatrix = [1, 0, 0, 0, 1, 0];
+      // Test if any transformations have been applied to the sketch
+      for (var i = 0; i < 6 && drawCrisp; i++) {
+        drawCrisp = currentModelView[i] === identityMatrix[i];
+      }
+      /* Draw crisp lines if the line is vertical or horizontal with the following method
+       * If any transformations have been applied to the sketch, don't make the line crisp
+       * If the line is directed up or to the left, reverse it by swapping x1/x2 or y1/y2
+       * Make the line 1 pixel longer to work around cross-platform canvas implementations
+       * If the lineWidth is odd, translate the line by 0.5 in the perpendicular direction
+       * Even lineWidths do not need to be translated because the canvas will draw them on pixel boundaries
+       * Change the cap to butt-end to work around cross-platform canvas implementations
+       * Reverse the translate and lineCap canvas state changes after drawing the line
+       */
+      if (drawCrisp) {
+        if (x1 === x2) {
+          if (y1 > y2) {
+            swap = y1;
+            y1 = y2;
+            y2 = swap;
+          }
+          y2++;
+          if (lineWidth % 2 === 1) {
+            curContext.translate(0.5, 0.0);
+          }
+        } else if (y1 === y2) {
+          if (x1 > x2) {
+            swap = x1;
+            x1 = x2;
+            x2 = swap;
+          }
+          x2++;
+          if (lineWidth % 2 === 1) {
+            curContext.translate(0.0, 0.5);
+          }
+        }
+        if (lineWidth === 1) {
+          lineCap = curContext.lineCap;
+          curContext.lineCap = 'butt';
+        }
+      }
+      curContext.beginPath();
+      curContext.moveTo(x1 || 0, y1 || 0);
+      curContext.lineTo(x2 || 0, y2 || 0);
+      executeContextStroke();
+      if (drawCrisp) {
+        if (x1 === x2 && lineWidth % 2 === 1) {
+          curContext.translate(-0.5, 0.0);
+        } else if (y1 === y2 && lineWidth % 2 === 1) {
+          curContext.translate(0.0, -0.5);
+        }
+        if (lineWidth === 1) {
+          curContext.lineCap = lineCap;
+        }
       }
     };
 
@@ -13210,6 +13689,47 @@
       p.endShape();
     };
 
+    var roundedRect$2d = function(x, y, width, height, tl, tr, br, bl) {
+      if (bl === undef) {
+        tr = tl;
+        br = tl;
+        bl = tl;
+      }
+      var halfWidth = width / 2,
+          halfHeight = height / 2;
+      if (tl > halfWidth || tl > halfHeight) {
+        tl = Math.min(halfWidth, halfHeight);
+      }
+      if (tr > halfWidth || tr > halfHeight) {
+        tr = Math.min(halfWidth, halfHeight);
+      }
+      if (br > halfWidth || br > halfHeight) {
+        br = Math.min(halfWidth, halfHeight);
+      }
+      if (bl > halfWidth || bl > halfHeight) {
+        bl = Math.min(halfWidth, halfHeight);
+      }
+      // Translate the stroke by (0.5, 0.5) to draw a crisp border
+      if (!doFill || doStroke) {
+        curContext.translate(0.5, 0.5);
+      }
+      curContext.beginPath();
+      curContext.moveTo(x + tl, y);
+      curContext.lineTo(x + width - tr, y);
+      curContext.quadraticCurveTo(x + width, y, x + width, y + tr);
+      curContext.lineTo(x + width, y + height - br);
+      curContext.quadraticCurveTo(x + width, y + height, x + width - br, y + height);
+      curContext.lineTo(x + bl, y + height);
+      curContext.quadraticCurveTo(x, y + height, x, y + height - bl);
+      curContext.lineTo(x, y + tl);
+      curContext.quadraticCurveTo(x, y, x + tl, y);
+      if (!doFill || doStroke) {
+        curContext.translate(-0.5, -0.5);
+      }
+      executeContextFill();
+      executeContextStroke();
+    };
+
     /**
     * Draws a rectangle to the screen. A rectangle is a four-sided shape with every angle at ninety
     * degrees. The first two parameters set the location, the third sets the width, and the fourth
@@ -13223,55 +13743,64 @@
     * @see rectMode
     * @see quad
     */
-    Drawing2D.prototype.rect = function(x, y, width, height) {
+    Drawing2D.prototype.rect = function(x, y, width, height, tl, tr, br, bl) {
       if (!width && !height) {
         return;
       }
 
-      // if only stroke is enabled, do it "crisp"
-      if (doStroke && !doFill && lineWidth <= 1.0 && curSketch.options.crispLines) {
-        var i, x2 = x + width - 1, y2 = y + height - 1;
-        for (i=0;i<width;++i) {
-          p.set(x + i, y, currentStrokeColor);
-          p.set(x + i, y2, currentStrokeColor);
-        }
-        for (i=0;i<height;++i) {
-          p.set(x, y + i, currentStrokeColor);
-          p.set(x2, y + i, currentStrokeColor);
-        }
-        return;
-      }
-
-      curContext.beginPath();
-
-      var offsetStart = 0;
-      var offsetEnd = 0;
-
       if (curRectMode === PConstants.CORNERS) {
         width -= x;
         height -= y;
-      }
-
-      if (curRectMode === PConstants.RADIUS) {
+      } else if (curRectMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-
-      if (curRectMode === PConstants.CENTER || curRectMode === PConstants.RADIUS) {
+        x -= width / 2;
+        y -= height / 2;
+      } else if (curRectMode === PConstants.CENTER) {
         x -= width / 2;
         y -= height / 2;
       }
 
-      curContext.rect(
-      Math.round(x) - offsetStart, Math.round(y) - offsetStart, Math.round(width) + offsetEnd, Math.round(height) + offsetEnd);
+      x = Math.round(x);
+      y = Math.round(y);
+      width = Math.round(width);
+      height = Math.round(height);
+      if (tl !== undef) {
+        roundedRect$2d(x, y, width, height, tl, tr, br, bl);
+        return;
+      }
 
+      // Translate the line by (0.5, 0.5) to draw a crisp rectangle border
+      if (doStroke && lineWidth % 2 === 1) {
+        curContext.translate(0.5, 0.5);
+      }
+      curContext.beginPath();
+      curContext.rect(x, y, width, height);
       executeContextFill();
       executeContextStroke();
-
-      curContext.closePath();
+      if (doStroke && lineWidth % 2 === 1) {
+        curContext.translate(-0.5, -0.5);
+      }
     };
 
-    Drawing3D.prototype.rect = function(x, y, width, height) {
+    Drawing3D.prototype.rect = function(x, y, width, height, tl, tr, br, bl) {
+      if (tl !== undef) {
+        throw "rect() with rounded corners is not supported in 3D mode";
+      }
+
+      if (curRectMode === PConstants.CORNERS) {
+        width -= x;
+        height -= y;
+      } else if (curRectMode === PConstants.RADIUS) {
+        width *= 2;
+        height *= 2;
+        x -= width / 2;
+        y -= height / 2;
+      } else if (curRectMode === PConstants.CENTER) {
+        x -= width / 2;
+        y -= height / 2;
+      }
+
       // Modeling transformation
       var model = new PMatrix3D();
       model.translate(x, y, 0);
@@ -13350,7 +13879,7 @@
      *
      * @see ellipseMode
      */
-    DrawingShared.prototype.ellipse = function(x, y, width, height) {
+    Drawing2D.prototype.ellipse = function(x, y, width, height) {
       x = x || 0;
       y = y || 0;
 
@@ -13361,46 +13890,28 @@
       if (curEllipseMode === PConstants.RADIUS) {
         width *= 2;
         height *= 2;
-      }
-
-      if (curEllipseMode === PConstants.CORNERS) {
+      } else if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
-      }
-
-      if (curEllipseMode === PConstants.CORNER || curEllipseMode === PConstants.CORNERS) {
+        x += width / 2;
+        y += height / 2;
+      } else if (curEllipseMode === PConstants.CORNER) {
         x += width / 2;
         y += height / 2;
       }
 
-      return {'x':x, 'y':y, 'width':width, 'height':height};
-    };
-
-    Drawing2D.prototype.ellipse = function(x, y, width, height) {
-      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
-
-      if (!params) {
-        return;
-      }
-
-      x = params['x'];
-      y = params['y'];
-      width = params['width'];
-      height = params['height'];
-
       // Shortcut for drawing a 2D circle
       if (width === height) {
         curContext.beginPath();
-        curContext.arc(x - offsetStart, y - offsetStart, width / 2, 0, PConstants.TWO_PI, false);
+        curContext.arc(x, y, width / 2, 0, PConstants.TWO_PI, false);
         executeContextFill();
         executeContextStroke();
-        curContext.closePath();
       } else {
         var w = width / 2,
-          h = height / 2,
-          C = 0.5522847498307933;
-        var c_x = C * w,
-          c_y = C * h;
+            h = height / 2,
+            C = 0.5522847498307933,
+            c_x = C * w,
+            c_y = C * h;
 
         p.beginShape();
         p.vertex(x + w, y);
@@ -13413,22 +13924,31 @@
     };
 
     Drawing3D.prototype.ellipse = function(x, y, width, height) {
-      var params = DrawingShared.prototype.ellipse.apply(this, arguments), offsetStart = 0;
+      x = x || 0;
+      y = y || 0;
 
-      if (!params) {
+      if (width <= 0 && height <= 0) {
         return;
       }
 
-      x = params['x'];
-      y = params['y'];
-      width = params['width'];
-      height = params['height'];
+      if (curEllipseMode === PConstants.RADIUS) {
+        width *= 2;
+        height *= 2;
+      } else if (curEllipseMode === PConstants.CORNERS) {
+        width = width - x;
+        height = height - y;
+        x += width / 2;
+        y += height / 2;
+      } else if (curEllipseMode === PConstants.CORNER) {
+        x += width / 2;
+        y += height / 2;
+      }
 
       var w = width / 2,
-        h = height / 2,
-        C = 0.5522847498307933;
-      var c_x = C * w,
-        c_y = C * h;
+          h = height / 2,
+          C = 0.5522847498307933,
+          c_x = C * w,
+          c_y = C * h;
 
       p.beginShape();
       p.vertex(x + w, y);
@@ -13534,9 +14054,8 @@
       // may implement this differently in later release
       if (img !== undef) {
         return window.open(img.toDataURL(),"_blank");
-      } else {
-        return window.open(p.externals.canvas.toDataURL(),"_blank");
       }
+      return window.open(p.externals.canvas.toDataURL(),"_blank");
     };
 
     var saveNumber = 0;
@@ -13590,6 +14109,103 @@
     }
 
     /**
+     * Handle the sketch code for pixels[] and pixels.length
+     * parser code converts pixels[] to getPixels()
+     * or setPixels(), .length becomes getLength()
+     */
+    function buildPixelsObject(pImage) {
+      return {
+
+        getLength: (function(aImg) {
+          return function() {
+            if (aImg.isRemote) {
+              throw "Image is loaded remotely. Cannot get length.";
+            } else {
+              return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
+            }
+          };
+        }(pImage)),
+
+        getPixel: (function(aImg) {
+          return function(i) {
+            var offset = i*4,
+              data = aImg.imageData.data;
+
+            if (aImg.isRemote) {
+              throw "Image is loaded remotely. Cannot get pixels.";
+            }
+
+            return (data[offset+3] << 24) & PConstants.ALPHA_MASK |
+                   (data[offset] << 16) & PConstants.RED_MASK |
+                   (data[offset+1] << 8) & PConstants.GREEN_MASK |
+                   data[offset+2] & PConstants.BLUE_MASK;
+          };
+        }(pImage)),
+
+        setPixel: (function(aImg) {
+          return function(i, c) {
+            var offset = i*4,
+              data = aImg.imageData.data;
+
+            if (aImg.isRemote) {
+              throw "Image is loaded remotely. Cannot set pixel.";
+            }
+
+            data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
+            data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
+            data[offset+2] = (c & PConstants.BLUE_MASK);
+            data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
+            aImg.__isDirty = true;
+          };
+        }(pImage)),
+
+        toArray: (function(aImg) {
+          return function() {
+            var arr = [],
+              data = aImg.imageData.data,
+              length = aImg.width * aImg.height;
+
+            if (aImg.isRemote) {
+              throw "Image is loaded remotely. Cannot get pixels.";
+            }
+
+            for (var i = 0, offset = 0; i < length; i++, offset += 4) {
+              arr.push( (data[offset+3] << 24) & PConstants.ALPHA_MASK |
+                        (data[offset] << 16) & PConstants.RED_MASK |
+                        (data[offset+1] << 8) & PConstants.GREEN_MASK |
+                        data[offset+2] & PConstants.BLUE_MASK );
+            }
+            return arr;
+          };
+        }(pImage)),
+
+        set: (function(aImg) {
+          return function(arr) {
+            var offset,
+              data,
+              c;
+            if (this.isRemote) {
+              throw "Image is loaded remotely. Cannot set pixels.";
+            }
+
+            data = aImg.imageData.data;
+            for (var i = 0, aL = arr.length; i < aL; i++) {
+              c = arr[i];
+              offset = i*4;
+
+              data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
+              data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
+              data[offset+2] = (c & PConstants.BLUE_MASK);
+              data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
+            }
+            aImg.__isDirty = true;
+          };
+        }(pImage))
+
+      };
+    }
+
+    /**
     * Datatype for storing images. Processing can display .gif, .jpg, .tga, and .png images. Images may be
     * displayed in 2D and 3D space. Before an image is used, it must be loaded with the loadImage() function.
     * The PImage object contains fields for the width and height of the image, as well as an array called
@@ -13609,15 +14225,95 @@
     * @see createImage
     */
     var PImage = function(aWidth, aHeight, aFormat) {
-      this.get = function(x, y, w, h) {
+
+      // Keep track of whether or not the cached imageData has been touched.
+      this.__isDirty = false;
+
+      if (aWidth instanceof HTMLImageElement) {
+        // convert an <img> to a PImage
+        this.fromHTMLImageData(aWidth);
+      } else if (aHeight || aFormat) {
+        this.width = aWidth || 1;
+        this.height = aHeight || 1;
+
+        // Stuff a canvas into sourceImg so image() calls can use drawImage like an <img>
+        var canvas = this.sourceImg = document.createElement("canvas");
+        canvas.width = this.width;
+        canvas.height = this.height;
+
+        var imageData = this.imageData = canvas.getContext('2d').createImageData(this.width, this.height);
+        this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
+        if (this.format === PConstants.RGB) {
+          // Set the alpha channel of an RGB image to opaque.
+          for (var i = 3, data = this.imageData.data, len = data.length; i < len; i += 4) {
+            data[i] = 255;
+          }
+        }
+
+        this.__isDirty = true;
+        this.updatePixels();
+      } else {
+        this.width = 0;
+        this.height = 0;
+        this.imageData = utilityContext2d.createImageData(1, 1);
+        this.format = PConstants.ARGB;
+      }
+
+      this.pixels = buildPixelsObject(this);
+    };
+    PImage.prototype = {
+
+      /**
+       * Temporary hack to deal with cross-Processing-instance created PImage.  See
+       * tickets #1623 and #1644.
+       */
+      __isPImage: true,
+
+      /**
+      * @member PImage
+      * Updates the image with the data in its pixels[] array. Use in conjunction with loadPixels(). If
+      * you're only reading pixels from the array, there's no need to call updatePixels().
+      * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the rule
+      * is that any time you want to manipulate the pixels[] array, you must first call loadPixels(), and
+      * after changes have been made, call updatePixels(). Even if the renderer may not seem to use this
+      * function in the current Processing release, this will always be subject to change.
+      * Currently, none of the renderers use the additional parameters to updatePixels().
+      */
+      updatePixels: function() {
+        var canvas = this.sourceImg;
+        if (canvas && canvas instanceof HTMLCanvasElement && this.__isDirty) {
+          canvas.getContext('2d').putImageData(this.imageData, 0, 0);
+        }
+        this.__isDirty = false;
+      },
+
+      fromHTMLImageData: function(htmlImg) {
+        // convert an <img> to a PImage
+        var canvasData = getCanvasData(htmlImg);
+        try {
+          var imageData = canvasData.context.getImageData(0, 0, htmlImg.width, htmlImg.height);
+          this.fromImageData(imageData);
+        } catch(e) {
+          if (htmlImg.width && htmlImg.height) {
+            this.isRemote = true;
+            this.width = htmlImg.width;
+            this.height = htmlImg.height;
+          }
+        }
+        this.sourceImg = htmlImg;
+      },
+
+      'get': function(x, y, w, h) {
         if (!arguments.length) {
           return p.get(this);
-        } else if (arguments.length === 2) {
+        }
+        if (arguments.length === 2) {
           return p.get(x, y, this);
-        } else if (arguments.length === 4) {
+        }
+        if (arguments.length === 4) {
           return p.get(x, y, w, h, this);
         }
-      };
+      },
 
       /**
       * @member PImage
@@ -13636,9 +14332,10 @@
       * @see pixels[]
       * @see copy
       */
-      this.set = function(x, y, c) {
+      'set': function(x, y, c) {
         p.set(x, y, c, this);
-      };
+        this.__isDirty = true;
+      },
 
       /**
       * @member PImage
@@ -13679,14 +14376,14 @@
       * @see alpha
       * @see copy
       */
-      this.blend = function(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE) {
+      blend: function(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE) {
         if (arguments.length === 9) {
           p.blend(this, srcImg, x, y, width, height, dx, dy, dwidth, dheight, this);
         } else if (arguments.length === 10) {
           p.blend(srcImg, x, y, width, height, dx, dy, dwidth, dheight, MODE, this);
         }
         delete this.sourceImg;
-      };
+      },
 
       /**
       * @member PImage
@@ -13708,14 +14405,14 @@
       * @see alpha
       * @see blend
       */
-      this.copy = function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
+      copy: function(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight) {
         if (arguments.length === 8) {
           p.blend(this, srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, PConstants.REPLACE, this);
         } else if (arguments.length === 9) {
           p.blend(srcImg, sx, sy, swidth, sheight, dx, dy, dwidth, dheight, PConstants.REPLACE, this);
         }
         delete this.sourceImg;
-      };
+      },
 
       /**
       * @member PImage
@@ -13735,7 +14432,7 @@
       * @param {MODE} MODE        Either THRESHOLD, GRAY, INVERT, POSTERIZE, BLUR, OPAQUE, ERODE, or DILATE
       * @param {int|float} param  in the range from 0 to 1
       */
-      this.filter = function(mode, param) {
+      filter: function(mode, param) {
         if (arguments.length === 2) {
           p.filter(mode, param, this);
         } else if (arguments.length === 1) {
@@ -13743,7 +14440,7 @@
           p.filter(mode, null, this);
         }
         delete this.sourceImg;
-      };
+      },
 
       /**
       * @member PImage
@@ -13759,9 +14456,9 @@
       *
       * @param {String} filename        a sequence of letters and numbers
       */
-      this.save = function(file){
+      save: function(file){
         p.save(file,this);
-      };
+      },
 
       /**
       * @member PImage
@@ -13773,26 +14470,25 @@
       *
       * @see get
       */
-      this.resize = function(w, h) {
+      resize: function(w, h) {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot resize.";
-        } else {
-          if (this.width !== 0 || this.height !== 0) {
-            // make aspect ratio if w or h is 0
-            if (w === 0 && h !== 0) {
-              w = Math.floor(this.width / this.height * h);
-            } else if (h === 0 && w !== 0) {
-              h = Math.floor(this.height / this.width * w);
-            }
-            // put 'this.imageData' into a new canvas
-            var canvas = getCanvasData(this.imageData).canvas;
-            // pull imageData object out of canvas into ImageData object
-            var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
-            // set this as new pimage
-            this.fromImageData(imageData);
-          }
         }
-      };
+        if (this.width !== 0 || this.height !== 0) {
+          // make aspect ratio if w or h is 0
+          if (w === 0 && h !== 0) {
+            w = Math.floor(this.width / this.height * h);
+          } else if (h === 0 && w !== 0) {
+            h = Math.floor(this.height / this.width * w);
+          }
+          // put 'this.imageData' into a new canvas
+          var canvas = getCanvasData(this.imageData).canvas;
+          // pull imageData object out of canvas into ImageData object
+          var imageData = getCanvasData(canvas, w, h).context.getImageData(0, 0, w, h);
+          // set this as new pimage
+          this.fromImageData(imageData);
+        }
+      },
 
       /**
       * @member PImage
@@ -13809,88 +14505,35 @@
       * @param {int[]} maskArray        any array of Integer numbers used as the alpha channel, needs to be same
       *                                 length as the image's pixel array
       */
-      this.mask = function(mask) {
-        this.__mask = undef;
+      mask: function(mask) {
+        var obj = this.toImageData(),
+            i,
+            size;
 
-        if (mask instanceof PImage) {
+        if (mask instanceof PImage || mask.__isPImage) {
           if (mask.width === this.width && mask.height === this.height) {
-            this.__mask = mask;
+            mask = mask.toImageData();
+
+            for (i = 2, size = this.width * this.height * 4; i < size; i += 4) {
+              // using it as an alpha channel
+              obj.data[i + 1] = mask.data[i];
+              // but only the blue color channel
+            }
           } else {
             throw "mask must have the same dimensions as PImage.";
           }
-        } else if (mask instanceof Array) { // this is a pixel array
-          // mask pixel array needs to be the same length as this.pixels
-          // how do we update this for 0.9 this.imageData holding pixels ^^
-          // mask.constructor ? and this.pixels.length = this.imageData.data.length instead ?
-          if (this.pixels.length === mask.length) {
-            this.__mask = mask;
+        } else if (mask instanceof Array) {
+          if (this.width * this.height === mask.length) {
+            for (i = 0, size = mask.length; i < size; ++i) {
+              obj.data[i * 4 + 3] = mask[i];
+            }
           } else {
             throw "mask array must be the same length as PImage pixels array.";
           }
         }
-      };
 
-      // handle the sketch code for pixels[] and pixels.length
-      // parser code converts pixels[] to getPixels()
-      // or setPixels(), .length becomes getLength()
-      this.pixels = {
-        getLength: (function(aImg) {
-          if (aImg.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot get length.";
-          } else {
-            return function() {
-              return aImg.imageData.data.length ? aImg.imageData.data.length/4 : 0;
-            };
-          }
-        }(this)),
-        getPixel: (function(aImg) {
-          if (aImg.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot get pixels.";
-          } else {
-            return function(i) {
-              var offset = i*4;
-              return p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
-                                   aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]);
-            };
-          }
-        }(this)),
-        setPixel: (function(aImg) {
-          if (aImg.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot set pixel.";
-          } else {
-            return function(i,c) {
-              var offset = i*4;
-              aImg.imageData.data[offset+0] = (c & PConstants.RED_MASK) >>> 16;
-              aImg.imageData.data[offset+1] = (c & PConstants.GREEN_MASK) >>> 8;
-              aImg.imageData.data[offset+2] = (c & PConstants.BLUE_MASK);
-              aImg.imageData.data[offset+3] = (c & PConstants.ALPHA_MASK) >>> 24;
-            };
-          }
-        }(this)),
-        toArray: (function(aImg) {
-          if (aImg.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot get pixels.";
-          } else {
-            return function() {
-              var arr = [], length = aImg.width * aImg.height;
-              for (var i = 0, offset = 0; i < length; i++, offset += 4) {
-                arr.push(p.color.toInt(aImg.imageData.data[offset], aImg.imageData.data[offset+1],
-                                       aImg.imageData.data[offset+2], aImg.imageData.data[offset+3]));
-              }
-              return arr;
-            };
-          }
-        }(this)),
-        set: function(arr) {
-          if (this.isRemote) { // Remote images cannot access imageData
-            throw "Image is loaded remotely. Cannot set pixels.";
-          } else {
-            for (var i = 0, aL = arr.length; i < aL; i++) {
-              this.setPixel(i, arr[i]);
-            }
-          }
-        }
-      };
+        this.fromImageData(obj);
+      },
 
       // These are intentionally left blank for PImages, we work live with pixels and draw as necessary
       /**
@@ -13902,81 +14545,45 @@
       * and after changes have been made, call updatePixels(). Even if the renderer may not seem to use
       * this function in the current Processing release, this will always be subject to change.
       */
-      this.loadPixels = nop;
+      loadPixels: nop,
 
-      /**
-      * @member PImage
-      * Updates the image with the data in its pixels[] array. Use in conjunction with loadPixels(). If
-      * you're only reading pixels from the array, there's no need to call updatePixels().
-      * Certain renderers may or may not seem to require loadPixels() or updatePixels(). However, the rule
-      * is that any time you want to manipulate the pixels[] array, you must first call loadPixels(), and
-      * after changes have been made, call updatePixels(). Even if the renderer may not seem to use this
-      * function in the current Processing release, this will always be subject to change.
-      * Currently, none of the renderers use the additional parameters to updatePixels().
-      */
-      this.updatePixels = nop;
-
-      this.toImageData = function() {
-        if (this.isRemote) { // Remote images cannot access imageData, send source image instead
+      toImageData: function() {
+        if (this.isRemote) {
           return this.sourceImg;
-        } else {
-          var canvasData = getCanvasData(this.imageData);
-          return canvasData.context.getImageData(0, 0, this.width, this.height);
         }
-      };
 
-      this.toDataURL = function() {
+        if (!this.__isDirty) {
+          return this.imageData;
+        }
+
+        var canvasData = getCanvasData(this.imageData);
+        return canvasData.context.getImageData(0, 0, this.width, this.height);
+      },
+
+      toDataURL: function() {
         if (this.isRemote) { // Remote images cannot access imageData
           throw "Image is loaded remotely. Cannot create dataURI.";
-        } else {
-          var canvasData = getCanvasData(this.imageData);
-          return canvasData.canvas.toDataURL();
         }
-      };
+        var canvasData = getCanvasData(this.imageData);
+        return canvasData.canvas.toDataURL();
+      },
 
-      this.fromImageData = function(canvasImg) {
-        this.width = canvasImg.width;
-        this.height = canvasImg.height;
-        this.imageData = canvasImg;
+      fromImageData: function(canvasImg) {
+        var w = canvasImg.width,
+          h = canvasImg.height,
+          canvas = document.createElement('canvas'),
+          ctx = canvas.getContext('2d');
+
+        this.width = canvas.width = w;
+        this.height = canvas.height = h;
+
+        ctx.putImageData(canvasImg, 0, 0);
+
         // changed for 0.9
         this.format = PConstants.ARGB;
-      };
 
-      this.fromHTMLImageData = function(htmlImg) {
-        // convert an <img> to a PImage
-        var canvasData = getCanvasData(htmlImg);
-        try {
-          var imageData = canvasData.context.getImageData(0, 0, htmlImg.width, htmlImg.height);
-          this.fromImageData(imageData);
-        } catch(e) {
-          if (htmlImg.width && htmlImg.height) {
-            this.isRemote = true;
-            this.width = htmlImg.width;
-            this.height = htmlImg.height;
-          }
-        }
-        this.sourceImg = htmlImg;
-      };
-
-      if (arguments.length === 1) {
-        // convert an <img> to a PImage
-        this.fromHTMLImageData(arguments[0]);
-      } else if (arguments.length === 2 || arguments.length === 3) {
-        this.width = aWidth || 1;
-        this.height = aHeight || 1;
-        this.imageData = utilityContext2d.createImageData(this.width, this.height);
-        this.format = (aFormat === PConstants.ARGB || aFormat === PConstants.ALPHA) ? aFormat : PConstants.RGB;
-        if (this.format === PConstants.RGB) {
-          // Set the alpha channel of an RGB image to opaque.
-          for (var i = 3, data = this.imageData.data, len = data.length; i < len; i += 4) {
-            data[i] = 255;
-          }
-        }
-      } else {
-        this.width = 0;
-        this.height = 0;
-        this.imageData = utilityContext2d.createImageData(1, 1);
-        this.format = PConstants.ARGB;
+        this.imageData = canvasImg;
+        this.sourceImg = canvas;
       }
     };
 
@@ -14047,29 +14654,27 @@
         return pimg;
       }
       // else async load it
-      else {
-        pimg = new PImage();
-        var img = document.createElement('img');
+      pimg = new PImage();
+      var img = document.createElement('img');
 
-        pimg.sourceImg = img;
+      pimg.sourceImg = img;
 
-        img.onload = (function(aImage, aPImage, aCallback) {
-          var image = aImage;
-          var pimg = aPImage;
-          var callback = aCallback;
-          return function() {
-            // change the <img> object into a PImage now that its loaded
-            pimg.fromHTMLImageData(image);
-            pimg.loaded = true;
-            if (callback) {
-              callback();
-            }
-          };
-        }(img, pimg, callback));
+      img.onload = (function(aImage, aPImage, aCallback) {
+        var image = aImage;
+        var pimg = aPImage;
+        var callback = aCallback;
+        return function() {
+          // change the <img> object into a PImage now that its loaded
+          pimg.fromHTMLImageData(image);
+          pimg.loaded = true;
+          if (callback) {
+            callback();
+          }
+        };
+      }(img, pimg, callback));
 
-        img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
-        return pimg;
-      }
+      img.src = file; // needs to be called after the img.onload function is declared or it wont work in opera
+      return pimg;
     };
 
     // async loading of large images, same functionality as loadImage above
@@ -14093,74 +14698,72 @@
     */
     p.requestImage = p.loadImage;
 
-    function get$0() {
-      //return a PImage of curContext
-      var c = new PImage(p.width, p.height, PConstants.RGB);
-      c.fromImageData(curContext.getImageData(0, 0, p.width, p.height));
-      return c;
-    }
     function get$2(x,y) {
       var data;
       // return the color at x,y (int) of curContext
-      // create a PImage object of size 1x1 and return the int of the pixels array element 0
-      if (x < p.width && x >= 0 && y >= 0 && y < p.height) {
-        if(isContextReplaced) {
-          var offset = ((0|x) + p.width * (0|y))*4;
-          data = p.imageData.data;
-          return p.color.toInt(data[offset], data[offset+1],
-                           data[offset+2], data[offset+3]);
-        }
-        // x,y is inside canvas space
-        data = curContext.getImageData(0|x, 0|y, 1, 1).data;
-        // changed for 0.9
-        return p.color.toInt(data[0], data[1], data[2], data[3]);
-      } else {
+      if (x >= p.width || x < 0 || y < 0 || y >= p.height) {
         // x,y is outside image return transparent black
         return 0;
       }
+
+      // loadPixels() has been called
+      if (isContextReplaced) {
+        var offset = ((0|x) + p.width * (0|y)) * 4;
+        data = p.imageData.data;
+        return (data[offset + 3] << 24) & PConstants.ALPHA_MASK |
+               (data[offset] << 16) & PConstants.RED_MASK |
+               (data[offset + 1] << 8) & PConstants.GREEN_MASK |
+               data[offset + 2] & PConstants.BLUE_MASK;
+      }
+
+      // x,y is inside canvas space
+      data = p.toImageData(0|x, 0|y, 1, 1).data;
+      return (data[3] << 24) & PConstants.ALPHA_MASK |
+             (data[0] << 16) & PConstants.RED_MASK |
+             (data[1] << 8) & PConstants.GREEN_MASK |
+             data[2] & PConstants.BLUE_MASK;
     }
     function get$3(x,y,img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot get x,y.";
-      } else {
-        // PImage.get(x,y) was called, return the color (int) at x,y of img
-        // changed in 0.9
-        var offset = y * img.width * 4 + (x * 4);
-        return p.color.toInt(img.imageData.data[offset],
-                           img.imageData.data[offset + 1],
-                           img.imageData.data[offset + 2],
-                           img.imageData.data[offset + 3]);
       }
+      // PImage.get(x,y) was called, return the color (int) at x,y of img
+      var offset = y * img.width * 4 + (x * 4),
+          data = img.imageData.data;
+      return (data[offset + 3] << 24) & PConstants.ALPHA_MASK |
+             (data[offset] << 16) & PConstants.RED_MASK |
+             (data[offset + 1] << 8) & PConstants.GREEN_MASK |
+             data[offset + 2] & PConstants.BLUE_MASK;
     }
     function get$4(x, y, w, h) {
       // return a PImage of w and h from cood x,y of curContext
-      var c = new PImage(w, h, PConstants.RGB);
-      c.fromImageData(curContext.getImageData(x, y, w, h));
+      var c = new PImage(w, h, PConstants.ARGB);
+      c.fromImageData(p.toImageData(x, y, w, h));
       return c;
     }
     function get$5(x, y, w, h, img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot get x,y,w,h.";
-      } else {
-        // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
-        // changed for 0.9, offset start point needs to be *4
-        var c = new PImage(w, h, PConstants.RGB), cData = c.imageData.data,
-          imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
-        // Don't need to copy pixels from the image outside ranges.
-        var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
-          stopRow = Math.min(h, imgHeight - y), stopColumn = Math.min(w, imgWidth - x);
-        for (var i = startRow; i < stopRow; ++i) {
-          var sourceOffset = ((y + i) * imgWidth + (x + startColumn)) * 4;
-          var targetOffset = (i * w + startColumn) * 4;
-          for (var j = startColumn; j < stopColumn; ++j) {
-            cData[targetOffset++] = imgData[sourceOffset++];
-            cData[targetOffset++] = imgData[sourceOffset++];
-            cData[targetOffset++] = imgData[sourceOffset++];
-            cData[targetOffset++] = imgData[sourceOffset++];
-          }
-        }
-        return c;
       }
+      // PImage.get(x,y,w,h) was called, return x,y,w,h PImage of img
+      // offset start point needs to be *4
+      var c = new PImage(w, h, PConstants.ARGB), cData = c.imageData.data,
+        imgWidth = img.width, imgHeight = img.height, imgData = img.imageData.data;
+      // Don't need to copy pixels from the image outside ranges.
+      var startRow = Math.max(0, -y), startColumn = Math.max(0, -x),
+        stopRow = Math.min(h, imgHeight - y), stopColumn = Math.min(w, imgWidth - x);
+      for (var i = startRow; i < stopRow; ++i) {
+        var sourceOffset = ((y + i) * imgWidth + (x + startColumn)) * 4;
+        var targetOffset = (i * w + startColumn) * 4;
+        for (var j = startColumn; j < stopColumn; ++j) {
+          cData[targetOffset++] = imgData[sourceOffset++];
+          cData[targetOffset++] = imgData[sourceOffset++];
+          cData[targetOffset++] = imgData[sourceOffset++];
+          cData[targetOffset++] = imgData[sourceOffset++];
+        }
+      }
+      c.__isDirty = true;
+      return c;
     }
 
     // Gets a single pixel or block of pixels from the current Canvas Context or a PImage
@@ -14189,20 +14792,24 @@
     */
     p.get = function(x, y, w, h, img) {
       // for 0 2 and 4 arguments use curContext, otherwise PImage.get was called
-      if (arguments.length === 2) {
-        return get$2(x, y);
-      } else if (arguments.length === 0) {
-        return get$0();
-      } else if (arguments.length === 5) {
+      if (img !== undefined) {
         return get$5(x, y, w, h, img);
-      } else if (arguments.length === 4) {
-        return get$4(x, y, w, h);
-      } else if (arguments.length === 3) {
-        return get$3(x, y, w);
-      } else if (arguments.length === 1) {
-        // PImage.get() was called, return the PImage
-        return x;
       }
+      if (h !== undefined) {
+        return get$4(x, y, w, h);
+      }
+      if (w !== undefined) {
+        return get$3(x, y, w);
+      }
+      if (y !== undefined) {
+        return get$2(x, y);
+      }
+      if (x !== undefined) {
+        // PImage.get() was called, return a new PImage
+        return get$5(0, 0, x.width, x.height, x);
+      }
+
+      return get$4(0, 0, p.width, p.height);
     };
 
     /**
@@ -14287,15 +14894,14 @@
     function set$4(x, y, obj, img) {
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot set x,y.";
-      } else {
-        var c = p.color.toArray(obj);
-        var offset = y * img.width * 4 + (x*4);
-        var data = img.imageData.data;
-        data[offset] = c[0];
-        data[offset+1] = c[1];
-        data[offset+2] = c[2];
-        data[offset+3] = c[3];
       }
+      var c = p.color.toArray(obj);
+      var offset = y * img.width * 4 + (x*4);
+      var data = img.imageData.data;
+      data[offset] = c[0];
+      data[offset+1] = c[1];
+      data[offset+2] = c[2];
+      data[offset+3] = c[3];
     }
 
     // Paints a pixel array into the canvas
@@ -14324,7 +14930,7 @@
         // called p.set(), was it with a color or a img ?
         if (typeof obj === "number") {
           set$3(x, y, obj);
-        } else if (obj instanceof PImage) {
+        } else if (obj instanceof PImage || obj.__isPImage) {
           p.image(obj, x, y);
         }
       } else if (arguments.length === 4) {
@@ -14506,12 +15112,13 @@
     var backgroundHelper = function(arg1, arg2, arg3, arg4) {
       var obj;
 
-      if (arg1 instanceof PImage) {
+      if (arg1 instanceof PImage || arg1.__isPImage) {
         obj = arg1;
 
         if (!obj.loaded) {
           throw "Error using image in background(): PImage not loaded.";
-        } else if(obj.width !== p.width || obj.height !== p.height){
+        }
+        if(obj.width !== p.width || obj.height !== p.height){
           throw "Background image must be the same dimensions as the canvas.";
         }
       } else {
@@ -14526,7 +15133,7 @@
         backgroundHelper(arg1, arg2, arg3, arg4);
       }
 
-      if (backgroundObj instanceof PImage) {
+      if (backgroundObj instanceof PImage || backgroundObj.__isPImage) {
         saveContext();
         curContext.setTransform(1, 0, 0, 1, 0, 0);
         p.image(backgroundObj, 0, 0);
@@ -14583,39 +15190,31 @@
     * @see alpha
     */
     Drawing2D.prototype.image = function(img, x, y, w, h) {
+      // Fix fractional positions
+      x = Math.round(x);
+      y = Math.round(y);
+
       if (img.width > 0) {
         var wid = w || img.width;
         var hgt = h || img.height;
 
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
-        var fastImage = !!img.sourceImg && curTint === null && !img.__mask;
+        var fastImage = !!img.sourceImg && curTint === null;
         if (fastImage) {
           var htmlElement = img.sourceImg;
+          if (img.__isDirty) {
+            img.updatePixels();
+          }
           // Using HTML element's width and height in case if the image was resized.
           curContext.drawImage(htmlElement, 0, 0,
             htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
         } else {
           var obj = img.toImageData();
 
-          if (img.__mask) {
-            var j, size;
-            if (img.__mask instanceof PImage) {
-              var objMask = img.__mask.toImageData();
-              for (j = 2, size = img.width * img.height * 4; j < size; j += 4) {
-                // using it as an alpha channel
-                obj.data[j + 1] = objMask.data[j];
-                // but only the blue color channel
-              }
-            } else {
-              for (j = 0, size = img.__mask.length; j < size; ++j) {
-                obj.data[(j << 2) + 3] = img.__mask[j];
-              }
-            }
-          }
-
           // Tint the image
           if (curTint !== null) {
             curTint(obj);
+            img.__isDirty = true;
           }
 
           curContext.drawImage(getCanvasData(obj).canvas, 0, 0,
@@ -14626,15 +15225,18 @@
 
     Drawing3D.prototype.image = function(img, x, y, w, h) {
       if (img.width > 0) {
-        var wid = w || img.width;
-        var hgt = h || img.height;
+        // Fix fractional positions
+        x = Math.round(x);
+        y = Math.round(y);
+        w = w || img.width;
+        h = h || img.height;
 
         p.beginShape(p.QUADS);
-        p.texture(img.externals.canvas);
+        p.texture(img);
         p.vertex(x, y, 0, 0, 0);
-        p.vertex(x, y+hgt, 0, 0, hgt);
-        p.vertex(x+wid, y+hgt, 0, wid, hgt);
-        p.vertex(x+wid, y, 0, wid, 0);
+        p.vertex(x, y+h, 0, 0, h);
+        p.vertex(x+w, y+h, 0, w, h);
+        p.vertex(x+w, y, 0, w, 0);
         p.endShape();
       }
     };
@@ -14671,13 +15273,12 @@
      * @see #noTint()
      * @see #image()
      */
-    p.tint = function() {
-      var tintColor = p.color.apply(this, arguments);
+    p.tint = function(a1, a2, a3, a4) {
+      var tintColor = p.color(a1, a2, a3, a4);
       var r = p.red(tintColor) / colorModeX;
       var g = p.green(tintColor) / colorModeY;
       var b = p.blue(tintColor) / colorModeZ;
       var a = p.alpha(tintColor) / colorModeA;
-
       curTint = function(obj) {
         var data = obj.data,
             length = 4 * obj.width * obj.height;
@@ -14686,6 +15287,15 @@
           data[i++] *= g;
           data[i++] *= b;
           data[i++] *= a;
+        }
+      };
+      // for overriding the color buffer when 3d rendering
+      curTint3d = function(data){
+        for (var i = 0; i < data.length;) {
+          data[i++] = r;
+          data[i++] = g;
+          data[i++] = b;
+          data[i++] = a;
         }
       };
     };
@@ -14698,6 +15308,7 @@
      */
     p.noTint = function() {
       curTint = null;
+      curTint3d = null;
     };
 
     /**
@@ -14720,7 +15331,7 @@
     * @see get
     */
     p.copy = function(src, sx, sy, sw, sh, dx, dy, dw, dh) {
-      if (arguments.length === 8) {
+      if (dh === undef) {
         // shift everything, and introduce p
         dh = dw;
         dw = dy;
@@ -14770,7 +15381,11 @@
     * @see filter
     */
     p.blend = function(src, sx, sy, sw, sh, dx, dy, dw, dh, mode, pimgdest) {
-      if (arguments.length === 9) {
+      if (src.isRemote) {
+        throw "Image is loaded remotely. Cannot blend image.";
+      }
+
+      if (mode === undef) {
         // shift everything, and introduce p
         mode = dh;
         dh = dw;
@@ -14784,36 +15399,28 @@
         src = p;
       }
 
-      var sx2 = sx + sw;
-      var sy2 = sy + sh;
-      var dx2 = dx + dw;
-      var dy2 = dy + dh;
-      var dest;
-      if (src.isRemote) { // Remote images cannot access imageData
-        throw "Image is loaded remotely. Cannot blend image.";
+      var sx2 = sx + sw,
+        sy2 = sy + sh,
+        dx2 = dx + dw,
+        dy2 = dy + dh,
+        dest = pimgdest || p;
+
+      // check if pimgdest is there and pixels, if so this was a call from pimg.blend
+      if (pimgdest === undef || mode === undef) {
+        p.loadPixels();
+      }
+
+      src.loadPixels();
+
+      if (src === p && p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
+        p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
+                      dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
       } else {
-        // check if pimgdest is there and pixels, if so this was a call from pimg.blend
-        if (arguments.length === 10 || arguments.length === 9) {
-          p.loadPixels();
-          dest = p;
-        } else if (arguments.length === 11 && pimgdest && pimgdest.imageData) {
-          dest = pimgdest;
-        }
-        if (src === p) {
-          if (p.intersect(sx, sy, sx2, sy2, dx, dy, dx2, dy2)) {
-            p.blit_resize(p.get(sx, sy, sx2 - sx, sy2 - sy), 0, 0, sx2 - sx - 1, sy2 - sy - 1,
-                          dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-          } else {
-            // same as below, except skip the loadPixels() because it'd be redundant
-            p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-          }
-        } else {
-          src.loadPixels();
-          p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
-        }
-        if (arguments.length === 10) {
-          p.updatePixels();
-        }
+        p.blit_resize(src, sx, sy, sx2, sy2, dest.imageData.data, dest.width, dest.height, dx, dy, dx2, dy2, mode);
+      }
+
+      if (pimgdest === undef) {
+        p.updatePixels();
       }
     };
 
@@ -15095,89 +15702,88 @@
       }
       if (img.isRemote) { // Remote images cannot access imageData
         throw "Image is loaded remotely. Cannot filter image.";
-      } else {
-        // begin filter process
-        var imglen = img.pixels.getLength();
-        switch (kind) {
-          case PConstants.BLUR:
-            var radius = param || 1; // if no param specified, use 1 (default for p5)
-            blurARGB(radius, img);
-            break;
+      }
+      // begin filter process
+      var imglen = img.pixels.getLength();
+      switch (kind) {
+        case PConstants.BLUR:
+          var radius = param || 1; // if no param specified, use 1 (default for p5)
+          blurARGB(radius, img);
+          break;
 
-          case PConstants.GRAY:
-            if (img.format === PConstants.ALPHA) { //trouble
-              // for an alpha image, convert it to an opaque grayscale
-              for (i = 0; i < imglen; i++) {
-                col = 255 - img.pixels.getPixel(i);
-                img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
-              }
-              img.format = PConstants.RGB; //trouble
-            } else {
-              for (i = 0; i < imglen; i++) {
-                col = img.pixels.getPixel(i);
-                lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
-                img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
-              }
-            }
-            break;
-
-          case PConstants.INVERT:
+        case PConstants.GRAY:
+          if (img.format === PConstants.ALPHA) { //trouble
+            // for an alpha image, convert it to an opaque grayscale
             for (i = 0; i < imglen; i++) {
-              img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
-            }
-            break;
-
-          case PConstants.POSTERIZE:
-            if (param === null) {
-              throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
-            }
-            var levels = p.floor(param);
-            if ((levels < 2) || (levels > 255)) {
-              throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
-            }
-            var levels1 = levels - 1;
-            for (i = 0; i < imglen; i++) {
-              var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
-              var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
-              var blevel = img.pixels.getPixel(i) & 0xff;
-              rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
-              glevel = (((glevel * levels) >> 8) * 255) / levels1;
-              blevel = (((blevel * levels) >> 8) * 255) / levels1;
-              img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
-            }
-            break;
-
-          case PConstants.OPAQUE:
-            for (i = 0; i < imglen; i++) {
-              img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
+              col = 255 - img.pixels.getPixel(i);
+              img.pixels.setPixel(i,(0xff000000 | (col << 16) | (col << 8) | col));
             }
             img.format = PConstants.RGB; //trouble
-            break;
-
-          case PConstants.THRESHOLD:
-            if (param === null) {
-              param = 0.5;
-            }
-            if ((param < 0) || (param > 1)) {
-              throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
-            }
-            var thresh = p.floor(param * 255);
+          } else {
             for (i = 0; i < imglen; i++) {
-              var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16, p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8, (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
-              img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) | ((max < thresh) ? 0x000000 : 0xffffff)));
+              col = img.pixels.getPixel(i);
+              lum = (77*(col>>16&0xff) + 151*(col>>8&0xff) + 28*(col&0xff))>>8;
+              img.pixels.setPixel(i,((col & PConstants.ALPHA_MASK) | lum<<16 | lum<<8 | lum));
             }
-            break;
+          }
+          break;
 
-          case PConstants.ERODE:
-            dilate(true, img);
-            break;
+        case PConstants.INVERT:
+          for (i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) ^ 0xffffff));
+          }
+          break;
 
-          case PConstants.DILATE:
-            dilate(false, img);
-            break;
-        }
-        img.updatePixels();
+        case PConstants.POSTERIZE:
+          if (param === null) {
+            throw "Use filter(POSTERIZE, int levels) instead of filter(POSTERIZE)";
+          }
+          var levels = p.floor(param);
+          if ((levels < 2) || (levels > 255)) {
+            throw "Levels must be between 2 and 255 for filter(POSTERIZE, levels)";
+          }
+          var levels1 = levels - 1;
+          for (i = 0; i < imglen; i++) {
+            var rlevel = (img.pixels.getPixel(i) >> 16) & 0xff;
+            var glevel = (img.pixels.getPixel(i) >> 8) & 0xff;
+            var blevel = img.pixels.getPixel(i) & 0xff;
+            rlevel = (((rlevel * levels) >> 8) * 255) / levels1;
+            glevel = (((glevel * levels) >> 8) * 255) / levels1;
+            blevel = (((blevel * levels) >> 8) * 255) / levels1;
+            img.pixels.setPixel(i, ((0xff000000 & img.pixels.getPixel(i)) | (rlevel << 16) | (glevel << 8) | blevel));
+          }
+          break;
+
+        case PConstants.OPAQUE:
+          for (i = 0; i < imglen; i++) {
+            img.pixels.setPixel(i, (img.pixels.getPixel(i) | 0xff000000));
+          }
+          img.format = PConstants.RGB; //trouble
+          break;
+
+        case PConstants.THRESHOLD:
+          if (param === null) {
+            param = 0.5;
+          }
+          if ((param < 0) || (param > 1)) {
+            throw "Level must be between 0 and 1 for filter(THRESHOLD, level)";
+          }
+          var thresh = p.floor(param * 255);
+          for (i = 0; i < imglen; i++) {
+            var max = p.max((img.pixels.getPixel(i) & PConstants.RED_MASK) >> 16, p.max((img.pixels.getPixel(i) & PConstants.GREEN_MASK) >> 8, (img.pixels.getPixel(i) & PConstants.BLUE_MASK)));
+            img.pixels.setPixel(i, ((img.pixels.getPixel(i) & PConstants.ALPHA_MASK) | ((max < thresh) ? 0x000000 : 0xffffff)));
+          }
+          break;
+
+        case PConstants.ERODE:
+          dilate(true, img);
+          break;
+
+        case PConstants.DILATE:
+          dilate(false, img);
+          break;
       }
+      img.updatePixels();
     };
 
 
@@ -15421,42 +16027,11 @@
     // Font handling
     ////////////////////////////////////////////////////////////////////////////
 
-    // Defines system (non-SVG) font.
-    function PFont(name) {
-      this.name = "sans-serif";
-      if(name !== undef) {
-        switch(name) {
-          case "sans-serif":
-          case "serif":
-          case "monospace":
-          case "fantasy":
-          case "cursive":
-            this.name = name;
-            break;
-          default:
-            this.name = "\"" + name + "\", sans-serif";
-            break;
-        }
-      }
-      this.origName = name;
-    }
-    PFont.prototype.width = function(str) {
-      if ("measureText" in curContext) {
-        return curContext.measureText(typeof str === "number" ? String.fromCharCode(str) : str).width / curTextSize;
-      } else {
-        return 0;
-      }
-    };
-    // Lists all standard fonts
-    PFont.list = function() {
-      return ["sans-serif", "serif", "monospace", "fantasy", "cursive"];
-    };
-    p.PFont = PFont;
-
     /**
      * loadFont() Loads a font into a variable of type PFont.
      *
      * @param {String} name filename of the font to load
+     * @param {int|float} size option font size (used internally)
      *
      * @returns {PFont} new PFont object
      *
@@ -15465,44 +16040,51 @@
      * @see #text
      * @see #createFont
      */
-    p.loadFont = function(name) {
-      if (name === undef || name.indexOf(".svg") === -1) {
-        return new PFont(name);
-      } else {
-        // If the font is a glyph, calculate by SVG table
-        var font = p.loadGlyphs(name);
-
-        return {
-          name: name,
-          glyph: true,
-          units_per_em: font.units_per_em,
-          horiz_adv_x: 1 / font.units_per_em * font.horiz_adv_x,
-          ascent: font.ascent,
-          descent: font.descent,
-          width: function(str) {
-            var width = 0;
-            var len = str.length;
-            for (var i = 0; i < len; i++) {
-              try {
-                width += parseFloat(p.glyphLook(p.glyphTable[name], str[i]).horiz_adv_x);
-              }
-              catch(e) {
-                Processing.debug(e);
-              }
-            }
-            return width / p.glyphTable[name].units_per_em;
-          }
-        };
+    p.loadFont = function(name, size) {
+      if (name === undef) {
+        throw("font name required in loadFont.");
       }
+      if (name.indexOf(".svg") === -1) {
+        if (size === undef) {
+          size = curTextFont.size;
+        }
+        return PFont.get(name, size);
+      }
+      // If the font is a glyph, calculate by SVG table
+      var font = p.loadGlyphs(name);
+
+      return {
+        name: name,
+        css: '12px sans-serif',
+        glyph: true,
+        units_per_em: font.units_per_em,
+        horiz_adv_x: 1 / font.units_per_em * font.horiz_adv_x,
+        ascent: font.ascent,
+        descent: font.descent,
+        width: function(str) {
+          var width = 0;
+          var len = str.length;
+          for (var i = 0; i < len; i++) {
+            try {
+              width += parseFloat(p.glyphLook(p.glyphTable[name], str[i]).horiz_adv_x);
+            }
+            catch(e) {
+              Processing.debug(e);
+            }
+          }
+          return width / p.glyphTable[name].units_per_em;
+        }
+      };
     };
 
     /**
      * createFont() Loads a font into a variable of type PFont.
+     * Smooth and charset are ignored in Processing.js.
      *
      * @param {String}    name    filename of the font to load
      * @param {int|float} size    font size in pixels
-     * @param {boolean}   smooth  optional true for an antialiased font, false for aliased
-     * @param {char[]}    charset optional array containing characters to be generated
+     * @param {boolean}   smooth  not used in Processing.js
+     * @param {char[]}    charset not used in Processing.js
      *
      * @returns {PFont} new PFont object
      *
@@ -15511,27 +16093,16 @@
      * @see #text
      * @see #loadFont
      */
-    p.createFont = function(name, size, smooth, charset) {
-      if (arguments.length === 2) {
-        p.textSize(size);
-        return p.loadFont(name);
-      } else if (arguments.length === 3) {
-        // smooth: true for an antialiased font, false for aliased
-        p.textSize(size);
-        return p.loadFont(name);
-      } else if (arguments.length === 4) {
-        // charset: char array containing characters to be generated
-        p.textSize(size);
-        return p.loadFont(name);
-      } else {
-        throw("incorrent number of parameters for createFont");
-      }
+    p.createFont = function(name, size) {
+      // because Processing.js only deals with real fonts,
+      // createFont is simply a wrapper for loadFont/2
+      return p.loadFont(name, size);
     };
 
     /**
      * textFont() Sets the current font.
      *
-     * @param {PFont}     name filename of the font to load
+     * @param {PFont}     pfont the PFont to load as current text font
      * @param {int|float} size optional font size in pixels
      *
      * @see #createFont
@@ -15539,14 +16110,21 @@
      * @see #PFont
      * @see #text
      */
-    p.textFont = function(font, size) {
-      curTextFont = font;
-      if (size) {
-        p.textSize(size);
-      } else {
-        var curContext = drawing.$ensureContext();
-        curContext.font = curTextSize + "px " + curTextFont.name;
+    p.textFont = function(pfont, size) {
+      if (size !== undef) {
+        // If we're using an SVG glyph font, don't load from cache
+        if (!pfont.glyph) {
+          pfont = PFont.get(pfont.name, size);
+        }
+        curTextSize = size;
       }
+      curTextFont = pfont;
+      curFontName = curTextFont.name;
+      curTextAscent = curTextFont.ascent;
+      curTextDescent = curTextFont.descent;
+      curTextLeading = curTextFont.leading;
+      var curContext = drawing.$ensureContext();
+      curContext.font = curTextFont.css;
     };
 
     /**
@@ -15560,11 +16138,53 @@
      * @see #text
      */
     p.textSize = function(size) {
-      if (size) {
+      if (size !== curTextSize) {
+        curTextFont = PFont.get(curFontName, size);
         curTextSize = size;
+        // recache metrics
+        curTextAscent = curTextFont.ascent;
+        curTextDescent = curTextFont.descent;
+        curTextLeading = curTextFont.leading;
         var curContext = drawing.$ensureContext();
-        curContext.font = curTextSize + "px " + curTextFont.name;
+        curContext.font = curTextFont.css;
       }
+    };
+
+    /**
+     * textAscent() returns the maximum height a character extends above the baseline of the
+     * current font at its current size, in pixels.
+     *
+     * @returns {float} height of the current font above the baseline, at its current size, in pixels
+     *
+     * @see #textDescent
+     */
+    p.textAscent = function() {
+      return curTextAscent;
+    };
+
+    /**
+     * textDescent() returns the maximum depth a character will protrude below the baseline of
+     * the current font at its current size, in pixels.
+     *
+     * @returns {float} depth of the current font below the baseline, at its current size, in pixels
+     *
+     * @see #textAscent
+     */
+    p.textDescent = function() {
+      return curTextDescent;
+    };
+
+    /**
+     * textLeading() Sets the current font's leading, which is the distance
+     * from baseline to baseline over consecutive lines, with additional vertical
+     * spacing taking into account. Usually this value is 1.2 or 1.25 times the
+     * textsize, but this value can be changed to effect vertically compressed
+     * or stretched text.
+     *
+     * @param {int|float} the desired baseline-to-baseline size in pixels
+     */
+    p.textLeading = function(leading) {
+      curTextLeading = leading;
     };
 
     /**
@@ -15582,21 +16202,29 @@
       verticalTextAlignment = yalign || PConstants.BASELINE;
     };
 
+    /**
+     * toP5String converts things with arbitrary data type into
+     * string values, for text rendering.
+     *
+     * @param {any} any object that can be converted into a string
+     *
+     * @return {String} the string representation of the input
+     */
     function toP5String(obj) {
       if(obj instanceof String) {
         return obj;
-      } else if(typeof obj === 'number') {
+      }
+      if(typeof obj === 'number') {
         // check if an int
         if(obj === (0 | obj)) {
           return obj.toString();
-        } else {
-          return p.nf(obj, 0, 3);
         }
-      } else if(obj === null || obj === undef) {
-        return "";
-      } else {
-        return obj.toString();
+        return p.nf(obj, 0, 3);
       }
+      if(obj === null || obj === undef) {
+        return "";
+      }
+      return obj.toString();
     }
 
     /**
@@ -15615,11 +16243,11 @@
       var lines = toP5String(str).split(/\r?\n/g), width = 0;
       var i, linesCount = lines.length;
 
-      curContext.font =  curTextSize + "px " + curTextFont.name;
+      curContext.font = curTextFont.css;
       for (i = 0; i < linesCount; ++i) {
-        width = Math.max(width, curContext.measureText(lines[i]).width);
+        width = Math.max(width, curTextFont.measureTextWidth(lines[i]));
       }
-      return width;
+      return width | 0;
     };
 
     Drawing3D.prototype.textWidth = function(str) {
@@ -15630,144 +16258,13 @@
       }
 
       var textContext = textcanvas.getContext("2d");
-      textContext.font =  curTextSize + "px " + curTextFont.name;
+      textContext.font = curTextFont.css;
 
       for (i = 0; i < linesCount; ++i) {
         width = Math.max(width, textContext.measureText(lines[i]).width);
       }
-      return width;
+      return width | 0;
     };
-
-    p.textLeading = function(leading) {
-      curTextLeading = leading;
-    };
-
-    function MeasureTextCanvas(fontFace, fontSize, baseLine, text) {
-      this.canvas = document.createElement('canvas');
-      this.canvas.setAttribute('width', fontSize + "px");
-      this.canvas.setAttribute('height', fontSize + "px");
-      this.ctx = this.canvas.getContext("2d");
-      this.ctx.font = fontSize + "pt " + fontFace;
-      this.ctx.fillStyle = "black";
-      this.ctx.fillRect(0, 0, fontSize, fontSize);
-      this.ctx.fillStyle = "white";
-      this.ctx.fillText(text, 0, baseLine);
-      this.imageData = this.ctx.getImageData(0, 0, fontSize, fontSize);
-
-      this.get = function(x, y) {
-        return this.imageData.data[((y*(this.imageData.width*4)) + (x*4))];
-      };
-    }
-
-    /**
-     * textAscent() height of the font above the baseline of the current font at its current size, in pixels.
-     *
-     * @returns {float} height of the font above the baseline of the current font at its current size, in pixels
-     *
-     * @see #textDescent
-     */
-    p.textAscent = (function() {
-      var oldTextSize = undef,
-          oldTextFont = undef,
-          ascent      = undef,
-          graphics    = undef;
-      return function textAscent() {
-        // if text size or font has changed, recalculate ascent value
-        if (oldTextFont !== curTextFont || oldTextSize !== curTextSize) {
-          // store current size and font
-          oldTextFont = curTextFont;
-          oldTextSize = curTextSize;
-
-          var found       = false,
-              character   = "k",
-              colour      = p.color(0),
-              top         = 0,
-              bottom      = curTextSize,
-              yLoc        = curTextSize/2;
-
-          // setup off screen image to write and measure text from
-          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, curTextSize, character);
-
-          // binary search for highest pixel
-          while(yLoc !== bottom) {
-            for (var xLoc = 0; xLoc < curTextSize; xLoc++) {
-              if (graphics.get(xLoc, yLoc) !== colour) {
-                found = true;
-                xLoc = curTextSize;
-              }
-            }
-            if (found) {
-              // y--
-              bottom = yLoc;
-              found = false;
-            } else {
-              // y++
-              top = yLoc;
-            }
-            yLoc = Math.ceil((bottom + top)/2);
-          }
-          ascent = ((curTextSize-1) - yLoc) + 1;
-          return ascent;
-        } else { // text size and font have not changed since last time
-          return ascent;
-        }
-      };
-    }());
-
-    /**
-     * textDescent() height of the font below the baseline of the current font at its current size, in pixels.
-     *
-     * @returns {float} height of the font below the baseline of the current font at its current size, in pixels
-     *
-     * @see #textAscent
-     */
-    p.textDescent = (function() {
-      var oldTextSize = undef,
-          oldTextFont = undef,
-          descent     = undef,
-          graphics    = undef;
-      return function textDescent() {
-        // if text size or font has changed, recalculate descent value
-        if (oldTextFont !== curTextFont || oldTextSize !== curTextSize) {
-          // store current size and font
-          oldTextFont = curTextFont;
-          oldTextSize = curTextSize;
-
-          var found       = false,
-              character   = "p",
-              colour      = p.color(0),
-              top         = 0,
-              bottom      = curTextSize,
-              yLoc        = curTextSize/2;
-
-          // setup off screen image to write and measure text from
-          graphics = new MeasureTextCanvas(curTextFont.name, curTextSize, 0, character);
-
-          // binary search for lowest pixel
-          while(yLoc !== bottom) {
-            for (var xLoc = 0; xLoc < curTextSize; xLoc++) {
-              if (graphics.get(xLoc, yLoc) !== colour) {
-                found = true;
-                xLoc = curTextSize;
-              }
-            }
-            if (found) {
-              // y++
-              top = yLoc;
-              found = false;
-            } else {
-              // y--
-              bottom = yLoc;
-            }
-            yLoc = Math.ceil((bottom + top)/2);
-          }
-          descent = yLoc + 1;
-          return descent;
-        } else { // text size and font have not changed since last time
-          return descent;
-        }
-      };
-    }());
 
     // A lookup table for characters that can not be referenced by Object
     p.glyphLook = function(font, chr) {
@@ -15881,7 +16378,7 @@
 
           // horizontal offset/alignment
           if(align === PConstants.RIGHT || align === PConstants.CENTER) {
-            textWidth = curContext.measureText(str).width;
+            textWidth = curTextFont.measureTextWidth(str);
 
             if(align === PConstants.RIGHT) {
               xOffset = -textWidth;
@@ -15894,7 +16391,7 @@
         }
       } else {
         // If the font is a Batik SVG font...
-        var font = p.glyphTable[curTextFont.name];
+        var font = p.glyphTable[curFontName];
         saveContext();
         curContext.translate(x, y + curTextSize);
 
@@ -15933,12 +16430,12 @@
       }
       var oldContext = curContext;
       curContext = textcanvas.getContext("2d");
-      curContext.font = curTextSize + "px " + curTextFont.name;
-      var textWidth = curContext.measureText(str).width;
+      curContext.font = curTextFont.css;
+      var textWidth = curTextFont.measureTextWidth(str);
       textcanvas.width = textWidth;
       textcanvas.height = curTextSize;
       curContext = textcanvas.getContext("2d"); // refreshes curContext
-      curContext.font = curTextSize + "px " + curTextFont.name;
+      curContext.font = curTextFont.css;
       curContext.textBaseline="top";
 
       // paint on 2D canvas
@@ -15949,7 +16446,7 @@
       curContext = oldContext;
 
       curContext.bindTexture(curContext.TEXTURE_2D, textTex);
-      executeTexImage2D(textcanvas);
+      curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
@@ -15988,6 +16485,10 @@
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
     };
 
+
+    /**
+    * unbounded text function (z is an optional argument)
+    */
     function text$4(str, x, y, z) {
       var lines, linesCount;
       if(str.indexOf('\n') < 0) {
@@ -15999,16 +16500,15 @@
       }
       // handle text line-by-line
 
-      var yOffset;
+      var yOffset = 0;
       if(verticalTextAlignment === PConstants.TOP) {
-        yOffset = (1-baselineOffset) * curTextLeading;
+        yOffset = curTextAscent + curTextDescent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        yOffset = (1-baselineOffset - linesCount/2) * curTextLeading;
+        yOffset = curTextAscent/2 - (linesCount-1)*curTextLeading/2;
       } else if(verticalTextAlignment === PConstants.BOTTOM) {
-        yOffset = (1-baselineOffset - linesCount) * curTextLeading;
-      } else { //  if(verticalTextAlignment === PConstants.BASELINE) {
-        yOffset = 0;
+        yOffset = -(curTextDescent + (linesCount-1)*curTextLeading);
       }
+
       for(var i=0;i<linesCount;++i) {
         var line = lines[i];
         drawing.text$line(line, x, y + yOffset, z, horizontalTextAlignment);
@@ -16016,6 +16516,10 @@
       }
     }
 
+
+    /**
+    * box-bounded text function (z is an optional argument)
+    */
     function text$6(str, x, y, width, height, z) {
       // 'fail' on 0-valued dimensions
       if (str.length === 0 || width === 0 || height === 0) {
@@ -16029,9 +16533,6 @@
       var spaceMark = -1;
       var start = 0;
       var lineWidth = 0;
-      var textboxWidth = width;
-      var yOffset = 0;
-      curContext.font = curTextSize + "px " + curTextFont.name;
       var drawCommands = [];
 
       // run through text, character-by-character
@@ -16039,10 +16540,10 @@
       {
         var currentChar = str[charPos];
         var spaceChar = (currentChar === " ");
-        var letterWidth = curContext.measureText(currentChar).width;
+        var letterWidth = curTextFont.measureTextWidth(currentChar);
 
         // if we aren't looking at a newline, and the text still fits, keep processing
-        if (currentChar !== "\n" && (lineWidth + letterWidth < textboxWidth)) {
+        if (currentChar !== "\n" && (lineWidth + letterWidth <= width)) {
           if (spaceChar) { spaceMark = charPos; }
           lineWidth += letterWidth;
         }
@@ -16061,16 +16562,17 @@
           }
 
           if (currentChar === "\n") {
-            drawCommands.push({text:str.substring(start, charPos), width: lineWidth, offset: yOffset});
+            drawCommands.push({text:str.substring(start, charPos), width: lineWidth});
             start = charPos + 1;
           } else {
             // current is not a newline, which means the line doesn't fit in box. push text.
-            drawCommands.push({text:str.substring(start, spaceMark), width: lineWidth, offset: yOffset});
+            // In Processing 1.5.1, the space is also pushed, so we push up to spaceMark+1,
+            // rather than up to spaceMark, as was the case for Processing 1.5 and earlier.
+            drawCommands.push({text:str.substring(start, spaceMark+1), width: lineWidth});
             start = spaceMark + 1;
           }
 
           // newline + return
-          yOffset += curTextLeading;
           lineWidth = 0;
           charPos = start - 1;
         }
@@ -16078,34 +16580,40 @@
 
       // push the remaining text
       if (start < len) {
-        drawCommands.push({text:str.substring(start), width: lineWidth, offset: yOffset});
-        yOffset += curTextSize;
+        drawCommands.push({text:str.substring(start), width: lineWidth});
       }
 
-      // determine which function to use for drawing text
-      var xOffset = 0;
-      if(horizontalTextAlignment === PConstants.CENTER) {
-        xOffset = width / 2;
-      } else if(horizontalTextAlignment === PConstants.RIGHT) {
+      // resolve horizontal alignment
+      var xOffset = 1,
+          yOffset = curTextAscent;
+      if (horizontalTextAlignment === PConstants.CENTER) {
+        xOffset = width/2;
+      } else if (horizontalTextAlignment === PConstants.RIGHT) {
         xOffset = width;
       }
 
-      // offsets for alignment
-      var boxYOffset1 = (1-baselineOffset) * curTextSize, boxYOffset2 = 0;
-      if(verticalTextAlignment === PConstants.BOTTOM) {
-        boxYOffset2 = height - (drawCommands.length * curTextLeading);
+      // resolve vertical alignment
+      var linesCount = drawCommands.length,
+          visibleLines = Math.min(linesCount, Math.floor(height/curTextLeading));
+      if(verticalTextAlignment === PConstants.TOP) {
+        yOffset = curTextAscent + curTextDescent;
       } else if(verticalTextAlignment === PConstants.CENTER) {
-        boxYOffset2 = (height - (drawCommands.length * curTextLeading)) / 2;
+        yOffset = (height/2) - curTextLeading * (visibleLines/2 - 1);
+      } else if(verticalTextAlignment === PConstants.BOTTOM) {
+        yOffset = curTextDescent + curTextLeading;
       }
 
-      for (var command=0, end=drawCommands.length; command<end; command++) {
-        var drawCommand = drawCommands[command];
-        // skip if not inside box yet
-        if (drawCommand.offset + boxYOffset2 < 0) { continue; }
-        // stop if no enough space for one more line draw
-        if (drawCommand.offset + boxYOffset2 + curTextSize > height) { break; }
-        // finally, draw text on canvas
-        drawing.text$line(drawCommand.text, x + xOffset, y + drawCommand.offset + boxYOffset1 + boxYOffset2, z, horizontalTextAlignment);
+      var command,
+          drawCommand,
+          leading;
+      for (command = 0; command < linesCount; command++) {
+        leading = command * curTextLeading;
+        // stop if not enough space for one more line draw
+        if (yOffset + leading > height - curTextDescent) {
+          break;
+        }
+        drawCommand = drawCommands[command];
+        drawing.text$line(drawCommand.text, x + xOffset, y + yOffset + leading, z, horizontalTextAlignment);
       }
     }
 
@@ -16127,43 +16635,18 @@
      * @see #textFont
      */
     p.text = function() {
-      if (tMode === PConstants.SCREEN) {  // TODO: 3D Screen not working yet due to 3D not working in textAscent
-        p.pushMatrix();
-        p.resetMatrix();
-        var asc = p.textAscent();
-        var des = p.textDescent();
-        var tWidth = p.textWidth(arguments[0]);
-        var tHeight = asc + des;
-        var font = p.loadFont(curTextFont.origName);
-        var hud = p.createGraphics(tWidth, tHeight);
-        hud.beginDraw();
-        hud.fill(currentFillColor);
-        hud.opaque = false;
-        hud.background(0, 0, 0, 0);
-        hud.textFont(font);
-        hud.textSize(curTextSize);
-        hud.text(arguments[0], 0, asc);
-        hud.endDraw();
-        if (arguments.length === 5 || arguments.length === 6) {
-          p.image(hud, arguments[1], arguments[2]-asc, arguments[3], arguments[4]);
-        } else {
-          p.image(hud, arguments[1], arguments[2]-asc);
-        }
-        p.popMatrix();
-      }
-      else if (tMode === PConstants.SHAPE) {
+      if (textMode === PConstants.SHAPE) {
         // TODO: requires beginRaw function
         return;
-      } else {
-        if (arguments.length === 3) { // for text( str, x, y)
-          text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
-        } else if (arguments.length === 4) { // for text( str, x, y, z)
-          text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
-        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
-        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
-          text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
-        }
+      }
+      if (arguments.length === 3) { // for text( str, x, y)
+        text$4(toP5String(arguments[0]), arguments[1], arguments[2], 0);
+      } else if (arguments.length === 4) { // for text( str, x, y, z)
+        text$4(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3]);
+      } else if (arguments.length === 5) { // for text( str, x, y , width, height)
+        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], 0);
+      } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+        text$6(toP5String(arguments[0]), arguments[1], arguments[2], arguments[3], arguments[4], arguments[5]);
       }
     };
 
@@ -16186,7 +16669,7 @@
      * @see createFont
      */
     p.textMode = function(mode){
-      tMode = mode;
+      textMode = mode;
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
@@ -16461,6 +16944,7 @@
     DrawingPre.prototype.rotate = createDrawingPreFunction("rotate");
     DrawingPre.prototype.rotateZ = createDrawingPreFunction("rotateZ");
     DrawingPre.prototype.redraw = createDrawingPreFunction("redraw");
+    DrawingPre.prototype.toImageData = createDrawingPreFunction("toImageData");
     DrawingPre.prototype.ambientLight = createDrawingPreFunction("ambientLight");
     DrawingPre.prototype.directionalLight = createDrawingPreFunction("directionalLight");
     DrawingPre.prototype.lightFalloff = createDrawingPreFunction("lightFalloff");
@@ -16468,6 +16952,9 @@
     DrawingPre.prototype.pointLight = createDrawingPreFunction("pointLight");
     DrawingPre.prototype.noLights = createDrawingPreFunction("noLights");
     DrawingPre.prototype.spotLight = createDrawingPreFunction("spotLight");
+    DrawingPre.prototype.beginCamera = createDrawingPreFunction("beginCamera");
+    DrawingPre.prototype.endCamera = createDrawingPreFunction("endCamera");
+    DrawingPre.prototype.frustum = createDrawingPreFunction("frustum");
     DrawingPre.prototype.box = createDrawingPreFunction("box");
     DrawingPre.prototype.sphere = createDrawingPreFunction("sphere");
     DrawingPre.prototype.ambient = createDrawingPreFunction("ambient");
@@ -16507,10 +16994,6 @@
       // Setup default 2d canvas context.
       // Moving this here removes the number of times we need to check the 3D variable
       p.size(p.width, p.height);
-
-      // Canvas has trouble rendering single pixel stuff on whole-pixel
-      // counts, so we slightly offset it (this is super lame).
-      curContext.translate(0.5, 0.5);
 
       curContext.lineCap = 'round';
 
@@ -16803,11 +17286,6 @@
     // Keyboard Events
     //////////////////////////////////////////////////////////////////////////
 
-    // Get the DOM element if string was passed
-    if (typeof curElement === "string") {
-      curElement = document.getElementById(curElement);
-    }
-
     // In order to catch key events in a canvas, it needs to be "specially focusable",
     // by assigning it a tabindex. If no tabindex is specified on-page, set this to 0.
     if (!curElement.getAttribute("tabindex")) {
@@ -17000,9 +17478,13 @@
         }
       }
 
+      // sketch execute test interval, used to reschedule
+      // an execute when preloads have not yet finished.
+      var retryInterval = 100;
+
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
-        if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
+        if (!(curSketch.imageCache.pending || PFont.preloading.pending(retryInterval))) {
           // the opera preload cache can only be cleared once we start
           if (window.opera) {
             var link,
@@ -17020,7 +17502,9 @@
           }
 
           curSketch.attach(processing, defaultScope);
-          curSketch.onLoad();
+
+          // pass a reference to the p instance for this sketch.
+          curSketch.onLoad(processing);
 
           // Run void setup()
           if (processing.setup) {
@@ -17042,7 +17526,7 @@
             }
           }
         } else {
-          window.setTimeout(function() { executeSketch(processing); }, 10);
+          window.setTimeout(function() { executeSketch(processing); }, retryInterval);
         }
       };
 
@@ -17067,31 +17551,6 @@
           wireDimensionalFunctions('2D');
         }
 
-        /**
-        * This function takes content from a canvas and turns it into an ImageData object to be used with a PImage
-        *
-        * @returns {ImageData}        ImageData object to attach to a PImage (1D array of pixel data)
-        *
-        * @see PImage
-        */
-        if (render === PConstants.WEBGL) {
-          p.toImageData = function() { // 3D
-            var c = document.createElement("canvas");
-            var ctx = c.getContext("2d");
-            var obj = ctx.createImageData(this.width, this.height);
-            var uBuff = new Uint8Array(this.width * this.height * 4);
-            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-            for(var i=0, ul=uBuff.length, h=this.height, w=this.width, obj_data=obj.data; i < ul; i++){
-              obj_data[i] = uBuff[(h - 1 - Math.floor(i / 4 / w)) * w * 4 + (i % (w * 4))];
-            }
-            return obj;
-          };
-        } else {
-          p.toImageData = function() { // 2D
-            return curContext.getImageData(0, 0, this.width, this.height);
-          };
-        }
-
         p.size(w, h, render);
       };
     }
@@ -17114,7 +17573,7 @@
       "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
       "blit_resize", "blue", "box", "breakShape", "brightness",
       "camera", "ceil", "Character", "color", "colorMode",
-      "concat", "console", "constrain", "copy", "cos", "createFont",
+      "concat", "constrain", "copy", "cos", "createFont",
       "createGraphics", "createImage", "cursor", "curve", "curveDetail",
       "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
       "degrees", "directionalLight", "disableContextMenu",
@@ -17122,7 +17581,7 @@
       "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
       "fill", "filter", "floor", "focused", "frameCount", "frameRate", "frustum",
       "get", "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour",
-      "hue", "image", "imageMode", "Import", "intersect", "join", "key",
+      "hue", "image", "imageMode", "intersect", "join", "key",
       "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
       "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
       "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape",
@@ -17133,9 +17592,9 @@
       "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
-      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat", "parseInt",
-      "peg", "perspective", "PFont", "PImage", "pixels",
-      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
+      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
+      "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
+      "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
@@ -17148,13 +17607,14 @@
       "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
       "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
       "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
-      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint",
+      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", "toImageData",
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
-      "vertex", "width", "XMLElement", "year", "__contains", "__equals", "__frameRate",
-      "__hashCode", "__int_cast", "__instanceof", "__keyPressed", "__mousePressed",
-      "__printStackTrace", "__replace", "__replaceAll", "__replaceFirst",
-      "__toCharArray", "__split", "__startsWith", "__endsWith"];
+      "vertex", "width", "XMLElement", "year", "__contains", "__equals",
+      "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
+      "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
+      "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
+      "__codePointAt", "__startsWith", "__endsWith"];
 
     var members = {};
     var i, l;
@@ -17232,9 +17692,8 @@
         var val = strings[index];
         if(val.charAt(0) === "/") {
           return val;
-        } else {
-          return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
         }
+        return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
       });
     }
 
@@ -17287,12 +17746,13 @@
       if(quoted || aposed) { // replace strings
         index = strings.length; strings.push(all);
         return "'" + index + "'";
-      } else if(regexCtx) { // replace RegExps
+      }
+      if(regexCtx) { // replace RegExps
         index = strings.length; strings.push(regex);
         return prefix + "'" + index + "'";
-      } else { // kill comments
-        return comment !== "" ? " " : "\n";
       }
+      // kill comments
+      return comment !== "" ? " " : "\n";
     });
 
     // removes generics
@@ -17363,9 +17823,8 @@
       var result = code.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
         if(name !== className) {
           return all;
-        } else {
-          return addAtom(all, 'G');
         }
+        return addAtom(all, 'G');
       });
       return result;
     }
@@ -17445,18 +17904,18 @@
         var atom = atoms[index];
         if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
           return all;
-        } else if(/^\(\s*int\s*\)$/.test(atom)) {
-          return "(int)" + next;
-        } else {
-          var indexParts = atom.split(/"C(\d+)"/g);
-          if(indexParts.length > 1) {
-            // even items contains atom numbers, can check only first
-            if(! /^\[\s*\]$/.test(atoms[indexParts[1]])) {
-              return all; // fallback - not a cast
-            }
-          }
-          return "" + next;
         }
+        if(/^\(\s*int\s*\)$/.test(atom)) {
+          return "(int)" + next;
+        }
+        var indexParts = atom.split(/"C(\d+)"/g);
+        if(indexParts.length > 1) {
+          // even items contains atom numbers, can check only first
+          if(! /^\[\s*\]$/.test(atoms[indexParts[1]])) {
+            return all; // fallback - not a cast
+          }
+        }
+        return "" + next;
       });
       // (int)??? -> __int_cast(???)
       s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~<\>\=]+)/g, function(all, arg) {
@@ -17489,27 +17948,25 @@
       //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
       //   pixels.length => pixels.getLength()
       //   pixels = ar => pixels.set(ar) | pixels => pixels.toArray()
-      s = s.replace(/\bpixels\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}]+))?/g,
+      s = s.replace(/\bpixels\b\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}]+))?/g,
         function(all, indexOrLength, index, atomIndex, equalsPart, rightSide) {
           if(index) {
             var atom = atoms[atomIndex];
             if(equalsPart) {
               return "pixels.setPixel" + addAtom("(" +atom.substring(1, atom.length - 1) +
                 "," + rightSide + ")", 'B');
-            } else {
-              return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
-                ")", 'B');
             }
-          } else if(indexOrLength) {
+            return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
+              ")", 'B');
+          }
+          if(indexOrLength) {
             // length
             return "pixels.getLength" + addAtom("()", 'B');
-          } else {
-            if(equalsPart) {
-              return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
-            } else {
-              return "pixels.toArray" + addAtom("()", 'B');
-            }
           }
+          if(equalsPart) {
+            return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
+          }
+          return "pixels.toArray" + addAtom("()", 'B');
         });
       // Java method replacements for: replace, replaceAll, replaceFirst, equals, hashCode, etc.
       //   xxx.replace(yyy) -> __replace(xxx, yyy)
@@ -17524,7 +17981,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
@@ -17627,31 +18084,29 @@
     function expandExpression(expr) {
       if(expr.charAt(0) === '(' || expr.charAt(0) === '[') {
         return expr.charAt(0) + expandExpression(expr.substring(1, expr.length - 1)) + expr.charAt(expr.length - 1);
-      } else if(expr.charAt(0) === '{') {
+      }
+      if(expr.charAt(0) === '{') {
         if(/^\{\s*(?:[A-Za-z_$][\w$]*|'\d+')\s*:/.test(expr)) {
           return "{" + addAtom(expr.substring(1, expr.length - 1), 'I') + "}";
-        } else {
-          return "[" + expandExpression(expr.substring(1, expr.length - 1)) + "]";
         }
-      } else {
-        var trimmed = trimSpaces(expr);
-        var result = preExpressionTransform(trimmed.middle);
-        result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
-          return expandExpression(atoms[index]);
-        });
-        return trimmed.untrim(result);
+        return "[" + expandExpression(expr.substring(1, expr.length - 1)) + "]";
       }
+      var trimmed = trimSpaces(expr);
+      var result = preExpressionTransform(trimmed.middle);
+      result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
+        return expandExpression(atoms[index]);
+      });
+      return trimmed.untrim(result);
     }
 
     function replaceContextInVars(expr) {
-      return expr.replace(/(\.\s*)?(\b[A-Za-z_$][\w$]*\b)(\s*\.\s*(\b[A-Za-z_$][\w$]*\b)(\s*\()?)?/g,
+      return expr.replace(/(\.\s*)?((?:\b[A-Za-z_]|\$)[\w$]*)(\s*\.\s*([A-Za-z_$][\w$]*)(\s*\()?)?/g,
         function(all, memberAccessSign, identifier, suffix, subMember, callSign) {
           if(memberAccessSign) {
             return all;
-          } else {
-            var subject = { name: identifier, member: subMember, callSign: !!callSign };
-            return replaceContext(subject) + (suffix === undef ? "" : suffix);
           }
+          var subject = { name: identifier, member: subMember, callSign: !!callSign };
+          return replaceContext(subject) + (suffix === undef ? "" : suffix);
         });
     }
 
@@ -17714,13 +18169,14 @@
     function getDefaultValueForType(type) {
         if(type === "int" || type === "float") {
           return "0";
-        } else if(type === "boolean") {
-          return "false";
-        } else if(type === "color") {
-          return "0x00000000";
-        } else {
-          return "null";
         }
+        if(type === "boolean") {
+          return "false";
+        }
+        if(type === "color") {
+          return "0x00000000";
+        }
+        return "null";
     }
 
     function AstVar(definitions, varType) {
@@ -17753,9 +18209,8 @@
           definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
         }
         return new AstVar(definitions, attrAndType[2]);
-      } else {
-        return new AstStatement(transformExpression(statement));
       }
+      return new AstStatement(transformExpression(statement));
     }
 
     function AstForExpression(initStatement, condition, step) {
@@ -17801,15 +18256,15 @@
         content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
         return new AstForInExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
-      } else if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
+      }
+      if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
         content = expr.substring(1, expr.length - 1).split(":");
         return new AstForEachExpression( transformStatement(trim(content[0])),
           transformExpression(content[1]));
-      } else {
-        content = expr.substring(1, expr.length - 1).split(";");
-        return new AstForExpression( transformStatement(trim(content[0])),
-          transformExpression(content[1]), transformExpression(content[2]));
       }
+      content = expr.substring(1, expr.length - 1).split(";");
+      return new AstForExpression( transformStatement(trim(content[0])),
+        transformExpression(content[1]), transformExpression(content[2]));
     }
 
     function sortByWeight(array) {
@@ -17908,9 +18363,8 @@
           staticDeclarations.push(declaration);
         }
         return staticDeclarations.join("");
-      } else {
-        return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
       }
+      return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
     };
 
     function transformClassField(statement) {
@@ -18139,11 +18593,14 @@
           // returns "$this_N.$self" pointer instead of "this" in cases:
           // "this()", "this.XXX()", "this", but not for "this.XXX"
           return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
-        } else if(thisClassFields.hasOwnProperty(name)) {
+        }
+        if(thisClassFields.hasOwnProperty(name)) {
           return thisClassFields[name].isStatic ? className + "." + name : selfId + "." + name;
-        } else if(thisClassInners.hasOwnProperty(name)) {
+        }
+        if(thisClassInners.hasOwnProperty(name)) {
           return selfId + "." + name;
-        } else if(thisClassMethods.hasOwnProperty(name)) {
+        }
+        if(thisClassMethods.hasOwnProperty(name)) {
           return thisClassMethods[name].isStatic ? className + "." + name : selfId + ".$self." + name;
         }
         return oldContext(subject);
@@ -18537,9 +18994,10 @@
         var name = subject.name;
         if(localNames.hasOwnProperty(name)) {
           return name;
-        } else if(globalMembers.hasOwnProperty(name) ||
-                  PConstants.hasOwnProperty(name) ||
-                  defaultScope.hasOwnProperty(name)) {
+        }
+        if(globalMembers.hasOwnProperty(name) ||
+           PConstants.hasOwnProperty(name) ||
+           defaultScope.hasOwnProperty(name)) {
           return "$p." + name;
         }
         return name;
@@ -18753,10 +19211,8 @@
               var fontName = clean(list[x]),
                   index = /^\{(\d*?)\}$/.exec(fontName);
               // if index is not null, send JSON, otherwise, send string
-              sketch.fonts.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
+              PFont.preloading.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
             }
-          } else if (key === "crisp") {
-            sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
             sketch.options.pauseOnBlur = value === "true";
           } else if (key === "globalKeyEvents") {
@@ -19070,7 +19526,6 @@
   Processing.Sketch = function(attachFunction) {
     this.attachFunction = attachFunction; // can be optional
     this.options = {
-      crispLines: false,
       pauseOnBlur: false,
       globalKeyEvents: false
     };
@@ -19098,113 +19553,47 @@
       images: {},
       // Opera requires special administration for preloading
       operaCache: {},
-      add: function(href) {
-        if(isDOMPresent) {
-          var img = new Image();
+      // Specify an optional img arg if the image is already loaded in the DOM,
+      // otherwise href will get loaded.
+      add: function(href, img) {
+        // Prevent muliple loads for an image, in case it gets
+        // preloaded more than once, or is added via JS and then preloaded.
+        if (this.images[href]) {
+          return;
+        }
+
+        if (!isDOMPresent) {
+          this.images[href] = null;
+        }
+
+        // No image in the DOM, kick-off a background load
+        if (!img) {
+          img = new Image();
           img.onload = (function(owner) {
             return function() {
               owner.pending--;
             };
           }(this));
           this.pending++;
-          this.images[href] = img;
           img.src = href;
+        }
 
-          // Opera will not load images until they are inserted into the DOM.
-          if (window.opera) {
-            var div = document.createElement("div");
-            div.appendChild(img);
-            // we can't use "display: none", since that makes it invisible, and thus not load
-            div.style.position = "absolute";
-            div.style.opacity = 0;
-            div.style.width = "1px";
-            div.style.height= "1px";
-            if (!this.operaCache[href]) {
-              document.body.appendChild(div);
-              this.operaCache[href] = div;
-            }
-          }
-        } else {
-          this.images[href] = null;
-        }
-      }
-    };
-    this.fonts = {
-      // template element used to compare font sizes
-      template: (function() {
-        if(!isDOMPresent) {
-          return null;
-        }
-        var element = document.createElement('p');
-        element.style.fontFamily = "serif";
-        element.style.fontSize = "72px";
-        element.style.visibility = "hidden";
-        element.innerHTML = "This element is a text block for font loading";
-        document.getElementsByTagName("body")[0].appendChild(element);
-        return element;
-      }()),
-      // number of attempts to load a font
-      attempt: 0,
-      // returns true is fonts are all loaded,
-      // true if number of attempts hits the limit,
-      // false otherwise
-      pending: function() {
-        var r = true;
-        for (var i = 0; i < this.fontList.length; i++) {
-          // compares size of text in pixels, if equal, custom font is not yet loaded
-          if (this.fontList[i].offsetWidth === this.template.offsetWidth && this.fontList[i].offsetHeight === this.template.offsetHeight) {
-            r = false;
-            this.attempt++;
-          } else {
-            // removes loaded font from the array and dom, so we don't compare it again
-            document.getElementsByTagName("body")[0].removeChild(this.fontList[i]);
-            this.fontList.splice(i--, 1);
-            this.attempt = 0;
+        this.images[href] = img;
+
+        // Opera will not load images until they are inserted into the DOM.
+        if (window.opera) {
+          var div = document.createElement("div");
+          div.appendChild(img);
+          // we can't use "display: none", since that makes it invisible, and thus not load
+          div.style.position = "absolute";
+          div.style.opacity = 0;
+          div.style.width = "1px";
+          div.style.height= "1px";
+          if (!this.operaCache[href]) {
+            document.body.appendChild(div);
+            this.operaCache[href] = div;
           }
         }
-        // give up loading after max attempts have been reached
-        if (this.attempt >= 30) {
-          r = true;
-          // remove remaining elements from the dom and array
-          for (var j = 0; j < this.fontList.length; j++) {
-            document.getElementsByTagName("body")[0].removeChild(this.fontList[j]);
-            this.fontList.splice(j--, 1);
-          }
-        }
-        // Remove the template element from the dom once done comparing
-        if (r) {
-          document.getElementsByTagName("body")[0].removeChild(this.template);
-        }
-        return r;
-      },
-      // fontList contains elements to compare font sizes against a template
-      fontList: [],
-      // string containing a css @font-face list of custom fonts
-      fontFamily: "",
-      // style element to hold the @font-face string
-      style: (isDOMPresent ? document.createElement('style') : null),
-      // adds a font to the font cache
-      // creates an element using the font, to start loading the font,
-      // and compare against a default font to see if the custom font is loaded
-      add: function(fontSrc) {
-        // fontSrc can be a string or a JSON object
-        // string contains a url to a font
-        // JSON object would contain a name and a url
-        // acceptable fonts are .ttf, .otf, and a data uri
-        var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
-            fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
-        // creating the @font-face style
-        this.fontFamily += "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
-        this.style.innerHTML = this.fontFamily;
-        document.getElementsByTagName("head")[0].appendChild(this.style);
-        // creating the element to load, and compare the new font
-        var preLoader = document.createElement('p');
-        preLoader.style.fontFamily = "'" + fontName + "', serif";
-        preLoader.style.fontSize = "72px";
-        preLoader.style.visibility = "hidden";
-        preLoader.innerHTML = "This element is a text block for font loading";
-        document.getElementsByTagName("body")[0].appendChild(preLoader);
-        this.fontList.push(preLoader);
       }
     };
     this.sourceCode = undefined;
@@ -19295,10 +19684,10 @@
             try {
               return new Processing(canvas, code.join("\n"));
             } catch(e) {
-              Processing.logger.log("Unable to execute pjs sketch: " + e);
+              throw "Processing.js: Unable to execute pjs sketch: " + e;
             }
           } else {
-            Processing.logger.log("Unable to load pjs sketch files: " + errors.join("\n"));
+            throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }
         }
       }
@@ -19359,9 +19748,18 @@
     }
 
     // also process all <script>-indicated sketches, if there are any
-    var scripts = document.getElementsByTagName('script');
-    var s, source, instance;
-    for (s = 0; s < scripts.length; s++) {
+    var s, last, source, instance,
+        nodelist = document.getElementsByTagName('script'),
+        scripts=[];
+
+    // snapshot the DOM, as the nodelist is only a DOM view, and is
+    // updated instantly when a script element is added or removed.
+    for (s = nodelist.length - 1; s >= 0; s--) {
+      scripts.push(nodelist[s]);
+    }
+
+    // iterate over all script elements to see if they contain Processing code
+    for (s = 0, last = scripts.length; s < last; s++) {
       var script = scripts[s];
       if (!script.getAttribute) {
         continue;
@@ -19389,11 +19787,29 @@
             loadSketchFromSources(canvas, filenames);
             continue;
           }
-          source =  script.innerText || script.textContent;
+          source =  script.textContent || script.text;
           instance = new Processing(canvas, source);
         }
       }
     }
+  };
+
+  /**
+   * Make Processing run through init after already having
+   * been set up for a page. This function exists mostly for pages
+   * that swap content in/out without reloading a page.
+   */
+  var reload = Processing.reload = function() {
+    if (processingInstances.length > 0) {
+      // unload sketches
+      for (var i = processingInstances.length - 1; i >= 0; i--) {
+        if (processingInstances[i]) {
+          processingInstances[i].exit();
+        }
+      }
+    }
+    // rerun init() to scan the DOM for sketches
+    init();
   };
 
   /**
