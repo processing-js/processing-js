@@ -4909,12 +4909,10 @@
        * @return {XMLElement} new "cdata" XMLElement, or null if content consists only of whitespace
        */
       createCDataElement: function (content) {
-        if (content.replace(/^\s+$/g,"") === "") {
-          return null;
-        }
-        var cdata = new XMLElement();
+        var cdata = this.createPCDataElement(content);
+        if (cdata === null) return null;
+
         cdata.type = "CDATA";
-        cdata.content = content;
         var htmlentities = {"<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;"},
             entity;
         for (entity in htmlentities) {
