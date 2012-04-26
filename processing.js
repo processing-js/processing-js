@@ -8286,9 +8286,10 @@
     * @returns none
     */
     p.exit = function() {
+      // cleanup
       window.clearInterval(looping);
-
       removeInstance(p.externals.canvas.id);
+      delete(curElement.onmousedown);
 
       // Step through the libraries to detach them
       for (var lib in Processing.lib) {
@@ -8299,11 +8300,13 @@
         }
       }
 
+      // clean up all event handling
       var i = eventHandlers.length;
       while (i--) {
         detachEventHandler(eventHandlers[i]);
       }
       curSketch.onExit();
+      
     };
 
     ////////////////////////////////////////////////////////////////////////////
