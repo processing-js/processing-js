@@ -19895,6 +19895,11 @@
    */
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
+    
+    // before running through init, clear the instances list, to prevent
+    // sketch duplication when page content is dynamically swapped without
+    // swapping out processing.js
+    processingInstances = [];
 
     var canvas = document.getElementsByTagName('canvas'),
       filenames;
@@ -19967,6 +19972,24 @@
         }
       }
     }
+  };
+
+  /**
+   * Make Processing run through init after already having
+   * been set up for a page. This function exists mostly for pages
+   * that swap content in/out without reloading a page.
+   */
+  Processing.reload = function() {
+    if (processingInstances.length > 0) {
+      // unload sketches
+      for (var i = processingInstances.length - 1; i >= 0; i--) {
+        if (processingInstances[i]) {
+          processingInstances[i].exit();
+        }
+      }
+    }
+    // rerun init() to scan the DOM for sketches
+    init();
   };
 
   /**
