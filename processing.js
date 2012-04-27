@@ -634,6 +634,35 @@
         return false;
       };
 
+       /**
+       * @member ArrayList
+       * ArrayList.removeAll Removes from this List all of the elements from 
+       * the current ArrayList which are present in the passed in paramater ArrayList 'c'.
+       * Shifts any succeeding elements to the left (reduces their index). 
+       *
+       * @param {ArrayList} the ArrayList to compare to the current ArrayList
+       *
+       * @returns {boolean} true if the ArrayList had an element removed; false otherwise
+       */
+      this.removeAll = function(c) {
+        var i, x, item,
+            newList = new ArrayList();
+        newList.addAll(this);
+        this.clear();
+        // For every item that exists in the original ArrayList and not in the c ArrayList
+        // copy it into the empty 'this' ArrayList to create the new 'this' Array.
+        for (i = 0, x = 0; i < newList.size(); i++) {
+          item = newList.get(i);
+          if (!c.contains(item)) {
+            this.add(x++, item);
+          }
+        }
+        if (this.size() < newList.size()) {
+          return true;
+        } 
+        return false;
+      };
+
       /**
        * @member ArrayList
        * ArrayList.isEmpty() Tests if this list has no elements.
