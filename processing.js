@@ -11378,6 +11378,10 @@
 
     Drawing3D.prototype.sphere = function() {
       var sRad = arguments[0];
+      
+      curContext.cullFace(curContext.BACK);
+      curContext.frontFace(curContext.CW);
+      curContext.enable(curContext.CULL_FACE);
 
       if ((sphereDetailU < 3) || (sphereDetailV < 2)) {
         p.sphereDetail(30);
@@ -11395,6 +11399,13 @@
       view.transpose();
 
       if (doFill) {
+      
+        // Turn on blending if the sphere isn't completely opaque.
+        if(fillStyle[3] < 1){
+          curContext.disable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.BLEND);
+        }
+        
         // Calculating the normal matrix can be expensive, so only
         // do it if it's necessary.
         if(lightCount > 0){
@@ -11451,6 +11462,8 @@
         uniformi("uIsDrawingText", programObject2D, "uIsDrawingText", false);
         curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
       }
+      
+      curContext.disable(curContext.CULL_FACE);
     };
 
     ////////////////////////////////////////////////////////////////////////////
