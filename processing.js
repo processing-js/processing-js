@@ -8090,7 +8090,7 @@
 
     Drawing3D.prototype.shearY = function(angleInRadians) {
       throw("Processing.js: shearY(angleInRadians) is not supported in 3D mode");
-    }
+    };
 
     /**
     * The pushStyle() function saves the current style settings and popStyle()  restores the prior settings.
