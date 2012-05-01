@@ -5,6 +5,7 @@ float scale;
 void setup()
 {
   size(100, 100);
+  frameRate(1000);
   noStroke();
   scale = width/10;
   randomSeed(42);

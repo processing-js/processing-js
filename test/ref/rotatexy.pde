@@ -12,8 +12,6 @@ void setup() {
   fill(204, 204);
 }
 
-iterations = 0;
-
 void draw() {  
   background(126);
   
@@ -34,9 +32,7 @@ void draw() {
   fill(0);
   rect(-rSize, -rSize, rSize*2, rSize*2);
 
-  iterations++;
-
-  if (iterations == 100) {
+  if (frameCount == 100) {
     exit();
   }
 }

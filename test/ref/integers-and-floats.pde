@@ -8,6 +8,7 @@ float b = 0.0;  // Create a variable "b" of the datatype "float"
 void setup()
 {
   size(100, 100);
+  frameRate(1000);
   stroke(255);
 }
 

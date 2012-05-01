@@ -5,6 +5,7 @@ PImage a, b;
 void setup()
 {
   size(100, 100);
+  frameRate(1000);
   a = loadImage("construct.png");
   b = loadImage("wash.png");
 }

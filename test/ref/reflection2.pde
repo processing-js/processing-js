@@ -9,6 +9,7 @@ float[] peakHeights = new float[segments+1];
 
 void setup(){
   size(100, 100);
+  frameRate(1000);
   smooth();
   randomSeed(42);
   orb = new Orb(50, 50, 3);

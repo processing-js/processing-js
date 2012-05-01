@@ -13,6 +13,7 @@ int ydirection = 1;  // Top to Bottom
 void setup() 
 {
   size(100, 100);
+  frameRate(1000);
   noStroke();
   smooth();
   // Set the starting position of the shape
