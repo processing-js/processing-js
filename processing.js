@@ -13350,14 +13350,14 @@
         p.curveVertex(x3, y3, z3);
         p.curveVertex(x4, y4, z4);
         p.endShape();
-      } else if (arguments.length === 8) {
-        p.beginShape();
-        p.curveVertex(x1, y1);
-        p.curveVertex(z1, x2);
-        p.curveVertex(y2, z2);
-        p.curveVertex(x3, y3);
-        p.endShape();
+        return;
       }
+      p.beginShape();
+      p.curveVertex(x1, y1);
+      p.curveVertex(z1, x2);
+      p.curveVertex(y2, z2);
+      p.curveVertex(x3, y3);
+      p.endShape();
     };
 
     /**
