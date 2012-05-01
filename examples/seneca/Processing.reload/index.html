@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Processing.reload() demonstrator</title>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="../../../processing.js"></script>
+    <script type="text/javascript">
+      function swap_content() {
+        var html4 = '<p>sketch 4</p>'+"\n"+'<canvas id="sketch4" data-processing-sources="sketch4.pde"></canvas>' + "\n";
+        var html5 = '<p>sketch 5</p>'+"\n"+'<canvas id="sketch5" data-processing-sources="sketch5.pde"></canvas>' + "\n";
+        var html6 = '<p>sketch 6</p>'+"\n"+'<canvas id="sketch6" data-processing-sources="sketch6.pde"></canvas>' + "\n";
+        var html = html4 + html5 + html6;
+        document.getElementById('content').innerHTML = html;
+        Processing.reload();
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Processing.reload()</h1>
+
+    <p>This example shows the use of Processing.reload(),
+    used to tell Processing to rescan the DOM for sketches
+    that should be loaded after DOM manipulations such as
+    swapping content in/out. Sketches are unloaded after
+    calling sketch.exit() on them, and their sketch bindings
+    are removed from Processing's instances list.</p>
+
+    <pre>    &lt;script type="text/javascript"&gt;
+      function swap_content() {
+        var html = "&lt;... ... ...&gt;";
+        document.getElementById('content').innerHTML = html;
+        Processing.reload();
+      }
+    &lt;/script&gt;
+    &lt;input type="button" onclick="swap_content()"&gt;</pre>
+
+    <div id="content">
+      <p>sketch 1</p>
+      <canvas id="sketch1" data-processing-sources="sketch1.pde"></canvas>
+
+      <p>sketch 2</p>
+      <canvas id="sketch2" data-processing-sources="sketch2.pde"></canvas>
+
+      <p>sketch 3</p>
+      <canvas id="sketch3" data-processing-sources="sketch3.pde"></canvas>
+    </div>
+
+    <p>Press the button to swap the content for three different sketches</p>
+    <input type="button" value="swap" onclick="swap_content()">
+  </body>
+</html>
