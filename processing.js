@@ -14986,6 +14986,7 @@
     p.createGraphics = function(w, h, render) {
       var pg = new Processing();
       pg.size(w, h, render);
+      pg.background(0,0);
       return pg;
     };
 
