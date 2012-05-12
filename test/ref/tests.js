@@ -17,6 +17,7 @@ var tests = [
   { path: "hue.pde", tags: ["2D"] },
   { path: "saturation.pde", tags: ["2D"] },
   { path: "brightness.pde", tags: ["2D"] },
+  { path: "brightness-3D.pde", tags: ["3D"] },
   { path: "radialgradient.pde", tags: ["2D"] },
   { path: "wavegradient.pde", tags: ["2D"] },
   { path: "explode.pde", tags: ["3D"] },
@@ -431,8 +432,8 @@ var tests = [
   { path: "transp-box-4.pde", tags: ["3D"] },
   { path: "transp-box-5.pde", tags: ["3D"] },
   { path: "transp-box-6.pde", tags: ["3D"] },
-  { path: "transp-line-1.pde", tags: ["3D"] },
-  { path: "transp-line-2.pde", tags: ["3D"] },
+  { path: "transp-line-1.pde", tags: ["3D"], knownFailureTicket: "1838" },
+  { path: "transp-line-2.pde", tags: ["3D"], knownFailureTicket: "1838" },
   { path: "transp-sphere-1.pde", tags: ["3D"] },
   { path: "transp-sphere-2.pde", tags: ["3D"] },
   { path: "transp-sphere-3.pde", tags: ["3D"] }  
