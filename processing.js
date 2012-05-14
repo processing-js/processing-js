@@ -1337,13 +1337,13 @@
     extendClass(derived, base);
   };
 
-  defaultScope.addMethod = function(object, name, fn, superAccessor) {
+  defaultScope.addMethod = function(object, name, fn, hasMethodArgs) {
     if (object[name]) {
       var args = fn.length,
         oldfn = object[name];
 
       object[name] = function() {
-        if (arguments.length === args) {
+        if (arguments.length === args || (hasMethodArgs && arguments.length > args)) {
           return fn.apply(this, arguments);
         }
         return oldfn.apply(this, arguments);
@@ -18867,6 +18867,7 @@
         var method = this.methods[i];
         var overload = methodOverloads[method.name];
         var methodId = method.name + "$" + method.params.params.length;
+        var hasMethodArgs = !!method.params.methodArgsParam;
         if (overload) {
           ++overload;
           methodId += "_" + overload;
@@ -18877,11 +18878,11 @@
         methodOverloads[method.name] = overload;
         if (method.isStatic) {
           staticDefinitions += method;
-          staticDefinitions += "$p.addMethod(" + className + ", '" + method.name + "', " + methodId + ");\n";
-          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n";
+          staticDefinitions += "$p.addMethod(" + className + ", '" + method.name + "', " + methodId + ", " + hasMethodArgs + ");\n";
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ", " + hasMethodArgs + ");\n";
         } else {
           result += method;
-          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ");\n";
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ", " + hasMethodArgs + ");\n";
         }
       }
       result += trim(this.misc.tail);
@@ -18895,7 +18896,7 @@
       for (i = 0, l = this.cstrs.length; i < l; ++i) {
         var paramsLength = this.cstrs[i].params.params.length;
         var methodArgsPresent = !!this.cstrs[i].params.methodArgsParam;
-        cstrsIfs.push("if(arguments.length " + (methodArgsPresent ? ">" : "===") +
+        cstrsIfs.push("if(arguments.length " + (methodArgsPresent ? ">=" : "===") +
           " " + paramsLength + ") { " +
           "$constr_" + paramsLength + ".apply(" + selfId + ", arguments); }");
       }

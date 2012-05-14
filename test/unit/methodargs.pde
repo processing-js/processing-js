@@ -8,10 +8,15 @@ String testFunction(int... numbers) {
 class Test {
   public String a;
   public Test(String... args) {
-    a = "";
+    a = "*";
     for (int i = 0; i < args.length; i++)
       a += args[i] + ";";
   }
+
+  public String testMethod() {
+    return "x";
+  }
+
   public String testMethod(int k, String... more) {
     String a = "" + k + ":";
     for (int i = 0; i < more.length; i++)
@@ -21,8 +26,12 @@ class Test {
 }
 
 Test t = new Test("a", "b");
-_checkEqual(t.a, "a;b;");
+_checkEqual(t.a, "*a;b;");
 _checkEqual(t.testMethod(2, "d"), "2:d;");
+_checkEqual(t.testMethod(), "x");
+Test t2 = new Test();
+_checkEqual(t2.a, "*");
+
 _checkEqual(testFunction(), "");
 _checkEqual(testFunction(1, 2, 3), "1;2;3;");
 
