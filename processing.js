@@ -18017,8 +18017,9 @@
       return this.name;
     };
     // AstParams contains an array of AstParam objects
-    function AstParams(params) {
+    function AstParams(params, methodArgsParam) {
       this.params = params;
+      this.methodArgsParam = methodArgsParam;
     }
     AstParams.prototype.getNames = function() {
       var names = [];
@@ -18026,6 +18027,14 @@
         names.push(this.params[i].name);
       }
       return names;
+    };
+    AstParams.prototype.prependMethodArgs = function(body) {
+      if (!this.methodArgsParam) {
+        return body;
+      }
+      return "{\nvar " + this.methodArgsParam.name +
+        " = Array.prototype.slice.call(arguments, " +
+        this.params.length + ");\n" + body.substring(1);
     };
     AstParams.prototype.toString = function() {
       if(this.params.length === 0) {
@@ -18040,15 +18049,19 @@
 
     function transformParams(params) {
       var paramsWoPars = trim(params.substring(1, params.length - 1));
-      var result = [];
+      var result = [], methodArgsParam = null;
       if(paramsWoPars !== "") {
         var paramList = paramsWoPars.split(",");
         for(var i=0; i < paramList.length; ++i) {
           var param = /\b([A-Za-z_$][\w$]*\b)(\s*"[ABC][\d]*")*\s*$/.exec(paramList[i]);
+          if (i === paramList.length - 1 && paramList[i].indexOf('...') >= 0) {
+            methodArgsParam = new AstParam(param[1]);
+            break;
+          }
           result.push(new AstParam(param[1]));
         }
       }
-      return new AstParams(result);
+      return new AstParams(result, methodArgsParam);
     }
 
     function preExpressionTransform(expr) {
@@ -18217,7 +18230,8 @@
       if(this.name) {
         result += " " + this.name;
       }
-      result += this.params + " " + this.body;
+      var body = this.params.prependMethodArgs(this.body.toString());
+      result += this.params + " " + body;
       replaceContext = oldContext;
       return result;
     };
@@ -18501,7 +18515,8 @@
       replaceContext = function (subject) {
         return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
-      var result = "function " + this.methodId + this.params + " " + this.body +"\n";
+      var body = this.params.prependMethodArgs(this.body.toString());
+      var result = "function " + this.methodId + this.params + " " + body +"\n";
       replaceContext = oldContext;
       return result;
     };
@@ -18569,7 +18584,7 @@
         return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
       var prefix = "function $constr_" + this.params.params.length + this.params.toString();
-      var body = this.body.toString();
+      var body = this.params.prependMethodArgs(this.body.toString());
       if(!/\$(superCstr|constr)\b/.test(body)) {
         body = "{\n$superCstr();\n" + body.substring(1);
       }
@@ -18879,7 +18894,9 @@
       var cstrsIfs = [];
       for (i = 0, l = this.cstrs.length; i < l; ++i) {
         var paramsLength = this.cstrs[i].params.params.length;
-        cstrsIfs.push("if(arguments.length === " + paramsLength + ") { " +
+        var methodArgsPresent = !!this.cstrs[i].params.methodArgsParam;
+        cstrsIfs.push("if(arguments.length " + (methodArgsPresent ? ">" : "===") +
+          " " + paramsLength + ") { " +
           "$constr_" + paramsLength + ".apply(" + selfId + ", arguments); }");
       }
       if(cstrsIfs.length > 0) {
@@ -18991,7 +19008,8 @@
       replaceContext = function (subject) {
         return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
       };
-      var result = "function " + this.name + this.params + " " + this.body + "\n" +
+      var body = this.params.prependMethodArgs(this.body.toString());
+      var result = "function " + this.name + this.params + " " + body + "\n" +
         "$p." + this.name + " = " + this.name + ";";
       replaceContext = oldContext;
       return result;
