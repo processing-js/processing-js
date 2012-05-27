@@ -5804,6 +5804,26 @@
       },
       /**
        * @member PMatrix2D
+       * The shearX() function shears the matrix along the x-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
+      shearX: function(angle) {
+        this.apply(1, 0, 1, Math.tan(angle) , 0, 0);
+      },
+      /**
+       * @member PMatrix2D
+       * The shearY() function shears the matrix along the y-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
+      shearY: function(angle) {
+        this.apply(1, 0, 1,  0, Math.tan(angle), 0);
+      },
+      /**
+       * @member PMatrix2D
        * The determinant() function calvculates the determinant of this matrix.
        *
        * @return {float} the determinant of the matrix
@@ -8081,6 +8101,11 @@
     * @see pushMatrix
     */
 
+    Drawing2D.prototype.shearX = function(angleInRadians) {
+      modelView.shearX(angleInRadians);
+      curContext.transform(1,0,angleInRadians,1,0,0);
+    };
+
     Drawing3D.prototype.shearX = function(angleInRadians) {
       modelView.shearX(angleInRadians);
     };
@@ -8108,6 +8133,11 @@
     * @see pushMatrix
     * @see shearX
     */
+
+   Drawing2D.prototype.shearY = function(angleInRadians) {
+      modelView.shearY(angleInRadians);
+      curContext.transform(1,angleInRadians,0,1,0,0);
+    };
 
     Drawing3D.prototype.shearY = function(angleInRadians) {
       modelView.shearY(angleInRadians);
