@@ -245,7 +245,7 @@ var tests = [
   { path: "curves.pde", tags: ["2D"], epsilonOverride: 0.07 },
   { path: "curve.pde", tags: ["2D"], epsilonOverride: 0.09 },
   { path: "curve-3D.pde", tags: ["3D"], epsilonOverride: 0.11 },
-  { path: "curveDetail.pde", tags: ["3D"], knownFailureTicket: "1416" },
+  { path: "curveDetail.pde", tags: ["3D"] },
   { path: "curvePoint.pde", tags: ["2D"], epsilonOverride: 0.11 },
   { path: "curveTangent.pde", tags: ["2D"], epsilonOverride: 0.10 },
   { path: "curveTightness.pde", tags: ["2D"], epsilonOverride: 0.11 },
