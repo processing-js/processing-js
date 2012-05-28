@@ -3766,6 +3766,10 @@
             this.matrix.skewX(parseFloat(m[0]));
           } else if (pieces[i].indexOf("skewY") !== -1) {
             this.matrix.skewY(m[0]);
+          } else if (pieces[i].indexOf("shearX") !== -1) {
+            this.matrix.shearX(m[0]);
+          } else if (pieces[i].indexOf("shearY") !== -1) {
+            this.matrix.shearY(m[0]);
           }
         }
         return this.matrix;
@@ -5800,6 +5804,26 @@
       },
       /**
        * @member PMatrix2D
+       * The shearX() function shears the matrix along the x-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
+      shearX: function(angle) {
+        this.apply(1, 0, 1, Math.tan(angle) , 0, 0);
+      },
+      /**
+       * @member PMatrix2D
+       * The shearY() function shears the matrix along the y-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of skew specified in radians
+       */
+      shearY: function(angle) {
+        this.apply(1, 0, 1,  0, Math.tan(angle), 0);
+      },
+      /**
+       * @member PMatrix2D
        * The determinant() function calvculates the determinant of this matrix.
        *
        * @return {float} the determinant of the matrix
@@ -6396,6 +6420,28 @@
        * @param {float} angle  angle of skew specified in radians
        */
       skewY: function(angle) {
+        var t = Math.tan(angle);
+        this.apply(1, 0, 0, 0, t, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      },
+      /**
+       * @member PMatrix3D
+       * The shearX() function shears the matrix along the x-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of shear specified in radians
+       */
+      shearX: function(angle) {
+        var t = Math.tan(angle);
+        this.apply(1, t, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      },
+      /**
+       * @member PMatrix3D
+       * The shearY() function shears the matrix along the y-axis the amount specified by the angle parameter.
+       * Angles should be specified in radians (values from 0 to PI*2) or converted to radians with the <b>radians()</b> function.
+       *
+       * @param {float} angle  angle of shear specified in radians
+       */
+      shearY: function(angle) {
         var t = Math.tan(angle);
         this.apply(1, 0, 0, 0, t, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
       },
@@ -8031,6 +8077,70 @@
 
     Drawing3D.prototype.rotate = function(angleInRadians) {
       p.rotateZ(angleInRadians);
+    };
+
+    /**
+    * Shears a shape around the x-axis the amount specified by the angle parameter. 
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to radians 
+    * with the radians() function. Objects are always sheared around their relative position 
+    * to the origin and positive numbers shear objects in a clockwise direction. Transformations 
+    * apply to everything that happens after and subsequent calls to the function accumulates the
+    * effect. For example, calling shearX(PI/2) and then shearX(PI/2) is the same as shearX(PI)
+    *
+    * @param {int|float} angleInRadians     angle of rotation specified in radians
+    *
+    * @returns none
+    *
+    * @see rotateX
+    * @see rotateY
+    * @see rotateZ
+    * @see rotate
+    * @see translate
+    * @see scale
+    * @see popMatrix
+    * @see pushMatrix
+    */
+
+    Drawing2D.prototype.shearX = function(angleInRadians) {
+      modelView.shearX(angleInRadians);
+      curContext.transform(1,0,angleInRadians,1,0,0);
+    };
+
+    Drawing3D.prototype.shearX = function(angleInRadians) {
+      modelView.shearX(angleInRadians);
+    };
+
+    /**
+    * Shears a shape around the y-axis the amount specified by the angle parameter. 
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to 
+    * radians with the radians() function. Objects are always sheared around their 
+    * relative position to the origin and positive numbers shear objects in a 
+    * clockwise direction. Transformations apply to everything that happens after
+    * and subsequent calls to the function accumulates the effect. For example, 
+    * calling shearY(PI/2) and then shearY(PI/2) is the same as shearY(PI).
+    *
+    * @param {int|float} angleInRadians     angle of rotation specified in radians
+    *
+    * @returns none
+    *
+    * @see rotateX
+    * @see rotateY
+    * @see rotateZ
+    * @see rotate
+    * @see translate
+    * @see scale
+    * @see popMatrix
+    * @see pushMatrix
+    * @see shearX
+    */
+
+   Drawing2D.prototype.shearY = function(angleInRadians) {
+      modelView.shearY(angleInRadians);
+      curContext.transform(1,angleInRadians,0,1,0,0);
+    };
+
+    Drawing3D.prototype.shearY = function(angleInRadians) {
+      modelView.shearY(angleInRadians);
     };
 
     /**
@@ -13333,26 +13443,31 @@
      * @see #curveTightness()
      * @see #bezier()
      */
-    Drawing2D.prototype.curve = function() {
-      if (arguments.length === 8) { // curve(x1, y1, x2, y2, x3, y3, x4, y4)
-        p.beginShape();
-        p.curveVertex(arguments[0], arguments[1]);
-        p.curveVertex(arguments[2], arguments[3]);
-        p.curveVertex(arguments[4], arguments[5]);
-        p.curveVertex(arguments[6], arguments[7]);
-        p.endShape();
-      }
+    Drawing2D.prototype.curve = function(x1, y1, x2, y2, x3, y3, x4, y4) {
+      p.beginShape();
+      p.curveVertex(x1, y1);
+      p.curveVertex(x2, y2);
+      p.curveVertex(x3, y3);
+      p.curveVertex(x4, y4);
+      p.endShape();
     };
 
-    Drawing3D.prototype.curve = function() {
-      if (arguments.length === 12) { // curve( x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+    Drawing3D.prototype.curve = function(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
+      if (z4 !== undef) {
         p.beginShape();
-        p.curveVertex(arguments[0], arguments[1], arguments[2]);
-        p.curveVertex(arguments[3], arguments[4], arguments[5]);
-        p.curveVertex(arguments[6], arguments[7], arguments[8]);
-        p.curveVertex(arguments[9], arguments[10], arguments[11]);
+        p.curveVertex(x1, y1, z1);
+        p.curveVertex(x2, y2, z2);
+        p.curveVertex(x3, y3, z3);
+        p.curveVertex(x4, y4, z4);
         p.endShape();
+        return;
       }
+      p.beginShape();
+      p.curveVertex(x1, y1);
+      p.curveVertex(z1, x2);
+      p.curveVertex(y2, z2);
+      p.curveVertex(x3, y3);
+      p.endShape();
     };
 
     /**
@@ -17107,6 +17222,8 @@
     DrawingPre.prototype.applyMatrix = createDrawingPreFunction("applyMatrix");
     DrawingPre.prototype.rotate = createDrawingPreFunction("rotate");
     DrawingPre.prototype.rotateZ = createDrawingPreFunction("rotateZ");
+    DrawingPre.prototype.shearX = createDrawingPreFunction("shearX");
+    DrawingPre.prototype.shearY = createDrawingPreFunction("shearY");
     DrawingPre.prototype.redraw = createDrawingPreFunction("redraw");
     DrawingPre.prototype.toImageData = createDrawingPreFunction("toImageData");
     DrawingPre.prototype.ambientLight = createDrawingPreFunction("ambientLight");
@@ -17770,7 +17887,7 @@
       "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ",
       "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
       "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
-      "shapeMode", "shared", "shininess", "shorten", "sin", "size", "smooth",
+      "shapeMode", "shared", "shearX", "shearY", "shininess", "shorten", "sin", "size", "smooth",
       "sort", "specular", "sphere", "sphereDetail", "splice", "split",
       "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
       "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
