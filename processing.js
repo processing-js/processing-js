@@ -9151,15 +9151,10 @@
      * @see #print
      */
     p.println = function(message) {
-      var bufferLen = logBuffer.length;
-      if (bufferLen) {
-        Processing.logger.log(logBuffer.join(""));
-        logBuffer.length = 0; // clear log buffer
-      }
 
-      if (arguments.length === 0 && bufferLen === 0) {
+      if (arguments.length === 0) {
         Processing.logger.log("");
-      } else if (arguments.length !== 0) {
+      } else{
         Processing.logger.log(message);
       }
     };
@@ -9171,7 +9166,7 @@
      * @see #join
      */
     p.print = function(message) {
-      logBuffer.push(message);
+      Processing.logger.log(message,true);
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
@@ -19257,10 +19252,8 @@
       logLimit = 512,
       log = "log";
 
-    if (typeof tinylog !== undef && typeof tinylog[log] === func) {
-      // pre-existing tinylog present
-      tinylogLite[log] = tinylog[log];
-    } else if (typeof document !== undef && !document.fake) {
+    var skipNewLine=false;
+    if (typeof document !== undef && !document.fake) {
       (function() {
         // DOM document
         var doc = document,
@@ -19372,8 +19365,9 @@
           return doc.createTextNode(text);
         },
 
-        createLog = tinylogLite[log] = function(message) {
+        createLog = tinylogLite[log] = function(message, p_skipNewLine) {
           // don't show output log until called once
+          var skipNewLine=p_skipNewLine;
           var uninit,
             originalPadding = docElemStyle.paddingBottom,
             container = createElement($div),
@@ -19474,7 +19468,14 @@
 
           docElem.insertBefore(container, docElem.firstChild);
 
-          tinylogLite[log] = function(message) {
+          tinylogLite[log] = function(message, p_skipNewLine) {
+            //alert(skipNewLine);
+            //alert(p_skipNewLine);
+            skipNewLine=p_skipNewLine;
+            if(skipNewLine) { // previous one was a print
+                document.documentElement.firstChild.firstChild.nextSibling.lastChild.firstChild.textContent+=message;
+                return;
+            }
             if (messages === logLimit) {
               output.removeChild(output.firstChild);
             } else {
