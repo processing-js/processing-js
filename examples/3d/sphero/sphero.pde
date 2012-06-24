@@ -40,31 +40,9 @@ PVector vertexAt( int i, int j ) {
 }
 
 void vert( PVector pt ) {
-	//normal( pt.x, pt.y, pt.z );
+	normal( pt.x, pt.y, pt.z );
 	vertex( pt.x, pt.y, pt.z, 0,0 );
 }
-
-/*
-curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
-curContext.bufferData(curContext.ARRAY_BUFFER, new Float32Array(sphereVerts), curContext.STATIC_DRAW)
-
-curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
-
-from Drawing3D.prototype.sphere
-
-curContext.useProgram(programObject3D);
-disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
-uniformMatrix("model3d", programObject3D, "model", false, model.array());
-uniformMatrix("view3d", programObject3D, "view", false, view.array());
-vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, sphereBuffer);
-disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
-curContext.enable(curContext.POLYGON_OFFSET_FILL);
-curContext.polygonOffset(1, 1);
-uniformf("color3d", programObject3D, "color", fillStyle);
-curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
-curContext.disable(curContext.POLYGON_OFFSET_FILL)
-
-*/
 
 void draw(){	
 	background(0);	
@@ -86,10 +64,6 @@ void draw(){
 	ang3 += 2.0;	
 	ang4 += 0.75;	
 
-	fill( 255 );
-
-	//sphere( 200 );return;
-
 	beginShape( TRIANGLES );
 	scale( 200 );
 
@@ -105,10 +79,8 @@ void draw(){
 			vert( vertexAt( i + add, j + 0 ) );
 		}
 	}
-//console.log( 'endShape' )
+
 	endShape();
-//console.log( 'endShape done' )
 
 	println(frameRate);
-
 }	
