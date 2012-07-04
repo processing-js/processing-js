@@ -3026,46 +3026,47 @@
        * PShape s = loadShapes("blah.svg");
        * shape(s);
        */
-      draw: function(){
+      draw: function(renderContext) {
+        renderContext = renderContext || p;
         if (this.visible) {
-          this.pre();
-          this.drawImpl();
-          this.post();
+          this.pre(renderContext);
+          this.drawImpl(renderContext);
+          this.post(renderContext);
         }
       },
       /**
        * @member PShape
        * the drawImpl() function draws the SVG document.
        */
-      drawImpl: function(){
+      drawImpl: function(renderContext) {
         if (this.family === PConstants.GROUP) {
-          this.drawGroup();
+          this.drawGroup(renderContext);
         } else if (this.family === PConstants.PRIMITIVE) {
-          this.drawPrimitive();
+          this.drawPrimitive(renderContext);
         } else if (this.family === PConstants.GEOMETRY) {
-          this.drawGeometry();
+          this.drawGeometry(renderContext);
         } else if (this.family === PConstants.PATH) {
-          this.drawPath();
+          this.drawPath(renderContext);
         }
       },
       /**
        * @member PShape
        * The drawPath() function draws the <path> part of the SVG document.
        */
-      drawPath: function(){
+      drawPath: function(renderContext) {
         var i, j;
         if (this.vertices.length === 0) { return; }
-        p.beginShape();
+        renderContext.beginShape();
         if (this.vertexCodes.length === 0) {  // each point is a simple vertex
           if (this.vertices[0].length === 2) {  // drawing 2D vertices
             for (i = 0, j = this.vertices.length; i < j; i++) {
-              p.vertex(this.vertices[i][0], this.vertices[i][1]);
+              renderContext.vertex(this.vertices[i][0], this.vertices[i][1]);
             }
           } else {  // drawing 3D vertices
             for (i = 0, j = this.vertices.length; i < j; i++) {
-              p.vertex(this.vertices[i][0],
-                       this.vertices[i][1],
-                       this.vertices[i][2]);
+              renderContext.vertex(this.vertices[i][0],
+                                   this.vertices[i][1],
+                                   this.vertices[i][2]);
             }
           }
         } else {  // coded set of vertices
@@ -3073,220 +3074,209 @@
           if (this.vertices[0].length === 2) {  // drawing a 2D path
             for (i = 0, j = this.vertexCodes.length; i < j; i++) {
               if (this.vertexCodes[i] === PConstants.VERTEX) {
-                p.vertex(this.vertices[index][0], this.vertices[index][1]);
-                if ( this.vertices[index]["moveTo"] === true) {
-                  vertArray[vertArray.length-1]["moveTo"] = true;
-                } else if ( this.vertices[index]["moveTo"] === false) {
-                  vertArray[vertArray.length-1]["moveTo"] = false;
-                }
-                p.breakShape = false;
+                renderContext.vertex(this.vertices[index][0], this.vertices[index][1], this.vertices[index]["moveTo"]);
+                renderContext.breakShape = false;
                 index++;
               } else if (this.vertexCodes[i] === PConstants.BEZIER_VERTEX) {
-                p.bezierVertex(this.vertices[index+0][0],
-                               this.vertices[index+0][1],
-                               this.vertices[index+1][0],
-                               this.vertices[index+1][1],
-                               this.vertices[index+2][0],
-                               this.vertices[index+2][1]);
+                renderContext.bezierVertex(this.vertices[index+0][0],
+                                           this.vertices[index+0][1],
+                                           this.vertices[index+1][0],
+                                           this.vertices[index+1][1],
+                                           this.vertices[index+2][0],
+                                           this.vertices[index+2][1]);
                 index += 3;
               } else if (this.vertexCodes[i] === PConstants.CURVE_VERTEX) {
-                p.curveVertex(this.vertices[index][0],
-                              this.vertices[index][1]);
+                renderContext.curveVertex(this.vertices[index][0],
+                                          this.vertices[index][1]);
                 index++;
               } else if (this.vertexCodes[i] ===  PConstants.BREAK) {
-                p.breakShape = true;
+                renderContext.breakShape = true;
               }
             }
           } else {  // drawing a 3D path
             for (i = 0, j = this.vertexCodes.length; i < j; i++) {
               if (this.vertexCodes[i] === PConstants.VERTEX) {
-                p.vertex(this.vertices[index][0],
-                         this.vertices[index][1],
-                         this.vertices[index][2]);
+                renderContext.vertex(this.vertices[index][0],
+                                     this.vertices[index][1],
+                                     this.vertices[index][2]);
                 if (this.vertices[index]["moveTo"] === true) {
                   vertArray[vertArray.length-1]["moveTo"] = true;
                 } else if (this.vertices[index]["moveTo"] === false) {
                   vertArray[vertArray.length-1]["moveTo"] = false;
                 }
-                p.breakShape = false;
+                renderContext.breakShape = false;
               } else if (this.vertexCodes[i] ===  PConstants.BEZIER_VERTEX) {
-                p.bezierVertex(this.vertices[index+0][0],
-                               this.vertices[index+0][1],
-                               this.vertices[index+0][2],
-                               this.vertices[index+1][0],
-                               this.vertices[index+1][1],
-                               this.vertices[index+1][2],
-                               this.vertices[index+2][0],
-                               this.vertices[index+2][1],
-                               this.vertices[index+2][2]);
+                renderContext.bezierVertex(this.vertices[index+0][0],
+                                           this.vertices[index+0][1],
+                                           this.vertices[index+0][2],
+                                           this.vertices[index+1][0],
+                                           this.vertices[index+1][1],
+                                           this.vertices[index+1][2],
+                                           this.vertices[index+2][0],
+                                           this.vertices[index+2][1],
+                                           this.vertices[index+2][2]);
                 index += 3;
               } else if (this.vertexCodes[i] === PConstants.CURVE_VERTEX) {
-                p.curveVertex(this.vertices[index][0],
-                              this.vertices[index][1],
-                              this.vertices[index][2]);
+                renderContext.curveVertex(this.vertices[index][0],
+                                          this.vertices[index][1],
+                                          this.vertices[index][2]);
                 index++;
               } else if (this.vertexCodes[i] === PConstants.BREAK) {
-                p.breakShape = true;
+                renderContext.breakShape = true;
               }
             }
           }
         }
-        p.endShape(this.close ? PConstants.CLOSE : PConstants.OPEN);
+        renderContext.endShape(this.close ? PConstants.CLOSE : PConstants.OPEN);
       },
       /**
        * @member PShape
        * The drawGeometry() function draws the geometry part of the SVG document.
        */
-      drawGeometry: function() {
+      drawGeometry: function(renderContext) {
         var i, j;
-        p.beginShape(this.kind);
+        renderContext.beginShape(this.kind);
         if (this.style) {
           for (i = 0, j = this.vertices.length; i < j; i++) {
-            p.vertex(this.vertices[i]);
+            renderContext.vertex(this.vertices[i]);
           }
         } else {
           for (i = 0, j = this.vertices.length; i < j; i++) {
             var vert = this.vertices[i];
             if (vert[2] === 0) {
-              p.vertex(vert[0], vert[1]);
+              renderContext.vertex(vert[0], vert[1]);
             } else {
-              p.vertex(vert[0], vert[1], vert[2]);
+              renderContext.vertex(vert[0], vert[1], vert[2]);
             }
           }
         }
-        p.endShape();
+        renderContext.endShape();
       },
       /**
        * @member PShape
        * The drawGroup() function draws the <g> part of the SVG document.
        */
-      drawGroup: function() {
+      drawGroup: function(renderContext) {
         for (var i = 0, j = this.children.length; i < j; i++) {
-          this.children[i].draw();
+          this.children[i].draw(renderContext);
         }
       },
       /**
        * @member PShape
        * The drawPrimitive() function draws SVG document shape elements. These can be point, line, triangle, quad, rect, ellipse, arc, box, or sphere.
        */
-      drawPrimitive: function() {
+      drawPrimitive: function(renderContext) {
         if (this.kind === PConstants.POINT) {
-          p.point(this.params[0], this.params[1]);
+          renderContext.point(this.params[0], this.params[1]);
         } else if (this.kind === PConstants.LINE) {
           if (this.params.length === 4) {  // 2D
-            p.line(this.params[0], this.params[1],
-                   this.params[2], this.params[3]);
+            renderContext.line(this.params[0], this.params[1],
+                              this.params[2], this.params[3]);
           } else {  // 3D
-            p.line(this.params[0], this.params[1], this.params[2],
-                   this.params[3], this.params[4], this.params[5]);
+            renderContext.line(this.params[0], this.params[1], this.params[2],
+                               this.params[3], this.params[4], this.params[5]);
           }
         } else if (this.kind === PConstants.TRIANGLE) {
-          p.triangle(this.params[0], this.params[1],
-                     this.params[2], this.params[3],
-                     this.params[4], this.params[5]);
+          renderContext.triangle(this.params[0], this.params[1],
+                                 this.params[2], this.params[3],
+                                 this.params[4], this.params[5]);
         } else if (this.kind === PConstants.QUAD) {
-          p.quad(this.params[0], this.params[1],
-                 this.params[2], this.params[3],
-                 this.params[4], this.params[5],
-                 this.params[6], this.params[7]);
+          renderContext.quad(this.params[0], this.params[1],
+                             this.params[2], this.params[3],
+                             this.params[4], this.params[5],
+                             this.params[6], this.params[7]);
         } else if (this.kind === PConstants.RECT) {
           if (this.image !== null) {
             var imMode = imageModeConvert;
-            p.imageMode(PConstants.CORNER);
-            p.image(this.image,
-                    this.params[0],
-                    this.params[1],
-                    this.params[2],
-                    this.params[3]);
+            renderContext.imageMode(PConstants.CORNER);
+            renderContext.image(this.image,
+                                this.params[0],
+                                this.params[1],
+                                this.params[2],
+                                this.params[3]);
             imageModeConvert = imMode;
           } else {
             var rcMode = curRectMode;
-            p.rectMode(PConstants.CORNER);
-            p.rect(this.params[0],
-                   this.params[1],
-                   this.params[2],
-                   this.params[3]);
+            renderContext.rectMode(PConstants.CORNER);
+            renderContext.rect(this.params[0],
+                               this.params[1],
+                               this.params[2],
+                               this.params[3]);
             curRectMode = rcMode;
           }
         } else if (this.kind === PConstants.ELLIPSE) {
           var elMode = curEllipseMode;
-          p.ellipseMode(PConstants.CORNER);
-          p.ellipse(this.params[0],
-                    this.params[1],
-                    this.params[2],
-                    this.params[3]);
+          renderContext.ellipseMode(PConstants.CORNER);
+          renderContext.ellipse(this.params[0],
+                                this.params[1],
+                                this.params[2],
+                                this.params[3]);
           curEllipseMode = elMode;
         } else if (this.kind === PConstants.ARC) {
           var eMode = curEllipseMode;
-          p.ellipseMode(PConstants.CORNER);
-          p.arc(this.params[0],
-                this.params[1],
-                this.params[2],
-                this.params[3],
-                this.params[4],
-                this.params[5]);
+          renderContext.ellipseMode(PConstants.CORNER);
+          renderContext.arc(this.params[0],
+                            this.params[1],
+                            this.params[2],
+                            this.params[3],
+                            this.params[4],
+                            this.params[5]);
           curEllipseMode = eMode;
         } else if (this.kind === PConstants.BOX) {
           if (this.params.length === 1) {
-            p.box(this.params[0]);
+            renderContext.box(this.params[0]);
           } else {
-            p.box(this.params[0], this.params[1], this.params[2]);
+            renderContext.box(this.params[0], this.params[1], this.params[2]);
           }
         } else if (this.kind === PConstants.SPHERE) {
-          p.sphere(this.params[0]);
+          renderContext.sphere(this.params[0]);
         }
       },
       /**
        * @member PShape
        * The pre() function performs the preparations before the SVG is drawn. This includes doing transformations and storing previous styles.
        */
-      pre: function() {
+      pre: function(renderContext) {
         if (this.matrix) {
-          p.pushMatrix();
-          curContext.transform(this.matrix.elements[0],
-                               this.matrix.elements[3],
-                               this.matrix.elements[1],
-                               this.matrix.elements[4],
-                               this.matrix.elements[2],
-                               this.matrix.elements[5]);
-          //p.applyMatrix(this.matrix.elements[0],this.matrix.elements[0]);
+          renderContext.pushMatrix();
+          renderContext.transform(this.matrix);
         }
         if (this.style) {
-          p.pushStyle();
-          this.styles();
+          renderContext.pushStyle();
+          this.styles(renderContext);
         }
       },
       /**
        * @member PShape
        * The post() function performs the necessary actions after the SVG is drawn. This includes removing transformations and removing added styles.
        */
-      post: function() {
+      post: function(renderContext) {
         if (this.matrix) {
-          p.popMatrix();
+          renderContext.popMatrix();
         }
         if (this.style) {
-          p.popStyle();
+          renderContext.popStyle();
         }
       },
       /**
        * @member PShape
        * The styles() function changes the Processing's current styles
        */
-      styles: function() {
+      styles: function(renderContext) {
         if (this.stroke) {
-          p.stroke(this.strokeColor);
-          p.strokeWeight(this.strokeWeight);
-          p.strokeCap(this.strokeCap);
-          p.strokeJoin(this.strokeJoin);
+          renderContext.stroke(this.strokeColor);
+          renderContext.strokeWeight(this.strokeWeight);
+          renderContext.strokeCap(this.strokeCap);
+          renderContext.strokeJoin(this.strokeJoin);
         } else {
-          p.noStroke();
+          renderContext.noStroke();
         }
 
         if (this.fill) {
-          p.fill(this.fillColor);
+          renderContext.fill(this.fillColor);
 
         } else {
-          p.noFill();
+          renderContext.noFill();
         }
       },
       /**
@@ -4700,7 +4690,7 @@
               p.translate(x, y);
             }
           }
-          shape.draw();
+          shape.draw(p);
           if ((arguments.length === 1 && curShapeMode === PConstants.CENTER ) || arguments.length > 1) {
             p.popMatrix();
           }
@@ -7861,6 +7851,24 @@
       modelView.scale(x, y, z);
       modelViewInv.invScale(x, y, z);
     };
+
+
+    /**
+     * helper function for applying a transfrom matrix to a 2D context.
+     */
+    Drawing2D.prototype.transform = function(pmatrix) {
+      var e = pmatrix.array();
+      curContext.transform(e[0],e[3],e[1],e[4],e[2],e[5]);
+    };
+
+    /**
+     * helper function for applying a transfrom matrix to a 3D context.
+     * not currently implemented.
+     */
+    Drawing3D.prototype.transformm = function(pmatrix3d) {
+      throw("p.transform is currently not supported in 3D mode");
+    };
+
 
     /**
     * Pushes the current transformation matrix onto the matrix stack. Understanding pushMatrix() and popMatrix()
@@ -12204,9 +12212,7 @@
      *
      * @param {int | float} x x-coordinate of the vertex
      * @param {int | float} y y-coordinate of the vertex
-     * @param {int | float} z z-coordinate of the vertex
-     * @param {int | float} u horizontal coordinate for the texture mapping
-     * @param {int | float} v vertical coordinate for the texture mapping
+     * @param {boolean} moveto flag to indicate whether this is a new subpath
      *
      * @see beginShape
      * @see endShape
@@ -12215,7 +12221,7 @@
      * @see texture
      */
 
-    Drawing2D.prototype.vertex = function(x, y, u, v) {
+    Drawing2D.prototype.vertex = function(x, y, moveTo) {
       var vert = [];
 
       if (firstVert) { firstVert = false; }
@@ -12224,14 +12230,17 @@
       vert[0] = x;
       vert[1] = y;
       vert[2] = 0;
-      vert[3] = u;
-      vert[4] = v;
+      vert[3] = 0;
+      vert[4] = 0;
 
       // fill and stroke color
       vert[5] = currentFillColor;
       vert[6] = currentStrokeColor;
 
       vertArray.push(vert);
+      if (moveTo) {
+        vertArray[vertArray.length-1]["moveTo"] = moveTo;
+      }
     };
 
     Drawing3D.prototype.vertex = function(x, y, z, u, v) {
@@ -17215,6 +17224,7 @@
       };
     }
     DrawingPre.prototype.translate = createDrawingPreFunction("translate");
+    DrawingPre.prototype.transform = createDrawingPreFunction("transform");
     DrawingPre.prototype.scale = createDrawingPreFunction("scale");
     DrawingPre.prototype.pushMatrix = createDrawingPreFunction("pushMatrix");
     DrawingPre.prototype.popMatrix = createDrawingPreFunction("popMatrix");
@@ -17893,7 +17903,7 @@
       "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
       "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", "toImageData",
-      "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
+      "touchCancel", "touchEnd", "touchMove", "touchStart", "translate", "transform",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
       "vertex", "width", "XMLElement", "year", "__contains", "__equals",
       "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
