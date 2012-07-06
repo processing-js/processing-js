@@ -6,6 +6,7 @@ void setup()
   size(100,100);
   pg = createGraphics(100,100,JAVA2D);
   pg.beginDraw();
+  pg.translate(0.5,0.5); // canvas offsetting
   pg.fill(0,255,0);
   pg.ellipse(width/2,height/2,width/4,height/4);
   pg.stroke(0);
