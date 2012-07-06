@@ -40,7 +40,7 @@ var tests = [
   { path: "pimage-resize-smaller.pde", tags: ["2D"] },
   { path: "pimage-resize-bigger.pde", tags: ["2D"] },
   { path: "pimage-resize-x.pde", tags: ["2D"] },
-  { path: "pimage-resize-y.pde", tags: ["2D"] },
+  { path: "pimage-resize-y.pde", tags: ["2D"], epsilonOverride: 0.8 },
   { path: "smooth.pde", tags: ["2D"], epsilonOverride: 0.18 },
   { path: "crispy.pde", tags: ["2D", "Crisp"] },
   { path: "crisp-point.pde", tags: ["2D", "Crisp"] },
