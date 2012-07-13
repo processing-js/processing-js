@@ -4824,17 +4824,6 @@
     };
 
     /**
-     * Processing 2.0 function for loading XML files.
-     *
-     * @param {String} uri The uri for the xml file to load.
-     *
-     * @return {XML} An XML object representing the xml data.
-     */
-    p.loadXML = function(uri) {
-      return new XML(p, uri);
-    }
-
-    /**
      * XMLAttribute is an attribute of a XML element. This is an internal class
      *
      * @param {String} fname     the full name of the attribute
@@ -5675,10 +5664,22 @@
     // Processing 2.0 compatibility
     var XML = p.XML = p.XMLElement;
 
+    /**
+     * Processing 2.0 function for loading XML files.
+     *
+     * @param {String} uri The uri for the xml file to load.
+     *
+     * @return {XML} An XML object representing the xml data.
+     */
+    p.loadXML = function(uri) {
+      return new XML(p, uri);
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
     ////////////////////////////////////////////////////////////////////////////
+
     /**
      * Helper function for printMatrix(). Finds the largest scalar
      * in the matrix, then number of digits left of the decimal.
