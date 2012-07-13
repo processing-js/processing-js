@@ -1293,6 +1293,7 @@
   };
 
   function extendClass(subClass, baseClass) {
+    subClass.baseClass = baseClass;
     function extendGetterSetter(propertyName) {
       defaultScope.defineProperty(subClass, propertyName, {
         get: function() {
