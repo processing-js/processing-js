@@ -4910,13 +4910,17 @@
        */
       createCDataElement: function (content) {
         var cdata = this.createPCDataElement(content);
-        if (cdata === null) return null;
+        if (cdata === null) {
+          return null;
+        }
 
         cdata.type = "CDATA";
         var htmlentities = {"<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;"},
             entity;
         for (entity in htmlentities) {
-          content = content.replace(new RegExp(entity, "g"), htmlentities[entity]);
+          if (!Object.hasOwnProperty(htmlentities,entity)) {
+            content = content.replace(new RegExp(entity, "g"), htmlentities[entity]);
+          }
         }
         cdata.cdata = content;
         return cdata;
@@ -5475,8 +5479,13 @@
        */
       toString: function() {
         // shortcut for text and cdata nodes
-        if (this.type === "TEXT") return this.content;
-        if (this.type === "CDATA") return this.cdata;
+        if (this.type === "TEXT") {
+          return this.content;
+        }
+
+        if (this.type === "CDATA") {
+          return this.cdata;
+        }
 
         // real XMLElements
         var tagstring = this.fullName;
