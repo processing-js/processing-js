@@ -3,6 +3,7 @@
 
 void setup() {
   size(100, 100, P3D);
+  frameRate(1000);
   noStroke();
   colorMode(RGB, 1);
   fill(0.4);

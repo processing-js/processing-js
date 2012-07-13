@@ -5,6 +5,7 @@ ArrayList psystems;
 
 void setup() {
   size(100, 100);
+  frameRate(1000);
   colorMode(RGB, 255, 255, 255, 100);
   psystems = new ArrayList();
   randomSeed(42);

@@ -13,6 +13,7 @@ float[] yvalues;                           // Using an array to store height val
 
 void setup() {
   size(100,100);
+  frameRate(1000);
   colorMode(RGB,255,255,255,100);
   smooth();
   w = width+8;

@@ -4,6 +4,8 @@
 Flock flock;
 
 void setup() {
+  size(100, 100);
+  frameRate(1000);
   colorMode(RGB,255,255,255,100);
   randomSeed(42);
 
