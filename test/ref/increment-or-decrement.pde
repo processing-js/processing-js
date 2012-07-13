@@ -9,6 +9,7 @@ boolean direction;
 void setup()
 {
   size(100, 100);
+  frameRate(1000);
   colorMode(RGB, width);
   a = 0;
   b = width;

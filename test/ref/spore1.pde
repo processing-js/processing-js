@@ -12,6 +12,7 @@ color black = color(0, 0, 0);
 void setup()
 {
   size(100, 100, P2D);
+  frameRate(1000);
   randomSeed(42);
   clearscr();  
   w = new World();

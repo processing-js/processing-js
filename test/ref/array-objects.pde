@@ -7,6 +7,7 @@ Module[] mods;
 void setup() 
 {
   size(100, 100);
+  frameRate(1000);
   background(176);
   noStroke();
   randomSeed(42);

@@ -12,6 +12,7 @@ float signal;
 void setup() 
 {
   size(100, 100);
+  frameRate(1000);
   stroke(255);
   a = loadImage("arch-100.png");
 
