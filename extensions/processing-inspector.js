@@ -119,12 +119,11 @@ if(typeof ProcessingInspector === "undefined") {
          }(attr, monitoredAttr));
         Object.defineProperty(object, attr, props);
 
-        // 3) set/increment the monitored value count,
-        if (hasValueProperty(object,monitorCount)) {
-          object[monitorCount]++;
-        } else {
-          object[monitorCount] = 1;
+        // 3) (set and) increment the monitored value count,
+        if (!hasValueProperty(object, monitorCount, false)) {
+          object[monitorCount] = 0;
         }
+        object[monitorCount]++;
 
         // 4) (re)bind the releasing function.
         object[releaseFunctor] = releaseFunction;
