@@ -27,6 +27,7 @@
     }
     
     C test;
+    C getTest() { return test; }
   
     void setup() {
       size(100,100);
@@ -77,8 +78,8 @@
   <canvas></canvas>
   
   <div>
-    <input id="x_control" type="number" min="0" max="100" step="1">
-    <input id="y_control" type="number" min="0" max="100" step="1">
+    <input id="x_control" type="number" min="-100" max="100" step="1">
+    <input id="y_control" type="number" min="-100" max="100" step="1">
   </div>
 
 </body>
