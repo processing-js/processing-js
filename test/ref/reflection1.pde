@@ -10,6 +10,7 @@ float velocityX, velocityY;
 
 void setup(){
   size(100, 100);
+  frameRate(1000);
   fill(128);
   smooth();
   baseX1 = 0;

@@ -8,6 +8,7 @@ void setup()
 {
   a = loadImage("eames.png");
   size(100,100);
+  frameRate(1000);
   noStroke();
   background(255);
   smooth();

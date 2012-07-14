@@ -6,21 +6,19 @@
 PImage img;
 int direction = 1;
 float signal;
-int iterations = 0;
 
 void setup() {
   size(100, 100);
   noFill();
   stroke(255);
-  frameRate(30);
+  frameRate(1000);
   img = loadImage("berlin.png");
 }
 
 void draw() {
-  if (iterations == 5) {
+  if (frameCount == 5) {
     exit();
   }
-  iterations++;
 
   if (signal > img.width*img.height-1 || signal < 0) { 
     direction = direction * -1; 

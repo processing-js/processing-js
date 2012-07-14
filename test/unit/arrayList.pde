@@ -21,3 +21,6 @@ list1Clone.remove(0);
 ArrayList list2 = new ArrayList(list1);
 
 _checkEqual(list1, list2);
+
+ArrayList list3 = new ArrayList(5);
+_checkEqual(list3.size(), 5);

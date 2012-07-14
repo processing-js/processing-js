@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+	<title>File and fragment loading test (ticket 1818)</title>
+	<script type="text/javascript" src="../../../processing.js"></script>
+	<script type="text/processing" id="customcode">
+	  void draw() {
+	    background(255,255,100);
+	    fill(0);
+	    textAlign(CENTER);
+	    text("custom code inclusion worked", width/2, height/2);
+	  }
+	</script>
+</head>
+<body>
+
+  <h1>Mixed from-file and from-fragment loading of sketches</h1>
+
+  <p>This should show a yellowish sketch, with the text "custom code inclusion worked", centered.</p>
+
+	<canvas id="t1818test" data-processing-sources="fafl.pde
+	                                                #customcode
+	                                                "></canvas>
+</body>
+</html>

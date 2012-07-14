@@ -18,6 +18,7 @@ float[]cellRadius = new float[cells];
 void setup(){
   background(0);
   size(100, 100);
+  frameRate(1000);
   // begin in the center
   headX = width/2;
   headY = height/2;
