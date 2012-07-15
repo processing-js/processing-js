@@ -246,7 +246,6 @@
     BEZIER_VERTEX: 1,
     CURVE_VERTEX:  2,
     BREAK:         3,
-    CLOSESHAPE:    4,
 
     // Shape closing modes
     OPEN:  1,
@@ -2138,7 +2137,6 @@
         oldCursor = curElement.style.cursor,
         curShape = PConstants.POLYGON,
         curShapeCount = 0,
-        curvePoints = [],
         curTightness = 0,
         curveDet = 20,
         curveInited = false,
@@ -2263,7 +2261,7 @@
         curveVertCount = 0,
         isCurve = false,
         isBezier = false,
-        firstVert = true;
+        pathStart = true;
 
     //PShape stuff
     var curShapeMode = PConstants.CORNER;
@@ -4331,7 +4329,7 @@
      *
      * @see PShapeSVG#parsePath
      */
-    PShapeSVG.prototype.parsePathVertex = function(x,  y) {
+    PShapeSVG.prototype.parsePathVertex = function(x, y) {
       var verts = [];
       verts[0]  = x;
       verts[1]  = y;
@@ -12240,8 +12238,16 @@
      */
     p.beginShape = function(type) {
       curShape = type;
-      curvePoints = [];
       vertArray = [];
+    };
+
+    /**
+     * The breakShape() function is used inside a beginShape()/endShape() section
+     * to effect 'cutouts' in multi-vertex shapes. This function is available in
+     * Processing, but is undocumented.
+     */
+    p.breakShape = function() {
+      pathStart = true; 
     };
 
     /**
@@ -12267,29 +12273,29 @@
      * @see texture
      */
 
-    Drawing2D.prototype.vertex = function(x, y, u, v) {
-      var vert = [];
+    Drawing2D.prototype.vertex = function(x, y) {
+      var vert = {
+        type: PConstants.VERTEX,
+        moveTo: pathStart,
+        x: x,
+        y: y,
+        fillColor: currentFillColor,
+        strokeColor: currentStrokeColor
+      };
 
-      if (firstVert) { firstVert = false; }
-      vert["isVert"] = true;
-
-      vert[0] = x;
-      vert[1] = y;
-      vert[2] = 0;
-      vert[3] = u;
-      vert[4] = v;
-
-      // fill and stroke color
-      vert[5] = currentFillColor;
-      vert[6] = currentStrokeColor;
+      // This can no longer be a path start
+      if (pathStart) {
+        pathStart = false;
+      }
 
       vertArray.push(vert);
+      return vert;
     };
 
     Drawing3D.prototype.vertex = function(x, y, z, u, v) {
       var vert = [];
 
-      if (firstVert) { firstVert = false; }
+      if (pathStart) { pathStart = false; }
       vert["isVert"] = true;
 
       if (v === undef && usingTexture) {
@@ -12463,6 +12469,24 @@
     };
 
     /**
+     * Drawing2d.prototype.endShape() helper function
+     * for setting the fill and stroke color for sections
+     * of a shape
+     *
+     * @param {boolean} doFill indicates whether or not to use a fill color
+     * @param {boolean} doStroke indicates whether or not to use a stroke color
+     * @param {object} colordata an object {fillColor,strokeColor} indicating the colors to use
+     */
+    function setFillStroke(doFill, doStroke, colordata) {
+        if (doFill) {
+          p.fill(colordata.fillColor);
+        }
+        if (doStroke) {
+          p.stroke(colordata.strokeColor);
+        }
+    }
+
+    /**
      * this series of three operations is used a lot in Drawing2D.prototype.endShape
      * and has been split off as its own function, to tighten the code and allow for
      * fewer bugs.
@@ -12471,6 +12495,218 @@
       executeContextFill();
       executeContextStroke();
       curContext.closePath();
+    }
+
+    /**
+     * HELPER FUNCTION
+     *
+     *  Conversion matrix for Catmull-Rom to cubic Bezier,
+     *  where t = curTightness.
+     *
+     *   | 0         1          0         0       |
+     *   | (t-1)/6   1          (1-t)/6   0       |
+     *   | 0         (1-t)/6    1         (t-1)/6 |
+     *   | 0         0          0         0       |
+     *
+     */
+    function endShapeCurve(i,vertArray,vertArrayLength)
+    {
+      var previous,  // vertArray[i-1]
+          current,   // vertArray[i]
+          next,      // vertArray[i+1]
+          nextOver;  // vertArray[i+2]
+
+      // first, we find all curve vertices that we
+      // must deal with in this run
+      var j, curveVertices = [];
+      for(j=0; j<vertArrayLength; j++) {
+        current = vertArray[i+j];
+        if (current.type !== PConstants.CURVE_VERTEX) {
+          break;
+        }
+        curveVertices.push(current);
+      }
+
+      // then we convert the spline defined by these
+      // vertices in terms of bezier curves.
+      var curveVerticesLength = curveVertices.length;
+      if (curveVerticesLength > 3) {
+        current = curveVertices[1];
+        curContext.moveTo(current.x, current.y);
+
+        var b = [],
+            s = 1 - curTightness;
+        for (i = 1; (i+2) < curveVerticesLength; i++) {
+          previous = curveVertices[i-1];
+          current  = curveVertices[i];
+          next     = curveVertices[i+1];
+          nextOver = curveVertices[i+2];
+          b[0] = [current.x, current.y];
+          b[1] = [current.x + (s * next.x - s * previous.x) / 6,
+                  current.y + (s * next.y - s * previous.y) / 6];
+          b[2] = [next.x + (s * current.x - s * nextOver.x) / 6,
+                  next.y + (s * current.y - s * nextOver.y) / 6];
+          b[3] = [next.x, next.y];
+          curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
+        }
+      }
+
+      return curveVerticesLength-1;
+    }
+
+    /**
+     * This function deals with rendering specific shapes.
+     *
+     * @param curShape integer constant; either POINTS, LINES, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS or QUAD_STRIP
+     */
+    function endShapeSpecific(curShape, vertArray, vertArrayLength) {
+      var i,j,
+          start = vertArray[0],
+          previous,  // vertArray[i-1]
+          current,   // vertArray[i]
+          next,      // vertArray[i+1]
+          nextOver;  // vertArray[i+2]
+
+      if (curShape === PConstants.POINTS) {
+        var lastcolor = 0;
+        for (i = 0; i < vertArrayLength; i++) {
+          current = vertArray[i];
+          //  For some reason this does not work:
+          //
+          //    setFillStroke(false,true,current);
+          //    curContext.fillStyle = curContext.strokeStyle;
+          //
+          //  So, we use explicit color values when
+          //  there is a color change required.
+          var c = current.strokeColor;
+          if (c !== lastcolor) {
+            curContext.fillStyle = 'rgba('+p.red(c)+', '+p.green(c)+', '+p.blue(c)+', '+(p.alpha(c)/colorModeA)+')';
+          }
+          if (lineWidth > 1) {
+            curContext.arc(current.x, current.y, lineWidth / 2, 0, PConstants.TWO_PI, false);
+            curContext.fill();
+            curContext.beginPath();
+          } else {
+            curContext.fillRect(current.x, current.y, 1, 1);
+          }
+        }
+      }
+
+      else if (curShape === PConstants.LINES) {
+        for (i = 0; (i + 1) < vertArrayLength; i+=2) {
+          current = vertArray[i];
+          next = vertArray[i+1];
+          setFillStroke(false, doStroke, next);
+          curContext.moveTo(current.x, current.y);
+          curContext.lineTo(next.x, next.y);
+          setFillStroke(doFill, doStroke, next);
+          fillStrokeClose();
+        }
+      }
+
+      else if (curShape === PConstants.TRIANGLES) {
+        if (vertArrayLength > 2) {
+          for (i = 0; (i + 2) < vertArrayLength; i+=3) {
+            current  = vertArray[i];
+            next     = vertArray[i+1];
+            nextOver = vertArray[i+2];
+
+            curContext.beginPath();
+            curContext.moveTo(current.x, current.y);
+            curContext.lineTo(next.x, next.y);
+            curContext.lineTo(nextOver.x, nextOver.y);
+            curContext.lineTo(current.x, current.y);
+
+            setFillStroke(doFill, doStroke, nextOver);
+            fillStrokeClose();
+          }
+        }
+      }
+
+      else if (curShape === PConstants.TRIANGLE_STRIP) {
+        if (vertArrayLength > 2) {
+          // ensure that the first iteration ends up as
+          // {current=0/next=1/nextover=2}
+          next     = vertArray[0];
+          nextOver = vertArray[1];
+          for (i = 2; i < vertArrayLength; i++) {
+            fillStrokeClose();
+
+            current = next;
+            next = nextOver;
+            nextOver = vertArray[i];
+
+            curContext.beginPath();
+            curContext.moveTo(current.x, current.y);
+            curContext.lineTo(next.x, next.y);
+            curContext.lineTo(nextOver.x, nextOver.y);
+            curContext.lineTo(current.x, current.y);
+            setFillStroke(doFill, doStroke, nextOver);
+          }
+        }
+      }
+
+      else if (curShape === PConstants.TRIANGLE_FAN) {
+        if (vertArrayLength > 2) {
+          start = vertArray[0];
+          for (i = 2; i < vertArrayLength; i++) {
+            previous = vertArray[i-1];
+            current  = vertArray[i];
+
+            curContext.beginPath();
+            curContext.moveTo(start.x, start.y);
+            curContext.lineTo(previous.x, previous.y);
+            curContext.lineTo(current.x, current.y);
+
+            setFillStroke(doFill, doStroke, current);
+            fillStrokeClose();
+          }
+        }
+      }
+
+      else if (curShape === PConstants.QUADS) {
+        if (vertArrayLength > 3) {
+          for (i = 0; (i + 3) < vertArrayLength; i+=4) {
+            start = vertArray[i];
+
+            curContext.beginPath();
+            curContext.moveTo(start.x, start.y);
+            for (j = 1; j < 4; j++) {
+              current = vertArray[i+j];
+              curContext.lineTo(current.x, current.y);
+            }
+            curContext.lineTo(start.x, start.y);
+
+            setFillStroke(doFill, doStroke, current);
+            fillStrokeClose();
+          }
+        }
+      }
+
+      else if (curShape === PConstants.QUAD_STRIP) {
+        if (vertArrayLength > 3) {
+          // ensure that the first iteration ends up as
+          // {start=0/current=1/next=3/nextover=2}
+          next     = vertArray[1];
+          nextOver = vertArray[0];
+          for (i = 2; (i+1) < vertArrayLength; i+=2) {
+            start    = nextOver;
+            current  = next;
+            next     = vertArray[i+1];
+            nextOver = vertArray[i];
+
+            curContext.beginPath();
+            curContext.moveTo(start.x, start.y);
+            curContext.lineTo(current.x, current.y);
+            curContext.lineTo(next.x, next.y);
+            curContext.lineTo(nextOver.x, nextOver.y);
+            curContext.lineTo(start.x, start.y);
+
+            setFillStroke(doFill, doStroke, next);
+            fillStrokeClose();
+          }
+        }
+      }
     }
 
     /**
@@ -12483,281 +12719,78 @@
      * @see beginShape
      */
     Drawing2D.prototype.endShape = function(mode) {
-      // Duplicated in Drawing3D; too many variables used
       if (vertArray.length === 0) { return; }
+      var i,
+          vertArrayLength = vertArray.length,
+          start = vertArray[0],
+          current,   // vertArray[i]
+          next,      // vertArray[i+1]
+          nextOver,  // vertArray[i+2]
+          closeShape = (mode === PConstants.CLOSE);
 
-      var closeShape = mode === PConstants.CLOSE;
-
-      // if the shape is closed, the first element is also the last element
-      if (closeShape) {
-        vertArray.push(vertArray[0]);
+      if (!renderSmooth) {
+        curContext.translate(0.5,0.5);
       }
 
-      var lineVertArray = [];
-      var fillVertArray = [];
-      var colorVertArray = [];
-      var strokeVertArray = [];
-      var texVertArray = [];
-      var cachedVertArray;
+      pathStart = true;
+      curContext.beginPath();
 
-      firstVert = true;
-      var i, j, k;
-      var vertArrayLength = vertArray.length;
+      // is specific shape building required?
+      if (curShape !== undef && curShape !== PConstants.POLYGON) {
+        endShapeSpecific(curShape, vertArray, vertArrayLength);
+      } else {
+        // normal shape building. This can consist of plain,
+        // Catmull-Rom curve, and Bezier curve vertices.
+        for(i = 0; i<vertArrayLength; i++) {
+          current = vertArray[i];
 
-      for (i = 0; i < vertArrayLength; i++) {
-        cachedVertArray = vertArray[i];
-        for (j = 0; j < 3; j++) {
-          fillVertArray.push(cachedVertArray[j]);
-        }
-      }
-
-      // 5,6,7,8
-      // R,G,B,A - fill colour
-      for (i = 0; i < vertArrayLength; i++) {
-        cachedVertArray = vertArray[i];
-        for (j = 5; j < 9; j++) {
-          colorVertArray.push(cachedVertArray[j]);
-        }
-      }
-
-      // 9,10,11,12
-      // R, G, B, A - stroke colour
-      for (i = 0; i < vertArrayLength; i++) {
-        cachedVertArray = vertArray[i];
-        for (j = 9; j < 13; j++) {
-          strokeVertArray.push(cachedVertArray[j]);
-        }
-      }
-
-      // texture u,v
-      for (i = 0; i < vertArrayLength; i++) {
-        cachedVertArray = vertArray[i];
-        texVertArray.push(cachedVertArray[3]);
-        texVertArray.push(cachedVertArray[4]);
-      }
-
-      // curveVertex
-      if ( isCurve && (curShape === PConstants.POLYGON || curShape === undef) ) {
-        if (vertArrayLength > 3) {
-          var b = [],
-              s = 1 - curTightness;
-          curContext.beginPath();
-          curContext.moveTo(vertArray[1][0], vertArray[1][1]);
-            /*
-            * Matrix to convert from Catmull-Rom to cubic Bezier
-            * where t = curTightness
-            * |0         1          0         0       |
-            * |(t-1)/6   1          (1-t)/6   0       |
-            * |0         (1-t)/6    1         (t-1)/6 |
-            * |0         0          0         0       |
-            */
-          for (i = 1; (i+2) < vertArrayLength; i++) {
-            cachedVertArray = vertArray[i];
-            b[0] = [cachedVertArray[0], cachedVertArray[1]];
-            b[1] = [cachedVertArray[0] + (s * vertArray[i+1][0] - s * vertArray[i-1][0]) / 6,
-                   cachedVertArray[1] + (s * vertArray[i+1][1] - s * vertArray[i-1][1]) / 6];
-            b[2] = [vertArray[i+1][0] + (s * vertArray[i][0] - s * vertArray[i+2][0]) / 6,
-                   vertArray[i+1][1] + (s * vertArray[i][1] - s * vertArray[i+2][1]) / 6];
-            b[3] = [vertArray[i+1][0], vertArray[i+1][1]];
-            curContext.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
+          // Catmull-Rom curves must be converted to Bezier curves
+          // before we can draw them. Doing so forwards the iterator
+          // to the first non-Catmull-Rom vertex.
+          if (current.type === PConstants.CURVE_VERTEX) {
+            i += endShapeCurve(i,vertArray,vertArrayLength);
+            continue;
           }
-          fillStrokeClose();
-        }
-      }
 
-      // bezierVertex
-      else if ( isBezier && (curShape === PConstants.POLYGON || curShape === undef) ) {
-        curContext.beginPath();
-        for (i = 0; i < vertArrayLength; i++) {
-          cachedVertArray = vertArray[i];
-          if (vertArray[i]["isVert"]) { //if it is a vertex move to the position
-            if (vertArray[i]["moveTo"]) {
-              curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
+          if (current.type === PConstants.BEZIER_VERTEX) {
+            curContext.bezierCurveTo(current.cx1, current.cy1, current.cx2, current.cy2, current.x2, current.y2);
+          } else {
+            if (current.moveTo) {
+              if (closeShape && i>0) {
+                // If we moveTo in the middle of a shape, check
+                // whether we need to close the broken shape.
+                curContext.lineTo(start.x, start.y);
+                start = current;
+              }
+              curContext.moveTo(current.x, current.y);
             } else {
-              curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
+              curContext.lineTo(current.x, current.y);
             }
-          } else { //otherwise continue drawing bezier
-            curContext.bezierCurveTo(vertArray[i][0], vertArray[i][1], vertArray[i][2], vertArray[i][3], vertArray[i][4], vertArray[i][5]);
           }
         }
-        fillStrokeClose();
+        setFillStroke(doFill, doStroke, current);
       }
 
-      // render the vertices provided
-      else {
-        if (curShape === PConstants.POINTS) {
-          for (i = 0; i < vertArrayLength; i++) {
-            cachedVertArray = vertArray[i];
-            if (doStroke) {
-              p.stroke(cachedVertArray[6]);
-            }
-            p.point(cachedVertArray[0], cachedVertArray[1]);
-          }
-        } else if (curShape === PConstants.LINES) {
-          for (i = 0; (i + 1) < vertArrayLength; i+=2) {
-            cachedVertArray = vertArray[i];
-            if (doStroke) {
-              p.stroke(vertArray[i+1][6]);
-            }
-            p.line(cachedVertArray[0], cachedVertArray[1], vertArray[i+1][0], vertArray[i+1][1]);
-          }
-        } else if (curShape === PConstants.TRIANGLES) {
-          for (i = 0; (i + 2) < vertArrayLength; i+=3) {
-            cachedVertArray = vertArray[i];
-            curContext.beginPath();
-            curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
-            curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-            curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-            curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
-
-            if (doFill) {
-              p.fill(vertArray[i+2][5]);
-              executeContextFill();
-            }
-            if (doStroke) {
-              p.stroke(vertArray[i+2][6]);
-              executeContextStroke();
-            }
-
-            curContext.closePath();
-          }
-        } else if (curShape === PConstants.TRIANGLE_STRIP) {
-          for (i = 0; (i+1) < vertArrayLength; i++) {
-            cachedVertArray = vertArray[i];
-            curContext.beginPath();
-            curContext.moveTo(vertArray[i+1][0], vertArray[i+1][1]);
-            curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
-
-            if (doStroke) {
-              p.stroke(vertArray[i+1][6]);
-            }
-            if (doFill) {
-              p.fill(vertArray[i+1][5]);
-            }
-
-            if (i + 2 < vertArrayLength) {
-              curContext.lineTo(vertArray[i+2][0], vertArray[i+2][1]);
-              if (doStroke) {
-                p.stroke(vertArray[i+2][6]);
-              }
-              if (doFill) {
-                p.fill(vertArray[i+2][5]);
-              }
-            }
-            fillStrokeClose();
-          }
-        } else if (curShape === PConstants.TRIANGLE_FAN) {
-          if (vertArrayLength > 2) {
-            curContext.beginPath();
-            curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-            curContext.lineTo(vertArray[1][0], vertArray[1][1]);
-            curContext.lineTo(vertArray[2][0], vertArray[2][1]);
-
-            if (doFill) {
-              p.fill(vertArray[2][5]);
-              executeContextFill();
-            }
-            if (doStroke) {
-              p.stroke(vertArray[2][6]);
-              executeContextStroke();
-            }
-
-            curContext.closePath();
-            for (i = 3; i < vertArrayLength; i++) {
-              cachedVertArray = vertArray[i];
-              curContext.beginPath();
-              curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-              curContext.lineTo(vertArray[i-1][0], vertArray[i-1][1]);
-              curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
-
-              if (doFill) {
-                p.fill(cachedVertArray[5]);
-                executeContextFill();
-              }
-              if (doStroke) {
-                p.stroke(cachedVertArray[6]);
-                executeContextStroke();
-              }
-
-              curContext.closePath();
-            }
-          }
-        } else if (curShape === PConstants.QUADS) {
-          for (i = 0; (i + 3) < vertArrayLength; i+=4) {
-            cachedVertArray = vertArray[i];
-            curContext.beginPath();
-            curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
-            for (j = 1; j < 4; j++) {
-              curContext.lineTo(vertArray[i+j][0], vertArray[i+j][1]);
-            }
-            curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
-
-            if (doFill) {
-              p.fill(vertArray[i+3][5]);
-              executeContextFill();
-            }
-            if (doStroke) {
-              p.stroke(vertArray[i+3][6]);
-              executeContextStroke();
-            }
-
-            curContext.closePath();
-          }
-        } else if (curShape === PConstants.QUAD_STRIP) {
-          if (vertArrayLength > 3) {
-            for (i = 0; (i+1) < vertArrayLength; i+=2) {
-              cachedVertArray = vertArray[i];
-              curContext.beginPath();
-              if (i+3 < vertArrayLength) {
-                curContext.moveTo(vertArray[i+2][0], vertArray[i+2][1]);
-                curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
-                curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-                curContext.lineTo(vertArray[i+3][0], vertArray[i+3][1]);
-
-                if (doFill) {
-                  p.fill(vertArray[i+3][5]);
-                }
-                if (doStroke) {
-                  p.stroke(vertArray[i+3][6]);
-                }
-              } else {
-                curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
-                curContext.lineTo(vertArray[i+1][0], vertArray[i+1][1]);
-              }
-              fillStrokeClose();
-            }
-          }
-        } else {
-          curContext.beginPath();
-          curContext.moveTo(vertArray[0][0], vertArray[0][1]);
-          for (i = 1; i < vertArrayLength; i++) {
-            cachedVertArray = vertArray[i];
-            if (cachedVertArray["isVert"]) { //if it is a vertex move to the position
-              if (cachedVertArray["moveTo"]) {
-                curContext.moveTo(cachedVertArray[0], cachedVertArray[1]);
-              } else {
-                curContext.lineTo(cachedVertArray[0], cachedVertArray[1]);
-              }
-            }
-          }
-          fillStrokeClose();
-        }
-      }
-
-      // Reset some settings
-      isCurve = false;
-      isBezier = false;
-      curveVertArray = [];
-      curveVertCount = 0;
-
-      // If the shape is closed, the first element was added as last element.
-      // We must remove it again to prevent the list of vertices from growing
-      // over successive calls to endShape(CLOSE)
       if (closeShape) {
-        vertArray.pop();
+        curContext.closePath();
+      }
+
+      fillStrokeClose();
+
+      if (!renderSmooth) {
+        curContext.translate(-0.5,-0.5);
       }
     };
 
+    /**
+     * The endShape() function is the companion to beginShape() and may only be called after beginShape().
+     * When endshape() is called, all of image data defined since the previous call to beginShape() is written
+     * into the image buffer.
+     *
+     * @param {int} MODE Use CLOSE to close the shape
+     *
+     * @see beginShape
+     */
     Drawing3D.prototype.endShape = function(mode) {
       // Duplicated in Drawing3D; too many variables used
       if (vertArray.length === 0) { return; }
@@ -12770,7 +12803,7 @@
       var texVertArray = [];
       var cachedVertArray;
 
-      firstVert = true;
+      pathStart = true;
       var i, j, k;
       var vertArrayLength = vertArray.length;
 
@@ -13233,24 +13266,30 @@
      * @see vertex
      * @see bezier
      */
-    Drawing2D.prototype.bezierVertex = function() {
-      isBezier = true;
-      var vert = [];
-      if (firstVert) {
+    Drawing2D.prototype.bezierVertex = function(cx1, cy1, cx2, cy2, x2, y2) {
+      if (pathStart) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
       }
 
-      for (var i = 0; i < arguments.length; i++) {
-        vert[i] = arguments[i];
-      }
+      var vert = {
+        type: PConstants.BEZIER_VERTEX,
+        cx1: cx1,
+        cy1: cy1,
+        cx2: cx2,
+        cy2: cy2,
+         x2:  x2,
+         y2:  y2,
+         fillColor: currentFillColor,
+         strokeColor: currentStrokeColor
+      };
+
       vertArray.push(vert);
-      vertArray[vertArray.length -1]["isVert"] = false;
     };
 
     Drawing3D.prototype.bezierVertex = function() {
       isBezier = true;
       var vert = [];
-      if (firstVert) {
+      if (pathStart) {
         throw ("vertex() must be used at least once before calling bezierVertex()");
       }
 
@@ -13432,9 +13471,8 @@
      * @see bezierVertex
      */
     Drawing2D.prototype.curveVertex = function(x, y) {
-      isCurve = true;
-
-      p.vertex(x, y);
+      var vert = p.vertex(x, y);
+      vert.type = PConstants.CURVE_VERTEX;
     };
 
     Drawing3D.prototype.curveVertex = function(x, y, z) {
@@ -13646,6 +13684,9 @@
     p.arc = function(x, y, width, height, start, stop) {
       if (width <= 0 || stop < start) { return; }
 
+      // bypass smoothing
+      curContext.translate(-0.5,-0.5);
+
       if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
@@ -13700,6 +13741,9 @@
         p.endShape();
         doFill = savedFill;
       }
+
+      // restore smoothing bypass
+      curContext.translate(0.5,0.5);
     };
 
     /**
