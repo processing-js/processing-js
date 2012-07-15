@@ -1292,6 +1292,46 @@
     }
   };
 
+  function overloadBaseClassFunction(object, name, basefn) {
+    if (!object.hasOwnProperty(name) || typeof object[name] !== 'function') {
+      // object method is not a function or just inherited from Object.prototype
+      object[name] = basefn;
+      return;
+    }
+    var fn = object[name];
+    if ("$overloads" in fn) {
+      // the object method already overloaded (see defaultScope.addMethod)
+      // let's just change a fallback method
+      fn.$defaultOverload = basefn;
+      return;
+    }
+    if (!("$overloads" in basefn) && fn.length === basefn.length) {
+      // special case when we just overriding the method
+      return;
+    }
+    var overloads, defaultOverload;
+    if ("$overloads" in basefn) {
+      // let's inherit base class overloads to speed up things
+      overloads = basefn.$overloads.slice(0);
+      overloads[fn.length] = fn;
+      defaultOverload = basefn.$defaultOverload;
+    } else {
+      overloads = [];
+      overloads[basefn.length] = basefn;
+      overloads[fn.length] = fn;
+      defaultOverload = fn;
+    }
+    var hubfn = function() {
+      var fn = hubfn.$overloads[arguments.length] ||
+               hubfn.$defaultOverload;
+      return fn.apply(this, arguments);
+    };
+    hubfn.$overloads = overloads;
+    hubfn.$defaultOverload = defaultOverload;
+    hubfn.name = name;
+    object[name] = hubfn;
+  }
+
   function extendClass(subClass, baseClass) {
     function extendGetterSetter(propertyName) {
       defaultScope.defineProperty(subClass, propertyName, {
@@ -1308,10 +1348,7 @@
     var properties = [];
     for (var propertyName in baseClass) {
       if (typeof baseClass[propertyName] === 'function') {
-        // Overriding all non-overriden functions
-        if (!subClass.hasOwnProperty(propertyName)) {
-          subClass[propertyName] = baseClass[propertyName];
-        }
+        overloadBaseClassFunction(subClass, propertyName, baseClass[propertyName]);
       } else if(propertyName.charAt(0) !== "$" && !(propertyName in subClass)) {
         // Delaying the properties extension due to the IE9 bug (see #918).
         properties.push(propertyName);
@@ -1343,16 +1380,26 @@
   };
 
   defaultScope.addMethod = function(object, name, fn, superAccessor) {
-    if (object[name]) {
-      var args = fn.length,
-        oldfn = object[name];
-
-      object[name] = function() {
-        if (arguments.length === args) {
+    var existingfn = object[name];
+    if (existingfn) {
+      var args = fn.length;
+      // builds the overload methods table
+      if ("$overloads" in existingfn) {
+        existingfn.$overloads[args] = fn;
+      } else {
+        var hubfn = function() {
+          var fn = hubfn.$overloads[arguments.length] ||
+                   hubfn.$defaultOverload;
           return fn.apply(this, arguments);
-        }
-        return oldfn.apply(this, arguments);
-      };
+        };
+        var overloads = [];
+        overloads[existingfn.length] = existingfn;
+        overloads[args] = fn;
+        hubfn.$overloads = overloads;
+        hubfn.$defaultOverload = existingfn;
+        hubfn.name = name;
+        object[name] = hubfn;
+      }
     } else {
       object[name] = fn;
     }

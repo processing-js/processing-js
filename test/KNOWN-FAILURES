@@ -11,7 +11,5 @@ test/parser/Processing-Book-001/Units 31-42/40 Image 5/_11/_11.pde
 test/parser/Fry-Visualizing-Data/ch08-graphlayout/step_08c_graphviz/step_08c_graphviz.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_04/_04.pde
 test/parser/Processing-Book-001/Units 43-51/45 Output 2/_05/_05.pde
-# Known issue with overloaded methods
-test/unit/overloadedMethodCall.pde
 # Uses code that isn't even supported by Processing
 test/parser/Processing-Book-001/Extensions/Mobile/_07/_07.pde
