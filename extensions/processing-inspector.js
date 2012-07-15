@@ -13,7 +13,7 @@
 if(typeof ProcessingInspector === "undefined") {
   ProcessingInspector = (function() {
     var releaseFunctor = "__release__",
-    monitorCount = "__monitor_count_",
+        monitorCount = "__monitor_count_",
     
     /**
      * To prevent magic strings, we 
@@ -94,7 +94,7 @@ if(typeof ProcessingInspector === "undefined") {
       monitor: function(object, attr, callback) {
         // can we even monitor this object's attribute?
         object = getOwner(object, attr, false);
-        if(object === false) {
+        if (object === false) {
           return false;
         }
 
@@ -108,7 +108,7 @@ if(typeof ProcessingInspector === "undefined") {
            props = {
              get : function() { return this[monitoredAttr]; },
              set : function(v) {
-                     if (v!=this[monitoredAttr]) {
+                     if (v != this[monitoredAttr]) {
                        this[monitoredAttr] = v;
                        callback(object, attr, v);
                      }
@@ -152,6 +152,6 @@ if(typeof ProcessingInspector === "undefined") {
     };
   }());
 }
-else if(window && window.console && window.console.log) {
+else if (window && window.console && window.console.log) {
   window.console.log("ERROR: ProcessingInspector already exists.");
 }
