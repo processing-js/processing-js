@@ -10,7 +10,7 @@
     Bug Tracking  : http://processing-js.lighthouseapp.com
 
 */
-if(typeof ProcessingInspector === "undefined") {
+if (typeof ProcessingInspector === "undefined") {
   ProcessingInspector = (function() {
     var releaseFunctor = "__release__",
         monitorCount = "__monitor_count_",
