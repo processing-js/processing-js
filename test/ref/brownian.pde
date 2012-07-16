@@ -10,6 +10,7 @@ float[] ay = new float[num];
 void setup() 
 {
   size(100, 100);
+  frameRate(1000);
   for(int i=0; i<num; i++) {
     ax[i] = width/2;
     ay[i] = height/2;

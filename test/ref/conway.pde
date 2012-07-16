@@ -7,6 +7,7 @@ int[][][] world;
 void setup() 
 { 
   size(100, 100);
+  frameRate(1000);
   sx = width;
   sy = height;
   world = new int[sx][sy][2]; 

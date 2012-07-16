@@ -8,6 +8,7 @@ Random generator;
 
 void setup() {
   size(100, 100);
+  frameRate(1000);
   colorMode(RGB, 255, 255, 255, 100);
 
   // Using a Java random number generator for Gaussian random numbers

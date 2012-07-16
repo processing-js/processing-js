@@ -8,6 +8,7 @@ float zincrement = 0.08;
 
 void setup() {
   size(100,100);
+  frameRate(1000);
   noiseSeed(42);
 }
 
