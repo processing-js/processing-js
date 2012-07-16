@@ -659,9 +659,9 @@
 
        /**
        * @member ArrayList
-       * ArrayList.removeAll Removes from this List all of the elements from 
+       * ArrayList.removeAll Removes from this List all of the elements from
        * the current ArrayList which are present in the passed in paramater ArrayList 'c'.
-       * Shifts any succeeding elements to the left (reduces their index). 
+       * Shifts any succeeding elements to the left (reduces their index).
        *
        * @param {ArrayList} the ArrayList to compare to the current ArrayList
        *
@@ -682,7 +682,7 @@
         }
         if (this.size() < newList.size()) {
           return true;
-        } 
+        }
         return false;
       };
 
@@ -1809,10 +1809,10 @@
       this.context2d.font = this.css;
     }
   }
-  
+
   /**
    * regulates whether or not we're caching the canvas
-   * 2d context for quick text width computation. 
+   * 2d context for quick text width computation.
    */
   PFont.prototype.caching = true;
 
@@ -1861,7 +1861,7 @@
    */
   PFont.get = function(fontName, fontSize) {
     // round fontSize to one decimal point
-    fontSize = ((fontSize*10)+0.5|0)/10; 
+    fontSize = ((fontSize*10)+0.5|0)/10;
     var cache = PFont.PFontCache,
         idx = fontName+"/"+fontSize;
     if (!cache[idx]) {
@@ -1894,7 +1894,7 @@
     }
     return cache[idx];
   };
-  
+
   /**
    * FALLBACK FUNCTION -- replaces PFont.get when the font cache
    * becomes too large. This function bypasses font caching entirely.
@@ -2478,7 +2478,7 @@
       "}" +
 
       "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
-      // Get the vector from the light to the vertex and 
+      // Get the vector from the light to the vertex and
       // get the distance from the current vector to the light position.
       "  float d = length( light.position - ecPos );" +
       "  float attenuation = 1.0 / ( uFalloff[0] + ( uFalloff[1] * d ) + ( uFalloff[2] * d * d ));" +
@@ -5661,9 +5661,25 @@
       return element;
     };
 
+    // Processing 2.0 compatibility
+    var XML = p.XML = p.XMLElement;
+
+    /**
+     * Processing 2.0 function for loading XML files.
+     *
+     * @param {String} uri The uri for the xml file to load.
+     *
+     * @return {XML} An XML object representing the xml data.
+     */
+    p.loadXML = function(uri) {
+      return new XML(p, uri);
+    };
+
+
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
     ////////////////////////////////////////////////////////////////////////////
+
     /**
      * Helper function for printMatrix(). Finds the largest scalar
      * in the matrix, then number of digits left of the decimal.
@@ -8152,10 +8168,10 @@
     };
 
     /**
-    * Shears a shape around the x-axis the amount specified by the angle parameter. 
-    * Angles should be specified in radians (values from 0 to PI*2) or converted to radians 
-    * with the radians() function. Objects are always sheared around their relative position 
-    * to the origin and positive numbers shear objects in a clockwise direction. Transformations 
+    * Shears a shape around the x-axis the amount specified by the angle parameter.
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to radians
+    * with the radians() function. Objects are always sheared around their relative position
+    * to the origin and positive numbers shear objects in a clockwise direction. Transformations
     * apply to everything that happens after and subsequent calls to the function accumulates the
     * effect. For example, calling shearX(PI/2) and then shearX(PI/2) is the same as shearX(PI)
     *
@@ -8183,12 +8199,12 @@
     };
 
     /**
-    * Shears a shape around the y-axis the amount specified by the angle parameter. 
-    * Angles should be specified in radians (values from 0 to PI*2) or converted to 
-    * radians with the radians() function. Objects are always sheared around their 
-    * relative position to the origin and positive numbers shear objects in a 
+    * Shears a shape around the y-axis the amount specified by the angle parameter.
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to
+    * radians with the radians() function. Objects are always sheared around their
+    * relative position to the origin and positive numbers shear objects in a
     * clockwise direction. Transformations apply to everything that happens after
-    * and subsequent calls to the function accumulates the effect. For example, 
+    * and subsequent calls to the function accumulates the effect. For example,
     * calling shearY(PI/2) and then shearY(PI/2) is the same as shearY(PI).
     *
     * @param {int|float} angleInRadians     angle of rotation specified in radians
@@ -10578,7 +10594,7 @@
 
         // Assume we aren't using textures by default.
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
- 
+
         // Set some defaults.
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
@@ -12135,7 +12151,7 @@
      * but will enhance the visual refinement. <br/><br/>
      * Note that smooth() will also improve image quality of resized images, and noSmooth() will disable image (and font) smoothing altogether.
      * When working with a 3D sketch, smooth will draw points as circles rather than squares.
-     * 
+     *
      * @see #noSmooth()
      * @see #hint()
      * @see #size()
@@ -17942,7 +17958,7 @@
       "hue", "image", "imageMode", "intersect", "join", "key",
       "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
       "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
-      "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape",
+      "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape", "loadXML",
       "loadStrings", "log", "loop", "mag", "map", "match", "matchAll", "max",
       "millis", "min", "minute", "mix", "modelX", "modelY", "modelZ", "modes",
       "month", "mouseButton", "mouseClicked", "mouseDragged", "mouseMoved",
@@ -17968,7 +17984,7 @@
       "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", "toImageData",
       "touchCancel", "touchEnd", "touchMove", "touchStart", "translate",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
-      "vertex", "width", "XMLElement", "year", "__contains", "__equals",
+      "vertex", "width", "XMLElement", "XML", "year", "__contains", "__equals",
       "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
       "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
       "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
@@ -20090,7 +20106,7 @@
    */
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
-    
+
     // before running through init, clear the instances list, to prevent
     // sketch duplication when page content is dynamically swapped without
     // swapping out processing.js
