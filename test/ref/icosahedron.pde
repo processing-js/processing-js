@@ -14,8 +14,6 @@ void setup(){
   ico3 = new Icosahedron(12);
 }
 
-iterations = 0;
-
 void draw(){
   background(0);
   lights();
@@ -47,9 +45,7 @@ void draw(){
   ico3.create();
   popMatrix();
 
-  iterations++;
-
-  if (iterations == 25) {
+  if (frameCount == 25) {
     exit();
   }
 }

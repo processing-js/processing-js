@@ -55,6 +55,11 @@
     };
   }
 
+  /* IE9+ quirks mode check - ticket #1606 */
+  if (document.documentMode >= 9 && !document.doctype) {
+    throw("The doctype directive is missing. The recommended doctype in Internet Explorer is the HTML5 doctype: <!DOCTYPE html>");
+  }
+
   var Float32Array = setupTypedArray("Float32Array", "WebGLFloatArray"),
       Int32Array   = setupTypedArray("Int32Array",   "WebGLIntArray"),
       Uint16Array  = setupTypedArray("Uint16Array",  "WebGLUnsignedShortArray"),
