@@ -4926,7 +4926,7 @@
 
       if (selector) {
         if (typeof selector === "string") {
-          if (uri === undef && selector.indexOf("<")>-1) {
+          if (uri === undef && selector.indexOf("<") > -1) {
             // load XML from text string
             this.parse(selector);
           } else {
@@ -5005,26 +5005,33 @@
           xmlelement.parent  = parent;
         }
 
-        // if this is a text node, return a PCData element, instead of an XML element.
-        if(elementpath.nodeType === 3 && elementpath.textContent !== "") {
+        // if this is a text node, return a PCData element (parsed character data)
+        if (elementpath.nodeType === 3 && elementpath.textContent !== "") {
           return this.createPCDataElement(elementpath.textContent);
         }
 
-        // bind all attributes
-        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
-          tmpattrib    = elementpath.attributes[l];
-          xmlattribute = new XMLAttribute(tmpattrib.getname,
-                                          tmpattrib.nodeName,
-                                          tmpattrib.namespaceURI,
-                                          tmpattrib.nodeValue,
-                                          tmpattrib.nodeType);
-          xmlelement.attributes.push(xmlattribute);
+        // if this is a CDATA node, return a CData element (unparsed character data)
+        if (elementpath.nodeType === 4) {
+         return this.createCDataElement(elementpath.textContent);
         }
 
-        // bind all children
-        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
-          var node = elementpath.childNodes[l];
-          if (node.nodeType === 1 || node.nodeType === 3) { // ELEMENT_NODE or TEXT_NODE
+        // bind all attributes, if there are any
+        if (elementpath.attributes) {
+          for (l = 0, m = elementpath.attributes.length; l < m; l++) {
+            tmpattrib    = elementpath.attributes[l];
+            xmlattribute = new XMLAttribute(tmpattrib.getname,
+                                            tmpattrib.nodeName,
+                                            tmpattrib.namespaceURI,
+                                            tmpattrib.nodeValue,
+                                            tmpattrib.nodeType);
+            xmlelement.attributes.push(xmlattribute);
+          }
+        }
+
+        // bind all children, if there are any
+        if (elementpath.childNodes) {
+          for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
+            var node = elementpath.childNodes[l];
             child = xmlelement.parseChildrenRecursive(xmlelement, node);
             if (child !== null) {
               xmlelement.children.push(child);
@@ -5055,16 +5062,39 @@
        * Because Processing discards whitespace TEXT nodes, this method will not build an element
        * if the passed content is empty after trimming for whitespace.
        *
-       * @return {XMLElement} new "test" XMLElement, or null if content consists only of whitespace
+       * @return {XMLElement} new "pcdata" XMLElement, or null if content consists only of whitespace
        */
-      createPCDataElement: function (content) {
-        if(content.replace(/^\s+$/g,"") === "") {
+      createPCDataElement: function (content, isCDATA) {
+        if (content.replace(/^\s+$/g,"") === "") {
           return null;
         }
         var pcdata = new XMLElement();
-        pcdata.content = content;
         pcdata.type = "TEXT";
+        pcdata.content = content;
         return pcdata;
+      },
+      /**
+       * @member XMLElement
+       * The createCDataElement() function creates an element to be used for CDATA content.
+       *
+       * @return {XMLElement} new "cdata" XMLElement, or null if content consists only of whitespace
+       */
+      createCDataElement: function (content) {
+        var cdata = this.createPCDataElement(content);
+        if (cdata === null) {
+          return null;
+        }
+
+        cdata.type = "CDATA";
+        var htmlentities = {"<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;"},
+            entity;
+        for (entity in htmlentities) {
+          if (!Object.hasOwnProperty(htmlentities,entity)) {
+            content = content.replace(new RegExp(entity, "g"), htmlentities[entity]);
+          }
+        }
+        cdata.cdata = content;
+        return cdata;
       },
       /**
        * @member XMLElement
@@ -5129,11 +5159,11 @@
        * @return {String} the (possibly null) content
        */
       getContent: function(){
-        if (this.type === "TEXT") {
+        if (this.type === "TEXT" || this.type === "CDATA") {
           return this.content;
         }
         var children = this.children;
-        if (children.length === 1 && children[0].type === "TEXT") {
+        if (children.length === 1 && (children[0].type === "TEXT" || children[0].type === "CDATA")) {
           return children[0].content;
         }
         return null;
@@ -5150,7 +5180,7 @@
        */
       getAttribute: function (){
         var attribute;
-        if( arguments.length === 2 ){
+        if (arguments.length === 2) {
           attribute = this.findAttribute(arguments[0]);
           if (attribute) {
             return attribute.getValue();
@@ -5185,7 +5215,7 @@
         if (arguments.length === 1) {
           return this.getAttribute(arguments[0]);
         }
-        if (arguments.length === 2){
+        if (arguments.length === 2) {
           return this.getAttribute(arguments[0], arguments[1]);
         }
         return this.getAttribute(arguments[0], arguments[1],arguments[2]);
@@ -5212,7 +5242,7 @@
         if (arguments.length === 1 ) {
           return parseFloat(this.getAttribute(arguments[0], 0));
         }
-        if (arguments.length === 2 ){
+        if (arguments.length === 2 ) {
           return this.getAttribute(arguments[0], arguments[1]);
         }
         return this.getAttribute(arguments[0], arguments[1],arguments[2]);
@@ -5364,7 +5394,7 @@
        * @see XMLElement#getChild()
        * @see XMLElement#getChildren()
        */
-      getChildCount: function(){
+      getChildCount: function() {
         return this.children.length;
       },
       /**
@@ -5418,7 +5448,7 @@
        *
        * @return {boolean} true if the element has no children.
        */
-      isLeaf: function(){
+      isLeaf: function() {
         return !this.hasChildren();
       },
       /**
@@ -5554,7 +5584,7 @@
        * @param {String} content     the (possibly null) content
        */
       setContent: function(content) {
-        if (this.children.length>0) {
+        if (this.children.length > 0) {
           Processing.debug("Tried to set content for XMLElement with children"); }
         this.content = content;
       },
@@ -5619,8 +5649,14 @@
        * @return {String} the XML definition of this XMLElement
        */
       toString: function() {
-        // shortcut for text nodes
-        if(this.type==="TEXT") { return this.content; }
+        // shortcut for text and cdata nodes
+        if (this.type === "TEXT") {
+          return this.content;
+        }
+
+        if (this.type === "CDATA") {
+          return this.cdata;
+        }
 
         // real XMLElements
         var tagstring = this.fullName;
