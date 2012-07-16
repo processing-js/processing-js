@@ -502,7 +502,7 @@
       this.contains = function(item) {
         return this.indexOf(item)>-1;
       };
-       /**
+      /**
        * @member ArrayList
        * ArrayList.indexOf() Returns the position this element takes in the list, or -1 if the element is not found.
        *
@@ -518,7 +518,25 @@
         }
         return -1;
       };
-     /**
+      /**
+       * @member ArrayList
+       * ArrayList.lastIndexOf() Returns the index of the last occurrence of the specified element in this list,
+       * or -1 if this list does not contain the element. More formally, returns the highest index i such that
+       * (o==null ? get(i)==null : o.equals(get(i))), or -1 if there is no such index.
+       *
+       * @param {Object} item element to search for.
+       *
+       * @returns {int} the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.
+       */
+      this.lastIndexOf = function(item) {
+        for (var i = array.length-1; i >= 0; --i) {
+          if (virtEquals(item, array[i])) {
+            return i;
+          }
+        }
+        return -1;
+      };
+      /**
        * @member ArrayList
        * ArrayList.add() Adds the specified element to this list.
        *
