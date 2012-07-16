@@ -1357,6 +1357,8 @@
     while (properties.length > 0) {
       extendGetterSetter(properties.shift());
     }
+
+    subClass.$super = baseClass;
   }
 
   defaultScope.extendClassChain = function(base) {
