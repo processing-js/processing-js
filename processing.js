@@ -787,7 +787,7 @@
         var bucketIndex = 0;
         var itemIndex = -1;
         var endOfBuckets = false;
-        var current;
+        var currentItem;
 
         function findNext() {
           while (!endOfBuckets) {
@@ -816,9 +816,9 @@
         * Return the next Item
         */
         this.next = function() {
-          current = conversion(buckets[bucketIndex][itemIndex]);
+          currentItem = conversion(buckets[bucketIndex][itemIndex]);
           findNext();
-          return current;
+          return currentItem;
         };
 
         /*
@@ -826,14 +826,11 @@
         * Remove the current item
         */
         this.remove = function() {
-          if (current !== undef) {
-            removeItem(current);
+          if (currentItem !== undef) {
+            removeItem(currentItem);
             --itemIndex;
             findNext();
           }
-          else {
-            return null;
-          } 
         };
 
         findNext();
