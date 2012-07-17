@@ -57,6 +57,7 @@ _checkEqual(3, hm.entrySet().size());
 // removal
 i = hm.keySet().iterator(); 
 _checkTrue(i.hasNext());
+i.next();
 i.remove();
 
 _checkEqual(2, hm.size());
@@ -64,6 +65,7 @@ _checkEqual(2, hm.size());
 // removal
 i = hm.entrySet().iterator(); 
 _checkTrue(i.hasNext());
+i.next()
 i.remove();
 
 _checkEqual(1, hm.size());
