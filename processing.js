@@ -640,9 +640,9 @@
 
        /**
        * @member ArrayList
-       * ArrayList.removeAll Removes from this List all of the elements from 
+       * ArrayList.removeAll Removes from this List all of the elements from
        * the current ArrayList which are present in the passed in paramater ArrayList 'c'.
-       * Shifts any succeeding elements to the left (reduces their index). 
+       * Shifts any succeeding elements to the left (reduces their index).
        *
        * @param {ArrayList} the ArrayList to compare to the current ArrayList
        *
@@ -663,7 +663,7 @@
         }
         if (this.size() < newList.size()) {
           return true;
-        } 
+        }
         return false;
       };
 
@@ -1741,10 +1741,10 @@
       this.context2d.font = this.css;
     }
   }
-  
+
   /**
    * regulates whether or not we're caching the canvas
-   * 2d context for quick text width computation. 
+   * 2d context for quick text width computation.
    */
   PFont.prototype.caching = true;
 
@@ -1793,7 +1793,7 @@
    */
   PFont.get = function(fontName, fontSize) {
     // round fontSize to one decimal point
-    fontSize = ((fontSize*10)+0.5|0)/10; 
+    fontSize = ((fontSize*10)+0.5|0)/10;
     var cache = PFont.PFontCache,
         idx = fontName+"/"+fontSize;
     if (!cache[idx]) {
@@ -1826,7 +1826,7 @@
     }
     return cache[idx];
   };
-  
+
   /**
    * FALLBACK FUNCTION -- replaces PFont.get when the font cache
    * becomes too large. This function bypasses font caching entirely.
@@ -2409,7 +2409,7 @@
       "}" +
 
       "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
-      // Get the vector from the light to the vertex and 
+      // Get the vector from the light to the vertex and
       // get the distance from the current vector to the light position.
       "  float d = length( light.position - ecPos );" +
       "  float attenuation = 1.0 / ( uFalloff[0] + ( uFalloff[1] * d ) + ( uFalloff[2] * d * d ));" +
@@ -8083,10 +8083,10 @@
     };
 
     /**
-    * Shears a shape around the x-axis the amount specified by the angle parameter. 
-    * Angles should be specified in radians (values from 0 to PI*2) or converted to radians 
-    * with the radians() function. Objects are always sheared around their relative position 
-    * to the origin and positive numbers shear objects in a clockwise direction. Transformations 
+    * Shears a shape around the x-axis the amount specified by the angle parameter.
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to radians
+    * with the radians() function. Objects are always sheared around their relative position
+    * to the origin and positive numbers shear objects in a clockwise direction. Transformations
     * apply to everything that happens after and subsequent calls to the function accumulates the
     * effect. For example, calling shearX(PI/2) and then shearX(PI/2) is the same as shearX(PI)
     *
@@ -8114,12 +8114,12 @@
     };
 
     /**
-    * Shears a shape around the y-axis the amount specified by the angle parameter. 
-    * Angles should be specified in radians (values from 0 to PI*2) or converted to 
-    * radians with the radians() function. Objects are always sheared around their 
-    * relative position to the origin and positive numbers shear objects in a 
+    * Shears a shape around the y-axis the amount specified by the angle parameter.
+    * Angles should be specified in radians (values from 0 to PI*2) or converted to
+    * radians with the radians() function. Objects are always sheared around their
+    * relative position to the origin and positive numbers shear objects in a
     * clockwise direction. Transformations apply to everything that happens after
-    * and subsequent calls to the function accumulates the effect. For example, 
+    * and subsequent calls to the function accumulates the effect. For example,
     * calling shearY(PI/2) and then shearY(PI/2) is the same as shearY(PI).
     *
     * @param {int|float} angleInRadians     angle of rotation specified in radians
@@ -10509,7 +10509,7 @@
 
         // Assume we aren't using textures by default.
         uniformi("usingTexture3d", programObject3D, "usingTexture", usingTexture);
- 
+
         // Set some defaults.
         p.lightFalloff(1, 0, 0);
         p.shininess(1);
@@ -12066,7 +12066,7 @@
      * but will enhance the visual refinement. <br/><br/>
      * Note that smooth() will also improve image quality of resized images, and noSmooth() will disable image (and font) smoothing altogether.
      * When working with a 3D sketch, smooth will draw points as circles rather than squares.
-     * 
+     *
      * @see #noSmooth()
      * @see #hint()
      * @see #size()
@@ -12200,7 +12200,7 @@
      * Processing, but is undocumented.
      */
     p.breakShape = function() {
-      pathStart = true; 
+      pathStart = true;
     };
 
     /**
@@ -12444,10 +12444,12 @@
      * and has been split off as its own function, to tighten the code and allow for
      * fewer bugs.
      */
-    function fillStrokeClose() {
+    function fillStrokeClose(bypassClose) {
       executeContextFill();
       executeContextStroke();
-      curContext.closePath();
+      if (bypassClose !== false) {
+        curContext.closePath();
+      }
     }
 
     /**
@@ -12599,20 +12601,65 @@
         }
       }
 
+      /**
+       * TRIANGLE_FAN shapes are a bit odd. The first
+       * three vertices form a closed triangle. Subsequent
+       * individual vertices create a new filled triangle
+       * but do NOT close off. Not even with endShape(CLOSE).
+       * This is the same for P5 v1.5.1 and v2.0 so presumably
+       * this is intentional behaviour.
+       *
+       * See http://code.google.com/p/processing/issues/detail?id=1137
+       */
       else if (curShape === PConstants.TRIANGLE_FAN) {
         if (vertArrayLength > 2) {
+          // initial closed triangle
           start = vertArray[0];
-          for (i = 2; i < vertArrayLength; i++) {
-            previous = vertArray[i-1];
-            current  = vertArray[i];
+          previous = vertArray[1];
+          current  = vertArray[2];
 
-            curContext.beginPath();
-            curContext.moveTo(start.x, start.y);
-            curContext.lineTo(previous.x, previous.y);
-            curContext.lineTo(current.x, current.y);
+          curContext.beginPath();
+          curContext.moveTo(start.x, start.y);
+          curContext.lineTo(previous.x, previous.y);
+          curContext.lineTo(current.x, current.y);
+          setFillStroke(doFill, doStroke, current);
+          fillStrokeClose();
 
-            setFillStroke(doFill, doStroke, current);
-            fillStrokeClose();
+          // subsequent triangles
+          if (vertArrayLength > 3) {
+            var last = vertArray[vertArrayLength-1],
+                 closing = (start.x === last.x && start.y === last.y),
+                 end = closing ? vertArrayLength -1 : vertArrayLength,
+                 strokeLimit = end - 1;
+
+            // treat all fills first, because these can overwrite the stroking.
+            curContext.strokeStyle = "none";
+            for (i = 2; i < vertArrayLength; i++) {
+              previous = vertArray[i-1];
+              current  = vertArray[i];
+              curContext.beginPath();
+              curContext.moveTo(start.x, start.y);
+              curContext.lineTo(previous.x, previous.y);
+              curContext.lineTo(current.x, current.y);
+              setFillStroke(doFill, false, current);
+              fillStrokeClose();
+            }
+
+            // then draw the strokes on top
+            curContext.fillStyle = "none";
+            for (i = 2; i < vertArrayLength; i++) {
+              previous = vertArray[i-1];
+              current  = vertArray[i];
+              curContext.beginPath();
+              curContext.moveTo(start.x, start.y);
+              curContext.lineTo(previous.x, previous.y);
+              curContext.lineTo(current.x, current.y);
+              setFillStroke(false, doStroke, current);
+              if (i === strokeLimit && closing) {
+                curContext.closePath();
+              }
+              executeContextStroke();
+            }
           }
         }
       }
@@ -20066,7 +20113,7 @@
    */
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
-    
+
     // before running through init, clear the instances list, to prevent
     // sketch duplication when page content is dynamically swapped without
     // swapping out processing.js
