@@ -1,6 +1,6 @@
 var tests = [
   { path: "stretch.pde", tags: ["3D"] },
-  { path: "arc-fill-crisp.pde", tags: ["2D", "endShape2D"], epsilonOverride: 0.08 },
+  { path: "arc-fill-crisp.pde", tags: ["2D", "endShape2D"], epsilonOverride: 0.11 },
   { path: "mixture.pde", tags: ["3D"], knownFailureTicket: "1239" },
   { path: "mixturegrid.pde", tags: ["3D"], knownFailureTicket: "1239" },
   { path: "moveeye.pde", tags: ["3D"], epsilonOverride: 0.06 },
