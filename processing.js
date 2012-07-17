@@ -13684,6 +13684,9 @@
     p.arc = function(x, y, width, height, start, stop) {
       if (width <= 0 || stop < start) { return; }
 
+      // bypass smoothing
+      curContext.translate(-0.5,-0.5);
+
       if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
         height = height - y;
@@ -13713,8 +13716,6 @@
           stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2),
           i, j;
       if (doFill) {
-        // bypass smoothing
-        curContext.translate(-0.5,-0.5);
         // shut off stroke for a minute
         var savedStroke = doStroke;
         doStroke = false;
@@ -13726,8 +13727,6 @@
         }
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
-        // restore smoothing
-        curContext.translate(0.5,0.5);
       }
 
       if (doStroke) {
@@ -13742,6 +13741,9 @@
         p.endShape();
         doFill = savedFill;
       }
+
+      // restore smoothing bypass
+      curContext.translate(0.5,0.5);
     };
 
     /**
