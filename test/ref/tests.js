@@ -328,7 +328,7 @@ var tests = [
   { path: "triangle-3d.pde", tags: ["3D"]},
 
   { path: "endShape2d-points-color.pde", tags:["endShape2D", "2D"] },
-  { path: "endShape2d-trianglefan-color.pde", tags:["endShape2D", "2D"] },
+  { path: "endShape2d-trianglefan-color.pde", tags:["endShape2D", "2D", "dedicated"] },
   { path: "endShape2d-trianglestrip-color.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.06 },
   { path: "endShape2d-trianglestrip-stroke-color.pde", tags:["endShape2D", "2D"] },
   { path: "endShape2d-quadstrip-color.pde", tags:["endShape2D", "2D"] },

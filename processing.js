@@ -12444,12 +12444,10 @@
      * and has been split off as its own function, to tighten the code and allow for
      * fewer bugs.
      */
-    function fillStrokeClose(bypassClose) {
+    function fillStrokeClose() {
       executeContextFill();
       executeContextStroke();
-      if (bypassClose !== false) {
-        curContext.closePath();
-      }
+      curContext.closePath();
     }
 
     /**
@@ -12613,53 +12611,19 @@
        */
       else if (curShape === PConstants.TRIANGLE_FAN) {
         if (vertArrayLength > 2) {
-          // initial closed triangle
           start = vertArray[0];
-          previous = vertArray[1];
-          current  = vertArray[2];
 
-          curContext.beginPath();
-          curContext.moveTo(start.x, start.y);
-          curContext.lineTo(previous.x, previous.y);
-          curContext.lineTo(current.x, current.y);
-          setFillStroke(doFill, doStroke, current);
-          fillStrokeClose();
+          for (i = 2; i < vertArrayLength; i++) {
+            previous = vertArray[i-1];
+            current  = vertArray[i];
 
-          // subsequent triangles
-          if (vertArrayLength > 3) {
-            var last = vertArray[vertArrayLength-1],
-                 closing = (start.x === last.x && start.y === last.y),
-                 end = closing ? vertArrayLength -1 : vertArrayLength,
-                 strokeLimit = end - 1;
+            curContext.beginPath();
+            curContext.moveTo(start.x, start.y);
+            curContext.lineTo(previous.x, previous.y);
+            curContext.lineTo(current.x, current.y);
 
-            // treat all fills first, because these can overwrite the stroking.
-            curContext.strokeStyle = "none";
-            for (i = 2; i < vertArrayLength; i++) {
-              previous = vertArray[i-1];
-              current  = vertArray[i];
-              curContext.beginPath();
-              curContext.moveTo(start.x, start.y);
-              curContext.lineTo(previous.x, previous.y);
-              curContext.lineTo(current.x, current.y);
-              setFillStroke(doFill, false, current);
-              fillStrokeClose();
-            }
-
-            // then draw the strokes on top
-            curContext.fillStyle = "none";
-            for (i = 2; i < vertArrayLength; i++) {
-              previous = vertArray[i-1];
-              current  = vertArray[i];
-              curContext.beginPath();
-              curContext.moveTo(start.x, start.y);
-              curContext.lineTo(previous.x, previous.y);
-              curContext.lineTo(current.x, current.y);
-              setFillStroke(false, doStroke, current);
-              if (i === strokeLimit && closing) {
-                curContext.closePath();
-              }
-              executeContextStroke();
-            }
+            setFillStroke(doFill, doStroke, current);
+            fillStrokeClose();
           }
         }
       }
@@ -13685,7 +13649,7 @@
       if (width <= 0 || stop < start) { return; }
 
       // bypass smoothing
-      curContext.translate(-0.5,-0.5);
+      p.translate(-0.5,-0.5);
 
       if (curEllipseMode === PConstants.CORNERS) {
         width = width - x;
@@ -13743,7 +13707,7 @@
       }
 
       // restore smoothing bypass
-      curContext.translate(0.5,0.5);
+      p.translate(0.5,0.5);
     };
 
     /**
