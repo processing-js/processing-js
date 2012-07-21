@@ -12613,7 +12613,16 @@
         if (vertArrayLength > 2) {
           start = vertArray[0];
 
-          for (i = 2; i < vertArrayLength; i++) {
+          // Ensure that if the fan is explicitly closed, we ignore
+          // that last vertex, as it'll cause a "triangle" line.
+          var lastPos = vertArrayLength-1,
+              last = vertArray[vertArrayLength-1];
+
+          if (last.x !== start.x || last.y !== start.y) {
+            lastPos = vertArrayLength;
+          }
+
+          for (i = 2; i < lastPos; i++) {
             previous = vertArray[i-1];
             current  = vertArray[i];
 

@@ -328,7 +328,7 @@ var tests = [
   { path: "triangle-3d.pde", tags: ["3D"]},
 
   { path: "endShape2d-points-color.pde", tags:["endShape2D", "2D"] },
-  { path: "endShape2d-trianglefan-color.pde", tags:["endShape2D", "2D", "dedicated"] },
+  { path: "endShape2d-trianglefan-color.pde", tags:["endShape2D", "2D"] },
   { path: "endShape2d-trianglestrip-color.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.06 },
   { path: "endShape2d-trianglestrip-stroke-color.pde", tags:["endShape2D", "2D"] },
   { path: "endShape2d-quadstrip-color.pde", tags:["endShape2D", "2D"] },
@@ -347,7 +347,7 @@ var tests = [
   { path: "beginEndShape-2dquadstrip2.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.10 },
   { path: "beginEndShape-2dtrianglefan1.pde", tags:["endShape2D", "2D"]  },
   { path: "beginEndShape-2dtrianglefan2.pde", tags:["endShape2D", "2D"] },
-  { path: "beginEndShape-2dtrianglefan3.pde", tags:["endShape2D", "2D"] },
+  { path: "beginEndShape-2dtrianglefan3.pde", tags:["endShape2D", "2D"], knownFailureTicket: "1504" },
   { path: "beginEndShape-2dtriangles1.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.12 },
   { path: "beginEndShape-2dtriangles2.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.12 },
   { path: "beginEndShape-2dtrianglestrip1.pde", tags:["endShape2D", "2D"], epsilonOverride: 0.15 },
