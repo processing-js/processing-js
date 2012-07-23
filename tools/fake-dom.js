@@ -100,7 +100,11 @@ var Canvas = function() {
                      uniform4fv: __empty_func__,
                      disableVertexAttribArray: __empty_func__,
                      bindTexture: __empty_func__,
-                     setTransform: __empty_func__
+                     setTransform: __empty_func__,
+                     blendEquation: __empty_func__,
+                     blendFunc: __empty_func__,
+                     cullFace:  __empty_func__,
+                     frontFace:  __empty_func__
                    };
   };
   this.style = {
