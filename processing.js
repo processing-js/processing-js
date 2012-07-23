@@ -12971,35 +12971,30 @@
           line3D(lineVertArray, "LINES", strokeVertArray);  // render function for lines
         } else if (curShape === PConstants.TRIANGLES) {     // if TRIANGLES was the specified parameter in beginShape
           if (vertArrayLength > 2) {
-            for (i = 0; (i+2) < vertArrayLength; i+=3) {   // loop through the array per triangle
-              fillVertArray = [];
-              texVertArray = [];
-              lineVertArray = [];
-              colorVertArray = [];
-              strokeVertArray = [];
-              for (j = 0; j < 3; j++) {
-                for (k = 0; k < 3; k++) {                   // loop through and push
-                  lineVertArray.push(vertArray[i+j][k]);    // the line point location information
-                  fillVertArray.push(vertArray[i+j][k]);    // and fill point location information
-                }
+            fillVertArray = [];
+            texVertArray = [];
+            lineVertArray = [];
+            colorVertArray = [];
+            strokeVertArray = [];
+            for (i = 0; i < vertArrayLength; i++) {   // loop through the entire array
+              for (k = 0; k < 3; k++) {                   // loop through and push
+                lineVertArray.push(vertArray[i][k]);    // the line point location information
+                fillVertArray.push(vertArray[i][k]);    // and fill point location information
               }
-              for (j = 0; j < 3; j++) {                     // loop through and push the texture information
-                for (k = 3; k < 5; k++) {
-                  texVertArray.push(vertArray[i+j][k]);
-                }
+			  // loop through and push the texture information
+              for (k = 3; k < 5; k++) {
+                texVertArray.push(vertArray[i][k]);
               }
-              for (j = 0; j < 3; j++) {
-                for (k = 5; k < 9; k++) {                   // loop through and push
-                  colorVertArray.push(vertArray[i+j][k]);   // the colour information
-                  strokeVertArray.push(vertArray[i+j][k+4]);// and the stroke information
-                }
+              for (k = 5; k < 9; k++) {                   // loop through and push
+                colorVertArray.push(vertArray[i][k]);   // the colour information
+                strokeVertArray.push(vertArray[i][k+4]);// and the stroke information
               }
-              if (doStroke) {
-                line3D(lineVertArray, "LINE_LOOP", strokeVertArray );               // line render function
-              }
-              if (doFill || usingTexture) {
-                fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);   // fill shape render function
-              }
+            }
+            if (doStroke) {
+              line3D(lineVertArray, "LINE_LOOP", strokeVertArray );               // line render function
+            }
+            if (doFill || usingTexture) {
+              fill3D(fillVertArray, "TRIANGLES", colorVertArray, texVertArray);   // fill shape render function
             }
           }
         } else if (curShape === PConstants.TRIANGLE_STRIP) {    // if TRIANGLE_STRIP was the specified parameter in beginShape
