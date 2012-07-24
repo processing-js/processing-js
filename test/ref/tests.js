@@ -134,7 +134,7 @@ var tests = [
   { path: "svg-buffered.pde", tags: ["2D","SVG"] },
   { path: "blur.pde", tags: ["2D","Convolution"] },
   { path: "edgedetect.pde", tags: ["2D","Convolution"] },
-  { path: "size-3D.pde", tags: ["3D"] },
+  { path: "size-3d.pde", tags: ["3D"] },
   { path: "empty-draw-2D.pde", tags: ["2D"] },
   { path: "empty-draw-3D.pde", tags: ["3D"] },
   { path: "defaults-background_and_size.pde", tags: ["2D"] },
