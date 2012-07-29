@@ -13,6 +13,7 @@ int sc = 40;
 void setup() 
 {
   size(100, 100);
+  frameRate(1000);
   noStroke();
   smooth();
 }

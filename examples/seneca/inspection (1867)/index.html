@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Processing inspector extension test</title>
+  <script type="text/javascript" src="../../../processing.js"></script>
+  <script type="text/javascript" src="../../../extensions/processing-inspector.js"></script>
+</head>
+<body>
+  <h1>Processing Inspector</h1>
+  
+  <h3>number spinners should be continuously updated. spin them to see the line change.
+  click sketch to pause, allowing spinner updates. click sketch again to release monitored
+  values (changing them still affects sketch, but sketch no longer affects them).</h3>
+
+  <script type="text/processing">
+    class A {
+      float x=0, y=0;
+      void setX(float v) { x = v; }
+      void setY(float v) { y = v; }
+    }
+    
+    class B extends A {}
+    
+    class C extends B {
+      String printThis() { return x + "/" + y; }
+    }
+    
+    C test;
+    C getTest() { return test; }
+  
+    void setup() {
+      size(100,100);
+      test = new C();
+      test.setX(40);
+      test.setY(0);
+      stroke(0);
+    }
+    
+    float step = PI/20;
+    void draw() {
+    background(240);
+      float x = test.x,
+             y = test.y;
+      float nx = x * cos(step) - y * sin(step),
+             ny = x * sin(step) + y * cos(step);
+      test.setX(nx);
+      test.setY(ny);
+      line(width/2, height/2, width/2 + test.x, height/2 + test.y);
+    }
+
+    boolean unbind = false;
+    void mousePressed() {
+      if(!unbind) {
+        unbind = true; 
+        noLoop();
+      }
+      else {
+        loop();
+        ProcessingInspector.release(test, "x");
+        ProcessingInspector.release(test, "y");
+      }
+    }
+    
+    // processing.js event handling
+    onload = function() {
+      var xControl = document.getElementById('x_control');
+      xControl.onchange = function() { test.x = this.value; redraw(); }
+      var callback = function(obj, attr, val) { xControl.value = val|0; };
+      ProcessingInspector.monitor(test, "x", callback);
+
+      var yControl = document.getElementById('y_control');
+      yControl.onchange = function() { test.y = this.value; redraw(); }
+      callback = function(obj, attr, val) { yControl.value = val|0; };
+      ProcessingInspector.monitor(test, "y", callback);
+    }
+  </script>
+  <canvas></canvas>
+  
+  <div>
+    <input id="x_control" type="number" min="-100" max="100" step="1">
+    <input id="y_control" type="number" min="-100" max="100" step="1">
+  </div>
+
+</body>
+</html>

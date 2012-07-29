@@ -20,8 +20,6 @@ void setup()
   lights();
 } 
 
-int iterations = 0; 
-
 void draw() 
 {
   background(0, 0, 26);
@@ -37,9 +35,7 @@ void draw()
     popMatrix();
   }
 
-  iterations++;
-
-  if (iterations == 60) {
+  if (frameCount == 60) {
     exit();
   }
 }

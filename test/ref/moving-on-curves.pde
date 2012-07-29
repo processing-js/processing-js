@@ -16,6 +16,7 @@ void setup()
 {
   background(0);
   size(100, 100);
+  frameRate(1000);
   noStroke();
   smooth();
   distX = endX - beginX;
