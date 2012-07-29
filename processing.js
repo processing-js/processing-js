@@ -9373,8 +9373,7 @@
         return subject.equals.apply(subject, removeFirstArgument(arguments));
       }
 
-      // TODO use virtEquals for HashMap here
-      return subject.valueOf() === other.valueOf();
+      return virtEquals(subject, other);
     };
     /**
      * The __equalsIgnoreCase() function compares two strings to see if they are the same.
