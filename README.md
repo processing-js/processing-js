@@ -1,4 +1,3 @@
-
 Processing.js - @VERSION@
 =========================
 a port of the Processing visualization language
@@ -134,7 +133,7 @@ Processing Developers at http://processingjs.org/reference/articles/p5QuickStart
 JavaScript developers should start with the Processing.js Quick Start Guide for
 JavaScript Developers at http://processingjs.org/reference/articles/jsQuickStart
 
-A more detailed guide is http://processingjs.org/reference/articles/PomaxGuide.
+A more detailed guide is http://processingjs.org/articles/PomaxGuide.html
 
 A complete reference of all Processing.js functions and variables is available
 at http://processingjs.org/reference.

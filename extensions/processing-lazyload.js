@@ -75,15 +75,17 @@
 
   /**
    * General purpose "height of element on page" function.
+   * Code from http://www.quirksmode.org/js/findpos.html
    * @param {HTMLElement} element The HTML element for which the height on the page is being checked
    */
-  var getElementPosition = function(element) {
-    var height = 0;
-    while (element && element.offsetTop) {
-      height += element.offsetTop;
-      element = element.parentNode;
+  var getElementPosition = function(obj) {
+    var curTop = 0;
+    if (obj.offsetParent) {
+      do {
+        curTop += obj.offsetTop;    
+      } while (!!(obj = obj.offsetParent));
     }
-    return height;
+    return curTop;
   };
 
   /**
