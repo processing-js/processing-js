@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Canvas properties explanation</title>
+    <script type="text/javascript" src="../../../processing.js"></script>
+  </head>
+  <body>
+
+    <h1>Canvas properties</h1>
+
+    <p>By default any element that is tab-focussable (via tabindex)
+       gets an outline rendered by certain browsers. We turn this outline
+       off for canvas, by setting the canvas's style property "outline: none".
+       We also disable the onmousedown handler and text-select properties so
+       that the canvas does not count as a text-selectable item. Click-dragging
+       the canvas will not show the typical I-bar cursor associated with
+       text selection, and double clicking the canvas will not select it
+       as if it was a text element.</p>
+
+    <canvas data-processing-sources="demo.pde"></canvas>
+  </body>
+</html>

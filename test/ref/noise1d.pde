@@ -7,6 +7,7 @@ float xincrement = 0.01;
 
 void setup() {
   size(100,100);
+  frameRate(1000);
   background(0);
   smooth();
   noStroke();

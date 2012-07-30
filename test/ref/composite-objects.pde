@@ -5,6 +5,7 @@ EggRing er1, er2;
 void setup() 
 {
   size(100, 100);
+  frameRate(1000);
   smooth();
   er1 = new EggRing(33, 66, 0.1, 33);
   er2 = new EggRing(66, 90, 0.05, 66);

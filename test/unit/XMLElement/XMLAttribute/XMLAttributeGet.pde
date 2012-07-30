@@ -4,6 +4,6 @@ String sites =  "<?xml version='1.0'?>\n"+
                 "  <site id='1' url='mobile.processing.org'>Processing Mobile</site>\n"+
                 "</websites>";
 
-XMLElement xml = new XMLElement(sites);
+XMLElement xml = XMLElement.parse(sites);
 String number = xml.getAttribute("number");
 _checkEqual(number,"2");

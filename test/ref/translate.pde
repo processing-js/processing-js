@@ -6,6 +6,7 @@ float s = 40.0;
 void setup() 
 {
   size(100,100);
+  frameRate(1000);
   noStroke();
 }
 

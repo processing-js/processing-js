@@ -609,9 +609,9 @@ function DOMParser() {
     node.createElement = function(tagName) {
       return node.createElementNS("", tagName);
     };
-    node.createTextNode = function(data) {
+    node.createTextNode = function(data, nodeTypeOverride) {
       var text = new Node();
-      text.nodeType = Node.TEXT_NODE;
+      text.nodeType = (nodeTypeOverride ? nodeTypeOverride : Node.TEXT_NODE);
       text.ownerDocument = node;
       text.nodeValue = data;
       Object.defineProperty(text, "data", {
@@ -634,7 +634,7 @@ function DOMParser() {
       return text;
     };
     node.createCDATASection = function(data) {
-      return this.createTextNode(data);
+      return this.createTextNode(data, Node.CDATA_SECTION_NODE);
     };
     node.createAttribute = function(name) {
       return node.createAttributeNS("", name);
