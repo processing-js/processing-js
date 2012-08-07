@@ -9490,7 +9490,7 @@
      */
     p.__matches = function(str, regexp) {
       return (new RegExp(regexp)).test(str);
-    }
+    };
     /**
      * The startsWith() function tests if a string starts with the specified prefix.  If the prefix
      * is the empty String or equal to the subject String, startsWith() will also return true.
