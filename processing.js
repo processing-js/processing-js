@@ -17730,7 +17730,6 @@
     // by assigning it a tabindex. If no tabindex is specified on-page, set this to 0.
     if (!curElement.getAttribute("tabindex")) {
       curElement.setAttribute("tabindex", 0);
-      curElement.focus();
     }
 
     function getKeyCode(e) {
