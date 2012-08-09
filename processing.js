@@ -9481,6 +9481,17 @@
       return str.match(regexp);
     };
     /**
+     * The matches() function checks whether or not a string matches a given regular expression.
+     *
+     * @param {String} str      the String on which the match is tested
+     * @param {String} regexp   the regexp for which a match is tested
+     *
+     * @return {boolean} true if the string fits the regexp, false otherwise
+     */
+    p.__matches = function(str, regexp) {
+      return (new RegExp(regexp)).test(str);
+    };
+    /**
      * The startsWith() function tests if a string starts with the specified prefix.  If the prefix
      * is the empty String or equal to the subject String, startsWith() will also return true.
      *
@@ -18054,7 +18065,7 @@
       "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
       "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
       "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
-      "__codePointAt", "__startsWith", "__endsWith"];
+      "__codePointAt", "__startsWith", "__endsWith", "__matches"];
 
     var members = {};
     var i, l;
@@ -18446,7 +18457,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt|matches)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
