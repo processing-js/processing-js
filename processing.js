@@ -17661,7 +17661,11 @@
     });
 
     // Disable browser's default handling for click-drag of a canvas.
-    curElement.onmousedown = function () { return false; };
+    curElement.onmousedown = function () {
+      // make sure focus happens, but nothing else
+      curElement.focus();
+      return false;
+    };
 
     attachEventHandler(curElement, "mousedown", function(e) {
       p.__mousePressed = true;
