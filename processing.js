@@ -460,13 +460,11 @@
       };
 
       this.next = function() {
-        index++;
-        return array[index];
+        return array[++index];
       };
 
       this.remove = function() {
-        array.splice(index, 1);
-        index--;
+        array.splice(index--, 1);
       };
     }
 
