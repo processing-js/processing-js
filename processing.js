@@ -471,7 +471,7 @@
     function ArrayList(a) {
       var array;
 
-      if (a instanceof ArrayList) {
+      if (a && a.toArray) {
         array = a.toArray();
       } else {
         array = [];
