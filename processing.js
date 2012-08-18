@@ -454,17 +454,17 @@
    */
   var ArrayList = (function() {
     function Iterator(array) {
-      var index = 0;
+      var index = -1;
       this.hasNext = function() {
-        return index < array.length;
+        return (index + 1) < array.length;
       };
 
       this.next = function() {
-        return array[index++];
+        return array[++index];
       };
 
       this.remove = function() {
-        array.splice(index, 1);
+        array.splice(index--, 1);
       };
     }
 
