@@ -2060,6 +2060,14 @@
 
     // Get padding and border style widths for mouse offsets
     var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
+    // If the canvas is scaled or rotated, we'll need to hold onto the matrix and 
+    // update the mouseX and mouseY coordinates.
+    var cssTransformMatrix = [1,0,0,1,0,0];
+
+    // We also need to hold onto the untransformed cursor coordinates since each frame we 
+    // need to calculate the new p.mouseX and p.mouseY without 'accumulating' the vector.
+    var mouseXuntrans = 0;
+    var mouseYuntrans = 0;
 
     if (document.defaultView && document.defaultView.getComputedStyle) {
       stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null)['paddingLeft'], 10)      || 0;
@@ -8136,6 +8144,14 @@
       p.draw();
       restoreContext();
 
+      // Move the untransformed point to the canvas origin
+      var cx = mouseXuntrans - p.width/2;
+      var cy = mouseYuntrans - p.height/2;
+
+      // Apply the transformation matrix and move the point back
+      p.mouseX = (cx * cssTransformMatrix[0]) + (cy * cssTransformMatrix[1]) + p.width/2;
+      p.mouseY = (cx * cssTransformMatrix[2]) + (cy * cssTransformMatrix[3]) + p.height/2;
+
       pmouseXLastFrame = p.mouseX;
       pmouseYLastFrame = p.mouseY;
       p.pmouseX = pmouseXLastEvent;
@@ -8163,6 +8179,14 @@
       p.emissive(0, 0, 0);
       p.camera();
       p.draw();
+
+      // Move the untransformed point to the canvas origin
+      var cx = mouseXuntrans - p.width/2;
+      var cy = mouseYuntrans - p.height/2;
+
+      // Apply the transformation matrix and move the point back
+      p.mouseX = (cx * cssTransformMatrix[0]) + (cy * cssTransformMatrix[1]) + p.width/2;
+      p.mouseY = (cx * cssTransformMatrix[2]) + (cy * cssTransformMatrix[3]) + p.height/2;
 
       pmouseXLastFrame = p.mouseX;
       pmouseYLastFrame = p.mouseY;
@@ -17056,8 +17080,8 @@
 
       // Dropping support for IE clientX and clientY, switching to pageX and pageY so we don't have to calculate scroll offset.
       // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
-      p.mouseX = event.pageX - offset.X;
-      p.mouseY = event.pageY - offset.Y;
+      mouseXuntrans = event.pageX - offset.X;
+      mouseYuntrans = event.pageY - offset.Y;
     }
 
     // Return a TouchEvent with canvas-specific x/y co-ordinates
@@ -17082,6 +17106,28 @@
       }
 
       return t;
+    }
+
+    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    if(MutationObserver){
+      var mutationObserver = new MutationObserver(function(mutations){
+        var style = window.getComputedStyle(curElement, null);
+        var transform =  style.getPropertyValue("-moz-transform") || style.getPropertyValue("-webkit-transform") ||
+                         style.getPropertyValue("-ms-transform")  || style.getPropertyValue("-o-transform") ||
+                         style.getPropertyValue("transform");
+
+        if(transform !== 'none'){
+          // transform looks like: "matrix(0.996, 0.087, -0.087, 0.996, 0, 0)"
+          // Remove the "matrix(" and ")" parts of the string
+          transform = transform.substring(7, transform.length-1);
+
+          // Split the string into an array and convert to numbers
+          transform.split(',').forEach(function(val,el,arr){
+                                      cssTransformMatrix[el] = +val;
+                                });
+        }
+      });
+      mutationObserver.observe(curElement, {attributes: true, childList: false, characterData: false});
     }
 
     attachEventHandler(curElement, "touchstart", function (t) {
