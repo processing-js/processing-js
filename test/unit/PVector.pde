@@ -69,19 +69,6 @@ _checkEqual(v3.z, 0);
 
 PVector v4 = new PVector(10, 10, 10);
 
-// SUB
-v3.sub(v4);
-
-_checkEqual(v3.x, 95);
-_checkEqual(v3.y, 80);
-_checkEqual(v3.z, -10);
-
-PVector v5 = PVector.sub(v3,v4);
-
-_checkEqual(v5.x, 85);
-_checkEqual(v5.y, 70);
-_checkEqual(v5.z, -20);
-
 PVector v1, v2;
 v1 = new PVector(40, 20, 15);
 v2 = new PVector(25, 50, 10); 
