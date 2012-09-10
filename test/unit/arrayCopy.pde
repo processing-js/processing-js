@@ -29,8 +29,8 @@ _checkEqual(combined[0][0], "ON");
 _checkEqual(combined[0][1], "QC"); 
 _checkEqual(combined[1][0], "FL");  
 _checkEqual(combined[1][1], "NY");
-_checkEqual(combined[2][0], 0);  
-_checkEqual(combined[2][1], 0);
+_checkIsNull(combined[2][0]);  
+_checkIsNull(combined[2][1]);
 arrayCopy(codes2, 0, combined, 2, 2); //combined is now ON,QC,PE,NB,FL,NY,TX,CA,NS,MN,BC,NF,IL,NJ,WY,OH
 _checkEqual(combined[2][0], "NS");  
 _checkEqual(combined[2][1], "MN");

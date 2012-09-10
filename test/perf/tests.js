@@ -88,7 +88,7 @@ var tests = [
   { path: "background-3D.pde", tags: ["3D"] },
   { path: "box-3D.pde", tags: ["3D"] },
   { path: "box-noFill-3D.pde", tags: ["3D"] },
-  { path: "box-noStroke-3D.pde", tags: ["3D"] },
+  { path: "box-nostroke-3D.pde", tags: ["3D"] },
   { path: "sphere-3D.pde", tags: ["3D"] },
   { path: "sphere-noFill-3D.pde", tags: ["3D"] },
   { path: "triangle-3D.pde", tags: ["3D"] },
