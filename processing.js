@@ -471,7 +471,7 @@
     function ArrayList(a) {
       var array;
 
-      if (a instanceof ArrayList) {
+      if (a && a.toArray) {
         array = a.toArray();
       } else {
         array = [];
@@ -9072,7 +9072,6 @@
     * @see nfp
     */
     p.nfc = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits, ","); };
-
     var decimalToHex = function(d, padding) {
       //if there is no padding value added, default padding to 8 else go into while statement.
       padding = (padding === undef || padding === null) ? padding = 8 : padding;
@@ -9373,8 +9372,7 @@
         return subject.equals.apply(subject, removeFirstArgument(arguments));
       }
 
-      // TODO use virtEquals for HashMap here
-      return subject.valueOf() === other.valueOf();
+      return virtEquals(subject, other);
     };
     /**
      * The __equalsIgnoreCase() function compares two strings to see if they are the same.
@@ -9481,6 +9479,17 @@
       return str.match(regexp);
     };
     /**
+     * The matches() function checks whether or not a string matches a given regular expression.
+     *
+     * @param {String} str      the String on which the match is tested
+     * @param {String} regexp   the regexp for which a match is tested
+     *
+     * @return {boolean} true if the string fits the regexp, false otherwise
+     */
+    p.__matches = function(str, regexp) {
+      return (new RegExp(regexp)).test(str);
+    };
+    /**
      * The startsWith() function tests if a string starts with the specified prefix.  If the prefix
      * is the empty String or equal to the subject String, startsWith() will also return true.
      *
@@ -9557,15 +9566,16 @@
      */
     p.println = function(message) {
       var bufferLen = logBuffer.length;
+      var bufferMsg = "";
       if (bufferLen) {
-        Processing.logger.log(logBuffer.join(""));
+        bufferMsg = logBuffer.join("");
         logBuffer.length = 0; // clear log buffer
       }
 
       if (arguments.length === 0 && bufferLen === 0) {
-        Processing.logger.log("");
+        Processing.logger.log(bufferMsg + "");
       } else if (arguments.length !== 0) {
-        Processing.logger.log(message);
+        Processing.logger.log(bufferMsg + message);
       }
     };
     /**
@@ -17661,7 +17671,11 @@
     });
 
     // Disable browser's default handling for click-drag of a canvas.
-    curElement.onmousedown = function () { return false; };
+    curElement.onmousedown = function () {
+      // make sure focus happens, but nothing else
+      curElement.focus();
+      return false;
+    };
 
     attachEventHandler(curElement, "mousedown", function(e) {
       p.__mousePressed = true;
@@ -18050,7 +18064,7 @@
       "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
       "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
       "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
-      "__codePointAt", "__startsWith", "__endsWith"];
+      "__codePointAt", "__startsWith", "__endsWith", "__matches"];
 
     var members = {};
     var i, l;
@@ -18442,7 +18456,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt|matches)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)

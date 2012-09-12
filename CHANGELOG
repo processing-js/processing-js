@@ -1,3 +1,8 @@
+August 9, 2012 - Release 1.4.1
+
+  * Added String.matches() [#1886]
+  * Fixed canvas not receiving focus [#1883]
+
 July 31, 2012 - Release 1.4.0
 
   * Added a PJS object inspector [#1867]
