@@ -1666,7 +1666,7 @@
 
   var addInstance = function(processing) {
     var canvas = processing.externals.canvas;
-    if (canvas.id.indexOf("__Pjs__tmp__id__") === 0 || canvas.id === undef || !canvas.id.length) {
+    if (canvas.id === undef || !canvas.id.length || canvas.id.indexOf("__Pjs__tmp__id__") === 0) {
       canvas.id = "__processing" + processingInstances.length;
     }
     processingInstanceIds[canvas.id] = processingInstances.length;
@@ -20128,7 +20128,9 @@
    * @param {String[]} source The array of files that must be loaded
    */
   var loadSketchFromSources = function(canvas, sources, code) {
-    var errors = [], sourcesCount = sources.length, loaded = 0;
+    var errors = [],
+        sourcesCount = sources.length,
+        loaded = 0;
 
     code = code || [];
     var startPos = code.length;
@@ -20196,7 +20198,7 @@
     }
 
     for (var i = 0; i < sourcesCount; ++i) {
-      loadBlock(i+startPos, sources[i]);
+      loadBlock(i + startPos, sources[i]);
     }
   };
 
@@ -20236,7 +20238,7 @@
 
       if (type && (type === "text/processing" || type === "application/processing")) {
         target = script.getAttribute("data-target");
-        if(!target) {
+        if (!target) {
           // Deprecated "processing-target" attribute. Will be removed sometime in the future.
           target = script.getAttribute("data-processing-target");
         }
@@ -20246,7 +20248,7 @@
         if (target) {
           canvas = document.getElementById(target);
           // set up code binding for this canvas
-          if(!codeBindings[target]) {
+          if (!codeBindings[target]) {
             codeBindings[target] = { canvas: canvas, code: [], fileNames: [] };
           }
         }
@@ -20261,15 +20263,13 @@
 
           if (next) {
             canvas = next;
-          }
 
-          if(canvas) {
             // set up code binding for this canvas
-            if(!canvas.id) {
+            if (!canvas.id) {
               canvas.id = "__Pjs__tmp__id__"+(tmpId++);
             }
 
-            if(!codeBindings[canvas.id]) {
+            if (!codeBindings[canvas.id]) {
               codeBindings[canvas.id] = { canvas: canvas, code: [], fileNames: [] };
             }
           }
@@ -20286,7 +20286,7 @@
           // if not, we load a fragment from textContent (or text, for IE)
           else {
             source =  script.textContent || script.text;
-            if(source.trim() !== "") {
+            if (source.trim() !== "") {
               codeBindings[canvas.id].code.push(source);
             }
           }
@@ -20297,29 +20297,30 @@
     // run through all canvas elements to see if they
     // indicate their own code loading
     // NOTE: datasrc and data-src have been deprecated as of v1.4.2
-    var canvas = document.getElementsByTagName('canvas'),
-        processingSources,
-        j;
+    canvas = document.getElementsByTagName('canvas');
+    var processingSources, j;
+
     for (s = 0, last = canvas.length; s < last; s++) {
       processingSources = canvas[s].getAttribute('data-processing-sources');
       if (processingSources) {
-        filenames = processingSources.split(/\s+/);
+        fileNames = processingSources.split(/\s+/);
         // remove empty entries
-        for (j = 0; j < filenames.length;) {
-          if (filenames[j]) {
-            codeBindings[canvas[s].id].fileNames.push(filenames[j++]);
+        for (j = 0; j < fileNames.length; ) {
+          if (fileNames[j]) {
+            codeBindings[canvas[s].id].fileNames.push(fileNames[j++]);
           } else {
-            filenames.splice(j, 1);
+            fileNames.splice(j, 1);
           }
         }
       }
     }
 
     // finally, run through all codeBindings
-    for(s in codeBindings) {
-      if(Object.hasOwnProperty(codeBindings, s)) continue;
-      codeBinding = codeBindings[s];
-      loadSketchFromSources(codeBinding.canvas, codeBinding.fileNames, codeBinding.code);
+    for (s in codeBindings) {
+      if (!Object.hasOwnProperty(codeBindings, s)) {
+        codeBinding = codeBindings[s];
+        loadSketchFromSources(codeBinding.canvas, codeBinding.fileNames, codeBinding.code);
+      }
     }
   };
 
