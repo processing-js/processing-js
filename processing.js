@@ -20197,8 +20197,14 @@
       ajaxAsync(filename, callback);
     }
 
+    // if we have source files to load, do that
     for (var i = 0; i < sourcesCount; ++i) {
       loadBlock(i + startPos, sources[i]);
+    }
+    
+    // if not, immediately create our instance
+    if (sourcesCount === 0) {
+      return new Processing(canvas, code.join("\n"));
     }
   };
 
