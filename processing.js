@@ -2074,7 +2074,7 @@
       curElement = typeof aCanvas === "string" ? document.getElementById(aCanvas) : aCanvas;
     }
 
-    if (!(curElement instanceof HTMLCanvasElement)) {
+    if (!('getContext' in curElement)) {
       throw("called Processing constructor without passing canvas element reference or id.");
     }
 
