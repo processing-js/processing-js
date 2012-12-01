@@ -20208,6 +20208,7 @@
     // sketch duplication when page content is dynamically swapped without
     // swapping out processing.js
     processingInstances = [];
+    Processing.instances = processingInstances;
 
     var canvas = document.getElementsByTagName('canvas'),
       filenames;
