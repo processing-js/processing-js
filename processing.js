@@ -8684,9 +8684,7 @@
     }
 
     /**
-    * Quits/stops/exits the program. Programs without a draw() function exit automatically
-    * after the last line has run, but programs with draw() run continuously until the
-    * program is manually stopped or exit() is run.
+    * Quits/stops/exits the program.
     * Rather than terminating immediately, exit() will cause the sketch to exit after draw()
     * has completed (or after setup() completes if called during the setup() method).
     *
