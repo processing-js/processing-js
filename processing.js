@@ -1152,6 +1152,10 @@
       return v1.cross(v2);
     };
 
+    PVector.sub = function(v1, v2) {
+      return new PVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+    };
+
     PVector.angleBetween = function(v1, v2) {
       return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
     };
