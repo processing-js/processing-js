@@ -15075,10 +15075,8 @@
     * @see background
     */
     p.loadImage = function(file, type, callback) {
-      // if type is specified add it with a . to file to make the filename
-      if (type) {
-        file = file + "." + type;
-      }
+      // if type is specified, we just ignore it
+
       var pimg;
       // if image is in the preloader cache return a new PImage
       if (curSketch.imageCache.images[file]) {
