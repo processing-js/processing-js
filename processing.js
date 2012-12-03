@@ -2230,7 +2230,6 @@
     var curContext,
         curSketch,
         drawing, // hold a Drawing2D or Drawing3D object
-        online = true,
         doFill = true,
         fillStyle = [1.0, 1.0, 1.0, 1.0],
         currentFillColor = 0xFFFFFFFF,
