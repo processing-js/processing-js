@@ -9074,7 +9074,6 @@
     * @see nfp
     */
     p.nfc = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits, ","); };
-
     var decimalToHex = function(d, padding) {
       //if there is no padding value added, default padding to 8 else go into while statement.
       padding = (padding === undef || padding === null) ? padding = 8 : padding;
@@ -9569,15 +9568,16 @@
      */
     p.println = function(message) {
       var bufferLen = logBuffer.length;
+      var bufferMsg = "";
       if (bufferLen) {
-        Processing.logger.log(logBuffer.join(""));
+        bufferMsg = logBuffer.join("");
         logBuffer.length = 0; // clear log buffer
       }
 
       if (arguments.length === 0 && bufferLen === 0) {
-        Processing.logger.log("");
+        Processing.logger.log(bufferMsg + "");
       } else if (arguments.length !== 0) {
-        Processing.logger.log(message);
+        Processing.logger.log(bufferMsg + message);
       }
     };
     /**
