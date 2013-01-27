@@ -469,15 +469,10 @@
     }
 
     function ArrayList(a) {
-      var array;
+      var array = [];
 
       if (a && a.toArray) {
         array = a.toArray();
-      } else {
-        array = [];
-        if (typeof a === "number") {
-          array.length = a > 0 ? a : 0;
-        }
       }
 
       /**
