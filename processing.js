@@ -428,9 +428,6 @@
   * @param {Object} obj          The object to be iterated.
   */
   var ObjectIterator = function(obj) {
-    if (obj.iterator instanceof Function) {
-      return obj.iterator();
-    }
     if (obj instanceof Array) {
       // iterate through array items
       var index = -1;
@@ -440,6 +437,8 @@
       this.next = function() {
         return obj[index];
       };
+    } else if (obj.iterator instanceof Function) {
+      return obj.iterator();
     } else {
       throw "Unable to iterate: " + obj;
     }
