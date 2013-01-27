@@ -9073,7 +9073,7 @@
     * @see nfs
     * @see nfp
     */
-    p.nfc = function(value, rightDigits) { return nfCore(value, "", "-", 0, rightDigits, ","); };
+    p.nfc = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits, ","); };
 
     var decimalToHex = function(d, padding) {
       //if there is no padding value added, default padding to 8 else go into while statement.
