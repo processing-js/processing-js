@@ -3866,14 +3866,17 @@
      */
     PShapeSVG.prototype.parseChildren = function(element) {
       var newelement = element.getChildren();
-      var children   = new p.PShape();
-      for (var i = 0, j = newelement.length; i < j; i++) {
+      var base = new p.PShape();
+      var i, j;
+      for (i = 0, j = newelement.length; i < j; i++) {
         var kid = this.parseChild(newelement[i]);
         if (kid) {
-          children.addChild(kid);
+          base.addChild(kid);
         }
       }
-      this.children.push(children);
+      for (i = 0, j = base.children.length; i < j; i++) {
+        this.children.push(base.children[i]);
+      }
     };
     /**
      * @member PShapeSVG
