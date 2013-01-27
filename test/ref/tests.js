@@ -114,6 +114,7 @@ var tests = [
   { path: "pshape_svg.pde", tags: ["2D","SVG"], epsilonOverride: 0.07 },
   { path: "shearx.pde", tags: ["2D"] },
   { path: "sheary.pde", tags: ["2D"] },
+  { path: "loadShape-child-nesting.pde", tags: ["2D","SVG"] },
   { path: "loadShape.pde", tags: ["2D","SVG"], epsilonOverride: 0.06 },
   { path: "loadShape2.pde", tags: ["2D","SVG"], epsilonOverride: 0.08 },
   { path: "loadShape3.pde", tags: ["2D","SVG"], epsilonOverride: 0.07 },
@@ -205,7 +206,7 @@ var tests = [
   { path: "text-unboxed-center-top.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-unboxed-center-top-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-center-center.pde", tags:["2D", "Text"], epsilonOverride: 0.12, knownFailureTicket: "1684" }, /* See ticket #1172 */
-  { path: "text-unboxed-center-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" }, 
+  { path: "text-unboxed-center-center-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-center-bottom.pde", tags:["2D", "Text"], epsilonOverride: 0.17 }, /* See ticket #1172 */
   { path: "text-unboxed-center-bottom-3D.pde", tags:["3D", "Text"], knownFailureTicket: "750" },
   { path: "text-unboxed-right-top.pde", tags:["2D", "Text"], epsilonOverride: 0.15 }, /* See ticket #1172 */
@@ -284,7 +285,7 @@ var tests = [
   { path: "point_3D_smooth_beginShape.pde", tags: ["3D"], epsilonOverride: 0.14 },
   { path: "point_3D_smooth_stroke.pde", tags: ["3D"], epsilonOverride: 0.14 },
   { path: "point_3D_smooth_hint_off.pde", tags: ["3D"], epsilonOverride: 0.14 },
-  
+
   { path: "box.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "box_scale_3D.pde", tags: ["3D"], epsilonOverride: 0.18 },
   { path: "applyMatrix.pde", tags: ["3D"] },
