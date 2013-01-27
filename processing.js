@@ -1734,9 +1734,6 @@
   defaultScope.defineProperty(defaultScope, 'screenHeight',
     { get: function() { return window.innerHeight; } });
 
-  defaultScope.defineProperty(defaultScope, 'online',
-    { get: function() { return true; } });
-
   // Manage multiple Processing instances
   var processingInstances = [];
   var processingInstanceIds = {};
