@@ -5125,6 +5125,20 @@
       },
       /**
        * @member XMLElement
+       * The listAttributes() function gets all of the specified element's
+       * attribute names, and returns them as an array of Strings.
+       *
+       * @return {String[]} an array of attribute names associated with this XMLElement
+       */
+      listAttributes: function() {
+        var names = [];
+        this.attributes.forEach( function (attribute) {
+          names.push(attribute.getName());
+        });
+        return names;
+      },
+      /**
+       * @member XMLElement
        * The equals() function checks to see if the XMLElement being passed in equals another XMLElement
        *
        * @param {XMLElement} rawElement the element to compare to
@@ -5451,6 +5465,15 @@
           kidMatches = kidMatches.concat(matches[i].getChildrenRecursive(items, offset+1));
         }
         return kidMatches;
+      },
+      /**
+       * @member XMLElement
+       * The getParent() function return a reference to the element's parent.
+       *
+       * @return {XMLElement} the XML node representing this element's parent.
+       */
+      getParent: function() {
+        return this.parent;
       },
       /**
        * @member XMLElement
