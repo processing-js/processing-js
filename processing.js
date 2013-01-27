@@ -1152,6 +1152,10 @@
       return v1.cross(v2);
     };
 
+    PVector.sub = function(v1, v2) {
+      return new PVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+    };
+
     PVector.angleBetween = function(v1, v2) {
       return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
     };
@@ -8680,9 +8684,7 @@
     }
 
     /**
-    * Quits/stops/exits the program. Programs without a draw() function exit automatically
-    * after the last line has run, but programs with draw() run continuously until the
-    * program is manually stopped or exit() is run.
+    * Quits/stops/exits the program.
     * Rather than terminating immediately, exit() will cause the sketch to exit after draw()
     * has completed (or after setup() completes if called during the setup() method).
     *
@@ -15074,10 +15076,8 @@
     * @see background
     */
     p.loadImage = function(file, type, callback) {
-      // if type is specified add it with a . to file to make the filename
-      if (type) {
-        file = file + "." + type;
-      }
+      // if type is specified, we just ignore it
+
       var pimg;
       // if image is in the preloader cache return a new PImage
       if (curSketch.imageCache.images[file]) {
@@ -20207,6 +20207,7 @@
     // sketch duplication when page content is dynamically swapped without
     // swapping out processing.js
     processingInstances = [];
+    Processing.instances = processingInstances;
 
     var canvas = document.getElementsByTagName('canvas'),
       filenames;
