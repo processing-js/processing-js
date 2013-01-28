@@ -9571,15 +9571,16 @@
      */
     p.println = function(message) {
       var bufferLen = logBuffer.length;
+      var bufferMsg = "";
       if (bufferLen) {
-        Processing.logger.log(logBuffer.join(""));
+        bufferMsg = logBuffer.join("");
         logBuffer.length = 0; // clear log buffer
       }
 
       if (arguments.length === 0 && bufferLen === 0) {
-        Processing.logger.log("");
+        Processing.logger.log(bufferMsg + "");
       } else if (arguments.length !== 0) {
-        Processing.logger.log(message);
+        Processing.logger.log(bufferMsg + message);
       }
     };
     /**
