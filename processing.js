@@ -28,7 +28,9 @@
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
   // document.head polyfill for the benefit of Firefox 3.6
-  document.head = document.head || document.getElementsByTagName('head')[0];
+  if (!document.head) {
+    document.getElementsByTagName('head')[0];
+  }
 
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
   function setupTypedArray(name, fallback) {
@@ -2072,7 +2074,7 @@
       curElement = typeof aCanvas === "string" ? document.getElementById(aCanvas) : aCanvas;
     }
 
-    if (!(curElement instanceof HTMLCanvasElement)) {
+    if (!('getContext' in curElement)) {
       throw("called Processing constructor without passing canvas element reference or id.");
     }
 
