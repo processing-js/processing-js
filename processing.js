@@ -1183,6 +1183,20 @@
             z = this.z;
         return Math.sqrt(x * x + y * y + z * z);
       },
+      setMag: function(arg1, arg2) {
+        // If the user provided two arguments, the first can be ignored,
+        // it simply indicates they do not want to modify the original vector.
+        if(arguments.length === 2){
+          var vec = new PVector(this.x, this.y, this.z);
+          vec.normalize();
+          vec.mult(arg2);
+          return vec;
+        // If only 1 argument was passed in, it's a number
+        } else {
+          this.normalize();
+          this.mult(arg1);
+        }
+      },
       add: function(v, y, z) {
         if (arguments.length === 1) {
           this.x += v.x;
