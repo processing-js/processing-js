@@ -1307,7 +1307,6 @@
                            x * v.y - v.x * y);
       },
       lerp: function(v_or_x, amt_or_y, z, amt) {
-        // 3rd definition of lerp in this file...
         function lerp_val(start, stop, amt) {
           return start + (stop - start) * amt;
         };
