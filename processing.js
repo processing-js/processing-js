@@ -18658,6 +18658,11 @@
     }
 
     function AstVar(definitions, varType) {
+      if(varType==="int") {
+        for (var i in definitions) {
+          definitions[i].value.expr = (definitions[i].isDefault===false )?["Math.floor(",definitions[i].value.expr,")"].join(""):definitions[i].value.expr;
+        }
+      }
       this.definitions = definitions;
       this.varType = varType;
     }
