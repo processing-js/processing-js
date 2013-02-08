@@ -15650,7 +15650,10 @@
           curContext.drawImage(htmlElement, 0, 0,
             htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
         } else {
-          var obj = img.toImageData();
+           var obj = img.imageData;
+           if (img instanceof Processing) {
+             obj = img.toImageData();
+           }
 
           // Tint the image
           if (curTint !== null) {
