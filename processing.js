@@ -1,4 +1,3 @@
-
 (function(window, document, Math, undef) {
 
   var nop = function(){};
@@ -15650,10 +15649,14 @@
           curContext.drawImage(htmlElement, 0, 0,
             htmlElement.width, htmlElement.height, bounds.x, bounds.y, bounds.w, bounds.h);
         } else {
-           var obj = img.imageData;
+           var obj;
            if (img instanceof Processing) {
              obj = img.toImageData();
            }
+           else {
+             obj = img.get().imageData;
+           }           
+           
 
           // Tint the image
           if (curTint !== null) {
