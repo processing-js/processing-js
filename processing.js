@@ -7235,7 +7235,12 @@
     * @see sort
     */
     p.reverse = function(array) {
-      return array.reverse();
+      var reversed = array.reverse(),
+          len = array.length,
+          i;
+      for (i = 0; i < len; i++) {
+        array[i] = reversed[i];
+      }
     };
 
 
