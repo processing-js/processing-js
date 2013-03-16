@@ -167,6 +167,11 @@
 
     WHITESPACE: " \t\n\r\f\u00A0",
 
+    // Pointer type identifiers
+    MOUSE_POINTER: 4,
+    TOUCH_POINTER: 2,
+    PEN_POINTER: 3,
+
     // Color modes
     RGB:   1,
     ARGB:  2,
@@ -338,7 +343,7 @@
     TEXT:     'text',
     WAIT:     'wait',
     NOCURSOR: "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto",
-
+    
     // Hints
     DISABLE_OPENGL_2X_SMOOTH:     1,
     ENABLE_OPENGL_2X_SMOOTH:     -1,
@@ -2208,6 +2213,12 @@
     p.mouseScrolled   = undef;
     p.mouseOver       = undef;
     p.mouseOut        = undef;
+    p.pointerDown     = undef;
+    p.pointerMove     = undef;
+    p.pointerUp       = undef;
+    p.pointerCancel   = undef;
+    p.pointerOver     = undef;
+    p.pointerOut      = undef;
     p.touchStart      = undef;
     p.touchEnd        = undef;
     p.touchMove       = undef;
@@ -17612,101 +17623,144 @@
       return t;
     }
 
-    attachEventHandler(curElement, "touchstart", function (t) {
-      // Removes unwanted behaviour of the canvas when touching canvas
-      curElement.setAttribute("style","-webkit-user-select: none");
-      curElement.setAttribute("onclick","void(0)");
-      curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
-      // Loop though eventHandlers and remove mouse listeners
-      for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-        var type = eventHandlers[i].type;
-        // Have this function remove itself from the eventHandlers list too
-        if (type === "mouseout" ||  type === "mousemove" ||
-            type === "mousedown" || type === "mouseup" ||
-            type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
-          detachEventHandler(eventHandlers[i]);
-        }
-      }
+    // For pointer-enabled browsers, enable pointer events
+    if (window.navigator.msPointerEnabled) {
+        // Think about adding something to set the style of the canvas
 
-      // If there are any native touch events defined in the sketch, connect all of them
-      // Otherwise, connect all of the emulated mouse events
-      if (p.touchStart !== undef || p.touchMove !== undef ||
-          p.touchEnd !== undef || p.touchCancel !== undef) {
-        attachEventHandler(curElement, "touchstart", function(t) {
-          if (p.touchStart !== undef) {
-            t = addTouchEventOffset(t);
-            p.touchStart(t);
-          }
+        attachEventHandler(curElement, "MSPointerDown", function (t) {
+            curElement.setAttribute("style", "-ms-touch-action: none");
+            if (p.pointerDown !== undef) {
+                p.pointerDown(t);
+            }
         });
 
-        attachEventHandler(curElement, "touchmove", function(t) {
-          if (p.touchMove !== undef) {
-            t.preventDefault(); // Stop the viewport from scrolling
-            t = addTouchEventOffset(t);
-            p.touchMove(t);
-          }
+        attachEventHandler(curElement, "MSPointerUp", function (t) {
+            if (p.pointerUp !== undef) {
+                p.pointerUp(t);
+            }
         });
 
-        attachEventHandler(curElement, "touchend", function(t) {
-          if (p.touchEnd !== undef) {
-            t = addTouchEventOffset(t);
-            p.touchEnd(t);
-          }
+        attachEventHandler(curElement, "MSPointerMove", function (t) {
+            if (p.pointerMove !== undef) {
+                p.pointerMove(t);
+            }
         });
 
-        attachEventHandler(curElement, "touchcancel", function(t) {
-          if (p.touchCancel !== undef) {
-            t = addTouchEventOffset(t);
-            p.touchCancel(t);
-          }
+        attachEventHandler(curElement, "MSPointerCancel", function (t) {
+            if (p.pointerCancel !== undef) {
+                p.pointerCancel(t);
+            }
         });
 
-      } else {
-        // Emulated touch start/mouse down event
-        attachEventHandler(curElement, "touchstart", function(e) {
-          updateMousePosition(curElement, e.touches[0]);
-
-          p.__mousePressed = true;
-          p.mouseDragging = false;
-          p.mouseButton = PConstants.LEFT;
-
-          if (typeof p.mousePressed === "function") {
-            p.mousePressed();
-          }
+        attachEventHandler(curElement, "MSPointerOver", function (t) {
+            if (p.pointerOver !== undef) {
+                p.pointerOver(t);
+            }
         });
 
-        // Emulated touch move/mouse move event
-        attachEventHandler(curElement, "touchmove", function(e) {
-          e.preventDefault();
-          updateMousePosition(curElement, e.touches[0]);
+        attachEventHandler(curElement, "MSPointerOut", function (t) {
+            if (p.pointerOut !== undef) {
+                p.pointerOut(t);
+            }
+        });
+    } else {
 
-          if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
-            p.mouseMoved();
-          }
-          if (typeof p.mouseDragged === "function" && p.__mousePressed) {
-            p.mouseDragged();
-            p.mouseDragging = true;
-          }
+        attachEventHandler(curElement, "touchstart", function (t) {
+            // Removes unwanted behaviour of the canvas when touching canvas
+            curElement.setAttribute("style", "-webkit-user-select: none");
+            curElement.setAttribute("onclick", "void(0)");
+            curElement.setAttribute("style", "-webkit-tap-highlight-color:rgba(0,0,0,0)");
+            // Loop though eventHandlers and remove mouse listeners
+            for (var i = 0, ehl = eventHandlers.length; i < ehl; i++) {
+                var type = eventHandlers[i].type;
+                // Have this function remove itself from the eventHandlers list too
+                if (type === "mouseout" || type === "mousemove" ||
+                    type === "mousedown" || type === "mouseup" ||
+                    type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
+                    detachEventHandler(eventHandlers[i]);
+                }
+            }
+
+            // If there are any native touch events defined in the sketch, connect all of them
+            // Otherwise, connect all of the emulated mouse events
+            if (p.touchStart !== undef || p.touchMove !== undef ||
+                p.touchEnd !== undef || p.touchCancel !== undef) {
+                attachEventHandler(curElement, "touchstart", function (t) {
+                    if (p.touchStart !== undef) {
+                        t = addTouchEventOffset(t);
+                        p.touchStart(t);
+                    }
+                });
+
+                attachEventHandler(curElement, "touchmove", function (t) {
+                    if (p.touchMove !== undef) {
+                        t.preventDefault(); // Stop the viewport from scrolling
+                        t = addTouchEventOffset(t);
+                        p.touchMove(t);
+                    }
+                });
+
+                attachEventHandler(curElement, "touchend", function (t) {
+                    if (p.touchEnd !== undef) {
+                        t = addTouchEventOffset(t);
+                        p.touchEnd(t);
+                    }
+                });
+
+                attachEventHandler(curElement, "touchcancel", function (t) {
+                    if (p.touchCancel !== undef) {
+                        t = addTouchEventOffset(t);
+                        p.touchCancel(t);
+                    }
+                });
+
+            } else {
+                // Emulated touch start/mouse down event
+                attachEventHandler(curElement, "touchstart", function (e) {
+                    updateMousePosition(curElement, e.touches[0]);
+
+                    p.__mousePressed = true;
+                    p.mouseDragging = false;
+                    p.mouseButton = PConstants.LEFT;
+
+                    if (typeof p.mousePressed === "function") {
+                        p.mousePressed();
+                    }
+                });
+
+                // Emulated touch move/mouse move event
+                attachEventHandler(curElement, "touchmove", function (e) {
+                    e.preventDefault();
+                    updateMousePosition(curElement, e.touches[0]);
+
+                    if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
+                        p.mouseMoved();
+                    }
+                    if (typeof p.mouseDragged === "function" && p.__mousePressed) {
+                        p.mouseDragged();
+                        p.mouseDragging = true;
+                    }
+                });
+
+                // Emulated touch up/mouse up event
+                attachEventHandler(curElement, "touchend", function (e) {
+                    p.__mousePressed = false;
+
+                    if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
+                        p.mouseClicked();
+                    }
+
+                    if (typeof p.mouseReleased === "function") {
+                        p.mouseReleased();
+                    }
+                });
+            }
+
+            // Refire the touch start event we consumed in this function
+            curElement.dispatchEvent(t);
         });
 
-        // Emulated touch up/mouse up event
-        attachEventHandler(curElement, "touchend", function(e) {
-          p.__mousePressed = false;
-
-          if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
-            p.mouseClicked();
-          }
-
-          if (typeof p.mouseReleased === "function") {
-            p.mouseReleased();
-          }
-        });
-      }
-
-      // Refire the touch start event we consumed in this function
-      curElement.dispatchEvent(t);
-    });
-
+    }
     (function() {
       var enabled = true,
           contextMenu = function(e) {
@@ -18130,7 +18184,9 @@
       "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
       "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
       "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
-      "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
+      "pointLight", "pointerDown", "pointerMove", "pointerUp", 
+      "pointerCancel", "pointerOver", "pointerOut",
+      "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
       "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
