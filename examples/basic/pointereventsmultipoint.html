@@ -72,7 +72,7 @@ int increment = 150;
 void setup() {
   size(700, 700);
   background(200);
-  noStroke(0);
+  noStroke();
 }
 
 // For touchscreens
@@ -106,7 +106,7 @@ void pointerMove(p) {
                 h = 8;
             } else if (p.pointerType == PEN_POINTER){
                 w = 20 * p.pressure;
-                h = 20 * p.pressure;
+                h = 20 * p.pressure;		
             } else if (p.pointerType == TOUCH_POINTER){
                 w = p.width;
                 h = p.height;
