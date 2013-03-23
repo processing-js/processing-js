@@ -167,6 +167,11 @@
 
     WHITESPACE: " \t\n\r\f\u00A0",
 
+    // Pointer type identifiers
+    MOUSE_POINTER: 4,
+    TOUCH_POINTER: 2,
+    PEN_POINTER: 3,
+
     // Color modes
     RGB:   1,
     ARGB:  2,
@@ -338,7 +343,7 @@
     TEXT:     'text',
     WAIT:     'wait',
     NOCURSOR: "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto",
-
+    
     // Hints
     DISABLE_OPENGL_2X_SMOOTH:     1,
     ENABLE_OPENGL_2X_SMOOTH:     -1,
@@ -1752,10 +1757,11 @@
   };
 
   var addInstance = function(processing) {
-    if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
-      processing.externals.canvas.id = "__processing" + processingInstances.length;
+    var canvas = processing.externals.canvas;
+    if (canvas.id === undef || !canvas.id.length || canvas.id.indexOf("__Pjs__tmp__id__") === 0) {
+      canvas.id = "__processing" + processingInstances.length;
     }
-    processingInstanceIds[processing.externals.canvas.id] = processingInstances.length;
+    processingInstanceIds[canvas.id] = processingInstances.length;
     processingInstances.push(processing);
   };
 
@@ -2207,6 +2213,12 @@
     p.mouseScrolled   = undef;
     p.mouseOver       = undef;
     p.mouseOut        = undef;
+    p.pointerDown     = undef;
+    p.pointerMove     = undef;
+    p.pointerUp       = undef;
+    p.pointerCancel   = undef;
+    p.pointerOver     = undef;
+    p.pointerOut      = undef;
     p.touchStart      = undef;
     p.touchEnd        = undef;
     p.touchMove       = undef;
@@ -17611,101 +17623,144 @@
       return t;
     }
 
-    attachEventHandler(curElement, "touchstart", function (t) {
-      // Removes unwanted behaviour of the canvas when touching canvas
-      curElement.setAttribute("style","-webkit-user-select: none");
-      curElement.setAttribute("onclick","void(0)");
-      curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
-      // Loop though eventHandlers and remove mouse listeners
-      for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-        var type = eventHandlers[i].type;
-        // Have this function remove itself from the eventHandlers list too
-        if (type === "mouseout" ||  type === "mousemove" ||
-            type === "mousedown" || type === "mouseup" ||
-            type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
-          detachEventHandler(eventHandlers[i]);
-        }
-      }
+    // For pointer-enabled browsers, enable pointer events
+    if (window.navigator.msPointerEnabled) {
+        // Think about adding something to set the style of the canvas
 
-      // If there are any native touch events defined in the sketch, connect all of them
-      // Otherwise, connect all of the emulated mouse events
-      if (p.touchStart !== undef || p.touchMove !== undef ||
-          p.touchEnd !== undef || p.touchCancel !== undef) {
-        attachEventHandler(curElement, "touchstart", function(t) {
-          if (p.touchStart !== undef) {
-            t = addTouchEventOffset(t);
-            p.touchStart(t);
-          }
+        attachEventHandler(curElement, "MSPointerDown", function (t) {
+            curElement.setAttribute("style", "-ms-touch-action: none");
+            if (p.pointerDown !== undef) {
+                p.pointerDown(t);
+            }
         });
 
-        attachEventHandler(curElement, "touchmove", function(t) {
-          if (p.touchMove !== undef) {
-            t.preventDefault(); // Stop the viewport from scrolling
-            t = addTouchEventOffset(t);
-            p.touchMove(t);
-          }
+        attachEventHandler(curElement, "MSPointerUp", function (t) {
+            if (p.pointerUp !== undef) {
+                p.pointerUp(t);
+            }
         });
 
-        attachEventHandler(curElement, "touchend", function(t) {
-          if (p.touchEnd !== undef) {
-            t = addTouchEventOffset(t);
-            p.touchEnd(t);
-          }
+        attachEventHandler(curElement, "MSPointerMove", function (t) {
+            if (p.pointerMove !== undef) {
+                p.pointerMove(t);
+            }
         });
 
-        attachEventHandler(curElement, "touchcancel", function(t) {
-          if (p.touchCancel !== undef) {
-            t = addTouchEventOffset(t);
-            p.touchCancel(t);
-          }
+        attachEventHandler(curElement, "MSPointerCancel", function (t) {
+            if (p.pointerCancel !== undef) {
+                p.pointerCancel(t);
+            }
         });
 
-      } else {
-        // Emulated touch start/mouse down event
-        attachEventHandler(curElement, "touchstart", function(e) {
-          updateMousePosition(curElement, e.touches[0]);
-
-          p.__mousePressed = true;
-          p.mouseDragging = false;
-          p.mouseButton = PConstants.LEFT;
-
-          if (typeof p.mousePressed === "function") {
-            p.mousePressed();
-          }
+        attachEventHandler(curElement, "MSPointerOver", function (t) {
+            if (p.pointerOver !== undef) {
+                p.pointerOver(t);
+            }
         });
 
-        // Emulated touch move/mouse move event
-        attachEventHandler(curElement, "touchmove", function(e) {
-          e.preventDefault();
-          updateMousePosition(curElement, e.touches[0]);
+        attachEventHandler(curElement, "MSPointerOut", function (t) {
+            if (p.pointerOut !== undef) {
+                p.pointerOut(t);
+            }
+        });
+    } else {
 
-          if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
-            p.mouseMoved();
-          }
-          if (typeof p.mouseDragged === "function" && p.__mousePressed) {
-            p.mouseDragged();
-            p.mouseDragging = true;
-          }
+        attachEventHandler(curElement, "touchstart", function (t) {
+            // Removes unwanted behaviour of the canvas when touching canvas
+            curElement.setAttribute("style", "-webkit-user-select: none");
+            curElement.setAttribute("onclick", "void(0)");
+            curElement.setAttribute("style", "-webkit-tap-highlight-color:rgba(0,0,0,0)");
+            // Loop though eventHandlers and remove mouse listeners
+            for (var i = 0, ehl = eventHandlers.length; i < ehl; i++) {
+                var type = eventHandlers[i].type;
+                // Have this function remove itself from the eventHandlers list too
+                if (type === "mouseout" || type === "mousemove" ||
+                    type === "mousedown" || type === "mouseup" ||
+                    type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
+                    detachEventHandler(eventHandlers[i]);
+                }
+            }
+
+            // If there are any native touch events defined in the sketch, connect all of them
+            // Otherwise, connect all of the emulated mouse events
+            if (p.touchStart !== undef || p.touchMove !== undef ||
+                p.touchEnd !== undef || p.touchCancel !== undef) {
+                attachEventHandler(curElement, "touchstart", function (t) {
+                    if (p.touchStart !== undef) {
+                        t = addTouchEventOffset(t);
+                        p.touchStart(t);
+                    }
+                });
+
+                attachEventHandler(curElement, "touchmove", function (t) {
+                    if (p.touchMove !== undef) {
+                        t.preventDefault(); // Stop the viewport from scrolling
+                        t = addTouchEventOffset(t);
+                        p.touchMove(t);
+                    }
+                });
+
+                attachEventHandler(curElement, "touchend", function (t) {
+                    if (p.touchEnd !== undef) {
+                        t = addTouchEventOffset(t);
+                        p.touchEnd(t);
+                    }
+                });
+
+                attachEventHandler(curElement, "touchcancel", function (t) {
+                    if (p.touchCancel !== undef) {
+                        t = addTouchEventOffset(t);
+                        p.touchCancel(t);
+                    }
+                });
+
+            } else {
+                // Emulated touch start/mouse down event
+                attachEventHandler(curElement, "touchstart", function (e) {
+                    updateMousePosition(curElement, e.touches[0]);
+
+                    p.__mousePressed = true;
+                    p.mouseDragging = false;
+                    p.mouseButton = PConstants.LEFT;
+
+                    if (typeof p.mousePressed === "function") {
+                        p.mousePressed();
+                    }
+                });
+
+                // Emulated touch move/mouse move event
+                attachEventHandler(curElement, "touchmove", function (e) {
+                    e.preventDefault();
+                    updateMousePosition(curElement, e.touches[0]);
+
+                    if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
+                        p.mouseMoved();
+                    }
+                    if (typeof p.mouseDragged === "function" && p.__mousePressed) {
+                        p.mouseDragged();
+                        p.mouseDragging = true;
+                    }
+                });
+
+                // Emulated touch up/mouse up event
+                attachEventHandler(curElement, "touchend", function (e) {
+                    p.__mousePressed = false;
+
+                    if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
+                        p.mouseClicked();
+                    }
+
+                    if (typeof p.mouseReleased === "function") {
+                        p.mouseReleased();
+                    }
+                });
+            }
+
+            // Refire the touch start event we consumed in this function
+            curElement.dispatchEvent(t);
         });
 
-        // Emulated touch up/mouse up event
-        attachEventHandler(curElement, "touchend", function(e) {
-          p.__mousePressed = false;
-
-          if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
-            p.mouseClicked();
-          }
-
-          if (typeof p.mouseReleased === "function") {
-            p.mouseReleased();
-          }
-        });
-      }
-
-      // Refire the touch start event we consumed in this function
-      curElement.dispatchEvent(t);
-    });
-
+    }
     (function() {
       var enabled = true,
           contextMenu = function(e) {
@@ -18129,7 +18184,9 @@
       "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
       "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
       "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
-      "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
+      "pointLight", "pointerDown", "pointerMove", "pointerUp", 
+      "pointerCancel", "pointerOver", "pointerOut",
+      "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
       "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
@@ -20210,8 +20267,13 @@
    * @param {CANVAS} canvas The html canvas element to bind to
    * @param {String[]} source The array of files that must be loaded
    */
-  var loadSketchFromSources = function(canvas, sources) {
-    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
+  var loadSketchFromSources = function(canvas, sources, code) {
+    var errors = [],
+        sourcesCount = sources.length,
+        loaded = 0;
+
+    code = code || [];
+    var startPos = code.length;
 
     function ajaxAsync(url, callback) {
       var xhr = new XMLHttpRequest();
@@ -20275,8 +20337,14 @@
       ajaxAsync(filename, callback);
     }
 
+    // if we have source files to load, do that
     for (var i = 0; i < sourcesCount; ++i) {
-      loadBlock(i, sources[i]);
+      loadBlock(i + startPos, sources[i]);
+    }
+    
+    // if not, immediately create our instance
+    if (sourcesCount === 0) {
+      return new Processing(canvas, code.join("\n"));
     }
   };
 
@@ -20292,75 +20360,113 @@
     processingInstances = [];
     Processing.instances = processingInstances;
 
-    var canvas = document.getElementsByTagName('canvas'),
-      filenames;
+    var canvas,
+        scripts = document.getElementsByTagName('script'),
+        codeBindings = {},
+        codeBinding,
+        s,
+        last,
+        source,
+        target,
+        instance,
+        fileNames = [],
+        fileName,
+        tmpId = 1234;
 
-    for (var i = 0, l = canvas.length; i < l; i++) {
-      // datasrc and data-src are deprecated.
-      var processingSources = canvas[i].getAttribute('data-processing-sources');
-      if (processingSources === null) {
-        // Temporary fallback for datasrc and data-src
-        processingSources = canvas[i].getAttribute('data-src');
-        if (processingSources === null) {
-          processingSources = canvas[i].getAttribute('datasrc');
-        }
-      }
-      if (processingSources) {
-        filenames = processingSources.split(/\s+/g);
-        for (var j = 0; j < filenames.length;) {
-          if (filenames[j]) {
-            j++;
-          } else {
-            filenames.splice(j, 1);
-          }
-        }
-        loadSketchFromSources(canvas[i], filenames);
-      }
-    }
-
-    // also process all <script>-indicated sketches, if there are any
-    var s, last, source, instance,
-        nodelist = document.getElementsByTagName('script'),
-        scripts=[];
-
-    // snapshot the DOM, as the nodelist is only a DOM view, and is
-    // updated instantly when a script element is added or removed.
-    for (s = nodelist.length - 1; s >= 0; s--) {
-      scripts.push(nodelist[s]);
-    }
-
-    // iterate over all script elements to see if they contain Processing code
     for (s = 0, last = scripts.length; s < last; s++) {
       var script = scripts[s];
+
       if (!script.getAttribute) {
         continue;
       }
 
       var type = script.getAttribute("type");
-      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
-        var target = script.getAttribute("data-processing-target");
+      type = (type ? type.toLowerCase() : type);
+
+      if (type && (type === "text/processing" || type === "application/processing")) {
+        target = script.getAttribute("data-target");
+        if (!target) {
+          // Deprecated "processing-target" attribute. Will be removed sometime in the future.
+          target = script.getAttribute("data-processing-target");
+        }
         canvas = undef;
+
+        // if we have a target canvas, use that
         if (target) {
           canvas = document.getElementById(target);
-        } else {
-          var nextSibling = script.nextSibling;
-          while (nextSibling && nextSibling.nodeType !== 1) {
-            nextSibling = nextSibling.nextSibling;
-          }
-          if (nextSibling && nextSibling.nodeName.toLowerCase() === "canvas") {
-            canvas = nextSibling;
+          // set up code binding for this canvas
+          if (!codeBindings[target]) {
+            codeBindings[target] = { canvas: canvas, code: [], fileNames: [] };
           }
         }
 
-        if (canvas) {
-          if (script.getAttribute("src")) {
-            filenames = script.getAttribute("src").split(/\s+/);
-            loadSketchFromSources(canvas, filenames);
-            continue;
+        // if we do not have a target canvas, treat this as code
+        // for the nearest next canvas sibling.
+        else {
+          var next = script.nextSibling;
+          while (next && next.nodeName.toLowerCase() !== "canvas") {
+            next = next.nextSibling;
           }
-          source =  script.textContent || script.text;
-          instance = new Processing(canvas, source);
+
+          if (next) {
+            canvas = next;
+
+            // set up code binding for this canvas
+            if (!canvas.id) {
+              canvas.id = "__Pjs__tmp__id__"+(tmpId++);
+            }
+
+            if (!codeBindings[canvas.id]) {
+              codeBindings[canvas.id] = { canvas: canvas, code: [], fileNames: [] };
+            }
+          }
         }
+
+        // was this script element tied to a canvas?
+        if (canvas) {
+          // do we need to load a fragment from file?
+          fileName = script.getAttribute("src");
+          if (fileName) {
+            codeBindings[canvas.id].fileNames.push(fileName);
+          }
+
+          // if not, we load a fragment from textContent (or text, for IE)
+          else {
+            source =  script.textContent || script.text;
+            if (source.trim() !== "") {
+              codeBindings[canvas.id].code.push(source);
+            }
+          }
+        }
+      }
+    }
+
+    // run through all canvas elements to see if they
+    // indicate their own code loading
+    // NOTE: datasrc and data-src have been deprecated as of v1.4.2
+    canvas = document.getElementsByTagName('canvas');
+    var processingSources, j;
+
+    for (s = 0, last = canvas.length; s < last; s++) {
+      processingSources = canvas[s].getAttribute('data-processing-sources');
+      if (processingSources) {
+        fileNames = processingSources.split(/\s+/);
+        // remove empty entries
+        for (j = 0; j < fileNames.length; ) {
+          if (fileNames[j]) {
+            codeBindings[canvas[s].id].fileNames.push(fileNames[j++]);
+          } else {
+            fileNames.splice(j, 1);
+          }
+        }
+      }
+    }
+
+    // finally, run through all codeBindings
+    for (s in codeBindings) {
+      if (!Object.hasOwnProperty(codeBindings, s)) {
+        codeBinding = codeBindings[s];
+        loadSketchFromSources(codeBinding.canvas, codeBinding.fileNames, codeBinding.code);
       }
     }
   };
