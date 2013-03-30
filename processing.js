@@ -29,7 +29,7 @@
 
   // document.head polyfill for the benefit of Firefox 3.6
   if (!document.head) {
-    document.getElementsByTagName('head')[0];
+    document.head = document.getElementsByTagName('head')[0];
   }
 
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
@@ -1143,11 +1143,11 @@
       v.x = Math.cos(angle);
       v.y = Math.sin(angle);
       return v;
-    }
+    };
 
     PVector.random2D = function(v) {
       return PVector.fromAngle(Math.random() * PConstants.TWO_PI, v);
-    }
+    };
 
     PVector.random3D = function(v) {
       var angle = Math.random() * PConstants.TWO_PI;
@@ -1161,7 +1161,7 @@
         v.set(vx, vy, vz);
       }
       return v;
-    }
+    };
 
     PVector.dist = function(v1, v2) {
       return v1.dist(v2);
@@ -1188,7 +1188,7 @@
       var retval = new PVector(v1.x, v1.y, v1.z);
       retval.lerp(v2, amt);
       return retval;
-    }
+    };
 
     // Common vector operations for PVector
     PVector.prototype = {
@@ -1302,7 +1302,7 @@
                            x * v.y - v.x * y);
       },
       lerp: function(v_or_x, amt_or_y, z, amt) {
-        function lerp_val(start, stop, amt) {
+        var lerp_val = function(start, stop, amt) {
           return start + (stop - start) * amt;
         };
         var x, y;
