@@ -2962,10 +2962,13 @@
      *
      * @param {String} vetexShaderSource
      * @param {String} fragmentShaderSource
+     * @param {Array.<String>} opt_attributes names of attributes to
+     *        bind locations. Each string will be passed to
+     *        bindAttribLocation with its index.
      *
      * @returns {WebGLProgram} A program object
     */
-    var createProgramObject = function(curContext, vetexShaderSource, fragmentShaderSource) {
+    var createProgramObject = function(curContext, vetexShaderSource, fragmentShaderSource, opt_attributes) {
       var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
       curContext.shaderSource(vertexShaderObject, vetexShaderSource);
       curContext.compileShader(vertexShaderObject);
@@ -2983,6 +2986,11 @@
       var programObject = curContext.createProgram();
       curContext.attachShader(programObject, vertexShaderObject);
       curContext.attachShader(programObject, fragmentShaderObject);
+      if (opt_attributes) {
+        opt_attributes.forEach(function(attribute, index) {
+          curContext.bindAttribLocation(programObject, index, attribute);
+        });
+      }
       curContext.linkProgram(programObject);
       if (!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)) {
         throw "Error linking shaders.";
@@ -10730,16 +10738,16 @@
         // Create the program objects to render 2D (points, lines) and
         // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
         // lighting calculations are ommitted from this program object.
-        programObject2D = createProgramObject(curContext, vertexShaderSrc2D, fragmentShaderSrc2D);
+        programObject2D = createProgramObject(curContext, vertexShaderSrc2D, fragmentShaderSrc2D, ["aVertex"]);
 
-        programObjectUnlitShape = createProgramObject(curContext, vertexShaderSrcUnlitShape, fragmentShaderSrcUnlitShape);
+        programObjectUnlitShape = createProgramObject(curContext, vertexShaderSrcUnlitShape, fragmentShaderSrcUnlitShape, ["aVertex"]);
 
         // Set the default point and line width for the 2D and unlit shapes.
         p.strokeWeight(1);
 
         // Now that the programs have been compiled, we can set the default
         // states for the lights.
-        programObject3D = createProgramObject(curContext, vertexShaderSrc3D, fragmentShaderSrc3D);
+        programObject3D = createProgramObject(curContext, vertexShaderSrc3D, fragmentShaderSrc3D, ["aVertex"]);
         curContext.useProgram(programObject3D);
 
         // Assume we aren't using textures by default.
