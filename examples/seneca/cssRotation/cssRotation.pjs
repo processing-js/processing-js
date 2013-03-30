@@ -1,0 +1,22 @@
+﻿float theta = 0;
+
+void setup(){
+  size(300, 400);
+  strokeWeight(5);
+}
+
+void draw(){
+  if(mousePressed){
+    rotateCanvas();
+    theta++;
+    point(mouseX, mouseY);
+  }
+}
+
+function rotateCanvas(){
+  var attr = ["-moz-transform", "-webkit-transform", "-o-transform", "-ms-transform", "transform"];
+
+  for(a in attr){
+    document.getElementById('cvs').style.setProperty(attr[a], 'rotate(' + theta + 'deg)' );	
+  }	
+}
