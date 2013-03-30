@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../processing.js"></script>
+    <link rel="stylesheet" href="../../style.css"/>
+  </head>
+  <body>
+    <h1>Testing noContextMenu pjs directive</a></h1>
+
+    <p>This sketch should allow a context menu:</p>
+
+    <script type="text/processing">
+    void setup() {
+      size(100,100);
+      background(#00FF00);
+    }</script><canvas></canvas>
+
+    <p>This sketch should no allow a context menu:</p>
+
+    <script type="text/processing">
+    /* @pjs noContextMenu = "true"; */
+    void setup() {
+      size(100,100);
+      background(#00FF00);
+    }</script><canvas></canvas>
+  </body>
+</html>
