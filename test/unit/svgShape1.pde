@@ -13,21 +13,23 @@ XMLHttpRequest.prototype = {
 PShape s1 = loadShape("test1.svg");
 _checkEqual(819, s1.height);
 _checkEqual(1, s1.children[0].children.length);
-var s1_g = s1.children[0].children[0];
+
+var s1_g = s1.children[0];
 _checkEqual(0, s1_g.family); // GROUP
-_checkEqual(1, s1_g.children[0].children.length);
-var s1_g_path = s1_g.children[0].children[0];
+_checkEqual(1, s1_g.children.length);
+
+var s1_g_path = s1_g.children[0];
 _checkEqual(21, s1_g_path.family); // PATH
-_checkEqual(0, s1_g_path.children[0].children.length);
+_checkEqual(0, s1_g_path.children.length);
 _checkEqual([[35,25],[256,10]], s1_g_path.vertices);
 _checkEqual([0, 0], s1_g_path.vertexCodes);
 
 PShape s2 = loadShape("test2.svg");
 _checkEqual(200, s2.width);
-_checkEqual(1, s2.children[0].children.length);
-var s2_rect = s2.children[0].children[0];
+_checkEqual(1, s2.children.length);
+
+var s2_rect = s2.children[0];
 _checkEqual(1, s2_rect.family); // PRIMITIVE
 _checkEqual(30, s2_rect.kind); // RECT
-_checkEqual(0, s2_rect.children[0].children.length);
+_checkEqual(0, s2_rect.children.length);
 _checkEqual([10,10,180,180], s2_rect.params);
-
