@@ -2131,7 +2131,7 @@
   ////////////////////////////////////////////////////////////////////////////
 
 
-  var Processing = this.Processing = function(aCanvas, aCode) {
+  var Processing = this.Processing = function(aCanvas, aCode, aOptions) {
     // Previously we allowed calling Processing as a func instead of ctor, but no longer.
     if (!(this instanceof Processing)) {
       throw("called Processing constructor as if it were a function: missing 'new'.");
@@ -8677,7 +8677,7 @@
       doLoop = false;
       loopStarted = false;
       clearInterval(looping);
-      curSketch.onPause();
+      curSketch.onPause(p);
     };
 
     /**
@@ -8698,9 +8698,9 @@
 
       looping = window.setInterval(function() {
         try {
-          curSketch.onFrameStart();
+          curSketch.onFrameStart(p);
           p.redraw();
-          curSketch.onFrameEnd();
+          curSketch.onFrameEnd(p);
         } catch(e_loop) {
           window.clearInterval(looping);
           throw e_loop;
@@ -8708,7 +8708,7 @@
       }, curMsPerFrame);
       doLoop = true;
       loopStarted = true;
-      curSketch.onLoop();
+      curSketch.onLoop(p);
     };
 
     /**
@@ -8787,7 +8787,7 @@
       while (i--) {
         detachEventHandler(eventHandlers[i]);
       }
-      curSketch.onExit();
+      curSketch.onExit(p);
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -17951,6 +17951,12 @@
 //#endif
       }
 
+      "onLoad onSetup onPause onLoop onExit onFrameStart onFrameEnd".split(" ").forEach(function(element) {
+        if (aOptions && aOptions.element && typeof aOptions.element === "function") {
+          curSketch.element = aOptions.element;
+        }
+      });
+
       // Expose internal field for diagnostics and testing
       p.externals.sketch = curSketch;
 
@@ -18040,7 +18046,7 @@
             // if any transforms were performed in setup reset to identity matrix
             // so draw loop is unpolluted
             processing.resetMatrix();
-            curSketch.onSetup();
+            curSketch.onSetup(processing);
           }
 
           // some pixels can be cached, flushing
@@ -18068,6 +18074,12 @@
       // No executable sketch was specified
       // or called via createGraphics
       curSketch = new Processing.Sketch();
+
+      "onLoad onSetup onPause onLoop onExit onFrameStart onFrameEnd".split(" ").forEach(function(element) {
+        if (aOptions && aOptions.element && typeof aOptions.element === "function") {
+          curSketch.element = aOptions.element;
+        }
+      });
 
       wireDimensionalFunctions();
 
@@ -20204,7 +20216,7 @@
    * @param {CANVAS} canvas The html canvas element to bind to
    * @param {String[]} source The array of files that must be loaded
    */
-  var loadSketchFromSources = function(canvas, sources) {
+  var loadSketchFromSources = function(canvas, sources, options) {
     var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
 
     function ajaxAsync(url, callback) {
@@ -20246,7 +20258,7 @@
         if (loaded === sourcesCount) {
           if (errors.length === 0) {
             try {
-              return new Processing(canvas, code.join("\n"));
+              return new Processing(canvas, code.join("\n"), options);
             } catch(e) {
               throw "Processing.js: Unable to execute pjs sketch: " + e;
             }
