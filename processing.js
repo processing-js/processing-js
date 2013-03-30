@@ -1734,9 +1734,6 @@
   defaultScope.defineProperty(defaultScope, 'screenHeight',
     { get: function() { return window.innerHeight; } });
 
-  defaultScope.defineProperty(defaultScope, 'online',
-    { get: function() { return true; } });
-
   // Manage multiple Processing instances
   var processingInstances = [];
   var processingInstanceIds = {};
@@ -2230,7 +2227,6 @@
     var curContext,
         curSketch,
         drawing, // hold a Drawing2D or Drawing3D object
-        online = true,
         doFill = true,
         fillStyle = [1.0, 1.0, 1.0, 1.0],
         currentFillColor = 0xFFFFFFFF,
