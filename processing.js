@@ -17519,12 +17519,10 @@
 
       // Set default stroke and fill color
       p.noSmooth();
-      p.disableContextMenu();
     };
     Drawing3D.prototype.$init = function() {
       // For ref/perf test compatibility until those are fixed
       p.use3DContext = true;
-      p.disableContextMenu();
     };
 
     DrawingShared.prototype.$ensureContext = function() {
@@ -17700,6 +17698,9 @@
       curElement.dispatchEvent(t);
     });
 
+    /**
+     * how should the sketch deal with contextmenu clicks?
+     */
     (function() {
       var enabled = true,
           contextMenu = function(e) {
@@ -18033,6 +18034,11 @@
 
           // pass a reference to the p instance for this sketch.
           curSketch.onLoad(processing);
+
+          // disable context menu?
+          if (curSketch.options.noContextMenu) {
+            processing.disableContextMenu();
+          }
 
           // Run void setup()
           if (processing.setup) {
@@ -19781,6 +19787,8 @@
             sketch.options.pauseOnBlur = value === "true";
           } else if (key === "globalKeyEvents") {
             sketch.options.globalKeyEvents = value === "true";
+          } else if (key === "noContextMenu") {
+            sketch.options.noContextMenu = value === "true";
           } else if (key.substring(0, 6) === "param-") {
             sketch.params[key.substring(6)] = value;
           } else {
