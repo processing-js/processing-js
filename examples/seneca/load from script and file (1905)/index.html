@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <script type="text/javascript" src="../../../processing.js"></script>
+
+    <!-- first fragments, from URL -->
+    <script type="text/processing" data-target="targetcanvas" src="setup.pde"></script>
+    <script type="text/processing" data-target="targetcanvas" src="drawGrid.pde"></script>
+
+    <!-- second fragment, plain source -->
+    <script type="text/processing" data-target="targetcanvas">
+      // setup located in setup.pde
+      void draw() {
+        background(255);
+        drawGrid();     // located in drawGrid.pde
+        drawFunction(); // located in on-page fragment
+        fillWhite();
+        useBlack();
+      }
+    </script>
+  </head>
+  <body>
+    <h2>Load a single sketch from multiple script fragments as well as data-processing-sources</h2>
+    <p>The following sketch should load from three &lt;script&gt; elements, two
+    in the header element, explicitly referring to the target canvas, one from
+    the body, without an explicit target, but located before the canvas it should
+    be used for. The canvas itself then also loads data from a file called
+    codebase.pde</p>
+
+    <p>This sketch should have mouseMove behaviour, drawing a circle at the cursor position.</p>
+
+    <!-- third fragment, from URL, using implicit target -->
+    <script type="text/processing" src="mouseEvents.pde"></script>
+
+    <!-- fourth fragment, plain source, using implicit target -->
+    <script type="text/processing">
+      void drawFunction() {
+        useBlack(); // located in codebase.pde
+        ellipseMode(CENTER);
+        ellipse(width/2,height/2, width/3, height/3);
+      }
+    </script>
+
+    <!-- target canvas, also loading a fragment from URL -->
+    <canvas id="targetcanvas" data-processing-sources="codebase.pde" style="border: 1px solid black"></canvas>
+  </body>
+</html>

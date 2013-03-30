@@ -1744,10 +1744,11 @@
   };
 
   var addInstance = function(processing) {
-    if (processing.externals.canvas.id === undef || !processing.externals.canvas.id.length) {
-      processing.externals.canvas.id = "__processing" + processingInstances.length;
+    var canvas = processing.externals.canvas;
+    if (canvas.id === undef || !canvas.id.length || canvas.id.indexOf("__Pjs__tmp__id__") === 0) {
+      canvas.id = "__processing" + processingInstances.length;
     }
-    processingInstanceIds[processing.externals.canvas.id] = processingInstances.length;
+    processingInstanceIds[canvas.id] = processingInstances.length;
     processingInstances.push(processing);
   };
 
@@ -20204,8 +20205,13 @@
    * @param {CANVAS} canvas The html canvas element to bind to
    * @param {String[]} source The array of files that must be loaded
    */
-  var loadSketchFromSources = function(canvas, sources) {
-    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
+  var loadSketchFromSources = function(canvas, sources, code) {
+    var errors = [],
+        sourcesCount = sources.length,
+        loaded = 0;
+
+    code = code || [];
+    var startPos = code.length;
 
     function ajaxAsync(url, callback) {
       var xhr = new XMLHttpRequest();
@@ -20269,8 +20275,14 @@
       ajaxAsync(filename, callback);
     }
 
+    // if we have source files to load, do that
     for (var i = 0; i < sourcesCount; ++i) {
-      loadBlock(i, sources[i]);
+      loadBlock(i + startPos, sources[i]);
+    }
+    
+    // if not, immediately create our instance
+    if (sourcesCount === 0) {
+      return new Processing(canvas, code.join("\n"));
     }
   };
 
@@ -20286,75 +20298,113 @@
     processingInstances = [];
     Processing.instances = processingInstances;
 
-    var canvas = document.getElementsByTagName('canvas'),
-      filenames;
+    var canvas,
+        scripts = document.getElementsByTagName('script'),
+        codeBindings = {},
+        codeBinding,
+        s,
+        last,
+        source,
+        target,
+        instance,
+        fileNames = [],
+        fileName,
+        tmpId = 1234;
 
-    for (var i = 0, l = canvas.length; i < l; i++) {
-      // datasrc and data-src are deprecated.
-      var processingSources = canvas[i].getAttribute('data-processing-sources');
-      if (processingSources === null) {
-        // Temporary fallback for datasrc and data-src
-        processingSources = canvas[i].getAttribute('data-src');
-        if (processingSources === null) {
-          processingSources = canvas[i].getAttribute('datasrc');
-        }
-      }
-      if (processingSources) {
-        filenames = processingSources.split(/\s+/g);
-        for (var j = 0; j < filenames.length;) {
-          if (filenames[j]) {
-            j++;
-          } else {
-            filenames.splice(j, 1);
-          }
-        }
-        loadSketchFromSources(canvas[i], filenames);
-      }
-    }
-
-    // also process all <script>-indicated sketches, if there are any
-    var s, last, source, instance,
-        nodelist = document.getElementsByTagName('script'),
-        scripts=[];
-
-    // snapshot the DOM, as the nodelist is only a DOM view, and is
-    // updated instantly when a script element is added or removed.
-    for (s = nodelist.length - 1; s >= 0; s--) {
-      scripts.push(nodelist[s]);
-    }
-
-    // iterate over all script elements to see if they contain Processing code
     for (s = 0, last = scripts.length; s < last; s++) {
       var script = scripts[s];
+
       if (!script.getAttribute) {
         continue;
       }
 
       var type = script.getAttribute("type");
-      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
-        var target = script.getAttribute("data-processing-target");
+      type = (type ? type.toLowerCase() : type);
+
+      if (type && (type === "text/processing" || type === "application/processing")) {
+        target = script.getAttribute("data-target");
+        if (!target) {
+          // Deprecated "processing-target" attribute. Will be removed sometime in the future.
+          target = script.getAttribute("data-processing-target");
+        }
         canvas = undef;
+
+        // if we have a target canvas, use that
         if (target) {
           canvas = document.getElementById(target);
-        } else {
-          var nextSibling = script.nextSibling;
-          while (nextSibling && nextSibling.nodeType !== 1) {
-            nextSibling = nextSibling.nextSibling;
-          }
-          if (nextSibling && nextSibling.nodeName.toLowerCase() === "canvas") {
-            canvas = nextSibling;
+          // set up code binding for this canvas
+          if (!codeBindings[target]) {
+            codeBindings[target] = { canvas: canvas, code: [], fileNames: [] };
           }
         }
 
-        if (canvas) {
-          if (script.getAttribute("src")) {
-            filenames = script.getAttribute("src").split(/\s+/);
-            loadSketchFromSources(canvas, filenames);
-            continue;
+        // if we do not have a target canvas, treat this as code
+        // for the nearest next canvas sibling.
+        else {
+          var next = script.nextSibling;
+          while (next && next.nodeName.toLowerCase() !== "canvas") {
+            next = next.nextSibling;
           }
-          source =  script.textContent || script.text;
-          instance = new Processing(canvas, source);
+
+          if (next) {
+            canvas = next;
+
+            // set up code binding for this canvas
+            if (!canvas.id) {
+              canvas.id = "__Pjs__tmp__id__"+(tmpId++);
+            }
+
+            if (!codeBindings[canvas.id]) {
+              codeBindings[canvas.id] = { canvas: canvas, code: [], fileNames: [] };
+            }
+          }
         }
+
+        // was this script element tied to a canvas?
+        if (canvas) {
+          // do we need to load a fragment from file?
+          fileName = script.getAttribute("src");
+          if (fileName) {
+            codeBindings[canvas.id].fileNames.push(fileName);
+          }
+
+          // if not, we load a fragment from textContent (or text, for IE)
+          else {
+            source =  script.textContent || script.text;
+            if (source.trim() !== "") {
+              codeBindings[canvas.id].code.push(source);
+            }
+          }
+        }
+      }
+    }
+
+    // run through all canvas elements to see if they
+    // indicate their own code loading
+    // NOTE: datasrc and data-src have been deprecated as of v1.4.2
+    canvas = document.getElementsByTagName('canvas');
+    var processingSources, j;
+
+    for (s = 0, last = canvas.length; s < last; s++) {
+      processingSources = canvas[s].getAttribute('data-processing-sources');
+      if (processingSources) {
+        fileNames = processingSources.split(/\s+/);
+        // remove empty entries
+        for (j = 0; j < fileNames.length; ) {
+          if (fileNames[j]) {
+            codeBindings[canvas[s].id].fileNames.push(fileNames[j++]);
+          } else {
+            fileNames.splice(j, 1);
+          }
+        }
+      }
+    }
+
+    // finally, run through all codeBindings
+    for (s in codeBindings) {
+      if (!Object.hasOwnProperty(codeBindings, s)) {
+        codeBinding = codeBindings[s];
+        loadSketchFromSources(codeBinding.canvas, codeBinding.fileNames, codeBinding.code);
       }
     }
   };
