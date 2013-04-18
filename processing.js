@@ -1,4 +1,4 @@
-
+﻿
 (function(window, document, Math, undef) {
 
   var nop = function(){};
@@ -28,9 +28,7 @@
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
   // document.head polyfill for the benefit of Firefox 3.6
-  if (!document.head) {
-    document.getElementsByTagName('head')[0];
-  }
+  document.head = document.head || document.getElementsByTagName('head')[0];
 
   // Typed Arrays: fallback to WebGL arrays or Native JS arrays if unavailable
   function setupTypedArray(name, fallback) {
@@ -343,7 +341,7 @@
     TEXT:     'text',
     WAIT:     'wait',
     NOCURSOR: "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto",
-    
+
     // Hints
     DISABLE_OPENGL_2X_SMOOTH:     1,
     ENABLE_OPENGL_2X_SMOOTH:     -1,
@@ -435,6 +433,9 @@
   * @param {Object} obj          The object to be iterated.
   */
   var ObjectIterator = function(obj) {
+    if (obj.iterator instanceof Function) {
+      return obj.iterator();
+    }
     if (obj instanceof Array) {
       // iterate through array items
       var index = -1;
@@ -444,8 +445,6 @@
       this.next = function() {
         return obj[index];
       };
-    } else if (obj.iterator instanceof Function) {
-      return obj.iterator();
     } else {
       throw "Unable to iterate: " + obj;
     }
@@ -460,24 +459,24 @@
    */
   var ArrayList = (function() {
     function Iterator(array) {
-      var index = -1;
+      var index = 0;
       this.hasNext = function() {
-        return (index + 1) < array.length;
+        return index < array.length;
       };
 
       this.next = function() {
-        return array[++index];
+        return array[index++];
       };
 
       this.remove = function() {
-        array.splice(index--, 1);
+        array.splice(index, 1);
       };
     }
 
     function ArrayList(a) {
       var array;
 
-      if (a && a.toArray) {
+      if (a instanceof ArrayList) {
         array = a.toArray();
       } else {
         array = [];
@@ -1146,33 +1145,6 @@
       this.z = z || 0;
     }
 
-    PVector.fromAngle = function(angle, v) {
-      if (v === undef || v === null) {
-        v = new PVector();
-      }
-      v.x = Math.cos(angle);
-      v.y = Math.sin(angle);
-      return v;
-    }
-
-    PVector.random2D = function(v) {
-      return PVector.fromAngle(Math.random() * PConstants.TWO_PI, v);
-    }
-
-    PVector.random3D = function(v) {
-      var angle = Math.random() * PConstants.TWO_PI;
-      var vz = Math.random() * 2 - 1;
-      var mult = Math.sqrt(1 - vz * vz);
-      var vx = mult * Math.cos(angle);
-      var vy = mult * Math.sin(angle);
-      if (v === undef || v === null) {
-        v = new PVector(vx, vy, vz);
-      } else {
-        v.set(vx, vy, vz);
-      }
-      return v;
-    }
-
     PVector.dist = function(v1, v2) {
       return v1.dist(v2);
     };
@@ -1185,20 +1157,9 @@
       return v1.cross(v2);
     };
 
-    PVector.sub = function(v1, v2) {
-      return new PVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
-    };
-
     PVector.angleBetween = function(v1, v2) {
       return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
     };
-
-    PVector.lerp = function(v1, v2, amt) {
-      // non-static lerp mutates object, but this version returns a new vector
-      var retval = new PVector(v1.x, v1.y, v1.z);
-      retval.lerp(v2, amt);
-      return retval;
-    }
 
     // Common vector operations for PVector
     PVector.prototype = {
@@ -1221,24 +1182,6 @@
             y = this.y,
             z = this.z;
         return Math.sqrt(x * x + y * y + z * z);
-      },
-      magSq: function() {
-        var x = this.x,
-            y = this.y,
-            z = this.z;
-        return (x * x + y * y + z * z);
-      },
-      setMag: function(v_or_len, len) {
-        if (len === undef) {
-          len = v_or_len;
-          this.normalize();
-          this.mult(len);
-        } else {
-          var v = v_or_len;
-          v.normalize();
-          v.mult(len);
-          return v;
-        }
       },
       add: function(v, y, z) {
         if (arguments.length === 1) {
@@ -1284,13 +1227,6 @@
           this.z /= v.z;
         }
       },
-      rotate: function(angle) {
-        var prev_x = this.x;
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-        this.x = c * this.x - s * this.y;
-        this.y = s * prev_x + c * this.y;
-      },
       dist: function(v) {
         var dx = this.x - v.x,
             dy = this.y - v.y,
@@ -1311,26 +1247,6 @@
                            z * v.x - v.z * x,
                            x * v.y - v.x * y);
       },
-      lerp: function(v_or_x, amt_or_y, z, amt) {
-        function lerp_val(start, stop, amt) {
-          return start + (stop - start) * amt;
-        };
-        var x, y;
-        if (arguments.length === 2) {
-          // given vector and amt
-          amt = amt_or_y;
-          x = v_or_x.x;
-          y = v_or_x.y;
-          z = v_or_x.z;
-        } else {
-          // given x, y, z and amt
-          x = v_or_x;
-          y = amt_or_y;
-        }
-        this.x = lerp_val(this.x, x, amt);
-        this.y = lerp_val(this.y, y, amt);
-        this.z = lerp_val(this.z, z, amt);
-      },
       normalize: function() {
         var m = this.mag();
         if (m > 0) {
@@ -1343,11 +1259,8 @@
           this.mult(high);
         }
       },
-      heading: function() {
-        return (-Math.atan2(-this.y, this.x));
-      },
       heading2D: function() {
-        return this.heading();
+        return (-Math.atan2(-this.y, this.x));
       },
       toString: function() {
         return "[" + this.x + ", " + this.y + ", " + this.z + "]";
@@ -2160,7 +2073,7 @@
       curElement = typeof aCanvas === "string" ? document.getElementById(aCanvas) : aCanvas;
     }
 
-    if (!('getContext' in curElement)) {
+    if (!(curElement instanceof HTMLCanvasElement)) {
       throw("called Processing constructor without passing canvas element reference or id.");
     }
 
@@ -2212,12 +2125,23 @@
     p.mouseScrolled   = undef;
     p.mouseOver       = undef;
     p.mouseOut        = undef;
-    p.pointerDown     = undef;
-    p.pointerMove     = undef;
-    p.pointerUp       = undef;
-    p.pointerCancel   = undef;
-    p.pointerOver     = undef;
-    p.pointerOut      = undef;
+
+    // *******************************************************************
+    // WINDOWS 8 ADJUSTMENTS - START
+    // *******************************************************************
+
+    p.pointerDown = undef;
+    p.pointerMove = undef;
+    p.pointerUp = undef;
+    p.pointerCancel = undef;
+    p.pointerOver = undef;
+    p.pointerOut = undef;
+
+    // *******************************************************************
+    // WINDOWS 8 ADJUSTMENTS - END
+    // *******************************************************************
+
+
     p.touchStart      = undef;
     p.touchEnd        = undef;
     p.touchMove       = undef;
@@ -8778,7 +8702,9 @@
     }
 
     /**
-    * Quits/stops/exits the program.
+    * Quits/stops/exits the program. Programs without a draw() function exit automatically
+    * after the last line has run, but programs with draw() run continuously until the
+    * program is manually stopped or exit() is run.
     * Rather than terminating immediately, exit() will cause the sketch to exit after draw()
     * has completed (or after setup() completes if called during the setup() method).
     *
@@ -8788,7 +8714,10 @@
       // cleanup
       window.clearInterval(looping);
       removeInstance(p.externals.canvas.id);
-      delete(curElement.onmousedown);
+
+      
+
+      delete (curElement.onmousedown);
 
       // Step through the libraries to detach them
       for (var lib in Processing.lib) {
@@ -9167,7 +9096,7 @@
     * @see nfs
     * @see nfp
     */
-    p.nfc = function(value, rightDigits) { return nfCore(value, "", "-", 0, rightDigits, ","); };
+    p.nfc = function(value, leftDigits, rightDigits) { return nfCore(value, "", "-", leftDigits, rightDigits, ","); };
 
     var decimalToHex = function(d, padding) {
       //if there is no padding value added, default padding to 8 else go into while statement.
@@ -9469,7 +9398,8 @@
         return subject.equals.apply(subject, removeFirstArgument(arguments));
       }
 
-      return virtEquals(subject, other);
+      // TODO use virtEquals for HashMap here
+      return subject.valueOf() === other.valueOf();
     };
     /**
      * The __equalsIgnoreCase() function compares two strings to see if they are the same.
@@ -9576,17 +9506,6 @@
       return str.match(regexp);
     };
     /**
-     * The matches() function checks whether or not a string matches a given regular expression.
-     *
-     * @param {String} str      the String on which the match is tested
-     * @param {String} regexp   the regexp for which a match is tested
-     *
-     * @return {boolean} true if the string fits the regexp, false otherwise
-     */
-    p.__matches = function(str, regexp) {
-      return (new RegExp(regexp)).test(str);
-    };
-    /**
      * The startsWith() function tests if a string starts with the specified prefix.  If the prefix
      * is the empty String or equal to the subject String, startsWith() will also return true.
      *
@@ -9663,16 +9582,15 @@
      */
     p.println = function(message) {
       var bufferLen = logBuffer.length;
-      var bufferMsg = "";
       if (bufferLen) {
-        bufferMsg = logBuffer.join("");
+          Processing.logger.log(logBuffer.join(""));
         logBuffer.length = 0; // clear log buffer
       }
 
       if (arguments.length === 0 && bufferLen === 0) {
-        Processing.logger.log(bufferMsg + "");
+        Processing.logger.log("");
       } else if (arguments.length !== 0) {
-        Processing.logger.log(bufferMsg + message);
+        Processing.logger.log(message);
       }
     };
     /**
@@ -15170,8 +15088,10 @@
     * @see background
     */
     p.loadImage = function(file, type, callback) {
-      // if type is specified, we just ignore it
-
+      // if type is specified add it with a . to file to make the filename
+      if (type) {
+        file = file + "." + type;
+      }
       var pimg;
       // if image is in the preloader cache return a new PImage
       if (curSketch.imageCache.images[file]) {
@@ -17598,6 +17518,19 @@
       p.mouseY = event.pageY - offset.Y;
     }
 
+      // turn a mouse position into a pointer position
+    function convertMouseToPointer(event) {
+        var point = {};
+        point.pointerType = 4;
+        point.pointerId = 1;
+        point.offsetX = p.mouseX;
+        point.offsetY = p.mouseY;
+        point.width = 0;
+        point.height = 0;
+        return point;
+    }
+
+
     // Return a TouchEvent with canvas-specific x/y co-ordinates
     function addTouchEventOffset(t) {
       var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]),
@@ -17622,47 +17555,81 @@
       return t;
     }
 
-    // For pointer-enabled browsers, enable pointer events
-    if (window.navigator.msPointerEnabled) {
-        // Think about adding something to set the style of the canvas
+    // Turn a touch object into a pointer object
+    function convertTouchToPointer(t, event) {
+        t = addTouchEventOffset(t);
+        var allPointers = new Array();
+        var touchCount = t.touches.length;
+        
+        for(i = 0; i < t.touches.length; i++){
+            var touch = t.changedTouches[i];
+            var point = {};
+            point.pointerType = 2;
+            try{
+                point.pointerId = touch.identifier;
+                point.offsetX = touch.offsetX;
+                point.offsetY = touch.offsetY;
+                point.width = touch.radiusX;
+                point.height = touch.radiusY;
+                allPointers[i] = point;   
+            } catch (e) {
 
-        attachEventHandler(curElement, "MSPointerDown", function (t) {
-            curElement.setAttribute("style", "-ms-touch-action: none");
-            if (p.pointerDown !== undef) {
-                p.pointerDown(t);
             }
-        });
+        }
+        return allPointers;
+    }
 
-        attachEventHandler(curElement, "MSPointerUp", function (t) {
-            if (p.pointerUp !== undef) {
-                p.pointerUp(t);
-            }
-        });
 
-        attachEventHandler(curElement, "MSPointerMove", function (t) {
-            if (p.pointerMove !== undef) {
-                p.pointerMove(t);
-            }
-        });
+    // *******************************************************************
+    // WINDOWS 8 ADJUSTMENTS - START
+    // *******************************************************************
 
-        attachEventHandler(curElement, "MSPointerCancel", function (t) {
-            if (p.pointerCancel !== undef) {
-                p.pointerCancel(t);
-            }
-        });
+        var touchEnabled = window.navigator.msPointerEnabled;
 
-        attachEventHandler(curElement, "MSPointerOver", function (t) {
-            if (p.pointerOver !== undef) {
-                p.pointerOver(t);
-            }
-        });
+        if (touchEnabled) {
 
-        attachEventHandler(curElement, "MSPointerOut", function (t) {
-            if (p.pointerOut !== undef) {
-                p.pointerOut(t);
-            }
-        });
-    } else {
+            attachEventHandler(curElement, "MSPointerDown", function (t) {
+                //t = addMSPointerEventOffset(t);
+                if (p.pointerDown !== undef) {
+                    p.pointerDown(t);
+                }
+            });
+
+            attachEventHandler(curElement, "MSPointerUp", function (t) {
+                if (p.pointerUp !== undef) {
+                    p.pointerUp(t);
+                }
+            });
+
+            attachEventHandler(curElement, "MSPointerMove", function (t) {
+                if (p.pointerMove !== undef) {
+                    p.pointerMove(t);
+                }
+            });
+
+            attachEventHandler(curElement, "MSPointerCancel", function (t) {
+                //t = addMSPointerEventOffset(t);
+                if (p.pointerCancel !== undef) {
+                    p.pointerCancel(t);
+                }
+            });
+
+            attachEventHandler(curElement, "MSPointerOver", function (t) {
+                if (p.pointerOver !== undef) {
+                    p.pointerOver(t);
+                }
+            });
+
+            attachEventHandler(curElement, "MSPointerOut", function (t) {
+                if (p.pointerOut !== undef) {
+                    p.pointerOut(t);
+                }
+            });
+
+        } else {
+        // *******************************************************************
+        // WINDOWS 8 ADJUSTMENTS - END
+        // *******************************************************************
 
         attachEventHandler(curElement, "touchstart", function (t) {
             // Removes unwanted behaviour of the canvas when touching canvas
@@ -17701,6 +17668,7 @@
 
                 attachEventHandler(curElement, "touchend", function (t) {
                     if (p.touchEnd !== undef) {
+                        t.preven
                         t = addTouchEventOffset(t);
                         p.touchEnd(t);
                     }
@@ -17755,11 +17723,60 @@
                 });
             }
 
+            // Emulate pointer events so that pointer can work across all platforms
+            if (p.pointerDown !== undef || p.pointerMove !== undef ||
+                p.pointerUp !== undef || p.pointerCancel !== undef) {
+
+                // touchStart turns into pointerDown
+                attachEventHandler(curElement, "touchstart", function (t) {
+                    //t = addMSPointerEventOffset(t);
+                    if (p.pointerDown !== undef) {
+                        var pointers = convertTouchToPointer(t, "touchstart");
+                        for (var i = 0; i < pointers.length; i++) {
+                            p.pointerDown(pointers[i]);
+                            console.log("touchstart");
+                        }                        
+                    }
+                });
+
+                //touchMove turns into pointerMove
+                attachEventHandler(curElement, "touchmove", function (t) {
+                    if (p.pointerMove !== undef) {
+                        var pointers = convertTouchToPointer(t, "touchmove");
+                        for (var i = 0; i < pointers.length; i++) {
+                            p.pointerMove(pointers[i]);
+                        }
+                    }
+                });
+
+                // touchEnd turns into pointerUp
+                attachEventHandler(curElement, "touchend", function (t) {
+                    if (p.pointerUp !== undef) {
+                        var pointers = convertTouchToPointer(t, "touchend");
+                        for (var i = 0; i < pointers.length; i++) {
+                            p.pointerUp(pointers[i]);
+                            console.log("touchend");
+                        }
+                    }
+                });
+                                
+                // touchCancel turns into pointerCancel
+                attachEventHandler(curElement, "touchcancel", function (t) {
+                    //t = addMSPointerEventOffset(t);
+                    if (p.pointerCancel !== undef) {
+                        var pointers = convertTouchToPointer(t, "touchcancel");
+                        for (var i = 0; i < pointers.length; i++) {
+                            p.pointerCancel(pointers[i]);
+                            console.log("touchcancel");
+                        }
+                    }
+                });
+            }
             // Refire the touch start event we consumed in this function
             curElement.dispatchEvent(t);
         });
-
     }
+    
     (function() {
       var enabled = true,
           contextMenu = function(e) {
@@ -17784,11 +17801,39 @@
       };
     }());
 
+    //if (p.pointerDown !== undef) {
+    //    p.pointerDown(t);
+    //}
+    //if (p.pointerUp !== undef) {
+    //    p.pointerUp(t);
+    //}
+    //if (p.pointerMove !== undef) {
+    //    p.pointerMove(t);
+    //}
+    //if (p.pointerCancel !== undef) {
+    //    p.pointerCancel(t);
+    //}
+    //if (p.pointerOver !== undef) {
+    //    p.pointerOver(t);
+    //}
+    //if (p.pointerOut !== undef) {
+    //    p.pointerOut(t);
+    //}
+
     attachEventHandler(curElement, "mousemove", function(e) {
       updateMousePosition(curElement, e);
       if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
-        p.mouseMoved();
+          p.mouseMoved();
+          
       }
+      
+        // If we're not in IE10+, simulate the pointer event 
+        //    (IE10+ raises both events by default)
+      if (!window.navigator.msPointerEnabled && p.pointerMove !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerMove(point);
+      }
+
       if (typeof p.mouseDragged === "function" && p.__mousePressed) {
         p.mouseDragged();
         p.mouseDragging = true;
@@ -17799,6 +17844,11 @@
       if (typeof p.mouseOut === "function") {
         p.mouseOut();
       }
+
+      if (!window.navigator.msPointerEnabled && p.pointerOut !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerOut(point);
+      }
     });
 
     attachEventHandler(curElement, "mouseover", function(e) {
@@ -17806,14 +17856,14 @@
       if (typeof p.mouseOver === "function") {
         p.mouseOver();
       }
+      if (!window.navigator.msPointerEnabled && p.pointerOver !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerOver(point);
+      }
     });
 
     // Disable browser's default handling for click-drag of a canvas.
-    curElement.onmousedown = function () {
-      // make sure focus happens, but nothing else
-      curElement.focus();
-      return false;
-    };
+    curElement.onmousedown = function () { return false; };
 
     attachEventHandler(curElement, "mousedown", function(e) {
       p.__mousePressed = true;
@@ -17833,6 +17883,11 @@
       if (typeof p.mousePressed === "function") {
         p.mousePressed();
       }
+
+      if (!window.navigator.msPointerEnabled && p.pointerDown !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerDown(point);
+      }
     });
 
     attachEventHandler(curElement, "mouseup", function(e) {
@@ -17844,6 +17899,11 @@
 
       if (typeof p.mouseReleased === "function") {
         p.mouseReleased();
+      }
+
+      if (!window.navigator.msPointerEnabled && p.pointerUp !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerUp(point);
       }
     });
 
@@ -18068,7 +18128,7 @@
 
       // sketch execute test interval, used to reschedule
       // an execute when preloads have not yet finished.
-      var retryInterval = 100;
+      var retryInterval = 40;
 
       var executeSketch = function(processing) {
         // Don't start until all specified images and fonts in the cache are preloaded
@@ -18183,9 +18243,7 @@
       "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
       "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
       "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
-      "pointLight", "pointerDown", "pointerMove", "pointerUp", 
-      "pointerCancel", "pointerOver", "pointerOut",
-      "popMatrix", "popStyle", "pow", "print", "printCamera",
+      "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
       "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
@@ -18197,14 +18255,31 @@
       "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
       "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
       "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
-      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", "toImageData",
-      "touchCancel", "touchEnd", "touchMove", "touchStart", "translate", "transform",
+      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", "toImageData", "translate", "transform",
       "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
       "vertex", "width", "XMLElement", "XML", "year", "__contains", "__equals",
       "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
       "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
       "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
-      "__codePointAt", "__startsWith", "__endsWith", "__matches"];
+      "__codePointAt", "__startsWith", "__endsWith"];
+
+      // *******************************************************************
+      // WINDOWS 8 ADJUSTMENTS - START
+      // *******************************************************************
+
+      // Might need to re-work to integrate iOS with the same Pointer info
+    names.push(["touchCancel", "touchEnd", "touchMove", "touchStart"]);
+      // This is the actual pointer stuff
+    //names.push(["MSPointerDown", "MSPointerMove", "MSPointerUp"]);
+    //names.push(["MSPointerCancel", "MSPointerOver", "MSPointerOut"]);
+    names.push(["pointerDown", "pointerMove", "pointerUp"]);
+    names.push(["pointerCancel", "pointerOver", "pointerOut"]);
+
+
+      // *******************************************************************
+      // WINDOWS 8 ADJUSTMENTS - END
+      // *******************************************************************
+
 
     var members = {};
     var i, l;
@@ -18596,7 +18671,7 @@
       }
       do {
         repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt|matches)\s*"B(\d+)"/g,
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt)\s*"B(\d+)"/g,
           replacePrototypeMethods);
       } while (repeatJavaReplacement);
       // xxx instanceof yyy -> __instanceof(xxx, yyy)
@@ -19879,7 +19954,8 @@
       log = "log";
 
     if (typeof tinylog !== undef && typeof tinylog[log] === func) {
-      // pre-existing tinylog present
+        // pre-existing tinylog present
+        
       tinylogLite[log] = tinylog[log];
     } else if (typeof document !== undef && !document.fake) {
       (function() {
@@ -19993,6 +20069,7 @@
           return doc.createTextNode(text);
         },
 
+
         createLog = tinylogLite[log] = function(message) {
           // don't show output log until called once
           var uninit,
@@ -20006,7 +20083,6 @@
             previousHeight = False,
             previousScrollTop = False,
             messages = 0,
-
             updateSafetyMargin = function() {
               // have a blank space large enough to fit the output box at the page bottom
               docElemStyle.paddingBottom = container.clientHeight + "px";
@@ -20066,6 +20142,7 @@
                 uninit();
               })
             ];
+          closeButton.id = "tinyLogCloseButton";
 
           uninit = function() {
             // remove observers
@@ -20092,7 +20169,7 @@
           append(closeButton, createTextNode("\u2716"));
 
           resizer[$title] = "Double-click to toggle log minimization";
-
+          container.id = "tinyLogLiteDiv";
           docElem.insertBefore(container, docElem.firstChild);
 
           tinylogLite[log] = function(message) {
@@ -20346,7 +20423,6 @@
     // sketch duplication when page content is dynamically swapped without
     // swapping out processing.js
     processingInstances = [];
-    Processing.instances = processingInstances;
 
     var canvas = document.getElementsByTagName('canvas'),
       filenames;
