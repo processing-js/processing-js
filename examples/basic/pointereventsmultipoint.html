@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head> 
+	<title>Processing.js test of multi pointer event handling</title> 
+	<script type="text/javascript" src="../../processing.js"></script> 
+	<style type="text/css"> 
+	html, body
+	{
+		background: #EEE;
+		font-family: Arial;
+		font-size: 13px;
+		margin: 0;
+		padding: 0;
+	}
+	h1
+	{
+		background: #385C85;
+		color: #FFF;
+		padding: 10px;
+		padding-left: 20px;
+		margin-top: 0px;
+	}
+	h1 a
+	{
+		color: #FFF;
+	}
+	h2
+	{
+		padding-left: 20px;
+	}
+	p
+	{
+		padding-left: 20px;
+		line-height: 1.3em;
+	}
+	p a
+	{
+		color: #385C85;
+	}
+	canvas
+	{
+		margin: 10px 0;
+	}
+	pre
+	{
+		margin-left: 20px;
+		margin-right: 20px;
+		padding: 5px;
+		background: #FFF;
+		border-top: 1px solid #333;
+		border-bottom: 1px solid #333;
+	}
+	div.ref-col
+	{
+		float: left;
+		width: 32%;
+	}
+	</style> 
+</head> 
+<body> 
+	<h1>Multi point event handling</h1> 
+	<p>Presents a grey 700x700 sketch that can interacted with touch</p>
+	<p>Different pointers draw different colors, his supports touch points, mouse points and pen points.</p>
+	<!-- copy paste your processing code below this script tag --> 
+	<script id="script" type="application/processing"> 
+ArrayList pointers = new ArrayList();
+int newR = 255;
+int newG = 0;
+int newB = 0;
+int increment = 150;
+
+void setup() {
+  size(700, 700);
+  background(200);
+  noStroke();
+}
+
+// For touchscreens
+void pointerDown(p) {
+    Pointer newP = new Pointer();
+    newP.id = p.pointerId;
+    incrementColor();
+    newP.pColor = color(newR, newG, newB);
+    pointers.add(newP);
+    fill(newP.pColor);
+    int d = 20;
+    if(p.pointerType == MOUSE_POINTER){
+        d = 10;
+    } else if (p.pointerType == PEN_POINTER){
+        d = 5;
+    } else if (p.pointerType == TOUCH_POINTER){
+        d = 20;
+    }
+    ellipse(p.offsetX, p.offsetY, d, d);
+}
+
+void pointerMove(p) {
+   for (int i = pointers.size()-1; i >= 0; i--) {
+        Pointer thisP = (Pointer)pointers.get(i);
+        if(thisP.id == p.pointerId){
+            fill(thisP.pColor);
+            int w = 20;
+            int h = 20;
+            if(p.pointerType == MOUSE_POINTER){
+                w = 8;
+                h = 8;
+            } else if (p.pointerType == PEN_POINTER){
+                w = 20 * p.pressure;
+                h = 20 * p.pressure;		
+            } else if (p.pointerType == TOUCH_POINTER){
+                w = 25;
+                h = 25;
+            }
+            ellipse(p.offsetX, p.offsetY, w, h);
+        }
+    }
+}
+
+void pointerUp(Pointer e) {   
+    removePointer(e.pointerId);
+} 
+
+void pointerCancel(TouchEvent e) { 
+    removePointer(e.pointerId);
+}
+
+void pointerOut(TouchEvent e) {  
+    removePointer(e.pointerId);
+}
+
+void removePointer(float pID)
+{
+  for(int i = pointers.size()-1; i >=0; i--){
+    Pointer holderPointer = (Pointer)pointers.get(i);
+    if(holderPointer.id == pID){
+      pointers.remove(i);
+    }
+  }
+}
+
+
+class Pointer
+{
+    int id = 0;
+    color pColor = color(255, 255, 255);
+}
+
+void incrementColor(){
+    if (newR == 255) {
+        if (newB > 0) {
+            newB = newB - increment;
+            if (newB < 0) { newB = 0; }
+        }
+        else {
+            newG = newG + increment;
+            if (newG > 255) { newG = 255; }
+        }
+    }
+ 
+    if (newG == 255) {
+        if (newR > 0) {
+            newR = newR - increment;
+            if (newR < 0) { newR = 0; }
+        }
+        else {
+            newB = newB + increment;
+            if (newB > 255) { newB = 255; }
+        }
+    }
+ 
+    if (newB == 255) {
+        if (newG > 0) {
+            newG = newG - increment;
+            if (newG < 0) { newG = 0; }
+        }
+        else {
+            newR = newR + increment;
+            if (newR > 255) { newR = 255; }
+        }
+    }
+}
+
+	</script> 
+	<canvas id="display"></canvas> 
+	<br /> 
+	<pre style="border-style: dotted; border-width: 1px; background-color: #FFFFFF; padding: 2px; margin: 5px" id="scriptDisplay">
+	</pre> 
+  <script>
+    document.getElementById("scriptDisplay").innerHTML = document.getElementById("script").text;
+  </script>
+	<br /> 
+</body> 
+</html> 
+ 
