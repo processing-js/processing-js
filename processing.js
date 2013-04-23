@@ -1308,6 +1308,7 @@
       },
       lerp: function(v_or_x, amt_or_y, z, amt) {
         var lerp_val = function(start, stop, amt) {
+        // 3rd definition of lerp in this file...
           return start + (stop - start) * amt;
         };
         var x, y;
