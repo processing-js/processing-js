@@ -1143,11 +1143,19 @@
       v.x = Math.cos(angle);
       v.y = Math.sin(angle);
       return v;
+<<<<<<< HEAD
     };
 
     PVector.random2D = function(v) {
       return PVector.fromAngle(Math.random() * PConstants.TWO_PI, v);
     };
+=======
+    }
+
+    PVector.random2D = function(v) {
+      return PVector.fromAngle(Math.random() * PConstants.TWO_PI, v);
+    }
+>>>>>>> 3f587b3... PVector additions with tests for p5 API parity [#1981]
 
     PVector.random3D = function(v) {
       var angle = Math.random() * PConstants.TWO_PI;
@@ -1161,7 +1169,11 @@
         v.set(vx, vy, vz);
       }
       return v;
+<<<<<<< HEAD
     };
+=======
+    }
+>>>>>>> 3f587b3... PVector additions with tests for p5 API parity [#1981]
 
     PVector.dist = function(v1, v2) {
       return v1.dist(v2);
@@ -1188,7 +1200,11 @@
       var retval = new PVector(v1.x, v1.y, v1.z);
       retval.lerp(v2, amt);
       return retval;
+<<<<<<< HEAD
     };
+=======
+    }
+>>>>>>> 3f587b3... PVector additions with tests for p5 API parity [#1981]
 
     // Common vector operations for PVector
     PVector.prototype = {
@@ -1302,7 +1318,12 @@
                            x * v.y - v.x * y);
       },
       lerp: function(v_or_x, amt_or_y, z, amt) {
+<<<<<<< HEAD
         var lerp_val = function(start, stop, amt) {
+=======
+        // 3rd definition of lerp in this file...
+        function lerp_val(start, stop, amt) {
+>>>>>>> 3f587b3... PVector additions with tests for p5 API parity [#1981]
           return start + (stop - start) * amt;
         };
         var x, y;
