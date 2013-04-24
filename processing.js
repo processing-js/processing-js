@@ -167,6 +167,11 @@
 
     WHITESPACE: " \t\n\r\f\u00A0",
 
+    // Pointer type identifiers
+    MOUSE_POINTER: 4,
+    TOUCH_POINTER: 2,
+    PEN_POINTER: 3,
+
     // Color modes
     RGB:   1,
     ARGB:  2,
@@ -1303,6 +1308,7 @@
       },
       lerp: function(v_or_x, amt_or_y, z, amt) {
         var lerp_val = function(start, stop, amt) {
+        // 3rd definition of lerp in this file...
           return start + (stop - start) * amt;
         };
         var x, y;
@@ -2203,13 +2209,21 @@
     p.touchEnd        = undef;
     p.touchMove       = undef;
     p.touchCancel     = undef;
+    p.pointerDown     = undef;
+    p.pointerMove     = undef;
+    p.pointerUp       = undef;
+    p.pointerCancel   = undef;
+    p.pointerOver     = undef;
+    p.pointerOut      = undef;
     p.key             = undef;
     p.keyCode         = undef;
     p.keyPressed      = nop; // needed to remove function checks
     p.keyReleased     = nop;
     p.keyTyped        = nop;
     p.draw            = undef;
-    p.setup           = undef;
+    p.setup = undef;
+
+    
 
     // Remapped vars
     p.__mousePressed  = false;
@@ -17532,7 +17546,7 @@
     };
 
     //////////////////////////////////////////////////////////////////////////
-    // Touch and Mouse event handling
+    // Touch, Pointer and Mouse event handling
     //////////////////////////////////////////////////////////////////////////
 
     function calculateOffset(curElement, event) {
@@ -17581,6 +17595,18 @@
       p.mouseY = event.pageY - offset.Y;
     }
 
+    // Take the mouse position and render it as a pointer position
+    function convertMouseToPointer(event) {
+        var point = {};
+        point.pointerType = 4;
+        point.pointerId = 1;
+        point.offsetX = p.mouseX;
+        point.offsetY = p.mouseY;
+        point.width = 0;
+        point.height = 0;
+        return point;
+    }
+
     // Return a TouchEvent with canvas-specific x/y co-ordinates
     function addTouchEventOffset(t) {
       var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]),
@@ -17605,100 +17631,216 @@
       return t;
     }
 
-    attachEventHandler(curElement, "touchstart", function (t) {
-      // Removes unwanted behaviour of the canvas when touching canvas
-      curElement.setAttribute("style","-webkit-user-select: none");
-      curElement.setAttribute("onclick","void(0)");
-      curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
-      // Loop though eventHandlers and remove mouse listeners
-      for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-        var type = eventHandlers[i].type;
-        // Have this function remove itself from the eventHandlers list too
-        if (type === "mouseout" ||  type === "mousemove" ||
-            type === "mousedown" || type === "mouseup" ||
-            type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
-          detachEventHandler(eventHandlers[i]);
+    // Turn a touch object into a pointer object
+    function convertTouchToPointer(t, event) {
+        t = addTouchEventOffset(t);
+        var allPointers = new Array();
+        var touchCount = t.touches.length;
+
+        for (i = 0; i < t.touches.length; i++) {
+            var touch = t.changedTouches[i];
+            var point = {};
+            point.pointerType = 2;
+            try {
+                point.pointerId = touch.identifier;
+                point.offsetX = touch.offsetX;
+                point.offsetY = touch.offsetY;
+                point.width = touch.radiusX;
+                point.height = touch.radiusY;
+                allPointers[i] = point;
+            } catch (e) {
+                // if the a touch object is undefined , we will ignore it
+                //  and not add it to the pointers array
+            }
         }
-      }
+        return allPointers;
+    }
 
-      // If there are any native touch events defined in the sketch, connect all of them
-      // Otherwise, connect all of the emulated mouse events
-      if (p.touchStart !== undef || p.touchMove !== undef ||
-          p.touchEnd !== undef || p.touchCancel !== undef) {
-        attachEventHandler(curElement, "touchstart", function(t) {
-          if (p.touchStart !== undef) {
-            t = addTouchEventOffset(t);
-            p.touchStart(t);
-          }
+    // if pointer events are supported natively (as in IE10 an Win8/WinPhone browser controls)
+    if (window.navigator.msPointerEnabled) {
+        // cancel scrolling and zooming while using pointer events
+        curElement.setAttribute("style", "-ms-touch-action: none");
+
+        attachEventHandler(curElement, "MSPointerDown", function (t) {
+            //t = addMSPointerEventOffset(t);
+            if (p.pointerDown !== undef) {
+                p.pointerDown(t);
+            }
         });
 
-        attachEventHandler(curElement, "touchmove", function(t) {
-          if (p.touchMove !== undef) {
-            t.preventDefault(); // Stop the viewport from scrolling
-            t = addTouchEventOffset(t);
-            p.touchMove(t);
-          }
+        attachEventHandler(curElement, "MSPointerUp", function (t) {
+            if (p.pointerUp !== undef) {
+                p.pointerUp(t);
+            }
         });
 
-        attachEventHandler(curElement, "touchend", function(t) {
-          if (p.touchEnd !== undef) {
-            t = addTouchEventOffset(t);
-            p.touchEnd(t);
-          }
+        attachEventHandler(curElement, "MSPointerMove", function (t) {
+            if (p.pointerMove !== undef) {
+                p.pointerMove(t);
+            }
         });
 
-        attachEventHandler(curElement, "touchcancel", function(t) {
-          if (p.touchCancel !== undef) {
-            t = addTouchEventOffset(t);
-            p.touchCancel(t);
-          }
+        attachEventHandler(curElement, "MSPointerCancel", function (t) {
+            if (p.pointerCancel !== undef) {
+                p.pointerCancel(t);
+            }
         });
 
-      } else {
-        // Emulated touch start/mouse down event
-        attachEventHandler(curElement, "touchstart", function(e) {
-          updateMousePosition(curElement, e.touches[0]);
-
-          p.__mousePressed = true;
-          p.mouseDragging = false;
-          p.mouseButton = PConstants.LEFT;
-
-          if (typeof p.mousePressed === "function") {
-            p.mousePressed();
-          }
+        attachEventHandler(curElement, "MSPointerOver", function (t) {
+            if (p.pointerOver !== undef) {
+                p.pointerOver(t);
+            }
         });
 
-        // Emulated touch move/mouse move event
-        attachEventHandler(curElement, "touchmove", function(e) {
-          e.preventDefault();
-          updateMousePosition(curElement, e.touches[0]);
-
-          if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
-            p.mouseMoved();
-          }
-          if (typeof p.mouseDragged === "function" && p.__mousePressed) {
-            p.mouseDragged();
-            p.mouseDragging = true;
-          }
+        attachEventHandler(curElement, "MSPointerOut", function (t) {
+            if (p.pointerOut !== undef) {
+                p.pointerOut(t);
+            }
         });
+    } else {
 
-        // Emulated touch up/mouse up event
-        attachEventHandler(curElement, "touchend", function(e) {
-          p.__mousePressed = false;
-
-          if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
-            p.mouseClicked();
+        attachEventHandler(curElement, "touchstart", function (t) {
+          // Removes unwanted behaviour of the canvas when touching canvas
+          curElement.setAttribute("style","-webkit-user-select: none");
+          curElement.setAttribute("onclick","void(0)");
+          curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
+          // Loop though eventHandlers and remove mouse listeners
+          for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
+            var type = eventHandlers[i].type;
+            // Have this function remove itself from the eventHandlers list too
+            if (type === "mouseout" ||  type === "mousemove" ||
+                type === "mousedown" || type === "mouseup" ||
+                type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
+              detachEventHandler(eventHandlers[i]);
+            }
           }
 
-          if (typeof p.mouseReleased === "function") {
-            p.mouseReleased();
+          // If there are any native touch events defined in the sketch, connect all of them
+          // Otherwise, connect all of the emulated mouse events
+          if (p.touchStart !== undef || p.touchMove !== undef ||
+              p.touchEnd !== undef || p.touchCancel !== undef) {
+            attachEventHandler(curElement, "touchstart", function(t) {
+              if (p.touchStart !== undef) {
+                t = addTouchEventOffset(t);
+                p.touchStart(t);
+              }
+            });
+
+            attachEventHandler(curElement, "touchmove", function(t) {
+              if (p.touchMove !== undef) {
+                t.preventDefault(); // Stop the viewport from scrolling
+                t = addTouchEventOffset(t);
+                p.touchMove(t);
+              }
+            });
+
+            attachEventHandler(curElement, "touchend", function(t) {
+              if (p.touchEnd !== undef) {
+                t = addTouchEventOffset(t);
+                p.touchEnd(t);
+              }
+            });
+
+            attachEventHandler(curElement, "touchcancel", function(t) {
+              if (p.touchCancel !== undef) {
+                t = addTouchEventOffset(t);
+                p.touchCancel(t);
+              }
+            });
+
+          } else {
+            // Emulated touch start/mouse down event
+            attachEventHandler(curElement, "touchstart", function(e) {
+              updateMousePosition(curElement, e.touches[0]);
+
+              p.__mousePressed = true;
+              p.mouseDragging = false;
+              p.mouseButton = PConstants.LEFT;
+
+              if (typeof p.mousePressed === "function") {
+                p.mousePressed();
+              }
+            });
+
+            // Emulated touch move/mouse move event
+            attachEventHandler(curElement, "touchmove", function(e) {
+              e.preventDefault();
+              updateMousePosition(curElement, e.touches[0]);
+
+              if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
+                p.mouseMoved();
+              }
+              if (typeof p.mouseDragged === "function" && p.__mousePressed) {
+                p.mouseDragged();
+                p.mouseDragging = true;
+              }
+            });
+
+            // Emulated touch up/mouse up event
+            attachEventHandler(curElement, "touchend", function(e) {
+              p.__mousePressed = false;
+
+              if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
+                p.mouseClicked();
+              }
+
+              if (typeof p.mouseReleased === "function") {
+                p.mouseReleased();
+              }
+            });
           }
+
+          // Emulate pointer evetns so the pointer can work across touch platforms
+          if (p.pointerDown !== undef || p.pointerMove !== undef ||
+                p.pointerUp !== undef || p.pointerCancel !== undef) {
+
+              // touchStart turns into pointerDown
+              attachEventHandler(curElement, "touchstart", function (t) {
+                  //t = addMSPointerEventOffset(t);
+                  if (p.pointerDown !== undef) {
+                      var pointers = convertTouchToPointer(t, "touchstart");
+                      for (var i = 0; i < pointers.length; i++) {
+                          p.pointerDown(pointers[i]);
+                      }
+                  }
+              });
+
+              //touchMove turns into pointerMove
+              attachEventHandler(curElement, "touchmove", function (t) {
+                  if (p.pointerMove !== undef) {
+                      var pointers = convertTouchToPointer(t, "touchmove");
+                      for (var i = 0; i < pointers.length; i++) {
+                          p.pointerMove(pointers[i]);
+                      }
+                  }
+              });
+
+              // touchEnd turns into pointerUp
+              attachEventHandler(curElement, "touchend", function (t) {
+                  if (p.pointerUp !== undef) {
+                      var pointers = convertTouchToPointer(t, "touchend");
+                      for (var i = 0; i < pointers.length; i++) {
+                          p.pointerUp(pointers[i]);
+                      }
+                  }
+              });
+
+              // touchCancel turns into pointerCancel
+              attachEventHandler(curElement, "touchcancel", function (t) {
+                  //t = addMSPointerEventOffset(t);
+                  if (p.pointerCancel !== undef) {
+                      var pointers = convertTouchToPointer(t, "touchcancel");
+                      for (var i = 0; i < pointers.length; i++) {
+                          p.pointerCancel(pointers[i]);
+                      }
+                  }
+              });
+          }
+
+          // Refire the touch start event we consumed in this function
+          curElement.dispatchEvent(t);
         });
-      }
-
-      // Refire the touch start event we consumed in this function
-      curElement.dispatchEvent(t);
-    });
+    }
 
     (function() {
       var enabled = true,
@@ -17726,9 +17868,19 @@
 
     attachEventHandler(curElement, "mousemove", function(e) {
       updateMousePosition(curElement, e);
+
       if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
         p.mouseMoved();
       }
+
+      // If we're not in a pointer-enabled broswer, simulate pointer events
+      //    as they would be in a pointer-enabled browser
+      if (!window.navigator.msPointerEnabled && p.pointerMove !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerMove(point);
+          console.log("pointer fired");
+      }
+
       if (typeof p.mouseDragged === "function" && p.__mousePressed) {
         p.mouseDragged();
         p.mouseDragging = true;
@@ -17739,12 +17891,20 @@
       if (typeof p.mouseOut === "function") {
         p.mouseOut();
       }
+      if (!window.navigator.msPointerEnabled && p.pointerOut !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerOut(point);
+      }
     });
 
     attachEventHandler(curElement, "mouseover", function(e) {
       updateMousePosition(curElement, e);
       if (typeof p.mouseOver === "function") {
         p.mouseOver();
+      }
+      if (!window.navigator.msPointerEnabled && p.pointerOver !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerOver(point);
       }
     });
 
@@ -17773,6 +17933,11 @@
       if (typeof p.mousePressed === "function") {
         p.mousePressed();
       }
+
+      if (!window.navigator.msPointerEnabled && p.pointerDown !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerDown(point);
+      }
     });
 
     attachEventHandler(curElement, "mouseup", function(e) {
@@ -17784,6 +17949,11 @@
 
       if (typeof p.mouseReleased === "function") {
         p.mouseReleased();
+      }
+
+      if (!window.navigator.msPointerEnabled && p.pointerUp !== undef) {
+          var point = convertMouseToPointer(e);
+          p.pointerUp(point);
       }
     });
 
@@ -18123,6 +18293,7 @@
       "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
       "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
       "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
+      "pointerDown", "pointerMove", "pointerUp", "pointerCancel", "pointerOver", "pointerOut",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
