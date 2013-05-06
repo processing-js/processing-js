@@ -11778,6 +11778,29 @@
     // Coordinates
     ////////////////////////////////////////////////////////////////////////////
 
+      /**
+       * Returns the three-dimensional X, Y, Z position in model space. This returns
+       * a PVector containing the x,y and z values for a given coordinate based on the current set of transformations
+       * (scale, rotate, translate, etc.) The x, y and z value can be used to place an object
+       * in space relative to the location of the original point once the transformations
+       * are no longer in use.<br />
+       * <br />
+       *
+       * @param {int | float} x 3D x coordinate to be mapped
+       * @param {int | float} y 3D y coordinate to be mapped
+       * @param {int | float} z 3D z coordinate to be mapped
+       *
+       * @returns {PVector}
+       *
+       * @see modelX
+       * @see modelY
+       * @see modelZ
+       */
+      p.modelXYZ = function(x, y, z) {
+
+          return new PVector(p.modelX(x,y,z),p.modelY(x,y,z),p.modelZ(x,y,z));
+      };
+
     /**
      * Returns the three-dimensional X, Y, Z position in model space. This returns
      * the X value for a given coordinate based on the current set of transformations
@@ -18114,7 +18137,7 @@
       "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
       "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape", "loadXML",
       "loadStrings", "log", "loop", "mag", "map", "match", "matchAll", "max",
-      "millis", "min", "minute", "mix", "modelX", "modelY", "modelZ", "modes",
+      "millis", "min", "minute", "mix","modelXYZ", "modelX", "modelY", "modelZ", "modes",
       "month", "mouseButton", "mouseClicked", "mouseDragged", "mouseMoved",
       "mouseOut", "mouseOver", "mousePressed", "mouseReleased", "mouseScroll",
       "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
