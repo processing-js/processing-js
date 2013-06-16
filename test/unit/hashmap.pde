@@ -7,8 +7,8 @@ map.put("test2", obj);
 _checkEqual(2, map.size());
 _checkFalse(map.isEmpty());
 
-_checkEqual("1", map.get("test"));
-_checkEqual(obj, map.get("test2"));
+_checkEqual(map.get("test"), "1");
+_checkEqual(map.get("test2"), obj);
 _checkIsNull(map.get("test3"));
 
 map.remove("test");

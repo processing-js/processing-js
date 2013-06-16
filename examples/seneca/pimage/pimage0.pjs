@@ -1,4 +1,0 @@
-﻿PImage b = new PImage();
-println(b.width);
-println(b.height);
-println(b.format);

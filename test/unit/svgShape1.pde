@@ -1,9 +1,10 @@
 var __testFiles = {
   "test1.svg" : "<svg xmlns='http://www.w3.org/2000/svg' width='819' height='819'><g><path d='M35,25 L256,10' /></g></svg>",
-  "test2.svg" : "<svg width='200' height='200' viewbox='0 0 200 200' version='1.0' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='10' width='180' height='180' style='fill:#00F; stroke-width:1; stroke:#000; color: #F00;'/></svg>"
+  "test2.svg" : "<svg width='200' height='200' viewbox='0 0 200 200' version='1.0' xmlns='http://www.w3.org/2000/svg'> "
+                +"<rect x='10' y='10' width='180' height='180' style='fill:#00F; stroke-width:1; stroke:#000; color: #F00;'/></svg>"
 };
-XMLHttpRequest = function() {};
-XMLHttpRequest.prototype = {
+
+externals.window.XMLHttpRequest.prototype = {
   open: function(method, url) { this.responseText = __testFiles[url]; },
   status: 200,
   send: function() {},

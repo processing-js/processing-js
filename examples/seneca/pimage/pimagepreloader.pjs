@@ -1,4 +1,0 @@
-﻿/* @pjs preload="metamorphosis.jpg" */
-size(472,266);
-PImage img = loadImage("metamorphosis.jpg");
-image(img,0,0);
