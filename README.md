@@ -10,7 +10,7 @@ Clone the usual way, check out the nodecompile branch, install the node packages
 1. Lint: `$> grunt`
 2. Test: `$> node test`
 
-If step 1. gives you a "grunt: command not found" or similar error, run `npm install -g grunt` to make sure grunt is globally installed as CLI command.
+If step 1. gives you a "grunt: command not found" or similar error, run `npm install -g grunt-cli` to make sure grunt is globally installed as CLI command.
 
 The test script accepts the following arguments:
 
