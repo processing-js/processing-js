@@ -3,7 +3,7 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>Processing.js Ref Tests</title>
-    <script src="../../processing.js"></script>
+    <script src="/processing.js"></script>
     <script src="tests.js"></script>
     <style>
       .test  { border: solid 1px; margin: 5px; }
@@ -13,6 +13,8 @@
   <body>
     <h1>Processing.js Ref Test Runner</h1>
     <p>To start the tests click Start.  Each test is run in order (downloaded from the server).  The first canvas is the reference image, the second is a live sketch that has just been executed, the third is a visual diff.  The diff is calculated with a tolerance value (e.g., ~5%).  If the third canvas is green, the test passed.  If it is white with red pixels (or all red), it failed, and the red shows where the pixels differ. The calibrating must fail on some tests.  You can generate ref tests <a href="ref-test-builder.html">here</a>.</p>
+
+    <p>Performance tests can be run from <a href="/perf" target="_blank">here.</a>
 
     <h3>Settings</h3>
     <div>Run Tests:
@@ -46,6 +48,9 @@
     <div id="total"></div>
 
     <script type="text/javascript">
+      /**
+       *
+       */
       var isWebGLBrowser = (function() {
         var canvas = document.createElement('canvas'),
           contextNames = ["webgl", "experimental-webgl", "moz-webgl", "webkit-3d"],
@@ -77,12 +82,15 @@
       var epsilon = 0.05; // match accuracy ~5%
       document.getElementById('epsilon').value = epsilon;
       var kernel, kernelSize;
-      buildKernel();     
+      buildKernel();
 
+      /**
+       *
+       */
       function updateSelectedTests() {
         var selectControl = document.getElementById('test-type');
         var selectedTags = selectControl.value.split(',');
-        
+
         selectedTests = new Array();
         for(var i = 0; i < tests.length; ++i) {
           var found = false;
@@ -101,6 +109,9 @@
         testCount.innerHTML = '&nbsp;(' + selectedTests.length + ' tests)';
       }
 
+      /**
+       *
+       */
       function buildKernel() {
         var ss = sigma * sigma;
         var factor = 2 * Math.PI * ss;
@@ -123,6 +134,9 @@
         }
       }
 
+      /**
+       *
+       */
       function updateTolerance() {
         var newS = document.getElementById('sigma').value;
         if (newS)
@@ -135,6 +149,9 @@
           epsilon = parseFloat(newE);
       }
 
+      /**
+       *
+       */
       function download(file) {
         var req = new XMLHttpRequest();
         req.open('GET', file, false);
@@ -149,6 +166,17 @@
         }
       }
 
+
+      /**
+       *
+       */
+      var passedCount = 0,
+          failedCount = 0,
+          knownFailedCount = 0;
+
+      /**
+       *
+       */
       function getTest(testName) {
         var responseText = download(testName);
 
@@ -160,7 +188,7 @@
           }
           return false;
         }
-                                         
+
         if (!responseText) {
           return null;
         } else {
@@ -186,13 +214,28 @@
         }
       }
 
+      /**
+       *
+       */
       function endTests(){
         document.getElementById('testStart').style.display="inline";
         document.getElementById('testStop').style.display="none";
         stopTests = true;
+        // call-and-forget doesn't need an XMLHTTPRequest. Just an image.
+        var img = new Image(),
+            url = "/stopserver/"+failedCount+"/"+knownFailedCount+"/"+passedCount;
+        console.log("stopping server through " + url);
+        img.src = url;
       }
 
+      /**
+       *
+       */
       function runTests(tests) {
+        var tl = tests.length;
+        passedCount = 0;
+        failedCount = 0;
+        knownFailedCount = 0;
         stopTests = false;
         document.getElementById('testStart').style.display="none";
         document.getElementById('testStop').style.display="inline";
@@ -203,6 +246,9 @@
 
         removePassed = document.getElementById('remove-passed').checked;
 
+        /**
+         *
+         */
         var buildCanvas = function(id, w, h) {
           var c = document.createElement('canvas');
           c.id = id;
@@ -212,23 +258,32 @@
           return c;
         };
 
+        /**
+         *
+         */
         var link = function(name) {
           return '<a href="' + name + '">' + name + '</a>';
         };
 
+        /**
+         *
+         */
         var titleText = function(testNumber, testTotal, time, testName, hasFailed, message) {
-          return "Test (" + testNumber + "/" + testTotal + ") [" + time + "ms]: " + link(testName) + 
+          return "Test (" + testNumber + "/" + testTotal + ") [" + time + "ms]: " + link(testName) +
                  (hasFailed ? " -- FAILED (" + message + ")" : message ? " -- PASSED (" + message + ")" : " -- PASSED ");
         };
 
-        var getPixels = function(aCanvas, isWebGL) {        
+        /**
+         *
+         */
+        var getPixels = function(aCanvas, isWebGL) {
           try {
             if (isWebGL) {
               var context = aCanvas.getContext("experimental-webgl");
 
               var data = null;
               try{
-                // try deprecated way first 
+                // try deprecated way first
                 data = context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE);
 
                 // Chrome posts an error
@@ -236,7 +291,7 @@
                   throw new Error("readPixels() API has changed.");
                 }
               }catch(e){
-                // if that failed, try new way              
+                // if that failed, try new way
                 if(!data){
                   data = new Uint8Array(aCanvas.width * aCanvas.height * 4);
                   context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE, data);
@@ -251,7 +306,9 @@
           }
         };
 
-        var passedCount = 0, failedCount = 0, knownFailedCount = 0, tl = tests.length;
+        /**
+         *
+         */
         function nextTest(testNum) {
           if (document.getElementById('stop-on-fail').checked && failedCount){
             endTests();
@@ -306,6 +363,9 @@
           }
         }
 
+        /**
+         *
+         */
         var runOne = function(i) {
           var status = document.getElementById('status');
           status.innerHTML = "Running Test " + i + "/" + (tests.length-1);
@@ -345,7 +405,7 @@
                 for (var l=0; l < pixelsLen; l++) {
                   if (is3D) {
                     // WebGL inverts the rows in readPixels vs. the 2D context. Flip the image around so it looks right
-                    origData.data[l] = test.pixels[(original.height - 1 - Math.floor(l / 4 / original.width)) * 
+                    origData.data[l] = test.pixels[(original.height - 1 - Math.floor(l / 4 / original.width)) *
                                                     original.width * 4 + (l % (original.width * 4))];
                   } else {
                     origData.data[l] = test.pixels[l];
@@ -468,6 +528,9 @@
         window.setTimeout(function() { runOne(0); }, 10);
       }
 
+      /**
+       *
+       */
       function blur(data, width, height) {
         var len = data.length;
         var newData = new Array(len);
@@ -501,5 +564,16 @@
         return newData;
       }
     </script>
+
+    <!-- autorun -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        var loc = window.location.toString();
+        if(loc.indexOf("autorun=true") !== -1) {
+          runTests(selectedTests);
+        }
+      }, false);
+    </script>
+
   </body>
 </html>

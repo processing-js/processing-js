@@ -1,0 +1,17 @@
+{
+  "name": "Processing.js",
+  "version": "1.5.0",
+  "dependencies": {
+    "argv": "~0.0.2",
+    "browserify": "~2.18.1",
+    "express": "~3.3.3",
+    "node-minify": "~0.7.3",
+    "nunjucks": "~0.1.9",
+    "open": "0.0.3"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-cli": "~0.1.8",
+    "grunt-contrib-jshint": "~0.4.3"
+  }
+}
