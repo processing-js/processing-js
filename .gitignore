@@ -1,9 +1,2 @@
-release/
-dist/
-logs/
-
-Unsaved\ Document*
+node_modules
 .DS_Store
-*.swp
-*~
-*.pyc

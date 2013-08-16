@@ -24,7 +24,7 @@ for(Object o1 : hm.keySet()) {
   String key = (String)o1;
   result2 += key;
   for(Object o2 : (ArrayList) hm.get(key))
-    result2 += (String)o2;  
+    result2 += (String)o2;
 }
 
 _checkTrue(result2 == "a1b23" || result2 == "b23a1");

@@ -18,6 +18,8 @@
     <h1>Processing.js Performance Test Runner</h1>
     <p>To start the tests click Start.  Each test is run in order (downloaded from the server).  Tests are run for a maximum number of frames (specified below), and the time recorded.</p>
 
+    <p>Reference tests can be run from <a href="/ref" target="_blank">here.</a>
+
     <h3>Settings</h3>
     <div>Run Tests: <select id="test-type" onchange="updateSelectedTests();">
       <option value="2D,3D" selected="selected">2D and 3D</option>
@@ -32,7 +34,7 @@
     Iterations Per Test: <input type="text" size="4" id="iterations" onchange="updateIterations();">&nbsp;
     <input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
 
-    <h3>Results [total time for all tests: <span id="totalTime">0</span>ms] <button id="report" style="display:none" onclick="report();">Generate Report</button></h3>
+    <h3>Results [total time for <span id="curTest">0</span> tests: <span id="totalTime">0</span>ms] <button id="report" style="display:none" onclick="report();">Generate Report</button></h3>
     <div id="status" style="margin-bottom: 10px; display: none;">Running... (this may take some time)</div>
     <div id="results-chart"></div>
     <div id="results" style="margin: 5px; padding-top: 10px;"></div>
@@ -79,6 +81,9 @@
         document.location.href = "data:text/plain," + generateReport(finishedTests);
       }
 
+      /**
+       * Set up the test run filters
+       */
       function updateSelectedTests() {
         var selectControl = document.getElementById('test-type');
         var selectedTags = selectControl.value.split(',');
@@ -101,6 +106,10 @@
         testCount.innerHTML = '&nbsp;(' + selectedTests.length + ' tests)';
       }
 
+
+      /**
+       * Change how many times each perf test runs before reporting
+       */
       function updateIterations() {
         var newIterationCount = document.getElementById('iterations').value;
         if (newIterationCount) {
@@ -108,6 +117,9 @@
         }
       }
 
+      /**
+       * get a file with cache breaking t=...
+       */
       function download(file) {
         var req = new XMLHttpRequest();
         req.open('GET', file + "?t=" + Date.now(), false);
@@ -122,6 +134,9 @@
         }
       }
 
+      /**
+       * get a test's source code
+       */
       function getTest(testName) {
         var responseText = download(testName);
 
@@ -144,6 +159,9 @@
         return test;
       }
 
+      /**
+       * Generate the performance chart after running all tests
+       */
       function drawResultsChart() {
         var dataTable = new google.visualization.DataTable();
         dataTable.addColumn('string', 'Test');
@@ -166,6 +184,9 @@
                    });
       }
 
+      /**
+       * Run all performance tests
+       */
       function runTests(tests) {
         var results = document.getElementById('results');
         results.innerHTML = '';
@@ -199,7 +220,9 @@
         };
 
         var tl = tests.length;
+        var lastTest = 0;
         function nextTest(testNum) {
+
           if (testNum < tl) {
             window.setTimeout(function() { runOne(testNum); }, 50);
           } else {
@@ -218,15 +241,6 @@
               sortedDivs.push(results.firstChild);
               results.removeChild(results.firstChild);
             }
-            /*sortedDivs.sort(function(a, b) {
-              if (a.className === b.className) {
-                return 0;
-              } else if (a.className < b.className) {
-                return -1;
-              } else {
-                return 1;
-              }
-            });*/
 
             var failedDiv = document.createElement('div');
             failedDiv.innerHTML = '<hr><h3>Failed ' + failedTests + ' of ' + (passed + failedTests) + '</h3>';
@@ -254,7 +268,7 @@
           }
         }
 
-        var runOne = function(i) {
+        function runOne(i) {
           if (!tests[i]) {
             alert("Error: no test found.");
             return;
@@ -309,6 +323,7 @@
                     title.innerHTML = titleText(i+1, tl, diff, test.name, iterCount);
                   }
                   document.getElementById('totalTime').innerHTML = totalTime;
+                  document.getElementById('curTest').innerHTML = (i+1);
 
                   // Mark this test run a success with time
                   tests[i].completed = true;
@@ -333,7 +348,7 @@
                   if (--attempts <= 0) {
                     clearInterval(initInterval);
                     result.className = "failed";
-                    title.innerHTML = titleText(i+1, tl, 0, test.name, interCount, "Processing failed initialization");
+                    title.innerHTML = titleText(i+1, tl, 0, test.name, iterCount, "Processing failed initialization");
                     nextTest(i+1);
                     return;
                   }
@@ -352,6 +367,16 @@
         };
         window.setTimeout(function() { runOne(0); }, 25);
       };
+    </script>
+
+    <!-- autorun -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        var loc = window.location.toString();
+        if(loc.indexOf("autorun=true") !== -1) {
+          runTests(selectedTests);
+        }
+      }, false);
     </script>
   </body>
 </html>
