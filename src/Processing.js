@@ -11,7 +11,7 @@
       XMLHttpRequest = window.XMLHttpRequest,
       document = Browser.document,
       noop = options.noop,
-
+      PShape = defaultScope.PShape,
       PConstants = defaultScope.PConstants;
       var PFont = defaultScope.PFont,
       PShapeSVG = defaultScope.PShapeSVG,

@@ -1449,16 +1449,6 @@ module.exports = function(options) {
       this.retainAll = function(c) {
         var it = this.iterator();
         var toRemove = [];
-        while (it.hasNext()) {
-          var entry = it.next();
-          if (!c.contains(entry)) {
-            toRemove.push(entry);
-          }
-        }
-        for (var i = 0; i < toRemove.length; ++i) {
-          removeItem(toRemove[i]);
-        }
-        return toRemove.length > 0;
       };
 
       this.size = function() {
@@ -1467,6 +1457,16 @@ module.exports = function(options) {
 
       this.toArray = function() {
         var result = [];
+	      while (it.hasNext()) {
+		      var entry = it.next();
+		      if (!c.contains(entry)) {
+			      toRemove.push(entry);
+		      }
+	      }
+	      for (var i = 0; i < toRemove.length; ++i) {
+		      removeItem(toRemove[i]);
+	      }
+	      return toRemove.length > 0;
         var it = this.iterator();
         while (it.hasNext()) {
           result.push(it.next());
@@ -3085,7 +3085,7 @@ module.exports = function(options) {
    * @see #shapeMode()
    */
   var PShape = function(family) {
-    this.family    = family || PConstants.GROUP;
+    this.family    = family || PConstants.PATH;
     this.visible   = true;
     this.style     = true;
     this.children  = [];
@@ -3108,7 +3108,7 @@ module.exports = function(options) {
           this.strokeColor         = 0xFF000000;
           this.strokeWeight        = 1;
           this.strokeCap           = PConstants.SQUARE;  // BUTT in svg spec
-          this.strokeJoin          = PConstants.ROUNDED;
+          this.strokeJoin          = PConstants.MITER;
           this.strokeGradient      = "";
           this.strokeGradientPaint = "";
           this.strokeName          = "";
@@ -3128,16 +3128,54 @@ module.exports = function(options) {
     * getVertexCode() , getVertexCodes() , getVertexCodeCount(), getVertexX(), getVertexY(), getVertexZ()
     */
   PShape.prototype = {
+    bezierVertex: function(x2, y2, x3, y3, x4, y4, x5, y5,x6){
+      if(x5 &&y5 &&x6)
+{
+
+this.vertices.push([x2,y2,x3]);
+      this.vertices.push([y3,x4,y4]);
+      this.vertices.push([x5,y5, x6]);
+
+}
+else{
+       this.vertices.push([x2,y2]);
+      this.vertices.push([x3,y3]);
+      this.vertices.push([x4,y4]);
+}
+this.vertexCodes.push(PConstants.BEZIER_VERTEX);
+this.vertexCodes.push(PConstants.BEZIER_VERTEX);
+this.vertexCodes.push(PConstants.BEZIER_VERTEX);
+    },
+     curveVertex: function(x, y, z){
+        this.vertices.push([x,y,z]);
+		this.vertexCodes.push(PConstants.CURVE_VERTEX);
+},
     getVertexCodeCount:function(){
       return this.vertexCodes.length;
     },
     getVertexCount: function(){
       return this.vertices.length;
     },
+    getVertex: function(i){
+      return {x: this.vertices[i][0],y:this.vertices[i][1], z: this.vertices[i][2]};
+    },
+    setVertex: function(i, v, y ,z){
+      if(v.x){
+      this.vertices[i][0] = v.x;
+      this.vertices[i][1] = v.y;
+      this.vertices[i][2] = v.z;}
+      if(y){
+         this.vertices[i][0]= v;
+         this.vertices[i][1] = y;
+         this.vertices[i][2] = z;
+      }
+    },
     vertex: function(x,y,z){
-  
+  	if (z)
       this.vertices.push([x,y,z]);
-      this.vertexCodes.push( PConstants.LINE);
+      else 
+      this.vertices.push([x,y]);
+      this.vertexCodes.push( PConstants.VERTEX);
     },
      drawVertices:function(renderContext){
         if(renderContext){
@@ -3218,7 +3256,7 @@ module.exports = function(options) {
       return this.height;
     },
     /**
-     * @member PShape
+     * @member f
      * The setName() function sets the name of the shape
      *
      * @param {String} name the name of the shape
@@ -3256,6 +3294,7 @@ module.exports = function(options) {
      * the drawImpl() function draws the SVG document.
      */
     drawImpl: function(renderContext) {
+	console.log(this.family);
       if (this.family === PConstants.GROUP) {
         this.drawGroup(renderContext);
       } else if (this.family === PConstants.PRIMITIVE) {
@@ -9416,7 +9455,7 @@ module.exports = function setupParser(Processing, options) {
       XMLHttpRequest = window.XMLHttpRequest,
       document = Browser.document,
       noop = options.noop,
-
+      PShape = defaultScope.PShape,
       PConstants = defaultScope.PConstants;
       var PFont = defaultScope.PFont,
       PShapeSVG = defaultScope.PShapeSVG,
@@ -10503,6 +10542,7 @@ module.exports = function setupParser(Processing, options) {
             }
           }
           shape.draw(p);
+		  //shape.drawPath(p);
           if ((arguments.length === 1 && curShapeMode === PConstants.CENTER ) || arguments.length > 1) {
             p.popMatrix();
           }
@@ -21483,7 +21523,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       ObjectIterator = source.ObjectIterator,
       Char = source.Char,
       XMLAttribute = source.XMLAttribute(),
-
+      
       ArrayList = source.ArrayList({
         virtHashCode: virtHashCode,
         virtEquals: virtEquals
@@ -21517,6 +21557,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       PShape = source.PShape({
+        CommonFunctions: CommonFunctions,
         PConstants: PConstants,
         PMatrix2D: PMatrix2D,
         PMatrix3D: PMatrix3D
@@ -21531,6 +21572,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       defaultScope = source.defaultScope({
+        PShape: PShape,
         ArrayList: ArrayList,
         HashMap: HashMap,
         PVector: PVector,

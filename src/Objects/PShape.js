@@ -60,11 +60,47 @@ module.exports = function(options) {
     * getVertexCode() , getVertexCodes() , getVertexCodeCount(), getVertexX(), getVertexY(), getVertexZ()
     */
   PShape.prototype = {
+    bezierVertex: function(x2, y2, x3, y3, x4, y4, x5, y5,x6){
+      if(x5 &&y5 &&x6)
+{
+
+this.vertices.push([x2,y2,x3]);
+      this.vertices.push([y3,x4,y4]);
+      this.vertices.push([x5,y5, x6]);
+
+}
+else{
+       this.vertices.push([x2,y2]);
+      this.vertices.push([x3,y3]);
+      this.vertices.push([x4,y4]);
+}
+this.vertexCodes.push(PConstants.BEZIER_VERTEX);
+this.vertexCodes.push(PConstants.BEZIER_VERTEX);
+this.vertexCodes.push(PConstants.BEZIER_VERTEX);
+    },
+     curveVertex: function(x, y, z){
+        this.vertices.push([x,y,z]);
+		this.vertexCodes.push(PConstants.CURVE_VERTEX);
+},
     getVertexCodeCount:function(){
       return this.vertexCodes.length;
     },
     getVertexCount: function(){
       return this.vertices.length;
+    },
+    getVertex: function(i){
+      return {x: this.vertices[i][0],y:this.vertices[i][1], z: this.vertices[i][2]};
+    },
+    setVertex: function(i, v, y ,z){
+      if(v.x){
+      this.vertices[i][0] = v.x;
+      this.vertices[i][1] = v.y;
+      this.vertices[i][2] = v.z;}
+      if(y){
+         this.vertices[i][0]= v;
+         this.vertices[i][1] = y;
+         this.vertices[i][2] = z;
+      }
     },
     vertex: function(x,y,z){
   
