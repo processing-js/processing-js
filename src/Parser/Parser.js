@@ -62,7 +62,7 @@ module.exports = function setupParser(Processing, options) {
       "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
       "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
       "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
-      "__codePointAt", "__startsWith", "__endsWith", "__matches"];
+      "__codePointAt", "__startsWith", "__endsWith", "__matches","createShape"];
 
     // custom functions and properties are added here
     if(aFunctions) {

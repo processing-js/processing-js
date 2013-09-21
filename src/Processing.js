@@ -1138,6 +1138,9 @@
      * @see PApplet#shape()
      * @see PApplet#shapeMode()
      */
+	  p.createShape = function(){
+         return new PShape();
+     };
     p.loadShape = function (filename) {
       if (arguments.length === 1) {
         if (filename.indexOf(".svg") > -1) {

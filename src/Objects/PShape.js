@@ -31,6 +31,28 @@ module.exports = function(options) {
     this.width     = null;
     this.height    = null;
     this.parent    = null;
+	this.fill = true;
+    this.vertices  = [];
+    this.vertexCodes = [];
+          this.opacity             = 1;
+ 
+          this.stroke              = true;
+          this.strokeColor         = 0xFF000000;
+          this.strokeWeight        = 1;
+          this.strokeCap           = PConstants.SQUARE;  // BUTT in svg spec
+          this.strokeJoin          = PConstants.ROUNDED;
+          this.strokeGradient      = "";
+          this.strokeGradientPaint = "";
+          this.strokeName          = "";
+          this.strokeOpacity       = 1;
+ 
+          this.fill                = true;
+          this.fillColor           = 0xFF000000;
+          this.fillGradient        = null;
+          this.fillGradientPaint   = null;
+          this.fillOpacity         = 1;
+        return this;
+      
   };
   /**
     * PShape methods
@@ -38,6 +60,32 @@ module.exports = function(options) {
     * getVertexCode() , getVertexCodes() , getVertexCodeCount(), getVertexX(), getVertexY(), getVertexZ()
     */
   PShape.prototype = {
+	  setVisible:function(v){
+          this.visible = v;
+      },
+    getVertexCodeCount:function(){
+      return this.vertexCodes.length;
+    },
+    getVertexCount: function(){
+      return this.vertices.length;
+    },
+    vertex: function(x,y,z){
+  
+      this.vertices.push([x,y,z]);
+      this.vertexCodes.push( PConstants.LINE);
+    },
+     drawVertices:function(renderContext){
+        if(renderContext){
+            this.pre(renderContext);
+            renderContext.beginShape();
+            this.vertices.forEach(function(e){
+                renderContext.vertex(e[0],e[1],e[2]?e[2]:0);
+            });
+            renderContext.endShape();
+            this.post(renderContext);
+            
+        }
+     },
     /**
      * @member PShape
      * The isVisible() function returns a boolean value "true" if the image is set to be visible, "false" if not. This is modified with the <b>setVisible()</b> parameter.
