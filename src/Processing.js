@@ -13,10 +13,11 @@
       noop = options.noop,
 
       PConstants = defaultScope.PConstants;
-      PFont = defaultScope.PFont,
+      var PFont = defaultScope.PFont,
       PShapeSVG = defaultScope.PShapeSVG,
       PVector = defaultScope.PVector,
-      Char = Character = defaultScope.Char,
+      Char = defaultScope.Char,
+      Character = defaultScope.Char,
       ObjectIterator = defaultScope.ObjectIterator,
       XMLElement = defaultScope.XMLElement,
       XML = defaultScope.XML;
@@ -1138,7 +1139,7 @@
      * @see PApplet#shape()
      * @see PApplet#shapeMode()
      */
-	  p.createShape = function(){
+    p.createShape = function(){
          return new PShape();
      };
     p.loadShape = function (filename) {

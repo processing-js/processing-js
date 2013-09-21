@@ -60,9 +60,6 @@ module.exports = function(options) {
     * getVertexCode() , getVertexCodes() , getVertexCodeCount(), getVertexX(), getVertexY(), getVertexZ()
     */
   PShape.prototype = {
-	  setVisible:function(v){
-          this.visible = v;
-      },
     getVertexCodeCount:function(){
       return this.vertexCodes.length;
     },
