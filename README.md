@@ -1,9 +1,7 @@
 Processing.js
 =============
 
-*EXPERIMENTAL NODE COMPILE BRANCH*
-
-This is an experimental branch for Processing.js that builds up Pjs as a series of modules, rather than existing as one large file.
+This is the compilation repository for Processing.js, building the processing.js library from a series of modules, rather than existing as one large file as was the case in version 1.4.1 and earlier.
 
 Clone the usual way, check out the nodecompile branch, install the node packages with `npm install`. Then it's a fairly straight forward process:
 
