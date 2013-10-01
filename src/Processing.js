@@ -11,10 +11,10 @@
       XMLHttpRequest = window.XMLHttpRequest,
       document = Browser.document,
       noop = options.noop,
-      PShape = defaultScope.PShape,
-      PConstants = defaultScope.PConstants;
-      var PFont = defaultScope.PFont,
+      PConstants = defaultScope.PConstants,
+      PFont = defaultScope.PFont,
       PShapeSVG = defaultScope.PShapeSVG,
+      PShape = defaultScope.PShape,
       PVector = defaultScope.PVector,
       Char = defaultScope.Char,
       Character = defaultScope.Char,

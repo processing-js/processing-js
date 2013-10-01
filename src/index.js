@@ -95,6 +95,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
         ArrayList: ArrayList,
         HashMap: HashMap,
         PVector: PVector,
+        PShape: PShape,
         PFont: PFont,
         PShapeSVG: PShapeSVG,
         ObjectIterator: ObjectIterator,
@@ -108,6 +109,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
         defaultScope:defaultScope,
         Browser:Browser,
         extend:source.extend,
+        PConstants: PConstants,
         noop:noop
       });
 

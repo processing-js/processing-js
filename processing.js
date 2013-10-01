@@ -318,6 +318,14 @@ module.exports = {
     WAIT:     'wait',
     NOCURSOR: "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto",
 
+
+    // Mouse Event Buttons
+    MOUSELEFT: 1,
+    MOUSERIGHT: 3,
+    MOUSECENTER: 2,
+    
+
+
     // Hints
     DISABLE_OPENGL_2X_SMOOTH:     1,
     ENABLE_OPENGL_2X_SMOOTH:     -1,
@@ -1449,6 +1457,16 @@ module.exports = function(options) {
       this.retainAll = function(c) {
         var it = this.iterator();
         var toRemove = [];
+        while (it.hasNext()) {
+          var entry = it.next();
+          if (!c.contains(entry)) {
+            toRemove.push(entry);
+          }
+        }
+        for (var i = 0; i < toRemove.length; ++i) {
+          removeItem(toRemove[i]);
+        }
+        return toRemove.length > 0;
       };
 
       this.size = function() {
@@ -1457,16 +1475,6 @@ module.exports = function(options) {
 
       this.toArray = function() {
         var result = [];
-	      while (it.hasNext()) {
-		      var entry = it.next();
-		      if (!c.contains(entry)) {
-			      toRemove.push(entry);
-		      }
-	      }
-	      for (var i = 0; i < toRemove.length; ++i) {
-		      removeItem(toRemove[i]);
-	      }
-	      return toRemove.length > 0;
         var it = this.iterator();
         while (it.hasNext()) {
           result.push(it.next());
@@ -3085,7 +3093,7 @@ module.exports = function(options) {
    * @see #shapeMode()
    */
   var PShape = function(family) {
-    this.family    = family || PConstants.PATH;
+    this.family    = family || PConstants.GROUP;
     this.visible   = true;
     this.style     = true;
     this.children  = [];
@@ -3108,7 +3116,7 @@ module.exports = function(options) {
           this.strokeColor         = 0xFF000000;
           this.strokeWeight        = 1;
           this.strokeCap           = PConstants.SQUARE;  // BUTT in svg spec
-          this.strokeJoin          = PConstants.MITER;
+          this.strokeJoin          = PConstants.ROUNDED;
           this.strokeGradient      = "";
           this.strokeGradientPaint = "";
           this.strokeName          = "";
@@ -3171,11 +3179,9 @@ this.vertexCodes.push(PConstants.BEZIER_VERTEX);
       }
     },
     vertex: function(x,y,z){
-  	if (z)
+  
       this.vertices.push([x,y,z]);
-      else 
-      this.vertices.push([x,y]);
-      this.vertexCodes.push( PConstants.VERTEX);
+      this.vertexCodes.push( PConstants.LINE);
     },
      drawVertices:function(renderContext){
         if(renderContext){
@@ -3256,7 +3262,7 @@ this.vertexCodes.push(PConstants.BEZIER_VERTEX);
       return this.height;
     },
     /**
-     * @member f
+     * @member PShape
      * The setName() function sets the name of the shape
      *
      * @param {String} name the name of the shape
@@ -3294,7 +3300,6 @@ this.vertexCodes.push(PConstants.BEZIER_VERTEX);
      * the drawImpl() function draws the SVG document.
      */
     drawImpl: function(renderContext) {
-	console.log(this.family);
       if (this.family === PConstants.GROUP) {
         this.drawGroup(renderContext);
       } else if (this.family === PConstants.PRIMITIVE) {
@@ -7012,11 +7017,11 @@ module.exports = function withMath(p, undef) {
     }
 
     function lerp(t,a,b) { return a + t * (b - a); }
-
+//return x*x*x*(x*(x*6 - 15) + 10);
     this.noise3d = function(x, y, z) {
-      var X = Math.floor(x)&255, Y = Math.floor(y)&255, Z = Math.floor(z)&255;
-      x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
-      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y, fz = (3-2*z)*z*z;
+      var X = (x|0)&255, Y = (y|0)&255, Z = (z|0)&255;
+      x -= (x|0); y -= (y|0); z -= (z|0);
+      var fx = x*x*x*(x*(x*6-15)+10), fy = y*y*y*(y*(y*6-15)+10), fz = z*z*z*(z*(z*6-15)+10)
       var p0 = perm[X]+Y, p00 = perm[p0] + Z, p01 = perm[p0 + 1] + Z,
           p1 = perm[X + 1] + Y, p10 = perm[p1] + Z, p11 = perm[p1 + 1] + Z;
       return lerp(fz,
@@ -7027,9 +7032,9 @@ module.exports = function withMath(p, undef) {
     };
 
     this.noise2d = function(x, y) {
-      var X = Math.floor(x)&255, Y = Math.floor(y)&255;
-      x -= Math.floor(x); y -= Math.floor(y);
-      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y;
+var X = (x|0)&255, Y = (y|0)&255;
+      x -= (x|0); y -= (y|0);
+      var fx = x*x*x*(x*(x*6-15)+10), fy = y*y*y*(y*(y*6-15)+10);
       var p0 = perm[X]+Y, p1 = perm[X + 1] + Y;
       return lerp(fy,
         lerp(fx, grad2d(perm[p0], x, y), grad2d(perm[p1], x-1, y)),
@@ -7037,9 +7042,9 @@ module.exports = function withMath(p, undef) {
     };
 
     this.noise1d = function(x) {
-      var X = Math.floor(x)&255;
-      x -= Math.floor(x);
-      var fx = (3-2*x)*x*x;
+var X = (x|0)&255;
+      x -= (x|0)
+      var fx = x*x*x*(x*(x*6-15)+10);
       return lerp(fx, grad1d(perm[X], x), grad1d(perm[X+1], x-1));
     };
   }
@@ -7383,7 +7388,7 @@ module.exports = (function commonFunctions(undef) {
  * Touch and Mouse event handling
  */
 module.exports = function withToucht(p, curElement, attachEventHandler, document, undef) {
-
+var PConstants = p.PConstants;
   /**
    * Determine the location of the (mouse) pointer.
    */
@@ -7528,7 +7533,7 @@ module.exports = function withToucht(p, curElement, attachEventHandler, document
 
         p.__mousePressed = true;
         p.mouseDragging = false;
-        p.mouseButton = PConstants.LEFT;
+        p.mouseButton = PConstants.MOUSELEFT;
 
         if (typeof p.mousePressed === "function") {
           p.mousePressed();
@@ -7647,13 +7652,13 @@ module.exports = function withToucht(p, curElement, attachEventHandler, document
     p.mouseDragging = false;
     switch (e.which) {
     case 1:
-      p.mouseButton = PConstants.LEFT;
+      p.mouseButton = PConstants.MOUSELEFT;
       break;
     case 2:
-      p.mouseButton = PConstants.CENTER;
+      p.mouseButton = PConstants.MOUSECENTER;
       break;
     case 3:
-      p.mouseButton = PConstants.RIGHT;
+      p.mouseButton = PConstants.MOUSERIGHT;
       break;
     }
 
@@ -9455,10 +9460,10 @@ module.exports = function setupParser(Processing, options) {
       XMLHttpRequest = window.XMLHttpRequest,
       document = Browser.document,
       noop = options.noop,
-      PShape = defaultScope.PShape,
-      PConstants = defaultScope.PConstants;
-      var PFont = defaultScope.PFont,
+      PConstants = defaultScope.PConstants,
+      PFont = defaultScope.PFont,
       PShapeSVG = defaultScope.PShapeSVG,
+      PShape = defaultScope.PShape,
       PVector = defaultScope.PVector,
       Char = defaultScope.Char,
       Character = defaultScope.Char,
@@ -10542,7 +10547,6 @@ module.exports = function setupParser(Processing, options) {
             }
           }
           shape.draw(p);
-		  //shape.drawPath(p);
           if ((arguments.length === 1 && curShapeMode === PConstants.CENTER ) || arguments.length > 1) {
             p.popMatrix();
           }
@@ -21523,7 +21527,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       ObjectIterator = source.ObjectIterator,
       Char = source.Char,
       XMLAttribute = source.XMLAttribute(),
-      
+
       ArrayList = source.ArrayList({
         virtHashCode: virtHashCode,
         virtEquals: virtEquals
@@ -21557,7 +21561,6 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       PShape = source.PShape({
-        CommonFunctions: CommonFunctions,
         PConstants: PConstants,
         PMatrix2D: PMatrix2D,
         PMatrix3D: PMatrix3D
@@ -21572,10 +21575,10 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       defaultScope = source.defaultScope({
-        PShape: PShape,
         ArrayList: ArrayList,
         HashMap: HashMap,
         PVector: PVector,
+        PShape: PShape,
         PFont: PFont,
         PShapeSVG: PShapeSVG,
         ObjectIterator: ObjectIterator,
@@ -21589,6 +21592,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
         defaultScope:defaultScope,
         Browser:Browser,
         extend:source.extend,
+        PConstants: PConstants,
         noop:noop
       });
 
