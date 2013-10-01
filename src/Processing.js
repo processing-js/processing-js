@@ -11,12 +11,13 @@
       XMLHttpRequest = window.XMLHttpRequest,
       document = Browser.document,
       noop = options.noop,
-
-      PConstants = defaultScope.PConstants;
+      PConstants = defaultScope.PConstants,
       PFont = defaultScope.PFont,
       PShapeSVG = defaultScope.PShapeSVG,
+      PShape = defaultScope.PShape,
       PVector = defaultScope.PVector,
-      Char = Character = defaultScope.Char,
+      Char = defaultScope.Char,
+      Character = defaultScope.Char,
       ObjectIterator = defaultScope.ObjectIterator,
       XMLElement = defaultScope.XMLElement,
       XML = defaultScope.XML;
@@ -1138,6 +1139,9 @@
      * @see PApplet#shape()
      * @see PApplet#shapeMode()
      */
+    p.createShape = function(){
+         return new PShape();
+     };
     p.loadShape = function (filename) {
       if (arguments.length === 1) {
         if (filename.indexOf(".svg") > -1) {

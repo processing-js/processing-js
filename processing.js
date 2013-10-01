@@ -1,4 +1,4 @@
-;(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
+;(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // build script for generating processing.js
 
 var Browser = {
@@ -22,805 +22,941 @@ var Browser = {
 
 window.Processing = require('./src/')(Browser);
 
-},{"./src/":2}],2:[function(require,module,exports){
-// Base source files
-var source = {
-  virtEquals: require("./Helpers/virtEquals"),
-  virtHashCode: require("./Helpers/virtHashCode"),
-  ObjectIterator: require("./Helpers/ObjectIterator"),
-  PConstants: require("./Helpers/PConstants"),
-  ArrayList: require("./Objects/ArrayList"),
-  HashMap: require("./Objects/HashMap"),
-  PVector: require("./Objects/PVector"),
-  PFont: require("./Objects/PFont"),
-  Char: require("./Objects/Char"),
-  XMLAttribute: require("./Objects/XMLAttribute"),
-  XMLElement: require("./Objects/XMLElement"),
-  PMatrix2D: require("./Objects/PMatrix2D"),
-  PMatrix3D: require("./Objects/PMatrix3D"),
-  PShape: require("./Objects/PShape"),
-  colors: require("./Objects/webcolors"),
-  PShapeSVG:  require("./Objects/PShapeSVG"),
-  CommonFunctions: require("./P5Functions/commonFunctions"),
-  defaultScope: require("./Helpers/defaultScope"),
-  Processing: require("./Processing"),
-  setupParser: require("./Parser/Parser"),
-  finalize: require("./Helpers/finalizeProcessing")
-};
-
-// Additional code that gets tacked onto "p" during
-// instantiation of a Processing sketch.
-source.extend = {
-  withMath: require("./P5Functions/Math.js"),
-  withProxyFunctions: require("./P5Functions/JavaProxyFunctions")(source.virtHashCode, source.virtEquals),
-  withTouch: require("./P5Functions/touchmouse"),
-  withCommonFunctions: source.CommonFunctions.withCommonFunctions
-};
-
+},{"./src/":26}],2:[function(require,module,exports){
 /**
- * Processing.js building function
+* A ObjectIterator is an iterator wrapper for objects. If passed object contains
+* the iterator method, the object instance will be replaced by the result returned by
+* this method call. If passed object is an array, the ObjectIterator instance iterates
+* through its items.
+*
+* @param {Object} obj The object to be iterated.
+*/
+module.exports = function ObjectIterator(obj) {
+  if (obj instanceof Array) {
+    // iterate through array items
+    var index = -1;
+    this.hasNext = function() {
+      return ++index < obj.length;
+    };
+    this.next = function() {
+      return obj[index];
+    };
+  } else if (obj.iterator instanceof Function) {
+    return obj.iterator();
+  } else {
+    throw "Unable to iterate: " + obj;
+  }
+};
+
+},{}],3:[function(require,module,exports){
+/**
+ * Processing.js environment constants
  */
-module.exports = function buildProcessingJS(Browser, testHarness) {
-  var noop = function(){},
-      virtEquals = source.virtEquals,
-      virtHashCode = source.virtHashCode,
-      PConstants = source.PConstants,
-      CommonFunctions = source.CommonFunctions,
-      ObjectIterator = source.ObjectIterator,
-      Char = source.Char,
-      XMLAttribute = source.XMLAttribute(),
+module.exports = {
+    X: 0,
+    Y: 1,
+    Z: 2,
 
-      ArrayList = source.ArrayList({
-        virtHashCode: virtHashCode,
-        virtEquals: virtEquals
-      }),
+    R: 3,
+    G: 4,
+    B: 5,
+    A: 6,
 
-      HashMap = source.HashMap({
-        virtHashCode: virtHashCode,
-        virtEquals: virtEquals
-      }),
+    U: 7,
+    V: 8,
 
-      PVector = source.PVector({
-        PConstants: PConstants
-      }),
+    NX: 9,
+    NY: 10,
+    NZ: 11,
 
-      PFont = source.PFont({
-        Browser: Browser,
-        noop: noop
-      }),
+    EDGE: 12,
 
-      XMLElement = source.XMLElement({
-        Browser:Browser,
-        XMLAttribute: XMLAttribute
-      }),
+    // Stroke
+    SR: 13,
+    SG: 14,
+    SB: 15,
+    SA: 16,
 
-      PMatrix2D = source.PMatrix2D({
-        p:CommonFunctions
-      }),
+    SW: 17,
 
-      PMatrix3D = source.PMatrix3D({
-        p:CommonFunctions
-      }),
+    // Transformations (2D and 3D)
+    TX: 18,
+    TY: 19,
+    TZ: 20,
 
-      PShape = source.PShape({
-        PConstants: PConstants,
-        PMatrix2D: PMatrix2D,
-        PMatrix3D: PMatrix3D
-      }),
+    VX: 21,
+    VY: 22,
+    VZ: 23,
+    VW: 24,
 
-      PShapeSVG = source.PShapeSVG({
-        CommonFunctions:CommonFunctions,
-        PConstants:PConstants,
-        PShape:PShape,
-        XMLElement:XMLElement,
-        colors: source.colors
-      }),
+    // Material properties
+    AR: 25,
+    AG: 26,
+    AB: 27,
 
-      defaultScope = source.defaultScope({
-        ArrayList: ArrayList,
-        HashMap: HashMap,
-        PVector: PVector,
-        PFont: PFont,
-        PShapeSVG: PShapeSVG,
-        ObjectIterator: ObjectIterator,
-        PConstants: PConstants,
-        Char: Char,
-        XMLElement: XMLElement,
-        XML: XMLElement
-      }),
+    DR: 3,
+    DG: 4,
+    DB: 5,
+    DA: 6,
 
-      Processing = source.Processing({
-        defaultScope:defaultScope,
-        Browser:Browser,
-        extend:source.extend,
-        noop:noop
+    SPR: 28,
+    SPG: 29,
+    SPB: 30,
+
+    SHINE: 31,
+
+    ER: 32,
+    EG: 33,
+    EB: 34,
+
+    BEEN_LIT: 35,
+
+    VERTEX_FIELD_COUNT: 36,
+
+    // Renderers
+    P2D:    1,
+    JAVA2D: 1,
+    WEBGL:  2,
+    P3D:    2,
+    OPENGL: 2,
+    PDF:    0,
+    DXF:    0,
+
+    // Platform IDs
+    OTHER:   0,
+    WINDOWS: 1,
+    MAXOSX:  2,
+    LINUX:   3,
+
+    EPSILON: 0.0001,
+
+    MAX_FLOAT:  3.4028235e+38,
+    MIN_FLOAT: -3.4028235e+38,
+    MAX_INT:    2147483647,
+    MIN_INT:   -2147483648,
+
+    PI:         Math.PI,
+    TWO_PI:     2 * Math.PI,
+    HALF_PI:    Math.PI / 2,
+    THIRD_PI:   Math.PI / 3,
+    QUARTER_PI: Math.PI / 4,
+
+    DEG_TO_RAD: Math.PI / 180,
+    RAD_TO_DEG: 180 / Math.PI,
+
+    WHITESPACE: " \t\n\r\f\u00A0",
+
+    // Color modes
+    RGB:   1,
+    ARGB:  2,
+    HSB:   3,
+    ALPHA: 4,
+    CMYK:  5,
+
+    // Image file types
+    TIFF:  0,
+    TARGA: 1,
+    JPEG:  2,
+    GIF:   3,
+
+    // Filter/convert types
+    BLUR:      11,
+    GRAY:      12,
+    INVERT:    13,
+    OPAQUE:    14,
+    POSTERIZE: 15,
+    THRESHOLD: 16,
+    ERODE:     17,
+    DILATE:    18,
+
+    // Blend modes
+    REPLACE:    0,
+    BLEND:      1 << 0,
+    ADD:        1 << 1,
+    SUBTRACT:   1 << 2,
+    LIGHTEST:   1 << 3,
+    DARKEST:    1 << 4,
+    DIFFERENCE: 1 << 5,
+    EXCLUSION:  1 << 6,
+    MULTIPLY:   1 << 7,
+    SCREEN:     1 << 8,
+    OVERLAY:    1 << 9,
+    HARD_LIGHT: 1 << 10,
+    SOFT_LIGHT: 1 << 11,
+    DODGE:      1 << 12,
+    BURN:       1 << 13,
+
+    // Color component bit masks
+    ALPHA_MASK: 0xff000000,
+    RED_MASK:   0x00ff0000,
+    GREEN_MASK: 0x0000ff00,
+    BLUE_MASK:  0x000000ff,
+
+    // Projection matrices
+    CUSTOM:       0,
+    ORTHOGRAPHIC: 2,
+    PERSPECTIVE:  3,
+
+    // Shapes
+    POINT:          2,
+    POINTS:         2,
+    LINE:           4,
+    LINES:          4,
+    TRIANGLE:       8,
+    TRIANGLES:      9,
+    TRIANGLE_STRIP: 10,
+    TRIANGLE_FAN:   11,
+    QUAD:           16,
+    QUADS:          16,
+    QUAD_STRIP:     17,
+    POLYGON:        20,
+    PATH:           21,
+    RECT:           30,
+    ELLIPSE:        31,
+    ARC:            32,
+    SPHERE:         40,
+    BOX:            41,
+
+    GROUP:          0,
+    PRIMITIVE:      1,
+    //PATH:         21, // shared with Shape PATH
+    GEOMETRY:       3,
+
+    // Shape Vertex
+    VERTEX:        0,
+    BEZIER_VERTEX: 1,
+    CURVE_VERTEX:  2,
+    BREAK:         3,
+    CLOSESHAPE:    4,
+
+    // Shape closing modes
+    OPEN:  1,
+    CLOSE: 2,
+
+    // Shape drawing modes
+    CORNER:          0, // Draw mode convention to use (x, y) to (width, height)
+    CORNERS:         1, // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
+    RADIUS:          2, // Draw mode from the center, and using the radius
+    CENTER_RADIUS:   2, // Deprecated! Use RADIUS instead
+    CENTER:          3, // Draw from the center, using second pair of values as the diameter
+    DIAMETER:        3, // Synonym for the CENTER constant. Draw from the center
+    CENTER_DIAMETER: 3, // Deprecated! Use DIAMETER instead
+
+    // Text vertical alignment modes
+    BASELINE: 0,   // Default vertical alignment for text placement
+    TOP:      101, // Align text to the top
+    BOTTOM:   102, // Align text from the bottom, using the baseline
+
+    // UV Texture coordinate modes
+    NORMAL:     1,
+    NORMALIZED: 1,
+    IMAGE:      2,
+
+    // Text placement modes
+    MODEL: 4,
+    SHAPE: 5,
+
+    // Stroke modes
+    SQUARE:  'butt',
+    ROUND:   'round',
+    PROJECT: 'square',
+    MITER:   'miter',
+    BEVEL:   'bevel',
+
+    // Lighting modes
+    AMBIENT:     0,
+    DIRECTIONAL: 1,
+    //POINT:     2, Shared with Shape constant
+    SPOT:        3,
+
+    // Key constants
+
+    // Both key and keyCode will be equal to these values
+    BACKSPACE: 8,
+    TAB:       9,
+    ENTER:     10,
+    RETURN:    13,
+    ESC:       27,
+    DELETE:    127,
+    CODED:     0xffff,
+
+    // p.key will be CODED and p.keyCode will be this value
+    SHIFT:     16,
+    CONTROL:   17,
+    ALT:       18,
+    CAPSLK:    20,
+    PGUP:      33,
+    PGDN:      34,
+    END:       35,
+    HOME:      36,
+    LEFT:      37,
+    UP:        38,
+    RIGHT:     39,
+    DOWN:      40,
+    F1:        112,
+    F2:        113,
+    F3:        114,
+    F4:        115,
+    F5:        116,
+    F6:        117,
+    F7:        118,
+    F8:        119,
+    F9:        120,
+    F10:       121,
+    F11:       122,
+    F12:       123,
+    NUMLK:     144,
+    META:      157,
+    INSERT:    155,
+
+    // Cursor types
+    ARROW:    'default',
+    CROSS:    'crosshair',
+    HAND:     'pointer',
+    MOVE:     'move',
+    TEXT:     'text',
+    WAIT:     'wait',
+    NOCURSOR: "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto",
+
+
+    // Mouse Event Buttons
+    MOUSELEFT: 1,
+    MOUSERIGHT: 3,
+    MOUSECENTER: 2,
+    
+
+
+    // Hints
+    DISABLE_OPENGL_2X_SMOOTH:     1,
+    ENABLE_OPENGL_2X_SMOOTH:     -1,
+    ENABLE_OPENGL_4X_SMOOTH:      2,
+    ENABLE_NATIVE_FONTS:          3,
+    DISABLE_DEPTH_TEST:           4,
+    ENABLE_DEPTH_TEST:           -4,
+    ENABLE_DEPTH_SORT:            5,
+    DISABLE_DEPTH_SORT:          -5,
+    DISABLE_OPENGL_ERROR_REPORT:  6,
+    ENABLE_OPENGL_ERROR_REPORT:  -6,
+    ENABLE_ACCURATE_TEXTURES:     7,
+    DISABLE_ACCURATE_TEXTURES:   -7,
+    HINT_COUNT:                  10,
+
+    // PJS defined constants
+    SINCOS_LENGTH:      720,       // every half degree
+    PRECISIONB:         15,        // fixed point precision is limited to 15 bits!!
+    PRECISIONF:         1 << 15,
+    PREC_MAXVAL:        (1 << 15) - 1,
+    PREC_ALPHA_SHIFT:   24 - 15,
+    PREC_RED_SHIFT:     16 - 15,
+    NORMAL_MODE_AUTO:   0,
+    NORMAL_MODE_SHAPE:  1,
+    NORMAL_MODE_VERTEX: 2,
+    MAX_LIGHTS:         8
+};
+
+},{}],4:[function(require,module,exports){
+/**
+ * Processing.js default scope
+ */
+module.exports = function(options) {
+
+  // Building defaultScope. Changing of the prototype protects
+  // internal Processing code from the changes in defaultScope
+  function DefaultScope() {}
+  DefaultScope.prototype = options.PConstants;
+
+  var defaultScope = new DefaultScope();
+
+  // copy over all known Object types and helper objects
+  Object.keys(options).forEach(function(prop) {
+    defaultScope[prop] = options[prop];
+  });
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Class inheritance helper methods
+  ////////////////////////////////////////////////////////////////////////////
+
+  defaultScope.defineProperty = function(obj, name, desc) {
+    if("defineProperty" in Object) {
+      Object.defineProperty(obj, name, desc);
+    } else {
+      if (desc.hasOwnProperty("get")) {
+        obj.__defineGetter__(name, desc.get);
+      }
+      if (desc.hasOwnProperty("set")) {
+        obj.__defineSetter__(name, desc.set);
+      }
+    }
+  };
+
+  /**
+   * class overloading, part 1
+   */
+  function overloadBaseClassFunction(object, name, basefn) {
+    if (!object.hasOwnProperty(name) || typeof object[name] !== 'function') {
+      // object method is not a function or just inherited from Object.prototype
+      object[name] = basefn;
+      return;
+    }
+    var fn = object[name];
+    if ("$overloads" in fn) {
+      // the object method already overloaded (see defaultScope.addMethod)
+      // let's just change a fallback method
+      fn.$defaultOverload = basefn;
+      return;
+    }
+    if (!("$overloads" in basefn) && fn.length === basefn.length) {
+      // special case when we just overriding the method
+      return;
+    }
+    var overloads, defaultOverload;
+    if ("$overloads" in basefn) {
+      // let's inherit base class overloads to speed up things
+      overloads = basefn.$overloads.slice(0);
+      overloads[fn.length] = fn;
+      defaultOverload = basefn.$defaultOverload;
+    } else {
+      overloads = [];
+      overloads[basefn.length] = basefn;
+      overloads[fn.length] = fn;
+      defaultOverload = fn;
+    }
+    var hubfn = function() {
+      var fn = hubfn.$overloads[arguments.length] ||
+               ("$methodArgsIndex" in hubfn && arguments.length > hubfn.$methodArgsIndex ?
+               hubfn.$overloads[hubfn.$methodArgsIndex] : null) ||
+               hubfn.$defaultOverload;
+      return fn.apply(this, arguments);
+    };
+    hubfn.$overloads = overloads;
+    if ("$methodArgsIndex" in basefn) {
+      hubfn.$methodArgsIndex = basefn.$methodArgsIndex;
+    }
+    hubfn.$defaultOverload = defaultOverload;
+    hubfn.name = name;
+    object[name] = hubfn;
+  }
+
+  /**
+   * class overloading, part 2
+   */
+
+  function extendClass(subClass, baseClass) {
+    function extendGetterSetter(propertyName) {
+      defaultScope.defineProperty(subClass, propertyName, {
+        get: function() {
+          return baseClass[propertyName];
+        },
+        set: function(v) {
+          baseClass[propertyName]=v;
+        },
+        enumerable: true
       });
+    }
 
-  // set up the Processing syntax parser
-  Processing = source.setupParser(Processing, {
-    aFunctions: testHarness,
-    defaultScope: defaultScope
-  });
+    var properties = [];
+    for (var propertyName in baseClass) {
+      if (typeof baseClass[propertyName] === 'function') {
+        overloadBaseClassFunction(subClass, propertyName, baseClass[propertyName]);
+      } else if(propertyName.charAt(0) !== "$" && !(propertyName in subClass)) {
+        // Delaying the properties extension due to the IE9 bug (see #918).
+        properties.push(propertyName);
+      }
+    }
+    while (properties.length > 0) {
+      extendGetterSetter(properties.shift());
+    }
 
-  // finalise the Processing object
-  Processing = source.finalize(Processing, {
-    isDomPresent: false || Browser.isDomPresent,
-    window: Browser.window,
-    document: Browser.document,
-    noop: noop
-  });
+    subClass.$super = baseClass;
+  }
+
+  /**
+   * class overloading, part 3
+   */
+  defaultScope.extendClassChain = function(base) {
+    var path = [base];
+    for (var self = base.$upcast; self; self = self.$upcast) {
+      extendClass(self, base);
+      path.push(self);
+      base = self;
+    }
+    while (path.length > 0) {
+      path.pop().$self=base;
+    }
+  };
+
+  // static
+  defaultScope.extendStaticMembers = function(derived, base) {
+    extendClass(derived, base);
+  };
+
+  // interface
+  defaultScope.extendInterfaceMembers = function(derived, base) {
+    extendClass(derived, base);
+  };
+
+  /**
+   * Java methods and JavaScript functions differ enough that
+   * we need a special function to make sure it all links up
+   * as classical hierarchical class chains.
+   */
+  defaultScope.addMethod = function(object, name, fn, hasMethodArgs) {
+    var existingfn = object[name];
+    if (existingfn || hasMethodArgs) {
+      var args = fn.length;
+      // builds the overload methods table
+      if ("$overloads" in existingfn) {
+        existingfn.$overloads[args] = fn;
+      } else {
+        var hubfn = function() {
+          var fn = hubfn.$overloads[arguments.length] ||
+                   ("$methodArgsIndex" in hubfn && arguments.length > hubfn.$methodArgsIndex ?
+                   hubfn.$overloads[hubfn.$methodArgsIndex] : null) ||
+                   hubfn.$defaultOverload;
+          return fn.apply(this, arguments);
+        };
+        var overloads = [];
+        if (existingfn) {
+          overloads[existingfn.length] = existingfn;
+        }
+        overloads[args] = fn;
+        hubfn.$overloads = overloads;
+        hubfn.$defaultOverload = existingfn || fn;
+        if (hasMethodArgs) {
+          hubfn.$methodArgsIndex = args;
+        }
+        hubfn.name = name;
+        object[name] = hubfn;
+      }
+    } else {
+      object[name] = fn;
+    }
+  };
+
+  // internal helper function
+  function isNumericalJavaType(type) {
+    if (typeof type !== "string") {
+      return false;
+    }
+    return ["byte", "int", "char", "color", "float", "long", "double"].indexOf(type) !== -1;
+  }
+
+  /**
+   * Java's arrays are pre-filled when declared with
+   * an initial size, but no content. JS arrays are not.
+   */
+  defaultScope.createJavaArray = function(type, bounds) {
+    var result = null,
+        defaultValue = null;
+    if (typeof type === "string") {
+      if (type === "boolean") {
+        defaultValue = false;
+      } else if (isNumericalJavaType(type)) {
+        defaultValue = 0;
+      }
+    }
+    if (typeof bounds[0] === 'number') {
+      var itemsCount = 0 | bounds[0];
+      if (bounds.length <= 1) {
+        result = [];
+        result.length = itemsCount;
+        for (var i = 0; i < itemsCount; ++i) {
+          result[i] = defaultValue;
+        }
+      } else {
+        result = [];
+        var newBounds = bounds.slice(1);
+        for (var j = 0; j < itemsCount; ++j) {
+          result.push(defaultScope.createJavaArray(type, newBounds));
+        }
+      }
+    }
+    return result;
+  };
+
+  // screenWidth and screenHeight are shared by all instances.
+  // and return the width/height of the browser's viewport.
+  defaultScope.defineProperty(defaultScope, 'screenWidth',
+    { get: function() { return window.innerWidth; } });
+
+  defaultScope.defineProperty(defaultScope, 'screenHeight',
+    { get: function() { return window.innerHeight; } });
+
+  return defaultScope;
+};
+
+},{}],5:[function(require,module,exports){
+/**
+ * Finalise the Processing.js object.
+ */
+module.exports = function finalizeProcessing(Processing, options) {
+
+  // unpack options
+  var window = options.window,
+      document = options.document,
+      XMLHttpRequest = window.XMLHttpRequest,
+      noop = options.noop,
+      isDOMPresent = options.isDOMPresent,
+      version = options.version,
+      undef;
+
+  // versioning
+  Processing.version = (version ? version : "@DEV-VERSION@");
+
+  // Share lib space
+  Processing.lib = {};
+
+  /**
+   * External libraries can be added to the global Processing
+   * objects with the `registerLibrary` function.
+   */
+  Processing.registerLibrary = function(name, library) {
+    Processing.lib[name] = library;
+    if(library.hasOwnProperty("init")) {
+      library.init(defaultScope);
+    }
+  };
+
+  /**
+   * This is the object that acts as our version of PApplet.
+   * This can be called as Processing.Sketch() or as
+   * Processing.Sketch(function) in which case the function
+   * must be an already-compiled-to-JS sketch function.
+   */
+  Processing.Sketch = function(attachFunction) {
+    this.attachFunction = attachFunction;
+    this.options = {
+      pauseOnBlur: false,
+      globalKeyEvents: false
+    };
+
+    /* Optional Sketch event hooks:
+     *   onLoad       - parsing/preloading is done, before sketch starts
+     *   onSetup      - setup() has been called, before first draw()
+     *   onPause      - noLoop() has been called, pausing draw loop
+     *   onLoop       - loop() has been called, resuming draw loop
+     *   onFrameStart - draw() loop about to begin
+     *   onFrameEnd   - draw() loop finished
+     *   onExit       - exit() done being called
+     */
+    this.onLoad = noop;
+    this.onSetup = noop;
+    this.onPause = noop;
+    this.onLoop = noop;
+    this.onFrameStart = noop;
+    this.onFrameEnd = noop;
+    this.onExit = noop;
+
+    this.params = {};
+    this.imageCache = {
+      pending: 0,
+      images: {},
+      // Opera requires special administration for preloading
+      operaCache: {},
+      // Specify an optional img arg if the image is already loaded in the DOM,
+      // otherwise href will get loaded.
+      add: function(href, img) {
+        // Prevent muliple loads for an image, in case it gets
+        // preloaded more than once, or is added via JS and then preloaded.
+        if (this.images[href]) {
+          return;
+        }
+
+        if (!isDOMPresent) {
+          this.images[href] = null;
+        }
+
+        // No image in the DOM, kick-off a background load
+        if (!img) {
+          img = new Image();
+          img.onload = (function(owner) {
+            return function() {
+              owner.pending--;
+            };
+          }(this));
+          this.pending++;
+          img.src = href;
+        }
+
+        this.images[href] = img;
+
+        // Opera will not load images until they are inserted into the DOM.
+        if (window.opera) {
+          var div = document.createElement("div");
+          div.appendChild(img);
+          // we can't use "display: none", since that makes it invisible, and thus not load
+          div.style.position = "absolute";
+          div.style.opacity = 0;
+          div.style.width = "1px";
+          div.style.height= "1px";
+          if (!this.operaCache[href]) {
+            document.body.appendChild(div);
+            this.operaCache[href] = div;
+          }
+        }
+      }
+    };
+
+    this.sourceCode = undefined;
+    this.attach = function(processing) {
+      // either attachFunction or sourceCode must be present on attach
+      if(typeof this.attachFunction === "function") {
+        this.attachFunction(processing);
+      } else if(this.sourceCode) {
+        var func = ((new Function("return (" + this.sourceCode + ");"))());
+        func(processing);
+        this.attachFunction = func;
+      } else {
+        throw "Unable to attach sketch to the processing instance";
+      }
+    };
+
+    this.toString = function() {
+      var i;
+      var code = "((function(Sketch) {\n";
+      code += "var sketch = new Sketch(\n" + this.sourceCode + ");\n";
+      for(i in this.options) {
+        if(this.options.hasOwnProperty(i)) {
+          var value = this.options[i];
+          code += "sketch.options." + i + " = " +
+            (typeof value === 'string' ? '\"' + value + '\"' : "" + value) + ";\n";
+        }
+      }
+      for(i in this.imageCache) {
+        if(this.options.hasOwnProperty(i)) {
+          code += "sketch.imageCache.add(\"" + i + "\");\n";
+        }
+      }
+      // TODO serialize fonts
+      code += "return sketch;\n})(Processing.Sketch))";
+      return code;
+    };
+  };
+
+  /**
+   * aggregate all source code into a single file, then rewrite that
+   * source and bind to canvas via new Processing(canvas, sourcestring).
+   * @param {CANVAS} canvas The html canvas element to bind to
+   * @param {String[]} source The array of files that must be loaded
+   */
+  var loadSketchFromSources = Processing.loadSketchFromSources = function(canvas, sources) {
+    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
+
+    function ajaxAsync(url, callback) {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          var error;
+          if (xhr.status !== 200 && xhr.status !== 0) {
+            error = "Invalid XHR status " + xhr.status;
+          } else if (xhr.responseText === "") {
+            // Give a hint when loading fails due to same-origin issues on file:/// urls
+            if ( ("withCredentials" in new XMLHttpRequest()) &&
+                 (new XMLHttpRequest()).withCredentials === false &&
+                 window.location.protocol === "file:" ) {
+              error = "XMLHttpRequest failure, possibly due to a same-origin policy violation. You can try loading this page in another browser, or load it from http://localhost using a local webserver. See the Processing.js README for a more detailed explanation of this problem and solutions.";
+            } else {
+              error = "File is empty.";
+            }
+          }
+
+          callback(xhr.responseText, error);
+        }
+      };
+      xhr.open("GET", url, true);
+      if (xhr.overrideMimeType) {
+        xhr.overrideMimeType("application/json");
+      }
+      xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
+      xhr.send(null);
+    }
+
+    function loadBlock(index, filename) {
+      function callback(block, error) {
+        code[index] = block;
+        ++loaded;
+        if (error) {
+          errors.push(filename + " ==> " + error);
+        }
+        if (loaded === sourcesCount) {
+          if (errors.length === 0) {
+            try {
+              return new Processing(canvas, code.join("\n"));
+            } catch(e) {
+              console.log("Processing.js: Unable to execute pjs sketch.");
+              throw e;
+            }
+          } else {
+            throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
+          }
+        }
+      }
+      if (filename.charAt(0) === '#') {
+        // trying to get script from the element
+        var scriptElement = document.getElementById(filename.substring(1));
+        if (scriptElement) {
+          callback(scriptElement.text || scriptElement.textContent);
+        } else {
+          callback("", "Unable to load pjs sketch: element with id \'" + filename.substring(1) + "\' was not found");
+        }
+        return;
+      }
+
+      ajaxAsync(filename, callback);
+    }
+
+    for (var i = 0; i < sourcesCount; ++i) {
+      loadBlock(i, sources[i]);
+    }
+  };
+
+  /**
+   * Automatic initialization function.
+   */
+  var init = function() {
+    document.removeEventListener('DOMContentLoaded', init, false);
+
+    // before running through init, clear the instances list, to prevent
+    // sketch duplication when page content is dynamically swapped without
+    // swapping out processing.js
+    processingInstances = [];
+    Processing.instances = processingInstances;
+
+    var canvas = document.getElementsByTagName('canvas'),
+      filenames;
+
+    for (var i = 0, l = canvas.length; i < l; i++) {
+      // datasrc and data-src are deprecated.
+      var processingSources = canvas[i].getAttribute('data-processing-sources');
+      if (processingSources === null) {
+        // Temporary fallback for datasrc and data-src
+        processingSources = canvas[i].getAttribute('data-src');
+        if (processingSources === null) {
+          processingSources = canvas[i].getAttribute('datasrc');
+        }
+      }
+      if (processingSources) {
+        filenames = processingSources.split(/\s+/g);
+        for (var j = 0; j < filenames.length;) {
+          if (filenames[j]) {
+            j++;
+          } else {
+            filenames.splice(j, 1);
+          }
+        }
+        loadSketchFromSources(canvas[i], filenames);
+      }
+    }
+
+    // also process all <script>-indicated sketches, if there are any
+    var s, last, source, instance,
+        nodelist = document.getElementsByTagName('script'),
+        scripts=[];
+
+    // snapshot the DOM, as the nodelist is only a DOM view, and is
+    // updated instantly when a script element is added or removed.
+    for (s = nodelist.length - 1; s >= 0; s--) {
+      scripts.push(nodelist[s]);
+    }
+
+    // iterate over all script elements to see if they contain Processing code
+    for (s = 0, last = scripts.length; s < last; s++) {
+      var script = scripts[s];
+      if (!script.getAttribute) {
+        continue;
+      }
+
+      var type = script.getAttribute("type");
+      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
+        var target = script.getAttribute("data-processing-target");
+        canvas = undef;
+        if (target) {
+          canvas = document.getElementById(target);
+        } else {
+          var nextSibling = script.nextSibling;
+          while (nextSibling && nextSibling.nodeType !== 1) {
+            nextSibling = nextSibling.nextSibling;
+          }
+          if (nextSibling && nextSibling.nodeName.toLowerCase() === "canvas") {
+            canvas = nextSibling;
+          }
+        }
+
+        if (canvas) {
+          if (script.getAttribute("src")) {
+            filenames = script.getAttribute("src").split(/\s+/);
+            loadSketchFromSources(canvas, filenames);
+            continue;
+          }
+          source =  script.textContent || script.text;
+          instance = new Processing(canvas, source);
+        }
+      }
+    }
+  };
+
+  /**
+   * automatic loading of all sketches on the page
+   */
+  document.addEventListener('DOMContentLoaded', init, false);
+
+  /**
+   * Make Processing run through init after already having
+   * been set up for a page. This function exists mostly for pages
+   * that swap content in/out without reloading a page.
+   */
+  Processing.reload = function() {
+    if (processingInstances.length > 0) {
+      // unload sketches
+      for (var i = processingInstances.length - 1; i >= 0; i--) {
+        if (processingInstances[i]) {
+          processingInstances[i].exit();
+        }
+      }
+    }
+    // rerun init() to scan the DOM for sketches
+    init();
+  };
+
+  /**
+   * Disable the automatic loading of all sketches on the page.
+   * This will work as long as it's issued before DOMContentLoaded.
+   */
+  Processing.disableInit = function() {
+    document.removeEventListener('DOMContentLoaded', init, false);
+  };
 
   // done.
   return Processing;
 };
-
-},{"./P5Functions/Math.js":3,"./Helpers/virtEquals":4,"./Helpers/virtHashCode":5,"./Objects/ArrayList":6,"./Objects/HashMap":7,"./Helpers/PConstants":8,"./Objects/PFont":9,"./Objects/Char":10,"./Objects/PVector":11,"./Objects/XMLElement":12,"./Objects/XMLAttribute":13,"./Objects/PMatrix2D":14,"./Objects/PMatrix3D":15,"./Objects/PShape":16,"./P5Functions/commonFunctions":17,"./Objects/webcolors":18,"./Objects/PShapeSVG":19,"./Helpers/defaultScope":20,"./Processing":21,"./Parser/Parser":22,"./Helpers/finalizeProcessing":23,"./P5Functions/JavaProxyFunctions":24,"./P5Functions/touchmouse":25,"./Helpers/ObjectIterator":26}],3:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /**
- * For many "math" functions, we can delegate
- * to the Math object. For others, we can't.
+ * Returns Java equals() result for two objects. If the first object
+ * has the "equals" function, it preforms the call of this function.
+ * Otherwise the method uses the JavaScript === operator.
+ *
+ * @param {Object} obj          The first object.
+ * @param {Object} other        The second object.
+ *
+ * @returns {boolean}           true if the objects are equal.
  */
-module.exports = function withMath(p, undef) {
-  var currentRandom = Math.random;
-
-  /**
-  * Calculates the absolute value (magnitude) of a number. The absolute value of a number is always positive.
-  *
-  * @param {int|float} value   int or float
-  *
-  * @returns {int|float}
-  */
-  p.abs = Math.abs;
-
-  /**
-  * Calculates the closest int value that is greater than or equal to the value of the parameter.
-  * For example, ceil(9.03) returns the value 10.
-  *
-  * @param {float} value   float
-  *
-  * @returns {int}
-  *
-  * @see floor
-  * @see round
-  */
-  p.ceil = Math.ceil;
-
-  /**
-  * Returns Euler's number e (2.71828...) raised to the power of the value parameter.
-  *
-  * @param {int|float} value   int or float: the exponent to raise e to
-  *
-  * @returns {float}
-  */
-  p.exp = Math.exp;
-
-  /**
-  * Calculates the closest int value that is less than or equal to the value of the parameter.
-  *
-  * @param {int|float} value        the value to floor
-  *
-  * @returns {int|float}
-  *
-  * @see ceil
-  * @see round
-  */
-  p.floor = Math.floor;
-
-  /**
-  * Calculates the natural logarithm (the base-e logarithm) of a number. This function
-  * expects the values greater than 0.0.
-  *
-  * @param {int|float} value        int or float: number must be greater then 0.0
-  *
-  * @returns {float}
-  */
-  p.log = Math.log;
-
-  /**
-  * Facilitates exponential expressions. The pow() function is an efficient way of
-  * multiplying numbers by themselves (or their reciprocal) in large quantities.
-  * For example, pow(3, 5) is equivalent to the expression 3*3*3*3*3 and pow(3, -5)
-  * is equivalent to 1 / 3*3*3*3*3.
-  *
-  * @param {int|float} num        base of the exponential expression
-  * @param {int|float} exponent   power of which to raise the base
-  *
-  * @returns {float}
-  *
-  * @see sqrt
-  */
-  p.pow = Math.pow;
-
-  /**
-  * Calculates the integer closest to the value parameter. For example, round(9.2) returns the value 9.
-  *
-  * @param {float} value        number to round
-  *
-  * @returns {int}
-  *
-  * @see floor
-  * @see ceil
-  */
-  p.round = Math.round;
-  /**
-  * Calculates the square root of a number. The square root of a number is always positive,
-  * even though there may be a valid negative root. The square root s of number a is such
-  * that s*s = a. It is the opposite of squaring.
-  *
-  * @param {float} value        int or float, non negative
-  *
-  * @returns {float}
-  *
-  * @see pow
-  * @see sq
-  */
-
-  p.sqrt = Math.sqrt;
-
-  // Trigonometry
-  /**
-  * The inverse of cos(), returns the arc cosine of a value. This function expects the
-  * values in the range of -1 to 1 and values are returned in the range 0 to PI (3.1415927).
-  *
-  * @param {float} value        the value whose arc cosine is to be returned
-  *
-  * @returns {float}
-  *
-  * @see cos
-  * @see asin
-  * @see atan
-  */
-  p.acos = Math.acos;
-
-  /**
-  * The inverse of sin(), returns the arc sine of a value. This function expects the values
-  * in the range of -1 to 1 and values are returned in the range -PI/2 to PI/2.
-  *
-  * @param {float} value        the value whose arc sine is to be returned
-  *
-  * @returns {float}
-  *
-  * @see sin
-  * @see acos
-  * @see atan
-  */
-  p.asin = Math.asin;
-
-  /**
-  * The inverse of tan(), returns the arc tangent of a value. This function expects the values
-  * in the range of -Infinity to Infinity (exclusive) and values are returned in the range -PI/2 to PI/2 .
-  *
-  * @param {float} value        -Infinity to Infinity (exclusive)
-  *
-  * @returns {float}
-  *
-  * @see tan
-  * @see asin
-  * @see acos
-  */
-  p.atan = Math.atan;
-
-  /**
-  * Calculates the angle (in radians) from a specified point to the coordinate origin as measured from
-  * the positive x-axis. Values are returned as a float in the range from PI to -PI. The atan2() function
-  * is most often used for orienting geometry to the position of the cursor. Note: The y-coordinate of the
-  * point is the first parameter and the x-coordinate is the second due the the structure of calculating the tangent.
-  *
-  * @param {float} y        y-coordinate of the point
-  * @param {float} x        x-coordinate of the point
-  *
-  * @returns {float}
-  *
-  * @see tan
-  */
-  p.atan2 = Math.atan2;
-
-  /**
-  * Calculates the cosine of an angle. This function expects the values of the angle parameter to be provided
-  * in radians (values from 0 to PI*2). Values are returned in the range -1 to 1.
-  *
-  * @param {float} value        an angle in radians
-  *
-  * @returns {float}
-  *
-  * @see tan
-  * @see sin
-  */
-  p.cos = Math.cos;
-
-  /**
-  * Calculates the sine of an angle. This function expects the values of the angle parameter to be provided in
-  * radians (values from 0 to 6.28). Values are returned in the range -1 to 1.
-  *
-  * @param {float} value        an angle in radians
-  *
-  * @returns {float}
-  *
-  * @see cos
-  * @see radians
-  */
-  p.sin = Math.sin;
-
-  /**
-  * Calculates the ratio of the sine and cosine of an angle. This function expects the values of the angle
-  * parameter to be provided in radians (values from 0 to PI*2). Values are returned in the range infinity to -infinity.
-  *
-  * @param {float} value        an angle in radians
-  *
-  * @returns {float}
-  *
-  * @see cos
-  * @see sin
-  * @see radians
-  */
-  p.tan = Math.tan;
-
-  /**
-  * Constrains a value to not exceed a maximum and minimum value.
-  *
-  * @param {int|float} value   the value to constrain
-  * @param {int|float} value   minimum limit
-  * @param {int|float} value   maximum limit
-  *
-  * @returns {int|float}
-  *
-  * @see max
-  * @see min
-  */
-  p.constrain = function(aNumber, aMin, aMax) {
-    return aNumber > aMax ? aMax : aNumber < aMin ? aMin : aNumber;
-  };
-
-  /**
-  * Calculates the distance between two points.
-  *
-  * @param {int|float} x1     int or float: x-coordinate of the first point
-  * @param {int|float} y1     int or float: y-coordinate of the first point
-  * @param {int|float} z1     int or float: z-coordinate of the first point
-  * @param {int|float} x2     int or float: x-coordinate of the second point
-  * @param {int|float} y2     int or float: y-coordinate of the second point
-  * @param {int|float} z2     int or float: z-coordinate of the second point
-  *
-  * @returns {float}
-  */
-  p.dist = function() {
-    var dx, dy, dz;
-    if (arguments.length === 4) {
-      dx = arguments[0] - arguments[2];
-      dy = arguments[1] - arguments[3];
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-    if (arguments.length === 6) {
-      dx = arguments[0] - arguments[3];
-      dy = arguments[1] - arguments[4];
-      dz = arguments[2] - arguments[5];
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    }
-  };
-
-  /**
-  * Calculates a number between two numbers at a specific increment. The amt  parameter is the
-  * amount to interpolate between the two values where 0.0 equal to the first point, 0.1 is very
-  * near the first point, 0.5 is half-way in between, etc. The lerp function is convenient for
-  * creating motion along a straight path and for drawing dotted lines.
-  *
-  * @param {int|float} value1       float or int: first value
-  * @param {int|float} value2       float or int: second value
-  * @param {int|float} amt          float: between 0.0 and 1.0
-  *
-  * @returns {float}
-  *
-  * @see curvePoint
-  * @see bezierPoint
-  */
-  p.lerp = function(value1, value2, amt) {
-    return ((value2 - value1) * amt) + value1;
-  };
-
-  /**
-  * Calculates the magnitude (or length) of a vector. A vector is a direction in space commonly
-  * used in computer graphics and linear algebra. Because it has no "start" position, the magnitude
-  * of a vector can be thought of as the distance from coordinate (0,0) to its (x,y) value.
-  * Therefore, mag() is a shortcut for writing "dist(0, 0, x, y)".
-  *
-  * @param {int|float} a       float or int: first value
-  * @param {int|float} b       float or int: second value
-  * @param {int|float} c       float or int: third value
-  *
-  * @returns {float}
-  *
-  * @see dist
-  */
-  p.mag = function(a, b, c) {
-    if (c) {
-      return Math.sqrt(a * a + b * b + c * c);
-    }
-
-    return Math.sqrt(a * a + b * b);
-  };
-
-  /**
-  * Re-maps a number from one range to another. In the example above, the number '25' is converted from
-  * a value in the range 0..100 into a value that ranges from the left edge (0) to the right edge (width) of the screen.
-  * Numbers outside the range are not clamped to 0 and 1, because out-of-range values are often intentional and useful.
-  *
-  * @param {float} value        The incoming value to be converted
-  * @param {float} istart       Lower bound of the value's current range
-  * @param {float} istop        Upper bound of the value's current range
-  * @param {float} ostart       Lower bound of the value's target range
-  * @param {float} ostop        Upper bound of the value's target range
-  *
-  * @returns {float}
-  *
-  * @see norm
-  * @see lerp
-  */
-  p.map = function(value, istart, istop, ostart, ostop) {
-    return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
-  };
-
-  /**
-  * Determines the largest value in a sequence of numbers.
-  *
-  * @param {int|float} value1         int or float
-  * @param {int|float} value2         int or float
-  * @param {int|float} value3         int or float
-  * @param {int|float} array          int or float array
-  *
-  * @returns {int|float}
-  *
-  * @see min
-  */
-  p.max = function() {
-    if (arguments.length === 2) {
-      return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
-    }
-    var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-    if (! ("length" in numbers && numbers.length > 0)) {
-      throw "Non-empty array is expected";
-    }
-    var max = numbers[0],
-      count = numbers.length;
-    for (var i = 1; i < count; ++i) {
-      if (max < numbers[i]) {
-        max = numbers[i];
-      }
-    }
-    return max;
-  };
-
-  /**
-  * Determines the smallest value in a sequence of numbers.
-  *
-  * @param {int|float} value1         int or float
-  * @param {int|float} value2         int or float
-  * @param {int|float} value3         int or float
-  * @param {int|float} array          int or float array
-  *
-  * @returns {int|float}
-  *
-  * @see max
-  */
-  p.min = function() {
-    if (arguments.length === 2) {
-      return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
-    }
-    var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-    if (! ("length" in numbers && numbers.length > 0)) {
-      throw "Non-empty array is expected";
-    }
-    var min = numbers[0],
-      count = numbers.length;
-    for (var i = 1; i < count; ++i) {
-      if (min > numbers[i]) {
-        min = numbers[i];
-      }
-    }
-    return min;
-  };
-
-  /**
-  * Normalizes a number from another range into a value between 0 and 1.
-  * Identical to map(value, low, high, 0, 1);
-  * Numbers outside the range are not clamped to 0 and 1, because out-of-range
-  * values are often intentional and useful.
-  *
-  * @param {float} aNumber    The incoming value to be converted
-  * @param {float} low        Lower bound of the value's current range
-  * @param {float} high       Upper bound of the value's current range
-  *
-  * @returns {float}
-  *
-  * @see map
-  * @see lerp
-  */
-  p.norm = function(aNumber, low, high) {
-    return (aNumber - low) / (high - low);
-  };
-
-  /**
-  * Squares a number (multiplies a number by itself). The result is always a positive number,
-  * as multiplying two negative numbers always yields a positive result. For example, -1 * -1 = 1.
-  *
-  * @param {float} value        int or float
-  *
-  * @returns {float}
-  *
-  * @see sqrt
-  */
-  p.sq = function(aNumber) {
-    return aNumber * aNumber;
-  };
-
-  /**
-  * Converts a radian measurement to its corresponding value in degrees. Radians and degrees are two ways of
-  * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
-  * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
-  *
-  * @param {int|float} value        an angle in radians
-  *
-  * @returns {float}
-  *
-  * @see radians
-  */
-  p.degrees = function(aAngle) {
-    return (aAngle * 180) / Math.PI;
-  };
-
-  /**
-  * Generates random numbers. Each time the random() function is called, it returns an unexpected value within
-  * the specified range. If one parameter is passed to the function it will return a float between zero and the
-  * value of the high parameter. The function call random(5) returns values between 0 and 5 (starting at zero,
-  * up to but not including 5). If two parameters are passed, it will return a float with a value between the
-  * parameters. The function call random(-5, 10.2) returns values starting at -5 up to (but not including) 10.2.
-  * To convert a floating-point random number to an integer, use the int() function.
-  *
-  * @param {int|float} value1         if one parameter is used, the top end to random from, if two params the low end
-  * @param {int|float} value2         the top end of the random range
-  *
-  * @returns {float}
-  *
-  * @see randomSeed
-  * @see noise
-  */
-  p.random = function() {
-    if(arguments.length === 0) {
-      return currentRandom();
-    }
-    if(arguments.length === 1) {
-      return currentRandom() * arguments[0];
-    }
-    var aMin = arguments[0], aMax = arguments[1];
-    return currentRandom() * (aMax - aMin) + aMin;
-  };
-
-  // Pseudo-random generator
-  function Marsaglia(i1, i2) {
-    // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
-    var z=i1 || 362436069, w= i2 || 521288629;
-    var nextInt = function() {
-      z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
-      w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
-      return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
-    };
-
-    this.nextDouble = function() {
-      var i = nextInt() / 4294967296;
-      return i < 0 ? 1 + i : i;
-    };
-    this.nextInt = nextInt;
+module.exports = function virtEquals(obj, other) {
+  if (obj === null || other === null) {
+    return (obj === null) && (other === null);
   }
-  Marsaglia.createRandomized = function() {
-    var now = new Date();
-    return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
-  };
-
-  /**
-  * Sets the seed value for random(). By default, random() produces different results each time the
-  * program is run. Set the value parameter to a constant to return the same pseudo-random numbers
-  * each time the software is run.
-  *
-  * @param {int|float} seed         int
-  *
-  * @see random
-  * @see noise
-  * @see noiseSeed
-  */
-  p.randomSeed = function(seed) {
-    currentRandom = (new Marsaglia(seed)).nextDouble;
-  };
-
-  // Random
-  // We have two random()'s in the code... what does this do ? and which one is current ?
-  p.Random = function(seed) {
-    var haveNextNextGaussian = false, nextNextGaussian, random;
-
-    this.nextGaussian = function() {
-      if (haveNextNextGaussian) {
-        haveNextNextGaussian = false;
-        return nextNextGaussian;
-      }
-      var v1, v2, s;
-      do {
-        v1 = 2 * random() - 1; // between -1.0 and 1.0
-        v2 = 2 * random() - 1; // between -1.0 and 1.0
-        s = v1 * v1 + v2 * v2;
-      }
-      while (s >= 1 || s === 0);
-
-      var multiplier = Math.sqrt(-2 * Math.log(s) / s);
-      nextNextGaussian = v2 * multiplier;
-      haveNextNextGaussian = true;
-
-      return v1 * multiplier;
-    };
-
-    // by default use standard random, otherwise seeded
-    random = (seed === undef) ? Math.random : (new Marsaglia(seed)).nextDouble;
-  };
-
-  // Noise functions and helpers
-  function PerlinNoise(seed) {
-    var rnd = seed !== undef ? new Marsaglia(seed) : Marsaglia.createRandomized();
-    var i, j;
-    // http://www.noisemachine.com/talk1/17b.html
-    // http://mrl.nyu.edu/~perlin/noise/
-    // generate permutation
-    var perm = new Uint8Array(512);
-    for(i=0;i<256;++i) { perm[i] = i; }
-    for(i=0;i<256;++i) { var t = perm[j = rnd.nextInt() & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
-    // copy to avoid taking mod in perm[0];
-    for(i=0;i<256;++i) { perm[i + 256] = perm[i]; }
-
-    function grad3d(i,x,y,z) {
-      var h = i & 15; // convert into 12 gradient directions
-      var u = h<8 ? x : y,
-          v = h<4 ? y : h===12||h===14 ? x : z;
-      return ((h&1) === 0 ? u : -u) + ((h&2) === 0 ? v : -v);
-    }
-
-    function grad2d(i,x,y) {
-      var v = (i & 1) === 0 ? x : y;
-      return (i&2) === 0 ? -v : v;
-    }
-
-    function grad1d(i,x) {
-      return (i&1) === 0 ? -x : x;
-    }
-
-    function lerp(t,a,b) { return a + t * (b - a); }
-
-    this.noise3d = function(x, y, z) {
-      var X = Math.floor(x)&255, Y = Math.floor(y)&255, Z = Math.floor(z)&255;
-      x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
-      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y, fz = (3-2*z)*z*z;
-      var p0 = perm[X]+Y, p00 = perm[p0] + Z, p01 = perm[p0 + 1] + Z,
-          p1 = perm[X + 1] + Y, p10 = perm[p1] + Z, p11 = perm[p1 + 1] + Z;
-      return lerp(fz,
-        lerp(fy, lerp(fx, grad3d(perm[p00], x, y, z), grad3d(perm[p10], x-1, y, z)),
-                 lerp(fx, grad3d(perm[p01], x, y-1, z), grad3d(perm[p11], x-1, y-1,z))),
-        lerp(fy, lerp(fx, grad3d(perm[p00 + 1], x, y, z-1), grad3d(perm[p10 + 1], x-1, y, z-1)),
-                 lerp(fx, grad3d(perm[p01 + 1], x, y-1, z-1), grad3d(perm[p11 + 1], x-1, y-1,z-1))));
-    };
-
-    this.noise2d = function(x, y) {
-      var X = Math.floor(x)&255, Y = Math.floor(y)&255;
-      x -= Math.floor(x); y -= Math.floor(y);
-      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y;
-      var p0 = perm[X]+Y, p1 = perm[X + 1] + Y;
-      return lerp(fy,
-        lerp(fx, grad2d(perm[p0], x, y), grad2d(perm[p1], x-1, y)),
-        lerp(fx, grad2d(perm[p0 + 1], x, y-1), grad2d(perm[p1 + 1], x-1, y-1)));
-    };
-
-    this.noise1d = function(x) {
-      var X = Math.floor(x)&255;
-      x -= Math.floor(x);
-      var fx = (3-2*x)*x*x;
-      return lerp(fx, grad1d(perm[X], x), grad1d(perm[X+1], x-1));
-    };
+  if (typeof (obj) === "string") {
+    return obj === other;
   }
-
-  // processing defaults
-  var noiseProfile = { generator: undef, octaves: 4, fallout: 0.5, seed: undef};
-
-  /**
-  * Returns the Perlin noise value at specified coordinates. Perlin noise is a random sequence
-  * generator producing a more natural ordered, harmonic succession of numbers compared to the
-  * standard random() function. It was invented by Ken Perlin in the 1980s and been used since
-  * in graphical applications to produce procedural textures, natural motion, shapes, terrains etc.
-  * The main difference to the random() function is that Perlin noise is defined in an infinite
-  * n-dimensional space where each pair of coordinates corresponds to a fixed semi-random value
-  * (fixed only for the lifespan of the program). The resulting value will always be between 0.0
-  * and 1.0. Processing can compute 1D, 2D and 3D noise, depending on the number of coordinates
-  * given. The noise value can be animated by moving through the noise space as demonstrated in
-  * the example above. The 2nd and 3rd dimension can also be interpreted as time.
-  * The actual noise is structured similar to an audio signal, in respect to the function's use
-  * of frequencies. Similar to the concept of harmonics in physics, perlin noise is computed over
-  * several octaves which are added together for the final result.
-  * Another way to adjust the character of the resulting sequence is the scale of the input
-  * coordinates. As the function works within an infinite space the value of the coordinates
-  * doesn't matter as such, only the distance between successive coordinates does (eg. when using
-  * noise() within a loop). As a general rule the smaller the difference between coordinates, the
-  * smoother the resulting noise sequence will be. Steps of 0.005-0.03 work best for most applications,
-  * but this will differ depending on use.
-  *
-  * @param {float} x          x coordinate in noise space
-  * @param {float} y          y coordinate in noise space
-  * @param {float} z          z coordinate in noise space
-  *
-  * @returns {float}
-  *
-  * @see random
-  * @see noiseDetail
-  */
-  p.noise = function(x, y, z) {
-    if(noiseProfile.generator === undef) {
-      // caching
-      noiseProfile.generator = new PerlinNoise(noiseProfile.seed);
-    }
-    var generator = noiseProfile.generator;
-    var effect = 1, k = 1, sum = 0;
-    for(var i=0; i<noiseProfile.octaves; ++i) {
-      effect *= noiseProfile.fallout;
-      switch (arguments.length) {
-      case 1:
-        sum += effect * (1 + generator.noise1d(k*x))/2; break;
-      case 2:
-        sum += effect * (1 + generator.noise2d(k*x, k*y))/2; break;
-      case 3:
-        sum += effect * (1 + generator.noise3d(k*x, k*y, k*z))/2; break;
-      }
-      k *= 2;
-    }
-    return sum;
-  };
-
-  /**
-  * Adjusts the character and level of detail produced by the Perlin noise function.
-  * Similar to harmonics in physics, noise is computed over several octaves. Lower octaves
-  * contribute more to the output signal and as such define the overal intensity of the noise,
-  * whereas higher octaves create finer grained details in the noise sequence. By default,
-  * noise is computed over 4 octaves with each octave contributing exactly half than its
-  * predecessor, starting at 50% strength for the 1st octave. This falloff amount can be
-  * changed by adding an additional function parameter. Eg. a falloff factor of 0.75 means
-  * each octave will now have 75% impact (25% less) of the previous lower octave. Any value
-  * between 0.0 and 1.0 is valid, however note that values greater than 0.5 might result in
-  * greater than 1.0 values returned by noise(). By changing these parameters, the signal
-  * created by the noise() function can be adapted to fit very specific needs and characteristics.
-  *
-  * @param {int} octaves          number of octaves to be used by the noise() function
-  * @param {float} falloff        falloff factor for each octave
-  *
-  * @see noise
-  */
-  p.noiseDetail = function(octaves, fallout) {
-    noiseProfile.octaves = octaves;
-    if(fallout !== undef) {
-      noiseProfile.fallout = fallout;
-    }
-  };
-
-  /**
-  * Sets the seed value for noise(). By default, noise() produces different results each
-  * time the program is run. Set the value parameter to a constant to return the same
-  * pseudo-random numbers each time the software is run.
-  *
-  * @param {int} seed         int
-  *
-  * @returns {float}
-  *
-  * @see random
-  * @see radomSeed
-  * @see noise
-  * @see noiseDetail
-  */
-  p.noiseSeed = function(seed) {
-    noiseProfile.seed = seed;
-    noiseProfile.generator = undef;
-  };
+  if (typeof(obj) !== "object") {
+    return obj === other;
+  }
+  if (obj.equals instanceof Function) {
+    return obj.equals(other);
+  }
+  return obj === other;
 };
 
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * Returns Java hashCode() result for the object. If the object has the "hashCode" function,
  * it preforms the call of this function. Otherwise it uses/creates the "$id" property,
@@ -849,7 +985,7 @@ module.exports = function virtHashCode(obj, undef) {
   return obj.$id;
 };
 
-},{}],6:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /**
  * An ArrayList stores a variable number of objects.
  *
@@ -1127,34 +1263,34 @@ module.exports = function(options) {
   return ArrayList;
 };
 
-},{}],4:[function(require,module,exports){
-/**
- * Returns Java equals() result for two objects. If the first object
- * has the "equals" function, it preforms the call of this function.
- * Otherwise the method uses the JavaScript === operator.
- *
- * @param {Object} obj          The first object.
- * @param {Object} other        The second object.
- *
- * @returns {boolean}           true if the objects are equal.
- */
-module.exports = function virtEquals(obj, other) {
-  if (obj === null || other === null) {
-    return (obj === null) && (other === null);
-  }
-  if (typeof (obj) === "string") {
-    return obj === other;
-  }
-  if (typeof(obj) !== "object") {
-    return obj === other;
-  }
-  if (obj.equals instanceof Function) {
-    return obj.equals(other);
-  }
-  return obj === other;
-};
+},{}],9:[function(require,module,exports){
+module.exports = (function(charMap, undef) {
 
-},{}],7:[function(require,module,exports){
+  var Char = function(chr) {
+    if (typeof chr === 'string' && chr.length === 1) {
+      this.code = chr.charCodeAt(0);
+    } else if (typeof chr === 'number') {
+      this.code = chr;
+    } else if (chr instanceof Char) {
+      this.code = chr;
+    } else {
+      this.code = NaN;
+    }
+    return (charMap[this.code] === undef) ? charMap[this.code] = this : charMap[this.code];
+  };
+
+  Char.prototype.toString = function() {
+    return String.fromCharCode(this.code);
+  };
+
+  Char.prototype.valueOf = function() {
+    return this.code;
+  };
+
+  return Char;
+}({}));
+
+},{}],10:[function(require,module,exports){
 /**
 * A HashMap stores a collection of objects, each referenced by a key. This is similar to an Array, only
 * instead of accessing elements with a numeric index, a String  is used. (If you are familiar with
@@ -1567,305 +1703,7 @@ module.exports = function(options) {
   return HashMap;
 };
 
-},{}],8:[function(require,module,exports){
-/**
- * Processing.js environment constants
- */
-module.exports = {
-    X: 0,
-    Y: 1,
-    Z: 2,
-
-    R: 3,
-    G: 4,
-    B: 5,
-    A: 6,
-
-    U: 7,
-    V: 8,
-
-    NX: 9,
-    NY: 10,
-    NZ: 11,
-
-    EDGE: 12,
-
-    // Stroke
-    SR: 13,
-    SG: 14,
-    SB: 15,
-    SA: 16,
-
-    SW: 17,
-
-    // Transformations (2D and 3D)
-    TX: 18,
-    TY: 19,
-    TZ: 20,
-
-    VX: 21,
-    VY: 22,
-    VZ: 23,
-    VW: 24,
-
-    // Material properties
-    AR: 25,
-    AG: 26,
-    AB: 27,
-
-    DR: 3,
-    DG: 4,
-    DB: 5,
-    DA: 6,
-
-    SPR: 28,
-    SPG: 29,
-    SPB: 30,
-
-    SHINE: 31,
-
-    ER: 32,
-    EG: 33,
-    EB: 34,
-
-    BEEN_LIT: 35,
-
-    VERTEX_FIELD_COUNT: 36,
-
-    // Renderers
-    P2D:    1,
-    JAVA2D: 1,
-    WEBGL:  2,
-    P3D:    2,
-    OPENGL: 2,
-    PDF:    0,
-    DXF:    0,
-
-    // Platform IDs
-    OTHER:   0,
-    WINDOWS: 1,
-    MAXOSX:  2,
-    LINUX:   3,
-
-    EPSILON: 0.0001,
-
-    MAX_FLOAT:  3.4028235e+38,
-    MIN_FLOAT: -3.4028235e+38,
-    MAX_INT:    2147483647,
-    MIN_INT:   -2147483648,
-
-    PI:         Math.PI,
-    TWO_PI:     2 * Math.PI,
-    HALF_PI:    Math.PI / 2,
-    THIRD_PI:   Math.PI / 3,
-    QUARTER_PI: Math.PI / 4,
-
-    DEG_TO_RAD: Math.PI / 180,
-    RAD_TO_DEG: 180 / Math.PI,
-
-    WHITESPACE: " \t\n\r\f\u00A0",
-
-    // Color modes
-    RGB:   1,
-    ARGB:  2,
-    HSB:   3,
-    ALPHA: 4,
-    CMYK:  5,
-
-    // Image file types
-    TIFF:  0,
-    TARGA: 1,
-    JPEG:  2,
-    GIF:   3,
-
-    // Filter/convert types
-    BLUR:      11,
-    GRAY:      12,
-    INVERT:    13,
-    OPAQUE:    14,
-    POSTERIZE: 15,
-    THRESHOLD: 16,
-    ERODE:     17,
-    DILATE:    18,
-
-    // Blend modes
-    REPLACE:    0,
-    BLEND:      1 << 0,
-    ADD:        1 << 1,
-    SUBTRACT:   1 << 2,
-    LIGHTEST:   1 << 3,
-    DARKEST:    1 << 4,
-    DIFFERENCE: 1 << 5,
-    EXCLUSION:  1 << 6,
-    MULTIPLY:   1 << 7,
-    SCREEN:     1 << 8,
-    OVERLAY:    1 << 9,
-    HARD_LIGHT: 1 << 10,
-    SOFT_LIGHT: 1 << 11,
-    DODGE:      1 << 12,
-    BURN:       1 << 13,
-
-    // Color component bit masks
-    ALPHA_MASK: 0xff000000,
-    RED_MASK:   0x00ff0000,
-    GREEN_MASK: 0x0000ff00,
-    BLUE_MASK:  0x000000ff,
-
-    // Projection matrices
-    CUSTOM:       0,
-    ORTHOGRAPHIC: 2,
-    PERSPECTIVE:  3,
-
-    // Shapes
-    POINT:          2,
-    POINTS:         2,
-    LINE:           4,
-    LINES:          4,
-    TRIANGLE:       8,
-    TRIANGLES:      9,
-    TRIANGLE_STRIP: 10,
-    TRIANGLE_FAN:   11,
-    QUAD:           16,
-    QUADS:          16,
-    QUAD_STRIP:     17,
-    POLYGON:        20,
-    PATH:           21,
-    RECT:           30,
-    ELLIPSE:        31,
-    ARC:            32,
-    SPHERE:         40,
-    BOX:            41,
-
-    GROUP:          0,
-    PRIMITIVE:      1,
-    //PATH:         21, // shared with Shape PATH
-    GEOMETRY:       3,
-
-    // Shape Vertex
-    VERTEX:        0,
-    BEZIER_VERTEX: 1,
-    CURVE_VERTEX:  2,
-    BREAK:         3,
-    CLOSESHAPE:    4,
-
-    // Shape closing modes
-    OPEN:  1,
-    CLOSE: 2,
-
-    // Shape drawing modes
-    CORNER:          0, // Draw mode convention to use (x, y) to (width, height)
-    CORNERS:         1, // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
-    RADIUS:          2, // Draw mode from the center, and using the radius
-    CENTER_RADIUS:   2, // Deprecated! Use RADIUS instead
-    CENTER:          3, // Draw from the center, using second pair of values as the diameter
-    DIAMETER:        3, // Synonym for the CENTER constant. Draw from the center
-    CENTER_DIAMETER: 3, // Deprecated! Use DIAMETER instead
-
-    // Text vertical alignment modes
-    BASELINE: 0,   // Default vertical alignment for text placement
-    TOP:      101, // Align text to the top
-    BOTTOM:   102, // Align text from the bottom, using the baseline
-
-    // UV Texture coordinate modes
-    NORMAL:     1,
-    NORMALIZED: 1,
-    IMAGE:      2,
-
-    // Text placement modes
-    MODEL: 4,
-    SHAPE: 5,
-
-    // Stroke modes
-    SQUARE:  'butt',
-    ROUND:   'round',
-    PROJECT: 'square',
-    MITER:   'miter',
-    BEVEL:   'bevel',
-
-    // Lighting modes
-    AMBIENT:     0,
-    DIRECTIONAL: 1,
-    //POINT:     2, Shared with Shape constant
-    SPOT:        3,
-
-    // Key constants
-
-    // Both key and keyCode will be equal to these values
-    BACKSPACE: 8,
-    TAB:       9,
-    ENTER:     10,
-    RETURN:    13,
-    ESC:       27,
-    DELETE:    127,
-    CODED:     0xffff,
-
-    // p.key will be CODED and p.keyCode will be this value
-    SHIFT:     16,
-    CONTROL:   17,
-    ALT:       18,
-    CAPSLK:    20,
-    PGUP:      33,
-    PGDN:      34,
-    END:       35,
-    HOME:      36,
-    LEFT:      37,
-    UP:        38,
-    RIGHT:     39,
-    DOWN:      40,
-    F1:        112,
-    F2:        113,
-    F3:        114,
-    F4:        115,
-    F5:        116,
-    F6:        117,
-    F7:        118,
-    F8:        119,
-    F9:        120,
-    F10:       121,
-    F11:       122,
-    F12:       123,
-    NUMLK:     144,
-    META:      157,
-    INSERT:    155,
-
-    // Cursor types
-    ARROW:    'default',
-    CROSS:    'crosshair',
-    HAND:     'pointer',
-    MOVE:     'move',
-    TEXT:     'text',
-    WAIT:     'wait',
-    NOCURSOR: "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto",
-
-    // Hints
-    DISABLE_OPENGL_2X_SMOOTH:     1,
-    ENABLE_OPENGL_2X_SMOOTH:     -1,
-    ENABLE_OPENGL_4X_SMOOTH:      2,
-    ENABLE_NATIVE_FONTS:          3,
-    DISABLE_DEPTH_TEST:           4,
-    ENABLE_DEPTH_TEST:           -4,
-    ENABLE_DEPTH_SORT:            5,
-    DISABLE_DEPTH_SORT:          -5,
-    DISABLE_OPENGL_ERROR_REPORT:  6,
-    ENABLE_OPENGL_ERROR_REPORT:  -6,
-    ENABLE_ACCURATE_TEXTURES:     7,
-    DISABLE_ACCURATE_TEXTURES:   -7,
-    HINT_COUNT:                  10,
-
-    // PJS defined constants
-    SINCOS_LENGTH:      720,       // every half degree
-    PRECISIONB:         15,        // fixed point precision is limited to 15 bits!!
-    PRECISIONF:         1 << 15,
-    PREC_MAXVAL:        (1 << 15) - 1,
-    PREC_ALPHA_SHIFT:   24 - 15,
-    PREC_RED_SHIFT:     16 - 15,
-    NORMAL_MODE_AUTO:   0,
-    NORMAL_MODE_SHAPE:  1,
-    NORMAL_MODE_VERTEX: 2,
-    MAX_LIGHTS:         8
-};
-
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 // module export
 module.exports = function(options,undef) {
   var window = options.Browser.window,
@@ -2240,1164 +2078,7 @@ module.exports = function(options,undef) {
 
   return PFont;
 };
-},{}],10:[function(require,module,exports){
-module.exports = (function(charMap, undef) {
-
-  var Char = function(chr) {
-    if (typeof chr === 'string' && chr.length === 1) {
-      this.code = chr.charCodeAt(0);
-    } else if (typeof chr === 'number') {
-      this.code = chr;
-    } else if (chr instanceof Char) {
-      this.code = chr;
-    } else {
-      this.code = NaN;
-    }
-    return (charMap[this.code] === undef) ? charMap[this.code] = this : charMap[this.code];
-  };
-
-  Char.prototype.toString = function() {
-    return String.fromCharCode(this.code);
-  };
-
-  Char.prototype.valueOf = function() {
-    return this.code;
-  };
-
-  return Char;
-}({}));
-
-},{}],11:[function(require,module,exports){
-module.exports = function(options, undef) {
-  var PConstants = options.PConstants;
-
-  function PVector(x, y, z) {
-    this.x = x || 0;
-    this.y = y || 0;
-    this.z = z || 0;
-  }
-
-  PVector.fromAngle = function(angle, v) {
-    if (v === undef || v === null) {
-      v = new PVector();
-    }
-    v.x = Math.cos(angle);
-    v.y = Math.sin(angle);
-    return v;
-  };
-
-  PVector.random2D = function(v) {
-    return PVector.fromAngle(Math.random() * PConstants.TWO_PI, v);
-  };
-
-  PVector.random3D = function(v) {
-    var angle = Math.random() * PConstants.TWO_PI;
-    var vz = Math.random() * 2 - 1;
-    var mult = Math.sqrt(1 - vz * vz);
-    var vx = mult * Math.cos(angle);
-    var vy = mult * Math.sin(angle);
-    if (v === undef || v === null) {
-      v = new PVector(vx, vy, vz);
-    } else {
-      v.set(vx, vy, vz);
-    }
-    return v;
-  };
-
-  PVector.dist = function(v1, v2) {
-    return v1.dist(v2);
-  };
-
-  PVector.dot = function(v1, v2) {
-    return v1.dot(v2);
-  };
-
-  PVector.cross = function(v1, v2) {
-    return v1.cross(v2);
-  };
-
-  PVector.sub = function(v1, v2) {
-    return new PVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
-  };
-
-  PVector.angleBetween = function(v1, v2) {
-    return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
-  };
-
-  PVector.lerp = function(v1, v2, amt) {
-    // non-static lerp mutates object, but this version returns a new vector
-    var retval = new PVector(v1.x, v1.y, v1.z);
-    retval.lerp(v2, amt);
-    return retval;
-  };
-
-  // Common vector operations for PVector
-  PVector.prototype = {
-    set: function(v, y, z) {
-      if (arguments.length === 1) {
-        this.set(v.x || v[0] || 0,
-                 v.y || v[1] || 0,
-                 v.z || v[2] || 0);
-      } else {
-        this.x = v;
-        this.y = y;
-        this.z = z;
-      }
-    },
-    get: function() {
-      return new PVector(this.x, this.y, this.z);
-    },
-    mag: function() {
-      var x = this.x,
-          y = this.y,
-          z = this.z;
-      return Math.sqrt(x * x + y * y + z * z);
-    },
-    magSq: function() {
-      var x = this.x,
-          y = this.y,
-          z = this.z;
-      return (x * x + y * y + z * z);
-    },
-    setMag: function(v_or_len, len) {
-      if (len === undef) {
-        len = v_or_len;
-        this.normalize();
-        this.mult(len);
-      } else {
-        var v = v_or_len;
-        v.normalize();
-        v.mult(len);
-        return v;
-      }
-    },
-    add: function(v, y, z) {
-      if (arguments.length === 1) {
-        this.x += v.x;
-        this.y += v.y;
-        this.z += v.z;
-      } else {
-        this.x += v;
-        this.y += y;
-        this.z += z;
-      }
-    },
-    sub: function(v, y, z) {
-      if (arguments.length === 1) {
-        this.x -= v.x;
-        this.y -= v.y;
-        this.z -= v.z;
-      } else {
-        this.x -= v;
-        this.y -= y;
-        this.z -= z;
-      }
-    },
-    mult: function(v) {
-      if (typeof v === 'number') {
-        this.x *= v;
-        this.y *= v;
-        this.z *= v;
-      } else {
-        this.x *= v.x;
-        this.y *= v.y;
-        this.z *= v.z;
-      }
-    },
-    div: function(v) {
-      if (typeof v === 'number') {
-        this.x /= v;
-        this.y /= v;
-        this.z /= v;
-      } else {
-        this.x /= v.x;
-        this.y /= v.y;
-        this.z /= v.z;
-      }
-    },
-    rotate: function(angle) {
-      var prev_x = this.x;
-      var c = Math.cos(angle);
-      var s = Math.sin(angle);
-      this.x = c * this.x - s * this.y;
-      this.y = s * prev_x + c * this.y;
-    },
-    dist: function(v) {
-      var dx = this.x - v.x,
-          dy = this.y - v.y,
-          dz = this.z - v.z;
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    },
-    dot: function(v, y, z) {
-      if (arguments.length === 1) {
-        return (this.x * v.x + this.y * v.y + this.z * v.z);
-      }
-      return (this.x * v + this.y * y + this.z * z);
-    },
-    cross: function(v) {
-      var x = this.x,
-          y = this.y,
-          z = this.z;
-      return new PVector(y * v.z - v.y * z,
-                         z * v.x - v.z * x,
-                         x * v.y - v.x * y);
-    },
-    lerp: function(v_or_x, amt_or_y, z, amt) {
-      var lerp_val = function(start, stop, amt) {
-        return start + (stop - start) * amt;
-      };
-      var x, y;
-      if (arguments.length === 2) {
-        // given vector and amt
-        amt = amt_or_y;
-        x = v_or_x.x;
-        y = v_or_x.y;
-        z = v_or_x.z;
-      } else {
-        // given x, y, z and amt
-        x = v_or_x;
-        y = amt_or_y;
-      }
-      this.x = lerp_val(this.x, x, amt);
-      this.y = lerp_val(this.y, y, amt);
-      this.z = lerp_val(this.z, z, amt);
-    },
-    normalize: function() {
-      var m = this.mag();
-      if (m > 0) {
-        this.div(m);
-      }
-    },
-    limit: function(high) {
-      if (this.mag() > high) {
-        this.normalize();
-        this.mult(high);
-      }
-    },
-    heading: function() {
-      return (-Math.atan2(-this.y, this.x));
-    },
-    heading2D: function() {
-      return this.heading();
-    },
-    toString: function() {
-      return "[" + this.x + ", " + this.y + ", " + this.z + "]";
-    },
-    array: function() {
-      return [this.x, this.y, this.z];
-    }
-  };
-
-  function createPVectorMethod(method) {
-    return function(v1, v2) {
-      var v = v1.get();
-      v[method](v2);
-      return v;
-    };
-  }
-
-  for (var method in PVector.prototype) {
-    if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
-      PVector[method] = createPVectorMethod(method);
-    }
-  }
-
-  return PVector;
-};
-
-
 },{}],12:[function(require,module,exports){
-/**
- * XMLElement is a representation of an XML object. The object is able to parse XML code
- *
- * @param {PApplet} parent   typically use "this"
- * @param {String} filename  name of the XML/SVG file to load
- * @param {String} xml       the xml/svg string
- * @param {String} fullname  the full name of the element
- * @param {String} namespace the namespace  of the URI
- * @param {String} systemID  the system ID of the XML data where the element starts
- * @param {Integer }lineNr   the line in the XML data where the element starts
- */
-module.exports = function(options, undef) {
-
-  var Browser = options.Browser,
-      ajax = Browser.ajax,
-      window = Browser.window,
-      XMLHttpRequest = window.XMLHttpRequest,
-      DOMParser = window.DOMParser,
-      XMLAttribute = options. XMLAttribute;
-
-  var XMLElement = function(selector, uri, sysid, line) {
-    this.attributes = [];
-    this.children   = [];
-    this.fullName   = null;
-    this.name       = null;
-    this.namespace  = "";
-    this.content = null;
-    this.parent    = null;
-    this.lineNr     = "";
-    this.systemID   = "";
-    this.type = "ELEMENT";
-
-    if (selector) {
-      if (typeof selector === "string") {
-        if (uri === undef && selector.indexOf("<") > -1) {
-          // load XML from text string
-          this.parse(selector);
-        } else {
-          // XMLElement(fullname, namespace, sysid, line) format
-          this.fullName = selector;
-          this.namespace = uri;
-          this.systemId = sysid;
-          this.lineNr = line;
-        }
-      } else {
-        // XMLElement(this,file) format
-        this.parse(uri);
-      }
-    }
-  };
-  /**
-   * XMLElement methods
-   * missing: enumerateAttributeNames(), enumerateChildren(),
-   * NOTE: parse does not work when a url is passed in
-   */
-  XMLElement.prototype = {
-    /**
-     * @member XMLElement
-     * The parse() function retrieves the file via ajax() and uses DOMParser()
-     * parseFromString method to make an XML document
-     * @addon
-     *
-     * @param {String} filename name of the XML/SVG file to load
-     *
-     * @throws ExceptionType Error loading document
-     *
-     * @see XMLElement#parseChildrenRecursive
-     */
-    parse: function(textstring) {
-      var xmlDoc;
-      try {
-        var extension = textstring.substring(textstring.length-4);
-        if (extension === ".xml" || extension === ".svg") {
-          textstring = ajax(textstring);
-        }
-        xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
-        var elements = xmlDoc.documentElement;
-        if (elements) {
-          this.parseChildrenRecursive(null, elements);
-        } else {
-          throw ("Error loading document");
-        }
-        return this;
-      } catch(e) {
-        throw(e);
-      }
-    },
-    /**
-     * @member XMLElement
-     * Internal helper function for parse().
-     * Loops through the
-     * @addon
-     *
-     * @param {XMLElement} parent                      the parent node
-     * @param {XML document childNodes} elementpath    the remaining nodes that need parsing
-     *
-     * @return {XMLElement} the new element and its children elements
-     */
-    parseChildrenRecursive: function (parent, elementpath){
-      var xmlelement,
-        xmlattribute,
-        tmpattrib,
-        l, m,
-        child;
-      if (!parent) { // this element is the root element
-        this.fullName = elementpath.localName;
-        this.name     = elementpath.nodeName;
-        xmlelement    = this;
-      } else { // this element has a parent
-        xmlelement         = new XMLElement(elementpath.nodeName);
-        xmlelement.parent  = parent;
-      }
-
-      // if this is a text node, return a PCData element (parsed character data)
-      if (elementpath.nodeType === 3 && elementpath.textContent !== "") {
-        return this.createPCDataElement(elementpath.textContent);
-      }
-
-      // if this is a CDATA node, return a CData element (unparsed character data)
-      if (elementpath.nodeType === 4) {
-       return this.createCDataElement(elementpath.textContent);
-      }
-
-      // bind all attributes, if there are any
-      if (elementpath.attributes) {
-        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
-          tmpattrib    = elementpath.attributes[l];
-          xmlattribute = new XMLAttribute(tmpattrib.getname,
-                                          tmpattrib.nodeName,
-                                          tmpattrib.namespaceURI,
-                                          tmpattrib.nodeValue,
-                                          tmpattrib.nodeType);
-          xmlelement.attributes.push(xmlattribute);
-        }
-      }
-
-      // bind all children, if there are any
-      if (elementpath.childNodes) {
-        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
-          var node = elementpath.childNodes[l];
-          child = xmlelement.parseChildrenRecursive(xmlelement, node);
-          if (child !== null) {
-            xmlelement.children.push(child);
-          }
-        }
-      }
-
-      return xmlelement;
-    },
-    /**
-     * @member XMLElement
-     * The createElement() function Creates an empty element
-     *
-     * @param {String} fullName   the full name of the element
-     * @param {String} namespace  the namespace URI
-     * @param {String} systemID   the system ID of the XML data where the element starts
-     * @param {int} lineNr    the line in the XML data where the element starts
-     */
-    createElement: function (fullname, namespaceuri, sysid, line) {
-      if (sysid === undef) {
-        return new XMLElement(fullname, namespaceuri);
-      }
-      return new XMLElement(fullname, namespaceuri, sysid, line);
-    },
-    /**
-     * @member XMLElement
-     * The createPCDataElement() function creates an element to be used for #PCDATA content.
-     * Because Processing discards whitespace TEXT nodes, this method will not build an element
-     * if the passed content is empty after trimming for whitespace.
-     *
-     * @return {XMLElement} new "pcdata" XMLElement, or null if content consists only of whitespace
-     */
-    createPCDataElement: function (content, isCDATA) {
-      if (content.replace(/^\s+$/g,"") === "") {
-        return null;
-      }
-      var pcdata = new XMLElement();
-      pcdata.type = "TEXT";
-      pcdata.content = content;
-      return pcdata;
-    },
-    /**
-     * @member XMLElement
-     * The createCDataElement() function creates an element to be used for CDATA content.
-     *
-     * @return {XMLElement} new "cdata" XMLElement, or null if content consists only of whitespace
-     */
-    createCDataElement: function (content) {
-      var cdata = this.createPCDataElement(content);
-      if (cdata === null) {
-        return null;
-      }
-
-      cdata.type = "CDATA";
-      var htmlentities = {"<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;"},
-          entity;
-      for (entity in htmlentities) {
-        if (!Object.hasOwnProperty(htmlentities,entity)) {
-          content = content.replace(new RegExp(entity, "g"), htmlentities[entity]);
-        }
-      }
-      cdata.cdata = content;
-      return cdata;
-    },
-    /**
-     * @member XMLElement
-     * The hasAttribute() function returns whether an attribute exists
-     *
-     * @param {String} name      name of the attribute
-     * @param {String} namespace the namespace URI of the attribute
-     *
-     * @return {boolean} true if the attribute exists
-     */
-    hasAttribute: function () {
-      if (arguments.length === 1) {
-        return this.getAttribute(arguments[0]) !== null;
-      }
-      if (arguments.length === 2) {
-        return this.getAttribute(arguments[0],arguments[1]) !== null;
-      }
-    },
-    /**
-     * @member XMLElement
-     * The equals() function checks to see if the XMLElement being passed in equals another XMLElement
-     *
-     * @param {XMLElement} rawElement the element to compare to
-     *
-     * @return {boolean} true if the element equals another element
-     */
-    equals: function(other) {
-      if (!(other instanceof XMLElement)) {
-        return false;
-      }
-      var i, j;
-      if (this.fullName !== other.fullName) { return false; }
-      if (this.attributes.length !== other.getAttributeCount()) { return false; }
-      // attributes may be ordered differently
-      if (this.attributes.length !== other.attributes.length) { return false; }
-      var attr_name, attr_ns, attr_value, attr_type, attr_other;
-      for (i = 0, j = this.attributes.length; i < j; i++) {
-        attr_name = this.attributes[i].getName();
-        attr_ns = this.attributes[i].getNamespace();
-        attr_other = other.findAttribute(attr_name, attr_ns);
-        if (attr_other === null) { return false; }
-        if (this.attributes[i].getValue() !== attr_other.getValue()) { return false; }
-        if (this.attributes[i].getType() !== attr_other.getType()) { return false; }
-      }
-      // children must be ordered identically
-      if (this.children.length !== other.getChildCount()) { return false; }
-      if (this.children.length>0) {
-        var child1, child2;
-        for (i = 0, j = this.children.length; i < j; i++) {
-          child1 = this.getChild(i);
-          child2 = other.getChild(i);
-          if (!child1.equals(child2)) { return false; }
-        }
-        return true;
-      }
-      return (this.content === other.content);
-    },
-    /**
-     * @member XMLElement
-     * The getContent() function returns the content of an element. If there is no such content, null is returned
-     *
-     * @return {String} the (possibly null) content
-     */
-    getContent: function(){
-      if (this.type === "TEXT" || this.type === "CDATA") {
-        return this.content;
-      }
-      var children = this.children;
-      if (children.length === 1 && (children[0].type === "TEXT" || children[0].type === "CDATA")) {
-        return children[0].content;
-      }
-      return null;
-    },
-    /**
-     * @member XMLElement
-     * The getAttribute() function returns the value of an attribute
-     *
-     * @param {String} name         the non-null full name of the attribute
-     * @param {String} namespace    the namespace URI, which may be null
-     * @param {String} defaultValue the default value of the attribute
-     *
-     * @return {String} the value, or defaultValue if the attribute does not exist
-     */
-    getAttribute: function (){
-      var attribute;
-      if (arguments.length === 2) {
-        attribute = this.findAttribute(arguments[0]);
-        if (attribute) {
-          return attribute.getValue();
-        }
-        return arguments[1];
-      } else if (arguments.length === 1) {
-        attribute = this.findAttribute(arguments[0]);
-        if (attribute) {
-          return attribute.getValue();
-        }
-        return null;
-      } else if (arguments.length === 3) {
-        attribute = this.findAttribute(arguments[0],arguments[1]);
-        if (attribute) {
-          return attribute.getValue();
-        }
-        return arguments[2];
-      }
-    },
-    /**
-     * @member XMLElement
-     * The getStringAttribute() function returns the string attribute of the element
-     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
-     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
-     *
-     * @param name         the name of the attribute
-     * @param defaultValue value returned if the attribute is not found
-     *
-     * @return {String} the value, or defaultValue if the attribute does not exist
-     */
-    getStringAttribute: function() {
-      if (arguments.length === 1) {
-        return this.getAttribute(arguments[0]);
-      }
-      if (arguments.length === 2) {
-        return this.getAttribute(arguments[0], arguments[1]);
-      }
-      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic String
-     * attribute getter. This may only take one argument.
-     */
-    getString: function(attributeName) {
-      return this.getStringAttribute(attributeName);
-    },
-    /**
-     * @member XMLElement
-     * The getFloatAttribute() function returns the float attribute of the element.
-     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
-     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
-     *
-     * @param name         the name of the attribute
-     * @param defaultValue value returned if the attribute is not found
-     *
-     * @return {float} the value, or defaultValue if the attribute does not exist
-     */
-    getFloatAttribute: function() {
-      if (arguments.length === 1 ) {
-        return parseFloat(this.getAttribute(arguments[0], 0));
-      }
-      if (arguments.length === 2 ) {
-        return this.getAttribute(arguments[0], arguments[1]);
-      }
-      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic float
-     * attribute getter. This may only take one argument.
-     */
-    getFloat: function(attributeName) {
-      return this.getFloatAttribute(attributeName);
-    },
-    /**
-     * @member XMLElement
-     * The getIntAttribute() function returns the integer attribute of the element.
-     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
-     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
-     *
-     * @param name         the name of the attribute
-     * @param defaultValue value returned if the attribute is not found
-     *
-     * @return {int} the value, or defaultValue if the attribute does not exist
-     */
-    getIntAttribute: function () {
-      if (arguments.length === 1) {
-        return this.getAttribute( arguments[0], 0 );
-      }
-      if (arguments.length === 2) {
-        return this.getAttribute(arguments[0], arguments[1]);
-      }
-      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic int
-     * attribute getter. This may only take one argument.
-     */
-    getInt: function(attributeName) {
-      return this.getIntAttribute(attributeName);
-    },
-    /**
-     * @member XMLElement
-     * The hasChildren() function returns whether the element has children.
-     *
-     * @return {boolean} true if the element has children.
-     */
-    hasChildren: function () {
-      return this.children.length > 0 ;
-    },
-    /**
-     * @member XMLElement
-     * The addChild() function adds a child element
-     *
-     * @param {XMLElement} child the non-null child to add.
-     */
-    addChild: function (child) {
-      if (child !== null) {
-        child.parent = this;
-        this.children.push(child);
-      }
-    },
-    /**
-     * @member XMLElement
-     * The insertChild() function inserts a child element at the index provided
-     *
-     * @param {XMLElement} child  the non-null child to add.
-     * @param {int} index     where to put the child.
-     */
-    insertChild: function (child, index) {
-      if (child) {
-        if ((child.getLocalName() === null) && (! this.hasChildren())) {
-          var lastChild = this.children[this.children.length -1];
-          if (lastChild.getLocalName() === null) {
-              lastChild.setContent(lastChild.getContent() + child.getContent());
-              return;
-          }
-        }
-        child.parent = this;
-        this.children.splice(index,0,child);
-      }
-    },
-    /**
-     * @member XMLElement
-     * The getChild() returns the child XMLElement as specified by the <b>index</b> parameter.
-     * The value of the <b>index</b> parameter must be less than the total number of children to avoid going out of the array storing the child elements.
-     * When the <b>path</b> parameter is specified, then it will return all children that match that path. The path is a series of elements and sub-elements, separated by slashes.
-     *
-     * @param {int} index     where to put the child.
-     * @param {String} path       path to a particular element
-     *
-     * @return {XMLElement} the element
-     */
-    getChild: function (selector) {
-      if (typeof selector === "number") {
-        return this.children[selector];
-      }
-      if (selector.indexOf('/') !== -1) {
-        // path traversal is required
-        return this.getChildRecursive(selector.split("/"), 0);
-      }
-      var kid, kidName;
-      for (var i = 0, j = this.getChildCount(); i < j; i++) {
-        kid = this.getChild(i);
-        kidName = kid.getName();
-        if (kidName !== null && kidName === selector) {
-            return kid;
-        }
-      }
-      return null;
-    },
-    /**
-     * @member XMLElement
-     * The getChildren() returns all of the children as an XMLElement array.
-     * When the <b>path</b> parameter is specified, then it will return all children that match that path.
-     * The path is a series of elements and sub-elements, separated by slashes.
-     *
-     * @param {String} path       element name or path/to/element
-     *
-     * @return {XMLElement} array of child elements that match
-     *
-     * @see XMLElement#getChildCount()
-     * @see XMLElement#getChild()
-     */
-    getChildren: function(){
-      if (arguments.length === 1) {
-        if (typeof arguments[0] === "number") {
-          return this.getChild( arguments[0]);
-        }
-        if (arguments[0].indexOf('/') !== -1) { // path was given
-          return this.getChildrenRecursive( arguments[0].split("/"), 0);
-        }
-        var matches = [];
-        var kid, kidName;
-        for (var i = 0, j = this.getChildCount(); i < j; i++) {
-          kid = this.getChild(i);
-          kidName = kid.getName();
-          if (kidName !== null && kidName === arguments[0]) {
-            matches.push(kid);
-          }
-        }
-        return matches;
-      }
-      return this.children;
-    },
-    /**
-     * @member XMLElement
-     * The getChildCount() returns the number of children for the element.
-     *
-     * @return {int} the count
-     *
-     * @see XMLElement#getChild()
-     * @see XMLElement#getChildren()
-     */
-    getChildCount: function() {
-      return this.children.length;
-    },
-    /**
-     * @member XMLElement
-     * Internal helper function for getChild().
-     *
-     * @param {String[]} items   result of splitting the query on slashes
-     * @param {int} offset   where in the items[] array we're currently looking
-     *
-     * @return {XMLElement} matching element or null if no match
-     */
-    getChildRecursive: function (items, offset) {
-      // terminating clause: we are the requested candidate
-      if (offset === items.length) {
-        return this;
-      }
-      // continuation clause
-      var kid, kidName, matchName = items[offset];
-      for(var i = 0, j = this.getChildCount(); i < j; i++) {
-          kid = this.getChild(i);
-          kidName = kid.getName();
-          if (kidName !== null && kidName === matchName) {
-            return kid.getChildRecursive(items, offset+1);
-          }
-      }
-      return null;
-    },
-    /**
-     * @member XMLElement
-     * Internal helper function for getChildren().
-     *
-     * @param {String[]} items   result of splitting the query on slashes
-     * @param {int} offset   where in the items[] array we're currently looking
-     *
-     * @return {XMLElement[]} matching elements or empty array if no match
-     */
-    getChildrenRecursive: function (items, offset) {
-      if (offset === items.length-1) {
-        return this.getChildren(items[offset]);
-      }
-      var matches = this.getChildren(items[offset]);
-      var kidMatches = [];
-      for (var i = 0; i < matches.length; i++) {
-        kidMatches = kidMatches.concat(matches[i].getChildrenRecursive(items, offset+1));
-      }
-      return kidMatches;
-    },
-    /**
-     * @member XMLElement
-     * The isLeaf() function returns whether the element is a leaf element.
-     *
-     * @return {boolean} true if the element has no children.
-     */
-    isLeaf: function() {
-      return !this.hasChildren();
-    },
-    /**
-     * @member XMLElement
-     * The listChildren() function put the names of all children into an array. Same as looping through
-     * each child and calling getName() on each XMLElement.
-     *
-     * @return {String[]} a list of element names.
-     */
-    listChildren: function() {
-      var arr = [];
-      for (var i = 0, j = this.children.length; i < j; i++) {
-        arr.push( this.getChild(i).getName());
-      }
-      return arr;
-    },
-    /**
-     * @member XMLElement
-     * The removeAttribute() function removes an attribute
-     *
-     * @param {String} name        the non-null name of the attribute.
-     * @param {String} namespace   the namespace URI of the attribute, which may be null.
-     */
-    removeAttribute: function (name , namespace) {
-      this.namespace = namespace || "";
-      for (var i = 0, j = this.attributes.length; i < j; i++) {
-        if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
-          this.attributes.splice(i, 1);
-          break;
-        }
-      }
-    },
-    /**
-     * @member XMLElement
-     * The removeChild() removes a child element.
-     *
-     * @param {XMLElement} child      the the non-null child to be renoved
-     */
-    removeChild: function(child) {
-      if (child) {
-        for (var i = 0, j = this.children.length; i < j; i++) {
-          if (this.children[i].equals(child)) {
-            this.children.splice(i, 1);
-            break;
-          }
-        }
-      }
-    },
-    /**
-     * @member XMLElement
-     * The removeChildAtIndex() removes the child located at a certain index
-     *
-     * @param {int} index      the index of the child, where the first child has index 0
-     */
-    removeChildAtIndex: function(index) {
-      if (this.children.length > index) { //make sure its not outofbounds
-        this.children.splice(index, 1);
-      }
-    },
-    /**
-     * @member XMLElement
-     * The findAttribute() function searches an attribute
-     *
-     * @param {String} name        fullName the non-null full name of the attribute
-     * @param {String} namespace   the name space, which may be null
-     *
-     * @return {XMLAttribute} the attribute, or null if the attribute does not exist.
-     */
-    findAttribute: function (name, namespace) {
-      this.namespace = namespace || "";
-      for (var i = 0, j = this.attributes.length; i < j; i++) {
-        if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
-           return this.attributes[i];
-        }
-      }
-      return null;
-    },
-    /**
-     * @member XMLElement
-     * The setAttribute() function sets an attribute.
-     *
-     * @param {String} name        the non-null full name of the attribute
-     * @param {String} namespace   the non-null value of the attribute
-     */
-    setAttribute: function() {
-      var attr;
-      if (arguments.length === 3) {
-        var index = arguments[0].indexOf(':');
-        var name  = arguments[0].substring(index + 1);
-        attr      = this.findAttribute(name, arguments[1]);
-        if (attr) {
-          attr.setValue(arguments[2]);
-        } else {
-          attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
-          this.attributes.push(attr);
-        }
-      } else {
-        attr = this.findAttribute(arguments[0]);
-        if (attr) {
-          attr.setValue(arguments[1]);
-        } else {
-          attr = new XMLAttribute(arguments[0], arguments[0], null, arguments[1], "CDATA");
-          this.attributes.push(attr);
-        }
-      }
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic String
-     * attribute setter. This must take two arguments.
-     */
-    setString: function(attribute, value) {
-      this.setAttribute(attribute, value);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic int
-     * attribute setter. This must take two arguments.
-     */
-    setInt: function(attribute, value) {
-      this.setAttribute(attribute, value);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic float
-     * attribute setter. This must take two arguments.
-     */
-    setFloat: function(attribute, value) {
-      this.setAttribute(attribute, value);
-    },
-    /**
-     * @member XMLElement
-     * The setContent() function sets the #PCDATA content. It is an error to call this method with a
-     * non-null value if there are child objects.
-     *
-     * @param {String} content     the (possibly null) content
-     */
-    setContent: function(content) {
-      if (this.children.length > 0) {
-        Processing.debug("Tried to set content for XMLElement with children"); }
-      this.content = content;
-    },
-    /**
-     * @member XMLElement
-     * The setName() function sets the full name. This method also sets the short name and clears the
-     * namespace URI.
-     *
-     * @param {String} name        the non-null name
-     * @param {String} namespace   the namespace URI, which may be null.
-     */
-    setName: function() {
-      if (arguments.length === 1) {
-        this.name      = arguments[0];
-        this.fullName  = arguments[0];
-        this.namespace = null;
-      } else {
-        var index = arguments[0].indexOf(':');
-        if ((arguments[1] === null) || (index < 0)) {
-            this.name = arguments[0];
-        } else {
-            this.name = arguments[0].substring(index + 1);
-        }
-        this.fullName  = arguments[0];
-        this.namespace = arguments[1];
-      }
-    },
-    /**
-     * @member XMLElement
-     * The getName() function returns the full name (i.e. the name including an eventual namespace
-     * prefix) of the element.
-     *
-     * @return {String} the name, or null if the element only contains #PCDATA.
-     */
-    getName: function() {
-      return this.fullName;
-    },
-    /**
-     * @member XMLElement
-     * The getLocalName() function returns the local name (i.e. the name excluding an eventual namespace
-     * prefix) of the element.
-     *
-     * @return {String} the name, or null if the element only contains #PCDATA.
-     */
-    getLocalName: function() {
-      return this.name;
-    },
-    /**
-     * @member XMLElement
-     * The getAttributeCount() function returns the number of attributes for the node
-     * that this XMLElement represents.
-     *
-     * @return {int} the number of attributes in this XMLElement
-     */
-    getAttributeCount: function() {
-      return this.attributes.length;
-    },
-    /**
-     * @member XMLElement
-     * The toString() function returns the XML definition of an XMLElement.
-     *
-     * @return {String} the XML definition of this XMLElement
-     */
-    toString: function() {
-      // shortcut for text and cdata nodes
-      if (this.type === "TEXT") {
-        return this.content;
-      }
-
-      if (this.type === "CDATA") {
-        return this.cdata;
-      }
-
-      // real XMLElements
-      var tagstring = this.fullName;
-      var xmlstring =  "<" + tagstring;
-      var a,c;
-
-      // serialize the attributes to XML string
-      for (a = 0; a<this.attributes.length; a++) {
-        var attr = this.attributes[a];
-        xmlstring += " "  + attr.getName() + "=" + '"' + attr.getValue() + '"';
-      }
-
-      // serialize all children to XML string
-      if (this.children.length === 0) {
-        if (this.content==="") {
-          xmlstring += "/>";
-        } else {
-          xmlstring += ">" + this.content + "</"+tagstring+">";
-        }
-      } else {
-        xmlstring += ">";
-        for (c = 0; c<this.children.length; c++) {
-          xmlstring += this.children[c].toString();
-        }
-        xmlstring += "</" + tagstring + ">";
-      }
-      return xmlstring;
-     }
-  };
-
-  /**
-   * static Processing 1.5 XML API wrapper for the
-   * parse method. This may only take one argument.
-   */
-  XMLElement.parse = function(xmlstring) {
-    var element = new XMLElement();
-    element.parse(xmlstring);
-    return element;
-  };
-
-  return XMLElement;
-};
-
-},{}],13:[function(require,module,exports){
-/**
- * XMLAttribute is an attribute of a XML element.
- *
- * @param {String} fname     the full name of the attribute
- * @param {String} n         the short name of the attribute
- * @param {String} namespace the namespace URI of the attribute
- * @param {String} v         the value of the attribute
- * @param {String }t         the type of the attribute
- *
- * @see XMLElement
- */
-module.exports = function() {
-
-  var XMLAttribute = function (fname, n, nameSpace, v, t){
-    this.fullName = fname || "";
-    this.name = n || "";
-    this.namespace = nameSpace || "";
-    this.value = v;
-    this.type = t;
-  };
-
-  XMLAttribute.prototype = {
-    /**
-     * @member XMLAttribute
-     * The getName() function returns the short name of the attribute
-     *
-     * @return {String} the short name of the attribute
-     */
-    getName: function() {
-      return this.name;
-    },
-    /**
-     * @member XMLAttribute
-     * The getFullName() function returns the full name of the attribute
-     *
-     * @return {String} the full name of the attribute
-     */
-    getFullName: function() {
-      return this.fullName;
-    },
-    /**
-     * @member XMLAttribute
-     * The getNamespace() function returns the namespace of the attribute
-     *
-     * @return {String} the namespace of the attribute
-     */
-    getNamespace: function() {
-      return this.namespace;
-    },
-    /**
-     * @member XMLAttribute
-     * The getValue() function returns the value of the attribute
-     *
-     * @return {String} the value of the attribute
-     */
-    getValue: function() {
-      return this.value;
-    },
-    /**
-     * @member XMLAttribute
-     * The getValue() function returns the type of the attribute
-     *
-     * @return {String} the type of the attribute
-     */
-    getType: function() {
-      return this.type;
-    },
-    /**
-     * @member XMLAttribute
-     * The setValue() function sets the value of the attribute
-     *
-     * @param {String} newval the new value
-     */
-    setValue: function(newval) {
-      this.value = newval;
-    }
-  };
-
-  return XMLAttribute;
-};
-
-},{}],14:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -3794,7 +2475,7 @@ module.exports = function(options, undef) {
   return PMatrix2D;
 };
 
-},{}],15:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -4392,7 +3073,7 @@ module.exports = function(options, undef) {
 
   return PMatrix3D;
 };
-},{}],16:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports = function(options) {
   var PConstants = options.PConstants,
       PMatrix2D = options.PMatrix2D,
@@ -4426,6 +3107,28 @@ module.exports = function(options) {
     this.width     = null;
     this.height    = null;
     this.parent    = null;
+	this.fill = true;
+    this.vertices  = [];
+    this.vertexCodes = [];
+          this.opacity             = 1;
+ 
+          this.stroke              = true;
+          this.strokeColor         = 0xFF000000;
+          this.strokeWeight        = 1;
+          this.strokeCap           = PConstants.SQUARE;  // BUTT in svg spec
+          this.strokeJoin          = PConstants.ROUNDED;
+          this.strokeGradient      = "";
+          this.strokeGradientPaint = "";
+          this.strokeName          = "";
+          this.strokeOpacity       = 1;
+ 
+          this.fill                = true;
+          this.fillColor           = 0xFF000000;
+          this.fillGradient        = null;
+          this.fillGradientPaint   = null;
+          this.fillOpacity         = 1;
+        return this;
+      
   };
   /**
     * PShape methods
@@ -4433,6 +3136,65 @@ module.exports = function(options) {
     * getVertexCode() , getVertexCodes() , getVertexCodeCount(), getVertexX(), getVertexY(), getVertexZ()
     */
   PShape.prototype = {
+    bezierVertex: function(x2, y2, x3, y3, x4, y4, x5, y5,x6){
+      if(x5 &&y5 &&x6)
+{
+
+this.vertices.push([x2,y2,x3]);
+      this.vertices.push([y3,x4,y4]);
+      this.vertices.push([x5,y5, x6]);
+
+}
+else{
+       this.vertices.push([x2,y2]);
+      this.vertices.push([x3,y3]);
+      this.vertices.push([x4,y4]);
+}
+this.vertexCodes.push(PConstants.BEZIER_VERTEX);
+this.vertexCodes.push(PConstants.BEZIER_VERTEX);
+this.vertexCodes.push(PConstants.BEZIER_VERTEX);
+    },
+     curveVertex: function(x, y, z){
+        this.vertices.push([x,y,z]);
+		this.vertexCodes.push(PConstants.CURVE_VERTEX);
+},
+    getVertexCodeCount:function(){
+      return this.vertexCodes.length;
+    },
+    getVertexCount: function(){
+      return this.vertices.length;
+    },
+    getVertex: function(i){
+      return {x: this.vertices[i][0],y:this.vertices[i][1], z: this.vertices[i][2]};
+    },
+    setVertex: function(i, v, y ,z){
+      if(v.x){
+      this.vertices[i][0] = v.x;
+      this.vertices[i][1] = v.y;
+      this.vertices[i][2] = v.z;}
+      if(y){
+         this.vertices[i][0]= v;
+         this.vertices[i][1] = y;
+         this.vertices[i][2] = z;
+      }
+    },
+    vertex: function(x,y,z){
+  
+      this.vertices.push([x,y,z]);
+      this.vertexCodes.push( PConstants.LINE);
+    },
+     drawVertices:function(renderContext){
+        if(renderContext){
+            this.pre(renderContext);
+            renderContext.beginShape();
+            this.vertices.forEach(function(e){
+                renderContext.vertex(e[0],e[1],e[2]?e[2]:0);
+            });
+            renderContext.endShape();
+            this.post(renderContext);
+            
+        }
+     },
     /**
      * @member PShape
      * The isVisible() function returns a boolean value "true" if the image is set to be visible, "false" if not. This is modified with the <b>setVisible()</b> parameter.
@@ -5054,388 +3816,7 @@ module.exports = function(options) {
 
   return PShape;
 };
-},{}],17:[function(require,module,exports){
-/**
- * Common functions traditionally on "p" that should be class functions
- * that get bound to "p" when an instance is actually built, instead.
- */
-module.exports = (function commonFunctions(undef) {
-
-  var CommonFunctions = {
-    /**
-     * Remove whitespace characters from the beginning and ending
-     * of a String or a String array. Works like String.trim() but includes the
-     * unicode nbsp character as well. If an array is passed in the function will return a new array not effecting the array passed in.
-     *
-     * @param {String} str    the string to trim
-     * @param {String[]} str  the string array to trim
-     *
-     * @return {String|String[]} retrurns a string or an array will removed whitespaces
-     */
-    trim: function(str) {
-      if (str instanceof Array) {
-        var arr = [];
-        for (var i = 0; i < str.length; i++) {
-          arr.push(str[i].replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, ''));
-        }
-        return arr;
-      }
-      return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
-    },
-
-    /**
-     * Converts a degree measurement to its corresponding value in radians. Radians and degrees are two ways of
-     * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
-     * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
-     *
-     * @param {int|float} value        an angle in radians
-     *
-     * @returns {float}
-     *
-     * @see degrees
-     */
-    radians: function(aAngle) {
-      return (aAngle / 180) * Math.PI;
-    },
-
-    /**
-     * Number-to-String formatting function. Prepends "plus" or "minus" depending
-     * on whether the value is positive or negative, respectively, after padding
-     * the value with zeroes on the left and right, the number of zeroes used dictated
-     * by the values 'leftDigits' and 'rightDigits'. 'value' cannot be an array.
-     *
-     * @param {int|float} value                 the number to format
-     * @param {String} plus                     the prefix for positive numbers
-     * @param {String} minus                    the prefix for negative numbers
-     * @param {int} left                        number of digits to the left of the decimal point
-     * @param {int} right                       number of digits to the right of the decimal point
-     * @param {String} group                    string delimited for groups, such as the comma in "1,000"
-     *
-     * @returns {String or String[]}
-     *
-     * @see nfCore
-     */
-    nfCoreScalar: function (value, plus, minus, leftDigits, rightDigits, group) {
-      var sign = (value < 0) ? minus : plus;
-      var autoDetectDecimals = rightDigits === 0;
-      var rightDigitsOfDefault = (rightDigits === undef || rightDigits < 0) ? 0 : rightDigits;
-
-      var absValue = Math.abs(value);
-      if (autoDetectDecimals) {
-        rightDigitsOfDefault = 1;
-        absValue *= 10;
-        while (Math.abs(Math.round(absValue) - absValue) > 1e-6 && rightDigitsOfDefault < 7) {
-          ++rightDigitsOfDefault;
-          absValue *= 10;
-        }
-      } else if (rightDigitsOfDefault !== 0) {
-        absValue *= Math.pow(10, rightDigitsOfDefault);
-      }
-
-      // Using Java's default rounding policy HALF_EVEN. This policy is based
-      // on the idea that 0.5 values round to the nearest even number, and
-      // everything else is rounded normally.
-      var number, doubled = absValue * 2;
-      if (Math.floor(absValue) === absValue) {
-        number = absValue;
-      } else if (Math.floor(doubled) === doubled) {
-        var floored = Math.floor(absValue);
-        number = floored + (floored % 2);
-      } else {
-        number = Math.round(absValue);
-      }
-
-      var buffer = "";
-      var totalDigits = leftDigits + rightDigitsOfDefault;
-      while (totalDigits > 0 || number > 0) {
-        totalDigits--;
-        buffer = "" + (number % 10) + buffer;
-        number = Math.floor(number / 10);
-      }
-      if (group !== undef) {
-        var i = buffer.length - 3 - rightDigitsOfDefault;
-        while(i > 0) {
-          buffer = buffer.substring(0,i) + group + buffer.substring(i);
-          i-=3;
-        }
-      }
-      if (rightDigitsOfDefault > 0) {
-        return sign + buffer.substring(0, buffer.length - rightDigitsOfDefault) +
-               "." + buffer.substring(buffer.length - rightDigitsOfDefault, buffer.length);
-      }
-      return sign + buffer;
-    },
-
-    /**
-    * Number-to-String formatting function. Prepends "plus" or "minus" depending
-    * on whether the value is positive or negative, respectively, after padding
-    * the value with zeroes on the left and right, the number of zeroes used dictated
-    * by the values 'leftDigits' and 'rightDigits'. 'value' can be an array;
-    * if the input is an array, each value in it is formatted separately, and
-    * an array with formatted values is returned.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {String} plus                     the prefix for positive numbers
-    * @param {String} minus                    the prefix for negative numbers
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
-    *
-    * @returns {String or String[]}
-    *
-    * @see nfCoreScalar
-    */
-    nfCore: function(value, plus, minus, leftDigits, rightDigits, group) {
-      if (value instanceof Array) {
-        var arr = [];
-        for (var i = 0, len = value.length; i < len; i++) {
-          arr.push(CommonFunctions.nfCoreScalar(value[i], plus, minus, leftDigits, rightDigits, group));
-        }
-        return arr;
-      }
-      return CommonFunctions.nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
-    },
-
-    /**
-    * Utility function for formatting numbers into strings. There are two versions, one for
-    * formatting floats and one for formatting ints. The values for the digits, left, and
-    * right parameters should always be positive integers.
-    * As shown in the above example, nf() is used to add zeros to the left and/or right
-    * of a number. This is typically for aligning a list of numbers. To remove digits from
-    * a floating-point number, use the int(), ceil(), floor(), or round() functions.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    *
-    * @returns {String or String[]}
-    *
-    * @see nfs
-    * @see nfp
-    * @see nfc
-    */
-    nf: function(value, leftDigits, rightDigits) {
-      return CommonFunctions.nfCore(value, "", "-", leftDigits, rightDigits);
-    },
-
-    /**
-    * Utility function for formatting numbers into strings. Similar to nf()  but leaves a blank space in front
-    * of positive numbers so they align with negative numbers in spite of the minus symbol. There are two
-    * versions, one for formatting floats and one for formatting ints. The values for the digits, left,
-    * and right parameters should always be positive integers.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    *
-    * @returns {String or String[]}
-    *
-    * @see nf
-    * @see nfp
-    * @see nfc
-    */
-    nfs: function(value, leftDigits, rightDigits) {
-      return CommonFunctions.nfCore(value, " ", "-", leftDigits, rightDigits);
-    },
-
-    /**
-    * Utility function for formatting numbers into strings. Similar to nf()  but puts a "+" in front of
-    * positive numbers and a "-" in front of negative numbers. There are two versions, one for formatting
-    * floats and one for formatting ints. The values for the digits, left, and right parameters should
-    * always be positive integers.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    *
-    * @returns {String or String[]}
-    *
-    * @see nfs
-    * @see nf
-    * @see nfc
-    */
-    nfp: function(value, leftDigits, rightDigits) {
-      return CommonFunctions.nfCore(value, "+", "-", leftDigits, rightDigits);
-    },
-
-    /**
-    * Utility function for formatting numbers into strings and placing appropriate commas to mark
-    * units of 1000. There are two versions, one for formatting ints and one for formatting an array
-    * of ints. The value for the digits parameter should always be a positive integer.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    *
-    * @returns {String or String[]}
-    *
-    * @see nf
-    * @see nfs
-    * @see nfp
-    */
-    nfc: function(value, rightDigits) {
-      return CommonFunctions.nfCore(value, "", "-", 0, rightDigits, ",");
-    },
-
-    // used to bind all common functions to "p"
-    withCommonFunctions: function withCommonFunctions(p) {
-      ["trim", "radians", "nf", "nfs", "nfp", "nfc"].forEach(function(f){
-        p[f] = CommonFunctions[f];
-      });
-    }
-  };
-
-  return CommonFunctions;
-}());
-
-},{}],18:[function(require,module,exports){
-/**
- * web colors, by name
- */
-module.exports = {
-    aliceblue:            "#f0f8ff",
-    antiquewhite:         "#faebd7",
-    aqua:                 "#00ffff",
-    aquamarine:           "#7fffd4",
-    azure:                "#f0ffff",
-    beige:                "#f5f5dc",
-    bisque:               "#ffe4c4",
-    black:                "#000000",
-    blanchedalmond:       "#ffebcd",
-    blue:                 "#0000ff",
-    blueviolet:           "#8a2be2",
-    brown:                "#a52a2a",
-    burlywood:            "#deb887",
-    cadetblue:            "#5f9ea0",
-    chartreuse:           "#7fff00",
-    chocolate:            "#d2691e",
-    coral:                "#ff7f50",
-    cornflowerblue:       "#6495ed",
-    cornsilk:             "#fff8dc",
-    crimson:              "#dc143c",
-    cyan:                 "#00ffff",
-    darkblue:             "#00008b",
-    darkcyan:             "#008b8b",
-    darkgoldenrod:        "#b8860b",
-    darkgray:             "#a9a9a9",
-    darkgreen:            "#006400",
-    darkkhaki:            "#bdb76b",
-    darkmagenta:          "#8b008b",
-    darkolivegreen:       "#556b2f",
-    darkorange:           "#ff8c00",
-    darkorchid:           "#9932cc",
-    darkred:              "#8b0000",
-    darksalmon:           "#e9967a",
-    darkseagreen:         "#8fbc8f",
-    darkslateblue:        "#483d8b",
-    darkslategray:        "#2f4f4f",
-    darkturquoise:        "#00ced1",
-    darkviolet:           "#9400d3",
-    deeppink:             "#ff1493",
-    deepskyblue:          "#00bfff",
-    dimgray:              "#696969",
-    dodgerblue:           "#1e90ff",
-    firebrick:            "#b22222",
-    floralwhite:          "#fffaf0",
-    forestgreen:          "#228b22",
-    fuchsia:              "#ff00ff",
-    gainsboro:            "#dcdcdc",
-    ghostwhite:           "#f8f8ff",
-    gold:                 "#ffd700",
-    goldenrod:            "#daa520",
-    gray:                 "#808080",
-    green:                "#008000",
-    greenyellow:          "#adff2f",
-    honeydew:             "#f0fff0",
-    hotpink:              "#ff69b4",
-    indianred:            "#cd5c5c",
-    indigo:               "#4b0082",
-    ivory:                "#fffff0",
-    khaki:                "#f0e68c",
-    lavender:             "#e6e6fa",
-    lavenderblush:        "#fff0f5",
-    lawngreen:            "#7cfc00",
-    lemonchiffon:         "#fffacd",
-    lightblue:            "#add8e6",
-    lightcoral:           "#f08080",
-    lightcyan:            "#e0ffff",
-    lightgoldenrodyellow: "#fafad2",
-    lightgrey:            "#d3d3d3",
-    lightgreen:           "#90ee90",
-    lightpink:            "#ffb6c1",
-    lightsalmon:          "#ffa07a",
-    lightseagreen:        "#20b2aa",
-    lightskyblue:         "#87cefa",
-    lightslategray:       "#778899",
-    lightsteelblue:       "#b0c4de",
-    lightyellow:          "#ffffe0",
-    lime:                 "#00ff00",
-    limegreen:            "#32cd32",
-    linen:                "#faf0e6",
-    magenta:              "#ff00ff",
-    maroon:               "#800000",
-    mediumaquamarine:     "#66cdaa",
-    mediumblue:           "#0000cd",
-    mediumorchid:         "#ba55d3",
-    mediumpurple:         "#9370d8",
-    mediumseagreen:       "#3cb371",
-    mediumslateblue:      "#7b68ee",
-    mediumspringgreen:    "#00fa9a",
-    mediumturquoise:      "#48d1cc",
-    mediumvioletred:      "#c71585",
-    midnightblue:         "#191970",
-    mintcream:            "#f5fffa",
-    mistyrose:            "#ffe4e1",
-    moccasin:             "#ffe4b5",
-    navajowhite:          "#ffdead",
-    navy:                 "#000080",
-    oldlace:              "#fdf5e6",
-    olive:                "#808000",
-    olivedrab:            "#6b8e23",
-    orange:               "#ffa500",
-    orangered:            "#ff4500",
-    orchid:               "#da70d6",
-    palegoldenrod:        "#eee8aa",
-    palegreen:            "#98fb98",
-    paleturquoise:        "#afeeee",
-    palevioletred:        "#d87093",
-    papayawhip:           "#ffefd5",
-    peachpuff:            "#ffdab9",
-    peru:                 "#cd853f",
-    pink:                 "#ffc0cb",
-    plum:                 "#dda0dd",
-    powderblue:           "#b0e0e6",
-    purple:               "#800080",
-    red:                  "#ff0000",
-    rosybrown:            "#bc8f8f",
-    royalblue:            "#4169e1",
-    saddlebrown:          "#8b4513",
-    salmon:               "#fa8072",
-    sandybrown:           "#f4a460",
-    seagreen:             "#2e8b57",
-    seashell:             "#fff5ee",
-    sienna:               "#a0522d",
-    silver:               "#c0c0c0",
-    skyblue:              "#87ceeb",
-    slateblue:            "#6a5acd",
-    slategray:            "#708090",
-    snow:                 "#fffafa",
-    springgreen:          "#00ff7f",
-    steelblue:            "#4682b4",
-    tan:                  "#d2b48c",
-    teal:                 "#008080",
-    thistle:              "#d8bfd8",
-    tomato:               "#ff6347",
-    turquoise:            "#40e0d0",
-    violet:               "#ee82ee",
-    wheat:                "#f5deb3",
-    white:                "#ffffff",
-    whitesmoke:           "#f5f5f5",
-    yellow:               "#ffff00",
-    yellowgreen:          "#9acd32"
-  };
-
-},{}],19:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * SVG stands for Scalable Vector Graphics, a portable graphics format. It is
  * a vector format so it allows for infinite resolution and relatively small
@@ -6528,584 +4909,2809 @@ module.exports = function(options) {
   return PShapeSVG;
 };
 
-},{}],20:[function(require,module,exports){
-/**
- * Processing.js default scope
- */
-module.exports = function(options) {
+},{}],16:[function(require,module,exports){
+module.exports = function(options, undef) {
+  var PConstants = options.PConstants;
 
-  // Building defaultScope. Changing of the prototype protects
-  // internal Processing code from the changes in defaultScope
-  function DefaultScope() {}
-  DefaultScope.prototype = options.PConstants;
+  function PVector(x, y, z) {
+    this.x = x || 0;
+    this.y = y || 0;
+    this.z = z || 0;
+  }
 
-  var defaultScope = new DefaultScope();
+  PVector.fromAngle = function(angle, v) {
+    if (v === undef || v === null) {
+      v = new PVector();
+    }
+    v.x = Math.cos(angle);
+    v.y = Math.sin(angle);
+    return v;
+  };
 
-  // copy over all known Object types and helper objects
-  Object.keys(options).forEach(function(prop) {
-    defaultScope[prop] = options[prop];
-  });
+  PVector.random2D = function(v) {
+    return PVector.fromAngle(Math.random() * PConstants.TWO_PI, v);
+  };
 
-  ////////////////////////////////////////////////////////////////////////////
-  // Class inheritance helper methods
-  ////////////////////////////////////////////////////////////////////////////
-
-  defaultScope.defineProperty = function(obj, name, desc) {
-    if("defineProperty" in Object) {
-      Object.defineProperty(obj, name, desc);
+  PVector.random3D = function(v) {
+    var angle = Math.random() * PConstants.TWO_PI;
+    var vz = Math.random() * 2 - 1;
+    var mult = Math.sqrt(1 - vz * vz);
+    var vx = mult * Math.cos(angle);
+    var vy = mult * Math.sin(angle);
+    if (v === undef || v === null) {
+      v = new PVector(vx, vy, vz);
     } else {
-      if (desc.hasOwnProperty("get")) {
-        obj.__defineGetter__(name, desc.get);
+      v.set(vx, vy, vz);
+    }
+    return v;
+  };
+
+  PVector.dist = function(v1, v2) {
+    return v1.dist(v2);
+  };
+
+  PVector.dot = function(v1, v2) {
+    return v1.dot(v2);
+  };
+
+  PVector.cross = function(v1, v2) {
+    return v1.cross(v2);
+  };
+
+  PVector.sub = function(v1, v2) {
+    return new PVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+  };
+
+  PVector.angleBetween = function(v1, v2) {
+    return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
+  };
+
+  PVector.lerp = function(v1, v2, amt) {
+    // non-static lerp mutates object, but this version returns a new vector
+    var retval = new PVector(v1.x, v1.y, v1.z);
+    retval.lerp(v2, amt);
+    return retval;
+  };
+
+  // Common vector operations for PVector
+  PVector.prototype = {
+    set: function(v, y, z) {
+      if (arguments.length === 1) {
+        this.set(v.x || v[0] || 0,
+                 v.y || v[1] || 0,
+                 v.z || v[2] || 0);
+      } else {
+        this.x = v;
+        this.y = y;
+        this.z = z;
       }
-      if (desc.hasOwnProperty("set")) {
-        obj.__defineSetter__(name, desc.set);
+    },
+    get: function() {
+      return new PVector(this.x, this.y, this.z);
+    },
+    mag: function() {
+      var x = this.x,
+          y = this.y,
+          z = this.z;
+      return Math.sqrt(x * x + y * y + z * z);
+    },
+    magSq: function() {
+      var x = this.x,
+          y = this.y,
+          z = this.z;
+      return (x * x + y * y + z * z);
+    },
+    setMag: function(v_or_len, len) {
+      if (len === undef) {
+        len = v_or_len;
+        this.normalize();
+        this.mult(len);
+      } else {
+        var v = v_or_len;
+        v.normalize();
+        v.mult(len);
+        return v;
       }
+    },
+    add: function(v, y, z) {
+      if (arguments.length === 1) {
+        this.x += v.x;
+        this.y += v.y;
+        this.z += v.z;
+      } else {
+        this.x += v;
+        this.y += y;
+        this.z += z;
+      }
+    },
+    sub: function(v, y, z) {
+      if (arguments.length === 1) {
+        this.x -= v.x;
+        this.y -= v.y;
+        this.z -= v.z;
+      } else {
+        this.x -= v;
+        this.y -= y;
+        this.z -= z;
+      }
+    },
+    mult: function(v) {
+      if (typeof v === 'number') {
+        this.x *= v;
+        this.y *= v;
+        this.z *= v;
+      } else {
+        this.x *= v.x;
+        this.y *= v.y;
+        this.z *= v.z;
+      }
+    },
+    div: function(v) {
+      if (typeof v === 'number') {
+        this.x /= v;
+        this.y /= v;
+        this.z /= v;
+      } else {
+        this.x /= v.x;
+        this.y /= v.y;
+        this.z /= v.z;
+      }
+    },
+    rotate: function(angle) {
+      var prev_x = this.x;
+      var c = Math.cos(angle);
+      var s = Math.sin(angle);
+      this.x = c * this.x - s * this.y;
+      this.y = s * prev_x + c * this.y;
+    },
+    dist: function(v) {
+      var dx = this.x - v.x,
+          dy = this.y - v.y,
+          dz = this.z - v.z;
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    },
+    dot: function(v, y, z) {
+      if (arguments.length === 1) {
+        return (this.x * v.x + this.y * v.y + this.z * v.z);
+      }
+      return (this.x * v + this.y * y + this.z * z);
+    },
+    cross: function(v) {
+      var x = this.x,
+          y = this.y,
+          z = this.z;
+      return new PVector(y * v.z - v.y * z,
+                         z * v.x - v.z * x,
+                         x * v.y - v.x * y);
+    },
+    lerp: function(v_or_x, amt_or_y, z, amt) {
+      var lerp_val = function(start, stop, amt) {
+        return start + (stop - start) * amt;
+      };
+      var x, y;
+      if (arguments.length === 2) {
+        // given vector and amt
+        amt = amt_or_y;
+        x = v_or_x.x;
+        y = v_or_x.y;
+        z = v_or_x.z;
+      } else {
+        // given x, y, z and amt
+        x = v_or_x;
+        y = amt_or_y;
+      }
+      this.x = lerp_val(this.x, x, amt);
+      this.y = lerp_val(this.y, y, amt);
+      this.z = lerp_val(this.z, z, amt);
+    },
+    normalize: function() {
+      var m = this.mag();
+      if (m > 0) {
+        this.div(m);
+      }
+    },
+    limit: function(high) {
+      if (this.mag() > high) {
+        this.normalize();
+        this.mult(high);
+      }
+    },
+    heading: function() {
+      return (-Math.atan2(-this.y, this.x));
+    },
+    heading2D: function() {
+      return this.heading();
+    },
+    toString: function() {
+      return "[" + this.x + ", " + this.y + ", " + this.z + "]";
+    },
+    array: function() {
+      return [this.x, this.y, this.z];
+    }
+  };
+
+  function createPVectorMethod(method) {
+    return function(v1, v2) {
+      var v = v1.get();
+      v[method](v2);
+      return v;
+    };
+  }
+
+  for (var method in PVector.prototype) {
+    if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
+      PVector[method] = createPVectorMethod(method);
+    }
+  }
+
+  return PVector;
+};
+
+
+},{}],17:[function(require,module,exports){
+/**
+ * XMLAttribute is an attribute of a XML element.
+ *
+ * @param {String} fname     the full name of the attribute
+ * @param {String} n         the short name of the attribute
+ * @param {String} namespace the namespace URI of the attribute
+ * @param {String} v         the value of the attribute
+ * @param {String }t         the type of the attribute
+ *
+ * @see XMLElement
+ */
+module.exports = function() {
+
+  var XMLAttribute = function (fname, n, nameSpace, v, t){
+    this.fullName = fname || "";
+    this.name = n || "";
+    this.namespace = nameSpace || "";
+    this.value = v;
+    this.type = t;
+  };
+
+  XMLAttribute.prototype = {
+    /**
+     * @member XMLAttribute
+     * The getName() function returns the short name of the attribute
+     *
+     * @return {String} the short name of the attribute
+     */
+    getName: function() {
+      return this.name;
+    },
+    /**
+     * @member XMLAttribute
+     * The getFullName() function returns the full name of the attribute
+     *
+     * @return {String} the full name of the attribute
+     */
+    getFullName: function() {
+      return this.fullName;
+    },
+    /**
+     * @member XMLAttribute
+     * The getNamespace() function returns the namespace of the attribute
+     *
+     * @return {String} the namespace of the attribute
+     */
+    getNamespace: function() {
+      return this.namespace;
+    },
+    /**
+     * @member XMLAttribute
+     * The getValue() function returns the value of the attribute
+     *
+     * @return {String} the value of the attribute
+     */
+    getValue: function() {
+      return this.value;
+    },
+    /**
+     * @member XMLAttribute
+     * The getValue() function returns the type of the attribute
+     *
+     * @return {String} the type of the attribute
+     */
+    getType: function() {
+      return this.type;
+    },
+    /**
+     * @member XMLAttribute
+     * The setValue() function sets the value of the attribute
+     *
+     * @param {String} newval the new value
+     */
+    setValue: function(newval) {
+      this.value = newval;
+    }
+  };
+
+  return XMLAttribute;
+};
+
+},{}],18:[function(require,module,exports){
+/**
+ * XMLElement is a representation of an XML object. The object is able to parse XML code
+ *
+ * @param {PApplet} parent   typically use "this"
+ * @param {String} filename  name of the XML/SVG file to load
+ * @param {String} xml       the xml/svg string
+ * @param {String} fullname  the full name of the element
+ * @param {String} namespace the namespace  of the URI
+ * @param {String} systemID  the system ID of the XML data where the element starts
+ * @param {Integer }lineNr   the line in the XML data where the element starts
+ */
+module.exports = function(options, undef) {
+
+  var Browser = options.Browser,
+      ajax = Browser.ajax,
+      window = Browser.window,
+      XMLHttpRequest = window.XMLHttpRequest,
+      DOMParser = window.DOMParser,
+      XMLAttribute = options. XMLAttribute;
+
+  var XMLElement = function(selector, uri, sysid, line) {
+    this.attributes = [];
+    this.children   = [];
+    this.fullName   = null;
+    this.name       = null;
+    this.namespace  = "";
+    this.content = null;
+    this.parent    = null;
+    this.lineNr     = "";
+    this.systemID   = "";
+    this.type = "ELEMENT";
+
+    if (selector) {
+      if (typeof selector === "string") {
+        if (uri === undef && selector.indexOf("<") > -1) {
+          // load XML from text string
+          this.parse(selector);
+        } else {
+          // XMLElement(fullname, namespace, sysid, line) format
+          this.fullName = selector;
+          this.namespace = uri;
+          this.systemId = sysid;
+          this.lineNr = line;
+        }
+      } else {
+        // XMLElement(this,file) format
+        this.parse(uri);
+      }
+    }
+  };
+  /**
+   * XMLElement methods
+   * missing: enumerateAttributeNames(), enumerateChildren(),
+   * NOTE: parse does not work when a url is passed in
+   */
+  XMLElement.prototype = {
+    /**
+     * @member XMLElement
+     * The parse() function retrieves the file via ajax() and uses DOMParser()
+     * parseFromString method to make an XML document
+     * @addon
+     *
+     * @param {String} filename name of the XML/SVG file to load
+     *
+     * @throws ExceptionType Error loading document
+     *
+     * @see XMLElement#parseChildrenRecursive
+     */
+    parse: function(textstring) {
+      var xmlDoc;
+      try {
+        var extension = textstring.substring(textstring.length-4);
+        if (extension === ".xml" || extension === ".svg") {
+          textstring = ajax(textstring);
+        }
+        xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
+        var elements = xmlDoc.documentElement;
+        if (elements) {
+          this.parseChildrenRecursive(null, elements);
+        } else {
+          throw ("Error loading document");
+        }
+        return this;
+      } catch(e) {
+        throw(e);
+      }
+    },
+    /**
+     * @member XMLElement
+     * Internal helper function for parse().
+     * Loops through the
+     * @addon
+     *
+     * @param {XMLElement} parent                      the parent node
+     * @param {XML document childNodes} elementpath    the remaining nodes that need parsing
+     *
+     * @return {XMLElement} the new element and its children elements
+     */
+    parseChildrenRecursive: function (parent, elementpath){
+      var xmlelement,
+        xmlattribute,
+        tmpattrib,
+        l, m,
+        child;
+      if (!parent) { // this element is the root element
+        this.fullName = elementpath.localName;
+        this.name     = elementpath.nodeName;
+        xmlelement    = this;
+      } else { // this element has a parent
+        xmlelement         = new XMLElement(elementpath.nodeName);
+        xmlelement.parent  = parent;
+      }
+
+      // if this is a text node, return a PCData element (parsed character data)
+      if (elementpath.nodeType === 3 && elementpath.textContent !== "") {
+        return this.createPCDataElement(elementpath.textContent);
+      }
+
+      // if this is a CDATA node, return a CData element (unparsed character data)
+      if (elementpath.nodeType === 4) {
+       return this.createCDataElement(elementpath.textContent);
+      }
+
+      // bind all attributes, if there are any
+      if (elementpath.attributes) {
+        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
+          tmpattrib    = elementpath.attributes[l];
+          xmlattribute = new XMLAttribute(tmpattrib.getname,
+                                          tmpattrib.nodeName,
+                                          tmpattrib.namespaceURI,
+                                          tmpattrib.nodeValue,
+                                          tmpattrib.nodeType);
+          xmlelement.attributes.push(xmlattribute);
+        }
+      }
+
+      // bind all children, if there are any
+      if (elementpath.childNodes) {
+        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
+          var node = elementpath.childNodes[l];
+          child = xmlelement.parseChildrenRecursive(xmlelement, node);
+          if (child !== null) {
+            xmlelement.children.push(child);
+          }
+        }
+      }
+
+      return xmlelement;
+    },
+    /**
+     * @member XMLElement
+     * The createElement() function Creates an empty element
+     *
+     * @param {String} fullName   the full name of the element
+     * @param {String} namespace  the namespace URI
+     * @param {String} systemID   the system ID of the XML data where the element starts
+     * @param {int} lineNr    the line in the XML data where the element starts
+     */
+    createElement: function (fullname, namespaceuri, sysid, line) {
+      if (sysid === undef) {
+        return new XMLElement(fullname, namespaceuri);
+      }
+      return new XMLElement(fullname, namespaceuri, sysid, line);
+    },
+    /**
+     * @member XMLElement
+     * The createPCDataElement() function creates an element to be used for #PCDATA content.
+     * Because Processing discards whitespace TEXT nodes, this method will not build an element
+     * if the passed content is empty after trimming for whitespace.
+     *
+     * @return {XMLElement} new "pcdata" XMLElement, or null if content consists only of whitespace
+     */
+    createPCDataElement: function (content, isCDATA) {
+      if (content.replace(/^\s+$/g,"") === "") {
+        return null;
+      }
+      var pcdata = new XMLElement();
+      pcdata.type = "TEXT";
+      pcdata.content = content;
+      return pcdata;
+    },
+    /**
+     * @member XMLElement
+     * The createCDataElement() function creates an element to be used for CDATA content.
+     *
+     * @return {XMLElement} new "cdata" XMLElement, or null if content consists only of whitespace
+     */
+    createCDataElement: function (content) {
+      var cdata = this.createPCDataElement(content);
+      if (cdata === null) {
+        return null;
+      }
+
+      cdata.type = "CDATA";
+      var htmlentities = {"<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;"},
+          entity;
+      for (entity in htmlentities) {
+        if (!Object.hasOwnProperty(htmlentities,entity)) {
+          content = content.replace(new RegExp(entity, "g"), htmlentities[entity]);
+        }
+      }
+      cdata.cdata = content;
+      return cdata;
+    },
+    /**
+     * @member XMLElement
+     * The hasAttribute() function returns whether an attribute exists
+     *
+     * @param {String} name      name of the attribute
+     * @param {String} namespace the namespace URI of the attribute
+     *
+     * @return {boolean} true if the attribute exists
+     */
+    hasAttribute: function () {
+      if (arguments.length === 1) {
+        return this.getAttribute(arguments[0]) !== null;
+      }
+      if (arguments.length === 2) {
+        return this.getAttribute(arguments[0],arguments[1]) !== null;
+      }
+    },
+    /**
+     * @member XMLElement
+     * The equals() function checks to see if the XMLElement being passed in equals another XMLElement
+     *
+     * @param {XMLElement} rawElement the element to compare to
+     *
+     * @return {boolean} true if the element equals another element
+     */
+    equals: function(other) {
+      if (!(other instanceof XMLElement)) {
+        return false;
+      }
+      var i, j;
+      if (this.fullName !== other.fullName) { return false; }
+      if (this.attributes.length !== other.getAttributeCount()) { return false; }
+      // attributes may be ordered differently
+      if (this.attributes.length !== other.attributes.length) { return false; }
+      var attr_name, attr_ns, attr_value, attr_type, attr_other;
+      for (i = 0, j = this.attributes.length; i < j; i++) {
+        attr_name = this.attributes[i].getName();
+        attr_ns = this.attributes[i].getNamespace();
+        attr_other = other.findAttribute(attr_name, attr_ns);
+        if (attr_other === null) { return false; }
+        if (this.attributes[i].getValue() !== attr_other.getValue()) { return false; }
+        if (this.attributes[i].getType() !== attr_other.getType()) { return false; }
+      }
+      // children must be ordered identically
+      if (this.children.length !== other.getChildCount()) { return false; }
+      if (this.children.length>0) {
+        var child1, child2;
+        for (i = 0, j = this.children.length; i < j; i++) {
+          child1 = this.getChild(i);
+          child2 = other.getChild(i);
+          if (!child1.equals(child2)) { return false; }
+        }
+        return true;
+      }
+      return (this.content === other.content);
+    },
+    /**
+     * @member XMLElement
+     * The getContent() function returns the content of an element. If there is no such content, null is returned
+     *
+     * @return {String} the (possibly null) content
+     */
+    getContent: function(){
+      if (this.type === "TEXT" || this.type === "CDATA") {
+        return this.content;
+      }
+      var children = this.children;
+      if (children.length === 1 && (children[0].type === "TEXT" || children[0].type === "CDATA")) {
+        return children[0].content;
+      }
+      return null;
+    },
+    /**
+     * @member XMLElement
+     * The getAttribute() function returns the value of an attribute
+     *
+     * @param {String} name         the non-null full name of the attribute
+     * @param {String} namespace    the namespace URI, which may be null
+     * @param {String} defaultValue the default value of the attribute
+     *
+     * @return {String} the value, or defaultValue if the attribute does not exist
+     */
+    getAttribute: function (){
+      var attribute;
+      if (arguments.length === 2) {
+        attribute = this.findAttribute(arguments[0]);
+        if (attribute) {
+          return attribute.getValue();
+        }
+        return arguments[1];
+      } else if (arguments.length === 1) {
+        attribute = this.findAttribute(arguments[0]);
+        if (attribute) {
+          return attribute.getValue();
+        }
+        return null;
+      } else if (arguments.length === 3) {
+        attribute = this.findAttribute(arguments[0],arguments[1]);
+        if (attribute) {
+          return attribute.getValue();
+        }
+        return arguments[2];
+      }
+    },
+    /**
+     * @member XMLElement
+     * The getStringAttribute() function returns the string attribute of the element
+     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+     *
+     * @param name         the name of the attribute
+     * @param defaultValue value returned if the attribute is not found
+     *
+     * @return {String} the value, or defaultValue if the attribute does not exist
+     */
+    getStringAttribute: function() {
+      if (arguments.length === 1) {
+        return this.getAttribute(arguments[0]);
+      }
+      if (arguments.length === 2) {
+        return this.getAttribute(arguments[0], arguments[1]);
+      }
+      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic String
+     * attribute getter. This may only take one argument.
+     */
+    getString: function(attributeName) {
+      return this.getStringAttribute(attributeName);
+    },
+    /**
+     * @member XMLElement
+     * The getFloatAttribute() function returns the float attribute of the element.
+     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+     *
+     * @param name         the name of the attribute
+     * @param defaultValue value returned if the attribute is not found
+     *
+     * @return {float} the value, or defaultValue if the attribute does not exist
+     */
+    getFloatAttribute: function() {
+      if (arguments.length === 1 ) {
+        return parseFloat(this.getAttribute(arguments[0], 0));
+      }
+      if (arguments.length === 2 ) {
+        return this.getAttribute(arguments[0], arguments[1]);
+      }
+      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic float
+     * attribute getter. This may only take one argument.
+     */
+    getFloat: function(attributeName) {
+      return this.getFloatAttribute(attributeName);
+    },
+    /**
+     * @member XMLElement
+     * The getIntAttribute() function returns the integer attribute of the element.
+     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+     *
+     * @param name         the name of the attribute
+     * @param defaultValue value returned if the attribute is not found
+     *
+     * @return {int} the value, or defaultValue if the attribute does not exist
+     */
+    getIntAttribute: function () {
+      if (arguments.length === 1) {
+        return this.getAttribute( arguments[0], 0 );
+      }
+      if (arguments.length === 2) {
+        return this.getAttribute(arguments[0], arguments[1]);
+      }
+      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic int
+     * attribute getter. This may only take one argument.
+     */
+    getInt: function(attributeName) {
+      return this.getIntAttribute(attributeName);
+    },
+    /**
+     * @member XMLElement
+     * The hasChildren() function returns whether the element has children.
+     *
+     * @return {boolean} true if the element has children.
+     */
+    hasChildren: function () {
+      return this.children.length > 0 ;
+    },
+    /**
+     * @member XMLElement
+     * The addChild() function adds a child element
+     *
+     * @param {XMLElement} child the non-null child to add.
+     */
+    addChild: function (child) {
+      if (child !== null) {
+        child.parent = this;
+        this.children.push(child);
+      }
+    },
+    /**
+     * @member XMLElement
+     * The insertChild() function inserts a child element at the index provided
+     *
+     * @param {XMLElement} child  the non-null child to add.
+     * @param {int} index     where to put the child.
+     */
+    insertChild: function (child, index) {
+      if (child) {
+        if ((child.getLocalName() === null) && (! this.hasChildren())) {
+          var lastChild = this.children[this.children.length -1];
+          if (lastChild.getLocalName() === null) {
+              lastChild.setContent(lastChild.getContent() + child.getContent());
+              return;
+          }
+        }
+        child.parent = this;
+        this.children.splice(index,0,child);
+      }
+    },
+    /**
+     * @member XMLElement
+     * The getChild() returns the child XMLElement as specified by the <b>index</b> parameter.
+     * The value of the <b>index</b> parameter must be less than the total number of children to avoid going out of the array storing the child elements.
+     * When the <b>path</b> parameter is specified, then it will return all children that match that path. The path is a series of elements and sub-elements, separated by slashes.
+     *
+     * @param {int} index     where to put the child.
+     * @param {String} path       path to a particular element
+     *
+     * @return {XMLElement} the element
+     */
+    getChild: function (selector) {
+      if (typeof selector === "number") {
+        return this.children[selector];
+      }
+      if (selector.indexOf('/') !== -1) {
+        // path traversal is required
+        return this.getChildRecursive(selector.split("/"), 0);
+      }
+      var kid, kidName;
+      for (var i = 0, j = this.getChildCount(); i < j; i++) {
+        kid = this.getChild(i);
+        kidName = kid.getName();
+        if (kidName !== null && kidName === selector) {
+            return kid;
+        }
+      }
+      return null;
+    },
+    /**
+     * @member XMLElement
+     * The getChildren() returns all of the children as an XMLElement array.
+     * When the <b>path</b> parameter is specified, then it will return all children that match that path.
+     * The path is a series of elements and sub-elements, separated by slashes.
+     *
+     * @param {String} path       element name or path/to/element
+     *
+     * @return {XMLElement} array of child elements that match
+     *
+     * @see XMLElement#getChildCount()
+     * @see XMLElement#getChild()
+     */
+    getChildren: function(){
+      if (arguments.length === 1) {
+        if (typeof arguments[0] === "number") {
+          return this.getChild( arguments[0]);
+        }
+        if (arguments[0].indexOf('/') !== -1) { // path was given
+          return this.getChildrenRecursive( arguments[0].split("/"), 0);
+        }
+        var matches = [];
+        var kid, kidName;
+        for (var i = 0, j = this.getChildCount(); i < j; i++) {
+          kid = this.getChild(i);
+          kidName = kid.getName();
+          if (kidName !== null && kidName === arguments[0]) {
+            matches.push(kid);
+          }
+        }
+        return matches;
+      }
+      return this.children;
+    },
+    /**
+     * @member XMLElement
+     * The getChildCount() returns the number of children for the element.
+     *
+     * @return {int} the count
+     *
+     * @see XMLElement#getChild()
+     * @see XMLElement#getChildren()
+     */
+    getChildCount: function() {
+      return this.children.length;
+    },
+    /**
+     * @member XMLElement
+     * Internal helper function for getChild().
+     *
+     * @param {String[]} items   result of splitting the query on slashes
+     * @param {int} offset   where in the items[] array we're currently looking
+     *
+     * @return {XMLElement} matching element or null if no match
+     */
+    getChildRecursive: function (items, offset) {
+      // terminating clause: we are the requested candidate
+      if (offset === items.length) {
+        return this;
+      }
+      // continuation clause
+      var kid, kidName, matchName = items[offset];
+      for(var i = 0, j = this.getChildCount(); i < j; i++) {
+          kid = this.getChild(i);
+          kidName = kid.getName();
+          if (kidName !== null && kidName === matchName) {
+            return kid.getChildRecursive(items, offset+1);
+          }
+      }
+      return null;
+    },
+    /**
+     * @member XMLElement
+     * Internal helper function for getChildren().
+     *
+     * @param {String[]} items   result of splitting the query on slashes
+     * @param {int} offset   where in the items[] array we're currently looking
+     *
+     * @return {XMLElement[]} matching elements or empty array if no match
+     */
+    getChildrenRecursive: function (items, offset) {
+      if (offset === items.length-1) {
+        return this.getChildren(items[offset]);
+      }
+      var matches = this.getChildren(items[offset]);
+      var kidMatches = [];
+      for (var i = 0; i < matches.length; i++) {
+        kidMatches = kidMatches.concat(matches[i].getChildrenRecursive(items, offset+1));
+      }
+      return kidMatches;
+    },
+    /**
+     * @member XMLElement
+     * The isLeaf() function returns whether the element is a leaf element.
+     *
+     * @return {boolean} true if the element has no children.
+     */
+    isLeaf: function() {
+      return !this.hasChildren();
+    },
+    /**
+     * @member XMLElement
+     * The listChildren() function put the names of all children into an array. Same as looping through
+     * each child and calling getName() on each XMLElement.
+     *
+     * @return {String[]} a list of element names.
+     */
+    listChildren: function() {
+      var arr = [];
+      for (var i = 0, j = this.children.length; i < j; i++) {
+        arr.push( this.getChild(i).getName());
+      }
+      return arr;
+    },
+    /**
+     * @member XMLElement
+     * The removeAttribute() function removes an attribute
+     *
+     * @param {String} name        the non-null name of the attribute.
+     * @param {String} namespace   the namespace URI of the attribute, which may be null.
+     */
+    removeAttribute: function (name , namespace) {
+      this.namespace = namespace || "";
+      for (var i = 0, j = this.attributes.length; i < j; i++) {
+        if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
+          this.attributes.splice(i, 1);
+          break;
+        }
+      }
+    },
+    /**
+     * @member XMLElement
+     * The removeChild() removes a child element.
+     *
+     * @param {XMLElement} child      the the non-null child to be renoved
+     */
+    removeChild: function(child) {
+      if (child) {
+        for (var i = 0, j = this.children.length; i < j; i++) {
+          if (this.children[i].equals(child)) {
+            this.children.splice(i, 1);
+            break;
+          }
+        }
+      }
+    },
+    /**
+     * @member XMLElement
+     * The removeChildAtIndex() removes the child located at a certain index
+     *
+     * @param {int} index      the index of the child, where the first child has index 0
+     */
+    removeChildAtIndex: function(index) {
+      if (this.children.length > index) { //make sure its not outofbounds
+        this.children.splice(index, 1);
+      }
+    },
+    /**
+     * @member XMLElement
+     * The findAttribute() function searches an attribute
+     *
+     * @param {String} name        fullName the non-null full name of the attribute
+     * @param {String} namespace   the name space, which may be null
+     *
+     * @return {XMLAttribute} the attribute, or null if the attribute does not exist.
+     */
+    findAttribute: function (name, namespace) {
+      this.namespace = namespace || "";
+      for (var i = 0, j = this.attributes.length; i < j; i++) {
+        if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
+           return this.attributes[i];
+        }
+      }
+      return null;
+    },
+    /**
+     * @member XMLElement
+     * The setAttribute() function sets an attribute.
+     *
+     * @param {String} name        the non-null full name of the attribute
+     * @param {String} namespace   the non-null value of the attribute
+     */
+    setAttribute: function() {
+      var attr;
+      if (arguments.length === 3) {
+        var index = arguments[0].indexOf(':');
+        var name  = arguments[0].substring(index + 1);
+        attr      = this.findAttribute(name, arguments[1]);
+        if (attr) {
+          attr.setValue(arguments[2]);
+        } else {
+          attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
+          this.attributes.push(attr);
+        }
+      } else {
+        attr = this.findAttribute(arguments[0]);
+        if (attr) {
+          attr.setValue(arguments[1]);
+        } else {
+          attr = new XMLAttribute(arguments[0], arguments[0], null, arguments[1], "CDATA");
+          this.attributes.push(attr);
+        }
+      }
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic String
+     * attribute setter. This must take two arguments.
+     */
+    setString: function(attribute, value) {
+      this.setAttribute(attribute, value);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic int
+     * attribute setter. This must take two arguments.
+     */
+    setInt: function(attribute, value) {
+      this.setAttribute(attribute, value);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic float
+     * attribute setter. This must take two arguments.
+     */
+    setFloat: function(attribute, value) {
+      this.setAttribute(attribute, value);
+    },
+    /**
+     * @member XMLElement
+     * The setContent() function sets the #PCDATA content. It is an error to call this method with a
+     * non-null value if there are child objects.
+     *
+     * @param {String} content     the (possibly null) content
+     */
+    setContent: function(content) {
+      if (this.children.length > 0) {
+        Processing.debug("Tried to set content for XMLElement with children"); }
+      this.content = content;
+    },
+    /**
+     * @member XMLElement
+     * The setName() function sets the full name. This method also sets the short name and clears the
+     * namespace URI.
+     *
+     * @param {String} name        the non-null name
+     * @param {String} namespace   the namespace URI, which may be null.
+     */
+    setName: function() {
+      if (arguments.length === 1) {
+        this.name      = arguments[0];
+        this.fullName  = arguments[0];
+        this.namespace = null;
+      } else {
+        var index = arguments[0].indexOf(':');
+        if ((arguments[1] === null) || (index < 0)) {
+            this.name = arguments[0];
+        } else {
+            this.name = arguments[0].substring(index + 1);
+        }
+        this.fullName  = arguments[0];
+        this.namespace = arguments[1];
+      }
+    },
+    /**
+     * @member XMLElement
+     * The getName() function returns the full name (i.e. the name including an eventual namespace
+     * prefix) of the element.
+     *
+     * @return {String} the name, or null if the element only contains #PCDATA.
+     */
+    getName: function() {
+      return this.fullName;
+    },
+    /**
+     * @member XMLElement
+     * The getLocalName() function returns the local name (i.e. the name excluding an eventual namespace
+     * prefix) of the element.
+     *
+     * @return {String} the name, or null if the element only contains #PCDATA.
+     */
+    getLocalName: function() {
+      return this.name;
+    },
+    /**
+     * @member XMLElement
+     * The getAttributeCount() function returns the number of attributes for the node
+     * that this XMLElement represents.
+     *
+     * @return {int} the number of attributes in this XMLElement
+     */
+    getAttributeCount: function() {
+      return this.attributes.length;
+    },
+    /**
+     * @member XMLElement
+     * The toString() function returns the XML definition of an XMLElement.
+     *
+     * @return {String} the XML definition of this XMLElement
+     */
+    toString: function() {
+      // shortcut for text and cdata nodes
+      if (this.type === "TEXT") {
+        return this.content;
+      }
+
+      if (this.type === "CDATA") {
+        return this.cdata;
+      }
+
+      // real XMLElements
+      var tagstring = this.fullName;
+      var xmlstring =  "<" + tagstring;
+      var a,c;
+
+      // serialize the attributes to XML string
+      for (a = 0; a<this.attributes.length; a++) {
+        var attr = this.attributes[a];
+        xmlstring += " "  + attr.getName() + "=" + '"' + attr.getValue() + '"';
+      }
+
+      // serialize all children to XML string
+      if (this.children.length === 0) {
+        if (this.content==="") {
+          xmlstring += "/>";
+        } else {
+          xmlstring += ">" + this.content + "</"+tagstring+">";
+        }
+      } else {
+        xmlstring += ">";
+        for (c = 0; c<this.children.length; c++) {
+          xmlstring += this.children[c].toString();
+        }
+        xmlstring += "</" + tagstring + ">";
+      }
+      return xmlstring;
+     }
+  };
+
+  /**
+   * static Processing 1.5 XML API wrapper for the
+   * parse method. This may only take one argument.
+   */
+  XMLElement.parse = function(xmlstring) {
+    var element = new XMLElement();
+    element.parse(xmlstring);
+    return element;
+  };
+
+  return XMLElement;
+};
+
+},{}],19:[function(require,module,exports){
+/**
+ * web colors, by name
+ */
+module.exports = {
+    aliceblue:            "#f0f8ff",
+    antiquewhite:         "#faebd7",
+    aqua:                 "#00ffff",
+    aquamarine:           "#7fffd4",
+    azure:                "#f0ffff",
+    beige:                "#f5f5dc",
+    bisque:               "#ffe4c4",
+    black:                "#000000",
+    blanchedalmond:       "#ffebcd",
+    blue:                 "#0000ff",
+    blueviolet:           "#8a2be2",
+    brown:                "#a52a2a",
+    burlywood:            "#deb887",
+    cadetblue:            "#5f9ea0",
+    chartreuse:           "#7fff00",
+    chocolate:            "#d2691e",
+    coral:                "#ff7f50",
+    cornflowerblue:       "#6495ed",
+    cornsilk:             "#fff8dc",
+    crimson:              "#dc143c",
+    cyan:                 "#00ffff",
+    darkblue:             "#00008b",
+    darkcyan:             "#008b8b",
+    darkgoldenrod:        "#b8860b",
+    darkgray:             "#a9a9a9",
+    darkgreen:            "#006400",
+    darkkhaki:            "#bdb76b",
+    darkmagenta:          "#8b008b",
+    darkolivegreen:       "#556b2f",
+    darkorange:           "#ff8c00",
+    darkorchid:           "#9932cc",
+    darkred:              "#8b0000",
+    darksalmon:           "#e9967a",
+    darkseagreen:         "#8fbc8f",
+    darkslateblue:        "#483d8b",
+    darkslategray:        "#2f4f4f",
+    darkturquoise:        "#00ced1",
+    darkviolet:           "#9400d3",
+    deeppink:             "#ff1493",
+    deepskyblue:          "#00bfff",
+    dimgray:              "#696969",
+    dodgerblue:           "#1e90ff",
+    firebrick:            "#b22222",
+    floralwhite:          "#fffaf0",
+    forestgreen:          "#228b22",
+    fuchsia:              "#ff00ff",
+    gainsboro:            "#dcdcdc",
+    ghostwhite:           "#f8f8ff",
+    gold:                 "#ffd700",
+    goldenrod:            "#daa520",
+    gray:                 "#808080",
+    green:                "#008000",
+    greenyellow:          "#adff2f",
+    honeydew:             "#f0fff0",
+    hotpink:              "#ff69b4",
+    indianred:            "#cd5c5c",
+    indigo:               "#4b0082",
+    ivory:                "#fffff0",
+    khaki:                "#f0e68c",
+    lavender:             "#e6e6fa",
+    lavenderblush:        "#fff0f5",
+    lawngreen:            "#7cfc00",
+    lemonchiffon:         "#fffacd",
+    lightblue:            "#add8e6",
+    lightcoral:           "#f08080",
+    lightcyan:            "#e0ffff",
+    lightgoldenrodyellow: "#fafad2",
+    lightgrey:            "#d3d3d3",
+    lightgreen:           "#90ee90",
+    lightpink:            "#ffb6c1",
+    lightsalmon:          "#ffa07a",
+    lightseagreen:        "#20b2aa",
+    lightskyblue:         "#87cefa",
+    lightslategray:       "#778899",
+    lightsteelblue:       "#b0c4de",
+    lightyellow:          "#ffffe0",
+    lime:                 "#00ff00",
+    limegreen:            "#32cd32",
+    linen:                "#faf0e6",
+    magenta:              "#ff00ff",
+    maroon:               "#800000",
+    mediumaquamarine:     "#66cdaa",
+    mediumblue:           "#0000cd",
+    mediumorchid:         "#ba55d3",
+    mediumpurple:         "#9370d8",
+    mediumseagreen:       "#3cb371",
+    mediumslateblue:      "#7b68ee",
+    mediumspringgreen:    "#00fa9a",
+    mediumturquoise:      "#48d1cc",
+    mediumvioletred:      "#c71585",
+    midnightblue:         "#191970",
+    mintcream:            "#f5fffa",
+    mistyrose:            "#ffe4e1",
+    moccasin:             "#ffe4b5",
+    navajowhite:          "#ffdead",
+    navy:                 "#000080",
+    oldlace:              "#fdf5e6",
+    olive:                "#808000",
+    olivedrab:            "#6b8e23",
+    orange:               "#ffa500",
+    orangered:            "#ff4500",
+    orchid:               "#da70d6",
+    palegoldenrod:        "#eee8aa",
+    palegreen:            "#98fb98",
+    paleturquoise:        "#afeeee",
+    palevioletred:        "#d87093",
+    papayawhip:           "#ffefd5",
+    peachpuff:            "#ffdab9",
+    peru:                 "#cd853f",
+    pink:                 "#ffc0cb",
+    plum:                 "#dda0dd",
+    powderblue:           "#b0e0e6",
+    purple:               "#800080",
+    red:                  "#ff0000",
+    rosybrown:            "#bc8f8f",
+    royalblue:            "#4169e1",
+    saddlebrown:          "#8b4513",
+    salmon:               "#fa8072",
+    sandybrown:           "#f4a460",
+    seagreen:             "#2e8b57",
+    seashell:             "#fff5ee",
+    sienna:               "#a0522d",
+    silver:               "#c0c0c0",
+    skyblue:              "#87ceeb",
+    slateblue:            "#6a5acd",
+    slategray:            "#708090",
+    snow:                 "#fffafa",
+    springgreen:          "#00ff7f",
+    steelblue:            "#4682b4",
+    tan:                  "#d2b48c",
+    teal:                 "#008080",
+    thistle:              "#d8bfd8",
+    tomato:               "#ff6347",
+    turquoise:            "#40e0d0",
+    violet:               "#ee82ee",
+    wheat:                "#f5deb3",
+    white:                "#ffffff",
+    whitesmoke:           "#f5f5f5",
+    yellow:               "#ffff00",
+    yellowgreen:          "#9acd32"
+  };
+
+},{}],20:[function(require,module,exports){
+module.exports = function(virtHashCode, virtEquals, undef) {
+
+  return function withProxyFunctions(p, removeFirstArgument) {
+    /**
+     * The contains(string) function returns true if the string passed in the parameter
+     * is a substring of this string. It returns false if the string passed
+     * in the parameter is not a substring of this string.
+     *
+     * @param {String} The string to look for in the current string
+     *
+     * @return {boolean} returns true if this string contains
+     * the string passed as parameter. returns false, otherwise.
+     *
+     */
+    p.__contains = function (subject, subStr) {
+      if (typeof subject !== "string") {
+        return subject.contains.apply(subject, removeFirstArgument(arguments));
+      }
+      //Parameter is not null AND
+      //The type of the parameter is the same as this object (string)
+      //The javascript function that finds a substring returns 0 or higher
+      return (
+        (subject !== null) &&
+        (subStr !== null) &&
+        (typeof subStr === "string") &&
+        (subject.indexOf(subStr) > -1)
+      );
+    };
+
+    /**
+     * The __replaceAll() function searches all matches between a substring (or regular expression) and a string,
+     * and replaces the matched substring with a new substring
+     *
+     * @param {String} subject    a substring
+     * @param {String} regex      a substring or a regular expression
+     * @param {String} replace    the string to replace the found value
+     *
+     * @return {String} returns result
+     *
+     * @see #match
+     */
+    p.__replaceAll = function(subject, regex, replacement) {
+      if (typeof subject !== "string") {
+        return subject.replaceAll.apply(subject, removeFirstArgument(arguments));
+      }
+
+      return subject.replace(new RegExp(regex, "g"), replacement);
+    };
+
+    /**
+     * The __replaceFirst() function searches first matche between a substring (or regular expression) and a string,
+     * and replaces the matched substring with a new substring
+     *
+     * @param {String} subject    a substring
+     * @param {String} regex      a substring or a regular expression
+     * @param {String} replace    the string to replace the found value
+     *
+     * @return {String} returns result
+     *
+     * @see #match
+     */
+    p.__replaceFirst = function(subject, regex, replacement) {
+      if (typeof subject !== "string") {
+        return subject.replaceFirst.apply(subject, removeFirstArgument(arguments));
+      }
+
+      return subject.replace(new RegExp(regex, ""), replacement);
+    };
+
+    /**
+     * The __replace() function searches all matches between a substring and a string,
+     * and replaces the matched substring with a new substring
+     *
+     * @param {String} subject         a substring
+     * @param {String} what         a substring to find
+     * @param {String} replacement    the string to replace the found value
+     *
+     * @return {String} returns result
+     */
+    p.__replace = function(subject, what, replacement) {
+      if (typeof subject !== "string") {
+        return subject.replace.apply(subject, removeFirstArgument(arguments));
+      }
+      if (what instanceof RegExp) {
+        return subject.replace(what, replacement);
+      }
+
+      if (typeof what !== "string") {
+        what = what.toString();
+      }
+      if (what === "") {
+        return subject;
+      }
+
+      var i = subject.indexOf(what);
+      if (i < 0) {
+        return subject;
+      }
+
+      var j = 0, result = "";
+      do {
+        result += subject.substring(j, i) + replacement;
+        j = i + what.length;
+      } while ( (i = subject.indexOf(what, j)) >= 0);
+      return result + subject.substring(j);
+    };
+
+    /**
+     * The __equals() function compares two strings (or objects) to see if they are the same.
+     * This method is necessary because it's not possible to compare strings using the equality operator (==).
+     * Returns true if the strings are the same and false if they are not.
+     *
+     * @param {String} subject  a string used for comparison
+     * @param {String} other  a string used for comparison with
+     *
+     * @return {boolean} true is the strings are the same false otherwise
+     */
+    p.__equals = function(subject, other) {
+      if (subject.equals instanceof Function) {
+        return subject.equals.apply(subject, removeFirstArgument(arguments));
+      }
+
+      return virtEquals(subject, other);
+    };
+
+    /**
+     * The __equalsIgnoreCase() function compares two strings to see if they are the same.
+     * Returns true if the strings are the same, either when forced to all lower case or
+     * all upper case.
+     *
+     * @param {String} subject  a string used for comparison
+     * @param {String} other  a string used for comparison with
+     *
+     * @return {boolean} true is the strings are the same, ignoring case. false otherwise
+     */
+    p.__equalsIgnoreCase = function(subject, other) {
+      if (typeof subject !== "string") {
+        return subject.equalsIgnoreCase.apply(subject, removeFirstArgument(arguments));
+      }
+
+      return subject.toLowerCase() === other.toLowerCase();
+    };
+
+    /**
+     * The __toCharArray() function splits the string into a char array.
+     *
+     * @param {String} subject The string
+     *
+     * @return {Char[]} a char array
+     */
+    p.__toCharArray = function(subject) {
+      if (typeof subject !== "string") {
+        return subject.toCharArray.apply(subject, removeFirstArgument(arguments));
+      }
+
+      var chars = [];
+      for (var i = 0, len = subject.length; i < len; ++i) {
+        chars[i] = new Char(subject.charAt(i));
+      }
+      return chars;
+    };
+
+    /**
+     * The __split() function splits a string using the regex delimiter
+     * specified. If limit is specified, the resultant array will have number
+     * of elements equal to or less than the limit.
+     *
+     * @param {String} subject string to be split
+     * @param {String} regexp  regex string used to split the subject
+     * @param {int}    limit   max number of tokens to be returned
+     *
+     * @return {String[]} an array of tokens from the split string
+     */
+    p.__split = function(subject, regex, limit) {
+      if (typeof subject !== "string") {
+        return subject.split.apply(subject, removeFirstArgument(arguments));
+      }
+
+      var pattern = new RegExp(regex);
+
+      // If limit is not specified, use JavaScript's built-in String.split.
+      if ((limit === undef) || (limit < 1)) {
+        return subject.split(pattern);
+      }
+
+      // If limit is specified, JavaScript's built-in String.split has a
+      // different behaviour than Java's. A Java-compatible implementation is
+      // provided here.
+      var result = [], currSubject = subject, pos;
+      while (((pos = currSubject.search(pattern)) !== -1) && (result.length < (limit - 1))) {
+        var match = pattern.exec(currSubject).toString();
+        result.push(currSubject.substring(0, pos));
+        currSubject = currSubject.substring(pos + match.length);
+      }
+      if ((pos !== -1) || (currSubject !== "")) {
+        result.push(currSubject);
+      }
+      return result;
+    };
+
+    /**
+     * The codePointAt() function returns the unicode value of the character at a given index of a string.
+     *
+     * @param  {int} idx         the index of the character
+     *
+     * @return {String} code     the String containing the unicode value of the character
+     */
+    p.__codePointAt = function(subject, idx) {
+      var code = subject.charCodeAt(idx),
+          hi,
+          low;
+      if (0xD800 <= code && code <= 0xDBFF) {
+        hi = code;
+        low = subject.charCodeAt(idx + 1);
+        return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+      }
+      return code;
+    };
+
+    /**
+     * The matches() function checks whether or not a string matches a given regular expression.
+     *
+     * @param {String} str      the String on which the match is tested
+     * @param {String} regexp   the regexp for which a match is tested
+     *
+     * @return {boolean} true if the string fits the regexp, false otherwise
+     */
+    p.__matches = function(str, regexp) {
+      return (new RegExp(regexp)).test(str);
+    };
+
+    /**
+     * The startsWith() function tests if a string starts with the specified prefix.  If the prefix
+     * is the empty String or equal to the subject String, startsWith() will also return true.
+     *
+     * @param {String} prefix   the String used to compare against the start of the subject String.
+     * @param {int}    toffset  (optional) an offset into the subject String where searching should begin.
+     *
+     * @return {boolean} true if the subject String starts with the prefix.
+     */
+    p.__startsWith = function(subject, prefix, toffset) {
+      if (typeof subject !== "string") {
+        return subject.startsWith.apply(subject, removeFirstArgument(arguments));
+      }
+
+      toffset = toffset || 0;
+      if (toffset < 0 || toffset > subject.length) {
+        return false;
+      }
+      return (prefix === '' || prefix === subject) ? true : (subject.indexOf(prefix) === toffset);
+    };
+
+    /**
+     * The endsWith() function tests if a string ends with the specified suffix.  If the suffix
+     * is the empty String, endsWith() will also return true.
+     *
+     * @param {String} suffix   the String used to compare against the end of the subject String.
+     *
+     * @return {boolean} true if the subject String starts with the prefix.
+     */
+    p.__endsWith = function(subject, suffix) {
+      if (typeof subject !== "string") {
+        return subject.endsWith.apply(subject, removeFirstArgument(arguments));
+      }
+
+      var suffixLen = suffix ? suffix.length : 0;
+      return (suffix === '' || suffix === subject) ? true :
+        (subject.indexOf(suffix) === subject.length - suffixLen);
+    };
+
+    /**
+     * The returns hash code of the.
+     *
+     * @param {Object} subject The string
+     *
+     * @return {int} a hash code
+     */
+    p.__hashCode = function(subject) {
+      if (subject.hashCode instanceof Function) {
+        return subject.hashCode.apply(subject, removeFirstArgument(arguments));
+      }
+      return virtHashCode(subject);
+    };
+
+    /**
+     * The __printStackTrace() prints stack trace to the console.
+     *
+     * @param {Exception} subject The error
+     */
+    p.__printStackTrace = function(subject) {
+      p.println("Exception: " + subject.toString() );
+    };
+  };
+
+};
+
+},{}],21:[function(require,module,exports){
+/**
+ * For many "math" functions, we can delegate
+ * to the Math object. For others, we can't.
+ */
+module.exports = function withMath(p, undef) {
+  var currentRandom = Math.random;
+
+  /**
+  * Calculates the absolute value (magnitude) of a number. The absolute value of a number is always positive.
+  *
+  * @param {int|float} value   int or float
+  *
+  * @returns {int|float}
+  */
+  p.abs = Math.abs;
+
+  /**
+  * Calculates the closest int value that is greater than or equal to the value of the parameter.
+  * For example, ceil(9.03) returns the value 10.
+  *
+  * @param {float} value   float
+  *
+  * @returns {int}
+  *
+  * @see floor
+  * @see round
+  */
+  p.ceil = Math.ceil;
+
+  /**
+  * Returns Euler's number e (2.71828...) raised to the power of the value parameter.
+  *
+  * @param {int|float} value   int or float: the exponent to raise e to
+  *
+  * @returns {float}
+  */
+  p.exp = Math.exp;
+
+  /**
+  * Calculates the closest int value that is less than or equal to the value of the parameter.
+  *
+  * @param {int|float} value        the value to floor
+  *
+  * @returns {int|float}
+  *
+  * @see ceil
+  * @see round
+  */
+  p.floor = Math.floor;
+
+  /**
+  * Calculates the natural logarithm (the base-e logarithm) of a number. This function
+  * expects the values greater than 0.0.
+  *
+  * @param {int|float} value        int or float: number must be greater then 0.0
+  *
+  * @returns {float}
+  */
+  p.log = Math.log;
+
+  /**
+  * Facilitates exponential expressions. The pow() function is an efficient way of
+  * multiplying numbers by themselves (or their reciprocal) in large quantities.
+  * For example, pow(3, 5) is equivalent to the expression 3*3*3*3*3 and pow(3, -5)
+  * is equivalent to 1 / 3*3*3*3*3.
+  *
+  * @param {int|float} num        base of the exponential expression
+  * @param {int|float} exponent   power of which to raise the base
+  *
+  * @returns {float}
+  *
+  * @see sqrt
+  */
+  p.pow = Math.pow;
+
+  /**
+  * Calculates the integer closest to the value parameter. For example, round(9.2) returns the value 9.
+  *
+  * @param {float} value        number to round
+  *
+  * @returns {int}
+  *
+  * @see floor
+  * @see ceil
+  */
+  p.round = Math.round;
+  /**
+  * Calculates the square root of a number. The square root of a number is always positive,
+  * even though there may be a valid negative root. The square root s of number a is such
+  * that s*s = a. It is the opposite of squaring.
+  *
+  * @param {float} value        int or float, non negative
+  *
+  * @returns {float}
+  *
+  * @see pow
+  * @see sq
+  */
+
+  p.sqrt = Math.sqrt;
+
+  // Trigonometry
+  /**
+  * The inverse of cos(), returns the arc cosine of a value. This function expects the
+  * values in the range of -1 to 1 and values are returned in the range 0 to PI (3.1415927).
+  *
+  * @param {float} value        the value whose arc cosine is to be returned
+  *
+  * @returns {float}
+  *
+  * @see cos
+  * @see asin
+  * @see atan
+  */
+  p.acos = Math.acos;
+
+  /**
+  * The inverse of sin(), returns the arc sine of a value. This function expects the values
+  * in the range of -1 to 1 and values are returned in the range -PI/2 to PI/2.
+  *
+  * @param {float} value        the value whose arc sine is to be returned
+  *
+  * @returns {float}
+  *
+  * @see sin
+  * @see acos
+  * @see atan
+  */
+  p.asin = Math.asin;
+
+  /**
+  * The inverse of tan(), returns the arc tangent of a value. This function expects the values
+  * in the range of -Infinity to Infinity (exclusive) and values are returned in the range -PI/2 to PI/2 .
+  *
+  * @param {float} value        -Infinity to Infinity (exclusive)
+  *
+  * @returns {float}
+  *
+  * @see tan
+  * @see asin
+  * @see acos
+  */
+  p.atan = Math.atan;
+
+  /**
+  * Calculates the angle (in radians) from a specified point to the coordinate origin as measured from
+  * the positive x-axis. Values are returned as a float in the range from PI to -PI. The atan2() function
+  * is most often used for orienting geometry to the position of the cursor. Note: The y-coordinate of the
+  * point is the first parameter and the x-coordinate is the second due the the structure of calculating the tangent.
+  *
+  * @param {float} y        y-coordinate of the point
+  * @param {float} x        x-coordinate of the point
+  *
+  * @returns {float}
+  *
+  * @see tan
+  */
+  p.atan2 = Math.atan2;
+
+  /**
+  * Calculates the cosine of an angle. This function expects the values of the angle parameter to be provided
+  * in radians (values from 0 to PI*2). Values are returned in the range -1 to 1.
+  *
+  * @param {float} value        an angle in radians
+  *
+  * @returns {float}
+  *
+  * @see tan
+  * @see sin
+  */
+  p.cos = Math.cos;
+
+  /**
+  * Calculates the sine of an angle. This function expects the values of the angle parameter to be provided in
+  * radians (values from 0 to 6.28). Values are returned in the range -1 to 1.
+  *
+  * @param {float} value        an angle in radians
+  *
+  * @returns {float}
+  *
+  * @see cos
+  * @see radians
+  */
+  p.sin = Math.sin;
+
+  /**
+  * Calculates the ratio of the sine and cosine of an angle. This function expects the values of the angle
+  * parameter to be provided in radians (values from 0 to PI*2). Values are returned in the range infinity to -infinity.
+  *
+  * @param {float} value        an angle in radians
+  *
+  * @returns {float}
+  *
+  * @see cos
+  * @see sin
+  * @see radians
+  */
+  p.tan = Math.tan;
+
+  /**
+  * Constrains a value to not exceed a maximum and minimum value.
+  *
+  * @param {int|float} value   the value to constrain
+  * @param {int|float} value   minimum limit
+  * @param {int|float} value   maximum limit
+  *
+  * @returns {int|float}
+  *
+  * @see max
+  * @see min
+  */
+  p.constrain = function(aNumber, aMin, aMax) {
+    return aNumber > aMax ? aMax : aNumber < aMin ? aMin : aNumber;
+  };
+
+  /**
+  * Calculates the distance between two points.
+  *
+  * @param {int|float} x1     int or float: x-coordinate of the first point
+  * @param {int|float} y1     int or float: y-coordinate of the first point
+  * @param {int|float} z1     int or float: z-coordinate of the first point
+  * @param {int|float} x2     int or float: x-coordinate of the second point
+  * @param {int|float} y2     int or float: y-coordinate of the second point
+  * @param {int|float} z2     int or float: z-coordinate of the second point
+  *
+  * @returns {float}
+  */
+  p.dist = function() {
+    var dx, dy, dz;
+    if (arguments.length === 4) {
+      dx = arguments[0] - arguments[2];
+      dy = arguments[1] - arguments[3];
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    if (arguments.length === 6) {
+      dx = arguments[0] - arguments[3];
+      dy = arguments[1] - arguments[4];
+      dz = arguments[2] - arguments[5];
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
   };
 
   /**
-   * class overloading, part 1
-   */
-  function overloadBaseClassFunction(object, name, basefn) {
-    if (!object.hasOwnProperty(name) || typeof object[name] !== 'function') {
-      // object method is not a function or just inherited from Object.prototype
-      object[name] = basefn;
-      return;
+  * Calculates a number between two numbers at a specific increment. The amt  parameter is the
+  * amount to interpolate between the two values where 0.0 equal to the first point, 0.1 is very
+  * near the first point, 0.5 is half-way in between, etc. The lerp function is convenient for
+  * creating motion along a straight path and for drawing dotted lines.
+  *
+  * @param {int|float} value1       float or int: first value
+  * @param {int|float} value2       float or int: second value
+  * @param {int|float} amt          float: between 0.0 and 1.0
+  *
+  * @returns {float}
+  *
+  * @see curvePoint
+  * @see bezierPoint
+  */
+  p.lerp = function(value1, value2, amt) {
+    return ((value2 - value1) * amt) + value1;
+  };
+
+  /**
+  * Calculates the magnitude (or length) of a vector. A vector is a direction in space commonly
+  * used in computer graphics and linear algebra. Because it has no "start" position, the magnitude
+  * of a vector can be thought of as the distance from coordinate (0,0) to its (x,y) value.
+  * Therefore, mag() is a shortcut for writing "dist(0, 0, x, y)".
+  *
+  * @param {int|float} a       float or int: first value
+  * @param {int|float} b       float or int: second value
+  * @param {int|float} c       float or int: third value
+  *
+  * @returns {float}
+  *
+  * @see dist
+  */
+  p.mag = function(a, b, c) {
+    if (c) {
+      return Math.sqrt(a * a + b * b + c * c);
     }
-    var fn = object[name];
-    if ("$overloads" in fn) {
-      // the object method already overloaded (see defaultScope.addMethod)
-      // let's just change a fallback method
-      fn.$defaultOverload = basefn;
-      return;
+
+    return Math.sqrt(a * a + b * b);
+  };
+
+  /**
+  * Re-maps a number from one range to another. In the example above, the number '25' is converted from
+  * a value in the range 0..100 into a value that ranges from the left edge (0) to the right edge (width) of the screen.
+  * Numbers outside the range are not clamped to 0 and 1, because out-of-range values are often intentional and useful.
+  *
+  * @param {float} value        The incoming value to be converted
+  * @param {float} istart       Lower bound of the value's current range
+  * @param {float} istop        Upper bound of the value's current range
+  * @param {float} ostart       Lower bound of the value's target range
+  * @param {float} ostop        Upper bound of the value's target range
+  *
+  * @returns {float}
+  *
+  * @see norm
+  * @see lerp
+  */
+  p.map = function(value, istart, istop, ostart, ostop) {
+    return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+  };
+
+  /**
+  * Determines the largest value in a sequence of numbers.
+  *
+  * @param {int|float} value1         int or float
+  * @param {int|float} value2         int or float
+  * @param {int|float} value3         int or float
+  * @param {int|float} array          int or float array
+  *
+  * @returns {int|float}
+  *
+  * @see min
+  */
+  p.max = function() {
+    if (arguments.length === 2) {
+      return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
     }
-    if (!("$overloads" in basefn) && fn.length === basefn.length) {
-      // special case when we just overriding the method
-      return;
+    var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+    if (! ("length" in numbers && numbers.length > 0)) {
+      throw "Non-empty array is expected";
     }
-    var overloads, defaultOverload;
-    if ("$overloads" in basefn) {
-      // let's inherit base class overloads to speed up things
-      overloads = basefn.$overloads.slice(0);
-      overloads[fn.length] = fn;
-      defaultOverload = basefn.$defaultOverload;
-    } else {
-      overloads = [];
-      overloads[basefn.length] = basefn;
-      overloads[fn.length] = fn;
-      defaultOverload = fn;
+    var max = numbers[0],
+      count = numbers.length;
+    for (var i = 1; i < count; ++i) {
+      if (max < numbers[i]) {
+        max = numbers[i];
+      }
     }
-    var hubfn = function() {
-      var fn = hubfn.$overloads[arguments.length] ||
-               ("$methodArgsIndex" in hubfn && arguments.length > hubfn.$methodArgsIndex ?
-               hubfn.$overloads[hubfn.$methodArgsIndex] : null) ||
-               hubfn.$defaultOverload;
-      return fn.apply(this, arguments);
+    return max;
+  };
+
+  /**
+  * Determines the smallest value in a sequence of numbers.
+  *
+  * @param {int|float} value1         int or float
+  * @param {int|float} value2         int or float
+  * @param {int|float} value3         int or float
+  * @param {int|float} array          int or float array
+  *
+  * @returns {int|float}
+  *
+  * @see max
+  */
+  p.min = function() {
+    if (arguments.length === 2) {
+      return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
+    }
+    var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+    if (! ("length" in numbers && numbers.length > 0)) {
+      throw "Non-empty array is expected";
+    }
+    var min = numbers[0],
+      count = numbers.length;
+    for (var i = 1; i < count; ++i) {
+      if (min > numbers[i]) {
+        min = numbers[i];
+      }
+    }
+    return min;
+  };
+
+  /**
+  * Normalizes a number from another range into a value between 0 and 1.
+  * Identical to map(value, low, high, 0, 1);
+  * Numbers outside the range are not clamped to 0 and 1, because out-of-range
+  * values are often intentional and useful.
+  *
+  * @param {float} aNumber    The incoming value to be converted
+  * @param {float} low        Lower bound of the value's current range
+  * @param {float} high       Upper bound of the value's current range
+  *
+  * @returns {float}
+  *
+  * @see map
+  * @see lerp
+  */
+  p.norm = function(aNumber, low, high) {
+    return (aNumber - low) / (high - low);
+  };
+
+  /**
+  * Squares a number (multiplies a number by itself). The result is always a positive number,
+  * as multiplying two negative numbers always yields a positive result. For example, -1 * -1 = 1.
+  *
+  * @param {float} value        int or float
+  *
+  * @returns {float}
+  *
+  * @see sqrt
+  */
+  p.sq = function(aNumber) {
+    return aNumber * aNumber;
+  };
+
+  /**
+  * Converts a radian measurement to its corresponding value in degrees. Radians and degrees are two ways of
+  * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
+  * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
+  *
+  * @param {int|float} value        an angle in radians
+  *
+  * @returns {float}
+  *
+  * @see radians
+  */
+  p.degrees = function(aAngle) {
+    return (aAngle * 180) / Math.PI;
+  };
+
+  /**
+  * Generates random numbers. Each time the random() function is called, it returns an unexpected value within
+  * the specified range. If one parameter is passed to the function it will return a float between zero and the
+  * value of the high parameter. The function call random(5) returns values between 0 and 5 (starting at zero,
+  * up to but not including 5). If two parameters are passed, it will return a float with a value between the
+  * parameters. The function call random(-5, 10.2) returns values starting at -5 up to (but not including) 10.2.
+  * To convert a floating-point random number to an integer, use the int() function.
+  *
+  * @param {int|float} value1         if one parameter is used, the top end to random from, if two params the low end
+  * @param {int|float} value2         the top end of the random range
+  *
+  * @returns {float}
+  *
+  * @see randomSeed
+  * @see noise
+  */
+  p.random = function() {
+    if(arguments.length === 0) {
+      return currentRandom();
+    }
+    if(arguments.length === 1) {
+      return currentRandom() * arguments[0];
+    }
+    var aMin = arguments[0], aMax = arguments[1];
+    return currentRandom() * (aMax - aMin) + aMin;
+  };
+
+  // Pseudo-random generator
+  function Marsaglia(i1, i2) {
+    // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
+    var z=i1 || 362436069, w= i2 || 521288629;
+    var nextInt = function() {
+      z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
+      w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
+      return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
     };
-    hubfn.$overloads = overloads;
-    if ("$methodArgsIndex" in basefn) {
-      hubfn.$methodArgsIndex = basefn.$methodArgsIndex;
+
+    this.nextDouble = function() {
+      var i = nextInt() / 4294967296;
+      return i < 0 ? 1 + i : i;
+    };
+    this.nextInt = nextInt;
+  }
+  Marsaglia.createRandomized = function() {
+    var now = new Date();
+    return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
+  };
+
+  /**
+  * Sets the seed value for random(). By default, random() produces different results each time the
+  * program is run. Set the value parameter to a constant to return the same pseudo-random numbers
+  * each time the software is run.
+  *
+  * @param {int|float} seed         int
+  *
+  * @see random
+  * @see noise
+  * @see noiseSeed
+  */
+  p.randomSeed = function(seed) {
+    currentRandom = (new Marsaglia(seed)).nextDouble;
+  };
+
+  // Random
+  // We have two random()'s in the code... what does this do ? and which one is current ?
+  p.Random = function(seed) {
+    var haveNextNextGaussian = false, nextNextGaussian, random;
+
+    this.nextGaussian = function() {
+      if (haveNextNextGaussian) {
+        haveNextNextGaussian = false;
+        return nextNextGaussian;
+      }
+      var v1, v2, s;
+      do {
+        v1 = 2 * random() - 1; // between -1.0 and 1.0
+        v2 = 2 * random() - 1; // between -1.0 and 1.0
+        s = v1 * v1 + v2 * v2;
+      }
+      while (s >= 1 || s === 0);
+
+      var multiplier = Math.sqrt(-2 * Math.log(s) / s);
+      nextNextGaussian = v2 * multiplier;
+      haveNextNextGaussian = true;
+
+      return v1 * multiplier;
+    };
+
+    // by default use standard random, otherwise seeded
+    random = (seed === undef) ? Math.random : (new Marsaglia(seed)).nextDouble;
+  };
+
+  // Noise functions and helpers
+  function PerlinNoise(seed) {
+    var rnd = seed !== undef ? new Marsaglia(seed) : Marsaglia.createRandomized();
+    var i, j;
+    // http://www.noisemachine.com/talk1/17b.html
+    // http://mrl.nyu.edu/~perlin/noise/
+    // generate permutation
+    var perm = new Uint8Array(512);
+    for(i=0;i<256;++i) { perm[i] = i; }
+    for(i=0;i<256;++i) { var t = perm[j = rnd.nextInt() & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
+    // copy to avoid taking mod in perm[0];
+    for(i=0;i<256;++i) { perm[i + 256] = perm[i]; }
+
+    function grad3d(i,x,y,z) {
+      var h = i & 15; // convert into 12 gradient directions
+      var u = h<8 ? x : y,
+          v = h<4 ? y : h===12||h===14 ? x : z;
+      return ((h&1) === 0 ? u : -u) + ((h&2) === 0 ? v : -v);
     }
-    hubfn.$defaultOverload = defaultOverload;
-    hubfn.name = name;
-    object[name] = hubfn;
+
+    function grad2d(i,x,y) {
+      var v = (i & 1) === 0 ? x : y;
+      return (i&2) === 0 ? -v : v;
+    }
+
+    function grad1d(i,x) {
+      return (i&1) === 0 ? -x : x;
+    }
+
+    function lerp(t,a,b) { return a + t * (b - a); }
+//return x*x*x*(x*(x*6 - 15) + 10);
+    this.noise3d = function(x, y, z) {
+      var X = (x|0)&255, Y = (y|0)&255, Z = (z|0)&255;
+      x -= (x|0); y -= (y|0); z -= (z|0);
+      var fx = x*x*x*(x*(x*6-15)+10), fy = y*y*y*(y*(y*6-15)+10), fz = z*z*z*(z*(z*6-15)+10)
+      var p0 = perm[X]+Y, p00 = perm[p0] + Z, p01 = perm[p0 + 1] + Z,
+          p1 = perm[X + 1] + Y, p10 = perm[p1] + Z, p11 = perm[p1 + 1] + Z;
+      return lerp(fz,
+        lerp(fy, lerp(fx, grad3d(perm[p00], x, y, z), grad3d(perm[p10], x-1, y, z)),
+                 lerp(fx, grad3d(perm[p01], x, y-1, z), grad3d(perm[p11], x-1, y-1,z))),
+        lerp(fy, lerp(fx, grad3d(perm[p00 + 1], x, y, z-1), grad3d(perm[p10 + 1], x-1, y, z-1)),
+                 lerp(fx, grad3d(perm[p01 + 1], x, y-1, z-1), grad3d(perm[p11 + 1], x-1, y-1,z-1))));
+    };
+
+    this.noise2d = function(x, y) {
+var X = (x|0)&255, Y = (y|0)&255;
+      x -= (x|0); y -= (y|0);
+      var fx = x*x*x*(x*(x*6-15)+10), fy = y*y*y*(y*(y*6-15)+10);
+      var p0 = perm[X]+Y, p1 = perm[X + 1] + Y;
+      return lerp(fy,
+        lerp(fx, grad2d(perm[p0], x, y), grad2d(perm[p1], x-1, y)),
+        lerp(fx, grad2d(perm[p0 + 1], x, y-1), grad2d(perm[p1 + 1], x-1, y-1)));
+    };
+
+    this.noise1d = function(x) {
+var X = (x|0)&255;
+      x -= (x|0)
+      var fx = x*x*x*(x*(x*6-15)+10);
+      return lerp(fx, grad1d(perm[X], x), grad1d(perm[X+1], x-1));
+    };
+  }
+
+  // processing defaults
+  var noiseProfile = { generator: undef, octaves: 4, fallout: 0.5, seed: undef};
+
+  /**
+  * Returns the Perlin noise value at specified coordinates. Perlin noise is a random sequence
+  * generator producing a more natural ordered, harmonic succession of numbers compared to the
+  * standard random() function. It was invented by Ken Perlin in the 1980s and been used since
+  * in graphical applications to produce procedural textures, natural motion, shapes, terrains etc.
+  * The main difference to the random() function is that Perlin noise is defined in an infinite
+  * n-dimensional space where each pair of coordinates corresponds to a fixed semi-random value
+  * (fixed only for the lifespan of the program). The resulting value will always be between 0.0
+  * and 1.0. Processing can compute 1D, 2D and 3D noise, depending on the number of coordinates
+  * given. The noise value can be animated by moving through the noise space as demonstrated in
+  * the example above. The 2nd and 3rd dimension can also be interpreted as time.
+  * The actual noise is structured similar to an audio signal, in respect to the function's use
+  * of frequencies. Similar to the concept of harmonics in physics, perlin noise is computed over
+  * several octaves which are added together for the final result.
+  * Another way to adjust the character of the resulting sequence is the scale of the input
+  * coordinates. As the function works within an infinite space the value of the coordinates
+  * doesn't matter as such, only the distance between successive coordinates does (eg. when using
+  * noise() within a loop). As a general rule the smaller the difference between coordinates, the
+  * smoother the resulting noise sequence will be. Steps of 0.005-0.03 work best for most applications,
+  * but this will differ depending on use.
+  *
+  * @param {float} x          x coordinate in noise space
+  * @param {float} y          y coordinate in noise space
+  * @param {float} z          z coordinate in noise space
+  *
+  * @returns {float}
+  *
+  * @see random
+  * @see noiseDetail
+  */
+  p.noise = function(x, y, z) {
+    if(noiseProfile.generator === undef) {
+      // caching
+      noiseProfile.generator = new PerlinNoise(noiseProfile.seed);
+    }
+    var generator = noiseProfile.generator;
+    var effect = 1, k = 1, sum = 0;
+    for(var i=0; i<noiseProfile.octaves; ++i) {
+      effect *= noiseProfile.fallout;
+      switch (arguments.length) {
+      case 1:
+        sum += effect * (1 + generator.noise1d(k*x))/2; break;
+      case 2:
+        sum += effect * (1 + generator.noise2d(k*x, k*y))/2; break;
+      case 3:
+        sum += effect * (1 + generator.noise3d(k*x, k*y, k*z))/2; break;
+      }
+      k *= 2;
+    }
+    return sum;
+  };
+
+  /**
+  * Adjusts the character and level of detail produced by the Perlin noise function.
+  * Similar to harmonics in physics, noise is computed over several octaves. Lower octaves
+  * contribute more to the output signal and as such define the overal intensity of the noise,
+  * whereas higher octaves create finer grained details in the noise sequence. By default,
+  * noise is computed over 4 octaves with each octave contributing exactly half than its
+  * predecessor, starting at 50% strength for the 1st octave. This falloff amount can be
+  * changed by adding an additional function parameter. Eg. a falloff factor of 0.75 means
+  * each octave will now have 75% impact (25% less) of the previous lower octave. Any value
+  * between 0.0 and 1.0 is valid, however note that values greater than 0.5 might result in
+  * greater than 1.0 values returned by noise(). By changing these parameters, the signal
+  * created by the noise() function can be adapted to fit very specific needs and characteristics.
+  *
+  * @param {int} octaves          number of octaves to be used by the noise() function
+  * @param {float} falloff        falloff factor for each octave
+  *
+  * @see noise
+  */
+  p.noiseDetail = function(octaves, fallout) {
+    noiseProfile.octaves = octaves;
+    if(fallout !== undef) {
+      noiseProfile.fallout = fallout;
+    }
+  };
+
+  /**
+  * Sets the seed value for noise(). By default, noise() produces different results each
+  * time the program is run. Set the value parameter to a constant to return the same
+  * pseudo-random numbers each time the software is run.
+  *
+  * @param {int} seed         int
+  *
+  * @returns {float}
+  *
+  * @see random
+  * @see radomSeed
+  * @see noise
+  * @see noiseDetail
+  */
+  p.noiseSeed = function(seed) {
+    noiseProfile.seed = seed;
+    noiseProfile.generator = undef;
+  };
+};
+
+},{}],22:[function(require,module,exports){
+/**
+ * Common functions traditionally on "p" that should be class functions
+ * that get bound to "p" when an instance is actually built, instead.
+ */
+module.exports = (function commonFunctions(undef) {
+
+  var CommonFunctions = {
+    /**
+     * Remove whitespace characters from the beginning and ending
+     * of a String or a String array. Works like String.trim() but includes the
+     * unicode nbsp character as well. If an array is passed in the function will return a new array not effecting the array passed in.
+     *
+     * @param {String} str    the string to trim
+     * @param {String[]} str  the string array to trim
+     *
+     * @return {String|String[]} retrurns a string or an array will removed whitespaces
+     */
+    trim: function(str) {
+      if (str instanceof Array) {
+        var arr = [];
+        for (var i = 0; i < str.length; i++) {
+          arr.push(str[i].replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, ''));
+        }
+        return arr;
+      }
+      return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
+    },
+
+    /**
+     * Converts a degree measurement to its corresponding value in radians. Radians and degrees are two ways of
+     * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
+     * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
+     *
+     * @param {int|float} value        an angle in radians
+     *
+     * @returns {float}
+     *
+     * @see degrees
+     */
+    radians: function(aAngle) {
+      return (aAngle / 180) * Math.PI;
+    },
+
+    /**
+     * Number-to-String formatting function. Prepends "plus" or "minus" depending
+     * on whether the value is positive or negative, respectively, after padding
+     * the value with zeroes on the left and right, the number of zeroes used dictated
+     * by the values 'leftDigits' and 'rightDigits'. 'value' cannot be an array.
+     *
+     * @param {int|float} value                 the number to format
+     * @param {String} plus                     the prefix for positive numbers
+     * @param {String} minus                    the prefix for negative numbers
+     * @param {int} left                        number of digits to the left of the decimal point
+     * @param {int} right                       number of digits to the right of the decimal point
+     * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+     *
+     * @returns {String or String[]}
+     *
+     * @see nfCore
+     */
+    nfCoreScalar: function (value, plus, minus, leftDigits, rightDigits, group) {
+      var sign = (value < 0) ? minus : plus;
+      var autoDetectDecimals = rightDigits === 0;
+      var rightDigitsOfDefault = (rightDigits === undef || rightDigits < 0) ? 0 : rightDigits;
+
+      var absValue = Math.abs(value);
+      if (autoDetectDecimals) {
+        rightDigitsOfDefault = 1;
+        absValue *= 10;
+        while (Math.abs(Math.round(absValue) - absValue) > 1e-6 && rightDigitsOfDefault < 7) {
+          ++rightDigitsOfDefault;
+          absValue *= 10;
+        }
+      } else if (rightDigitsOfDefault !== 0) {
+        absValue *= Math.pow(10, rightDigitsOfDefault);
+      }
+
+      // Using Java's default rounding policy HALF_EVEN. This policy is based
+      // on the idea that 0.5 values round to the nearest even number, and
+      // everything else is rounded normally.
+      var number, doubled = absValue * 2;
+      if (Math.floor(absValue) === absValue) {
+        number = absValue;
+      } else if (Math.floor(doubled) === doubled) {
+        var floored = Math.floor(absValue);
+        number = floored + (floored % 2);
+      } else {
+        number = Math.round(absValue);
+      }
+
+      var buffer = "";
+      var totalDigits = leftDigits + rightDigitsOfDefault;
+      while (totalDigits > 0 || number > 0) {
+        totalDigits--;
+        buffer = "" + (number % 10) + buffer;
+        number = Math.floor(number / 10);
+      }
+      if (group !== undef) {
+        var i = buffer.length - 3 - rightDigitsOfDefault;
+        while(i > 0) {
+          buffer = buffer.substring(0,i) + group + buffer.substring(i);
+          i-=3;
+        }
+      }
+      if (rightDigitsOfDefault > 0) {
+        return sign + buffer.substring(0, buffer.length - rightDigitsOfDefault) +
+               "." + buffer.substring(buffer.length - rightDigitsOfDefault, buffer.length);
+      }
+      return sign + buffer;
+    },
+
+    /**
+    * Number-to-String formatting function. Prepends "plus" or "minus" depending
+    * on whether the value is positive or negative, respectively, after padding
+    * the value with zeroes on the left and right, the number of zeroes used dictated
+    * by the values 'leftDigits' and 'rightDigits'. 'value' can be an array;
+    * if the input is an array, each value in it is formatted separately, and
+    * an array with formatted values is returned.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {String} plus                     the prefix for positive numbers
+    * @param {String} minus                    the prefix for negative numbers
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfCoreScalar
+    */
+    nfCore: function(value, plus, minus, leftDigits, rightDigits, group) {
+      if (value instanceof Array) {
+        var arr = [];
+        for (var i = 0, len = value.length; i < len; i++) {
+          arr.push(CommonFunctions.nfCoreScalar(value[i], plus, minus, leftDigits, rightDigits, group));
+        }
+        return arr;
+      }
+      return CommonFunctions.nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
+    },
+
+    /**
+    * Utility function for formatting numbers into strings. There are two versions, one for
+    * formatting floats and one for formatting ints. The values for the digits, left, and
+    * right parameters should always be positive integers.
+    * As shown in the above example, nf() is used to add zeros to the left and/or right
+    * of a number. This is typically for aligning a list of numbers. To remove digits from
+    * a floating-point number, use the int(), ceil(), floor(), or round() functions.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfs
+    * @see nfp
+    * @see nfc
+    */
+    nf: function(value, leftDigits, rightDigits) {
+      return CommonFunctions.nfCore(value, "", "-", leftDigits, rightDigits);
+    },
+
+    /**
+    * Utility function for formatting numbers into strings. Similar to nf()  but leaves a blank space in front
+    * of positive numbers so they align with negative numbers in spite of the minus symbol. There are two
+    * versions, one for formatting floats and one for formatting ints. The values for the digits, left,
+    * and right parameters should always be positive integers.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    *
+    * @returns {String or String[]}
+    *
+    * @see nf
+    * @see nfp
+    * @see nfc
+    */
+    nfs: function(value, leftDigits, rightDigits) {
+      return CommonFunctions.nfCore(value, " ", "-", leftDigits, rightDigits);
+    },
+
+    /**
+    * Utility function for formatting numbers into strings. Similar to nf()  but puts a "+" in front of
+    * positive numbers and a "-" in front of negative numbers. There are two versions, one for formatting
+    * floats and one for formatting ints. The values for the digits, left, and right parameters should
+    * always be positive integers.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfs
+    * @see nf
+    * @see nfc
+    */
+    nfp: function(value, leftDigits, rightDigits) {
+      return CommonFunctions.nfCore(value, "+", "-", leftDigits, rightDigits);
+    },
+
+    /**
+    * Utility function for formatting numbers into strings and placing appropriate commas to mark
+    * units of 1000. There are two versions, one for formatting ints and one for formatting an array
+    * of ints. The value for the digits parameter should always be a positive integer.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    *
+    * @returns {String or String[]}
+    *
+    * @see nf
+    * @see nfs
+    * @see nfp
+    */
+    nfc: function(value, rightDigits) {
+      return CommonFunctions.nfCore(value, "", "-", 0, rightDigits, ",");
+    },
+
+    // used to bind all common functions to "p"
+    withCommonFunctions: function withCommonFunctions(p) {
+      ["trim", "radians", "nf", "nfs", "nfp", "nfc"].forEach(function(f){
+        p[f] = CommonFunctions[f];
+      });
+    }
+  };
+
+  return CommonFunctions;
+}());
+
+},{}],23:[function(require,module,exports){
+/**
+ * Touch and Mouse event handling
+ */
+module.exports = function withToucht(p, curElement, attachEventHandler, document, undef) {
+var PConstants = p.PConstants;
+  /**
+   * Determine the location of the (mouse) pointer.
+   */
+  function calculateOffset(curElement, event) {
+    var element = curElement,
+      offsetX = 0,
+      offsetY = 0;
+
+    p.pmouseX = p.mouseX;
+    p.pmouseY = p.mouseY;
+
+    // Find element offset
+    if (element.offsetParent) {
+      do {
+        offsetX += element.offsetLeft;
+        offsetY += element.offsetTop;
+      } while (!!(element = element.offsetParent));
+    }
+
+    // Find Scroll offset
+    element = curElement;
+    do {
+      offsetX -= element.scrollLeft || 0;
+      offsetY -= element.scrollTop || 0;
+    } while (!!(element = element.parentNode));
+
+    // Get padding and border style widths for mouse offsets
+    var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
+    if (document.defaultView && document.defaultView.getComputedStyle) {
+      stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null).paddingLeft, 10)      || 0;
+      stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(curElement, null).paddingTop, 10)       || 0;
+      styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(curElement, null).borderLeftWidth, 10)  || 0;
+      styleBorderTop   = parseInt(document.defaultView.getComputedStyle(curElement, null).borderTopWidth, 10)   || 0;
+    }
+
+    // Add padding and border style widths to offset
+    offsetX += stylePaddingLeft;
+    offsetY += stylePaddingTop;
+
+    offsetX += styleBorderLeft;
+    offsetY += styleBorderTop;
+
+    // Take into account any scrolling done
+    offsetX += window.pageXOffset;
+    offsetY += window.pageYOffset;
+
+    return {'X':offsetX,'Y':offsetY};
+  }
+
+  // simple relative position
+  function updateMousePosition(curElement, event) {
+    var offset = calculateOffset(curElement, event);
+    // Dropping support for IE clientX and clientY, switching to pageX and pageY
+    // so we don't have to calculate scroll offset.
+    // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
+    p.mouseX = event.pageX - offset.X;
+    p.mouseY = event.pageY - offset.Y;
   }
 
   /**
-   * class overloading, part 2
+   * Return a TouchEvent with canvas-specific x/y co-ordinates
    */
+  function addTouchEventOffset(t) {
+    var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]),
+        i;
 
-  function extendClass(subClass, baseClass) {
-    function extendGetterSetter(propertyName) {
-      defaultScope.defineProperty(subClass, propertyName, {
-        get: function() {
-          return baseClass[propertyName];
-        },
-        set: function(v) {
-          baseClass[propertyName]=v;
-        },
-        enumerable: true
+    for (i = 0; i < t.touches.length; i++) {
+      var touch = t.touches[i];
+      touch.offsetX = touch.pageX - offset.X;
+      touch.offsetY = touch.pageY - offset.Y;
+    }
+    for (i = 0; i < t.targetTouches.length; i++) {
+      var targetTouch = t.targetTouches[i];
+      targetTouch.offsetX = targetTouch.pageX - offset.X;
+      targetTouch.offsetY = targetTouch.pageY - offset.Y;
+    }
+    for (i = 0; i < t.changedTouches.length; i++) {
+      var changedTouch = t.changedTouches[i];
+      changedTouch.offsetX = changedTouch.pageX - offset.X;
+      changedTouch.offsetY = changedTouch.pageY - offset.Y;
+    }
+
+    return t;
+  }
+
+  /**
+   * Touch event support.
+   */
+  attachEventHandler(curElement, "touchstart", function (t) {
+    // Removes unwanted behaviour of the canvas when touching canvas
+    curElement.setAttribute("style","-webkit-user-select: none");
+    curElement.setAttribute("onclick","void(0)");
+    curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
+    // Loop though eventHandlers and remove mouse listeners
+    for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
+      var type = eventHandlers[i].type;
+      // Have this function remove itself from the eventHandlers list too
+      if (type === "mouseout" ||  type === "mousemove" ||
+          type === "mousedown" || type === "mouseup" ||
+          type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
+        detachEventHandler(eventHandlers[i]);
+      }
+    }
+
+    // If there are any native touch events defined in the sketch, connect all of them
+    // Otherwise, connect all of the emulated mouse events
+    if (p.touchStart !== undef || p.touchMove !== undef ||
+        p.touchEnd !== undef || p.touchCancel !== undef) {
+      attachEventHandler(curElement, "touchstart", function(t) {
+        if (p.touchStart !== undef) {
+          t = addTouchEventOffset(t);
+          p.touchStart(t);
+        }
+      });
+
+      attachEventHandler(curElement, "touchmove", function(t) {
+        if (p.touchMove !== undef) {
+          t.preventDefault(); // Stop the viewport from scrolling
+          t = addTouchEventOffset(t);
+          p.touchMove(t);
+        }
+      });
+
+      attachEventHandler(curElement, "touchend", function(t) {
+        if (p.touchEnd !== undef) {
+          t = addTouchEventOffset(t);
+          p.touchEnd(t);
+        }
+      });
+
+      attachEventHandler(curElement, "touchcancel", function(t) {
+        if (p.touchCancel !== undef) {
+          t = addTouchEventOffset(t);
+          p.touchCancel(t);
+        }
+      });
+
+    } else {
+      // Emulated touch start/mouse down event
+      attachEventHandler(curElement, "touchstart", function(e) {
+        updateMousePosition(curElement, e.touches[0]);
+
+        p.__mousePressed = true;
+        p.mouseDragging = false;
+        p.mouseButton = PConstants.MOUSELEFT;
+
+        if (typeof p.mousePressed === "function") {
+          p.mousePressed();
+        }
+      });
+
+      // Emulated touch move/mouse move event
+      attachEventHandler(curElement, "touchmove", function(e) {
+        e.preventDefault();
+        updateMousePosition(curElement, e.touches[0]);
+
+        if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
+          p.mouseMoved();
+        }
+        if (typeof p.mouseDragged === "function" && p.__mousePressed) {
+          p.mouseDragged();
+          p.mouseDragging = true;
+        }
+      });
+
+      // Emulated touch up/mouse up event
+      attachEventHandler(curElement, "touchend", function(e) {
+        p.__mousePressed = false;
+
+        if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
+          p.mouseClicked();
+        }
+
+        if (typeof p.mouseReleased === "function") {
+          p.mouseReleased();
+        }
       });
     }
 
-    var properties = [];
-    for (var propertyName in baseClass) {
-      if (typeof baseClass[propertyName] === 'function') {
-        overloadBaseClassFunction(subClass, propertyName, baseClass[propertyName]);
-      } else if(propertyName.charAt(0) !== "$" && !(propertyName in subClass)) {
-        // Delaying the properties extension due to the IE9 bug (see #918).
-        properties.push(propertyName);
-      }
-    }
-    while (properties.length > 0) {
-      extendGetterSetter(properties.shift());
-    }
-
-    subClass.$super = baseClass;
-  }
+    // Refire the touch start event we consumed in this function
+    curElement.dispatchEvent(t);
+  });
 
   /**
-   * class overloading, part 3
+   * Context menu toggles. Most often you will not want the
+   * browser's context menu to show on a right click, but
+   * sometimes, you do, so we add two unofficial functions
+   * that can be used to trigger context menu behaviour.
    */
-  defaultScope.extendClassChain = function(base) {
-    var path = [base];
-    for (var self = base.$upcast; self; self = self.$upcast) {
-      extendClass(self, base);
-      path.push(self);
-      base = self;
-    }
-    while (path.length > 0) {
-      path.pop().$self=base;
-    }
-  };
-
-  // static
-  defaultScope.extendStaticMembers = function(derived, base) {
-    extendClass(derived, base);
-  };
-
-  // interface
-  defaultScope.extendInterfaceMembers = function(derived, base) {
-    extendClass(derived, base);
-  };
-
-  /**
-   * Java methods and JavaScript functions differ enough that
-   * we need a special function to make sure it all links up
-   * as classical hierarchical class chains.
-   */
-  defaultScope.addMethod = function(object, name, fn, hasMethodArgs) {
-    var existingfn = object[name];
-    if (existingfn || hasMethodArgs) {
-      var args = fn.length;
-      // builds the overload methods table
-      if ("$overloads" in existingfn) {
-        existingfn.$overloads[args] = fn;
-      } else {
-        var hubfn = function() {
-          var fn = hubfn.$overloads[arguments.length] ||
-                   ("$methodArgsIndex" in hubfn && arguments.length > hubfn.$methodArgsIndex ?
-                   hubfn.$overloads[hubfn.$methodArgsIndex] : null) ||
-                   hubfn.$defaultOverload;
-          return fn.apply(this, arguments);
+  (function() {
+    var enabled = true,
+        contextMenu = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
         };
-        var overloads = [];
-        if (existingfn) {
-          overloads[existingfn.length] = existingfn;
-        }
-        overloads[args] = fn;
-        hubfn.$overloads = overloads;
-        hubfn.$defaultOverload = existingfn || fn;
-        if (hasMethodArgs) {
-          hubfn.$methodArgsIndex = args;
-        }
-        hubfn.name = name;
-        object[name] = hubfn;
-      }
-    } else {
-      object[name] = fn;
-    }
-  };
 
-  // internal helper function
-  function isNumericalJavaType(type) {
-    if (typeof type !== "string") {
-      return false;
-    }
-    return ["byte", "int", "char", "color", "float", "long", "double"].indexOf(type) !== -1;
-  }
-
-  /**
-   * Java's arrays are pre-filled when declared with
-   * an initial size, but no content. JS arrays are not.
-   */
-  defaultScope.createJavaArray = function(type, bounds) {
-    var result = null,
-        defaultValue = null;
-    if (typeof type === "string") {
-      if (type === "boolean") {
-        defaultValue = false;
-      } else if (isNumericalJavaType(type)) {
-        defaultValue = 0;
-      }
-    }
-    if (typeof bounds[0] === 'number') {
-      var itemsCount = 0 | bounds[0];
-      if (bounds.length <= 1) {
-        result = [];
-        result.length = itemsCount;
-        for (var i = 0; i < itemsCount; ++i) {
-          result[i] = defaultValue;
-        }
-      } else {
-        result = [];
-        var newBounds = bounds.slice(1);
-        for (var j = 0; j < itemsCount; ++j) {
-          result.push(defaultScope.createJavaArray(type, newBounds));
-        }
-      }
-    }
-    return result;
-  };
-
-  // screenWidth and screenHeight are shared by all instances.
-  // and return the width/height of the browser's viewport.
-  defaultScope.defineProperty(defaultScope, 'screenWidth',
-    { get: function() { return window.innerWidth; } });
-
-  defaultScope.defineProperty(defaultScope, 'screenHeight',
-    { get: function() { return window.innerHeight; } });
-
-  return defaultScope;
-};
-
-},{}],23:[function(require,module,exports){
-(function(){/**
- * Finalise the Processing.js object.
- */
-module.exports = function finalizeProcessing(Processing, options) {
-
-  // unpack options
-  var window = options.window,
-      document = options.document,
-      XMLHttpRequest = window.XMLHttpRequest,
-      noop = options.noop,
-      isDOMPresent = options.isDOMPresent,
-      version = options.version,
-      undef;
-
-  // versioning
-  Processing.version = (version ? version : "@DEV-VERSION@");
-
-  // Share lib space
-  Processing.lib = {};
-
-  /**
-   * External libraries can be added to the global Processing
-   * objects with the `registerLibrary` function.
-   */
-  Processing.registerLibrary = function(name, library) {
-    Processing.lib[name] = library;
-    if(library.hasOwnProperty("init")) {
-      library.init(defaultScope);
-    }
-  };
-
-  /**
-   * This is the object that acts as our version of PApplet.
-   * This can be called as Processing.Sketch() or as
-   * Processing.Sketch(function) in which case the function
-   * must be an already-compiled-to-JS sketch function.
-   */
-  Processing.Sketch = function(attachFunction) {
-    this.attachFunction = attachFunction;
-    this.options = {
-      pauseOnBlur: false,
-      globalKeyEvents: false
-    };
-
-    /* Optional Sketch event hooks:
-     *   onLoad       - parsing/preloading is done, before sketch starts
-     *   onSetup      - setup() has been called, before first draw()
-     *   onPause      - noLoop() has been called, pausing draw loop
-     *   onLoop       - loop() has been called, resuming draw loop
-     *   onFrameStart - draw() loop about to begin
-     *   onFrameEnd   - draw() loop finished
-     *   onExit       - exit() done being called
-     */
-    this.onLoad = noop;
-    this.onSetup = noop;
-    this.onPause = noop;
-    this.onLoop = noop;
-    this.onFrameStart = noop;
-    this.onFrameEnd = noop;
-    this.onExit = noop;
-
-    this.params = {};
-    this.imageCache = {
-      pending: 0,
-      images: {},
-      // Opera requires special administration for preloading
-      operaCache: {},
-      // Specify an optional img arg if the image is already loaded in the DOM,
-      // otherwise href will get loaded.
-      add: function(href, img) {
-        // Prevent muliple loads for an image, in case it gets
-        // preloaded more than once, or is added via JS and then preloaded.
-        if (this.images[href]) {
-          return;
-        }
-
-        if (!isDOMPresent) {
-          this.images[href] = null;
-        }
-
-        // No image in the DOM, kick-off a background load
-        if (!img) {
-          img = new Image();
-          img.onload = (function(owner) {
-            return function() {
-              owner.pending--;
-            };
-          }(this));
-          this.pending++;
-          img.src = href;
-        }
-
-        this.images[href] = img;
-
-        // Opera will not load images until they are inserted into the DOM.
-        if (window.opera) {
-          var div = document.createElement("div");
-          div.appendChild(img);
-          // we can't use "display: none", since that makes it invisible, and thus not load
-          div.style.position = "absolute";
-          div.style.opacity = 0;
-          div.style.width = "1px";
-          div.style.height= "1px";
-          if (!this.operaCache[href]) {
-            document.body.appendChild(div);
-            this.operaCache[href] = div;
-          }
-        }
-      }
-    };
-
-    this.sourceCode = undefined;
-    this.attach = function(processing) {
-      // either attachFunction or sourceCode must be present on attach
-      if(typeof this.attachFunction === "function") {
-        this.attachFunction(processing);
-      } else if(this.sourceCode) {
-        var func = ((new Function("return (" + this.sourceCode + ");"))());
-        func(processing);
-        this.attachFunction = func;
-      } else {
-        throw "Unable to attach sketch to the processing instance";
-      }
-    };
-
-    this.toString = function() {
-      var i;
-      var code = "((function(Sketch) {\n";
-      code += "var sketch = new Sketch(\n" + this.sourceCode + ");\n";
-      for(i in this.options) {
-        if(this.options.hasOwnProperty(i)) {
-          var value = this.options[i];
-          code += "sketch.options." + i + " = " +
-            (typeof value === 'string' ? '\"' + value + '\"' : "" + value) + ";\n";
-        }
-      }
-      for(i in this.imageCache) {
-        if(this.options.hasOwnProperty(i)) {
-          code += "sketch.imageCache.add(\"" + i + "\");\n";
-        }
-      }
-      // TODO serialize fonts
-      code += "return sketch;\n})(Processing.Sketch))";
-      return code;
-    };
-  };
-
-  /**
-   * aggregate all source code into a single file, then rewrite that
-   * source and bind to canvas via new Processing(canvas, sourcestring).
-   * @param {CANVAS} canvas The html canvas element to bind to
-   * @param {String[]} source The array of files that must be loaded
-   */
-  var loadSketchFromSources = Processing.loadSketchFromSources = function(canvas, sources) {
-    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
-
-    function ajaxAsync(url, callback) {
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-          var error;
-          if (xhr.status !== 200 && xhr.status !== 0) {
-            error = "Invalid XHR status " + xhr.status;
-          } else if (xhr.responseText === "") {
-            // Give a hint when loading fails due to same-origin issues on file:/// urls
-            if ( ("withCredentials" in new XMLHttpRequest()) &&
-                 (new XMLHttpRequest()).withCredentials === false &&
-                 window.location.protocol === "file:" ) {
-              error = "XMLHttpRequest failure, possibly due to a same-origin policy violation. You can try loading this page in another browser, or load it from http://localhost using a local webserver. See the Processing.js README for a more detailed explanation of this problem and solutions.";
-            } else {
-              error = "File is empty.";
-            }
-          }
-
-          callback(xhr.responseText, error);
-        }
-      };
-      xhr.open("GET", url, true);
-      if (xhr.overrideMimeType) {
-        xhr.overrideMimeType("application/json");
-      }
-      xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
-      xhr.send(null);
-    }
-
-    function loadBlock(index, filename) {
-      function callback(block, error) {
-        code[index] = block;
-        ++loaded;
-        if (error) {
-          errors.push(filename + " ==> " + error);
-        }
-        if (loaded === sourcesCount) {
-          if (errors.length === 0) {
-            try {
-              return new Processing(canvas, code.join("\n"));
-            } catch(e) {
-              console.log("Processing.js: Unable to execute pjs sketch.");
-              throw e;
-            }
-          } else {
-            throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
-          }
-        }
-      }
-      if (filename.charAt(0) === '#') {
-        // trying to get script from the element
-        var scriptElement = document.getElementById(filename.substring(1));
-        if (scriptElement) {
-          callback(scriptElement.text || scriptElement.textContent);
-        } else {
-          callback("", "Unable to load pjs sketch: element with id \'" + filename.substring(1) + "\' was not found");
-        }
+    p.disableContextMenu = function() {
+      if (!enabled) {
         return;
       }
+      attachEventHandler(curElement, 'contextmenu', contextMenu);
+      enabled = false;
+    };
 
-      ajaxAsync(filename, callback);
-    }
+    p.enableContextMenu = function() {
+      if (enabled) {
+        return;
+      }
+      detachEventHandler({elem: curElement, type: 'contextmenu', fn: contextMenu});
+      enabled = true;
+    };
+  }());
 
-    for (var i = 0; i < sourcesCount; ++i) {
-      loadBlock(i, sources[i]);
+  /**
+   * Mouse moved or dragged
+   */
+  attachEventHandler(curElement, "mousemove", function(e) {
+    updateMousePosition(curElement, e);
+    if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
+      p.mouseMoved();
     }
+    if (typeof p.mouseDragged === "function" && p.__mousePressed) {
+      p.mouseDragged();
+      p.mouseDragging = true;
+    }
+  });
+
+  /**
+   * Unofficial mouse-out handling
+   */
+  attachEventHandler(curElement, "mouseout", function(e) {
+    if (typeof p.mouseOut === "function") {
+      p.mouseOut();
+    }
+  });
+
+  /**
+   * Mouse over
+   */
+  attachEventHandler(curElement, "mouseover", function(e) {
+    updateMousePosition(curElement, e);
+    if (typeof p.mouseOver === "function") {
+      p.mouseOver();
+    }
+  });
+
+  /**
+   * Disable browser's default handling for click-drag of a canvas.
+   */
+  curElement.onmousedown = function () {
+    // make sure focus happens, but nothing else
+    curElement.focus();
+    return false;
   };
 
   /**
-   * Automatic initialization function.
+   * Mouse pressed or drag
    */
-  var init = function() {
-    document.removeEventListener('DOMContentLoaded', init, false);
-
-    // before running through init, clear the instances list, to prevent
-    // sketch duplication when page content is dynamically swapped without
-    // swapping out processing.js
-    processingInstances = [];
-    Processing.instances = processingInstances;
-
-    var canvas = document.getElementsByTagName('canvas'),
-      filenames;
-
-    for (var i = 0, l = canvas.length; i < l; i++) {
-      // datasrc and data-src are deprecated.
-      var processingSources = canvas[i].getAttribute('data-processing-sources');
-      if (processingSources === null) {
-        // Temporary fallback for datasrc and data-src
-        processingSources = canvas[i].getAttribute('data-src');
-        if (processingSources === null) {
-          processingSources = canvas[i].getAttribute('datasrc');
-        }
-      }
-      if (processingSources) {
-        filenames = processingSources.split(/\s+/g);
-        for (var j = 0; j < filenames.length;) {
-          if (filenames[j]) {
-            j++;
-          } else {
-            filenames.splice(j, 1);
-          }
-        }
-        loadSketchFromSources(canvas[i], filenames);
-      }
+  attachEventHandler(curElement, "mousedown", function(e) {
+    p.__mousePressed = true;
+    p.mouseDragging = false;
+    switch (e.which) {
+    case 1:
+      p.mouseButton = PConstants.MOUSELEFT;
+      break;
+    case 2:
+      p.mouseButton = PConstants.MOUSECENTER;
+      break;
+    case 3:
+      p.mouseButton = PConstants.MOUSERIGHT;
+      break;
     }
 
-    // also process all <script>-indicated sketches, if there are any
-    var s, last, source, instance,
-        nodelist = document.getElementsByTagName('script'),
-        scripts=[];
+    if (typeof p.mousePressed === "function") {
+      p.mousePressed();
+    }
+  });
 
-    // snapshot the DOM, as the nodelist is only a DOM view, and is
-    // updated instantly when a script element is added or removed.
-    for (s = nodelist.length - 1; s >= 0; s--) {
-      scripts.push(nodelist[s]);
+  /**
+   * Mouse clicked or released
+   */
+  attachEventHandler(curElement, "mouseup", function(e) {
+    p.__mousePressed = false;
+
+    if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
+      p.mouseClicked();
     }
 
-    // iterate over all script elements to see if they contain Processing code
-    for (s = 0, last = scripts.length; s < last; s++) {
-      var script = scripts[s];
-      if (!script.getAttribute) {
-        continue;
-      }
+    if (typeof p.mouseReleased === "function") {
+      p.mouseReleased();
+    }
+  });
 
-      var type = script.getAttribute("type");
-      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
-        var target = script.getAttribute("data-processing-target");
-        canvas = undef;
-        if (target) {
-          canvas = document.getElementById(target);
-        } else {
-          var nextSibling = script.nextSibling;
-          while (nextSibling && nextSibling.nodeType !== 1) {
-            nextSibling = nextSibling.nextSibling;
-          }
-          if (nextSibling && nextSibling.nodeName.toLowerCase() === "canvas") {
-            canvas = nextSibling;
-          }
-        }
+  /**
+   * Unofficial scroll wheel handling.
+   */
+  var mouseWheelHandler = function(e) {
+    var delta = 0;
 
-        if (canvas) {
-          if (script.getAttribute("src")) {
-            filenames = script.getAttribute("src").split(/\s+/);
-            loadSketchFromSources(canvas, filenames);
-            continue;
-          }
-          source =  script.textContent || script.text;
-          instance = new Processing(canvas, source);
-        }
+    if (e.wheelDelta) {
+      delta = e.wheelDelta / 120;
+      if (window.opera) {
+        delta = -delta;
       }
+    } else if (e.detail) {
+      delta = -e.detail / 3;
+    }
+
+    p.mouseScroll = delta;
+
+    if (delta && typeof p.mouseScrolled === 'function') {
+      p.mouseScrolled();
     }
   };
 
-  /**
-   * automatic loading of all sketches on the page
-   */
-  document.addEventListener('DOMContentLoaded', init, false);
+  // Support Gecko and non-Gecko scroll events
+  attachEventHandler(document, 'DOMMouseScroll', mouseWheelHandler);
+  attachEventHandler(document, 'mousewheel', mouseWheelHandler);
 
-  /**
-   * Make Processing run through init after already having
-   * been set up for a page. This function exists mostly for pages
-   * that swap content in/out without reloading a page.
-   */
-  Processing.reload = function() {
-    if (processingInstances.length > 0) {
-      // unload sketches
-      for (var i = processingInstances.length - 1; i >= 0; i--) {
-        if (processingInstances[i]) {
-          processingInstances[i].exit();
-        }
-      }
-    }
-    // rerun init() to scan the DOM for sketches
-    init();
-  };
-
-  /**
-   * Disable the automatic loading of all sketches on the page.
-   * This will work as long as it's issued before DOMContentLoaded.
-   */
-  Processing.disableInit = function() {
-    document.removeEventListener('DOMContentLoaded', init, false);
-  };
-
-  // done.
-  return Processing;
 };
-})()
-},{}],22:[function(require,module,exports){
-(function(){/**
+
+},{}],24:[function(require,module,exports){
+/**
  * The parser for turning Processing syntax into Pjs JavaScript.
  * This code is not trivial; unless you know what you're doing,
  * you shouldn't be changing things in here =)
@@ -7169,7 +7775,7 @@ module.exports = function setupParser(Processing, options) {
       "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
       "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
       "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
-      "__codePointAt", "__startsWith", "__endsWith", "__matches"];
+      "__codePointAt", "__startsWith", "__endsWith", "__matches","createShape"];
 
     // custom functions and properties are added here
     if(aFunctions) {
@@ -8840,659 +9446,8 @@ module.exports = function setupParser(Processing, options) {
   return Processing;
 };
 
-})()
-},{}],24:[function(require,module,exports){
-module.exports = function(virtHashCode, virtEquals, undef) {
-
-  return function withProxyFunctions(p, removeFirstArgument) {
-    /**
-     * The contains(string) function returns true if the string passed in the parameter
-     * is a substring of this string. It returns false if the string passed
-     * in the parameter is not a substring of this string.
-     *
-     * @param {String} The string to look for in the current string
-     *
-     * @return {boolean} returns true if this string contains
-     * the string passed as parameter. returns false, otherwise.
-     *
-     */
-    p.__contains = function (subject, subStr) {
-      if (typeof subject !== "string") {
-        return subject.contains.apply(subject, removeFirstArgument(arguments));
-      }
-      //Parameter is not null AND
-      //The type of the parameter is the same as this object (string)
-      //The javascript function that finds a substring returns 0 or higher
-      return (
-        (subject !== null) &&
-        (subStr !== null) &&
-        (typeof subStr === "string") &&
-        (subject.indexOf(subStr) > -1)
-      );
-    };
-
-    /**
-     * The __replaceAll() function searches all matches between a substring (or regular expression) and a string,
-     * and replaces the matched substring with a new substring
-     *
-     * @param {String} subject    a substring
-     * @param {String} regex      a substring or a regular expression
-     * @param {String} replace    the string to replace the found value
-     *
-     * @return {String} returns result
-     *
-     * @see #match
-     */
-    p.__replaceAll = function(subject, regex, replacement) {
-      if (typeof subject !== "string") {
-        return subject.replaceAll.apply(subject, removeFirstArgument(arguments));
-      }
-
-      return subject.replace(new RegExp(regex, "g"), replacement);
-    };
-
-    /**
-     * The __replaceFirst() function searches first matche between a substring (or regular expression) and a string,
-     * and replaces the matched substring with a new substring
-     *
-     * @param {String} subject    a substring
-     * @param {String} regex      a substring or a regular expression
-     * @param {String} replace    the string to replace the found value
-     *
-     * @return {String} returns result
-     *
-     * @see #match
-     */
-    p.__replaceFirst = function(subject, regex, replacement) {
-      if (typeof subject !== "string") {
-        return subject.replaceFirst.apply(subject, removeFirstArgument(arguments));
-      }
-
-      return subject.replace(new RegExp(regex, ""), replacement);
-    };
-
-    /**
-     * The __replace() function searches all matches between a substring and a string,
-     * and replaces the matched substring with a new substring
-     *
-     * @param {String} subject         a substring
-     * @param {String} what         a substring to find
-     * @param {String} replacement    the string to replace the found value
-     *
-     * @return {String} returns result
-     */
-    p.__replace = function(subject, what, replacement) {
-      if (typeof subject !== "string") {
-        return subject.replace.apply(subject, removeFirstArgument(arguments));
-      }
-      if (what instanceof RegExp) {
-        return subject.replace(what, replacement);
-      }
-
-      if (typeof what !== "string") {
-        what = what.toString();
-      }
-      if (what === "") {
-        return subject;
-      }
-
-      var i = subject.indexOf(what);
-      if (i < 0) {
-        return subject;
-      }
-
-      var j = 0, result = "";
-      do {
-        result += subject.substring(j, i) + replacement;
-        j = i + what.length;
-      } while ( (i = subject.indexOf(what, j)) >= 0);
-      return result + subject.substring(j);
-    };
-
-    /**
-     * The __equals() function compares two strings (or objects) to see if they are the same.
-     * This method is necessary because it's not possible to compare strings using the equality operator (==).
-     * Returns true if the strings are the same and false if they are not.
-     *
-     * @param {String} subject  a string used for comparison
-     * @param {String} other  a string used for comparison with
-     *
-     * @return {boolean} true is the strings are the same false otherwise
-     */
-    p.__equals = function(subject, other) {
-      if (subject.equals instanceof Function) {
-        return subject.equals.apply(subject, removeFirstArgument(arguments));
-      }
-
-      return virtEquals(subject, other);
-    };
-
-    /**
-     * The __equalsIgnoreCase() function compares two strings to see if they are the same.
-     * Returns true if the strings are the same, either when forced to all lower case or
-     * all upper case.
-     *
-     * @param {String} subject  a string used for comparison
-     * @param {String} other  a string used for comparison with
-     *
-     * @return {boolean} true is the strings are the same, ignoring case. false otherwise
-     */
-    p.__equalsIgnoreCase = function(subject, other) {
-      if (typeof subject !== "string") {
-        return subject.equalsIgnoreCase.apply(subject, removeFirstArgument(arguments));
-      }
-
-      return subject.toLowerCase() === other.toLowerCase();
-    };
-
-    /**
-     * The __toCharArray() function splits the string into a char array.
-     *
-     * @param {String} subject The string
-     *
-     * @return {Char[]} a char array
-     */
-    p.__toCharArray = function(subject) {
-      if (typeof subject !== "string") {
-        return subject.toCharArray.apply(subject, removeFirstArgument(arguments));
-      }
-
-      var chars = [];
-      for (var i = 0, len = subject.length; i < len; ++i) {
-        chars[i] = new Char(subject.charAt(i));
-      }
-      return chars;
-    };
-
-    /**
-     * The __split() function splits a string using the regex delimiter
-     * specified. If limit is specified, the resultant array will have number
-     * of elements equal to or less than the limit.
-     *
-     * @param {String} subject string to be split
-     * @param {String} regexp  regex string used to split the subject
-     * @param {int}    limit   max number of tokens to be returned
-     *
-     * @return {String[]} an array of tokens from the split string
-     */
-    p.__split = function(subject, regex, limit) {
-      if (typeof subject !== "string") {
-        return subject.split.apply(subject, removeFirstArgument(arguments));
-      }
-
-      var pattern = new RegExp(regex);
-
-      // If limit is not specified, use JavaScript's built-in String.split.
-      if ((limit === undef) || (limit < 1)) {
-        return subject.split(pattern);
-      }
-
-      // If limit is specified, JavaScript's built-in String.split has a
-      // different behaviour than Java's. A Java-compatible implementation is
-      // provided here.
-      var result = [], currSubject = subject, pos;
-      while (((pos = currSubject.search(pattern)) !== -1) && (result.length < (limit - 1))) {
-        var match = pattern.exec(currSubject).toString();
-        result.push(currSubject.substring(0, pos));
-        currSubject = currSubject.substring(pos + match.length);
-      }
-      if ((pos !== -1) || (currSubject !== "")) {
-        result.push(currSubject);
-      }
-      return result;
-    };
-
-    /**
-     * The codePointAt() function returns the unicode value of the character at a given index of a string.
-     *
-     * @param  {int} idx         the index of the character
-     *
-     * @return {String} code     the String containing the unicode value of the character
-     */
-    p.__codePointAt = function(subject, idx) {
-      var code = subject.charCodeAt(idx),
-          hi,
-          low;
-      if (0xD800 <= code && code <= 0xDBFF) {
-        hi = code;
-        low = subject.charCodeAt(idx + 1);
-        return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
-      }
-      return code;
-    };
-
-    /**
-     * The matches() function checks whether or not a string matches a given regular expression.
-     *
-     * @param {String} str      the String on which the match is tested
-     * @param {String} regexp   the regexp for which a match is tested
-     *
-     * @return {boolean} true if the string fits the regexp, false otherwise
-     */
-    p.__matches = function(str, regexp) {
-      return (new RegExp(regexp)).test(str);
-    };
-
-    /**
-     * The startsWith() function tests if a string starts with the specified prefix.  If the prefix
-     * is the empty String or equal to the subject String, startsWith() will also return true.
-     *
-     * @param {String} prefix   the String used to compare against the start of the subject String.
-     * @param {int}    toffset  (optional) an offset into the subject String where searching should begin.
-     *
-     * @return {boolean} true if the subject String starts with the prefix.
-     */
-    p.__startsWith = function(subject, prefix, toffset) {
-      if (typeof subject !== "string") {
-        return subject.startsWith.apply(subject, removeFirstArgument(arguments));
-      }
-
-      toffset = toffset || 0;
-      if (toffset < 0 || toffset > subject.length) {
-        return false;
-      }
-      return (prefix === '' || prefix === subject) ? true : (subject.indexOf(prefix) === toffset);
-    };
-
-    /**
-     * The endsWith() function tests if a string ends with the specified suffix.  If the suffix
-     * is the empty String, endsWith() will also return true.
-     *
-     * @param {String} suffix   the String used to compare against the end of the subject String.
-     *
-     * @return {boolean} true if the subject String starts with the prefix.
-     */
-    p.__endsWith = function(subject, suffix) {
-      if (typeof subject !== "string") {
-        return subject.endsWith.apply(subject, removeFirstArgument(arguments));
-      }
-
-      var suffixLen = suffix ? suffix.length : 0;
-      return (suffix === '' || suffix === subject) ? true :
-        (subject.indexOf(suffix) === subject.length - suffixLen);
-    };
-
-    /**
-     * The returns hash code of the.
-     *
-     * @param {Object} subject The string
-     *
-     * @return {int} a hash code
-     */
-    p.__hashCode = function(subject) {
-      if (subject.hashCode instanceof Function) {
-        return subject.hashCode.apply(subject, removeFirstArgument(arguments));
-      }
-      return virtHashCode(subject);
-    };
-
-    /**
-     * The __printStackTrace() prints stack trace to the console.
-     *
-     * @param {Exception} subject The error
-     */
-    p.__printStackTrace = function(subject) {
-      p.println("Exception: " + subject.toString() );
-    };
-  };
-
-};
-
 },{}],25:[function(require,module,exports){
 /**
- * Touch and Mouse event handling
- */
-module.exports = function withToucht(p, curElement, attachEventHandler, document, undef) {
-
-  /**
-   * Determine the location of the (mouse) pointer.
-   */
-  function calculateOffset(curElement, event) {
-    var element = curElement,
-      offsetX = 0,
-      offsetY = 0;
-
-    p.pmouseX = p.mouseX;
-    p.pmouseY = p.mouseY;
-
-    // Find element offset
-    if (element.offsetParent) {
-      do {
-        offsetX += element.offsetLeft;
-        offsetY += element.offsetTop;
-      } while (!!(element = element.offsetParent));
-    }
-
-    // Find Scroll offset
-    element = curElement;
-    do {
-      offsetX -= element.scrollLeft || 0;
-      offsetY -= element.scrollTop || 0;
-    } while (!!(element = element.parentNode));
-
-    // Get padding and border style widths for mouse offsets
-    var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
-    if (document.defaultView && document.defaultView.getComputedStyle) {
-      stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(curElement, null).paddingLeft, 10)      || 0;
-      stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(curElement, null).paddingTop, 10)       || 0;
-      styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(curElement, null).borderLeftWidth, 10)  || 0;
-      styleBorderTop   = parseInt(document.defaultView.getComputedStyle(curElement, null).borderTopWidth, 10)   || 0;
-    }
-
-    // Add padding and border style widths to offset
-    offsetX += stylePaddingLeft;
-    offsetY += stylePaddingTop;
-
-    offsetX += styleBorderLeft;
-    offsetY += styleBorderTop;
-
-    // Take into account any scrolling done
-    offsetX += window.pageXOffset;
-    offsetY += window.pageYOffset;
-
-    return {'X':offsetX,'Y':offsetY};
-  }
-
-  // simple relative position
-  function updateMousePosition(curElement, event) {
-    var offset = calculateOffset(curElement, event);
-    // Dropping support for IE clientX and clientY, switching to pageX and pageY
-    // so we don't have to calculate scroll offset.
-    // Removed in ticket #184. See rev: 2f106d1c7017fed92d045ba918db47d28e5c16f4
-    p.mouseX = event.pageX - offset.X;
-    p.mouseY = event.pageY - offset.Y;
-  }
-
-  /**
-   * Return a TouchEvent with canvas-specific x/y co-ordinates
-   */
-  function addTouchEventOffset(t) {
-    var offset = calculateOffset(t.changedTouches[0].target, t.changedTouches[0]),
-        i;
-
-    for (i = 0; i < t.touches.length; i++) {
-      var touch = t.touches[i];
-      touch.offsetX = touch.pageX - offset.X;
-      touch.offsetY = touch.pageY - offset.Y;
-    }
-    for (i = 0; i < t.targetTouches.length; i++) {
-      var targetTouch = t.targetTouches[i];
-      targetTouch.offsetX = targetTouch.pageX - offset.X;
-      targetTouch.offsetY = targetTouch.pageY - offset.Y;
-    }
-    for (i = 0; i < t.changedTouches.length; i++) {
-      var changedTouch = t.changedTouches[i];
-      changedTouch.offsetX = changedTouch.pageX - offset.X;
-      changedTouch.offsetY = changedTouch.pageY - offset.Y;
-    }
-
-    return t;
-  }
-
-  /**
-   * Touch event support.
-   */
-  attachEventHandler(curElement, "touchstart", function (t) {
-    // Removes unwanted behaviour of the canvas when touching canvas
-    curElement.setAttribute("style","-webkit-user-select: none");
-    curElement.setAttribute("onclick","void(0)");
-    curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
-    // Loop though eventHandlers and remove mouse listeners
-    for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-      var type = eventHandlers[i].type;
-      // Have this function remove itself from the eventHandlers list too
-      if (type === "mouseout" ||  type === "mousemove" ||
-          type === "mousedown" || type === "mouseup" ||
-          type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
-        detachEventHandler(eventHandlers[i]);
-      }
-    }
-
-    // If there are any native touch events defined in the sketch, connect all of them
-    // Otherwise, connect all of the emulated mouse events
-    if (p.touchStart !== undef || p.touchMove !== undef ||
-        p.touchEnd !== undef || p.touchCancel !== undef) {
-      attachEventHandler(curElement, "touchstart", function(t) {
-        if (p.touchStart !== undef) {
-          t = addTouchEventOffset(t);
-          p.touchStart(t);
-        }
-      });
-
-      attachEventHandler(curElement, "touchmove", function(t) {
-        if (p.touchMove !== undef) {
-          t.preventDefault(); // Stop the viewport from scrolling
-          t = addTouchEventOffset(t);
-          p.touchMove(t);
-        }
-      });
-
-      attachEventHandler(curElement, "touchend", function(t) {
-        if (p.touchEnd !== undef) {
-          t = addTouchEventOffset(t);
-          p.touchEnd(t);
-        }
-      });
-
-      attachEventHandler(curElement, "touchcancel", function(t) {
-        if (p.touchCancel !== undef) {
-          t = addTouchEventOffset(t);
-          p.touchCancel(t);
-        }
-      });
-
-    } else {
-      // Emulated touch start/mouse down event
-      attachEventHandler(curElement, "touchstart", function(e) {
-        updateMousePosition(curElement, e.touches[0]);
-
-        p.__mousePressed = true;
-        p.mouseDragging = false;
-        p.mouseButton = PConstants.LEFT;
-
-        if (typeof p.mousePressed === "function") {
-          p.mousePressed();
-        }
-      });
-
-      // Emulated touch move/mouse move event
-      attachEventHandler(curElement, "touchmove", function(e) {
-        e.preventDefault();
-        updateMousePosition(curElement, e.touches[0]);
-
-        if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
-          p.mouseMoved();
-        }
-        if (typeof p.mouseDragged === "function" && p.__mousePressed) {
-          p.mouseDragged();
-          p.mouseDragging = true;
-        }
-      });
-
-      // Emulated touch up/mouse up event
-      attachEventHandler(curElement, "touchend", function(e) {
-        p.__mousePressed = false;
-
-        if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
-          p.mouseClicked();
-        }
-
-        if (typeof p.mouseReleased === "function") {
-          p.mouseReleased();
-        }
-      });
-    }
-
-    // Refire the touch start event we consumed in this function
-    curElement.dispatchEvent(t);
-  });
-
-  /**
-   * Context menu toggles. Most often you will not want the
-   * browser's context menu to show on a right click, but
-   * sometimes, you do, so we add two unofficial functions
-   * that can be used to trigger context menu behaviour.
-   */
-  (function() {
-    var enabled = true,
-        contextMenu = function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-        };
-
-    p.disableContextMenu = function() {
-      if (!enabled) {
-        return;
-      }
-      attachEventHandler(curElement, 'contextmenu', contextMenu);
-      enabled = false;
-    };
-
-    p.enableContextMenu = function() {
-      if (enabled) {
-        return;
-      }
-      detachEventHandler({elem: curElement, type: 'contextmenu', fn: contextMenu});
-      enabled = true;
-    };
-  }());
-
-  /**
-   * Mouse moved or dragged
-   */
-  attachEventHandler(curElement, "mousemove", function(e) {
-    updateMousePosition(curElement, e);
-    if (typeof p.mouseMoved === "function" && !p.__mousePressed) {
-      p.mouseMoved();
-    }
-    if (typeof p.mouseDragged === "function" && p.__mousePressed) {
-      p.mouseDragged();
-      p.mouseDragging = true;
-    }
-  });
-
-  /**
-   * Unofficial mouse-out handling
-   */
-  attachEventHandler(curElement, "mouseout", function(e) {
-    if (typeof p.mouseOut === "function") {
-      p.mouseOut();
-    }
-  });
-
-  /**
-   * Mouse over
-   */
-  attachEventHandler(curElement, "mouseover", function(e) {
-    updateMousePosition(curElement, e);
-    if (typeof p.mouseOver === "function") {
-      p.mouseOver();
-    }
-  });
-
-  /**
-   * Disable browser's default handling for click-drag of a canvas.
-   */
-  curElement.onmousedown = function () {
-    // make sure focus happens, but nothing else
-    curElement.focus();
-    return false;
-  };
-
-  /**
-   * Mouse pressed or drag
-   */
-  attachEventHandler(curElement, "mousedown", function(e) {
-    p.__mousePressed = true;
-    p.mouseDragging = false;
-    switch (e.which) {
-    case 1:
-      p.mouseButton = PConstants.LEFT;
-      break;
-    case 2:
-      p.mouseButton = PConstants.CENTER;
-      break;
-    case 3:
-      p.mouseButton = PConstants.RIGHT;
-      break;
-    }
-
-    if (typeof p.mousePressed === "function") {
-      p.mousePressed();
-    }
-  });
-
-  /**
-   * Mouse clicked or released
-   */
-  attachEventHandler(curElement, "mouseup", function(e) {
-    p.__mousePressed = false;
-
-    if (typeof p.mouseClicked === "function" && !p.mouseDragging) {
-      p.mouseClicked();
-    }
-
-    if (typeof p.mouseReleased === "function") {
-      p.mouseReleased();
-    }
-  });
-
-  /**
-   * Unofficial scroll wheel handling.
-   */
-  var mouseWheelHandler = function(e) {
-    var delta = 0;
-
-    if (e.wheelDelta) {
-      delta = e.wheelDelta / 120;
-      if (window.opera) {
-        delta = -delta;
-      }
-    } else if (e.detail) {
-      delta = -e.detail / 3;
-    }
-
-    p.mouseScroll = delta;
-
-    if (delta && typeof p.mouseScrolled === 'function') {
-      p.mouseScrolled();
-    }
-  };
-
-  // Support Gecko and non-Gecko scroll events
-  attachEventHandler(document, 'DOMMouseScroll', mouseWheelHandler);
-  attachEventHandler(document, 'mousewheel', mouseWheelHandler);
-
-};
-
-},{}],26:[function(require,module,exports){
-/**
-* A ObjectIterator is an iterator wrapper for objects. If passed object contains
-* the iterator method, the object instance will be replaced by the result returned by
-* this method call. If passed object is an array, the ObjectIterator instance iterates
-* through its items.
-*
-* @param {Object} obj The object to be iterated.
-*/
-module.exports = function ObjectIterator(obj) {
-  if (obj instanceof Array) {
-    // iterate through array items
-    var index = -1;
-    this.hasNext = function() {
-      return ++index < obj.length;
-    };
-    this.next = function() {
-      return obj[index];
-    };
-  } else if (obj.iterator instanceof Function) {
-    return obj.iterator();
-  } else {
-    throw "Unable to iterate: " + obj;
-  }
-};
-
-},{}],21:[function(require,module,exports){
-(function(){/**
  * Processing.js object
  */
  module.exports = function(options, undef) {
@@ -9505,12 +9460,13 @@ module.exports = function ObjectIterator(obj) {
       XMLHttpRequest = window.XMLHttpRequest,
       document = Browser.document,
       noop = options.noop,
-
-      PConstants = defaultScope.PConstants;
+      PConstants = defaultScope.PConstants,
       PFont = defaultScope.PFont,
       PShapeSVG = defaultScope.PShapeSVG,
+      PShape = defaultScope.PShape,
       PVector = defaultScope.PVector,
-      Char = Character = defaultScope.Char,
+      Char = defaultScope.Char,
+      Character = defaultScope.Char,
       ObjectIterator = defaultScope.ObjectIterator,
       XMLElement = defaultScope.XMLElement,
       XML = defaultScope.XML;
@@ -10632,6 +10588,9 @@ module.exports = function ObjectIterator(obj) {
      * @see PApplet#shape()
      * @see PApplet#shapeMode()
      */
+    p.createShape = function(){
+         return new PShape();
+     };
     p.loadShape = function (filename) {
       if (arguments.length === 1) {
         if (filename.indexOf(".svg") > -1) {
@@ -21521,7 +21480,139 @@ module.exports = function ObjectIterator(obj) {
   // we're done. Return our object.
   return Processing;
 };
+},{}],26:[function(require,module,exports){
+// Base source files
+var source = {
+  virtEquals: require("./Helpers/virtEquals"),
+  virtHashCode: require("./Helpers/virtHashCode"),
+  ObjectIterator: require("./Helpers/ObjectIterator"),
+  PConstants: require("./Helpers/PConstants"),
+  ArrayList: require("./Objects/ArrayList"),
+  HashMap: require("./Objects/HashMap"),
+  PVector: require("./Objects/PVector"),
+  PFont: require("./Objects/PFont"),
+  Char: require("./Objects/Char"),
+  XMLAttribute: require("./Objects/XMLAttribute"),
+  XMLElement: require("./Objects/XMLElement"),
+  PMatrix2D: require("./Objects/PMatrix2D"),
+  PMatrix3D: require("./Objects/PMatrix3D"),
+  PShape: require("./Objects/PShape"),
+  colors: require("./Objects/webcolors"),
+  PShapeSVG:  require("./Objects/PShapeSVG"),
+  CommonFunctions: require("./P5Functions/commonFunctions"),
+  defaultScope: require("./Helpers/defaultScope"),
+  Processing: require("./Processing"),
+  setupParser: require("./Parser/Parser"),
+  finalize: require("./Helpers/finalizeProcessing")
+};
 
-})()
-},{}]},{},[1])
+// Additional code that gets tacked onto "p" during
+// instantiation of a Processing sketch.
+source.extend = {
+  withMath: require("./P5Functions/Math.js"),
+  withProxyFunctions: require("./P5Functions/JavaProxyFunctions")(source.virtHashCode, source.virtEquals),
+  withTouch: require("./P5Functions/touchmouse"),
+  withCommonFunctions: source.CommonFunctions.withCommonFunctions
+};
+
+/**
+ * Processing.js building function
+ */
+module.exports = function buildProcessingJS(Browser, testHarness) {
+  var noop = function(){},
+      virtEquals = source.virtEquals,
+      virtHashCode = source.virtHashCode,
+      PConstants = source.PConstants,
+      CommonFunctions = source.CommonFunctions,
+      ObjectIterator = source.ObjectIterator,
+      Char = source.Char,
+      XMLAttribute = source.XMLAttribute(),
+
+      ArrayList = source.ArrayList({
+        virtHashCode: virtHashCode,
+        virtEquals: virtEquals
+      }),
+
+      HashMap = source.HashMap({
+        virtHashCode: virtHashCode,
+        virtEquals: virtEquals
+      }),
+
+      PVector = source.PVector({
+        PConstants: PConstants
+      }),
+
+      PFont = source.PFont({
+        Browser: Browser,
+        noop: noop
+      }),
+
+      XMLElement = source.XMLElement({
+        Browser:Browser,
+        XMLAttribute: XMLAttribute
+      }),
+
+      PMatrix2D = source.PMatrix2D({
+        p:CommonFunctions
+      }),
+
+      PMatrix3D = source.PMatrix3D({
+        p:CommonFunctions
+      }),
+
+      PShape = source.PShape({
+        PConstants: PConstants,
+        PMatrix2D: PMatrix2D,
+        PMatrix3D: PMatrix3D
+      }),
+
+      PShapeSVG = source.PShapeSVG({
+        CommonFunctions:CommonFunctions,
+        PConstants:PConstants,
+        PShape:PShape,
+        XMLElement:XMLElement,
+        colors: source.colors
+      }),
+
+      defaultScope = source.defaultScope({
+        ArrayList: ArrayList,
+        HashMap: HashMap,
+        PVector: PVector,
+        PShape: PShape,
+        PFont: PFont,
+        PShapeSVG: PShapeSVG,
+        ObjectIterator: ObjectIterator,
+        PConstants: PConstants,
+        Char: Char,
+        XMLElement: XMLElement,
+        XML: XMLElement
+      }),
+
+      Processing = source.Processing({
+        defaultScope:defaultScope,
+        Browser:Browser,
+        extend:source.extend,
+        PConstants: PConstants,
+        noop:noop
+      });
+
+  // set up the Processing syntax parser
+  Processing = source.setupParser(Processing, {
+    aFunctions: testHarness,
+    defaultScope: defaultScope
+  });
+
+  // finalise the Processing object
+  Processing = source.finalize(Processing, {
+    isDomPresent: false || Browser.isDomPresent,
+    window: Browser.window,
+    document: Browser.document,
+    noop: noop
+  });
+
+  // done.
+  return Processing;
+};
+
+},{"./Helpers/ObjectIterator":2,"./Helpers/PConstants":3,"./Helpers/defaultScope":4,"./Helpers/finalizeProcessing":5,"./Helpers/virtEquals":6,"./Helpers/virtHashCode":7,"./Objects/ArrayList":8,"./Objects/Char":9,"./Objects/HashMap":10,"./Objects/PFont":11,"./Objects/PMatrix2D":12,"./Objects/PMatrix3D":13,"./Objects/PShape":14,"./Objects/PShapeSVG":15,"./Objects/PVector":16,"./Objects/XMLAttribute":17,"./Objects/XMLElement":18,"./Objects/webcolors":19,"./P5Functions/JavaProxyFunctions":20,"./P5Functions/Math.js":21,"./P5Functions/commonFunctions":22,"./P5Functions/touchmouse":23,"./Parser/Parser":24,"./Processing":25}]},{},[1])
 ;

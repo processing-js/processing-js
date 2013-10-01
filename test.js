@@ -4,8 +4,8 @@ argv.option({
     name: 'test',
     type: 'string',
     description: 'Run a single test, rather than all tests.',
-    example: "'node test --test=unittest.pde'"
-});
+    example: "'node test --test=unittest.pde'"}
+);
 argv.option({
     name: 'nobuild',
     type: 'string',

@@ -531,11 +531,11 @@ module.exports = function withMath(p, undef) {
     }
 
     function lerp(t,a,b) { return a + t * (b - a); }
-
+//return x*x*x*(x*(x*6 - 15) + 10);
     this.noise3d = function(x, y, z) {
-      var X = Math.floor(x)&255, Y = Math.floor(y)&255, Z = Math.floor(z)&255;
-      x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
-      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y, fz = (3-2*z)*z*z;
+      var X = (x|0)&255, Y = (y|0)&255, Z = (z|0)&255;
+      x -= (x|0); y -= (y|0); z -= (z|0);
+      var fx = x*x*x*(x*(x*6-15)+10), fy = y*y*y*(y*(y*6-15)+10), fz = z*z*z*(z*(z*6-15)+10)
       var p0 = perm[X]+Y, p00 = perm[p0] + Z, p01 = perm[p0 + 1] + Z,
           p1 = perm[X + 1] + Y, p10 = perm[p1] + Z, p11 = perm[p1 + 1] + Z;
       return lerp(fz,
@@ -546,9 +546,9 @@ module.exports = function withMath(p, undef) {
     };
 
     this.noise2d = function(x, y) {
-      var X = Math.floor(x)&255, Y = Math.floor(y)&255;
-      x -= Math.floor(x); y -= Math.floor(y);
-      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y;
+var X = (x|0)&255, Y = (y|0)&255;
+      x -= (x|0); y -= (y|0);
+      var fx = x*x*x*(x*(x*6-15)+10), fy = y*y*y*(y*(y*6-15)+10);
       var p0 = perm[X]+Y, p1 = perm[X + 1] + Y;
       return lerp(fy,
         lerp(fx, grad2d(perm[p0], x, y), grad2d(perm[p1], x-1, y)),
@@ -556,9 +556,9 @@ module.exports = function withMath(p, undef) {
     };
 
     this.noise1d = function(x) {
-      var X = Math.floor(x)&255;
-      x -= Math.floor(x);
-      var fx = (3-2*x)*x*x;
+var X = (x|0)&255;
+      x -= (x|0)
+      var fx = x*x*x*(x*(x*6-15)+10);
       return lerp(fx, grad1d(perm[X], x), grad1d(perm[X+1], x-1));
     };
   }

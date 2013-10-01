@@ -2,7 +2,7 @@
  * Touch and Mouse event handling
  */
 module.exports = function withToucht(p, curElement, attachEventHandler, document, undef) {
-
+var PConstants = p.PConstants;
   /**
    * Determine the location of the (mouse) pointer.
    */
@@ -147,7 +147,7 @@ module.exports = function withToucht(p, curElement, attachEventHandler, document
 
         p.__mousePressed = true;
         p.mouseDragging = false;
-        p.mouseButton = PConstants.LEFT;
+        p.mouseButton = PConstants.MOUSELEFT;
 
         if (typeof p.mousePressed === "function") {
           p.mousePressed();
@@ -266,13 +266,13 @@ module.exports = function withToucht(p, curElement, attachEventHandler, document
     p.mouseDragging = false;
     switch (e.which) {
     case 1:
-      p.mouseButton = PConstants.LEFT;
+      p.mouseButton = PConstants.MOUSELEFT;
       break;
     case 2:
-      p.mouseButton = PConstants.CENTER;
+      p.mouseButton = PConstants.MOUSECENTER;
       break;
     case 3:
-      p.mouseButton = PConstants.RIGHT;
+      p.mouseButton = PConstants.MOUSERIGHT;
       break;
     }
 

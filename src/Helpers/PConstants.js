@@ -267,6 +267,14 @@ module.exports = {
     WAIT:     'wait',
     NOCURSOR: "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto",
 
+
+    // Mouse Event Buttons
+    MOUSELEFT: 1,
+    MOUSERIGHT: 3,
+    MOUSECENTER: 2,
+    
+
+
     // Hints
     DISABLE_OPENGL_2X_SMOOTH:     1,
     ENABLE_OPENGL_2X_SMOOTH:     -1,
