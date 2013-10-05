@@ -47,7 +47,7 @@ module.exports = function setupParser(Processing, options) {
       "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
-      "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
+      "pushMatrix", "pushStyle", "quad", "radians", "random", "randomGaussian",
       "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
       "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ",
       "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
