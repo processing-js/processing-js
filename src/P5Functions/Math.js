@@ -472,10 +472,19 @@ module.exports = function withMath(p, undef) {
     currentRandom = (new Marsaglia(seed)).nextDouble;
   };
 
-  // Random
-  // We have two random()'s in the code... what does this do ? and which one is current ?
-  p.Random = function(seed) {
-    var haveNextNextGaussian = false, nextNextGaussian, random;
+  /**
+  * Returns a float from a random series of numbers having a mean of 0 and standard deviation of 1. Each time
+  * the randomGaussian() function is called, it returns a number fitting a Gaussian, or normal, distribution.
+  * There is theoretically no minimum or maximum value that randomGaussian() might return. Rather, there is just a
+  * very low probability that values far from the mean will be returned; and a higher probability that numbers
+  * near the mean will be returned.
+  *
+  * @returns {float}
+  *
+  * @see random
+  * @see noise
+  */
+  p.randomGaussian = function() {    var haveNextNextGaussian = false, nextNextGaussian, random;
 
     this.nextGaussian = function() {
       if (haveNextNextGaussian) {
