@@ -470,6 +470,7 @@ module.exports = function withMath(p, undef) {
   */
   p.randomSeed = function(seed) {
     currentRandom = (new Marsaglia(seed)).nextDouble;
+    this.haveNextNextGaussian = false;
   };
 
   /**
@@ -484,30 +485,26 @@ module.exports = function withMath(p, undef) {
   * @see random
   * @see noise
   */
-  p.randomGaussian = function() {    var haveNextNextGaussian = false, nextNextGaussian, random;
-
-    this.nextGaussian = function() {
-      if (haveNextNextGaussian) {
-        haveNextNextGaussian = false;
-        return nextNextGaussian;
+  p.randomGaussian = function() {    
+  
+      if (this.haveNextNextGaussian) {
+        this.haveNextNextGaussian = false;
+        return this.nextNextGaussian;
       }
       var v1, v2, s;
       do {
-        v1 = 2 * random() - 1; // between -1.0 and 1.0
-        v2 = 2 * random() - 1; // between -1.0 and 1.0
+        v1 = 2 * currentRandom() - 1; // between -1.0 and 1.0
+        v2 = 2 * currentRandom() - 1; // between -1.0 and 1.0
         s = v1 * v1 + v2 * v2;
       }
       while (s >= 1 || s === 0);
 
       var multiplier = Math.sqrt(-2 * Math.log(s) / s);
-      nextNextGaussian = v2 * multiplier;
-      haveNextNextGaussian = true;
+      this.nextNextGaussian = v2 * multiplier;
+      this.haveNextNextGaussian = true;
 
       return v1 * multiplier;
-    };
 
-    // by default use standard random, otherwise seeded
-    random = (seed === undef) ? Math.random : (new Marsaglia(seed)).nextDouble;
   };
 
   // Noise functions and helpers
