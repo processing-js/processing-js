@@ -223,6 +223,9 @@ module.exports = function setupParser(Processing, options) {
     // convert dollar sign to character code
     codeWoStrings = codeWoStrings.replace(/\$/g, "__x0024");
 
+    // Remove newlines after return statements
+    codeWoStrings = codeWoStrings.replace(/return\s*[\n\r]+/g, "return ");
+
     // removes generics
     var genericsWereRemoved;
     var codeWoGenerics = codeWoStrings;
