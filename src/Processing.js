@@ -4500,6 +4500,16 @@
     p.match = function(str, regexp) {
       return str.match(regexp);
     };
+    /**
+     * Adds a .charAtProcessing() which is called instead of .charAt and returns
+     * a Char instead of a string - see bug report #2051.
+     *
+     * @param {int} index the index of the character to get
+     */
+    String.prototype._processingCharAt = function(index) {
+	    return new Char(this.charAt(index));
+    };
+
 
     ////////////////////////////////////////////////////////////////////////////
     // Other java specific functions
