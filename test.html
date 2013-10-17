@@ -25,6 +25,11 @@
         point(mouseX, mouseY);
         redraw();
       }
+
+      void mousePressed() {
+        line(0,mouseY,width,mouseY);
+        line(mouseX,0,mouseX,height);
+      }
     </script>
     <canvas></canvas>
   </body>
