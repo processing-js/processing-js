@@ -1,7 +1,7 @@
 /**
  * Touch and Mouse event handling
  */
-module.exports = function withToucht(p, curElement, attachEventHandler, document, undef) {
+module.exports = function withTouch(p, curElement, attachEventHandler, document, PConstants, undef) {
 
   /**
    * Determine the location of the (mouse) pointer.
