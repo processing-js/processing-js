@@ -159,7 +159,7 @@
     extend.withCommonFunctions(p);
     extend.withMath(p);
     extend.withProxyFunctions(p, removeFirstArgument);
-    extend.withTouch(p, curElement, attachEventHandler, document);
+    extend.withTouch(p, curElement, attachEventHandler, document, PConstants);
 
     // custom functions and properties are added here
     if(aFunctions) {

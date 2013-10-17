@@ -119,6 +119,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
 
   // finalise the Processing object
   Processing = source.finalize(Processing, {
+    version: require('../package.json').version,
     isDomPresent: false || Browser.isDomPresent,
     window: Browser.window,
     document: Browser.document,
