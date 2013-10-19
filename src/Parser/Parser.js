@@ -1731,182 +1731,114 @@ module.exports = function setupParser(Processing, options) {
     sketch.sourceCode = compiledPde;
     return sketch;
   };
- var tinylogLite = function() {
-    var tinylogLite = {},
-      undef = "undefined",
-      func = "function",
-      False = !1,
-      True = !0,
-      logLimit = 512,
-      log = "log";
-    if (typeof tinylog !== undef && typeof tinylog[log] === func) tinylogLite[log] = tinylog[log];
-    else if (typeof document !== undef && !document.fake)(function() {
-      var doc = document,
-        $div = "div",
-        $style = "style",
-        $title = "title",
-        containerStyles = {
-        zIndex: 1E4,
-        position: "fixed",
-        bottom: "0px",
-        width: "100%",
-        height: "15%",
-        fontFamily: "sans-serif",
-        color: "#ccc",
-        backgroundColor: "black"
-      },
-        outputStyles = {
-        position: "relative",
-        fontFamily: "monospace",
-        overflow: "auto",
-        height: "100%",
-        paddingTop: "5px"
-      },
-        resizerStyles = {
-        height: "5px",
-        marginTop: "-5px",
-        cursor: "n-resize",
-        backgroundColor: "darkgrey"
-      },
-        closeButtonStyles = {
-        position: "absolute",
-        top: "5px",
-        right: "20px",
-        color: "#111",
-        MozBorderRadius: "4px",
-        webkitBorderRadius: "4px",
-        borderRadius: "4px",
-        cursor: "pointer",
-        fontWeight: "normal",
-        textAlign: "center",
-        padding: "3px 5px",
-        backgroundColor: "#333",
-        fontSize: "12px"
-      },
-        entryStyles = {
-        minHeight: "16px"
-      },
-        entryTextStyles = {
-        fontSize: "12px",
-        margin: "0 8px 0 8px",
-        maxWidth: "100%",
-        whiteSpace: "pre-wrap",
-        overflow: "auto"
-      },
-        view = doc.defaultView,
-        docElem = doc.documentElement,
-        docElemStyle = docElem[$style],
-        setStyles = function() {
-        var i = arguments.length,
-          elemStyle, styles, style;
-        while (i--) {
-          styles = arguments[i--];
-          elemStyle = arguments[i][$style];
-          for (style in styles) if (styles.hasOwnProperty(style)) elemStyle[style] = styles[style]
-        }
-      },
-        observer = function(obj, event, handler) {
-        if (obj.addEventListener) obj.addEventListener(event, handler, False);
-        else if (obj.attachEvent) obj.attachEvent("on" + event, handler);
-        return [obj, event, handler]
-      },
-        unobserve = function(obj, event, handler) {
-        if (obj.removeEventListener) obj.removeEventListener(event, handler, False);
-        else if (obj.detachEvent) obj.detachEvent("on" + event, handler)
-      },
-        clearChildren = function(node) {
-        var children = node.childNodes,
-          child = children.length;
-        while (child--) node.removeChild(children.item(0))
-      },
-        append = function(to, elem) {
-        return to.appendChild(elem)
-      },
-        createElement = function(localName) {
-        return doc.createElement(localName)
-      },
-        createTextNode = function(text) {
-        return doc.createTextNode(text)
-      },
-        createLog = tinylogLite[log] = function(message) {
-        var uninit, originalPadding = docElemStyle.paddingBottom,
-          container = createElement($div),
-          containerStyle = container[$style],
-          resizer = append(container, createElement($div)),
-          output = append(container, createElement($div)),
-          closeButton = append(container, createElement($div)),
-          resizingLog = False,
-          previousHeight = False,
-          previousScrollTop = False,
-          messages = 0,
-          updateSafetyMargin = function() {
-          docElemStyle.paddingBottom = container.clientHeight + "px"
-        },
-          setContainerHeight = function(height) {
-          var viewHeight = view.innerHeight,
-            resizerHeight = resizer.clientHeight;
-          if (height < 0) height = 0;
-          else if (height + resizerHeight > viewHeight) height = viewHeight - resizerHeight;
-          containerStyle.height = height / viewHeight * 100 + "%";
-          updateSafetyMargin()
-        },
-          observers = [observer(doc, "mousemove", function(evt) {
-          if (resizingLog) {
-            setContainerHeight(view.innerHeight - evt.clientY);
-            output.scrollTop = previousScrollTop
-          }
-        }), observer(doc, "mouseup", function() {
-          if (resizingLog) resizingLog = previousScrollTop = False
-        }), observer(resizer, "dblclick", function(evt) {
-          evt.preventDefault();
-          if (previousHeight) {
-            setContainerHeight(previousHeight);
-            previousHeight = False
-          } else {
-            previousHeight = container.clientHeight;
-            containerStyle.height = "0px"
-          }
-        }), observer(resizer, "mousedown", function(evt) {
-          evt.preventDefault();
-          resizingLog = True;
-          previousScrollTop = output.scrollTop
-        }), observer(resizer, "contextmenu", function() {
-          resizingLog = False
-        }), observer(closeButton, "click", function() {
-          uninit()
-        })];
-        uninit = function() {
-          var i = observers.length;
-          while (i--) unobserve.apply(tinylogLite, observers[i]);
-          docElem.removeChild(container);
-          docElemStyle.paddingBottom = originalPadding;
-          clearChildren(output);
-          clearChildren(container);
-          tinylogLite[log] = createLog
-        };
-        setStyles(container, containerStyles, output, outputStyles, resizer, resizerStyles, closeButton, closeButtonStyles);
-        closeButton[$title] = "Close Log";
-        append(closeButton, createTextNode("\u2716"));
-        resizer[$title] = "Double-click to toggle log minimization";
-        docElem.insertBefore(container, docElem.firstChild);
-        tinylogLite[log] = function(message) {
-          if (messages === logLimit) output.removeChild(output.firstChild);
-          else messages++;
-          var entry = append(output, createElement($div)),
-            entryText = append(entry, createElement($div));
-          entry[$title] = (new Date).toLocaleTimeString();
-          setStyles(entry, entryStyles, entryText, entryTextStyles);
-          append(entryText, createTextNode(message));
-          output.scrollTop = output.scrollHeight
-        };
-        tinylogLite[log](message);
-        updateSafetyMargin()
-      }
-    })();
-    else if (typeof print === func) tinylogLite[log] = print;
-    return tinylogLite
-  }();
-  Processing.logger = tinylogLite;
+  var PjsConsole = function () {
+		var e = {};
+		e.wrapper = document.createElement(
+			"div");
+		e.wrapper.setAttribute("style",
+			"opacity:.75;display:block;position:fixed;bottom:0px;left:0px;right:0px;height:50px;background-color:#aaa"
+		);
+		e.dragger = document.createElement(
+			"div");
+		e.dragger.setAttribute("style",
+			"display:block;border:3px black raised;cursor:n-resize;position:absolute;top:0px;left:0px;right:0px;height:5px;background-color:#333"
+		);
+		e.closer = document.createElement(
+			"div");
+		e.closer.onmouseover = function () {
+			this.closer.style.setProperty(
+				"background-color", "#ccc")
+		};
+		e.closer.onmouseout = function () {
+			e.closer.style.setProperty(
+				"background-color", "#ddd")
+		};
+		e.closer.innerHTML = "&#10006;";
+		e.closer.setAttribute("style",
+			"opacity:.5;display:block;border:3px black raised;position:absolute;top:10px;right:30px;height:20px;width:20px;background-color:#ddd;color:#000;line-height:20px;text-align:center;cursor:pointer;"
+		);
+		e.javaconsole = document.createElement(
+			"div");
+		e.javaconsole.setAttribute("style",
+			"overflow-x: auto;display:block;position:absolute;left:10px;right:0px;bottom:5px;top:10px;overflow-y:scroll;height:40px;"
+		);
+		document.body.appendChild(e.wrapper);
+		e.wrapper.appendChild(e.dragger);
+		e.wrapper.appendChild(e.javaconsole);
+		e.wrapper.appendChild(e.closer);
+		e.divheight = e.wrapper.style.height;
+		e.dragger.onmousedown = function (t) {
+			if (document.selection) document
+				.selection.empty();
+			else window.getSelection()
+				.removeAllRanges();
+			var n = t.screenY;
+			window.onmousemove = function (
+				t) {
+				e.wrapper.style.height =
+					parseFloat(e.divheight) +
+					(n - t.screenY) + "px";
+				e.javaconsole.style.height =
+					parseFloat(e.divheight) +
+					(n - t.screenY) - 10 +
+					"px"
+			};
+			window.onmouseup = function (t) {
+				if (document.selection)
+					document.selection.empty();
+				else window.getSelection()
+					.removeAllRanges();
+				e.wrapper.style.height =
+					parseFloat(e.divheight) +
+					(n - t.screenY) + "px";
+				e.javaconsole.style.height =
+					parseFloat(e.divheight) +
+					(n - t.screenY) - 10 +
+					"px";
+				window.onmousemove = null;
+				window.onmouseup = null
+			}
+		};
+		e.BufferArray = [];
+		e.print = function (t) {
+			e.BufferArray[e.BufferArray.length -
+				1] += t + "";
+			e.javaconsole.innerText = e.BufferArray
+				.join("\n");
+			if (e.wrapper.style.visibility ===
+				"hidden") {
+				this.wrapper.style.visibility =
+					"visible"
+			}
+		};
+		e.println = function (t) {
+			e.BufferArray.push(t);
+			e.javaconsole.innerText = e.BufferArray
+				.join("\n");
+			if (e.BufferArray.length > 200)
+				e.BufferArray.splice(0, 1);
+			else e.javaconsole.scrollTop =
+				e.javaconsole.scrollHeight; if (
+				e.wrapper.style.visibility ===
+				"hidden") {
+				e.wrapper.style.visibility =
+					"visible"
+			}
+		};
+		e.showconsole = function () {
+			e.wrapper.style.visibility =
+				"visible"
+		};
+		e.hideconsole = function () {
+			e.wrapper.style.visibility =
+				"hidden"
+		};
+		e.closer.onclick = function () {
+			hideconsole()
+		};
+		return e
+	};
+  Processing.logger = new PjsConsole();
   // done
   return Processing;
 };
