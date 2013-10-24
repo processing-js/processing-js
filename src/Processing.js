@@ -4518,18 +4518,7 @@
      * @see #print
      */
     p.println = function(message) {
-      var bufferLen = logBuffer.length;
-      var bufferMsg = "";
-      if (bufferLen) {
-        bufferMsg = logBuffer.join("");
-        logBuffer.length = 0; // clear log buffer
-      }
-
-      if (arguments.length === 0 && bufferLen === 0) {
-        Processing.logger.log(bufferMsg + "");
-      } else if (arguments.length !== 0) {
-        Processing.logger.log(bufferMsg + message);
-      }
+      Processing.logger.println(message);
     };
     /**
      * The print() function writes to the console area of the Processing environment.
@@ -4539,7 +4528,7 @@
      * @see #join
      */
     p.print = function(message) {
-      logBuffer.push(message);
+      Processing.logger.print(message);
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
