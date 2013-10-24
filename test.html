@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf8">
     <title>Processing.js</title>
-    <script src="processing.min.js"></script>
+    <script src="processing.js"></script>
   </head>
   <body>
     <h1>Processing.js</h1>
@@ -29,6 +29,7 @@
       void mousePressed() {
         line(0,mouseY,width,mouseY);
         line(mouseX,0,mouseX,height);
+        println(mouseX, mouseY);
       }
     </script>
     <canvas></canvas>

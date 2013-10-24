@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":27}],2:[function(require,module,exports){
 module.exports={
   "name": "Processing.js",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "dependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
@@ -7652,6 +7652,8 @@ module.exports = function setupParser(Processing, options) {
   var defaultScope = options.defaultScope,
       PConstants = defaultScope.PConstants,
       aFunctions = options.aFunctions,
+      Browser = options.Browser,
+      document = Browser.document,
       undef;
 
   // Processing global methods and constants for the parser
@@ -9377,6 +9379,90 @@ module.exports = function setupParser(Processing, options) {
     sketch.sourceCode = compiledPde;
     return sketch;
   };
+
+  // the logger for println()
+  var PjsConsole = function (document) {
+    var e = {}, added = false;
+    e.BufferMax = 200;
+    e.wrapper = document.createElement("div");
+    e.wrapper.setAttribute("style", "opacity:.75;display:block;position:fixed;bottom:0px;left:0px;right:0px;height:50px;background-color:#aaa");
+    e.dragger = document.createElement("div");
+    e.dragger.setAttribute("style", "display:block;border:3px black raised;cursor:n-resize;position:absolute;top:0px;left:0px;right:0px;height:5px;background-color:#333");
+    e.closer = document.createElement("div");
+    e.closer.onmouseover = function () {
+      e.closer.style.setProperty("background-color", "#ccc");
+    };
+    e.closer.onmouseout = function () {
+      e.closer.style.setProperty("background-color", "#ddd");
+    };
+    e.closer.innerHTML = "&#10006;";
+    e.closer.setAttribute("style", "opacity:.5;display:block;border:3px black raised;position:absolute;top:10px;right:30px;height:20px;width:20px;background-color:#ddd;color:#000;line-height:20px;text-align:center;cursor:pointer;");
+    e.javaconsole = document.createElement("div");
+    e.javaconsole.setAttribute("style", "overflow-x: auto;display:block;position:absolute;left:10px;right:0px;bottom:5px;top:10px;overflow-y:scroll;height:40px;");
+    e.wrapper.appendChild(e.dragger);
+    e.wrapper.appendChild(e.javaconsole);
+    e.wrapper.appendChild(e.closer);
+    e.dragger.onmousedown = function (t) {
+      e.divheight = e.wrapper.style.height;
+      if (document.selection) document.selection.empty();
+      else window.getSelection().removeAllRanges();
+      var n = t.screenY;
+      window.onmousemove = function (t) {
+        e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
+        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px"
+      };
+      window.onmouseup = function (t) {
+        if (document.selection) document.selection.empty();
+        else window.getSelection().removeAllRanges();
+        e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
+        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
+        window.onmousemove = null;
+        window.onmouseup = null;
+      };
+    };
+    e.BufferArray = [];
+    e.print = e.log = function (t) {
+      // var oldheight = e.javaconsole.scrollHeight-e.javaconsole.scrollTop;
+      if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
+      else e.BufferArray.push(t);
+      e.javaconsole.innerHTML = e.BufferArray.join('');
+      if (e.wrapper.style.visibility === "hidden") {
+        e.wrapper.style.visibility = "visible";
+      }
+      //if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
+      //else e.javaconsole.scrollTop = oldheight;
+      if (e.wrapper.style.visibility === "hidden") {
+        e.wrapper.style.visibility = "visible"
+      }
+    };
+    e.println = function (t) {
+      if(!added) { document.body.appendChild(e.wrapper); }
+      e.print(t);
+      e.BufferArray.push('<br/>');
+      e.javaconsole.innerHTML = e.BufferArray.join('');
+      if (e.wrapper.style.visibility === "hidden") {
+        e.wrapper.style.visibility = "visible";
+      }
+      if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
+      else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
+      if (e.wrapper.style.visibility === "hidden") {
+        e.wrapper.style.visibility = "visible";
+      }
+    };
+    e.showconsole = function () {
+      e.wrapper.style.visibility = "visible";
+    };
+    e.hideconsole = function () {
+      e.wrapper.style.visibility = "hidden";
+    };
+    e.closer.onclick = function () {
+      e.hideconsole();
+    };
+    e.hideconsole();
+    return e;
+  };
+
+  Processing.logger = new PjsConsole(document);
 
   // done
   return Processing;
@@ -13903,18 +13989,7 @@ module.exports = function setupParser(Processing, options) {
      * @see #print
      */
     p.println = function(message) {
-      var bufferLen = logBuffer.length;
-      var bufferMsg = "";
-      if (bufferLen) {
-        bufferMsg = logBuffer.join("");
-        logBuffer.length = 0; // clear log buffer
-      }
-
-      if (arguments.length === 0 && bufferLen === 0) {
-        Processing.logger.log(bufferMsg + "");
-      } else if (arguments.length !== 0) {
-        Processing.logger.log(bufferMsg + message);
-      }
+      Processing.logger.println(message);
     };
     /**
      * The print() function writes to the console area of the Processing environment.
@@ -13924,7 +13999,7 @@ module.exports = function setupParser(Processing, options) {
      * @see #join
      */
     p.print = function(message) {
-      logBuffer.push(message);
+      Processing.logger.print(message);
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
@@ -21481,7 +21556,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       XMLElement = source.XMLElement({
-        Browser:Browser,
+        Browser: Browser,
         XMLAttribute: XMLAttribute
       }),
 
@@ -21500,10 +21575,10 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       PShapeSVG = source.PShapeSVG({
-        CommonFunctions:CommonFunctions,
-        PConstants:PConstants,
-        PShape:PShape,
-        XMLElement:XMLElement,
+        CommonFunctions: CommonFunctions,
+        PConstants: PConstants,
+        PShape: PShape,
+        XMLElement: XMLElement,
         colors: source.colors
       }),
 
@@ -21521,14 +21596,15 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       Processing = source.Processing({
-        defaultScope:defaultScope,
-        Browser:Browser,
-        extend:source.extend,
-        noop:noop
+        defaultScope: defaultScope,
+        Browser: Browser,
+        extend: source.extend,
+        noop: noop
       });
 
   // set up the Processing syntax parser
   Processing = source.setupParser(Processing, {
+    Browser: Browser,
     aFunctions: testHarness,
     defaultScope: defaultScope
   });
