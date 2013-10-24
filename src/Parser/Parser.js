@@ -1773,23 +1773,25 @@ module.exports = function setupParser(Processing, options) {
     e.BufferArray = [];
     e.print = e.log = function (t) {
       e.BufferArray.push(t);
-      e.javaconsole.innerText = e.BufferArray.join("");
+      e.javaconsole.innerHTML = e.BufferArray.join("");
       if (e.wrapper.style.visibility === "hidden") {
         e.wrapper.style.visibility = "visible"
       }
       if (e.BufferArray.length > 200) e.BufferArray.splice(0, 1);
-      else e.javaconsole.scrollTop = e.javaconsole.scrollHeight; if (e.wrapper.style.visibility === "hidden") {
+      else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
+      if (e.wrapper.style.visibility === "hidden") {
         e.wrapper.style.visibility = "visible"
       }
     };
     e.println = function (t) {
-      e.BufferArray.push(t + '\n');
-      e.javaconsole.innerText = e.BufferArray.join("");
+      e.BufferArray.push(t + '<br/>');
+      e.javaconsole.innerHTML = e.BufferArray.join("");
       if (e.wrapper.style.visibility === "hidden") {
         e.wrapper.style.visibility = "visible"
       }
       if (e.BufferArray.length > 200) e.BufferArray.splice(0, 1);
-      else e.javaconsole.scrollTop = e.javaconsole.scrollHeight; if (e.wrapper.style.visibility === "hidden") {
+      else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
+      if (e.wrapper.style.visibility === "hidden") {
         e.wrapper.style.visibility = "visible"
       }
     };
