@@ -1731,18 +1731,19 @@ module.exports = function setupParser(Processing, options) {
     sketch.sourceCode = compiledPde;
     return sketch;
   };
-  var PjsConsole = function () {
+  var PjsConsole = (function () {
     var e = {};
+    e.BufferMax = 200;
     e.wrapper = document.createElement("div");
     e.wrapper.setAttribute("style", "opacity:.75;display:block;position:fixed;bottom:0px;left:0px;right:0px;height:50px;background-color:#aaa");
     e.dragger = document.createElement("div");
     e.dragger.setAttribute("style", "display:block;border:3px black raised;cursor:n-resize;position:absolute;top:0px;left:0px;right:0px;height:5px;background-color:#333");
     e.closer = document.createElement("div");
     e.closer.onmouseover = function () {
-      e.closer.style.setProperty("background-color", "#ccc")
+      e.closer.style.setProperty("background-color", "#ccc");
     };
     e.closer.onmouseout = function () {
-      e.closer.style.setProperty("background-color", "#ddd")
+      e.closer.style.setProperty("background-color", "#ddd");
     };
     e.closer.innerHTML = "&#10006;";
     e.closer.setAttribute("style", "opacity:.5;display:block;border:3px black raised;position:absolute;top:10px;right:30px;height:20px;width:20px;background-color:#ddd;color:#000;line-height:20px;text-align:center;cursor:pointer;");
@@ -1767,46 +1768,49 @@ module.exports = function setupParser(Processing, options) {
         e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
         e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
         window.onmousemove = null;
-        window.onmouseup = null
-      }
+        window.onmouseup = null;
+      };
     };
     e.BufferArray = [];
     e.print = e.log = function (t) {
-      e.BufferArray.push(t);
-      e.javaconsole.innerHTML = e.BufferArray.join("");
+      // var oldheight = e.javaconsole.scrollHeight-e.javaconsole.scrollTop;
+      if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
+      else e.BufferArray.push(t);
+      e.javaconsole.innerHTML = e.BufferArray.join('');
       if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible"
+        e.wrapper.style.visibility = "visible";
       }
-      if (e.BufferArray.length > 200) e.BufferArray.splice(0, 1);
-      else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
+      //if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
+      //else e.javaconsole.scrollTop = oldheight;
       if (e.wrapper.style.visibility === "hidden") {
         e.wrapper.style.visibility = "visible"
       }
     };
     e.println = function (t) {
-      e.BufferArray.push(t + '<br/>');
-      e.javaconsole.innerHTML = e.BufferArray.join("");
+      e.print(t);
+      e.BufferArray.push('<br/>');
+      e.javaconsole.innerHTML = e.BufferArray.join('');
       if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible"
+        e.wrapper.style.visibility = "visible";
       }
-      if (e.BufferArray.length > 200) e.BufferArray.splice(0, 1);
+      if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
       else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
       if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible"
+        e.wrapper.style.visibility = "visible";
       }
     };
     e.showconsole = function () {
-      e.wrapper.style.visibility = "visible"
+      e.wrapper.style.visibility = "visible";
     };
     e.hideconsole = function () {
-      e.wrapper.style.visibility = "hidden"
+      e.wrapper.style.visibility = "hidden";
     };
     e.closer.onclick = function () {
-      e.hideconsole()
+      e.hideconsole();
     };
     e.hideconsole();
-    return e
-  };
+    return e;
+  });
   Processing.logger = new PjsConsole();
   // done
   return Processing;
