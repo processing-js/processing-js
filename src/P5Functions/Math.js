@@ -3,7 +3,7 @@
  * to the Math object. For others, we can't.
  */
 module.exports = function withMath(p, undef) {
-  var currentRandom = Math.random.call(null);
+  var currentRandom = function(){return Math.random.call(null)};
 
   /**
   * Calculates the absolute value (magnitude) of a number. The absolute value of a number is always positive.
