@@ -1,0 +1,17 @@
+{
+  "name": "Processing.js",
+  "version": "1.4.2",
+  "main": "processing.js",
+  "ignore": [
+		"bundle",
+		"lib",
+		"node_modules",
+		"src",
+		"test",
+		"build.js",
+		"Gruntfile.js",
+		"minify.js",
+		"package.json",
+		"server.js"
+  ]
+}
