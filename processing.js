@@ -15694,7 +15694,7 @@ module.exports = function setupParser(Processing, options) {
      * @see #colorMode()
      */
     DrawingShared.prototype.fill = function() {
-      var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
+      var color = p.color.apply(this, arguments);
       if(color === currentFillColor && doFill) {
         return;
       }
@@ -15764,7 +15764,7 @@ module.exports = function setupParser(Processing, options) {
      * @see #colorMode()
      */
     DrawingShared.prototype.stroke = function() {
-      var color = p.color(arguments[0], arguments[1], arguments[2], arguments[3]);
+      var color = p.color.apply(this, arguments);
       if(color === currentStrokeColor && doStroke) {
         return;
       }
