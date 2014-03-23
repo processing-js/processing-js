@@ -470,35 +470,41 @@ module.exports = function withMath(p, undef) {
   */
   p.randomSeed = function(seed) {
     currentRandom = (new Marsaglia(seed)).nextDouble;
+    this.haveNextNextGaussian = false;
   };
 
-  // Random
-  // We have two random()'s in the code... what does this do ? and which one is current ?
-  p.Random = function(seed) {
-    var haveNextNextGaussian = false, nextNextGaussian, random;
-
-    this.nextGaussian = function() {
-      if (haveNextNextGaussian) {
-        haveNextNextGaussian = false;
-        return nextNextGaussian;
+  /**
+  * Returns a float from a random series of numbers having a mean of 0 and standard deviation of 1. Each time
+  * the randomGaussian() function is called, it returns a number fitting a Gaussian, or normal, distribution.
+  * There is theoretically no minimum or maximum value that randomGaussian() might return. Rather, there is just a
+  * very low probability that values far from the mean will be returned; and a higher probability that numbers
+  * near the mean will be returned.
+  *
+  * @returns {float}
+  *
+  * @see random
+  * @see noise
+  */
+  p.randomGaussian = function() {    
+  
+      if (this.haveNextNextGaussian) {
+        this.haveNextNextGaussian = false;
+        return this.nextNextGaussian;
       }
       var v1, v2, s;
       do {
-        v1 = 2 * random() - 1; // between -1.0 and 1.0
-        v2 = 2 * random() - 1; // between -1.0 and 1.0
+        v1 = 2 * currentRandom() - 1; // between -1.0 and 1.0
+        v2 = 2 * currentRandom() - 1; // between -1.0 and 1.0
         s = v1 * v1 + v2 * v2;
       }
       while (s >= 1 || s === 0);
 
       var multiplier = Math.sqrt(-2 * Math.log(s) / s);
-      nextNextGaussian = v2 * multiplier;
-      haveNextNextGaussian = true;
+      this.nextNextGaussian = v2 * multiplier;
+      this.haveNextNextGaussian = true;
 
       return v1 * multiplier;
-    };
 
-    // by default use standard random, otherwise seeded
-    random = (seed === undef) ? Math.random : (new Marsaglia(seed)).nextDouble;
   };
 
   // Noise functions and helpers
