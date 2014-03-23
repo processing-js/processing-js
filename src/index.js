@@ -65,7 +65,7 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       XMLElement = source.XMLElement({
-        Browser:Browser,
+        Browser: Browser,
         XMLAttribute: XMLAttribute
       }),
 
@@ -84,10 +84,10 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       PShapeSVG = source.PShapeSVG({
-        CommonFunctions:CommonFunctions,
-        PConstants:PConstants,
-        PShape:PShape,
-        XMLElement:XMLElement,
+        CommonFunctions: CommonFunctions,
+        PConstants: PConstants,
+        PShape: PShape,
+        XMLElement: XMLElement,
         colors: source.colors
       }),
 
@@ -105,14 +105,15 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
       }),
 
       Processing = source.Processing({
-        defaultScope:defaultScope,
-        Browser:Browser,
-        extend:source.extend,
-        noop:noop
+        defaultScope: defaultScope,
+        Browser: Browser,
+        extend: source.extend,
+        noop: noop
       });
 
   // set up the Processing syntax parser
   Processing = source.setupParser(Processing, {
+    Browser: Browser,
     aFunctions: testHarness,
     defaultScope: defaultScope
   });
