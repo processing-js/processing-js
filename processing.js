@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":27}],2:[function(require,module,exports){
 module.exports={
   "name": "Processing.js",
-  "version": "1.4.2",
+  "version": "1.4.4",
   "dependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
@@ -8946,7 +8946,9 @@ module.exports = function setupParser(Processing, options) {
       };
       var body = this.params.prependMethodArgs(this.body.toString());
       var result = "function " + this.name + this.params + " " + body + "\n" +
-        "$p." + this.name + " = " + this.name + ";";
+                   "$p." + this.name + " = " + this.name + ";\n" +
+                   this.name + " = " + this.name + ".bind($p);";
+//        "$p." + this.name + " = " + this.name + ";";
       replaceContext = oldContext;
       return result;
     };

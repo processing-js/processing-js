@@ -1,4 +1,6 @@
 var tests = [
+  { path: "test-this.pde", tags: ["2D"] },
+  { path: "test-this-class.pde", tags: ["2D"] },
   { path: "stretch.pde", tags: ["3D"] },
   { path: "arc-fill-crisp.pde", tags: ["2D"], epsilonOverride: 0.08 },
   { path: "mixture.pde", tags: ["3D"], knownFailureTicket: "1239" },

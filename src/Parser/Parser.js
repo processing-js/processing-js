@@ -1302,7 +1302,9 @@ module.exports = function setupParser(Processing, options) {
       };
       var body = this.params.prependMethodArgs(this.body.toString());
       var result = "function " + this.name + this.params + " " + body + "\n" +
-        "$p." + this.name + " = " + this.name + ";";
+                   "$p." + this.name + " = " + this.name + ";\n" +
+                   this.name + " = " + this.name + ".bind($p);";
+//        "$p." + this.name + " = " + this.name + ";";
       replaceContext = oldContext;
       return result;
     };
