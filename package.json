@@ -1,6 +1,6 @@
 {
   "name": "Processing.js",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "dependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
