@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":27}],2:[function(require,module,exports){
 module.exports={
   "name": "Processing.js",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "dependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
@@ -6420,7 +6420,7 @@ module.exports = function(virtHashCode, virtEquals, undef) {
  * to the Math object. For others, we can't.
  */
 module.exports = function withMath(p, undef) {
-  var currentRandom = Math.random;
+  var internalRandomGenerator = function() { return Math.random(); };
 
   /**
   * Calculates the absolute value (magnitude) of a number. The absolute value of a number is always positive.
@@ -6844,30 +6844,30 @@ module.exports = function withMath(p, undef) {
   */
   p.random = function() {
     if(arguments.length === 0) {
-      return currentRandom();
+      return internalRandomGenerator();
     }
     if(arguments.length === 1) {
-      return currentRandom() * arguments[0];
+      return internalRandomGenerator() * arguments[0];
     }
     var aMin = arguments[0], aMax = arguments[1];
-    return currentRandom() * (aMax - aMin) + aMin;
+    return internalRandomGenerator() * (aMax - aMin) + aMin;
   };
 
   // Pseudo-random generator
   function Marsaglia(i1, i2) {
     // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
     var z=i1 || 362436069, w= i2 || 521288629;
-    var nextInt = function() {
+    var intGenerator = function() {
       z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
       w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
       return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
     };
 
-    this.nextDouble = function() {
-      var i = nextInt() / 4294967296;
+    this.doubleGenerator = function() {
+      var i = intGenerator() / 4294967296;
       return i < 0 ? 1 + i : i;
     };
-    this.nextInt = nextInt;
+    this.intGenerator = intGenerator;
   }
   Marsaglia.createRandomized = function() {
     var now = new Date();
@@ -6886,7 +6886,7 @@ module.exports = function withMath(p, undef) {
   * @see noiseSeed
   */
   p.randomSeed = function(seed) {
-    currentRandom = (new Marsaglia(seed)).nextDouble;
+    internalRandomGenerator = (new Marsaglia(seed)).doubleGenerator;
   };
 
   // Random
@@ -6915,7 +6915,7 @@ module.exports = function withMath(p, undef) {
     };
 
     // by default use standard random, otherwise seeded
-    random = (seed === undef) ? Math.random : (new Marsaglia(seed)).nextDouble;
+    random = (seed === undef) ? Math.random : (new Marsaglia(seed)).doubleGenerator;
   };
 
   // Noise functions and helpers
@@ -6927,7 +6927,7 @@ module.exports = function withMath(p, undef) {
     // generate permutation
     var perm = new Uint8Array(512);
     for(i=0;i<256;++i) { perm[i] = i; }
-    for(i=0;i<256;++i) { var t = perm[j = rnd.nextInt() & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
+    for(i=0;i<256;++i) { var t = perm[j = rnd.intGenerator() & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
     // copy to avoid taking mod in perm[0];
     for(i=0;i<256;++i) { perm[i + 256] = perm[i]; }
 
