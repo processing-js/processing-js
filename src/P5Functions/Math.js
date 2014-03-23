@@ -3,7 +3,7 @@
  * to the Math object. For others, we can't.
  */
 module.exports = function withMath(p, undef) {
-  var currentRandom = Math.random;
+  var currentRandom = function(){return Math.random.call(null)};
 
   /**
   * Calculates the absolute value (magnitude) of a number. The absolute value of a number is always positive.
@@ -498,7 +498,9 @@ module.exports = function withMath(p, undef) {
     };
 
     // by default use standard random, otherwise seeded
-    random = (seed === undef) ? Math.random : (new Marsaglia(seed)).nextDouble;
+    if (seed === undef)
+      seed =  new Date().getTime();
+    random = (new Marsaglia(seed)).nextDouble;
   };
 
   // Noise functions and helpers
