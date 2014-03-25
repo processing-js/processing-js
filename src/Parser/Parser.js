@@ -1765,7 +1765,7 @@ module.exports = function setupParser(Processing, options) {
       var n = t.screenY;
       window.onmousemove = function (t) {
         e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px"
+        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
       };
       window.onmouseup = function (t) {
         if (document.selection) document.selection.empty();
@@ -1788,7 +1788,7 @@ module.exports = function setupParser(Processing, options) {
       //if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
       //else e.javaconsole.scrollTop = oldheight;
       if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible"
+        e.wrapper.style.visibility = "visible";
       }
     };
     e.println = function (t) {

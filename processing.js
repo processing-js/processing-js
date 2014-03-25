@@ -1,4 +1,4 @@
-;(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // build script for generating processing.js
 
 var Browser = {
@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":27}],2:[function(require,module,exports){
 module.exports={
   "name": "Processing.js",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "dependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
@@ -9409,7 +9409,7 @@ module.exports = function setupParser(Processing, options) {
       var n = t.screenY;
       window.onmousemove = function (t) {
         e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px"
+        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
       };
       window.onmouseup = function (t) {
         if (document.selection) document.selection.empty();
@@ -9432,7 +9432,7 @@ module.exports = function setupParser(Processing, options) {
       //if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
       //else e.javaconsole.scrollTop = oldheight;
       if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible"
+        e.wrapper.style.visibility = "visible";
       }
     };
     e.println = function (t) {
@@ -21623,4 +21623,3 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
 };
 
 },{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":5,"./Helpers/finalizeProcessing":6,"./Helpers/virtEquals":7,"./Helpers/virtHashCode":8,"./Objects/ArrayList":9,"./Objects/Char":10,"./Objects/HashMap":11,"./Objects/PFont":12,"./Objects/PMatrix2D":13,"./Objects/PMatrix3D":14,"./Objects/PShape":15,"./Objects/PShapeSVG":16,"./Objects/PVector":17,"./Objects/XMLAttribute":18,"./Objects/XMLElement":19,"./Objects/webcolors":20,"./P5Functions/JavaProxyFunctions":21,"./P5Functions/Math.js":22,"./P5Functions/commonFunctions":23,"./P5Functions/touchmouse":24,"./Parser/Parser":25,"./Processing":26}]},{},[1])
-;
