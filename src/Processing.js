@@ -1848,10 +1848,19 @@
        * @param {float} angle         the angle of rotation in radiants
        */
       rotate: function(angle, v0, v1, v2) {
-        if (!v1) {
+        if (arguments.length < 4) {
           this.rotateZ(angle);
         } else {
-          // TODO should make sure this vector is normalized
+          var v = new PVector(v0, v1, v2);
+          var m = v.mag();
+          if (m === 0) {
+            return;
+          } else if (m != 1) {
+            v.normalize();
+            v0 = v.x;
+            v1 = v.y;
+            v2 = v.z;
+          }
           var c = p.cos(angle);
           var s = p.sin(angle);
           var t = 1.0 - c;
@@ -3665,7 +3674,12 @@
     };
 
     Drawing3D.prototype.rotate = function(angleInRadians) {
-      p.rotateZ(angleInRadians);
+      if (arguments.length < 4) {
+        p.rotateZ(angleInRadians);
+      } else {
+        modelView.rotate(angleInRadians, arguments[1], arguments[2], arguments[3]);
+        modelViewInv.rotate((-angleInRadians), arguments[1], arguments[2], arguments[3]);
+      }
     };
 
     /**
