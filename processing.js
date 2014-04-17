@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+;(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // build script for generating processing.js
 
 var Browser = {
@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":27}],2:[function(require,module,exports){
 module.exports={
   "name": "Processing.js",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "dependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
@@ -6869,6 +6869,7 @@ module.exports = function withMath(p, undef) {
     };
     this.intGenerator = intGenerator;
   }
+
   Marsaglia.createRandomized = function() {
     var now = new Date();
     return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
@@ -6887,35 +6888,39 @@ module.exports = function withMath(p, undef) {
   */
   p.randomSeed = function(seed) {
     internalRandomGenerator = (new Marsaglia(seed)).doubleGenerator;
+    this.haveNextNextGaussian = false;
   };
 
-  // Random
-  // We have two random()'s in the code... what does this do ? and which one is current ?
-  p.Random = function(seed) {
-    var haveNextNextGaussian = false, nextNextGaussian, random;
+  /**
+  * Returns a float from a random series of numbers having a mean of 0 and standard deviation of 1. Each time
+  * the randomGaussian() function is called, it returns a number fitting a Gaussian, or normal, distribution.
+  * There is theoretically no minimum or maximum value that randomGaussian() might return. Rather, there is just a
+  * very low probability that values far from the mean will be returned; and a higher probability that numbers
+  * near the mean will be returned.
+  *
+  * @returns {float}
+  *
+  * @see random
+  * @see noise
+  */
+  p.randomGaussian = function() {
+    if (this.haveNextNextGaussian) {
+      this.haveNextNextGaussian = false;
+      return this.nextNextGaussian;
+    }
+    var v1, v2, s;
+    do {
+      v1 = 2 * internalRandomGenerator() - 1; // between -1.0 and 1.0
+      v2 = 2 * internalRandomGenerator() - 1; // between -1.0 and 1.0
+      s = v1 * v1 + v2 * v2;
+    }
+    while (s >= 1 || s === 0);
 
-    this.nextGaussian = function() {
-      if (haveNextNextGaussian) {
-        haveNextNextGaussian = false;
-        return nextNextGaussian;
-      }
-      var v1, v2, s;
-      do {
-        v1 = 2 * random() - 1; // between -1.0 and 1.0
-        v2 = 2 * random() - 1; // between -1.0 and 1.0
-        s = v1 * v1 + v2 * v2;
-      }
-      while (s >= 1 || s === 0);
+    var multiplier = Math.sqrt(-2 * Math.log(s) / s);
+    this.nextNextGaussian = v2 * multiplier;
+    this.haveNextNextGaussian = true;
 
-      var multiplier = Math.sqrt(-2 * Math.log(s) / s);
-      nextNextGaussian = v2 * multiplier;
-      haveNextNextGaussian = true;
-
-      return v1 * multiplier;
-    };
-
-    // by default use standard random, otherwise seeded
-    random = (seed === undef) ? Math.random : (new Marsaglia(seed)).doubleGenerator;
+    return v1 * multiplier;
   };
 
   // Noise functions and helpers
@@ -7691,7 +7696,7 @@ module.exports = function setupParser(Processing, options) {
       "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
-      "pushMatrix", "pushStyle", "quad", "radians", "random", "Random",
+      "pushMatrix", "pushStyle", "quad", "radians", "random", "randomGaussian",
       "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
       "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ",
       "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
@@ -21637,3 +21642,4 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
 };
 
 },{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":5,"./Helpers/finalizeProcessing":6,"./Helpers/virtEquals":7,"./Helpers/virtHashCode":8,"./Objects/ArrayList":9,"./Objects/Char":10,"./Objects/HashMap":11,"./Objects/PFont":12,"./Objects/PMatrix2D":13,"./Objects/PMatrix3D":14,"./Objects/PShape":15,"./Objects/PShapeSVG":16,"./Objects/PVector":17,"./Objects/XMLAttribute":18,"./Objects/XMLElement":19,"./Objects/webcolors":20,"./P5Functions/JavaProxyFunctions":21,"./P5Functions/Math.js":22,"./P5Functions/commonFunctions":23,"./P5Functions/touchmouse":24,"./Parser/Parser":25,"./Processing":26}]},{},[1])
+;
