@@ -1,19 +1,19 @@
 int attempts = 10000, buckets = 10;
 double[] r = new double[attempts]; // fully random
 for(int i=0;i<attempts;++i) {
-  r[i] = random(); 
+  r[i] = random();
 }
 
 randomSeed(14); // with seed
 double[] r1 = new double[attempts];
 for(int i=0;i<attempts;++i) {
-  r1[i] = random(); 
+  r1[i] = random();
 }
 
 randomSeed(14); // with same seed
 double[] r2 = new double[attempts];
 for(int i=0;i<attempts;++i) {
-  r2[i] = random(); 
+  r2[i] = random();
 }
 
 boolean r1r2TheSame = true;
@@ -58,8 +58,3 @@ for(int i=0;i<attempts;++i) {
   var sample = random(minSample, maxSample);
   if(sample < minSample || sample >= maxSample) _checkTrue(false); // bad random with two arg
 }
-
-// gaussian: simple call
-Random g = new Random();
-var g1 = g.nextGaussian(), g2 = g.nextGaussian(), g3 = g.nextGaussian();
-

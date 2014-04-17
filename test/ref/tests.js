@@ -28,7 +28,6 @@ var tests = [
   { path: "pattern.pde", tags: ["2D"] },
   { path: "pixelarray.pde", tags: ["2D"] },
   { path: "pulses.pde", tags: ["2D"] },
-  { path: "smoke-particle-system.pde", tags: ["2D"] },
   { path: "zoom.pde", tags: ["3D"], epsilonOverride: 0.07 },
   { path: "tint-isImageDirty.pde", tags: ["2D"] },
   { path: "copy-no-source.pde", tags: ["2D", "BLEND"] },
