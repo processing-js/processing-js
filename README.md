@@ -3,6 +3,8 @@ Processing.js
 
 This is the compilation repository for Processing.js, building the processing.js library from a series of modules, rather than existing as one large file as was the case in version 1.4.1 and earlier.
 
+**note:** this is not the repository for Processing, the language and IDE. Processing itself is hosted over at https://github.com/processing/processing.
+
 Getting Processing.js
 ---------------------
 
