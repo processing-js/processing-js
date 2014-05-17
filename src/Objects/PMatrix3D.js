@@ -277,30 +277,39 @@ module.exports = function(options, undef) {
      *
      * @param {float} angle         the angle of rotation in radiants
      */
-    rotate: function(angle, v0, v1, v2) {
-      if (!v1) {
-        this.rotateZ(angle);
-      } else {
-        // TODO should make sure this vector is normalized
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-        var t = 1.0 - c;
+     rotate: function(angle, v0, v1, v2) {
+        if (arguments.length < 4) {
+          this.rotateZ(angle);
+        } else {
+          var v = new PVector(v0, v1, v2);
+          var m = v.mag();
+          if (m === 0) {
+            return;
+          } else if (m != 1) {
+            v.normalize();
+            v0 = v.x;
+            v1 = v.y;
+            v2 = v.z;
+          }
+          var c = p.cos(angle);
+          var s = p.sin(angle);
+          var t = 1.0 - c;
 
-        this.apply((t * v0 * v0) + c,
-                   (t * v0 * v1) - (s * v2),
-                   (t * v0 * v2) + (s * v1),
-                   0,
-                   (t * v0 * v1) + (s * v2),
-                   (t * v1 * v1) + c,
-                   (t * v1 * v2) - (s * v0),
-                   0,
-                   (t * v0 * v2) - (s * v1),
-                   (t * v1 * v2) + (s * v0),
-                   (t * v2 * v2) + c,
-                   0,
-                   0, 0, 0, 1);
-      }
-    },
+          this.apply((t * v0 * v0) + c,
+                     (t * v0 * v1) - (s * v2),
+                     (t * v0 * v2) + (s * v1),
+                     0,
+                     (t * v0 * v1) + (s * v2),
+                     (t * v1 * v1) + c,
+                     (t * v1 * v2) - (s * v0),
+                     0,
+                     (t * v0 * v2) - (s * v1),
+                     (t * v1 * v2) + (s * v0),
+                     (t * v2 * v2) + c,
+                     0,
+                     0, 0, 0, 1);
+        }
+      },
     /**
      * @member PMatrix3D
      * The invApply() function applies the inverted matrix to this matrix.

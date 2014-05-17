@@ -1,4 +1,4 @@
-;(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // build script for generating processing.js
 
 var Browser = {
@@ -2767,30 +2767,39 @@ module.exports = function(options, undef) {
      *
      * @param {float} angle         the angle of rotation in radiants
      */
-    rotate: function(angle, v0, v1, v2) {
-      if (!v1) {
-        this.rotateZ(angle);
-      } else {
-        // TODO should make sure this vector is normalized
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-        var t = 1.0 - c;
+     rotate: function(angle, v0, v1, v2) {
+        if (arguments.length < 4) {
+          this.rotateZ(angle);
+        } else {
+          var v = new PVector(v0, v1, v2);
+          var m = v.mag();
+          if (m === 0) {
+            return;
+          } else if (m != 1) {
+            v.normalize();
+            v0 = v.x;
+            v1 = v.y;
+            v2 = v.z;
+          }
+          var c = p.cos(angle);
+          var s = p.sin(angle);
+          var t = 1.0 - c;
 
-        this.apply((t * v0 * v0) + c,
-                   (t * v0 * v1) - (s * v2),
-                   (t * v0 * v2) + (s * v1),
-                   0,
-                   (t * v0 * v1) + (s * v2),
-                   (t * v1 * v1) + c,
-                   (t * v1 * v2) - (s * v0),
-                   0,
-                   (t * v0 * v2) - (s * v1),
-                   (t * v1 * v2) + (s * v0),
-                   (t * v2 * v2) + c,
-                   0,
-                   0, 0, 0, 1);
-      }
-    },
+          this.apply((t * v0 * v0) + c,
+                     (t * v0 * v1) - (s * v2),
+                     (t * v0 * v2) + (s * v1),
+                     0,
+                     (t * v0 * v1) + (s * v2),
+                     (t * v1 * v1) + c,
+                     (t * v1 * v2) - (s * v0),
+                     0,
+                     (t * v0 * v2) - (s * v1),
+                     (t * v1 * v2) + (s * v0),
+                     (t * v2 * v2) + c,
+                     0,
+                     0, 0, 0, 1);
+        }
+      },
     /**
      * @member PMatrix3D
      * The invApply() function applies the inverted matrix to this matrix.
@@ -21642,4 +21651,3 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
 };
 
 },{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":5,"./Helpers/finalizeProcessing":6,"./Helpers/virtEquals":7,"./Helpers/virtHashCode":8,"./Objects/ArrayList":9,"./Objects/Char":10,"./Objects/HashMap":11,"./Objects/PFont":12,"./Objects/PMatrix2D":13,"./Objects/PMatrix3D":14,"./Objects/PShape":15,"./Objects/PShapeSVG":16,"./Objects/PVector":17,"./Objects/XMLAttribute":18,"./Objects/XMLElement":19,"./Objects/webcolors":20,"./P5Functions/JavaProxyFunctions":21,"./P5Functions/Math.js":22,"./P5Functions/commonFunctions":23,"./P5Functions/touchmouse":24,"./Parser/Parser":25,"./Processing":26}]},{},[1])
-;
