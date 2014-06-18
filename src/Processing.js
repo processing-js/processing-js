@@ -10121,7 +10121,7 @@
 
     // helper function for filter()
     var buildBlurKernel = function(r) {
-      var radius = p.floor(r * 3.5), i, radiusi;
+      var radius = p.floor(r * 3.5), i;
       radius = (radius < 1) ? 1 : ((radius < 248) ? radius : 248);
       if (p.shared.blurRadius !== radius) {
         p.shared.blurRadius = radius;
@@ -10136,7 +10136,7 @@
         }
         var radiusiSquared = (radius - 1) * (radius - 1);
         for (i = 1; i < radius; i++) {
-          sharedBlurKernal[radius + i] = sharedBlurKernal[radiusi] = radiusiSquared;
+          sharedBlurKernal[radius + i] = sharedBlurKernal[radius-i] = radiusiSquared;
         }
         sharedBlurKernal[radius] = radius * radius;
       }

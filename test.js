@@ -39,7 +39,7 @@ var Browser = require('./lib/Browser'),
     exec = require('child_process').exec,
     fs = require("fs"),
     open = require('open'),
-    testHarness = require("./lib/testHarness"),
+    testHarness = require("./lib/TestHarness"),
     unitDir = "./test/unit";
 
 // script vars
