@@ -290,7 +290,7 @@ module.exports = function(options,undef) {
 
       // set up the template element
       var element = document.createElement("span");
-      element.style.cssText = 'position: absolute; width: 0px; height: 0px; top: 0; left: 0; opacity: 0; font-family: "PjsEmptyFont", fantasy;';
+      element.style.cssText = 'position: absolute; width: 0px; height: 0px; display: none; top: 0; left: 0; opacity: 0; font-family: "PjsEmptyFont", fantasy;';
       element.innerHTML = "AAAAAAAA";
       document.body.appendChild(element);
       this.template = element;
