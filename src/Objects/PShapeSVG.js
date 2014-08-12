@@ -144,8 +144,7 @@ module.exports = function(options) {
 
   };
   /**
-   * PShapeSVG methods
-   * missing: getChild(), print(), parseStyleAttributes(), styles() - deals with strokeGradient and fillGradient
+   * PShapeSVG methods are inherited from the PShape prototype
    */
   PShapeSVG.prototype = new PShape();
   /**
