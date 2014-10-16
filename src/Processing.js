@@ -145,18 +145,12 @@
       }
     }
 
-    // detach event handlers whose type matches the given string/regex
-    function detachEventHandlersByTypeMatch(types) {
-
-        // Loop though eventHandlers and remove event listeners that match the
-        // given type regex
-        for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-          var type = eventHandlers[i].type;
-
-          if (type.match(types)) {
-            detachEventHandler(eventHandlers[i]);
-          }
+    function detachEventHandlersByType(element, types) {
+      Object.keys(eventHandlers).forEach(function(eventHandler) {
+        if (types.indexOf(eventHandler.type) > -1 && (eventHandler.elem == element)) {
+          detachEventHandler(eventHandler.type);
         }
+      });
     }
 
     function removeFirstArgument(args) {
@@ -173,7 +167,7 @@
     extend.withCommonFunctions(p);
     extend.withMath(p);
     extend.withProxyFunctions(p, removeFirstArgument);
-    extend.withTouch(p, curElement, attachEventHandler, detachEventHandlersByTypeMatch, document, PConstants);
+    extend.withTouch(p, curElement, attachEventHandler, detachEventHandlersByType, document, PConstants);
 
     // custom functions and properties are added here
     if(aFunctions) {
