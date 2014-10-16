@@ -1,7 +1,10 @@
 /**
  * Touch and Mouse event handling
  */
-module.exports = function withTouch(p, curElement, attachEventHandler, detachEventHandlersByTypeMatch, document, PConstants, undef) {
+module.exports = function withTouch(p, curElement, attachEventHandler, detachEventHandlersByType, document, PConstants, undef) {
+
+  // List of mouse event types
+  var mouseTypes = ['mouseout','mousemove','mousedown','mouseup','DOMMouseScroll','mousewheel','touchstart'];
 
   /**
    * Determine the location of the (mouse) pointer.
@@ -98,7 +101,7 @@ module.exports = function withTouch(p, curElement, attachEventHandler, detachEve
     curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
 
     // Remove mouse-type event listeners
-    detachEventHandlersByTypeMatch('^(mouseout|mousemove|mousedown|mouseup|DOMMouseScroll|mousewheel|touchstart)$');
+    detachEventHandlersByType(curElement, mouseTypes);
 
     // If there are any native touch events defined in the sketch, connect all of them
     // Otherwise, connect all of the emulated mouse events
