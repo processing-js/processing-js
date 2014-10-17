@@ -6543,9 +6543,10 @@
       if (!doStroke) {
         return;
       }
-
-      x = Math.round(x);
-      y = Math.round(y);
+      if (!renderSmooth) {
+        x = Math.round(x);
+        y = Math.round(y);
+      }
       curContext.fillStyle = p.color.toString(currentStrokeColor);
       isFillDirty = true;
       // Draw a circle for any point larger than 1px
@@ -8091,10 +8092,13 @@
       if (!doStroke) {
         return;
       }
-      x1 = Math.round(x1);
-      x2 = Math.round(x2);
-      y1 = Math.round(y1);
-      y2 = Math.round(y2);
+      if (!renderSmooth) {
+        x1 = Math.round(x1);
+        x2 = Math.round(x2);
+        y1 = Math.round(y1);
+        y2 = Math.round(y2);
+      }
+
       // A line is only defined if it has different start and end coordinates.
       // If they are the same, we call point instead.
       if (x1 === x2 && y1 === y2) {
@@ -8450,10 +8454,12 @@
         y -= height / 2;
       }
 
-      x = Math.round(x);
-      y = Math.round(y);
-      width = Math.round(width);
-      height = Math.round(height);
+      if (!renderSmooth) {
+        x = Math.round(x);
+        y = Math.round(y);
+        width = Math.round(width);
+        height = Math.round(height);
+      }
       if (tl !== undef) {
         roundedRect$2d(x, y, width, height, tl, tr, br, bl);
         return;
