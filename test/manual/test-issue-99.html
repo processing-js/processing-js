@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ProcessingJS.org :: Manual Test for Issue #99</title>
+
+<script src="../../processing.min.js"></script>
+</head>
+<body>
+
+<h1>Manual Test for Issue #99</h1>
+<p>Manual test verify the fix for 
+<a href="https://github.com/processing-js/processing-js/issues/99">Issue #99 : touch events not working after v1.4.1</a>.</p>
+
+<div>
+<canvas id="canvas-issue-99"  data-processing-sources="test-issue-99.pde"></canvas>
+<label for="canvas-issue-99">Use this canvas to test the actions below.</label>
+</div>
+
+<div>
+<ol>
+<li>
+    <img id="test-image-1"
+    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAA/ElEQVRoQ+2Zyw3EIAwFSSO0RxGcKYL2aIT9nFbay3OwophMpNyeBJ7nySVHSmm+38c8BwNv3jUNb15womEa3owAK71ZoX/j0DANb0aAld6sUN+PVq115pw/W3LpM8aYrbVT5y6tdO/90kF/DyulnDqbgS3YaNhCazHLSosAcVgE9Y3hsIXWYhaHRYA4LILCYQsojywOixRxWASFwxZQHlkcFinisAgKhy2gPLI4LFLEYREUDltAeWRxWKSIwyIoHLaA8sjisEhxyeHH/T0Uod4qttTwrSYRL8PAIqiwMRoOW514cRoWQYWN0XDY6sSL07AIKmyMhsNWJ178BS6PowGvTKIgAAAAAElFTkSuQmCC"
+    alt="1. initial drawing: grey square centred on black background" /> 
+    <label for="test-image-1">initial drawing, no interaction</label>
+</li>
+<li> 
+    <img id="test-image-2"
+    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAA90lEQVRoQ+2ZwQ2EMAwEnaaSjiiKjkhTueN9r8EnRMIg8VuJeMaLkCgRMb73a67iwIu71vDigkPDGl6MgCu9mNCfcTSs4cUIuNKLCf3vS+s4jlFrPbfk1qv3Plprl56bWukxRuz7fuuw58O2bYtSLs2b+5Z24JtcaxiAtsMAVthhQiuRtcMAnh0GsOwwgZXJ2mFAzw4DWHaYwMpk7TCgZ4cBLDtMYGWydhjQs8MAlh0msDJZOwzo2WEAyw4TWJmsHQb07DCAFa/7e0jgPCWbWumnDEHO4cCE1oxZDc9ojZxZw4TWjFkNz2iNnFnDhNaMWQ3PaI2c+QOamvoB9sdZgwAAAABJRU5ErkJggg=="
+    alt="2. on hover: grey square with white outline centred on black background" />
+    <label for="test-image-2">on (mouse) hover, center square gets a white outline.</label>
+</li>
+<li>
+    <img id="test-image-3"
+    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAA9klEQVRoQ+2ZQQ6EIBAE4Ufw/0fAj3DX6166ZeIKlom3TpapntpozCml8blfc2UG3rxrGt684ETDNLwZAVZ6s0J/xqFhGt6MACu9WaGxf1qttVFK+W7JrVfvfdRaL/3u1EqP8b9X6ZwvzTv3LM3ANy42DYuwcVgEdcZw2KE1mcVhESAOi6Bw2AEVkcVhkSIOi6Bw2AEVkcVhkSIOi6Bw2AEVkcVhkSIOi6Bw2AEVkcVhkSIOi6Bw2AEVkcVhkSIOi6DO2Ou+HjpwnpKdWumnDOGcg4EdWitmaXjF1pwz07BDa8UsDa/YmnNmGnZorZil4RVbc858AB8FowGbPuplAAAAAElFTkSuQmCC"
+    alt="3. on mousedown : white square centred on black background" />
+    <label for="test-image-3">on mousedown/touchstart, center square turns white</label>
+</li>
+<li>
+    <img id="test-image-4"
+    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAAsUlEQVRoQ+3ZsQ3DMBAEwVdH7L8JlkRbsWOfgNMQUAG/u7hE18yc7/eadzm43DXD5YKHYYbLCEi6TOjPOQwzXEZA0mVCjZakJV1GQNJlQq20pCVdRkDSZUKttKQl/ScCe++z1roLi77Hkj7nmb+0Dk71xXCItKRDoEfSIdKSDoGWdAq0pFOkrXSItKRDoK10CrSkU6StdIi0pEOgrXQKtKRTpK10iLSkQ6CtdAr065L+AOhylqdVdx+2AAAAAElFTkSuQmCC"
+    alt="4. on mouse move: white square moved to bottom corner of black background" /> 
+    <label for="test-image-4">on mousemove/touchmove, white square moves</label>
+</li>
+</ol>
+</div>
+
+</body>
+</html>
+
