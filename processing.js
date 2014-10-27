@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // build script for generating processing.js
 
 var Browser = {
@@ -38,6 +38,23 @@ module.exports={
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.8",
     "grunt-contrib-jshint": "~0.4.3"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "description": "Processing.js =============",
+  "main": "Gruntfile.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/whyi/processing-js.git"
+  },
+  "author": "",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/whyi/processing-js/issues"
   }
 }
 
@@ -236,6 +253,9 @@ module.exports = {
     ARC:            32,
     SPHERE:         40,
     BOX:            41,
+
+    // Arc mode
+    CHORD:          2,
 
     GROUP:          0,
     PRIMITIVE:      1,
@@ -3894,8 +3914,7 @@ module.exports = function(options) {
 
   };
   /**
-   * PShapeSVG methods
-   * missing: getChild(), print(), parseStyleAttributes(), styles() - deals with strokeGradient and fillGradient
+   * PShapeSVG methods are inherited from the PShape prototype
    */
   PShapeSVG.prototype = new PShape();
   /**
@@ -17473,18 +17492,20 @@ module.exports = function setupParser(Processing, options) {
      * <b>ellipseMode()</b> function.
      * The <b>start</b> and <b>stop</b> parameters specify the angles
      * at which to draw the arc.
-     *
+     * There is an option to draw an arc; the rendering technique used is defined by the optional seventh paramter.
+     * Currently we only support CHORD.
      * @param {float} a       x-coordinate of the arc's ellipse
      * @param {float} b       y-coordinate of the arc's ellipse
      * @param {float} c       width of the arc's ellipse
      * @param {float} d       height of the arc's ellipse
      * @param {float} start   angle to start the arc, specified in radians
      * @param {float} stop    angle to stop the arc, specified in radians
+     * @param {enum}  mode    drawing mode, currently only CHORD is available.
      *
      * @see #ellipseMode()
      * @see #ellipse()
      */
-    p.arc = function(x, y, width, height, start, stop) {
+    p.arc = function(x, y, width, height, start, stop, mode) {
       if (width <= 0 || stop < start) { return; }
 
       if (curEllipseMode === PConstants.CORNERS) {
@@ -17525,6 +17546,13 @@ module.exports = function setupParser(Processing, options) {
           j = i % PConstants.SINCOS_LENGTH;
           p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
+
+        if (mode == PConstants.CHORD)
+        {
+          startingCoordinate = startLUT % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[startingCoordinate] * hr, centerY + sinLUT[startingCoordinate] * vr);
+        }
+
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
       }
@@ -17538,6 +17566,13 @@ module.exports = function setupParser(Processing, options) {
           j = i % PConstants.SINCOS_LENGTH;
           p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
+
+        if (mode == PConstants.CHORD)
+        {
+          startingCoordinate = startLUT % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[startingCoordinate] * hr, centerY + sinLUT[startingCoordinate] * vr);
+        }
+
         p.endShape();
         doFill = savedFill;
       }
@@ -21641,4 +21676,4 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
   return Processing;
 };
 
-},{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":5,"./Helpers/finalizeProcessing":6,"./Helpers/virtEquals":7,"./Helpers/virtHashCode":8,"./Objects/ArrayList":9,"./Objects/Char":10,"./Objects/HashMap":11,"./Objects/PFont":12,"./Objects/PMatrix2D":13,"./Objects/PMatrix3D":14,"./Objects/PShape":15,"./Objects/PShapeSVG":16,"./Objects/PVector":17,"./Objects/XMLAttribute":18,"./Objects/XMLElement":19,"./Objects/webcolors":20,"./P5Functions/JavaProxyFunctions":21,"./P5Functions/Math.js":22,"./P5Functions/commonFunctions":23,"./P5Functions/touchmouse":24,"./Parser/Parser":25,"./Processing":26}]},{},[1])
+},{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":5,"./Helpers/finalizeProcessing":6,"./Helpers/virtEquals":7,"./Helpers/virtHashCode":8,"./Objects/ArrayList":9,"./Objects/Char":10,"./Objects/HashMap":11,"./Objects/PFont":12,"./Objects/PMatrix2D":13,"./Objects/PMatrix3D":14,"./Objects/PShape":15,"./Objects/PShapeSVG":16,"./Objects/PVector":17,"./Objects/XMLAttribute":18,"./Objects/XMLElement":19,"./Objects/webcolors":20,"./P5Functions/JavaProxyFunctions":21,"./P5Functions/Math.js":22,"./P5Functions/commonFunctions":23,"./P5Functions/touchmouse":24,"./Parser/Parser":25,"./Processing":26}]},{},[1]);
