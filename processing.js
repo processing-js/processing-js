@@ -827,23 +827,18 @@ module.exports = function finalizeProcessing(Processing, options) {
    */
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
-    var i;
 
     // before running through init, clear the instances list, to prevent
     // sketch duplication when page content is dynamically swapped without
     // swapping out processing.js
-    while (Processing.instances.length > 0) {
-      for (i = Processing.instances.length - 1; i >= 0; i--) {
-        if (Processing.instances[i]) {
-          Processing.instances[i].exit();
-        }
-      }
-    }
+    Processing.instances.forEach(function(instance) {
+      instance.exit();
+    });
 
     var canvas = document.getElementsByTagName('canvas'),
       filenames;
 
-    for (i = 0, l = canvas.length; i < l; i++) {
+    for (var i = 0, l = canvas.length; i < l; i++) {
       // datasrc and data-src are deprecated.
       var processingSources = canvas[i].getAttribute('data-processing-sources');
       if (processingSources === null) {
