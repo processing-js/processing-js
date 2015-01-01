@@ -3235,7 +3235,7 @@
         b = p.lerp(hsb1[2], hsb2[2], amt);
         rgb = p.color.toRGB(h, s, b);
         // ... and for Alpha-range
-        a = p.lerp(a1, a2, amt) * colorModeA;
+        a = (p.lerp(a1, a2, amt) * colorModeA + 0.5) | 0;
 
         return (a << 24) & PConstants.ALPHA_MASK |
                (rgb[0] << 16) & PConstants.RED_MASK |
@@ -3256,10 +3256,10 @@
       a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      r = p.lerp(r1, r2, amt) | 0;
-      g = p.lerp(g1, g2, amt) | 0;
-      b = p.lerp(b1, b2, amt) | 0;
-      a = p.lerp(a1, a2, amt) * colorModeA;
+      r = (p.lerp(r1, r2, amt) + 0.5) | 0;
+      g = (p.lerp(g1, g2, amt) + 0.5) | 0;
+      b = (p.lerp(b1, b2, amt) + 0.5) | 0;
+      a = (p.lerp(a1, a2, amt) * colorModeA + 0.5) | 0;
 
       return (a << 24) & PConstants.ALPHA_MASK |
              (r << 16) & PConstants.RED_MASK |
