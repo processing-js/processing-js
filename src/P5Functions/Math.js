@@ -515,7 +515,15 @@ module.exports = function withMath(p, undef) {
     // generate permutation
     var perm = new Uint8Array(512);
     for(i=0;i<256;++i) { perm[i] = i; }
-    for(i=0;i<256;++i) { var t = perm[j = rnd.intGenerator() & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
+    for(i=0;i<256;++i) {
+      // NOTE: we can only do this because we've made sure the Marsaglia generator
+      //       gives us numbers where the last byte in a pseudo-random number is
+      //       still pseudo-random. If no 2nd argument is passed in the constructor,
+      //       that is no longer the case and this pair swap will always run identically.
+      var t = perm[j = rnd.intGenerator() & 0xFF];
+      perm[j] = perm[i];
+      perm[i] = t;
+    }
     // copy to avoid taking mod in perm[0];
     for(i=0;i<256;++i) { perm[i + 256] = perm[i]; }
 
