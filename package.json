@@ -13,5 +13,8 @@
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.8",
     "grunt-contrib-jshint": "~0.4.3"
+  },
+  "scripts": {
+    "test": "node test"
   }
 }

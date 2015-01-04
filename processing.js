@@ -38,6 +38,9 @@ module.exports={
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.8",
     "grunt-contrib-jshint": "~0.4.3"
+  },
+  "scripts": {
+    "test": "node test"
   }
 }
 
@@ -6920,7 +6923,7 @@ module.exports = function withMath(p, undef) {
 
   // Noise functions and helpers
   function PerlinNoise(seed) {
-    var rnd = seed !== undef ? new Marsaglia(seed) : Marsaglia.createRandomized();
+    var rnd = seed !== undef ? new Marsaglia(seed, (seed<<16)+(seed>>16)) : Marsaglia.createRandomized();
     var i, j;
     // http://www.noisemachine.com/talk1/17b.html
     // http://mrl.nyu.edu/~perlin/noise/
@@ -12706,7 +12709,7 @@ module.exports = function setupParser(Processing, options) {
         b = p.lerp(hsb1[2], hsb2[2], amt);
         rgb = p.color.toRGB(h, s, b);
         // ... and for Alpha-range
-        a = p.lerp(a1, a2, amt) * colorModeA;
+        a = (p.lerp(a1, a2, amt) * colorModeA + 0.5) | 0;
 
         return (a << 24) & PConstants.ALPHA_MASK |
                (rgb[0] << 16) & PConstants.RED_MASK |
@@ -12727,10 +12730,10 @@ module.exports = function setupParser(Processing, options) {
       a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      r = p.lerp(r1, r2, amt) | 0;
-      g = p.lerp(g1, g2, amt) | 0;
-      b = p.lerp(b1, b2, amt) | 0;
-      a = p.lerp(a1, a2, amt) * colorModeA;
+      r = (p.lerp(r1, r2, amt) + 0.5) | 0;
+      g = (p.lerp(g1, g2, amt) + 0.5) | 0;
+      b = (p.lerp(b1, b2, amt) + 0.5) | 0;
+      a = (p.lerp(a1, a2, amt) * colorModeA + 0.5) | 0;
 
       return (a << 24) & PConstants.ALPHA_MASK |
              (r << 16) & PConstants.RED_MASK |

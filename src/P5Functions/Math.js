@@ -508,7 +508,7 @@ module.exports = function withMath(p, undef) {
 
   // Noise functions and helpers
   function PerlinNoise(seed) {
-    var rnd = seed !== undef ? new Marsaglia(seed) : Marsaglia.createRandomized();
+    var rnd = seed !== undef ? new Marsaglia(seed, (seed<<16)+(seed>>16)) : Marsaglia.createRandomized();
     var i, j;
     // http://www.noisemachine.com/talk1/17b.html
     // http://mrl.nyu.edu/~perlin/noise/
