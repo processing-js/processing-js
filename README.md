@@ -40,7 +40,7 @@ While the browser tests run
 
 With the test server is running, the following urls are good to know:
 
-* http://localhost:3000 - vanilla example page
-* http://localhost:3000/ref - reference testing page
-* http://localhost:3000/perf - performance testing page
-* http://localhost:3000/processing-helper.html - utility page for converting/running Processing code
+* [http://localhost:3000](http://localhost:3000) - vanilla example page
+* [http://localhost:3000/ref](http://localhost:3000/ref) - reference testing page
+* [http://localhost:3000/perf](http://localhost:3000/perf) - performance testing page
+* [http://localhost:3000/processing-helper.html](http://localhost:3000/processing-helper.html) - utility page for converting/running Processing code
