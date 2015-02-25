@@ -167,6 +167,9 @@ module.exports = {
     SPHERE:         40,
     BOX:            41,
 
+    // Arc mode
+    CHORD:          2,
+
     GROUP:          0,
     PRIMITIVE:      1,
     //PATH:         21, // shared with Shape PATH

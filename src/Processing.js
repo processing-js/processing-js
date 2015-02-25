@@ -7998,18 +7998,20 @@
      * <b>ellipseMode()</b> function.
      * The <b>start</b> and <b>stop</b> parameters specify the angles
      * at which to draw the arc.
-     *
+     * There is an option to draw an arc; the rendering technique used is defined by the optional seventh paramter.
+     * Currently we only support CHORD.
      * @param {float} a       x-coordinate of the arc's ellipse
      * @param {float} b       y-coordinate of the arc's ellipse
      * @param {float} c       width of the arc's ellipse
      * @param {float} d       height of the arc's ellipse
      * @param {float} start   angle to start the arc, specified in radians
      * @param {float} stop    angle to stop the arc, specified in radians
+     * @param {enum}  mode    drawing mode, currently only CHORD is available.
      *
      * @see #ellipseMode()
      * @see #ellipse()
      */
-    p.arc = function(x, y, width, height, start, stop) {
+    p.arc = function(x, y, width, height, start, stop, mode) {
       if (width <= 0 || stop < start) { return; }
 
       if (curEllipseMode === PConstants.CORNERS) {
@@ -8050,6 +8052,13 @@
           j = i % PConstants.SINCOS_LENGTH;
           p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
+
+        if (mode === PConstants.CHORD)
+        {
+          startingCoordinate = startLUT % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[startingCoordinate] * hr, centerY + sinLUT[startingCoordinate] * vr);
+        }
+
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
       }
@@ -8063,6 +8072,13 @@
           j = i % PConstants.SINCOS_LENGTH;
           p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
+
+        if (mode === PConstants.CHORD)
+        {
+          startingCoordinate = startLUT % PConstants.SINCOS_LENGTH;
+          p.vertex(centerX + cosLUT[startingCoordinate] * hr, centerY + sinLUT[startingCoordinate] * vr);
+        }
+
         p.endShape();
         doFill = savedFill;
       }
