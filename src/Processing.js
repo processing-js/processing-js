@@ -8052,7 +8052,7 @@
           p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
 
-        if (mode == PConstants.CHORD)
+        if (mode === PConstants.CHORD)
         {
           startingCoordinate = startLUT % PConstants.SINCOS_LENGTH;
           p.vertex(centerX + cosLUT[startingCoordinate] * hr, centerY + sinLUT[startingCoordinate] * vr);
@@ -8072,7 +8072,7 @@
           p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
         }
 
-        if (mode == PConstants.CHORD)
+        if (mode === PConstants.CHORD)
         {
           startingCoordinate = startLUT % PConstants.SINCOS_LENGTH;
           p.vertex(centerX + cosLUT[startingCoordinate] * hr, centerY + sinLUT[startingCoordinate] * vr);
