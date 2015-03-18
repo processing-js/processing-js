@@ -1158,6 +1158,16 @@
       return new XML(p, uri);
     };
 
+    /**
+     * Processing 2.0 function for creating XML elements from string
+     *
+     * @param {String} xml the XML source code
+     *
+     * @return {XML} An XML object representation of the input XML markup.
+     */
+    p.parseXML = function(xmlstring) {
+      return new XML.parse(xmlstring);
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
