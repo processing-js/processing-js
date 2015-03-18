@@ -757,11 +757,11 @@ module.exports = function(options, undef) {
     toString: function() {
       // shortcut for text and cdata nodes
       if (this.type === "TEXT") {
-        return this.content;
+        return this.content || "";
       }
 
       if (this.type === "CDATA") {
-        return this.cdata;
+        return this.cdata || "";
       }
 
       // real XMLElements
@@ -777,7 +777,7 @@ module.exports = function(options, undef) {
 
       // serialize all children to XML string
       if (this.children.length === 0) {
-        if (this.content==="") {
+        if (this.content==="" || this.content===null) {
           xmlstring += "/>";
         } else {
           xmlstring += ">" + this.content + "</"+tagstring+">";
