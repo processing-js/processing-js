@@ -777,7 +777,7 @@ module.exports = function(options, undef) {
 
       // serialize all children to XML string
       if (this.children.length === 0) {
-        if (this.content === "" || this.content == null) {
+        if (this.content === "" || this.content === null || this.content === undefined) {
           xmlstring += "/>";
         } else {
           xmlstring += ">" + this.content + "</"+tagstring+">";

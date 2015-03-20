@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":27}],2:[function(require,module,exports){
 module.exports={
   "name": "Processing.js",
-  "version": "1.4.9",
+  "version": "1.4.10",
   "dependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
@@ -5919,11 +5919,11 @@ module.exports = function(options, undef) {
     toString: function() {
       // shortcut for text and cdata nodes
       if (this.type === "TEXT") {
-        return this.content;
+        return this.content || "";
       }
 
       if (this.type === "CDATA") {
-        return this.cdata;
+        return this.cdata || "";
       }
 
       // real XMLElements
@@ -5939,7 +5939,7 @@ module.exports = function(options, undef) {
 
       // serialize all children to XML string
       if (this.children.length === 0) {
-        if (this.content==="") {
+        if (this.content === "" || this.content === null || this.content === undefined) {
           xmlstring += "/>";
         } else {
           xmlstring += ">" + this.content + "</"+tagstring+">";
@@ -7698,8 +7698,8 @@ module.exports = function setupParser(Processing, options) {
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
       "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
-      "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
-      "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
+      "parseInt", "parseXML", "peg", "perspective", "PImage", "pixels",
+      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "randomGaussian",
@@ -10644,6 +10644,18 @@ module.exports = function setupParser(Processing, options) {
       return new XML(p, uri);
     };
 
+    /**
+     * Processing 2.0 function for creating XML elements from string
+     *
+     * @param {String} xml the XML source code
+     *
+     * @return {XML} An XML object representation of the input XML markup.
+     */
+    p.parseXML = function(xmlstring) {
+      var element = new XML();
+      element.parse(xmlstring);
+      return element;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
