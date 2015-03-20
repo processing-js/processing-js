@@ -5205,8 +5205,8 @@ module.exports = function(options, undef) {
           this.lineNr = line;
         }
       } else {
-        // XMLElement(this,file) format
-        this.parse(uri);
+        // XMLElement(this, file uri) format
+        this.parse(uri, true);
       }
     }
   };
@@ -5228,11 +5228,11 @@ module.exports = function(options, undef) {
      *
      * @see XMLElement#parseChildrenRecursive
      */
-    parse: function(textstring) {
+    parse: function(textstring, stringIsURI) {
       var xmlDoc;
       try {
         var extension = textstring.substring(textstring.length-4);
-        if (extension === ".xml" || extension === ".svg") {
+        if (stringIsURI) {
           textstring = ajax(textstring);
         }
         xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
