@@ -1166,7 +1166,9 @@
      * @return {XML} An XML object representation of the input XML markup.
      */
     p.parseXML = function(xmlstring) {
-      return new XML.parse(xmlstring);
+      var element = new XML();
+      element.parse(xmlstring);
+      return element;
     };
 
     ////////////////////////////////////////////////////////////////////////////
