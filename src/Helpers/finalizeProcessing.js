@@ -192,12 +192,8 @@ module.exports = function finalizeProcessing(Processing, options) {
         }
         if (loaded === sourcesCount) {
           if (errors.length === 0) {
-            try {
-              return new Processing(canvas, code.join("\n"));
-            } catch(e) {
-              console.log("Processing.js: Unable to execute pjs sketch.");
-              throw e;
-            }
+            // This used to throw, but it was constantly getting in the way of debugging where things go wrong!
+            return new Processing(canvas, code.join("\n"));
           } else {
             throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }

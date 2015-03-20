@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "Processing.js",
-  "version": "1.4.11",
+  "version": "1.4.12",
   "dependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
@@ -893,12 +893,8 @@ module.exports = function finalizeProcessing(Processing, options) {
         }
         if (loaded === sourcesCount) {
           if (errors.length === 0) {
-            try {
-              return new Processing(canvas, code.join("\n"));
-            } catch(e) {
-              console.log("Processing.js: Unable to execute pjs sketch.");
-              throw e;
-            }
+            // This used to throw, but it was constantly getting in the way of debugging where things go wrong!
+            return new Processing(canvas, code.join("\n"));
           } else {
             throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }
