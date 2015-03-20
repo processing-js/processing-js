@@ -23,8 +23,12 @@
 
   // fascinating "read only" jshint error if we don't start a new var block here.
   var HTMLCanvasElement = window.HTMLCanvasElement,
-      HTMLImageElement = window.HTMLImageElement,
-      localStorage = window.localStorage;
+      HTMLImageElement = window.HTMLImageElement;
+
+  // window.localStorage cannot be accessed if a user is blocking cookies.
+  // In that case, we make it a temporary source cache object.
+  var localStorage;
+  try { localStorage = window.localStorage; } catch (e) { localStorage = {}; }
 
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
