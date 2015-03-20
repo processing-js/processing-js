@@ -470,7 +470,7 @@ module.exports = function withMath(p, undef) {
   * @see noiseSeed
   */
   p.randomSeed = function(seed) {
-    internalRandomGenerator = (new Marsaglia(seed)).doubleGenerator;
+    internalRandomGenerator = (new Marsaglia(seed, (seed<<16)+(seed>>16))).doubleGenerator;
     this.haveNextNextGaussian = false;
   };
 
