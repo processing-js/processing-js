@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "Processing.js",
-  "version": "1.4.10",
+  "version": "1.4.11",
   "dependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
