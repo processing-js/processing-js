@@ -22,7 +22,7 @@ var Browser = {
 
 window.Processing = require('./src/')(Browser);
 
-},{"./src/":27}],2:[function(require,module,exports){
+},{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "Processing.js",
   "version": "1.4.10",
@@ -370,6 +370,104 @@ module.exports = {
 };
 
 },{}],5:[function(require,module,exports){
+// the logger for println()
+module.exports = function PjsConsole(document) {
+  var e = {}, added = false;
+  e.BufferMax = 200;
+
+  e.wrapper = document.createElement("div");
+
+  e.wrapper.setAttribute("style", "opacity:.75;display:block;position:fixed;bottom:0px;left:0px;right:0px;height:50px;background-color:#aaa");
+
+  e.dragger = document.createElement("div");
+
+  e.dragger.setAttribute("style", "display:block;border:3px black raised;cursor:n-resize;position:absolute;top:0px;left:0px;right:0px;height:5px;background-color:#333");
+
+  e.closer = document.createElement("div");
+
+  e.closer.onmouseover = function () {
+    e.closer.style.setProperty("background-color", "#ccc");
+  };
+
+  e.closer.onmouseout = function () {
+    e.closer.style.setProperty("background-color", "#ddd");
+  };
+
+  e.closer.innerHTML = "&#10006;";
+
+  e.closer.setAttribute("style", "opacity:.5;display:block;border:3px black raised;position:absolute;top:10px;right:30px;height:20px;width:20px;background-color:#ddd;color:#000;line-height:20px;text-align:center;cursor:pointer;");
+
+  e.javaconsole = document.createElement("div");
+
+  e.javaconsole.setAttribute("style", "overflow-x: auto;display:block;position:absolute;left:10px;right:0px;bottom:5px;top:10px;overflow-y:scroll;height:40px;");
+
+  e.wrapper.appendChild(e.dragger);
+
+  e.wrapper.appendChild(e.javaconsole);
+
+  e.wrapper.appendChild(e.closer);
+
+  e.dragger.onmousedown = function (t) {
+    e.divheight = e.wrapper.style.height;
+    if (document.selection) document.selection.empty();
+    else window.getSelection().removeAllRanges();
+    var n = t.screenY;
+    window.onmousemove = function (t) {
+      e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
+      e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
+    };
+    window.onmouseup = function (t) {
+      if (document.selection) document.selection.empty();
+      else window.getSelection().removeAllRanges();
+      e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
+      e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
+      window.onmousemove = null;
+      window.onmouseup = null;
+    };
+  };
+
+  e.BufferArray = [];
+
+  e.print = e.log = function () {
+    var args = Array.prototype.slice.call(arguments);
+    t = args.map(function(t, idx) { return t + (idx+1 === args.length ? "" : " "); }).join('');
+    if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
+    else e.BufferArray.push(t);
+    e.javaconsole.innerHTML = e.BufferArray.join('');
+    if (e.wrapper.style.visibility === "hidden") {
+      e.wrapper.style.visibility = "visible";
+    }
+    if (e.wrapper.style.visibility === "hidden") {
+      e.wrapper.style.visibility = "visible";
+    }
+  };
+
+  e.println = function () {
+    if(!added) { document.body.appendChild(e.wrapper); }
+    var args = Array.prototype.slice.call(arguments);
+    args.push('<br>');
+    e.print.apply(e, args);
+    if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
+    else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
+  };
+  e.showconsole = function () {
+    e.wrapper.style.visibility = "visible";
+  };
+
+  e.hideconsole = function () {
+    e.wrapper.style.visibility = "hidden";
+  };
+
+  e.closer.onclick = function () {
+    e.hideconsole();
+  };
+
+  e.hideconsole();
+
+  return e;
+};
+
+},{}],6:[function(require,module,exports){
 /**
  * Processing.js default scope
  */
@@ -600,7 +698,7 @@ module.exports = function(options) {
   return defaultScope;
 };
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * Finalise the Processing.js object.
  */
@@ -940,7 +1038,7 @@ module.exports = function finalizeProcessing(Processing, options) {
   return Processing;
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /**
  * Returns Java equals() result for two objects. If the first object
  * has the "equals" function, it preforms the call of this function.
@@ -967,7 +1065,7 @@ module.exports = function virtEquals(obj, other) {
   return obj === other;
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * Returns Java hashCode() result for the object. If the object has the "hashCode" function,
  * it preforms the call of this function. Otherwise it uses/creates the "$id" property,
@@ -996,7 +1094,7 @@ module.exports = function virtHashCode(obj, undef) {
   return obj.$id;
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
  * An ArrayList stores a variable number of objects.
  *
@@ -1274,7 +1372,7 @@ module.exports = function(options) {
   return ArrayList;
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 module.exports = (function(charMap, undef) {
 
   var Char = function(chr) {
@@ -1301,7 +1399,7 @@ module.exports = (function(charMap, undef) {
   return Char;
 }({}));
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
 * A HashMap stores a collection of objects, each referenced by a key. This is similar to an Array, only
 * instead of accessing elements with a numeric index, a String  is used. (If you are familiar with
@@ -1714,7 +1812,7 @@ module.exports = function(options) {
   return HashMap;
 };
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 // module export
 module.exports = function(options,undef) {
   var window = options.Browser.window,
@@ -2089,7 +2187,7 @@ module.exports = function(options,undef) {
 
   return PFont;
 };
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -2486,7 +2584,7 @@ module.exports = function(options, undef) {
   return PMatrix2D;
 };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -3084,7 +3182,7 @@ module.exports = function(options, undef) {
 
   return PMatrix3D;
 };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 module.exports = function(options) {
   var PConstants = options.PConstants,
       PMatrix2D = options.PMatrix2D,
@@ -3746,7 +3844,7 @@ module.exports = function(options) {
 
   return PShape;
 };
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /**
  * SVG stands for Scalable Vector Graphics, a portable graphics format. It is
  * a vector format so it allows for infinite resolution and relatively small
@@ -4838,7 +4936,7 @@ module.exports = function(options) {
   return PShapeSVG;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports = function(options, undef) {
   var PConstants = options.PConstants;
 
@@ -5077,7 +5175,7 @@ module.exports = function(options, undef) {
 };
 
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * XMLAttribute is an attribute of a XML element.
  *
@@ -5159,7 +5257,7 @@ module.exports = function() {
   return XMLAttribute;
 };
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /**
  * XMLElement is a representation of an XML object. The object is able to parse XML code
  *
@@ -5968,7 +6066,7 @@ module.exports = function(options, undef) {
   return XMLElement;
 };
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /**
  * web colors, by name
  */
@@ -6115,7 +6213,7 @@ module.exports = {
     yellowgreen:          "#9acd32"
   };
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports = function(virtHashCode, virtEquals, undef) {
 
   return function withProxyFunctions(p, removeFirstArgument) {
@@ -6412,7 +6510,7 @@ module.exports = function(virtHashCode, virtEquals, undef) {
 
 };
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /**
  * For many "math" functions, we can delegate
  * to the Math object. For others, we can't.
@@ -7091,7 +7189,7 @@ module.exports = function withMath(p, undef) {
   };
 };
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /**
  * Common functions traditionally on "p" that should be class functions
  * that get bound to "p" when an instance is actually built, instead.
@@ -7325,7 +7423,7 @@ module.exports = (function commonFunctions(undef) {
   return CommonFunctions;
 }());
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /**
  * Touch and Mouse event handling
  */
@@ -7652,7 +7750,7 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
 
 };
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /**
  * The parser for turning Processing syntax into Pjs JavaScript.
  * This code is not trivial; unless you know what you're doing,
@@ -9391,95 +9489,14 @@ module.exports = function setupParser(Processing, options) {
     return sketch;
   };
 
-  // the logger for println()
-  var PjsConsole = function (document) {
-    var e = {}, added = false;
-    e.BufferMax = 200;
-    e.wrapper = document.createElement("div");
-    e.wrapper.setAttribute("style", "opacity:.75;display:block;position:fixed;bottom:0px;left:0px;right:0px;height:50px;background-color:#aaa");
-    e.dragger = document.createElement("div");
-    e.dragger.setAttribute("style", "display:block;border:3px black raised;cursor:n-resize;position:absolute;top:0px;left:0px;right:0px;height:5px;background-color:#333");
-    e.closer = document.createElement("div");
-    e.closer.onmouseover = function () {
-      e.closer.style.setProperty("background-color", "#ccc");
-    };
-    e.closer.onmouseout = function () {
-      e.closer.style.setProperty("background-color", "#ddd");
-    };
-    e.closer.innerHTML = "&#10006;";
-    e.closer.setAttribute("style", "opacity:.5;display:block;border:3px black raised;position:absolute;top:10px;right:30px;height:20px;width:20px;background-color:#ddd;color:#000;line-height:20px;text-align:center;cursor:pointer;");
-    e.javaconsole = document.createElement("div");
-    e.javaconsole.setAttribute("style", "overflow-x: auto;display:block;position:absolute;left:10px;right:0px;bottom:5px;top:10px;overflow-y:scroll;height:40px;");
-    e.wrapper.appendChild(e.dragger);
-    e.wrapper.appendChild(e.javaconsole);
-    e.wrapper.appendChild(e.closer);
-    e.dragger.onmousedown = function (t) {
-      e.divheight = e.wrapper.style.height;
-      if (document.selection) document.selection.empty();
-      else window.getSelection().removeAllRanges();
-      var n = t.screenY;
-      window.onmousemove = function (t) {
-        e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
-      };
-      window.onmouseup = function (t) {
-        if (document.selection) document.selection.empty();
-        else window.getSelection().removeAllRanges();
-        e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
-        window.onmousemove = null;
-        window.onmouseup = null;
-      };
-    };
-    e.BufferArray = [];
-    e.print = e.log = function (t) {
-      // var oldheight = e.javaconsole.scrollHeight-e.javaconsole.scrollTop;
-      if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
-      else e.BufferArray.push(t);
-      e.javaconsole.innerHTML = e.BufferArray.join('');
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-      //if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
-      //else e.javaconsole.scrollTop = oldheight;
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-    };
-    e.println = function (t) {
-      if(!added) { document.body.appendChild(e.wrapper); }
-      e.print(t);
-      e.BufferArray.push('<br/>');
-      e.javaconsole.innerHTML = e.BufferArray.join('');
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-      if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
-      else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-    };
-    e.showconsole = function () {
-      e.wrapper.style.visibility = "visible";
-    };
-    e.hideconsole = function () {
-      e.wrapper.style.visibility = "hidden";
-    };
-    e.closer.onclick = function () {
-      e.hideconsole();
-    };
-    e.hideconsole();
-    return e;
-  };
-
+  var PjsConsole = require("../Helpers/PjsConsole");
   Processing.logger = new PjsConsole(document);
 
   // done
   return Processing;
 };
 
-},{}],26:[function(require,module,exports){
+},{"../Helpers/PjsConsole":5}],27:[function(require,module,exports){
 /**
  * Processing.js object
  */
@@ -14029,8 +14046,8 @@ module.exports = function setupParser(Processing, options) {
      * @see #join
      * @see #print
      */
-    p.println = function(message) {
-      Processing.logger.println(message);
+    p.println = function() {
+      Processing.logger.println.apply(Processing.logger, arguments);
     };
     /**
      * The print() function writes to the console area of the Processing environment.
@@ -14039,8 +14056,8 @@ module.exports = function setupParser(Processing, options) {
      *
      * @see #join
      */
-    p.print = function(message) {
-      Processing.logger.print(message);
+    p.print = function() {
+      Processing.logger.print.apply(Processing.logger, arguments);
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
@@ -21535,7 +21552,7 @@ module.exports = function setupParser(Processing, options) {
   return Processing;
 };
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 // Base source files
 var source = {
   virtEquals: require("./Helpers/virtEquals"),
@@ -21669,4 +21686,4 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
   return Processing;
 };
 
-},{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":5,"./Helpers/finalizeProcessing":6,"./Helpers/virtEquals":7,"./Helpers/virtHashCode":8,"./Objects/ArrayList":9,"./Objects/Char":10,"./Objects/HashMap":11,"./Objects/PFont":12,"./Objects/PMatrix2D":13,"./Objects/PMatrix3D":14,"./Objects/PShape":15,"./Objects/PShapeSVG":16,"./Objects/PVector":17,"./Objects/XMLAttribute":18,"./Objects/XMLElement":19,"./Objects/webcolors":20,"./P5Functions/JavaProxyFunctions":21,"./P5Functions/Math.js":22,"./P5Functions/commonFunctions":23,"./P5Functions/touchmouse":24,"./Parser/Parser":25,"./Processing":26}]},{},[1]);
+},{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":6,"./Helpers/finalizeProcessing":7,"./Helpers/virtEquals":8,"./Helpers/virtHashCode":9,"./Objects/ArrayList":10,"./Objects/Char":11,"./Objects/HashMap":12,"./Objects/PFont":13,"./Objects/PMatrix2D":14,"./Objects/PMatrix3D":15,"./Objects/PShape":16,"./Objects/PShapeSVG":17,"./Objects/PVector":18,"./Objects/XMLAttribute":19,"./Objects/XMLElement":20,"./Objects/webcolors":21,"./P5Functions/JavaProxyFunctions":22,"./P5Functions/Math.js":23,"./P5Functions/commonFunctions":24,"./P5Functions/touchmouse":25,"./Parser/Parser":26,"./Processing":27}]},{},[1]);

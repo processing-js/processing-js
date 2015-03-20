@@ -4547,8 +4547,8 @@
      * @see #join
      * @see #print
      */
-    p.println = function(message) {
-      Processing.logger.println(message);
+    p.println = function() {
+      Processing.logger.println.apply(Processing.logger, arguments);
     };
     /**
      * The print() function writes to the console area of the Processing environment.
@@ -4557,8 +4557,8 @@
      *
      * @see #join
      */
-    p.print = function(message) {
-      Processing.logger.print(message);
+    p.print = function() {
+      Processing.logger.print.apply(Processing.logger, arguments);
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
