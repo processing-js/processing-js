@@ -69,7 +69,6 @@ module.exports = function(options, undef) {
     parse: function(textstring, stringIsURI) {
       var xmlDoc;
       try {
-        var extension = textstring.substring(textstring.length-4);
         if (stringIsURI) {
           textstring = ajax(textstring);
         }
