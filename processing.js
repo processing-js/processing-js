@@ -25,14 +25,14 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.4.12",
+  "version": "1.4.13",
   "author": "Processing.js",
   "repository": {
     "type": "git",
     "url": "git@github.com/processing-js/processing-js.git"
   },
   "main": "processing.min.js",
-  "bugs": "https://github.com/processing-js/processing-js/issues", 
+  "bugs": "https://github.com/processing-js/processing-js/issues",
   "devDependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
@@ -47,7 +47,7 @@ module.exports={
   "scripts": {
     "test": "node test"
   },
-  "license": "MIT"  
+  "license": "MIT"
 }
 
 },{}],3:[function(require,module,exports){
@@ -498,6 +498,7 @@ module.exports = function PjsConsole(document) {
     if(!added) {
       document.body.appendChild(style);
       document.body.appendChild(e.wrapper);
+      added = true;
     }
     var args = Array.prototype.slice.call(arguments);
     args.push('<br>');
@@ -2153,7 +2154,7 @@ module.exports = function(options,undef) {
 
       // set up the template element
       var element = document.createElement("span");
-      element.style.cssText = 'position: absolute; top: 0; left: 0; opacity: 0; font-family: "PjsEmptyFont", fantasy;';
+      element.style.cssText = 'position: absolute; top: -1000; left: 0; opacity: 0; font-family: "PjsEmptyFont", fantasy;';
       element.innerHTML = "AAAAAAAA";
       document.body.appendChild(element);
       this.template = element;

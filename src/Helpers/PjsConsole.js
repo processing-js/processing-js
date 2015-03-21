@@ -120,6 +120,7 @@ module.exports = function PjsConsole(document) {
     if(!added) {
       document.body.appendChild(style);
       document.body.appendChild(e.wrapper);
+      added = true;
     }
     var args = Array.prototype.slice.call(arguments);
     args.push('<br>');
