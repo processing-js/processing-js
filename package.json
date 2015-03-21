@@ -7,7 +7,7 @@
     "url": "git@github.com/processing-js/processing-js.git"
   },
   "main": "processing.min.js",
-  "bugs": "https://github.com/processing-js/processing-js/issues", 
+  "bugs": "https://github.com/processing-js/processing-js/issues",
   "devDependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
@@ -22,5 +22,5 @@
   "scripts": {
     "test": "node test"
   },
-  "license": "MIT"  
+  "license": "MIT"
 }
