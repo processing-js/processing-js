@@ -1,4 +1,4 @@
-String xmlstring = "<root><a></a><b></b></root>";
+String xmlstring = "<root><a/><b></b></root>";
 XMLElement e = XMLElement.parse(xmlstring);
 String id = e.toString();
 String check = "<root><a/><b/></root>";
