@@ -51,7 +51,7 @@ module.exports = function(options, undef) {
   };
 
   PVector.angleBetween = function(v1, v2) {
-    return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
+    return Math.acos(v1.dot(v2) / Math.sqrt(v1.magSq() * v2.magSq()));
   };
 
   PVector.lerp = function(v1, v2, amt) {
