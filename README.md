@@ -12,7 +12,7 @@ The current version is 1.4.13 (released March 21, 2015)
 
 ### Bower install
 
-`bower install processing`
+`bower install Processing.js`
 
 ### NPM install
 
