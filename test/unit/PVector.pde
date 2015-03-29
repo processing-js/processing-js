@@ -39,6 +39,14 @@ PVector v2 = new PVector(60, 80);
 float a = PVector.angleBetween(v1, v2);
 _checkEqual(degrees(a), 10.304846, round_tolerance);
 
+v1 = new PVector(2, 3);
+a = PVector.angleBetween(v1, v1);
+_checkEqual(a, 0, round_tolerance);
+
+v1 = new PVector(2, 4);
+a = PVector.angleBetween(v1, v1);
+_checkEqual(a, 0, round_tolerance);
+
 // CROSS
 PVector v1 = new PVector(10, 20, 2);
 PVector v2 = new PVector(60, 80, 6); 
