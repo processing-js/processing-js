@@ -8053,18 +8053,21 @@
           vr = height / 2,
           centerX = x + hr,
           centerY = y + vr,
-          startLUT = 0 | (0.5 + start * p.RAD_TO_DEG * 2),
-          stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2),
-          i, j;
+          step = (stop-start)/10,
+          i, angle;
+
       if (doFill) {
         // shut off stroke for a minute
         var savedStroke = doStroke;
         doStroke = false;
         p.beginShape();
         p.vertex(centerX, centerY);
-        for (i = startLUT; i <= stopLUT; i++) {
-          j = i % PConstants.SINCOS_LENGTH;
-          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
+        for (i=0, angle; start + i*step < stop + step; i++) {
+          angle = start + i*step;
+          p.vertex(
+            Math.floor(centerX + Math.cos(angle) * hr),
+            Math.floor(centerY + Math.sin(angle) * vr)
+          );
         }
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
@@ -8075,9 +8078,12 @@
         var savedFill = doFill;
         doFill = false;
         p.beginShape();
-        for (i = startLUT; i <= stopLUT; i++) {
-          j = i % PConstants.SINCOS_LENGTH;
-          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
+        for (i=0, angle; start + i*step < stop + step; i++) {
+          angle = start + i*step;
+          p.vertex(
+            Math.floor(centerX + Math.cos(angle) * hr),
+            Math.floor(centerY + Math.sin(angle) * vr)
+          );
         }
         p.endShape();
         doFill = savedFill;
