@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.4.13",
+  "version": "1.4.14",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -5039,7 +5039,7 @@ module.exports = function(options, undef) {
   };
 
   PVector.angleBetween = function(v1, v2) {
-    return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
+    return Math.acos(v1.dot(v2) / Math.sqrt(v1.magSq() * v2.magSq()));
   };
 
   PVector.lerp = function(v1, v2, amt) {
@@ -17600,18 +17600,21 @@ module.exports = function setupParser(Processing, options) {
           vr = height / 2,
           centerX = x + hr,
           centerY = y + vr,
-          startLUT = 0 | (0.5 + start * p.RAD_TO_DEG * 2),
-          stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2),
-          i, j;
+          step = (stop-start)/10,
+          i, angle;
+
       if (doFill) {
         // shut off stroke for a minute
         var savedStroke = doStroke;
         doStroke = false;
         p.beginShape();
         p.vertex(centerX, centerY);
-        for (i = startLUT; i <= stopLUT; i++) {
-          j = i % PConstants.SINCOS_LENGTH;
-          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
+        for (i=0, angle; start + i*step < stop + step; i++) {
+          angle = start + i*step;
+          p.vertex(
+            Math.floor(centerX + Math.cos(angle) * hr),
+            Math.floor(centerY + Math.sin(angle) * vr)
+          );
         }
         p.endShape(PConstants.CLOSE);
         doStroke = savedStroke;
@@ -17622,9 +17625,12 @@ module.exports = function setupParser(Processing, options) {
         var savedFill = doFill;
         doFill = false;
         p.beginShape();
-        for (i = startLUT; i <= stopLUT; i++) {
-          j = i % PConstants.SINCOS_LENGTH;
-          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
+        for (i=0, angle; start + i*step < stop + step; i++) {
+          angle = start + i*step;
+          p.vertex(
+            Math.floor(centerX + Math.cos(angle) * hr),
+            Math.floor(centerY + Math.sin(angle) * vr)
+          );
         }
         p.endShape();
         doFill = savedFill;
