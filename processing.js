@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.4.14",
+  "version": "1.4.15",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -17600,39 +17600,36 @@ module.exports = function setupParser(Processing, options) {
           vr = height / 2,
           centerX = x + hr,
           centerY = y + vr,
-          step = (stop-start)/10,
-          i, angle;
+          step = 1/(hr+vr);
+
+      var drawSlice = (function(x, y, start, step, stop) {
+        return function(p, closed, i, a, e) {
+          i = 0;
+          a = start;
+          e = stop + step;
+          p.beginShape();
+          if(closed) { p.vertex(x-0.5, y-0.5); }
+          for (; a < e; i++, a = i*step + start) {
+            p.vertex(
+              (x + Math.cos(a) * hr)|0,
+              (y + Math.sin(a) * vr)|0
+            );
+          }
+          p.endShape(closed ? PConstants.CLOSE : undefined);
+        };
+      }(centerX+0.5, centerY+0.5, start, step, stop));
 
       if (doFill) {
-        // shut off stroke for a minute
         var savedStroke = doStroke;
         doStroke = false;
-        p.beginShape();
-        p.vertex(centerX, centerY);
-        for (i=0, angle; start + i*step < stop + step; i++) {
-          angle = start + i*step;
-          p.vertex(
-            Math.floor(centerX + Math.cos(angle) * hr),
-            Math.floor(centerY + Math.sin(angle) * vr)
-          );
-        }
-        p.endShape(PConstants.CLOSE);
+        drawSlice(p, true);
         doStroke = savedStroke;
       }
 
       if (doStroke) {
-        // and doesn't include the first (center) vertex.
         var savedFill = doFill;
         doFill = false;
-        p.beginShape();
-        for (i=0, angle; start + i*step < stop + step; i++) {
-          angle = start + i*step;
-          p.vertex(
-            Math.floor(centerX + Math.cos(angle) * hr),
-            Math.floor(centerY + Math.sin(angle) * vr)
-          );
-        }
-        p.endShape();
+        drawSlice(p);
         doFill = savedFill;
       }
     };
