@@ -1,6 +1,5 @@
 {
   "name": "Processing.js",
-  "version": "1.4.15",
   "main": "processing.js",
   "ignore": [
 		"bundle",
