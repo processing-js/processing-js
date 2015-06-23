@@ -23,8 +23,12 @@
 
   // fascinating "read only" jshint error if we don't start a new var block here.
   var HTMLCanvasElement = window.HTMLCanvasElement,
-      HTMLImageElement = window.HTMLImageElement,
-      localStorage = window.localStorage;
+      HTMLImageElement = window.HTMLImageElement;
+
+  // window.localStorage cannot be accessed if a user is blocking cookies.
+  // In that case, we make it a temporary source cache object.
+  var localStorage;
+  try { localStorage = window.localStorage; } catch (e) { localStorage = {}; }
 
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
@@ -1165,6 +1169,18 @@
       return new XML(p, uri);
     };
 
+    /**
+     * Processing 2.0 function for creating XML elements from string
+     *
+     * @param {String} xml the XML source code
+     *
+     * @return {XML} An XML object representation of the input XML markup.
+     */
+    p.parseXML = function(xmlstring) {
+      var element = new XML();
+      element.parse(xmlstring);
+      return element;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
@@ -3242,7 +3258,7 @@
         b = p.lerp(hsb1[2], hsb2[2], amt);
         rgb = p.color.toRGB(h, s, b);
         // ... and for Alpha-range
-        a = p.lerp(a1, a2, amt) * colorModeA;
+        a = (p.lerp(a1, a2, amt) * colorModeA + 0.5) | 0;
 
         return (a << 24) & PConstants.ALPHA_MASK |
                (rgb[0] << 16) & PConstants.RED_MASK |
@@ -3263,10 +3279,10 @@
       a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      r = p.lerp(r1, r2, amt) | 0;
-      g = p.lerp(g1, g2, amt) | 0;
-      b = p.lerp(b1, b2, amt) | 0;
-      a = p.lerp(a1, a2, amt) * colorModeA;
+      r = (p.lerp(r1, r2, amt) + 0.5) | 0;
+      g = (p.lerp(g1, g2, amt) + 0.5) | 0;
+      b = (p.lerp(b1, b2, amt) + 0.5) | 0;
+      a = (p.lerp(a1, a2, amt) * colorModeA + 0.5) | 0;
 
       return (a << 24) & PConstants.ALPHA_MASK |
              (r << 16) & PConstants.RED_MASK |
@@ -4538,8 +4554,8 @@
      * @see #join
      * @see #print
      */
-    p.println = function(message) {
-      Processing.logger.println(message);
+    p.println = function() {
+      Processing.logger.println.apply(Processing.logger, arguments);
     };
     /**
      * The print() function writes to the console area of the Processing environment.
@@ -4548,8 +4564,8 @@
      *
      * @see #join
      */
-    p.print = function(message) {
-      Processing.logger.print(message);
+    p.print = function() {
+      Processing.logger.print.apply(Processing.logger, arguments);
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
@@ -8044,33 +8060,36 @@
           vr = height / 2,
           centerX = x + hr,
           centerY = y + vr,
-          startLUT = 0 | (0.5 + start * p.RAD_TO_DEG * 2),
-          stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2),
-          i, j;
+          step = 1/(hr+vr);
+
+      var drawSlice = (function(x, y, start, step, stop) {
+        return function(p, closed, i, a, e) {
+          i = 0;
+          a = start;
+          e = stop + step;
+          p.beginShape();
+          if(closed) { p.vertex(x-0.5, y-0.5); }
+          for (; a < e; i++, a = i*step + start) {
+            p.vertex(
+              (x + Math.cos(a) * hr)|0,
+              (y + Math.sin(a) * vr)|0
+            );
+          }
+          p.endShape(closed ? PConstants.CLOSE : undefined);
+        };
+      }(centerX+0.5, centerY+0.5, start, step, stop));
+
       if (doFill) {
-        // shut off stroke for a minute
         var savedStroke = doStroke;
         doStroke = false;
-        p.beginShape();
-        p.vertex(centerX, centerY);
-        for (i = startLUT; i <= stopLUT; i++) {
-          j = i % PConstants.SINCOS_LENGTH;
-          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
-        }
-        p.endShape(PConstants.CLOSE);
+        drawSlice(p, true);
         doStroke = savedStroke;
       }
 
       if (doStroke) {
-        // and doesn't include the first (center) vertex.
         var savedFill = doFill;
         doFill = false;
-        p.beginShape();
-        for (i = startLUT; i <= stopLUT; i++) {
-          j = i % PConstants.SINCOS_LENGTH;
-          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
-        }
-        p.endShape();
+        drawSlice(p);
         doFill = savedFill;
       }
     };

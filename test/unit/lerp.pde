@@ -24,8 +24,8 @@ to = color(250, 30);
 interA = lerpColor(from, to, .33);
 interB = lerpColor(from, to, .66);
 
-_checkEqual(color.toArray(interA), [89, 89, 89, 143]);
-_checkEqual(color.toArray(interB), [168, 168, 168, 87]);
+_checkEqual(color.toArray(interA), [89, 89, 89, 144]);
+_checkEqual(color.toArray(interB), [168, 168, 168, 88]);
 
 
 // RGB
@@ -35,8 +35,8 @@ to = color(0, 102, 153);
 interA = lerpColor(from, to, .33);
 interB = lerpColor(from, to, .66);
 
-_checkEqual(color.toArray(interA), [136, 102, 50, 255]);
-_checkEqual(color.toArray(interB), [69, 102, 100, 255]);
+_checkEqual(color.toArray(interA), [137, 102, 50, 255]);
+_checkEqual(color.toArray(interB), [69, 102, 101, 255]);
 
 
 // RGB with alpha
@@ -46,8 +46,8 @@ to = color(0, 102, 153, 72);
 interA = lerpColor(from, to, .33);
 interB = lerpColor(from, to, .66);
 
-_checkEqual(color.toArray(interA), [136, 102, 50, 144]);
-_checkEqual(color.toArray(interB), [69, 102, 100, 108]);
+_checkEqual(color.toArray(interA), [137, 102, 50, 144]);
+_checkEqual(color.toArray(interB), [69, 102, 101, 109]);
 
 
 // HSB
@@ -72,5 +72,5 @@ interB = lerpColor(from, to, .66);
 _checkEqual(color.toArray(interA), [52, 73, 65, 106]);
 // p5 estimates a little bit different values
 // _checkEqual(color.toArray(interB), [54, 58, 65, 67]);
-_checkEqual(color.toArray(interB), [55, 60, 65, 67]);
+_checkEqual(color.toArray(interB), [55, 60, 65, 68]);
 

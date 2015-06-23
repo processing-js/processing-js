@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // build script for generating processing.js
 
 var Browser = {
@@ -22,23 +22,32 @@ var Browser = {
 
 window.Processing = require('./src/')(Browser);
 
-},{"./src/":27}],2:[function(require,module,exports){
+},{"./src/":28}],2:[function(require,module,exports){
 module.exports={
-  "name": "Processing.js",
-  "version": "1.4.8",
-  "dependencies": {
+  "name": "processing-js",
+  "version": "1.4.15",
+  "author": "Processing.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/processing-js/processing-js.git"
+  },
+  "main": "processing.min.js",
+  "bugs": "https://github.com/processing-js/processing-js/issues",
+  "devDependencies": {
     "argv": "~0.0.2",
     "browserify": "~2.18.1",
     "express": "~3.3.3",
     "node-minify": "~0.7.3",
     "nunjucks": "~0.1.9",
-    "open": "0.0.3"
-  },
-  "devDependencies": {
+    "open": "0.0.3",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.8",
     "grunt-contrib-jshint": "~0.4.3"
-  }
+  },
+  "scripts": {
+    "test": "node test"
+  },
+  "license": "MIT"
 }
 
 },{}],3:[function(require,module,exports){
@@ -367,6 +376,151 @@ module.exports = {
 };
 
 },{}],5:[function(require,module,exports){
+// the logger for println()
+module.exports = function PjsConsole(document) {
+  var e = { BufferMax: 200 },
+      style = document.createElement("style"),
+      added = false;
+
+  style.textContent = [
+    ".pjsconsole.hidden {",
+    "  display: none!important;",
+    "}"
+  ].join('\n');
+
+  e.wrapper = document.createElement("div");
+  style.textContent += [
+    "",
+    ".pjsconsole {",
+    "  opacity: .75;",
+    "  display: block;",
+    "  position: fixed;",
+    "  bottom: 0px;",
+    "  left: 0px;",
+    "  right: 0px;",
+    "  height: 50px;",
+    "  background-color: #aaa;",
+    "}"
+  ].join('\n');
+  e.wrapper.classList.add("pjsconsole");
+
+  e.dragger = document.createElement("div");
+  style.textContent += [
+    "",
+    ".pjsconsole .dragger {",
+    "  display: block;",
+    "  border: 3px black raised;",
+    "  cursor: n-resize;",
+    "  position: absolute;",
+    "  top: 0px;",
+    "  left: 0px;",
+    "  right: 0px;",
+    "  height: 5px;",
+    "  background-color: #333;",
+    "}"
+  ].join('\n');
+  e.dragger.classList.add("dragger");
+
+  e.closer = document.createElement("div");
+  style.textContent += [
+    "",
+    ".pjsconsole .closer {",
+    "  opacity: .5;",
+    "  display: block;",
+    "  border: 3px black raised;",
+    "  position: absolute;",
+    "  top: 10px;",
+    "  right: 30px;",
+    "  height: 20px;",
+    "  width: 20px;",
+    "  background-color: #ddd;",
+    "  color: #000;",
+    "  line-height: 20px;",
+    "  text-align: center;",
+    "  cursor: pointer",
+    "}"
+  ].join('\n');
+  e.closer.classList.add("closer");
+  e.closer.innerHTML = "&#10006;";
+
+  e.javaconsole = document.createElement("div");
+  style.textContent += [
+    "",
+    ".pjsconsole .console {",
+    "  overflow-x: auto;",
+    "  display: block;",
+    "  position: absolute;",
+    "  left: 10px;",
+    "  right: 0px;",
+    "  bottom: 5px;",
+    "  top: 10px;",
+    "  overflow-y: scroll;",
+    "  height: 40px;",
+    "}"
+  ].join('\n');
+  e.javaconsole.setAttribute("class", "console");
+
+  e.wrapper.appendChild(e.dragger);
+  e.wrapper.appendChild(e.javaconsole);
+  e.wrapper.appendChild(e.closer);
+
+  e.dragger.onmousedown = function (t) {
+    e.divheight = e.wrapper.style.height;
+    if (document.selection) document.selection.empty();
+    else window.getSelection().removeAllRanges();
+    var n = t.screenY;
+    window.onmousemove = function (t) {
+      e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
+      e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
+    };
+    window.onmouseup = function (t) {
+      if (document.selection) document.selection.empty();
+      else window.getSelection().removeAllRanges();
+      e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
+      e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
+      window.onmousemove = null;
+      window.onmouseup = null;
+    };
+  };
+
+  e.BufferArray = [];
+
+  e.print = e.log = function () {
+    var args = Array.prototype.slice.call(arguments);
+    t = args.map(function(t, idx) { return t + (idx+1 === args.length ? "" : " "); }).join('');
+    if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
+    else e.BufferArray.push(t);
+    e.javaconsole.innerHTML = e.BufferArray.join('');
+    e.showconsole();
+  };
+
+  e.println = function () {
+    if(!added) {
+      document.body.appendChild(style);
+      document.body.appendChild(e.wrapper);
+      added = true;
+    }
+    var args = Array.prototype.slice.call(arguments);
+    args.push('<br>');
+    e.print.apply(e, args);
+    if (e.BufferArray.length > e.BufferMax) {
+      e.BufferArray.splice(0, 1);
+    } else {
+      e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
+    }
+  };
+
+  e.showconsole = function () { e.wrapper.classList.remove("hidden"); };
+  e.hideconsole = function () { e.wrapper.classList.add("hidden"); };
+
+  e.closer.onclick = function () { e.hideconsole(); };
+
+  e.hideconsole();
+
+  return e;
+};
+
+},{}],6:[function(require,module,exports){
 /**
  * Processing.js default scope
  */
@@ -597,7 +751,7 @@ module.exports = function(options) {
   return defaultScope;
 };
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * Finalise the Processing.js object.
  */
@@ -792,12 +946,8 @@ module.exports = function finalizeProcessing(Processing, options) {
         }
         if (loaded === sourcesCount) {
           if (errors.length === 0) {
-            try {
-              return new Processing(canvas, code.join("\n"));
-            } catch(e) {
-              console.log("Processing.js: Unable to execute pjs sketch.");
-              throw e;
-            }
+            // This used to throw, but it was constantly getting in the way of debugging where things go wrong!
+            return new Processing(canvas, code.join("\n"));
           } else {
             throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }
@@ -827,17 +977,23 @@ module.exports = function finalizeProcessing(Processing, options) {
    */
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
+    var i;
 
     // before running through init, clear the instances list, to prevent
     // sketch duplication when page content is dynamically swapped without
     // swapping out processing.js
-    processingInstances = [];
-    Processing.instances = processingInstances;
+    while (Processing.instances.length > 0) {
+      for (i = Processing.instances.length - 1; i >= 0; i--) {
+        if (Processing.instances[i]) {
+          Processing.instances[i].exit();
+        }
+      }
+    }
 
     var canvas = document.getElementsByTagName('canvas'),
       filenames;
 
-    for (var i = 0, l = canvas.length; i < l; i++) {
+    for (i = 0, l = canvas.length; i < l; i++) {
       // datasrc and data-src are deprecated.
       var processingSources = canvas[i].getAttribute('data-processing-sources');
       if (processingSources === null) {
@@ -917,18 +1073,7 @@ module.exports = function finalizeProcessing(Processing, options) {
    * been set up for a page. This function exists mostly for pages
    * that swap content in/out without reloading a page.
    */
-  Processing.reload = function() {
-    if (processingInstances.length > 0) {
-      // unload sketches
-      for (var i = processingInstances.length - 1; i >= 0; i--) {
-        if (processingInstances[i]) {
-          processingInstances[i].exit();
-        }
-      }
-    }
-    // rerun init() to scan the DOM for sketches
-    init();
-  };
+  Processing.reload = init;
 
   /**
    * Disable the automatic loading of all sketches on the page.
@@ -941,7 +1086,8 @@ module.exports = function finalizeProcessing(Processing, options) {
   // done.
   return Processing;
 };
-},{}],7:[function(require,module,exports){
+
+},{}],8:[function(require,module,exports){
 /**
  * Returns Java equals() result for two objects. If the first object
  * has the "equals" function, it preforms the call of this function.
@@ -968,7 +1114,7 @@ module.exports = function virtEquals(obj, other) {
   return obj === other;
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * Returns Java hashCode() result for the object. If the object has the "hashCode" function,
  * it preforms the call of this function. Otherwise it uses/creates the "$id" property,
@@ -997,7 +1143,7 @@ module.exports = function virtHashCode(obj, undef) {
   return obj.$id;
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
  * An ArrayList stores a variable number of objects.
  *
@@ -1275,7 +1421,7 @@ module.exports = function(options) {
   return ArrayList;
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 module.exports = (function(charMap, undef) {
 
   var Char = function(chr) {
@@ -1302,7 +1448,7 @@ module.exports = (function(charMap, undef) {
   return Char;
 }({}));
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
 * A HashMap stores a collection of objects, each referenced by a key. This is similar to an Array, only
 * instead of accessing elements with a numeric index, a String  is used. (If you are familiar with
@@ -1715,7 +1861,7 @@ module.exports = function(options) {
   return HashMap;
 };
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 // module export
 module.exports = function(options,undef) {
   var window = options.Browser.window,
@@ -2008,7 +2154,7 @@ module.exports = function(options,undef) {
 
       // set up the template element
       var element = document.createElement("span");
-      element.style.cssText = 'position: absolute; top: 0; left: 0; opacity: 0; font-family: "PjsEmptyFont", fantasy;';
+      element.style.cssText = 'position: absolute; top: -1000; left: 0; opacity: 0; font-family: "PjsEmptyFont", fantasy;';
       element.innerHTML = "AAAAAAAA";
       document.body.appendChild(element);
       this.template = element;
@@ -2090,7 +2236,7 @@ module.exports = function(options,undef) {
 
   return PFont;
 };
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -2487,7 +2633,7 @@ module.exports = function(options, undef) {
   return PMatrix2D;
 };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -3085,7 +3231,7 @@ module.exports = function(options, undef) {
 
   return PMatrix3D;
 };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 module.exports = function(options) {
   var PConstants = options.PConstants,
       PMatrix2D = options.PMatrix2D,
@@ -3747,7 +3893,7 @@ module.exports = function(options) {
 
   return PShape;
 };
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /**
  * SVG stands for Scalable Vector Graphics, a portable graphics format. It is
  * a vector format so it allows for infinite resolution and relatively small
@@ -3894,8 +4040,7 @@ module.exports = function(options) {
 
   };
   /**
-   * PShapeSVG methods
-   * missing: getChild(), print(), parseStyleAttributes(), styles() - deals with strokeGradient and fillGradient
+   * PShapeSVG methods are inherited from the PShape prototype
    */
   PShapeSVG.prototype = new PShape();
   /**
@@ -4840,7 +4985,7 @@ module.exports = function(options) {
   return PShapeSVG;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports = function(options, undef) {
   var PConstants = options.PConstants;
 
@@ -4894,7 +5039,7 @@ module.exports = function(options, undef) {
   };
 
   PVector.angleBetween = function(v1, v2) {
-    return Math.acos(v1.dot(v2) / (v1.mag() * v2.mag()));
+    return Math.acos(v1.dot(v2) / Math.sqrt(v1.magSq() * v2.magSq()));
   };
 
   PVector.lerp = function(v1, v2, amt) {
@@ -5079,7 +5224,7 @@ module.exports = function(options, undef) {
 };
 
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * XMLAttribute is an attribute of a XML element.
  *
@@ -5161,7 +5306,7 @@ module.exports = function() {
   return XMLAttribute;
 };
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /**
  * XMLElement is a representation of an XML object. The object is able to parse XML code
  *
@@ -5207,8 +5352,8 @@ module.exports = function(options, undef) {
           this.lineNr = line;
         }
       } else {
-        // XMLElement(this,file) format
-        this.parse(uri);
+        // XMLElement(this, file uri) format
+        this.parse(uri, true);
       }
     }
   };
@@ -5230,11 +5375,10 @@ module.exports = function(options, undef) {
      *
      * @see XMLElement#parseChildrenRecursive
      */
-    parse: function(textstring) {
+    parse: function(textstring, stringIsURI) {
       var xmlDoc;
       try {
-        var extension = textstring.substring(textstring.length-4);
-        if (extension === ".xml" || extension === ".svg") {
+        if (stringIsURI) {
           textstring = ajax(textstring);
         }
         xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
@@ -5921,11 +6065,11 @@ module.exports = function(options, undef) {
     toString: function() {
       // shortcut for text and cdata nodes
       if (this.type === "TEXT") {
-        return this.content;
+        return this.content || "";
       }
 
       if (this.type === "CDATA") {
-        return this.cdata;
+        return this.cdata || "";
       }
 
       // real XMLElements
@@ -5941,7 +6085,7 @@ module.exports = function(options, undef) {
 
       // serialize all children to XML string
       if (this.children.length === 0) {
-        if (this.content==="") {
+        if (this.content === "" || this.content === null || this.content === undefined) {
           xmlstring += "/>";
         } else {
           xmlstring += ">" + this.content + "</"+tagstring+">";
@@ -5970,7 +6114,7 @@ module.exports = function(options, undef) {
   return XMLElement;
 };
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /**
  * web colors, by name
  */
@@ -6117,7 +6261,7 @@ module.exports = {
     yellowgreen:          "#9acd32"
   };
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports = function(virtHashCode, virtEquals, undef) {
 
   return function withProxyFunctions(p, removeFirstArgument) {
@@ -6414,7 +6558,7 @@ module.exports = function(virtHashCode, virtEquals, undef) {
 
 };
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /**
  * For many "math" functions, we can delegate
  * to the Math object. For others, we can't.
@@ -6887,7 +7031,7 @@ module.exports = function withMath(p, undef) {
   * @see noiseSeed
   */
   p.randomSeed = function(seed) {
-    internalRandomGenerator = (new Marsaglia(seed)).doubleGenerator;
+    internalRandomGenerator = (new Marsaglia(seed, (seed<<16)+(seed>>16))).doubleGenerator;
     this.haveNextNextGaussian = false;
   };
 
@@ -6925,14 +7069,22 @@ module.exports = function withMath(p, undef) {
 
   // Noise functions and helpers
   function PerlinNoise(seed) {
-    var rnd = seed !== undef ? new Marsaglia(seed) : Marsaglia.createRandomized();
+    var rnd = seed !== undef ? new Marsaglia(seed, (seed<<16)+(seed>>16)) : Marsaglia.createRandomized();
     var i, j;
     // http://www.noisemachine.com/talk1/17b.html
     // http://mrl.nyu.edu/~perlin/noise/
     // generate permutation
     var perm = new Uint8Array(512);
     for(i=0;i<256;++i) { perm[i] = i; }
-    for(i=0;i<256;++i) { var t = perm[j = rnd.intGenerator() & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
+    for(i=0;i<256;++i) {
+      // NOTE: we can only do this because we've made sure the Marsaglia generator
+      //       gives us numbers where the last byte in a pseudo-random number is
+      //       still pseudo-random. If no 2nd argument is passed in the constructor,
+      //       that is no longer the case and this pair swap will always run identically.
+      var t = perm[j = rnd.intGenerator() & 0xFF];
+      perm[j] = perm[i];
+      perm[i] = t;
+    }
     // copy to avoid taking mod in perm[0];
     for(i=0;i<256;++i) { perm[i + 256] = perm[i]; }
 
@@ -7085,7 +7237,7 @@ module.exports = function withMath(p, undef) {
   };
 };
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /**
  * Common functions traditionally on "p" that should be class functions
  * that get bound to "p" when an instance is actually built, instead.
@@ -7319,7 +7471,7 @@ module.exports = (function commonFunctions(undef) {
   return CommonFunctions;
 }());
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /**
  * Touch and Mouse event handling
  */
@@ -7646,7 +7798,7 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
 
 };
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /**
  * The parser for turning Processing syntax into Pjs JavaScript.
  * This code is not trivial; unless you know what you're doing,
@@ -7692,8 +7844,8 @@ module.exports = function setupParser(Processing, options) {
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
       "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
-      "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
-      "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
+      "parseInt", "parseXML", "peg", "perspective", "PImage", "pixels",
+      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "randomGaussian",
@@ -9385,95 +9537,14 @@ module.exports = function setupParser(Processing, options) {
     return sketch;
   };
 
-  // the logger for println()
-  var PjsConsole = function (document) {
-    var e = {}, added = false;
-    e.BufferMax = 200;
-    e.wrapper = document.createElement("div");
-    e.wrapper.setAttribute("style", "opacity:.75;display:block;position:fixed;bottom:0px;left:0px;right:0px;height:50px;background-color:#aaa");
-    e.dragger = document.createElement("div");
-    e.dragger.setAttribute("style", "display:block;border:3px black raised;cursor:n-resize;position:absolute;top:0px;left:0px;right:0px;height:5px;background-color:#333");
-    e.closer = document.createElement("div");
-    e.closer.onmouseover = function () {
-      e.closer.style.setProperty("background-color", "#ccc");
-    };
-    e.closer.onmouseout = function () {
-      e.closer.style.setProperty("background-color", "#ddd");
-    };
-    e.closer.innerHTML = "&#10006;";
-    e.closer.setAttribute("style", "opacity:.5;display:block;border:3px black raised;position:absolute;top:10px;right:30px;height:20px;width:20px;background-color:#ddd;color:#000;line-height:20px;text-align:center;cursor:pointer;");
-    e.javaconsole = document.createElement("div");
-    e.javaconsole.setAttribute("style", "overflow-x: auto;display:block;position:absolute;left:10px;right:0px;bottom:5px;top:10px;overflow-y:scroll;height:40px;");
-    e.wrapper.appendChild(e.dragger);
-    e.wrapper.appendChild(e.javaconsole);
-    e.wrapper.appendChild(e.closer);
-    e.dragger.onmousedown = function (t) {
-      e.divheight = e.wrapper.style.height;
-      if (document.selection) document.selection.empty();
-      else window.getSelection().removeAllRanges();
-      var n = t.screenY;
-      window.onmousemove = function (t) {
-        e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
-      };
-      window.onmouseup = function (t) {
-        if (document.selection) document.selection.empty();
-        else window.getSelection().removeAllRanges();
-        e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
-        window.onmousemove = null;
-        window.onmouseup = null;
-      };
-    };
-    e.BufferArray = [];
-    e.print = e.log = function (t) {
-      // var oldheight = e.javaconsole.scrollHeight-e.javaconsole.scrollTop;
-      if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
-      else e.BufferArray.push(t);
-      e.javaconsole.innerHTML = e.BufferArray.join('');
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-      //if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
-      //else e.javaconsole.scrollTop = oldheight;
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-    };
-    e.println = function (t) {
-      if(!added) { document.body.appendChild(e.wrapper); }
-      e.print(t);
-      e.BufferArray.push('<br/>');
-      e.javaconsole.innerHTML = e.BufferArray.join('');
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-      if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
-      else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-    };
-    e.showconsole = function () {
-      e.wrapper.style.visibility = "visible";
-    };
-    e.hideconsole = function () {
-      e.wrapper.style.visibility = "hidden";
-    };
-    e.closer.onclick = function () {
-      e.hideconsole();
-    };
-    e.hideconsole();
-    return e;
-  };
-
+  var PjsConsole = require("../Helpers/PjsConsole");
   Processing.logger = new PjsConsole(document);
 
   // done
   return Processing;
 };
 
-},{}],26:[function(require,module,exports){
+},{"../Helpers/PjsConsole":5}],27:[function(require,module,exports){
 /**
  * Processing.js object
  */
@@ -9499,8 +9570,12 @@ module.exports = function setupParser(Processing, options) {
 
   // fascinating "read only" jshint error if we don't start a new var block here.
   var HTMLCanvasElement = window.HTMLCanvasElement,
-      HTMLImageElement = window.HTMLImageElement,
-      localStorage = window.localStorage;
+      HTMLImageElement = window.HTMLImageElement;
+
+  // window.localStorage cannot be accessed if a user is blocking cookies.
+  // In that case, we make it a temporary source cache object.
+  var localStorage;
+  try { localStorage = window.localStorage; } catch (e) { localStorage = {}; }
 
   var isDOMPresent = ("document" in this) && !("fake" in this.document);
 
@@ -10634,6 +10709,18 @@ module.exports = function setupParser(Processing, options) {
       return new XML(p, uri);
     };
 
+    /**
+     * Processing 2.0 function for creating XML elements from string
+     *
+     * @param {String} xml the XML source code
+     *
+     * @return {XML} An XML object representation of the input XML markup.
+     */
+    p.parseXML = function(xmlstring) {
+      var element = new XML();
+      element.parse(xmlstring);
+      return element;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D Matrix
@@ -12711,7 +12798,7 @@ module.exports = function setupParser(Processing, options) {
         b = p.lerp(hsb1[2], hsb2[2], amt);
         rgb = p.color.toRGB(h, s, b);
         // ... and for Alpha-range
-        a = p.lerp(a1, a2, amt) * colorModeA;
+        a = (p.lerp(a1, a2, amt) * colorModeA + 0.5) | 0;
 
         return (a << 24) & PConstants.ALPHA_MASK |
                (rgb[0] << 16) & PConstants.RED_MASK |
@@ -12732,10 +12819,10 @@ module.exports = function setupParser(Processing, options) {
       a2 = ((colorBits2 & PConstants.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
-      r = p.lerp(r1, r2, amt) | 0;
-      g = p.lerp(g1, g2, amt) | 0;
-      b = p.lerp(b1, b2, amt) | 0;
-      a = p.lerp(a1, a2, amt) * colorModeA;
+      r = (p.lerp(r1, r2, amt) + 0.5) | 0;
+      g = (p.lerp(g1, g2, amt) + 0.5) | 0;
+      b = (p.lerp(b1, b2, amt) + 0.5) | 0;
+      a = (p.lerp(a1, a2, amt) * colorModeA + 0.5) | 0;
 
       return (a << 24) & PConstants.ALPHA_MASK |
              (r << 16) & PConstants.RED_MASK |
@@ -14007,8 +14094,8 @@ module.exports = function setupParser(Processing, options) {
      * @see #join
      * @see #print
      */
-    p.println = function(message) {
-      Processing.logger.println(message);
+    p.println = function() {
+      Processing.logger.println.apply(Processing.logger, arguments);
     };
     /**
      * The print() function writes to the console area of the Processing environment.
@@ -14017,8 +14104,8 @@ module.exports = function setupParser(Processing, options) {
      *
      * @see #join
      */
-    p.print = function(message) {
-      Processing.logger.print(message);
+    p.print = function() {
+      Processing.logger.print.apply(Processing.logger, arguments);
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
@@ -16019,9 +16106,10 @@ module.exports = function setupParser(Processing, options) {
       if (!doStroke) {
         return;
       }
-
-      x = Math.round(x);
-      y = Math.round(y);
+      if (!renderSmooth) {
+        x = Math.round(x);
+        y = Math.round(y);
+      }
       curContext.fillStyle = p.color.toString(currentStrokeColor);
       isFillDirty = true;
       // Draw a circle for any point larger than 1px
@@ -17512,33 +17600,36 @@ module.exports = function setupParser(Processing, options) {
           vr = height / 2,
           centerX = x + hr,
           centerY = y + vr,
-          startLUT = 0 | (0.5 + start * p.RAD_TO_DEG * 2),
-          stopLUT  = 0 | (0.5 + stop * p.RAD_TO_DEG * 2),
-          i, j;
+          step = 1/(hr+vr);
+
+      var drawSlice = (function(x, y, start, step, stop) {
+        return function(p, closed, i, a, e) {
+          i = 0;
+          a = start;
+          e = stop + step;
+          p.beginShape();
+          if(closed) { p.vertex(x-0.5, y-0.5); }
+          for (; a < e; i++, a = i*step + start) {
+            p.vertex(
+              (x + Math.cos(a) * hr)|0,
+              (y + Math.sin(a) * vr)|0
+            );
+          }
+          p.endShape(closed ? PConstants.CLOSE : undefined);
+        };
+      }(centerX+0.5, centerY+0.5, start, step, stop));
+
       if (doFill) {
-        // shut off stroke for a minute
         var savedStroke = doStroke;
         doStroke = false;
-        p.beginShape();
-        p.vertex(centerX, centerY);
-        for (i = startLUT; i <= stopLUT; i++) {
-          j = i % PConstants.SINCOS_LENGTH;
-          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
-        }
-        p.endShape(PConstants.CLOSE);
+        drawSlice(p, true);
         doStroke = savedStroke;
       }
 
       if (doStroke) {
-        // and doesn't include the first (center) vertex.
         var savedFill = doFill;
         doFill = false;
-        p.beginShape();
-        for (i = startLUT; i <= stopLUT; i++) {
-          j = i % PConstants.SINCOS_LENGTH;
-          p.vertex(centerX + cosLUT[j] * hr, centerY + sinLUT[j] * vr);
-        }
-        p.endShape();
+        drawSlice(p);
         doFill = savedFill;
       }
     };
@@ -17567,10 +17658,13 @@ module.exports = function setupParser(Processing, options) {
       if (!doStroke) {
         return;
       }
-      x1 = Math.round(x1);
-      x2 = Math.round(x2);
-      y1 = Math.round(y1);
-      y2 = Math.round(y2);
+      if (!renderSmooth) {
+        x1 = Math.round(x1);
+        x2 = Math.round(x2);
+        y1 = Math.round(y1);
+        y2 = Math.round(y2);
+      }
+
       // A line is only defined if it has different start and end coordinates.
       // If they are the same, we call point instead.
       if (x1 === x2 && y1 === y2) {
@@ -17926,10 +18020,12 @@ module.exports = function setupParser(Processing, options) {
         y -= height / 2;
       }
 
-      x = Math.round(x);
-      y = Math.round(y);
-      width = Math.round(width);
-      height = Math.round(height);
+      if (!renderSmooth) {
+        x = Math.round(x);
+        y = Math.round(y);
+        width = Math.round(width);
+        height = Math.round(height);
+      }
       if (tl !== undef) {
         roundedRect$2d(x, y, width, height, tl, tr, br, bl);
         return;
@@ -21507,7 +21603,7 @@ module.exports = function setupParser(Processing, options) {
   return Processing;
 };
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 // Base source files
 var source = {
   virtEquals: require("./Helpers/virtEquals"),
@@ -21641,4 +21737,4 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
   return Processing;
 };
 
-},{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":5,"./Helpers/finalizeProcessing":6,"./Helpers/virtEquals":7,"./Helpers/virtHashCode":8,"./Objects/ArrayList":9,"./Objects/Char":10,"./Objects/HashMap":11,"./Objects/PFont":12,"./Objects/PMatrix2D":13,"./Objects/PMatrix3D":14,"./Objects/PShape":15,"./Objects/PShapeSVG":16,"./Objects/PVector":17,"./Objects/XMLAttribute":18,"./Objects/XMLElement":19,"./Objects/webcolors":20,"./P5Functions/JavaProxyFunctions":21,"./P5Functions/Math.js":22,"./P5Functions/commonFunctions":23,"./P5Functions/touchmouse":24,"./Parser/Parser":25,"./Processing":26}]},{},[1])
+},{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":6,"./Helpers/finalizeProcessing":7,"./Helpers/virtEquals":8,"./Helpers/virtHashCode":9,"./Objects/ArrayList":10,"./Objects/Char":11,"./Objects/HashMap":12,"./Objects/PFont":13,"./Objects/PMatrix2D":14,"./Objects/PMatrix3D":15,"./Objects/PShape":16,"./Objects/PShapeSVG":17,"./Objects/PVector":18,"./Objects/XMLAttribute":19,"./Objects/XMLElement":20,"./Objects/webcolors":21,"./P5Functions/JavaProxyFunctions":22,"./P5Functions/Math.js":23,"./P5Functions/commonFunctions":24,"./P5Functions/touchmouse":25,"./Parser/Parser":26,"./Processing":27}]},{},[1]);

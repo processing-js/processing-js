@@ -192,12 +192,8 @@ module.exports = function finalizeProcessing(Processing, options) {
         }
         if (loaded === sourcesCount) {
           if (errors.length === 0) {
-            try {
-              return new Processing(canvas, code.join("\n"));
-            } catch(e) {
-              console.log("Processing.js: Unable to execute pjs sketch.");
-              throw e;
-            }
+            // This used to throw, but it was constantly getting in the way of debugging where things go wrong!
+            return new Processing(canvas, code.join("\n"));
           } else {
             throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }
@@ -227,17 +223,23 @@ module.exports = function finalizeProcessing(Processing, options) {
    */
   var init = function() {
     document.removeEventListener('DOMContentLoaded', init, false);
+    var i;
 
     // before running through init, clear the instances list, to prevent
     // sketch duplication when page content is dynamically swapped without
     // swapping out processing.js
-    processingInstances = [];
-    Processing.instances = processingInstances;
+    while (Processing.instances.length > 0) {
+      for (i = Processing.instances.length - 1; i >= 0; i--) {
+        if (Processing.instances[i]) {
+          Processing.instances[i].exit();
+        }
+      }
+    }
 
     var canvas = document.getElementsByTagName('canvas'),
       filenames;
 
-    for (var i = 0, l = canvas.length; i < l; i++) {
+    for (i = 0, l = canvas.length; i < l; i++) {
       // datasrc and data-src are deprecated.
       var processingSources = canvas[i].getAttribute('data-processing-sources');
       if (processingSources === null) {
@@ -317,18 +319,7 @@ module.exports = function finalizeProcessing(Processing, options) {
    * been set up for a page. This function exists mostly for pages
    * that swap content in/out without reloading a page.
    */
-  Processing.reload = function() {
-    if (processingInstances.length > 0) {
-      // unload sketches
-      for (var i = processingInstances.length - 1; i >= 0; i--) {
-        if (processingInstances[i]) {
-          processingInstances[i].exit();
-        }
-      }
-    }
-    // rerun init() to scan the DOM for sketches
-    init();
-  };
+  Processing.reload = init;
 
   /**
    * Disable the automatic loading of all sketches on the page.

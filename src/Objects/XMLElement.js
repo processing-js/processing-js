@@ -43,8 +43,8 @@ module.exports = function(options, undef) {
           this.lineNr = line;
         }
       } else {
-        // XMLElement(this,file) format
-        this.parse(uri);
+        // XMLElement(this, file uri) format
+        this.parse(uri, true);
       }
     }
   };
@@ -66,11 +66,10 @@ module.exports = function(options, undef) {
      *
      * @see XMLElement#parseChildrenRecursive
      */
-    parse: function(textstring) {
+    parse: function(textstring, stringIsURI) {
       var xmlDoc;
       try {
-        var extension = textstring.substring(textstring.length-4);
-        if (extension === ".xml" || extension === ".svg") {
+        if (stringIsURI) {
           textstring = ajax(textstring);
         }
         xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
@@ -757,11 +756,11 @@ module.exports = function(options, undef) {
     toString: function() {
       // shortcut for text and cdata nodes
       if (this.type === "TEXT") {
-        return this.content;
+        return this.content || "";
       }
 
       if (this.type === "CDATA") {
-        return this.cdata;
+        return this.cdata || "";
       }
 
       // real XMLElements
@@ -777,7 +776,7 @@ module.exports = function(options, undef) {
 
       // serialize all children to XML string
       if (this.children.length === 0) {
-        if (this.content==="") {
+        if (this.content === "" || this.content === null || this.content === undefined) {
           xmlstring += "/>";
         } else {
           xmlstring += ">" + this.content + "</"+tagstring+">";

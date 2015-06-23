@@ -470,7 +470,7 @@ module.exports = function withMath(p, undef) {
   * @see noiseSeed
   */
   p.randomSeed = function(seed) {
-    internalRandomGenerator = (new Marsaglia(seed)).doubleGenerator;
+    internalRandomGenerator = (new Marsaglia(seed, (seed<<16)+(seed>>16))).doubleGenerator;
     this.haveNextNextGaussian = false;
   };
 
@@ -508,14 +508,22 @@ module.exports = function withMath(p, undef) {
 
   // Noise functions and helpers
   function PerlinNoise(seed) {
-    var rnd = seed !== undef ? new Marsaglia(seed) : Marsaglia.createRandomized();
+    var rnd = seed !== undef ? new Marsaglia(seed, (seed<<16)+(seed>>16)) : Marsaglia.createRandomized();
     var i, j;
     // http://www.noisemachine.com/talk1/17b.html
     // http://mrl.nyu.edu/~perlin/noise/
     // generate permutation
     var perm = new Uint8Array(512);
     for(i=0;i<256;++i) { perm[i] = i; }
-    for(i=0;i<256;++i) { var t = perm[j = rnd.intGenerator() & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
+    for(i=0;i<256;++i) {
+      // NOTE: we can only do this because we've made sure the Marsaglia generator
+      //       gives us numbers where the last byte in a pseudo-random number is
+      //       still pseudo-random. If no 2nd argument is passed in the constructor,
+      //       that is no longer the case and this pair swap will always run identically.
+      var t = perm[j = rnd.intGenerator() & 0xFF];
+      perm[j] = perm[i];
+      perm[i] = t;
+    }
     // copy to avoid taking mod in perm[0];
     for(i=0;i<256;++i) { perm[i + 256] = perm[i]; }
 

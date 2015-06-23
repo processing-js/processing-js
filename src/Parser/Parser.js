@@ -43,8 +43,8 @@ module.exports = function setupParser(Processing, options) {
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
       "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
       "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
-      "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
-      "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
+      "parseInt", "parseXML", "peg", "perspective", "PImage", "pixels",
+      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
       "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
       "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
       "pushMatrix", "pushStyle", "quad", "radians", "random", "randomGaussian",
@@ -1736,88 +1736,7 @@ module.exports = function setupParser(Processing, options) {
     return sketch;
   };
 
-  // the logger for println()
-  var PjsConsole = function (document) {
-    var e = {}, added = false;
-    e.BufferMax = 200;
-    e.wrapper = document.createElement("div");
-    e.wrapper.setAttribute("style", "opacity:.75;display:block;position:fixed;bottom:0px;left:0px;right:0px;height:50px;background-color:#aaa");
-    e.dragger = document.createElement("div");
-    e.dragger.setAttribute("style", "display:block;border:3px black raised;cursor:n-resize;position:absolute;top:0px;left:0px;right:0px;height:5px;background-color:#333");
-    e.closer = document.createElement("div");
-    e.closer.onmouseover = function () {
-      e.closer.style.setProperty("background-color", "#ccc");
-    };
-    e.closer.onmouseout = function () {
-      e.closer.style.setProperty("background-color", "#ddd");
-    };
-    e.closer.innerHTML = "&#10006;";
-    e.closer.setAttribute("style", "opacity:.5;display:block;border:3px black raised;position:absolute;top:10px;right:30px;height:20px;width:20px;background-color:#ddd;color:#000;line-height:20px;text-align:center;cursor:pointer;");
-    e.javaconsole = document.createElement("div");
-    e.javaconsole.setAttribute("style", "overflow-x: auto;display:block;position:absolute;left:10px;right:0px;bottom:5px;top:10px;overflow-y:scroll;height:40px;");
-    e.wrapper.appendChild(e.dragger);
-    e.wrapper.appendChild(e.javaconsole);
-    e.wrapper.appendChild(e.closer);
-    e.dragger.onmousedown = function (t) {
-      e.divheight = e.wrapper.style.height;
-      if (document.selection) document.selection.empty();
-      else window.getSelection().removeAllRanges();
-      var n = t.screenY;
-      window.onmousemove = function (t) {
-        e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
-      };
-      window.onmouseup = function (t) {
-        if (document.selection) document.selection.empty();
-        else window.getSelection().removeAllRanges();
-        e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-        e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
-        window.onmousemove = null;
-        window.onmouseup = null;
-      };
-    };
-    e.BufferArray = [];
-    e.print = e.log = function (t) {
-      // var oldheight = e.javaconsole.scrollHeight-e.javaconsole.scrollTop;
-      if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
-      else e.BufferArray.push(t);
-      e.javaconsole.innerHTML = e.BufferArray.join('');
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-      //if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
-      //else e.javaconsole.scrollTop = oldheight;
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-    };
-    e.println = function (t) {
-      if(!added) { document.body.appendChild(e.wrapper); }
-      e.print(t);
-      e.BufferArray.push('<br/>');
-      e.javaconsole.innerHTML = e.BufferArray.join('');
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-      if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
-      else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
-      if (e.wrapper.style.visibility === "hidden") {
-        e.wrapper.style.visibility = "visible";
-      }
-    };
-    e.showconsole = function () {
-      e.wrapper.style.visibility = "visible";
-    };
-    e.hideconsole = function () {
-      e.wrapper.style.visibility = "hidden";
-    };
-    e.closer.onclick = function () {
-      e.hideconsole();
-    };
-    e.hideconsole();
-    return e;
-  };
-
+  var PjsConsole = require("../Helpers/PjsConsole");
   Processing.logger = new PjsConsole(document);
 
   // done

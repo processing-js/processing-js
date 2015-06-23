@@ -19,8 +19,12 @@ for(int i=0;i<attempts;++i) {
 boolean r1r2TheSame = true;
 boolean r1rTheSame = true;
 for(int i=0;i<attempts;++i) {
-  if(r1[i] != r[i])  r1rTheSame = false;
-  if(r1[i] != r2[i]) r1r2TheSame = false;
+  if( Math.abs(r1[i] - r[i]) > 0.00000000001) {
+    r1rTheSame = false;
+  }
+  if( Math.abs(r1[i] - r2[i]) > 0.00000000001) {
+    r1r2TheSame = false;
+  }
 }
 
 _checkTrue(r1r2TheSame); // random with the same seeds are equal
