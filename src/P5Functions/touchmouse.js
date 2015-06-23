@@ -177,9 +177,6 @@ module.exports = function withTouch(p, curElement, attachEventHandler, detachEve
         }
       });
     }
-
-    // Refire the touch start event we consumed in this function
-    curElement.dispatchEvent(t);
   });
 
   /**
