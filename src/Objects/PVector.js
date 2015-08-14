@@ -106,6 +106,10 @@ module.exports = function(options, undef) {
         this.x += v.x;
         this.y += v.y;
         this.z += v.z;
+      } else if (arguments.length === 2) {
+        // 2D Vector
+        this.x += v;
+        this.y += y;
       } else {
         this.x += v;
         this.y += y;
@@ -117,6 +121,10 @@ module.exports = function(options, undef) {
         this.x -= v.x;
         this.y -= v.y;
         this.z -= v.z;
+      } else if (arguments.length === 2) {
+        // 2D Vector
+        this.x -= v;
+        this.y -= y;
       } else {
         this.x -= v;
         this.y -= y;
@@ -234,4 +242,3 @@ module.exports = function(options, undef) {
 
   return PVector;
 };
-
