@@ -10,7 +10,7 @@
   "bugs": "https://github.com/processing-js/processing-js/issues",
   "devDependencies": {
     "argv": "~0.0.2",
-    "browserify": "~2.18.1",
+    "browserify": "^11.0.1",
     "express": "~3.3.3",
     "node-minify": "~0.7.3",
     "nunjucks": "~0.1.9",
@@ -20,7 +20,8 @@
     "grunt-contrib-jshint": "~0.4.3"
   },
   "scripts": {
-    "test": "node test"
+    "test": "node test",
+    "start": "browserify build.js -o processing.js && node minify"
   },
   "license": "MIT"
 }

@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.4.15",
+  "version": "1.4.16",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -35,7 +35,7 @@ module.exports={
   "bugs": "https://github.com/processing-js/processing-js/issues",
   "devDependencies": {
     "argv": "~0.0.2",
-    "browserify": "~2.18.1",
+    "browserify": "^11.0.1",
     "express": "~3.3.3",
     "node-minify": "~0.7.3",
     "nunjucks": "~0.1.9",
@@ -45,7 +45,8 @@ module.exports={
     "grunt-contrib-jshint": "~0.4.3"
   },
   "scripts": {
-    "test": "node test"
+    "test": "node test",
+    "start": "browserify build.js -o processing.js && node minify"
   },
   "license": "MIT"
 }
@@ -5094,6 +5095,10 @@ module.exports = function(options, undef) {
         this.x += v.x;
         this.y += v.y;
         this.z += v.z;
+      } else if (arguments.length === 2) {
+        // 2D Vector
+        this.x += v;
+        this.y += y;
       } else {
         this.x += v;
         this.y += y;
@@ -5105,6 +5110,10 @@ module.exports = function(options, undef) {
         this.x -= v.x;
         this.y -= v.y;
         this.z -= v.z;
+      } else if (arguments.length === 2) {
+        // 2D Vector
+        this.x -= v;
+        this.y -= y;
       } else {
         this.x -= v;
         this.y -= y;
@@ -5222,7 +5231,6 @@ module.exports = function(options, undef) {
 
   return PVector;
 };
-
 
 },{}],19:[function(require,module,exports){
 /**
