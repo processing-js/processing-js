@@ -58,13 +58,21 @@ If you do like coding, but you don't want to write patches and go through the pr
 
 Open source is a collaborative efforts, so try to interact with others in an open and friendly way. Pointing out things are wrong is fine, but be polite about it: there is a normal, real human being on the other side of the table, and they have feelings, too. Don't just say what is wrong, but explain why you think so, so that people can learn from that and can have a discussion to get to the root of what is wrong.
 
-### You are not your code
+### Remember: you are not your code
 
 It is hard to not feel attacked personally when someone points out a problem with the code you wrote, but remember that you are not your code. We all make mistakes, have typos, forget about a particular pattern that "would have been much better to use" etc. etc. so when someone points out mistakes in your code, as long as they're polite about it they're helping you get better, not telling you that you are bad at writing code.
 
 ### Have a normal conversation
 
 It is tempting to just list comments and critique, such as a bullet list of things that wrong, or points you agree/disagree with, but you're not talking to machines, so please don't do this. Use normal language to describe what you're thinking of and what you'd recommend be done in normal paragraphs of text. If you have multiple points to make, just write multiple paragraphs. They can be short, but unless someone asked a question and you're supplying the answer and that answer is short, don't just list factoids.
+
+### If someone tells you they feel uncomfortable with things you do, listen
+
+It's easy to think that the way you communicate is fine, and that when someone says they are uncomfortable with it, then that's their problem. That is, however, not acceptable in this project. Respect other contributors, and behave in a way that does not make them feel uncomfortable. If someone points out that the way you communicate is curt and even rude, ask them what they mean and how they think you could improve your communication. Don't tell them off for being too sensitive, and also don't just go "ok" and then try to figure out how to fix it on your own: ask people to help you improve when they point out there is room for improvement. This is true for code, but it's just as true for behaviour. 
+
+### And if someone makes you feel uncomfortable, tell them
+
+The reserve of the previous point is also true: if someone is behaving in a way that makes you uncomfortable, tell them that. And then also tell them why that is and what you think they can do to overcome that. Don't wait for them to acknowledge you before telling them how you would like to be treated instead. Working in a group is not just about getting good code, tests, and documentation written, but also about making sure that everyone in the group can work together without animosity or resentment. You can always walk out on a project whenever you want, so it's worth first trying to address problems before giving up on someone. You might be surprised how much they listen. 
 
 ### Don't "derail" conversations with side issues
 
