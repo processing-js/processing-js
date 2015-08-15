@@ -59,4 +59,4 @@ With the test server is running, the following urls are good to know:
 
 ### Contributing to Processing.js
 
-Please read ["how to contribute to Processing.js"](Contribute.md) for how you can contribute, and what code of conduct is expected to be followed.
+Please read ["how to contribute to Processing.js"](CONTRIBUTING.md) for how you can contribute, and what code of conduct is expected to be followed.
