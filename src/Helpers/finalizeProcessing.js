@@ -150,8 +150,9 @@ module.exports = function finalizeProcessing(Processing, options) {
    * source and bind to canvas via new Processing(canvas, sourcestring).
    * @param {CANVAS} canvas The html canvas element to bind to
    * @param {String[]} source The array of files that must be loaded
+   * @param {Function} onComplete A callback, called with the sketch as the argument.
    */
-  var loadSketchFromSources = Processing.loadSketchFromSources = function(canvas, sources) {
+  var loadSketchFromSources = Processing.loadSketchFromSources = function(canvas, sources, onComplete) {
     var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
 
     function ajaxAsync(url, callback) {
@@ -193,7 +194,10 @@ module.exports = function finalizeProcessing(Processing, options) {
         if (loaded === sourcesCount) {
           if (errors.length === 0) {
             // This used to throw, but it was constantly getting in the way of debugging where things go wrong!
-            return new Processing(canvas, code.join("\n"));
+            var sketch = new Processing(canvas, code.join("\n"));
+            if (onComplete) {
+              onComplete(sketch);
+            }
           } else {
             throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
           }
