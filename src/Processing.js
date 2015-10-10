@@ -11935,8 +11935,7 @@
 
       // if keyboard events should be handled globally, the listeners should
       // be bound to the document window, rather than to the current canvas
-      //var keyTrigger = curSketch.options.globalKeyEvents ? window : curElement;
-      var keyTrigger = window;
+      var keyTrigger = curSketch.options.globalKeyEvents ? window : curElement;
       
       attachEventHandler(keyTrigger, "keydown", handleKeydown);
       attachEventHandler(keyTrigger, "keypress", handleKeypress);
