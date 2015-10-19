@@ -4067,8 +4067,6 @@
       doLoop = false;
       loopStarted = false;
       
-      // requestAnimationFrame edit
-      //clearInterval(looping);
       looping = false;
       curSketch.onPause();
     };
@@ -4083,7 +4081,6 @@ requestAnimationFrame= (function(){
              };
      })();
 
-    // requestAnimationFrame edit
     var _now, _then=0, _doDraw = function(t) {
       requestAnimationFrame(_doDraw);
         if (!looping) { return; }
@@ -4114,19 +4111,6 @@ requestAnimationFrame= (function(){
 
       timeSinceLastFPS = Date.now();
       framesSinceLastFPS = 0;
-
-      // looping = window.setInterval(function() {
-      //   try {
-      //     curSketch.onFrameStart();
-      //     p.redraw();
-      //     curSketch.onFrameEnd();
-      //   } catch(e_loop) {
-      //     window.clearInterval(looping);
-      //     throw e_loop;
-      //   }
-      // }, curMsPerFrame);
-      
-      // requestAnimationFrame edit
       looping = true;
       requestAnimationFrame(_doDraw);
       
@@ -4167,8 +4151,6 @@ requestAnimationFrame= (function(){
     */
     p.exit = function() {
       // cleanup
-      // requestAnimationFrame edit
-      //window.clearInterval(looping);
       looping = false;
       removeInstance(p.externals.canvas.id);
       delete(curElement.onmousedown);
