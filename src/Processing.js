@@ -4066,35 +4066,34 @@
     p.noLoop = function() {
       doLoop = false;
       loopStarted = false;
-      
       looping = false;
       curSketch.onPause();
     };
 
-requestAnimationFrame= (function(){
+    requestAnimationFrame = (function(){
       return window.requestAnimationFrame ||
              window.webkitRequestAnimationFrame ||
              window.mozRequestAnimationFrame    ||
              function( callback ){
-                var _h= function(){callback(Date.now());};
-                window.setTimeout(_h, curMsPerFrame);
+               var _h = function(){callback(Date.now());};
+               window.setTimeout(_h, curMsPerFrame);
              };
-     })();
+    })();
 
-    var _now, _then=0, _doDraw = function(t) {
-      requestAnimationFrame(_doDraw);
+    var _doDraw = (function() {
+      var then = 0;
+      return function(now) {
         if (!looping) { return; }
-        _now= t;
-        var _delta= _now - _then;
-        if (_delta > curMsPerFrame) {  // regulate the framerate
-            _then= _now - (_delta % curMsPerFrame);
-
-            curSketch.onFrameStart();
-            p.redraw();
-            curSketch.onFrameEnd();
+        requestAnimationFrame(_doDraw);
+        var delta = now - then;
+        if (delta > curMsPerFrame) {  // regulate the framerate
+          then = now - (delta % curMsPerFrame);
+          curSketch.onFrameStart();
+          p.redraw();
+          curSketch.onFrameEnd();
         }
-    };
-
+      };
+    }());
 
     /**
     * Causes Processing to continuously execute the code within draw(). If noLoop() is called,
@@ -4113,7 +4112,6 @@ requestAnimationFrame= (function(){
       framesSinceLastFPS = 0;
       looping = true;
       requestAnimationFrame(_doDraw);
-      
       doLoop = true;
       loopStarted = true;
       curSketch.onLoop();
