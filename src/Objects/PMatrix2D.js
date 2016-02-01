@@ -253,7 +253,7 @@ module.exports = function(options, undef) {
      * @param {float} sy  the amount to scale on the y-axis
      */
     scale: function(sx, sy) {
-      if (sx && !sy) {
+      if (sx && sy === undef) {
         sy = sx;
       }
       if (sx && sy) {
