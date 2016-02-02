@@ -381,9 +381,9 @@ module.exports = function(options, undef) {
      * @param {float} sz  the amount to scale on the z-axis
      */
     scale: function(sx, sy, sz) {
-      if (sx && !sy && !sz) {
+      if (sx && sy === undef && sz === undef) {
         sy = sz = sx;
-      } else if (sx && sy && !sz) {
+      } else if (sx && sy && sz === undef) {
         sz = 1;
       }
 
