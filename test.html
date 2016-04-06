@@ -1,13 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf8">
+    <meta charset="utf-8">
     <title>Processing.js</title>
     <script src="processing.js"></script>
   </head>
   <body>
     <h1>Processing.js</h1>
     <script type="text/processing">
+      document.getElementById("canvas");
+    
       void setup() {
         size(400,200);
         textAlign(CENTER, CENTER);
@@ -32,6 +34,6 @@
         println(mouseX, mouseY);
       }
     </script>
-    <canvas></canvas>
+    <canvas id="canvas"></canvas>
   </body>
 </html>
