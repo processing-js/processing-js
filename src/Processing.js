@@ -8421,9 +8421,9 @@
       if (bl > halfWidth || bl > halfHeight) {
         bl = Math.min(halfWidth, halfHeight);
       }
-      // Translate the stroke by (0.5, 0.5) to draw a crisp border
-      if (!doFill || doStroke) {
-        curContext.translate(0.5, 0.5);
+      // Translate the stroke by (0.5 * lineWidth, 0.5 * lineWidth) to draw a crisp border
+      if (doStroke) {
+        curContext.translate(0.5 * lineWidth, 0.5 * lineWidth);
       }
       curContext.beginPath();
       curContext.moveTo(x + tl, y);
@@ -8435,11 +8435,11 @@
       curContext.quadraticCurveTo(x, y + height, x, y + height - bl);
       curContext.lineTo(x, y + tl);
       curContext.quadraticCurveTo(x, y, x + tl, y);
-      if (!doFill || doStroke) {
-        curContext.translate(-0.5, -0.5);
-      }
       executeContextFill();
       executeContextStroke();
+      if (doStroke) {
+        curContext.translate(-0.5 * lineWidth, -0.5 * lineWidth);
+      }
     };
 
     /**
@@ -8484,16 +8484,16 @@
         return;
       }
 
-      // Translate the line by (0.5, 0.5) to draw a crisp rectangle border
-      if (doStroke && lineWidth % 2 === 1) {
-        curContext.translate(0.5, 0.5);
+      // Translate the line by (0.5 * lineWidth, 0.5 * lineWidth) to draw a crisp rectangle border
+      if (doStroke) {
+        curContext.translate(0.5 * lineWidth, 0.5 * lineWidth);
       }
       curContext.beginPath();
       curContext.rect(x, y, width, height);
       executeContextFill();
       executeContextStroke();
-      if (doStroke && lineWidth % 2 === 1) {
-        curContext.translate(-0.5, -0.5);
+      if (doStroke) {
+        curContext.translate(-0.5 * lineWidth, -0.5 * lineWidth);
       }
     };
 
