@@ -433,7 +433,14 @@ module.exports = function withMath(p, undef) {
       return internalRandomGenerator() * arguments[0];
     }
     var aMin = arguments[0], aMax = arguments[1];
-    return internalRandomGenerator() * (aMax - aMin) + aMin;
+    while (true) {
+      var ir = internalRandomGenerator();
+      var result = ir * (aMax - aMin) + aMin;
+      if (result !== aMax || result === aMin) {
+        return result;
+      }
+      // assertion: ir is never less than 0.5
+    }
   };
 
   // Pseudo-random generator
