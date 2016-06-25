@@ -167,6 +167,12 @@ module.exports = {
     SPHERE:         40,
     BOX:            41,
 
+    // Arc drawing modes
+    //OPEN:          1, // shared with Shape closing modes   
+    CHORD:           2,
+    PIE:             3, 
+
+
     GROUP:          0,
     PRIMITIVE:      1,
     //PATH:         21, // shared with Shape PATH
