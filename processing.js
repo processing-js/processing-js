@@ -247,6 +247,12 @@ module.exports = {
     SPHERE:         40,
     BOX:            41,
 
+    // Arc drawing modes
+    //OPEN:          1, // shared with Shape closing modes   
+    CHORD:           2,
+    PIE:             3, 
+
+
     GROUP:          0,
     PRIMITIVE:      1,
     //PATH:         21, // shared with Shape PATH
@@ -905,9 +911,9 @@ module.exports = function finalizeProcessing(Processing, options) {
    * source and bind to canvas via new Processing(canvas, sourcestring).
    * @param {CANVAS} canvas The html canvas element to bind to
    * @param {String[]} source The array of files that must be loaded
-   * @param {Function} complete A callback, called with the sketch as the argument.
+   * @param {Function} onComplete A callback, called with the sketch as the argument.
    */
-  var loadSketchFromSources = Processing.loadSketchFromSources = function(canvas, sources, complete) {
+  var loadSketchFromSources = Processing.loadSketchFromSources = function(canvas, sources, onComplete) {
     var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
 
     function ajaxAsync(url, callback) {
@@ -950,8 +956,8 @@ module.exports = function finalizeProcessing(Processing, options) {
           if (errors.length === 0) {
             // This used to throw, but it was constantly getting in the way of debugging where things go wrong!
             var sketch = new Processing(canvas, code.join("\n"));
-            if (complete) {
-              complete(sketch);
+            if (onComplete) {
+              onComplete(sketch);
             }
           } else {
             throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
@@ -2497,7 +2503,7 @@ module.exports = function(options, undef) {
      * @param {float} sy  the amount to scale on the y-axis
      */
     scale: function(sx, sy) {
-      if (sx && !sy) {
+      if (sx && sy === undef) {
         sy = sx;
       }
       if (sx && sy) {
@@ -3022,9 +3028,9 @@ module.exports = function(options, undef) {
      * @param {float} sz  the amount to scale on the z-axis
      */
     scale: function(sx, sy, sz) {
-      if (sx && !sy && !sz) {
+      if (sx && sy === undef && sz === undef) {
         sy = sz = sx;
-      } else if (sx && sy && !sz) {
+      } else if (sx && sy && sz === undef) {
         sz = 1;
       }
 
@@ -17580,11 +17586,12 @@ module.exports = function setupParser(Processing, options) {
      * @param {float} d       height of the arc's ellipse
      * @param {float} start   angle to start the arc, specified in radians
      * @param {float} stop    angle to stop the arc, specified in radians
+     * @param {enum}  mode    drawing mode (OPEN, CHORD, PIE)
      *
      * @see #ellipseMode()
      * @see #ellipse()
      */
-    p.arc = function(x, y, width, height, start, stop) {
+    p.arc = function(x, y, width, height, start, stop, mode) {
       if (width <= 0 || stop < start) { return; }
 
       if (curEllipseMode === PConstants.CORNERS) {
@@ -17605,8 +17612,8 @@ module.exports = function setupParser(Processing, options) {
         stop += PConstants.TWO_PI;
       }
       if (stop - start > PConstants.TWO_PI) {
-        start = 0;
-        stop = PConstants.TWO_PI;
+        // don't change start, it is visible in PIE mode
+        stop = start + PConstants.TWO_PI;
       }
       var hr = width / 2,
           vr = height / 2,
@@ -17627,6 +17634,16 @@ module.exports = function setupParser(Processing, options) {
               (y + Math.sin(a) * vr)|0
             );
           }
+
+          if (mode === PConstants.OPEN && doFill) {
+            p.vertex(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr);
+          } else if (mode === PConstants.CHORD) {
+            p.vertex(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr);
+          } else if (mode === PConstants.PIE) {
+            p.line(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr, centerX, centerY);
+            p.line(centerX, centerY, centerX + Math.cos(stop) * hr, centerY + Math.sin(stop) * vr);
+          } 
+
           p.endShape(closed ? PConstants.CLOSE : undefined);
         };
       }(centerX+0.5, centerY+0.5, start, step, stop));

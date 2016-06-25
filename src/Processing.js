@@ -8021,11 +8021,12 @@
      * @param {float} d       height of the arc's ellipse
      * @param {float} start   angle to start the arc, specified in radians
      * @param {float} stop    angle to stop the arc, specified in radians
+     * @param {enum}  mode    drawing mode (OPEN, CHORD, PIE)
      *
      * @see #ellipseMode()
      * @see #ellipse()
      */
-    p.arc = function(x, y, width, height, start, stop) {
+    p.arc = function(x, y, width, height, start, stop, mode) {
       if (width <= 0 || stop < start) { return; }
 
       if (curEllipseMode === PConstants.CORNERS) {
@@ -8046,8 +8047,8 @@
         stop += PConstants.TWO_PI;
       }
       if (stop - start > PConstants.TWO_PI) {
-        start = 0;
-        stop = PConstants.TWO_PI;
+        // don't change start, it is visible in PIE mode
+        stop = start + PConstants.TWO_PI;
       }
       var hr = width / 2,
           vr = height / 2,
@@ -8068,6 +8069,16 @@
               (y + Math.sin(a) * vr)|0
             );
           }
+
+          if (mode === PConstants.OPEN && doFill) {
+            p.vertex(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr);
+          } else if (mode === PConstants.CHORD) {
+            p.vertex(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr);
+          } else if (mode === PConstants.PIE) {
+            p.line(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr, centerX, centerY);
+            p.line(centerX, centerY, centerX + Math.cos(stop) * hr, centerY + Math.sin(stop) * vr);
+          } 
+
           p.endShape(closed ? PConstants.CLOSE : undefined);
         };
       }(centerX+0.5, centerY+0.5, start, step, stop));
