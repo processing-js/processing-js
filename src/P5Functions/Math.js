@@ -436,7 +436,7 @@ module.exports = function withMath(p, undef) {
     if (aMin === aMax) {
       return aMin;
     }
-    while (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 100; i++) {
       var ir = internalRandomGenerator();
       var result = ir * (aMax - aMin) + aMin;
       if (result !== aMax) {
