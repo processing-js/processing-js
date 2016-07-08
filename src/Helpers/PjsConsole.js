@@ -1,4 +1,4 @@
-// the logger for println()
+// the logger for print() and println()
 module.exports = function PjsConsole(document) {
   var e = { BufferMax: 200 },
       style = document.createElement("style"),
