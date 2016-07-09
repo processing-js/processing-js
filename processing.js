@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -6992,7 +6992,18 @@ module.exports = function withMath(p, undef) {
       return internalRandomGenerator() * arguments[0];
     }
     var aMin = arguments[0], aMax = arguments[1];
-    return internalRandomGenerator() * (aMax - aMin) + aMin;
+    if (aMin === aMax) {
+      return aMin;
+    }
+    for (var i = 0; i < 100; i++) {
+      var ir = internalRandomGenerator();
+      var result = ir * (aMax - aMin) + aMin;
+      if (result !== aMax) {
+        return result;
+      }
+      // assertion: ir is never less than 0.5
+    }
+    return aMin;
   };
 
   // Pseudo-random generator
