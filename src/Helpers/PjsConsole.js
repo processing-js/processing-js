@@ -1,4 +1,4 @@
-// the logger for println()
+// the logger for print() and println()
 module.exports = function PjsConsole(document) {
   var e = { BufferMax: 200 },
       style = document.createElement("style"),
@@ -108,6 +108,11 @@ module.exports = function PjsConsole(document) {
   e.BufferArray = [];
 
   e.print = e.log = function () {
+    if(!added) {
+      document.body.appendChild(style);
+      document.body.appendChild(e.wrapper);
+      added = true;
+    }
     var args = Array.prototype.slice.call(arguments);
     t = args.map(function(t, idx) { return t + (idx+1 === args.length ? "" : " "); }).join('');
     if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
@@ -117,11 +122,6 @@ module.exports = function PjsConsole(document) {
   };
 
   e.println = function () {
-    if(!added) {
-      document.body.appendChild(style);
-      document.body.appendChild(e.wrapper);
-      added = true;
-    }
     var args = Array.prototype.slice.call(arguments);
     args.push('<br>');
     e.print.apply(e, args);
