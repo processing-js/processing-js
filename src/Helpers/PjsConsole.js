@@ -125,8 +125,11 @@ module.exports = function PjsConsole(document) {
     var args = Array.prototype.slice.call(arguments);
     args.push('<br>');
     e.print.apply(e, args);
-    if (e.BufferArray.length > e.BufferMax) e.BufferArray.splice(0, 1);
-    else e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
+    if (e.BufferArray.length > e.BufferMax) {
+      e.BufferArray.splice(0, 1);
+    } else {
+      e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
+    }
   };
 
   e.showconsole = function () { e.wrapper.classList.remove("hidden"); };
