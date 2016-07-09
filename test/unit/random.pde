@@ -58,3 +58,19 @@ for(int i=0;i<attempts;++i) {
   var sample = random(minSample, maxSample);
   if(sample < minSample || sample >= maxSample) _checkTrue(false); // bad random with two arg
 }
+
+double r,
+    c = 512.0,
+    d = 0.000000001,
+    a = c - d,
+    b = c;
+boolean failed = false;
+for (int i=0; i<100000; i++) {
+  r = random(a, b);
+  if (r >= b || r < a) {
+    failed = true;
+    break;
+  }
+}
+// at this point `failed` reflects whether or not the previous run failed even once.
+_checkFalse(failed);
