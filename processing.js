@@ -7800,9 +7800,9 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
     p.mouseScroll = delta;
 
     if (delta && typeof p.mouseScrolled === 'function') {
-      p.mouseScrolled();
       e.preventDefault();
       e.stopPropagation();
+      p.mouseScrolled();
     }
   };
 
