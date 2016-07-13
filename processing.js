@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.4.16",
+  "version": "1.6.0",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -37,18 +37,22 @@ module.exports={
     "argv": "~0.0.2",
     "browserify": "^11.0.1",
     "express": "~3.3.3",
-    "node-minify": "~0.7.3",
-    "nunjucks": "~0.1.9",
-    "open": "0.0.3",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.8",
-    "grunt-contrib-jshint": "~0.4.3"
+    "grunt-contrib-jshint": "~0.4.3",
+    "minifier": "^0.7.1",
+    "node-minify": "~0.7.3",
+    "nunjucks": "~0.1.9",
+    "open": "0.0.3"
   },
   "scripts": {
     "test": "node test",
-    "start": "browserify build.js -o processing.js && node minify"
+    "start": "browserify build.js -o processing.js && minify --output processing.min.js processing.js"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "minifier": "^0.7.1"
+  }
 }
 
 },{}],3:[function(require,module,exports){
@@ -247,6 +251,12 @@ module.exports = {
     SPHERE:         40,
     BOX:            41,
 
+    // Arc drawing modes
+    //OPEN:          1, // shared with Shape closing modes   
+    CHORD:           2,
+    PIE:             3, 
+
+
     GROUP:          0,
     PRIMITIVE:      1,
     //PATH:         21, // shared with Shape PATH
@@ -377,7 +387,7 @@ module.exports = {
 };
 
 },{}],5:[function(require,module,exports){
-// the logger for println()
+// the logger for print() and println()
 module.exports = function PjsConsole(document) {
   var e = { BufferMax: 200 },
       style = document.createElement("style"),
@@ -487,6 +497,11 @@ module.exports = function PjsConsole(document) {
   e.BufferArray = [];
 
   e.print = e.log = function () {
+    if(!added) {
+      document.body.appendChild(style);
+      document.body.appendChild(e.wrapper);
+      added = true;
+    }
     var args = Array.prototype.slice.call(arguments);
     t = args.map(function(t, idx) { return t + (idx+1 === args.length ? "" : " "); }).join('');
     if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
@@ -496,11 +511,6 @@ module.exports = function PjsConsole(document) {
   };
 
   e.println = function () {
-    if(!added) {
-      document.body.appendChild(style);
-      document.body.appendChild(e.wrapper);
-      added = true;
-    }
     var args = Array.prototype.slice.call(arguments);
     args.push('<br>');
     e.print.apply(e, args);
@@ -7006,7 +7016,18 @@ module.exports = function withMath(p, undef) {
       return internalRandomGenerator() * arguments[0];
     }
     var aMin = arguments[0], aMax = arguments[1];
-    return internalRandomGenerator() * (aMax - aMin) + aMin;
+    if (aMin === aMax) {
+      return aMin;
+    }
+    for (var i = 0; i < 100; i++) {
+      var ir = internalRandomGenerator();
+      var result = ir * (aMax - aMin) + aMin;
+      if (result !== aMax) {
+        return result;
+      }
+      // assertion: ir is never less than 0.5
+    }
+    return aMin;
   };
 
   // Pseudo-random generator
@@ -7800,8 +7821,8 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
     p.mouseScroll = delta;
 
     if (delta && typeof p.mouseScrolled === 'function') {
-      e.preventDefault();
       e.stopPropagation();
+      e.preventDefault();
       p.mouseScrolled();
     }
   };
@@ -17582,11 +17603,12 @@ module.exports = function setupParser(Processing, options) {
      * @param {float} d       height of the arc's ellipse
      * @param {float} start   angle to start the arc, specified in radians
      * @param {float} stop    angle to stop the arc, specified in radians
+     * @param {enum}  mode    drawing mode (OPEN, CHORD, PIE)
      *
      * @see #ellipseMode()
      * @see #ellipse()
      */
-    p.arc = function(x, y, width, height, start, stop) {
+    p.arc = function(x, y, width, height, start, stop, mode) {
       if (width <= 0 || stop < start) { return; }
 
       if (curEllipseMode === PConstants.CORNERS) {
@@ -17607,8 +17629,8 @@ module.exports = function setupParser(Processing, options) {
         stop += PConstants.TWO_PI;
       }
       if (stop - start > PConstants.TWO_PI) {
-        start = 0;
-        stop = PConstants.TWO_PI;
+        // don't change start, it is visible in PIE mode
+        stop = start + PConstants.TWO_PI;
       }
       var hr = width / 2,
           vr = height / 2,
@@ -17629,6 +17651,16 @@ module.exports = function setupParser(Processing, options) {
               (y + Math.sin(a) * vr)|0
             );
           }
+
+          if (mode === PConstants.OPEN && doFill) {
+            p.vertex(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr);
+          } else if (mode === PConstants.CHORD) {
+            p.vertex(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr);
+          } else if (mode === PConstants.PIE) {
+            p.line(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr, centerX, centerY);
+            p.line(centerX, centerY, centerX + Math.cos(stop) * hr, centerY + Math.sin(stop) * vr);
+          } 
+
           p.endShape(closed ? PConstants.CLOSE : undefined);
         };
       }(centerX+0.5, centerY+0.5, start, step, stop));

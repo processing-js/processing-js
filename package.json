@@ -1,6 +1,6 @@
 {
   "name": "processing-js",
-  "version": "1.4.16",
+  "version": "1.6.0",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -12,16 +12,20 @@
     "argv": "~0.0.2",
     "browserify": "^11.0.1",
     "express": "~3.3.3",
-    "node-minify": "~0.7.3",
-    "nunjucks": "~0.1.9",
-    "open": "0.0.3",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.8",
-    "grunt-contrib-jshint": "~0.4.3"
+    "grunt-contrib-jshint": "~0.4.3",
+    "minifier": "^0.7.1",
+    "node-minify": "~0.7.3",
+    "nunjucks": "~0.1.9",
+    "open": "0.0.3"
   },
   "scripts": {
     "test": "node test",
-    "start": "browserify build.js -o processing.js && node minify"
+    "start": "browserify build.js -o processing.js && minify --output processing.min.js processing.js"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "minifier": "^0.7.1"
+  }
 }

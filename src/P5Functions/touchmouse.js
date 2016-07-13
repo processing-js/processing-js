@@ -314,8 +314,8 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
     p.mouseScroll = delta;
 
     if (delta && typeof p.mouseScrolled === 'function') {
-      e.preventDefault();
       e.stopPropagation();
+      e.preventDefault();
       p.mouseScrolled();
     }
   };
