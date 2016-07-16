@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@ module.exports={
   },
   "scripts": {
     "test": "node test",
+    "test:manual": "http-server -o test/manual",
     "start": "browserify build.js -o processing.js && minify --output processing.min.js processing.js"
   },
   "license": "MIT",
@@ -7783,6 +7784,9 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
    * Unofficial scroll wheel handling.
    */
   var mouseWheelHandler = function(e) {
+    // do not handle scroll wheel if initiated outside of the sketch
+    if (e.target !== curElement) return;
+
     var delta = 0;
 
     if (e.wheelDelta) {
@@ -7797,6 +7801,11 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
     p.mouseScroll = delta;
 
     if (delta && typeof p.mouseScrolled === 'function') {
+      // If this sketch has explicit scroll handling,
+      // prevent scroll from kicking in globally before
+      // calling the scroll handler.
+      e.stopPropagation();
+      e.preventDefault();   
       p.mouseScrolled();
     }
   };
@@ -7806,6 +7815,7 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
   attachEventHandler(document, 'mousewheel', mouseWheelHandler);
 
 };
+
 
 },{}],25:[function(require,module,exports){
 /**

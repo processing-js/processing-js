@@ -22,6 +22,7 @@
   },
   "scripts": {
     "test": "node test",
+    "test:manual": "http-server -o test/manual",
     "start": "browserify build.js -o processing.js && minify --output processing.min.js processing.js"
   },
   "license": "MIT",
