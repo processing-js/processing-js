@@ -411,14 +411,14 @@ module.exports = function withMath(p, undef) {
 
   /**
   * Generates random numbers. Each time the random() function is called, it returns an unexpected value within
-  * the specified range. If one parameter is passed to the function it will return a float between zero and the
-  * value of the high parameter. The function call random(5) returns values between 0 and 5 (starting at zero,
+  * the specified range. If one parameter is passed to the function it will return a float between zero and
+  * that value. The function call random(5) returns values between 0 and 5 (starting at zero,
   * up to but not including 5). If two parameters are passed, it will return a float with a value between the
   * parameters. The function call random(-5, 10.2) returns values starting at -5 up to (but not including) 10.2.
   * To convert a floating-point random number to an integer, use the int() function.
   *
-  * @param {int|float} value1         if one parameter is used, the top end to random from, if two params the low end
-  * @param {int|float} value2         the top end of the random range
+  * @param {int|float} value1         if one parameter is used, the end of the range, if two params the beginning
+  * @param {int|float} value2         the end of the random range
   *
   * @returns {float}
   *
@@ -426,25 +426,28 @@ module.exports = function withMath(p, undef) {
   * @see noise
   */
   p.random = function() {
-    if(arguments.length === 0) {
-      return internalRandomGenerator();
-    }
-    if(arguments.length === 1) {
-      return internalRandomGenerator() * arguments[0];
-    }
-    var aMin = arguments[0], aMax = arguments[1];
-    if (aMin === aMax) {
-      return aMin;
-    }
-    for (var i = 0; i < 100; i++) {
-      var ir = internalRandomGenerator();
-      var result = ir * (aMax - aMin) + aMin;
-      if (result !== aMax) {
-        return result;
-      }
-      // assertion: ir is never less than 0.5
-    }
-    return aMin;
+    var a, b; // range from a to b
+  	if (arguments.length === 0) {
+  		a = 0;
+  		b = 1;
+  	} else if (arguments.length === 1) {
+  		a = 0;
+  		b = arguments[0];
+  	} else {
+  		a = arguments[0];
+  		b = arguments[1];
+  	}
+  	if (a !== b) {
+  		for (var i = 0; i < 100; i++) {
+  			var ir = internalRandomGenerator();
+  			var results = ir * (b - a) + a;
+  			if (results !== b) {
+  				return results;
+  			}
+  			// assertion: ir is never less than 0.5
+  		}
+  	}
+  	return a;
   };
 
   // Pseudo-random generator
