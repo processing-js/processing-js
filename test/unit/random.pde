@@ -74,3 +74,16 @@ for (int i=0; i<100000; i++) {
 }
 // at this point `failed` reflects whether or not the previous run failed even once.
 _checkFalse(failed);
+
+double r,
+    b = 5e-324;
+boolean failed = false;
+for (int i=0; i<100; i++) {
+  r = random(b);
+  if (r >= b || r < 0) {
+    failed = true;
+    break;
+  }
+}
+// at this point `failed` reflects whether or not the previous run failed even once.
+_checkFalse(failed);
