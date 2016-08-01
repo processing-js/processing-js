@@ -3789,6 +3789,9 @@
         'currentStrokeColor': currentStrokeColor,
         'curTint': curTint,
         'curRectMode': curRectMode,
+        'curEllipseMode': curEllipseMode,
+        'curShapeMode' : curShapeMode,
+        'imageModeConvert': imageModeConvert,
         'curColorMode': curColorMode,
         'colorModeX': colorModeX,
         'colorModeZ': colorModeZ,
@@ -3832,6 +3835,9 @@
         currentStrokeColor = oldState.currentStrokeColor;
         curTint = oldState.curTint;
         curRectMode = oldState.curRectMode;
+        curEllipseMode = oldState.curEllipseMode;
+        curShapeMode = oldState.curShapeMode;
+        imageModeConvert = oldState.imageModeConvert;
         curColorMode = oldState.curColorMode;
         colorModeX = oldState.colorModeX;
         colorModeZ = oldState.colorModeZ;
