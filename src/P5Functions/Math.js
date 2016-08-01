@@ -425,29 +425,25 @@ module.exports = function withMath(p, undef) {
   * @see randomSeed
   * @see noise
   */
-  p.random = function() {
-    var a, b; // range from a to b
-  	if (arguments.length === 0) {
-  		a = 0;
-  		b = 1;
-  	} else if (arguments.length === 1) {
-  		a = 0;
-  		b = arguments[0];
-  	} else {
-  		a = arguments[0];
-  		b = arguments[1];
-  	}
-  	if (a !== b) {
-  		for (var i = 0; i < 100; i++) {
-  			var ir = internalRandomGenerator();
-  			var results = ir * (b - a) + a;
-  			if (results !== b) {
-  				return results;
-  			}
-  			// assertion: ir is never less than 0.5
-  		}
-  	}
-  	return a;
+  p.random = function(a, b) {
+    a = a || 0;
+    if (arguments.length === 0) {
+      b = 1;
+    } else if (arguments.length === 1) {
+      b = a;
+      a = 0;
+    }
+    if (a !== b) {
+      for (var i = 0; i < 100; i++) {
+        var ir = internalRandomGenerator();
+        var results = ir * (b - a) + a;
+        if (results !== b) {
+          return results;
+        }
+        // assertion: ir is never less than 0.5
+      }
+    }
+    return a;
   };
 
   // Pseudo-random generator
