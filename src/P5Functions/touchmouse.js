@@ -300,6 +300,9 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
    * Unofficial scroll wheel handling.
    */
   var mouseWheelHandler = function(e) {
+    // do not handle scroll wheel if initiated outside of the sketch
+    if (e.target !== curElement) return;
+
     var delta = 0;
 
     if (e.wheelDelta) {
@@ -314,6 +317,11 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
     p.mouseScroll = delta;
 
     if (delta && typeof p.mouseScrolled === 'function') {
+      // If this sketch has explicit scroll handling,
+      // prevent scroll from kicking in globally before
+      // calling the scroll handler.
+      e.stopPropagation();
+      e.preventDefault();   
       p.mouseScrolled();
     }
   };
@@ -323,3 +331,4 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
   attachEventHandler(document, 'mousewheel', mouseWheelHandler);
 
 };
+
