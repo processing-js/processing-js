@@ -16,6 +16,7 @@ module.exports={
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.8",
     "grunt-contrib-jshint": "~0.4.3",
+    "http-server": "^0.9.0",
     "minifier": "^0.7.1",
     "node-minify": "~0.7.3",
     "nunjucks": "~0.1.9",
