@@ -8467,7 +8467,8 @@
     * @see quad
     */
     Drawing2D.prototype.rect = function(x, y, width, height, tl, tr, br, bl) {
-      if (!width && !height) {
+      // width and height need to be defined, numerical values
+      if (width!=''+width && height!=''+height) {
         return;
       }
 
@@ -8494,6 +8495,11 @@
         roundedRect$2d(x, y, width, height, tl, tr, br, bl);
         return;
       }
+
+//      if (width < 0) { x += width; width = -width; }
+//      if (height < 0) { y += height; height = -height; }
+
+      console.log(x,y,width,height);
 
       // Translate the line by (0.5, 0.5) to draw a crisp rectangle border
       if (doStroke && lineWidth % 2 === 1) {
