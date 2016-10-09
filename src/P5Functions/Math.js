@@ -426,13 +426,20 @@ module.exports = function withMath(p, undef) {
   * @see noise
   */
   p.random = function() {
-    if(arguments.length === 0) {
-      return internalRandomGenerator();
+    var aMin, aMax;
+    switch (arguments.length) {
+      case 0:
+        aMin = 0;
+        aMax = 1;
+        break;
+      case 1:
+        aMin = 0;
+        aMax = arguments[0];
+        break;
+      default:
+        aMin = arguments[0];
+        aMax = arguments[2];
     }
-    if(arguments.length === 1) {
-      return internalRandomGenerator() * arguments[0];
-    }
-    var aMin = arguments[0], aMax = arguments[1];
     if (aMin === aMax) {
       return aMin;
     }
