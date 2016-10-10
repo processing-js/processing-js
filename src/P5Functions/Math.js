@@ -425,20 +425,13 @@ module.exports = function withMath(p, undef) {
   * @see randomSeed
   * @see noise
   */
-  p.random = function() {
-    var aMin, aMax;
-    switch (arguments.length) {
-      case 0:
-        aMin = 0;
-        aMax = 1;
-        break;
-      case 1:
-        aMin = 0;
-        aMax = arguments[0];
-        break;
-      default:
-        aMin = arguments[0];
-        aMax = arguments[2];
+  p.random = function(aMin, aMax) {
+    if (arguments.length === 0) {
+      aMax = 1;
+      aMin = 0;
+    } else if (arguments.length === 1) {
+      aMax = aMin;
+      aMin = 0;
     }
     if (aMin === aMax) {
       return aMin;
