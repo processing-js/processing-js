@@ -49,14 +49,20 @@ var minSample = 30, maxSample = 40;
 for(int i=0;i<attempts;++i) {
   var sample = r1[i];
   if(sample < 0 || sample >= 1) _checkTrue(false); // bad random with no args
+  if(typeof sample !== "number") _checkTrue(false);
+  if(isNaN(sample)) _checkTrue(false);
 }
 for(int i=0;i<attempts;++i) {
   var sample = random(maxSample);
   if(sample < 0 || sample >= maxSample) _checkTrue(false); // bad random with one arg
+  if(typeof sample !== "number") _checkTrue(false);
+  if(isNaN(sample)) _checkTrue(false);
 }
 for(int i=0;i<attempts;++i) {
   var sample = random(minSample, maxSample);
   if(sample < minSample || sample >= maxSample) _checkTrue(false); // bad random with two arg
+  if(typeof sample !== "number") _checkTrue(false);
+  if(isNaN(sample)) _checkTrue(false);
 }
 
 double r,
