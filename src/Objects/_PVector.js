@@ -1,283 +1,261 @@
 module.exports = function(options, undef) {
-  'use strict';
+  "use strict";
 
   const TAU = 2 * Math.PI,
-        //TAU = options.PConstants.TAU,
-        lerp = function(start, stop, amt) {
-          return amt * (stop - start) + start;
-        },
-        sq = function(n) {
-          return n*n;
-        },
-        argsErr = function(mtd, len, min) {
-          throw 'Too few args passed to ' + mtd +
-                '() [' + len + ' < ' + min + '].';
+        lerp = (start, stop, amt) => +start + amt*(stop - start),
+        sq = n => n*n,
+        pjsCheck = obj => obj != null && 'random' in obj,
+        argsErr = (mtd, len, min) => {
+          throw `Too few args passed to ${mtd}() [${len} < ${min}].`;
         };
 
-  function _PVector(x, y, z) {
-    this.x = +x || 0;
-    this.y = +y || 0;
-    this.z = +z || 0;
+  function PVector(x, y, z) {
+    this.x = x || 0, this.y = y || 0, this.z = z || 0;
   }
 
-  _PVector.fromAngle = function(angle, target) {
-    return target? target.set(Math.cos(angle), Math.sin(angle))
-                 : new _PVector(Math.cos(angle), Math.sin(angle));
+  PVector.fromAngle = (angle, t) =>
+    t? t.set(Math.cos(angle), Math.sin(angle))
+     : new PVector(Math.cos(angle), Math.sin(angle));
+
+  PVector.random2D = (t, p) => {
+    const isPjs = pjsCheck(t), rnd = p? p : isPjs && t || Math;
+    return PVector.fromAngle(TAU * rnd.random(), !isPjs && t || void 0);
   };
 
-  _PVector.random2D = function(target, parent) {
-    //const rnd = parent? parent : target instanceof Processing? target : Math;
-    const rnd = parent? parent : target && target.random? target : Math;
-    return _PVector.fromAngle(TAU * rnd.random(), target);
-  };
-
-  _PVector.random3D = function(target, parent) {
-    //const rnd = parent? parent : target instanceof Processing? target : Math,
-    const rnd = parent? parent : target && target.random? target : Math,
+  PVector.random3D = (t, p) => {
+    const isPjs = pjsCheck(t),
+          rnd = p? p : isPjs && t || Math,
           ang = TAU * rnd.random(),
-          vz  = 2 * rnd.random() - 1,
+          vz  = 2*rnd.random() - 1,
           vzr = Math.sqrt(1 - vz*vz),
           vx  = vzr * Math.cos(ang),
           vy  = vzr * Math.sin(ang);
-    return target? target.set(vx, vy, vz) : new _PVector(vx, vy, vz);
+    return t && !isPjs? t.set(vx, vy, vz) : new PVector(vx, vy, vz);
   };
 
-  _PVector.dist = function(v1, v2) {
-    return Math.sqrt(_PVector.distSq(v1, v2));
-  };
+  PVector.dist = (v1, v2) => Math.sqrt(PVector.distSq(v1, v2));
+  PVector.distSq = (v1, v2) => sq(v1.x-v2.x) + sq(v1.y-v2.y) + sq(v1.z-v2.z);
+  PVector.dot = (v1, v2) => v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
 
-  _PVector.distSq = function(v1, v2) {
-    return sq(v1.x - v2.x) + sq(v1.y - v2.y) + sq(v1.z - v2.z);
-  };
-
-  _PVector.dot = function(v1, v2) {
-    return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
-  };
-
-  _PVector.cross = function(v1, v2, target) {
+  PVector.cross = (v1, v2, t) => {
     const cx = v1.y*v2.z - v2.y*v1.z,
           cy = v1.z*v2.x - v2.z*v1.x,
           cz = v1.x*v2.y - v2.x*v1.y;
-    return target? target.set(cx, cy, cz) : new _PVector(cx, cy, cz);
+    return t && t.set(cx, cy, cz) || new PVector(cx, cy, cz);
   };
 
-  _PVector.angleBetween = function(v1, v2) {
-    if (!v1.x && !v1.y && !v1.z || !v2.x && !v2.y && !v2.z) { return 0; }
-    const amt = _PVector.dot(v1, v2) / Math.sqrt(v1.magSq() * v2.magSq());
+  PVector.angleBetween = (v1, v2) => {
+    if (!v1.x && !v1.y && !v1.z || !v2.x && !v2.y && !v2.z)  return 0;
+    const amt = PVector.dot(v1, v2) / Math.sqrt(v1.magSq() * v2.magSq());
     return amt <= -1? Math.PI : amt >= 1? 0 : Math.acos(amt);
   };
 
-  _PVector.lerp = function(v1, v2, amt) {
-    return v1.copy().lerp(v2, amt);
+  PVector.lerp = (v1, v2, amt, t) =>
+    (t && t.set(v1) || v1.copy()).lerp(v2, amt);
+
+  PVector.add = (v1, v2, t) =>
+    t? t.set(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z)
+     : new PVector(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+
+  PVector.sub = (v1, v2, t) =>
+    t? t.set(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z)
+     : new PVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+
+  PVector.mult = (v, n, t) => {
+    if (typeof n === 'object')
+      return t? t.set(v.x*n.x, v.y*n.y, v.z*n.z)
+              : new PVector(v.x*n.x, v.y*n.y, v.z*n.z);
+    else
+      return t? t.set(v.x*n, v.y*n, v.z*n)
+              : new PVector(v.x*n, v.y*n, v.z*n);
   };
 
-  _PVector.add = function(v1, v2, target) {
-    return target? target.set(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z)
-                 : new _PVector(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+  PVector.div = (v, n, t) => {
+    if (typeof n === 'object')
+      return t? t.set(v.x/n.x, v.y/n.y, v.z/n.z)
+              : new PVector(v.x/n.x, v.y/n.y, v.z/n.z);
+    else
+      return t? t.set (v.x/n, v.y/n, v.z/n)
+              : new PVector(v.x/n, v.y/n, v.z/n);
   };
 
-  _PVector.sub = function(v1, v2, target) {
-    return target? target.set(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z)
-                 : new _PVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+  PVector.mod = (v, n, t) => {
+    if (typeof n === 'object')
+      return t? t.set(v.x%n.x, v.y%n.y, v.z%n.z)
+              : new PVector(v.x%n.x, v.y%n.y, v.z%n.z);
+    else
+      return t? t.set(v.x%n, v.y%n, v.z%n)
+              : new PVector(v.x%n, v.y%n, v.z%n);
   };
 
-  _PVector.mult = function(v, n, target) {
-    if (typeof n === 'number') {
-      return target? target.set(v.x*n, v.y*n, v.z*n)
-                   : new _PVector(v.x*n, v.y*n, v.z*n);
-    }
-    return target? target.set(v.x*n.x, v.y*n.y, v.z*n.z)
-                 : new _PVector(v.x*n.x, v.y*n.y, v.z*n.z);
-  };
+  PVector.compare = (a, b) => a.x - b.x || a.y - b.y || a.z - b.z;
 
-  _PVector.div = function(v, n, target) {
-    if (typeof n === 'number') {
-      return target? target.set(v.x/n, v.y/n, v.z/n)
-                   : new _PVector(v.x/n, v.y/n, v.z/n);
-    }
-    return target? target.set(v.x/n.x, v.y/n.y, v.z/n.z)
-                 : new _PVector(v.x/n.x, v.y/n.y, v.z/n.z);
-  };
-
-  _PVector.prototype = {
-    copy: function() {
-      return new _PVector(this.x, this.y, this.z);
+  PVector.prototype = {
+    compareTo: function(v) {
+      return this.x - v.x || this.y - v.y || this.z - v.z;
     },
-    get: function(target) {
-      if (!arguments.length) { return this.copy(); } // @Deprecated
-      if (typeof target !== 'object') { return this.array(); }
-      target[0] = this.x;
-      target[1] = this.y;
-      target[2] = this.z;
-      return target;
+    array: function() { return [this.x, this.y, this.z]; },
+    object: function() { return { x: this.x, y: this.y, z: this.z }; },
+    copy: function() { return new PVector(this.x, this.y, this.z); },
+    clone: null,
+    get: function(t) {
+      if (!t)  return t === void 0 && this.copy() || this.array();
+      else if ('z' in t)  t.x  = this.x, t.y  = this.y, t.z  = this.z;
+      else t[0] = this.x, t[1] = this.y, t[2] = this.z;
+      return t;
     },
     set: function(v, y, z) {
-      const len = arguments.length;
-      if (len > 1) {
-        this.x = v;
-        this.y = y;
-        if (len > 2) { this.z = z; }
-      } else if (len === 1) {
-        this.set(v.x || v[0] || 0,
-                 v.y || v[1] || 0,
-                 v.z || v[2] || 0);
-      } else { argsErr('set', len, 1); }
+      if (y != void 0)  this.x = +v, this.y = +y, z != void 0 && (this.z = +z);
+      else this.set(v[0] || v.x || 0, v[1] || v.y || 0, v[2] || v.z);
       return this;
     },
-    array: function() {
-      return [this.x, this.y, this.z];
+    normalize: function(t, mag) {
+      const m = mag || this.mag(), canDivide = m != 0 && m != 1;
+      if (!arguments.length)  return canDivide && this.div(m) || this;
+      return canDivide? PVector.div(this, m, t)
+                      : t && t.set(this) || this.copy();
     },
-    normalize: function(target) {
-      const m = this.mag(),
-            canDivide = m !== 0 && m !== 1;
-      if (!arguments.length) { return canDivide? this.div(m) : this; }
-      return canDivide? _PVector.div(this, m, target)
-                      : target? target.set(this) : this.copy();
+    limit: function(max, t, magSq) {
+      const mSq = magSq || this.magSq(), overMax = mSq > max*max;
+      t === null && (t = new PVector);
+      return !t? overMax && this.normalize().mult(max) || this
+               : overMax && this.normalize(t, Math.sqrt(mSq)).mult(max)
+               || t.set(this);
     },
-    limit: function(max) {
-      return this.magSq() > max*max? this.normalize().mult(max) : this;
-    },
-    heading: function() {
-      //return -Math.atan2(-this.y, this.x);
-      return Math.atan2(this.y, this.x);
-    },
+    heading: function() { return Math.atan2(this.y, this.x); },
     heading2D: null, // @Deprecated
-    mag: function() {
-      return Math.sqrt(this.magSq());
+    mag: function() { return Math.sqrt(this.magSq()); },
+    magSq: function() { return this.x*this.x + this.y*this.y + this.z*this.z; },
+    setMag: function(t, len, mag) {
+      return typeof t === 'object'?
+             this.normalize(t, mag).mult(len) : this.normalize().mult(t);
     },
-    magSq: function() {
-      return sq(this.x) + sq(this.y) + sq(this.z);
+    rotate: function(angle, t) {
+      const c = Math.cos(angle),
+            s = Math.sin(angle),
+            x = c*this.x - s*this.y,
+            y = s*this.x + c*this.y;
+      t === null && (t = new PVector);
+      return (t || this).set(x, y);
     },
-    setMag: function(target, length) {
-      const len = arguments.length;
-      return len === 1? this.normalize().mult(target) :
-             len > 1? this.normalize(target).mult(length) :
-             argsErr('setMag', len, 1);
+    rotateX: function(angle, t) {
+      const c = Math.cos(angle),
+            s = Math.sin(angle),
+            y = c*this.y - s*this.z,
+            z = s*this.y + c*this.z;
+      t === null && (t = new PVector);
+      return (t || this).set(this.x, y, z);
     },
-    rotate: function(angle) {
-      const prev_x = this.x,
-            c = Math.cos(angle),
-            s = Math.sin(angle);
-      this.x = c*this.x - s*this.y;
-      this.y = s*prev_x + c*this.y;
-      return this;
+    rotateY: function(angle, t) {
+      const c = Math.cos(angle),
+            s = Math.sin(angle),
+            x = s*this.z + c*this.x,
+            z = c*this.z - s*this.x;
+      t === null && (t = new PVector);
+      return (t || this).set(x, this.y, z);
+    },
+    rotateZ: null,
+    fromAngle: function(angle, t) {
+      return PVector.fromAngle(angle, t || this);
+    },
+    random2D: function(t, p) {
+      return pjsCheck(t) && PVector.random2D(this, t)
+                         || PVector.random2D(t === void 0 && this || t, p);
+    },
+    random3D: function(t, p) {
+      return pjsCheck(t) && PVector.random3D(this, t)
+                         || PVector.random3D(t === void 0 && this || t, p);
     },
     dist: function(v1, v2) {
-      return v2? _PVector.dist(v1, v2) : _PVector.dist(this, v1);
+      return v2? PVector.dist(v1, v2) : PVector.dist(this, v1);
     },
     distSq: function(v1, v2) {
-      return v2? _PVector.distSq(v1, v2) : _PVector.distSq(this, v1);
+      return v2? PVector.distSq(v1, v2) : PVector.distSq(this, v1);
     },
     dot: function(v, y, z) {
-      const len = arguments.length;
-      return len === 1? _PVector.dot(this, v) :
-             len === 2? _PVector.dot(v, y) :
-             len > 2? this.x*v + this.y*y + this.z*z :
-             argsErr('dot', len, 1);
+      return typeof v != 'object'? this.x*v + this.y*+y + this.z*z :
+                    y == void 0? PVector.dot(this, v) : PVector.dot(v, y);
     },
-    cross: function(v1, v2, target) {
-      return target? _PVector.cross(v1, v2, target)
-                   : _PVector.cross(this, v1, v2);
+    cross: function(v1, v2, t) {
+      return t && PVector.cross(v1, v2, t) || PVector.cross(this, v1, v2);
     },
-    lerp: function() {
-      var x, y, z, amt;
+    angleBetween: function(v) { return PVector.angleBetween(this, v); },
+    lerp: function(a, b, c, d) {
+      let x, y, z, amt;
       const len = arguments.length;
-      if ((len | 1) === 1) { argsErr('lerp', len, 2); }
+      if ((len | 1) === 1)  argsErr('lerp', len, 2);
       if (len === 2) { // given vector and amt
-        const v = arguments[0];
-        x = v.x;
-        y = v.y;
-        z = v.z;
-        amt = arguments[1];
+        ({x, y, z} = a), amt = b;
       } else if (len === 3) { // given vector 1, vector 2 and amt
-        return _PVector.lerp(arguments[0], arguments[1], arguments[2]);
+        return PVector.lerp(a, b, c);
       } else { // given x, y, z and amt
-        x = arguments[0];
-        y = arguments[1];
-        z = arguments[2];
-        amt = arguments[3];
+        x = a, y = b, z = c, amt = d;
       }
-      this.x = lerp(this.x, x, amt);
-      this.y = lerp(this.y, y, amt);
-      this.z = lerp(this.z, z, amt);
-      return this;
+      return this.set(lerp(this.x, x, amt),
+                      lerp(this.y, y, amt),
+                      lerp(this.z, z, amt));
     },
     add: function(v, y, z) {
-      if (y instanceof _PVector) { return _PVector.add(v, y, z); }
-      const len = arguments.length;
-      if (len === 1) {
-        //_PVector.add(this, v, this);
-        this.x += v.x;
-        this.y += v.y;
-        this.z += v.z;
-      } else if (len > 1) {
-        this.x += v;
-        this.y += y;
-        if (len > 2) { this.z += z };
-      } else { argsErr('add', len, 1); }
+      if (y != void 0) {
+        if (typeof y === 'object')  return PVector.add(v, y, z);
+        this.x += +v, this.y += +y, z != void 0 && (this.z += +z);
+      } else if (typeof v === 'object')
+          this.x += v.x, this.y += v.y, this.z += v.z;
+        else
+          this.x += +v,  this.y += +v,  this.z += +v;
       return this;
     },
     sub: function(v, y, z) {
-      if (y instanceof _PVector) { return _PVector.sub(v, y, z); }
-      const len = arguments.length;
-      if (len === 1) {
-        this.x -= v.x;
-        this.y -= v.y;
-        this.z -= v.z;
-      } else if (len > 1) {
-        this.x -= v;
-        this.y -= y;
-        if (len > 2) { this.z -= z; }
-      } else { argsErr('sub', len, 1); }
+      if (y != void 0) {
+        if (typeof y === 'object')  return PVector.sub(v, y, z);
+        this.x -= v, this.y -= y, z != void 0 && (this.z -= z);
+      } else if (typeof v === 'object')
+          this.x -= v.x, this.y -= v.y, this.z -= v.z;
+        else
+          this.x -= v,  this.y -= v,  this.z -= v;
       return this;
     },
-    mult: function(v, n, target) {
-      const len = arguments.length;
-      if (len === 1) {
-        if (typeof v === 'number') {
-          this.x *= v;
-          this.y *= v;
-          this.z *= v;
-        } else {
-          this.x *= v.x;
-          this.y *= v.y;
-          this.z *= v.z;
-        }
-        return this;
-      } else if (len > 1) { return _PVector.mult(v, n, target); }
-      argsErr('mult', len, 1);
+    mult: function(v, n, t) {
+      if (n != void 0)  return PVector.mult(v, n, t);
+      if (typeof v === 'object')  this.x *= v.x, this.y *= v.y, this.z *= v.z;
+      else                        this.x *= v,   this.y *= v,   this.z *= v;
+      return this;
     },
-    div: function(v, n, target) {
-      const len = arguments.length;
-      if (len === 1) {
-        if (typeof v === 'number') {
-          this.x /= v;
-          this.y /= v;
-          this.z /= v;
-        } else {
-          this.x /= v.x;
-          this.y /= v.y;
-          this.z /= v.z;
-        }
-        return this;
-      } else if (len > 1) { return _PVector.div(v, n, target); }
-      argsErr('div', len, 1);
+    div: function(v, n, t) {
+      if (n != void 0)  return PVector.div(v, n, t);
+      if (typeof v === 'object')  this.x /= v.x, this.y /= v.y, this.z /= v.z;
+      else                        this.x /= v,   this.y /= v,   this.z /= v;
+      return this;
     },
-    toString: function() {
-      return '[' + this.x + ', ' + this.y + ', ' + this.z + ']';
+    mod: function(v, n, t) {
+      if (n != void 0)  return PVector.mod(v, n, t);
+      if (typeof v === 'object')  this.x %= v.x, this.y %= v.y, this.z %= v.z;
+      else                        this.x %= v,   this.y %= v,   this.z %= v;
+      return this;
     },
+    negate: function() {
+      this.x *= -1, this.y *= -1, this.z *= -1;
+      return this;
+    },
+    clear: function() {
+      this.x = this.y = this.z = 0;
+      return this;
+    },
+    isNaN: function() {
+      return this.x !== this.x || this.y !== this.y || this.z !== this.z;
+    },
+    toString: function() { return `[ ${this.x}, ${this.y}, ${this.z} ]`; },
+    valueOf: function() { return this.x; },
+    hashCode: function() { return this.x + this.y + this.z; },
     equals: function(o) {
-      return o === this? true : o instanceof _PVector?
-             o.x === this.x && o.y === this.y && o.z === this.z : false;
-    },
-    hashCode: function() {
-      var hash = 1;
-      hash = 31*hash + this.x;
-      hash = 31*hash + this.y;
-      return 31*hash + this.z;
+      return o === this? true : o instanceof PVector &&
+      o.x === this.x && o.y === this.y && o.z === this.z;
     }
   };
 
-  _PVector.prototype.heading2D = _PVector.prototype.heading; // @Deprecated
-  return _PVector;
+  PVector.prototype.clone = PVector.prototype.copy;
+  PVector.prototype.heading2D = PVector.prototype.heading; // @Deprecated
+  PVector.prototype.rotateZ = PVector.prototype.rotate;
+
+  return PVector;
 };
