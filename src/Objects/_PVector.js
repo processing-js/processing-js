@@ -110,7 +110,7 @@ module.exports = function(options, undef) {
       return this;
     },
     normalize: function(t, mag) {
-      const m = mag || this.mag(), canDivide = m != 0 && m != 1;
+      const m = +mag || this.mag(), canDivide = m === m && m !== 0 && m !== 1;
       if (!arguments.length)  return canDivide && this.div(m) || this;
       return canDivide? PVector.div(this, m, t)
                       : t && t.set(this) || this.copy();
