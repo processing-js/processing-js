@@ -195,6 +195,9 @@ module.exports = function setupParser(Processing, options) {
     // remove carriage returns "\r"
     var codeWoExtraCr = code.replace(/\r\n?|\n\r/g, "\n");
 
+    // replace instances of .charAt with ._processingCharAt
+    codeWoExtraCr = codeWoExtraCr.replace(/"\.charAt\(/g, "\"._processingCharAt(");
+
     // masks strings and regexs with "'5'", where 5 is the index in an array containing all strings and regexs
     // also removes all comments
     var strings = [];
