@@ -189,7 +189,7 @@ module.exports = function(options, undef) {
       } else if (len === 3) { // given vector 1, vector 2 and amt
         return _PVector.lerp(a, b, c);
       } else { // given x, y, z and amt
-        x = a, y = b, z = c, amt = d;
+        [x, y, z, amt] = arguments;
       }
       return this.set(lerp(this.x, x, amt),
                       lerp(this.y, y, amt),
