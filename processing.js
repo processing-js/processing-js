@@ -1,7 +1,31 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+// build script for generating processing.js
+
+var Browser = {
+  isDomPresent: true,
+  navigator: navigator,
+  window: window,
+  document: document,
+  ajax: function(url) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, false);
+    if (xhr.overrideMimeType) {
+      xhr.overrideMimeType("text/plain");
+    }
+    xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT");
+    xhr.send(null);
+    // failed request?
+    if (xhr.status !== 200 && xhr.status !== 0) { throw ("XMLHttpRequest failed, status code " + xhr.status); }
+    return xhr.responseText;
+  }
+};
+
+window.Processing = require('./src/')(Browser);
+
+},{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -33,7 +57,7 @@ module.exports={
   }
 }
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 /**
 * A ObjectIterator is an iterator wrapper for objects. If passed object contains
 * the iterator method, the object instance will be replaced by the result returned by
@@ -59,7 +83,7 @@ module.exports = function ObjectIterator(obj) {
   }
 };
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /**
  * Processing.js environment constants
  */
@@ -364,7 +388,7 @@ module.exports = {
     MAX_LIGHTS:         8
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 // the logger for print() and println()
 module.exports = function PjsConsole(document) {
   var e = { BufferMax: 200 },
@@ -509,7 +533,7 @@ module.exports = function PjsConsole(document) {
   return e;
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /**
  * Processing.js default scope
  */
@@ -740,7 +764,7 @@ module.exports = function(options) {
   return defaultScope;
 };
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * Finalise the Processing.js object.
  */
@@ -1080,7 +1104,7 @@ module.exports = function finalizeProcessing(Processing, options) {
   return Processing;
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /**
  * Returns Java equals() result for two objects. If the first object
  * has the "equals" function, it preforms the call of this function.
@@ -1107,7 +1131,7 @@ module.exports = function virtEquals(obj, other) {
   return obj === other;
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * Returns Java hashCode() result for the object. If the object has the "hashCode" function,
  * it preforms the call of this function. Otherwise it uses/creates the "$id" property,
@@ -1136,7 +1160,7 @@ module.exports = function virtHashCode(obj, undef) {
   return obj.$id;
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
  * An ArrayList stores a variable number of objects.
  *
@@ -1414,7 +1438,7 @@ module.exports = function(options) {
   return ArrayList;
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 module.exports = (function(charMap, undef) {
 
   var Char = function(chr) {
@@ -1441,7 +1465,7 @@ module.exports = (function(charMap, undef) {
   return Char;
 }({}));
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
 * A HashMap stores a collection of objects, each referenced by a key. This is similar to an Array, only
 * instead of accessing elements with a numeric index, a String  is used. (If you are familiar with
@@ -1854,7 +1878,7 @@ module.exports = function(options) {
   return HashMap;
 };
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 // module export
 module.exports = function(options,undef) {
   var window = options.Browser.window,
@@ -2229,7 +2253,7 @@ module.exports = function(options,undef) {
 
   return PFont;
 };
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -2626,7 +2650,7 @@ module.exports = function(options, undef) {
   return PMatrix2D;
 };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -3224,7 +3248,7 @@ module.exports = function(options, undef) {
 
   return PMatrix3D;
 };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 module.exports = function(options) {
   var PConstants = options.PConstants,
       PMatrix2D = options.PMatrix2D,
@@ -3886,7 +3910,7 @@ module.exports = function(options) {
 
   return PShape;
 };
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /**
  * SVG stands for Scalable Vector Graphics, a portable graphics format. It is
  * a vector format so it allows for infinite resolution and relatively small
@@ -4978,7 +5002,7 @@ module.exports = function(options) {
   return PShapeSVG;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports = function(options, undef) {
   var PConstants = options.PConstants;
 
@@ -5224,7 +5248,7 @@ module.exports = function(options, undef) {
   return PVector;
 };
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * XMLAttribute is an attribute of a XML element.
  *
@@ -5306,7 +5330,7 @@ module.exports = function() {
   return XMLAttribute;
 };
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /**
  * XMLElement is a representation of an XML object. The object is able to parse XML code
  *
@@ -6114,7 +6138,7 @@ module.exports = function(options, undef) {
   return XMLElement;
 };
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /**
  * web colors, by name
  */
@@ -6261,7 +6285,7 @@ module.exports = {
     yellowgreen:          "#9acd32"
   };
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports = function(virtHashCode, virtEquals, undef) {
 
   return function withProxyFunctions(p, removeFirstArgument) {
@@ -6558,7 +6582,7 @@ module.exports = function(virtHashCode, virtEquals, undef) {
 
 };
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /**
  * For many "math" functions, we can delegate
  * to the Math object. For others, we can't.
@@ -7248,7 +7272,7 @@ module.exports = function withMath(p, undef) {
   };
 };
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /**
  * Common functions traditionally on "p" that should be class functions
  * that get bound to "p" when an instance is actually built, instead.
@@ -7482,7 +7506,7 @@ module.exports = (function commonFunctions(undef) {
   return CommonFunctions;
 }());
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /**
  * Touch and Mouse event handling
  */
@@ -7818,7 +7842,7 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
 };
 
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /**
  * The parser for turning Processing syntax into Pjs JavaScript.
  * This code is not trivial; unless you know what you're doing,
@@ -9564,7 +9588,7 @@ module.exports = function setupParser(Processing, options) {
   return Processing;
 };
 
-},{"../Helpers/PjsConsole":4}],26:[function(require,module,exports){
+},{"../Helpers/PjsConsole":5}],27:[function(require,module,exports){
 /**
  * Processing.js object
  */
@@ -17644,7 +17668,7 @@ module.exports = function setupParser(Processing, options) {
           } else if (mode === PConstants.PIE) {
             p.line(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr, centerX, centerY);
             p.line(centerX, centerY, centerX + Math.cos(stop) * hr, centerY + Math.sin(stop) * vr);
-          } 
+          }
 
           p.endShape(closed ? PConstants.CLOSE : undefined);
         };
@@ -18062,11 +18086,6 @@ module.exports = function setupParser(Processing, options) {
         roundedRect$2d(x, y, width, height, tl, tr, br, bl);
         return;
       }
-
-//      if (width < 0) { x += width; width = -width; }
-//      if (height < 0) { y += height; height = -height; }
-
-      console.log(x,y,width,height);
 
       // Translate the line by (0.5, 0.5) to draw a crisp rectangle border
       if (doStroke && lineWidth % 2 === 1) {
@@ -21640,7 +21659,7 @@ module.exports = function setupParser(Processing, options) {
   return Processing;
 };
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 // Base source files
 var source = {
   virtEquals: require("./Helpers/virtEquals"),
@@ -21774,28 +21793,4 @@ module.exports = function buildProcessingJS(Browser, testHarness) {
   return Processing;
 };
 
-},{"../package.json":1,"./Helpers/ObjectIterator":2,"./Helpers/PConstants":3,"./Helpers/defaultScope":5,"./Helpers/finalizeProcessing":6,"./Helpers/virtEquals":7,"./Helpers/virtHashCode":8,"./Objects/ArrayList":9,"./Objects/Char":10,"./Objects/HashMap":11,"./Objects/PFont":12,"./Objects/PMatrix2D":13,"./Objects/PMatrix3D":14,"./Objects/PShape":15,"./Objects/PShapeSVG":16,"./Objects/PVector":17,"./Objects/XMLAttribute":18,"./Objects/XMLElement":19,"./Objects/webcolors":20,"./P5Functions/JavaProxyFunctions":21,"./P5Functions/Math.js":22,"./P5Functions/commonFunctions":23,"./P5Functions/touchmouse":24,"./Parser/Parser":25,"./Processing":26}],28:[function(require,module,exports){
-// build script for generating processing.js
-
-var Browser = {
-  isDomPresent: true,
-  navigator: navigator,
-  window: window,
-  document: document,
-  ajax: function(url) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, false);
-    if (xhr.overrideMimeType) {
-      xhr.overrideMimeType("text/plain");
-    }
-    xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT");
-    xhr.send(null);
-    // failed request?
-    if (xhr.status !== 200 && xhr.status !== 0) { throw ("XMLHttpRequest failed, status code " + xhr.status); }
-    return xhr.responseText;
-  }
-};
-
-window.Processing = require('./src/')(Browser);
-
-},{"./src/":27}]},{},[28]);
+},{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":6,"./Helpers/finalizeProcessing":7,"./Helpers/virtEquals":8,"./Helpers/virtHashCode":9,"./Objects/ArrayList":10,"./Objects/Char":11,"./Objects/HashMap":12,"./Objects/PFont":13,"./Objects/PMatrix2D":14,"./Objects/PMatrix3D":15,"./Objects/PShape":16,"./Objects/PShapeSVG":17,"./Objects/PVector":18,"./Objects/XMLAttribute":19,"./Objects/XMLElement":20,"./Objects/webcolors":21,"./P5Functions/JavaProxyFunctions":22,"./P5Functions/Math.js":23,"./P5Functions/commonFunctions":24,"./P5Functions/touchmouse":25,"./Parser/Parser":26,"./Processing":27}]},{},[1]);

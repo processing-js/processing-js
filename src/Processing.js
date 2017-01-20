@@ -8077,7 +8077,7 @@
           } else if (mode === PConstants.PIE) {
             p.line(centerX + Math.cos(start) * hr, centerY + Math.sin(start) * vr, centerX, centerY);
             p.line(centerX, centerY, centerX + Math.cos(stop) * hr, centerY + Math.sin(stop) * vr);
-          } 
+          }
 
           p.endShape(closed ? PConstants.CLOSE : undefined);
         };
@@ -8495,11 +8495,6 @@
         roundedRect$2d(x, y, width, height, tl, tr, br, bl);
         return;
       }
-
-//      if (width < 0) { x += width; width = -width; }
-//      if (height < 0) { y += height; height = -height; }
-
-      console.log(x,y,width,height);
 
       // Translate the line by (0.5, 0.5) to draw a crisp rectangle border
       if (doStroke && lineWidth % 2 === 1) {
