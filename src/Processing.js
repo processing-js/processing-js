@@ -127,15 +127,13 @@
     // JavaScript event binding and releasing
     ////////////////////////////////////////////////////////////////////////////
 
-    var eventHandlers = [];
-
     function attachEventHandler(elem, type, fn) {
       if (elem.addEventListener) {
         elem.addEventListener(type, fn, false);
       } else {
         elem.attachEvent("on" + type, fn);
       }
-      eventHandlers.push({elem: elem, type: type, fn: fn});
+      p.eventHandlers.push({elem: elem, type: type, fn: fn});
     }
 
     function detachEventHandler(eventHandler) {
@@ -149,6 +147,14 @@
       }
     }
 
+    function detachEventHandlersByType(element, types) {
+      Object.keys(eventHandlers).forEach(function(eventHandler) {
+        if (types.indexOf(eventHandler.type) > -1 && (eventHandler.elem == element)) {
+          detachEventHandler(eventHandler.type);
+        }
+      });
+    }
+
     function removeFirstArgument(args) {
       return Array.prototype.slice.call(args, 1);
     }
@@ -160,10 +166,11 @@
     p.Char = p.Character = Char;
 
     // add in the Processing API functions
+    p.eventHandlers = [];
     extend.withCommonFunctions(p);
     extend.withMath(p);
     extend.withProxyFunctions(p, removeFirstArgument);
-    extend.withTouch(p, curElement, attachEventHandler, document, PConstants);
+    extend.withTouch(p, curElement, attachEventHandler, detachEventHandlersByType, document, PConstants);
 
     // custom functions and properties are added here
     if(aFunctions) {
@@ -4147,9 +4154,9 @@
       }
 
       // clean up all event handling
-      var i = eventHandlers.length;
+      var i = p.eventHandlers.length;
       while (i--) {
-        detachEventHandler(eventHandlers[i]);
+        detachEventHandler(p.eventHandlers[i]);
       }
       curSketch.onExit();
     };
