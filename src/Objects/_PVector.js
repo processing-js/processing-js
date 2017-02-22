@@ -4,7 +4,7 @@ module.exports = function(options, undef) {
   const TAU = 2 * Math.PI,
         lerp = (start, stop, amt) => +start + amt*(stop - start),
         sq = n => n*n,
-        pjsCheck = obj => obj != null && 'lerp' in obj,
+        pjsCheck = obj => obj != null && 'noLoop' in obj,
         argsErr = (mtd, len, min) => {
           throw `Too few args passed to ${mtd}() [${len} < ${min}].`;
         };
