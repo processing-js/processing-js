@@ -148,7 +148,7 @@
     }
 
     function detachEventHandlersByType(element, types) {
-      Object.keys(eventHandlers).forEach(function(eventHandler) {
+      Object.keys(p.eventHandlers).forEach(function(eventHandler) {
         if (types.indexOf(eventHandler.type) > -1 && (eventHandler.elem == element)) {
           detachEventHandler(eventHandler.type);
         }

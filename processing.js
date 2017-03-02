@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+;(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
 // build script for generating processing.js
 
 var Browser = {
@@ -22,7 +22,820 @@ var Browser = {
 
 window.Processing = require('./src/')(Browser);
 
-},{"./src/":28}],2:[function(require,module,exports){
+},{"./src/":2}],2:[function(require,module,exports){
+// Base source files
+var source = {
+  virtEquals: require("./Helpers/virtEquals"),
+  virtHashCode: require("./Helpers/virtHashCode"),
+  ObjectIterator: require("./Helpers/ObjectIterator"),
+  PConstants: require("./Helpers/PConstants"),
+  ArrayList: require("./Objects/ArrayList"),
+  HashMap: require("./Objects/HashMap"),
+  PVector: require("./Objects/PVector"),
+  PFont: require("./Objects/PFont"),
+  Char: require("./Objects/Char"),
+  XMLAttribute: require("./Objects/XMLAttribute"),
+  XMLElement: require("./Objects/XMLElement"),
+  PMatrix2D: require("./Objects/PMatrix2D"),
+  PMatrix3D: require("./Objects/PMatrix3D"),
+  PShape: require("./Objects/PShape"),
+  colors: require("./Objects/webcolors"),
+  PShapeSVG:  require("./Objects/PShapeSVG"),
+  CommonFunctions: require("./P5Functions/commonFunctions"),
+  defaultScope: require("./Helpers/defaultScope"),
+  Processing: require("./Processing"),
+  setupParser: require("./Parser/Parser"),
+  finalize: require("./Helpers/finalizeProcessing")
+};
+
+// Additional code that gets tacked onto "p" during
+// instantiation of a Processing sketch.
+source.extend = {
+  withMath: require("./P5Functions/Math.js"),
+  withProxyFunctions: require("./P5Functions/JavaProxyFunctions")(source.virtHashCode, source.virtEquals),
+  withTouch: require("./P5Functions/touchmouse"),
+  withCommonFunctions: source.CommonFunctions.withCommonFunctions
+};
+
+/**
+ * Processing.js building function
+ */
+module.exports = function buildProcessingJS(Browser, testHarness) {
+  var noop = function(){},
+      virtEquals = source.virtEquals,
+      virtHashCode = source.virtHashCode,
+      PConstants = source.PConstants,
+      CommonFunctions = source.CommonFunctions,
+      ObjectIterator = source.ObjectIterator,
+      Char = source.Char,
+      XMLAttribute = source.XMLAttribute(),
+
+      ArrayList = source.ArrayList({
+        virtHashCode: virtHashCode,
+        virtEquals: virtEquals
+      }),
+
+      HashMap = source.HashMap({
+        virtHashCode: virtHashCode,
+        virtEquals: virtEquals
+      }),
+
+      PVector = source.PVector({
+        PConstants: PConstants
+      }),
+
+      PFont = source.PFont({
+        Browser: Browser,
+        noop: noop
+      }),
+
+      XMLElement = source.XMLElement({
+        Browser: Browser,
+        XMLAttribute: XMLAttribute
+      }),
+
+      PMatrix2D = source.PMatrix2D({
+        p:CommonFunctions
+      }),
+
+      PMatrix3D = source.PMatrix3D({
+        p:CommonFunctions
+      }),
+
+      PShape = source.PShape({
+        PConstants: PConstants,
+        PMatrix2D: PMatrix2D,
+        PMatrix3D: PMatrix3D
+      }),
+
+      PShapeSVG = source.PShapeSVG({
+        CommonFunctions: CommonFunctions,
+        PConstants: PConstants,
+        PShape: PShape,
+        XMLElement: XMLElement,
+        colors: source.colors
+      }),
+
+      defaultScope = source.defaultScope({
+        ArrayList: ArrayList,
+        HashMap: HashMap,
+        PVector: PVector,
+        PFont: PFont,
+        PShapeSVG: PShapeSVG,
+        ObjectIterator: ObjectIterator,
+        PConstants: PConstants,
+        Char: Char,
+        XMLElement: XMLElement,
+        XML: XMLElement
+      }),
+
+      Processing = source.Processing({
+        defaultScope: defaultScope,
+        Browser: Browser,
+        extend: source.extend,
+        noop: noop
+      });
+
+  // set up the Processing syntax parser
+  Processing = source.setupParser(Processing, {
+    Browser: Browser,
+    aFunctions: testHarness,
+    defaultScope: defaultScope
+  });
+
+  // finalise the Processing object
+  Processing = source.finalize(Processing, {
+    version: require('../package.json').version,
+    isDomPresent: false || Browser.isDomPresent,
+    window: Browser.window,
+    document: Browser.document,
+    noop: noop
+  });
+
+  // done.
+  return Processing;
+};
+
+},{"../package.json":4,"./Helpers/ObjectIterator":7,"./Helpers/PConstants":8,"./Helpers/defaultScope":22,"./Helpers/finalizeProcessing":25,"./Helpers/virtEquals":5,"./Helpers/virtHashCode":6,"./Objects/ArrayList":9,"./Objects/Char":13,"./Objects/HashMap":10,"./Objects/PFont":12,"./Objects/PMatrix2D":16,"./Objects/PMatrix3D":17,"./Objects/PShape":18,"./Objects/PShapeSVG":19,"./Objects/PVector":11,"./Objects/XMLAttribute":14,"./Objects/XMLElement":15,"./Objects/webcolors":20,"./P5Functions/JavaProxyFunctions":26,"./P5Functions/Math.js":3,"./P5Functions/commonFunctions":21,"./P5Functions/touchmouse":27,"./Parser/Parser":24,"./Processing":23}],3:[function(require,module,exports){
+/**
+ * For many "math" functions, we can delegate
+ * to the Math object. For others, we can't.
+ */
+module.exports = function withMath(p, undef) {
+  var internalRandomGenerator = function() { return Math.random(); };
+
+  /**
+  * Calculates the absolute value (magnitude) of a number. The absolute value of a number is always positive.
+  *
+  * @param {int|float} value   int or float
+  *
+  * @returns {int|float}
+  */
+  p.abs = Math.abs;
+
+  /**
+  * Calculates the closest int value that is greater than or equal to the value of the parameter.
+  * For example, ceil(9.03) returns the value 10.
+  *
+  * @param {float} value   float
+  *
+  * @returns {int}
+  *
+  * @see floor
+  * @see round
+  */
+  p.ceil = Math.ceil;
+
+  /**
+  * Returns Euler's number e (2.71828...) raised to the power of the value parameter.
+  *
+  * @param {int|float} value   int or float: the exponent to raise e to
+  *
+  * @returns {float}
+  */
+  p.exp = Math.exp;
+
+  /**
+  * Calculates the closest int value that is less than or equal to the value of the parameter.
+  *
+  * @param {int|float} value        the value to floor
+  *
+  * @returns {int|float}
+  *
+  * @see ceil
+  * @see round
+  */
+  p.floor = Math.floor;
+
+  /**
+  * Calculates the natural logarithm (the base-e logarithm) of a number. This function
+  * expects the values greater than 0.0.
+  *
+  * @param {int|float} value        int or float: number must be greater then 0.0
+  *
+  * @returns {float}
+  */
+  p.log = Math.log;
+
+  /**
+  * Facilitates exponential expressions. The pow() function is an efficient way of
+  * multiplying numbers by themselves (or their reciprocal) in large quantities.
+  * For example, pow(3, 5) is equivalent to the expression 3*3*3*3*3 and pow(3, -5)
+  * is equivalent to 1 / 3*3*3*3*3.
+  *
+  * @param {int|float} num        base of the exponential expression
+  * @param {int|float} exponent   power of which to raise the base
+  *
+  * @returns {float}
+  *
+  * @see sqrt
+  */
+  p.pow = Math.pow;
+
+  /**
+  * Calculates the integer closest to the value parameter. For example, round(9.2) returns the value 9.
+  *
+  * @param {float} value        number to round
+  *
+  * @returns {int}
+  *
+  * @see floor
+  * @see ceil
+  */
+  p.round = Math.round;
+  /**
+  * Calculates the square root of a number. The square root of a number is always positive,
+  * even though there may be a valid negative root. The square root s of number a is such
+  * that s*s = a. It is the opposite of squaring.
+  *
+  * @param {float} value        int or float, non negative
+  *
+  * @returns {float}
+  *
+  * @see pow
+  * @see sq
+  */
+
+  p.sqrt = Math.sqrt;
+
+  // Trigonometry
+  /**
+  * The inverse of cos(), returns the arc cosine of a value. This function expects the
+  * values in the range of -1 to 1 and values are returned in the range 0 to PI (3.1415927).
+  *
+  * @param {float} value        the value whose arc cosine is to be returned
+  *
+  * @returns {float}
+  *
+  * @see cos
+  * @see asin
+  * @see atan
+  */
+  p.acos = Math.acos;
+
+  /**
+  * The inverse of sin(), returns the arc sine of a value. This function expects the values
+  * in the range of -1 to 1 and values are returned in the range -PI/2 to PI/2.
+  *
+  * @param {float} value        the value whose arc sine is to be returned
+  *
+  * @returns {float}
+  *
+  * @see sin
+  * @see acos
+  * @see atan
+  */
+  p.asin = Math.asin;
+
+  /**
+  * The inverse of tan(), returns the arc tangent of a value. This function expects the values
+  * in the range of -Infinity to Infinity (exclusive) and values are returned in the range -PI/2 to PI/2 .
+  *
+  * @param {float} value        -Infinity to Infinity (exclusive)
+  *
+  * @returns {float}
+  *
+  * @see tan
+  * @see asin
+  * @see acos
+  */
+  p.atan = Math.atan;
+
+  /**
+  * Calculates the angle (in radians) from a specified point to the coordinate origin as measured from
+  * the positive x-axis. Values are returned as a float in the range from PI to -PI. The atan2() function
+  * is most often used for orienting geometry to the position of the cursor. Note: The y-coordinate of the
+  * point is the first parameter and the x-coordinate is the second due the the structure of calculating the tangent.
+  *
+  * @param {float} y        y-coordinate of the point
+  * @param {float} x        x-coordinate of the point
+  *
+  * @returns {float}
+  *
+  * @see tan
+  */
+  p.atan2 = Math.atan2;
+
+  /**
+  * Calculates the cosine of an angle. This function expects the values of the angle parameter to be provided
+  * in radians (values from 0 to PI*2). Values are returned in the range -1 to 1.
+  *
+  * @param {float} value        an angle in radians
+  *
+  * @returns {float}
+  *
+  * @see tan
+  * @see sin
+  */
+  p.cos = Math.cos;
+
+  /**
+  * Calculates the sine of an angle. This function expects the values of the angle parameter to be provided in
+  * radians (values from 0 to 6.28). Values are returned in the range -1 to 1.
+  *
+  * @param {float} value        an angle in radians
+  *
+  * @returns {float}
+  *
+  * @see cos
+  * @see radians
+  */
+  p.sin = Math.sin;
+
+  /**
+  * Calculates the ratio of the sine and cosine of an angle. This function expects the values of the angle
+  * parameter to be provided in radians (values from 0 to PI*2). Values are returned in the range infinity to -infinity.
+  *
+  * @param {float} value        an angle in radians
+  *
+  * @returns {float}
+  *
+  * @see cos
+  * @see sin
+  * @see radians
+  */
+  p.tan = Math.tan;
+
+  /**
+  * Constrains a value to not exceed a maximum and minimum value.
+  *
+  * @param {int|float} value   the value to constrain
+  * @param {int|float} value   minimum limit
+  * @param {int|float} value   maximum limit
+  *
+  * @returns {int|float}
+  *
+  * @see max
+  * @see min
+  */
+  p.constrain = function(aNumber, aMin, aMax) {
+    return aNumber > aMax ? aMax : aNumber < aMin ? aMin : aNumber;
+  };
+
+  /**
+  * Calculates the distance between two points.
+  *
+  * @param {int|float} x1     int or float: x-coordinate of the first point
+  * @param {int|float} y1     int or float: y-coordinate of the first point
+  * @param {int|float} z1     int or float: z-coordinate of the first point
+  * @param {int|float} x2     int or float: x-coordinate of the second point
+  * @param {int|float} y2     int or float: y-coordinate of the second point
+  * @param {int|float} z2     int or float: z-coordinate of the second point
+  *
+  * @returns {float}
+  */
+  p.dist = function() {
+    var dx, dy, dz;
+    if (arguments.length === 4) {
+      dx = arguments[0] - arguments[2];
+      dy = arguments[1] - arguments[3];
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    if (arguments.length === 6) {
+      dx = arguments[0] - arguments[3];
+      dy = arguments[1] - arguments[4];
+      dz = arguments[2] - arguments[5];
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+  };
+
+  /**
+  * Calculates a number between two numbers at a specific increment. The amt  parameter is the
+  * amount to interpolate between the two values where 0.0 equal to the first point, 0.1 is very
+  * near the first point, 0.5 is half-way in between, etc. The lerp function is convenient for
+  * creating motion along a straight path and for drawing dotted lines.
+  *
+  * @param {int|float} value1       float or int: first value
+  * @param {int|float} value2       float or int: second value
+  * @param {int|float} amt          float: between 0.0 and 1.0
+  *
+  * @returns {float}
+  *
+  * @see curvePoint
+  * @see bezierPoint
+  */
+  p.lerp = function(value1, value2, amt) {
+    return ((value2 - value1) * amt) + value1;
+  };
+
+  /**
+  * Calculates the magnitude (or length) of a vector. A vector is a direction in space commonly
+  * used in computer graphics and linear algebra. Because it has no "start" position, the magnitude
+  * of a vector can be thought of as the distance from coordinate (0,0) to its (x,y) value.
+  * Therefore, mag() is a shortcut for writing "dist(0, 0, x, y)".
+  *
+  * @param {int|float} a       float or int: first value
+  * @param {int|float} b       float or int: second value
+  * @param {int|float} c       float or int: third value
+  *
+  * @returns {float}
+  *
+  * @see dist
+  */
+  p.mag = function(a, b, c) {
+    if (c) {
+      return Math.sqrt(a * a + b * b + c * c);
+    }
+
+    return Math.sqrt(a * a + b * b);
+  };
+
+  /**
+  * Re-maps a number from one range to another. In the example above, the number '25' is converted from
+  * a value in the range 0..100 into a value that ranges from the left edge (0) to the right edge (width) of the screen.
+  * Numbers outside the range are not clamped to 0 and 1, because out-of-range values are often intentional and useful.
+  *
+  * @param {float} value        The incoming value to be converted
+  * @param {float} istart       Lower bound of the value's current range
+  * @param {float} istop        Upper bound of the value's current range
+  * @param {float} ostart       Lower bound of the value's target range
+  * @param {float} ostop        Upper bound of the value's target range
+  *
+  * @returns {float}
+  *
+  * @see norm
+  * @see lerp
+  */
+  p.map = function(value, istart, istop, ostart, ostop) {
+    return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+  };
+
+  /**
+  * Determines the largest value in a sequence of numbers.
+  *
+  * @param {int|float} value1         int or float
+  * @param {int|float} value2         int or float
+  * @param {int|float} value3         int or float
+  * @param {int|float} array          int or float array
+  *
+  * @returns {int|float}
+  *
+  * @see min
+  */
+  p.max = function() {
+    if (arguments.length === 2) {
+      return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
+    }
+    var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+    if (! ("length" in numbers && numbers.length > 0)) {
+      throw "Non-empty array is expected";
+    }
+    var max = numbers[0],
+      count = numbers.length;
+    for (var i = 1; i < count; ++i) {
+      if (max < numbers[i]) {
+        max = numbers[i];
+      }
+    }
+    return max;
+  };
+
+  /**
+  * Determines the smallest value in a sequence of numbers.
+  *
+  * @param {int|float} value1         int or float
+  * @param {int|float} value2         int or float
+  * @param {int|float} value3         int or float
+  * @param {int|float} array          int or float array
+  *
+  * @returns {int|float}
+  *
+  * @see max
+  */
+  p.min = function() {
+    if (arguments.length === 2) {
+      return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
+    }
+    var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
+    if (! ("length" in numbers && numbers.length > 0)) {
+      throw "Non-empty array is expected";
+    }
+    var min = numbers[0],
+      count = numbers.length;
+    for (var i = 1; i < count; ++i) {
+      if (min > numbers[i]) {
+        min = numbers[i];
+      }
+    }
+    return min;
+  };
+
+  /**
+  * Normalizes a number from another range into a value between 0 and 1.
+  * Identical to map(value, low, high, 0, 1);
+  * Numbers outside the range are not clamped to 0 and 1, because out-of-range
+  * values are often intentional and useful.
+  *
+  * @param {float} aNumber    The incoming value to be converted
+  * @param {float} low        Lower bound of the value's current range
+  * @param {float} high       Upper bound of the value's current range
+  *
+  * @returns {float}
+  *
+  * @see map
+  * @see lerp
+  */
+  p.norm = function(aNumber, low, high) {
+    return (aNumber - low) / (high - low);
+  };
+
+  /**
+  * Squares a number (multiplies a number by itself). The result is always a positive number,
+  * as multiplying two negative numbers always yields a positive result. For example, -1 * -1 = 1.
+  *
+  * @param {float} value        int or float
+  *
+  * @returns {float}
+  *
+  * @see sqrt
+  */
+  p.sq = function(aNumber) {
+    return aNumber * aNumber;
+  };
+
+  /**
+  * Converts a radian measurement to its corresponding value in degrees. Radians and degrees are two ways of
+  * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
+  * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
+  *
+  * @param {int|float} value        an angle in radians
+  *
+  * @returns {float}
+  *
+  * @see radians
+  */
+  p.degrees = function(aAngle) {
+    return (aAngle * 180) / Math.PI;
+  };
+
+  /**
+  * Generates random numbers. Each time the random() function is called, it returns an unexpected value within
+  * the specified range. If one parameter is passed to the function it will return a float between zero and the
+  * value of the high parameter. The function call random(5) returns values between 0 and 5 (starting at zero,
+  * up to but not including 5). If two parameters are passed, it will return a float with a value between the
+  * parameters. The function call random(-5, 10.2) returns values starting at -5 up to (but not including) 10.2.
+  * To convert a floating-point random number to an integer, use the int() function.
+  *
+  * @param {int|float} value1         if one parameter is used, the top end to random from, if two params the low end
+  * @param {int|float} value2         the top end of the random range
+  *
+  * @returns {float}
+  *
+  * @see randomSeed
+  * @see noise
+  */
+  p.random = function() {
+    if(arguments.length === 0) {
+      return internalRandomGenerator();
+    }
+    if(arguments.length === 1) {
+      return internalRandomGenerator() * arguments[0];
+    }
+    var aMin = arguments[0], aMax = arguments[1];
+    return internalRandomGenerator() * (aMax - aMin) + aMin;
+  };
+
+  // Pseudo-random generator
+  function Marsaglia(i1, i2) {
+    // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
+    var z=i1 || 362436069, w= i2 || 521288629;
+    var intGenerator = function() {
+      z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
+      w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
+      return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
+    };
+
+    this.doubleGenerator = function() {
+      var i = intGenerator() / 4294967296;
+      return i < 0 ? 1 + i : i;
+    };
+    this.intGenerator = intGenerator;
+  }
+
+  Marsaglia.createRandomized = function() {
+    var now = new Date();
+    return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
+  };
+
+  /**
+  * Sets the seed value for random(). By default, random() produces different results each time the
+  * program is run. Set the value parameter to a constant to return the same pseudo-random numbers
+  * each time the software is run.
+  *
+  * @param {int|float} seed         int
+  *
+  * @see random
+  * @see noise
+  * @see noiseSeed
+  */
+  p.randomSeed = function(seed) {
+    internalRandomGenerator = (new Marsaglia(seed, (seed<<16)+(seed>>16))).doubleGenerator;
+    this.haveNextNextGaussian = false;
+  };
+
+  /**
+  * Returns a float from a random series of numbers having a mean of 0 and standard deviation of 1. Each time
+  * the randomGaussian() function is called, it returns a number fitting a Gaussian, or normal, distribution.
+  * There is theoretically no minimum or maximum value that randomGaussian() might return. Rather, there is just a
+  * very low probability that values far from the mean will be returned; and a higher probability that numbers
+  * near the mean will be returned.
+  *
+  * @returns {float}
+  *
+  * @see random
+  * @see noise
+  */
+  p.randomGaussian = function() {
+    if (this.haveNextNextGaussian) {
+      this.haveNextNextGaussian = false;
+      return this.nextNextGaussian;
+    }
+    var v1, v2, s;
+    do {
+      v1 = 2 * internalRandomGenerator() - 1; // between -1.0 and 1.0
+      v2 = 2 * internalRandomGenerator() - 1; // between -1.0 and 1.0
+      s = v1 * v1 + v2 * v2;
+    }
+    while (s >= 1 || s === 0);
+
+    var multiplier = Math.sqrt(-2 * Math.log(s) / s);
+    this.nextNextGaussian = v2 * multiplier;
+    this.haveNextNextGaussian = true;
+
+    return v1 * multiplier;
+  };
+
+  // Noise functions and helpers
+  function PerlinNoise(seed) {
+    var rnd = seed !== undef ? new Marsaglia(seed, (seed<<16)+(seed>>16)) : Marsaglia.createRandomized();
+    var i, j;
+    // http://www.noisemachine.com/talk1/17b.html
+    // http://mrl.nyu.edu/~perlin/noise/
+    // generate permutation
+    var perm = new Uint8Array(512);
+    for(i=0;i<256;++i) { perm[i] = i; }
+    for(i=0;i<256;++i) {
+      // NOTE: we can only do this because we've made sure the Marsaglia generator
+      //       gives us numbers where the last byte in a pseudo-random number is
+      //       still pseudo-random. If no 2nd argument is passed in the constructor,
+      //       that is no longer the case and this pair swap will always run identically.
+      var t = perm[j = rnd.intGenerator() & 0xFF];
+      perm[j] = perm[i];
+      perm[i] = t;
+    }
+    // copy to avoid taking mod in perm[0];
+    for(i=0;i<256;++i) { perm[i + 256] = perm[i]; }
+
+    function grad3d(i,x,y,z) {
+      var h = i & 15; // convert into 12 gradient directions
+      var u = h<8 ? x : y,
+          v = h<4 ? y : h===12||h===14 ? x : z;
+      return ((h&1) === 0 ? u : -u) + ((h&2) === 0 ? v : -v);
+    }
+
+    function grad2d(i,x,y) {
+      var v = (i & 1) === 0 ? x : y;
+      return (i&2) === 0 ? -v : v;
+    }
+
+    function grad1d(i,x) {
+      return (i&1) === 0 ? -x : x;
+    }
+
+    function lerp(t,a,b) { return a + t * (b - a); }
+
+    this.noise3d = function(x, y, z) {
+      var X = Math.floor(x)&255, Y = Math.floor(y)&255, Z = Math.floor(z)&255;
+      x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y, fz = (3-2*z)*z*z;
+      var p0 = perm[X]+Y, p00 = perm[p0] + Z, p01 = perm[p0 + 1] + Z,
+          p1 = perm[X + 1] + Y, p10 = perm[p1] + Z, p11 = perm[p1 + 1] + Z;
+      return lerp(fz,
+        lerp(fy, lerp(fx, grad3d(perm[p00], x, y, z), grad3d(perm[p10], x-1, y, z)),
+                 lerp(fx, grad3d(perm[p01], x, y-1, z), grad3d(perm[p11], x-1, y-1,z))),
+        lerp(fy, lerp(fx, grad3d(perm[p00 + 1], x, y, z-1), grad3d(perm[p10 + 1], x-1, y, z-1)),
+                 lerp(fx, grad3d(perm[p01 + 1], x, y-1, z-1), grad3d(perm[p11 + 1], x-1, y-1,z-1))));
+    };
+
+    this.noise2d = function(x, y) {
+      var X = Math.floor(x)&255, Y = Math.floor(y)&255;
+      x -= Math.floor(x); y -= Math.floor(y);
+      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y;
+      var p0 = perm[X]+Y, p1 = perm[X + 1] + Y;
+      return lerp(fy,
+        lerp(fx, grad2d(perm[p0], x, y), grad2d(perm[p1], x-1, y)),
+        lerp(fx, grad2d(perm[p0 + 1], x, y-1), grad2d(perm[p1 + 1], x-1, y-1)));
+    };
+
+    this.noise1d = function(x) {
+      var X = Math.floor(x)&255;
+      x -= Math.floor(x);
+      var fx = (3-2*x)*x*x;
+      return lerp(fx, grad1d(perm[X], x), grad1d(perm[X+1], x-1));
+    };
+  }
+
+  // processing defaults
+  var noiseProfile = { generator: undef, octaves: 4, fallout: 0.5, seed: undef};
+
+  /**
+  * Returns the Perlin noise value at specified coordinates. Perlin noise is a random sequence
+  * generator producing a more natural ordered, harmonic succession of numbers compared to the
+  * standard random() function. It was invented by Ken Perlin in the 1980s and been used since
+  * in graphical applications to produce procedural textures, natural motion, shapes, terrains etc.
+  * The main difference to the random() function is that Perlin noise is defined in an infinite
+  * n-dimensional space where each pair of coordinates corresponds to a fixed semi-random value
+  * (fixed only for the lifespan of the program). The resulting value will always be between 0.0
+  * and 1.0. Processing can compute 1D, 2D and 3D noise, depending on the number of coordinates
+  * given. The noise value can be animated by moving through the noise space as demonstrated in
+  * the example above. The 2nd and 3rd dimension can also be interpreted as time.
+  * The actual noise is structured similar to an audio signal, in respect to the function's use
+  * of frequencies. Similar to the concept of harmonics in physics, perlin noise is computed over
+  * several octaves which are added together for the final result.
+  * Another way to adjust the character of the resulting sequence is the scale of the input
+  * coordinates. As the function works within an infinite space the value of the coordinates
+  * doesn't matter as such, only the distance between successive coordinates does (eg. when using
+  * noise() within a loop). As a general rule the smaller the difference between coordinates, the
+  * smoother the resulting noise sequence will be. Steps of 0.005-0.03 work best for most applications,
+  * but this will differ depending on use.
+  *
+  * @param {float} x          x coordinate in noise space
+  * @param {float} y          y coordinate in noise space
+  * @param {float} z          z coordinate in noise space
+  *
+  * @returns {float}
+  *
+  * @see random
+  * @see noiseDetail
+  */
+  p.noise = function(x, y, z) {
+    if(noiseProfile.generator === undef) {
+      // caching
+      noiseProfile.generator = new PerlinNoise(noiseProfile.seed);
+    }
+    var generator = noiseProfile.generator;
+    var effect = 1, k = 1, sum = 0;
+    for(var i=0; i<noiseProfile.octaves; ++i) {
+      effect *= noiseProfile.fallout;
+      switch (arguments.length) {
+      case 1:
+        sum += effect * (1 + generator.noise1d(k*x))/2; break;
+      case 2:
+        sum += effect * (1 + generator.noise2d(k*x, k*y))/2; break;
+      case 3:
+        sum += effect * (1 + generator.noise3d(k*x, k*y, k*z))/2; break;
+      }
+      k *= 2;
+    }
+    return sum;
+  };
+
+  /**
+  * Adjusts the character and level of detail produced by the Perlin noise function.
+  * Similar to harmonics in physics, noise is computed over several octaves. Lower octaves
+  * contribute more to the output signal and as such define the overal intensity of the noise,
+  * whereas higher octaves create finer grained details in the noise sequence. By default,
+  * noise is computed over 4 octaves with each octave contributing exactly half than its
+  * predecessor, starting at 50% strength for the 1st octave. This falloff amount can be
+  * changed by adding an additional function parameter. Eg. a falloff factor of 0.75 means
+  * each octave will now have 75% impact (25% less) of the previous lower octave. Any value
+  * between 0.0 and 1.0 is valid, however note that values greater than 0.5 might result in
+  * greater than 1.0 values returned by noise(). By changing these parameters, the signal
+  * created by the noise() function can be adapted to fit very specific needs and characteristics.
+  *
+  * @param {int} octaves          number of octaves to be used by the noise() function
+  * @param {float} falloff        falloff factor for each octave
+  *
+  * @see noise
+  */
+  p.noiseDetail = function(octaves, fallout) {
+    noiseProfile.octaves = octaves;
+    if(fallout !== undef) {
+      noiseProfile.fallout = fallout;
+    }
+  };
+
+  /**
+  * Sets the seed value for noise(). By default, noise() produces different results each
+  * time the program is run. Set the value parameter to a constant to return the same
+  * pseudo-random numbers each time the software is run.
+  *
+  * @param {int} seed         int
+  *
+  * @returns {float}
+  *
+  * @see random
+  * @see radomSeed
+  * @see noise
+  * @see noiseDetail
+  */
+  p.noiseSeed = function(seed) {
+    noiseProfile.seed = seed;
+    noiseProfile.generator = undef;
+  };
+};
+
+},{}],4:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
   "version": "1.4.15",
@@ -50,7 +863,63 @@ module.exports={
   "license": "MIT"
 }
 
-},{}],3:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
+/**
+ * Returns Java equals() result for two objects. If the first object
+ * has the "equals" function, it preforms the call of this function.
+ * Otherwise the method uses the JavaScript === operator.
+ *
+ * @param {Object} obj          The first object.
+ * @param {Object} other        The second object.
+ *
+ * @returns {boolean}           true if the objects are equal.
+ */
+module.exports = function virtEquals(obj, other) {
+  if (obj === null || other === null) {
+    return (obj === null) && (other === null);
+  }
+  if (typeof (obj) === "string") {
+    return obj === other;
+  }
+  if (typeof(obj) !== "object") {
+    return obj === other;
+  }
+  if (obj.equals instanceof Function) {
+    return obj.equals(other);
+  }
+  return obj === other;
+};
+
+},{}],6:[function(require,module,exports){
+/**
+ * Returns Java hashCode() result for the object. If the object has the "hashCode" function,
+ * it preforms the call of this function. Otherwise it uses/creates the "$id" property,
+ * which is used as the hashCode.
+ *
+ * @param {Object} obj          The object.
+ * @returns {int}               The object's hash code.
+ */
+module.exports = function virtHashCode(obj, undef) {
+  if (typeof(obj) === "string") {
+    var hash = 0;
+    for (var i = 0; i < obj.length; ++i) {
+      hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
+    }
+    return hash;
+  }
+  if (typeof(obj) !== "object") {
+    return obj & 0xFFFFFFFF;
+  }
+  if (obj.hashCode instanceof Function) {
+    return obj.hashCode();
+  }
+  if (obj.$id === undef) {
+      obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
+  }
+  return obj.$id;
+};
+
+},{}],7:[function(require,module,exports){
 /**
 * A ObjectIterator is an iterator wrapper for objects. If passed object contains
 * the iterator method, the object instance will be replaced by the result returned by
@@ -76,7 +945,7 @@ module.exports = function ObjectIterator(obj) {
   }
 };
 
-},{}],4:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /**
  * Processing.js environment constants
  */
@@ -375,775 +1244,7 @@ module.exports = {
     MAX_LIGHTS:         8
 };
 
-},{}],5:[function(require,module,exports){
-// the logger for println()
-module.exports = function PjsConsole(document) {
-  var e = { BufferMax: 200 },
-      style = document.createElement("style"),
-      added = false;
-
-  style.textContent = [
-    ".pjsconsole.hidden {",
-    "  display: none!important;",
-    "}"
-  ].join('\n');
-
-  e.wrapper = document.createElement("div");
-  style.textContent += [
-    "",
-    ".pjsconsole {",
-    "  opacity: .75;",
-    "  display: block;",
-    "  position: fixed;",
-    "  bottom: 0px;",
-    "  left: 0px;",
-    "  right: 0px;",
-    "  height: 50px;",
-    "  background-color: #aaa;",
-    "}"
-  ].join('\n');
-  e.wrapper.classList.add("pjsconsole");
-
-  e.dragger = document.createElement("div");
-  style.textContent += [
-    "",
-    ".pjsconsole .dragger {",
-    "  display: block;",
-    "  border: 3px black raised;",
-    "  cursor: n-resize;",
-    "  position: absolute;",
-    "  top: 0px;",
-    "  left: 0px;",
-    "  right: 0px;",
-    "  height: 5px;",
-    "  background-color: #333;",
-    "}"
-  ].join('\n');
-  e.dragger.classList.add("dragger");
-
-  e.closer = document.createElement("div");
-  style.textContent += [
-    "",
-    ".pjsconsole .closer {",
-    "  opacity: .5;",
-    "  display: block;",
-    "  border: 3px black raised;",
-    "  position: absolute;",
-    "  top: 10px;",
-    "  right: 30px;",
-    "  height: 20px;",
-    "  width: 20px;",
-    "  background-color: #ddd;",
-    "  color: #000;",
-    "  line-height: 20px;",
-    "  text-align: center;",
-    "  cursor: pointer",
-    "}"
-  ].join('\n');
-  e.closer.classList.add("closer");
-  e.closer.innerHTML = "&#10006;";
-
-  e.javaconsole = document.createElement("div");
-  style.textContent += [
-    "",
-    ".pjsconsole .console {",
-    "  overflow-x: auto;",
-    "  display: block;",
-    "  position: absolute;",
-    "  left: 10px;",
-    "  right: 0px;",
-    "  bottom: 5px;",
-    "  top: 10px;",
-    "  overflow-y: scroll;",
-    "  height: 40px;",
-    "}"
-  ].join('\n');
-  e.javaconsole.setAttribute("class", "console");
-
-  e.wrapper.appendChild(e.dragger);
-  e.wrapper.appendChild(e.javaconsole);
-  e.wrapper.appendChild(e.closer);
-
-  e.dragger.onmousedown = function (t) {
-    e.divheight = e.wrapper.style.height;
-    if (document.selection) document.selection.empty();
-    else window.getSelection().removeAllRanges();
-    var n = t.screenY;
-    window.onmousemove = function (t) {
-      e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-      e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
-    };
-    window.onmouseup = function (t) {
-      if (document.selection) document.selection.empty();
-      else window.getSelection().removeAllRanges();
-      e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
-      e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
-      window.onmousemove = null;
-      window.onmouseup = null;
-    };
-  };
-
-  e.BufferArray = [];
-
-  e.print = e.log = function () {
-    var args = Array.prototype.slice.call(arguments);
-    t = args.map(function(t, idx) { return t + (idx+1 === args.length ? "" : " "); }).join('');
-    if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
-    else e.BufferArray.push(t);
-    e.javaconsole.innerHTML = e.BufferArray.join('');
-    e.showconsole();
-  };
-
-  e.println = function () {
-    if(!added) {
-      document.body.appendChild(style);
-      document.body.appendChild(e.wrapper);
-      added = true;
-    }
-    var args = Array.prototype.slice.call(arguments);
-    args.push('<br>');
-    e.print.apply(e, args);
-    if (e.BufferArray.length > e.BufferMax) {
-      e.BufferArray.splice(0, 1);
-    } else {
-      e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
-    }
-  };
-
-  e.showconsole = function () { e.wrapper.classList.remove("hidden"); };
-  e.hideconsole = function () { e.wrapper.classList.add("hidden"); };
-
-  e.closer.onclick = function () { e.hideconsole(); };
-
-  e.hideconsole();
-
-  return e;
-};
-
-},{}],6:[function(require,module,exports){
-/**
- * Processing.js default scope
- */
-module.exports = function(options) {
-
-  // Building defaultScope. Changing of the prototype protects
-  // internal Processing code from the changes in defaultScope
-  function DefaultScope() {}
-  DefaultScope.prototype = options.PConstants;
-
-  var defaultScope = new DefaultScope();
-
-  // copy over all known Object types and helper objects
-  Object.keys(options).forEach(function(prop) {
-    defaultScope[prop] = options[prop];
-  });
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Class inheritance helper methods
-  ////////////////////////////////////////////////////////////////////////////
-
-  defaultScope.defineProperty = function(obj, name, desc) {
-    if("defineProperty" in Object) {
-      Object.defineProperty(obj, name, desc);
-    } else {
-      if (desc.hasOwnProperty("get")) {
-        obj.__defineGetter__(name, desc.get);
-      }
-      if (desc.hasOwnProperty("set")) {
-        obj.__defineSetter__(name, desc.set);
-      }
-    }
-  };
-
-  /**
-   * class overloading, part 1
-   */
-  function overloadBaseClassFunction(object, name, basefn) {
-    if (!object.hasOwnProperty(name) || typeof object[name] !== 'function') {
-      // object method is not a function or just inherited from Object.prototype
-      object[name] = basefn;
-      return;
-    }
-    var fn = object[name];
-    if ("$overloads" in fn) {
-      // the object method already overloaded (see defaultScope.addMethod)
-      // let's just change a fallback method
-      fn.$defaultOverload = basefn;
-      return;
-    }
-    if (!("$overloads" in basefn) && fn.length === basefn.length) {
-      // special case when we just overriding the method
-      return;
-    }
-    var overloads, defaultOverload;
-    if ("$overloads" in basefn) {
-      // let's inherit base class overloads to speed up things
-      overloads = basefn.$overloads.slice(0);
-      overloads[fn.length] = fn;
-      defaultOverload = basefn.$defaultOverload;
-    } else {
-      overloads = [];
-      overloads[basefn.length] = basefn;
-      overloads[fn.length] = fn;
-      defaultOverload = fn;
-    }
-    var hubfn = function() {
-      var fn = hubfn.$overloads[arguments.length] ||
-               ("$methodArgsIndex" in hubfn && arguments.length > hubfn.$methodArgsIndex ?
-               hubfn.$overloads[hubfn.$methodArgsIndex] : null) ||
-               hubfn.$defaultOverload;
-      return fn.apply(this, arguments);
-    };
-    hubfn.$overloads = overloads;
-    if ("$methodArgsIndex" in basefn) {
-      hubfn.$methodArgsIndex = basefn.$methodArgsIndex;
-    }
-    hubfn.$defaultOverload = defaultOverload;
-    hubfn.name = name;
-    object[name] = hubfn;
-  }
-
-  /**
-   * class overloading, part 2
-   */
-
-  function extendClass(subClass, baseClass) {
-    function extendGetterSetter(propertyName) {
-      defaultScope.defineProperty(subClass, propertyName, {
-        get: function() {
-          return baseClass[propertyName];
-        },
-        set: function(v) {
-          baseClass[propertyName]=v;
-        },
-        enumerable: true
-      });
-    }
-
-    var properties = [];
-    for (var propertyName in baseClass) {
-      if (typeof baseClass[propertyName] === 'function') {
-        overloadBaseClassFunction(subClass, propertyName, baseClass[propertyName]);
-      } else if(propertyName.charAt(0) !== "$" && !(propertyName in subClass)) {
-        // Delaying the properties extension due to the IE9 bug (see #918).
-        properties.push(propertyName);
-      }
-    }
-    while (properties.length > 0) {
-      extendGetterSetter(properties.shift());
-    }
-
-    subClass.$super = baseClass;
-  }
-
-  /**
-   * class overloading, part 3
-   */
-  defaultScope.extendClassChain = function(base) {
-    var path = [base];
-    for (var self = base.$upcast; self; self = self.$upcast) {
-      extendClass(self, base);
-      path.push(self);
-      base = self;
-    }
-    while (path.length > 0) {
-      path.pop().$self=base;
-    }
-  };
-
-  // static
-  defaultScope.extendStaticMembers = function(derived, base) {
-    extendClass(derived, base);
-  };
-
-  // interface
-  defaultScope.extendInterfaceMembers = function(derived, base) {
-    extendClass(derived, base);
-  };
-
-  /**
-   * Java methods and JavaScript functions differ enough that
-   * we need a special function to make sure it all links up
-   * as classical hierarchical class chains.
-   */
-  defaultScope.addMethod = function(object, name, fn, hasMethodArgs) {
-    var existingfn = object[name];
-    if (existingfn || hasMethodArgs) {
-      var args = fn.length;
-      // builds the overload methods table
-      if ("$overloads" in existingfn) {
-        existingfn.$overloads[args] = fn;
-      } else {
-        var hubfn = function() {
-          var fn = hubfn.$overloads[arguments.length] ||
-                   ("$methodArgsIndex" in hubfn && arguments.length > hubfn.$methodArgsIndex ?
-                   hubfn.$overloads[hubfn.$methodArgsIndex] : null) ||
-                   hubfn.$defaultOverload;
-          return fn.apply(this, arguments);
-        };
-        var overloads = [];
-        if (existingfn) {
-          overloads[existingfn.length] = existingfn;
-        }
-        overloads[args] = fn;
-        hubfn.$overloads = overloads;
-        hubfn.$defaultOverload = existingfn || fn;
-        if (hasMethodArgs) {
-          hubfn.$methodArgsIndex = args;
-        }
-        hubfn.name = name;
-        object[name] = hubfn;
-      }
-    } else {
-      object[name] = fn;
-    }
-  };
-
-  // internal helper function
-  function isNumericalJavaType(type) {
-    if (typeof type !== "string") {
-      return false;
-    }
-    return ["byte", "int", "char", "color", "float", "long", "double"].indexOf(type) !== -1;
-  }
-
-  /**
-   * Java's arrays are pre-filled when declared with
-   * an initial size, but no content. JS arrays are not.
-   */
-  defaultScope.createJavaArray = function(type, bounds) {
-    var result = null,
-        defaultValue = null;
-    if (typeof type === "string") {
-      if (type === "boolean") {
-        defaultValue = false;
-      } else if (isNumericalJavaType(type)) {
-        defaultValue = 0;
-      }
-    }
-    if (typeof bounds[0] === 'number') {
-      var itemsCount = 0 | bounds[0];
-      if (bounds.length <= 1) {
-        result = [];
-        result.length = itemsCount;
-        for (var i = 0; i < itemsCount; ++i) {
-          result[i] = defaultValue;
-        }
-      } else {
-        result = [];
-        var newBounds = bounds.slice(1);
-        for (var j = 0; j < itemsCount; ++j) {
-          result.push(defaultScope.createJavaArray(type, newBounds));
-        }
-      }
-    }
-    return result;
-  };
-
-  // screenWidth and screenHeight are shared by all instances.
-  // and return the width/height of the browser's viewport.
-  defaultScope.defineProperty(defaultScope, 'screenWidth',
-    { get: function() { return window.innerWidth; } });
-
-  defaultScope.defineProperty(defaultScope, 'screenHeight',
-    { get: function() { return window.innerHeight; } });
-
-  return defaultScope;
-};
-
-},{}],7:[function(require,module,exports){
-/**
- * Finalise the Processing.js object.
- */
-module.exports = function finalizeProcessing(Processing, options) {
-
-  // unpack options
-  var window = options.window,
-      document = options.document,
-      XMLHttpRequest = window.XMLHttpRequest,
-      noop = options.noop,
-      isDOMPresent = options.isDOMPresent,
-      version = options.version,
-      undef;
-
-  // versioning
-  Processing.version = (version ? version : "@DEV-VERSION@");
-
-  // Share lib space
-  Processing.lib = {};
-
-  /**
-   * External libraries can be added to the global Processing
-   * objects with the `registerLibrary` function.
-   */
-  Processing.registerLibrary = function(name, library) {
-    Processing.lib[name] = library;
-    if(library.hasOwnProperty("init")) {
-      library.init(defaultScope);
-    }
-  };
-
-  /**
-   * This is the object that acts as our version of PApplet.
-   * This can be called as Processing.Sketch() or as
-   * Processing.Sketch(function) in which case the function
-   * must be an already-compiled-to-JS sketch function.
-   */
-  Processing.Sketch = function(attachFunction) {
-    this.attachFunction = attachFunction;
-    this.options = {
-      pauseOnBlur: false,
-      globalKeyEvents: false
-    };
-
-    /* Optional Sketch event hooks:
-     *   onLoad       - parsing/preloading is done, before sketch starts
-     *   onSetup      - setup() has been called, before first draw()
-     *   onPause      - noLoop() has been called, pausing draw loop
-     *   onLoop       - loop() has been called, resuming draw loop
-     *   onFrameStart - draw() loop about to begin
-     *   onFrameEnd   - draw() loop finished
-     *   onExit       - exit() done being called
-     */
-    this.onLoad = noop;
-    this.onSetup = noop;
-    this.onPause = noop;
-    this.onLoop = noop;
-    this.onFrameStart = noop;
-    this.onFrameEnd = noop;
-    this.onExit = noop;
-
-    this.params = {};
-    this.imageCache = {
-      pending: 0,
-      images: {},
-      // Opera requires special administration for preloading
-      operaCache: {},
-      // Specify an optional img arg if the image is already loaded in the DOM,
-      // otherwise href will get loaded.
-      add: function(href, img) {
-        // Prevent muliple loads for an image, in case it gets
-        // preloaded more than once, or is added via JS and then preloaded.
-        if (this.images[href]) {
-          return;
-        }
-
-        if (!isDOMPresent) {
-          this.images[href] = null;
-        }
-
-        // No image in the DOM, kick-off a background load
-        if (!img) {
-          img = new Image();
-          img.onload = (function(owner) {
-            return function() {
-              owner.pending--;
-            };
-          }(this));
-          this.pending++;
-          img.src = href;
-        }
-
-        this.images[href] = img;
-
-        // Opera will not load images until they are inserted into the DOM.
-        if (window.opera) {
-          var div = document.createElement("div");
-          div.appendChild(img);
-          // we can't use "display: none", since that makes it invisible, and thus not load
-          div.style.position = "absolute";
-          div.style.opacity = 0;
-          div.style.width = "1px";
-          div.style.height= "1px";
-          if (!this.operaCache[href]) {
-            document.body.appendChild(div);
-            this.operaCache[href] = div;
-          }
-        }
-      }
-    };
-
-    this.sourceCode = undefined;
-    this.attach = function(processing) {
-      // either attachFunction or sourceCode must be present on attach
-      if(typeof this.attachFunction === "function") {
-        this.attachFunction(processing);
-      } else if(this.sourceCode) {
-        var func = ((new Function("return (" + this.sourceCode + ");"))());
-        func(processing);
-        this.attachFunction = func;
-      } else {
-        throw "Unable to attach sketch to the processing instance";
-      }
-    };
-
-    this.toString = function() {
-      var i;
-      var code = "((function(Sketch) {\n";
-      code += "var sketch = new Sketch(\n" + this.sourceCode + ");\n";
-      for(i in this.options) {
-        if(this.options.hasOwnProperty(i)) {
-          var value = this.options[i];
-          code += "sketch.options." + i + " = " +
-            (typeof value === 'string' ? '\"' + value + '\"' : "" + value) + ";\n";
-        }
-      }
-      for(i in this.imageCache) {
-        if(this.options.hasOwnProperty(i)) {
-          code += "sketch.imageCache.add(\"" + i + "\");\n";
-        }
-      }
-      // TODO serialize fonts
-      code += "return sketch;\n})(Processing.Sketch))";
-      return code;
-    };
-  };
-
-  /**
-   * aggregate all source code into a single file, then rewrite that
-   * source and bind to canvas via new Processing(canvas, sourcestring).
-   * @param {CANVAS} canvas The html canvas element to bind to
-   * @param {String[]} source The array of files that must be loaded
-   */
-  var loadSketchFromSources = Processing.loadSketchFromSources = function(canvas, sources) {
-    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
-
-    function ajaxAsync(url, callback) {
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-          var error;
-          if (xhr.status !== 200 && xhr.status !== 0) {
-            error = "Invalid XHR status " + xhr.status;
-          } else if (xhr.responseText === "") {
-            // Give a hint when loading fails due to same-origin issues on file:/// urls
-            if ( ("withCredentials" in new XMLHttpRequest()) &&
-                 (new XMLHttpRequest()).withCredentials === false &&
-                 window.location.protocol === "file:" ) {
-              error = "XMLHttpRequest failure, possibly due to a same-origin policy violation. You can try loading this page in another browser, or load it from http://localhost using a local webserver. See the Processing.js README for a more detailed explanation of this problem and solutions.";
-            } else {
-              error = "File is empty.";
-            }
-          }
-
-          callback(xhr.responseText, error);
-        }
-      };
-      xhr.open("GET", url, true);
-      if (xhr.overrideMimeType) {
-        xhr.overrideMimeType("application/json");
-      }
-      xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
-      xhr.send(null);
-    }
-
-    function loadBlock(index, filename) {
-      function callback(block, error) {
-        code[index] = block;
-        ++loaded;
-        if (error) {
-          errors.push(filename + " ==> " + error);
-        }
-        if (loaded === sourcesCount) {
-          if (errors.length === 0) {
-            // This used to throw, but it was constantly getting in the way of debugging where things go wrong!
-            return new Processing(canvas, code.join("\n"));
-          } else {
-            throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
-          }
-        }
-      }
-      if (filename.charAt(0) === '#') {
-        // trying to get script from the element
-        var scriptElement = document.getElementById(filename.substring(1));
-        if (scriptElement) {
-          callback(scriptElement.text || scriptElement.textContent);
-        } else {
-          callback("", "Unable to load pjs sketch: element with id \'" + filename.substring(1) + "\' was not found");
-        }
-        return;
-      }
-
-      ajaxAsync(filename, callback);
-    }
-
-    for (var i = 0; i < sourcesCount; ++i) {
-      loadBlock(i, sources[i]);
-    }
-  };
-
-  /**
-   * Automatic initialization function.
-   */
-  var init = function() {
-    document.removeEventListener('DOMContentLoaded', init, false);
-    var i;
-
-    // before running through init, clear the instances list, to prevent
-    // sketch duplication when page content is dynamically swapped without
-    // swapping out processing.js
-    while (Processing.instances.length > 0) {
-      for (i = Processing.instances.length - 1; i >= 0; i--) {
-        if (Processing.instances[i]) {
-          Processing.instances[i].exit();
-        }
-      }
-    }
-
-    var canvas = document.getElementsByTagName('canvas'),
-      filenames;
-
-    for (i = 0, l = canvas.length; i < l; i++) {
-      // datasrc and data-src are deprecated.
-      var processingSources = canvas[i].getAttribute('data-processing-sources');
-      if (processingSources === null) {
-        // Temporary fallback for datasrc and data-src
-        processingSources = canvas[i].getAttribute('data-src');
-        if (processingSources === null) {
-          processingSources = canvas[i].getAttribute('datasrc');
-        }
-      }
-      if (processingSources) {
-        filenames = processingSources.split(/\s+/g);
-        for (var j = 0; j < filenames.length;) {
-          if (filenames[j]) {
-            j++;
-          } else {
-            filenames.splice(j, 1);
-          }
-        }
-        loadSketchFromSources(canvas[i], filenames);
-      }
-    }
-
-    // also process all <script>-indicated sketches, if there are any
-    var s, last, source, instance,
-        nodelist = document.getElementsByTagName('script'),
-        scripts=[];
-
-    // snapshot the DOM, as the nodelist is only a DOM view, and is
-    // updated instantly when a script element is added or removed.
-    for (s = nodelist.length - 1; s >= 0; s--) {
-      scripts.push(nodelist[s]);
-    }
-
-    // iterate over all script elements to see if they contain Processing code
-    for (s = 0, last = scripts.length; s < last; s++) {
-      var script = scripts[s];
-      if (!script.getAttribute) {
-        continue;
-      }
-
-      var type = script.getAttribute("type");
-      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
-        var target = script.getAttribute("data-processing-target");
-        canvas = undef;
-        if (target) {
-          canvas = document.getElementById(target);
-        } else {
-          var nextSibling = script.nextSibling;
-          while (nextSibling && nextSibling.nodeType !== 1) {
-            nextSibling = nextSibling.nextSibling;
-          }
-          if (nextSibling && nextSibling.nodeName.toLowerCase() === "canvas") {
-            canvas = nextSibling;
-          }
-        }
-
-        if (canvas) {
-          if (script.getAttribute("src")) {
-            filenames = script.getAttribute("src").split(/\s+/);
-            loadSketchFromSources(canvas, filenames);
-            continue;
-          }
-          source =  script.textContent || script.text;
-          instance = new Processing(canvas, source);
-        }
-      }
-    }
-  };
-
-  /**
-   * automatic loading of all sketches on the page
-   */
-  document.addEventListener('DOMContentLoaded', init, false);
-
-  /**
-   * Make Processing run through init after already having
-   * been set up for a page. This function exists mostly for pages
-   * that swap content in/out without reloading a page.
-   */
-  Processing.reload = init;
-
-  /**
-   * Disable the automatic loading of all sketches on the page.
-   * This will work as long as it's issued before DOMContentLoaded.
-   */
-  Processing.disableInit = function() {
-    document.removeEventListener('DOMContentLoaded', init, false);
-  };
-
-  // done.
-  return Processing;
-};
-
-},{}],8:[function(require,module,exports){
-/**
- * Returns Java equals() result for two objects. If the first object
- * has the "equals" function, it preforms the call of this function.
- * Otherwise the method uses the JavaScript === operator.
- *
- * @param {Object} obj          The first object.
- * @param {Object} other        The second object.
- *
- * @returns {boolean}           true if the objects are equal.
- */
-module.exports = function virtEquals(obj, other) {
-  if (obj === null || other === null) {
-    return (obj === null) && (other === null);
-  }
-  if (typeof (obj) === "string") {
-    return obj === other;
-  }
-  if (typeof(obj) !== "object") {
-    return obj === other;
-  }
-  if (obj.equals instanceof Function) {
-    return obj.equals(other);
-  }
-  return obj === other;
-};
-
 },{}],9:[function(require,module,exports){
-/**
- * Returns Java hashCode() result for the object. If the object has the "hashCode" function,
- * it preforms the call of this function. Otherwise it uses/creates the "$id" property,
- * which is used as the hashCode.
- *
- * @param {Object} obj          The object.
- * @returns {int}               The object's hash code.
- */
-module.exports = function virtHashCode(obj, undef) {
-  if (typeof(obj) === "string") {
-    var hash = 0;
-    for (var i = 0; i < obj.length; ++i) {
-      hash = (hash * 31 + obj.charCodeAt(i)) & 0xFFFFFFFF;
-    }
-    return hash;
-  }
-  if (typeof(obj) !== "object") {
-    return obj & 0xFFFFFFFF;
-  }
-  if (obj.hashCode instanceof Function) {
-    return obj.hashCode();
-  }
-  if (obj.$id === undef) {
-      obj.$id = ((Math.floor(Math.random() * 0x10000) - 0x8000) << 16) | Math.floor(Math.random() * 0x10000);
-  }
-  return obj.$id;
-};
-
-},{}],10:[function(require,module,exports){
 /**
  * An ArrayList stores a variable number of objects.
  *
@@ -1421,34 +1522,7 @@ module.exports = function(options) {
   return ArrayList;
 };
 
-},{}],11:[function(require,module,exports){
-module.exports = (function(charMap, undef) {
-
-  var Char = function(chr) {
-    if (typeof chr === 'string' && chr.length === 1) {
-      this.code = chr.charCodeAt(0);
-    } else if (typeof chr === 'number') {
-      this.code = chr;
-    } else if (chr instanceof Char) {
-      this.code = chr;
-    } else {
-      this.code = NaN;
-    }
-    return (charMap[this.code] === undef) ? charMap[this.code] = this : charMap[this.code];
-  };
-
-  Char.prototype.toString = function() {
-    return String.fromCharCode(this.code);
-  };
-
-  Char.prototype.valueOf = function() {
-    return this.code;
-  };
-
-  return Char;
-}({}));
-
-},{}],12:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
 * A HashMap stores a collection of objects, each referenced by a key. This is similar to an Array, only
 * instead of accessing elements with a numeric index, a String  is used. (If you are familiar with
@@ -1861,7 +1935,246 @@ module.exports = function(options) {
   return HashMap;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
+module.exports = function(options, undef) {
+  var PConstants = options.PConstants;
+
+  function PVector(x, y, z) {
+    this.x = x || 0;
+    this.y = y || 0;
+    this.z = z || 0;
+  }
+
+  PVector.fromAngle = function(angle, v) {
+    if (v === undef || v === null) {
+      v = new PVector();
+    }
+    v.x = Math.cos(angle);
+    v.y = Math.sin(angle);
+    return v;
+  };
+
+  PVector.random2D = function(v) {
+    return PVector.fromAngle(Math.random() * PConstants.TWO_PI, v);
+  };
+
+  PVector.random3D = function(v) {
+    var angle = Math.random() * PConstants.TWO_PI;
+    var vz = Math.random() * 2 - 1;
+    var mult = Math.sqrt(1 - vz * vz);
+    var vx = mult * Math.cos(angle);
+    var vy = mult * Math.sin(angle);
+    if (v === undef || v === null) {
+      v = new PVector(vx, vy, vz);
+    } else {
+      v.set(vx, vy, vz);
+    }
+    return v;
+  };
+
+  PVector.dist = function(v1, v2) {
+    return v1.dist(v2);
+  };
+
+  PVector.dot = function(v1, v2) {
+    return v1.dot(v2);
+  };
+
+  PVector.cross = function(v1, v2) {
+    return v1.cross(v2);
+  };
+
+  PVector.sub = function(v1, v2) {
+    return new PVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+  };
+
+  PVector.angleBetween = function(v1, v2) {
+    return Math.acos(v1.dot(v2) / Math.sqrt(v1.magSq() * v2.magSq()));
+  };
+
+  PVector.lerp = function(v1, v2, amt) {
+    // non-static lerp mutates object, but this version returns a new vector
+    var retval = new PVector(v1.x, v1.y, v1.z);
+    retval.lerp(v2, amt);
+    return retval;
+  };
+
+  // Common vector operations for PVector
+  PVector.prototype = {
+    set: function(v, y, z) {
+      if (arguments.length === 1) {
+        this.set(v.x || v[0] || 0,
+                 v.y || v[1] || 0,
+                 v.z || v[2] || 0);
+      } else {
+        this.x = v;
+        this.y = y;
+        this.z = z;
+      }
+    },
+    get: function() {
+      return new PVector(this.x, this.y, this.z);
+    },
+    mag: function() {
+      var x = this.x,
+          y = this.y,
+          z = this.z;
+      return Math.sqrt(x * x + y * y + z * z);
+    },
+    magSq: function() {
+      var x = this.x,
+          y = this.y,
+          z = this.z;
+      return (x * x + y * y + z * z);
+    },
+    setMag: function(v_or_len, len) {
+      if (len === undef) {
+        len = v_or_len;
+        this.normalize();
+        this.mult(len);
+      } else {
+        var v = v_or_len;
+        v.normalize();
+        v.mult(len);
+        return v;
+      }
+    },
+    add: function(v, y, z) {
+      if (arguments.length === 1) {
+        this.x += v.x;
+        this.y += v.y;
+        this.z += v.z;
+      } else {
+        this.x += v;
+        this.y += y;
+        this.z += z;
+      }
+    },
+    sub: function(v, y, z) {
+      if (arguments.length === 1) {
+        this.x -= v.x;
+        this.y -= v.y;
+        this.z -= v.z;
+      } else {
+        this.x -= v;
+        this.y -= y;
+        this.z -= z;
+      }
+    },
+    mult: function(v) {
+      if (typeof v === 'number') {
+        this.x *= v;
+        this.y *= v;
+        this.z *= v;
+      } else {
+        this.x *= v.x;
+        this.y *= v.y;
+        this.z *= v.z;
+      }
+    },
+    div: function(v) {
+      if (typeof v === 'number') {
+        this.x /= v;
+        this.y /= v;
+        this.z /= v;
+      } else {
+        this.x /= v.x;
+        this.y /= v.y;
+        this.z /= v.z;
+      }
+    },
+    rotate: function(angle) {
+      var prev_x = this.x;
+      var c = Math.cos(angle);
+      var s = Math.sin(angle);
+      this.x = c * this.x - s * this.y;
+      this.y = s * prev_x + c * this.y;
+    },
+    dist: function(v) {
+      var dx = this.x - v.x,
+          dy = this.y - v.y,
+          dz = this.z - v.z;
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    },
+    dot: function(v, y, z) {
+      if (arguments.length === 1) {
+        return (this.x * v.x + this.y * v.y + this.z * v.z);
+      }
+      return (this.x * v + this.y * y + this.z * z);
+    },
+    cross: function(v) {
+      var x = this.x,
+          y = this.y,
+          z = this.z;
+      return new PVector(y * v.z - v.y * z,
+                         z * v.x - v.z * x,
+                         x * v.y - v.x * y);
+    },
+    lerp: function(v_or_x, amt_or_y, z, amt) {
+      var lerp_val = function(start, stop, amt) {
+        return start + (stop - start) * amt;
+      };
+      var x, y;
+      if (arguments.length === 2) {
+        // given vector and amt
+        amt = amt_or_y;
+        x = v_or_x.x;
+        y = v_or_x.y;
+        z = v_or_x.z;
+      } else {
+        // given x, y, z and amt
+        x = v_or_x;
+        y = amt_or_y;
+      }
+      this.x = lerp_val(this.x, x, amt);
+      this.y = lerp_val(this.y, y, amt);
+      this.z = lerp_val(this.z, z, amt);
+    },
+    normalize: function() {
+      var m = this.mag();
+      if (m > 0) {
+        this.div(m);
+      }
+    },
+    limit: function(high) {
+      if (this.mag() > high) {
+        this.normalize();
+        this.mult(high);
+      }
+    },
+    heading: function() {
+      return (-Math.atan2(-this.y, this.x));
+    },
+    heading2D: function() {
+      return this.heading();
+    },
+    toString: function() {
+      return "[" + this.x + ", " + this.y + ", " + this.z + "]";
+    },
+    array: function() {
+      return [this.x, this.y, this.z];
+    }
+  };
+
+  function createPVectorMethod(method) {
+    return function(v1, v2) {
+      var v = v1.get();
+      v[method](v2);
+      return v;
+    };
+  }
+
+  for (var method in PVector.prototype) {
+    if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
+      PVector[method] = createPVectorMethod(method);
+    }
+  }
+
+  return PVector;
+};
+
+
+},{}],12:[function(require,module,exports){
 // module export
 module.exports = function(options,undef) {
   var window = options.Browser.window,
@@ -2236,7 +2549,116 @@ module.exports = function(options,undef) {
 
   return PFont;
 };
+},{}],13:[function(require,module,exports){
+module.exports = (function(charMap, undef) {
+
+  var Char = function(chr) {
+    if (typeof chr === 'string' && chr.length === 1) {
+      this.code = chr.charCodeAt(0);
+    } else if (typeof chr === 'number') {
+      this.code = chr;
+    } else if (chr instanceof Char) {
+      this.code = chr;
+    } else {
+      this.code = NaN;
+    }
+    return (charMap[this.code] === undef) ? charMap[this.code] = this : charMap[this.code];
+  };
+
+  Char.prototype.toString = function() {
+    return String.fromCharCode(this.code);
+  };
+
+  Char.prototype.valueOf = function() {
+    return this.code;
+  };
+
+  return Char;
+}({}));
+
 },{}],14:[function(require,module,exports){
+/**
+ * XMLAttribute is an attribute of a XML element.
+ *
+ * @param {String} fname     the full name of the attribute
+ * @param {String} n         the short name of the attribute
+ * @param {String} namespace the namespace URI of the attribute
+ * @param {String} v         the value of the attribute
+ * @param {String }t         the type of the attribute
+ *
+ * @see XMLElement
+ */
+module.exports = function() {
+
+  var XMLAttribute = function (fname, n, nameSpace, v, t){
+    this.fullName = fname || "";
+    this.name = n || "";
+    this.namespace = nameSpace || "";
+    this.value = v;
+    this.type = t;
+  };
+
+  XMLAttribute.prototype = {
+    /**
+     * @member XMLAttribute
+     * The getName() function returns the short name of the attribute
+     *
+     * @return {String} the short name of the attribute
+     */
+    getName: function() {
+      return this.name;
+    },
+    /**
+     * @member XMLAttribute
+     * The getFullName() function returns the full name of the attribute
+     *
+     * @return {String} the full name of the attribute
+     */
+    getFullName: function() {
+      return this.fullName;
+    },
+    /**
+     * @member XMLAttribute
+     * The getNamespace() function returns the namespace of the attribute
+     *
+     * @return {String} the namespace of the attribute
+     */
+    getNamespace: function() {
+      return this.namespace;
+    },
+    /**
+     * @member XMLAttribute
+     * The getValue() function returns the value of the attribute
+     *
+     * @return {String} the value of the attribute
+     */
+    getValue: function() {
+      return this.value;
+    },
+    /**
+     * @member XMLAttribute
+     * The getValue() function returns the type of the attribute
+     *
+     * @return {String} the type of the attribute
+     */
+    getType: function() {
+      return this.type;
+    },
+    /**
+     * @member XMLAttribute
+     * The setValue() function sets the value of the attribute
+     *
+     * @param {String} newval the new value
+     */
+    setValue: function(newval) {
+      this.value = newval;
+    }
+  };
+
+  return XMLAttribute;
+};
+
+},{}],16:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -2634,6 +3056,814 @@ module.exports = function(options, undef) {
 };
 
 },{}],15:[function(require,module,exports){
+/**
+ * XMLElement is a representation of an XML object. The object is able to parse XML code
+ *
+ * @param {PApplet} parent   typically use "this"
+ * @param {String} filename  name of the XML/SVG file to load
+ * @param {String} xml       the xml/svg string
+ * @param {String} fullname  the full name of the element
+ * @param {String} namespace the namespace  of the URI
+ * @param {String} systemID  the system ID of the XML data where the element starts
+ * @param {Integer }lineNr   the line in the XML data where the element starts
+ */
+module.exports = function(options, undef) {
+
+  var Browser = options.Browser,
+      ajax = Browser.ajax,
+      window = Browser.window,
+      XMLHttpRequest = window.XMLHttpRequest,
+      DOMParser = window.DOMParser,
+      XMLAttribute = options. XMLAttribute;
+
+  var XMLElement = function(selector, uri, sysid, line) {
+    this.attributes = [];
+    this.children   = [];
+    this.fullName   = null;
+    this.name       = null;
+    this.namespace  = "";
+    this.content = null;
+    this.parent    = null;
+    this.lineNr     = "";
+    this.systemID   = "";
+    this.type = "ELEMENT";
+
+    if (selector) {
+      if (typeof selector === "string") {
+        if (uri === undef && selector.indexOf("<") > -1) {
+          // load XML from text string
+          this.parse(selector);
+        } else {
+          // XMLElement(fullname, namespace, sysid, line) format
+          this.fullName = selector;
+          this.namespace = uri;
+          this.systemId = sysid;
+          this.lineNr = line;
+        }
+      } else {
+        // XMLElement(this, file uri) format
+        this.parse(uri, true);
+      }
+    }
+  };
+  /**
+   * XMLElement methods
+   * missing: enumerateAttributeNames(), enumerateChildren(),
+   * NOTE: parse does not work when a url is passed in
+   */
+  XMLElement.prototype = {
+    /**
+     * @member XMLElement
+     * The parse() function retrieves the file via ajax() and uses DOMParser()
+     * parseFromString method to make an XML document
+     * @addon
+     *
+     * @param {String} filename name of the XML/SVG file to load
+     *
+     * @throws ExceptionType Error loading document
+     *
+     * @see XMLElement#parseChildrenRecursive
+     */
+    parse: function(textstring, stringIsURI) {
+      var xmlDoc;
+      try {
+        if (stringIsURI) {
+          textstring = ajax(textstring);
+        }
+        xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
+        var elements = xmlDoc.documentElement;
+        if (elements) {
+          this.parseChildrenRecursive(null, elements);
+        } else {
+          throw ("Error loading document");
+        }
+        return this;
+      } catch(e) {
+        throw(e);
+      }
+    },
+    /**
+     * @member XMLElement
+     * Internal helper function for parse().
+     * Loops through the
+     * @addon
+     *
+     * @param {XMLElement} parent                      the parent node
+     * @param {XML document childNodes} elementpath    the remaining nodes that need parsing
+     *
+     * @return {XMLElement} the new element and its children elements
+     */
+    parseChildrenRecursive: function (parent, elementpath){
+      var xmlelement,
+        xmlattribute,
+        tmpattrib,
+        l, m,
+        child;
+      if (!parent) { // this element is the root element
+        this.fullName = elementpath.localName;
+        this.name     = elementpath.nodeName;
+        xmlelement    = this;
+      } else { // this element has a parent
+        xmlelement         = new XMLElement(elementpath.nodeName);
+        xmlelement.parent  = parent;
+      }
+
+      // if this is a text node, return a PCData element (parsed character data)
+      if (elementpath.nodeType === 3 && elementpath.textContent !== "") {
+        return this.createPCDataElement(elementpath.textContent);
+      }
+
+      // if this is a CDATA node, return a CData element (unparsed character data)
+      if (elementpath.nodeType === 4) {
+       return this.createCDataElement(elementpath.textContent);
+      }
+
+      // bind all attributes, if there are any
+      if (elementpath.attributes) {
+        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
+          tmpattrib    = elementpath.attributes[l];
+          xmlattribute = new XMLAttribute(tmpattrib.getname,
+                                          tmpattrib.nodeName,
+                                          tmpattrib.namespaceURI,
+                                          tmpattrib.nodeValue,
+                                          tmpattrib.nodeType);
+          xmlelement.attributes.push(xmlattribute);
+        }
+      }
+
+      // bind all children, if there are any
+      if (elementpath.childNodes) {
+        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
+          var node = elementpath.childNodes[l];
+          child = xmlelement.parseChildrenRecursive(xmlelement, node);
+          if (child !== null) {
+            xmlelement.children.push(child);
+          }
+        }
+      }
+
+      return xmlelement;
+    },
+    /**
+     * @member XMLElement
+     * The createElement() function Creates an empty element
+     *
+     * @param {String} fullName   the full name of the element
+     * @param {String} namespace  the namespace URI
+     * @param {String} systemID   the system ID of the XML data where the element starts
+     * @param {int} lineNr    the line in the XML data where the element starts
+     */
+    createElement: function (fullname, namespaceuri, sysid, line) {
+      if (sysid === undef) {
+        return new XMLElement(fullname, namespaceuri);
+      }
+      return new XMLElement(fullname, namespaceuri, sysid, line);
+    },
+    /**
+     * @member XMLElement
+     * The createPCDataElement() function creates an element to be used for #PCDATA content.
+     * Because Processing discards whitespace TEXT nodes, this method will not build an element
+     * if the passed content is empty after trimming for whitespace.
+     *
+     * @return {XMLElement} new "pcdata" XMLElement, or null if content consists only of whitespace
+     */
+    createPCDataElement: function (content, isCDATA) {
+      if (content.replace(/^\s+$/g,"") === "") {
+        return null;
+      }
+      var pcdata = new XMLElement();
+      pcdata.type = "TEXT";
+      pcdata.content = content;
+      return pcdata;
+    },
+    /**
+     * @member XMLElement
+     * The createCDataElement() function creates an element to be used for CDATA content.
+     *
+     * @return {XMLElement} new "cdata" XMLElement, or null if content consists only of whitespace
+     */
+    createCDataElement: function (content) {
+      var cdata = this.createPCDataElement(content);
+      if (cdata === null) {
+        return null;
+      }
+
+      cdata.type = "CDATA";
+      var htmlentities = {"<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;"},
+          entity;
+      for (entity in htmlentities) {
+        if (!Object.hasOwnProperty(htmlentities,entity)) {
+          content = content.replace(new RegExp(entity, "g"), htmlentities[entity]);
+        }
+      }
+      cdata.cdata = content;
+      return cdata;
+    },
+    /**
+     * @member XMLElement
+     * The hasAttribute() function returns whether an attribute exists
+     *
+     * @param {String} name      name of the attribute
+     * @param {String} namespace the namespace URI of the attribute
+     *
+     * @return {boolean} true if the attribute exists
+     */
+    hasAttribute: function () {
+      if (arguments.length === 1) {
+        return this.getAttribute(arguments[0]) !== null;
+      }
+      if (arguments.length === 2) {
+        return this.getAttribute(arguments[0],arguments[1]) !== null;
+      }
+    },
+    /**
+     * @member XMLElement
+     * The equals() function checks to see if the XMLElement being passed in equals another XMLElement
+     *
+     * @param {XMLElement} rawElement the element to compare to
+     *
+     * @return {boolean} true if the element equals another element
+     */
+    equals: function(other) {
+      if (!(other instanceof XMLElement)) {
+        return false;
+      }
+      var i, j;
+      if (this.fullName !== other.fullName) { return false; }
+      if (this.attributes.length !== other.getAttributeCount()) { return false; }
+      // attributes may be ordered differently
+      if (this.attributes.length !== other.attributes.length) { return false; }
+      var attr_name, attr_ns, attr_value, attr_type, attr_other;
+      for (i = 0, j = this.attributes.length; i < j; i++) {
+        attr_name = this.attributes[i].getName();
+        attr_ns = this.attributes[i].getNamespace();
+        attr_other = other.findAttribute(attr_name, attr_ns);
+        if (attr_other === null) { return false; }
+        if (this.attributes[i].getValue() !== attr_other.getValue()) { return false; }
+        if (this.attributes[i].getType() !== attr_other.getType()) { return false; }
+      }
+      // children must be ordered identically
+      if (this.children.length !== other.getChildCount()) { return false; }
+      if (this.children.length>0) {
+        var child1, child2;
+        for (i = 0, j = this.children.length; i < j; i++) {
+          child1 = this.getChild(i);
+          child2 = other.getChild(i);
+          if (!child1.equals(child2)) { return false; }
+        }
+        return true;
+      }
+      return (this.content === other.content);
+    },
+    /**
+     * @member XMLElement
+     * The getContent() function returns the content of an element. If there is no such content, null is returned
+     *
+     * @return {String} the (possibly null) content
+     */
+    getContent: function(){
+      if (this.type === "TEXT" || this.type === "CDATA") {
+        return this.content;
+      }
+      var children = this.children;
+      if (children.length === 1 && (children[0].type === "TEXT" || children[0].type === "CDATA")) {
+        return children[0].content;
+      }
+      return null;
+    },
+    /**
+     * @member XMLElement
+     * The getAttribute() function returns the value of an attribute
+     *
+     * @param {String} name         the non-null full name of the attribute
+     * @param {String} namespace    the namespace URI, which may be null
+     * @param {String} defaultValue the default value of the attribute
+     *
+     * @return {String} the value, or defaultValue if the attribute does not exist
+     */
+    getAttribute: function (){
+      var attribute;
+      if (arguments.length === 2) {
+        attribute = this.findAttribute(arguments[0]);
+        if (attribute) {
+          return attribute.getValue();
+        }
+        return arguments[1];
+      } else if (arguments.length === 1) {
+        attribute = this.findAttribute(arguments[0]);
+        if (attribute) {
+          return attribute.getValue();
+        }
+        return null;
+      } else if (arguments.length === 3) {
+        attribute = this.findAttribute(arguments[0],arguments[1]);
+        if (attribute) {
+          return attribute.getValue();
+        }
+        return arguments[2];
+      }
+    },
+    /**
+     * @member XMLElement
+     * The getStringAttribute() function returns the string attribute of the element
+     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+     *
+     * @param name         the name of the attribute
+     * @param defaultValue value returned if the attribute is not found
+     *
+     * @return {String} the value, or defaultValue if the attribute does not exist
+     */
+    getStringAttribute: function() {
+      if (arguments.length === 1) {
+        return this.getAttribute(arguments[0]);
+      }
+      if (arguments.length === 2) {
+        return this.getAttribute(arguments[0], arguments[1]);
+      }
+      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic String
+     * attribute getter. This may only take one argument.
+     */
+    getString: function(attributeName) {
+      return this.getStringAttribute(attributeName);
+    },
+    /**
+     * @member XMLElement
+     * The getFloatAttribute() function returns the float attribute of the element.
+     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+     *
+     * @param name         the name of the attribute
+     * @param defaultValue value returned if the attribute is not found
+     *
+     * @return {float} the value, or defaultValue if the attribute does not exist
+     */
+    getFloatAttribute: function() {
+      if (arguments.length === 1 ) {
+        return parseFloat(this.getAttribute(arguments[0], 0));
+      }
+      if (arguments.length === 2 ) {
+        return this.getAttribute(arguments[0], arguments[1]);
+      }
+      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic float
+     * attribute getter. This may only take one argument.
+     */
+    getFloat: function(attributeName) {
+      return this.getFloatAttribute(attributeName);
+    },
+    /**
+     * @member XMLElement
+     * The getIntAttribute() function returns the integer attribute of the element.
+     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
+     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
+     *
+     * @param name         the name of the attribute
+     * @param defaultValue value returned if the attribute is not found
+     *
+     * @return {int} the value, or defaultValue if the attribute does not exist
+     */
+    getIntAttribute: function () {
+      if (arguments.length === 1) {
+        return this.getAttribute( arguments[0], 0 );
+      }
+      if (arguments.length === 2) {
+        return this.getAttribute(arguments[0], arguments[1]);
+      }
+      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic int
+     * attribute getter. This may only take one argument.
+     */
+    getInt: function(attributeName) {
+      return this.getIntAttribute(attributeName);
+    },
+    /**
+     * @member XMLElement
+     * The hasChildren() function returns whether the element has children.
+     *
+     * @return {boolean} true if the element has children.
+     */
+    hasChildren: function () {
+      return this.children.length > 0 ;
+    },
+    /**
+     * @member XMLElement
+     * The addChild() function adds a child element
+     *
+     * @param {XMLElement} child the non-null child to add.
+     */
+    addChild: function (child) {
+      if (child !== null) {
+        child.parent = this;
+        this.children.push(child);
+      }
+    },
+    /**
+     * @member XMLElement
+     * The insertChild() function inserts a child element at the index provided
+     *
+     * @param {XMLElement} child  the non-null child to add.
+     * @param {int} index     where to put the child.
+     */
+    insertChild: function (child, index) {
+      if (child) {
+        if ((child.getLocalName() === null) && (! this.hasChildren())) {
+          var lastChild = this.children[this.children.length -1];
+          if (lastChild.getLocalName() === null) {
+              lastChild.setContent(lastChild.getContent() + child.getContent());
+              return;
+          }
+        }
+        child.parent = this;
+        this.children.splice(index,0,child);
+      }
+    },
+    /**
+     * @member XMLElement
+     * The getChild() returns the child XMLElement as specified by the <b>index</b> parameter.
+     * The value of the <b>index</b> parameter must be less than the total number of children to avoid going out of the array storing the child elements.
+     * When the <b>path</b> parameter is specified, then it will return all children that match that path. The path is a series of elements and sub-elements, separated by slashes.
+     *
+     * @param {int} index     where to put the child.
+     * @param {String} path       path to a particular element
+     *
+     * @return {XMLElement} the element
+     */
+    getChild: function (selector) {
+      if (typeof selector === "number") {
+        return this.children[selector];
+      }
+      if (selector.indexOf('/') !== -1) {
+        // path traversal is required
+        return this.getChildRecursive(selector.split("/"), 0);
+      }
+      var kid, kidName;
+      for (var i = 0, j = this.getChildCount(); i < j; i++) {
+        kid = this.getChild(i);
+        kidName = kid.getName();
+        if (kidName !== null && kidName === selector) {
+            return kid;
+        }
+      }
+      return null;
+    },
+    /**
+     * @member XMLElement
+     * The getChildren() returns all of the children as an XMLElement array.
+     * When the <b>path</b> parameter is specified, then it will return all children that match that path.
+     * The path is a series of elements and sub-elements, separated by slashes.
+     *
+     * @param {String} path       element name or path/to/element
+     *
+     * @return {XMLElement} array of child elements that match
+     *
+     * @see XMLElement#getChildCount()
+     * @see XMLElement#getChild()
+     */
+    getChildren: function(){
+      if (arguments.length === 1) {
+        if (typeof arguments[0] === "number") {
+          return this.getChild( arguments[0]);
+        }
+        if (arguments[0].indexOf('/') !== -1) { // path was given
+          return this.getChildrenRecursive( arguments[0].split("/"), 0);
+        }
+        var matches = [];
+        var kid, kidName;
+        for (var i = 0, j = this.getChildCount(); i < j; i++) {
+          kid = this.getChild(i);
+          kidName = kid.getName();
+          if (kidName !== null && kidName === arguments[0]) {
+            matches.push(kid);
+          }
+        }
+        return matches;
+      }
+      return this.children;
+    },
+    /**
+     * @member XMLElement
+     * The getChildCount() returns the number of children for the element.
+     *
+     * @return {int} the count
+     *
+     * @see XMLElement#getChild()
+     * @see XMLElement#getChildren()
+     */
+    getChildCount: function() {
+      return this.children.length;
+    },
+    /**
+     * @member XMLElement
+     * Internal helper function for getChild().
+     *
+     * @param {String[]} items   result of splitting the query on slashes
+     * @param {int} offset   where in the items[] array we're currently looking
+     *
+     * @return {XMLElement} matching element or null if no match
+     */
+    getChildRecursive: function (items, offset) {
+      // terminating clause: we are the requested candidate
+      if (offset === items.length) {
+        return this;
+      }
+      // continuation clause
+      var kid, kidName, matchName = items[offset];
+      for(var i = 0, j = this.getChildCount(); i < j; i++) {
+          kid = this.getChild(i);
+          kidName = kid.getName();
+          if (kidName !== null && kidName === matchName) {
+            return kid.getChildRecursive(items, offset+1);
+          }
+      }
+      return null;
+    },
+    /**
+     * @member XMLElement
+     * Internal helper function for getChildren().
+     *
+     * @param {String[]} items   result of splitting the query on slashes
+     * @param {int} offset   where in the items[] array we're currently looking
+     *
+     * @return {XMLElement[]} matching elements or empty array if no match
+     */
+    getChildrenRecursive: function (items, offset) {
+      if (offset === items.length-1) {
+        return this.getChildren(items[offset]);
+      }
+      var matches = this.getChildren(items[offset]);
+      var kidMatches = [];
+      for (var i = 0; i < matches.length; i++) {
+        kidMatches = kidMatches.concat(matches[i].getChildrenRecursive(items, offset+1));
+      }
+      return kidMatches;
+    },
+    /**
+     * @member XMLElement
+     * The isLeaf() function returns whether the element is a leaf element.
+     *
+     * @return {boolean} true if the element has no children.
+     */
+    isLeaf: function() {
+      return !this.hasChildren();
+    },
+    /**
+     * @member XMLElement
+     * The listChildren() function put the names of all children into an array. Same as looping through
+     * each child and calling getName() on each XMLElement.
+     *
+     * @return {String[]} a list of element names.
+     */
+    listChildren: function() {
+      var arr = [];
+      for (var i = 0, j = this.children.length; i < j; i++) {
+        arr.push( this.getChild(i).getName());
+      }
+      return arr;
+    },
+    /**
+     * @member XMLElement
+     * The removeAttribute() function removes an attribute
+     *
+     * @param {String} name        the non-null name of the attribute.
+     * @param {String} namespace   the namespace URI of the attribute, which may be null.
+     */
+    removeAttribute: function (name , namespace) {
+      this.namespace = namespace || "";
+      for (var i = 0, j = this.attributes.length; i < j; i++) {
+        if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
+          this.attributes.splice(i, 1);
+          break;
+        }
+      }
+    },
+    /**
+     * @member XMLElement
+     * The removeChild() removes a child element.
+     *
+     * @param {XMLElement} child      the the non-null child to be renoved
+     */
+    removeChild: function(child) {
+      if (child) {
+        for (var i = 0, j = this.children.length; i < j; i++) {
+          if (this.children[i].equals(child)) {
+            this.children.splice(i, 1);
+            break;
+          }
+        }
+      }
+    },
+    /**
+     * @member XMLElement
+     * The removeChildAtIndex() removes the child located at a certain index
+     *
+     * @param {int} index      the index of the child, where the first child has index 0
+     */
+    removeChildAtIndex: function(index) {
+      if (this.children.length > index) { //make sure its not outofbounds
+        this.children.splice(index, 1);
+      }
+    },
+    /**
+     * @member XMLElement
+     * The findAttribute() function searches an attribute
+     *
+     * @param {String} name        fullName the non-null full name of the attribute
+     * @param {String} namespace   the name space, which may be null
+     *
+     * @return {XMLAttribute} the attribute, or null if the attribute does not exist.
+     */
+    findAttribute: function (name, namespace) {
+      this.namespace = namespace || "";
+      for (var i = 0, j = this.attributes.length; i < j; i++) {
+        if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
+           return this.attributes[i];
+        }
+      }
+      return null;
+    },
+    /**
+     * @member XMLElement
+     * The setAttribute() function sets an attribute.
+     *
+     * @param {String} name        the non-null full name of the attribute
+     * @param {String} namespace   the non-null value of the attribute
+     */
+    setAttribute: function() {
+      var attr;
+      if (arguments.length === 3) {
+        var index = arguments[0].indexOf(':');
+        var name  = arguments[0].substring(index + 1);
+        attr      = this.findAttribute(name, arguments[1]);
+        if (attr) {
+          attr.setValue(arguments[2]);
+        } else {
+          attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
+          this.attributes.push(attr);
+        }
+      } else {
+        attr = this.findAttribute(arguments[0]);
+        if (attr) {
+          attr.setValue(arguments[1]);
+        } else {
+          attr = new XMLAttribute(arguments[0], arguments[0], null, arguments[1], "CDATA");
+          this.attributes.push(attr);
+        }
+      }
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic String
+     * attribute setter. This must take two arguments.
+     */
+    setString: function(attribute, value) {
+      this.setAttribute(attribute, value);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic int
+     * attribute setter. This must take two arguments.
+     */
+    setInt: function(attribute, value) {
+      this.setAttribute(attribute, value);
+    },
+    /**
+     * Processing 1.5 XML API wrapper for the generic float
+     * attribute setter. This must take two arguments.
+     */
+    setFloat: function(attribute, value) {
+      this.setAttribute(attribute, value);
+    },
+    /**
+     * @member XMLElement
+     * The setContent() function sets the #PCDATA content. It is an error to call this method with a
+     * non-null value if there are child objects.
+     *
+     * @param {String} content     the (possibly null) content
+     */
+    setContent: function(content) {
+      if (this.children.length > 0) {
+        Processing.debug("Tried to set content for XMLElement with children"); }
+      this.content = content;
+    },
+    /**
+     * @member XMLElement
+     * The setName() function sets the full name. This method also sets the short name and clears the
+     * namespace URI.
+     *
+     * @param {String} name        the non-null name
+     * @param {String} namespace   the namespace URI, which may be null.
+     */
+    setName: function() {
+      if (arguments.length === 1) {
+        this.name      = arguments[0];
+        this.fullName  = arguments[0];
+        this.namespace = null;
+      } else {
+        var index = arguments[0].indexOf(':');
+        if ((arguments[1] === null) || (index < 0)) {
+            this.name = arguments[0];
+        } else {
+            this.name = arguments[0].substring(index + 1);
+        }
+        this.fullName  = arguments[0];
+        this.namespace = arguments[1];
+      }
+    },
+    /**
+     * @member XMLElement
+     * The getName() function returns the full name (i.e. the name including an eventual namespace
+     * prefix) of the element.
+     *
+     * @return {String} the name, or null if the element only contains #PCDATA.
+     */
+    getName: function() {
+      return this.fullName;
+    },
+    /**
+     * @member XMLElement
+     * The getLocalName() function returns the local name (i.e. the name excluding an eventual namespace
+     * prefix) of the element.
+     *
+     * @return {String} the name, or null if the element only contains #PCDATA.
+     */
+    getLocalName: function() {
+      return this.name;
+    },
+    /**
+     * @member XMLElement
+     * The getAttributeCount() function returns the number of attributes for the node
+     * that this XMLElement represents.
+     *
+     * @return {int} the number of attributes in this XMLElement
+     */
+    getAttributeCount: function() {
+      return this.attributes.length;
+    },
+    /**
+     * @member XMLElement
+     * The toString() function returns the XML definition of an XMLElement.
+     *
+     * @return {String} the XML definition of this XMLElement
+     */
+    toString: function() {
+      // shortcut for text and cdata nodes
+      if (this.type === "TEXT") {
+        return this.content || "";
+      }
+
+      if (this.type === "CDATA") {
+        return this.cdata || "";
+      }
+
+      // real XMLElements
+      var tagstring = this.fullName;
+      var xmlstring =  "<" + tagstring;
+      var a,c;
+
+      // serialize the attributes to XML string
+      for (a = 0; a<this.attributes.length; a++) {
+        var attr = this.attributes[a];
+        xmlstring += " "  + attr.getName() + "=" + '"' + attr.getValue() + '"';
+      }
+
+      // serialize all children to XML string
+      if (this.children.length === 0) {
+        if (this.content === "" || this.content === null || this.content === undefined) {
+          xmlstring += "/>";
+        } else {
+          xmlstring += ">" + this.content + "</"+tagstring+">";
+        }
+      } else {
+        xmlstring += ">";
+        for (c = 0; c<this.children.length; c++) {
+          xmlstring += this.children[c].toString();
+        }
+        xmlstring += "</" + tagstring + ">";
+      }
+      return xmlstring;
+     }
+  };
+
+  /**
+   * static Processing 1.5 XML API wrapper for the
+   * parse method. This may only take one argument.
+   */
+  XMLElement.parse = function(xmlstring) {
+    var element = new XMLElement();
+    element.parse(xmlstring);
+    return element;
+  };
+
+  return XMLElement;
+};
+
+},{}],17:[function(require,module,exports){
 module.exports = function(options, undef) {
 
   // FIXME: hack
@@ -3231,7 +4461,7 @@ module.exports = function(options, undef) {
 
   return PMatrix3D;
 };
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports = function(options) {
   var PConstants = options.PConstants,
       PMatrix2D = options.PMatrix2D,
@@ -3893,7 +5123,7 @@ module.exports = function(options) {
 
   return PShape;
 };
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * SVG stands for Scalable Vector Graphics, a portable graphics format. It is
  * a vector format so it allows for infinite resolution and relatively small
@@ -4985,1136 +6215,7 @@ module.exports = function(options) {
   return PShapeSVG;
 };
 
-},{}],18:[function(require,module,exports){
-module.exports = function(options, undef) {
-  var PConstants = options.PConstants;
-
-  function PVector(x, y, z) {
-    this.x = x || 0;
-    this.y = y || 0;
-    this.z = z || 0;
-  }
-
-  PVector.fromAngle = function(angle, v) {
-    if (v === undef || v === null) {
-      v = new PVector();
-    }
-    v.x = Math.cos(angle);
-    v.y = Math.sin(angle);
-    return v;
-  };
-
-  PVector.random2D = function(v) {
-    return PVector.fromAngle(Math.random() * PConstants.TWO_PI, v);
-  };
-
-  PVector.random3D = function(v) {
-    var angle = Math.random() * PConstants.TWO_PI;
-    var vz = Math.random() * 2 - 1;
-    var mult = Math.sqrt(1 - vz * vz);
-    var vx = mult * Math.cos(angle);
-    var vy = mult * Math.sin(angle);
-    if (v === undef || v === null) {
-      v = new PVector(vx, vy, vz);
-    } else {
-      v.set(vx, vy, vz);
-    }
-    return v;
-  };
-
-  PVector.dist = function(v1, v2) {
-    return v1.dist(v2);
-  };
-
-  PVector.dot = function(v1, v2) {
-    return v1.dot(v2);
-  };
-
-  PVector.cross = function(v1, v2) {
-    return v1.cross(v2);
-  };
-
-  PVector.sub = function(v1, v2) {
-    return new PVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
-  };
-
-  PVector.angleBetween = function(v1, v2) {
-    return Math.acos(v1.dot(v2) / Math.sqrt(v1.magSq() * v2.magSq()));
-  };
-
-  PVector.lerp = function(v1, v2, amt) {
-    // non-static lerp mutates object, but this version returns a new vector
-    var retval = new PVector(v1.x, v1.y, v1.z);
-    retval.lerp(v2, amt);
-    return retval;
-  };
-
-  // Common vector operations for PVector
-  PVector.prototype = {
-    set: function(v, y, z) {
-      if (arguments.length === 1) {
-        this.set(v.x || v[0] || 0,
-                 v.y || v[1] || 0,
-                 v.z || v[2] || 0);
-      } else {
-        this.x = v;
-        this.y = y;
-        this.z = z;
-      }
-    },
-    get: function() {
-      return new PVector(this.x, this.y, this.z);
-    },
-    mag: function() {
-      var x = this.x,
-          y = this.y,
-          z = this.z;
-      return Math.sqrt(x * x + y * y + z * z);
-    },
-    magSq: function() {
-      var x = this.x,
-          y = this.y,
-          z = this.z;
-      return (x * x + y * y + z * z);
-    },
-    setMag: function(v_or_len, len) {
-      if (len === undef) {
-        len = v_or_len;
-        this.normalize();
-        this.mult(len);
-      } else {
-        var v = v_or_len;
-        v.normalize();
-        v.mult(len);
-        return v;
-      }
-    },
-    add: function(v, y, z) {
-      if (arguments.length === 1) {
-        this.x += v.x;
-        this.y += v.y;
-        this.z += v.z;
-      } else {
-        this.x += v;
-        this.y += y;
-        this.z += z;
-      }
-    },
-    sub: function(v, y, z) {
-      if (arguments.length === 1) {
-        this.x -= v.x;
-        this.y -= v.y;
-        this.z -= v.z;
-      } else {
-        this.x -= v;
-        this.y -= y;
-        this.z -= z;
-      }
-    },
-    mult: function(v) {
-      if (typeof v === 'number') {
-        this.x *= v;
-        this.y *= v;
-        this.z *= v;
-      } else {
-        this.x *= v.x;
-        this.y *= v.y;
-        this.z *= v.z;
-      }
-    },
-    div: function(v) {
-      if (typeof v === 'number') {
-        this.x /= v;
-        this.y /= v;
-        this.z /= v;
-      } else {
-        this.x /= v.x;
-        this.y /= v.y;
-        this.z /= v.z;
-      }
-    },
-    rotate: function(angle) {
-      var prev_x = this.x;
-      var c = Math.cos(angle);
-      var s = Math.sin(angle);
-      this.x = c * this.x - s * this.y;
-      this.y = s * prev_x + c * this.y;
-    },
-    dist: function(v) {
-      var dx = this.x - v.x,
-          dy = this.y - v.y,
-          dz = this.z - v.z;
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    },
-    dot: function(v, y, z) {
-      if (arguments.length === 1) {
-        return (this.x * v.x + this.y * v.y + this.z * v.z);
-      }
-      return (this.x * v + this.y * y + this.z * z);
-    },
-    cross: function(v) {
-      var x = this.x,
-          y = this.y,
-          z = this.z;
-      return new PVector(y * v.z - v.y * z,
-                         z * v.x - v.z * x,
-                         x * v.y - v.x * y);
-    },
-    lerp: function(v_or_x, amt_or_y, z, amt) {
-      var lerp_val = function(start, stop, amt) {
-        return start + (stop - start) * amt;
-      };
-      var x, y;
-      if (arguments.length === 2) {
-        // given vector and amt
-        amt = amt_or_y;
-        x = v_or_x.x;
-        y = v_or_x.y;
-        z = v_or_x.z;
-      } else {
-        // given x, y, z and amt
-        x = v_or_x;
-        y = amt_or_y;
-      }
-      this.x = lerp_val(this.x, x, amt);
-      this.y = lerp_val(this.y, y, amt);
-      this.z = lerp_val(this.z, z, amt);
-    },
-    normalize: function() {
-      var m = this.mag();
-      if (m > 0) {
-        this.div(m);
-      }
-    },
-    limit: function(high) {
-      if (this.mag() > high) {
-        this.normalize();
-        this.mult(high);
-      }
-    },
-    heading: function() {
-      return (-Math.atan2(-this.y, this.x));
-    },
-    heading2D: function() {
-      return this.heading();
-    },
-    toString: function() {
-      return "[" + this.x + ", " + this.y + ", " + this.z + "]";
-    },
-    array: function() {
-      return [this.x, this.y, this.z];
-    }
-  };
-
-  function createPVectorMethod(method) {
-    return function(v1, v2) {
-      var v = v1.get();
-      v[method](v2);
-      return v;
-    };
-  }
-
-  for (var method in PVector.prototype) {
-    if (PVector.prototype.hasOwnProperty(method) && !PVector.hasOwnProperty(method)) {
-      PVector[method] = createPVectorMethod(method);
-    }
-  }
-
-  return PVector;
-};
-
-
-},{}],19:[function(require,module,exports){
-/**
- * XMLAttribute is an attribute of a XML element.
- *
- * @param {String} fname     the full name of the attribute
- * @param {String} n         the short name of the attribute
- * @param {String} namespace the namespace URI of the attribute
- * @param {String} v         the value of the attribute
- * @param {String }t         the type of the attribute
- *
- * @see XMLElement
- */
-module.exports = function() {
-
-  var XMLAttribute = function (fname, n, nameSpace, v, t){
-    this.fullName = fname || "";
-    this.name = n || "";
-    this.namespace = nameSpace || "";
-    this.value = v;
-    this.type = t;
-  };
-
-  XMLAttribute.prototype = {
-    /**
-     * @member XMLAttribute
-     * The getName() function returns the short name of the attribute
-     *
-     * @return {String} the short name of the attribute
-     */
-    getName: function() {
-      return this.name;
-    },
-    /**
-     * @member XMLAttribute
-     * The getFullName() function returns the full name of the attribute
-     *
-     * @return {String} the full name of the attribute
-     */
-    getFullName: function() {
-      return this.fullName;
-    },
-    /**
-     * @member XMLAttribute
-     * The getNamespace() function returns the namespace of the attribute
-     *
-     * @return {String} the namespace of the attribute
-     */
-    getNamespace: function() {
-      return this.namespace;
-    },
-    /**
-     * @member XMLAttribute
-     * The getValue() function returns the value of the attribute
-     *
-     * @return {String} the value of the attribute
-     */
-    getValue: function() {
-      return this.value;
-    },
-    /**
-     * @member XMLAttribute
-     * The getValue() function returns the type of the attribute
-     *
-     * @return {String} the type of the attribute
-     */
-    getType: function() {
-      return this.type;
-    },
-    /**
-     * @member XMLAttribute
-     * The setValue() function sets the value of the attribute
-     *
-     * @param {String} newval the new value
-     */
-    setValue: function(newval) {
-      this.value = newval;
-    }
-  };
-
-  return XMLAttribute;
-};
-
 },{}],20:[function(require,module,exports){
-/**
- * XMLElement is a representation of an XML object. The object is able to parse XML code
- *
- * @param {PApplet} parent   typically use "this"
- * @param {String} filename  name of the XML/SVG file to load
- * @param {String} xml       the xml/svg string
- * @param {String} fullname  the full name of the element
- * @param {String} namespace the namespace  of the URI
- * @param {String} systemID  the system ID of the XML data where the element starts
- * @param {Integer }lineNr   the line in the XML data where the element starts
- */
-module.exports = function(options, undef) {
-
-  var Browser = options.Browser,
-      ajax = Browser.ajax,
-      window = Browser.window,
-      XMLHttpRequest = window.XMLHttpRequest,
-      DOMParser = window.DOMParser,
-      XMLAttribute = options. XMLAttribute;
-
-  var XMLElement = function(selector, uri, sysid, line) {
-    this.attributes = [];
-    this.children   = [];
-    this.fullName   = null;
-    this.name       = null;
-    this.namespace  = "";
-    this.content = null;
-    this.parent    = null;
-    this.lineNr     = "";
-    this.systemID   = "";
-    this.type = "ELEMENT";
-
-    if (selector) {
-      if (typeof selector === "string") {
-        if (uri === undef && selector.indexOf("<") > -1) {
-          // load XML from text string
-          this.parse(selector);
-        } else {
-          // XMLElement(fullname, namespace, sysid, line) format
-          this.fullName = selector;
-          this.namespace = uri;
-          this.systemId = sysid;
-          this.lineNr = line;
-        }
-      } else {
-        // XMLElement(this, file uri) format
-        this.parse(uri, true);
-      }
-    }
-  };
-  /**
-   * XMLElement methods
-   * missing: enumerateAttributeNames(), enumerateChildren(),
-   * NOTE: parse does not work when a url is passed in
-   */
-  XMLElement.prototype = {
-    /**
-     * @member XMLElement
-     * The parse() function retrieves the file via ajax() and uses DOMParser()
-     * parseFromString method to make an XML document
-     * @addon
-     *
-     * @param {String} filename name of the XML/SVG file to load
-     *
-     * @throws ExceptionType Error loading document
-     *
-     * @see XMLElement#parseChildrenRecursive
-     */
-    parse: function(textstring, stringIsURI) {
-      var xmlDoc;
-      try {
-        if (stringIsURI) {
-          textstring = ajax(textstring);
-        }
-        xmlDoc = new DOMParser().parseFromString(textstring, "text/xml");
-        var elements = xmlDoc.documentElement;
-        if (elements) {
-          this.parseChildrenRecursive(null, elements);
-        } else {
-          throw ("Error loading document");
-        }
-        return this;
-      } catch(e) {
-        throw(e);
-      }
-    },
-    /**
-     * @member XMLElement
-     * Internal helper function for parse().
-     * Loops through the
-     * @addon
-     *
-     * @param {XMLElement} parent                      the parent node
-     * @param {XML document childNodes} elementpath    the remaining nodes that need parsing
-     *
-     * @return {XMLElement} the new element and its children elements
-     */
-    parseChildrenRecursive: function (parent, elementpath){
-      var xmlelement,
-        xmlattribute,
-        tmpattrib,
-        l, m,
-        child;
-      if (!parent) { // this element is the root element
-        this.fullName = elementpath.localName;
-        this.name     = elementpath.nodeName;
-        xmlelement    = this;
-      } else { // this element has a parent
-        xmlelement         = new XMLElement(elementpath.nodeName);
-        xmlelement.parent  = parent;
-      }
-
-      // if this is a text node, return a PCData element (parsed character data)
-      if (elementpath.nodeType === 3 && elementpath.textContent !== "") {
-        return this.createPCDataElement(elementpath.textContent);
-      }
-
-      // if this is a CDATA node, return a CData element (unparsed character data)
-      if (elementpath.nodeType === 4) {
-       return this.createCDataElement(elementpath.textContent);
-      }
-
-      // bind all attributes, if there are any
-      if (elementpath.attributes) {
-        for (l = 0, m = elementpath.attributes.length; l < m; l++) {
-          tmpattrib    = elementpath.attributes[l];
-          xmlattribute = new XMLAttribute(tmpattrib.getname,
-                                          tmpattrib.nodeName,
-                                          tmpattrib.namespaceURI,
-                                          tmpattrib.nodeValue,
-                                          tmpattrib.nodeType);
-          xmlelement.attributes.push(xmlattribute);
-        }
-      }
-
-      // bind all children, if there are any
-      if (elementpath.childNodes) {
-        for (l = 0, m = elementpath.childNodes.length; l < m; l++) {
-          var node = elementpath.childNodes[l];
-          child = xmlelement.parseChildrenRecursive(xmlelement, node);
-          if (child !== null) {
-            xmlelement.children.push(child);
-          }
-        }
-      }
-
-      return xmlelement;
-    },
-    /**
-     * @member XMLElement
-     * The createElement() function Creates an empty element
-     *
-     * @param {String} fullName   the full name of the element
-     * @param {String} namespace  the namespace URI
-     * @param {String} systemID   the system ID of the XML data where the element starts
-     * @param {int} lineNr    the line in the XML data where the element starts
-     */
-    createElement: function (fullname, namespaceuri, sysid, line) {
-      if (sysid === undef) {
-        return new XMLElement(fullname, namespaceuri);
-      }
-      return new XMLElement(fullname, namespaceuri, sysid, line);
-    },
-    /**
-     * @member XMLElement
-     * The createPCDataElement() function creates an element to be used for #PCDATA content.
-     * Because Processing discards whitespace TEXT nodes, this method will not build an element
-     * if the passed content is empty after trimming for whitespace.
-     *
-     * @return {XMLElement} new "pcdata" XMLElement, or null if content consists only of whitespace
-     */
-    createPCDataElement: function (content, isCDATA) {
-      if (content.replace(/^\s+$/g,"") === "") {
-        return null;
-      }
-      var pcdata = new XMLElement();
-      pcdata.type = "TEXT";
-      pcdata.content = content;
-      return pcdata;
-    },
-    /**
-     * @member XMLElement
-     * The createCDataElement() function creates an element to be used for CDATA content.
-     *
-     * @return {XMLElement} new "cdata" XMLElement, or null if content consists only of whitespace
-     */
-    createCDataElement: function (content) {
-      var cdata = this.createPCDataElement(content);
-      if (cdata === null) {
-        return null;
-      }
-
-      cdata.type = "CDATA";
-      var htmlentities = {"<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;"},
-          entity;
-      for (entity in htmlentities) {
-        if (!Object.hasOwnProperty(htmlentities,entity)) {
-          content = content.replace(new RegExp(entity, "g"), htmlentities[entity]);
-        }
-      }
-      cdata.cdata = content;
-      return cdata;
-    },
-    /**
-     * @member XMLElement
-     * The hasAttribute() function returns whether an attribute exists
-     *
-     * @param {String} name      name of the attribute
-     * @param {String} namespace the namespace URI of the attribute
-     *
-     * @return {boolean} true if the attribute exists
-     */
-    hasAttribute: function () {
-      if (arguments.length === 1) {
-        return this.getAttribute(arguments[0]) !== null;
-      }
-      if (arguments.length === 2) {
-        return this.getAttribute(arguments[0],arguments[1]) !== null;
-      }
-    },
-    /**
-     * @member XMLElement
-     * The equals() function checks to see if the XMLElement being passed in equals another XMLElement
-     *
-     * @param {XMLElement} rawElement the element to compare to
-     *
-     * @return {boolean} true if the element equals another element
-     */
-    equals: function(other) {
-      if (!(other instanceof XMLElement)) {
-        return false;
-      }
-      var i, j;
-      if (this.fullName !== other.fullName) { return false; }
-      if (this.attributes.length !== other.getAttributeCount()) { return false; }
-      // attributes may be ordered differently
-      if (this.attributes.length !== other.attributes.length) { return false; }
-      var attr_name, attr_ns, attr_value, attr_type, attr_other;
-      for (i = 0, j = this.attributes.length; i < j; i++) {
-        attr_name = this.attributes[i].getName();
-        attr_ns = this.attributes[i].getNamespace();
-        attr_other = other.findAttribute(attr_name, attr_ns);
-        if (attr_other === null) { return false; }
-        if (this.attributes[i].getValue() !== attr_other.getValue()) { return false; }
-        if (this.attributes[i].getType() !== attr_other.getType()) { return false; }
-      }
-      // children must be ordered identically
-      if (this.children.length !== other.getChildCount()) { return false; }
-      if (this.children.length>0) {
-        var child1, child2;
-        for (i = 0, j = this.children.length; i < j; i++) {
-          child1 = this.getChild(i);
-          child2 = other.getChild(i);
-          if (!child1.equals(child2)) { return false; }
-        }
-        return true;
-      }
-      return (this.content === other.content);
-    },
-    /**
-     * @member XMLElement
-     * The getContent() function returns the content of an element. If there is no such content, null is returned
-     *
-     * @return {String} the (possibly null) content
-     */
-    getContent: function(){
-      if (this.type === "TEXT" || this.type === "CDATA") {
-        return this.content;
-      }
-      var children = this.children;
-      if (children.length === 1 && (children[0].type === "TEXT" || children[0].type === "CDATA")) {
-        return children[0].content;
-      }
-      return null;
-    },
-    /**
-     * @member XMLElement
-     * The getAttribute() function returns the value of an attribute
-     *
-     * @param {String} name         the non-null full name of the attribute
-     * @param {String} namespace    the namespace URI, which may be null
-     * @param {String} defaultValue the default value of the attribute
-     *
-     * @return {String} the value, or defaultValue if the attribute does not exist
-     */
-    getAttribute: function (){
-      var attribute;
-      if (arguments.length === 2) {
-        attribute = this.findAttribute(arguments[0]);
-        if (attribute) {
-          return attribute.getValue();
-        }
-        return arguments[1];
-      } else if (arguments.length === 1) {
-        attribute = this.findAttribute(arguments[0]);
-        if (attribute) {
-          return attribute.getValue();
-        }
-        return null;
-      } else if (arguments.length === 3) {
-        attribute = this.findAttribute(arguments[0],arguments[1]);
-        if (attribute) {
-          return attribute.getValue();
-        }
-        return arguments[2];
-      }
-    },
-    /**
-     * @member XMLElement
-     * The getStringAttribute() function returns the string attribute of the element
-     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
-     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
-     *
-     * @param name         the name of the attribute
-     * @param defaultValue value returned if the attribute is not found
-     *
-     * @return {String} the value, or defaultValue if the attribute does not exist
-     */
-    getStringAttribute: function() {
-      if (arguments.length === 1) {
-        return this.getAttribute(arguments[0]);
-      }
-      if (arguments.length === 2) {
-        return this.getAttribute(arguments[0], arguments[1]);
-      }
-      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic String
-     * attribute getter. This may only take one argument.
-     */
-    getString: function(attributeName) {
-      return this.getStringAttribute(attributeName);
-    },
-    /**
-     * @member XMLElement
-     * The getFloatAttribute() function returns the float attribute of the element.
-     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
-     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
-     *
-     * @param name         the name of the attribute
-     * @param defaultValue value returned if the attribute is not found
-     *
-     * @return {float} the value, or defaultValue if the attribute does not exist
-     */
-    getFloatAttribute: function() {
-      if (arguments.length === 1 ) {
-        return parseFloat(this.getAttribute(arguments[0], 0));
-      }
-      if (arguments.length === 2 ) {
-        return this.getAttribute(arguments[0], arguments[1]);
-      }
-      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic float
-     * attribute getter. This may only take one argument.
-     */
-    getFloat: function(attributeName) {
-      return this.getFloatAttribute(attributeName);
-    },
-    /**
-     * @member XMLElement
-     * The getIntAttribute() function returns the integer attribute of the element.
-     * If the <b>defaultValue</b> parameter is used and the attribute doesn't exist, the <b>defaultValue</b> value is returned.
-     * When calling the function without the <b>defaultValue</b> parameter, if the attribute doesn't exist, the value 0 is returned.
-     *
-     * @param name         the name of the attribute
-     * @param defaultValue value returned if the attribute is not found
-     *
-     * @return {int} the value, or defaultValue if the attribute does not exist
-     */
-    getIntAttribute: function () {
-      if (arguments.length === 1) {
-        return this.getAttribute( arguments[0], 0 );
-      }
-      if (arguments.length === 2) {
-        return this.getAttribute(arguments[0], arguments[1]);
-      }
-      return this.getAttribute(arguments[0], arguments[1],arguments[2]);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic int
-     * attribute getter. This may only take one argument.
-     */
-    getInt: function(attributeName) {
-      return this.getIntAttribute(attributeName);
-    },
-    /**
-     * @member XMLElement
-     * The hasChildren() function returns whether the element has children.
-     *
-     * @return {boolean} true if the element has children.
-     */
-    hasChildren: function () {
-      return this.children.length > 0 ;
-    },
-    /**
-     * @member XMLElement
-     * The addChild() function adds a child element
-     *
-     * @param {XMLElement} child the non-null child to add.
-     */
-    addChild: function (child) {
-      if (child !== null) {
-        child.parent = this;
-        this.children.push(child);
-      }
-    },
-    /**
-     * @member XMLElement
-     * The insertChild() function inserts a child element at the index provided
-     *
-     * @param {XMLElement} child  the non-null child to add.
-     * @param {int} index     where to put the child.
-     */
-    insertChild: function (child, index) {
-      if (child) {
-        if ((child.getLocalName() === null) && (! this.hasChildren())) {
-          var lastChild = this.children[this.children.length -1];
-          if (lastChild.getLocalName() === null) {
-              lastChild.setContent(lastChild.getContent() + child.getContent());
-              return;
-          }
-        }
-        child.parent = this;
-        this.children.splice(index,0,child);
-      }
-    },
-    /**
-     * @member XMLElement
-     * The getChild() returns the child XMLElement as specified by the <b>index</b> parameter.
-     * The value of the <b>index</b> parameter must be less than the total number of children to avoid going out of the array storing the child elements.
-     * When the <b>path</b> parameter is specified, then it will return all children that match that path. The path is a series of elements and sub-elements, separated by slashes.
-     *
-     * @param {int} index     where to put the child.
-     * @param {String} path       path to a particular element
-     *
-     * @return {XMLElement} the element
-     */
-    getChild: function (selector) {
-      if (typeof selector === "number") {
-        return this.children[selector];
-      }
-      if (selector.indexOf('/') !== -1) {
-        // path traversal is required
-        return this.getChildRecursive(selector.split("/"), 0);
-      }
-      var kid, kidName;
-      for (var i = 0, j = this.getChildCount(); i < j; i++) {
-        kid = this.getChild(i);
-        kidName = kid.getName();
-        if (kidName !== null && kidName === selector) {
-            return kid;
-        }
-      }
-      return null;
-    },
-    /**
-     * @member XMLElement
-     * The getChildren() returns all of the children as an XMLElement array.
-     * When the <b>path</b> parameter is specified, then it will return all children that match that path.
-     * The path is a series of elements and sub-elements, separated by slashes.
-     *
-     * @param {String} path       element name or path/to/element
-     *
-     * @return {XMLElement} array of child elements that match
-     *
-     * @see XMLElement#getChildCount()
-     * @see XMLElement#getChild()
-     */
-    getChildren: function(){
-      if (arguments.length === 1) {
-        if (typeof arguments[0] === "number") {
-          return this.getChild( arguments[0]);
-        }
-        if (arguments[0].indexOf('/') !== -1) { // path was given
-          return this.getChildrenRecursive( arguments[0].split("/"), 0);
-        }
-        var matches = [];
-        var kid, kidName;
-        for (var i = 0, j = this.getChildCount(); i < j; i++) {
-          kid = this.getChild(i);
-          kidName = kid.getName();
-          if (kidName !== null && kidName === arguments[0]) {
-            matches.push(kid);
-          }
-        }
-        return matches;
-      }
-      return this.children;
-    },
-    /**
-     * @member XMLElement
-     * The getChildCount() returns the number of children for the element.
-     *
-     * @return {int} the count
-     *
-     * @see XMLElement#getChild()
-     * @see XMLElement#getChildren()
-     */
-    getChildCount: function() {
-      return this.children.length;
-    },
-    /**
-     * @member XMLElement
-     * Internal helper function for getChild().
-     *
-     * @param {String[]} items   result of splitting the query on slashes
-     * @param {int} offset   where in the items[] array we're currently looking
-     *
-     * @return {XMLElement} matching element or null if no match
-     */
-    getChildRecursive: function (items, offset) {
-      // terminating clause: we are the requested candidate
-      if (offset === items.length) {
-        return this;
-      }
-      // continuation clause
-      var kid, kidName, matchName = items[offset];
-      for(var i = 0, j = this.getChildCount(); i < j; i++) {
-          kid = this.getChild(i);
-          kidName = kid.getName();
-          if (kidName !== null && kidName === matchName) {
-            return kid.getChildRecursive(items, offset+1);
-          }
-      }
-      return null;
-    },
-    /**
-     * @member XMLElement
-     * Internal helper function for getChildren().
-     *
-     * @param {String[]} items   result of splitting the query on slashes
-     * @param {int} offset   where in the items[] array we're currently looking
-     *
-     * @return {XMLElement[]} matching elements or empty array if no match
-     */
-    getChildrenRecursive: function (items, offset) {
-      if (offset === items.length-1) {
-        return this.getChildren(items[offset]);
-      }
-      var matches = this.getChildren(items[offset]);
-      var kidMatches = [];
-      for (var i = 0; i < matches.length; i++) {
-        kidMatches = kidMatches.concat(matches[i].getChildrenRecursive(items, offset+1));
-      }
-      return kidMatches;
-    },
-    /**
-     * @member XMLElement
-     * The isLeaf() function returns whether the element is a leaf element.
-     *
-     * @return {boolean} true if the element has no children.
-     */
-    isLeaf: function() {
-      return !this.hasChildren();
-    },
-    /**
-     * @member XMLElement
-     * The listChildren() function put the names of all children into an array. Same as looping through
-     * each child and calling getName() on each XMLElement.
-     *
-     * @return {String[]} a list of element names.
-     */
-    listChildren: function() {
-      var arr = [];
-      for (var i = 0, j = this.children.length; i < j; i++) {
-        arr.push( this.getChild(i).getName());
-      }
-      return arr;
-    },
-    /**
-     * @member XMLElement
-     * The removeAttribute() function removes an attribute
-     *
-     * @param {String} name        the non-null name of the attribute.
-     * @param {String} namespace   the namespace URI of the attribute, which may be null.
-     */
-    removeAttribute: function (name , namespace) {
-      this.namespace = namespace || "";
-      for (var i = 0, j = this.attributes.length; i < j; i++) {
-        if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
-          this.attributes.splice(i, 1);
-          break;
-        }
-      }
-    },
-    /**
-     * @member XMLElement
-     * The removeChild() removes a child element.
-     *
-     * @param {XMLElement} child      the the non-null child to be renoved
-     */
-    removeChild: function(child) {
-      if (child) {
-        for (var i = 0, j = this.children.length; i < j; i++) {
-          if (this.children[i].equals(child)) {
-            this.children.splice(i, 1);
-            break;
-          }
-        }
-      }
-    },
-    /**
-     * @member XMLElement
-     * The removeChildAtIndex() removes the child located at a certain index
-     *
-     * @param {int} index      the index of the child, where the first child has index 0
-     */
-    removeChildAtIndex: function(index) {
-      if (this.children.length > index) { //make sure its not outofbounds
-        this.children.splice(index, 1);
-      }
-    },
-    /**
-     * @member XMLElement
-     * The findAttribute() function searches an attribute
-     *
-     * @param {String} name        fullName the non-null full name of the attribute
-     * @param {String} namespace   the name space, which may be null
-     *
-     * @return {XMLAttribute} the attribute, or null if the attribute does not exist.
-     */
-    findAttribute: function (name, namespace) {
-      this.namespace = namespace || "";
-      for (var i = 0, j = this.attributes.length; i < j; i++) {
-        if (this.attributes[i].getName() === name && this.attributes[i].getNamespace() === this.namespace) {
-           return this.attributes[i];
-        }
-      }
-      return null;
-    },
-    /**
-     * @member XMLElement
-     * The setAttribute() function sets an attribute.
-     *
-     * @param {String} name        the non-null full name of the attribute
-     * @param {String} namespace   the non-null value of the attribute
-     */
-    setAttribute: function() {
-      var attr;
-      if (arguments.length === 3) {
-        var index = arguments[0].indexOf(':');
-        var name  = arguments[0].substring(index + 1);
-        attr      = this.findAttribute(name, arguments[1]);
-        if (attr) {
-          attr.setValue(arguments[2]);
-        } else {
-          attr = new XMLAttribute(arguments[0], name, arguments[1], arguments[2], "CDATA");
-          this.attributes.push(attr);
-        }
-      } else {
-        attr = this.findAttribute(arguments[0]);
-        if (attr) {
-          attr.setValue(arguments[1]);
-        } else {
-          attr = new XMLAttribute(arguments[0], arguments[0], null, arguments[1], "CDATA");
-          this.attributes.push(attr);
-        }
-      }
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic String
-     * attribute setter. This must take two arguments.
-     */
-    setString: function(attribute, value) {
-      this.setAttribute(attribute, value);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic int
-     * attribute setter. This must take two arguments.
-     */
-    setInt: function(attribute, value) {
-      this.setAttribute(attribute, value);
-    },
-    /**
-     * Processing 1.5 XML API wrapper for the generic float
-     * attribute setter. This must take two arguments.
-     */
-    setFloat: function(attribute, value) {
-      this.setAttribute(attribute, value);
-    },
-    /**
-     * @member XMLElement
-     * The setContent() function sets the #PCDATA content. It is an error to call this method with a
-     * non-null value if there are child objects.
-     *
-     * @param {String} content     the (possibly null) content
-     */
-    setContent: function(content) {
-      if (this.children.length > 0) {
-        Processing.debug("Tried to set content for XMLElement with children"); }
-      this.content = content;
-    },
-    /**
-     * @member XMLElement
-     * The setName() function sets the full name. This method also sets the short name and clears the
-     * namespace URI.
-     *
-     * @param {String} name        the non-null name
-     * @param {String} namespace   the namespace URI, which may be null.
-     */
-    setName: function() {
-      if (arguments.length === 1) {
-        this.name      = arguments[0];
-        this.fullName  = arguments[0];
-        this.namespace = null;
-      } else {
-        var index = arguments[0].indexOf(':');
-        if ((arguments[1] === null) || (index < 0)) {
-            this.name = arguments[0];
-        } else {
-            this.name = arguments[0].substring(index + 1);
-        }
-        this.fullName  = arguments[0];
-        this.namespace = arguments[1];
-      }
-    },
-    /**
-     * @member XMLElement
-     * The getName() function returns the full name (i.e. the name including an eventual namespace
-     * prefix) of the element.
-     *
-     * @return {String} the name, or null if the element only contains #PCDATA.
-     */
-    getName: function() {
-      return this.fullName;
-    },
-    /**
-     * @member XMLElement
-     * The getLocalName() function returns the local name (i.e. the name excluding an eventual namespace
-     * prefix) of the element.
-     *
-     * @return {String} the name, or null if the element only contains #PCDATA.
-     */
-    getLocalName: function() {
-      return this.name;
-    },
-    /**
-     * @member XMLElement
-     * The getAttributeCount() function returns the number of attributes for the node
-     * that this XMLElement represents.
-     *
-     * @return {int} the number of attributes in this XMLElement
-     */
-    getAttributeCount: function() {
-      return this.attributes.length;
-    },
-    /**
-     * @member XMLElement
-     * The toString() function returns the XML definition of an XMLElement.
-     *
-     * @return {String} the XML definition of this XMLElement
-     */
-    toString: function() {
-      // shortcut for text and cdata nodes
-      if (this.type === "TEXT") {
-        return this.content || "";
-      }
-
-      if (this.type === "CDATA") {
-        return this.cdata || "";
-      }
-
-      // real XMLElements
-      var tagstring = this.fullName;
-      var xmlstring =  "<" + tagstring;
-      var a,c;
-
-      // serialize the attributes to XML string
-      for (a = 0; a<this.attributes.length; a++) {
-        var attr = this.attributes[a];
-        xmlstring += " "  + attr.getName() + "=" + '"' + attr.getValue() + '"';
-      }
-
-      // serialize all children to XML string
-      if (this.children.length === 0) {
-        if (this.content === "" || this.content === null || this.content === undefined) {
-          xmlstring += "/>";
-        } else {
-          xmlstring += ">" + this.content + "</"+tagstring+">";
-        }
-      } else {
-        xmlstring += ">";
-        for (c = 0; c<this.children.length; c++) {
-          xmlstring += this.children[c].toString();
-        }
-        xmlstring += "</" + tagstring + ">";
-      }
-      return xmlstring;
-     }
-  };
-
-  /**
-   * static Processing 1.5 XML API wrapper for the
-   * parse method. This may only take one argument.
-   */
-  XMLElement.parse = function(xmlstring) {
-    var element = new XMLElement();
-    element.parse(xmlstring);
-    return element;
-  };
-
-  return XMLElement;
-};
-
-},{}],21:[function(require,module,exports){
 /**
  * web colors, by name
  */
@@ -6261,7 +6362,809 @@ module.exports = {
     yellowgreen:          "#9acd32"
   };
 
+},{}],21:[function(require,module,exports){
+/**
+ * Common functions traditionally on "p" that should be class functions
+ * that get bound to "p" when an instance is actually built, instead.
+ */
+module.exports = (function commonFunctions(undef) {
+
+  var CommonFunctions = {
+    /**
+     * Remove whitespace characters from the beginning and ending
+     * of a String or a String array. Works like String.trim() but includes the
+     * unicode nbsp character as well. If an array is passed in the function will return a new array not effecting the array passed in.
+     *
+     * @param {String} str    the string to trim
+     * @param {String[]} str  the string array to trim
+     *
+     * @return {String|String[]} retrurns a string or an array will removed whitespaces
+     */
+    trim: function(str) {
+      if (str instanceof Array) {
+        var arr = [];
+        for (var i = 0; i < str.length; i++) {
+          arr.push(str[i].replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, ''));
+        }
+        return arr;
+      }
+      return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
+    },
+
+    /**
+     * Converts a degree measurement to its corresponding value in radians. Radians and degrees are two ways of
+     * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
+     * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
+     *
+     * @param {int|float} value        an angle in radians
+     *
+     * @returns {float}
+     *
+     * @see degrees
+     */
+    radians: function(aAngle) {
+      return (aAngle / 180) * Math.PI;
+    },
+
+    /**
+     * Number-to-String formatting function. Prepends "plus" or "minus" depending
+     * on whether the value is positive or negative, respectively, after padding
+     * the value with zeroes on the left and right, the number of zeroes used dictated
+     * by the values 'leftDigits' and 'rightDigits'. 'value' cannot be an array.
+     *
+     * @param {int|float} value                 the number to format
+     * @param {String} plus                     the prefix for positive numbers
+     * @param {String} minus                    the prefix for negative numbers
+     * @param {int} left                        number of digits to the left of the decimal point
+     * @param {int} right                       number of digits to the right of the decimal point
+     * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+     *
+     * @returns {String or String[]}
+     *
+     * @see nfCore
+     */
+    nfCoreScalar: function (value, plus, minus, leftDigits, rightDigits, group) {
+      var sign = (value < 0) ? minus : plus;
+      var autoDetectDecimals = rightDigits === 0;
+      var rightDigitsOfDefault = (rightDigits === undef || rightDigits < 0) ? 0 : rightDigits;
+
+      var absValue = Math.abs(value);
+      if (autoDetectDecimals) {
+        rightDigitsOfDefault = 1;
+        absValue *= 10;
+        while (Math.abs(Math.round(absValue) - absValue) > 1e-6 && rightDigitsOfDefault < 7) {
+          ++rightDigitsOfDefault;
+          absValue *= 10;
+        }
+      } else if (rightDigitsOfDefault !== 0) {
+        absValue *= Math.pow(10, rightDigitsOfDefault);
+      }
+
+      // Using Java's default rounding policy HALF_EVEN. This policy is based
+      // on the idea that 0.5 values round to the nearest even number, and
+      // everything else is rounded normally.
+      var number, doubled = absValue * 2;
+      if (Math.floor(absValue) === absValue) {
+        number = absValue;
+      } else if (Math.floor(doubled) === doubled) {
+        var floored = Math.floor(absValue);
+        number = floored + (floored % 2);
+      } else {
+        number = Math.round(absValue);
+      }
+
+      var buffer = "";
+      var totalDigits = leftDigits + rightDigitsOfDefault;
+      while (totalDigits > 0 || number > 0) {
+        totalDigits--;
+        buffer = "" + (number % 10) + buffer;
+        number = Math.floor(number / 10);
+      }
+      if (group !== undef) {
+        var i = buffer.length - 3 - rightDigitsOfDefault;
+        while(i > 0) {
+          buffer = buffer.substring(0,i) + group + buffer.substring(i);
+          i-=3;
+        }
+      }
+      if (rightDigitsOfDefault > 0) {
+        return sign + buffer.substring(0, buffer.length - rightDigitsOfDefault) +
+               "." + buffer.substring(buffer.length - rightDigitsOfDefault, buffer.length);
+      }
+      return sign + buffer;
+    },
+
+    /**
+    * Number-to-String formatting function. Prepends "plus" or "minus" depending
+    * on whether the value is positive or negative, respectively, after padding
+    * the value with zeroes on the left and right, the number of zeroes used dictated
+    * by the values 'leftDigits' and 'rightDigits'. 'value' can be an array;
+    * if the input is an array, each value in it is formatted separately, and
+    * an array with formatted values is returned.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {String} plus                     the prefix for positive numbers
+    * @param {String} minus                    the prefix for negative numbers
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfCoreScalar
+    */
+    nfCore: function(value, plus, minus, leftDigits, rightDigits, group) {
+      if (value instanceof Array) {
+        var arr = [];
+        for (var i = 0, len = value.length; i < len; i++) {
+          arr.push(CommonFunctions.nfCoreScalar(value[i], plus, minus, leftDigits, rightDigits, group));
+        }
+        return arr;
+      }
+      return CommonFunctions.nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
+    },
+
+    /**
+    * Utility function for formatting numbers into strings. There are two versions, one for
+    * formatting floats and one for formatting ints. The values for the digits, left, and
+    * right parameters should always be positive integers.
+    * As shown in the above example, nf() is used to add zeros to the left and/or right
+    * of a number. This is typically for aligning a list of numbers. To remove digits from
+    * a floating-point number, use the int(), ceil(), floor(), or round() functions.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfs
+    * @see nfp
+    * @see nfc
+    */
+    nf: function(value, leftDigits, rightDigits) {
+      return CommonFunctions.nfCore(value, "", "-", leftDigits, rightDigits);
+    },
+
+    /**
+    * Utility function for formatting numbers into strings. Similar to nf()  but leaves a blank space in front
+    * of positive numbers so they align with negative numbers in spite of the minus symbol. There are two
+    * versions, one for formatting floats and one for formatting ints. The values for the digits, left,
+    * and right parameters should always be positive integers.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    *
+    * @returns {String or String[]}
+    *
+    * @see nf
+    * @see nfp
+    * @see nfc
+    */
+    nfs: function(value, leftDigits, rightDigits) {
+      return CommonFunctions.nfCore(value, " ", "-", leftDigits, rightDigits);
+    },
+
+    /**
+    * Utility function for formatting numbers into strings. Similar to nf()  but puts a "+" in front of
+    * positive numbers and a "-" in front of negative numbers. There are two versions, one for formatting
+    * floats and one for formatting ints. The values for the digits, left, and right parameters should
+    * always be positive integers.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    *
+    * @returns {String or String[]}
+    *
+    * @see nfs
+    * @see nf
+    * @see nfc
+    */
+    nfp: function(value, leftDigits, rightDigits) {
+      return CommonFunctions.nfCore(value, "+", "-", leftDigits, rightDigits);
+    },
+
+    /**
+    * Utility function for formatting numbers into strings and placing appropriate commas to mark
+    * units of 1000. There are two versions, one for formatting ints and one for formatting an array
+    * of ints. The value for the digits parameter should always be a positive integer.
+    *
+    * @param {int|int[]|float|float[]} value   the number(s) to format
+    * @param {int} left                        number of digits to the left of the decimal point
+    * @param {int} right                       number of digits to the right of the decimal point
+    *
+    * @returns {String or String[]}
+    *
+    * @see nf
+    * @see nfs
+    * @see nfp
+    */
+    nfc: function(value, rightDigits) {
+      return CommonFunctions.nfCore(value, "", "-", 0, rightDigits, ",");
+    },
+
+    // used to bind all common functions to "p"
+    withCommonFunctions: function withCommonFunctions(p) {
+      ["trim", "radians", "nf", "nfs", "nfp", "nfc"].forEach(function(f){
+        p[f] = CommonFunctions[f];
+      });
+    }
+  };
+
+  return CommonFunctions;
+}());
+
 },{}],22:[function(require,module,exports){
+/**
+ * Processing.js default scope
+ */
+module.exports = function(options) {
+
+  // Building defaultScope. Changing of the prototype protects
+  // internal Processing code from the changes in defaultScope
+  function DefaultScope() {}
+  DefaultScope.prototype = options.PConstants;
+
+  var defaultScope = new DefaultScope();
+
+  // copy over all known Object types and helper objects
+  Object.keys(options).forEach(function(prop) {
+    defaultScope[prop] = options[prop];
+  });
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Class inheritance helper methods
+  ////////////////////////////////////////////////////////////////////////////
+
+  defaultScope.defineProperty = function(obj, name, desc) {
+    if("defineProperty" in Object) {
+      Object.defineProperty(obj, name, desc);
+    } else {
+      if (desc.hasOwnProperty("get")) {
+        obj.__defineGetter__(name, desc.get);
+      }
+      if (desc.hasOwnProperty("set")) {
+        obj.__defineSetter__(name, desc.set);
+      }
+    }
+  };
+
+  /**
+   * class overloading, part 1
+   */
+  function overloadBaseClassFunction(object, name, basefn) {
+    if (!object.hasOwnProperty(name) || typeof object[name] !== 'function') {
+      // object method is not a function or just inherited from Object.prototype
+      object[name] = basefn;
+      return;
+    }
+    var fn = object[name];
+    if ("$overloads" in fn) {
+      // the object method already overloaded (see defaultScope.addMethod)
+      // let's just change a fallback method
+      fn.$defaultOverload = basefn;
+      return;
+    }
+    if (!("$overloads" in basefn) && fn.length === basefn.length) {
+      // special case when we just overriding the method
+      return;
+    }
+    var overloads, defaultOverload;
+    if ("$overloads" in basefn) {
+      // let's inherit base class overloads to speed up things
+      overloads = basefn.$overloads.slice(0);
+      overloads[fn.length] = fn;
+      defaultOverload = basefn.$defaultOverload;
+    } else {
+      overloads = [];
+      overloads[basefn.length] = basefn;
+      overloads[fn.length] = fn;
+      defaultOverload = fn;
+    }
+    var hubfn = function() {
+      var fn = hubfn.$overloads[arguments.length] ||
+               ("$methodArgsIndex" in hubfn && arguments.length > hubfn.$methodArgsIndex ?
+               hubfn.$overloads[hubfn.$methodArgsIndex] : null) ||
+               hubfn.$defaultOverload;
+      return fn.apply(this, arguments);
+    };
+    hubfn.$overloads = overloads;
+    if ("$methodArgsIndex" in basefn) {
+      hubfn.$methodArgsIndex = basefn.$methodArgsIndex;
+    }
+    hubfn.$defaultOverload = defaultOverload;
+    hubfn.name = name;
+    object[name] = hubfn;
+  }
+
+  /**
+   * class overloading, part 2
+   */
+
+  function extendClass(subClass, baseClass) {
+    function extendGetterSetter(propertyName) {
+      defaultScope.defineProperty(subClass, propertyName, {
+        get: function() {
+          return baseClass[propertyName];
+        },
+        set: function(v) {
+          baseClass[propertyName]=v;
+        },
+        enumerable: true
+      });
+    }
+
+    var properties = [];
+    for (var propertyName in baseClass) {
+      if (typeof baseClass[propertyName] === 'function') {
+        overloadBaseClassFunction(subClass, propertyName, baseClass[propertyName]);
+      } else if(propertyName.charAt(0) !== "$" && !(propertyName in subClass)) {
+        // Delaying the properties extension due to the IE9 bug (see #918).
+        properties.push(propertyName);
+      }
+    }
+    while (properties.length > 0) {
+      extendGetterSetter(properties.shift());
+    }
+
+    subClass.$super = baseClass;
+  }
+
+  /**
+   * class overloading, part 3
+   */
+  defaultScope.extendClassChain = function(base) {
+    var path = [base];
+    for (var self = base.$upcast; self; self = self.$upcast) {
+      extendClass(self, base);
+      path.push(self);
+      base = self;
+    }
+    while (path.length > 0) {
+      path.pop().$self=base;
+    }
+  };
+
+  // static
+  defaultScope.extendStaticMembers = function(derived, base) {
+    extendClass(derived, base);
+  };
+
+  // interface
+  defaultScope.extendInterfaceMembers = function(derived, base) {
+    extendClass(derived, base);
+  };
+
+  /**
+   * Java methods and JavaScript functions differ enough that
+   * we need a special function to make sure it all links up
+   * as classical hierarchical class chains.
+   */
+  defaultScope.addMethod = function(object, name, fn, hasMethodArgs) {
+    var existingfn = object[name];
+    if (existingfn || hasMethodArgs) {
+      var args = fn.length;
+      // builds the overload methods table
+      if ("$overloads" in existingfn) {
+        existingfn.$overloads[args] = fn;
+      } else {
+        var hubfn = function() {
+          var fn = hubfn.$overloads[arguments.length] ||
+                   ("$methodArgsIndex" in hubfn && arguments.length > hubfn.$methodArgsIndex ?
+                   hubfn.$overloads[hubfn.$methodArgsIndex] : null) ||
+                   hubfn.$defaultOverload;
+          return fn.apply(this, arguments);
+        };
+        var overloads = [];
+        if (existingfn) {
+          overloads[existingfn.length] = existingfn;
+        }
+        overloads[args] = fn;
+        hubfn.$overloads = overloads;
+        hubfn.$defaultOverload = existingfn || fn;
+        if (hasMethodArgs) {
+          hubfn.$methodArgsIndex = args;
+        }
+        hubfn.name = name;
+        object[name] = hubfn;
+      }
+    } else {
+      object[name] = fn;
+    }
+  };
+
+  // internal helper function
+  function isNumericalJavaType(type) {
+    if (typeof type !== "string") {
+      return false;
+    }
+    return ["byte", "int", "char", "color", "float", "long", "double"].indexOf(type) !== -1;
+  }
+
+  /**
+   * Java's arrays are pre-filled when declared with
+   * an initial size, but no content. JS arrays are not.
+   */
+  defaultScope.createJavaArray = function(type, bounds) {
+    var result = null,
+        defaultValue = null;
+    if (typeof type === "string") {
+      if (type === "boolean") {
+        defaultValue = false;
+      } else if (isNumericalJavaType(type)) {
+        defaultValue = 0;
+      }
+    }
+    if (typeof bounds[0] === 'number') {
+      var itemsCount = 0 | bounds[0];
+      if (bounds.length <= 1) {
+        result = [];
+        result.length = itemsCount;
+        for (var i = 0; i < itemsCount; ++i) {
+          result[i] = defaultValue;
+        }
+      } else {
+        result = [];
+        var newBounds = bounds.slice(1);
+        for (var j = 0; j < itemsCount; ++j) {
+          result.push(defaultScope.createJavaArray(type, newBounds));
+        }
+      }
+    }
+    return result;
+  };
+
+  // screenWidth and screenHeight are shared by all instances.
+  // and return the width/height of the browser's viewport.
+  defaultScope.defineProperty(defaultScope, 'screenWidth',
+    { get: function() { return window.innerWidth; } });
+
+  defaultScope.defineProperty(defaultScope, 'screenHeight',
+    { get: function() { return window.innerHeight; } });
+
+  return defaultScope;
+};
+
+},{}],25:[function(require,module,exports){
+(function(){/**
+ * Finalise the Processing.js object.
+ */
+module.exports = function finalizeProcessing(Processing, options) {
+
+  // unpack options
+  var window = options.window,
+      document = options.document,
+      XMLHttpRequest = window.XMLHttpRequest,
+      noop = options.noop,
+      isDOMPresent = options.isDOMPresent,
+      version = options.version,
+      undef;
+
+  // versioning
+  Processing.version = (version ? version : "@DEV-VERSION@");
+
+  // Share lib space
+  Processing.lib = {};
+
+  /**
+   * External libraries can be added to the global Processing
+   * objects with the `registerLibrary` function.
+   */
+  Processing.registerLibrary = function(name, library) {
+    Processing.lib[name] = library;
+    if(library.hasOwnProperty("init")) {
+      library.init(defaultScope);
+    }
+  };
+
+  /**
+   * This is the object that acts as our version of PApplet.
+   * This can be called as Processing.Sketch() or as
+   * Processing.Sketch(function) in which case the function
+   * must be an already-compiled-to-JS sketch function.
+   */
+  Processing.Sketch = function(attachFunction) {
+    this.attachFunction = attachFunction;
+    this.options = {
+      pauseOnBlur: false,
+      globalKeyEvents: false
+    };
+
+    /* Optional Sketch event hooks:
+     *   onLoad       - parsing/preloading is done, before sketch starts
+     *   onSetup      - setup() has been called, before first draw()
+     *   onPause      - noLoop() has been called, pausing draw loop
+     *   onLoop       - loop() has been called, resuming draw loop
+     *   onFrameStart - draw() loop about to begin
+     *   onFrameEnd   - draw() loop finished
+     *   onExit       - exit() done being called
+     */
+    this.onLoad = noop;
+    this.onSetup = noop;
+    this.onPause = noop;
+    this.onLoop = noop;
+    this.onFrameStart = noop;
+    this.onFrameEnd = noop;
+    this.onExit = noop;
+
+    this.params = {};
+    this.imageCache = {
+      pending: 0,
+      images: {},
+      // Opera requires special administration for preloading
+      operaCache: {},
+      // Specify an optional img arg if the image is already loaded in the DOM,
+      // otherwise href will get loaded.
+      add: function(href, img) {
+        // Prevent muliple loads for an image, in case it gets
+        // preloaded more than once, or is added via JS and then preloaded.
+        if (this.images[href]) {
+          return;
+        }
+
+        if (!isDOMPresent) {
+          this.images[href] = null;
+        }
+
+        // No image in the DOM, kick-off a background load
+        if (!img) {
+          img = new Image();
+          img.onload = (function(owner) {
+            return function() {
+              owner.pending--;
+            };
+          }(this));
+          this.pending++;
+          img.src = href;
+        }
+
+        this.images[href] = img;
+
+        // Opera will not load images until they are inserted into the DOM.
+        if (window.opera) {
+          var div = document.createElement("div");
+          div.appendChild(img);
+          // we can't use "display: none", since that makes it invisible, and thus not load
+          div.style.position = "absolute";
+          div.style.opacity = 0;
+          div.style.width = "1px";
+          div.style.height= "1px";
+          if (!this.operaCache[href]) {
+            document.body.appendChild(div);
+            this.operaCache[href] = div;
+          }
+        }
+      }
+    };
+
+    this.sourceCode = undefined;
+    this.attach = function(processing) {
+      // either attachFunction or sourceCode must be present on attach
+      if(typeof this.attachFunction === "function") {
+        this.attachFunction(processing);
+      } else if(this.sourceCode) {
+        var func = ((new Function("return (" + this.sourceCode + ");"))());
+        func(processing);
+        this.attachFunction = func;
+      } else {
+        throw "Unable to attach sketch to the processing instance";
+      }
+    };
+
+    this.toString = function() {
+      var i;
+      var code = "((function(Sketch) {\n";
+      code += "var sketch = new Sketch(\n" + this.sourceCode + ");\n";
+      for(i in this.options) {
+        if(this.options.hasOwnProperty(i)) {
+          var value = this.options[i];
+          code += "sketch.options." + i + " = " +
+            (typeof value === 'string' ? '\"' + value + '\"' : "" + value) + ";\n";
+        }
+      }
+      for(i in this.imageCache) {
+        if(this.options.hasOwnProperty(i)) {
+          code += "sketch.imageCache.add(\"" + i + "\");\n";
+        }
+      }
+      // TODO serialize fonts
+      code += "return sketch;\n})(Processing.Sketch))";
+      return code;
+    };
+  };
+
+  /**
+   * aggregate all source code into a single file, then rewrite that
+   * source and bind to canvas via new Processing(canvas, sourcestring).
+   * @param {CANVAS} canvas The html canvas element to bind to
+   * @param {String[]} source The array of files that must be loaded
+   */
+  var loadSketchFromSources = Processing.loadSketchFromSources = function(canvas, sources) {
+    var code = [], errors = [], sourcesCount = sources.length, loaded = 0;
+
+    function ajaxAsync(url, callback) {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          var error;
+          if (xhr.status !== 200 && xhr.status !== 0) {
+            error = "Invalid XHR status " + xhr.status;
+          } else if (xhr.responseText === "") {
+            // Give a hint when loading fails due to same-origin issues on file:/// urls
+            if ( ("withCredentials" in new XMLHttpRequest()) &&
+                 (new XMLHttpRequest()).withCredentials === false &&
+                 window.location.protocol === "file:" ) {
+              error = "XMLHttpRequest failure, possibly due to a same-origin policy violation. You can try loading this page in another browser, or load it from http://localhost using a local webserver. See the Processing.js README for a more detailed explanation of this problem and solutions.";
+            } else {
+              error = "File is empty.";
+            }
+          }
+
+          callback(xhr.responseText, error);
+        }
+      };
+      xhr.open("GET", url, true);
+      if (xhr.overrideMimeType) {
+        xhr.overrideMimeType("application/json");
+      }
+      xhr.setRequestHeader("If-Modified-Since", "Fri, 01 Jan 1960 00:00:00 GMT"); // no cache
+      xhr.send(null);
+    }
+
+    function loadBlock(index, filename) {
+      function callback(block, error) {
+        code[index] = block;
+        ++loaded;
+        if (error) {
+          errors.push(filename + " ==> " + error);
+        }
+        if (loaded === sourcesCount) {
+          if (errors.length === 0) {
+            // This used to throw, but it was constantly getting in the way of debugging where things go wrong!
+            return new Processing(canvas, code.join("\n"));
+          } else {
+            throw "Processing.js: Unable to load pjs sketch files: " + errors.join("\n");
+          }
+        }
+      }
+      if (filename.charAt(0) === '#') {
+        // trying to get script from the element
+        var scriptElement = document.getElementById(filename.substring(1));
+        if (scriptElement) {
+          callback(scriptElement.text || scriptElement.textContent);
+        } else {
+          callback("", "Unable to load pjs sketch: element with id \'" + filename.substring(1) + "\' was not found");
+        }
+        return;
+      }
+
+      ajaxAsync(filename, callback);
+    }
+
+    for (var i = 0; i < sourcesCount; ++i) {
+      loadBlock(i, sources[i]);
+    }
+  };
+
+  /**
+   * Automatic initialization function.
+   */
+  var init = function() {
+    document.removeEventListener('DOMContentLoaded', init, false);
+    var i;
+
+    // before running through init, clear the instances list, to prevent
+    // sketch duplication when page content is dynamically swapped without
+    // swapping out processing.js
+    while (Processing.instances.length > 0) {
+      for (i = Processing.instances.length - 1; i >= 0; i--) {
+        if (Processing.instances[i]) {
+          Processing.instances[i].exit();
+        }
+      }
+    }
+
+    var canvas = document.getElementsByTagName('canvas'),
+      filenames;
+
+    for (i = 0, l = canvas.length; i < l; i++) {
+      // datasrc and data-src are deprecated.
+      var processingSources = canvas[i].getAttribute('data-processing-sources');
+      if (processingSources === null) {
+        // Temporary fallback for datasrc and data-src
+        processingSources = canvas[i].getAttribute('data-src');
+        if (processingSources === null) {
+          processingSources = canvas[i].getAttribute('datasrc');
+        }
+      }
+      if (processingSources) {
+        filenames = processingSources.split(/\s+/g);
+        for (var j = 0; j < filenames.length;) {
+          if (filenames[j]) {
+            j++;
+          } else {
+            filenames.splice(j, 1);
+          }
+        }
+        loadSketchFromSources(canvas[i], filenames);
+      }
+    }
+
+    // also process all <script>-indicated sketches, if there are any
+    var s, last, source, instance,
+        nodelist = document.getElementsByTagName('script'),
+        scripts=[];
+
+    // snapshot the DOM, as the nodelist is only a DOM view, and is
+    // updated instantly when a script element is added or removed.
+    for (s = nodelist.length - 1; s >= 0; s--) {
+      scripts.push(nodelist[s]);
+    }
+
+    // iterate over all script elements to see if they contain Processing code
+    for (s = 0, last = scripts.length; s < last; s++) {
+      var script = scripts[s];
+      if (!script.getAttribute) {
+        continue;
+      }
+
+      var type = script.getAttribute("type");
+      if (type && (type.toLowerCase() === "text/processing" || type.toLowerCase() === "application/processing")) {
+        var target = script.getAttribute("data-processing-target");
+        canvas = undef;
+        if (target) {
+          canvas = document.getElementById(target);
+        } else {
+          var nextSibling = script.nextSibling;
+          while (nextSibling && nextSibling.nodeType !== 1) {
+            nextSibling = nextSibling.nextSibling;
+          }
+          if (nextSibling && nextSibling.nodeName.toLowerCase() === "canvas") {
+            canvas = nextSibling;
+          }
+        }
+
+        if (canvas) {
+          if (script.getAttribute("src")) {
+            filenames = script.getAttribute("src").split(/\s+/);
+            loadSketchFromSources(canvas, filenames);
+            continue;
+          }
+          source =  script.textContent || script.text;
+          instance = new Processing(canvas, source);
+        }
+      }
+    }
+  };
+
+  /**
+   * automatic loading of all sketches on the page
+   */
+  document.addEventListener('DOMContentLoaded', init, false);
+
+  /**
+   * Make Processing run through init after already having
+   * been set up for a page. This function exists mostly for pages
+   * that swap content in/out without reloading a page.
+   */
+  Processing.reload = init;
+
+  /**
+   * Disable the automatic loading of all sketches on the page.
+   * This will work as long as it's issued before DOMContentLoaded.
+   */
+  Processing.disableInit = function() {
+    document.removeEventListener('DOMContentLoaded', init, false);
+  };
+
+  // done.
+  return Processing;
+};
+
+})()
+},{}],26:[function(require,module,exports){
 module.exports = function(virtHashCode, virtEquals, undef) {
 
   return function withProxyFunctions(p, removeFirstArgument) {
@@ -6558,924 +7461,14 @@ module.exports = function(virtHashCode, virtEquals, undef) {
 
 };
 
-},{}],23:[function(require,module,exports){
-/**
- * For many "math" functions, we can delegate
- * to the Math object. For others, we can't.
- */
-module.exports = function withMath(p, undef) {
-  var internalRandomGenerator = function() { return Math.random(); };
-
-  /**
-  * Calculates the absolute value (magnitude) of a number. The absolute value of a number is always positive.
-  *
-  * @param {int|float} value   int or float
-  *
-  * @returns {int|float}
-  */
-  p.abs = Math.abs;
-
-  /**
-  * Calculates the closest int value that is greater than or equal to the value of the parameter.
-  * For example, ceil(9.03) returns the value 10.
-  *
-  * @param {float} value   float
-  *
-  * @returns {int}
-  *
-  * @see floor
-  * @see round
-  */
-  p.ceil = Math.ceil;
-
-  /**
-  * Returns Euler's number e (2.71828...) raised to the power of the value parameter.
-  *
-  * @param {int|float} value   int or float: the exponent to raise e to
-  *
-  * @returns {float}
-  */
-  p.exp = Math.exp;
-
-  /**
-  * Calculates the closest int value that is less than or equal to the value of the parameter.
-  *
-  * @param {int|float} value        the value to floor
-  *
-  * @returns {int|float}
-  *
-  * @see ceil
-  * @see round
-  */
-  p.floor = Math.floor;
-
-  /**
-  * Calculates the natural logarithm (the base-e logarithm) of a number. This function
-  * expects the values greater than 0.0.
-  *
-  * @param {int|float} value        int or float: number must be greater then 0.0
-  *
-  * @returns {float}
-  */
-  p.log = Math.log;
-
-  /**
-  * Facilitates exponential expressions. The pow() function is an efficient way of
-  * multiplying numbers by themselves (or their reciprocal) in large quantities.
-  * For example, pow(3, 5) is equivalent to the expression 3*3*3*3*3 and pow(3, -5)
-  * is equivalent to 1 / 3*3*3*3*3.
-  *
-  * @param {int|float} num        base of the exponential expression
-  * @param {int|float} exponent   power of which to raise the base
-  *
-  * @returns {float}
-  *
-  * @see sqrt
-  */
-  p.pow = Math.pow;
-
-  /**
-  * Calculates the integer closest to the value parameter. For example, round(9.2) returns the value 9.
-  *
-  * @param {float} value        number to round
-  *
-  * @returns {int}
-  *
-  * @see floor
-  * @see ceil
-  */
-  p.round = Math.round;
-  /**
-  * Calculates the square root of a number. The square root of a number is always positive,
-  * even though there may be a valid negative root. The square root s of number a is such
-  * that s*s = a. It is the opposite of squaring.
-  *
-  * @param {float} value        int or float, non negative
-  *
-  * @returns {float}
-  *
-  * @see pow
-  * @see sq
-  */
-
-  p.sqrt = Math.sqrt;
-
-  // Trigonometry
-  /**
-  * The inverse of cos(), returns the arc cosine of a value. This function expects the
-  * values in the range of -1 to 1 and values are returned in the range 0 to PI (3.1415927).
-  *
-  * @param {float} value        the value whose arc cosine is to be returned
-  *
-  * @returns {float}
-  *
-  * @see cos
-  * @see asin
-  * @see atan
-  */
-  p.acos = Math.acos;
-
-  /**
-  * The inverse of sin(), returns the arc sine of a value. This function expects the values
-  * in the range of -1 to 1 and values are returned in the range -PI/2 to PI/2.
-  *
-  * @param {float} value        the value whose arc sine is to be returned
-  *
-  * @returns {float}
-  *
-  * @see sin
-  * @see acos
-  * @see atan
-  */
-  p.asin = Math.asin;
-
-  /**
-  * The inverse of tan(), returns the arc tangent of a value. This function expects the values
-  * in the range of -Infinity to Infinity (exclusive) and values are returned in the range -PI/2 to PI/2 .
-  *
-  * @param {float} value        -Infinity to Infinity (exclusive)
-  *
-  * @returns {float}
-  *
-  * @see tan
-  * @see asin
-  * @see acos
-  */
-  p.atan = Math.atan;
-
-  /**
-  * Calculates the angle (in radians) from a specified point to the coordinate origin as measured from
-  * the positive x-axis. Values are returned as a float in the range from PI to -PI. The atan2() function
-  * is most often used for orienting geometry to the position of the cursor. Note: The y-coordinate of the
-  * point is the first parameter and the x-coordinate is the second due the the structure of calculating the tangent.
-  *
-  * @param {float} y        y-coordinate of the point
-  * @param {float} x        x-coordinate of the point
-  *
-  * @returns {float}
-  *
-  * @see tan
-  */
-  p.atan2 = Math.atan2;
-
-  /**
-  * Calculates the cosine of an angle. This function expects the values of the angle parameter to be provided
-  * in radians (values from 0 to PI*2). Values are returned in the range -1 to 1.
-  *
-  * @param {float} value        an angle in radians
-  *
-  * @returns {float}
-  *
-  * @see tan
-  * @see sin
-  */
-  p.cos = Math.cos;
-
-  /**
-  * Calculates the sine of an angle. This function expects the values of the angle parameter to be provided in
-  * radians (values from 0 to 6.28). Values are returned in the range -1 to 1.
-  *
-  * @param {float} value        an angle in radians
-  *
-  * @returns {float}
-  *
-  * @see cos
-  * @see radians
-  */
-  p.sin = Math.sin;
-
-  /**
-  * Calculates the ratio of the sine and cosine of an angle. This function expects the values of the angle
-  * parameter to be provided in radians (values from 0 to PI*2). Values are returned in the range infinity to -infinity.
-  *
-  * @param {float} value        an angle in radians
-  *
-  * @returns {float}
-  *
-  * @see cos
-  * @see sin
-  * @see radians
-  */
-  p.tan = Math.tan;
-
-  /**
-  * Constrains a value to not exceed a maximum and minimum value.
-  *
-  * @param {int|float} value   the value to constrain
-  * @param {int|float} value   minimum limit
-  * @param {int|float} value   maximum limit
-  *
-  * @returns {int|float}
-  *
-  * @see max
-  * @see min
-  */
-  p.constrain = function(aNumber, aMin, aMax) {
-    return aNumber > aMax ? aMax : aNumber < aMin ? aMin : aNumber;
-  };
-
-  /**
-  * Calculates the distance between two points.
-  *
-  * @param {int|float} x1     int or float: x-coordinate of the first point
-  * @param {int|float} y1     int or float: y-coordinate of the first point
-  * @param {int|float} z1     int or float: z-coordinate of the first point
-  * @param {int|float} x2     int or float: x-coordinate of the second point
-  * @param {int|float} y2     int or float: y-coordinate of the second point
-  * @param {int|float} z2     int or float: z-coordinate of the second point
-  *
-  * @returns {float}
-  */
-  p.dist = function() {
-    var dx, dy, dz;
-    if (arguments.length === 4) {
-      dx = arguments[0] - arguments[2];
-      dy = arguments[1] - arguments[3];
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-    if (arguments.length === 6) {
-      dx = arguments[0] - arguments[3];
-      dy = arguments[1] - arguments[4];
-      dz = arguments[2] - arguments[5];
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    }
-  };
-
-  /**
-  * Calculates a number between two numbers at a specific increment. The amt  parameter is the
-  * amount to interpolate between the two values where 0.0 equal to the first point, 0.1 is very
-  * near the first point, 0.5 is half-way in between, etc. The lerp function is convenient for
-  * creating motion along a straight path and for drawing dotted lines.
-  *
-  * @param {int|float} value1       float or int: first value
-  * @param {int|float} value2       float or int: second value
-  * @param {int|float} amt          float: between 0.0 and 1.0
-  *
-  * @returns {float}
-  *
-  * @see curvePoint
-  * @see bezierPoint
-  */
-  p.lerp = function(value1, value2, amt) {
-    return ((value2 - value1) * amt) + value1;
-  };
-
-  /**
-  * Calculates the magnitude (or length) of a vector. A vector is a direction in space commonly
-  * used in computer graphics and linear algebra. Because it has no "start" position, the magnitude
-  * of a vector can be thought of as the distance from coordinate (0,0) to its (x,y) value.
-  * Therefore, mag() is a shortcut for writing "dist(0, 0, x, y)".
-  *
-  * @param {int|float} a       float or int: first value
-  * @param {int|float} b       float or int: second value
-  * @param {int|float} c       float or int: third value
-  *
-  * @returns {float}
-  *
-  * @see dist
-  */
-  p.mag = function(a, b, c) {
-    if (c) {
-      return Math.sqrt(a * a + b * b + c * c);
-    }
-
-    return Math.sqrt(a * a + b * b);
-  };
-
-  /**
-  * Re-maps a number from one range to another. In the example above, the number '25' is converted from
-  * a value in the range 0..100 into a value that ranges from the left edge (0) to the right edge (width) of the screen.
-  * Numbers outside the range are not clamped to 0 and 1, because out-of-range values are often intentional and useful.
-  *
-  * @param {float} value        The incoming value to be converted
-  * @param {float} istart       Lower bound of the value's current range
-  * @param {float} istop        Upper bound of the value's current range
-  * @param {float} ostart       Lower bound of the value's target range
-  * @param {float} ostop        Upper bound of the value's target range
-  *
-  * @returns {float}
-  *
-  * @see norm
-  * @see lerp
-  */
-  p.map = function(value, istart, istop, ostart, ostop) {
-    return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
-  };
-
-  /**
-  * Determines the largest value in a sequence of numbers.
-  *
-  * @param {int|float} value1         int or float
-  * @param {int|float} value2         int or float
-  * @param {int|float} value3         int or float
-  * @param {int|float} array          int or float array
-  *
-  * @returns {int|float}
-  *
-  * @see min
-  */
-  p.max = function() {
-    if (arguments.length === 2) {
-      return arguments[0] < arguments[1] ? arguments[1] : arguments[0];
-    }
-    var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-    if (! ("length" in numbers && numbers.length > 0)) {
-      throw "Non-empty array is expected";
-    }
-    var max = numbers[0],
-      count = numbers.length;
-    for (var i = 1; i < count; ++i) {
-      if (max < numbers[i]) {
-        max = numbers[i];
-      }
-    }
-    return max;
-  };
-
-  /**
-  * Determines the smallest value in a sequence of numbers.
-  *
-  * @param {int|float} value1         int or float
-  * @param {int|float} value2         int or float
-  * @param {int|float} value3         int or float
-  * @param {int|float} array          int or float array
-  *
-  * @returns {int|float}
-  *
-  * @see max
-  */
-  p.min = function() {
-    if (arguments.length === 2) {
-      return arguments[0] < arguments[1] ? arguments[0] : arguments[1];
-    }
-    var numbers = arguments.length === 1 ? arguments[0] : arguments; // if single argument, array is used
-    if (! ("length" in numbers && numbers.length > 0)) {
-      throw "Non-empty array is expected";
-    }
-    var min = numbers[0],
-      count = numbers.length;
-    for (var i = 1; i < count; ++i) {
-      if (min > numbers[i]) {
-        min = numbers[i];
-      }
-    }
-    return min;
-  };
-
-  /**
-  * Normalizes a number from another range into a value between 0 and 1.
-  * Identical to map(value, low, high, 0, 1);
-  * Numbers outside the range are not clamped to 0 and 1, because out-of-range
-  * values are often intentional and useful.
-  *
-  * @param {float} aNumber    The incoming value to be converted
-  * @param {float} low        Lower bound of the value's current range
-  * @param {float} high       Upper bound of the value's current range
-  *
-  * @returns {float}
-  *
-  * @see map
-  * @see lerp
-  */
-  p.norm = function(aNumber, low, high) {
-    return (aNumber - low) / (high - low);
-  };
-
-  /**
-  * Squares a number (multiplies a number by itself). The result is always a positive number,
-  * as multiplying two negative numbers always yields a positive result. For example, -1 * -1 = 1.
-  *
-  * @param {float} value        int or float
-  *
-  * @returns {float}
-  *
-  * @see sqrt
-  */
-  p.sq = function(aNumber) {
-    return aNumber * aNumber;
-  };
-
-  /**
-  * Converts a radian measurement to its corresponding value in degrees. Radians and degrees are two ways of
-  * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
-  * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
-  *
-  * @param {int|float} value        an angle in radians
-  *
-  * @returns {float}
-  *
-  * @see radians
-  */
-  p.degrees = function(aAngle) {
-    return (aAngle * 180) / Math.PI;
-  };
-
-  /**
-  * Generates random numbers. Each time the random() function is called, it returns an unexpected value within
-  * the specified range. If one parameter is passed to the function it will return a float between zero and the
-  * value of the high parameter. The function call random(5) returns values between 0 and 5 (starting at zero,
-  * up to but not including 5). If two parameters are passed, it will return a float with a value between the
-  * parameters. The function call random(-5, 10.2) returns values starting at -5 up to (but not including) 10.2.
-  * To convert a floating-point random number to an integer, use the int() function.
-  *
-  * @param {int|float} value1         if one parameter is used, the top end to random from, if two params the low end
-  * @param {int|float} value2         the top end of the random range
-  *
-  * @returns {float}
-  *
-  * @see randomSeed
-  * @see noise
-  */
-  p.random = function() {
-    if(arguments.length === 0) {
-      return internalRandomGenerator();
-    }
-    if(arguments.length === 1) {
-      return internalRandomGenerator() * arguments[0];
-    }
-    var aMin = arguments[0], aMax = arguments[1];
-    return internalRandomGenerator() * (aMax - aMin) + aMin;
-  };
-
-  // Pseudo-random generator
-  function Marsaglia(i1, i2) {
-    // from http://www.math.uni-bielefeld.de/~sillke/ALGORITHMS/random/marsaglia-c
-    var z=i1 || 362436069, w= i2 || 521288629;
-    var intGenerator = function() {
-      z=(36969*(z&65535)+(z>>>16)) & 0xFFFFFFFF;
-      w=(18000*(w&65535)+(w>>>16)) & 0xFFFFFFFF;
-      return (((z&0xFFFF)<<16) | (w&0xFFFF)) & 0xFFFFFFFF;
-    };
-
-    this.doubleGenerator = function() {
-      var i = intGenerator() / 4294967296;
-      return i < 0 ? 1 + i : i;
-    };
-    this.intGenerator = intGenerator;
-  }
-
-  Marsaglia.createRandomized = function() {
-    var now = new Date();
-    return new Marsaglia((now / 60000) & 0xFFFFFFFF, now & 0xFFFFFFFF);
-  };
-
-  /**
-  * Sets the seed value for random(). By default, random() produces different results each time the
-  * program is run. Set the value parameter to a constant to return the same pseudo-random numbers
-  * each time the software is run.
-  *
-  * @param {int|float} seed         int
-  *
-  * @see random
-  * @see noise
-  * @see noiseSeed
-  */
-  p.randomSeed = function(seed) {
-    internalRandomGenerator = (new Marsaglia(seed, (seed<<16)+(seed>>16))).doubleGenerator;
-    this.haveNextNextGaussian = false;
-  };
-
-  /**
-  * Returns a float from a random series of numbers having a mean of 0 and standard deviation of 1. Each time
-  * the randomGaussian() function is called, it returns a number fitting a Gaussian, or normal, distribution.
-  * There is theoretically no minimum or maximum value that randomGaussian() might return. Rather, there is just a
-  * very low probability that values far from the mean will be returned; and a higher probability that numbers
-  * near the mean will be returned.
-  *
-  * @returns {float}
-  *
-  * @see random
-  * @see noise
-  */
-  p.randomGaussian = function() {
-    if (this.haveNextNextGaussian) {
-      this.haveNextNextGaussian = false;
-      return this.nextNextGaussian;
-    }
-    var v1, v2, s;
-    do {
-      v1 = 2 * internalRandomGenerator() - 1; // between -1.0 and 1.0
-      v2 = 2 * internalRandomGenerator() - 1; // between -1.0 and 1.0
-      s = v1 * v1 + v2 * v2;
-    }
-    while (s >= 1 || s === 0);
-
-    var multiplier = Math.sqrt(-2 * Math.log(s) / s);
-    this.nextNextGaussian = v2 * multiplier;
-    this.haveNextNextGaussian = true;
-
-    return v1 * multiplier;
-  };
-
-  // Noise functions and helpers
-  function PerlinNoise(seed) {
-    var rnd = seed !== undef ? new Marsaglia(seed, (seed<<16)+(seed>>16)) : Marsaglia.createRandomized();
-    var i, j;
-    // http://www.noisemachine.com/talk1/17b.html
-    // http://mrl.nyu.edu/~perlin/noise/
-    // generate permutation
-    var perm = new Uint8Array(512);
-    for(i=0;i<256;++i) { perm[i] = i; }
-    for(i=0;i<256;++i) {
-      // NOTE: we can only do this because we've made sure the Marsaglia generator
-      //       gives us numbers where the last byte in a pseudo-random number is
-      //       still pseudo-random. If no 2nd argument is passed in the constructor,
-      //       that is no longer the case and this pair swap will always run identically.
-      var t = perm[j = rnd.intGenerator() & 0xFF];
-      perm[j] = perm[i];
-      perm[i] = t;
-    }
-    // copy to avoid taking mod in perm[0];
-    for(i=0;i<256;++i) { perm[i + 256] = perm[i]; }
-
-    function grad3d(i,x,y,z) {
-      var h = i & 15; // convert into 12 gradient directions
-      var u = h<8 ? x : y,
-          v = h<4 ? y : h===12||h===14 ? x : z;
-      return ((h&1) === 0 ? u : -u) + ((h&2) === 0 ? v : -v);
-    }
-
-    function grad2d(i,x,y) {
-      var v = (i & 1) === 0 ? x : y;
-      return (i&2) === 0 ? -v : v;
-    }
-
-    function grad1d(i,x) {
-      return (i&1) === 0 ? -x : x;
-    }
-
-    function lerp(t,a,b) { return a + t * (b - a); }
-
-    this.noise3d = function(x, y, z) {
-      var X = Math.floor(x)&255, Y = Math.floor(y)&255, Z = Math.floor(z)&255;
-      x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
-      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y, fz = (3-2*z)*z*z;
-      var p0 = perm[X]+Y, p00 = perm[p0] + Z, p01 = perm[p0 + 1] + Z,
-          p1 = perm[X + 1] + Y, p10 = perm[p1] + Z, p11 = perm[p1 + 1] + Z;
-      return lerp(fz,
-        lerp(fy, lerp(fx, grad3d(perm[p00], x, y, z), grad3d(perm[p10], x-1, y, z)),
-                 lerp(fx, grad3d(perm[p01], x, y-1, z), grad3d(perm[p11], x-1, y-1,z))),
-        lerp(fy, lerp(fx, grad3d(perm[p00 + 1], x, y, z-1), grad3d(perm[p10 + 1], x-1, y, z-1)),
-                 lerp(fx, grad3d(perm[p01 + 1], x, y-1, z-1), grad3d(perm[p11 + 1], x-1, y-1,z-1))));
-    };
-
-    this.noise2d = function(x, y) {
-      var X = Math.floor(x)&255, Y = Math.floor(y)&255;
-      x -= Math.floor(x); y -= Math.floor(y);
-      var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y;
-      var p0 = perm[X]+Y, p1 = perm[X + 1] + Y;
-      return lerp(fy,
-        lerp(fx, grad2d(perm[p0], x, y), grad2d(perm[p1], x-1, y)),
-        lerp(fx, grad2d(perm[p0 + 1], x, y-1), grad2d(perm[p1 + 1], x-1, y-1)));
-    };
-
-    this.noise1d = function(x) {
-      var X = Math.floor(x)&255;
-      x -= Math.floor(x);
-      var fx = (3-2*x)*x*x;
-      return lerp(fx, grad1d(perm[X], x), grad1d(perm[X+1], x-1));
-    };
-  }
-
-  // processing defaults
-  var noiseProfile = { generator: undef, octaves: 4, fallout: 0.5, seed: undef};
-
-  /**
-  * Returns the Perlin noise value at specified coordinates. Perlin noise is a random sequence
-  * generator producing a more natural ordered, harmonic succession of numbers compared to the
-  * standard random() function. It was invented by Ken Perlin in the 1980s and been used since
-  * in graphical applications to produce procedural textures, natural motion, shapes, terrains etc.
-  * The main difference to the random() function is that Perlin noise is defined in an infinite
-  * n-dimensional space where each pair of coordinates corresponds to a fixed semi-random value
-  * (fixed only for the lifespan of the program). The resulting value will always be between 0.0
-  * and 1.0. Processing can compute 1D, 2D and 3D noise, depending on the number of coordinates
-  * given. The noise value can be animated by moving through the noise space as demonstrated in
-  * the example above. The 2nd and 3rd dimension can also be interpreted as time.
-  * The actual noise is structured similar to an audio signal, in respect to the function's use
-  * of frequencies. Similar to the concept of harmonics in physics, perlin noise is computed over
-  * several octaves which are added together for the final result.
-  * Another way to adjust the character of the resulting sequence is the scale of the input
-  * coordinates. As the function works within an infinite space the value of the coordinates
-  * doesn't matter as such, only the distance between successive coordinates does (eg. when using
-  * noise() within a loop). As a general rule the smaller the difference between coordinates, the
-  * smoother the resulting noise sequence will be. Steps of 0.005-0.03 work best for most applications,
-  * but this will differ depending on use.
-  *
-  * @param {float} x          x coordinate in noise space
-  * @param {float} y          y coordinate in noise space
-  * @param {float} z          z coordinate in noise space
-  *
-  * @returns {float}
-  *
-  * @see random
-  * @see noiseDetail
-  */
-  p.noise = function(x, y, z) {
-    if(noiseProfile.generator === undef) {
-      // caching
-      noiseProfile.generator = new PerlinNoise(noiseProfile.seed);
-    }
-    var generator = noiseProfile.generator;
-    var effect = 1, k = 1, sum = 0;
-    for(var i=0; i<noiseProfile.octaves; ++i) {
-      effect *= noiseProfile.fallout;
-      switch (arguments.length) {
-      case 1:
-        sum += effect * (1 + generator.noise1d(k*x))/2; break;
-      case 2:
-        sum += effect * (1 + generator.noise2d(k*x, k*y))/2; break;
-      case 3:
-        sum += effect * (1 + generator.noise3d(k*x, k*y, k*z))/2; break;
-      }
-      k *= 2;
-    }
-    return sum;
-  };
-
-  /**
-  * Adjusts the character and level of detail produced by the Perlin noise function.
-  * Similar to harmonics in physics, noise is computed over several octaves. Lower octaves
-  * contribute more to the output signal and as such define the overal intensity of the noise,
-  * whereas higher octaves create finer grained details in the noise sequence. By default,
-  * noise is computed over 4 octaves with each octave contributing exactly half than its
-  * predecessor, starting at 50% strength for the 1st octave. This falloff amount can be
-  * changed by adding an additional function parameter. Eg. a falloff factor of 0.75 means
-  * each octave will now have 75% impact (25% less) of the previous lower octave. Any value
-  * between 0.0 and 1.0 is valid, however note that values greater than 0.5 might result in
-  * greater than 1.0 values returned by noise(). By changing these parameters, the signal
-  * created by the noise() function can be adapted to fit very specific needs and characteristics.
-  *
-  * @param {int} octaves          number of octaves to be used by the noise() function
-  * @param {float} falloff        falloff factor for each octave
-  *
-  * @see noise
-  */
-  p.noiseDetail = function(octaves, fallout) {
-    noiseProfile.octaves = octaves;
-    if(fallout !== undef) {
-      noiseProfile.fallout = fallout;
-    }
-  };
-
-  /**
-  * Sets the seed value for noise(). By default, noise() produces different results each
-  * time the program is run. Set the value parameter to a constant to return the same
-  * pseudo-random numbers each time the software is run.
-  *
-  * @param {int} seed         int
-  *
-  * @returns {float}
-  *
-  * @see random
-  * @see radomSeed
-  * @see noise
-  * @see noiseDetail
-  */
-  p.noiseSeed = function(seed) {
-    noiseProfile.seed = seed;
-    noiseProfile.generator = undef;
-  };
-};
-
-},{}],24:[function(require,module,exports){
-/**
- * Common functions traditionally on "p" that should be class functions
- * that get bound to "p" when an instance is actually built, instead.
- */
-module.exports = (function commonFunctions(undef) {
-
-  var CommonFunctions = {
-    /**
-     * Remove whitespace characters from the beginning and ending
-     * of a String or a String array. Works like String.trim() but includes the
-     * unicode nbsp character as well. If an array is passed in the function will return a new array not effecting the array passed in.
-     *
-     * @param {String} str    the string to trim
-     * @param {String[]} str  the string array to trim
-     *
-     * @return {String|String[]} retrurns a string or an array will removed whitespaces
-     */
-    trim: function(str) {
-      if (str instanceof Array) {
-        var arr = [];
-        for (var i = 0; i < str.length; i++) {
-          arr.push(str[i].replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, ''));
-        }
-        return arr;
-      }
-      return str.replace(/^\s*/, '').replace(/\s*$/, '').replace(/\r*$/, '');
-    },
-
-    /**
-     * Converts a degree measurement to its corresponding value in radians. Radians and degrees are two ways of
-     * measuring the same thing. There are 360 degrees in a circle and 2*PI radians in a circle. For example,
-     * 90 degrees = PI/2 = 1.5707964. All trigonometric methods in Processing require their parameters to be specified in radians.
-     *
-     * @param {int|float} value        an angle in radians
-     *
-     * @returns {float}
-     *
-     * @see degrees
-     */
-    radians: function(aAngle) {
-      return (aAngle / 180) * Math.PI;
-    },
-
-    /**
-     * Number-to-String formatting function. Prepends "plus" or "minus" depending
-     * on whether the value is positive or negative, respectively, after padding
-     * the value with zeroes on the left and right, the number of zeroes used dictated
-     * by the values 'leftDigits' and 'rightDigits'. 'value' cannot be an array.
-     *
-     * @param {int|float} value                 the number to format
-     * @param {String} plus                     the prefix for positive numbers
-     * @param {String} minus                    the prefix for negative numbers
-     * @param {int} left                        number of digits to the left of the decimal point
-     * @param {int} right                       number of digits to the right of the decimal point
-     * @param {String} group                    string delimited for groups, such as the comma in "1,000"
-     *
-     * @returns {String or String[]}
-     *
-     * @see nfCore
-     */
-    nfCoreScalar: function (value, plus, minus, leftDigits, rightDigits, group) {
-      var sign = (value < 0) ? minus : plus;
-      var autoDetectDecimals = rightDigits === 0;
-      var rightDigitsOfDefault = (rightDigits === undef || rightDigits < 0) ? 0 : rightDigits;
-
-      var absValue = Math.abs(value);
-      if (autoDetectDecimals) {
-        rightDigitsOfDefault = 1;
-        absValue *= 10;
-        while (Math.abs(Math.round(absValue) - absValue) > 1e-6 && rightDigitsOfDefault < 7) {
-          ++rightDigitsOfDefault;
-          absValue *= 10;
-        }
-      } else if (rightDigitsOfDefault !== 0) {
-        absValue *= Math.pow(10, rightDigitsOfDefault);
-      }
-
-      // Using Java's default rounding policy HALF_EVEN. This policy is based
-      // on the idea that 0.5 values round to the nearest even number, and
-      // everything else is rounded normally.
-      var number, doubled = absValue * 2;
-      if (Math.floor(absValue) === absValue) {
-        number = absValue;
-      } else if (Math.floor(doubled) === doubled) {
-        var floored = Math.floor(absValue);
-        number = floored + (floored % 2);
-      } else {
-        number = Math.round(absValue);
-      }
-
-      var buffer = "";
-      var totalDigits = leftDigits + rightDigitsOfDefault;
-      while (totalDigits > 0 || number > 0) {
-        totalDigits--;
-        buffer = "" + (number % 10) + buffer;
-        number = Math.floor(number / 10);
-      }
-      if (group !== undef) {
-        var i = buffer.length - 3 - rightDigitsOfDefault;
-        while(i > 0) {
-          buffer = buffer.substring(0,i) + group + buffer.substring(i);
-          i-=3;
-        }
-      }
-      if (rightDigitsOfDefault > 0) {
-        return sign + buffer.substring(0, buffer.length - rightDigitsOfDefault) +
-               "." + buffer.substring(buffer.length - rightDigitsOfDefault, buffer.length);
-      }
-      return sign + buffer;
-    },
-
-    /**
-    * Number-to-String formatting function. Prepends "plus" or "minus" depending
-    * on whether the value is positive or negative, respectively, after padding
-    * the value with zeroes on the left and right, the number of zeroes used dictated
-    * by the values 'leftDigits' and 'rightDigits'. 'value' can be an array;
-    * if the input is an array, each value in it is formatted separately, and
-    * an array with formatted values is returned.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {String} plus                     the prefix for positive numbers
-    * @param {String} minus                    the prefix for negative numbers
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    * @param {String} group                    string delimited for groups, such as the comma in "1,000"
-    *
-    * @returns {String or String[]}
-    *
-    * @see nfCoreScalar
-    */
-    nfCore: function(value, plus, minus, leftDigits, rightDigits, group) {
-      if (value instanceof Array) {
-        var arr = [];
-        for (var i = 0, len = value.length; i < len; i++) {
-          arr.push(CommonFunctions.nfCoreScalar(value[i], plus, minus, leftDigits, rightDigits, group));
-        }
-        return arr;
-      }
-      return CommonFunctions.nfCoreScalar(value, plus, minus, leftDigits, rightDigits, group);
-    },
-
-    /**
-    * Utility function for formatting numbers into strings. There are two versions, one for
-    * formatting floats and one for formatting ints. The values for the digits, left, and
-    * right parameters should always be positive integers.
-    * As shown in the above example, nf() is used to add zeros to the left and/or right
-    * of a number. This is typically for aligning a list of numbers. To remove digits from
-    * a floating-point number, use the int(), ceil(), floor(), or round() functions.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    *
-    * @returns {String or String[]}
-    *
-    * @see nfs
-    * @see nfp
-    * @see nfc
-    */
-    nf: function(value, leftDigits, rightDigits) {
-      return CommonFunctions.nfCore(value, "", "-", leftDigits, rightDigits);
-    },
-
-    /**
-    * Utility function for formatting numbers into strings. Similar to nf()  but leaves a blank space in front
-    * of positive numbers so they align with negative numbers in spite of the minus symbol. There are two
-    * versions, one for formatting floats and one for formatting ints. The values for the digits, left,
-    * and right parameters should always be positive integers.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    *
-    * @returns {String or String[]}
-    *
-    * @see nf
-    * @see nfp
-    * @see nfc
-    */
-    nfs: function(value, leftDigits, rightDigits) {
-      return CommonFunctions.nfCore(value, " ", "-", leftDigits, rightDigits);
-    },
-
-    /**
-    * Utility function for formatting numbers into strings. Similar to nf()  but puts a "+" in front of
-    * positive numbers and a "-" in front of negative numbers. There are two versions, one for formatting
-    * floats and one for formatting ints. The values for the digits, left, and right parameters should
-    * always be positive integers.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    *
-    * @returns {String or String[]}
-    *
-    * @see nfs
-    * @see nf
-    * @see nfc
-    */
-    nfp: function(value, leftDigits, rightDigits) {
-      return CommonFunctions.nfCore(value, "+", "-", leftDigits, rightDigits);
-    },
-
-    /**
-    * Utility function for formatting numbers into strings and placing appropriate commas to mark
-    * units of 1000. There are two versions, one for formatting ints and one for formatting an array
-    * of ints. The value for the digits parameter should always be a positive integer.
-    *
-    * @param {int|int[]|float|float[]} value   the number(s) to format
-    * @param {int} left                        number of digits to the left of the decimal point
-    * @param {int} right                       number of digits to the right of the decimal point
-    *
-    * @returns {String or String[]}
-    *
-    * @see nf
-    * @see nfs
-    * @see nfp
-    */
-    nfc: function(value, rightDigits) {
-      return CommonFunctions.nfCore(value, "", "-", 0, rightDigits, ",");
-    },
-
-    // used to bind all common functions to "p"
-    withCommonFunctions: function withCommonFunctions(p) {
-      ["trim", "radians", "nf", "nfs", "nfp", "nfc"].forEach(function(f){
-        p[f] = CommonFunctions[f];
-      });
-    }
-  };
-
-  return CommonFunctions;
-}());
-
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /**
  * Touch and Mouse event handling
  */
-module.exports = function withTouch(p, curElement, attachEventHandler, document, PConstants, undef) {
+module.exports = function withTouch(p, curElement, attachEventHandler, detachEventHandlersByType, document, PConstants, undef) {
+
+  // List of mouse event types
+  var mouseTypes = ['mouseout','mousemove','mousedown','mouseup','DOMMouseScroll','mousewheel','touchstart'];
 
   /**
    * Determine the location of the (mouse) pointer.
@@ -7570,16 +7563,9 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
     curElement.setAttribute("style","-webkit-user-select: none");
     curElement.setAttribute("onclick","void(0)");
     curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
-    // Loop though eventHandlers and remove mouse listeners
-    for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-      var type = eventHandlers[i].type;
-      // Have this function remove itself from the eventHandlers list too
-      if (type === "mouseout" ||  type === "mousemove" ||
-          type === "mousedown" || type === "mouseup" ||
-          type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
-        detachEventHandler(eventHandlers[i]);
-      }
-    }
+
+    // Remove mouse-type event listeners
+    detachEventHandlersByType(curElement, mouseTypes);
 
     // If there are any native touch events defined in the sketch, connect all of them
     // Otherwise, connect all of the emulated mouse events
@@ -7655,9 +7641,6 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
         }
       });
     }
-
-    // Refire the touch start event we consumed in this function
-    curElement.dispatchEvent(t);
   });
 
   /**
@@ -7798,1754 +7781,8 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
 
 };
 
-},{}],26:[function(require,module,exports){
-/**
- * The parser for turning Processing syntax into Pjs JavaScript.
- * This code is not trivial; unless you know what you're doing,
- * you shouldn't be changing things in here =)
- */
-module.exports = function setupParser(Processing, options) {
-
-  var defaultScope = options.defaultScope,
-      PConstants = defaultScope.PConstants,
-      aFunctions = options.aFunctions,
-      Browser = options.Browser,
-      document = Browser.document,
-      undef;
-
-  // Processing global methods and constants for the parser
-  function getGlobalMembers() {
-    // The names array contains the names of everything that is inside "p."
-    // When something new is added to "p." it must also be added to this list.
-    var names = [ /* this code is generated by jsglobals.js */
-      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix",
-      "arc", "arrayCopy", "asin", "atan", "atan2", "background", "beginCamera",
-      "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint",
-      "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
-      "blit_resize", "blue", "box", "breakShape", "brightness",
-      "camera", "ceil", "Character", "color", "colorMode",
-      "concat", "constrain", "copy", "cos", "createFont",
-      "createGraphics", "createImage", "cursor", "curve", "curveDetail",
-      "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
-      "degrees", "directionalLight", "disableContextMenu",
-      "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu",
-      "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
-      "fill", "filter", "floor", "focused", "frameCount", "frameRate", "frustum",
-      "get", "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour",
-      "hue", "image", "imageMode", "intersect", "join", "key",
-      "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
-      "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
-      "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape", "loadXML",
-      "loadStrings", "log", "loop", "mag", "map", "match", "matchAll", "max",
-      "millis", "min", "minute", "mix", "modelX", "modelY", "modelZ", "modes",
-      "month", "mouseButton", "mouseClicked", "mouseDragged", "mouseMoved",
-      "mouseOut", "mouseOver", "mousePressed", "mouseReleased", "mouseScroll",
-      "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
-      "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
-      "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
-      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
-      "parseInt", "parseXML", "peg", "perspective", "PImage", "pixels",
-      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
-      "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
-      "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
-      "pushMatrix", "pushStyle", "quad", "radians", "random", "randomGaussian",
-      "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
-      "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ",
-      "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
-      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
-      "shapeMode", "shared", "shearX", "shearY", "shininess", "shorten", "sin", "size", "smooth",
-      "sort", "specular", "sphere", "sphereDetail", "splice", "split",
-      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
-      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
-      "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
-      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", "toImageData",
-      "touchCancel", "touchEnd", "touchMove", "touchStart", "translate", "transform",
-      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
-      "vertex", "width", "XMLElement", "XML", "year", "__contains", "__equals",
-      "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
-      "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
-      "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
-      "__codePointAt", "__startsWith", "__endsWith", "__matches"];
-
-    // custom functions and properties are added here
-    if(aFunctions) {
-      Object.keys(aFunctions).forEach(function(name) {
-        names.push(name);
-      });
-    }
-
-    // custom libraries that were attached to Processing
-    var members = {};
-    var i, l;
-    for (i = 0, l = names.length; i < l ; ++i) {
-      members[names[i]] = null;
-    }
-    for (var lib in Processing.lib) {
-      if (Processing.lib.hasOwnProperty(lib)) {
-        if (Processing.lib[lib].exports) {
-          var exportedNames = Processing.lib[lib].exports;
-          for (i = 0, l = exportedNames.length; i < l; ++i) {
-           members[exportedNames[i]] = null;
-          }
-        }
-      }
-    }
-    return members;
-  }
-
-  /*
-
-    Parser converts Java-like syntax into JavaScript.
-    Creates an Abstract Syntax Tree -- "Light AST" from the Java-like code.
-
-    It is an object tree. The root object is created from the AstRoot class, which contains statements.
-
-    A statement object can be of type: AstForStatement, AstCatchStatement, AstPrefixStatement, AstMethod, AstClass,
-    AstInterface, AstFunction, AstStatementBlock and AstLabel.
-
-    AstPrefixStatement can be a statement of type: if, switch, while, with, do, else, finally, return, throw, try, break, and continue.
-
-    These object's toString function returns the JavaScript code for the statement.
-
-    Any processing calls need "processing." prepended to them.
-
-    Similarly, calls from inside classes need "$this_1.", prepended to them,
-    with 1 being the depth level for inner classes.
-    This includes members passed down from inheritance.
-
-    The resulting code is then eval'd and run.
-
-  */
-
-  function parseProcessing(code) {
-    var globalMembers = getGlobalMembers();
-
-    // masks parentheses, brackets and braces with '"A5"'
-    // where A is the bracket type, and 5 is the index in an array containing all brackets split into atoms
-    // 'while(true){}' -> 'while"B1""A2"'
-    // parentheses() = B, brackets[] = C and braces{} = A
-    function splitToAtoms(code) {
-      var atoms = [];
-      var items = code.split(/([\{\[\(\)\]\}])/);
-      var result = items[0];
-
-      var stack = [];
-      for(var i=1; i < items.length; i += 2) {
-        var item = items[i];
-        if(item === '[' || item === '{' || item === '(') {
-          stack.push(result); result = item;
-        } else if(item === ']' || item === '}' || item === ')') {
-          var kind = item === '}' ? 'A' : item === ')' ? 'B' : 'C';
-          var index = atoms.length; atoms.push(result + item);
-          result = stack.pop() + '"' + kind + (index + 1) + '"';
-        }
-        result += items[i + 1];
-      }
-      atoms.unshift(result);
-      return atoms;
-    }
-
-    // replaces strings and regexs keyed by index with an array of strings
-    function injectStrings(code, strings) {
-      return code.replace(/'(\d+)'/g, function(all, index) {
-        var val = strings[index];
-        if(val.charAt(0) === "/") {
-          return val;
-        }
-        return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
-      });
-    }
-
-    // trims off leading and trailing spaces
-    // returns an object. object.left, object.middle, object.right, object.untrim
-    function trimSpaces(string) {
-      var m1 = /^\s*/.exec(string), result;
-      if(m1[0].length === string.length) {
-        result = {left: m1[0], middle: "", right: ""};
-      } else {
-        var m2 = /\s*$/.exec(string);
-        result = {left: m1[0], middle: string.substring(m1[0].length, m2.index), right: m2[0]};
-      }
-      result.untrim = function(t) { return this.left + t + this.right; };
-      return result;
-    }
-
-    // simple trim of leading and trailing spaces
-    function trim(string) {
-      return string.replace(/^\s+/,'').replace(/\s+$/,'');
-    }
-
-    function appendToLookupTable(table, array) {
-      for(var i=0,l=array.length;i<l;++i) {
-        table[array[i]] = null;
-      }
-      return table;
-    }
-
-    function isLookupTableEmpty(table) {
-      for(var i in table) {
-        if(table.hasOwnProperty(i)) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    function getAtomIndex(templ) { return templ.substring(2, templ.length - 1); }
-
-    // remove carriage returns "\r"
-    var codeWoExtraCr = code.replace(/\r\n?|\n\r/g, "\n");
-
-    // masks strings and regexs with "'5'", where 5 is the index in an array containing all strings and regexs
-    // also removes all comments
-    var strings = [];
-    var codeWoStrings = codeWoExtraCr.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g,
-    function(all, quoted, aposed, regexCtx, prefix, regex, singleComment, comment) {
-      var index;
-      if(quoted || aposed) { // replace strings
-        index = strings.length; strings.push(all);
-        return "'" + index + "'";
-      }
-      if(regexCtx) { // replace RegExps
-        index = strings.length; strings.push(regex);
-        return prefix + "'" + index + "'";
-      }
-      // kill comments
-      return comment !== "" ? " " : "\n";
-    });
-
-    // protect character codes from namespace collision
-    codeWoStrings = codeWoStrings.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
-      // $ = __x0024
-      // _ = __x005F
-      // this protects existing character codes from conversion
-      // __x0024 = __x005F_x0024
-      return "__x005F_x" + hexCode;
-    });
-
-    // convert dollar sign to character code
-    codeWoStrings = codeWoStrings.replace(/\$/g, "__x0024");
-
-    // Remove newlines after return statements
-    codeWoStrings = codeWoStrings.replace(/return\s*[\n\r]+/g, "return ");
-
-    // removes generics
-    var genericsWereRemoved;
-    var codeWoGenerics = codeWoStrings;
-    var replaceFunc = function(all, before, types, after) {
-      if(!!before || !!after) {
-        return all;
-      }
-      genericsWereRemoved = true;
-      return "";
-    };
-
-    do {
-      genericsWereRemoved = false;
-      codeWoGenerics = codeWoGenerics.replace(/([<]?)<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\[\])*(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\[\])*(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*>([=]?)/g, replaceFunc);
-    } while (genericsWereRemoved);
-
-    var atoms = splitToAtoms(codeWoGenerics);
-    var replaceContext;
-    var declaredClasses = {}, currentClassId, classIdSeed = 0;
-
-    function addAtom(text, type) {
-      var lastIndex = atoms.length;
-      atoms.push(text);
-      return '"' + type + lastIndex + '"';
-    }
-
-    function generateClassId() {
-      return "class" + (++classIdSeed);
-    }
-
-    function appendClass(class_, classId, scopeId) {
-      class_.classId = classId;
-      class_.scopeId = scopeId;
-      declaredClasses[classId] = class_;
-    }
-
-    // functions defined below
-    var transformClassBody, transformInterfaceBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
-
-    var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
-    var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract|synchronized)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
-    var fieldTest = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
-    var cstrsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+")/g;
-    var attrAndTypeRegex = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*/;
-    var functionsRegex = /\bfunction(?:\s+([A-Za-z_$][\w$]*))?\s*("B\d+")\s*("A\d+")/g;
-
-    // This converts classes, methods and functions into atoms, and adds them to the atoms array.
-    // classes = E, methods = D and functions = H
-    function extractClassesAndMethods(code) {
-      var s = code;
-      s = s.replace(classesRegex, function(all) {
-        return addAtom(all, 'E');
-      });
-      s = s.replace(methodsRegex, function(all) {
-        return addAtom(all, 'D');
-      });
-      s = s.replace(functionsRegex, function(all) {
-        return addAtom(all, 'H');
-      });
-      return s;
-    }
-
-    // This converts constructors into atoms, and adds them to the atoms array.
-    // constructors = G
-    function extractConstructors(code, className) {
-      var result = code.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
-        if(name !== className) {
-          return all;
-        }
-        return addAtom(all, 'G');
-      });
-      return result;
-    }
-
-    // AstParam contains the name of a parameter inside a function declaration
-    function AstParam(name) {
-      this.name = name;
-    }
-    AstParam.prototype.toString = function() {
-      return this.name;
-    };
-    // AstParams contains an array of AstParam objects
-    function AstParams(params, methodArgsParam) {
-      this.params = params;
-      this.methodArgsParam = methodArgsParam;
-    }
-    AstParams.prototype.getNames = function() {
-      var names = [];
-      for(var i=0,l=this.params.length;i<l;++i) {
-        names.push(this.params[i].name);
-      }
-      return names;
-    };
-    AstParams.prototype.prependMethodArgs = function(body) {
-      if (!this.methodArgsParam) {
-        return body;
-      }
-      return "{\nvar " + this.methodArgsParam.name +
-        " = Array.prototype.slice.call(arguments, " +
-        this.params.length + ");\n" + body.substring(1);
-    };
-    AstParams.prototype.toString = function() {
-      if(this.params.length === 0) {
-        return "()";
-      }
-      var result = "(";
-      for(var i=0,l=this.params.length;i<l;++i) {
-        result += this.params[i] + ", ";
-      }
-      return result.substring(0, result.length - 2) + ")";
-    };
-
-    function transformParams(params) {
-      var paramsWoPars = trim(params.substring(1, params.length - 1));
-      var result = [], methodArgsParam = null;
-      if(paramsWoPars !== "") {
-        var paramList = paramsWoPars.split(",");
-        for(var i=0; i < paramList.length; ++i) {
-          var param = /\b([A-Za-z_$][\w$]*\b)(\s*"[ABC][\d]*")*\s*$/.exec(paramList[i]);
-          if (i === paramList.length - 1 && paramList[i].indexOf('...') >= 0) {
-            methodArgsParam = new AstParam(param[1]);
-            break;
-          }
-          result.push(new AstParam(param[1]));
-        }
-      }
-      return new AstParams(result, methodArgsParam);
-    }
-
-    function preExpressionTransform(expr) {
-      var s = expr;
-      // new type[] {...} --> {...}
-      s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s*"C\d+")+\s*("A\d+")/g, function(all, type, init) {
-        return init;
-      });
-      // new Runnable() {...} --> "F???"
-      s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s*"B\d+")\s*("A\d+")/g, function(all, type, init) {
-        return addAtom(all, 'F');
-      });
-      // function(...) { } --> "H???"
-      s = s.replace(functionsRegex, function(all) {
-        return addAtom(all, 'H');
-      });
-      // new type[?] --> createJavaArray('type', [?])
-      s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*("C\d+"(?:\s*"C\d+")*)/g, function(all, type, index) {
-        var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; })
-          .replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
-        var arrayInitializer = "{" + args.substring(1, args.length - 1) + "}";
-        var createArrayArgs = "('" + type + "', " + addAtom(arrayInitializer, 'A') + ")";
-        return '$p.createJavaArray' + addAtom(createArrayArgs, 'B');
-      });
-      // .length() --> .length
-      s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");
-      // #000000 --> 0x000000
-      s = s.replace(/#([0-9A-Fa-f]{6})\b/g, function(all, digits) {
-        return "0xFF" + digits;
-      });
-      // delete (type)???, except (int)???
-      s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
-        var atom = atoms[index];
-        if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
-          return all;
-        }
-        if(/^\(\s*int\s*\)$/.test(atom)) {
-          return "(int)" + next;
-        }
-        var indexParts = atom.split(/"C(\d+)"/g);
-        if(indexParts.length > 1) {
-          // even items contains atom numbers, can check only first
-          if(! /^\[\s*\]$/.test(atoms[indexParts[1]])) {
-            return all; // fallback - not a cast
-          }
-        }
-        return "" + next;
-      });
-      // (int)??? -> __int_cast(???)
-      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~<\>\=]+)/g, function(all, arg) {
-        var trimmed = trimSpaces(arg);
-        return trimmed.untrim("__int_cast(" + trimmed.middle + ")");
-      });
-      // super() -> $superCstr(), super. -> $super.;
-      s = s.replace(/\bsuper(\s*"B\d+")/g, "$$superCstr$1").replace(/\bsuper(\s*\.)/g, "$$super$1");
-      // 000.43->0.43 and 0010f->10, but not 0010
-      s = s.replace(/\b0+((\d*)(?:\.[\d*])?(?:[eE][\-\+]?\d+)?[fF]?)\b/, function(all, numberWo0, intPart) {
-        if( numberWo0 === intPart) {
-          return all;
-        }
-        return intPart === "" ? "0" + numberWo0 : numberWo0;
-      });
-      // 3.0f -> 3.0
-      s = s.replace(/\b(\.?\d+\.?)[fF]\b/g, "$1");
-      // Weird (?) parsing errors with %
-      s = s.replace(/([^\s])%([^=\s])/g, "$1 % $2");
-      // Since frameRate() and frameRate are different things,
-      // we need to differentiate them somehow. So when we parse
-      // the Processing.js source, replace frameRate so it isn't
-      // confused with frameRate(), as well as keyPressed and mousePressed
-      s = s.replace(/\b(frameRate|keyPressed|mousePressed)\b(?!\s*"B)/g, "__$1");
-      // "boolean", "byte", "int", etc. => "parseBoolean", "parseByte", "parseInt", etc.
-      s = s.replace(/\b(boolean|byte|char|float|int)\s*"B/g, function(all, name) {
-        return "parse" + name.substring(0, 1).toUpperCase() + name.substring(1) + "\"B";
-      });
-      // "pixels" replacements:
-      //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
-      //   pixels.length => pixels.getLength()
-      //   pixels = ar => pixels.set(ar) | pixels => pixels.toArray()
-      s = s.replace(/\bpixels\b\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}]+))?/g,
-        function(all, indexOrLength, index, atomIndex, equalsPart, rightSide) {
-          if(index) {
-            var atom = atoms[atomIndex];
-            if(equalsPart) {
-              return "pixels.setPixel" + addAtom("(" +atom.substring(1, atom.length - 1) +
-                "," + rightSide + ")", 'B');
-            }
-            return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
-              ")", 'B');
-          }
-          if(indexOrLength) {
-            // length
-            return "pixels.getLength" + addAtom("()", 'B');
-          }
-          if(equalsPart) {
-            return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
-          }
-          return "pixels.toArray" + addAtom("()", 'B');
-        });
-      // Java method replacements for: replace, replaceAll, replaceFirst, equals, hashCode, etc.
-      //   xxx.replace(yyy) -> __replace(xxx, yyy)
-      //   "xx".replace(yyy) -> __replace("xx", yyy)
-      var repeatJavaReplacement;
-      function replacePrototypeMethods(all, subject, method, atomIndex) {
-        var atom = atoms[atomIndex];
-        repeatJavaReplacement = true;
-        var trimmed = trimSpaces(atom.substring(1, atom.length - 1));
-        return "__" + method  + ( trimmed.middle === "" ? addAtom("(" + subject.replace(/\.\s*$/, "") + ")", 'B') :
-          addAtom("(" + subject.replace(/\.\s*$/, "") + "," + trimmed.middle + ")", 'B') );
-      }
-      do {
-        repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt|matches)\s*"B(\d+)"/g,
-          replacePrototypeMethods);
-      } while (repeatJavaReplacement);
-      // xxx instanceof yyy -> __instanceof(xxx, yyy)
-      function replaceInstanceof(all, subject, type) {
-        repeatJavaReplacement = true;
-        return "__instanceof" + addAtom("(" + subject + ", " + type + ")", 'B');
-      }
-      do {
-        repeatJavaReplacement = false;
-        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*(?:\.\s*[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*)*)instanceof\s+([A-Za-z_$][\w$]*\s*(?:\.\s*[A-Za-z_$][\w$]*)*)/g,
-          replaceInstanceof);
-      } while (repeatJavaReplacement);
-      // this() -> $constr()
-      s = s.replace(/\bthis(\s*"B\d+")/g, "$$constr$1");
-
-      return s;
-    }
-
-    function AstInlineClass(baseInterfaceName, body) {
-      this.baseInterfaceName = baseInterfaceName;
-      this.body = body;
-      body.owner = this;
-    }
-    AstInlineClass.prototype.toString = function() {
-      return "new (" + this.body + ")";
-    };
-
-    function transformInlineClass(class_) {
-      var m = new RegExp(/\bnew\s*([A-Za-z_$][\w$]*\s*(?:\.\s*[A-Za-z_$][\w$]*)*)\s*"B\d+"\s*"A(\d+)"/).exec(class_);
-      var oldClassId = currentClassId, newClassId = generateClassId();
-      currentClassId = newClassId;
-      var uniqueClassName = m[1] + "$" + newClassId;
-      var inlineClass = new AstInlineClass(uniqueClassName,
-        transformClassBody(atoms[m[2]], uniqueClassName, "", "implements " + m[1]));
-      appendClass(inlineClass, newClassId, oldClassId);
-      currentClassId = oldClassId;
-      return inlineClass;
-    }
-
-    function AstFunction(name, params, body) {
-      this.name = name;
-      this.params = params;
-      this.body = body;
-    }
-    AstFunction.prototype.toString = function() {
-      var oldContext = replaceContext;
-      // saving "this." and parameters
-      var names = appendToLookupTable({"this":null}, this.params.getNames());
-      replaceContext = function (subject) {
-        return names.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
-      };
-      var result = "function";
-      if(this.name) {
-        result += " " + this.name;
-      }
-      var body = this.params.prependMethodArgs(this.body.toString());
-      result += this.params + " " + body;
-      replaceContext = oldContext;
-      return result;
-    };
-
-    function transformFunction(class_) {
-      var m = new RegExp(/\b([A-Za-z_$][\w$]*)\s*"B(\d+)"\s*"A(\d+)"/).exec(class_);
-      return new AstFunction( m[1] !== "function" ? m[1] : null,
-        transformParams(atoms[m[2]]), transformStatementsBlock(atoms[m[3]]));
-    }
-
-    function AstInlineObject(members) {
-      this.members = members;
-    }
-    AstInlineObject.prototype.toString = function() {
-      var oldContext = replaceContext;
-      replaceContext = function (subject) {
-          return subject.name === "this" ? "this" : oldContext(subject); // saving "this."
-      };
-      var result = "";
-      for(var i=0,l=this.members.length;i<l;++i) {
-        if(this.members[i].label) {
-          result += this.members[i].label + ": ";
-        }
-        result += this.members[i].value.toString() + ", ";
-      }
-      replaceContext = oldContext;
-      return result.substring(0, result.length - 2);
-    };
-
-    function transformInlineObject(obj) {
-      var members = obj.split(',');
-      for(var i=0; i < members.length; ++i) {
-        var label = members[i].indexOf(':');
-        if(label < 0) {
-          members[i] = { value: transformExpression(members[i]) };
-        } else {
-          members[i] = { label: trim(members[i].substring(0, label)),
-            value: transformExpression( trim(members[i].substring(label + 1)) ) };
-        }
-      }
-      return new AstInlineObject(members);
-    }
-
-    function expandExpression(expr) {
-      if(expr.charAt(0) === '(' || expr.charAt(0) === '[') {
-        return expr.charAt(0) + expandExpression(expr.substring(1, expr.length - 1)) + expr.charAt(expr.length - 1);
-      }
-      if(expr.charAt(0) === '{') {
-        if(/^\{\s*(?:[A-Za-z_$][\w$]*|'\d+')\s*:/.test(expr)) {
-          return "{" + addAtom(expr.substring(1, expr.length - 1), 'I') + "}";
-        }
-        return "[" + expandExpression(expr.substring(1, expr.length - 1)) + "]";
-      }
-      var trimmed = trimSpaces(expr);
-      var result = preExpressionTransform(trimmed.middle);
-      result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
-        return expandExpression(atoms[index]);
-      });
-      return trimmed.untrim(result);
-    }
-
-    function replaceContextInVars(expr) {
-      return expr.replace(/(\.\s*)?((?:\b[A-Za-z_]|\$)[\w$]*)(\s*\.\s*([A-Za-z_$][\w$]*)(\s*\()?)?/g,
-        function(all, memberAccessSign, identifier, suffix, subMember, callSign) {
-          if(memberAccessSign) {
-            return all;
-          }
-          var subject = { name: identifier, member: subMember, callSign: !!callSign };
-          return replaceContext(subject) + (suffix === undef ? "" : suffix);
-        });
-    }
-
-    function AstExpression(expr, transforms) {
-      this.expr = expr;
-      this.transforms = transforms;
-    }
-    AstExpression.prototype.toString = function() {
-      var transforms = this.transforms;
-      var expr = replaceContextInVars(this.expr);
-      return expr.replace(/"!(\d+)"/g, function(all, index) {
-        return transforms[index].toString();
-      });
-    };
-
-    transformExpression = function(expr) {
-      var transforms = [];
-      var s = expandExpression(expr);
-      s = s.replace(/"H(\d+)"/g, function(all, index) {
-        transforms.push(transformFunction(atoms[index]));
-        return '"!' + (transforms.length - 1) + '"';
-      });
-      s = s.replace(/"F(\d+)"/g, function(all, index) {
-        transforms.push(transformInlineClass(atoms[index]));
-        return '"!' + (transforms.length - 1) + '"';
-      });
-      s = s.replace(/"I(\d+)"/g, function(all, index) {
-        transforms.push(transformInlineObject(atoms[index]));
-        return '"!' + (transforms.length - 1) + '"';
-      });
-
-      return new AstExpression(s, transforms);
-    };
-
-    function AstVarDefinition(name, value, isDefault) {
-      this.name = name;
-      this.value = value;
-      this.isDefault = isDefault;
-    }
-    AstVarDefinition.prototype.toString = function() {
-      return this.name + ' = ' + this.value;
-    };
-
-    function transformVarDefinition(def, defaultTypeValue) {
-      var eqIndex = def.indexOf("=");
-      var name, value, isDefault;
-      if(eqIndex < 0) {
-        name = def;
-        value = defaultTypeValue;
-        isDefault = true;
-      } else {
-        name = def.substring(0, eqIndex);
-        value = transformExpression(def.substring(eqIndex + 1));
-        isDefault = false;
-      }
-      return new AstVarDefinition( trim(name.replace(/(\s*"C\d+")+/g, "")),
-        value, isDefault);
-    }
-
-    function getDefaultValueForType(type) {
-        if(type === "int" || type === "float") {
-          return "0";
-        }
-        if(type === "boolean") {
-          return "false";
-        }
-        if(type === "color") {
-          return "0x00000000";
-        }
-        return "null";
-    }
-
-    function AstVar(definitions, varType) {
-      this.definitions = definitions;
-      this.varType = varType;
-    }
-    AstVar.prototype.getNames = function() {
-      var names = [];
-      for(var i=0,l=this.definitions.length;i<l;++i) {
-        names.push(this.definitions[i].name);
-      }
-      return names;
-    };
-    AstVar.prototype.toString = function() {
-      return "var " + this.definitions.join(",");
-    };
-    function AstStatement(expression) {
-      this.expression = expression;
-    }
-    AstStatement.prototype.toString = function() {
-      return this.expression.toString();
-    };
-
-    function transformStatement(statement) {
-      if(fieldTest.test(statement)) {
-        var attrAndType = attrAndTypeRegex.exec(statement);
-        var definitions = statement.substring(attrAndType[0].length).split(",");
-        var defaultTypeValue = getDefaultValueForType(attrAndType[2]);
-        for(var i=0; i < definitions.length; ++i) {
-          definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
-        }
-        return new AstVar(definitions, attrAndType[2]);
-      }
-      return new AstStatement(transformExpression(statement));
-    }
-
-    function AstForExpression(initStatement, condition, step) {
-      this.initStatement = initStatement;
-      this.condition = condition;
-      this.step = step;
-    }
-    AstForExpression.prototype.toString = function() {
-      return "(" + this.initStatement + "; " + this.condition + "; " + this.step + ")";
-    };
-
-    function AstForInExpression(initStatement, container) {
-      this.initStatement = initStatement;
-      this.container = container;
-    }
-    AstForInExpression.prototype.toString = function() {
-      var init = this.initStatement.toString();
-      if(init.indexOf("=") >= 0) { // can be without var declaration
-        init = init.substring(0, init.indexOf("="));
-      }
-      return "(" + init + " in " + this.container + ")";
-    };
-
-    function AstForEachExpression(initStatement, container) {
-      this.initStatement = initStatement;
-      this.container = container;
-    }
-    AstForEachExpression.iteratorId = 0;
-    AstForEachExpression.prototype.toString = function() {
-      var init = this.initStatement.toString();
-      var iterator = "$it" + (AstForEachExpression.iteratorId++);
-      var variableName = init.replace(/^\s*var\s*/, "").split("=")[0];
-      var initIteratorAndVariable = "var " + iterator + " = new $p.ObjectIterator(" + this.container + "), " +
-         variableName + " = void(0)";
-      var nextIterationCondition = iterator + ".hasNext() && ((" +
-         variableName + " = " + iterator + ".next()) || true)";
-      return "(" + initIteratorAndVariable + "; " + nextIterationCondition + ";)";
-    };
-
-    function transformForExpression(expr) {
-      var content;
-      if (/\bin\b/.test(expr)) {
-        content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
-        return new AstForInExpression( transformStatement(trim(content[0])),
-          transformExpression(content[1]));
-      }
-      if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
-        content = expr.substring(1, expr.length - 1).split(":");
-        return new AstForEachExpression( transformStatement(trim(content[0])),
-          transformExpression(content[1]));
-      }
-      content = expr.substring(1, expr.length - 1).split(";");
-      return new AstForExpression( transformStatement(trim(content[0])),
-        transformExpression(content[1]), transformExpression(content[2]));
-    }
-
-    function sortByWeight(array) {
-      array.sort(function (a,b) {
-        return b.weight - a.weight;
-      });
-    }
-
-    function AstInnerInterface(name, body, isStatic) {
-      this.name = name;
-      this.body = body;
-      this.isStatic = isStatic;
-      body.owner = this;
-    }
-    AstInnerInterface.prototype.toString = function() {
-      return "" + this.body;
-    };
-    function AstInnerClass(name, body, isStatic) {
-      this.name = name;
-      this.body = body;
-      this.isStatic = isStatic;
-      body.owner = this;
-    }
-    AstInnerClass.prototype.toString = function() {
-      return "" + this.body;
-    };
-
-    function transformInnerClass(class_) {
-      var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
-      classesRegex.lastIndex = 0;
-      var isStatic = m[1].indexOf("static") >= 0;
-      var body = atoms[getAtomIndex(m[6])], innerClass;
-      var oldClassId = currentClassId, newClassId = generateClassId();
-      currentClassId = newClassId;
-      if(m[2] === "interface") {
-        innerClass = new AstInnerInterface(m[3], transformInterfaceBody(body, m[3], m[4]), isStatic);
-      } else {
-        innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]), isStatic);
-      }
-      appendClass(innerClass, newClassId, oldClassId);
-      currentClassId = oldClassId;
-      return innerClass;
-    }
-
-    function AstClassMethod(name, params, body, isStatic) {
-      this.name = name;
-      this.params = params;
-      this.body = body;
-      this.isStatic = isStatic;
-    }
-    AstClassMethod.prototype.toString = function(){
-      var paramNames = appendToLookupTable({}, this.params.getNames());
-      var oldContext = replaceContext;
-      replaceContext = function (subject) {
-        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
-      };
-      var body = this.params.prependMethodArgs(this.body.toString());
-      var result = "function " + this.methodId + this.params + " " + body +"\n";
-      replaceContext = oldContext;
-      return result;
-    };
-
-    function transformClassMethod(method) {
-      var m = methodsRegex.exec(method);
-      methodsRegex.lastIndex = 0;
-      var isStatic = m[1].indexOf("static") >= 0;
-      var body = m[6] !== ';' ? atoms[getAtomIndex(m[6])] : "{}";
-      return new AstClassMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
-        transformStatementsBlock(body), isStatic );
-    }
-
-    function AstClassField(definitions, fieldType, isStatic) {
-      this.definitions = definitions;
-      this.fieldType = fieldType;
-      this.isStatic = isStatic;
-    }
-    AstClassField.prototype.getNames = function() {
-      var names = [];
-      for(var i=0,l=this.definitions.length;i<l;++i) {
-        names.push(this.definitions[i].name);
-      }
-      return names;
-    };
-    AstClassField.prototype.toString = function() {
-      var thisPrefix = replaceContext({ name: "[this]" });
-      if(this.isStatic) {
-        var className = this.owner.name;
-        var staticDeclarations = [];
-        for(var i=0,l=this.definitions.length;i<l;++i) {
-          var definition = this.definitions[i];
-          var name = definition.name, staticName = className + "." + name;
-          var declaration = "if(" + staticName + " === void(0)) {\n" +
-            " " + staticName + " = " + definition.value + "; }\n" +
-            "$p.defineProperty(" + thisPrefix + ", " +
-            "'" + name + "', { get: function(){return " + staticName + ";}, " +
-            "set: function(val){" + staticName + " = val;} });\n";
-          staticDeclarations.push(declaration);
-        }
-        return staticDeclarations.join("");
-      }
-      return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
-    };
-
-    function transformClassField(statement) {
-      var attrAndType = attrAndTypeRegex.exec(statement);
-      var isStatic = attrAndType[1].indexOf("static") >= 0;
-      var definitions = statement.substring(attrAndType[0].length).split(/,\s*/g);
-      var defaultTypeValue = getDefaultValueForType(attrAndType[2]);
-      for(var i=0; i < definitions.length; ++i) {
-        definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
-      }
-      return new AstClassField(definitions, attrAndType[2], isStatic);
-    }
-
-    function AstConstructor(params, body) {
-      this.params = params;
-      this.body = body;
-    }
-    AstConstructor.prototype.toString = function() {
-      var paramNames = appendToLookupTable({}, this.params.getNames());
-      var oldContext = replaceContext;
-      replaceContext = function (subject) {
-        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
-      };
-      var prefix = "function $constr_" + this.params.params.length + this.params.toString();
-      var body = this.params.prependMethodArgs(this.body.toString());
-      if(!/\$(superCstr|constr)\b/.test(body)) {
-        body = "{\n$superCstr();\n" + body.substring(1);
-      }
-      replaceContext = oldContext;
-      return prefix + body + "\n";
-    };
-
-    function transformConstructor(cstr) {
-      var m = new RegExp(/"B(\d+)"\s*"A(\d+)"/).exec(cstr);
-      var params = transformParams(atoms[m[1]]);
-
-      return new AstConstructor(params, transformStatementsBlock(atoms[m[2]]));
-    }
-
-    function AstInterfaceBody(name, interfacesNames, methodsNames, fields, innerClasses, misc) {
-      var i,l;
-      this.name = name;
-      this.interfacesNames = interfacesNames;
-      this.methodsNames = methodsNames;
-      this.fields = fields;
-      this.innerClasses = innerClasses;
-      this.misc = misc;
-      for(i=0,l=fields.length; i<l; ++i) {
-        fields[i].owner = this;
-      }
-    }
-    AstInterfaceBody.prototype.getMembers = function(classFields, classMethods, classInners) {
-      if(this.owner.base) {
-        this.owner.base.body.getMembers(classFields, classMethods, classInners);
-      }
-      var i, j, l, m;
-      for(i=0,l=this.fields.length;i<l;++i) {
-        var fieldNames = this.fields[i].getNames();
-        for(j=0,m=fieldNames.length;j<m;++j) {
-          classFields[fieldNames[j]] = this.fields[i];
-        }
-      }
-      for(i=0,l=this.methodsNames.length;i<l;++i) {
-        var methodName = this.methodsNames[i];
-        classMethods[methodName] = true;
-      }
-      for(i=0,l=this.innerClasses.length;i<l;++i) {
-        var innerClass = this.innerClasses[i];
-        classInners[innerClass.name] = innerClass;
-      }
-    };
-    AstInterfaceBody.prototype.toString = function() {
-      function getScopeLevel(p) {
-        var i = 0;
-        while(p) {
-          ++i;
-          p=p.scope;
-        }
-        return i;
-      }
-
-      var scopeLevel = getScopeLevel(this.owner);
-
-      var className = this.name;
-      var staticDefinitions = "";
-      var metadata = "";
-
-      var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
-      this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
-
-      var i, l, j, m;
-
-      if (this.owner.interfaces) {
-        // interface name can be present, but interface is not
-        var resolvedInterfaces = [], resolvedInterface;
-        for (i = 0, l = this.interfacesNames.length; i < l; ++i) {
-          if (!this.owner.interfaces[i]) {
-            continue;
-          }
-          resolvedInterface = replaceContext({name: this.interfacesNames[i]});
-          resolvedInterfaces.push(resolvedInterface);
-          staticDefinitions += "$p.extendInterfaceMembers(" + className + ", " + resolvedInterface + ");\n";
-        }
-        metadata += className + ".$interfaces = [" + resolvedInterfaces.join(", ") + "];\n";
-      }
-      metadata += className + ".$isInterface = true;\n";
-      metadata += className + ".$methods = [\'" + this.methodsNames.join("\', \'") + "\'];\n";
-
-      sortByWeight(this.innerClasses);
-      for (i = 0, l = this.innerClasses.length; i < l; ++i) {
-        var innerClass = this.innerClasses[i];
-        if (innerClass.isStatic) {
-          staticDefinitions += className + "." + innerClass.name + " = " + innerClass + ";\n";
-        }
-      }
-
-      for (i = 0, l = this.fields.length; i < l; ++i) {
-        var field = this.fields[i];
-        if (field.isStatic) {
-          staticDefinitions += className + "." + field.definitions.join(";\n" + className + ".") + ";\n";
-        }
-      }
-
-      return "(function() {\n" +
-        "function " + className + "() { throw \'Unable to create the interface\'; }\n" +
-        staticDefinitions +
-        metadata +
-        "return " + className + ";\n" +
-        "})()";
-    };
-
-    transformInterfaceBody = function(body, name, baseInterfaces) {
-      var declarations = body.substring(1, body.length - 1);
-      declarations = extractClassesAndMethods(declarations);
-      declarations = extractConstructors(declarations, name);
-      var methodsNames = [], classes = [];
-      declarations = declarations.replace(/"([DE])(\d+)"/g, function(all, type, index) {
-        if(type === 'D') { methodsNames.push(index); }
-        else if(type === 'E') { classes.push(index); }
-        return "";
-      });
-      var fields = declarations.split(/;(?:\s*;)*/g);
-      var baseInterfaceNames;
-      var i, l;
-
-      if(baseInterfaces !== undef) {
-        baseInterfaceNames = baseInterfaces.replace(/^\s*extends\s+(.+?)\s*$/g, "$1").split(/\s*,\s*/g);
-      }
-
-      for(i = 0, l = methodsNames.length; i < l; ++i) {
-        var method = transformClassMethod(atoms[methodsNames[i]]);
-        methodsNames[i] = method.name;
-      }
-      for(i = 0, l = fields.length - 1; i < l; ++i) {
-        var field = trimSpaces(fields[i]);
-        fields[i] = transformClassField(field.middle);
-      }
-      var tail = fields.pop();
-      for(i = 0, l = classes.length; i < l; ++i) {
-        classes[i] = transformInnerClass(atoms[classes[i]]);
-      }
-
-      return new AstInterfaceBody(name, baseInterfaceNames, methodsNames, fields, classes, { tail: tail });
-    };
-
-    function AstClassBody(name, baseClassName, interfacesNames, functions, methods, fields, cstrs, innerClasses, misc) {
-      var i,l;
-      this.name = name;
-      this.baseClassName = baseClassName;
-      this.interfacesNames = interfacesNames;
-      this.functions = functions;
-      this.methods = methods;
-      this.fields = fields;
-      this.cstrs = cstrs;
-      this.innerClasses = innerClasses;
-      this.misc = misc;
-      for(i=0,l=fields.length; i<l; ++i) {
-        fields[i].owner = this;
-      }
-    }
-    AstClassBody.prototype.getMembers = function(classFields, classMethods, classInners) {
-      if(this.owner.base) {
-        this.owner.base.body.getMembers(classFields, classMethods, classInners);
-      }
-      var i, j, l, m;
-      for(i=0,l=this.fields.length;i<l;++i) {
-        var fieldNames = this.fields[i].getNames();
-        for(j=0,m=fieldNames.length;j<m;++j) {
-          classFields[fieldNames[j]] = this.fields[i];
-        }
-      }
-      for(i=0,l=this.methods.length;i<l;++i) {
-        var method = this.methods[i];
-        classMethods[method.name] = method;
-      }
-      for(i=0,l=this.innerClasses.length;i<l;++i) {
-        var innerClass = this.innerClasses[i];
-        classInners[innerClass.name] = innerClass;
-      }
-    };
-    AstClassBody.prototype.toString = function() {
-      function getScopeLevel(p) {
-        var i = 0;
-        while(p) {
-          ++i;
-          p=p.scope;
-        }
-        return i;
-      }
-
-      var scopeLevel = getScopeLevel(this.owner);
-
-      var selfId = "$this_" + scopeLevel;
-      var className = this.name;
-      var result = "var " + selfId + " = this;\n";
-      var staticDefinitions = "";
-      var metadata = "";
-
-      var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
-      this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
-
-      var oldContext = replaceContext;
-      replaceContext = function (subject) {
-        var name = subject.name;
-        if(name === "this") {
-          // returns "$this_N.$self" pointer instead of "this" in cases:
-          // "this()", "this.XXX()", "this", but not for "this.XXX"
-          return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
-        }
-        if(thisClassFields.hasOwnProperty(name)) {
-          return thisClassFields[name].isStatic ? className + "." + name : selfId + "." + name;
-        }
-        if(thisClassInners.hasOwnProperty(name)) {
-          return selfId + "." + name;
-        }
-        if(thisClassMethods.hasOwnProperty(name)) {
-          return thisClassMethods[name].isStatic ? className + "." + name : selfId + ".$self." + name;
-        }
-        return oldContext(subject);
-      };
-
-      var resolvedBaseClassName;
-      if (this.baseClassName) {
-        resolvedBaseClassName = oldContext({name: this.baseClassName});
-        result += "var $super = { $upcast: " + selfId + " };\n";
-        result += "function $superCstr(){" + resolvedBaseClassName +
-          ".apply($super,arguments);if(!('$self' in $super)) $p.extendClassChain($super)}\n";
-        metadata += className + ".$base = " + resolvedBaseClassName + ";\n";
-      } else {
-        result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
-      }
-
-      if (this.owner.base) {
-        // base class name can be present, but class is not
-        staticDefinitions += "$p.extendStaticMembers(" + className + ", " + resolvedBaseClassName + ");\n";
-      }
-
-      var i, l, j, m;
-
-      if (this.owner.interfaces) {
-        // interface name can be present, but interface is not
-        var resolvedInterfaces = [], resolvedInterface;
-        for (i = 0, l = this.interfacesNames.length; i < l; ++i) {
-          if (!this.owner.interfaces[i]) {
-            continue;
-          }
-          resolvedInterface = oldContext({name: this.interfacesNames[i]});
-          resolvedInterfaces.push(resolvedInterface);
-          staticDefinitions += "$p.extendInterfaceMembers(" + className + ", " + resolvedInterface + ");\n";
-        }
-        metadata += className + ".$interfaces = [" + resolvedInterfaces.join(", ") + "];\n";
-      }
-
-      if (this.functions.length > 0) {
-        result += this.functions.join('\n') + '\n';
-      }
-
-      sortByWeight(this.innerClasses);
-      for (i = 0, l = this.innerClasses.length; i < l; ++i) {
-        var innerClass = this.innerClasses[i];
-        if (innerClass.isStatic) {
-          staticDefinitions += className + "." + innerClass.name + " = " + innerClass + ";\n";
-          result += selfId + "." + innerClass.name + " = " + className + "." + innerClass.name + ";\n";
-        } else {
-          result += selfId + "." + innerClass.name + " = " + innerClass + ";\n";
-        }
-      }
-
-      for (i = 0, l = this.fields.length; i < l; ++i) {
-        var field = this.fields[i];
-        if (field.isStatic) {
-          staticDefinitions += className + "." + field.definitions.join(";\n" + className + ".") + ";\n";
-          for (j = 0, m = field.definitions.length; j < m; ++j) {
-            var fieldName = field.definitions[j].name, staticName = className + "." + fieldName;
-            result += "$p.defineProperty(" + selfId + ", '" + fieldName + "', {" +
-              "get: function(){return " + staticName + "}, " +
-              "set: function(val){" + staticName + " = val}});\n";
-          }
-        } else {
-          result += selfId + "." + field.definitions.join(";\n" + selfId + ".") + ";\n";
-        }
-      }
-      var methodOverloads = {};
-      for (i = 0, l = this.methods.length; i < l; ++i) {
-        var method = this.methods[i];
-        var overload = methodOverloads[method.name];
-        var methodId = method.name + "$" + method.params.params.length;
-        var hasMethodArgs = !!method.params.methodArgsParam;
-        if (overload) {
-          ++overload;
-          methodId += "_" + overload;
-        } else {
-          overload = 1;
-        }
-        method.methodId = methodId;
-        methodOverloads[method.name] = overload;
-        if (method.isStatic) {
-          staticDefinitions += method;
-          staticDefinitions += "$p.addMethod(" + className + ", '" + method.name + "', " + methodId + ", " + hasMethodArgs + ");\n";
-          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ", " + hasMethodArgs + ");\n";
-        } else {
-          result += method;
-          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ", " + hasMethodArgs + ");\n";
-        }
-      }
-      result += trim(this.misc.tail);
-
-      if (this.cstrs.length > 0) {
-        result += this.cstrs.join('\n') + '\n';
-      }
-
-      result += "function $constr() {\n";
-      var cstrsIfs = [];
-      for (i = 0, l = this.cstrs.length; i < l; ++i) {
-        var paramsLength = this.cstrs[i].params.params.length;
-        var methodArgsPresent = !!this.cstrs[i].params.methodArgsParam;
-        cstrsIfs.push("if(arguments.length " + (methodArgsPresent ? ">=" : "===") +
-          " " + paramsLength + ") { " +
-          "$constr_" + paramsLength + ".apply(" + selfId + ", arguments); }");
-      }
-      if(cstrsIfs.length > 0) {
-        result += cstrsIfs.join(" else ") + " else ";
-      }
-      // ??? add check if length is 0, otherwise fail
-      result += "$superCstr();\n}\n";
-      result += "$constr.apply(null, arguments);\n";
-
-      replaceContext = oldContext;
-      return "(function() {\n" +
-        "function " + className + "() {\n" + result + "}\n" +
-        staticDefinitions +
-        metadata +
-        "return " + className + ";\n" +
-        "})()";
-    };
-
-    transformClassBody = function(body, name, baseName, interfaces) {
-      var declarations = body.substring(1, body.length - 1);
-      declarations = extractClassesAndMethods(declarations);
-      declarations = extractConstructors(declarations, name);
-      var methods = [], classes = [], cstrs = [], functions = [];
-      declarations = declarations.replace(/"([DEGH])(\d+)"/g, function(all, type, index) {
-        if(type === 'D') { methods.push(index); }
-        else if(type === 'E') { classes.push(index); }
-        else if(type === 'H') { functions.push(index); }
-        else { cstrs.push(index); }
-        return "";
-      });
-      var fields = declarations.replace(/^(?:\s*;)+/, "").split(/;(?:\s*;)*/g);
-      var baseClassName, interfacesNames;
-      var i;
-
-      if(baseName !== undef) {
-        baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*$/g, "$1");
-      }
-
-      if(interfaces !== undef) {
-        interfacesNames = interfaces.replace(/^\s*implements\s+(.+?)\s*$/g, "$1").split(/\s*,\s*/g);
-      }
-
-      for(i = 0; i < functions.length; ++i) {
-        functions[i] = transformFunction(atoms[functions[i]]);
-      }
-      for(i = 0; i < methods.length; ++i) {
-        methods[i] = transformClassMethod(atoms[methods[i]]);
-      }
-      for(i = 0; i < fields.length - 1; ++i) {
-        var field = trimSpaces(fields[i]);
-        fields[i] = transformClassField(field.middle);
-      }
-      var tail = fields.pop();
-      for(i = 0; i < cstrs.length; ++i) {
-        cstrs[i] = transformConstructor(atoms[cstrs[i]]);
-      }
-      for(i = 0; i < classes.length; ++i) {
-        classes[i] = transformInnerClass(atoms[classes[i]]);
-      }
-
-      return new AstClassBody(name, baseClassName, interfacesNames, functions, methods, fields, cstrs,
-        classes, { tail: tail });
-    };
-
-    function AstInterface(name, body) {
-      this.name = name;
-      this.body = body;
-      body.owner = this;
-    }
-    AstInterface.prototype.toString = function() {
-      return "var " + this.name + " = " + this.body + ";\n" +
-        "$p." + this.name + " = " + this.name + ";\n";
-    };
-    function AstClass(name, body) {
-      this.name = name;
-      this.body = body;
-      body.owner = this;
-    }
-    AstClass.prototype.toString = function() {
-      return "var " + this.name + " = " + this.body + ";\n" +
-        "$p." + this.name + " = " + this.name + ";\n";
-    };
-
-    function transformGlobalClass(class_) {
-      var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
-      classesRegex.lastIndex = 0;
-      var body = atoms[getAtomIndex(m[6])];
-      var oldClassId = currentClassId, newClassId = generateClassId();
-      currentClassId = newClassId;
-      var globalClass;
-      if(m[2] === "interface") {
-        globalClass = new AstInterface(m[3], transformInterfaceBody(body, m[3], m[4]) );
-      } else {
-        globalClass = new AstClass(m[3], transformClassBody(body, m[3], m[4], m[5]) );
-      }
-      appendClass(globalClass, newClassId, oldClassId);
-      currentClassId = oldClassId;
-      return globalClass;
-    }
-
-    function AstMethod(name, params, body) {
-      this.name = name;
-      this.params = params;
-      this.body = body;
-    }
-    AstMethod.prototype.toString = function(){
-      var paramNames = appendToLookupTable({}, this.params.getNames());
-      var oldContext = replaceContext;
-      replaceContext = function (subject) {
-        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
-      };
-      var body = this.params.prependMethodArgs(this.body.toString());
-      var result = "function " + this.name + this.params + " " + body + "\n" +
-                   "$p." + this.name + " = " + this.name + ";\n" +
-                   this.name + " = " + this.name + ".bind($p);";
-//        "$p." + this.name + " = " + this.name + ";";
-      replaceContext = oldContext;
-      return result;
-    };
-
-    function transformGlobalMethod(method) {
-      var m = methodsRegex.exec(method);
-      var result =
-      methodsRegex.lastIndex = 0;
-      return new AstMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
-        transformStatementsBlock(atoms[getAtomIndex(m[6])]));
-    }
-
-    function preStatementsTransform(statements) {
-      var s = statements;
-      // turns multiple catch blocks into one, because we have no way to properly get into them anyway.
-      s = s.replace(/\b(catch\s*"B\d+"\s*"A\d+")(\s*catch\s*"B\d+"\s*"A\d+")+/g, "$1");
-      return s;
-    }
-
-    function AstForStatement(argument, misc) {
-      this.argument = argument;
-      this.misc = misc;
-    }
-    AstForStatement.prototype.toString = function() {
-      return this.misc.prefix + this.argument.toString();
-    };
-    function AstCatchStatement(argument, misc) {
-      this.argument = argument;
-      this.misc = misc;
-    }
-    AstCatchStatement.prototype.toString = function() {
-      return this.misc.prefix + this.argument.toString();
-    };
-    function AstPrefixStatement(name, argument, misc) {
-      this.name = name;
-      this.argument = argument;
-      this.misc = misc;
-    }
-    AstPrefixStatement.prototype.toString = function() {
-      var result = this.misc.prefix;
-      if(this.argument !== undef) {
-        result += this.argument.toString();
-      }
-      return result;
-    };
-    function AstSwitchCase(expr) {
-      this.expr = expr;
-    }
-    AstSwitchCase.prototype.toString = function() {
-      return "case " + this.expr + ":";
-    };
-    function AstLabel(label) {
-      this.label = label;
-    }
-    AstLabel.prototype.toString = function() {
-      return this.label;
-    };
-
-    transformStatements = function(statements, transformMethod, transformClass) {
-      var nextStatement = new RegExp(/\b(catch|for|if|switch|while|with)\s*"B(\d+)"|\b(do|else|finally|return|throw|try|break|continue)\b|("[ADEH](\d+)")|\b(case)\s+([^:]+):|\b([A-Za-z_$][\w$]*\s*:)|(;)/g);
-      var res = [];
-      statements = preStatementsTransform(statements);
-      var lastIndex = 0, m, space;
-      // m contains the matches from the nextStatement regexp, null if there are no matches.
-      // nextStatement.exec starts searching at nextStatement.lastIndex.
-      while((m = nextStatement.exec(statements)) !== null) {
-        if(m[1] !== undef) { // catch, for ...
-          var i = statements.lastIndexOf('"B', nextStatement.lastIndex);
-          var statementsPrefix = statements.substring(lastIndex, i);
-          if(m[1] === "for") {
-            res.push(new AstForStatement(transformForExpression(atoms[m[2]]),
-              { prefix: statementsPrefix }) );
-          } else if(m[1] === "catch") {
-            res.push(new AstCatchStatement(transformParams(atoms[m[2]]),
-              { prefix: statementsPrefix }) );
-          } else {
-            res.push(new AstPrefixStatement(m[1], transformExpression(atoms[m[2]]),
-              { prefix: statementsPrefix }) );
-          }
-        } else if(m[3] !== undef) { // do, else, ...
-            res.push(new AstPrefixStatement(m[3], undef,
-              { prefix: statements.substring(lastIndex, nextStatement.lastIndex) }) );
-        } else if(m[4] !== undef) { // block, class and methods
-          space = statements.substring(lastIndex, nextStatement.lastIndex - m[4].length);
-          if(trim(space).length !== 0) { continue; } // avoiding new type[] {} construct
-          res.push(space);
-          var kind = m[4].charAt(1), atomIndex = m[5];
-          if(kind === 'D') {
-            res.push(transformMethod(atoms[atomIndex]));
-          } else if(kind === 'E') {
-            res.push(transformClass(atoms[atomIndex]));
-          } else if(kind === 'H') {
-            res.push(transformFunction(atoms[atomIndex]));
-          } else {
-            res.push(transformStatementsBlock(atoms[atomIndex]));
-          }
-        } else if(m[6] !== undef) { // switch case
-          res.push(new AstSwitchCase(transformExpression(trim(m[7]))));
-        } else if(m[8] !== undef) { // label
-          space = statements.substring(lastIndex, nextStatement.lastIndex - m[8].length);
-          if(trim(space).length !== 0) { continue; } // avoiding ?: construct
-          res.push(new AstLabel(statements.substring(lastIndex, nextStatement.lastIndex)) );
-        } else { // semicolon
-          var statement = trimSpaces(statements.substring(lastIndex, nextStatement.lastIndex - 1));
-          res.push(statement.left);
-          res.push(transformStatement(statement.middle));
-          res.push(statement.right + ";");
-        }
-        lastIndex = nextStatement.lastIndex;
-      }
-      var statementsTail = trimSpaces(statements.substring(lastIndex));
-      res.push(statementsTail.left);
-      if(statementsTail.middle !== "") {
-        res.push(transformStatement(statementsTail.middle));
-        res.push(";" + statementsTail.right);
-      }
-      return res;
-    };
-
-    function getLocalNames(statements) {
-      var localNames = [];
-      for(var i=0,l=statements.length;i<l;++i) {
-        var statement = statements[i];
-        if(statement instanceof AstVar) {
-          localNames = localNames.concat(statement.getNames());
-        } else if(statement instanceof AstForStatement &&
-          statement.argument.initStatement instanceof AstVar) {
-          localNames = localNames.concat(statement.argument.initStatement.getNames());
-        } else if(statement instanceof AstInnerInterface || statement instanceof AstInnerClass ||
-          statement instanceof AstInterface || statement instanceof AstClass ||
-          statement instanceof AstMethod || statement instanceof AstFunction) {
-          localNames.push(statement.name);
-        }
-      }
-      return appendToLookupTable({}, localNames);
-    }
-
-    function AstStatementsBlock(statements) {
-      this.statements = statements;
-    }
-    AstStatementsBlock.prototype.toString = function() {
-      var localNames = getLocalNames(this.statements);
-      var oldContext = replaceContext;
-
-      // replacing context only when necessary
-      if(!isLookupTableEmpty(localNames)) {
-        replaceContext = function (subject) {
-          return localNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
-        };
-      }
-
-      var result = "{\n" + this.statements.join('') + "\n}";
-      replaceContext = oldContext;
-      return result;
-    };
-
-    transformStatementsBlock = function(block) {
-      var content = trimSpaces(block.substring(1, block.length - 1));
-      return new AstStatementsBlock(transformStatements(content.middle));
-    };
-
-    function AstRoot(statements) {
-      this.statements = statements;
-    }
-    AstRoot.prototype.toString = function() {
-      var classes = [], otherStatements = [], statement;
-      for (var i = 0, len = this.statements.length; i < len; ++i) {
-        statement = this.statements[i];
-        if (statement instanceof AstClass || statement instanceof AstInterface) {
-          classes.push(statement);
-        } else {
-          otherStatements.push(statement);
-        }
-      }
-      sortByWeight(classes);
-
-      var localNames = getLocalNames(this.statements);
-      replaceContext = function (subject) {
-        var name = subject.name;
-        if(localNames.hasOwnProperty(name)) {
-          return name;
-        }
-        if(globalMembers.hasOwnProperty(name) ||
-           PConstants.hasOwnProperty(name) ||
-           defaultScope.hasOwnProperty(name)) {
-          return "$p." + name;
-        }
-        return name;
-      };
-      var result = "// this code was autogenerated from PJS\n" +
-        "(function($p) {\n" +
-        classes.join('') + "\n" +
-        otherStatements.join('') + "\n})";
-      replaceContext = null;
-      return result;
-    };
-
-    transformMain = function() {
-      var statements = extractClassesAndMethods(atoms[0]);
-      statements = statements.replace(/\bimport\s+[^;]+;/g, "");
-      return new AstRoot( transformStatements(statements,
-        transformGlobalMethod, transformGlobalClass) );
-    };
-
-    function generateMetadata(ast) {
-      var globalScope = {};
-      var id, class_;
-      for(id in declaredClasses) {
-        if(declaredClasses.hasOwnProperty(id)) {
-          class_ = declaredClasses[id];
-          var scopeId = class_.scopeId, name = class_.name;
-          if(scopeId) {
-            var scope = declaredClasses[scopeId];
-            class_.scope = scope;
-            if(scope.inScope === undef) {
-              scope.inScope = {};
-            }
-            scope.inScope[name] = class_;
-          } else {
-            globalScope[name] = class_;
-          }
-        }
-      }
-
-      function findInScopes(class_, name) {
-        var parts = name.split('.');
-        var currentScope = class_.scope, found;
-        while(currentScope) {
-          if(currentScope.hasOwnProperty(parts[0])) {
-            found = currentScope[parts[0]]; break;
-          }
-          currentScope = currentScope.scope;
-        }
-        if(found === undef) {
-          found = globalScope[parts[0]];
-        }
-        for(var i=1,l=parts.length;i<l && found;++i) {
-          found = found.inScope[parts[i]];
-        }
-        return found;
-      }
-
-      for(id in declaredClasses) {
-        if(declaredClasses.hasOwnProperty(id)) {
-          class_ = declaredClasses[id];
-          var baseClassName = class_.body.baseClassName;
-          if(baseClassName) {
-            var parent = findInScopes(class_, baseClassName);
-            if (parent) {
-              class_.base = parent;
-              if (!parent.derived) {
-                parent.derived = [];
-              }
-              parent.derived.push(class_);
-            }
-          }
-          var interfacesNames = class_.body.interfacesNames,
-            interfaces = [], i, l;
-          if (interfacesNames && interfacesNames.length > 0) {
-            for (i = 0, l = interfacesNames.length; i < l; ++i) {
-              var interface_ = findInScopes(class_, interfacesNames[i]);
-              interfaces.push(interface_);
-              if (!interface_) {
-                continue;
-              }
-              if (!interface_.derived) {
-                interface_.derived = [];
-              }
-              interface_.derived.push(class_);
-            }
-            if (interfaces.length > 0) {
-              class_.interfaces = interfaces;
-            }
-          }
-        }
-      }
-    }
-
-    function setWeight(ast) {
-      var queue = [], tocheck = {};
-      var id, scopeId, class_;
-      // queue most inner and non-inherited
-      for (id in declaredClasses) {
-        if (declaredClasses.hasOwnProperty(id)) {
-          class_ = declaredClasses[id];
-          if (!class_.inScope && !class_.derived) {
-            queue.push(id);
-            class_.weight = 0;
-          } else {
-            var dependsOn = [];
-            if (class_.inScope) {
-              for (scopeId in class_.inScope) {
-                if (class_.inScope.hasOwnProperty(scopeId)) {
-                  dependsOn.push(class_.inScope[scopeId]);
-                }
-              }
-            }
-            if (class_.derived) {
-              dependsOn = dependsOn.concat(class_.derived);
-            }
-            tocheck[id] = dependsOn;
-          }
-        }
-      }
-      function removeDependentAndCheck(targetId, from) {
-        var dependsOn = tocheck[targetId];
-        if (!dependsOn) {
-          return false; // no need to process
-        }
-        var i = dependsOn.indexOf(from);
-        if (i < 0) {
-          return false;
-        }
-        dependsOn.splice(i, 1);
-        if (dependsOn.length > 0) {
-          return false;
-        }
-        delete tocheck[targetId];
-        return true;
-      }
-      while (queue.length > 0) {
-        id = queue.shift();
-        class_ = declaredClasses[id];
-        if (class_.scopeId && removeDependentAndCheck(class_.scopeId, class_)) {
-          queue.push(class_.scopeId);
-          declaredClasses[class_.scopeId].weight = class_.weight + 1;
-        }
-        if (class_.base && removeDependentAndCheck(class_.base.classId, class_)) {
-          queue.push(class_.base.classId);
-          class_.base.weight = class_.weight + 1;
-        }
-        if (class_.interfaces) {
-          var i, l;
-          for (i = 0, l = class_.interfaces.length; i < l; ++i) {
-            if (!class_.interfaces[i] ||
-                !removeDependentAndCheck(class_.interfaces[i].classId, class_)) {
-              continue;
-            }
-            queue.push(class_.interfaces[i].classId);
-            class_.interfaces[i].weight = class_.weight + 1;
-          }
-        }
-      }
-    }
-
-    var transformed = transformMain();
-    generateMetadata(transformed);
-    setWeight(transformed);
-
-    var redendered = transformed.toString();
-
-    // remove empty extra lines with space
-    redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
-
-    // convert character codes to characters
-    redendered = redendered.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
-      return String.fromCharCode(parseInt(hexCode,16));
-    });
-
-    return injectStrings(redendered, strings);
-  }// Parser ends
-
-  function preprocessCode(aCode, sketch) {
-    // Parse out @pjs directive, if any.
-    var dm = new RegExp(/\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g).exec(aCode);
-    if (dm && dm.length === 2) {
-      // masks contents of a JSON to be replaced later
-      // to protect the contents from further parsing
-      var jsonItems = [],
-          directives = dm.splice(1, 2)[0].replace(/\{([\s\S]*?)\}/g, (function() {
-            return function(all, item) {
-              jsonItems.push(item);
-              return "{" + (jsonItems.length-1) + "}";
-            };
-          }())).replace('\n', '').replace('\r', '').split(";");
-
-      // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
-      var clean = function(s) {
-        return s.replace(/^\s*["']?/, '').replace(/["']?\s*$/, '');
-      };
-
-      for (var i = 0, dl = directives.length; i < dl; i++) {
-        var pair = directives[i].split('=');
-        if (pair && pair.length === 2) {
-          var key = clean(pair[0]),
-              value = clean(pair[1]),
-              list = [];
-          // A few directives require work beyond storying key/value pairings
-          if (key === "preload") {
-            list = value.split(',');
-            // All pre-loaded images will get put in imageCache, keyed on filename
-            for (var j = 0, jl = list.length; j < jl; j++) {
-              var imageName = clean(list[j]);
-              sketch.imageCache.add(imageName);
-            }
-          // fonts can be declared as a string containing a url,
-          // or a JSON object, containing a font name, and a url
-          } else if (key === "font") {
-            list = value.split(",");
-            for (var x = 0, xl = list.length; x < xl; x++) {
-              var fontName = clean(list[x]),
-                  index = /^\{(\d*?)\}$/.exec(fontName);
-              // if index is not null, send JSON, otherwise, send string
-              PFont.preloading.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
-            }
-          } else if (key === "pauseOnBlur") {
-            sketch.options.pauseOnBlur = value === "true";
-          } else if (key === "globalKeyEvents") {
-            sketch.options.globalKeyEvents = value === "true";
-          } else if (key.substring(0, 6) === "param-") {
-            sketch.params[key.substring(6)] = value;
-          } else {
-            sketch.options[key] = value;
-          }
-        }
-      }
-    }
-    return aCode;
-  }
-
-  // Parse/compiles Processing (Java-like) syntax to JavaScript syntax
-  Processing.compile = function(pdeCode) {
-    var sketch = new Processing.Sketch();
-    var code = preprocessCode(pdeCode, sketch);
-    var compiledPde = parseProcessing(code);
-    sketch.sourceCode = compiledPde;
-    return sketch;
-  };
-
-  var PjsConsole = require("../Helpers/PjsConsole");
-  Processing.logger = new PjsConsole(document);
-
-  // done
-  return Processing;
-};
-
-},{"../Helpers/PjsConsole":5}],27:[function(require,module,exports){
-/**
+},{}],23:[function(require,module,exports){
+(function(){/**
  * Processing.js object
  */
  module.exports = function(options, undef) {
@@ -9674,15 +7911,13 @@ module.exports = function setupParser(Processing, options) {
     // JavaScript event binding and releasing
     ////////////////////////////////////////////////////////////////////////////
 
-    var eventHandlers = [];
-
     function attachEventHandler(elem, type, fn) {
       if (elem.addEventListener) {
         elem.addEventListener(type, fn, false);
       } else {
         elem.attachEvent("on" + type, fn);
       }
-      eventHandlers.push({elem: elem, type: type, fn: fn});
+      p.eventHandlers.push({elem: elem, type: type, fn: fn});
     }
 
     function detachEventHandler(eventHandler) {
@@ -9696,6 +7931,14 @@ module.exports = function setupParser(Processing, options) {
       }
     }
 
+    function detachEventHandlersByType(element, types) {
+      Object.keys(p.eventHandlers).forEach(function(eventHandler) {
+        if (types.indexOf(eventHandler.type) > -1 && (eventHandler.elem == element)) {
+          detachEventHandler(eventHandler.type);
+        }
+      });
+    }
+
     function removeFirstArgument(args) {
       return Array.prototype.slice.call(args, 1);
     }
@@ -9707,10 +7950,11 @@ module.exports = function setupParser(Processing, options) {
     p.Char = p.Character = Char;
 
     // add in the Processing API functions
+    p.eventHandlers = [];
     extend.withCommonFunctions(p);
     extend.withMath(p);
     extend.withProxyFunctions(p, removeFirstArgument);
-    extend.withTouch(p, curElement, attachEventHandler, document, PConstants);
+    extend.withTouch(p, curElement, attachEventHandler, detachEventHandlersByType, document, PConstants);
 
     // custom functions and properties are added here
     if(aFunctions) {
@@ -13694,9 +11938,9 @@ module.exports = function setupParser(Processing, options) {
       }
 
       // clean up all event handling
-      var i = eventHandlers.length;
+      var i = p.eventHandlers.length;
       while (i--) {
-        detachEventHandler(eventHandlers[i]);
+        detachEventHandler(p.eventHandlers[i]);
       }
       curSketch.onExit();
     };
@@ -21603,138 +19847,1898 @@ module.exports = function setupParser(Processing, options) {
   return Processing;
 };
 
-},{}],28:[function(require,module,exports){
-// Base source files
-var source = {
-  virtEquals: require("./Helpers/virtEquals"),
-  virtHashCode: require("./Helpers/virtHashCode"),
-  ObjectIterator: require("./Helpers/ObjectIterator"),
-  PConstants: require("./Helpers/PConstants"),
-  ArrayList: require("./Objects/ArrayList"),
-  HashMap: require("./Objects/HashMap"),
-  PVector: require("./Objects/PVector"),
-  PFont: require("./Objects/PFont"),
-  Char: require("./Objects/Char"),
-  XMLAttribute: require("./Objects/XMLAttribute"),
-  XMLElement: require("./Objects/XMLElement"),
-  PMatrix2D: require("./Objects/PMatrix2D"),
-  PMatrix3D: require("./Objects/PMatrix3D"),
-  PShape: require("./Objects/PShape"),
-  colors: require("./Objects/webcolors"),
-  PShapeSVG:  require("./Objects/PShapeSVG"),
-  CommonFunctions: require("./P5Functions/commonFunctions"),
-  defaultScope: require("./Helpers/defaultScope"),
-  Processing: require("./Processing"),
-  setupParser: require("./Parser/Parser"),
-  finalize: require("./Helpers/finalizeProcessing")
-};
-
-// Additional code that gets tacked onto "p" during
-// instantiation of a Processing sketch.
-source.extend = {
-  withMath: require("./P5Functions/Math.js"),
-  withProxyFunctions: require("./P5Functions/JavaProxyFunctions")(source.virtHashCode, source.virtEquals),
-  withTouch: require("./P5Functions/touchmouse"),
-  withCommonFunctions: source.CommonFunctions.withCommonFunctions
-};
-
-/**
- * Processing.js building function
+})()
+},{}],24:[function(require,module,exports){
+(function(){/**
+ * The parser for turning Processing syntax into Pjs JavaScript.
+ * This code is not trivial; unless you know what you're doing,
+ * you shouldn't be changing things in here =)
  */
-module.exports = function buildProcessingJS(Browser, testHarness) {
-  var noop = function(){},
-      virtEquals = source.virtEquals,
-      virtHashCode = source.virtHashCode,
-      PConstants = source.PConstants,
-      CommonFunctions = source.CommonFunctions,
-      ObjectIterator = source.ObjectIterator,
-      Char = source.Char,
-      XMLAttribute = source.XMLAttribute(),
+module.exports = function setupParser(Processing, options) {
 
-      ArrayList = source.ArrayList({
-        virtHashCode: virtHashCode,
-        virtEquals: virtEquals
-      }),
+  var defaultScope = options.defaultScope,
+      PConstants = defaultScope.PConstants,
+      aFunctions = options.aFunctions,
+      Browser = options.Browser,
+      document = Browser.document,
+      undef;
 
-      HashMap = source.HashMap({
-        virtHashCode: virtHashCode,
-        virtEquals: virtEquals
-      }),
+  // Processing global methods and constants for the parser
+  function getGlobalMembers() {
+    // The names array contains the names of everything that is inside "p."
+    // When something new is added to "p." it must also be added to this list.
+    var names = [ /* this code is generated by jsglobals.js */
+      "abs", "acos", "alpha", "ambient", "ambientLight", "append", "applyMatrix",
+      "arc", "arrayCopy", "asin", "atan", "atan2", "background", "beginCamera",
+      "beginDraw", "beginShape", "bezier", "bezierDetail", "bezierPoint",
+      "bezierTangent", "bezierVertex", "binary", "blend", "blendColor",
+      "blit_resize", "blue", "box", "breakShape", "brightness",
+      "camera", "ceil", "Character", "color", "colorMode",
+      "concat", "constrain", "copy", "cos", "createFont",
+      "createGraphics", "createImage", "cursor", "curve", "curveDetail",
+      "curvePoint", "curveTangent", "curveTightness", "curveVertex", "day",
+      "degrees", "directionalLight", "disableContextMenu",
+      "dist", "draw", "ellipse", "ellipseMode", "emissive", "enableContextMenu",
+      "endCamera", "endDraw", "endShape", "exit", "exp", "expand", "externals",
+      "fill", "filter", "floor", "focused", "frameCount", "frameRate", "frustum",
+      "get", "glyphLook", "glyphTable", "green", "height", "hex", "hint", "hour",
+      "hue", "image", "imageMode", "intersect", "join", "key",
+      "keyCode", "keyPressed", "keyReleased", "keyTyped", "lerp", "lerpColor",
+      "lightFalloff", "lights", "lightSpecular", "line", "link", "loadBytes",
+      "loadFont", "loadGlyphs", "loadImage", "loadPixels", "loadShape", "loadXML",
+      "loadStrings", "log", "loop", "mag", "map", "match", "matchAll", "max",
+      "millis", "min", "minute", "mix", "modelX", "modelY", "modelZ", "modes",
+      "month", "mouseButton", "mouseClicked", "mouseDragged", "mouseMoved",
+      "mouseOut", "mouseOver", "mousePressed", "mouseReleased", "mouseScroll",
+      "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
+      "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
+      "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
+      "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
+      "parseInt", "parseXML", "peg", "perspective", "PImage", "pixels",
+      "PMatrix2D", "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",
+      "pointLight", "popMatrix", "popStyle", "pow", "print", "printCamera",
+      "println", "printMatrix", "printProjection", "PShape", "PShapeSVG",
+      "pushMatrix", "pushStyle", "quad", "radians", "random", "randomGaussian",
+      "randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
+      "resetMatrix", "reverse", "rotate", "rotateX", "rotateY", "rotateZ",
+      "round", "saturation", "save", "saveFrame", "saveStrings", "scale",
+      "screenX", "screenY", "screenZ", "second", "set", "setup", "shape",
+      "shapeMode", "shared", "shearX", "shearY", "shininess", "shorten", "sin", "size", "smooth",
+      "sort", "specular", "sphere", "sphereDetail", "splice", "split",
+      "splitTokens", "spotLight", "sq", "sqrt", "status", "str", "stroke",
+      "strokeCap", "strokeJoin", "strokeWeight", "subset", "tan", "text",
+      "textAlign", "textAscent", "textDescent", "textFont", "textLeading",
+      "textMode", "textSize", "texture", "textureMode", "textWidth", "tint", "toImageData",
+      "touchCancel", "touchEnd", "touchMove", "touchStart", "translate", "transform",
+      "triangle", "trim", "unbinary", "unhex", "updatePixels", "use3DContext",
+      "vertex", "width", "XMLElement", "XML", "year", "__contains", "__equals",
+      "__equalsIgnoreCase", "__frameRate", "__hashCode", "__int_cast",
+      "__instanceof", "__keyPressed", "__mousePressed", "__printStackTrace",
+      "__replace", "__replaceAll", "__replaceFirst", "__toCharArray", "__split",
+      "__codePointAt", "__startsWith", "__endsWith", "__matches"];
 
-      PVector = source.PVector({
-        PConstants: PConstants
-      }),
+    // custom functions and properties are added here
+    if(aFunctions) {
+      Object.keys(aFunctions).forEach(function(name) {
+        names.push(name);
+      });
+    }
 
-      PFont = source.PFont({
-        Browser: Browser,
-        noop: noop
-      }),
+    // custom libraries that were attached to Processing
+    var members = {};
+    var i, l;
+    for (i = 0, l = names.length; i < l ; ++i) {
+      members[names[i]] = null;
+    }
+    for (var lib in Processing.lib) {
+      if (Processing.lib.hasOwnProperty(lib)) {
+        if (Processing.lib[lib].exports) {
+          var exportedNames = Processing.lib[lib].exports;
+          for (i = 0, l = exportedNames.length; i < l; ++i) {
+           members[exportedNames[i]] = null;
+          }
+        }
+      }
+    }
+    return members;
+  }
 
-      XMLElement = source.XMLElement({
-        Browser: Browser,
-        XMLAttribute: XMLAttribute
-      }),
+  /*
 
-      PMatrix2D = source.PMatrix2D({
-        p:CommonFunctions
-      }),
+    Parser converts Java-like syntax into JavaScript.
+    Creates an Abstract Syntax Tree -- "Light AST" from the Java-like code.
 
-      PMatrix3D = source.PMatrix3D({
-        p:CommonFunctions
-      }),
+    It is an object tree. The root object is created from the AstRoot class, which contains statements.
 
-      PShape = source.PShape({
-        PConstants: PConstants,
-        PMatrix2D: PMatrix2D,
-        PMatrix3D: PMatrix3D
-      }),
+    A statement object can be of type: AstForStatement, AstCatchStatement, AstPrefixStatement, AstMethod, AstClass,
+    AstInterface, AstFunction, AstStatementBlock and AstLabel.
 
-      PShapeSVG = source.PShapeSVG({
-        CommonFunctions: CommonFunctions,
-        PConstants: PConstants,
-        PShape: PShape,
-        XMLElement: XMLElement,
-        colors: source.colors
-      }),
+    AstPrefixStatement can be a statement of type: if, switch, while, with, do, else, finally, return, throw, try, break, and continue.
 
-      defaultScope = source.defaultScope({
-        ArrayList: ArrayList,
-        HashMap: HashMap,
-        PVector: PVector,
-        PFont: PFont,
-        PShapeSVG: PShapeSVG,
-        ObjectIterator: ObjectIterator,
-        PConstants: PConstants,
-        Char: Char,
-        XMLElement: XMLElement,
-        XML: XMLElement
-      }),
+    These object's toString function returns the JavaScript code for the statement.
 
-      Processing = source.Processing({
-        defaultScope: defaultScope,
-        Browser: Browser,
-        extend: source.extend,
-        noop: noop
+    Any processing calls need "processing." prepended to them.
+
+    Similarly, calls from inside classes need "$this_1.", prepended to them,
+    with 1 being the depth level for inner classes.
+    This includes members passed down from inheritance.
+
+    The resulting code is then eval'd and run.
+
+  */
+
+  function parseProcessing(code) {
+    var globalMembers = getGlobalMembers();
+
+    // masks parentheses, brackets and braces with '"A5"'
+    // where A is the bracket type, and 5 is the index in an array containing all brackets split into atoms
+    // 'while(true){}' -> 'while"B1""A2"'
+    // parentheses() = B, brackets[] = C and braces{} = A
+    function splitToAtoms(code) {
+      var atoms = [];
+      var items = code.split(/([\{\[\(\)\]\}])/);
+      var result = items[0];
+
+      var stack = [];
+      for(var i=1; i < items.length; i += 2) {
+        var item = items[i];
+        if(item === '[' || item === '{' || item === '(') {
+          stack.push(result); result = item;
+        } else if(item === ']' || item === '}' || item === ')') {
+          var kind = item === '}' ? 'A' : item === ')' ? 'B' : 'C';
+          var index = atoms.length; atoms.push(result + item);
+          result = stack.pop() + '"' + kind + (index + 1) + '"';
+        }
+        result += items[i + 1];
+      }
+      atoms.unshift(result);
+      return atoms;
+    }
+
+    // replaces strings and regexs keyed by index with an array of strings
+    function injectStrings(code, strings) {
+      return code.replace(/'(\d+)'/g, function(all, index) {
+        var val = strings[index];
+        if(val.charAt(0) === "/") {
+          return val;
+        }
+        return (/^'((?:[^'\\\n])|(?:\\.[0-9A-Fa-f]*))'$/).test(val) ? "(new $p.Character(" + val + "))" : val;
+      });
+    }
+
+    // trims off leading and trailing spaces
+    // returns an object. object.left, object.middle, object.right, object.untrim
+    function trimSpaces(string) {
+      var m1 = /^\s*/.exec(string), result;
+      if(m1[0].length === string.length) {
+        result = {left: m1[0], middle: "", right: ""};
+      } else {
+        var m2 = /\s*$/.exec(string);
+        result = {left: m1[0], middle: string.substring(m1[0].length, m2.index), right: m2[0]};
+      }
+      result.untrim = function(t) { return this.left + t + this.right; };
+      return result;
+    }
+
+    // simple trim of leading and trailing spaces
+    function trim(string) {
+      return string.replace(/^\s+/,'').replace(/\s+$/,'');
+    }
+
+    function appendToLookupTable(table, array) {
+      for(var i=0,l=array.length;i<l;++i) {
+        table[array[i]] = null;
+      }
+      return table;
+    }
+
+    function isLookupTableEmpty(table) {
+      for(var i in table) {
+        if(table.hasOwnProperty(i)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function getAtomIndex(templ) { return templ.substring(2, templ.length - 1); }
+
+    // remove carriage returns "\r"
+    var codeWoExtraCr = code.replace(/\r\n?|\n\r/g, "\n");
+
+    // masks strings and regexs with "'5'", where 5 is the index in an array containing all strings and regexs
+    // also removes all comments
+    var strings = [];
+    var codeWoStrings = codeWoExtraCr.replace(/("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(([\[\(=|&!\^:?]\s*)(\/(?![*\/])(?:[^\/\\\n]|\\.)*\/[gim]*)\b)|(\/\/[^\n]*\n)|(\/\*(?:(?!\*\/)(?:.|\n))*\*\/)/g,
+    function(all, quoted, aposed, regexCtx, prefix, regex, singleComment, comment) {
+      var index;
+      if(quoted || aposed) { // replace strings
+        index = strings.length; strings.push(all);
+        return "'" + index + "'";
+      }
+      if(regexCtx) { // replace RegExps
+        index = strings.length; strings.push(regex);
+        return prefix + "'" + index + "'";
+      }
+      // kill comments
+      return comment !== "" ? " " : "\n";
+    });
+
+    // protect character codes from namespace collision
+    codeWoStrings = codeWoStrings.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
+      // $ = __x0024
+      // _ = __x005F
+      // this protects existing character codes from conversion
+      // __x0024 = __x005F_x0024
+      return "__x005F_x" + hexCode;
+    });
+
+    // convert dollar sign to character code
+    codeWoStrings = codeWoStrings.replace(/\$/g, "__x0024");
+
+    // Remove newlines after return statements
+    codeWoStrings = codeWoStrings.replace(/return\s*[\n\r]+/g, "return ");
+
+    // removes generics
+    var genericsWereRemoved;
+    var codeWoGenerics = codeWoStrings;
+    var replaceFunc = function(all, before, types, after) {
+      if(!!before || !!after) {
+        return all;
+      }
+      genericsWereRemoved = true;
+      return "";
+    };
+
+    do {
+      genericsWereRemoved = false;
+      codeWoGenerics = codeWoGenerics.replace(/([<]?)<\s*((?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\[\])*(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?(?:\s*,\s*(?:\?|[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\[\])*(?:\s+(?:extends|super)\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)?)*)\s*>([=]?)/g, replaceFunc);
+    } while (genericsWereRemoved);
+
+    var atoms = splitToAtoms(codeWoGenerics);
+    var replaceContext;
+    var declaredClasses = {}, currentClassId, classIdSeed = 0;
+
+    function addAtom(text, type) {
+      var lastIndex = atoms.length;
+      atoms.push(text);
+      return '"' + type + lastIndex + '"';
+    }
+
+    function generateClassId() {
+      return "class" + (++classIdSeed);
+    }
+
+    function appendClass(class_, classId, scopeId) {
+      class_.classId = classId;
+      class_.scopeId = scopeId;
+      declaredClasses[classId] = class_;
+    }
+
+    // functions defined below
+    var transformClassBody, transformInterfaceBody, transformStatementsBlock, transformStatements, transformMain, transformExpression;
+
+    var classesRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)(class|interface)\s+([A-Za-z_$][\w$]*\b)(\s+extends\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?(\s+implements\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\b)*)?\s*("A\d+")/g;
+    var methodsRegex = /\b((?:(?:public|private|final|protected|static|abstract|synchronized)\s+)*)((?!(?:else|new|return|throw|function|public|private|protected)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+"|;)/g;
+    var fieldTest = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:else|new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*([A-Za-z_$][\w$]*\b)\s*(?:"C\d+"\s*)*([=,]|$)/;
+    var cstrsRegex = /\b((?:(?:public|private|final|protected|static|abstract)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b)\s*("B\d+")(\s*throws\s+[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*,\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)*)?\s*("A\d+")/g;
+    var attrAndTypeRegex = /^((?:(?:public|private|final|protected|static)\s+)*)((?!(?:new|return|throw)\b)[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*(?:\s*"C\d+")*)\s*/;
+    var functionsRegex = /\bfunction(?:\s+([A-Za-z_$][\w$]*))?\s*("B\d+")\s*("A\d+")/g;
+
+    // This converts classes, methods and functions into atoms, and adds them to the atoms array.
+    // classes = E, methods = D and functions = H
+    function extractClassesAndMethods(code) {
+      var s = code;
+      s = s.replace(classesRegex, function(all) {
+        return addAtom(all, 'E');
+      });
+      s = s.replace(methodsRegex, function(all) {
+        return addAtom(all, 'D');
+      });
+      s = s.replace(functionsRegex, function(all) {
+        return addAtom(all, 'H');
+      });
+      return s;
+    }
+
+    // This converts constructors into atoms, and adds them to the atoms array.
+    // constructors = G
+    function extractConstructors(code, className) {
+      var result = code.replace(cstrsRegex, function(all, attr, name, params, throws_, body) {
+        if(name !== className) {
+          return all;
+        }
+        return addAtom(all, 'G');
+      });
+      return result;
+    }
+
+    // AstParam contains the name of a parameter inside a function declaration
+    function AstParam(name) {
+      this.name = name;
+    }
+    AstParam.prototype.toString = function() {
+      return this.name;
+    };
+    // AstParams contains an array of AstParam objects
+    function AstParams(params, methodArgsParam) {
+      this.params = params;
+      this.methodArgsParam = methodArgsParam;
+    }
+    AstParams.prototype.getNames = function() {
+      var names = [];
+      for(var i=0,l=this.params.length;i<l;++i) {
+        names.push(this.params[i].name);
+      }
+      return names;
+    };
+    AstParams.prototype.prependMethodArgs = function(body) {
+      if (!this.methodArgsParam) {
+        return body;
+      }
+      return "{\nvar " + this.methodArgsParam.name +
+        " = Array.prototype.slice.call(arguments, " +
+        this.params.length + ");\n" + body.substring(1);
+    };
+    AstParams.prototype.toString = function() {
+      if(this.params.length === 0) {
+        return "()";
+      }
+      var result = "(";
+      for(var i=0,l=this.params.length;i<l;++i) {
+        result += this.params[i] + ", ";
+      }
+      return result.substring(0, result.length - 2) + ")";
+    };
+
+    function transformParams(params) {
+      var paramsWoPars = trim(params.substring(1, params.length - 1));
+      var result = [], methodArgsParam = null;
+      if(paramsWoPars !== "") {
+        var paramList = paramsWoPars.split(",");
+        for(var i=0; i < paramList.length; ++i) {
+          var param = /\b([A-Za-z_$][\w$]*\b)(\s*"[ABC][\d]*")*\s*$/.exec(paramList[i]);
+          if (i === paramList.length - 1 && paramList[i].indexOf('...') >= 0) {
+            methodArgsParam = new AstParam(param[1]);
+            break;
+          }
+          result.push(new AstParam(param[1]));
+        }
+      }
+      return new AstParams(result, methodArgsParam);
+    }
+
+    function preExpressionTransform(expr) {
+      var s = expr;
+      // new type[] {...} --> {...}
+      s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s*"C\d+")+\s*("A\d+")/g, function(all, type, init) {
+        return init;
+      });
+      // new Runnable() {...} --> "F???"
+      s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)(?:\s*"B\d+")\s*("A\d+")/g, function(all, type, init) {
+        return addAtom(all, 'F');
+      });
+      // function(...) { } --> "H???"
+      s = s.replace(functionsRegex, function(all) {
+        return addAtom(all, 'H');
+      });
+      // new type[?] --> createJavaArray('type', [?])
+      s = s.replace(/\bnew\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*("C\d+"(?:\s*"C\d+")*)/g, function(all, type, index) {
+        var args = index.replace(/"C(\d+)"/g, function(all, j) { return atoms[j]; })
+          .replace(/\[\s*\]/g, "[null]").replace(/\s*\]\s*\[\s*/g, ", ");
+        var arrayInitializer = "{" + args.substring(1, args.length - 1) + "}";
+        var createArrayArgs = "('" + type + "', " + addAtom(arrayInitializer, 'A') + ")";
+        return '$p.createJavaArray' + addAtom(createArrayArgs, 'B');
+      });
+      // .length() --> .length
+      s = s.replace(/(\.\s*length)\s*"B\d+"/g, "$1");
+      // #000000 --> 0x000000
+      s = s.replace(/#([0-9A-Fa-f]{6})\b/g, function(all, digits) {
+        return "0xFF" + digits;
+      });
+      // delete (type)???, except (int)???
+      s = s.replace(/"B(\d+)"(\s*(?:[\w$']|"B))/g, function(all, index, next) {
+        var atom = atoms[index];
+        if(!/^\(\s*[A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*\s*(?:"C\d+"\s*)*\)$/.test(atom)) {
+          return all;
+        }
+        if(/^\(\s*int\s*\)$/.test(atom)) {
+          return "(int)" + next;
+        }
+        var indexParts = atom.split(/"C(\d+)"/g);
+        if(indexParts.length > 1) {
+          // even items contains atom numbers, can check only first
+          if(! /^\[\s*\]$/.test(atoms[indexParts[1]])) {
+            return all; // fallback - not a cast
+          }
+        }
+        return "" + next;
+      });
+      // (int)??? -> __int_cast(???)
+      s = s.replace(/\(int\)([^,\]\)\}\?\:\*\+\-\/\^\|\%\&\~<\>\=]+)/g, function(all, arg) {
+        var trimmed = trimSpaces(arg);
+        return trimmed.untrim("__int_cast(" + trimmed.middle + ")");
+      });
+      // super() -> $superCstr(), super. -> $super.;
+      s = s.replace(/\bsuper(\s*"B\d+")/g, "$$superCstr$1").replace(/\bsuper(\s*\.)/g, "$$super$1");
+      // 000.43->0.43 and 0010f->10, but not 0010
+      s = s.replace(/\b0+((\d*)(?:\.[\d*])?(?:[eE][\-\+]?\d+)?[fF]?)\b/, function(all, numberWo0, intPart) {
+        if( numberWo0 === intPart) {
+          return all;
+        }
+        return intPart === "" ? "0" + numberWo0 : numberWo0;
+      });
+      // 3.0f -> 3.0
+      s = s.replace(/\b(\.?\d+\.?)[fF]\b/g, "$1");
+      // Weird (?) parsing errors with %
+      s = s.replace(/([^\s])%([^=\s])/g, "$1 % $2");
+      // Since frameRate() and frameRate are different things,
+      // we need to differentiate them somehow. So when we parse
+      // the Processing.js source, replace frameRate so it isn't
+      // confused with frameRate(), as well as keyPressed and mousePressed
+      s = s.replace(/\b(frameRate|keyPressed|mousePressed)\b(?!\s*"B)/g, "__$1");
+      // "boolean", "byte", "int", etc. => "parseBoolean", "parseByte", "parseInt", etc.
+      s = s.replace(/\b(boolean|byte|char|float|int)\s*"B/g, function(all, name) {
+        return "parse" + name.substring(0, 1).toUpperCase() + name.substring(1) + "\"B";
+      });
+      // "pixels" replacements:
+      //   pixels[i] = c => pixels.setPixel(i,c) | pixels[i] => pixels.getPixel(i)
+      //   pixels.length => pixels.getLength()
+      //   pixels = ar => pixels.set(ar) | pixels => pixels.toArray()
+      s = s.replace(/\bpixels\b\s*(("C(\d+)")|\.length)?(\s*=(?!=)([^,\]\)\}]+))?/g,
+        function(all, indexOrLength, index, atomIndex, equalsPart, rightSide) {
+          if(index) {
+            var atom = atoms[atomIndex];
+            if(equalsPart) {
+              return "pixels.setPixel" + addAtom("(" +atom.substring(1, atom.length - 1) +
+                "," + rightSide + ")", 'B');
+            }
+            return "pixels.getPixel" + addAtom("(" + atom.substring(1, atom.length - 1) +
+              ")", 'B');
+          }
+          if(indexOrLength) {
+            // length
+            return "pixels.getLength" + addAtom("()", 'B');
+          }
+          if(equalsPart) {
+            return "pixels.set" + addAtom("(" + rightSide + ")", 'B');
+          }
+          return "pixels.toArray" + addAtom("()", 'B');
+        });
+      // Java method replacements for: replace, replaceAll, replaceFirst, equals, hashCode, etc.
+      //   xxx.replace(yyy) -> __replace(xxx, yyy)
+      //   "xx".replace(yyy) -> __replace("xx", yyy)
+      var repeatJavaReplacement;
+      function replacePrototypeMethods(all, subject, method, atomIndex) {
+        var atom = atoms[atomIndex];
+        repeatJavaReplacement = true;
+        var trimmed = trimSpaces(atom.substring(1, atom.length - 1));
+        return "__" + method  + ( trimmed.middle === "" ? addAtom("(" + subject.replace(/\.\s*$/, "") + ")", 'B') :
+          addAtom("(" + subject.replace(/\.\s*$/, "") + "," + trimmed.middle + ")", 'B') );
+      }
+      do {
+        repeatJavaReplacement = false;
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*\.\s*(?:[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*\.\s*)*)(replace|replaceAll|replaceFirst|contains|equals|equalsIgnoreCase|hashCode|toCharArray|printStackTrace|split|startsWith|endsWith|codePointAt|matches)\s*"B(\d+)"/g,
+          replacePrototypeMethods);
+      } while (repeatJavaReplacement);
+      // xxx instanceof yyy -> __instanceof(xxx, yyy)
+      function replaceInstanceof(all, subject, type) {
+        repeatJavaReplacement = true;
+        return "__instanceof" + addAtom("(" + subject + ", " + type + ")", 'B');
+      }
+      do {
+        repeatJavaReplacement = false;
+        s = s.replace(/((?:'\d+'|\b[A-Za-z_$][\w$]*\s*(?:"[BC]\d+")*)\s*(?:\.\s*[A-Za-z_$][\w$]*\s*(?:"[BC]\d+"\s*)*)*)instanceof\s+([A-Za-z_$][\w$]*\s*(?:\.\s*[A-Za-z_$][\w$]*)*)/g,
+          replaceInstanceof);
+      } while (repeatJavaReplacement);
+      // this() -> $constr()
+      s = s.replace(/\bthis(\s*"B\d+")/g, "$$constr$1");
+
+      return s;
+    }
+
+    function AstInlineClass(baseInterfaceName, body) {
+      this.baseInterfaceName = baseInterfaceName;
+      this.body = body;
+      body.owner = this;
+    }
+    AstInlineClass.prototype.toString = function() {
+      return "new (" + this.body + ")";
+    };
+
+    function transformInlineClass(class_) {
+      var m = new RegExp(/\bnew\s*([A-Za-z_$][\w$]*\s*(?:\.\s*[A-Za-z_$][\w$]*)*)\s*"B\d+"\s*"A(\d+)"/).exec(class_);
+      var oldClassId = currentClassId, newClassId = generateClassId();
+      currentClassId = newClassId;
+      var uniqueClassName = m[1] + "$" + newClassId;
+      var inlineClass = new AstInlineClass(uniqueClassName,
+        transformClassBody(atoms[m[2]], uniqueClassName, "", "implements " + m[1]));
+      appendClass(inlineClass, newClassId, oldClassId);
+      currentClassId = oldClassId;
+      return inlineClass;
+    }
+
+    function AstFunction(name, params, body) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+    AstFunction.prototype.toString = function() {
+      var oldContext = replaceContext;
+      // saving "this." and parameters
+      var names = appendToLookupTable({"this":null}, this.params.getNames());
+      replaceContext = function (subject) {
+        return names.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
+      };
+      var result = "function";
+      if(this.name) {
+        result += " " + this.name;
+      }
+      var body = this.params.prependMethodArgs(this.body.toString());
+      result += this.params + " " + body;
+      replaceContext = oldContext;
+      return result;
+    };
+
+    function transformFunction(class_) {
+      var m = new RegExp(/\b([A-Za-z_$][\w$]*)\s*"B(\d+)"\s*"A(\d+)"/).exec(class_);
+      return new AstFunction( m[1] !== "function" ? m[1] : null,
+        transformParams(atoms[m[2]]), transformStatementsBlock(atoms[m[3]]));
+    }
+
+    function AstInlineObject(members) {
+      this.members = members;
+    }
+    AstInlineObject.prototype.toString = function() {
+      var oldContext = replaceContext;
+      replaceContext = function (subject) {
+          return subject.name === "this" ? "this" : oldContext(subject); // saving "this."
+      };
+      var result = "";
+      for(var i=0,l=this.members.length;i<l;++i) {
+        if(this.members[i].label) {
+          result += this.members[i].label + ": ";
+        }
+        result += this.members[i].value.toString() + ", ";
+      }
+      replaceContext = oldContext;
+      return result.substring(0, result.length - 2);
+    };
+
+    function transformInlineObject(obj) {
+      var members = obj.split(',');
+      for(var i=0; i < members.length; ++i) {
+        var label = members[i].indexOf(':');
+        if(label < 0) {
+          members[i] = { value: transformExpression(members[i]) };
+        } else {
+          members[i] = { label: trim(members[i].substring(0, label)),
+            value: transformExpression( trim(members[i].substring(label + 1)) ) };
+        }
+      }
+      return new AstInlineObject(members);
+    }
+
+    function expandExpression(expr) {
+      if(expr.charAt(0) === '(' || expr.charAt(0) === '[') {
+        return expr.charAt(0) + expandExpression(expr.substring(1, expr.length - 1)) + expr.charAt(expr.length - 1);
+      }
+      if(expr.charAt(0) === '{') {
+        if(/^\{\s*(?:[A-Za-z_$][\w$]*|'\d+')\s*:/.test(expr)) {
+          return "{" + addAtom(expr.substring(1, expr.length - 1), 'I') + "}";
+        }
+        return "[" + expandExpression(expr.substring(1, expr.length - 1)) + "]";
+      }
+      var trimmed = trimSpaces(expr);
+      var result = preExpressionTransform(trimmed.middle);
+      result = result.replace(/"[ABC](\d+)"/g, function(all, index) {
+        return expandExpression(atoms[index]);
+      });
+      return trimmed.untrim(result);
+    }
+
+    function replaceContextInVars(expr) {
+      return expr.replace(/(\.\s*)?((?:\b[A-Za-z_]|\$)[\w$]*)(\s*\.\s*([A-Za-z_$][\w$]*)(\s*\()?)?/g,
+        function(all, memberAccessSign, identifier, suffix, subMember, callSign) {
+          if(memberAccessSign) {
+            return all;
+          }
+          var subject = { name: identifier, member: subMember, callSign: !!callSign };
+          return replaceContext(subject) + (suffix === undef ? "" : suffix);
+        });
+    }
+
+    function AstExpression(expr, transforms) {
+      this.expr = expr;
+      this.transforms = transforms;
+    }
+    AstExpression.prototype.toString = function() {
+      var transforms = this.transforms;
+      var expr = replaceContextInVars(this.expr);
+      return expr.replace(/"!(\d+)"/g, function(all, index) {
+        return transforms[index].toString();
+      });
+    };
+
+    transformExpression = function(expr) {
+      var transforms = [];
+      var s = expandExpression(expr);
+      s = s.replace(/"H(\d+)"/g, function(all, index) {
+        transforms.push(transformFunction(atoms[index]));
+        return '"!' + (transforms.length - 1) + '"';
+      });
+      s = s.replace(/"F(\d+)"/g, function(all, index) {
+        transforms.push(transformInlineClass(atoms[index]));
+        return '"!' + (transforms.length - 1) + '"';
+      });
+      s = s.replace(/"I(\d+)"/g, function(all, index) {
+        transforms.push(transformInlineObject(atoms[index]));
+        return '"!' + (transforms.length - 1) + '"';
       });
 
-  // set up the Processing syntax parser
-  Processing = source.setupParser(Processing, {
-    Browser: Browser,
-    aFunctions: testHarness,
-    defaultScope: defaultScope
-  });
+      return new AstExpression(s, transforms);
+    };
 
-  // finalise the Processing object
-  Processing = source.finalize(Processing, {
-    version: require('../package.json').version,
-    isDomPresent: false || Browser.isDomPresent,
-    window: Browser.window,
-    document: Browser.document,
-    noop: noop
-  });
+    function AstVarDefinition(name, value, isDefault) {
+      this.name = name;
+      this.value = value;
+      this.isDefault = isDefault;
+    }
+    AstVarDefinition.prototype.toString = function() {
+      return this.name + ' = ' + this.value;
+    };
 
-  // done.
+    function transformVarDefinition(def, defaultTypeValue) {
+      var eqIndex = def.indexOf("=");
+      var name, value, isDefault;
+      if(eqIndex < 0) {
+        name = def;
+        value = defaultTypeValue;
+        isDefault = true;
+      } else {
+        name = def.substring(0, eqIndex);
+        value = transformExpression(def.substring(eqIndex + 1));
+        isDefault = false;
+      }
+      return new AstVarDefinition( trim(name.replace(/(\s*"C\d+")+/g, "")),
+        value, isDefault);
+    }
+
+    function getDefaultValueForType(type) {
+        if(type === "int" || type === "float") {
+          return "0";
+        }
+        if(type === "boolean") {
+          return "false";
+        }
+        if(type === "color") {
+          return "0x00000000";
+        }
+        return "null";
+    }
+
+    function AstVar(definitions, varType) {
+      this.definitions = definitions;
+      this.varType = varType;
+    }
+    AstVar.prototype.getNames = function() {
+      var names = [];
+      for(var i=0,l=this.definitions.length;i<l;++i) {
+        names.push(this.definitions[i].name);
+      }
+      return names;
+    };
+    AstVar.prototype.toString = function() {
+      return "var " + this.definitions.join(",");
+    };
+    function AstStatement(expression) {
+      this.expression = expression;
+    }
+    AstStatement.prototype.toString = function() {
+      return this.expression.toString();
+    };
+
+    function transformStatement(statement) {
+      if(fieldTest.test(statement)) {
+        var attrAndType = attrAndTypeRegex.exec(statement);
+        var definitions = statement.substring(attrAndType[0].length).split(",");
+        var defaultTypeValue = getDefaultValueForType(attrAndType[2]);
+        for(var i=0; i < definitions.length; ++i) {
+          definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
+        }
+        return new AstVar(definitions, attrAndType[2]);
+      }
+      return new AstStatement(transformExpression(statement));
+    }
+
+    function AstForExpression(initStatement, condition, step) {
+      this.initStatement = initStatement;
+      this.condition = condition;
+      this.step = step;
+    }
+    AstForExpression.prototype.toString = function() {
+      return "(" + this.initStatement + "; " + this.condition + "; " + this.step + ")";
+    };
+
+    function AstForInExpression(initStatement, container) {
+      this.initStatement = initStatement;
+      this.container = container;
+    }
+    AstForInExpression.prototype.toString = function() {
+      var init = this.initStatement.toString();
+      if(init.indexOf("=") >= 0) { // can be without var declaration
+        init = init.substring(0, init.indexOf("="));
+      }
+      return "(" + init + " in " + this.container + ")";
+    };
+
+    function AstForEachExpression(initStatement, container) {
+      this.initStatement = initStatement;
+      this.container = container;
+    }
+    AstForEachExpression.iteratorId = 0;
+    AstForEachExpression.prototype.toString = function() {
+      var init = this.initStatement.toString();
+      var iterator = "$it" + (AstForEachExpression.iteratorId++);
+      var variableName = init.replace(/^\s*var\s*/, "").split("=")[0];
+      var initIteratorAndVariable = "var " + iterator + " = new $p.ObjectIterator(" + this.container + "), " +
+         variableName + " = void(0)";
+      var nextIterationCondition = iterator + ".hasNext() && ((" +
+         variableName + " = " + iterator + ".next()) || true)";
+      return "(" + initIteratorAndVariable + "; " + nextIterationCondition + ";)";
+    };
+
+    function transformForExpression(expr) {
+      var content;
+      if (/\bin\b/.test(expr)) {
+        content = expr.substring(1, expr.length - 1).split(/\bin\b/g);
+        return new AstForInExpression( transformStatement(trim(content[0])),
+          transformExpression(content[1]));
+      }
+      if (expr.indexOf(":") >= 0 && expr.indexOf(";") < 0) {
+        content = expr.substring(1, expr.length - 1).split(":");
+        return new AstForEachExpression( transformStatement(trim(content[0])),
+          transformExpression(content[1]));
+      }
+      content = expr.substring(1, expr.length - 1).split(";");
+      return new AstForExpression( transformStatement(trim(content[0])),
+        transformExpression(content[1]), transformExpression(content[2]));
+    }
+
+    function sortByWeight(array) {
+      array.sort(function (a,b) {
+        return b.weight - a.weight;
+      });
+    }
+
+    function AstInnerInterface(name, body, isStatic) {
+      this.name = name;
+      this.body = body;
+      this.isStatic = isStatic;
+      body.owner = this;
+    }
+    AstInnerInterface.prototype.toString = function() {
+      return "" + this.body;
+    };
+    function AstInnerClass(name, body, isStatic) {
+      this.name = name;
+      this.body = body;
+      this.isStatic = isStatic;
+      body.owner = this;
+    }
+    AstInnerClass.prototype.toString = function() {
+      return "" + this.body;
+    };
+
+    function transformInnerClass(class_) {
+      var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
+      classesRegex.lastIndex = 0;
+      var isStatic = m[1].indexOf("static") >= 0;
+      var body = atoms[getAtomIndex(m[6])], innerClass;
+      var oldClassId = currentClassId, newClassId = generateClassId();
+      currentClassId = newClassId;
+      if(m[2] === "interface") {
+        innerClass = new AstInnerInterface(m[3], transformInterfaceBody(body, m[3], m[4]), isStatic);
+      } else {
+        innerClass = new AstInnerClass(m[3], transformClassBody(body, m[3], m[4], m[5]), isStatic);
+      }
+      appendClass(innerClass, newClassId, oldClassId);
+      currentClassId = oldClassId;
+      return innerClass;
+    }
+
+    function AstClassMethod(name, params, body, isStatic) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+      this.isStatic = isStatic;
+    }
+    AstClassMethod.prototype.toString = function(){
+      var paramNames = appendToLookupTable({}, this.params.getNames());
+      var oldContext = replaceContext;
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
+      };
+      var body = this.params.prependMethodArgs(this.body.toString());
+      var result = "function " + this.methodId + this.params + " " + body +"\n";
+      replaceContext = oldContext;
+      return result;
+    };
+
+    function transformClassMethod(method) {
+      var m = methodsRegex.exec(method);
+      methodsRegex.lastIndex = 0;
+      var isStatic = m[1].indexOf("static") >= 0;
+      var body = m[6] !== ';' ? atoms[getAtomIndex(m[6])] : "{}";
+      return new AstClassMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
+        transformStatementsBlock(body), isStatic );
+    }
+
+    function AstClassField(definitions, fieldType, isStatic) {
+      this.definitions = definitions;
+      this.fieldType = fieldType;
+      this.isStatic = isStatic;
+    }
+    AstClassField.prototype.getNames = function() {
+      var names = [];
+      for(var i=0,l=this.definitions.length;i<l;++i) {
+        names.push(this.definitions[i].name);
+      }
+      return names;
+    };
+    AstClassField.prototype.toString = function() {
+      var thisPrefix = replaceContext({ name: "[this]" });
+      if(this.isStatic) {
+        var className = this.owner.name;
+        var staticDeclarations = [];
+        for(var i=0,l=this.definitions.length;i<l;++i) {
+          var definition = this.definitions[i];
+          var name = definition.name, staticName = className + "." + name;
+          var declaration = "if(" + staticName + " === void(0)) {\n" +
+            " " + staticName + " = " + definition.value + "; }\n" +
+            "$p.defineProperty(" + thisPrefix + ", " +
+            "'" + name + "', { get: function(){return " + staticName + ";}, " +
+            "set: function(val){" + staticName + " = val;} });\n";
+          staticDeclarations.push(declaration);
+        }
+        return staticDeclarations.join("");
+      }
+      return thisPrefix + "." + this.definitions.join("; " + thisPrefix + ".");
+    };
+
+    function transformClassField(statement) {
+      var attrAndType = attrAndTypeRegex.exec(statement);
+      var isStatic = attrAndType[1].indexOf("static") >= 0;
+      var definitions = statement.substring(attrAndType[0].length).split(/,\s*/g);
+      var defaultTypeValue = getDefaultValueForType(attrAndType[2]);
+      for(var i=0; i < definitions.length; ++i) {
+        definitions[i] = transformVarDefinition(definitions[i], defaultTypeValue);
+      }
+      return new AstClassField(definitions, attrAndType[2], isStatic);
+    }
+
+    function AstConstructor(params, body) {
+      this.params = params;
+      this.body = body;
+    }
+    AstConstructor.prototype.toString = function() {
+      var paramNames = appendToLookupTable({}, this.params.getNames());
+      var oldContext = replaceContext;
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
+      };
+      var prefix = "function $constr_" + this.params.params.length + this.params.toString();
+      var body = this.params.prependMethodArgs(this.body.toString());
+      if(!/\$(superCstr|constr)\b/.test(body)) {
+        body = "{\n$superCstr();\n" + body.substring(1);
+      }
+      replaceContext = oldContext;
+      return prefix + body + "\n";
+    };
+
+    function transformConstructor(cstr) {
+      var m = new RegExp(/"B(\d+)"\s*"A(\d+)"/).exec(cstr);
+      var params = transformParams(atoms[m[1]]);
+
+      return new AstConstructor(params, transformStatementsBlock(atoms[m[2]]));
+    }
+
+    function AstInterfaceBody(name, interfacesNames, methodsNames, fields, innerClasses, misc) {
+      var i,l;
+      this.name = name;
+      this.interfacesNames = interfacesNames;
+      this.methodsNames = methodsNames;
+      this.fields = fields;
+      this.innerClasses = innerClasses;
+      this.misc = misc;
+      for(i=0,l=fields.length; i<l; ++i) {
+        fields[i].owner = this;
+      }
+    }
+    AstInterfaceBody.prototype.getMembers = function(classFields, classMethods, classInners) {
+      if(this.owner.base) {
+        this.owner.base.body.getMembers(classFields, classMethods, classInners);
+      }
+      var i, j, l, m;
+      for(i=0,l=this.fields.length;i<l;++i) {
+        var fieldNames = this.fields[i].getNames();
+        for(j=0,m=fieldNames.length;j<m;++j) {
+          classFields[fieldNames[j]] = this.fields[i];
+        }
+      }
+      for(i=0,l=this.methodsNames.length;i<l;++i) {
+        var methodName = this.methodsNames[i];
+        classMethods[methodName] = true;
+      }
+      for(i=0,l=this.innerClasses.length;i<l;++i) {
+        var innerClass = this.innerClasses[i];
+        classInners[innerClass.name] = innerClass;
+      }
+    };
+    AstInterfaceBody.prototype.toString = function() {
+      function getScopeLevel(p) {
+        var i = 0;
+        while(p) {
+          ++i;
+          p=p.scope;
+        }
+        return i;
+      }
+
+      var scopeLevel = getScopeLevel(this.owner);
+
+      var className = this.name;
+      var staticDefinitions = "";
+      var metadata = "";
+
+      var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
+      this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
+
+      var i, l, j, m;
+
+      if (this.owner.interfaces) {
+        // interface name can be present, but interface is not
+        var resolvedInterfaces = [], resolvedInterface;
+        for (i = 0, l = this.interfacesNames.length; i < l; ++i) {
+          if (!this.owner.interfaces[i]) {
+            continue;
+          }
+          resolvedInterface = replaceContext({name: this.interfacesNames[i]});
+          resolvedInterfaces.push(resolvedInterface);
+          staticDefinitions += "$p.extendInterfaceMembers(" + className + ", " + resolvedInterface + ");\n";
+        }
+        metadata += className + ".$interfaces = [" + resolvedInterfaces.join(", ") + "];\n";
+      }
+      metadata += className + ".$isInterface = true;\n";
+      metadata += className + ".$methods = [\'" + this.methodsNames.join("\', \'") + "\'];\n";
+
+      sortByWeight(this.innerClasses);
+      for (i = 0, l = this.innerClasses.length; i < l; ++i) {
+        var innerClass = this.innerClasses[i];
+        if (innerClass.isStatic) {
+          staticDefinitions += className + "." + innerClass.name + " = " + innerClass + ";\n";
+        }
+      }
+
+      for (i = 0, l = this.fields.length; i < l; ++i) {
+        var field = this.fields[i];
+        if (field.isStatic) {
+          staticDefinitions += className + "." + field.definitions.join(";\n" + className + ".") + ";\n";
+        }
+      }
+
+      return "(function() {\n" +
+        "function " + className + "() { throw \'Unable to create the interface\'; }\n" +
+        staticDefinitions +
+        metadata +
+        "return " + className + ";\n" +
+        "})()";
+    };
+
+    transformInterfaceBody = function(body, name, baseInterfaces) {
+      var declarations = body.substring(1, body.length - 1);
+      declarations = extractClassesAndMethods(declarations);
+      declarations = extractConstructors(declarations, name);
+      var methodsNames = [], classes = [];
+      declarations = declarations.replace(/"([DE])(\d+)"/g, function(all, type, index) {
+        if(type === 'D') { methodsNames.push(index); }
+        else if(type === 'E') { classes.push(index); }
+        return "";
+      });
+      var fields = declarations.split(/;(?:\s*;)*/g);
+      var baseInterfaceNames;
+      var i, l;
+
+      if(baseInterfaces !== undef) {
+        baseInterfaceNames = baseInterfaces.replace(/^\s*extends\s+(.+?)\s*$/g, "$1").split(/\s*,\s*/g);
+      }
+
+      for(i = 0, l = methodsNames.length; i < l; ++i) {
+        var method = transformClassMethod(atoms[methodsNames[i]]);
+        methodsNames[i] = method.name;
+      }
+      for(i = 0, l = fields.length - 1; i < l; ++i) {
+        var field = trimSpaces(fields[i]);
+        fields[i] = transformClassField(field.middle);
+      }
+      var tail = fields.pop();
+      for(i = 0, l = classes.length; i < l; ++i) {
+        classes[i] = transformInnerClass(atoms[classes[i]]);
+      }
+
+      return new AstInterfaceBody(name, baseInterfaceNames, methodsNames, fields, classes, { tail: tail });
+    };
+
+    function AstClassBody(name, baseClassName, interfacesNames, functions, methods, fields, cstrs, innerClasses, misc) {
+      var i,l;
+      this.name = name;
+      this.baseClassName = baseClassName;
+      this.interfacesNames = interfacesNames;
+      this.functions = functions;
+      this.methods = methods;
+      this.fields = fields;
+      this.cstrs = cstrs;
+      this.innerClasses = innerClasses;
+      this.misc = misc;
+      for(i=0,l=fields.length; i<l; ++i) {
+        fields[i].owner = this;
+      }
+    }
+    AstClassBody.prototype.getMembers = function(classFields, classMethods, classInners) {
+      if(this.owner.base) {
+        this.owner.base.body.getMembers(classFields, classMethods, classInners);
+      }
+      var i, j, l, m;
+      for(i=0,l=this.fields.length;i<l;++i) {
+        var fieldNames = this.fields[i].getNames();
+        for(j=0,m=fieldNames.length;j<m;++j) {
+          classFields[fieldNames[j]] = this.fields[i];
+        }
+      }
+      for(i=0,l=this.methods.length;i<l;++i) {
+        var method = this.methods[i];
+        classMethods[method.name] = method;
+      }
+      for(i=0,l=this.innerClasses.length;i<l;++i) {
+        var innerClass = this.innerClasses[i];
+        classInners[innerClass.name] = innerClass;
+      }
+    };
+    AstClassBody.prototype.toString = function() {
+      function getScopeLevel(p) {
+        var i = 0;
+        while(p) {
+          ++i;
+          p=p.scope;
+        }
+        return i;
+      }
+
+      var scopeLevel = getScopeLevel(this.owner);
+
+      var selfId = "$this_" + scopeLevel;
+      var className = this.name;
+      var result = "var " + selfId + " = this;\n";
+      var staticDefinitions = "";
+      var metadata = "";
+
+      var thisClassFields = {}, thisClassMethods = {}, thisClassInners = {};
+      this.getMembers(thisClassFields, thisClassMethods, thisClassInners);
+
+      var oldContext = replaceContext;
+      replaceContext = function (subject) {
+        var name = subject.name;
+        if(name === "this") {
+          // returns "$this_N.$self" pointer instead of "this" in cases:
+          // "this()", "this.XXX()", "this", but not for "this.XXX"
+          return subject.callSign || !subject.member ? selfId + ".$self" : selfId;
+        }
+        if(thisClassFields.hasOwnProperty(name)) {
+          return thisClassFields[name].isStatic ? className + "." + name : selfId + "." + name;
+        }
+        if(thisClassInners.hasOwnProperty(name)) {
+          return selfId + "." + name;
+        }
+        if(thisClassMethods.hasOwnProperty(name)) {
+          return thisClassMethods[name].isStatic ? className + "." + name : selfId + ".$self." + name;
+        }
+        return oldContext(subject);
+      };
+
+      var resolvedBaseClassName;
+      if (this.baseClassName) {
+        resolvedBaseClassName = oldContext({name: this.baseClassName});
+        result += "var $super = { $upcast: " + selfId + " };\n";
+        result += "function $superCstr(){" + resolvedBaseClassName +
+          ".apply($super,arguments);if(!('$self' in $super)) $p.extendClassChain($super)}\n";
+        metadata += className + ".$base = " + resolvedBaseClassName + ";\n";
+      } else {
+        result += "function $superCstr(){$p.extendClassChain("+ selfId +")}\n";
+      }
+
+      if (this.owner.base) {
+        // base class name can be present, but class is not
+        staticDefinitions += "$p.extendStaticMembers(" + className + ", " + resolvedBaseClassName + ");\n";
+      }
+
+      var i, l, j, m;
+
+      if (this.owner.interfaces) {
+        // interface name can be present, but interface is not
+        var resolvedInterfaces = [], resolvedInterface;
+        for (i = 0, l = this.interfacesNames.length; i < l; ++i) {
+          if (!this.owner.interfaces[i]) {
+            continue;
+          }
+          resolvedInterface = oldContext({name: this.interfacesNames[i]});
+          resolvedInterfaces.push(resolvedInterface);
+          staticDefinitions += "$p.extendInterfaceMembers(" + className + ", " + resolvedInterface + ");\n";
+        }
+        metadata += className + ".$interfaces = [" + resolvedInterfaces.join(", ") + "];\n";
+      }
+
+      if (this.functions.length > 0) {
+        result += this.functions.join('\n') + '\n';
+      }
+
+      sortByWeight(this.innerClasses);
+      for (i = 0, l = this.innerClasses.length; i < l; ++i) {
+        var innerClass = this.innerClasses[i];
+        if (innerClass.isStatic) {
+          staticDefinitions += className + "." + innerClass.name + " = " + innerClass + ";\n";
+          result += selfId + "." + innerClass.name + " = " + className + "." + innerClass.name + ";\n";
+        } else {
+          result += selfId + "." + innerClass.name + " = " + innerClass + ";\n";
+        }
+      }
+
+      for (i = 0, l = this.fields.length; i < l; ++i) {
+        var field = this.fields[i];
+        if (field.isStatic) {
+          staticDefinitions += className + "." + field.definitions.join(";\n" + className + ".") + ";\n";
+          for (j = 0, m = field.definitions.length; j < m; ++j) {
+            var fieldName = field.definitions[j].name, staticName = className + "." + fieldName;
+            result += "$p.defineProperty(" + selfId + ", '" + fieldName + "', {" +
+              "get: function(){return " + staticName + "}, " +
+              "set: function(val){" + staticName + " = val}});\n";
+          }
+        } else {
+          result += selfId + "." + field.definitions.join(";\n" + selfId + ".") + ";\n";
+        }
+      }
+      var methodOverloads = {};
+      for (i = 0, l = this.methods.length; i < l; ++i) {
+        var method = this.methods[i];
+        var overload = methodOverloads[method.name];
+        var methodId = method.name + "$" + method.params.params.length;
+        var hasMethodArgs = !!method.params.methodArgsParam;
+        if (overload) {
+          ++overload;
+          methodId += "_" + overload;
+        } else {
+          overload = 1;
+        }
+        method.methodId = methodId;
+        methodOverloads[method.name] = overload;
+        if (method.isStatic) {
+          staticDefinitions += method;
+          staticDefinitions += "$p.addMethod(" + className + ", '" + method.name + "', " + methodId + ", " + hasMethodArgs + ");\n";
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ", " + hasMethodArgs + ");\n";
+        } else {
+          result += method;
+          result += "$p.addMethod(" + selfId + ", '" + method.name + "', " + methodId + ", " + hasMethodArgs + ");\n";
+        }
+      }
+      result += trim(this.misc.tail);
+
+      if (this.cstrs.length > 0) {
+        result += this.cstrs.join('\n') + '\n';
+      }
+
+      result += "function $constr() {\n";
+      var cstrsIfs = [];
+      for (i = 0, l = this.cstrs.length; i < l; ++i) {
+        var paramsLength = this.cstrs[i].params.params.length;
+        var methodArgsPresent = !!this.cstrs[i].params.methodArgsParam;
+        cstrsIfs.push("if(arguments.length " + (methodArgsPresent ? ">=" : "===") +
+          " " + paramsLength + ") { " +
+          "$constr_" + paramsLength + ".apply(" + selfId + ", arguments); }");
+      }
+      if(cstrsIfs.length > 0) {
+        result += cstrsIfs.join(" else ") + " else ";
+      }
+      // ??? add check if length is 0, otherwise fail
+      result += "$superCstr();\n}\n";
+      result += "$constr.apply(null, arguments);\n";
+
+      replaceContext = oldContext;
+      return "(function() {\n" +
+        "function " + className + "() {\n" + result + "}\n" +
+        staticDefinitions +
+        metadata +
+        "return " + className + ";\n" +
+        "})()";
+    };
+
+    transformClassBody = function(body, name, baseName, interfaces) {
+      var declarations = body.substring(1, body.length - 1);
+      declarations = extractClassesAndMethods(declarations);
+      declarations = extractConstructors(declarations, name);
+      var methods = [], classes = [], cstrs = [], functions = [];
+      declarations = declarations.replace(/"([DEGH])(\d+)"/g, function(all, type, index) {
+        if(type === 'D') { methods.push(index); }
+        else if(type === 'E') { classes.push(index); }
+        else if(type === 'H') { functions.push(index); }
+        else { cstrs.push(index); }
+        return "";
+      });
+      var fields = declarations.replace(/^(?:\s*;)+/, "").split(/;(?:\s*;)*/g);
+      var baseClassName, interfacesNames;
+      var i;
+
+      if(baseName !== undef) {
+        baseClassName = baseName.replace(/^\s*extends\s+([A-Za-z_$][\w$]*\b(?:\s*\.\s*[A-Za-z_$][\w$]*\b)*)\s*$/g, "$1");
+      }
+
+      if(interfaces !== undef) {
+        interfacesNames = interfaces.replace(/^\s*implements\s+(.+?)\s*$/g, "$1").split(/\s*,\s*/g);
+      }
+
+      for(i = 0; i < functions.length; ++i) {
+        functions[i] = transformFunction(atoms[functions[i]]);
+      }
+      for(i = 0; i < methods.length; ++i) {
+        methods[i] = transformClassMethod(atoms[methods[i]]);
+      }
+      for(i = 0; i < fields.length - 1; ++i) {
+        var field = trimSpaces(fields[i]);
+        fields[i] = transformClassField(field.middle);
+      }
+      var tail = fields.pop();
+      for(i = 0; i < cstrs.length; ++i) {
+        cstrs[i] = transformConstructor(atoms[cstrs[i]]);
+      }
+      for(i = 0; i < classes.length; ++i) {
+        classes[i] = transformInnerClass(atoms[classes[i]]);
+      }
+
+      return new AstClassBody(name, baseClassName, interfacesNames, functions, methods, fields, cstrs,
+        classes, { tail: tail });
+    };
+
+    function AstInterface(name, body) {
+      this.name = name;
+      this.body = body;
+      body.owner = this;
+    }
+    AstInterface.prototype.toString = function() {
+      return "var " + this.name + " = " + this.body + ";\n" +
+        "$p." + this.name + " = " + this.name + ";\n";
+    };
+    function AstClass(name, body) {
+      this.name = name;
+      this.body = body;
+      body.owner = this;
+    }
+    AstClass.prototype.toString = function() {
+      return "var " + this.name + " = " + this.body + ";\n" +
+        "$p." + this.name + " = " + this.name + ";\n";
+    };
+
+    function transformGlobalClass(class_) {
+      var m = classesRegex.exec(class_); // 1 - attr, 2 - class|int, 3 - name, 4 - extends, 5 - implements, 6 - body
+      classesRegex.lastIndex = 0;
+      var body = atoms[getAtomIndex(m[6])];
+      var oldClassId = currentClassId, newClassId = generateClassId();
+      currentClassId = newClassId;
+      var globalClass;
+      if(m[2] === "interface") {
+        globalClass = new AstInterface(m[3], transformInterfaceBody(body, m[3], m[4]) );
+      } else {
+        globalClass = new AstClass(m[3], transformClassBody(body, m[3], m[4], m[5]) );
+      }
+      appendClass(globalClass, newClassId, oldClassId);
+      currentClassId = oldClassId;
+      return globalClass;
+    }
+
+    function AstMethod(name, params, body) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+    AstMethod.prototype.toString = function(){
+      var paramNames = appendToLookupTable({}, this.params.getNames());
+      var oldContext = replaceContext;
+      replaceContext = function (subject) {
+        return paramNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
+      };
+      var body = this.params.prependMethodArgs(this.body.toString());
+      var result = "function " + this.name + this.params + " " + body + "\n" +
+                   "$p." + this.name + " = " + this.name + ";\n" +
+                   this.name + " = " + this.name + ".bind($p);";
+//        "$p." + this.name + " = " + this.name + ";";
+      replaceContext = oldContext;
+      return result;
+    };
+
+    function transformGlobalMethod(method) {
+      var m = methodsRegex.exec(method);
+      var result =
+      methodsRegex.lastIndex = 0;
+      return new AstMethod(m[3], transformParams(atoms[getAtomIndex(m[4])]),
+        transformStatementsBlock(atoms[getAtomIndex(m[6])]));
+    }
+
+    function preStatementsTransform(statements) {
+      var s = statements;
+      // turns multiple catch blocks into one, because we have no way to properly get into them anyway.
+      s = s.replace(/\b(catch\s*"B\d+"\s*"A\d+")(\s*catch\s*"B\d+"\s*"A\d+")+/g, "$1");
+      return s;
+    }
+
+    function AstForStatement(argument, misc) {
+      this.argument = argument;
+      this.misc = misc;
+    }
+    AstForStatement.prototype.toString = function() {
+      return this.misc.prefix + this.argument.toString();
+    };
+    function AstCatchStatement(argument, misc) {
+      this.argument = argument;
+      this.misc = misc;
+    }
+    AstCatchStatement.prototype.toString = function() {
+      return this.misc.prefix + this.argument.toString();
+    };
+    function AstPrefixStatement(name, argument, misc) {
+      this.name = name;
+      this.argument = argument;
+      this.misc = misc;
+    }
+    AstPrefixStatement.prototype.toString = function() {
+      var result = this.misc.prefix;
+      if(this.argument !== undef) {
+        result += this.argument.toString();
+      }
+      return result;
+    };
+    function AstSwitchCase(expr) {
+      this.expr = expr;
+    }
+    AstSwitchCase.prototype.toString = function() {
+      return "case " + this.expr + ":";
+    };
+    function AstLabel(label) {
+      this.label = label;
+    }
+    AstLabel.prototype.toString = function() {
+      return this.label;
+    };
+
+    transformStatements = function(statements, transformMethod, transformClass) {
+      var nextStatement = new RegExp(/\b(catch|for|if|switch|while|with)\s*"B(\d+)"|\b(do|else|finally|return|throw|try|break|continue)\b|("[ADEH](\d+)")|\b(case)\s+([^:]+):|\b([A-Za-z_$][\w$]*\s*:)|(;)/g);
+      var res = [];
+      statements = preStatementsTransform(statements);
+      var lastIndex = 0, m, space;
+      // m contains the matches from the nextStatement regexp, null if there are no matches.
+      // nextStatement.exec starts searching at nextStatement.lastIndex.
+      while((m = nextStatement.exec(statements)) !== null) {
+        if(m[1] !== undef) { // catch, for ...
+          var i = statements.lastIndexOf('"B', nextStatement.lastIndex);
+          var statementsPrefix = statements.substring(lastIndex, i);
+          if(m[1] === "for") {
+            res.push(new AstForStatement(transformForExpression(atoms[m[2]]),
+              { prefix: statementsPrefix }) );
+          } else if(m[1] === "catch") {
+            res.push(new AstCatchStatement(transformParams(atoms[m[2]]),
+              { prefix: statementsPrefix }) );
+          } else {
+            res.push(new AstPrefixStatement(m[1], transformExpression(atoms[m[2]]),
+              { prefix: statementsPrefix }) );
+          }
+        } else if(m[3] !== undef) { // do, else, ...
+            res.push(new AstPrefixStatement(m[3], undef,
+              { prefix: statements.substring(lastIndex, nextStatement.lastIndex) }) );
+        } else if(m[4] !== undef) { // block, class and methods
+          space = statements.substring(lastIndex, nextStatement.lastIndex - m[4].length);
+          if(trim(space).length !== 0) { continue; } // avoiding new type[] {} construct
+          res.push(space);
+          var kind = m[4].charAt(1), atomIndex = m[5];
+          if(kind === 'D') {
+            res.push(transformMethod(atoms[atomIndex]));
+          } else if(kind === 'E') {
+            res.push(transformClass(atoms[atomIndex]));
+          } else if(kind === 'H') {
+            res.push(transformFunction(atoms[atomIndex]));
+          } else {
+            res.push(transformStatementsBlock(atoms[atomIndex]));
+          }
+        } else if(m[6] !== undef) { // switch case
+          res.push(new AstSwitchCase(transformExpression(trim(m[7]))));
+        } else if(m[8] !== undef) { // label
+          space = statements.substring(lastIndex, nextStatement.lastIndex - m[8].length);
+          if(trim(space).length !== 0) { continue; } // avoiding ?: construct
+          res.push(new AstLabel(statements.substring(lastIndex, nextStatement.lastIndex)) );
+        } else { // semicolon
+          var statement = trimSpaces(statements.substring(lastIndex, nextStatement.lastIndex - 1));
+          res.push(statement.left);
+          res.push(transformStatement(statement.middle));
+          res.push(statement.right + ";");
+        }
+        lastIndex = nextStatement.lastIndex;
+      }
+      var statementsTail = trimSpaces(statements.substring(lastIndex));
+      res.push(statementsTail.left);
+      if(statementsTail.middle !== "") {
+        res.push(transformStatement(statementsTail.middle));
+        res.push(";" + statementsTail.right);
+      }
+      return res;
+    };
+
+    function getLocalNames(statements) {
+      var localNames = [];
+      for(var i=0,l=statements.length;i<l;++i) {
+        var statement = statements[i];
+        if(statement instanceof AstVar) {
+          localNames = localNames.concat(statement.getNames());
+        } else if(statement instanceof AstForStatement &&
+          statement.argument.initStatement instanceof AstVar) {
+          localNames = localNames.concat(statement.argument.initStatement.getNames());
+        } else if(statement instanceof AstInnerInterface || statement instanceof AstInnerClass ||
+          statement instanceof AstInterface || statement instanceof AstClass ||
+          statement instanceof AstMethod || statement instanceof AstFunction) {
+          localNames.push(statement.name);
+        }
+      }
+      return appendToLookupTable({}, localNames);
+    }
+
+    function AstStatementsBlock(statements) {
+      this.statements = statements;
+    }
+    AstStatementsBlock.prototype.toString = function() {
+      var localNames = getLocalNames(this.statements);
+      var oldContext = replaceContext;
+
+      // replacing context only when necessary
+      if(!isLookupTableEmpty(localNames)) {
+        replaceContext = function (subject) {
+          return localNames.hasOwnProperty(subject.name) ? subject.name : oldContext(subject);
+        };
+      }
+
+      var result = "{\n" + this.statements.join('') + "\n}";
+      replaceContext = oldContext;
+      return result;
+    };
+
+    transformStatementsBlock = function(block) {
+      var content = trimSpaces(block.substring(1, block.length - 1));
+      return new AstStatementsBlock(transformStatements(content.middle));
+    };
+
+    function AstRoot(statements) {
+      this.statements = statements;
+    }
+    AstRoot.prototype.toString = function() {
+      var classes = [], otherStatements = [], statement;
+      for (var i = 0, len = this.statements.length; i < len; ++i) {
+        statement = this.statements[i];
+        if (statement instanceof AstClass || statement instanceof AstInterface) {
+          classes.push(statement);
+        } else {
+          otherStatements.push(statement);
+        }
+      }
+      sortByWeight(classes);
+
+      var localNames = getLocalNames(this.statements);
+      replaceContext = function (subject) {
+        var name = subject.name;
+        if(localNames.hasOwnProperty(name)) {
+          return name;
+        }
+        if(globalMembers.hasOwnProperty(name) ||
+           PConstants.hasOwnProperty(name) ||
+           defaultScope.hasOwnProperty(name)) {
+          return "$p." + name;
+        }
+        return name;
+      };
+      var result = "// this code was autogenerated from PJS\n" +
+        "(function($p) {\n" +
+        classes.join('') + "\n" +
+        otherStatements.join('') + "\n})";
+      replaceContext = null;
+      return result;
+    };
+
+    transformMain = function() {
+      var statements = extractClassesAndMethods(atoms[0]);
+      statements = statements.replace(/\bimport\s+[^;]+;/g, "");
+      return new AstRoot( transformStatements(statements,
+        transformGlobalMethod, transformGlobalClass) );
+    };
+
+    function generateMetadata(ast) {
+      var globalScope = {};
+      var id, class_;
+      for(id in declaredClasses) {
+        if(declaredClasses.hasOwnProperty(id)) {
+          class_ = declaredClasses[id];
+          var scopeId = class_.scopeId, name = class_.name;
+          if(scopeId) {
+            var scope = declaredClasses[scopeId];
+            class_.scope = scope;
+            if(scope.inScope === undef) {
+              scope.inScope = {};
+            }
+            scope.inScope[name] = class_;
+          } else {
+            globalScope[name] = class_;
+          }
+        }
+      }
+
+      function findInScopes(class_, name) {
+        var parts = name.split('.');
+        var currentScope = class_.scope, found;
+        while(currentScope) {
+          if(currentScope.hasOwnProperty(parts[0])) {
+            found = currentScope[parts[0]]; break;
+          }
+          currentScope = currentScope.scope;
+        }
+        if(found === undef) {
+          found = globalScope[parts[0]];
+        }
+        for(var i=1,l=parts.length;i<l && found;++i) {
+          found = found.inScope[parts[i]];
+        }
+        return found;
+      }
+
+      for(id in declaredClasses) {
+        if(declaredClasses.hasOwnProperty(id)) {
+          class_ = declaredClasses[id];
+          var baseClassName = class_.body.baseClassName;
+          if(baseClassName) {
+            var parent = findInScopes(class_, baseClassName);
+            if (parent) {
+              class_.base = parent;
+              if (!parent.derived) {
+                parent.derived = [];
+              }
+              parent.derived.push(class_);
+            }
+          }
+          var interfacesNames = class_.body.interfacesNames,
+            interfaces = [], i, l;
+          if (interfacesNames && interfacesNames.length > 0) {
+            for (i = 0, l = interfacesNames.length; i < l; ++i) {
+              var interface_ = findInScopes(class_, interfacesNames[i]);
+              interfaces.push(interface_);
+              if (!interface_) {
+                continue;
+              }
+              if (!interface_.derived) {
+                interface_.derived = [];
+              }
+              interface_.derived.push(class_);
+            }
+            if (interfaces.length > 0) {
+              class_.interfaces = interfaces;
+            }
+          }
+        }
+      }
+    }
+
+    function setWeight(ast) {
+      var queue = [], tocheck = {};
+      var id, scopeId, class_;
+      // queue most inner and non-inherited
+      for (id in declaredClasses) {
+        if (declaredClasses.hasOwnProperty(id)) {
+          class_ = declaredClasses[id];
+          if (!class_.inScope && !class_.derived) {
+            queue.push(id);
+            class_.weight = 0;
+          } else {
+            var dependsOn = [];
+            if (class_.inScope) {
+              for (scopeId in class_.inScope) {
+                if (class_.inScope.hasOwnProperty(scopeId)) {
+                  dependsOn.push(class_.inScope[scopeId]);
+                }
+              }
+            }
+            if (class_.derived) {
+              dependsOn = dependsOn.concat(class_.derived);
+            }
+            tocheck[id] = dependsOn;
+          }
+        }
+      }
+      function removeDependentAndCheck(targetId, from) {
+        var dependsOn = tocheck[targetId];
+        if (!dependsOn) {
+          return false; // no need to process
+        }
+        var i = dependsOn.indexOf(from);
+        if (i < 0) {
+          return false;
+        }
+        dependsOn.splice(i, 1);
+        if (dependsOn.length > 0) {
+          return false;
+        }
+        delete tocheck[targetId];
+        return true;
+      }
+      while (queue.length > 0) {
+        id = queue.shift();
+        class_ = declaredClasses[id];
+        if (class_.scopeId && removeDependentAndCheck(class_.scopeId, class_)) {
+          queue.push(class_.scopeId);
+          declaredClasses[class_.scopeId].weight = class_.weight + 1;
+        }
+        if (class_.base && removeDependentAndCheck(class_.base.classId, class_)) {
+          queue.push(class_.base.classId);
+          class_.base.weight = class_.weight + 1;
+        }
+        if (class_.interfaces) {
+          var i, l;
+          for (i = 0, l = class_.interfaces.length; i < l; ++i) {
+            if (!class_.interfaces[i] ||
+                !removeDependentAndCheck(class_.interfaces[i].classId, class_)) {
+              continue;
+            }
+            queue.push(class_.interfaces[i].classId);
+            class_.interfaces[i].weight = class_.weight + 1;
+          }
+        }
+      }
+    }
+
+    var transformed = transformMain();
+    generateMetadata(transformed);
+    setWeight(transformed);
+
+    var redendered = transformed.toString();
+
+    // remove empty extra lines with space
+    redendered = redendered.replace(/\s*\n(?:[\t ]*\n)+/g, "\n\n");
+
+    // convert character codes to characters
+    redendered = redendered.replace(/__x([0-9A-F]{4})/g, function(all, hexCode) {
+      return String.fromCharCode(parseInt(hexCode,16));
+    });
+
+    return injectStrings(redendered, strings);
+  }// Parser ends
+
+  function preprocessCode(aCode, sketch) {
+    // Parse out @pjs directive, if any.
+    var dm = new RegExp(/\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g).exec(aCode);
+    if (dm && dm.length === 2) {
+      // masks contents of a JSON to be replaced later
+      // to protect the contents from further parsing
+      var jsonItems = [],
+          directives = dm.splice(1, 2)[0].replace(/\{([\s\S]*?)\}/g, (function() {
+            return function(all, item) {
+              jsonItems.push(item);
+              return "{" + (jsonItems.length-1) + "}";
+            };
+          }())).replace('\n', '').replace('\r', '').split(";");
+
+      // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
+      var clean = function(s) {
+        return s.replace(/^\s*["']?/, '').replace(/["']?\s*$/, '');
+      };
+
+      for (var i = 0, dl = directives.length; i < dl; i++) {
+        var pair = directives[i].split('=');
+        if (pair && pair.length === 2) {
+          var key = clean(pair[0]),
+              value = clean(pair[1]),
+              list = [];
+          // A few directives require work beyond storying key/value pairings
+          if (key === "preload") {
+            list = value.split(',');
+            // All pre-loaded images will get put in imageCache, keyed on filename
+            for (var j = 0, jl = list.length; j < jl; j++) {
+              var imageName = clean(list[j]);
+              sketch.imageCache.add(imageName);
+            }
+          // fonts can be declared as a string containing a url,
+          // or a JSON object, containing a font name, and a url
+          } else if (key === "font") {
+            list = value.split(",");
+            for (var x = 0, xl = list.length; x < xl; x++) {
+              var fontName = clean(list[x]),
+                  index = /^\{(\d*?)\}$/.exec(fontName);
+              // if index is not null, send JSON, otherwise, send string
+              PFont.preloading.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
+            }
+          } else if (key === "pauseOnBlur") {
+            sketch.options.pauseOnBlur = value === "true";
+          } else if (key === "globalKeyEvents") {
+            sketch.options.globalKeyEvents = value === "true";
+          } else if (key.substring(0, 6) === "param-") {
+            sketch.params[key.substring(6)] = value;
+          } else {
+            sketch.options[key] = value;
+          }
+        }
+      }
+    }
+    return aCode;
+  }
+
+  // Parse/compiles Processing (Java-like) syntax to JavaScript syntax
+  Processing.compile = function(pdeCode) {
+    var sketch = new Processing.Sketch();
+    var code = preprocessCode(pdeCode, sketch);
+    var compiledPde = parseProcessing(code);
+    sketch.sourceCode = compiledPde;
+    return sketch;
+  };
+
+  var PjsConsole = require("../Helpers/PjsConsole");
+  Processing.logger = new PjsConsole(document);
+
+  // done
   return Processing;
 };
 
-},{"../package.json":2,"./Helpers/ObjectIterator":3,"./Helpers/PConstants":4,"./Helpers/defaultScope":6,"./Helpers/finalizeProcessing":7,"./Helpers/virtEquals":8,"./Helpers/virtHashCode":9,"./Objects/ArrayList":10,"./Objects/Char":11,"./Objects/HashMap":12,"./Objects/PFont":13,"./Objects/PMatrix2D":14,"./Objects/PMatrix3D":15,"./Objects/PShape":16,"./Objects/PShapeSVG":17,"./Objects/PVector":18,"./Objects/XMLAttribute":19,"./Objects/XMLElement":20,"./Objects/webcolors":21,"./P5Functions/JavaProxyFunctions":22,"./P5Functions/Math.js":23,"./P5Functions/commonFunctions":24,"./P5Functions/touchmouse":25,"./Parser/Parser":26,"./Processing":27}]},{},[1]);
+})()
+},{"../Helpers/PjsConsole":28}],28:[function(require,module,exports){
+// the logger for println()
+module.exports = function PjsConsole(document) {
+  var e = { BufferMax: 200 },
+      style = document.createElement("style"),
+      added = false;
+
+  style.textContent = [
+    ".pjsconsole.hidden {",
+    "  display: none!important;",
+    "}"
+  ].join('\n');
+
+  e.wrapper = document.createElement("div");
+  style.textContent += [
+    "",
+    ".pjsconsole {",
+    "  opacity: .75;",
+    "  display: block;",
+    "  position: fixed;",
+    "  bottom: 0px;",
+    "  left: 0px;",
+    "  right: 0px;",
+    "  height: 50px;",
+    "  background-color: #aaa;",
+    "}"
+  ].join('\n');
+  e.wrapper.classList.add("pjsconsole");
+
+  e.dragger = document.createElement("div");
+  style.textContent += [
+    "",
+    ".pjsconsole .dragger {",
+    "  display: block;",
+    "  border: 3px black raised;",
+    "  cursor: n-resize;",
+    "  position: absolute;",
+    "  top: 0px;",
+    "  left: 0px;",
+    "  right: 0px;",
+    "  height: 5px;",
+    "  background-color: #333;",
+    "}"
+  ].join('\n');
+  e.dragger.classList.add("dragger");
+
+  e.closer = document.createElement("div");
+  style.textContent += [
+    "",
+    ".pjsconsole .closer {",
+    "  opacity: .5;",
+    "  display: block;",
+    "  border: 3px black raised;",
+    "  position: absolute;",
+    "  top: 10px;",
+    "  right: 30px;",
+    "  height: 20px;",
+    "  width: 20px;",
+    "  background-color: #ddd;",
+    "  color: #000;",
+    "  line-height: 20px;",
+    "  text-align: center;",
+    "  cursor: pointer",
+    "}"
+  ].join('\n');
+  e.closer.classList.add("closer");
+  e.closer.innerHTML = "&#10006;";
+
+  e.javaconsole = document.createElement("div");
+  style.textContent += [
+    "",
+    ".pjsconsole .console {",
+    "  overflow-x: auto;",
+    "  display: block;",
+    "  position: absolute;",
+    "  left: 10px;",
+    "  right: 0px;",
+    "  bottom: 5px;",
+    "  top: 10px;",
+    "  overflow-y: scroll;",
+    "  height: 40px;",
+    "}"
+  ].join('\n');
+  e.javaconsole.setAttribute("class", "console");
+
+  e.wrapper.appendChild(e.dragger);
+  e.wrapper.appendChild(e.javaconsole);
+  e.wrapper.appendChild(e.closer);
+
+  e.dragger.onmousedown = function (t) {
+    e.divheight = e.wrapper.style.height;
+    if (document.selection) document.selection.empty();
+    else window.getSelection().removeAllRanges();
+    var n = t.screenY;
+    window.onmousemove = function (t) {
+      e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
+      e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
+    };
+    window.onmouseup = function (t) {
+      if (document.selection) document.selection.empty();
+      else window.getSelection().removeAllRanges();
+      e.wrapper.style.height = parseFloat(e.divheight) + (n - t.screenY) + "px";
+      e.javaconsole.style.height = parseFloat(e.divheight) + (n - t.screenY) - 10 + "px";
+      window.onmousemove = null;
+      window.onmouseup = null;
+    };
+  };
+
+  e.BufferArray = [];
+
+  e.print = e.log = function () {
+    var args = Array.prototype.slice.call(arguments);
+    t = args.map(function(t, idx) { return t + (idx+1 === args.length ? "" : " "); }).join('');
+    if (e.BufferArray[e.BufferArray.length - 1]) e.BufferArray[e.BufferArray.length - 1] += (t) + "";
+    else e.BufferArray.push(t);
+    e.javaconsole.innerHTML = e.BufferArray.join('');
+    e.showconsole();
+  };
+
+  e.println = function () {
+    if(!added) {
+      document.body.appendChild(style);
+      document.body.appendChild(e.wrapper);
+      added = true;
+    }
+    var args = Array.prototype.slice.call(arguments);
+    args.push('<br>');
+    e.print.apply(e, args);
+    if (e.BufferArray.length > e.BufferMax) {
+      e.BufferArray.splice(0, 1);
+    } else {
+      e.javaconsole.scrollTop = e.javaconsole.scrollHeight;
+    }
+  };
+
+  e.showconsole = function () { e.wrapper.classList.remove("hidden"); };
+  e.hideconsole = function () { e.wrapper.classList.add("hidden"); };
+
+  e.closer.onclick = function () { e.hideconsole(); };
+
+  e.hideconsole();
+
+  return e;
+};
+
+},{}]},{},[1])
+;
