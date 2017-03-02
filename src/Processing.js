@@ -126,14 +126,14 @@
     ////////////////////////////////////////////////////////////////////////////
     // JavaScript event binding and releasing
     ////////////////////////////////////////////////////////////////////////////
-
+	var eventHandlers = [];
     function attachEventHandler(elem, type, fn) {
       if (elem.addEventListener) {
         elem.addEventListener(type, fn, false);
       } else {
         elem.attachEvent("on" + type, fn);
       }
-      p.eventHandlers.push({elem: elem, type: type, fn: fn});
+      eventHandlers.push({elem: elem, type: type, fn: fn});
     }
 
     function detachEventHandler(eventHandler) {
@@ -148,7 +148,7 @@
     }
 
     function detachEventHandlersByType(element, types) {
-      Object.keys(p.eventHandlers).forEach(function(eventHandler) {
+      Object.keys(eventHandlers).forEach(function(eventHandler) {
         if (types.indexOf(eventHandler.type) > -1 && (eventHandler.elem == element)) {
           detachEventHandler(eventHandler.type);
         }
@@ -166,7 +166,7 @@
     p.Char = p.Character = Char;
 
     // add in the Processing API functions
-    p.eventHandlers = [];
+    eventHandlers = [];
     extend.withCommonFunctions(p);
     extend.withMath(p);
     extend.withProxyFunctions(p, removeFirstArgument);
@@ -4154,9 +4154,9 @@
       }
 
       // clean up all event handling
-      var i = p.eventHandlers.length;
+      var i = eventHandlers.length;
       while (i--) {
-        detachEventHandler(p.eventHandlers[i]);
+        detachEventHandler(eventHandlers[i]);
       }
       curSketch.onExit();
     };
