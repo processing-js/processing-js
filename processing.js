@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -7510,7 +7510,10 @@ module.exports = (function commonFunctions(undef) {
 /**
  * Touch and Mouse event handling
  */
-module.exports = function withTouch(p, curElement, attachEventHandler, document, PConstants, undef) {
+module.exports = function withTouch(p, curElement, attachEventHandler, detachEventHandlersByType, document, PConstants, undef) {
+
+  // List of mouse event types
+  var mouseTypes = ['mouseout','mousemove','mousedown','mouseup','DOMMouseScroll','mousewheel','touchstart'];
 
   /**
    * Determine the location of the (mouse) pointer.
@@ -7605,16 +7608,9 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
     curElement.setAttribute("style","-webkit-user-select: none");
     curElement.setAttribute("onclick","void(0)");
     curElement.setAttribute("style","-webkit-tap-highlight-color:rgba(0,0,0,0)");
-    // Loop though eventHandlers and remove mouse listeners
-    for (var i=0, ehl=eventHandlers.length; i<ehl; i++) {
-      var type = eventHandlers[i].type;
-      // Have this function remove itself from the eventHandlers list too
-      if (type === "mouseout" ||  type === "mousemove" ||
-          type === "mousedown" || type === "mouseup" ||
-          type === "DOMMouseScroll" || type === "mousewheel" || type === "touchstart") {
-        detachEventHandler(eventHandlers[i]);
-      }
-    }
+
+    // Remove mouse-type event listeners
+    detachEventHandlersByType(curElement, mouseTypes);
 
     // If there are any native touch events defined in the sketch, connect all of them
     // Otherwise, connect all of the emulated mouse events
@@ -7690,9 +7686,6 @@ module.exports = function withTouch(p, curElement, attachEventHandler, document,
         }
       });
     }
-
-    // Refire the touch start event we consumed in this function
-    curElement.dispatchEvent(t);
   });
 
   /**
@@ -9717,9 +9710,7 @@ module.exports = function setupParser(Processing, options) {
     ////////////////////////////////////////////////////////////////////////////
     // JavaScript event binding and releasing
     ////////////////////////////////////////////////////////////////////////////
-
-    var eventHandlers = [];
-
+	var eventHandlers = [];
     function attachEventHandler(elem, type, fn) {
       if (elem.addEventListener) {
         elem.addEventListener(type, fn, false);
@@ -9740,6 +9731,14 @@ module.exports = function setupParser(Processing, options) {
       }
     }
 
+    function detachEventHandlersByType(element, types) {
+      Object.keys(eventHandlers).forEach(function(eventHandler) {
+        if (types.indexOf(eventHandler.type) > -1 && (eventHandler.elem == element)) {
+          detachEventHandler(eventHandler.type);
+        }
+      });
+    }
+
     function removeFirstArgument(args) {
       return Array.prototype.slice.call(args, 1);
     }
@@ -9751,10 +9750,11 @@ module.exports = function setupParser(Processing, options) {
     p.Char = p.Character = Char;
 
     // add in the Processing API functions
+    eventHandlers = [];
     extend.withCommonFunctions(p);
     extend.withMath(p);
     extend.withProxyFunctions(p, removeFirstArgument);
-    extend.withTouch(p, curElement, attachEventHandler, document, PConstants);
+    extend.withTouch(p, curElement, attachEventHandler, detachEventHandlersByType, document, PConstants);
 
     // custom functions and properties are added here
     if(aFunctions) {
