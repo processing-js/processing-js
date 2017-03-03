@@ -126,9 +126,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // JavaScript event binding and releasing
     ////////////////////////////////////////////////////////////////////////////
-
-    var eventHandlers = [];
-
+	var eventHandlers = [];
     function attachEventHandler(elem, type, fn) {
       if (elem.addEventListener) {
         elem.addEventListener(type, fn, false);
@@ -149,6 +147,14 @@
       }
     }
 
+    function detachEventHandlersByType(element, types) {
+      Object.keys(eventHandlers).forEach(function(eventHandler) {
+        if (types.indexOf(eventHandler.type) > -1 && (eventHandler.elem == element)) {
+          detachEventHandler(eventHandler.type);
+        }
+      });
+    }
+
     function removeFirstArgument(args) {
       return Array.prototype.slice.call(args, 1);
     }
@@ -160,10 +166,11 @@
     p.Char = p.Character = Char;
 
     // add in the Processing API functions
+    eventHandlers = [];
     extend.withCommonFunctions(p);
     extend.withMath(p);
     extend.withProxyFunctions(p, removeFirstArgument);
-    extend.withTouch(p, curElement, attachEventHandler, document, PConstants);
+    extend.withTouch(p, curElement, attachEventHandler, detachEventHandlersByType, document, PConstants);
 
     // custom functions and properties are added here
     if(aFunctions) {
