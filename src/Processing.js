@@ -3030,7 +3030,7 @@
       b = (b > colorModeZ) ? colorModeZ : b;
 
       // Limit values smaller than range
-      b = (h < 0) ? 0 : h;
+      h = (h < 0) ? 0 : h;
 
       h = (h / colorModeX) * 360;
       s = (s / colorModeY) * 100;
