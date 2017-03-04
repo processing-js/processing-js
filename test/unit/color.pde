@@ -185,6 +185,12 @@ colorMode(RGB, 100);
 color h1 = color(100);
 _checkEqual([hue(h1), saturation(h1), brightness(h1)], [0, 0, 100]);
 
+// Test HSB robustness to negative values
+colorMode(HSB);
+color r1 = color(-1,100,100);
+color r2 = color(0,100,100);
+_checkEqual(r1, r2);
+
 // Test HSB color
 colorMode(RGB, 255);
 color c1 = color(204, 153, 0);
