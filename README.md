@@ -39,6 +39,12 @@ Clone this project using git, and ensure you have [node.js](http://nodejs.org) i
 
 If step 1 gives you a "grunt: command not found" or similar error, run `npm install -g grunt-cli` to make sure grunt is globally installed as CLI command. If step 1 does not throw any errors, step 2 will run the Processing object through a battery of tests. Once the browser reference tests start, your `processing.js` and `processing.min.js` have been successfully built.
 
+### Only edit files in the ./src directory
+
+As is implicit to the whole `processing.js` and `processing.min.js` getting rebuilt every time: remember not to edit either of these files directly. Instead, all the real source code live inside the `./src` directory, except for the `build.js` file that is used to create the library bundle. As this build file should not reasonably require any fixing, if you want to try to fix anything, or see what happens when you change something, make sure you only ever do that in files inside `./src`.
+
+### Test script runtime flags
+
 The test script also accepts the following optional arguments:
 
 * `--test=testfile.pde` runs one specific test
