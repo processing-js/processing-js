@@ -3029,6 +3029,9 @@
       s = (s > colorModeY) ? colorModeY : s;
       b = (b > colorModeZ) ? colorModeZ : b;
 
+      // Limit values smaller than range
+      h = (h < 0) ? 0 : h;
+
       h = (h / colorModeX) * 360;
       s = (s / colorModeY) * 100;
       b = (b / colorModeZ) * 100;
@@ -3056,6 +3059,8 @@
         return [t, p, br];
       case 5:
         return [br, p, q];
+      default:
+        Processing.debug("Unexpectedly hit default case in toRGB function.");
       }
     };
 
