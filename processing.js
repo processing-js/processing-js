@@ -25,7 +25,7 @@ window.Processing = require('./src/')(Browser);
 },{"./src/":28}],2:[function(require,module,exports){
 module.exports={
   "name": "processing-js",
-  "version": "1.6.5",
+  "version": "1.6.6",
   "author": "Processing.js",
   "repository": {
     "type": "git",
@@ -12613,6 +12613,9 @@ module.exports = function setupParser(Processing, options) {
       s = (s > colorModeY) ? colorModeY : s;
       b = (b > colorModeZ) ? colorModeZ : b;
 
+      // Limit values smaller than range
+      h = (h < 0) ? 0 : h;
+
       h = (h / colorModeX) * 360;
       s = (s / colorModeY) * 100;
       b = (b / colorModeZ) * 100;
@@ -12640,6 +12643,8 @@ module.exports = function setupParser(Processing, options) {
         return [t, p, br];
       case 5:
         return [br, p, q];
+      default:
+        Processing.debug("Unexpectedly hit default case in toRGB function.");
       }
     };
 
