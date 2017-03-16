@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>name</key>
+		<string>new</string>
+		<key>regex</key>
+		<string>( |\n|=)(new)( |\n)</string>
+		<key>color</key>
+		<string>45,154,126</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>types</string>
+		<key>regex</key>
+		<string>(?&lt;=^| |\n|\()(int|String|bool|float|double)( )?(?=\w|\n|\(|\[)</string>
+		<key>color</key>
+		<string>228,102,0</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>parameters</string>
+		<key>regex</key>
+		<string>(?&lt;= |\n|\(|,)(mouseX|mouseY|mousePressed|screenHeight|screenWidth)(?= |\n|\)|,)</string>
+		<key>color</key>
+		<string>117,143,102</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>constants</string>
+		<key>regex</key>
+		<string>(?&lt;= |\n|\()(CENTER|RIGHT|LEFT)(?= |\n|\))</string>
+		<key>color</key>
+		<string>117,143,102</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>void</string>
+		<key>regex</key>
+		<string>(^| |\n)(void)($| )</string>
+		<key>color</key>
+		<string>45,154,126</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>method signature</string>
+		<key>regex</key>
+		<string>(?&lt;=void )(\w)+(?=\()</string>
+		<key>color</key>
+		<string>0,101,155</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>method call</string>
+		<key>regex</key>
+		<string>( |^|\n)(\w)+(?=\()</string>
+		<key>color</key>
+		<string>0,101,155</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>text string incomplete</string>
+		<key>regex</key>
+		<string>(&quot;)(.*?)(\n)</string>
+		<key>color</key>
+		<string>102,102,102</string>
+		<key>bold</key>
+		<true/>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>text string</string>
+		<key>regex</key>
+		<string>(&quot;)(.*?)(&quot;)</string>
+		<key>color</key>
+		<string>126,68,149</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>line comment</string>
+		<key>regex</key>
+		<string>( |^|\n)(//)(.)*(\n)</string>
+		<key>color</key>
+		<string>200,200,200</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>multiline comment</string>
+		<key>regex</key>
+		<string>(/\*)(.|\n)*(\*/)</string>
+		<key>color</key>
+		<string>200,200,200</string>
+	</dict>
+</array>
+</plist>

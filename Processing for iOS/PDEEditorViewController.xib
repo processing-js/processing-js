@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
+        <capability name="Alignment constraints to the first baseline" minToolsVersion="6.0"/>
+        <capability name="Alignment constraints with different attributes" minToolsVersion="5.1"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="SourceCodePro-Regular.ttf">
+            <string>SourceCodePro-Regular</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="PDEEditorViewController">
+            <connections>
+                <outlet property="editor" destination="LN9-AC-DGD" id="P8Q-uh-hoI"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <scrollView hidden="YES" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zPf-vG-JsV">
+                    <rect key="frame" x="0.0" y="0.0" width="330" height="56"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6GQ-wx-Rmf">
+                            <rect key="frame" x="0.0" y="0.0" width="95" height="56"/>
+                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="95" id="ssX-zl-MlW"/>
+                            </constraints>
+                            <state key="normal" title="Class">
+                                <color key="titleColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Pm0-VY-LLE">
+                            <rect key="frame" x="95" y="0.0" width="102" height="56"/>
+                            <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="102" id="6F4-a7-s1S"/>
+                            </constraints>
+                            <state key="normal" title="Class">
+                                <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                        </button>
+                    </subviews>
+                    <constraints>
+                        <constraint firstAttribute="bottom" secondItem="6GQ-wx-Rmf" secondAttribute="bottom" id="1dm-I2-7Tg"/>
+                        <constraint firstItem="6GQ-wx-Rmf" firstAttribute="leading" secondItem="zPf-vG-JsV" secondAttribute="leading" id="5VH-i0-4Lf"/>
+                        <constraint firstItem="6GQ-wx-Rmf" firstAttribute="top" secondItem="zPf-vG-JsV" secondAttribute="top" id="BZt-Na-dlB"/>
+                        <constraint firstItem="6GQ-wx-Rmf" firstAttribute="top" secondItem="Pm0-VY-LLE" secondAttribute="top" id="Bzy-v7-dFX"/>
+                        <constraint firstItem="Pm0-VY-LLE" firstAttribute="baseline" secondItem="6GQ-wx-Rmf" secondAttribute="firstBaseline" id="L6x-36-9NZ"/>
+                        <constraint firstAttribute="trailing" secondItem="Pm0-VY-LLE" secondAttribute="trailing" constant="133" id="NRc-el-wjK"/>
+                        <constraint firstItem="6GQ-wx-Rmf" firstAttribute="baseline" secondItem="Pm0-VY-LLE" secondAttribute="firstBaseline" id="YSs-zl-MNE"/>
+                        <constraint firstItem="Pm0-VY-LLE" firstAttribute="leading" secondItem="6GQ-wx-Rmf" secondAttribute="trailing" id="qSW-kP-Em8"/>
+                        <constraint firstItem="6GQ-wx-Rmf" firstAttribute="centerY" secondItem="zPf-vG-JsV" secondAttribute="centerY" id="vA8-ua-jKY"/>
+                    </constraints>
+                </scrollView>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="O34-I0-8LG">
+                    <rect key="frame" x="331" y="0.0" width="44" height="56"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="44" id="mad-Tt-QJn"/>
+                        <constraint firstAttribute="height" constant="56" id="wId-nL-cRG"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="26"/>
+                    <state key="normal" title="+"/>
+                </button>
+                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" keyboardDismissMode="interactive" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="LN9-AC-DGD">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
+                    <fontDescription key="fontDescription" name="SourceCodePro-Regular" family="Source Code Pro" pointSize="18"/>
+                    <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no"/>
+                    <connections>
+                        <outlet property="delegate" destination="-1" id="oYp-5B-6ah"/>
+                    </connections>
+                </textView>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="LN9-AC-DGD" secondAttribute="bottom" id="4pc-Pg-Ueg"/>
+                <constraint firstItem="LN9-AC-DGD" firstAttribute="top" secondItem="zPf-vG-JsV" secondAttribute="top" id="6a0-sl-KhA"/>
+                <constraint firstAttribute="trailing" secondItem="O34-I0-8LG" secondAttribute="trailing" id="HBr-8Y-pLf"/>
+                <constraint firstItem="zPf-vG-JsV" firstAttribute="top" secondItem="O34-I0-8LG" secondAttribute="top" id="J5V-mW-OrF"/>
+                <constraint firstItem="LN9-AC-DGD" firstAttribute="trailing" secondItem="O34-I0-8LG" secondAttribute="trailing" id="PSL-eg-RYO"/>
+                <constraint firstItem="LN9-AC-DGD" firstAttribute="leading" secondItem="zPf-vG-JsV" secondAttribute="leading" id="Z5u-0N-GPu"/>
+                <constraint firstItem="zPf-vG-JsV" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="bYn-5s-t92"/>
+                <constraint firstItem="zPf-vG-JsV" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="fHk-h8-QTa"/>
+                <constraint firstItem="zPf-vG-JsV" firstAttribute="bottom" secondItem="O34-I0-8LG" secondAttribute="bottom" id="idn-ft-de7"/>
+                <constraint firstItem="O34-I0-8LG" firstAttribute="leading" secondItem="zPf-vG-JsV" secondAttribute="trailing" constant="1" id="rBA-zv-FKu"/>
+            </constraints>
+            <point key="canvasLocation" x="85.5" y="69.5"/>
+        </view>
+    </objects>
+</document>

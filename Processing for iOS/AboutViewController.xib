@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina5_5" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="AboutViewController">
+            <connections>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="frederik_riedel" translatesAutoresizingMaskIntoConstraints="NO" id="OAs-Y5-Dw8">
+                    <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                </imageView>
+                <view alpha="0.69999999999999996" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Q4j-i4-VUi">
+                    <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Developed by Frederik Riedel" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="T2n-i2-mKv">
+                            <rect key="frame" x="95.333333333333343" y="707.66666666666652" width="223.66666666666666" height="20.333333333333371"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                            <nil key="textColor"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <stackView opaque="NO" contentMode="scaleToFill" misplaced="YES" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="46R-Ij-rOu">
+                            <rect key="frame" x="107" y="343" width="200" height="111"/>
+                            <subviews>
+                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hit me up on Twitter if you have any questions or ideas how to improve this app:" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="5" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AT6-Cp-5MC">
+                                    <rect key="frame" x="0.0" y="0.0" width="200" height="81.333333333333371"/>
+                                    <constraints>
+                                        <constraint firstAttribute="width" constant="200" id="VIf-jR-1sl"/>
+                                    </constraints>
+                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                    <nil key="textColor"/>
+                                    <nil key="highlightedColor"/>
+                                </label>
+                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XKg-Ez-W6x">
+                                    <rect key="frame" x="0.0" y="81.333333333333371" width="200" height="30"/>
+                                    <state key="normal" title="@frederikriedel"/>
+                                    <connections>
+                                        <action selector="openTwitter:" destination="-1" eventType="touchUpInside" id="9dE-re-ZzG"/>
+                                    </connections>
+                                </button>
+                            </subviews>
+                        </stackView>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="T2n-i2-mKv" firstAttribute="centerX" secondItem="Q4j-i4-VUi" secondAttribute="centerX" id="0T4-QS-Thl"/>
+                        <constraint firstItem="46R-Ij-rOu" firstAttribute="centerX" secondItem="T2n-i2-mKv" secondAttribute="centerX" id="Q3k-Hg-wsp"/>
+                        <constraint firstItem="46R-Ij-rOu" firstAttribute="centerY" secondItem="Q4j-i4-VUi" secondAttribute="centerY" id="XO3-0p-dAx"/>
+                        <constraint firstItem="T2n-i2-mKv" firstAttribute="bottom" secondItem="Q4j-i4-VUi" secondAttribute="bottomMargin" id="xNN-XW-Eb0"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="OAs-Y5-Dw8" secondAttribute="bottom" id="3OG-yS-pbe"/>
+                <constraint firstItem="Q4j-i4-VUi" firstAttribute="top" secondItem="OAs-Y5-Dw8" secondAttribute="top" id="4p7-tZ-Cmh"/>
+                <constraint firstItem="Q4j-i4-VUi" firstAttribute="bottom" secondItem="OAs-Y5-Dw8" secondAttribute="bottom" id="DkG-ha-t2x"/>
+                <constraint firstItem="Q4j-i4-VUi" firstAttribute="trailing" secondItem="OAs-Y5-Dw8" secondAttribute="trailing" id="MGn-jo-bBG"/>
+                <constraint firstItem="Q4j-i4-VUi" firstAttribute="leading" secondItem="OAs-Y5-Dw8" secondAttribute="leading" id="U6c-DV-tf9"/>
+                <constraint firstItem="OAs-Y5-Dw8" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="UP4-9Q-Zsl"/>
+                <constraint firstAttribute="trailing" secondItem="OAs-Y5-Dw8" secondAttribute="trailing" id="mAk-ll-NS9"/>
+                <constraint firstItem="OAs-Y5-Dw8" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="vHe-g1-ayi"/>
+            </constraints>
+            <point key="canvasLocation" x="34" y="53"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="frederik_riedel" width="6000" height="4000"/>
+    </resources>
+</document>
