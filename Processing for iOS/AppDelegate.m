@@ -8,6 +8,8 @@
 
 #import "AppDelegate.h"
 #import "UIColor+ProcessingColor.h"
+@import Firebase;
+
 
 @interface AppDelegate ()
 
@@ -18,6 +20,9 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    
+    [FIRApp configure];
+    
     [[UINavigationBar appearance] setTintColor:[UIColor whiteColor]];
     [[UINavigationBar appearance] setBarTintColor:[UIColor processingColor]];
     [[UINavigationBar appearance] setTranslucent:NO];
