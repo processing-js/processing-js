@@ -1,0 +1,3 @@
+language: objective-c
+xcode_workspace: Processing for iOS.xcworkspace
+xcode_scheme: Processing for iOS

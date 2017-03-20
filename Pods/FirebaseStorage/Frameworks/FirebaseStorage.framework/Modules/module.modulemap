@@ -1,0 +1,12 @@
+framework module FirebaseStorage {
+  umbrella header "FirebaseStorage.h"
+  export *
+  module * { export *}
+  link "c++"
+  link "z"
+  link framework "CoreGraphics"
+  link framework "Foundation"
+  link framework "MobileCoreServices"
+  link framework "Security"
+  link framework "UIKit"
+}

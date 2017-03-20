@@ -1,0 +1,9 @@
+FRAMEWORK_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/FirebaseAnalytics/Frameworks" "${PODS_ROOT}/FirebaseCore/Frameworks" "${PODS_ROOT}/FirebaseInstanceID/Frameworks" "${PODS_ROOT}/FirebaseStorage/Frameworks"
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
+HEADER_SEARCH_PATHS = $(inherited) ${PODS_ROOT}/Firebase/Core/Sources $(inherited) "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/Firebase" "${PODS_ROOT}/Headers/Public/FirebaseAnalytics" "${PODS_ROOT}/Headers/Public/FirebaseCore" "${PODS_ROOT}/Headers/Public/FirebaseInstanceID" "${PODS_ROOT}/Headers/Public/FirebaseStorage" "${PODS_ROOT}/Headers/Public/GTMSessionFetcher" "${PODS_ROOT}/Headers/Public/GoogleToolboxForMac"
+LIBRARY_SEARCH_PATHS = $(inherited) "$PODS_CONFIGURATION_BUILD_DIR/GTMSessionFetcher" "$PODS_CONFIGURATION_BUILD_DIR/GoogleToolboxForMac"
+OTHER_CFLAGS = $(inherited) -isystem "${PODS_ROOT}/Headers/Public" -isystem "${PODS_ROOT}/Headers/Public/Firebase" -isystem "${PODS_ROOT}/Headers/Public/FirebaseAnalytics" -isystem "${PODS_ROOT}/Headers/Public/FirebaseCore" -isystem "${PODS_ROOT}/Headers/Public/FirebaseInstanceID" -isystem "${PODS_ROOT}/Headers/Public/FirebaseStorage" -isystem "${PODS_ROOT}/Headers/Public/GTMSessionFetcher" -isystem "${PODS_ROOT}/Headers/Public/GoogleToolboxForMac"
+OTHER_LDFLAGS = $(inherited) -ObjC -l"GTMSessionFetcher" -l"GoogleToolboxForMac" -l"c++" -l"sqlite3" -l"z" -framework "FirebaseAnalytics" -framework "FirebaseCore" -framework "FirebaseInstanceID" -framework "FirebaseStorage" -framework "MobileCoreServices" -framework "Security" -framework "StoreKit" -framework "SystemConfiguration"
+PODS_BUILD_DIR = $BUILD_DIR
+PODS_CONFIGURATION_BUILD_DIR = $PODS_BUILD_DIR/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)
+PODS_ROOT = ${SRCROOT}/Pods

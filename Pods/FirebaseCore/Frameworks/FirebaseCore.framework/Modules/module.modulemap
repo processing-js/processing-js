@@ -1,0 +1,10 @@
+framework module FirebaseCore {
+  umbrella header "FirebaseCore.h"
+  export *
+  module * { export *}
+  link "c++"
+  link "z"
+  link framework "CoreGraphics"
+  link framework "Foundation"
+  link framework "UIKit"
+}
