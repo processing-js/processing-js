@@ -4078,9 +4078,25 @@
     p.noLoop = function() {
       doLoop = false;
       loopStarted = false;
-      clearInterval(looping);
+      
+      // requestAnimationFrame edit
+      //clearInterval(looping);
+      looping = false;
       curSketch.onPause();
     };
+
+    // requestAnimationFrame edit
+    var _doDraw = function() {
+      requestAnimationFrame(function() {
+        if (!looping) { return; }
+        
+        curSketch.onFrameStart();
+        p.redraw();
+        curSketch.onFrameEnd();
+        _doDraw();
+      });
+    };
+
 
     /**
     * Causes Processing to continuously execute the code within draw(). If noLoop() is called,
@@ -4098,16 +4114,21 @@
       timeSinceLastFPS = Date.now();
       framesSinceLastFPS = 0;
 
-      looping = window.setInterval(function() {
-        try {
-          curSketch.onFrameStart();
-          p.redraw();
-          curSketch.onFrameEnd();
-        } catch(e_loop) {
-          window.clearInterval(looping);
-          throw e_loop;
-        }
-      }, curMsPerFrame);
+      // looping = window.setInterval(function() {
+      //   try {
+      //     curSketch.onFrameStart();
+      //     p.redraw();
+      //     curSketch.onFrameEnd();
+      //   } catch(e_loop) {
+      //     window.clearInterval(looping);
+      //     throw e_loop;
+      //   }
+      // }, curMsPerFrame);
+      
+      // requestAnimationFrame edit
+      looping = true;
+      _doDraw();
+      
       doLoop = true;
       loopStarted = true;
       curSketch.onLoop();
@@ -4145,7 +4166,9 @@
     */
     p.exit = function() {
       // cleanup
-      window.clearInterval(looping);
+      // requestAnimationFrame edit
+      //window.clearInterval(looping);
+      looping = false;
       removeInstance(p.externals.canvas.id);
       delete(curElement.onmousedown);
 
@@ -11936,7 +11959,7 @@
 
       // if keyboard events should be handled globally, the listeners should
       // be bound to the document window, rather than to the current canvas
-      var keyTrigger = curSketch.options.globalKeyEvents ? window : curElement;
+      var keyTrigger = curSketch.options.globalKeyEvents ? window : curElement;      
       attachEventHandler(keyTrigger, "keydown", handleKeydown);
       attachEventHandler(keyTrigger, "keypress", handleKeypress);
       attachEventHandler(keyTrigger, "keyup", handleKeyup);
