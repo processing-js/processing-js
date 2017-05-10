@@ -18,17 +18,21 @@ File an issue to say that you'd like to help out, and we can find some good plac
 
 ## Getting Processing.js
 
-### Bower install
-
-`bower install Processing.js`
-
 ### NPM install
+
+This is the preferred method of installing "the latest" version of Processing.js
 
 `npm install processing-js`
 
 ### Getting Processing.js the plain way
 
-Simply grab the `processing.js` or `processing.min.js` files, include them as script on your webpage, and you're all set. See `test.html` for a simple example of using Processing.js on your pages.
+If you need to, you can also grab the `processing.js` or `processing.min.js` files, include them as script on your webpage, and you're all set. See `test.html` for a simple example of using Processing.js on your pages.
+
+### Bower install
+
+Bower is no longer recommended as a way to get processing.js, and so might not even work anymore (it "should" work but there is no verification on that)
+
+`bower install Processing.js`
 
 ## Playing with the code
 
