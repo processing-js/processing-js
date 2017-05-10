@@ -8,7 +8,7 @@ This is the compilation repository for Processing.js, used in building the `proc
 
 # Versioning
 
-Processing.js adheres to [semver](http://semver.org) style versioning, with the current version being 1.6.0 (released July 9th, 2016)
+Processing.js adheres to [semver](http://semver.org) style versioning.
 
 #  This project is currently in need of developers
 
