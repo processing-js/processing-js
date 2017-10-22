@@ -74,7 +74,7 @@ module.exports = {
     // Platform IDs
     OTHER:   0,
     WINDOWS: 1,
-    MAXOSX:  2,
+    MACOSX:  2,
     LINUX:   3,
 
     EPSILON: 0.0001,
