@@ -8,6 +8,7 @@
 
 #import "AppDelegate.h"
 #import "UIColor+ProcessingColor.h"
+#import "SketchController.h"
 @import Firebase;
 
 
@@ -19,7 +20,6 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
     
     [FIRApp configure];
     

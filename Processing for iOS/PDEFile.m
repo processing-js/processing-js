@@ -7,40 +7,37 @@
 //
 
 #import "PDEFile.h"
+#import "PDESketch.h"
 
 @implementation PDEFile
 
--(id) initWithFileName:(NSString *) fileName {
+-(id)initWithFileName:(NSString *) fileName partOfSketch:(PDESketch*) sketch {
     self= [super init];
     
     if(self) {
         self.fileName = fileName;
+        self.sketch = sketch;
     }
-    
     
     return self;
 }
 
--(NSString *) loadCode {
-    
-    NSString *programmCodeDateiPfad = [[FileManager documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.pde",self.fileName]];
+-(NSString*)filePath {
+    return [[FileManager documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"/sketches/%@/%@.pde",self.sketch.sketchName,self.fileName]];
+}
 
-    
-    
-    if([[NSFileManager defaultManager] fileExistsAtPath:programmCodeDateiPfad]) {
-        NSString *programmCode = [NSString stringWithContentsOfFile:programmCodeDateiPfad encoding:NSUTF8StringEncoding error:NULL];
+-(NSString *)loadCode {
+    if([[NSFileManager defaultManager] fileExistsAtPath:[self filePath]]) {
+        NSString *programmCode = [NSString stringWithContentsOfFile:[self filePath] encoding:NSUTF8StringEncoding error:NULL];
         
         return programmCode;
     }
-    
-    
-    
+
     return [NSString stringWithContentsOfFile:[[NSBundle mainBundle] pathForResource: self.fileName ofType: @"pde"] usedEncoding:nil error:nil];
 }
 
--(void) saveCode:(NSString *) code {
-    NSString *programmCodeDateiPfad = [[FileManager documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.pde",self.fileName]];
-    [code writeToFile:programmCodeDateiPfad atomically:YES encoding:NSUTF8StringEncoding error:nil];
+-(void)saveCode:(NSString *) code {
+    [code writeToFile:[self filePath] atomically:YES encoding:NSUTF8StringEncoding error:nil];
 }
 
 @end

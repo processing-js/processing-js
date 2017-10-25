@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "PDEFile.h"
+#import "PDESketch.h"
 #import "FileManager.h"
 @import CoreMotion;
 
@@ -15,12 +16,12 @@
 
 @interface RunSketchViewController : UIViewController<UIWebViewDelegate, WKScriptMessageHandler>
     
-    @property(nonatomic,strong) PDEFile *pdeFile;
+    @property(nonatomic,strong) PDESketch *pdeSketch;
     @property(nonatomic,strong) WKWebView *sketchWebView;
     
     @property (nonatomic,strong) CMMotionManager* motionManager;
     
     
--(id) initWithPDEFile:(PDEFile *) pdeFile;
+-(id)initWithPDEFile:(PDESketch*)pdeSketch;
     
     @end

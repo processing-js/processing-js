@@ -11,14 +11,12 @@
 
 @implementation RunSketchViewController
 
--(id) initWithPDEFile:(PDEFile *) pdeFile {
+-(id)initWithPDEFile:(PDESketch*)pdeSketch {
     self = [super initWithNibName:nil bundle:nil];
     
     if(self) {
-        
-
-        self.pdeFile = pdeFile;
-        self.title=self.pdeFile.fileName;
+        self.pdeSketch = pdeSketch;
+        self.title = self.pdeSketch.sketchName;
         
         WKWebViewConfiguration* configuration = [WKWebViewConfiguration new];
         WKUserContentController* contentController = [WKUserContentController new];
@@ -41,7 +39,7 @@
         
         NSString *processingjs = [NSString stringWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"processing.min" ofType:@"js"] encoding:NSUTF8StringEncoding error:nil];
         
-        NSString* content = [NSString stringWithFormat:[FileManager containerFile],processingjs,[pdeFile loadCode]];
+        NSString* content = [NSString stringWithFormat:[FileManager containerFile],processingjs,self.pdeSketch.pdeFiles.firstObject.loadCode];
         
         
         [self.sketchWebView loadHTMLString:content baseURL: nil];
@@ -75,7 +73,7 @@
                                                      [self.sketchWebView evaluateJavaScript:[NSString stringWithFormat:@"var pjs = Processing.getInstanceById('Sketch');"
                                                                                              "pjs.accelerometerUpdated(%f,%f,%f);", accelerometerData.acceleration.x, accelerometerData.acceleration.y, accelerometerData.acceleration.z] completionHandler:^(id _Nullable result, NSError * _Nullable error) {
                                                          
-                                                         //NSLog(@"%@, %@",result, error.description);
+                                                         NSLog(@"%@, %@",result, error.description);
                                                          
                                                          
                                                      }];

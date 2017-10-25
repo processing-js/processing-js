@@ -10,6 +10,8 @@
 		46FA4196029EDF472CF4B098 /* libPods-Processing for iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F9043BE611E98C3A1184F72 /* libPods-Processing for iOS.a */; };
 		5106B9C61C933EFA00AE74CC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5106B9C51C933EFA00AE74CC /* Main.storyboard */; };
 		5106B9C91C933F5600AE74CC /* UIColor+ProcessingColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 5106B9C81C933F5600AE74CC /* UIColor+ProcessingColor.m */; };
+		510926FC1FA0CE1E00C255D1 /* SketchController.m in Sources */ = {isa = PBXBuildFile; fileRef = 510926FB1FA0CE1E00C255D1 /* SketchController.m */; };
+		510926FF1FA0D72A00C255D1 /* PDESketch.m in Sources */ = {isa = PBXBuildFile; fileRef = 510926FE1FA0D72A00C255D1 /* PDESketch.m */; };
 		511A4BF11B6D12C200B03259 /* Example_3D.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BEF1B6D12C200B03259 /* Example_3D.pde */; };
 		511A4BF21B6D12C200B03259 /* Example_Draw.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BF01B6D12C200B03259 /* Example_Draw.pde */; };
 		511A4BF51B6D134100B03259 /* Example_Clock.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BF31B6D134100B03259 /* Example_Clock.pde */; };
@@ -61,6 +63,10 @@
 		5106B9C51C933EFA00AE74CC /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		5106B9C71C933F5600AE74CC /* UIColor+ProcessingColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIColor+ProcessingColor.h"; sourceTree = "<group>"; };
 		5106B9C81C933F5600AE74CC /* UIColor+ProcessingColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+ProcessingColor.m"; sourceTree = "<group>"; };
+		510926FA1FA0CE1E00C255D1 /* SketchController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SketchController.h; sourceTree = "<group>"; };
+		510926FB1FA0CE1E00C255D1 /* SketchController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SketchController.m; sourceTree = "<group>"; };
+		510926FD1FA0D72A00C255D1 /* PDESketch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PDESketch.h; sourceTree = "<group>"; };
+		510926FE1FA0D72A00C255D1 /* PDESketch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PDESketch.m; sourceTree = "<group>"; };
 		511A4BEF1B6D12C200B03259 /* Example_3D.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_3D.pde; sourceTree = "<group>"; };
 		511A4BF01B6D12C200B03259 /* Example_Draw.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_Draw.pde; sourceTree = "<group>"; };
 		511A4BF31B6D134100B03259 /* Example_Clock.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_Clock.pde; sourceTree = "<group>"; };
@@ -207,6 +213,12 @@
 				5106B9C81C933F5600AE74CC /* UIColor+ProcessingColor.m */,
 				51CEE44D1B3E9A290031D1BE /* PDEFileSelectorViewController.h */,
 				51CEE44E1B3E9A2B0031D1BE /* PDEFileSelectorViewController.m */,
+				510926FA1FA0CE1E00C255D1 /* SketchController.h */,
+				510926FB1FA0CE1E00C255D1 /* SketchController.m */,
+				510926FD1FA0D72A00C255D1 /* PDESketch.h */,
+				510926FE1FA0D72A00C255D1 /* PDESketch.m */,
+				51CEE46C1B3E9D5E0031D1BE /* PDEFile.h */,
+				51CEE46D1B3E9D5E0031D1BE /* PDEFile.m */,
 				861890C71E7CB95000321C55 /* HighlightsTableViewController.h */,
 				861890C81E7CB95000321C55 /* HighlightsTableViewController.m */,
 				515230F81B74B3D1003497F9 /* SettingsViewController.h */,
@@ -219,8 +231,6 @@
 				860DBA421E5736300022C90F /* AboutViewController.h */,
 				860DBA431E5736300022C90F /* AboutViewController.m */,
 				860DBA441E5736300022C90F /* AboutViewController.xib */,
-				51CEE46C1B3E9D5E0031D1BE /* PDEFile.h */,
-				51CEE46D1B3E9D5E0031D1BE /* PDEFile.m */,
 				51CEE46F1B3E9E390031D1BE /* FileManager.h */,
 				51CEE4701B3E9E390031D1BE /* FileManager.m */,
 				51CEE4531B3E9A2F0031D1BE /* Images.xcassets */,
@@ -480,6 +490,8 @@
 				5106B9C91C933F5600AE74CC /* UIColor+ProcessingColor.m in Sources */,
 				51CEE44F1B3E9A2B0031D1BE /* PDEFileSelectorViewController.m in Sources */,
 				51CEE46E1B3E9D5E0031D1BE /* PDEFile.m in Sources */,
+				510926FC1FA0CE1E00C255D1 /* SketchController.m in Sources */,
+				510926FF1FA0D72A00C255D1 /* PDESketch.m in Sources */,
 				515230FA1B74B3D1003497F9 /* SettingsViewController.m in Sources */,
 				861890C91E7CB95000321C55 /* HighlightsTableViewController.m in Sources */,
 				86D0673E1E509C390033A4FF /* PDEEditorViewController.m in Sources */,
