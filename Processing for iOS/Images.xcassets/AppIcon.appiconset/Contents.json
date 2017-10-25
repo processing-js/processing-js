@@ -1,102 +1,112 @@
 {
   "images" : [
-    {
-      "idiom" : "iphone",
+	{
       "size" : "20x20",
-      "scale" : "2x"
+      "idiom": "iphone",
+	  "filename" : "processing app icon.001-20@2x.png",
+      "scale": "2x"
+    },
+	{
+      "size" : "20x20",
+      "idiom": "iphone",
+	  "filename" : "processing app icon.001-20@3x.png",
+      "scale": "3x"
+    },
+	{
+      "size" : "20x20",
+      "idiom": "ipad",
+	  "filename" : "processing app icon.001-20.png",
+      "scale": "1x"
     },
     {
-      "idiom" : "iphone",
       "size" : "20x20",
-      "scale" : "3x"
+      "idiom": "ipad",
+	  "filename" : "processing app icon.001-20@2x.png",
+      "scale": "2x"
     },
     {
       "size" : "29x29",
       "idiom" : "iphone",
-      "filename" : "icon processing.001 Kopie 5.png",
+      "filename" : "processing app icon.001-29@2x.png",
       "scale" : "2x"
     },
     {
       "size" : "29x29",
       "idiom" : "iphone",
-      "filename" : "icon processing.001 Kopie 4.png",
+      "filename" : "processing app icon.001-29@3x.png",
       "scale" : "3x"
     },
     {
       "size" : "40x40",
       "idiom" : "iphone",
-      "filename" : "icon processing.001 Kopie 7.png",
+      "filename" : "processing app icon.001-40@2x.png",
       "scale" : "2x"
     },
     {
       "size" : "40x40",
       "idiom" : "iphone",
-      "filename" : "icon processing.001 Kopie 6.png",
+      "filename" : "processing app icon.001-40@3x.png",
       "scale" : "3x"
     },
     {
       "size" : "60x60",
       "idiom" : "iphone",
-      "filename" : "icon processing.001 Kopie.png",
+      "filename" : "processing app icon.001-60@2x.png",
       "scale" : "2x"
     },
     {
       "size" : "60x60",
       "idiom" : "iphone",
-      "filename" : "icon processing.001 Kopie 8.png",
+      "filename" : "processing app icon.001-60@3x.png",
       "scale" : "3x"
     },
     {
-      "idiom" : "ipad",
-      "size" : "20x20",
-      "scale" : "1x"
-    },
-    {
-      "idiom" : "ipad",
-      "size" : "20x20",
-      "scale" : "2x"
-    },
-    {
       "size" : "29x29",
       "idiom" : "ipad",
-      "filename" : "icon processing.001 Kopie 3.png",
+      "filename" : "processing app icon.001-29.png",
       "scale" : "1x"
     },
     {
       "size" : "29x29",
       "idiom" : "ipad",
-      "filename" : "icon processing.001 Kopie 5-1.png",
+      "filename" : "processing app icon.001-29@2x.png",
       "scale" : "2x"
     },
     {
       "size" : "40x40",
       "idiom" : "ipad",
-      "filename" : "icon processing.001 Kopie 13.png",
+      "filename" : "processing app icon.001-40.png",
       "scale" : "1x"
     },
     {
       "size" : "40x40",
       "idiom" : "ipad",
-      "filename" : "icon processing.001 Kopie 7-1.png",
+      "filename" : "processing app icon.001-40@2x.png",
       "scale" : "2x"
     },
     {
       "size" : "76x76",
       "idiom" : "ipad",
-      "filename" : "icon processing.001 Kopie 12.png",
+      "filename" : "processing app icon.001-76.png",
       "scale" : "1x"
     },
     {
       "size" : "76x76",
       "idiom" : "ipad",
-      "filename" : "icon processing.001 Kopie 11.png",
+      "filename" : "processing app icon.001-76@2x.png",
       "scale" : "2x"
     },
     {
       "size" : "83.5x83.5",
       "idiom" : "ipad",
-      "filename" : "ipad_pro.png",
+      "filename" : "processing app icon.001-83.5@2x.png",
       "scale" : "2x"
+    },
+    {
+      "size" : "1024x1024",
+      "idiom" : "ios-marketing",
+      "filename" : "processing app icon.001-1024.png",
+      "scale" : "1x"
     }
   ],
   "info" : {
