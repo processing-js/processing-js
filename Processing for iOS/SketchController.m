@@ -7,7 +7,7 @@
 //
 
 #import "SketchController.h"
-
+#import "FirstStart.h"
 
 @implementation SketchController
 
@@ -20,6 +20,22 @@
         }
     }
     
+    if ([FirstStart isFirstStart]) {
+        NSArray<NSString*>* sampleProjects = @[@"Example_3D",@"Example_Draw",@"Example_Clock",@"Example_FollowMe",@"Example_Multitouch", @"Example_Gyroscope_Accelerometer"];
+        
+        for (NSString* fileName in sampleProjects) {
+            [[NSFileManager defaultManager] createDirectoryAtPath:[[[self documentsDirectory] stringByAppendingPathComponent:@"sketches"] stringByAppendingPathComponent:fileName] withIntermediateDirectories:YES attributes:nil error:nil];
+            NSError* error;
+            
+            
+            NSString* mainBundlePath = [[NSBundle mainBundle] pathForResource:fileName ofType:@"pde"];
+            NSString* documentsDirectoryPath = [[[[[self documentsDirectory] stringByAppendingPathComponent:@"sketches"] stringByAppendingPathComponent:fileName] stringByAppendingPathComponent:fileName] stringByAppendingString:@".pde"];
+            
+            [[NSFileManager defaultManager] copyItemAtPath:mainBundlePath toPath:documentsDirectoryPath error:&error];
+        }
+        
+    }
+    
     NSMutableArray<PDESketch*>* pdeSketches = [NSMutableArray array];
     NSArray *filePathsArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[[self documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"sketches"]]  error:nil];
     for (NSString* sketchFolder in filePathsArray) {
@@ -29,15 +45,20 @@
             [pdeSketches addObject:sketch];
         }
     }
-    callback(pdeSketches.copy);
+    
+    NSArray* sortedArray = [pdeSketches sortedArrayUsingComparator:^NSComparisonResult(PDESketch* sketch1, PDESketch* sketch2) {
+        return [sketch1.sketchName compare:sketch2.sketchName];
+    }];
+    
+    callback(sortedArray);
 }
 
 +(void)updateFilesToNewFolderStructure {
     NSArray<NSString*>* legacyFiles = [self legacyItemsFromMenuFile];
     for (NSString* legacyFileName in legacyFiles) {
-        NSString* currentPath = [[self documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.pde",legacyFileName]];
-        NSString* movePath =  [[self documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"sketches/%@/%@.pde",legacyFileName,legacyFileName]];
-        NSString* moveFolder = [[self documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"sketches/%@/data",legacyFileName]];
+        NSString* currentPath = [[self documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.pde", legacyFileName]];
+        NSString* movePath =  [[self documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"sketches/%@/%@.pde", legacyFileName, legacyFileName]];
+        NSString* moveFolder = [[self documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"sketches/%@/data", legacyFileName]];
         NSError* error;
         [[NSFileManager defaultManager] createDirectoryAtPath:moveFolder withIntermediateDirectories:YES attributes:nil error:nil];
         [[NSFileManager defaultManager] moveItemAtPath:currentPath toPath:movePath error:&error];

@@ -18,6 +18,7 @@
 		511A4BF61B6D134100B03259 /* Example_FollowMe.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BF41B6D134100B03259 /* Example_FollowMe.pde */; };
 		511A4BF81B6D13FF00B03259 /* Example_Multitouch.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BF71B6D13FF00B03259 /* Example_Multitouch.pde */; };
 		5128B7531B3EEAA700572894 /* syntax highlighting.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5128B7521B3EEAA700572894 /* syntax highlighting.plist */; };
+		513CADDF1FCD712100B9A6F1 /* FirstStart.m in Sources */ = {isa = PBXBuildFile; fileRef = 513CADDE1FCD712100B9A6F1 /* FirstStart.m */; };
 		515230FA1B74B3D1003497F9 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 515230F91B74B3D1003497F9 /* SettingsViewController.m */; };
 		5199DD751B3F232C004437DB /* SourceCodePro-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5199DD6E1B3F232C004437DB /* SourceCodePro-Black.ttf */; };
 		5199DD761B3F232C004437DB /* SourceCodePro-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5199DD6F1B3F232C004437DB /* SourceCodePro-Bold.ttf */; };
@@ -73,6 +74,8 @@
 		511A4BF41B6D134100B03259 /* Example_FollowMe.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_FollowMe.pde; sourceTree = "<group>"; };
 		511A4BF71B6D13FF00B03259 /* Example_Multitouch.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_Multitouch.pde; sourceTree = "<group>"; };
 		5128B7521B3EEAA700572894 /* syntax highlighting.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "syntax highlighting.plist"; sourceTree = "<group>"; };
+		513CADDD1FCD712100B9A6F1 /* FirstStart.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FirstStart.h; sourceTree = "<group>"; };
+		513CADDE1FCD712100B9A6F1 /* FirstStart.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FirstStart.m; sourceTree = "<group>"; };
 		515230F81B74B3D1003497F9 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
 		515230F91B74B3D1003497F9 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
 		5199DD6E1B3F232C004437DB /* SourceCodePro-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SourceCodePro-Black.ttf"; sourceTree = "<group>"; };
@@ -209,6 +212,8 @@
 				5199DD6D1B3F232C004437DB /* Schriftart */,
 				51CEE44A1B3E9A250031D1BE /* AppDelegate.h */,
 				51CEE44B1B3E9A270031D1BE /* AppDelegate.m */,
+				513CADDD1FCD712100B9A6F1 /* FirstStart.h */,
+				513CADDE1FCD712100B9A6F1 /* FirstStart.m */,
 				5106B9C71C933F5600AE74CC /* UIColor+ProcessingColor.h */,
 				5106B9C81C933F5600AE74CC /* UIColor+ProcessingColor.m */,
 				51CEE44D1B3E9A290031D1BE /* PDEFileSelectorViewController.h */,
@@ -496,6 +501,7 @@
 				861890C91E7CB95000321C55 /* HighlightsTableViewController.m in Sources */,
 				86D0673E1E509C390033A4FF /* PDEEditorViewController.m in Sources */,
 				51CEE44C1B3E9A270031D1BE /* AppDelegate.m in Sources */,
+				513CADDF1FCD712100B9A6F1 /* FirstStart.m in Sources */,
 				860DBA451E5736300022C90F /* AboutViewController.m in Sources */,
 				51CEE4791B3EA6FC0031D1BE /* RunSketchViewController.m in Sources */,
 				51CEE4711B3E9E390031D1BE /* FileManager.m in Sources */,

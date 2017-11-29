@@ -39,7 +39,10 @@
     
     [self highlightCode];
     [self codeLineIndent];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveCode) name:@"saveCode" object:nil];
 }
+
 
 -(NSArray<UIKeyCommand *> *)keyCommands {
     
@@ -58,7 +61,7 @@
 
 
 -(void) runSketch {
-    [self.pdeSketch.pdeFiles.firstObject saveCode:self.editor.text];
+    [self saveCode];
     
     RunSketchViewController *sketchViewController = [[RunSketchViewController alloc] initWithPDEFile:self.pdeSketch];
     
@@ -262,11 +265,15 @@
     [UIView commitAnimations];
 }
 
--(void) viewWillDisappear:(BOOL)animated {
+-(void)viewWillDisappear:(BOOL)animated {
     if ([self.navigationController.viewControllers indexOfObject:self]==NSNotFound) {
-        [self.pdeSketch.pdeFiles.firstObject saveCode:self.editor.text];
+        [self saveCode];
     }
     [super viewWillDisappear:animated];
+}
+
+-(void)saveCode {
+    [self.pdeSketch.pdeFiles.firstObject saveCode:self.editor.text];
 }
 
 

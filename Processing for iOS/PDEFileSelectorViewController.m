@@ -73,21 +73,21 @@
         
         // Check if file name contains forbidden characters.
         if([newFileName isEqualToString:@""]) {
-            UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"Error" message:@"Name should consist at least of one character." delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Create", nil];
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Name should be at least one character." delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Create", nil];
             alert.alertViewStyle=UIAlertViewStylePlainTextInput;
             [alert show];
         } else if([self nameAlreadyExists:newFileName]) {
-            UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"Error" message:[NSString stringWithFormat:@"File with name '%@' already exists. Please choose another name or delete this one first.",newFileName] delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Create", nil];
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:[NSString stringWithFormat:@"File with name '%@' already exists. Please choose another name or delete this one first.",newFileName] delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Create", nil];
             alert.alertViewStyle=UIAlertViewStylePlainTextInput;
             [alert show];
         } else if([newFileName containsString:@" "]) {
-            UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"Error" message:[NSString stringWithFormat:@"File name should not contain spaces."] delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Create", nil];
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:[NSString stringWithFormat:@"File name should not contain spaces."] delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Create", nil];
             alert.alertViewStyle=UIAlertViewStylePlainTextInput;
             UITextField *textField=[alert textFieldAtIndex:0];
             textField.text=[newFileName stringByReplacingOccurrencesOfString:@" " withString:@"_"];
             [alert show];
-        } else if(![letters isSupersetOfSet: [NSCharacterSet characterSetWithCharactersInString:[newFileName substringToIndex:1]]]) {
-            UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"Error" message:[NSString stringWithFormat:@"File name should start with an alphabetic letter."] delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Create", nil];
+        } else if(![letters isSupersetOfSet: [NSCharacterSet characterSetWithCharactersInString:newFileName]]) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:[NSString stringWithFormat:@"File name should contain no fancy symbols."] delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Create", nil];
             alert.alertViewStyle=UIAlertViewStylePlainTextInput;
             UITextField *textField=[alert textFieldAtIndex:0];
             textField.text=[@"sketch_" stringByAppendingString:newFileName];
@@ -102,7 +102,7 @@
             
             [SketchController loadSketches:^(NSArray<PDESketch *> *sketches) {
                 self.pdeSketches = sketches;
-                [self.table insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
+                [self.table reloadData];
             }];
         }
         
