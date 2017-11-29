@@ -8,6 +8,7 @@
 
 #import "AppDelegate.h"
 #import "UIColor+ProcessingColor.h"
+#import "SketchController.h"
 @import Firebase;
 
 
@@ -19,7 +20,6 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
     
     [FIRApp configure];
     
@@ -38,6 +38,9 @@
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+    
+    // save code
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"saveCode" object:nil];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {

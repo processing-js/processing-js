@@ -9,7 +9,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Root View Controller-->
+        <!--My Sketches-->
         <scene sceneID="LQy-BS-395">
             <objects>
                 <tableViewController id="xlK-Uk-qQ1" customClass="PDEFileSelectorViewController" sceneMemberID="viewController">
@@ -32,7 +32,7 @@
                             <outlet property="delegate" destination="xlK-Uk-qQ1" id="wIg-o3-C7o"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Root View Controller" id="8gB-au-KDF">
+                    <navigationItem key="navigationItem" title="My Sketches" id="8gB-au-KDF">
                         <barButtonItem key="leftBarButtonItem" title="About" id="bkn-57-TNX">
                             <connections>
                                 <action selector="about:" destination="xlK-Uk-qQ1" id="B1t-Yd-3bm"/>
@@ -64,7 +64,7 @@
             </objects>
             <point key="canvasLocation" x="127" y="-1210"/>
         </scene>
-        <!--Item-->
+        <!--Highlights Table View Controller-->
         <scene sceneID="7Aq-VJ-cbr">
             <objects>
                 <tableViewController id="ye8-iv-IXk" customClass="HighlightsTableViewController" sceneMemberID="viewController">
@@ -87,17 +87,17 @@
                             <outlet property="delegate" destination="ye8-iv-IXk" id="m9k-fA-GS0"/>
                         </connections>
                     </tableView>
-                    <tabBarItem key="tabBarItem" title="Item" id="Kfh-yM-akp"/>
+                    <tabBarItem key="tabBarItem" systemItem="featured" id="Kfh-yM-akp"/>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="LXV-rS-0aC" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1141" y="-1565"/>
         </scene>
-        <!--Item-->
+        <!--My Sketches-->
         <scene sceneID="9GV-4k-bmk">
             <objects>
                 <navigationController id="OPY-yT-Ow2" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="Item" id="ejJ-tO-O8W"/>
+                    <tabBarItem key="tabBarItem" title="My Sketches" id="ejJ-tO-O8W"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" misplaced="YES" id="Aoo-bp-1L0">
                         <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>

@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "FileManager.h"
 #import "PDEFile.h"
+#import "PDESketch.h"
 #import "PDEEditorViewController.h"
 #import "SettingsViewController.h"
 
@@ -16,7 +17,7 @@
 
 
 @property (strong, nonatomic) IBOutlet UITableView *table;
-@property(nonatomic,strong) NSMutableArray *pdeFiles;
+@property(nonatomic,strong) NSArray<PDESketch*>* pdeSketches;
 
 @end
 

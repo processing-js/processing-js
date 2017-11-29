@@ -10,6 +10,15 @@
 
 @implementation PDEEditorViewController
 
+-(instancetype)initWithPDESketch:(PDESketch*)pdeSketch {
+    self = [super init];
+    if (!self) {
+        return nil;
+    }
+    self.pdeSketch = pdeSketch;
+    self.title = self.pdeSketch.sketchName;
+    return self;
+}
 
 -(void)viewDidLoad {
     [super viewDidLoad];
@@ -25,18 +34,15 @@
     
     self.navigationItem.rightBarButtonItems=@[runButton,formatButton];
     
-    self.editor.text = [self.pdeFile loadCode];
+    self.editor.text = [self.pdeSketch.pdeFiles.firstObject loadCode];
     
     
     [self highlightCode];
     [self codeLineIndent];
     
-    
-    
-    
-    
-    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveCode) name:@"saveCode" object:nil];
 }
+
 
 -(NSArray<UIKeyCommand *> *)keyCommands {
     
@@ -53,25 +59,16 @@
 }
 
 
--(void) setPdeFile:(PDEFile *)pdeFile {
-    _pdeFile = pdeFile;
-    
-    self.title=[NSString stringWithFormat:@"%@.pde",self.pdeFile.fileName];
-}
-
-
-
 
 -(void) runSketch {
+    [self saveCode];
     
-    [self.pdeFile saveCode:self.editor.text];
-    
-    RunSketchViewController *sketchViewController = [[RunSketchViewController alloc] initWithPDEFile:self.pdeFile];
+    RunSketchViewController *sketchViewController = [[RunSketchViewController alloc] initWithPDEFile:self.pdeSketch];
     
     [self.navigationController pushViewController:sketchViewController animated:YES];
 }
 
--(void) formatCode {
+-(void)formatCode {
     
     NSArray *codeLines = [self.editor.text componentsSeparatedByString:@"\n"];
     
@@ -259,30 +256,24 @@
 }
 
 - (void)keyboardWillHide:(NSNotification *)notification {
-    
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationDuration:[notification.userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue]];
     [UIView setAnimationCurve:[notification.userInfo[UIKeyboardAnimationCurveUserInfoKey] integerValue]];
     [UIView setAnimationBeginsFromCurrentState:YES];
-    
-    
     self.editor.contentInset = UIEdgeInsetsZero;
     self.editor.scrollIndicatorInsets = UIEdgeInsetsZero;
-    
-    
-    
-    
-    
-    
     [UIView commitAnimations];
-    
 }
 
--(void) viewWillDisappear:(BOOL)animated {
+-(void)viewWillDisappear:(BOOL)animated {
     if ([self.navigationController.viewControllers indexOfObject:self]==NSNotFound) {
-        [self.pdeFile saveCode:self.editor.text];
+        [self saveCode];
     }
     [super viewWillDisappear:animated];
+}
+
+-(void)saveCode {
+    [self.pdeSketch.pdeFiles.firstObject saveCode:self.editor.text];
 }
 
 

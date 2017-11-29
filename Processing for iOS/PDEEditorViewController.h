@@ -8,11 +8,14 @@
 
 #import <UIKit/UIKit.h>
 #import "PDEFile.h"
+#import "PDESketch.h"
 #import "RunSketchViewController.h"
 
 @interface PDEEditorViewController : UIViewController<UITextViewDelegate>
 
-@property(nonatomic,strong) PDEFile *pdeFile;
+-(instancetype)initWithPDESketch:(PDESketch*)pdeSketch;
+
+@property(nonatomic,strong) PDESketch* pdeSketch;
 @property (strong, nonatomic) IBOutlet UITextView *editor;
 
 
