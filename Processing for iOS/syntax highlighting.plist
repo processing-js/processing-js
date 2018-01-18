@@ -80,7 +80,7 @@
 		<key>name</key>
 		<string>line comment</string>
 		<key>regex</key>
-		<string>( |^|\n)(//)(.)*(\n)</string>
+		<string>( |^|)(\/\/)(.)*(\n|$)</string>
 		<key>color</key>
 		<string>200,200,200</string>
 	</dict>
