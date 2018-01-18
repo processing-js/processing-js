@@ -88,7 +88,7 @@
 		<key>name</key>
 		<string>multiline comment</string>
 		<key>regex</key>
-		<string>(/\*)(.|\n)*(\*/)</string>
+		<string>(\/\*)(.|\n)*(\*\/)</string>
 		<key>color</key>
 		<string>200,200,200</string>
 	</dict>
