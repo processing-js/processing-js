@@ -89,7 +89,9 @@
             NSString *lastChar = [result substringFromIndex:result.length-1];
             
             
-            if([firstChar isEqualToString:@"{"] || [lastChar isEqualToString:@"{"]) {
+            if([firstChar isEqualToString:@"}"] && [lastChar isEqualToString:@"{"]) {
+                codeLevel[currentLine] = currentCodeLevel-1;
+            } else if([firstChar isEqualToString:@"{"] || [lastChar isEqualToString:@"{"]) {
                 codeLevel[currentLine] = currentCodeLevel;
                 currentCodeLevel++;
             } else if([firstChar isEqualToString:@"}"]) {
