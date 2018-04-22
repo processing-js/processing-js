@@ -66,6 +66,14 @@
             NSLog(@"Error occured while copying the files: %@",error.description);
         }
     }
+    
+    NSArray *filePathsArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[self documentsDirectory]  error:nil];
+    for (NSString* file in filePathsArray) {
+        if ([file.pathExtension isEqualToString:@"pde"]) {
+            NSString* path = [[self documentsDirectory] stringByAppendingPathComponent:file];
+            [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
+        }
+    }
 }
 
 +(NSArray<NSString*>*)legacyItemsFromMenuFile {
@@ -93,7 +101,14 @@
 }
 
 +(void)deleteSketchWithName:(NSString*)sketchName {
-    [[NSFileManager defaultManager] removeItemAtPath:[[self documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"sketches/%@",sketchName]] error:nil];
+    NSString* path = [[self documentsDirectory] stringByAppendingPathComponent:[NSString stringWithFormat:@"sketches/%@/",sketchName]];
+    NSError *error;
+    if ([[NSFileManager defaultManager] isDeletableFileAtPath:path]) {
+        BOOL success = [[NSFileManager defaultManager] removeItemAtPath:path error:&error];
+        if (!success) {
+            NSLog(@"Error removing file at path: %@", error.localizedDescription);
+        }
+    }
 }
 
 +(void)savePDESketch:(PDESketch*)sketch {
@@ -102,7 +117,6 @@
         [[NSFileManager defaultManager] createDirectoryAtPath:sketchPath withIntermediateDirectories:YES attributes:nil error:nil];
         NSLog(@"Created new folder for new sketch");
     }
-    
 }
 
 +(NSString*)documentsDirectory {
