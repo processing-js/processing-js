@@ -1,3 +1,4 @@
+![](https://travis-ci.org/Processing-iOS/Processing-iOS.svg?branch=master)
 # Processing for iOS
 A port of the Processing visualization language to iOS.
 
