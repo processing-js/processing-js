@@ -69,7 +69,8 @@
     {
         NSString *newFileName = textField.text;
         
-        NSCharacterSet *letters = [NSCharacterSet letterCharacterSet];
+        NSMutableCharacterSet *letters = [NSMutableCharacterSet letterCharacterSet];
+        [letters addCharactersInString:@"_1234567890"];
         
         // Check if file name contains forbidden characters.
         if([newFileName isEqualToString:@""]) {
