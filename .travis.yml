@@ -1,3 +1,3 @@
 language: objective-c
-xcode_workspace: Processing for iOS.xcworkspace
-xcode_scheme: Processing for iOS
+osx_image: xcode9.3
+script: xcodebuild -workspace "Processing for iOS.xcworkspace" -scheme "Processing for iOS" -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO | xcpretty -c
