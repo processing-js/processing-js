@@ -36,7 +36,6 @@
 		5199DD7B1B3F232C004437DB /* SourceCodePro-Semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5199DD741B3F232C004437DB /* SourceCodePro-Semibold.ttf */; };
 		51CEE4491B3E9A240031D1BE /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 51CEE4481B3E9A240031D1BE /* main.m */; };
 		51CEE44C1B3E9A270031D1BE /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 51CEE44B1B3E9A270031D1BE /* AppDelegate.m */; };
-		51CEE44F1B3E9A2B0031D1BE /* PDEFileSelectorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 51CEE44E1B3E9A2B0031D1BE /* PDEFileSelectorViewController.m */; };
 		51CEE4541B3E9A2F0031D1BE /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51CEE4531B3E9A2F0031D1BE /* Images.xcassets */; };
 		51CEE4571B3E9A300031D1BE /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 51CEE4551B3E9A300031D1BE /* LaunchScreen.xib */; };
 		51CEE4631B3E9A310031D1BE /* Processing_for_iOSTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 51CEE4621B3E9A310031D1BE /* Processing_for_iOSTests.m */; };
@@ -105,8 +104,6 @@
 		51CEE4481B3E9A240031D1BE /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		51CEE44A1B3E9A250031D1BE /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		51CEE44B1B3E9A270031D1BE /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		51CEE44D1B3E9A290031D1BE /* PDEFileSelectorViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PDEFileSelectorViewController.h; sourceTree = "<group>"; };
-		51CEE44E1B3E9A2B0031D1BE /* PDEFileSelectorViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PDEFileSelectorViewController.m; sourceTree = "<group>"; };
 		51CEE4531B3E9A2F0031D1BE /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		51CEE4561B3E9A300031D1BE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		51CEE45C1B3E9A300031D1BE /* Processing for iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Processing for iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -232,8 +229,6 @@
 				513CADDE1FCD712100B9A6F1 /* FirstStart.m */,
 				5106B9C71C933F5600AE74CC /* UIColor+ProcessingColor.h */,
 				5106B9C81C933F5600AE74CC /* UIColor+ProcessingColor.m */,
-				51CEE44D1B3E9A290031D1BE /* PDEFileSelectorViewController.h */,
-				51CEE44E1B3E9A2B0031D1BE /* PDEFileSelectorViewController.m */,
 				510F51A120AB618E0082B979 /* ProjectSelectionTableViewController.swift */,
 				510F51A320AB64C40082B979 /* ProjectTableViewCell.swift */,
 				510926FA1FA0CE1E00C255D1 /* SketchController.h */,
@@ -520,7 +515,6 @@
 			files = (
 				5106B9C91C933F5600AE74CC /* UIColor+ProcessingColor.m in Sources */,
 				5192E54D20A8A15E00354BC8 /* FolderContentBrowserTableViewController.swift in Sources */,
-				51CEE44F1B3E9A2B0031D1BE /* PDEFileSelectorViewController.m in Sources */,
 				51CEE46E1B3E9D5E0031D1BE /* PDEFile.m in Sources */,
 				510926FC1FA0CE1E00C255D1 /* SketchController.m in Sources */,
 				510926FF1FA0D72A00C255D1 /* PDESketch.m in Sources */,
