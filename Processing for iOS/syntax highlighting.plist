@@ -14,7 +14,7 @@
 		<key>name</key>
 		<string>types</string>
 		<key>regex</key>
-		<string>(?&lt;=^| |\n|\()(int|String|bool|float|double)( )?(?=\w|\n|\(|\[)</string>
+		<string>(?&lt;=^| |\n|\()(int|String|bool|float|double|PImage)( )?(?=\w|\n|\(|\[)</string>
 		<key>color</key>
 		<string>228,102,0</string>
 	</dict>

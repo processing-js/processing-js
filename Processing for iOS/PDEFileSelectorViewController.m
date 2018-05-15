@@ -9,6 +9,7 @@
 #import "PDEFileSelectorViewController.h"
 #import "AboutViewController.h"
 #import "SketchController.h"
+#import "Processing_for_iOS-Swift.h"
 
 @interface PDEFileSelectorViewController ()
 
@@ -143,6 +144,10 @@
     return cell;
 }
 
+-(UIStatusBarStyle)preferredStatusBarStyle {
+    return UIStatusBarStyleLightContent;
+}
+
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     PDESketch *selectedSketch = [self.pdeSketches objectAtIndex:indexPath.row];
@@ -176,7 +181,7 @@
 - (IBAction)about:(id)sender {
     AboutViewController* about = [AboutViewController new];
     
-    UINavigationController* aboutNavController = [[UINavigationController alloc] initWithRootViewController:about];
+    ProcessingNavigationViewController* aboutNavController = [[ProcessingNavigationViewController alloc] initWithRootViewController:about];
     aboutNavController.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
     aboutNavController.modalPresentationStyle = UIModalPresentationFormSheet;
     

@@ -42,18 +42,16 @@
         NSString* content = [NSString stringWithFormat:[FileManager containerFile],processingjs,self.pdeSketch.pdeFiles.firstObject.loadCode];
         
         
-        [self.sketchWebView loadHTMLString:content baseURL: nil];
+        NSURL* baseURL = [[NSURL fileURLWithPath:pdeSketch.filePath] URLByAppendingPathComponent:@"data"];
+        [self.sketchWebView loadHTMLString:content baseURL: baseURL];
         
         self.motionManager = [CMMotionManager new];
 
         [self startAccelerometerListener];
         [self startGyroscopeListener];
-        
-        
+
     }
-    
-    
-    
+
     return self;
 }
     
@@ -72,12 +70,12 @@
                                                      
                                                      [self.sketchWebView evaluateJavaScript:[NSString stringWithFormat:@"var pjs = Processing.getInstanceById('Sketch');"
                                                                                              "pjs.accelerometerUpdated(%f,%f,%f);", accelerometerData.acceleration.x, accelerometerData.acceleration.y, accelerometerData.acceleration.z] completionHandler:^(id _Nullable result, NSError * _Nullable error) {
-                                                         
+
                                                          NSLog(@"%@, %@",result, error.description);
-                                                         
-                                                         
+
+
                                                      }];
-                                                     
+
                                                      
                                                  }];
     } else {
@@ -99,10 +97,10 @@
             [self.motionManager startGyroUpdatesToQueue:[NSOperationQueue mainQueue]
                                             withHandler:^(CMGyroData *gyroData, NSError *error)
              {
-                 
+
                  [self.sketchWebView evaluateJavaScript:[NSString stringWithFormat:@"var pjs = Processing.getInstanceById('Sketch');"
                                                          "pjs.gyroscopeUpdated(%f,%f,%f);", gyroData.rotationRate.x, gyroData.rotationRate.y, gyroData.rotationRate.z] completionHandler:^(id _Nullable result, NSError * _Nullable error) {
-                     
+
                  }];
                  
                  

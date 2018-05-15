@@ -7,6 +7,7 @@
 //
 
 #import "PDEEditorViewController.h"
+#import "Processing_for_iOS-Swift.h"
 
 @implementation PDEEditorViewController
 
@@ -22,6 +23,10 @@
 
 -(void)viewDidLoad {
     [super viewDidLoad];
+    
+    if (@available(iOS 11.0, *)) {
+        self.navigationController.navigationBar.prefersLargeTitles = NO;
+    }
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillChange:) name:UIKeyboardWillChangeFrameNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
@@ -289,6 +294,15 @@
     return YES;
 }
 
+- (IBAction)showFolderContent:(id)sender {    
+    FolderContentBrowserTableViewController* folderCVC = [[FolderContentBrowserTableViewController alloc] initWithPath:self.pdeSketch.filePath basePath:self.pdeSketch.filePath];
+    ProcessingNavigationViewController* navController = [[ProcessingNavigationViewController alloc] initWithRootViewController:folderCVC];
+    [self.navigationController presentViewController:navController animated:YES completion:nil];
+}
+
+-(UIStatusBarStyle)preferredStatusBarStyle {
+    return UIStatusBarStyleLightContent;
+}
 
 
 @end

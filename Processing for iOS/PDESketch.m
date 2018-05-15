@@ -38,4 +38,8 @@
     return pdeFiles.copy;
 }
 
+-(NSString*)filePath {
+    return [NSString stringWithFormat:@"%@/sketches/%@",[FileManager documentsDirectory],self.sketchName];
+}
+
 @end

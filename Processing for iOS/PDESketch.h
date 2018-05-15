@@ -12,6 +12,7 @@
 @interface PDESketch : NSObject
 
 -(instancetype)initWithSketchName:(NSString*)sketchName;
+-(NSString*)filePath;
 
 @property(nonatomic,strong) NSString* sketchName;
 @property(nonatomic,strong) NSArray<PDEFile*>* pdeFiles;

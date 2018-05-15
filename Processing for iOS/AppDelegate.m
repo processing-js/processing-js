@@ -24,9 +24,13 @@
     [FIRApp configure];
     
     [[UINavigationBar appearance] setTintColor:[UIColor whiteColor]];
+    
     [[UINavigationBar appearance] setBarTintColor:[UIColor processingColor]];
     [[UINavigationBar appearance] setTranslucent:NO];
     [[UINavigationBar appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor whiteColor]}];
+    if (@available(iOS 11.0, *)) {
+        [[UINavigationBar appearance] setLargeTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor whiteColor]}];
+    }
     return YES;
 }
 

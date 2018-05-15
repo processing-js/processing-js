@@ -12,6 +12,8 @@
 		5106B9C91C933F5600AE74CC /* UIColor+ProcessingColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 5106B9C81C933F5600AE74CC /* UIColor+ProcessingColor.m */; };
 		510926FC1FA0CE1E00C255D1 /* SketchController.m in Sources */ = {isa = PBXBuildFile; fileRef = 510926FB1FA0CE1E00C255D1 /* SketchController.m */; };
 		510926FF1FA0D72A00C255D1 /* PDESketch.m in Sources */ = {isa = PBXBuildFile; fileRef = 510926FE1FA0D72A00C255D1 /* PDESketch.m */; };
+		510F51A220AB618E0082B979 /* ProjectSelectionTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510F51A120AB618E0082B979 /* ProjectSelectionTableViewController.swift */; };
+		510F51A420AB64C40082B979 /* ProjectTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510F51A320AB64C40082B979 /* ProjectTableViewCell.swift */; };
 		511A4BF11B6D12C200B03259 /* Example_3D.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BEF1B6D12C200B03259 /* Example_3D.pde */; };
 		511A4BF21B6D12C200B03259 /* Example_Draw.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BF01B6D12C200B03259 /* Example_Draw.pde */; };
 		511A4BF51B6D134100B03259 /* Example_Clock.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BF31B6D134100B03259 /* Example_Clock.pde */; };
@@ -20,6 +22,11 @@
 		5128B7531B3EEAA700572894 /* syntax highlighting.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5128B7521B3EEAA700572894 /* syntax highlighting.plist */; };
 		513CADDF1FCD712100B9A6F1 /* FirstStart.m in Sources */ = {isa = PBXBuildFile; fileRef = 513CADDE1FCD712100B9A6F1 /* FirstStart.m */; };
 		515230FA1B74B3D1003497F9 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 515230F91B74B3D1003497F9 /* SettingsViewController.m */; };
+		5192E54D20A8A15E00354BC8 /* FolderContentBrowserTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5192E54B20A8A15E00354BC8 /* FolderContentBrowserTableViewController.swift */; };
+		5192E54E20A8A15E00354BC8 /* FolderContentBrowserTableViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5192E54C20A8A15E00354BC8 /* FolderContentBrowserTableViewController.xib */; };
+		5192E55320A8A67300354BC8 /* FileContentTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5192E55120A8A67300354BC8 /* FileContentTableViewCell.swift */; };
+		5192E55420A8A67300354BC8 /* FileContentTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5192E55220A8A67300354BC8 /* FileContentTableViewCell.xib */; };
+		5192E55620A8AFFB00354BC8 /* ProcessingNavigationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5192E55520A8AFFB00354BC8 /* ProcessingNavigationViewController.swift */; };
 		5199DD751B3F232C004437DB /* SourceCodePro-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5199DD6E1B3F232C004437DB /* SourceCodePro-Black.ttf */; };
 		5199DD761B3F232C004437DB /* SourceCodePro-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5199DD6F1B3F232C004437DB /* SourceCodePro-Bold.ttf */; };
 		5199DD771B3F232C004437DB /* SourceCodePro-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5199DD701B3F232C004437DB /* SourceCodePro-ExtraLight.ttf */; };
@@ -68,6 +75,8 @@
 		510926FB1FA0CE1E00C255D1 /* SketchController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SketchController.m; sourceTree = "<group>"; };
 		510926FD1FA0D72A00C255D1 /* PDESketch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PDESketch.h; sourceTree = "<group>"; };
 		510926FE1FA0D72A00C255D1 /* PDESketch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PDESketch.m; sourceTree = "<group>"; };
+		510F51A120AB618E0082B979 /* ProjectSelectionTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSelectionTableViewController.swift; sourceTree = "<group>"; };
+		510F51A320AB64C40082B979 /* ProjectTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectTableViewCell.swift; sourceTree = "<group>"; };
 		511A4BEF1B6D12C200B03259 /* Example_3D.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_3D.pde; sourceTree = "<group>"; };
 		511A4BF01B6D12C200B03259 /* Example_Draw.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_Draw.pde; sourceTree = "<group>"; };
 		511A4BF31B6D134100B03259 /* Example_Clock.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_Clock.pde; sourceTree = "<group>"; };
@@ -78,6 +87,12 @@
 		513CADDE1FCD712100B9A6F1 /* FirstStart.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FirstStart.m; sourceTree = "<group>"; };
 		515230F81B74B3D1003497F9 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
 		515230F91B74B3D1003497F9 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
+		5192E54A20A8A15D00354BC8 /* Processing for iOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Processing for iOS-Bridging-Header.h"; sourceTree = "<group>"; };
+		5192E54B20A8A15E00354BC8 /* FolderContentBrowserTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderContentBrowserTableViewController.swift; sourceTree = "<group>"; };
+		5192E54C20A8A15E00354BC8 /* FolderContentBrowserTableViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FolderContentBrowserTableViewController.xib; sourceTree = "<group>"; };
+		5192E55120A8A67300354BC8 /* FileContentTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileContentTableViewCell.swift; sourceTree = "<group>"; };
+		5192E55220A8A67300354BC8 /* FileContentTableViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FileContentTableViewCell.xib; sourceTree = "<group>"; };
+		5192E55520A8AFFB00354BC8 /* ProcessingNavigationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingNavigationViewController.swift; sourceTree = "<group>"; };
 		5199DD6E1B3F232C004437DB /* SourceCodePro-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SourceCodePro-Black.ttf"; sourceTree = "<group>"; };
 		5199DD6F1B3F232C004437DB /* SourceCodePro-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SourceCodePro-Bold.ttf"; sourceTree = "<group>"; };
 		5199DD701B3F232C004437DB /* SourceCodePro-ExtraLight.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SourceCodePro-ExtraLight.ttf"; sourceTree = "<group>"; };
@@ -212,12 +227,15 @@
 				5199DD6D1B3F232C004437DB /* Schriftart */,
 				51CEE44A1B3E9A250031D1BE /* AppDelegate.h */,
 				51CEE44B1B3E9A270031D1BE /* AppDelegate.m */,
+				5192E55520A8AFFB00354BC8 /* ProcessingNavigationViewController.swift */,
 				513CADDD1FCD712100B9A6F1 /* FirstStart.h */,
 				513CADDE1FCD712100B9A6F1 /* FirstStart.m */,
 				5106B9C71C933F5600AE74CC /* UIColor+ProcessingColor.h */,
 				5106B9C81C933F5600AE74CC /* UIColor+ProcessingColor.m */,
 				51CEE44D1B3E9A290031D1BE /* PDEFileSelectorViewController.h */,
 				51CEE44E1B3E9A2B0031D1BE /* PDEFileSelectorViewController.m */,
+				510F51A120AB618E0082B979 /* ProjectSelectionTableViewController.swift */,
+				510F51A320AB64C40082B979 /* ProjectTableViewCell.swift */,
 				510926FA1FA0CE1E00C255D1 /* SketchController.h */,
 				510926FB1FA0CE1E00C255D1 /* SketchController.m */,
 				510926FD1FA0D72A00C255D1 /* PDESketch.h */,
@@ -231,6 +249,10 @@
 				86D0673B1E509C380033A4FF /* PDEEditorViewController.h */,
 				86D0673C1E509C390033A4FF /* PDEEditorViewController.m */,
 				86D0673D1E509C390033A4FF /* PDEEditorViewController.xib */,
+				5192E54B20A8A15E00354BC8 /* FolderContentBrowserTableViewController.swift */,
+				5192E54C20A8A15E00354BC8 /* FolderContentBrowserTableViewController.xib */,
+				5192E55120A8A67300354BC8 /* FileContentTableViewCell.swift */,
+				5192E55220A8A67300354BC8 /* FileContentTableViewCell.xib */,
 				51CEE4771B3EA6FC0031D1BE /* RunSketchViewController.h */,
 				51CEE4781B3EA6FC0031D1BE /* RunSketchViewController.m */,
 				860DBA421E5736300022C90F /* AboutViewController.h */,
@@ -242,6 +264,7 @@
 				51CEE4551B3E9A300031D1BE /* LaunchScreen.xib */,
 				5106B9C51C933EFA00AE74CC /* Main.storyboard */,
 				51CEE4461B3E9A220031D1BE /* Supporting Files */,
+				5192E54A20A8A15D00354BC8 /* Processing for iOS-Bridging-Header.h */,
 			);
 			path = "Processing for iOS";
 			sourceTree = "<group>";
@@ -328,6 +351,7 @@
 					51CEE4421B3E9A1D0031D1BE = {
 						CreatedOnToolsVersion = 6.3.2;
 						DevelopmentTeam = 52U6XAJSSF;
+						LastSwiftMigration = 0930;
 					};
 					51CEE45B1B3E9A300031D1BE = {
 						CreatedOnToolsVersion = 6.3.2;
@@ -370,6 +394,8 @@
 				86D067411E5266C70033A4FF /* Example_Gyroscope_Accelerometer.pde in Resources */,
 				86D0673F1E509C390033A4FF /* PDEEditorViewController.xib in Resources */,
 				511A4BF81B6D13FF00B03259 /* Example_Multitouch.pde in Resources */,
+				5192E54E20A8A15E00354BC8 /* FolderContentBrowserTableViewController.xib in Resources */,
+				5192E55420A8A67300354BC8 /* FileContentTableViewCell.xib in Resources */,
 				5199DD761B3F232C004437DB /* SourceCodePro-Bold.ttf in Resources */,
 				511A4BF11B6D12C200B03259 /* Example_3D.pde in Resources */,
 				5199DD751B3F232C004437DB /* SourceCodePro-Black.ttf in Resources */,
@@ -493,17 +519,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				5106B9C91C933F5600AE74CC /* UIColor+ProcessingColor.m in Sources */,
+				5192E54D20A8A15E00354BC8 /* FolderContentBrowserTableViewController.swift in Sources */,
 				51CEE44F1B3E9A2B0031D1BE /* PDEFileSelectorViewController.m in Sources */,
 				51CEE46E1B3E9D5E0031D1BE /* PDEFile.m in Sources */,
 				510926FC1FA0CE1E00C255D1 /* SketchController.m in Sources */,
 				510926FF1FA0D72A00C255D1 /* PDESketch.m in Sources */,
 				515230FA1B74B3D1003497F9 /* SettingsViewController.m in Sources */,
+				5192E55320A8A67300354BC8 /* FileContentTableViewCell.swift in Sources */,
 				861890C91E7CB95000321C55 /* HighlightsTableViewController.m in Sources */,
 				86D0673E1E509C390033A4FF /* PDEEditorViewController.m in Sources */,
 				51CEE44C1B3E9A270031D1BE /* AppDelegate.m in Sources */,
+				510F51A420AB64C40082B979 /* ProjectTableViewCell.swift in Sources */,
 				513CADDF1FCD712100B9A6F1 /* FirstStart.m in Sources */,
 				860DBA451E5736300022C90F /* AboutViewController.m in Sources */,
 				51CEE4791B3EA6FC0031D1BE /* RunSketchViewController.m in Sources */,
+				510F51A220AB618E0082B979 /* ProjectSelectionTableViewController.swift in Sources */,
+				5192E55620A8AFFB00354BC8 /* ProcessingNavigationViewController.swift in Sources */,
 				51CEE4711B3E9E390031D1BE /* FileManager.m in Sources */,
 				51CEE4491B3E9A240031D1BE /* main.m in Sources */,
 			);
@@ -626,11 +657,15 @@
 			baseConfigurationReference = B854AF8587528F6C3FFE8E97 /* Pods-Processing for iOS.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = 52U6XAJSSF;
 				INFOPLIST_FILE = "Processing for iOS/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Processing for iOS/Processing for iOS-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -639,11 +674,14 @@
 			baseConfigurationReference = 75506C019411DF8A4B4F7575 /* Pods-Processing for iOS.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = 52U6XAJSSF;
 				INFOPLIST_FILE = "Processing for iOS/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Processing for iOS/Processing for iOS-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -651,6 +689,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 128122013802BBDAD6F77DA8 /* Pods-Processing for iOSTests.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
@@ -671,6 +710,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 34A9E516CE961AD7EBCE1DE4 /* Pods-Processing for iOSTests.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
