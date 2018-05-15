@@ -47,7 +47,7 @@
     }
     
     NSArray* sortedArray = [pdeSketches sortedArrayUsingComparator:^NSComparisonResult(PDESketch* sketch1, PDESketch* sketch2) {
-        return [sketch1.sketchName compare:sketch2.sketchName];
+        return [sketch1.sketchName.lowercaseString compare:sketch2.sketchName.lowercaseString];
     }];
     
     callback(sortedArray);

@@ -71,8 +71,16 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="My Projects" id="bQS-5w-IgC">
-                        <barButtonItem key="leftBarButtonItem" title="About" id="XUy-26-xC3"/>
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="9eJ-6L-65S"/>
+                        <barButtonItem key="leftBarButtonItem" title="About" id="XUy-26-xC3">
+                            <connections>
+                                <action selector="about:" destination="6bI-Kx-yTy" id="hO2-Nq-h2b"/>
+                            </connections>
+                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="9eJ-6L-65S">
+                            <connections>
+                                <action selector="createNewProject:" destination="6bI-Kx-yTy" id="YVQ-NI-7ga"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="FTE-Gg-VFR" userLabel="First Responder" sceneMemberID="firstResponder"/>

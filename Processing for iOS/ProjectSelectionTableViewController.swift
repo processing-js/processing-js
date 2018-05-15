@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ProjectSelectionTableViewController: UITableViewController, UIViewControllerPreviewingDelegate {
+class ProjectSelectionTableViewController: UITableViewController, UIViewControllerPreviewingDelegate, UIAlertViewDelegate {
 
     
 
@@ -147,6 +147,67 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
         aboutNavigationController.modalPresentationStyle = .formSheet;
         
         self.navigationController?.present(aboutNavigationController, animated: true, completion: nil)
+    }
+    
+    @IBAction func createNewProject(_ sender: Any) {
+        let alertView = UIAlertView(title: "New Processing Project", message: "", delegate: self, cancelButtonTitle: "Cancel", otherButtonTitles: "Create")
+        alertView.alertViewStyle = .plainTextInput
+        alertView.show()
+    }
+    
+    func alertView(_ alertView: UIAlertView, clickedButtonAt buttonIndex: Int) {
+        let textField = alertView.textField(at: 0)
+        textField?.resignFirstResponder()
+        
+        if buttonIndex == 1 {
+            if let fileName = textField?.text {
+                let letters = NSMutableCharacterSet.letters as! NSMutableCharacterSet
+                letters.addCharacters(in: "-_1234567890")
+                
+                var message = ""
+                var suggestedName = fileName
+                if fileName == "" {
+                    message = "Name should be at least one character"
+                } else if nameAlreadyExists(name: fileName) {
+                    message = "File with name '\(fileName)' already exists. Please choose another name or delete the exiting one first."
+                } else if fileName.contains(" ") {
+                    message = "File name should not contain spaces."
+                    suggestedName = fileName.replacingOccurrences(of: " ", with: "_")
+                } else if !letters.isSuperset(of: CharacterSet.init(charactersIn: fileName)){
+                    message = "File name should contain no fancy symbols."
+                } else {
+                    // filename is correct
+                    let newProject = PDESketch(sketchName: fileName)
+                    SketchController.save(newProject)
+                    
+                    let newFile = PDEFile(fileName: fileName, partOf: newProject)
+                    newFile?.saveCode("void setup() {\n   size(screen.width, screen.height);\n}\n\nvoid draw() {\n   background(0,0,255);\n}")
+                    
+                    SketchController.loadSketches { (projects) in
+                        self.projects = projects
+                        self.tableView.reloadData()
+                    }
+                    return
+                }
+                
+                let alertView = UIAlertView(title: "Error", message: message, delegate: self, cancelButtonTitle: "Cancel", otherButtonTitles: "Create")
+                alertView.alertViewStyle = .plainTextInput
+                if suggestedName != "" {
+                    alertView.textField(at: 0)?.text = suggestedName
+                }
+                alertView.show()
+                
+            }
+        }
+    }
+    
+    private func nameAlreadyExists(name: String) -> Bool {
+        for project in projects! {
+            if project.sketchName == name {
+                return true
+            }
+        }
+        return false
     }
     
     func previewingContext(_ previewingContext: UIViewControllerPreviewing, viewControllerForLocation location: CGPoint) -> UIViewController? {
