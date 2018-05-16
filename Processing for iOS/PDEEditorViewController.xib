@@ -7,7 +7,6 @@
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
         <capability name="Alignment constraints to the first baseline" minToolsVersion="6.0"/>
-        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <customFonts key="customFonts">
@@ -73,7 +72,7 @@
                     <state key="normal" title="+"/>
                 </button>
                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" keyboardDismissMode="interactive" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="LN9-AC-DGD">
-                    <rect key="frame" x="0.0" y="0.0" width="375" height="729"/>
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
                     <fontDescription key="fontDescription" name="SourceCodePro-Regular" family="Source Code Pro" pointSize="18"/>
@@ -82,33 +81,18 @@
                         <outlet property="delegate" destination="-1" id="oYp-5B-6ah"/>
                     </connections>
                 </textView>
-                <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Okt-1v-XXA">
-                    <rect key="frame" x="0.0" y="729" width="375" height="49"/>
-                    <items>
-                        <barButtonItem systemItem="add" id="8oP-ue-Bje"/>
-                        <barButtonItem style="plain" systemItem="flexibleSpace" id="Om5-Gh-wjO"/>
-                        <barButtonItem systemItem="organize" id="8sD-Vu-RE4">
-                            <connections>
-                                <action selector="showFolderContent:" destination="-1" id="oRE-1c-Sci"/>
-                            </connections>
-                        </barButtonItem>
-                    </items>
-                </toolbar>
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
+                <constraint firstItem="LN9-AC-DGD" firstAttribute="leading" secondItem="zPf-vG-JsV" secondAttribute="leading" id="Cok-F8-cmQ"/>
                 <constraint firstAttribute="trailing" secondItem="O34-I0-8LG" secondAttribute="trailing" id="HBr-8Y-pLf"/>
-                <constraint firstItem="LN9-AC-DGD" firstAttribute="bottom" secondItem="Okt-1v-XXA" secondAttribute="top" id="HGV-0l-HLP"/>
                 <constraint firstItem="zPf-vG-JsV" firstAttribute="top" secondItem="O34-I0-8LG" secondAttribute="top" id="J5V-mW-OrF"/>
-                <constraint firstItem="LN9-AC-DGD" firstAttribute="top" secondItem="zPf-vG-JsV" secondAttribute="top" id="NqY-va-e5a"/>
-                <constraint firstItem="LN9-AC-DGD" firstAttribute="trailing" secondItem="O34-I0-8LG" secondAttribute="trailing" id="Tme-h6-c4h"/>
-                <constraint firstItem="Okt-1v-XXA" firstAttribute="leading" secondItem="zPf-vG-JsV" secondAttribute="leading" id="WtM-aF-648"/>
+                <constraint firstAttribute="bottom" secondItem="LN9-AC-DGD" secondAttribute="bottom" id="PX8-nX-EfI"/>
+                <constraint firstItem="LN9-AC-DGD" firstAttribute="trailing" secondItem="O34-I0-8LG" secondAttribute="trailing" id="X3K-og-ZFb"/>
                 <constraint firstItem="zPf-vG-JsV" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="bYn-5s-t92"/>
-                <constraint firstItem="Okt-1v-XXA" firstAttribute="bottom" secondItem="i5M-Pr-FkT" secondAttribute="bottomMargin" id="dng-Lm-U2w"/>
                 <constraint firstItem="zPf-vG-JsV" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="fHk-h8-QTa"/>
-                <constraint firstItem="LN9-AC-DGD" firstAttribute="leading" secondItem="zPf-vG-JsV" secondAttribute="leading" id="gYg-Cn-hlM"/>
+                <constraint firstItem="LN9-AC-DGD" firstAttribute="top" secondItem="zPf-vG-JsV" secondAttribute="top" id="i3P-0c-cht"/>
                 <constraint firstItem="zPf-vG-JsV" firstAttribute="bottom" secondItem="O34-I0-8LG" secondAttribute="bottom" id="idn-ft-de7"/>
-                <constraint firstItem="Okt-1v-XXA" firstAttribute="trailing" secondItem="O34-I0-8LG" secondAttribute="trailing" id="pay-xP-A7p"/>
                 <constraint firstItem="O34-I0-8LG" firstAttribute="leading" secondItem="zPf-vG-JsV" secondAttribute="trailing" constant="1" id="rBA-zv-FKu"/>
             </constraints>
             <point key="canvasLocation" x="85.5" y="69"/>

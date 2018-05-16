@@ -6,3 +6,4 @@
 #import "PDESketch.h"
 #import "AboutViewController.h"
 #import "PDEEditorViewController.h"
+#import "UIColor+ProcessingColor.h"

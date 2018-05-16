@@ -25,6 +25,7 @@
     
     [[UINavigationBar appearance] setTintColor:[UIColor whiteColor]];
     
+    [[UISegmentedControl appearance] setTintColor:[UIColor whiteColor]];
     [[UINavigationBar appearance] setBarTintColor:[UIColor processingColor]];
     [[UINavigationBar appearance] setTranslucent:NO];
     [[UINavigationBar appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor whiteColor]}];

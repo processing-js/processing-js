@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "PDEFileSelectorViewController.h"
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 

@@ -8,16 +8,16 @@
 
 #import "PDEEditorViewController.h"
 #import "Processing_for_iOS-Swift.h"
+@import SafariServices;
 
 @implementation PDEEditorViewController
 
--(instancetype)initWithPDESketch:(PDESketch*)pdeSketch {
+-(instancetype)initWithPDESketch:(PDEFile*)pdeFile {
     self = [super init];
     if (!self) {
         return nil;
     }
-    self.pdeSketch = pdeSketch;
-    self.title = self.pdeSketch.sketchName;
+    self.pdeFile = pdeFile;
     return self;
 }
 
@@ -32,20 +32,16 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
     
     
-    UIBarButtonItem *runButton =  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPlay target:self action:@selector(runSketch)];
     
     
-    UIBarButtonItem *formatButton = [[UIBarButtonItem alloc] initWithTitle:@"Format" style:UIBarButtonItemStylePlain target:self action:@selector(formatCode)];
-    
-    self.navigationItem.rightBarButtonItems=@[runButton,formatButton];
-    
-    self.editor.text = [self.pdeSketch.pdeFiles.firstObject loadCode];
+    self.editor.text = [self.pdeFile loadCode];
     
     
     [self highlightCode];
     [self codeLineIndent];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveCode) name:@"saveCode" object:nil];
+    
+    
 }
 
 
@@ -59,19 +55,7 @@
     return @[format, run, close, esc];
 }
 
--(void) close {
-    [self.navigationController popViewControllerAnimated:YES];
-}
 
-
-
--(void) runSketch {
-    [self saveCode];
-    
-    RunSketchViewController *sketchViewController = [[RunSketchViewController alloc] initWithPDEFile:self.pdeSketch];
-    
-    [self.navigationController pushViewController:sketchViewController animated:YES];
-}
 
 -(void)formatCode {
     
@@ -172,7 +156,8 @@
     self.editor.scrollEnabled=YES;
     [[NSOperationQueue mainQueue] addOperationWithBlock: ^{
         [self.editor setContentOffset: contentOffset animated:NO];
-    }];}
+    }];
+}
 
 
 -(void) highlightCode {
@@ -184,11 +169,7 @@
         
         for(NSDictionary *syntaxPattern in [FileManager syntaxHighlighterDictionary]) {
             NSString *patternString = syntaxPattern[@"regex"];
-            
-            //        patternString=@"";
-            
-            
-            
+
             NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:patternString options:NSRegularExpressionCaseInsensitive error:NULL];
             
             NSArray *matchResults = [regex matchesInString:self.editor.text options:0 range:NSMakeRange(0, self.editor.text.length)];
@@ -215,10 +196,6 @@
             
         }
         
-        
-        
-        
-        
         //Cursorposition speichern
         CGPoint contentOffset = self.editor.contentOffset;
                 
@@ -228,20 +205,12 @@
         [self.editor setAttributedText:string];
         
         self.editor.selectedRange = currentCurserPosition;
-        
-        
         [self.editor setContentOffset: contentOffset animated:NO];
-        
-        
         self.editor.scrollEnabled=YES;
-        
     }
 }
 
 - (void)keyboardWillChange:(NSNotification *)notification {
-    
-    
-    
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationDuration:[notification.userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue]];
     [UIView setAnimationCurve:[notification.userInfo[UIKeyboardAnimationCurveUserInfoKey] integerValue]];
@@ -255,11 +224,7 @@
     self.editor.contentInset = UIEdgeInsetsMake(0, 0, keyboardSize.height, 0);
     self.editor.scrollIndicatorInsets = self.editor.contentInset;
     
-    
-    
-    
     [UIView commitAnimations];
-    
 }
 
 - (void)keyboardWillHide:(NSNotification *)notification {
@@ -273,17 +238,15 @@
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
-    if ([self.navigationController.viewControllers indexOfObject:self]==NSNotFound) {
+    //if ([self.navigationController.viewControllers indexOfObject:self]==NSNotFound) {
         [self saveCode];
-    }
+    //}
     [super viewWillDisappear:animated];
 }
 
 -(void)saveCode {
-    [self.pdeSketch.pdeFiles.firstObject saveCode:self.editor.text];
+    [self.pdeFile saveCode:self.editor.text];
 }
-
-
 
 -(void)textViewDidChange:(UITextView *) textView {
     [self highlightCode];
@@ -294,15 +257,13 @@
     return YES;
 }
 
-- (IBAction)showFolderContent:(id)sender {    
-    FolderContentBrowserTableViewController* folderCVC = [[FolderContentBrowserTableViewController alloc] initWithPath:self.pdeSketch.filePath basePath:self.pdeSketch.filePath];
-    ProcessingNavigationViewController* navController = [[ProcessingNavigationViewController alloc] initWithRootViewController:folderCVC];
-    [self.navigationController presentViewController:navController animated:YES completion:nil];
-}
-
 -(UIStatusBarStyle)preferredStatusBarStyle {
     return UIStatusBarStyleLightContent;
 }
 
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.navigationController setToolbarHidden:NO animated:YES];
+}
 
 @end

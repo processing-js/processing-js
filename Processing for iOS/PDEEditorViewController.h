@@ -13,9 +13,11 @@
 
 @interface PDEEditorViewController : UIViewController<UITextViewDelegate>
 
--(instancetype)initWithPDESketch:(PDESketch*)pdeSketch;
+-(instancetype)initWithPDESketch:(PDEFile*)pdeFile;
+-(void)saveCode;
+-(void)formatCode;
 
-@property(nonatomic,strong) PDESketch* pdeSketch;
+@property(nonatomic,strong) PDEFile* pdeFile;
 @property (strong, nonatomic) IBOutlet UITextView *editor;
 
 

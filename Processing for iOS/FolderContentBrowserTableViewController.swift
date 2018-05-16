@@ -38,7 +38,12 @@ class FolderContentBrowserTableViewController: UITableViewController, UIDocument
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.register(UINib.init(nibName: "FileContentTableViewCell", bundle: Bundle.main), forCellReuseIdentifier: "file-cell")
-        navigationItem.rightBarButtonItems = [UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(FolderContentBrowserTableViewController.done)), UIBarButtonItem(title: "Import…", style: .done, target: self, action: #selector(FolderContentBrowserTableViewController.importFiles))]
+        navigationItem.rightBarButtonItems = [UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(FolderContentBrowserTableViewController.done))]
+        
+        self.navigationController?.setToolbarHidden(false, animated: false)
+        let importToolbarItem = UIBarButtonItem(title: "Import…", style: .done, target: self, action: #selector(FolderContentBrowserTableViewController.importFiles))
+        let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        self.toolbarItems = [flexibleSpace, importToolbarItem]
     }
     
     @objc func done() {

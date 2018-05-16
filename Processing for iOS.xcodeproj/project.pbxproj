@@ -7,13 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		46FA4196029EDF472CF4B098 /* libPods-Processing for iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F9043BE611E98C3A1184F72 /* libPods-Processing for iOS.a */; };
+		0708F45A019FA07554E4C242 /* Pods_Processing_for_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 199569DDED991500E4F252CB /* Pods_Processing_for_iOS.framework */; };
 		5106B9C61C933EFA00AE74CC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5106B9C51C933EFA00AE74CC /* Main.storyboard */; };
 		5106B9C91C933F5600AE74CC /* UIColor+ProcessingColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 5106B9C81C933F5600AE74CC /* UIColor+ProcessingColor.m */; };
 		510926FC1FA0CE1E00C255D1 /* SketchController.m in Sources */ = {isa = PBXBuildFile; fileRef = 510926FB1FA0CE1E00C255D1 /* SketchController.m */; };
 		510926FF1FA0D72A00C255D1 /* PDESketch.m in Sources */ = {isa = PBXBuildFile; fileRef = 510926FE1FA0D72A00C255D1 /* PDESketch.m */; };
 		510F51A220AB618E0082B979 /* ProjectSelectionTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510F51A120AB618E0082B979 /* ProjectSelectionTableViewController.swift */; };
 		510F51A420AB64C40082B979 /* ProjectTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510F51A320AB64C40082B979 /* ProjectTableViewCell.swift */; };
+		510F51B020ACB12C0082B979 /* EditorTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510F51AE20ACB12C0082B979 /* EditorTabViewController.swift */; };
+		510F51B120ACB12C0082B979 /* EditorTabViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 510F51AF20ACB12C0082B979 /* EditorTabViewController.xib */; };
 		511A4BF11B6D12C200B03259 /* Example_3D.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BEF1B6D12C200B03259 /* Example_3D.pde */; };
 		511A4BF21B6D12C200B03259 /* Example_Draw.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BF01B6D12C200B03259 /* Example_Draw.pde */; };
 		511A4BF51B6D134100B03259 /* Example_Clock.pde in Resources */ = {isa = PBXBuildFile; fileRef = 511A4BF31B6D134100B03259 /* Example_Clock.pde */; };
@@ -51,7 +53,7 @@
 		86D0673E1E509C390033A4FF /* PDEEditorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 86D0673C1E509C390033A4FF /* PDEEditorViewController.m */; };
 		86D0673F1E509C390033A4FF /* PDEEditorViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 86D0673D1E509C390033A4FF /* PDEEditorViewController.xib */; };
 		86D067411E5266C70033A4FF /* Example_Gyroscope_Accelerometer.pde in Resources */ = {isa = PBXBuildFile; fileRef = 86D067401E5266C70033A4FF /* Example_Gyroscope_Accelerometer.pde */; };
-		DCCE9F135AC315B17DF9106B /* libPods-Processing for iOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D002A5876F1E2AB798936EA5 /* libPods-Processing for iOSTests.a */; };
+		EE17D00CAC04369949ADD945 /* Pods_Processing_for_iOSTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57D0A912304A1FC223B9ABD8 /* Pods_Processing_for_iOSTests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +68,7 @@
 
 /* Begin PBXFileReference section */
 		128122013802BBDAD6F77DA8 /* Pods-Processing for iOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Processing for iOSTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Processing for iOSTests/Pods-Processing for iOSTests.debug.xcconfig"; sourceTree = "<group>"; };
+		199569DDED991500E4F252CB /* Pods_Processing_for_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Processing_for_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34A9E516CE961AD7EBCE1DE4 /* Pods-Processing for iOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Processing for iOSTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-Processing for iOSTests/Pods-Processing for iOSTests.release.xcconfig"; sourceTree = "<group>"; };
 		5106B9C51C933EFA00AE74CC /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		5106B9C71C933F5600AE74CC /* UIColor+ProcessingColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIColor+ProcessingColor.h"; sourceTree = "<group>"; };
@@ -76,6 +79,8 @@
 		510926FE1FA0D72A00C255D1 /* PDESketch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PDESketch.m; sourceTree = "<group>"; };
 		510F51A120AB618E0082B979 /* ProjectSelectionTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSelectionTableViewController.swift; sourceTree = "<group>"; };
 		510F51A320AB64C40082B979 /* ProjectTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectTableViewCell.swift; sourceTree = "<group>"; };
+		510F51AE20ACB12C0082B979 /* EditorTabViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorTabViewController.swift; sourceTree = "<group>"; };
+		510F51AF20ACB12C0082B979 /* EditorTabViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EditorTabViewController.xib; sourceTree = "<group>"; };
 		511A4BEF1B6D12C200B03259 /* Example_3D.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_3D.pde; sourceTree = "<group>"; };
 		511A4BF01B6D12C200B03259 /* Example_Draw.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_Draw.pde; sourceTree = "<group>"; };
 		511A4BF31B6D134100B03259 /* Example_Clock.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_Clock.pde; sourceTree = "<group>"; };
@@ -116,6 +121,7 @@
 		51CEE4771B3EA6FC0031D1BE /* RunSketchViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RunSketchViewController.h; sourceTree = "<group>"; };
 		51CEE4781B3EA6FC0031D1BE /* RunSketchViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RunSketchViewController.m; sourceTree = "<group>"; };
 		51CEE47A1B3EAC1C0031D1BE /* container.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = container.html; sourceTree = "<group>"; };
+		57D0A912304A1FC223B9ABD8 /* Pods_Processing_for_iOSTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Processing_for_iOSTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		75506C019411DF8A4B4F7575 /* Pods-Processing for iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Processing for iOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-Processing for iOS/Pods-Processing for iOS.release.xcconfig"; sourceTree = "<group>"; };
 		860DBA421E5736300022C90F /* AboutViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AboutViewController.h; sourceTree = "<group>"; };
 		860DBA431E5736300022C90F /* AboutViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AboutViewController.m; sourceTree = "<group>"; };
@@ -128,9 +134,7 @@
 		86D0673C1E509C390033A4FF /* PDEEditorViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PDEEditorViewController.m; sourceTree = "<group>"; };
 		86D0673D1E509C390033A4FF /* PDEEditorViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PDEEditorViewController.xib; sourceTree = "<group>"; };
 		86D067401E5266C70033A4FF /* Example_Gyroscope_Accelerometer.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Example_Gyroscope_Accelerometer.pde; sourceTree = "<group>"; };
-		9F9043BE611E98C3A1184F72 /* libPods-Processing for iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Processing for iOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B854AF8587528F6C3FFE8E97 /* Pods-Processing for iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Processing for iOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Processing for iOS/Pods-Processing for iOS.debug.xcconfig"; sourceTree = "<group>"; };
-		D002A5876F1E2AB798936EA5 /* libPods-Processing for iOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Processing for iOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,7 +142,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				46FA4196029EDF472CF4B098 /* libPods-Processing for iOS.a in Frameworks */,
+				0708F45A019FA07554E4C242 /* Pods_Processing_for_iOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,7 +150,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DCCE9F135AC315B17DF9106B /* libPods-Processing for iOSTests.a in Frameworks */,
+				EE17D00CAC04369949ADD945 /* Pods_Processing_for_iOSTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -167,8 +171,8 @@
 		47B535D0FA9E13A148AEF96F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				9F9043BE611E98C3A1184F72 /* libPods-Processing for iOS.a */,
-				D002A5876F1E2AB798936EA5 /* libPods-Processing for iOSTests.a */,
+				199569DDED991500E4F252CB /* Pods_Processing_for_iOS.framework */,
+				57D0A912304A1FC223B9ABD8 /* Pods_Processing_for_iOSTests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -242,6 +246,8 @@
 				515230F81B74B3D1003497F9 /* SettingsViewController.h */,
 				515230F91B74B3D1003497F9 /* SettingsViewController.m */,
 				86D0673B1E509C380033A4FF /* PDEEditorViewController.h */,
+				510F51AE20ACB12C0082B979 /* EditorTabViewController.swift */,
+				510F51AF20ACB12C0082B979 /* EditorTabViewController.xib */,
 				86D0673C1E509C390033A4FF /* PDEEditorViewController.m */,
 				86D0673D1E509C390033A4FF /* PDEEditorViewController.xib */,
 				5192E54B20A8A15E00354BC8 /* FolderContentBrowserTableViewController.swift */,
@@ -390,6 +396,7 @@
 				86D0673F1E509C390033A4FF /* PDEEditorViewController.xib in Resources */,
 				511A4BF81B6D13FF00B03259 /* Example_Multitouch.pde in Resources */,
 				5192E54E20A8A15E00354BC8 /* FolderContentBrowserTableViewController.xib in Resources */,
+				510F51B120ACB12C0082B979 /* EditorTabViewController.xib in Resources */,
 				5192E55420A8A67300354BC8 /* FileContentTableViewCell.xib in Resources */,
 				5199DD761B3F232C004437DB /* SourceCodePro-Bold.ttf in Resources */,
 				511A4BF11B6D12C200B03259 /* Example_3D.pde in Resources */,
@@ -422,13 +429,16 @@
 			files = (
 			);
 			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
 			);
 			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Processing for iOS-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 		5C5748396703EC73AC5190E7 /* [CP] Copy Pods Resources */ = {
@@ -452,9 +462,20 @@
 			files = (
 			);
 			inputPaths = (
+				"${SRCROOT}/Pods/Target Support Files/Pods-Processing for iOS/Pods-Processing for iOS-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
+				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
+				"${BUILT_PRODUCTS_DIR}/Pageboy/Pageboy.framework",
+				"${BUILT_PRODUCTS_DIR}/PureLayout/PureLayout.framework",
+				"${BUILT_PRODUCTS_DIR}/Tabman/Tabman.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Pageboy.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PureLayout.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Tabman.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -497,13 +518,16 @@
 			files = (
 			);
 			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
 			);
 			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Processing for iOSTests-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -516,6 +540,7 @@
 				5106B9C91C933F5600AE74CC /* UIColor+ProcessingColor.m in Sources */,
 				5192E54D20A8A15E00354BC8 /* FolderContentBrowserTableViewController.swift in Sources */,
 				51CEE46E1B3E9D5E0031D1BE /* PDEFile.m in Sources */,
+				510F51B020ACB12C0082B979 /* EditorTabViewController.swift in Sources */,
 				510926FC1FA0CE1E00C255D1 /* SketchController.m in Sources */,
 				510926FF1FA0D72A00C255D1 /* PDESketch.m in Sources */,
 				515230FA1B74B3D1003497F9 /* SettingsViewController.m in Sources */,

@@ -127,17 +127,11 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
         }
         
         if let project = currentProjects?[indexPath.row] {
-            let editor = PDEEditorViewController(pdeSketch: project)!
+            let editor = EditorTabViewController(withProject: project)
+//            let editor = PDEEditorViewController(pdeSketch: project)!
             navigationController?.pushViewController(editor, animated: true)
         }
     }
-    
-//    override func viewDidAppear(_ animated: Bool) {
-//        super.viewDidAppear(animated)
-//        if #available(iOS 11.0, *) {
-//            navigationController?.navigationBar.prefersLargeTitles = true
-//        }
-//    }
 
 
     @IBAction func about(_ sender: Any) {
@@ -221,8 +215,8 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
             } else {
                 project = projects![indexPath.row]
             }
-            let detailVC = PDEEditorViewController(pdeSketch: project)!
-            return detailVC
+            let editor = EditorTabViewController(withProject: project)
+            return editor
         }
         
         return nil
