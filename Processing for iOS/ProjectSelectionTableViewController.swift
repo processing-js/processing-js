@@ -81,7 +81,7 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
             dateFormatter.dateStyle = .medium
             dateFormatter.timeStyle = .medium
             
-            cell.creationDateLabel.text = dateFormatter.string(from: project.creationDate)
+            cell.creationDateLabel.text = "Created: \(dateFormatter.string(from: project.creationDate))"
         }
         
 
