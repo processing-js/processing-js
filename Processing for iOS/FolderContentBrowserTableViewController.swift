@@ -41,9 +41,13 @@ class FolderContentBrowserTableViewController: UITableViewController, UIDocument
         navigationItem.rightBarButtonItems = [UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(FolderContentBrowserTableViewController.done))]
         
         self.navigationController?.setToolbarHidden(false, animated: false)
-        let importToolbarItem = UIBarButtonItem(title: "Import…", style: .done, target: self, action: #selector(FolderContentBrowserTableViewController.importFiles))
+        let importToolbarItem = UIBarButtonItem(title: "Import…", style: .plain, target: self, action: #selector(FolderContentBrowserTableViewController.importFiles))
+        let editToolbarItem = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(FolderContentBrowserTableViewController.importFiles))
+        editToolbarItem.isEnabled = false
+        let exportToolbarItem = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(FolderContentBrowserTableViewController.importFiles))
+        exportToolbarItem.isEnabled = false
         let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        self.toolbarItems = [flexibleSpace, importToolbarItem]
+        self.toolbarItems = [importToolbarItem, flexibleSpace, exportToolbarItem, flexibleSpace, editToolbarItem]
     }
     
     @objc func done() {
@@ -51,10 +55,13 @@ class FolderContentBrowserTableViewController: UITableViewController, UIDocument
     }
     
     @objc func importFiles() {
-        let importMenu = UIDocumentPickerViewController(documentTypes: ["public.item"], in: .import)
-        importMenu.delegate = self
-        importMenu.popoverPresentationController?.barButtonItem = navigationItem.leftBarButtonItem;
-        present(importMenu, animated: true, completion: nil)
+        if #available(iOS 11.0, *) {
+            UINavigationBar.appearance(whenContainedInInstancesOf: [UIDocumentBrowserViewController.self]).tintColor = nil
+        }
+        let filePickerViewController = UIDocumentPickerViewController(documentTypes: ["public.item"], in: .import)
+        filePickerViewController.delegate = self
+        filePickerViewController.popoverPresentationController?.barButtonItem = navigationItem.leftBarButtonItem;
+        present(filePickerViewController, animated: true, completion: nil)
     }
 
     // MARK: - Table view data source
