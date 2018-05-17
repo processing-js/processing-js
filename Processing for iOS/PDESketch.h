@@ -13,6 +13,7 @@
 
 -(instancetype)initWithSketchName:(NSString*)sketchName;
 -(NSString*)filePath;
+-(NSString*)cummulatedSourceCode;
 
 @property(nonatomic,strong) NSString* sketchName;
 @property(nonatomic,strong) NSArray<PDEFile*>* pdeFiles;

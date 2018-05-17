@@ -42,4 +42,13 @@
     return [NSString stringWithFormat:@"%@/sketches/%@",[FileManager documentsDirectory],self.sketchName];
 }
 
+-(NSString*)cummulatedSourceCode {
+    NSMutableString* result = [NSMutableString string];
+    for (PDEFile* file in self.pdeFiles) {
+        [result appendString:file.loadCode];
+    }
+    
+    return result.copy;
+}
+
 @end

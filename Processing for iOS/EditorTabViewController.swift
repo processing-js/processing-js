@@ -97,13 +97,11 @@ class EditorTabViewController: TabmanViewController, PageboyViewControllerDataSo
     
     @objc func showCodeReference() {
         let safariVC = SFSafariViewController(url: URL(string: "https://processing.org/reference/")!)
-        navigationController?.pushViewController(safariVC, animated: true)
+        present(safariVC, animated: true, completion: nil)
     }
     
     @objc func runSketch() {
         saveCode()
-        
-        // Todo: put all PDE files / classes in one big file and run this then
         let runVC = RunSketchViewController(pdeFile: project)!
         navigationController?.pushViewController(runVC, animated: true)
     }
@@ -126,10 +124,66 @@ class EditorTabViewController: TabmanViewController, PageboyViewControllerDataSo
     }
     
     @objc func addNewPDEFile() {
-        let newPDEFile = PDEFile(fileName: "haha", partOf: project)
-        newPDEFile?.saveCode("void setup() {\n   size(screen.width, screen.height);\n}\n\nvoid draw() {\n   background(0,0,255);\n}")
-        self.reloadPages()
-        reloadBarTitles()
+        addNewFileName(withErrorMessage: nil, predefinedFileName: nil)
+    }
+    
+    func addNewFileName(withErrorMessage errorMessage: String?, predefinedFileName: String?) {
+        var fileNameAlertController: UIAlertController
+        if let errorMessage = errorMessage, let predefinedFileName = predefinedFileName {
+            fileNameAlertController = UIAlertController(title: "Error Creating New .pde File", message: errorMessage, preferredStyle: .alert)
+            fileNameAlertController.addTextField { (textfield) in
+                textfield.placeholder = "File Name"
+                textfield.text = predefinedFileName
+            }
+        } else {
+            fileNameAlertController = UIAlertController(title: "New .pde File", message: "Creating a .pde file in this project.", preferredStyle: .alert)
+            fileNameAlertController.addTextField { (textfield) in
+                textfield.placeholder = "File Name"
+            }
+        }
+        
+        let createAction = UIAlertAction(title: "Create", style: .default) { (_) in
+            if let newFileNameTextField = fileNameAlertController.textFields?.first {
+                if let newFileName = newFileNameTextField.text {
+                    
+                    let letters = NSMutableCharacterSet.letters as! NSMutableCharacterSet
+                    letters.addCharacters(in: "-_1234567890")
+                    
+                    if newFileName.contains(" ") {
+                        self.addNewFileName(withErrorMessage: "The name should not contain any spaces.", predefinedFileName: newFileName.replacingOccurrences(of: " ", with: "_"))
+                    } else if newFileName == "" {
+                        self.addNewFileName(withErrorMessage: "Name should be at least one character.", predefinedFileName: newFileName)
+                    } else if self.nameAlreadyExists(name: newFileName) {
+                        self.addNewFileName(withErrorMessage: "A file with the same name already exists. Please chose another name.", predefinedFileName: newFileName)
+                    } else if !letters.isSuperset(of: CharacterSet.init(charactersIn: newFileName)){
+                        self.addNewFileName(withErrorMessage: "Please don't use any fancy characters in the file name.", predefinedFileName: newFileName)
+                    } else {
+                        //everything is fine, create new file
+                        let newPDEFile = PDEFile(fileName: newFileName, partOf: self.project)
+                        let className = newFileName.capitalized
+                        newPDEFile?.saveCode("class \(className) {\n   \n   \(className)() {\n      \n   }\n}")
+                        self.reloadPages()
+                        self.reloadBarTitles()
+                    }
+                }
+            }
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        
+        fileNameAlertController.addAction(createAction)
+        fileNameAlertController.addAction(cancelAction)
+        
+        self.present(fileNameAlertController, animated: true, completion: nil)
+    }
+    
+    func nameAlreadyExists(name fileName: String) -> Bool {
+        for file in project.pdeFiles {
+            if file.fileName == fileName {
+                return true
+            }
+        }
+        return false
     }
 }
 

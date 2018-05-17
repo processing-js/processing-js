@@ -39,8 +39,7 @@
         
         NSString *processingjs = [NSString stringWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"processing.min" ofType:@"js"] encoding:NSUTF8StringEncoding error:nil];
         
-        NSString* content = [NSString stringWithFormat:[FileManager containerFile],processingjs,self.pdeSketch.pdeFiles.firstObject.loadCode];
-        
+        NSString* content = [NSString stringWithFormat:[FileManager containerFile],processingjs,self.pdeSketch.cummulatedSourceCode];
         
         NSURL* baseURL = [[NSURL fileURLWithPath:pdeSketch.filePath] URLByAppendingPathComponent:@"data"];
         [self.sketchWebView loadHTMLString:content baseURL: baseURL];
