@@ -72,7 +72,15 @@
                     </tableView>
                     <toolbarItems>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="KZj-Xb-Kq9"/>
-                        <barButtonItem enabled="NO" systemItem="edit" id="pUA-eF-Ngd"/>
+                        <barButtonItem title="12 Projects" style="plain" id="oL5-N2-Q1V">
+                            <color key="tintColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        </barButtonItem>
+                        <barButtonItem style="plain" systemItem="flexibleSpace" id="MU9-s2-ZH4"/>
+                        <barButtonItem systemItem="add" id="9eJ-6L-65S">
+                            <connections>
+                                <action selector="createNewProject:" destination="6bI-Kx-yTy" id="YVQ-NI-7ga"/>
+                            </connections>
+                        </barButtonItem>
                     </toolbarItems>
                     <navigationItem key="navigationItem" title="My Projects" id="bQS-5w-IgC">
                         <barButtonItem key="leftBarButtonItem" title="About" id="XUy-26-xC3">
@@ -80,11 +88,7 @@
                                 <action selector="about:" destination="6bI-Kx-yTy" id="hO2-Nq-h2b"/>
                             </connections>
                         </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="9eJ-6L-65S">
-                            <connections>
-                                <action selector="createNewProject:" destination="6bI-Kx-yTy" id="YVQ-NI-7ga"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" enabled="NO" systemItem="edit" id="pUA-eF-Ngd"/>
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                 </tableViewController>

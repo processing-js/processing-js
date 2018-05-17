@@ -186,6 +186,18 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
                     SketchController.loadSketches { (projects) in
                         self.projects = projects
                         self.tableView.reloadData()
+                        
+                        var index: Int?
+                        for (i, project) in projects!.enumerated() {
+                            if project.sketchName == newProject?.sketchName {
+                                index = i
+                                break
+                            }
+                        }
+                        
+                        if let index = index {
+                            self.tableView.selectRow(at: IndexPath(row: index, section: 0), animated: true, scrollPosition: .middle)
+                        }
                     }
                     return
                 }
