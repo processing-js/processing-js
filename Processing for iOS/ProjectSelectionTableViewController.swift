@@ -76,6 +76,12 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
         
         if let project = projects?[indexPath.row] {
             cell.projectNameLabel.text = project.sketchName
+            
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .medium
+            dateFormatter.timeStyle = .medium
+            
+            cell.creationDateLabel.text = dateFormatter.string(from: project.creationDate)
         }
         
 

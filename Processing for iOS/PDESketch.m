@@ -51,4 +51,15 @@
     return result.copy;
 }
 
+-(NSDate *)creationDate {
+    NSFileManager* fm = [NSFileManager defaultManager];
+    NSDictionary* attrs = [fm attributesOfItemAtPath:self.filePath error:nil];
+    
+    if (attrs != nil) {
+        return (NSDate*)[attrs objectForKey: NSFileCreationDate];
+    }
+    
+    return nil;
+}
+
 @end
