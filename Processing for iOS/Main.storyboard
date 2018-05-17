@@ -91,6 +91,9 @@
                         <barButtonItem key="rightBarButtonItem" enabled="NO" systemItem="edit" id="pUA-eF-Ngd"/>
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
+                    <connections>
+                        <outlet property="projectsCountLabel" destination="oL5-N2-Q1V" id="rJb-Rf-OIJ"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="FTE-Gg-VFR" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

@@ -11,7 +11,8 @@ import UIKit
 class ProjectSelectionTableViewController: UITableViewController, UIViewControllerPreviewingDelegate, UIAlertViewDelegate {
 
     
-
+    @IBOutlet weak var projectsCountLabel: UIBarButtonItem!
+    
     var projects: Array<PDESketch>?
     var filteredProjects: Array<PDESketch>?
     let searchController = UISearchController(searchResultsController: nil)
@@ -39,7 +40,19 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
             self.tableView.reloadData()
         }
         
+        
+        refreshProjectsCountLabel()
+        projectsCountLabel.isEnabled = false
+        projectsCountLabel.setTitleTextAttributes([NSFontAttributeName: UIFont.systemFont(ofSize: 13)], for: .disabled)
         registerForPreviewing(with: self, sourceView: tableView)
+    }
+    
+    func refreshProjectsCountLabel() {
+        if let numberOfProjects = projects?.count {
+            projectsCountLabel.title = "\(numberOfProjects) Projects"
+        } else {
+            projectsCountLabel.title = "0 Projects"
+        }
     }
 
     // MARK: - Table view data source
@@ -111,6 +124,7 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
                     SketchController.loadSketches { (projects) in
                         self.projects = projects
                         self.tableView.deleteRows(at: [indexPath], with: .automatic)
+                        self.refreshProjectsCountLabel()
                     }
                 }
                 alertController.addAction(deleteAction)
@@ -186,6 +200,7 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
                     SketchController.loadSketches { (projects) in
                         self.projects = projects
                         self.tableView.reloadData()
+                        self.refreshProjectsCountLabel()
                         
                         var index: Int?
                         for (i, project) in projects!.enumerated() {

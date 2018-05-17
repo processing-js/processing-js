@@ -65,7 +65,9 @@ class EditorTabViewController: TabmanViewController, PageboyViewControllerDataSo
         for pdeFile in project.pdeFiles {
             titles.append(Item(title: "\(pdeFile.fileName!).pde"))
         }
-        self.bar.items = titles
+        if titles.count > 0 {
+            self.bar.items = titles
+        }
     }
     
     func numberOfViewControllers(in pageboyViewController: PageboyViewController) -> Int {
