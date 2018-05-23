@@ -36,12 +36,10 @@
     
     self.editor.text = [self.pdeFile loadCode];
     
-    
     [self highlightCode];
     [self codeLineIndent];
     
-    
-    
+    [self.editor setContentOffset: CGPointMake(0, 0) animated:NO];
 }
 
 

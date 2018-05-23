@@ -6,6 +6,7 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <customFonts key="customFonts">
@@ -26,7 +27,7 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" keyboardDismissMode="interactive" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="LN9-AC-DGD">
-                    <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
+                    <rect key="frame" x="0.0" y="44" width="375" height="734"/>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
                     <fontDescription key="fontDescription" name="SourceCodePro-Regular" family="Source Code Pro" pointSize="18"/>
@@ -38,10 +39,10 @@
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
-                <constraint firstItem="LN9-AC-DGD" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="4BS-dt-kWv"/>
-                <constraint firstItem="LN9-AC-DGD" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="7HJ-8j-3n4"/>
-                <constraint firstAttribute="bottom" secondItem="LN9-AC-DGD" secondAttribute="bottom" id="AcY-wk-MOH"/>
-                <constraint firstAttribute="trailing" secondItem="LN9-AC-DGD" secondAttribute="trailing" id="ZY0-DY-huI"/>
+                <constraint firstAttribute="trailing" secondItem="LN9-AC-DGD" secondAttribute="trailing" id="6hM-xA-tuA"/>
+                <constraint firstItem="LN9-AC-DGD" firstAttribute="bottom" secondItem="i5M-Pr-FkT" secondAttribute="bottomMargin" id="F5V-20-sFT"/>
+                <constraint firstItem="LN9-AC-DGD" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="topMargin" id="PsH-Z9-VBi"/>
+                <constraint firstItem="LN9-AC-DGD" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="bFB-RA-hoq"/>
             </constraints>
             <point key="canvasLocation" x="85.5" y="69"/>
         </view>
