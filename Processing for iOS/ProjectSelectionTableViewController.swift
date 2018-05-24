@@ -43,7 +43,7 @@ class ProjectSelectionTableViewController: UITableViewController, UIViewControll
         
         refreshProjectsCountLabel()
         projectsCountLabel.isEnabled = false
-        projectsCountLabel.setTitleTextAttributes([NSFontAttributeName: UIFont.systemFont(ofSize: 13)], for: .disabled)
+        projectsCountLabel.setTitleTextAttributes([NSAttributedStringKey.font: UIFont.systemFont(ofSize: 13)], for: .disabled)
         registerForPreviewing(with: self, sourceView: tableView)
     }
     
