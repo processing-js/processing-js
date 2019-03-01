@@ -65,7 +65,7 @@ module.exports = function PjsConsole(document) {
   e.closer.classList.add("closer");
   e.closer.innerHTML = "&#10006;";
 
-  e.javaconsole = document.createElement("div");
+  e.javaconsole = document.createElement("pre");
   style.textContent += [
     "",
     ".pjsconsole .console {",
@@ -75,6 +75,7 @@ module.exports = function PjsConsole(document) {
     "  left: 10px;",
     "  right: 0px;",
     "  bottom: 5px;",
+    "  margin-top: 0;",
     "  top: 10px;",
     "  overflow-y: scroll;",
     "  height: 40px;",
