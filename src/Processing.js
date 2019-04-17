@@ -4078,9 +4078,34 @@
     p.noLoop = function() {
       doLoop = false;
       loopStarted = false;
-      clearInterval(looping);
+      looping = false;
       curSketch.onPause();
     };
+
+    requestAnimationFrame = (function(){
+      return window.requestAnimationFrame ||
+             window.webkitRequestAnimationFrame ||
+             window.mozRequestAnimationFrame    ||
+             function( callback ){
+               var _h = function(){callback(Date.now());};
+               window.setTimeout(_h, curMsPerFrame);
+             };
+    })();
+
+    var _doDraw = (function() {
+      var then = 0;
+      return function(now) {
+        if (!looping) { return; }
+        requestAnimationFrame(_doDraw);
+        var delta = now - then;
+        if (delta > curMsPerFrame) {  // regulate the framerate
+          then = now - (delta % curMsPerFrame);
+          curSketch.onFrameStart();
+          p.redraw();
+          curSketch.onFrameEnd();
+        }
+      };
+    }());
 
     /**
     * Causes Processing to continuously execute the code within draw(). If noLoop() is called,
@@ -4097,17 +4122,8 @@
 
       timeSinceLastFPS = Date.now();
       framesSinceLastFPS = 0;
-
-      looping = window.setInterval(function() {
-        try {
-          curSketch.onFrameStart();
-          p.redraw();
-          curSketch.onFrameEnd();
-        } catch(e_loop) {
-          window.clearInterval(looping);
-          throw e_loop;
-        }
-      }, curMsPerFrame);
+      looping = true;
+      requestAnimationFrame(_doDraw);
       doLoop = true;
       loopStarted = true;
       curSketch.onLoop();
@@ -4145,7 +4161,7 @@
     */
     p.exit = function() {
       // cleanup
-      window.clearInterval(looping);
+      looping = false;
       removeInstance(p.externals.canvas.id);
       delete(curElement.onmousedown);
 
