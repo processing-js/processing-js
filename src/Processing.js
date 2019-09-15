@@ -12,7 +12,7 @@
       document = Browser.document,
       noop = options.noop,
 
-      PConstants = defaultScope.PConstants;
+      PConstants = defaultScope.PConstants,
       PFont = defaultScope.PFont,
       PShapeSVG = defaultScope.PShapeSVG,
       PVector = defaultScope.PVector,
